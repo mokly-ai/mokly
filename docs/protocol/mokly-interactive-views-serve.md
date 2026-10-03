@@ -158,3 +158,18 @@ interactive is off, and the narrowed resolution-metadata limitation.
 - [Watched development](./mokly-watch.md)
 - [Diagnostic timings](./mokly-timings.md)
 - [Viewer frame adapter](./mokly-frame-adapter.md)
+
+## Generated Stylesheet Resources
+
+The Live origin serves accepted `mokly-generated/styles/**` and
+`mokly-generated/assets/**` routes from its generation's retained stylesheet
+outputs. Derived and committed output use the same byte source. GET and HEAD
+keep the existing MIME, no-store and nosniff policy. These resources do not
+trigger Live compilation. They retain CSS URL query suffixes without interpreting
+them; ordinary public files still accept no query. Safe decoded route validation
+and the generated-route allowlist apply before lookup. Missing reserved routes
+never fall back to disk. Other non-view generated routes remain refused.
+
+The [source-pinning contract](./mokly-interactive-source-pinning.md#imported-stylesheet-modules)
+defines the matching CSS Module bindings and empty plain-CSS modules. The Static
+head supplies the sole generated stylesheet links in each Live document.

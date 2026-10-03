@@ -12,8 +12,6 @@ import type {
   ScreenVariantInput,
 } from "../dist/authoring/types.js";
 import { defineComponent } from "../dist/components/definition.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
 import { defineUseCase } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
@@ -21,25 +19,10 @@ import type { RegistryViolation } from "../dist/registry/prepared_types.js";
 import { crossReferenceViolations } from "../dist/registry/relationships.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { registryValidationConfig } from "./helpers/registry_validation.js";
 
 const sourceRelativePath = "tests/variant_validation.test.ts";
-const config: ResolvedConfig = {
-  generatedOutput: "committed",
-  publicExclude: DEFAULT_PUBLIC_EXCLUDE,
-  colorSchemes: ["light"],
-  compatibility: {},
-  configPath: path.join(repositoryRoot, "mokly.config.ts"),
-  entriesDir: path.join(repositoryRoot, "tests"),
-  entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
-  interactive: "off",
-  mockupsDir: path.join(repositoryRoot, "mockups"),
-  moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
-  repoRoot: repositoryRoot,
-  review: { base: "main", outDir: ".review", sharedImpact: [] },
-  sourceFiles: [sourceRelativePath],
-  stylesheets: [],
-  watch: { debounceMs: 100, rules: [] },
-};
+const config = registryValidationConfig(sourceRelativePath);
 
 test("variant authoring rejects only the retained forbidden fields", () => {
   for (const field of ["variants", "navPath"] as const) {

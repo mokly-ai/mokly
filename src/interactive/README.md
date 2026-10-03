@@ -154,3 +154,21 @@ See the [Interactive Views overview](../../docs/protocol/mokly-interactive-views
 [Serve delivery contract](../../docs/protocol/mokly-interactive-views-serve.md),
 [rendering contract](../../docs/protocol/mokly-rendering.md), and [frame
 adapter](../../docs/protocol/mokly-frame-adapter.md).
+
+## Imported Styles In Live
+
+The accepted Node graph passes each stylesheet loader's JavaScript result to
+its source capture. CSS Modules retain the exact default map and named exports
+used by Static, including consumer PostCSS transforms and installed-package
+CSS. Package JavaScript remains unpinned. Plain CSS retains empty
+JavaScript. CSS symlinks keep separate logical-path blobs because main's scoped
+names depend on that path; ordinary raw-source aliases still share bytes.
+Live replays those blobs with the JavaScript loader and runs no CSS
+pipeline. Its preserved Static head supplies the stylesheet links once.
+
+`server_static.ts` serves accepted generated stylesheet and asset routes from
+`DocumentService.styles`, with no reserved disk fallback in either output mode.
+The route allowlist, MIME mapping, HEAD handling and origin headers still apply.
+CSS asset query suffixes are accepted for these resources; other public-file
+queries and non-view generated routes remain refused. Source edits or deletion
+cannot change an accepted generation's modules or resource bytes.

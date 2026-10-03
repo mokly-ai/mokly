@@ -30,6 +30,7 @@ export interface BoundViewerWorkspace {
 export interface ViewerCapabilitySnapshot extends ViewerRebuildStatusState {
   catalogue: Catalogue;
   interactive?: ViewerInteractiveDescriptor;
+  routeEvidence?: ViewerCapabilityRequest;
   source?: ViewerCapabilitySource;
   workspace?: BoundViewerWorkspace;
 }
@@ -76,6 +77,7 @@ export function commitViewerEvidence(
             ),
           }
         : {}),
+      routeEvidence: request,
       source: revision.source,
       ...(revision.workspace
         ? { workspace: { request, value: revision.workspace } }

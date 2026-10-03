@@ -13,6 +13,7 @@ import {
 import { action } from "../src/components/action/action.mokly.js";
 import { guestPicker } from "../src/components/guest-picker/guest-picker.mokly.js";
 import { toolbar } from "../src/components/toolbar/toolbar.mokly.js";
+import { workspaceNote } from "../src/components/workspace-note/workspace-note.mokly.js";
 
 import { renderExampleDocument } from "./document.js";
 
@@ -46,6 +47,7 @@ function Welcome({ compact }: { compact: boolean }) {
         placeholder="Name this workspace"
         value=""
       />
+      <workspaceNote.Component />
       <action.Component
         moklyInstance="details"
         label="View details"

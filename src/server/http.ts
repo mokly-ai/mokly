@@ -4,21 +4,20 @@ import { createCatalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timeAsync, timeSync } from "../diagnostics/timings.js";
+import { timeAsync } from "../diagnostics/timings.js";
 import type { InteractiveServer } from "../interactive/server.js";
 import { parseManifest } from "../registry/manifest.js";
 
 import { catalogueAtBaseline } from "./baseline_catalogue.js";
-import { catalogueSnapshotForConfig } from "./catalogue_snapshot.js";
-import {
-  loadBrowserClientModules,
-  loadBrowserNavigationModules,
-  loadShellFontAssets,
-} from "./client_modules.js";
-import { ComponentChangeCache } from "./component_changes.js";
+import { loadCatalogueAssets } from "./client_modules.js";
+import { ComponentChangeCache } from "./component_change_cache.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { DocumentService } from "./demand/service.js";
+import {
+  acceptedGeneratedStatic,
+  initialGeneratedStatic,
+} from "./generated_static.js";
 import { loadInitialCatalogueSnapshot } from "./http_initial.js";
 import {
   startInteractiveHttp,
@@ -51,11 +50,14 @@ export async function startCatalogueServer(
 ): Promise<RunningServer> {
   validateInteractiveSources(config, options.componentRuntime);
   const snapshot = await loadInitialCatalogueSnapshot(config, options);
-  const validated = catalogueSnapshotForConfig(snapshot, config);
-  const changes = validated.changes;
-  let catalogue = validated.catalogue;
+  const changes = snapshot.changes;
+  let catalogue = snapshot.catalogue;
   let manifest = catalogue.manifest;
   let componentRuntime = options.componentRuntime;
+  let acceptedGenerated = await initialGeneratedStatic(
+    config,
+    componentRuntime,
+  );
   let controls = componentRuntime
     ? new ComponentRenderService(componentRuntime)
     : undefined;
@@ -83,13 +85,8 @@ export async function startCatalogueServer(
   let documents = componentRuntime
     ? createDocuments(componentRuntime)
     : undefined;
-  const clientModules = timeSync("server.client-modules", () =>
-    loadBrowserClientModules(),
-  );
-  const navigationModules = timeSync("server.navigation-modules", () =>
-    loadBrowserNavigationModules(),
-  );
-  const fontAssets = timeSync("server.fonts", () => loadShellFontAssets());
+  const { clientModules, navigationModules, fontAssets } =
+    loadCatalogueAssets();
   const streams = new Set<ServerResponse>();
   const interactiveState: { server?: InteractiveServer } = {};
   const eligibility = new ServeWorkspaceEligibility(options.onDiagnostic);
@@ -161,6 +158,7 @@ export async function startCatalogueServer(
       activity,
       activeCatalogue: () => activeCatalogue,
       assets: { clientModules, fontAssets, navigationModules },
+      acceptedGenerated: () => acceptedGenerated,
       changedIds: () => changedIds,
       changesStatus: () => changesStatus,
       componentChanges: () => componentChanges,
@@ -240,6 +238,7 @@ export async function startCatalogueServer(
     replaceComponentRuntime(runtime): void {
       validateInteractiveSources(config, runtime);
       componentRuntime = runtime;
+      acceptedGenerated = acceptedGeneratedStatic(config, runtime);
       publicCatalogue.clearUsage();
       void documents?.close();
       documents = createDocuments(runtime);

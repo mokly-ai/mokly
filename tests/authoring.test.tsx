@@ -3,7 +3,6 @@ import path from "node:path";
 import test from "node:test";
 
 import React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
   RegistryDefinition,
@@ -12,46 +11,24 @@ import type {
   ScreenInput,
   UseCaseInput,
 } from "../dist/authoring/types.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
 import {
   defineRoot,
   defineComponent,
   definePage,
   defineScreen,
   defineUseCase,
-  MockLink,
-  ReviewIgnore,
-  ReviewIgnoreScope,
-  reviewMaterialKey,
   screen,
 } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
 import type { RegistryViolation } from "../dist/registry/prepared_types.js";
-import { serializeReviewSentinels } from "../dist/renderer/sentinels.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { registryValidationConfig } from "./helpers/registry_validation.js";
 
 const sourceRelativePath = "tests/authoring.test.tsx";
 
-const validationConfig: ResolvedConfig = {
-  generatedOutput: "committed",
-  publicExclude: DEFAULT_PUBLIC_EXCLUDE,
-  colorSchemes: ["light"],
-  compatibility: {},
-  configPath: path.join(repositoryRoot, "mokly.config.ts"),
-  entriesDir: path.join(repositoryRoot, "tests"),
-  entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
-  interactive: "off",
-  mockupsDir: path.join(repositoryRoot, "mockups"),
-  moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
-  repoRoot: repositoryRoot,
-  review: { base: "main", outDir: ".review", sharedImpact: [] },
-  sourceFiles: [sourceRelativePath],
-  stylesheets: [],
-  watch: { debounceMs: 100, rules: [] },
-};
+const validationConfig = registryValidationConfig(sourceRelativePath);
 
 const screenBase = {
   dependencies: [],
@@ -71,56 +48,6 @@ const useCaseBase: UseCaseInput = {
   steps: [{ screenId: "tagged-screen" }],
   title: "Tagged journey",
 };
-
-test("ReviewIgnore serializes to inert paired comments", () => {
-  const key = reviewMaterialKey({ current: "home" });
-  const html = serializeReviewSentinels(
-    renderToStaticMarkup(
-      <ReviewIgnore id="shared-nav" materialKey={key}>
-        <nav>Navigation</nav>
-      </ReviewIgnore>,
-    ),
-  );
-  assert.match(html, /<!--mokly-review-ignore:start:shared-nav-->/);
-  assert.match(html, /<!--mokly-review-ignore:end:shared-nav-->/);
-  assert.match(html, /<!--mokly-review-material:shared-nav:[a-f0-9]{64}-->/);
-});
-
-test("MockLink keeps fragment identity out of rendered package props", () => {
-  const html = renderToStaticMarkup(
-    <MockLink className="details-link" fragment="billing-section" to="details">
-      Details
-    </MockLink>,
-  );
-
-  assert.equal(
-    html,
-    '<a class="details-link" href="mock:details#billing-section">Details</a>',
-  );
-  assert.doesNotMatch(html, /fragment=/);
-  assert.throws(
-    () => renderToStaticMarkup(<MockLink to="details#billing">Bad</MockLink>),
-    /expected kebab-case/,
-  );
-});
-
-test("ReviewIgnoreScope can render children with no marker contract", () => {
-  const html = renderToStaticMarkup(
-    <ReviewIgnoreScope enabled={false}>
-      <ReviewIgnore id="shared-nav">
-        <nav>Navigation</nav>
-      </ReviewIgnore>
-    </ReviewIgnoreScope>,
-  );
-  assert.equal(html, "<nav>Navigation</nav>");
-});
-
-test("review material keys reject cyclic or non-finite state", () => {
-  const cyclic: { self?: object } = {};
-  cyclic.self = cyclic;
-  assert.throws(() => reviewMaterialKey(cyclic), /cyclic/);
-  assert.throws(() => reviewMaterialKey({ value: Number.NaN }), /finite/);
-});
 
 test("definitions keep identity while shared helpers derive every document", () => {
   const screenDefinition = defineScreen(screenBase);

@@ -18,6 +18,7 @@ export default defineConfig({
   ],
   interactive: "serve",
   mockupsDir: "generated",
+  postcss: "postcss.config.mjs",
   moduleResolution: {
     aliases: { "react-native": "react-native-web" },
     conditions: ["react-native", "import", "module", "default"],

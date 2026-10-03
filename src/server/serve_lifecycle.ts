@@ -2,7 +2,6 @@
 import { fileURLToPath } from "node:url";
 
 import type { Compilation } from "../build/compile.js";
-import { loadConsumerGraph } from "../build/load_graph.js";
 import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timingArguments } from "../diagnostics/timings.js";
@@ -16,7 +15,7 @@ import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
 } from "./supervisor_types.js";
-import type { WatchActionQueue } from "./watch_events.js";
+import type { WatchActionQueue } from "./watch_action_queue.js";
 import type { ConsumerWatcher } from "./watcher.js";
 
 /** Keep CLI child configuration, including diagnostic opt-in, stable across restarts. */
@@ -45,15 +44,6 @@ export function createWatchedSupervisor(
       strictPort: options.strictPort ?? false,
     },
   );
-}
-
-/** Refresh the entry and source inventory before watched runtime preparation. */
-export async function refreshWatchedSourceInventory(
-  config: ResolvedConfig,
-): Promise<void> {
-  const inventory = await loadConsumerGraph(config, { evaluate: false });
-  config.entryModules = inventory.entrySources;
-  config.sourceFiles = inventory.sourceFiles;
 }
 
 /** Project the child-resolved Live address into watched Serve readiness. */

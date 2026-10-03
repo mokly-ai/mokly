@@ -9,6 +9,7 @@ import { validateReviewOut } from "../config/path_validation.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import { renderReviewArtifact } from "./artifact.js";
+import type { ChangeEvidence } from "./change_evidence.js";
 import { compareReview } from "./compare.js";
 import type { ReadOnlyReviewRepository } from "./repository.js";
 import { writeReviewArtifact } from "./write.js";
@@ -21,6 +22,7 @@ export async function runReview(
   git: ReadOnlyReviewRepository,
   outputStore: GeneratedOutputStore = new FileSystemGeneratedOutputStore(),
   changedPathExclusions: readonly string[] = [],
+  changeEvidence?: ChangeEvidence,
 ): Promise<ReviewResult> {
   validateReviewOut(outDir, config, "Review output", "review-invalid");
   const compilation = await compileCatalogue(config);
@@ -33,6 +35,7 @@ export async function runReview(
     outDir,
     undefined,
     changedPathExclusions,
+    { ...(changeEvidence ? { changeEvidence } : {}) },
   );
   await writeReviewArtifact(renderReviewArtifact(artifact), outDir, config);
   return artifact.result;

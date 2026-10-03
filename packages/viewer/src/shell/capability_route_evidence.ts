@@ -1,6 +1,13 @@
-/** Private route evidence loaded after same-shell navigation to a workspace. */
-
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+/** Route-scoped private evidence adopted with the page's exact public scope. */
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 
 import type { ViewerHostCapabilities } from "../client/host_capabilities.js";
 import {
@@ -14,13 +21,12 @@ import {
   type BoundViewerWorkspace,
   type ViewerCapabilitySnapshot,
 } from "./capability_commit.js";
+import type { ViewerRouteEvidenceState } from "./capability_context.js";
 import type { ShellState } from "./store_state.js";
-
 interface Current<T> {
   current: T;
 }
-
-/** What the store needs to load and adopt one route's private evidence. */
+/** Inputs bound to the current route and source revision. */
 export interface RouteEvidenceInput {
   capabilities: ViewerHostCapabilities | undefined;
   interactive: boolean;
@@ -32,15 +38,10 @@ export interface RouteEvidenceInput {
   stateRef: Current<ShellState>;
   workspace: BoundViewerWorkspace | undefined;
 }
-
-/**
- * Load a newly routed screen or component's private evidence and adopt it
- * atomically. Returns whether that workspace is still expected: true from
- * navigation until adoption, false once adopted or once the request for this
- * exact route and source failed or was rejected. A result that a newer route
- * or source has superseded settles nothing; its successor has its own request.
- */
-export function useRouteEvidence(input: RouteEvidenceInput): boolean {
+/** Load all target routes; expose retryable delivery state without stale fallbacks. */
+export function useRouteEvidence(
+  input: RouteEvidenceInput,
+): ViewerRouteEvidenceState | undefined {
   const {
     capabilities,
     interactive,
@@ -48,72 +49,101 @@ export function useRouteEvidence(input: RouteEvidenceInput): boolean {
     setSnapshot,
     setState,
     snapshotRef,
+    state,
     stateRef,
     workspace,
   } = input;
-  const [unresolved, setUnresolved] = useState<
-    ViewerCapabilityRequest | undefined
-  >();
-  const target =
-    input.state.route.view.kind === "target" && input.state.route.view.target;
+  const target = state.route.view.kind === "target" && state.route.view.target;
   const ownsWorkspace =
     target &&
     target.kind === "entry" &&
     (target.entry.kind === "screen" || target.entry.kind === "component");
+  const [failedRequest, setFailedRequest] = useState<
+    ViewerCapabilityRequest | undefined
+  >();
+  const [attempt, retryAttempt] = useReducer((value: number) => value + 1, 0);
+  const retry = useCallback(() => {
+    setFailedRequest(undefined);
+    retryAttempt();
+  }, []);
+  const routeReady = Boolean(
+    request &&
+    sameCapabilityRequest(snapshotRef.current.routeEvidence, request),
+  );
+  const workspaceReady = Boolean(
+    !ownsWorkspace ||
+    (request && sameCapabilityRequest(workspace?.request, request)),
+  );
+  const ready = routeReady && workspaceReady;
+  const failed = Boolean(
+    request && failedRequest && sameCapabilityRequest(failedRequest, request),
+  );
   useEffect(() => {
-    if (
-      !capabilities ||
-      !interactive ||
-      !request ||
-      !ownsWorkspace ||
-      sameCapabilityRequest(workspace?.request, request)
-    )
-      return;
+    if (!capabilities || !interactive || !request || !target || ready) return;
     const controller = new AbortController();
-    const settle = () => {
-      if (!controller.signal.aborted) setUnresolved(request);
-    };
     void capabilities.evidence
       .loadRouteEvidence(request, controller.signal)
       .then((revision) => {
         if (controller.signal.aborted) return;
-        if (!revision) return settle();
         const current = snapshotRef.current;
-        if (
-          !current.source ||
-          !viewerCapabilitySourceEquals(current.source, request.source) ||
-          viewerCapabilityEntryId(stateRef.current.route) !== request.entryId
-        )
+        if (!currentRequestOwns(current, stateRef.current, request)) return;
+        if (!revision) {
+          setFailedRequest(request);
           return;
+        }
         const commit = commitViewerEvidence(
           current,
           stateRef.current,
           revision,
         );
-        if (!commit) return settle();
+        if (!commit) {
+          setFailedRequest(request);
+          return;
+        }
         snapshotRef.current = commit.snapshot;
         stateRef.current = commit.state;
+        setFailedRequest(undefined);
         setSnapshot(commit.snapshot);
         setState(commit.state);
       })
-      .catch(settle);
+      .catch(() => {
+        if (
+          !controller.signal.aborted &&
+          currentRequestOwns(snapshotRef.current, stateRef.current, request)
+        )
+          setFailedRequest(request);
+      });
     return () => controller.abort();
   }, [
+    attempt,
     capabilities,
     interactive,
-    ownsWorkspace,
+    ready,
     request,
     setSnapshot,
     setState,
     snapshotRef,
     stateRef,
-    workspace?.request,
+    target,
   ]);
+  return useMemo(
+    () =>
+      request && target
+        ? { status: ready ? "ready" : failed ? "failed" : "loading", retry }
+        : undefined,
+    [failed, ready, request, retry, target],
+  );
+}
+
+function currentRequestOwns(
+  snapshot: ViewerCapabilitySnapshot,
+  state: ShellState,
+  request: ViewerCapabilityRequest,
+): boolean {
   return Boolean(
-    ownsWorkspace &&
-    request &&
-    !sameCapabilityRequest(workspace?.request, request) &&
-    !sameCapabilityRequest(unresolved, request),
+    snapshot.source &&
+    viewerCapabilitySourceEquals(snapshot.source, request.source) &&
+    viewerCapabilityEntryId(state.route) === request.entryId,
   );
 }
 

@@ -6,6 +6,7 @@ import test from "node:test";
 import { capturedAssetReader } from "../dist/export/inputs.js";
 import { exportCatalogue } from "../dist/export/run.js";
 import { readManifest } from "../dist/registry/manifest.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import {
   NodeGitCommandRunner,
   CommittedRepository,
@@ -159,7 +160,7 @@ test("material Changes can use captured documents without reading current file b
     fixture.config,
     git.reader,
     commit,
-    [`mockups/${fragment}`],
+    asChangeEvidence([`mockups/${fragment}`]),
     {
       ...capturedAssetReader(captured, fixture.config),
       read: async (route) => {

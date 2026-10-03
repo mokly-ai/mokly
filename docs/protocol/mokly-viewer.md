@@ -8,7 +8,7 @@ runs in Serve, export, and application-owned hosts; every selection names a
 global entry id. [Appearance](./mokly-viewer-appearance.md) and
 [removed previews](./mokly-removed-previews.md) retain their host-specific
 controls and shared presentation in that tree.
-The host event and instance-reference corrections are implemented.
+Live Serve uses the strict [entry-scoped bootstrap](./mokly-shell-bootstrap.md).
 
 ## Package And Props
 
@@ -400,27 +400,27 @@ Shell state is one store scoped to a mounted viewer:
 - **Workspace** state (props under edit, inspector tab and pane size, active
   pick, highlight scope) lives with the mounted view and is discarded on route
   change or source replacement.
-  A watched reload restores the one-shot shell snapshot defined by the
-  [watch contract](./mokly-watch.md), including the disclosure and pre-filter
-  baseline values governed by the [persistence contract](./mokly-disclosure-persistence.md).
-  Native disclosure choices made before hydration complete are captured by the
-  pre-hydration script and take precedence over
-  older preferences and the snapshot; capture state is removed after hydration or
-  exit. Static export may resolve its shared catalogue after the document `load`
-  event, so capture remains authoritative through the actual hydration boundary.
-  The ordering is strict: the pre-hydration entry first reflects stored
-  disclosure and split-width preferences into the server DOM, native disclosure
-  activations may then update that DOM, the browser entry passes the resulting
-  values to React as initial store state and persists the adopted disclosure
-  state, and only then is temporary capture discarded. React does not replay or
-  overwrite those values after mounting. Hydration must produce no mismatches:
-  the server tree and the initial client tree are the same function of the same
-  read model, route, selection and delivery descriptor. Serve embeds that read
-  model directly. Static pages embed a compact identity/revision reference and
-  hydrate only after the one shared deployment catalogue has been fetched and
-  matched; resolution failure leaves SSR intact. Embedded hydration and workspace state uses canonical
-  object-key ordering, and validating then serializing hydration state must
-  reproduce the embedded bytes exactly.
+
+A watched reload restores the one-shot shell snapshot defined by the
+[watch contract](./mokly-watch.md), including the disclosure and pre-filter
+baseline values governed by the [persistence contract](./mokly-disclosure-persistence.md).
+Native disclosure choices made before hydration complete are captured by the
+pre-hydration script and take precedence over
+older preferences and the snapshot; capture state is removed after hydration or
+exit. Static export may resolve its shared catalogue after the document `load`
+event, so capture remains authoritative through the actual hydration boundary.
+The ordering is strict: the pre-hydration entry first reflects stored
+disclosure and split-width preferences into the server DOM, native disclosure
+activations may then update that DOM, the browser entry passes the resulting
+values to React as initial store state and persists the adopted disclosure
+state, and only then is temporary capture discarded. React does not replay or
+overwrite those values after mounting. Hydration must produce no mismatches:
+the server tree and the initial client tree are the same function of the same
+read model, route, selection and delivery descriptor. Serve embeds its scoped
+model and paired private workspace directly. Static pages embed a compact
+identity/revision reference and hydrate only after the shared complete catalogue
+has been fetched and matched; failure leaves SSR intact. Canonical embedded
+state is serialized once and its exact text survives later React renders.
 
 A source change (object/fetcher identity, URL value, object base origin), or
 adapter change, remounts the shell tree, cancelling stale loads, pick and frame
@@ -493,5 +493,6 @@ Acceptance includes all props, slots, events, handle methods, controlled-state
 round trips, multiple independent mounts, SSR/client lifecycle cleanup,
 hydration without mismatches on every fixture route, source replacement,
 same/cross-origin frames and the existing local browser tests passing against
-the hydrated shell. Behavioural parity under `tests/browser` is the bar; shell
-module bytes and export deployment identity are expected to change.
+the hydrated shell. Standalone coverage enforces the scoped-bootstrap contract.
+Behavioural parity under `tests/browser` is the bar; shell module bytes and the
+derived export deployment identity may change with viewer source.

@@ -477,6 +477,90 @@ was right-aligned, which no artboard shows.
       Live; and forwarded app origins cannot pass the preparation request's
       Origin check.
 
+### Mainline integration record
+
+Merge 1 from `b2c82c15` keeps imported CSS delivery (#125) and entry-scoped
+shell bootstraps (#120). Live replays the accepted Node graph's stylesheet
+JavaScript and serves its accepted generated CSS and asset bytes. CSS Module
+symlinks retain separate logical class maps. Installed stylesheet modules use
+the same maps without exposing package paths in public source inventory.
+Ordinary installed-package JavaScript retains its existing resolution behavior.
+
+The following table records every conflict decision for the future PR
+description. The existing milestone checklists remain complete. The user will
+run the independent implementation review after this merge is pushed.
+
+| Conflicted path                                                    | Resolution                                                                                                                                        |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/protocol/README.md`                                          | Keep both protocol indexes, including main's imported-styles and bootstrap docs and the branch's Live, rebuild-status and public-exclusions docs. |
+| `docs/protocol/mokly-component-design.md`                          | Keep main's design contract and add the branch's Live inspection rules and combined design counts.                                                |
+| `docs/protocol/mokly-configuration.md`                             | Keep main's stylesheet/PostCSS configuration and the branch's interactive configuration; link each focused contract.                              |
+| `docs/protocol/mokly-export.md`                                    | Keep main's export contract; retain the branch's private Live/status exclusions in the focused export contracts.                                  |
+| `docs/protocol/mokly-live-capabilities.md`                         | Pair main's scoped public bootstrap with complete private workspace evidence, Live eligibility/readiness and rebuild status.                      |
+| `docs/protocol/mokly-viewer.md`                                    | Keep main's scoped viewer contract and retain the branch's behavior in its focused interactive and rebuild contracts.                             |
+| `examples/basic/README.md`                                         | Document imported CSS/PostCSS, main's scoped delivery, Live adoption and the combined design inventory.                                           |
+| `examples/basic/entries/design/components/parts/view_controls.tsx` | Retain main's controls and loading state alongside the branch's Static/Live controls.                                                             |
+| `examples/basic/entries/design/library/controls/view-controls.tsx` | Preserve main's loading variant and the branch's Live variant and control schemas.                                                                |
+| `packages/viewer/src/client/host_capabilities.ts`                  | Preserve main's host evidence interface and the branch's private interactive and rebuild capabilities.                                            |
+| `packages/viewer/src/shell/README.md`                              | Describe main's atomic scoped adoption and Usage delivery alongside Live state, recovery and failure notices.                                     |
+| `packages/viewer/src/shell/capability_commit.ts`                   | Keep atomic scoped catalogue/workspace adoption and add private interactive/status adoption with version fences.                                  |
+| `packages/viewer/src/shell/capability_store.ts`                    | Keep main's request-bound workspace and retry behavior; retain branch readiness/status subscriptions and extract route-evidence handling.         |
+| `packages/viewer/src/shell/stage_frame.tsx`                        | Keep main's omitted-usage handling and the branch's Live frames and extracted document-frame owner.                                               |
+| `packages/viewer/src/shell/workspace.tsx`                          | Keep main's Usage delivery state and the branch's Live controls and inspection notices.                                                           |
+| `packages/viewer/tests/host_capabilities.test.tsx`                 | Keep main's split test owners and retain branch rendering/privacy cases in the rendering suite.                                                   |
+| `plans/README.md`                                                  | Keep both branch plans active until PR merge; mark main's imported-CSS and scoped-bootstrap plans completed.                                      |
+| `scripts/preview/catalogue.mjs`                                    | Keep main's scoped capture, binary assets and stability helpers; force interactive off for every preview operation.                               |
+| `src/build/README.md`                                              | Document main's imported-style outputs and the branch's accepted Live source capture.                                                             |
+| `src/build/compile.ts`                                             | Preserve binary/style outputs while retaining interactive eligibility and source capture.                                                         |
+| `src/build/component_runtime.ts`                                   | Carry main's style outputs alongside branch eligibility and generation-pinned sources.                                                            |
+| `src/build/load_graph.ts`                                          | Keep main's evaluation and PostCSS-loader API; add branch capture options and record actual stylesheet modules.                                   |
+| `src/build/source_inventory.ts`                                    | Preserve main's package-code ownership rules and the branch's confined runtime/source helpers.                                                    |
+| `src/client/README.md`                                             | Document scoped public/private adoption and private readiness/status transport.                                                                   |
+| `src/client/react_capability_updates.ts`                           | Keep main's strict scoped reader and the branch's interactive/rebuild events and recovery.                                                        |
+| `src/server/controls/runtime_ipc.ts`                               | Keep binary-safe outputs and carry branch eligibility, captured modules, resolutions and rebuild status.                                          |
+| `src/server/http.ts`                                               | Preserve accepted generated resources and scoped delivery; retain Live/status setup and extract startup/asset helpers.                            |
+| `src/server/http_request_handler.ts`                               | Pass main's accepted generated bytes together with branch Live/status request context.                                                            |
+| `src/server/http_routes.ts`                                        | Preserve main's generated routes and add branch readiness, status and private eligibility routing.                                                |
+| `src/server/serve_watched.ts`                                      | Preserve main's hydrated stylesheet watch inventory and the branch's typed source/delivery phases and update fences.                              |
+| `tests/client_react_capabilities.test.ts`                          | Keep main's scoped fixtures and retain branch Live/privacy assertions in matching focused tests.                                                  |
+| `tests/component_design_attribution.test.ts`                       | Preserve both design families and update shared-style attribution to the combined inventory.                                                      |
+| `tests/design_library_usage.test.ts`                               | Preserve both component libraries and their combined usage counts.                                                                                |
+| `tests/design_links.test.ts`                                       | Retain main's split link suites and include branch interactive/rebuild navigation in the combined inventory.                                      |
+| `tests/protocol_doc_sizes.test.ts`                                 | Keep main's exact caps; lower the runtime cap after removing stale text. Add no caps and raise none.                                              |
+
+Outside conflict markers, stylesheet recording and replay are implemented in
+`src/build/styles/collect.ts`, `src/build/interactive_source_capture.ts`, the
+new `interactive_source_loaders.ts` and `interactive_source_paths.ts`, and
+`src/interactive/source_resolution.ts`. `src/interactive/server_static.ts`
+serves only accepted allowlisted generated resources. Focused source-pinning
+and delivery tests cover edits, deletion, invalid CSS, aliases, packages,
+derived/committed output, headers, HEAD and confinement. Browser tests compare
+Workspace note and Welcome in Static/Live at desktop and mobile sizes.
+
+The example registers main's Workspace note as a component and renders it on
+Welcome. Main's Usage delivery state reaches `workspace_inspector.tsx`.
+`src/server/watch_action_queue.ts` owns the extracted queue. Startup snapshots,
+generated-resource initialization and catalogue asset loading have focused
+owners. The obsolete branch-only preview asset helper is removed. These splits
+keep changed production source files within main's length policy without
+changing the ratchets or public package exports.
+
+The separate source-file-length gate also requires test splits. Reporter Live
+output, authoring markup, Live frame origins, listener authority and preview
+color styles have focused test files. Registry-validation configuration, shell
+CSS readers and watched-runtime doubles have shared test helpers. The existing
+large shell suite is split into rendering, navigation, tags, chrome, styles,
+appearance and preview-color suites. Every test case and assertion is retained.
+Each new or changed test owner stays within 300 lines.
+
+Merge 1's plain dependency audit fails on `GHSA-vfj7-8cjw-p6xm` in main's
+existing development dependency path through Metro and `braces@3.0.3`. There
+is no patched release. Its package manifest and lockfile match `b2c82c15`.
+A separate merge brings main's strict, expiring audit exception from #130
+(`1dc91580`). The exception, expiry, dependency path and tests stay unchanged.
+The complete integration gate runs after that merge; the branch is pushed
+only after the final gate passes.
+
 ## Post-merge follow-up (non-blocking)
 
 - Live inspection: measure boundaries in the mounted DOM and re-enable

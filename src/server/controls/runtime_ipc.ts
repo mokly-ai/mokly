@@ -2,6 +2,12 @@
 import { isCatalogueId } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import {
+  receiveGeneratedFile,
+  transferGeneratedFile,
+  type GeneratedFile,
+  type TransferredGeneratedFile,
+} from "../../build/generated_file.js";
 import type { InteractiveSourceCapture } from "../../build/interactive_source_capture.js";
 import { validatePublicExclude } from "../../config/public_exclusions.js";
 import type { ResolvedConfig } from "../../config/types.js";
@@ -23,16 +29,15 @@ export interface RuntimeStartupMessage {
 /** Heavy retained fields not already supplied in the startup message. */
 export type TransferredComponentRuntime = Pick<
   ComponentRuntime,
-  "bundle" | "generation" | "interactiveEntries" | "outputs"
-> &
-  Pick<ComponentRuntime, "interactiveSources">;
-
-type TransferredComponentRuntimeMessage = Omit<
-  TransferredComponentRuntime,
-  "interactiveSources"
-> & {
-  interactiveSources?: InteractiveSourceCaptureMessage;
-};
+  | "bundle"
+  | "generation"
+  | "interactiveEntries"
+  | "interactiveSources"
+  | "outputs"
+  | "stylesheetRoutes"
+  | "styleOutputs"
+  | "deliveredStyleSources"
+>;
 
 export interface RuntimeMessage {
   changesStatus?: "pending" | "preparing";
@@ -44,7 +49,14 @@ export interface RuntimeMessage {
 
 /** JSON-safe parent-to-child runtime command. */
 export interface RuntimeCommand extends Omit<RuntimeMessage, "runtime"> {
-  runtime: TransferredComponentRuntimeMessage;
+  runtime: Omit<
+    TransferredComponentRuntime,
+    "interactiveSources" | "outputs" | "styleOutputs"
+  > & {
+    interactiveSources?: InteractiveSourceCaptureMessage;
+    outputs: readonly (readonly [string, TransferredGeneratedFile])[];
+    styleOutputs: readonly (readonly [string, TransferredGeneratedFile])[];
+  };
 }
 
 /** Strip startup data from a retained-runtime IPC response. */
@@ -65,7 +77,14 @@ export function componentRuntimeMessage(
             ),
           }
         : {}),
-      outputs: runtime.outputs,
+      outputs: runtime.outputs.map(
+        ([route, content]) => [route, transferGeneratedFile(content)] as const,
+      ),
+      stylesheetRoutes: runtime.stylesheetRoutes,
+      styleOutputs: runtime.styleOutputs.map(
+        ([route, content]) => [route, transferGeneratedFile(content)] as const,
+      ),
+      deliveredStyleSources: runtime.deliveredStyleSources,
     },
     type: "component-runtime",
     ...(changesStatus ? { changesStatus } : {}),
@@ -163,7 +182,7 @@ export function parseRuntimeMessage(
     !("runtime" in value)
   )
     return;
-  const runtime = value.runtime as TransferredComponentRuntime | undefined;
+  const runtime = value.runtime as RuntimeCommand["runtime"] | undefined;
   const version = "version" in value ? value.version : undefined;
   const changesStatus =
     "changesStatus" in value ? value.changesStatus : undefined;
@@ -183,8 +202,27 @@ export function parseRuntimeMessage(
     (changesStatus !== undefined &&
       changesStatus !== "pending" &&
       changesStatus !== "preparing") ||
+    !Array.isArray(runtime.stylesheetRoutes) ||
+    !Array.isArray(runtime.styleOutputs) ||
+    !Array.isArray(runtime.deliveredStyleSources) ||
+    !runtime.deliveredStyleSources.every(
+      (source) => typeof source === "string",
+    ) ||
     (version !== undefined &&
       (!Number.isSafeInteger(version) || (version as number) <= 0))
+  )
+    return;
+  const outputs = receiveOutputPairs(runtime.outputs);
+  const styleOutputs = receiveOutputPairs(runtime.styleOutputs);
+  if (!outputs || !styleOutputs) return;
+  if (
+    !runtime.stylesheetRoutes.every(
+      (item) =>
+        Array.isArray(item) &&
+        item.length === 2 &&
+        typeof item[0] === "string" &&
+        typeof item[1] === "string",
+    )
   )
     return;
   return {
@@ -195,7 +233,10 @@ export function parseRuntimeMessage(
       generation: runtime.generation,
       interactiveEntries: runtime.interactiveEntries,
       ...(interactiveSources ? { interactiveSources } : {}),
-      outputs: runtime.outputs,
+      outputs,
+      stylesheetRoutes: runtime.stylesheetRoutes,
+      styleOutputs,
+      deliveredStyleSources: runtime.deliveredStyleSources,
     },
     ...(version === undefined ? {} : { version: version as number }),
   };
@@ -213,4 +254,22 @@ function interactiveEntries(
         isCatalogueId(id) && typeof interactive === "boolean",
     )
   );
+}
+
+function receiveOutputPairs(
+  pairs: readonly (readonly [string, TransferredGeneratedFile])[],
+): Array<readonly [string, GeneratedFile]> | undefined {
+  const outputs: Array<readonly [string, GeneratedFile]> = [];
+  for (const item of pairs) {
+    if (
+      !Array.isArray(item) ||
+      item.length !== 2 ||
+      typeof item[0] !== "string"
+    )
+      return;
+    const content = receiveGeneratedFile(item[1]);
+    if (content === undefined) return;
+    outputs.push([item[0], content]);
+  }
+  return outputs;
 }

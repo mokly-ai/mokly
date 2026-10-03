@@ -229,6 +229,9 @@ function transferredRuntime(runtime: ComponentRuntime) {
         }
       : {}),
     outputs: runtime.outputs,
+    stylesheetRoutes: runtime.stylesheetRoutes,
+    styleOutputs: runtime.styleOutputs,
+    deliveredStyleSources: runtime.deliveredStyleSources,
   };
 }
 

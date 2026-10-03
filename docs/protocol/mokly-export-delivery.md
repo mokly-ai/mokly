@@ -156,7 +156,8 @@ and match both bootstrap revisions and the catalogue identity. Only then may
 React hydrate the existing server tree. A missing, redirected, malformed, or
 mismatched catalogue leaves the complete server-rendered page and its ordinary
 links in place without installing partial interaction. Serve retains its
-self-contained inline read model and performs no initial catalogue fetch.
+self-contained [entry-scoped read model](./mokly-shell-bootstrap.md), performs
+no initial catalogue fetch, and never puts `omitted` in the shared catalogue.
 
 The pre-hydration disclosure and navigation-width handoff remains active until
 the asynchronous static catalogue resolution reaches the actual hydration
@@ -165,9 +166,8 @@ stored state and hydrates without a mismatch. Static destination-page evidence
 resolves the compact destination bootstrap against the already installed
 catalogue after deployment fencing; it does not issue another catalogue fetch.
 
-Each exported screen and component page also embeds its route-scoped workspace
-evidence as inert JSON. After an in-shell route transition, React may read the
-destination's canonical shell page to recover evidence that is intentionally
+Each exported workspace page embeds scoped evidence as inert JSON. After
+navigation, React may read the destination shell page to recover evidence intentionally
 absent from the public catalogue, including affected consumers, related
 components, supplied-input changes, and resource evidence. This read never
 swaps or executes fetched markup. Accept only one shell bootstrap and one

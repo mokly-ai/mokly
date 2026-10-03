@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 
 import type { ViewerHostCapabilities } from "../client/host_capabilities.js";
 import type { ViewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
-import { serializeViewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
 import { ViewerCapabilityBoundary } from "../shell/capability_context.js";
 import type { Catalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
@@ -23,10 +22,6 @@ import type { WorkspaceData } from "../shell/workspace_data.js";
 import { normalizeTheme } from "../viewer/theme.js";
 
 import { useStandaloneAppearance } from "./appearance_bridge.js";
-import {
-  serializeShellBootstrap,
-  type ShellBootstrapState,
-} from "./bootstrap.js";
 import { HYDRATED_EVENT } from "./nav_resize.js";
 import type { StaticWorkspaceEvidence } from "./static_workspace_evidence.js";
 
@@ -35,10 +30,11 @@ const REACT_HOST_BUNDLE = "react-host.js";
 
 /** Render the standalone document without changing the existing shell tree. */
 export function StandaloneShellDocument({
-  bootstrap,
+  bootstrapJson,
   catalogue,
   capabilities,
   capabilityDescriptor,
+  capabilityDescriptorJson,
   context,
   initialState,
   initialWorkspace,
@@ -46,10 +42,11 @@ export function StandaloneShellDocument({
   staticEvidence,
   view,
 }: {
-  bootstrap?: ShellBootstrapState;
+  bootstrapJson?: string;
   catalogue: Catalogue;
   capabilities?: ViewerHostCapabilities;
   capabilityDescriptor?: ViewerCapabilityDescriptor;
+  capabilityDescriptorJson?: string;
   context: ShellContext;
   initialState?: ShellInitialState | undefined;
   initialWorkspace?: WorkspaceData;
@@ -76,14 +73,14 @@ export function StandaloneShellDocument({
       <ShellStoreProvider
         catalogue={catalogue}
         context={context}
-        interactive={bootstrap !== undefined}
+        interactive={bootstrapJson !== undefined}
         {...(recovery ? { recovery } : {})}
         view={view}
         {...(initialState ? { initialState } : {})}
       >
         <StandaloneDocumentContents
-          {...(bootstrap ? { bootstrap } : {})}
-          {...(capabilityDescriptor ? { capabilityDescriptor } : {})}
+          {...(bootstrapJson ? { bootstrapJson } : {})}
+          {...(capabilityDescriptorJson ? { capabilityDescriptorJson } : {})}
         />
       </ShellStoreProvider>
     </ViewerCapabilityBoundary>
@@ -91,11 +88,11 @@ export function StandaloneShellDocument({
 }
 
 function StandaloneDocumentContents({
-  bootstrap,
-  capabilityDescriptor,
+  bootstrapJson,
+  capabilityDescriptorJson,
 }: {
-  bootstrap?: ShellBootstrapState;
-  capabilityDescriptor?: ViewerCapabilityDescriptor;
+  bootstrapJson?: string;
+  capabilityDescriptorJson?: string;
 }) {
   const store = useShellStore();
   const catalogue = store.catalogue;
@@ -118,7 +115,7 @@ function StandaloneDocumentContents({
       data-mokly-content-version={
         context.delivery ? undefined : context.contentVersion
       }
-      data-mokly-host-capabilities={capabilityDescriptor ? "" : undefined}
+      data-mokly-host-capabilities={capabilityDescriptorJson ? "" : undefined}
       data-mokly-react-shell={hydrated ? "" : undefined}
       lang="en"
     >
@@ -153,28 +150,24 @@ function StandaloneDocumentContents({
           </div>
           <ShellStatusRegion />
         </div>
-        {bootstrap ? (
+        {bootstrapJson ? (
           <script
             data-mokly-shell-bootstrap=""
             type="application/json"
-            dangerouslySetInnerHTML={{
-              __html: serializeShellBootstrap(bootstrap),
-            }}
+            dangerouslySetInnerHTML={{ __html: bootstrapJson }}
           />
         ) : null}
-        {capabilityDescriptor ? (
+        {capabilityDescriptorJson ? (
           <script
             data-mokly-host-capability-state=""
             type="application/json"
-            dangerouslySetInnerHTML={{
-              __html: serializeViewerCapabilityDescriptor(capabilityDescriptor),
-            }}
+            dangerouslySetInnerHTML={{ __html: capabilityDescriptorJson }}
           />
         ) : null}
         <script src="/__mokly/client/navigation-resize.js" />
         {hydrated ? (
           <script
-            src={`/__mokly/client/${capabilityDescriptor ? REACT_HOST_BUNDLE : REACT_SHELL_BUNDLE}`}
+            src={`/__mokly/client/${capabilityDescriptorJson ? REACT_HOST_BUNDLE : REACT_SHELL_BUNDLE}`}
             type="module"
           />
         ) : null}

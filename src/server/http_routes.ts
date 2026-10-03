@@ -5,6 +5,7 @@ import type { RebuildStatus } from "@mokly/viewer/runtime";
 import type { Catalogue } from "@mokly/viewer/server";
 import { shellContext, SHELL_CSS } from "@mokly/viewer/server";
 
+import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { InteractiveServer } from "../interactive/server.js";
 
@@ -51,6 +52,7 @@ export async function handleCatalogueRequest(
   requestHeaders: IncomingHttpHeaders = {},
   workspaceEligibility?: WorkspaceEligibilitySource,
   currentRebuildStatus?: () => RebuildStatus | undefined,
+  acceptedGenerated?: ReadonlyMap<string, GeneratedFile>,
   unavailableComparisons = false,
 ): Promise<void> {
   const url = new URL(rawUrl, "http://mokly.invalid");
@@ -129,6 +131,7 @@ export async function handleCatalogueRequest(
       config,
       catalogue,
       method,
+      acceptedGenerated,
     );
   const changed =
     componentChanges?.changedIds ??

@@ -15,8 +15,8 @@ import {
 } from "../dist/server/supervisor.js";
 import type { ChildCommand } from "../dist/server/update_messages.js";
 import { parseChildDiagnosticMessage } from "../dist/server/update_messages.js";
+import { WatchActionQueue } from "../dist/server/watch_action_queue.js";
 import {
-  WatchActionQueue,
   WatchDebouncer,
   type DebounceClock,
 } from "../dist/server/watch_events.js";

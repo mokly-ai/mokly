@@ -2,7 +2,10 @@
 
 import { useContext, useMemo } from "react";
 
-import type { CatalogueRecord, CatalogueView } from "../catalogue/types.js";
+import type {
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { entryRoute } from "../navigation/routes.js";
@@ -22,7 +25,7 @@ import {
   generatedFrameSource,
   generatedUsage,
   generatedView,
-  unavailableUsage,
+  shellFrameUsage,
 } from "./stage_sources.js";
 import { useOptionalShellStore } from "./store_context.js";
 
@@ -42,14 +45,14 @@ export function StageFrame({
   views,
   viewport,
 }: {
-  entry: Extract<CatalogueRecord, { kind: "component" | "screen" }>;
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "component" | "screen" }>;
   flow?: boolean;
   fragment?: string;
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
   stepIndex?: number;
   variantId?: string;
-  views: readonly CatalogueView[];
+  views: readonly ShellCatalogueView[];
   viewport: "desktop" | "mobile";
 }) {
   const selection = useContext(DisplaySelection);
@@ -99,9 +102,7 @@ export function StageFrame({
     enabled: store?.interactive ?? false,
     identity,
     source: staticSource,
-    usage: preview
-      ? generatedUsage(preview)
-      : (selected?.usage ?? unavailableUsage),
+    usage: preview ? generatedUsage(preview) : shellFrameUsage(selected?.usage),
   });
   const initialSource = useFrameSource(
     mounted.frameRef,

@@ -14,8 +14,10 @@ When Serve resolves `interactive: "serve"`, the Node consumer-graph build
 captures the exact bytes returned for every repository-owned file input before
 tree shaking. The capture uses the source-inventory ownership rule: entry,
 renderer, transformer, local helper, JSON, and configured-loader inputs are
-included; Mokly runtime files and installed-package files are not. Logical and
-physical in-repository aliases address the same immutable blob. Capture occurs
+included. Ordinary Mokly runtime and installed-package files are excluded;
+accepted stylesheet JavaScript follows the exception below. Logical and
+physical in-repository aliases share ordinary raw-source blobs. Stylesheet
+modules retain the logical identity defined below. Capture occurs
 in the same load that produces the accepted graph, never in a second disk pass,
 and is sealed only after graph evaluation and registry/index validation
 succeed. A capture failure rejects that candidate generation.
@@ -135,3 +137,29 @@ documented resolution-metadata limitation.
 - [Interactive Serve delivery](./mokly-interactive-views-serve.md)
 - [Watched development](./mokly-watch.md)
 - [Source protection](./mokly-source-protection.md)
+
+## Imported Stylesheet Modules
+
+The accepted Node graph records the JavaScript returned by Mokly's stylesheet
+loader for each confined `.css` input, including installed-package CSS. A CSS Module blob contains the exact
+default class map and named exports used by Static. A plain stylesheet blob is
+empty JavaScript. The configured `empty` opt-out records the same empty module
+or empty default map used by the Node graph. Logical and physical stylesheet
+resolutions use the existing capture and IPC rules. A stylesheet symlink retains
+its own logical-path module blob: Static hashes that logical path, so merging
+it with the physical stylesheet's blob would change one accepted class map.
+Ordinary raw-source aliases still share their physical byte blob. Installed
+package JavaScript remains filesystem-resolved; only its accepted stylesheet
+modules are replayed. This does not add package paths to public source inventory.
+
+Live loads these blobs as JavaScript. It does not read stylesheet sources, run
+PostCSS, scope names, emit CSS, or inject styles. The accepted Static document's
+head links the generated stylesheets. Editing, deleting or breaking a source
+stylesheet after acceptance cannot change that generation's bundle or generated
+resources. The next accepted generation records new modules and resource bytes.
+An unrecorded repository stylesheet request fails with `source-not-captured`.
+Nested CSS imports and assets belong to the accepted stylesheet outputs; Live
+never traverses them as JavaScript inputs.
+
+The capture exists only in interactive Serve. It remains absent from generated
+output, static evidence, public catalogue JSON, exports and publication.

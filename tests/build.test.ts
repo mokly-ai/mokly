@@ -10,12 +10,12 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 
 import {
-  registerFixturePage,
   createFixture,
   removeFixture,
   repositoryRoot,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("build renders deterministic fragments, resolves id links, and checks committed bytes", async (context) => {
   const fixture = await createFixture();
@@ -41,7 +41,8 @@ test("custom renderer shares consumer React context and injects collected styles
   );
   const compilation = await compileCatalogue(config);
   const mobile =
-    compilation.outputs.get("screens/example-welcome.mobile.html") ?? "";
+    textOutput(compilation.outputs, "screens/example-welcome.mobile.html") ??
+    "";
   assert.match(mobile, /data-example-renderer="mobile"/);
   assert.match(mobile, /data-color-scheme="light"/);
   assert.match(
@@ -71,7 +72,7 @@ test("dark schemes render dark fragments per view", async (context) => {
     assert.ok(compilation.outputs.has(route), `missing ${route}`);
   }
   assert.match(
-    compilation.outputs.get("screens/home.mobile.dark.html") ?? "",
+    textOutput(compilation.outputs, "screens/home.mobile.dark.html") ?? "",
     /details\.mobile\.html/,
   );
   const home = compilation.manifest.entries.find(
@@ -157,177 +158,6 @@ test("registry rejects duplicate ids and broken relationships", async (context) 
   await assert.rejects(() => compileCatalogue(config), /missing-use-case/);
 });
 
-test("registry reports source-attributed navigation path conflicts", async (context) => {
-  const fixture = await createFixture(`
-import { defineScreen } from "@mokly/mokly";
-import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
-export const mockups = [
-  defineScreen({ ...metadata, navPath: ["Browse"], description: "First screen", desktop: <main>First</main>, id: "first", mobile: <main>First</main>, route: "first.html", title: "First" }),
-  defineScreen({ ...metadata, navPath: ["browse"], description: "Second screen", desktop: <main>Second</main>, id: "second", mobile: <main>Second</main>, route: "second.html", title: "Second" })
-];
-`);
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-
-  await assert.rejects(
-    () => compileCatalogue(config),
-    (error: Error) => {
-      assert.match(
-        error.message,
-        /\[nav-path-conflict\].*entries\/fixture\.mockup\.tsx/s,
-      );
-      assert.match(error.message, /Browse.*browse/s);
-      return true;
-    },
-  );
-});
-
-test("screen colorSchemes must be a subset of config", async (context) => {
-  const fixture = await createFixture(
-    screenWithColorSchemes('["light", "dark"]'),
-  );
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-
-  await assert.rejects(
-    () => compileCatalogue(config),
-    /unsupported-color-scheme[\s\S]*screen declares "dark" but config colorSchemes is light-only/,
-  );
-  for (const colorSchemes of ["[]", '["dark"]', '["light", "light"]']) {
-    await fs.promises.writeFile(
-      fixture.entryPath,
-      screenWithColorSchemes(colorSchemes),
-    );
-    await assert.rejects(
-      () => compileCatalogue(config),
-      /invalid-color-schemes[\s\S]*colorSchemes must be a non-empty subset of \["light", "dark"\] that includes "light"/,
-    );
-  }
-});
-
-test("missing declared dependencies and stylesheets are actionable", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  await fs.promises.writeFile(
-    fixture.entryPath,
-    validEntrySource().replaceAll('"notes.md"', '"missing.md"'),
-  );
-  await assert.rejects(
-    () => compileCatalogue(config),
-    /path does not exist: missing.md/,
-  );
-  await fs.promises.writeFile(fixture.entryPath, validEntrySource());
-  await fs.promises.writeFile(
-    fixture.configPath,
-    `export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", stylesheets: [{ match: "**/*.html", stylesheets: ["missing.css"] }] };\n`,
-  );
-  const stylesheetConfig = await loadConfig(fixture.root);
-  await assert.rejects(
-    () => compileCatalogue(stylesheetConfig),
-    /stylesheet does not exist/,
-  );
-});
-
-test("scheme-specific stylesheets append after shared stylesheets", async (context) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: `colorSchemes: ["light", "dark"],
-  stylesheets: [{ match: "**/*.html", stylesheets: ["shared.css"], darkStylesheets: ["dark.css"] }],`,
-  });
-  context.after(() => removeFixture(fixture));
-  await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "shared.css"),
-    "body { margin: 0; }\n",
-  );
-  await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "dark.css"),
-    "body { color: white; }\n",
-  );
-  const config = await loadConfig(fixture.root);
-
-  const compilation = await compileCatalogue(config);
-  const light = compilation.outputs.get("screens/home.mobile.html") ?? "";
-  const dark = compilation.outputs.get("screens/home.mobile.dark.html") ?? "";
-  assert.deepEqual(stylesheetHrefs(light), ["../shared.css"]);
-  assert.deepEqual(stylesheetHrefs(dark), ["../shared.css", "../dark.css"]);
-
-  await fs.promises.rm(path.join(fixture.mockupsDir, "dark.css"));
-  await assert.rejects(
-    () => compileCatalogue(config),
-    /stylesheet does not exist: dark\.css/,
-  );
-});
-
-test("writer refuses to overwrite an unowned route", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  const target = path.join(fixture.mockupsDir, "screens/home.mobile.html");
-  await fs.promises.mkdir(path.dirname(target), { recursive: true });
-  await fs.promises.writeFile(target, "user-authored\n");
-  await assert.rejects(
-    () => writeCompilation(compilation, config),
-    /refusing to overwrite unowned/,
-  );
-  assert.equal(await fs.promises.readFile(target, "utf8"), "user-authored\n");
-});
-
-test("generic legacy TypeScript sources coexist through explicit config", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const pages = path.join(fixture.root, "legacy");
-  await fs.promises.mkdir(pages);
-  await fs.promises.writeFile(
-    path.join(pages, "old.source.ts"),
-    `export const source = () => "<!doctype html><html><body><main id=old>Legacy</main></body></html>";\n`,
-  );
-  await fs.promises.writeFile(
-    fixture.configPath,
-    `export default { entriesDir: "entries",  mockupsDir: "mockups", repoRoot: "." };\n`,
-  );
-  await registerFixturePage(
-    fixture,
-    "old",
-    "archive/old.html",
-    "legacy/old.source.ts",
-  );
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  assert.ok(compilation.outputs.has("pages/old.html"));
-  await writeCompilation(compilation, config);
-  checkCompilation(await compileCatalogue(config), config);
-});
-
-test("consumer page composition replaces HTML comment components and owns lint policy", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  await fs.promises.writeFile(
-    path.join(fixture.root, "document.source.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server";
-function Notice({label}) { return <aside id="notice">{label}</aside>; }
-export function source() { return "<!doctype html>" + renderToStaticMarkup(<html><body><Notice label="Expanded" /></body></html>); }`,
-  );
-  await registerFixturePage(
-    fixture,
-    "notice",
-    "old.html",
-    "document.source.tsx",
-  );
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  assert.match(
-    compilation.outputs.get("pages/notice.html") ?? "",
-    /<aside id="notice">Expanded<\/aside>/,
-  );
-  assert.equal(
-    (compilation.outputs.get("pages/notice.html") ?? "").match(/<aside/g)
-      ?.length,
-    1,
-  );
-});
-
 async function treeDigest(root: string): Promise<string> {
   const files = await listFiles(root);
   const hash = crypto.createHash("sha256");
@@ -336,29 +166,6 @@ async function treeDigest(root: string): Promise<string> {
     hash.update(await fs.promises.readFile(file));
   }
   return hash.digest("hex");
-}
-
-function stylesheetHrefs(html: string): string[] {
-  return [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(
-    (match) => match[1] ?? "",
-  );
-}
-
-function screenWithColorSchemes(colorSchemes: string): string {
-  return `import { defineScreen } from "@mokly/mokly";
-import React from "react";
-export const mockups = [defineScreen({
-  colorSchemes: ${colorSchemes} as ("dark" | "light")[],
-  dependencies: [],
-  description: "Scheme screen",
-  desktop: <main>Desktop</main>,
-  id: "scheme-screen",
-  mobile: <main>Mobile</main>,
-  relatedDocs: [],
-  route: "screens/scheme.html",
-  title: "Scheme screen"
-})];
-`;
 }
 
 async function listFiles(root: string): Promise<string[]> {

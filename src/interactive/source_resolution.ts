@@ -12,10 +12,10 @@ import type {
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import {
-  interactiveSourceLoader,
   type InteractiveSourceCapture,
   type InteractiveSourceFile,
 } from "../build/interactive_source_capture.js";
+import { interactiveSourceLoader } from "../build/interactive_source_loaders.js";
 import {
   interactiveSourceResolutionKey,
   interactiveSourceResolutionRequest,
@@ -88,6 +88,10 @@ class CapturedSourceResolver {
         });
         pluginBuild.onLoad(
           { filter: /.*/, namespace: CAPTURED_SOURCE_NAMESPACE },
+          (arguments_) => this.load(arguments_.path),
+        );
+        pluginBuild.onLoad(
+          { filter: /\.css$/, namespace: "file" },
           (arguments_) => this.load(arguments_.path),
         );
       },

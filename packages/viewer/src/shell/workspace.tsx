@@ -259,6 +259,7 @@ export function ComponentWorkspace({
           selectedKey={selectedKey}
           variantId={variantId}
           views={views}
+          usageDelivery={workspace.usageDelivery}
         />
       </div>
       {inspection.overlay}

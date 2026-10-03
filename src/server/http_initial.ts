@@ -3,6 +3,7 @@
 import type { ResolvedConfig } from "../config/types.js";
 
 import {
+  catalogueSnapshotForConfig,
   loadLiveCatalogueSnapshot,
   loadServedCatalogueSnapshot,
   type CatalogueSnapshot,
@@ -14,9 +15,13 @@ export async function loadInitialCatalogueSnapshot(
   config: ResolvedConfig,
   options: ServerOptions,
 ): Promise<CatalogueSnapshot> {
-  if (options.snapshot) return options.snapshot;
+  if (options.snapshot)
+    return catalogueSnapshotForConfig(options.snapshot, config);
   if (options.manifest?.schemaVersion === "live-index-1")
-    return loadLiveCatalogueSnapshot(config, options.manifest);
+    return catalogueSnapshotForConfig(
+      await loadLiveCatalogueSnapshot(config, options.manifest),
+      config,
+    );
   const base =
     options.manifest ||
     options.componentChanges ||
@@ -25,10 +30,13 @@ export async function loadInitialCatalogueSnapshot(
       : options.review
         ? options.base
         : undefined;
-  return loadServedCatalogueSnapshot(
+  return catalogueSnapshotForConfig(
+    await loadServedCatalogueSnapshot(
+      config,
+      base,
+      options.manifest,
+      options.review?.repository,
+    ),
     config,
-    base,
-    options.manifest,
-    options.review?.repository,
   );
 }

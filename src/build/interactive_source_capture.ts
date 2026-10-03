@@ -4,7 +4,6 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type {
-  Loader,
   OnLoadResult,
   OnResolveArgs,
   OnResolveResult,
@@ -14,9 +13,16 @@ import type {
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import { locatePath } from "../config/file_locations.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
+import { interactiveSourceLoader } from "./interactive_source_loaders.js";
+import {
+  capturedSourceKey,
+  capturedSourcePaths,
+  resolutionAlias,
+} from "./interactive_source_paths.js";
 import {
   interactiveSourceResolutionKey,
   interactiveSourceResolutionRequest,
@@ -51,27 +57,19 @@ interface MutableSourceFile {
   readonly paths: Set<string>;
 }
 
-const DEFAULT_LOADERS: Readonly<Record<string, Loader>> = {
-  ".cjs": "js",
-  ".css": "css",
-  ".cts": "ts",
-  ".js": "js",
-  ".json": "json",
-  ".jsx": "jsx",
-  ".mjs": "js",
-  ".mts": "ts",
-  ".ts": "ts",
-  ".tsx": "tsx",
-  ".txt": "text",
-};
-
 /** Install one capture plugin and return its later acceptance boundary. */
 export function interactiveSourceCapture(config: ResolvedConfig): {
   candidate: InteractiveSourceCaptureCandidate;
   plugin: Plugin;
+  recordStylesheet(candidate: string, contents: string): void;
 } {
   const capture = new SourceCapture(config);
-  return { candidate: capture, plugin: capture.plugin() };
+  return {
+    candidate: capture,
+    plugin: capture.plugin(),
+    recordStylesheet: (candidate, contents) =>
+      capture.recordStylesheet(candidate, contents),
+  };
 }
 
 class SourceCapture implements InteractiveSourceCaptureCandidate {
@@ -90,6 +88,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
         pluginBuild.onResolve({ filter: /.*/ }, async (arguments_) => {
           if (
             arguments_.pluginData === skipResolution ||
+            arguments_.pluginData?.moklySkip ||
             (!arguments_.importer && !arguments_.resolveDir)
           )
             return;
@@ -106,6 +105,19 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
         );
       },
     };
+  }
+
+  recordStylesheet(candidate: string, contents: string): void {
+    const location = locatePath(candidate, this.config.repoRoot);
+    if (!location) return;
+    const key = capturedSourceKey(location);
+    const file = {
+      bytes: Buffer.from(contents),
+      paths: this.files.get(key)?.paths ?? new Set<string>(),
+    };
+    this.files.set(key, file);
+    for (const sourcePath of capturedSourcePaths(location))
+      this.addPath(file, key, sourcePath);
   }
 
   seal(): InteractiveSourceCapture {
@@ -137,6 +149,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
   }
 
   private async load(candidate: string): Promise<OnLoadResult | undefined> {
+    if (candidate.endsWith(".css")) return;
     const location = graphSourceLocation(candidate, this.config.repoRoot);
     if (!location) return;
     const loader = interactiveSourceLoader(location.logicalPath, this.config);
@@ -165,23 +178,29 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
   ): void {
     if ((result.errors?.length ?? 0) > 0 || result.external || !result.path)
       return;
-    const target = graphSourceLocation(result.path, this.config.repoRoot);
+    const target =
+      graphSourceLocation(result.path, this.config.repoRoot) ??
+      (result.path.endsWith(".css")
+        ? locatePath(result.path, this.config.repoRoot)
+        : undefined);
     if (!target) return;
     const request = this.resolutionRequest(arguments_);
     if (!request) return;
     const alias = resolutionAlias(arguments_, this.config.repoRoot);
-    const key = target.physicalPath;
+    const key = capturedSourceKey(target);
     let file = this.files.get(key);
     if (!file) {
       file = {
-        bytes: fs.readFileSync(target.physicalPath),
+        bytes: target.logicalPath.endsWith(".css")
+          ? Buffer.alloc(0)
+          : fs.readFileSync(target.physicalPath),
         paths: new Set<string>(),
       };
       this.files.set(key, file);
     }
     if (alias) this.addPath(file, key, alias);
-    this.addPath(file, key, target.relativePath);
-    this.addPath(file, key, target.physicalRelativePath);
+    for (const sourcePath of capturedSourcePaths(target))
+      this.addPath(file, key, sourcePath);
     this.addResolution(request, target.relativePath);
   }
 
@@ -255,34 +274,6 @@ async function resolveThroughEsbuild(
     resolveDir: arguments_.resolveDir,
     with: arguments_.with,
   });
-}
-
-function resolutionAlias(
-  arguments_: OnResolveArgs,
-  repoRoot: string,
-): string | undefined {
-  const absolute = path.isAbsolute(arguments_.path)
-    ? arguments_.path
-    : arguments_.path.startsWith(".")
-      ? path.resolve(
-          arguments_.resolveDir || path.dirname(arguments_.importer),
-          arguments_.path,
-        )
-      : undefined;
-  if (!absolute) return;
-  const relative = path.relative(repoRoot, absolute).split(path.sep).join("/");
-  return isSafeRepositoryPath(relative) ? relative : undefined;
-}
-
-/** Select the configured or standard esbuild loader for one source path. */
-export function interactiveSourceLoader(
-  candidate: string,
-  config: ResolvedConfig,
-): Loader | undefined {
-  const extension = path.extname(candidate).toLowerCase();
-  return (
-    config.moduleResolution.loaders[extension] ?? DEFAULT_LOADERS[extension]
-  );
 }
 
 function compareText(left: string, right: string): number {

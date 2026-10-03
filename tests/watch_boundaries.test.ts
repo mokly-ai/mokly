@@ -3,25 +3,20 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import type { Compilation } from "../dist/build/compile.js";
-import type { GeneratedOutputStore } from "../dist/build/output_store.js";
 import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
-import type { CatalogueServerFactory } from "../dist/server/factory.js";
-import type {
-  RunningServer,
-  ServerOptions,
-} from "../dist/server/http_types.js";
 import { PlainServeReporter } from "../dist/server/reporter.js";
 import { serve } from "../dist/server/serve.js";
-import type {
-  ProcessSupervisor,
-  ProcessSupervisorFactory,
-} from "../dist/server/supervisor_types.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import {
+  CountingSupervisor,
+  CountingSupervisorFactory,
+  FakeOutputStore,
+  UnusedServerFactory,
+} from "./helpers/watch_boundary_runtime.js";
 
 test("package-owned watch rules precede broad consumer rules", async (context) => {
   const fixture = await createFixture();
@@ -230,70 +225,6 @@ test(
     );
   },
 );
-
-class FakeOutputStore implements GeneratedOutputStore {
-  check(_compilation: Compilation, _config: ResolvedConfig): void {}
-
-  async write(
-    _compilation: Compilation,
-    _config: ResolvedConfig,
-  ): Promise<void> {}
-}
-
-class CountingSupervisorFactory implements ProcessSupervisorFactory {
-  constructor(private readonly supervisor: ProcessSupervisor) {}
-
-  create(
-    _binPath: string,
-    _baseArguments: readonly string[],
-    _requestedPort: number,
-  ): ProcessSupervisor {
-    return this.supervisor;
-  }
-}
-
-class CountingSupervisor implements ProcessSupervisor {
-  replaceComponentRuntime(): void {}
-  restarts = 0;
-  updates = 0;
-  private version = 0;
-
-  currentUpdateVersion(): number {
-    return Math.max(1, this.version);
-  }
-
-  publishRebuildStatus(): void {}
-
-  reserveUpdateVersion(): number {
-    return ++this.version;
-  }
-
-  async close(): Promise<void> {}
-
-  notifyUpdate(): void {
-    this.updates += 1;
-  }
-
-  onUnexpectedExit(_callback: (error: Error) => void): void {}
-
-  async restart(): Promise<number> {
-    this.restarts += 1;
-    return 48123;
-  }
-
-  async start(): Promise<number> {
-    return 48123;
-  }
-}
-
-class UnusedServerFactory implements CatalogueServerFactory {
-  async start(
-    _config: ResolvedConfig,
-    _options: ServerOptions,
-  ): Promise<RunningServer> {
-    throw new Error("watched Serve must not start an in-process server");
-  }
-}
 
 async function waitFor(condition: () => boolean): Promise<void> {
   const deadline = Date.now() + 5_000;

@@ -36,9 +36,10 @@ const TENS = [
   "sixty",
   "seventy",
   "eighty",
+  "ninety",
 ];
 
-/** A count written in digits or as English words up to eighty-nine. */
+/** A count written in digits or as English words up to ninety-nine. */
 function count(written: string): number {
   if (/^\d+$/u.test(written)) return Number(written);
   const [tens, unit] = written.toLowerCase().split("-");

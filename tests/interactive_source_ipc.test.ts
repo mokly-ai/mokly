@@ -59,6 +59,9 @@ test("runtime IPC uses the exact canonical source-capture projection", () => {
     interactiveSources: capture,
     manifest: {} as never,
     outputs: [],
+    stylesheetRoutes: [],
+    styleOutputs: [],
+    deliveredStyleSources: [],
   });
   assert.deepEqual(command.runtime.interactiveSources, message);
   assert.equal(Object.hasOwn(command.runtime, "config"), false);
@@ -256,6 +259,9 @@ function runtimeCommand(interactiveSources: unknown): object {
       interactiveEntries: {},
       interactiveSources,
       outputs: [],
+      stylesheetRoutes: [],
+      styleOutputs: [],
+      deliveredStyleSources: [],
     },
     type: "component-runtime",
   };

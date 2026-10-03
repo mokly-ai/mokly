@@ -16,6 +16,7 @@ import type { WorkspaceEligibilitySource } from "./workspace_eligibility.js";
 type CatalogueRequestArguments = Parameters<typeof handleCatalogueRequest>;
 
 interface CatalogueRequestHandlerInput {
+  acceptedGenerated(): CatalogueRequestArguments[21];
   activity: ForegroundActivity;
   activeCatalogue(): CatalogueRequestArguments[3];
   assets: CatalogueRequestArguments[8];
@@ -88,6 +89,7 @@ export function catalogueRequestHandler(
       request.headers,
       input.workspaceEligibility(),
       input.rebuildStatus,
+      input.acceptedGenerated(),
       input.options.liveChanges === false &&
         input.options.changesStatus === "unavailable",
     ).catch(() => {

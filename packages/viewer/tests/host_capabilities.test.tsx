@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
 import {
   readViewerEvidenceRevision,
   ViewerCapabilityScope,
@@ -16,41 +14,18 @@ import {
   viewerCapabilityRequest,
 } from "../src/client/host_capability_descriptor.js";
 import {
-  readViewerPrivateWorkspace,
-  readViewerWorkspace,
-} from "../src/client/workspace_descriptor.js";
-import {
   ViewerCapabilityBoundary,
   useViewerCapabilities,
   useViewerInitialWorkspace,
 } from "../src/shell/capability_context.js";
-import { renderHydratedShellPage } from "../src/shell/document.js";
 import type { WorkspaceData } from "../src/shell/workspace_data.js";
-import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
 
-const catalogue = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
-const generation = "a".repeat(32);
-const token = "b".repeat(64);
-const source = {
-  base: "origin/main",
-  catalogueId: catalogue.identity.id,
-  contentRevision: catalogue.revision.content,
-  evidenceRevision: catalogue.revision.evidence,
-  previewGeneration: generation,
-  renderGeneration: generation,
-  updateVersion: 4,
-};
+import {
+  catalogue,
+  generation,
+  source,
+  token,
+} from "./host_capabilities_fixture.js";
 
 test("the provider exposes live capabilities and export-style omission", () => {
   const capabilities = {
@@ -87,23 +62,19 @@ test("the provider exposes live capabilities and export-style omission", () => {
   assert.equal(renderToStaticMarkup(<Probe />), "<span>export:none</span>");
 });
 
-test("a request scope cancels work when its source or route changes", () => {
-  const initial = viewerCapabilityRequest(source, "components/button.html");
+test("a request scope cancels work when its source or entry changes", () => {
+  const initial = viewerCapabilityRequest(source, "button");
   const scope = new ViewerCapabilityScope(initial);
   const first = scope.signal;
   assert.equal(scope.replace(initial), first);
-  const second = scope.replace(
-    viewerCapabilityRequest(source, "components/card.html"),
-  );
+  const second = scope.replace(viewerCapabilityRequest(source, "card"));
   assert.equal(first.aborted, true);
   assert.equal(second.aborted, false);
   const replacement = {
     ...source,
     contentRevision: source.contentRevision + 1,
   };
-  const third = scope.replace(
-    viewerCapabilityRequest(replacement, "components/card.html"),
-  );
+  const third = scope.replace(viewerCapabilityRequest(replacement, "card"));
   assert.equal(second.aborted, true);
   assert.equal(third.aborted, false);
   scope.close();
@@ -186,123 +157,4 @@ test("temporary rendering is independent from on-demand document availability", 
       }),
     /Live viewer render generations are inconsistent/,
   );
-});
-
-test("live SSR carries a private descriptor while export carries no host loader", () => {
-  const display = viewerCatalogue(catalogue);
-  const { publicModel: _publicModel, ...privateDisplay } = display;
-  const view = viewerView(display, {
-    ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
-  });
-  if (view.kind !== "target")
-    throw new Error("Expected a target fixture view.");
-  const liveContext = {
-    base: source.base,
-    contentVersion: source.contentRevision,
-    interactive: {
-      generation,
-      port: 4174,
-      state: "idle" as const,
-    },
-    previewGeneration: generation,
-    readModel: catalogue,
-    renderCapability: { generation, token },
-    updateVersion: source.updateVersion,
-    workspaceInteractive: {
-      entryId: view.target.entry.id,
-      entryKind: "component" as const,
-      value: false,
-    },
-  };
-  assert.deepEqual(
-    viewerCapabilityDescriptor(catalogue, liveContext)?.source,
-    source,
-  );
-  const live = renderHydratedShellPage(view, liveContext, privateDisplay);
-  assert.match(live, /data-mokly-host-capabilities=""/);
-  assert.match(live, /client\/react-host\.js/);
-  assert.match(live, new RegExp(token));
-  const state = live.match(
-    /data-mokly-host-capability-state="" type="application\/json">([^<]+)<\/script>/,
-  )?.[1];
-  assert.ok(state);
-  const descriptor = JSON.parse(state);
-  assert.deepEqual(descriptor.interactive, {
-    generation,
-    port: 4174,
-    state: "idle",
-  });
-  assert.equal(view.kind, "target");
-  assert.equal(descriptor.workspace.entry.id, view.target.entry.id);
-  assert.equal(descriptor.workspace.base, source.base);
-  assert.equal(descriptor.workspace.interactive, false);
-  assert.equal("interactive" in descriptor.workspace.entry, false);
-  assert.equal("renderCapability" in descriptor.workspace, false);
-  assert.deepEqual(readViewerCapabilityDescriptor(descriptor), descriptor);
-  assert.deepEqual(
-    readViewerPrivateWorkspace(descriptor.workspace, source, true),
-    descriptor.workspace,
-  );
-  assert.throws(
-    () => readViewerWorkspace(descriptor.workspace, source),
-    /Invalid viewer workspace evidence/,
-  );
-  const { interactive: _eligibility, ...workspaceWithoutEligibility } =
-    descriptor.workspace;
-  assert.deepEqual(
-    readViewerCapabilityDescriptor({
-      ...descriptor,
-      workspace: workspaceWithoutEligibility,
-    }).workspace,
-    workspaceWithoutEligibility,
-  );
-  assert.throws(
-    () =>
-      readViewerCapabilityDescriptor({
-        ...descriptor,
-        workspace: { ...descriptor.workspace, interactive: "unknown" },
-      }),
-    /Invalid viewer workspace evidence/,
-  );
-  const { interactive: _interactive, ...descriptorWithoutInteractive } =
-    descriptor;
-  assert.throws(
-    () => readViewerCapabilityDescriptor(descriptorWithoutInteractive),
-    /Invalid viewer workspace evidence/,
-  );
-  for (const leaked of [{ token }, { renderCapability: { generation, token } }])
-    assert.throws(
-      () =>
-        readViewerPrivateWorkspace(
-          { ...descriptor.workspace, ...leaked },
-          source,
-          true,
-        ),
-      /Invalid viewer workspace evidence/,
-    );
-
-  const deploymentId = "c".repeat(64);
-  const exported = renderHydratedShellPage(view, {
-    base: source.base,
-    delivery: {
-      schemaVersion: 3,
-      deploymentId,
-      canonicalPath: "/",
-      comparisonUrl: null,
-    },
-    interactive: {
-      generation,
-      origin: "https://private-live.example",
-      port: 4174,
-      state: "ready",
-    },
-    readModel: { ...catalogue, deploymentId },
-    updateVersion: 0,
-  });
-  assert.doesNotMatch(exported, /data-mokly-host-capabilities/);
-  assert.doesNotMatch(exported, /client\/react-host\.js/);
-  assert.doesNotMatch(exported, new RegExp(token));
-  assert.doesNotMatch(exported, /private-live\.example|"port":4174/);
-  assert.match(exported, /client\/react-shell\.js/);
 });

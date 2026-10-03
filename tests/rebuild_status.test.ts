@@ -14,10 +14,8 @@ import {
   failedWatchAction,
   WatchActionFailurePhase,
 } from "../dist/server/watch_action_outcome.js";
-import {
-  WatchActionQueue,
-  type RuntimeWatchAction,
-} from "../dist/server/watch_events.js";
+import { WatchActionQueue } from "../dist/server/watch_action_queue.js";
+import { type RuntimeWatchAction } from "../dist/server/watch_events.js";
 import { reportedWatchProcessor } from "../dist/server/watch_reporting.js";
 
 test("source failure is replaced and only source success clears it", async () => {

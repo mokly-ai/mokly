@@ -21,7 +21,6 @@ import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
 import {
   closeWatched,
   createWatchedSupervisor,
-  refreshWatchedSourceInventory,
   watchedInteractiveAddress,
   watcherReadyBeforeShutdown,
 } from "./serve_lifecycle.js";
@@ -33,13 +32,14 @@ import {
   type WatchRuntimeDelivery,
   WatchedRuntimeDelivery,
 } from "./watch_action_processor.js";
+import { WatchActionQueue } from "./watch_action_queue.js";
 import {
   classifyWatchPath,
   NotificationGate,
-  WatchActionQueue,
   WatchDebouncer,
   type WatchEvent,
 } from "./watch_events.js";
+import { hydrateWatchInventory } from "./watch_inventory.js";
 import { watchTargets } from "./watch_paths.js";
 import { reportedWatchProcessor } from "./watch_reporting.js";
 import { WatchedBackground } from "./watched_background.js";
@@ -68,7 +68,7 @@ export async function serveWatched(
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
   const gate = new NotificationGate<WatchEvent>(report);
   const failures = new NotificationGate<Error>(report);
-  await refreshWatchedSourceInventory(config);
+  await hydrateWatchInventory(config);
   let activeConfig = config;
   let watcher = createSourceWatcher(watcherFactory, config, gate, report);
   const resources = new ResourceWatcher(
@@ -158,7 +158,7 @@ export async function serveWatched(
   ): Promise<WatchActionDelivery | undefined> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
-    await refreshWatchedSourceInventory(nextConfig);
+    await hydrateWatchInventory(nextConfig);
     const nextGate = new NotificationGate<WatchEvent>(report);
     const replacement = createSourceWatcher(
       watcherFactory,

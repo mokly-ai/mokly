@@ -108,7 +108,7 @@ The [configuration contract](./mokly-configuration.md) defines the complete type
 shape, path validation, source/output boundaries, and individual field behavior.
 
 `publicExclude` defaults and validation follow the
-[configuration contract](./mokly-configuration.md#public-exclusion-configuration),
+[configuration contract](./mokly-configuration-discovery.md#public-exclusion-configuration),
 with matching and public access defined by the
 [source-protection contract](./mokly-source-protection.md#public-exclusions).
 
@@ -124,7 +124,7 @@ examples, not mandatory runtime locations. An explicit `entries` glob defines
 the complete entry shape with no additional suffix filter. The `.mockup.ts` and
 `.mockup.tsx` convention remains recommended, and `entriesDir` selects it by
 expanding to `<dir>/**/*.mockup.{ts,tsx}`. See
-[entry discovery](./mokly-configuration.md#entry-discovery).
+[entry discovery](./mokly-configuration-discovery.md#entry-discovery).
 
 ## Public Authoring API
 
@@ -144,7 +144,9 @@ defines the consumer cutover adapter and its ownership constraints.
 ## Generated Contract
 
 The [generated-output contract](./mokly-rendering.md#generated-contract) defines
-fragments, manifest v7, deterministic ordering, and generated-file ownership.
+fragments, manifest v7, deterministic ordering, and generated-file ownership;
+the [imported-styles contract](./mokly-imported-styles.md) defines binary CSS
+assets and per-root stylesheet routes in that output.
 
 ## Pages And Baseline Comparisons
 
@@ -181,6 +183,7 @@ literals, and package boundary.
 
 ## Related Docs
 
+- [Generated output and manifest v7](./mokly-rendering-generated.md#generated-contract)
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)

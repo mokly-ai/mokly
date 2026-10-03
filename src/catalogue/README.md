@@ -2,8 +2,13 @@
 
 This module projects accepted catalogue and Changes evidence into the public
 `schemaVersion: 3` read model at `__mokly/catalogue.json`. Serve, consumer export,
-and repository preview use the same projection. The local shell keeps its embedded private data; Serve
-evidence updates also adopt the validated public snapshot in place.
+and repository preview use the same complete projection. Live shell pages derive
+a separate entry-scoped bootstrap from it, retaining the whole index but
+replacing out-of-scope usage with the viewer runtime's `omitted` state. The
+endpoint, exported file, fixture, upload and ownership inventories never contain
+that state. The local shell keeps its embedded private data; Serve evidence
+updates replace the validated scoped public snapshot and optional matching
+private workspace together.
 
 `projection_input.ts` is the typed input boundary. It accepts validated manifest
 v7 or live-index metadata, the section-scoped folder trees, and accepted comparison/usage
@@ -38,7 +43,10 @@ removed variants; readers remain strict.
 
 `@mokly/viewer` owns the public types and `readCatalogue`; its value/reference
 validators reject unsupported versions, malformed known fields, private evidence,
-unsafe paths, and broken references while tolerating additive fields. Component
+unsafe paths, bootstrap-only `omitted` usage, and broken references while
+tolerating additive fields. The runtime bootstrap reader derives scope from the
+page route/snapshot, requires `omitted` exactly outside it, and fully validates
+retained records. Component
 schemas, controls, wire props, keys and ranges reuse their existing validators.
 Historical props and slot names are not checked against newer component
 declarations; their wire encoding, keys and ownership references remain validated.
@@ -65,4 +73,5 @@ npx playwright test tests/browser/catalogue_fetch.spec.ts
 ```
 
 See the [catalogue contract](../../docs/protocol/mokly-catalogue.md),
+[bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md),
 [export boundary](../export/README.md), and [Serve lifecycle](../server/README.md).

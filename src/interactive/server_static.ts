@@ -5,6 +5,11 @@ import type { ServerResponse } from "node:http";
 import path from "node:path";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
+import { generatedBytes } from "../build/generated_file.js";
+import {
+  isGeneratedRoute,
+  isPublicGeneratedRoute,
+} from "../build/styles/routes.js";
 import { publicFileLocation } from "../config/public_files.js";
 import { contentType, safeDecodePath } from "../server/respond.js";
 
@@ -56,6 +61,19 @@ export async function serveInteractiveStatic(
     );
   const target = context.views.get(route);
   if (!target) {
+    if (isGeneratedRoute(route)) {
+      const content = isPublicGeneratedRoute(route)
+        ? context.documents.styles.get(route)
+        : undefined;
+      if (content === undefined) return notFound(response, method);
+      return sendInteractive(
+        response,
+        200,
+        contentType(route),
+        generatedBytes(content),
+        method,
+      );
+    }
     if (context.generatedRoutes.has(route)) return notFound(response, method);
     return publicFile(response, method, route, url.searchParams, context);
   }

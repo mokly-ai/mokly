@@ -1,10 +1,12 @@
 /** Convert validated public data to the existing shell's display records. */
+
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
-  CatalogueReadModel,
-  CatalogueRecord,
-  CatalogueView,
-} from "../catalogue/types.js";
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
+import type { CatalogueEntry } from "../catalogue/types.js";
 import type {
   ComponentViewRecord,
   ManifestComponentVariant,
@@ -17,7 +19,7 @@ import type { ShellView } from "../shell/views.js";
 
 import type { ViewerSelection } from "./types.js";
 
-function metadata(entry: CatalogueRecord) {
+function metadata(entry: CatalogueEntry) {
   return {
     id: entry.id,
     title: entry.title,
@@ -27,7 +29,8 @@ function metadata(entry: CatalogueRecord) {
     navPath: entry.navPath,
   };
 }
-function usageView(view: CatalogueView): ComponentViewRecord | undefined {
+
+function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
   if (view.usage.status !== "ready") return;
   return {
     viewport: view.viewport,
@@ -39,7 +42,8 @@ function usageView(view: CatalogueView): ComponentViewRecord | undefined {
     resources: [],
   };
 }
-export function displayEntry(entry: CatalogueRecord): ManifestEntry {
+
+export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
   const base = { ...metadata(entry) };
   switch (entry.kind) {
     case "page":
@@ -80,7 +84,8 @@ export function displayEntry(entry: CatalogueRecord): ManifestEntry {
       };
   }
 }
-export function viewerCatalogue(model: CatalogueReadModel) {
+
+export function viewerCatalogue(model: ShellCatalogueReadModel) {
   const manifest: ManifestV7 = {
     schemaVersion: 7,
     generatedBy: "mokly",
@@ -108,8 +113,9 @@ export function viewerCatalogue(model: CatalogueReadModel) {
     publicModel: model,
   };
 }
+
 export function viewerContext(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   selection: ViewerSelection,
 ): ShellContext {
   const resolved =
@@ -149,6 +155,7 @@ export function viewerContext(
       : {}),
   };
 }
+
 export function viewerView(
   catalogue: ReturnType<typeof viewerCatalogue>,
   selection: ViewerSelection,

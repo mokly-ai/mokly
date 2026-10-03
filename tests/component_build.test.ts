@@ -15,6 +15,7 @@ import { viewRoute } from "../packages/viewer/dist/data.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentVariants } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 async function compile(
   t: { after: (fn: () => Promise<void>) => void },
@@ -77,7 +78,8 @@ test("component registration emits deterministic variants and actual per-view ow
     instanceKey({ kind: "entry" }, slotted.slotKey, "action"),
   );
   assert.deepEqual(decodeProps(slotted.props), { label: "Slot action" });
-  const html = result.outputs.get(
+  const html = textOutput(
+    result.outputs,
     viewRoute("screen", screen.id, "mobile", "light"),
   )!;
   assert.equal(html.includes("<template"), false);

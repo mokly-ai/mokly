@@ -3,8 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
+import { readBaseManifest } from "../dist/review/base_manifest.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedIds } from "../dist/server/changed.js";
+import { changedContentPaths } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -65,6 +69,43 @@ for (const change of [
     );
   });
 }
+
+test("v7 page resource evidence uses the merged changed-path set", async (context) => {
+  const fixture = await changedFixture(
+    context,
+    source,
+    undefined,
+    async (item) => {
+      await fs.writeFile(
+        path.join(item.mockupsDir, "document.css"),
+        "body { color: red; }",
+      );
+    },
+  );
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "document.css"),
+    "body { color: blue; }",
+  );
+  const repository = committedReviewRepository(fixture.config);
+  const commit = await repository.evidence.mergeBase("HEAD", "HEAD");
+  const baseline = await readBaseManifest(
+    repository.reader,
+    commit,
+    fixture.config,
+  );
+  const current = (await compileCatalogue(fixture.config)).manifest;
+  assert.deepEqual(
+    await changedContentPaths(
+      current,
+      baseline,
+      fixture.config,
+      repository.reader,
+      commit,
+      asChangeEvidence(["mockups/document.css"]),
+    ),
+    ["mockups/pages/handbook.html"],
+  );
+});
 
 test("Changes cannot treat a historical authoring input as a deleted public resource", async (context) => {
   const fixture = await changedFixture(

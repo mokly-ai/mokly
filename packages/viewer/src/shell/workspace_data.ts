@@ -51,6 +51,8 @@ export interface WorkspaceData {
   interactive?: boolean;
   previewGeneration?: string;
   usageComplete?: boolean;
+  /** Selected public views are waiting for route-scoped usage evidence. */
+  viewUsagePending?: boolean;
   renderCapability?: RenderCapability;
   /** The exact routed entry whose chrome and lifecycle own this workspace. */
   entry: WorkspaceEntry;

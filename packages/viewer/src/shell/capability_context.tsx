@@ -41,6 +41,7 @@ export interface ViewerLiveState {
   /** Latest validated private watched-Serve status whose source fence is installed. */
   rebuildStatus?: RebuildStatus;
   request?: ViewerCapabilityRequest;
+  routeEvidence?: ViewerRouteEvidenceState;
   workspace?: WorkspaceData;
   /**
    * The routed screen or component's private workspace is still expected:
@@ -48,6 +49,12 @@ export interface ViewerLiveState {
    * request settles without one, which leaves private evidence unknown.
    */
   workspacePending?: true;
+}
+
+/** Route-owned public/private evidence delivery exposed to workspace UI. */
+export interface ViewerRouteEvidenceState {
+  status: "failed" | "loading" | "ready";
+  retry(): void;
 }
 
 const ViewerCapabilityContext = createContext<ViewerCapabilityContextValue>({});

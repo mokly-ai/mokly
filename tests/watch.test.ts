@@ -17,9 +17,9 @@ import {
   type ProcessSupervisor,
   type ProcessSupervisorFactory,
 } from "../dist/server/supervisor_types.js";
+import { WatchActionQueue } from "../dist/server/watch_action_queue.js";
 import {
   NotificationGate,
-  WatchActionQueue,
   WatchDebouncer,
   classifyWatchPath,
   type DebounceClock,

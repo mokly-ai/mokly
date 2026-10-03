@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ComponentChangeCache } from "../dist/server/component_changes.js";
+import { ComponentChangeCache } from "../dist/server/component_change_cache.js";
 
 test("lightweight component classification coalesces by generation and resolved baseline", async () => {
   let baseline = "first";

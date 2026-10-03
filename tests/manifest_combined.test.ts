@@ -11,6 +11,7 @@ import {
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const pageSource = `import { definePage } from "@mokly/mokly";
 export const mockups = [definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => "<html><body>Handbook</body></html>" })];`;
@@ -30,7 +31,7 @@ test("v7 combines pages and component usage at both manifest boundaries", async 
   const screen = current.entries.find((entry) => entry.kind === "screen");
   assert.ok(screen?.componentViews?.every((view) => view.instances.length > 0));
   assert.match(
-    compilation.outputs.get("pages/handbook.html") ?? "",
+    textOutput(compilation.outputs, "pages/handbook.html") ?? "",
     /Handbook/,
   );
 });

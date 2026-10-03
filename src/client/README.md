@@ -28,6 +28,14 @@ cannot replace the current status. Descriptor and routed-evidence reads carry
 the same private value through their existing source and revision fences. The
 shell-facing value is `useViewerLiveState().rebuildStatus`; this host adds no
 presentation of its own.
+Each route or live-evidence page contributes a validated public bootstrap and a
+complete private workspace for screen and component routes. The centralized
+reader accepts only exact route scope and rejects complete, missing or leaked
+live usage. They are adopted as one revision by replacing the prior catalogue,
+never merging usage across visited routes. Until scoped adoption, the shell
+reports Usage as loading; a current read failure or rejection reports failed
+and supports retry without remounting the preview. Authored content changes
+retain the reload lifecycle.
 
 The synchronous viewer bootstrap captures native disclosure choices made before
 module initialization. Browse preferences and one-shot recovery retain these
@@ -38,6 +46,10 @@ private. `react_host.ts` hydrates even when the optional event stream or recover
 storage is unavailable. Export supplies no capabilities. No private tokens
 enter catalogue JSON.
 
+The browser passes the exact embedded bootstrap and capability-descriptor text
+through hydration, so subsequent shell renders do not serialize either state.
+
 Run `npm test`, `npm run test:browser`, and `cargo xtask check` from the repository
-root. See the [viewer contract](../../docs/protocol/mokly-viewer.md) and
+root. See the [viewer contract](../../docs/protocol/mokly-viewer.md), the
+[bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md), and the
 [Serve lifecycle](../server/README.md).

@@ -215,45 +215,6 @@ test("rich Serve keeps snapshot and non-interactive status secondary", () => {
   assert.doesNotMatch(watchedTerminal.stdout(), /press h/);
 });
 
-test("Serve reporters announce the private Live origin", () => {
-  const plainTerminal = memoryTerminal({ isTTY: false });
-  new PlainReporter(plainTerminal.environment).serveReady({
-    base: "origin/main",
-    configPath: "mokly.config.ts",
-    generatedOutput: "committed",
-    interactiveOrigin: "https://live.example.test",
-    url: "http://127.0.0.1:4173",
-    version: "0.10.0",
-    watch: true,
-  });
-  assert.equal(
-    plainTerminal.stdout(),
-    "Mokly listening at http://127.0.0.1:4173 (watching)\n" +
-      "Mokly Live at https://live.example.test\n",
-  );
-
-  const richTerminal = memoryTerminal({ columns: 48, isTTY: true });
-  new RichReporter(richTerminal.environment).serveReady({
-    base: "origin/main",
-    configPath: "mokly.config.ts",
-    generatedOutput: "committed",
-    interactiveOrigin: "https://live.example.test",
-    url: "http://127.0.0.1:4173",
-    version: "0.10.0",
-    watch: false,
-  });
-  assert.match(
-    richTerminal.stdout(),
-    /Live frames {2}https:\/\/live\.example\.test/,
-  );
-  assert.ok(
-    richTerminal
-      .stdout()
-      .split("\n")
-      .every((line) => line.replace(ANSI, "").length <= 48),
-  );
-});
-
 test("rich Serve contracts its URL panel to a narrow terminal", () => {
   const terminal = memoryTerminal({ columns: 24, isTTY: true });
   const reporter = new RichReporter(terminal.environment);

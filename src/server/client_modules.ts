@@ -6,7 +6,20 @@ import { fileURLToPath } from "node:url";
 
 import { viewerAssetUrl } from "@mokly/viewer/server";
 
+import { timeSync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
+
+/** Load and time the complete package-owned shell asset inventory. */
+export function loadCatalogueAssets() {
+  return {
+    clientModules: timeSync("server.client-modules", loadBrowserClientModules),
+    navigationModules: timeSync(
+      "server.navigation-modules",
+      loadBrowserNavigationModules,
+    ),
+    fontAssets: timeSync("server.fonts", loadShellFontAssets),
+  };
+}
 
 /** Load every JavaScript browser build output before the HTTP server binds. */
 export function loadBrowserClientModules(): ReadonlyMap<string, Buffer> {

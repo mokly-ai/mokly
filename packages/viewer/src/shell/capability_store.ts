@@ -82,6 +82,7 @@ export function useViewerCapabilityStore(input: {
     catalogue: input.catalogue,
     ...(initialInteractive ? { interactive: initialInteractive } : {}),
     ...(initialRebuildStatus ? { rebuildStatus: initialRebuildStatus } : {}),
+    ...(initialRequest ? { routeEvidence: initialRequest } : {}),
     ...(initialRequest ? { source: initialRequest.source } : {}),
     ...(initialRequest && initialWorkspace?.entry.id === initialRequest.entryId
       ? { workspace: { request: initialRequest, value: initialWorkspace } }
@@ -105,7 +106,7 @@ export function useViewerCapabilityStore(input: {
       ? snapshot.workspace?.value
       : undefined;
 
-  const workspacePending = useRouteEvidence({
+  const routeEvidence = useRouteEvidence({
     capabilities,
     interactive: input.interactive,
     request,
@@ -236,17 +237,20 @@ export function useViewerCapabilityStore(input: {
         ? { rebuildStatus: snapshot.rebuildStatus }
         : {}),
       ...(request ? { request } : {}),
+      ...(routeEvidence ? { routeEvidence } : {}),
       ...(workspace ? { workspace } : {}),
-      ...(workspacePending ? { workspacePending: true as const } : {}),
+      ...(routeEvidence?.status === "loading"
+        ? { workspacePending: true as const }
+        : {}),
     }),
     [
       adoptPreparation,
       capabilities,
       request,
+      routeEvidence,
       snapshot.interactive,
       snapshot.rebuildStatus,
       workspace,
-      workspacePending,
     ],
   );
   return { catalogue: snapshot.catalogue, context, liveState };

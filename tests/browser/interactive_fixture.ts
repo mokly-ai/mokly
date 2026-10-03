@@ -5,6 +5,7 @@ import type { Page } from "@playwright/test";
 
 import { adaptBrowseDocument } from "../../dist/browse/document_adapter.js";
 import { compileCatalogue } from "../../dist/build/compile.js";
+import { generatedText } from "../../dist/build/generated_file.js";
 import { prepareLiveRuntime } from "../../dist/build/live_runtime.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { EsbuildInteractiveBundleCompiler } from "../../dist/interactive/bundle.js";
@@ -113,7 +114,7 @@ export async function interactiveFixture() {
       undefined,
     ],
   ] as const) {
-    const compiled = compilation.outputs.get(route);
+    const compiled = generatedText(compilation.outputs.get(route), route);
     if (!compiled) throw new Error(`Missing compiled fixture route: ${route}`);
     const adapted = adaptBrowseDocument(compiled, route, catalogue);
     const built = buildInteractiveBootstrap({
@@ -129,7 +130,10 @@ export async function interactiveFixture() {
     files.set(`static/${route}`, composeInteractiveDocument(adapted, built));
   }
   const homePath = viewRoute("screen", home.id, "mobile", "light");
-  const homeDocument = compilation.outputs.get(homePath);
+  const homeDocument = generatedText(
+    compilation.outputs.get(homePath),
+    homePath,
+  );
   if (!homeDocument) throw new Error("Interactive home fixture is missing");
   const adaptedHome = adaptBrowseDocument(homeDocument, homePath, catalogue);
   const homeBootstrap = buildInteractiveBootstrap({

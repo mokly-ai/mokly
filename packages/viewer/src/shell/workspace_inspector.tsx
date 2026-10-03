@@ -8,6 +8,7 @@ import type { ReviewResult } from "../review/types.js";
 import type { Catalogue } from "./catalogue.js";
 import { Inspector } from "./inspector.js";
 import { LIVE_PREVIEW_COPY } from "./preview_mode.js";
+import type { UsageDeliveryState } from "./use_workspace_data.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { WorkspaceInstances } from "./workspace_instances.js";
@@ -33,6 +34,7 @@ export function WorkspaceInspector({
   selectedKey,
   variantId,
   views,
+  usageDelivery,
 }: {
   activeViewport: Viewport;
   catalogue: Catalogue;
@@ -47,6 +49,7 @@ export function WorkspaceInspector({
   selectedKey?: string | undefined;
   variantId?: string | undefined;
   views: readonly GeneratedComponentView[];
+  usageDelivery: UsageDeliveryState;
 }) {
   const notice = live ? (
     <p className="mbk-inspector-notice" data-live-notice="">
@@ -81,7 +84,9 @@ export function WorkspaceInspector({
           />
         ),
         props: notice ?? props,
-        usage: notice ?? <WorkspaceUsage data={data} />,
+        usage: notice ?? (
+          <WorkspaceUsage data={data} delivery={usageDelivery} />
+        ),
       }}
     />
   );

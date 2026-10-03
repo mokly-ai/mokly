@@ -8,7 +8,13 @@ import type { ArtboardViewport } from "../../parts/shell.js";
 export interface HighlightOption {
   active: boolean;
   unavailable:
-    "empty" | "unavailable" | "comparison" | "removed" | "live" | undefined;
+    | "empty"
+    | "unavailable"
+    | "loading"
+    | "comparison"
+    | "removed"
+    | "live"
+    | undefined;
 }
 
 /**
