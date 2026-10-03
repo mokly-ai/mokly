@@ -68,7 +68,7 @@ is:
 
 | Boundary                            | New writer | Reader policy                                                               |
 | ----------------------------------- | ---------- | --------------------------------------------------------------------------- |
-| Private source manifest             | 8          | Current: 8; historical: versioned readers in the manifest contract          |
+| Private source manifest             | 8          | Read current and baseline v8 only; older baselines yield incompatibility    |
 | Public complete or scoped catalogue | 4          | Accept 4 only; reject 1–3 and unknown versions before entry/path validation |
 | Static delivery descriptor          | 4          | Accept 4 only; retain the four v3 fields and their types                    |
 | Shell bootstrap envelope            | 1          | Add a required root `schemaVersion: 1`; reject absent/other versions        |
@@ -142,8 +142,9 @@ repository cannot change the wording in an already installed older binary.
 
 There is no automatic conversion of older public artifacts. They keep their
 original bundled viewer at their original deployment, or are re-exported.
-Historical private manifest readers are a separate comparison facility and
-remain required; their support does not authorize a mixed public artifact.
+The separate private baseline boundary also reads only v8. Older manifest
+envelopes are checked solely to produce the approved earlier-baseline outcome;
+they cannot authorize content reads or a mixed public artifact.
 Mokly Cloud must update upload validation, stored path lookup, catalogue fetch
 URLs and embedded viewer/version-error handling before accepting this format.
 That external rollout is a post-merge follow-up, not an implicit code change

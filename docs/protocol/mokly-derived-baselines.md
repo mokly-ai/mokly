@@ -2,20 +2,21 @@
 
 ## Delivery Status
 
-Implemented by [Generated Output Simplification](../../plans/generated-output-simplification.md).
-The cached rebuild infrastructure, `preparing` state, per-commit reader
-selection, v6 inventory verification and dedicated `mokly-generated/` layout are
-shipped. Only `check` inspects head Git index tracking.
-Milestone 11 will extend selection and compatibility under the approved
-[v8 manifest contract](./mokly-generated-manifest.md), including v7 styles and
-binary assets. The command and trust boundaries in this document stay in force.
+Approved Milestone 11 target in
+[Generated Output Simplification](../../plans/generated-output-simplification.md).
+Correction 3 option A permits only v8 baselines. The current branch still
+implements v6; this document specifies the merge behavior without changing code.
+Keep per-commit selection, rebuilds and `preparing`; apply the
+[v8 version gate](./mokly-generated-manifest.md) before creating a reader.
+Only `check` inspects head Git index tracking.
 
 ## Purpose And Configuration
 
 The head side always uses the current validated **in-memory compilation**;
 neither tracked nor untracked head output has to match local generated files
-to compare. For every pinned merge-base commit independently, use complete
-generated Git blobs if they exist, or rebuild that commit using its own
+to compare. For every pinned merge-base commit independently, first reject
+recognized earlier output with `main`'s expected unavailable outcome. Otherwise
+use complete v8 generated Git blobs, or rebuild that commit using its own
 lockfile, dependencies, config, entries, renderer, and Mokly version. A change
 in tracking policy across history does not change this rule. Neither HTTP
 request paths nor disposable Serve children may run the baseline build.
@@ -74,40 +75,53 @@ for debounce, one-shot and child/parent behavior.
 
 ### Selecting The Base Reader
 
-Resolve the merge base of `HEAD` and `review.base` (or explicit `--base`) once
-and pin it. Look up the canonical manifest in that commit under
-`<mockupsDir>/mokly-generated/` first and the historical single `mockupsDir`
-second; preserve former names and the opt-in v2 fallback only at the legacy
-path. If none exists, rebuild the commit. For a v6 manifest, verify that the
-listed generated paths and blob hashes match the full tree exactly, apart from
-the separately validated manifest itself. Missing, mismatched, extra, or
-non-regular paths trigger a rebuild and the exact informational diagnostic
-in [generated output](./mokly-generated-output.md#manifest-v6-and-per-commit-baselines).
-Historical manifests without inventory (v2–v5) retain the assumption that a
-committed manifest implies complete output and use Git blobs; the first
-missing blob on use still fails normally. A malformed manifest is an error,
-not absence. Baseline selection is independent of whether today's compiled
-output is tracked, whether the working tree contains local output, or whether
-the baseline used the same directory layout. Do not use Git evidence as a
-substitute for independent resource-byte comparisons.
+Resolve and pin the merge base once. Apply the
+[ordered version/inventory probe](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
+at the requested root. A committed pre-v8 canonical envelope or former-name
+sentinel returns `baseline-incompatible-earlier` without a build. A valid v8
+inventory selects Git blobs when complete and a rebuild when incomplete.
+Absent manifests select a rebuild, including when the historical root moved.
+Invalid/newer selected data is an error, never absence or earlier output.
 
-Both reader implementations accept **commit and repository-relative path**;
-the Git reader reads blobs. The rebuilt reader maps a v6 path directly beneath
-the cache entry's `output/`, or removes only the historical `mockupsDir` prefix
-for a flat legacy cache entry; it never uses the current config's mockups root.
-Neither follows symlinks; both require regular files and enforce the same
-4,096-object, 48 MiB per-batch limits, with at most 32 disk reads in flight.
-The manifest's closure supplies the v6 authored asset paths for historical
-reads. Current resources still use confined live files; differing closure
-membership or bytes can make an otherwise unchanged view material even
-without changed Git paths. Resource attribution and the unchanged-view fast
-path remain governed by [component changes](./mokly-component-changes.md).
-Per-commit selection supplies the
-[baseline catalogue descriptor](./mokly-baseline-addressing.md#per-commit-descriptor):
-pair documents by layout-relative logical route and authored resources by
-catalogue-relative path on **each** side, never by repository-relative base
-filename or changed-path evidence. This includes moved historical roots,
-legacy blobs, flat cached rebuilds, and v6 rebuilt caches.
+A rebuild uses that commit's own recipe. Its selected output must pass the same
+v8 gate: earlier output returns incompatibility after commands finish, while
+v8 must pass inventory verification before adoption. Existing older completed
+caches are probed only for that unavailable outcome, without commands or any
+content reader, under the [storage rules](./mokly-baseline-storage.md#cache-layout).
+No head-index state participates in these decisions.
+
+Both readable implementations accept a commit and repository-relative path.
+The Git reader reads blobs. The rebuilt v8 reader appends that path beneath
+its cache `output/`, using the pinned historical root. There is no flat legacy
+reader. Keep regular-file/symlink checks, 4,096-object and 48 MiB batch bounds,
+and at most 32 disk reads in flight. Authored resources come from the v8
+closure; generated CSS and opaque assets come from its verified inventory.
+
+Both sides are v8. Pair documents by kind/id and view axes; address generated
+resources relative to each generated root and authored resources relative to
+each catalogue root. Preserve moved-root handling, independent byte/membership
+checks, CSS attribution and component fast paths. Remove only old-schema
+conversion and cross-layout URL normalization, not ordinary URL parsing or
+source/dependency evidence. See the
+[descriptor contract](./mokly-baseline-addressing.md#comparison-namespaces).
+
+### Earlier-Baseline Availability
+
+Preserve `main`'s typed outcome for every pre-v8 base. Serve keeps All usable
+with Changes unavailable and no changed/removed entries, comparisons or previous
+versions. Export and Changes-enabled publication succeed with current content,
+`changesStatus: "unavailable"`, `comparisonUrl: null`, and no historical files.
+Publication without Changes stays disabled and performs no baseline work.
+
+Print exactly once per rejected pinned base:
+
+```text
+Changes are unavailable because the comparison base was built with an earlier version of Mokly. Changes will return once the base includes this version.
+```
+
+Retain the outcome for unchanged content generations; do not repeat the line or
+rebuild. A new base can restore Changes through normal preparation. A v8 source
+failure or invalid/newer baseline does not receive this graceful exception.
 
 ## Preparation And Serve
 
@@ -125,7 +139,7 @@ classification. Omission retains the reader; `null` revokes it while a new
 base prepares; stale update versions cannot restore an old commit. The child
 opens the already-selected read-only Git or cache reader; `--no-watch` uses
 the same handoff without IPC. Until handoff, unselected
-`/__mokly/diffs/review.json` fails `review-invalid` with
+`/mokly-viewer/diffs/review.json` fails `review-invalid` with
 `The comparison is not prepared`. The parent retains one preparation for each
 resolved commit and build settings. A ref move to a new merge base cancels
 the old preparation, revokes the reader and prepares the new base; an unchanged
@@ -136,7 +150,7 @@ discarded. A failed build can retry on a later generation.
 Serve opens with `pending`; a cache hit proceeds directly to classification.
 While actually rebuilding, show `preparing` in the Changes sidebar and then
 `pending` during classification, followed by `ready` or `unavailable`.
-Classification remains independent of the current output write policy. A
+Classification remains independent of the current output write policy. An earlier base becomes unavailable under the typed policy above; any other
 rebuild failure logs its typed error but does not expose commands or paths in
 the sidebar. Navigation, reconnect and retained-state rules treat `preparing`
 like `pending`. Lock waiters reusing another builder's result receive only
@@ -145,7 +159,8 @@ like `pending`. Lock waiters reusing another builder's result receive only
 ## Export, Diagnostics, And Acceptance
 
 Export with comparison prepares and pins the baseline before capture; a
-rebuild failure fails export, rather than showing zero Changes. The input
+rebuild failure fails export, except for the explicit earlier-version outcome
+above; neither outcome is a successful zero-Changes comparison. The input
 recheck confirms the completion marker still names the pinned commit and
 has not changed. Publication with Changes behaves the same; default
 publication without Changes needs no baseline. Both capture current generated
@@ -160,8 +175,10 @@ flag. Navigation targets and `preparing → pending` timing remain measurable.
 
 - Test tracking outcomes (including no Git), mixed-state path guidance,
   tracked missing/stale/extra output, and untracked local-output independence.
-- Test v6 absent/complete/missing/mismatched/extra inventory at **each** base
-  commit, transitions across tracking policies, and historical v5 comparison.
+- Test v8 absent/complete/missing/mismatched/extra inventory at **each** base
+  commit, tracking transitions and moved v8 roots; test v2–v7 incompatibility
+  from committed output, rebuilt output and matching old caches without reading
+  old resources, plus once-per-base reporting and v8 recovery.
 - Test cache hits, interruption, bounded command errors, path/symlink
   confinement, child handoff, and in-memory head comparisons.
 - Test Serve's `preparing → pending → ready | unavailable` lifecycle, export

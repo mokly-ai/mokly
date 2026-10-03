@@ -8,12 +8,17 @@
   removal of generated-file ownership machinery are implemented and verified;
   the approved directory rename avoids dot-path restrictions on static hosts.
   Milestone 9 defines the approved unified CSS/output layout, manifest v8,
-  historical readers, viewer namespace/version gates and independent lint
+  v8-only baseline policy, viewer namespace/version gates and independent lint
   contracts, with an audited preservation list for all 11 mainline commits.
-  Milestones 10–14 implement and verify that merge, rename `__mokly/` to
-  `mokly-viewer/`, and apply the approved lint fixes. Other review findings
-  await the user's decision; Cloud receiver/viewer rollout is a post-merge
-  follow-up.
+  Milestone 10 implements the independent directory literal guard and corrects
+  the source-root and fixed-name contracts. Its functional checks pass; the
+  existing `braces` dependency audit blocks the code commit pending direction.
+  Milestones 11–15 merge `main`, rename `__mokly/` to `mokly-viewer/`, finish
+  lint coverage, prepare the browser example baseline once in Milestone 14,
+  then verify and review in Milestone 15. Correction 3 A selects v8-only
+  baselines; findings 32 B and 34 C are documented. Milestone 11 has not
+  started. Other findings and the dependency blocker await direction; Cloud
+  rollout is a post-merge follow-up.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.

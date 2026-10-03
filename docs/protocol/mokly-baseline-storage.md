@@ -2,9 +2,10 @@
 
 This is the storage and command contract for [per-commit baseline selection](./mokly-derived-baselines.md).
 Historical commands execute trusted repository code; preparation is never an HTTP operation.
-The approved [v8 manifest contract](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
-defines the Milestone 11 additions for v7/v8 readers and cache markers. It
-preserves the storage, process, lock and retention rules below.
+This is the approved Milestone 11 target; the current branch still uses v6.
+The [v8 manifest gate](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
+permits only v8 content readers and retains `main`'s earlier-version outcome.
+Process, lock, confinement and retention rules remain unchanged.
 
 ## Rebuild Procedure
 
@@ -17,9 +18,13 @@ and is not converted to a baseline history error.
 1. Resolve the merge base of `HEAD` and the configured base ref with Git. A
    missing ref, shallow history, or unrelated histories fail as
    `baseline-history-unavailable`.
-2. Acquire the entry lock, including on cache hits. Sweep safe crash leftovers
+2. If the committed-manifest probe already found earlier output, return
+   `baseline-incompatible-earlier` without commands or cache adoption. Otherwise
+   acquire the entry lock, including on cache hits. Sweep safe crash leftovers
    under that lock as a best-effort maintenance step.
-3. Reuse a valid completion marker without executing any command. On a miss,
+3. Reuse a valid v8 completion marker without commands. A matching completed
+   older cache returns the earlier-version outcome under the probe below.
+   On a cache miss,
    extract the commit with Git's archive format into
    the entry's `source` directory. Entries that escape the directory, symlinks
    that resolve outside it, hard links, and special files fail
@@ -38,20 +43,23 @@ and is not converted to a baseline history error.
 5. Locate the historical catalogue using the ordered current-root lookup,
    then bounded extraction scan in
    [baseline addressing](./mokly-baseline-addressing.md#discovery-after-a-rebuild).
-   Zero or several valid candidates fail `baseline-output-invalid` with
+   Zero or several eligible candidates fail `baseline-output-invalid` with
    sorted candidates. The base and head may use different `mockupsDir` paths.
-6. For v6, move `<source>/<historical mockupsDir>/mokly-generated/` into
+6. If the selected output is earlier than v8, apply existing pre-adoption
+   cleanup and maintenance-error handling under the lock, then return
+   `baseline-incompatible-earlier`. Do not harvest old documents, write a
+   completion marker or upgrade the build's toolchain. The caller retains this
+   outcome for the pinned base and recipe; a later command invocation may
+   rebuild again when no committed manifest or completed cache proves it.
+7. For valid, inventory-verified v8, move
+   `<source>/<historical mockupsDir>/mokly-generated/` into
    `output/<historical mockupsDir>/mokly-generated/`, then copy exactly the
-   manifest's `assetClosure` from the source to
-   `output/<historical mockupsDir>/<closure path>`. Validate each file as a
-   confined regular file and reject symlink aliases, missing or protected
-   sources as `baseline-output-invalid`. For old single-directory manifests,
-   move the entire historical catalogue into flat `output/` as before. Readers
-   map validated repository-relative paths into the v6 cache directly, or
-   strip the validated historical mockups prefix for legacy flat cache entries,
-   never today's prefix. Delete the remaining extraction including
-   installed dependencies and write the completion marker with the discovered
-   historical root and layout. Successful
+   manifest's `assetClosure` beside it under the historical catalogue root.
+   Validate every file as a confined regular file; missing, symlinked or
+   protected sources fail `baseline-output-invalid`. Never harvest a flat
+   legacy tree. Readers map repository-relative paths directly into this v8
+   cache using the historical root. Delete the remaining extraction, including
+   installed dependencies, and write the completion marker. Successful
    completion of that write is the commit point:
    the result is adopted immediately and cannot be removed by this build's
    failure path. Retention cleanup and lock release are separate best-effort
@@ -80,26 +88,41 @@ ignore file; only `check` runs the index guard, failing if Git tracks anything u
 .mokly-cache/baselines/<commit>/
   lock            # holder pid and start time, created exclusively
   source/         # extraction, removed after adoption
-  output/         # v6: repo-relative mokly-generated plus closure; legacy: flat catalogue contents
+  output/         # v8: repo-relative mokly-generated plus authored closure
   complete.json   # completion marker
   inputs.json     # JSON string containing requested/current repo-relative mockupsDir ("." at repo root)
 ```
 
 New `complete.json` markers are `{ schemaVersion: 1, commit, finishedAt,
-commands, manifestVersion, historicalCatalogueRoot, layout }`, accepting
-historical manifest versions 2–5 and current v6. The root and layout identify
-the harvest; they never replace the requested path in `inputs.json`. An entry
-is complete only when the marker parses, its `commit` matches the directory
-name, and the manifest exists at that layout's validated location. Anything
-else is a partial entry and is removed under the lock before the next attempt.
-Pre-v6 complete markers without the new fields retain their flat legacy layout;
-their historical root is the requested root in `inputs.json` (and a changed
-request still fails intact). See [cache identity and readers](./mokly-baseline-addressing.md#cache-identity-and-readers).
-The historical manifest and its harvested closure are validated again on reuse.
-A complete entry with a different `inputs.json` requested path or
-`complete.json` command list fails as
-`baseline-output-invalid` and remains intact. The commit-only cache holds one
-catalogue/build configuration; remove that entry before changing those settings.
+commands, manifestVersion: 8, historicalCatalogueRoot, layout: "generated-v8" }`.
+The root identifies the harvest; it never replaces the requested path in
+`inputs.json`. Reuse requires the matching commit, request and recipe, a valid
+v8 manifest and its verified inventory/closure. Keep the
+[reader mapping](./mokly-baseline-addressing.md#cache-identity-and-readers).
+
+For existing schema-1 completed entries with `manifestVersion` 2–7, keep
+only a bounded compatibility probe. Validate the envelope, commit, requested
+path and command list before inspecting its manifest. A `generated-v6` marker
+with a safe historical root probes `output/<root>/mokly-generated/mokly-manifest.json`.
+An older flat marker (`legacy` or no descriptor) probes canonical, former and
+legacy names directly under `output/`; absent descriptor fields do not create
+a resource reader. These are fixed manifest lookup locations only.
+
+A regular canonical envelope whose older version agrees with the marker, or
+a regular former-name sentinel for that older marker, proves
+`baseline-incompatible-earlier` without another build. Leave the completed
+entry intact for that result and normal retention; never serve, harvest,
+translate or relabel its contents as v8. The committed-tree gate has priority:
+a complete committed v8 baseline uses blobs regardless of an obsolete cache.
+
+Missing completion data or a missing manifest is a partial entry and follows
+existing locked cleanup/rebuild rules. A selected malformed/nonregular manifest,
+version disagreement, unknown newer marker or unsafe location is not earlier
+output: fail `baseline-output-invalid` and retain diagnostic evidence. A
+completed entry with different requested inputs or commands also fails intact
+with the existing remove-entry guidance, rather than bypassing the identity
+check because its format is old. No fresh pre-v8 completion marker is written.
+The commit-only cache still holds one catalogue/build configuration.
 
 Lock contents are published atomically using an exclusively linked temporary
 file. Its identity is captured before publication and returned with ownership;

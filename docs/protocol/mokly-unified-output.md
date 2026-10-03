@@ -73,8 +73,14 @@ Substitute the original segment spelling and generated-root-relative route,
 without quotes. Existing invalid-route checks run first. Check reserved
 segments next, then duplicate/case-folded/file-directory collisions. Current
 identity helpers cannot produce these prefixes; test the lower-level route
-boundary too. This does not add an authored `route` option or reject historical
-routes accepted by their version-specific reader.
+boundary too. This does not add an authored `route` option. Only v8 baselines
+reach a content reader; there is no earlier route model to adapt.
+
+Finding 32 changes documentation only: generated HTML derives from kind/id and
+starts with `pages/`, `screens/` or `components/`. The outer delivery prefix is
+not part of those routes; an id may still contain the text `mokly-generated`.
+The helper's construction guarantees the first segment, not a generic path
+grammar or a new substring check. Shell-only use cases are not generated HTML.
 
 ## One Reference Rule
 
@@ -180,18 +186,20 @@ under the [manifest contract](./mokly-generated-manifest.md). Do not inspect
 the current index or require head disk equality. Reuse accepted outputs and
 the retained delivered-source map instead of rescanning a newer consumer graph.
 
-Compare resource membership on both sides. Resolve v7's
-`mokly-generated/styles/...` and v8's `styles/...` against their own descriptors
-to the same generated-resource key. Keep authored closure keys separate.
+Compare resource membership on both v8 sides using each side's own descriptor.
+Use generated-relative stylesheet/asset keys and separate catalogue-relative
+authored closure keys, including when catalogue roots move. Do not normalize
+older layouts into v8. A pre-v8 manifest, whether committed, cached or found
+after its own build, produces the typed earlier-baseline unavailable outcome.
 Feed changed compiled CSS to rule-aware attribution; its private CSS source
 is dependency evidence, not a second public stylesheet. Preserve `main`'s
 delivered-source suppression, shared-impact fallbacks, removed-resource rules,
-component fast paths and generation consistency. A real new stylesheet link
-against a pre-CSS baseline can cause the documented one-time Changes jump.
+component fast paths and generation consistency. Earlier baselines do not
+produce a one-time stylesheet Changes jump because their content is not read.
 
 Acceptance must retain `main`'s CSS/Modules/PostCSS regressions and this branch's
 tracking, transaction, baseline and closure tests. Add reserved-route rejection,
 raw binary inventory hashes, no stale-disk fallback, all three styled delivery
-surfaces, watcher success/failure, output-independent PostCSS scans, and a v7
-to v8 comparison whose unchanged stylesheet is not reported changed solely
-because its storage root moved.
+surfaces, watcher success/failure, output-independent PostCSS scans, and v8
+comparisons across moved catalogue roots. Test the exact unavailable outcome
+for every pre-v8 base instead of accepting a v7-to-v8 content comparison.

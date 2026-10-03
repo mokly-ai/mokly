@@ -12,9 +12,10 @@ local output; comparison baselines inspect the pinned commit's tree instead.
 **Change A: Git state replaces the output modes.** The `generatedOutput`
 option (`"committed" | "derived"`) is removed. Everything it selected is
 derived from one fact, read per commit: whether the generated output is
-tracked in Git. The baseline for a comparison is read from Git blobs when the
-merge-base commit contains generated output, and rebuilt with
-`review.baselineBuild` when it does not. `check` always validates the sources,
+tracked in Git. Only v8 can be a readable baseline after the merge. Complete
+v8 output uses Git blobs; missing or incomplete v8 output uses
+`review.baselineBuild`. Recognized earlier output gives main's
+incompatible-earlier outcome. `check` always validates the sources,
 and compares compiled bytes with the tracked files only when the output is
 tracked. Only `build`, `build --watch`, and `serve --build` write generated
 output; plain Serve, export, and publication never do. Watched writes follow each
@@ -55,17 +56,31 @@ Decisions:
 - The manifest records an inventory of every generated path with its Git
   blob hash, so the completeness of committed output can be judged at any
   commit from Git alone.
-- The baseline reader is chosen per merge-base commit from Git alone. No
-  manifest blob at `<mockupsDir>/mokly-generated/mokly-manifest.json` means
-  the commit is rebuilt. A manifest whose inventory paths all
-  exist in `git ls-tree` with matching hashes means complete, so blobs are
-  read. Missing or mismatched paths mean incomplete or stale output, so the
-  commit is rebuilt and the reason is logged; regeneration is always the safe
-  answer and history cannot be fixed. Manifests from before the inventory
-  keep today's assumption that a committed manifest means complete output. A
-  repository that stops or starts committing output keeps comparing across
-  the transition. The trust statement stays: a rebuild executes the base
-  commit's own install and build.
+- Historical baselines, correction 3 = **A**: preserve `main`'s
+  `baseline-incompatible-earlier` outcome for every pre-v8 base, including
+  this branch's v6. Only v8 has a content reader. A committed earlier manifest
+  at a known location returns that outcome without a rebuild; otherwise a
+  missing/incomplete baseline can rebuild with its own recipe and be rejected
+  if that recipe emits earlier output. Matching older completed caches provide
+  incompatibility evidence only, never content. Preserve the exact product
+  line and main's Serve/export/publication outcomes. Keep per-commit selection,
+  v8 inventory checks and moved-root discovery. Remove this branch's pre-v8
+  readers, legacy flat-layout reader/harvest and cross-layout URL normalization;
+  keep every mainline deletion. The manifest/storage contracts define lookup,
+  cache identity, cleanup and invalid-data precedence.
+- Finding 32 = **B**, documentation only: generated HTML derives from kind/id
+  and starts with `pages/`, `screens/` or `components/`. Its outer delivery
+  prefix is separate; ids may contain the directory-name text. The merged
+  viewer reads catalogue v4 only, with the required generated prefix. Add no
+  new route validator or substring rejection for this finding. The approved
+  `styles`/`assets` reservation remains decision 28 work.
+- Finding 34 = **C**: new Milestone 14 prepares the unchanged example baseline
+  repository and rebuilt cache once in Playwright global setup, with isolated
+  fixture copies. Audit every equivalent browser consumer after the merge;
+  today they are static-example and design-library-export. Keep one real cold
+  baseline browser regression and the real cold preview-build test, the
+  unchanged 600-second fixture limit, and before/after suite and fixture timing
+  evidence. Final verification/review moves to Milestone 15.
 - `review.baselineBuild` remains and is valid in every repository.
 - `check` on tracked output fails on missing, stale, or extra files with
   guidance to run `mokly build` and commit, or to untrack the directory.
@@ -83,8 +98,8 @@ Decisions:
   beside `mokly-generated/`, so the cache stays self-contained. Both copies are
   internal to `.mokly-cache/`.
 - The manifest lists the referenced closure so the harvest and the readers
-  know exactly which files belong to the catalogue. Historical manifests and
-  the old single-directory layout remain readable for baselines.
+  know exactly which files belong to the catalogue. After the merge only v8
+  content is readable; earlier envelopes and filenames identify incompatibility.
 - `mockupsDir` keeps its name. The generated child is the fixed name
   `mokly-generated`; unlike local-only `.mokly-cache`, deployable output has
   no leading dot because some static hosts and deploy tools skip dot-paths.
@@ -105,9 +120,10 @@ Decisions:
 - Backend and documentation only. No mockup or UI work.
 
 Approved merge targets: [unified output](../docs/protocol/mokly-unified-output.md),
-[manifest and historical readers](../docs/protocol/mokly-generated-manifest.md),
-[viewer namespace](../docs/protocol/mokly-viewer-namespace.md), and
-[lint contracts](../docs/protocol/mokly-directory-lint.md).
+[manifest and baseline version gate](../docs/protocol/mokly-generated-manifest.md),
+[viewer namespace](../docs/protocol/mokly-viewer-namespace.md),
+[lint contracts](../docs/protocol/mokly-directory-lint.md), and
+[browser fixture preparation](../docs/protocol/ci-fixture-preparation.md).
 Protocol owners: [configuration](../docs/protocol/mokly-configuration.md),
 [derived baselines](../docs/protocol/mokly-derived-baselines.md), and
 [baseline storage](../docs/protocol/mokly-baseline-storage.md). Related
@@ -592,6 +608,11 @@ Meanwhile `origin/main` added imported CSS delivery under
 content deltas (#122), route-scoped shell bootstraps (#120), and manifest v7,
 and it still uses the committed and derived output modes.
 
+Subsequent decisions supersede the earlier multi-version-reader design below:
+correction 3 A requires v8-only baseline content; finding 32 B corrects route
+and viewer-version wording; finding 34 C adds Milestone 14 shared preparation.
+Completed Milestones 1–8 remain history, not the post-merge compatibility policy.
+
 - [x] Audit every addition on `origin/main` since the merge base
       (`git diff --name-status <base>..origin/main`) and list in this plan
       the features, contracts, and tests that the merge must preserve.
@@ -637,7 +658,7 @@ and anchors, all changed protocols at most 250 lines, unchanged Milestones
 1–8 and moved v6 prose, and no new main-relative file deletions.
 `git diff --check` passed. `cargo xtask check` is exempt for this documentation
 milestone. The full implementation review remains assigned to the orchestrator
-in Milestone 14; this milestone only inspected its documentation diff.
+in Milestone 15; this milestone only inspected its documentation diff.
 
 ### Mainline preservation audit
 
@@ -701,8 +722,9 @@ Preserve each source commit's behavior and verification:
    and all related fixture/example conversions. Keep `nav_path_*`,
    `id_keyed_wire_formats`, `artifact_paths`, variant/manifest/catalogue,
    disclosure, historical identity, component reason/resource/fast-path,
-   private-metadata and export safety tests. The blanket pre-v7 rejection is
-   the one historical-compatibility behavior explicitly replaced below.
+   private-metadata and export safety tests. Preserve the earlier-baseline
+   unavailable behavior, raising its threshold to v8 under correction 3 A;
+   do not restore main's deleted legacy readers, adapters, fixtures or tests.
 6. `0c8245f8` (#122): content-addressed Plan → Blobs → Complete exchange;
    SHA-256/size ownership inventory; immutable snapshot capture; per-project
    deduplication; bounded parallelism; retry/expiry/re-plan rules; keep-first
@@ -755,12 +777,11 @@ they are preservation requirements, not a reduced validation selection.
 
 ### Fixed decisions for implementation
 
-- Use private manifest 8, extending v7 entries with v6 closure/blob fields.
-  Keep actual binary bytes in hashes. Retain the `generated-v6` cache layout
-  tag for its physical layout and distinguish schemas through `manifestVersion`.
-  Parse every supported historical schema separately. Preserve the unavailable
-  comparison outcome only when older parent-scoped component variant ids cannot
-  be projected losslessly into main's global-id model; never invent ids.
+- Use private manifest 8, extending v7 entries with closure/blob fields and
+  exact binary-byte hashes. Correction 3 A supersedes the earlier reader design:
+  only v8 content is readable. Use `generated-v8` descriptors and completion
+  markers; older completed caches can only prove incompatibility. Preserve
+  main's exact product copy and command outcomes for every older base.
 - Reserve `styles` and `assets` case-insensitively for HTML first segments,
   with the exact `build-invalid` error in the unified-output contract. One
   pending-output/closure resolver owns references; no stale-disk fallback.
@@ -786,7 +807,7 @@ they are preservation requirements, not a reduced validation selection.
 Decision 28 replaces main's split page/CSS roots and duplicate directory
 constant, committed/derived writer/capture branches, Git-ignore committability
 checks, mode-specific PostCSS directory scanning, per-file orphan ownership
-inside the fully disposable tree, and v7-only historical rejection. Their
+inside the fully disposable tree. Their
 tests must change to prove the new contract, not disappear. Preserve every
 non-mode CSS, path, privacy, confinement, transaction and invalid-version check.
 This branch's previously authorized removal of `generatedOutput`,
@@ -806,10 +827,16 @@ corrects the naming policy and marker exception. Milestone 9 removes no runtime
 feature or test; it moves the existing v6 manifest prose into its focused
 contract and removes the CSS follow-up already delivered on main.
 
-Findings 32, 34 and all other unapproved earlier findings remain deferred.
+Correction 3 A authorizes removing this branch's pre-v8 content readers,
+legacy flat reader/harvest, old-schema adapters and cross-layout URL
+normalization during Milestone 11. It preserves main's earlier-baseline outcome
+with threshold v8 and all deletions already on main. Finding 32 B changes only
+route-prefix/version-policy documentation; finding 34 C is Milestone 14 test
+preparation work. All other unapproved findings, including finding 17, remain
+deferred.
 Do not apply separate fixes under the merge. If a contract collision forces a
 change in one of those areas, make the smallest correct integration change and
-record it by path in the merge commit and milestone report. Milestone 14's
+record it by path in the merge commit and milestone report. Milestone 15's
 final review belongs to the orchestrating agent after the final push.
 
 ## Milestone 10: Give the directory-name check its own lint rule
@@ -824,8 +851,9 @@ final review belongs to the orchestrating agent after the final push.
        example-artifact regression tests plus a unit test of Mokly's fixed names.
 
 Commit these documentation corrections before the Milestone 10 code commit.
-Historical-reader correction 3 awaits the user's decision. Leave that text
-unchanged and do not start Milestone 11 until the orchestrator supplies it.
+Historical-reader correction 3 is now decided as A in the decisions above.
+The user accepted the subsequent contract update and authorized its separate
+documentation commit before Milestone 10. Milestone 11 follows those commits.
 
 Current-branch claims were checked against the implementation, not the guides:
 
@@ -843,8 +871,7 @@ Current-branch claims were checked against the implementation, not the guides:
   hashing. `src/review/prepare.ts`, `tree_inventory.ts` and
   `src/baseline/manifest.ts`, `catalogue.ts`, `cache_layout.ts`, `harvest.ts`
   confirm current lookup, inventory diagnostics, descriptors and harvest.
-  Historical-reader target text is unchanged pending correction 3; this audit
-  grants no permission to resolve other open findings.
+  At this audit the historical-reader target was unchanged pending correction 3. The later A decision now supersedes it; other open findings stay deferred.
 - `mokly-viewer-namespace.md`: `src/publication/removed_previews.ts`,
   `src/publish/manifest.ts`, `src/export/ownership.ts` and the viewer's catalogue
   reader confirm the old namespace and strict current versions. New namespace,
@@ -858,12 +885,35 @@ Current-branch claims were checked against the implementation, not the guides:
 Backend. This runs before the merge, so `main`'s `no-restricted-syntax`
 block and this branch's check never share one ESLint rule.
 
-- [ ] Replace the `no-restricted-syntax` directory-name check with the local
+Status: implementation and functional verification are ready; the code commit
+is blocked by the existing dependency audit. Documentation corrections were
+committed and pushed as `f8f64e8f756fcc2a7b32b7eb69df8e38b8c4a354`.
+
+- [x] Replace the `no-restricted-syntax` directory-name check with the local
       ESLint rule, and prove that a string, a template, and a
       regular-expression literal are reported.
+- [ ] Record the orchestrator's decision on the dependency-audit blocker
+      before committing the code. Do not change dependency versions without
+      separate authorization.
 - [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
+
+Validation: the ten focused lint tests pass. Under Node 22.14.0, formatting,
+lint and type checks pass; `npm test` passes 2,251 tests with no failures,
+skips or cancellations; all 689 browser tests pass; example Check validates
+310 untracked files. The initial Node 24.14.1 unit run had one native runtime
+crash, `FATAL ERROR: v8::ToLocalChecked Empty MaybeLocal`; the isolated watcher
+retry passed both tests, and the complete run passed on Node 22.14.0.
+
+`cargo xtask check` was run and retried. Both attempts stop at
+`npm run dependencies:check` with 13 high-severity findings from the `braces`
+chain (GHSA-vfj7-8cjw-p6xm); the final audit reports `No fix available`.
+The audited `HEAD` and `origin/main` lockfiles both contain `braces` 3.0.3,
+`micromatch` 4.0.8 and `react-native-worklets` 0.8.3. No dependency or gate
+configuration was changed, and no code commit or final implementation review
+has run. Historical-reader correction 3 was later decided as A, and its
+documentation is updated without starting Milestone 11 or making a commit.
 
 ## Milestone 11: Merge `main` and unify the generated directory
 
@@ -875,17 +925,39 @@ Backend.
 - [ ] Merge and reconcile the main-only protocol pages named in Milestone 9,
       then add their links. Preserve the current README and guide contracts
       while replacing only the authorized layout, modes and version clauses.
+      Include `mokly-baseline-compatibility.md`, retaining its earlier-version
+      outcome with the approved v8 threshold.
 - [ ] Implement the Milestone 9 layout and manifest: one constant,
       generated stylesheets and assets relative to the generated directory,
       reserved route segments, the shared reference rule, and imported CSS
       with Git-index tracking, in-memory head output, per-commit baselines,
       and the opt-in writers.
+- [ ] Implement correction 3 A: only v8 current/baseline readers; detect committed
+      v2–v7 envelopes and former-name sentinels without rebuilding; detect earlier
+      output after its own rebuild; retain main's exact typed outcome, product
+      copy and Serve/export/publication behavior.
+- [ ] Keep v8 inventory verification, per-commit blob/rebuild selection and bounded
+      moved-root discovery. Implement the documented old-cache compatibility probe
+      and identity checks; write only v8 completed caches and clean up rejected
+      rebuilt output without harvesting it.
+- [ ] Remove this branch's pre-v8 readers, old-schema adapters, legacy flat
+      reader/harvest and cross-layout URL normalization. Keep ordinary resource
+      resolution and every mainline deletion; do not restore removed legacy
+      fixtures or APIs. Record the affected paths and approved removals.
+- [ ] Test committed, rebuilt and cached earlier bases; malformed/newer versions;
+      v8 complete/incomplete inventories and moved roots; exact once-per-base
+      unavailable copy; current-only exports/publication and recovery to a v8 base.
+- [ ] Reconcile generated-prefix documentation with kind/id-derived HTML paths
+      and strict catalogue v4. Add no new validation for finding 32; retain the
+      separately approved styles/assets reservation and main's path helpers.
 - [ ] Update the tests and fixtures from both sides. Add tests that page
       routes cannot collide with `styles/` or `assets/`, and that a page loads
       its imported stylesheet from disk, through Serve, and in an export.
 - [ ] Smoke test the example: build, `check`, Serve with Changes against
       `origin/main`, an export served by a static file server, and a screen
       with imported CSS that is styled in all three.
+      If the pinned base predates v8, expect the documented unavailable state;
+      use a separate v8 fixture to prove actual comparison delivery before merge.
 - [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
@@ -923,9 +995,40 @@ Backend.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 
-## Milestone 14: Verify and review the merged branch
+## Milestone 14: Prepare shared browser baselines once
 
-- [ ] Re-read every document changed in Milestones 9 to 13 against the
+Test infrastructure. Implement finding 34 C under the
+[fixture preparation contract](../docs/protocol/ci-fixture-preparation.md).
+The product and every existing UI assertion remain functional throughout.
+
+- [ ] After the merge, audit every browser fixture and indirect helper that
+      rebuilds the same unchanged example baseline. Record all consumers, starting
+      with today's static-example and design-library-export fixtures.
+- [ ] Record the merged branch's browser-suite time, full test inventory and
+      fixture phases before changing preparation, with runtime, worker/shard and
+      cache conditions recorded for a comparable after measurement.
+- [ ] In Playwright global setup, create the example baseline repository and its
+      real rebuilt v8 cache once before tests start. Publish the validated run
+      descriptor only after preparation succeeds; retain existing Serve readiness.
+- [ ] Give every equivalent fixture an isolated repository/source/cache copy.
+      Preserve the baseline commit and recipe; prove warm hits, mutation isolation,
+      immutable template contents and safe global/fixture teardown on failure or
+      cancellation. No per-fixture fallback rebuild may mask failed preparation.
+- [ ] Retain exactly one browser test that exercises the real cold baseline
+      rebuild as its operation under test, and retain the real cold preview:build
+      preparation test. Preserve all unit/integration baseline and UI coverage.
+- [ ] Keep the 600-second fixture limit unchanged; do not change assertion
+      deadlines, retries, worker limits or sharding. Bound shared setup as specified.
+- [ ] Record after timings for the full browser suite, global preparation,
+      per-fixture copy/cache/export and the retained cold operations. Compare with
+      before results, including setup/teardown time and complete coverage evidence.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; `git add -A`; commit with Conventional Commits and push.
+
+## Milestone 15: Verify and review the merged branch
+
+- [ ] Re-read every document changed in Milestones 9 to 14 against the
       shipped behaviour and fix drift.
 - [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
@@ -951,4 +1054,5 @@ Backend.
 - Smoke-test a fresh consumer with the next published package: `npx mokly`
   and `npx mokly export` produce nothing under `mokly-generated/`, `npx mokly
 build` produces it, `check` passes with the directory ignored, and a
-  comparison against `origin/main` rebuilds its baseline.
+  comparison against `origin/main` uses verified v8 blobs or a v8 rebuild when
+  required. If that base predates v8, confirm the documented unavailable outcome.

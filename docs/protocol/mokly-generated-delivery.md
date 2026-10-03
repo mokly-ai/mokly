@@ -1,104 +1,109 @@
-# Generated Document Delivery Across Viewer Layouts
+# Identity-Derived Generated Document Delivery
 
 ## Delivery Status
 
-Implemented for v6 catalogues in [Generated Output Simplification](../../plans/generated-output-simplification.md); prefixless historical publications remain supported.
-The Milestones 11–12 target is defined separately by
-[unified output](./mokly-unified-output.md) and
-[viewer namespace/version gates](./mokly-viewer-namespace.md). Their public
-catalogue v4 supersedes the v1 compatibility policy below after implementation;
-this page records the pre-merge behavior until that milestone.
-This owns URL addressing for [catalogue read models](./mokly-catalogue.md),
-[viewer frames](./mokly-frame-adapter.md), [static export](./mokly-export-delivery.md)
-and [publication](./mokly-publication.md). It does not change logical route
-strings, the v1 public-catalogue version or historical snapshot URLs.
+Approved Milestones 11–12 target in
+[Generated Output Simplification](../../plans/generated-output-simplification.md).
+Finding 32 option B corrects the route-prefix documentation only. It adds no
+runtime route validation. Keep the separately approved `styles`/`assets`
+reservation and the [namespace/version contract](./mokly-viewer-namespace.md).
+The branch's pre-merge v6/public-v1 implementation is not the merged policy.
 
-## Layout Signal
+## Routes And Layout Signal
 
-The public `CatalogueReadModel` adds the optional literal field
-`generatedPathPrefix?: "mokly-generated"`. Every new v6 Serve, export or published
-catalogue **must** set it to `mokly-generated`; absence means the legacy
-single-directory layout, for existing published v1 catalogues. No other value,
-including `""` or `/`, is valid. Neither the viewer nor a host infers the
-prefix from a route, origin, file existence or current application version.
-The viewer's public catalogue decoder accepts exactly these two forms and
-rejects unknown non-literal values. Embedded Serve shell data and the
-SSR/hydration descriptor carry the same field, omitting it for an older
-source. A private v6 manifest or live-index-1 generation sets
-`mokly-generated` in its shell data; a historical v2–v5 manifest omits the field.
-The sole production literal is defined in
-`packages/viewer/src/catalogue/delivery_paths.ts` and exported from
-`@mokly/viewer/data`; the field's type derives from that constant. The
-unreleased dot-directory spelling is not
-an accepted prefix or a fallback layout.
-The field is delivery metadata, not a route component or a Git tracking mode.
-Switching layout is a content/source change: remount frame sessions and
-reject stale responses from the previous source, even if a route string matches.
+Merged entry routes derive from kind and id. Authors do not supply routes.
+Actual generated HTML has only these kind prefixes:
 
-The logical route remains `<route>.html`, with the existing validated
-route grammar. Project it to a public artifact path as follows:
+| Generated content                       | Generated-root-relative path             |
+| --------------------------------------- | ---------------------------------------- |
+| Page document                           | `pages/<id>.html`                        |
+| Screen view, including a screen variant | `screens/<id>.<viewport>[.dark].html`    |
+| Component variant view                  | `components/<id>.<viewport>[.dark].html` |
 
-| Source layout          | Current document path            | Authored closure path                  |
-| ---------------------- | -------------------------------- | -------------------------------------- |
-| v6 (`mokly-generated`) | `static/mokly-generated/<route>` | `static/<catalogue-relative path>`     |
-| legacy (field absent)  | `static/<route>`                 | existing legacy `static/<public path>` |
+The shared kind/id helpers guarantee these prefixes. This is not a claim that
+an arbitrary safe-relative-path grammar rejects every other prefix. The
+`mokly-generated/` delivery prefix is outside the logical generated route.
+An id can contain the text `mokly-generated`; for example,
+`screens/mokly-generated.mobile.html` still starts with `screens/`. No new
+substring or id-name prohibition is part of finding 32.
 
-The public catalogue's non-null `fragmentPath` and `documentPath` are
-artifact-root-relative **full paths** (including `static/`); v6 paths include
-the prefix, legacy paths do not. Producers construct them from the selected
-layout and manifest routes; public read-model validation recomputes each
-expected path from the entry/variant/viewport and that catalogue's prefix.
-The `route`/variant route fields themselves never contain `mokly-generated/`.
-Null stays null for an unavailable current view. Removed-entry `preview.path`,
-comparison generation URLs, and temporary component-render URLs retain their
-own separately validated namespaces; do not prefix them with `mokly-generated`.
+Logical shell routes additionally include `user-flows/<id>.html`. A use case
+has no generated HTML file of its own; a component parent likewise has no
+views. The shell lives at `/view/<kind-derived entry route>`, while frames
+load real page/view files. Compiled resources use `styles/` and `assets/`;
+the private manifest has its own fixed name. They are not HTML entry routes.
+
+Public catalogue v4 requires `generatedPathPrefix: "mokly-generated"`, typed
+from `GENERATED_DIRECTORY` in
+`packages/viewer/src/catalogue/delivery_paths.ts` and exported through
+`@mokly/viewer/data`. Only v4 is readable by the merged viewer. Reject older
+and unknown versions before entry or URL interpretation. An absent prefix is
+invalid in v4, not a legacy-layout signal; neither disk existence nor a route
+string chooses a fallback. This contract does not add v1/v2/v3 publication
+readers. Older deployments keep their matching bundled viewer or are re-exported.
+
+V4 records contain identity and view axes, not `route`, `documentPath` or
+`fragmentPath` fields. Derive each current file from that identity and the
+required prefix. Private v8/live-index stages derive the same addresses.
+Complete public models and strictly scoped live models retain their separate
+usage validation. Source changes still invalidate stale frame work and events.
+
+## Public Paths And References
+
+The current document URL is `/static/mokly-generated/<generated route>`;
+export stores it at `static/mokly-generated/<generated route>`. Generated CSS
+and assets use the same prefix with their generated-relative resource paths.
+Authored closure resources remain under
+`static/<catalogue-relative authored path>`. Use the single generation/closure
+reference rule in [unified output](./mokly-unified-output.md#one-reference-rule).
+
+Derive paths from the same shared helpers in shell frames, component stages,
+geometry, inspection and navigation; do not construct a second route map.
+Encode validated segments once, preserve query/fragment according to the
+existing contract, and resolve artifact-relative paths at the source origin
+root rather than the catalogue JSON directory or embedding application's URL.
+The private manifest is never a frame/resource target, served path or export.
+
+Comparison snapshots and removed previews resolve from the advertised immutable
+`mokly-viewer/diffs/generations/<generation>/review.json`. Their generation-local
+`snapshots/before/` and `snapshots/after/` paths remain identity-derived. They
+are not current `/static/` paths and never acquire another generated prefix.
+Transient component renders keep the distinct
+`mokly-viewer/components/renders/` capability boundary. Export contains none
+of the private live rendering, navigation, view-evidence or event endpoints.
 
 ## Frames And Reverse Mapping
 
-For a public model, the viewer uses its validated `fragmentPath` or
-`documentPath` directly, encodes each validated segment once and prepends
-`/` (or resolves it at that source's configured origin). For private
-manifest/live-index stages, which carry logical routes instead of public
-paths, append the validated logical route to `/static/mokly-generated/` for v6 or
-`/static/` for legacy, as selected by the shell's layout field. The component
-stage, geometry/inspection and
-same-origin and postMessage adapters use the **same source layout** rather
-than independently concatenating `/static/${route}`. The frame mount carries
-the selected layout and expected logical document route along with its URL;
-an absent mount prefix is legacy. The built-in adapter accepts a current
-HTML URL only when its decoded, normalized pathname is exactly
-`/static/mokly-generated/<expected route>` for v6 or `/static/<expected route>`
-for legacy on the configured origin, with the existing hash, query, encoding,
-no-traversal and frame-authentication rules.
-Never silently accept a legacy URL for a v6 mount or vice versa. The private
-temporary-render adapter retains its distinct `__mokly/components/renders/`
-path policy and must not adopt current-document URLs.
+Keep existing origin, session, pathname, encoding, traversal and authentication
+checks. A current frame URL must match the exact file derived for the mounted
+entry/view under `/static/mokly-generated/`. Strip that delivery prefix once
+before resolving the logical route through the catalogue's kind/id helpers.
+Retain a valid fragment separately. Authored closure URLs are resources, not
+entry routes; temporary renders and historical generations use their existing
+separate adapters. Do not accept an old prefixless current URL by treating a
+missing field as permission for a legacy mount.
 
-When an iframe loads or navigates, first verify its origin and decoded
-pathname against the active layout and current-document prefix; strip that
-prefix exactly once to obtain the logical route and validate it against the
-active catalogue's registered document/fragment routes. Retain a valid
-fragment separately. Use this logical route for shell navigation, selected
-comparisons, geometry/range authentication and links; never pass a
-`static/` or `mokly-generated/` path to the logical router. Reject cross-layout,
-unknown, traversal, encoded-separator, or non-HTML navigation. Authored
-closure URLs are resources, not frame routes. Source replacement invalidates
-in-flight mounts and events before adopting the next layout. This rule also
-applies when `@mokly/viewer` is hosted independently by a cloud product.
+Provider-normalized extensionless URLs remain supported under `main`'s shared
+normalization helpers and must identify the same derived document. This work
+adds no new route validator or removes a mainline path check. The already
+approved reserved first segments for raw generated HTML remain in
+[unified output](./mokly-unified-output.md#one-owned-tree).
 
 ## Static Artifacts And Compatibility
 
-Serve delivers in-memory v6 documents under `/static/mokly-generated/<route>`;
-export and publication place those compiled documents under
-`static/mokly-generated/<route>` and copy only manifest `assetClosure` resources
-under `static/<catalogue-relative path>`. The private manifest is never served
-(404) or shipped as `static/mokly-generated/mokly-manifest.json`. Relative HTML/CSS references resolve
-as they do on disk. No unreferenced file under `static/` becomes public by
-directory scan. Export's optional comparison snapshots are separate from the
-current tree and may retain their historical layout. The upload archive
-contains the **same** static layout and optional catalogue field, with no
-new upload schema; the receiver validates artifact inventory and paths but
-does not rewrite them to the receiver's current layout. An older archive or
-published catalogue with the field absent remains viewable under
-`/static/<route>` by the newer viewer. The legacy fallback is read-only
-compatibility: new publications always advertise and use `mokly-generated`.
+Serve reads current generated files from the accepted in-memory generation and
+only referenced authored closure files from their confined locations. Export
+and publication use that same layout. Neither reads stale generated disk files
+nor includes `static/mokly-generated/mokly-manifest.json`. Relative HTML/CSS
+references behave the same on disk and through `/static/`.
+
+Only v8 baselines provide comparison content. A pre-v8 base follows the exact
+[earlier-baseline outcome](./mokly-generated-manifest.md#earlier-baseline-outcome);
+it supplies no legacy-layout snapshots or removed-entry previews. Snapshot
+publication uses its existing generation-local layout for accepted v8 content.
+
+Catalogue v4, static delivery v4, bootstrap v1, ownership v3 and upload v2
+follow the [namespace version gates](./mokly-viewer-namespace.md#version-matrix).
+Receivers validate their supported formats before paths; they never rewrite
+an old artifact into the current layout. The marker/transport gate and strict
+viewer version gate protect current-only artifacts as well as comparisons.

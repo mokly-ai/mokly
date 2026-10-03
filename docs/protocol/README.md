@@ -9,6 +9,8 @@ The first public release remains an external delivery step.
 
 ## Supported Formats
 
+The following table describes the current branch before the planned main merge.
+
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
 | Without registered components | 6                  | 2                 |
@@ -30,13 +32,23 @@ when the historical primary file is absent, never when it is invalid.
 Milestone 9 of Generated Output Simplification defines an approved merge target,
 not another implemented format: private manifest v8, public catalogue v4,
 delivery v4, a versioned shell bootstrap, ownership v3 and upload v2. The
-contracts below define the implementation sequence and historical readers.
+contracts below define the implementation sequence. Correction 3 option A
+allows only v8 baseline content: every earlier base gets `main`'s typed
+incompatible-earlier outcome. Public catalogue v4 has no older-version reader
+or optional-prefix legacy fallback. These targets supersede the pre-merge
+compatibility policy above when Milestones 11–12 land.
+The current catalogue, adapter, export and upload implementation pages still
+describe pre-merge wire formats; [generated delivery](./mokly-generated-delivery.md)
+owns the merged prefix and viewer-version policy to apply during reconciliation.
 
 ## Contracts
 
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
   cache and aggregation contract; hosted acceptance measurements remain tracked
   by the active CI performance plan.
+- [CI fixture preparation and lifetime](./ci-fixture-preparation.md) — existing
+  cleanup/measurement rules and approved shared example-baseline preparation,
+  retained cold regressions and unchanged 600-second fixture limit.
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
@@ -49,18 +61,17 @@ contracts below define the implementation sequence and historical readers.
 - [Unified generated output and imported styles](./mokly-unified-output.md)
   — approved single-tree layout, reserved routes, reference policy, PostCSS and
   CSS delivery without output modes.
-- [Generated manifest and historical readers](./mokly-generated-manifest.md)
-  — implemented v6 inventory and approved v8 identity schema, version-specific
-  readers and cache mapping.
+- [Generated manifest and baseline version gate](./mokly-generated-manifest.md)
+  — approved v8 identity schema/inventory, earlier-version outcome and cache policy.
 - [Portable viewer namespace and version gates](./mokly-viewer-namespace.md)
   — approved `mokly-viewer/` paths, version errors and upload compatibility.
 - [Directory constants and import lint](./mokly-directory-lint.md)
   — approved independent literal guard, retained source-ordering rule and
   duplicate-import enforcement with folder coverage probes.
 - [Historical catalogue discovery and addressing](./mokly-baseline-addressing.md)
-  — deterministic rebuild discovery, cache descriptors and cross-layout comparisons.
+  — approved moved-root v8 discovery and descriptors without legacy content readers.
 - [Generated document delivery](./mokly-generated-delivery.md)
-  — public layout signal, frame URL mapping, static paths and legacy viewing.
+  — identity-derived HTML prefixes, catalogue-v4 policy and static/frame URL mapping.
 - [Public authoring API](./mokly-authoring.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Build and Browse runtime](./mokly-runtime.md)

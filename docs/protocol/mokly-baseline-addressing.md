@@ -1,141 +1,117 @@
-# Historical Catalogue Discovery And Addressing
+# Baseline Catalogue Discovery And Addressing
 
 ## Delivery Status
 
-Implemented for v6 and historical baselines in [Generated Output Simplification](../../plans/generated-output-simplification.md).
-The approved [v8 historical reader contract](./mokly-generated-manifest.md#historical-readers-and-layouts)
-extends this descriptor to `main`'s v7 and the unified v8 tree in Milestone 11.
-It replaces route-based cross-version pairing below with identity/view-axis
-pairing while retaining each side's actual file addresses.
-This supplements [per-commit selection](./mokly-derived-baselines.md) and
-[baseline storage](./mokly-baseline-storage.md). It does not inspect the head
-Git index: only `check` uses index tracking.
+Approved Milestone 11 target in
+[Generated Output Simplification](../../plans/generated-output-simplification.md).
+Correction 3 option A replaces the branch's old-schema and cross-layout readers.
+Only v8 content reaches a baseline reader. Earlier-version detection follows
+the [manifest gate](./mokly-generated-manifest.md#historical-readers-and-layouts).
+The branch's current v6 implementation is not changed by this documentation.
 
 ## Per-Commit Descriptor
 
-Each pinned baseline selection supplies an immutable descriptor to both Git
-blob and rebuilt readers:
+Both Git-blob and rebuilt v8 readers receive an immutable descriptor:
 
 ```ts
 interface BaselineCatalogue {
-  commit: string; // pinned merge-base commit
-  layout: "generated-v6" | "legacy";
-  catalogueRoot: string; // repository-relative POSIX historical mockupsDir
-  generatedRoot: string; // `${catalogueRoot}/mokly-generated` for v6, else catalogueRoot
+  commit: string;
+  layout: "generated-v8";
+  catalogueRoot: string; // repository-relative historical mockupsDir
+  generatedRoot: string; // catalogueRoot joined with GENERATED_DIRECTORY
 }
 ```
 
-Normalize a repository-root catalogue to `.`; join paths without writing
-`./` into Git requests. All roots must be confined, regular directories,
-without symlink aliases. The descriptor describes the **base**, never today's
-config. The head descriptor is always the current `mockupsDir` with
-`generatedRoot = <mockupsDir>/mokly-generated` and the v6 layout.
+A repository-root catalogue is `.`; never include `./` in Git requests. Roots
+must be confined regular directories without symlink aliases. The descriptor
+names the base's root, never today's configured root. The head uses the same
+v8 layout at the current root. No descriptor or resource reader is constructed
+for an earlier-version outcome.
 
-For a commit with a manifest at the current root, prefer
-`<current mockupsDir>/mokly-generated/mokly-manifest.json` as v6, then the
-historical single-directory canonical manifest, then its former name and
-opt-in v2 name. Malformed or non-regular selected manifests fail; never use
-an older filename to hide an invalid preferred manifest. A missing manifest
-at those locations selects a rebuild, **not** a search of Git history for an
-older root. Complete v6 inventory selects Git blobs; an incomplete inventory
-rebuilds as specified in [generated output](./mokly-generated-output.md#manifest-v6-and-per-commit-baselines).
+At the current requested root, select the first existing manifest in the
+[manifest lookup order](./mokly-generated-manifest.md#selection-cache-and-resource-addressing).
+An earlier committed envelope or sentinel returns incompatibility immediately,
+without inventory reads or commands. Invalid/nonregular selected files fail;
+never hide them behind another filename. A valid v8 child manifest selects
+blobs only when its inventory is complete. Missing manifests or incomplete v8
+output select the trusted rebuild path, not a scan of other committed roots.
 
 ## Discovery After A Rebuild
 
-After all historical build commands succeed, discover the generated root
-inside the extracted commit, before harvesting or writing the cache marker:
+After the base's own commands finish successfully and before adopting output:
 
-1. If the current requested catalogue root contains
-   `mokly-generated/mokly-manifest.json`, validate it as v6 and select that root.
-   Existence with invalid bytes, type, or symlink fails
-   `baseline-output-invalid`, not fallback.
-2. Otherwise try a direct legacy manifest at the current root in canonical,
-   former, then opt-in v2 filename order. The first existing name must parse
-   as the corresponding historical schema; an invalid one fails
-   `baseline-output-invalid`, not fallback.
-3. Otherwise walk the extraction lexicographically, excluding every `.git`,
-   `.mokly-cache`, and `node_modules` directory at any depth; never follow
-   symlinks. Use confined `lstat`, the existing bounded manifest reader, and
-   at most the 65,536-entry extraction traversal bound. For each directory,
-   inspect the first existing eligible manifest in order: v6 `mokly-generated/`
-   child, then direct canonical, former and opted-in v2 names. A `mokly-generated/`
-   directory holding its parent's v6 manifest is not a second legacy root.
-   If that preferred manifest is malformed, skip the directory entirely;
-   do not use an older filename to hide it. Only directories with a valid
-   selected manifest are candidates. A malformed manifest at the explicitly
-   requested root still fails steps 1–2.
-4. Exactly one candidate selects its repository-relative root and layout.
+1. Inspect the current requested root in the same ordered lookup. An existing
+   preferred file is authoritative. Earlier output returns
+   `baseline-incompatible-earlier`; malformed/nonregular/newer output or v8 at
+   the flat location fails `baseline-output-invalid`. No fallback masks it.
+2. If no recognized filename exists there, walk the extraction in UTF-16
+   code-unit order. Exclude `.git`, `.mokly-cache` and `node_modules` at every
+   depth. Never follow symlinks. Keep confined `lstat`, bounded manifest reads
+   and the 65,536-entry traversal limit.
+3. At each directory inspect the first existing eligible name: canonical in
+   its generated child, direct canonical, then the two former sentinels. A
+   valid v8 child is a compatible candidate. An earlier integer canonical
+   envelope or former sentinel is an incompatible candidate, without reading
+   old entries. A malformed/newer preferred file makes that directory ineligible;
+   never try its older names. Do not count the generated child again as a flat
+   catalogue when its manifest belongs to the parent candidate.
+4. Exactly one candidate is required, whether compatible or incompatible.
    Zero or several fail `baseline-output-invalid` with
    `No unique historical catalogue after baseline build; candidates: <list>.`
-   Use `(none)` for zero; otherwise list `<root> (<layout>)` entries sorted by
-   root and then layout, comma-separated. Do not guess from today's config.
-5. For a selected v6 candidate, verify the built tree's generated files and
-   Git blob hashes against its inventory (from built file bytes, not the
-   head index). Incomplete or stale rebuilt output fails
-   `baseline-output-invalid`; a no-op recipe cannot turn an invalid
-   committed inventory into a valid cached baseline.
+   Use `(none)` for zero. Otherwise list `<root> (generated-v8)` or
+   `<root> (incompatible-earlier)`, sorted by root then classification and
+   joined by comma and space. Do not prefer a v8 candidate over ambiguity.
+5. A sole earlier candidate returns the typed earlier-baseline outcome. Do not
+   harvest it, create a current descriptor or read its resources. A sole v8
+   candidate selects its historical root and must pass complete generated-file
+   and byte-hash verification. Missing/stale rebuilt output fails
+   `baseline-output-invalid`; a no-op recipe cannot repair a bad inventory.
 
-For example, the migrated example requests `examples/basic` but a legacy
-`origin/main` build produces `examples/basic/generated/mokly-manifest.json`;
-the scan selects `examples/basic/generated` as `legacy` when the requested
-root has no manifest. The recipe's historical code remains trusted input.
+A moved v8 root therefore remains usable: when the requested root is empty,
+the bounded search can find the one v8 generated child elsewhere. A rebuilt
+old flat catalogue may be recognized only to report incompatibility, never as
+an alternative content layout. Malformed data never becomes the graceful
+older-version outcome.
 
 ## Cache Identity And Readers
 
-Keep `inputs.json` as the JSON string of the **requested/current**
-repository-relative `mockupsDir` (`"."` for a repository-root catalogue),
-not the discovered root. A mismatch with
-the request, or a different command list in the completion marker, fails
-intact with the existing remove-the-entry guidance. New `complete.json`
-schema-version-1 markers retain `commit`, `finishedAt`, `commands`, and
-`manifestVersion` and add `historicalCatalogueRoot` (the discovered
-repository-relative POSIX path) and `layout` (`generated-v6` or `legacy`).
-Validate these fields and the corresponding harvested manifest on reuse;
-derive `generatedRoot` from them, never rerun discovery on a warm cache hit.
+`inputs.json` keeps the requested/current repo-relative `mockupsDir`, not the
+discovered root. New schema-1 completion markers use `manifestVersion: 8`,
+`historicalCatalogueRoot` and `layout: "generated-v8"`, alongside the existing
+commit, finish time and command list. Validate those fields and the v8 manifest
+on reuse; do not rediscover a root during a warm hit.
 
-New v6 cache entries store generated files beneath
-`output/<historicalCatalogueRoot>/mokly-generated/` and the manifest's authored
-closure beneath `output/<historicalCatalogueRoot>/`. Legacy entries retain
-the existing flat `output/<route>` tree. Both readers accept `(commit,
-repositoryRelativePath)`, verify that the path is under the descriptor's
-generated or catalogue root and is an allowed generated document or closure
-resource, then read only a confined regular file. The Git reader uses the
-repository-relative path directly; the v6 cache reader appends it to `output/`;
-the legacy cache reader strips **historicalCatalogueRoot** before reading
-under flat `output/`. Neither uses today's root to translate a base path.
+Cache output is always
+`output/<historicalCatalogueRoot>/mokly-generated/` plus the authored closure
+under `output/<historicalCatalogueRoot>/`. Each reader accepts a pinned commit
+and repository-relative path, proves that the path belongs to the generated
+set or authored closure under that descriptor, and reads a confined regular
+file. The Git reader uses that path directly; the cache reader appends it to
+`output/`. No reader strips a legacy root to access flat output.
 
-Pre-v6 completed cache markers lack the new fields. Accept them only with
-manifest versions 2–5 and the existing flat `output/` layout; their historical
-root equals the requested root stored in `inputs.json`, as the old builder
-could not discover another root. Validate the legacy manifest on reuse.
-If `inputs.json` differs after a catalogue move, fail intact and require
-removing that cache entry before retrying. A v6 marker missing the new fields
-is incomplete and rebuilt under the lock.
+The [storage compatibility probe](./mokly-baseline-storage.md#cache-layout)
+can inspect a previous completion marker and old manifest envelope solely to
+return `baseline-incompatible-earlier`. It cannot return a content reader,
+convert entries, relabel a v6 cache as v8 or reuse an old closure. Request/recipe
+mismatches retain the existing fail-intact/remove-entry guidance.
 
 ## Comparison Namespaces
 
-Never pair documents by repository-relative filename. Identify each side's
-generated document by its manifest **route relative to that side's
-`generatedRoot`**: head `<currentRoot>/mokly-generated/<route>` pairs with base
-`<baseRoot>/mokly-generated/<route>` for v6 or `<legacyRoot>/<route>` for legacy.
-Resolve each local HTML/CSS URL against the referring document or CSS file in
-that side's actual layout, then key the authored resource by its path relative
-to that side's `catalogueRoot`; thus head `../styles.css` and legacy base
-`styles.css` can pair as `styles.css`. Traverse each side's referenced closure
-independently; membership and exact bytes still decide materiality.
-For paired document materiality, normalize each local `href`, `src`, `srcset`
-candidate, and inline-style `url()` against its own side's real document path
-before comparing. Replace the URL's path with its catalogue-relative resource
-key (or logical generated route for a generated-document link), preserving
-query and fragment. Thus v6 `../styles.css` and legacy `styles.css` compare
-equal without hiding a changed stylesheet or a missing resource. Apply the
-same paired normalization in the unchanged-view fast path; raw HTML bytes
-are not a cross-layout materiality signal.
+Both accepted sides use v8 kind/id and view-axis addressing. Pair documents
+by that identity, with generated paths derived by the shared route helpers;
+read them beneath each side's own generated root. Generated stylesheet/asset
+keys are generated-relative; authored resource keys are catalogue-relative.
+These are separate namespaces even if their trailing strings are equal.
 
-Classification, selected comparisons, removed-content previews, component
-resource attribution, the unchanged-view fast path, CSS change attribution,
-and export/publication capture all use these side-specific namespaces and
-the descriptor for reads. Git changed-path evidence stays repository-relative
-for dependency/source impact and is **never** used to translate catalogue
-roots or infer a resource's comparison key. Snapshot publication retains
-its existing generation-local public URLs after comparison.
+Resolve local HTML/CSS URLs against each referring file in its own root and
+retain normal query/fragment, encoding, security and resource-membership rules.
+A root move alone leaves these layout-relative addresses unchanged. Do not
+normalize v2–v7 document hrefs into v8 ones, rewrite paired HTML to accommodate
+an older layout, or use Git changed-path strings to locate a base resource.
+Git paths remain source/dependency evidence only. Existing ordinary resource
+resolution, materiality and CSS equivalence checks remain required.
+
+Classification, selected comparisons, removed previews, component fast paths,
+CSS attribution and export/publication capture consume this same v8 descriptor.
+Snapshot publication retains its generation-local URLs; these are not a second
+baseline storage layout. Earlier output supplies no snapshot or removed entry.

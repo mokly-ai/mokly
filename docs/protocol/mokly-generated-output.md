@@ -2,7 +2,10 @@
 
 ## Delivery Status
 
-Implemented contract for [Generated Output Simplification](../../plans/generated-output-simplification.md).
+The command, closure and writer behavior is implemented by
+[Generated Output Simplification](../../plans/generated-output-simplification.md).
+The merged route addressing and v8-only baseline gate below are Milestone 11
+targets; the pre-merge branch still emits v6.
 The approved [unified output](./mokly-unified-output.md),
 [manifest v8](./mokly-generated-manifest.md#approved-manifest-v8),
 [viewer namespace](./mokly-viewer-namespace.md), and
@@ -14,10 +17,14 @@ changes are not implemented by the documentation-only Milestone 9. See
 ## Roots And Paths
 
 `mockupsDir` is the catalogue directory. Its fixed, Mokly-owned child
-`<mockupsDir>/mokly-generated/` contains **only** generated documents/fragments and
-`mokly-manifest.json`. No authored file belongs in this child. Route paths
-inside it are relative POSIX paths; an HTML route `design/a.html` is stored at
-`<mockupsDir>/mokly-generated/design/a.html`. Authored assets stay at their original
+`<mockupsDir>/mokly-generated/` holds generated documents/fragments and the
+manifest, with imported CSS and copied assets added by the merged layout.
+No authored file belongs in this child. Merged HTML routes derive from kind/id
+and start with `pages/`, `screens/` or `components/`; for example,
+`screens/a.mobile.html` is stored at
+`<mockupsDir>/mokly-generated/screens/a.mobile.html`. The fixed outer prefix
+is separate from the logical route; this adds no substring ban on ids.
+Authored assets stay at their original
 paths below `mockupsDir`, including stylesheet-rule paths, which remain relative
 to `mockupsDir`. Output, cache, and authored input paths must remain confined
 under the configured repository root through both lexical and real paths.
@@ -37,11 +44,12 @@ directories. The remaining `__mokly/` and `__generations/` violations are
 removed under the approved [namespace contract](./mokly-viewer-namespace.md).
 Production code defines `GENERATED_DIRECTORY` once in
 `packages/viewer/src/catalogue/delivery_paths.ts`, exports it through
-`@mokly/viewer/data`, and the CLI imports that constant directly. ESLint
-currently rejects other production string and template literals under
-`src/`, `packages/viewer/src/`, and `scripts/preview/`. The approved
-[lint contract](./mokly-directory-lint.md) adds regex literals and an independent
-rule so it can coexist with `main`'s source-ordering check.
+`@mokly/viewer/data`, and the CLI imports that constant directly. ESLint's
+`mokly/no-directory-literals` rule rejects other production string, template
+and regular-expression literals under `src/`, `packages/viewer/src/`, and
+`scripts/preview/`, including escaped spellings. The
+[lint contract](./mokly-directory-lint.md) keeps this rule independent of
+`main`'s source-ordering check; viewer-name enforcement remains Milestone 12.
 The former dot-directory name was never released and is not a read alias.
 
 Resolved entries, the renderer, compatibility transformer, module-resolution
@@ -142,16 +150,18 @@ are specified in [terminal output](./mokly-terminal-output.md).
 
 ## Manifest V6 And Per-Commit Baselines
 
-The [manifest contract](./mokly-generated-manifest.md) owns the implemented
-v6 fields, blob inventory, per-commit lookup and rebuild diagnostics. It also
-defines the approved v8 merge target and the separate historical readers.
-The current `schemaVersion: 6` envelope adds these fields to v5:
+The pre-merge `schemaVersion: 6` envelope adds these fields to v5:
 
 ```ts
 assetClosure: string[];
 generatedFiles: { path: string; blobHash: string }[];
 blobHashAlgorithm: "sha1" | "sha256";
 ```
+
+The approved [manifest contract](./mokly-generated-manifest.md) retains this
+inventory in v8 and defines per-commit lookup and diagnostics. After the merge,
+only v8 content is readable. Earlier committed, rebuilt or cached manifests
+produce `main`'s incompatible-earlier outcome, not compatibility readers.
 
 ## Closure, URLs, And Publication
 
@@ -166,9 +176,11 @@ collect each referenced authored regular file exactly once in `assetClosure`.
 Query/fragment-only and remote HTTP(S), `data:`, `mailto:`, and `tel:` links
 do not add local files; validate anchors and reject unsupported/escaping
 schemes according to the existing link contract. Do not collect unrelated
-public files merely because they share a directory. Assets outside
-`mockupsDir`, including CSS imported directly from React components, are not
-supported by this contract. A configured stylesheet pointing outside or into
+public files merely because they share a directory. Direct closure references
+outside `mockupsDir` remain unsupported. The merged
+[imported CSS pipeline](./mokly-unified-output.md) may instead deliver outside
+sources as compiled/copied generated resources, without exposing their source
+paths. A configured stylesheet pointing outside or into
 `mokly-generated/` is `config-invalid`; an emitted reference to an unavailable,
 unsafe, symlinked, non-regular, or protected target is `build-invalid` naming
 the referring generated or authored document. Preserve normal source and
@@ -177,7 +189,7 @@ realpath protection even for files listed in the manifest.
 Compute local hrefs from the **document's actual directory under**
 `mokly-generated/` to the authored file under `mockupsDir`, using POSIX relative
 paths, `/` separators, and URL-encoding per segment, preserving query and
-fragment; for example `mokly-generated/design/a.html` to `styles.css` uses
+fragment; for example `mokly-generated/screens/a.mobile.html` to `styles.css` uses
 `../../styles.css`. Resolve CSS references relative to the CSS file, not the
 generated document. A generated-to-generated link resolves inside
 `mokly-generated/`; no root-absolute catalogue hrefs. Disk-opened HTML and HTTP
@@ -189,8 +201,8 @@ to the live authored regular file;
 unreferenced paths return not found. No filesystem fallback for generated
 routes. Export ships those same compiled bytes under `mokly-generated/` plus only
 the closure files at their catalogue-relative paths; static hosting mirrors
-the disk URL layout. The public viewer's optional prefix signal and old
-publication compatibility are in [generated delivery](./mokly-generated-delivery.md).
+the disk URL layout. The merged viewer's required prefix, identity-derived
+paths and catalogue-v4-only policy are in [generated delivery](./mokly-generated-delivery.md).
 The export destination may neither contain nor be
 contained by `mokly-generated/`, including resolved aliases, and must preserve
 the existing source/cache/export transactional confinement rules.
@@ -214,8 +226,9 @@ HTML starts with `<!-- Generated by Mokly. Do not edit. -->` as one line;
 comparison and Browse strip this or a historical ownership first line without
 using either as authority. Git index tracking is a prefix check, never a grep.
 
-For v6 baseline cache entries, harvest `mokly-generated/` and the manifest closure
-under their repository-relative catalogue path; for legacy entries, keep the
-flat `output/` layout. The precise discovery, recorded root, reader mapping,
-and pre-v6 cache compatibility are in [baseline addressing](./mokly-baseline-addressing.md).
+The merged baseline cache harvests only v8 generated output and its closure
+under the recorded repository-relative catalogue root. Older completed caches
+are checked only for the earlier-version outcome, never read as flat content.
+Discovery, addressing and the storage probe are defined in
+[baseline addressing](./mokly-baseline-addressing.md).
 Keep confinement, marker/lock validation, retention and extraction bounds.
