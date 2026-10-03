@@ -49,7 +49,10 @@ navigation, breadcrumbs, path chips, and Details agree across screens:
 - The `design/browse/index-entries/**` states depict a branch on which only
   Security changed, so their filter counts one entry. In Changes, Profile is
   unmodified and its only changed row is a folder member, so its row stays an
-  undotted container above Security's dotted row.
+  undotted container above Security's dotted row. Security changed in its
+  Light views on both viewports, so it opens on its first changed view,
+  Mobile · Light, and its viewport control marks the desktop view that also
+  changed.
 - `design/browse/appearance/states/light-only-document` depicts a branch that
   removed Payment terms after the catalogue enabled Dark. Its previous version
   has only a light render, and Changes counts one entry,
@@ -87,7 +90,8 @@ The index entry states form one family:
 
 Switching the filter keeps the selection, so the folder screen stays selected in
 Changes as an unmodified container. Activating its row opens its first changed
-member, which is why both Changes rows lead to the same state. The Profile row
+member on that member's first changed view, which is why both Changes rows lead
+to the same state. The Profile row
 of the first changed member opens that same state again, as an unmodified
 variant parent's row does in `design/browse/variants/variant-changes`.
 

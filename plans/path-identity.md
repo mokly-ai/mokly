@@ -954,6 +954,33 @@ so mock it up first.
 - [x] Commit and push (`2b213e96`, pushed with the first part of
       Milestone 7).
 
+## Milestone 6F: Index member landing view mockup
+
+Tags: mockup
+
+Activating the unmodified Profile row in Changes opens Security on its first
+changed view, because `mokly-changes.md` lands a reader on the first changed
+view when the current selection is not a changed entry. The
+`design/browse/index-entries/member-changes` mockup showed Both instead. This
+milestone aligns the mockup with that rule, as
+`design/browse/variants/variant-changes` already shows one view.
+
+- [x] Depict Security as changed in its Light views on both viewports, so its
+      first changed view is Mobile · Light. Select Mobile on both artboards,
+      and mark the viewport control because Desktop also changed; the
+      Appearance control stays unmarked.
+- [x] Describe the landing view in the shell design inventory and the
+      depicted catalogue.
+- [x] Pin the selection and the mark in the design unit and browser tests
+      (`tests/design_index_entries.test.ts`,
+      `tests/browser/design_index_entries.spec.ts`).
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      and the design tests; smoke-test the screen through `npm run dev`. The
+      design unit tests (167) and design browser tests (92) pass. At both
+      artboard widths the screen shows Mobile with the viewport mark and the
+      comparison band (`.context/m6f/`).
+- [ ] Commit and push.
+
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui

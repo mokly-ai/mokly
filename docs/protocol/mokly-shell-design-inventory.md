@@ -50,7 +50,7 @@ their standalone screens are implemented.
 | `design/browse/index-entries/screen`                   | Browse shell › Index entries                               | Folder's own screen selected, variants and members listed     |
 | `design/browse/index-entries/member`                   | Browse shell › Index entries                               | Folder member selected, its crumb ending in that screen       |
 | `design/browse/index-entries/screen-changes`           | Browse shell › Index entries                               | Unmodified folder screen as an undotted Changes container     |
-| `design/browse/index-entries/member-changes`           | Browse shell › Index entries                               | First changed member, opened from that container row          |
+| `design/browse/index-entries/member-changes`           | Browse shell › Index entries                               | First changed member, opened on its first changed view        |
 | `design/changes/diff-controls/current`                 | Changes › Diff controls                                    | Current screen in Changes                                     |
 | `design/changes/diff-controls/overlay`                 | Changes › Diff controls                                    | On-demand overlay comparison                                  |
 | `design/changes/diff-controls/overlay-long`            | Changes › Diff controls                                    | Overlay on a long screen, scrolled part-way in one chrome     |
@@ -152,7 +152,8 @@ Additional owning groups keep each new page at no more than five screens:
   `design/browse/index-entries/member-changes` specify a screen that is its
   folder's own page: its row listing its variant and then the folder's members,
   a member's breadcrumbs, the unmodified row as an undotted Changes container,
-  and the first changed member that activating it opens. The first is the
+  and the first changed member that activating it opens on its first changed
+  view. The first is the
   group's canonical screen; [variant navigation](./mokly-variant-navigation.md#changes-rows)
   owns the behavior.
 - `design/changes/impact/styles/matched`, `design/changes/impact/styles/unresolved`,

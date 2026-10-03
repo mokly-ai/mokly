@@ -59,6 +59,22 @@ function changedMarks(node: Element): number {
   return byClass(node, "mbk-nav-changed").length;
 }
 
+/** The viewport option a state selects, and the marks on its control. */
+function viewportSelection(document: Node) {
+  const control = byClass(document, "ce-viewport-control")[0];
+  assert.ok(control, "missing viewport control");
+  const selected = elements(
+    control,
+    (node) =>
+      node.tagName === "option" && attribute(node, "selected") !== undefined,
+  );
+  assert.equal(selected.length, 1);
+  return {
+    marks: byClass(control, "ce-view-changed").length,
+    selected: attribute(selected[0]!, "value"),
+  };
+}
+
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: index entry states render as light-only shells with path chips`, async () => {
     for (const [id, title, path] of [
@@ -112,6 +128,22 @@ for (const viewport of ["mobile", "desktop"] as const) {
       elements(toolbar, (node) => node.tagName === "a"),
       [],
     );
+  });
+
+  test(`${viewport}: the first changed member opens on its first changed view`, async () => {
+    const member = await designDocument(MEMBER_CHANGES, viewport);
+    assert.deepEqual(viewportSelection(member.document), {
+      marks: 1,
+      selected: "mobile",
+    });
+    const appearance = byClass(member.document, "mbk-appearance")[0];
+    assert.ok(appearance);
+    assert.equal(byClass(appearance, "mbk-view-changed").length, 0);
+    const container = await designDocument(SCREEN_CHANGES, viewport);
+    assert.deepEqual(viewportSelection(container.document), {
+      marks: 0,
+      selected: viewport === "mobile" ? "mobile" : "both",
+    });
   });
 }
 

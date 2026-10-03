@@ -14,11 +14,21 @@ import {
   Shell,
   ViewSwitch,
   type ArtboardViewport,
+  type ChangedView,
 } from "../../parts/shell.js";
 import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
 
 /** Only Security changed on the branch these four states depict. */
 const CHANGED_COUNT = 1;
+
+/**
+ * Security changed in its Light views on both viewports, so its first changed
+ * view, mobile before desktop and light before dark, is Mobile · Light.
+ */
+const SECURITY_VIEWS: readonly ChangedView[] = [
+  { viewport: "mobile", scheme: "light" },
+  { viewport: "desktop", scheme: "light" },
+];
 
 type ProfileSubject = "profile" | "profileSecurity";
 
@@ -158,11 +168,17 @@ function FolderScreenChanges({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-/** The first changed member, which activating the Profile row in Changes opens. */
+/**
+ * The first changed member, which activating the Profile row in Changes opens.
+ * Profile was not a changed entry, so Security opens on its first changed view
+ * instead of the sticky selection: Mobile on both artboards, with the viewport
+ * control marking the desktop view that also changed.
+ */
 function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <Shell
       design={DESTINATIONS.indexMemberChanges}
+      changedViews={SECURITY_VIEWS}
       viewport={viewport}
       nav={
         viewport === "desktop" ? (
@@ -177,7 +193,7 @@ function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
     >
       <ScreenHead
         comparisons
-        action={viewSwitch(viewport)}
+        action={<ViewSwitch active="mobile" changedViews={SECURITY_VIEWS} />}
         comparisonMode="current"
         crumbs={["Account", "Profile"]}
         path={ENTRY_PATHS.profileSecurity}
@@ -231,12 +247,12 @@ export const indexEntryScreens = [
     ...designMetadata,
     colorSchemes: ["light"],
     description:
-      "The first changed member, opened by activating its folder screen's row in Changes.",
+      "The first changed member, opened on its first changed view by activating its folder screen's row in Changes.",
     desktop: <MemberChanges viewport="desktop" />,
     slug: "member-changes",
     mobile: <MemberChanges viewport="mobile" />,
     rationale:
-      "Activating an unmodified container row in Changes opens the first changed row it holds, as an unmodified variant parent opens its first changed variant, so a reviewer always lands on something that changed. The comparison band opens in Current; the other modes are depictions until a matching comparison state is authored.",
+      "Activating an unmodified container row in Changes opens the first changed row it holds, as an unmodified variant parent opens its first changed variant, so a reviewer always lands on something that changed. The selection was not a changed entry, so the member opens on its first changed view, Mobile · Light, rather than the sticky Both, and the viewport control marks the desktop view that also changed. The comparison band opens in Current; the other modes are depictions until a matching comparison state is authored.",
     title: "First changed member",
   }),
 ];
