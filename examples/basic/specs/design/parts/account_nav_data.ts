@@ -4,14 +4,105 @@ import { DESTINATIONS } from "./destinations.js";
 
 type NavigationRows = CatalogueNavigationProps["rows"];
 
+/** Whether the Profile row's list of variants and members is disclosed. */
+export type ProfileList = "closed" | "open";
+
+/**
+ * The Profile screen is its folder's own page, so it renders as the folder's
+ * row: a link beside a disclosure whose list holds its Unverified email
+ * variant and then the folder's other members, Notifications and Security.
+ * No artboard depicts Notifications or the variant, so those rows stay
+ * depictions.
+ */
+function profileRows(list: ProfileList): NavigationRows {
+  return [
+    {
+      key: "profile",
+      contents: true,
+      depth: 1,
+      kind: "screen",
+      label: "Profile",
+      to: DESTINATIONS.indexEntry,
+      variants: list,
+    },
+    {
+      key: "profile-unverified",
+      depth: 2,
+      kind: "variant",
+      label: "Unverified email",
+      variantParentKind: "screen",
+    },
+    {
+      key: "profile-notifications",
+      depth: 2,
+      kind: "screen",
+      label: "Notifications",
+    },
+    {
+      key: "profile-security",
+      depth: 2,
+      kind: "screen",
+      label: "Security",
+      to: DESTINATIONS.indexMember,
+    },
+  ];
+}
+
 /**
  * The Account area of the depicted catalogue. `Account` takes its title from
  * its slug; `Billing & Payments` takes its title from its folder record,
  * because its slug, `billing`, cannot spell it. Billing holds the Invoice screen
  * with its Overdue variant and the Payment terms document. No artboard depicts
- * Invoice from All, so its row stays a depiction.
+ * Invoice from All, so its row stays a depiction. Profile follows Billing
+ * because a folder row sorts before an entry row.
  */
-export const ACCOUNT_BRANCH: NavigationRows = [
+export function accountBranch(profile: ProfileList): NavigationRows {
+  return [
+    {
+      key: "account",
+      depth: 0,
+      kind: "folder",
+      label: "Account",
+      open: true,
+    },
+    {
+      key: "billing",
+      depth: 1,
+      kind: "folder",
+      label: "Billing & Payments",
+      open: true,
+    },
+    {
+      key: "invoice",
+      depth: 2,
+      kind: "screen",
+      label: "Invoice",
+      variants: "closed",
+    },
+    {
+      key: "invoice-overdue",
+      depth: 3,
+      kind: "variant",
+      label: "Overdue",
+      variantParentKind: "screen",
+    },
+    {
+      key: "payment-terms",
+      depth: 2,
+      kind: "document",
+      label: "Payment terms",
+      to: DESTINATIONS.document,
+    },
+    ...profileRows(profile),
+  ];
+}
+
+/**
+ * Changes on a branch where only Security changed. Profile is unmodified and
+ * its only changed row is a folder member, not a variant, so its row stays a
+ * container with no change dot; activating it opens its first changed member.
+ */
+export const PROFILE_CHANGES_ROWS: NavigationRows = [
   {
     key: "account",
     depth: 0,
@@ -20,32 +111,21 @@ export const ACCOUNT_BRANCH: NavigationRows = [
     open: true,
   },
   {
-    key: "billing",
+    key: "profile",
+    contents: true,
     depth: 1,
-    kind: "folder",
-    label: "Billing & Payments",
-    open: true,
+    kind: "screen",
+    label: "Profile",
+    to: DESTINATIONS.indexMemberChanges,
+    variants: "open",
   },
   {
-    key: "invoice",
+    key: "profile-security",
+    changed: true,
     depth: 2,
     kind: "screen",
-    label: "Invoice",
-    variants: "closed",
-  },
-  {
-    key: "invoice-overdue",
-    depth: 3,
-    kind: "variant",
-    label: "Overdue",
-    variantParentKind: "screen",
-  },
-  {
-    key: "payment-terms",
-    depth: 2,
-    kind: "document",
-    label: "Payment terms",
-    to: DESTINATIONS.document,
+    label: "Security",
+    to: DESTINATIONS.indexMemberChanges,
   },
 ];
 

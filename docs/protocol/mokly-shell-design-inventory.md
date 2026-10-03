@@ -3,9 +3,9 @@
 ## Delivery Status
 
 Implemented in the path-addressed design catalogue. The designs depict the approved path-identity shell: the Specs
-section, browse-only folder rows, `Overview` rows, path chips, Markdown
-documents, and `Moved` Changes rows, which the shell renders once that plan
-delivers them.
+section, browse-only folder rows, `Overview` rows, a folder's own screen
+listing the folder's members, path chips, Markdown documents, and `Moved`
+Changes rows, which the shell renders once that plan delivers them.
 
 This document is the inventory of Browse and Changes design screens for the
 [shell design contract](./mokly-shell-design.md), which owns their tokens,
@@ -47,6 +47,10 @@ their standalone screens are implemented.
 | `design/browse/variants/variant-removed`               | Browse shell › Screen variants                             | Removed variant under a surviving parent                   |
 | `design/browse/variants/variant-reparented`            | Browse shell › Screen variants                             | Removed variant kept flat after its parent becomes variant |
 | `design/browse/variants/changed-views`                 | Browse shell › Screen variants                             | Change confined to the views that are not shown            |
+| `design/browse/index-entries/screen`                   | Browse shell › Index entries                               | Folder's own screen selected, variants and members listed  |
+| `design/browse/index-entries/member`                   | Browse shell › Index entries                               | Folder member selected, its crumb ending in that screen    |
+| `design/browse/index-entries/screen-changes`           | Browse shell › Index entries                               | Unmodified folder screen as an undotted Changes container  |
+| `design/browse/index-entries/member-changes`           | Browse shell › Index entries                               | First changed member, opened from that container row       |
 | `design/changes/diff-controls/current`                 | Changes › Diff controls                                    | Current screen in Changes                                  |
 | `design/changes/diff-controls/overlay`                 | Changes › Diff controls                                    | On-demand overlay comparison                               |
 | `design/changes/diff-controls/overlay-long`            | Changes › Diff controls                                    | Overlay on a long screen, scrolled part-way in one chrome  |
@@ -142,6 +146,14 @@ Additional owning groups keep each new page at no more than five screens:
   another screen's variant, and a change confined to views other than the one
   shown. `design/browse/variants/variant-selected` is the group's canonical screen.
   Their behavior contract is [variants](./mokly-variants.md).
+- `design/browse/index-entries/screen`, `design/browse/index-entries/member`,
+  `design/browse/index-entries/screen-changes`, and
+  `design/browse/index-entries/member-changes` specify a screen that is its
+  folder's own page: its row listing its variant and then the folder's members,
+  a member's breadcrumbs, the unmodified row as an undotted Changes container,
+  and the first changed member that activating it opens. The first is the
+  group's canonical screen; [variant navigation](./mokly-variant-navigation.md#changes-rows)
+  owns the behavior.
 - `design/changes/impact/styles/matched`, `design/changes/impact/styles/unresolved`,
   `design/changes/impact/styles/unnamed`, and `design/changes/impact/styles/excluded` specify
   rule-aware stylesheet evidence beneath the impact states, so the impact group
@@ -198,46 +210,13 @@ is separate from the implemented outer shell that the
 
 ## Depicted Catalogue
 
-The artboards browse one fixture catalogue in the path model, so the
-navigation, breadcrumbs, path chips, and Details agree across screens:
-
-- Specs lists `Example`, `Account`, and `Design`; the catalogue's order record
-  names Example first. Example's README is the folder's own page and its first
-  row, `Overview`, above `Screens` (Welcome with its variants, and Details),
-  `Example tour`, and the `Getting started` page. `Account` holds
-  `Billing & Payments`, titled by its folder record because its slug is
-  `billing`, with the Invoice screen, its Overdue variant, and the Payment
-  terms document.
-- Components lists the same `Example` folder above its `Components` library,
-  so a folder holding both kinds appears in each section with only that
-  section's children.
-- Path chips show paths such as `example/screens/welcome`. Component Details
-  add the shown entry's path, a document's Details name its Markdown source,
-  and a moved entry's Details add a `Moved from` row with its previous path.
-- The depicted branch changed Welcome, added Details, moved `billing` under
-  `account`, and removed five screens, so Changes counts ten entries. Invoice
-  moved with edits; its Overdue variant and Payment terms moved unchanged.
-  Each keeps one row labelled `· Moved` at its new place.
-
-Its transitions, under the [design links contract](./mokly-design-links.md):
-
-- From All, `Overview` and the `Example` crumb open
-  `design/browse/views/folder-overview`, `Getting started` opens `design/browse/pages/view`,
-  and `Payment terms` opens `design/browse/pages/document`.
-- The README links Welcome, Details, Example tour, and Getting started to
-  `design/browse/views/screen`, `design/browse/views/details-screen`,
-  `design/browse/views/use-case`, and `design/browse/pages/view`.
-- In Changes, `Invoice · Moved` opens `design/changes/outcomes/moved`, whose Related
-  docs row opens `design/browse/pages/document`.
-
-Invoice in All, `Overdue · Moved`, `Payment terms · Moved`, the moved screen's
-All filter and comparison modes, and the document's overdue-invoice link have
-no depicted state, so they stay non-links. Folder crumbs stay text in Changes
-states and on removed entries, as a parent entry's crumb does.
+The fixture catalogue these screens browse, the branches they depict, and their
+transitions live in the [depicted design catalogue](./mokly-shell-design-catalogue.md).
 
 ## Related Docs
 
 - [Shell design contract](./mokly-shell-design.md)
+- [Depicted design catalogue](./mokly-shell-design-catalogue.md)
 - [Design mockup links](./mokly-design-links.md)
 - [Component explorer design catalogue](./mokly-component-design.md)
 - [Folders](./mokly-folders.md)

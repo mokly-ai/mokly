@@ -27,24 +27,24 @@ from its render context rather than pinning them in its fixture, so the top
 bar's samples name the scheme they rendered for; a fixture sets such a prop only
 to depict a different setting, as the `auto-appearance` sample does.
 
-| Group / slug                  | Existing implementation                                             | Variant names                                                                                              |
-| ----------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                        |
-| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants` |
-| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                |
-| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                         |
-| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`, `side-by-side-apart`                                   |
-| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                           |
-| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                 |
-| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                                                          |
-| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                                                |
-| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                                                               |
-| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                                                           |
-| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                            |
-| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                   |
-| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                   |
-| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                      |
-| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                          |
+| Group / slug                  | Existing implementation                                             | Variant names                                                                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                                                           |
+| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants`, `folder-screen`, `changed-member` |
+| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                                                   |
+| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                                                            |
+| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`, `side-by-side-apart`                                                                      |
+| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                                                              |
+| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                                                    |
+| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                                                                                             |
+| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                                                                                   |
+| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                                                                                                  |
+| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                                                                                              |
+| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                                                               |
+| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                                                      |
+| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                                                      |
+| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                                                         |
+| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                                                             |
 
 Fixtures for each variant come from the corresponding existing screen state,
 assembled into complete explicit props at declaration time, apart from the
@@ -78,7 +78,9 @@ Controls below use text, boolean, number and primitive enum selections only.
 2. **Catalogue navigation:** row records with stable key, label, kind
    `folder/screen/component/flow/page/document/variant`, depth, optional
    count/open/destination, changed mark, moved flag, and variant-list state; a variant row
-   requires `variantParentKind: "screen" | "component"`; selected destination,
+   requires `variantParentKind: "screen" | "component"`, and `contents` marks a
+   folder's own screen whose list also holds the folder's members after its
+   variants and names its disclosure for the contents; selected destination,
    All/Changes state, changed count and presentation
    `responsive/drawer`, and optional Changes availability
    `ready/pending/preparing/unavailable`.

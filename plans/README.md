@@ -7,8 +7,8 @@
   Markdown documents, detect moves, rename Pages to Specs, and make folder
   rows browse-only; manifest v8, read model v4, review result v5. Created
   2026-10-02; contracts, shell mockups, identity core, main integration,
-  review fixes and viewer navigation are complete. Markdown, move detection,
-  and the Changes and document presentation remain.
+  review fixes, viewer navigation and index entry mockups are complete.
+  Markdown, move detection, and the Changes and document presentation remain.
 - [Imported CSS Delivery](./imported-css-delivery.md) — shipped implementation
   and authorized final-review fixes complete; finding 3 was resolved by the
   separate `922c1ec` merge. Milestone 12 finding 1 was resolved in `d474975`;

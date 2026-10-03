@@ -4,7 +4,8 @@ The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
 Screen and Review-ignore behavior remains below. Pairing uses kind and path;
 review result v5 omits `previousPath` until move detection is implemented.
-Document rendering and move pairing remain planned in the
+Document rendering, move pairing, and opening a folder screen's first changed
+member from its row remain planned in the
 [path identity plan](../../plans/path-identity.md).
 
 The catalogue's All / Changes filter narrows one navigation tree. There is no
@@ -207,7 +208,8 @@ selection is not itself a changed entry, activating a changed row while the
 Changes filter is selected opens that destination's first changed view instead
 of the sticky selection, unless the URL names a viewport or scheme. Once a
 changed entry is selected, later row activations keep the sticky axes while an
-aggregate parent still redirects to its first visible changed variant. A direct
+unmodified container row still redirects to its first visible changed variant
+or member under [variant navigation](./mokly-variant-navigation.md#changes-rows). A direct
 URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
 selection.
 These marks and the `Changed views` row apply in exports with Changes as well as

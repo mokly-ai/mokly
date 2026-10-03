@@ -1,7 +1,11 @@
 import { COMPONENT_PAGES } from "../components/parts/destinations.js";
 import type { CatalogueNavigationProps } from "../library/chrome/catalogue-navigation.js";
 
-import { ACCOUNT_BRANCH, MOVED_COUNT } from "./account_nav_data.js";
+import {
+  MOVED_COUNT,
+  accountBranch,
+  type ProfileList,
+} from "./account_nav_data.js";
 import {
   COMPONENT_NAVIGATION,
   componentVariantRows,
@@ -93,7 +97,10 @@ const WELCOME_VARIANTS: NavigationRows = [
  * Overview because its title is the folder's title. Top-level folders follow
  * the catalogue's order record, which names Example first.
  */
-function catalogueTree(variants: "closed" | "open"): NavigationRows {
+function catalogueTree(
+  variants: "closed" | "open",
+  profile: ProfileList = "closed",
+): NavigationRows {
   return [
     {
       key: "example",
@@ -171,7 +178,7 @@ function catalogueTree(variants: "closed" | "open"): NavigationRows {
       label: "Getting started",
       to: DESTINATIONS.page,
     },
-    ...ACCOUNT_BRANCH,
+    ...accountBranch(profile),
     {
       key: "design",
       depth: 0,
@@ -194,3 +201,9 @@ export const NAV_TREE: NavigationRows = catalogueTree("closed");
 
 /** The same catalogue with Welcome's variant list disclosed. */
 export const NAV_TREE_VARIANTS_OPEN: NavigationRows = catalogueTree("open");
+
+/** The same catalogue with the Profile folder's screen row disclosed. */
+export const NAV_TREE_PROFILE_OPEN: NavigationRows = catalogueTree(
+  "closed",
+  "open",
+);

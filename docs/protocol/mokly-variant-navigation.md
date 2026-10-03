@@ -6,7 +6,9 @@ Variant entry navigation, component-shaped icons, sibling comparison
 continuity, removed-variant Dark availability, fallback breadcrumbs, the Specs
 section, and entry rows for a folder's own screen or component are implemented
 with path-keyed rows and the `variants:<path>` disclosure key. The `Moved`
-label awaits delivery through the [path identity plan](../../plans/path-identity.md).
+label and the Changes activation of a container row whose changed rows are only
+folder members, designed in `design/browse/index-entries/**`, await delivery
+through the [path identity plan](../../plans/path-identity.md).
 
 This contract owns the shell presentation of screen and component variants.
 Variant authoring, inheritance, manifest relationships, and generated views are
@@ -63,6 +65,17 @@ trailing change dot; it does not add a Changes row or count. Activating that
 aggregate row opens its first visible changed variant. If the parent itself is
 changed, activation keeps the parent as the destination. Hidden variants are
 never chosen.
+
+A folder's own screen or component lists the folder's members after its
+variants. A changed member is not a variant, so it never marks that row, just
+as it never marks a folder row. An unmodified row whose only changed rows are
+members therefore stays visible as a container with no change dot and adds no
+Changes row or count. Activating any unmodified container row opens the first
+visible changed entry its list holds, in list order: its variants, then its
+members, descending into member folders and member lists. Only a nav-row
+activation redirects; a breadcrumb or the filter switch keeps its ordinary
+destination, so the unmodified row may stay selected after switching to
+Changes.
 
 A variant the [move contract](./mokly-moves.md) pairs with a baseline variant,
 directly or through its moved parent, is labelled `Moved` in its Changes row

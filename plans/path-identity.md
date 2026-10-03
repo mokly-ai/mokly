@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–3, 3A, 3B, and 6 are complete. This plan supersedes
+discussion in this workspace. Milestones 1–3, 3A, 3B, 6, and 6A are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -618,10 +618,12 @@ Tags: ui
 Bring the shell to the Milestone 2 mockups.
 
 Status: Complete. After merging Milestone 3B, package (six consumer
-scenarios), unit (3,738), browser (751), hydration (226), and all remaining
-repository checks pass. The approved full-gate exception remains pre-existing
-GHSA-vfj7-8cjw-p6xm in development dependencies; no dependency change or
-audit exemption was added.
+scenarios), unit (3,738), browser (751), hydration (226), and the repository
+commands that were run pass. The approved full-gate exception remains
+pre-existing GHSA-vfj7-8cjw-p6xm in development dependencies; no dependency
+change or audit exemption was added. That run omitted the source file-length
+audit, which also fails on files earlier milestones changed; Milestone 6 added
+`tests/nav_tree.test.ts` to that list, and Milestone 6A split it.
 
 - [x] Rename the Pages section to Specs across `packages/viewer/src/shell`
       (`nav.tsx`, `nav_model.ts`, `nav_tree.ts`, `entry_wording.ts`) and
@@ -677,6 +679,54 @@ audit exemption was added.
       reconcile them with the implemented shell.
 - [x] Run `cargo xtask check`, then commit and push.
 
+## Milestone 6A: Index entry mockups
+
+Tags: mockup
+
+Mock up a screen that is its folder's own page and lists the folder's members
+under its row, in Browse and in Changes, before Milestone 7 implements the
+Changes click rule for it.
+
+Status: Complete. Package (six consumer scenarios), unit (3,748), browser
+(753), hydration (232), format, lint, repository ratchets, Rust formatting,
+Clippy, and Rust tests pass. Two repository checks still fail on earlier work:
+GHSA-vfj7-8cjw-p6xm, the approved exception, and the source file-length audit,
+which flags 28 files that Milestones 3 and 3B changed and that were already
+over 300 lines. This milestone added no file to that list; its disposition
+awaits the orchestrator.
+
+- [x] Add design screens, each with mobile and desktop variants, for: a screen
+      that is its folder's own page with its variants and folder members under
+      its row, showing the link beside the disclosure button, the `contents`
+      toggle wording, variants before members, and a member's breadcrumbs; an
+      unchanged index entry whose only changed rows are folder members, shown
+      in Changes as a container row with no dot; and the first changed member
+      that activating that row opens. Extend the depicted catalogue under
+      Account, keep each screen reachable from existing designs, keep
+      annotations outside the screen area, and stay within five screens per
+      folder.
+- [x] Add catalogue navigation library variants for those rows, so the shared
+      component also shows them in its mobile drawer presentation.
+- [x] Rename `mbk-idchip` to `mbk-pathchip` throughout the mockups and their
+      styles, and update the tests that pin the class name.
+- [x] Define the Changes click rule in `mokly-variant-navigation.md` and
+      `mokly-changes.md`, and record the new screens and transitions in
+      `mokly-shell-design-inventory.md` and the design-links contract.
+- [x] Move the depicted catalogue, its branches, and its transitions from the
+      inventory into `mokly-shell-design-catalogue.md`, so the inventory stays
+      within its 250-line limit and the design-links contract within its cap.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      the design unit tests and design browser specs, and the full gate except
+      the known audit failure; smoke-test the new screens through
+      `npm run dev`.
+- [x] Split `tests/nav_tree.test.ts`, which Milestone 6 grew past 300 lines,
+      into `nav_tree.test.ts`, `nav_tree_tags.test.ts`, and a shared
+      `tests/helpers/nav_tree_fixture.ts`.
+- [x] Mark `design/browse/index-entries/member-changes` as a changed design
+      in the comparison-eligibility browser spec, because it offers the
+      comparison band.
+- [ ] Commit and push.
+
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui
@@ -689,6 +739,11 @@ Tags: ui
 - [ ] Present documents in the page view with the document title, breadcrumbs,
       and the source path in details; link `relatedDocs` matches to their
       document entries.
+- [ ] In Changes, keep an unchanged screen or component index whose only
+      changed rows are folder members as a container row with no change dot,
+      and make activating that row open its first visible changed member, as
+      an unchanged variant parent opens its first changed variant
+      (`changes_activation.ts`); match the Milestone 6A screens.
 - [ ] Add browser tests for moved rows, moved comparisons, and document pages;
       verify parity with the Milestone 2 screens.
 - [ ] Re-apply the drafted `docs/guides/catalogue/changes.md` and

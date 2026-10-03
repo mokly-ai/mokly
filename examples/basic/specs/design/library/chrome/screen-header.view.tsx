@@ -37,7 +37,7 @@ export function ScreenHeaderView({
           <div className="mbk-title-row">
             <h2>{title}</h2>
             {path ? (
-              <span aria-label={`Path ${path}`} className="mbk-idchip">
+              <span aria-label={`Path ${path}`} className="mbk-pathchip">
                 {path}
               </span>
             ) : null}

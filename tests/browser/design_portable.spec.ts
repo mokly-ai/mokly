@@ -106,7 +106,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await page.goto(design(route, viewport));
       await expect(page.locator(".mbk-cmp-toolbar a")).toHaveCount(0);
       for (const control of await page
-        .locator(".mbk-idchip, .mbk-search-tag")
+        .locator(".mbk-pathchip, .mbk-search-tag")
         .all())
         await expect(control).not.toHaveAttribute("tabindex");
     }

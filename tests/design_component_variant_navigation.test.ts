@@ -47,7 +47,7 @@ function assertComponentHeader(
 ) {
   assert.equal(headTitle(document), expected.heading, id);
   assert.equal(
-    textContent(byClass(document, "mbk-idchip")[0]!).trim(),
+    textContent(byClass(document, "mbk-pathchip")[0]!).trim(),
     expected.path,
     id,
   );
