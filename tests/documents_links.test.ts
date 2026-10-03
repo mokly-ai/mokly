@@ -172,14 +172,27 @@ for (const [destination, reason, extra] of [
     });
   });
 
-for (const destination of ["#missing", "other.md#missing", "mock:missing"])
+for (const [destination, detail] of [
+  [
+    "#missing",
+    "document links and resources are invalid:\n- guide/index.html: missing anchor #missing",
+  ],
+  [
+    "other.md#missing",
+    "guide/index.html logical fragment missing for other is missing from document other/index.html",
+  ],
+  [
+    "mock:missing",
+    "[unknown-link-target] specs/guide.md: link target missing does not exist",
+  ],
+] as const)
   test(`document rejects missing fragment or logical entry: ${destination}`, async (t) => {
     const fixture = await pathFixture({
       "specs/guide.md": `# Guide\n\n[Target](${destination})`,
       "specs/other.md": "# Other",
     });
     t.after(fixture.remove);
-    await assert.rejects(fixture.compile(), /missing|does not exist/);
+    await assert.rejects(fixture.compile(), { code: "build-invalid", detail });
   });
 
 test("resource confinement checks physical targets and rejects in-root aliases", async (t) => {

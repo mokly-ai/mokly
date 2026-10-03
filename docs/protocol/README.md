@@ -62,6 +62,7 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   folders, and browse-only folder rows.
 - [Entry modules](./mokly-entry-modules.md) — export collection and slugs.
 - [Markdown documents](./mokly-documents.md) — discovered Markdown entries.
+- [Document rendering safety](./mokly-document-safety.md) — final HTML allowlist and script policy.
 - [Moves](./mokly-moves.md) — baseline pairing and `previousPath`.
 - [Path-derived artifact paths](./mokly-artifact-paths.md)
 - [Rendering and generated output](./mokly-rendering.md)

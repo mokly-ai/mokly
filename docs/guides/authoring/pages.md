@@ -73,7 +73,7 @@ Refunds return to the original payment method within five business days.
 ```
 
 The recognised keys are `title`, `description`, `tags`, `path` and
-`movedFrom`. Without a `title`, the first heading is the title, and without a
+`movedFrom`. One leading UTF-8 BOM is ignored. Without a `title`, the first nonempty heading is the title, and without a
 heading the file name is. The description is empty unless you set it.
 
 Mokly renders CommonMark with tables, strikethrough, task lists and automatic
@@ -82,6 +82,9 @@ code fence as a class, and shows raw HTML as literal text. The result is one
 document in the shell's typography at `<path>/index.html` under `mockupsDir`, with a dark
 rendering beside it when the catalogue enables dark. A document has no
 viewport, no variants and no helper to call; the file is the definition.
+Empty headings keep their place but have no anchor. Mokly checks the final body
+against its supported Markdown elements, attributes and URL schemes, so a
+transformer cannot introduce scripts, event handlers or inline body styles.
 
 A relative link to another Markdown file becomes a catalogue link to that
 document, and `mock:<path>` names any entry. A relative link or image with a
@@ -89,12 +92,19 @@ document, and `mock:<path>` names any entry. A relative link or image with a
 that file beside the document's folder. For a folder README at `account/billing`,
 `../shared/flow.png` is served at `static/account/shared/flow.png`.
 The file must live inside the same root.
+Copied resources cannot use hidden path segments or private directory names such
+as `node_modules`, `dist` or `target`; use an ordinary folder such as `assets`.
 File links resolve from the Markdown source directory. Logical `mock:./...`
 links resolve from the catalogue folder, including a declared README path.
 Resource copies join generated output; ignore those paths too in derived mode.
 A relative link to any other repository file renders as plain text, a link to
 a file that does not exist fails the build, and `http:`, `https:` and
 `mailto:` links are kept as they are.
+Existing public files under `mockupsDir` stay public and render as plain text.
+Links to Mokly-generated output or metadata fail; link to the source Markdown
+file or use a lower-case `mock:` destination instead. Character references in
+explicit link/image destinations and titles, such as `&amp;`, decode once.
+Autolinks keep their URI text literal.
 
 Documents join Changes like pages: the rendered document, its resources
 and its metadata are compared with the branch point, a removed document shows

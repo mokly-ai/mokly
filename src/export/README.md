@@ -188,6 +188,8 @@ historical copies. The
 [public-exclusion contract](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 extends that one policy with resolved `publicExclude` globs. Defaults exclude
 README and tsconfig files case-insensitively; consumer globs only add exclusions.
+Its lexical name rules live in `config/public_names.ts`; Markdown checks copied
+resource routes with that same policy during resolution, before publication.
 Capture, reference validation, Review reads and content-change classification
 must agree on candidate and realpath-alias matching relative to `mockupsDir`.
 Excluded files stay out of public inventory without becoming `sourceFiles`;

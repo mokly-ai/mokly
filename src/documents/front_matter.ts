@@ -14,6 +14,7 @@ export function parseFrontMatter(
   source: string,
   location: string,
 ): { metadata: DocumentFrontMatter; body: string } {
+  source = source.replace(/^\uFEFF/, "");
   const lines = source.replace(/\r\n?/g, "\n").split("\n");
   if (lines[0] !== "---") return { metadata: {}, body: source };
   const end = lines.indexOf("---", 1);

@@ -17,6 +17,7 @@ import { isGeneratedRoute } from "../build/styles/routes.js";
 import { toPosixPath } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { validateDocumentHtml } from "../documents/safety.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 import type { EntryMove } from "../review/moves/types.js";
@@ -107,6 +108,10 @@ export function transformCompatibilityDocuments(
     validateControlMetadata(linked.content, normalized, route);
     validateCompatibilityRecords(route, normalized, linked.records);
     outputs.set(route, normalized);
+  }
+  for (const [route, html] of outputs) {
+    const entry = byPath.get(route.slice(0, route.lastIndexOf("/")));
+    if (entry?.kind === "document") validateDocumentHtml(html, entry.location);
   }
   return records;
 }

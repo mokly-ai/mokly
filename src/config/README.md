@@ -27,6 +27,8 @@ trigger the appropriate rebuild without making generated output public source.
 lexical and physical confinement with Build, Serve, Review and export. Review and
 export destinations cannot overlap the directories holding matched inputs. Source
 protection is based on the resolved file set and complete graph inventory.
+`public_names.ts` owns the lexical public-file rules shared by export and copied
+Markdown resources. It has no filesystem reads or configuration state.
 
 ```sh
 node --import tsx --test tests/config*.test.ts tests/entry_discovery*.test.ts

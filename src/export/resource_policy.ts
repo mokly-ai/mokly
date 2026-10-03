@@ -7,19 +7,11 @@ import { isAuthoringSource } from "../build/source_inventory.js";
 import { isPublicGeneratedRoute } from "../build/styles/routes.js";
 import { entryModuleRoots } from "../config/entry_membership.js";
 import { isInside, projectRealPath } from "../config/paths.js";
+import { publicFileNameDenial } from "../config/public_names.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 
 import { exportError } from "./error.js";
-
-const PRIVATE_DIRECTORIES = new Set([
-  "node_modules",
-  "target",
-  "dist",
-  "coverage",
-  "test-results",
-  "playwright-report",
-]);
 
 /** Public names cannot identify private modules, hidden paths, or cache trees. */
 export function isExportPublicName(
@@ -46,13 +38,7 @@ function exportPublicNameDenial(
   if ([MANIFEST_NAME, ...EARLIER_MANIFEST_NAMES].includes(name as never))
     return "targets internal catalogue metadata";
   if (isPublicGeneratedRoute(name)) return;
-  for (const part of name.split("/")) {
-    if (part.startsWith(".")) return "contains a hidden path segment";
-    if (!options.allowBuildDirectories && PRIVATE_DIRECTORIES.has(part))
-      return `is inside a private build or dependency directory (${part})`;
-  }
-  if (/\.(?:[cm]?[jt]sx?|map)$/i.test(name))
-    return "uses a private module or source-map extension";
+  return publicFileNameDenial(name, options.allowBuildDirectories);
 }
 
 /** Snapshot names use lexical policy; current capture additionally resolves aliases. */

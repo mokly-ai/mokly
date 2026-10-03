@@ -2,12 +2,9 @@
 
 ## Delivery Status
 
-Implemented for [pages](./mokly-pages.md), screens, flows, components, and
-compatible baselines, each with a validated source inventory. The same
-resolved inventory protects build, runtime, comparisons, and both publication
-options. Roots retain protected file inputs, including excluded glob matches,
-and emit manifest v8. Markdown documents and copied resource inputs join the same private inventory;
-only their generated HTML and resource copies are public.
+Build, Check, Serve, Review, export and publication share validated manifest-v8
+source inventories. Root matches, Markdown definitions and copied-resource
+inputs stay private; generated HTML and copied resource outputs are public.
 
 ## Protected Inputs
 
@@ -49,9 +46,13 @@ resolved dependency evidence, ownership/style offsets, private envelopes, and
 absolute paths. Authored display metadata and optional
 [instance source locations](./mokly-instances.md#optional-invocation-source)
 remain repository-relative and confer no permission to fetch source files.
-Manifest denials include realpath aliases.
 An absent or dangling manifest alias remains private without
 preventing unrelated public files from loading.
+
+[Markdown file links](./mokly-documents.md#links-and-resources) classify output
+targets before inventory: reject proven Mokly-owned output and metadata, and
+render public-resource targets as plain text without adding them to `sourceFiles`.
+Source references and copied input resources keep their private inventory rules.
 
 The repository's `.mokly-cache/` is package-private in every mode, including
 physical aliases. Public readers, export, resource references, change evidence

@@ -3,18 +3,28 @@
 This internal module turns discovered Markdown files into document entries.
 The file is the definition. Consumers need no React component or authoring helper.
 
-`front_matter.ts` implements the strict, pure metadata grammar. `markdown.ts`
-uses one fresh Marked instance per render. It escapes raw HTML, generates heading
-ids, retains code languages, and delegates destination rewriting. Parsing and
-rendering never read files. `template.ts` owns the script-free light/dark document;
-its stylesheet follows the `design/browse/pages/document` design, which
-`tests/browser/document_typography.spec.ts` compares property by property.
+`front_matter.ts` strips one leading BOM before the strict, pure metadata grammar.
+`markdown.ts` uses one fresh Marked instance per render and escapes raw-mode text
+as well as HTML tokens. It decodes CommonMark references once, skips empty title
+headings, omits empty ids, retains code languages and delegates destinations.
+Parsing and rendering never read files. `template.ts` owns the script-free
+light/dark document; its stylesheet follows the `design/browse/pages/document`
+design, which `tests/browser/document_typography.spec.ts` compares property by
+property. After compatibility transforms, `safety.ts` parses the final
+HTML and enforces the element, attribute and URL allowlist independently. Serve's
+owned inspector still needs scripts, so the template adds no blanket CSP meta.
 
-`load.ts` applies shared root/path rules and title fallbacks. `destinations.ts`
-owns confined repository reads. File links use the source directory; `mock:`
+`load.ts` applies shared root/path rules and title fallbacks; index duplicates use
+exact directory spelling before shared case-collision validation. `destinations.ts`
+and `destination_files.ts` own confined repository reads and attributed errors.
+File links use the source directory; the lower-case `mock:`
 links use the resolved entry's ordinary or index base. Source-file links become
 plain text and join the private source inventory, so direct HTTP requests
 cannot expose them. Copyable resources remain byte-exact and join source watching.
+Targets already public under the output root stay public and render as text.
+Proven Mokly-owned output and metadata are rejected before inventory. Copied
+resources use the same lexical public-name policy as export, including hidden
+and private directory names. Filesystem failures never expose absolute paths.
 `resource_paths.ts` reconstructs their public paths from manifest metadata so
 transactions can replace and remove only proven generated copies.
 
