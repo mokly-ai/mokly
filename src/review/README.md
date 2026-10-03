@@ -1,5 +1,11 @@
 # Historical catalogue comparisons
 
+## Delivery Status
+
+Uniform CSS classification and evidence fields below are planned for Milestone 19;
+comparison details are planned for Milestone 20 of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 This internal module compares current validated output with a historical
 baseline. The supported consumer interface remains the catalogue and CLI;
 these modules are not public package exports.
@@ -7,15 +13,16 @@ these modules are not public package exports.
 Source-path comparison evidence is removed by Milestone 4 of
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
 unrendered source edits do not change catalogue membership or evidence.
-Rendered `styles` and `resources` ownership records, including
-component-declared stylesheet records, drive component attribution.
+Rendered `styles` and non-CSS `resources` records retain ownership attribution.
+Stylesheet changes use kept own-page matches and outside/unresolved page evidence;
+no CSS owner record routes them.
 Historical manifest v3–v7 inputs normalize to v8 before comparison. Every
 catalogue uses the same public comparison v5 format.
 Component-aware page comparison excludes only proven Mokly-inserted declared
 stylesheet links, except a component page's root-owned links. It uses private
 final-document spans on both complete and unchanged-view fast paths; actual
 resource and CSS analysis still reads the final linked document. Renderer
-links reused for ownership remain page content.
+links reused for declarations remain page content.
 `component_projection_resources.ts` prepares the comparison-only copies,
 while `component_view.ts` and `component_view_fast_path.ts` preserve the full
 documents for actual resource closure and CSS rule evidence. See the
@@ -90,8 +97,8 @@ compilation across worker and child-process boundaries without decoding assets.
 Derived classification compares all generated documents and reachable resource
 bytes even without changed Git output paths. Cache paths and their physical
 aliases are excluded before rendered-resource classification.
-The classifier records retained view resources and actual-invocation owner
-reasons by entry pair. Source validation accepts dependency reasons only from
+The classifier records retained view resources, per-rule unfiltered and kept
+own-page CSS proof, page selectors and non-CSS actual-invocation owner reasons by entry pair. Source validation accepts dependency reasons only from
 that record; it never trusts result view records as sources or re-evaluates a
 source-path policy. The record uses kind and id, including flattened variants.
 
@@ -112,6 +119,25 @@ Review v5, live membership, watched updates and publishing use it to
 exclude changed stylesheets whose changed rules cannot match a view. Public
 resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
+
+The [rule membership contract](../../docs/protocol/mokly-css-attribution-rules.md)
+applies to configured, declared, CSS-imported and JavaScript-bundled stylesheets.
+Retain all before/after matches after paired Review-ignore, with their component
+containment. Match equal normalized before/after rule tuples across files.
+Collect unfiltered own-page matches for every component and rule. X loses an
+own-page match inside a different nested Y if Y's unfiltered own-page set is
+nonempty. Self-nested X cannot take its own match. Only kept matches change X
+and its matching saved variants. Y need not be changed, so this calculation is
+independent of order and works with recursive or mutually nested components.
+Root output markers keep renderer wrappers separate from component output.
+
+Page rows still use inclusive nested containment. A page gets its own reason
+for matches outside components changed by that same rule, or for unresolved rules. A wrapper-only component page reason gives its
+saved entry a row, but adds no affected consumers. Resource ownership cannot
+filter CSS or turn an invocation match into a component change. Declared links
+keep `insertedStylesheets` provenance, without derived `resources` records.
+The [evidence schema](../../docs/protocol/mokly-css-attribution-membership.md)
+defines the in-place v5/v4/v8 updates and complete/fast/selected agreement.
 
 Review result v5 replaces both earlier result versions; a catalogue without
 registered components emits the same shape with empty component arrays.
@@ -228,8 +254,9 @@ references before incomplete syntax; strict rule parsing still reports it unreso
 
 `ResourceComparison.compare(before?, after?, excluded?, matching?)` reads and
 validates resource closures before passing changed resources to
-`CssResourceAnalysis.analyze(resources, documents)`. Component ownership controls
-reachability independently of matching against actual normalized markup. Embedded
+`CssResourceAnalysis.analyze(resources, documents)`. CSS uses actual normalized
+resource reachability and markup, without owner-based exclusions. Non-CSS
+resource ownership retains its separate projection policy. Embedded
 documents also supply matching trees. Base resource reads are batched by graph
 depth; optional counterpart CSS reads distinguish missing files from invalid
 ones. Per-side readers cache bytes, and the injected parser caches identical CSS
@@ -258,9 +285,9 @@ optional view `reasons` (with stylesheet `analysis`) and `excludedResources`.
 Entry reasons merge by path and union selectors, with
 unresolved evidence taking precedence. The shared browser/server decoder rejects
 invalid or contradictory evidence; canonical artifact serialization preserves it.
-Owned rendered resources retained at an actual invocation keep their component
-in Changes even when saved variants exclude them; CSS additionally requires
-retained rule-analysis evidence. Unrendered entry declarations never provide
+Owned non-CSS resources retained at an actual invocation keep their component
+in Changes even when saved variants exclude them. CSS requires kept matches on the
+component's own pages; consumer-only matches cannot grant a component reason. Unrendered entry declarations never provide
 independent evidence, even for CSS.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
@@ -326,8 +353,8 @@ Key code:
   `select`, including siblings exposed when component implementation text is
   removed. Views without ownership text edits use actual-document evidence
   alone.
-- `component_resource_attribution.ts`: actual-invocation CSS ownership and entry
-  evidence aggregation without inventing variants.
+- `component_resource_attribution.ts`: non-CSS invocation ownership; its CSS
+  promotion is removed under the planned rule contract.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and
   traversal shared by resource evidence and snapshots.
 - `css/types.ts`: rule records, the parser interface, and result/error contracts.

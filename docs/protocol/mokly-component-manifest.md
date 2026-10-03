@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Root output ranges and removal of CSS resource owners are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Manifest v8 changes in place.
+
 manifest-v8 generation, validation, Serve, and static export use the public
 `defineComponent` API. These are the normative interfaces
 for the [component contract](./mokly-components.md). `ManifestEntryBase`,
@@ -84,7 +87,7 @@ field. A reader derives every path from the
 
 Common entry metadata keeps its meaning, including source attribution and
 authored `navPath` (following the [path contract](./mokly-nav-paths.md)).
-The removed fields `dependencies`, `declaredDependencies` and `ownedDependencies` are never written. Source locations provide attribution and protection, not comparison evidence. Ownership comes from rendered `styles` and `resources` records, including declared stylesheet links.
+The removed fields `dependencies`, `declaredDependencies` and `ownedDependencies` are never written. Source locations provide attribution and protection, not comparison evidence. Ownership comes from document `styles` and non-CSS `resources` records. Declared stylesheet provenance remains in `insertedStylesheets`; no CSS resource owners are derived.
 Historical v5 to v7 inputs retain their required `sourceFiles` inventory.
 For v3 and v4, infer entry and legacy-page sources before dropping collection
 records, so a module that only defined collections stays protected.

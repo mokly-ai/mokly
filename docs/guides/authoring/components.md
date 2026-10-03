@@ -123,12 +123,16 @@ propSchema: {
 
 `stylesheets` names existing public CSS files relative to `mockupsDir`, in
 authored order. Mokly links them only where the component actually renders,
-including an empty render, and derives a resource owner record. HTTP(S),
+including an empty render, and records the links it inserts. HTTP(S),
 missing or non-public CSS paths fail validation. A repeated file or alias is
-linked once with a warning. Two components may share a file; each rendered
-declarer owns it. Transitive imports are unowned unless separately declared
-or reported by the renderer. A renderer may still return exact style or other
-resource ownership; a record for declared CSS is ignored with a warning. Put
+linked once with a warning. Two components may share a file. Changed rules
+are checked against component output on the component's own saved pages.
+A component keeps only matches outside a different nested component that has
+its own-page matches for the same rule. Self-nesting does not remove matches.
+Imports follow the same rule. Screen-only styles inside a component invocation
+change the screen, not every use of that component. A renderer may return
+exact document style ranges or non-CSS resource ownership. A resource owner
+record for any stylesheet is ignored with a warning. Put
 `componentStylesheets` in a configured rule's shared list to choose where
 declared CSS is linked.
 

@@ -4,6 +4,11 @@ This spec validates and emits the [component comparison result schema](./mokly-c
 Canonical order enforcement and the shared affected-consumer key are
 implemented by both the producer and strict v5 reader.
 
+## Delivery Status
+
+Rule-specific source proof and own-page CSS impact validation are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 ## Validation And Canonical Output
 
 Use one result schema and reason policy in Browse's lightweight classification,
@@ -16,11 +21,15 @@ structures, inconsistent sides, duplicate records/reasons, missing view evidence
 and invalid values fail rather than being silently dropped.
 
 For each entry, the classifier records retained resources from its actual
-view comparisons and owned resource evidence at actual invocations. The
+view comparisons and non-CSS owned resource evidence at actual invocations.
+For CSS, freeze per-rule unfiltered and kept own-page matches and page selectors.
+Nested filtering uses the unfiltered sets; component reasons require kept
+matches on the named component or variant's own pages. The
 [ownership rule](./mokly-component-changes.md#rendered-resources-and-styles)
 excludes unrendered source paths and manually declared paths. Source validation
 accepts a `dependency` reason only when that entry's recorded sources contain
-its path. It uses the frozen classifier evidence, never the result's own rows
+its path and, for CSS, its eligible rule records. A retained path alone cannot
+justify a page or component reason. It uses the frozen classifier evidence, never the result's own rows
 or a fresh path match. Source keys use kind and id, including flattened variants.
 
 Source validation also receives the implementation-impact set computed from
@@ -28,7 +37,9 @@ the classifier's paired material, unchanged inputs and rendered-resource policy.
 requires exact equality with the complete affected-consumer evidence derived
 from that set and both manifests. Neither a subset nor the set of every changed
 component is sufficient: saved-variant/control metadata edits can be direct
-changes without implementation impact. Every classification path performs this
+changes without implementation impact. Wrapper-only or unresolved CSS page
+reasons also have no component impact unless another rule proves a kept own-root
+match. Never build the CSS impact set from consumer invocation matches. Every classification path performs this
 validation before returning results, including lightweight Browse updates.
 
 The [selected live endpoint](./mokly-selected-comparisons.md) projects a validated

@@ -2,11 +2,14 @@
 
 ## Delivery Status
 
+Uniform CSS attribution in the acceptance table is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 The basic consumer records shared instances without changing existing design
 screens. Registered entries live under Components → Design → Shared components,
 beside Example Action and Toolbar. The generated manifest owns all counts.
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+The remaining contract is implemented.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
 define delivery; [shell design](./mokly-shell-design.md) and
@@ -163,14 +166,14 @@ turning the whole artboard into a second running application.
 
 Mixed files such as `design.css`, `design-stage.css`, `design-review.css` and
 `design-component-*.css` retain shared, layout and global rules after extraction.
-Never declare one of these whole files owned by a single component. Separate
-exclusive component selectors into the inventory's owned sheets; keep global
-tokens, resets, cross-component selectors and screen layout conservatively
-attributed until an actual exclusive owner exists.
+Keep component selectors in the inventory's component sheets. Keep shared
+tokens, resets, cross-component selectors and screen layout in configured
+sheets. All these files use the same kept own-page match rule; none has an owner
+record that decides attribution.
 
-Declare each exclusive public CSS file in the owning component's `stylesheets`
-array. Different components can share one declared CSS file, with both owning
-its rendered link. Shared fixtures, navigation tables, icons and mixed helpers
+Declare each component's public CSS in its `stylesheets` array for linking.
+Different components can share one file. Retain their declaring ids only as
+inserted-link provenance. Shared fixtures, navigation tables, icons and mixed helpers
 do not establish path-based ownership or evidence. Only rendered resources,
 CSS analysis, reviewable metadata and usage determine Changes.
 
@@ -194,7 +197,7 @@ variant uses that child: an absent component cannot justify suppressing that
 resource in the current view. Test a closed Top bar picker and an empty Tag picker
 alongside their populated variants so nested CSS edits do not become parent or
 screen changes through unused stylesheet links. No shared global sheet is filtered
-out as a substitute for proving exclusive ownership.
+out as a substitute for matching changed rules to component output.
 Observe new public CSS through the existing watch configuration/resource graph;
 do not copy the same rules into standalone stories and screen stylesheets.
 
@@ -203,24 +206,9 @@ including `:has()` viewport/theme state, inspector sizing, popovers and focus
 rings. Cross-component state remains explicit or a documented shared context;
 class proximity is not proof of exclusive ownership.
 
-Acceptance after a registered baseline exists:
-
-| Edit                                                           | Direct Changes                                                                                                    | Secondary evidence                        |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Top bar implementation or its exclusive CSS                    | Top bar                                                                                                           | Consuming design screens                  |
-| Nested Tag chip implementation                                 | Tag chip                                                                                                          | Picker/Top bar and their screen consumers |
-| A screen changes query, title, target, status or a field value | That screen                                                                                                       | Actual usage updates                      |
-| A screen changes supplied slot content or instance order       | That screen                                                                                                       | Actual usage updates                      |
-| A variant entry's props change                                 | That variant entry                                                                                                | No automatic consumer change              |
-| Global tokens or screen layout change                          | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#rendered-resources-and-styles) | Shared-file evidence                      |
-| Temporary local prop edit or Reset                             | None                                                                                                              | Preview only                              |
-
-The initial registration migration may create legitimate one-time structural
-changes against an unregistered baseline. Do not add blanket Review ignores to
-hide them. Prove steady-state attribution with two fully registered snapshots.
-Update existing legacy style-attribution tests deliberately: retain meaningful
-global/layout assertions and use the shared component-aware classifier for
-owned styles, not the old raw changed-path helper.
+Acceptance after a registered baseline exists is defined by
+[design component attribution](./mokly-design-component-attribution.md),
+including each CSS delivery path and the unchanged input/slot rules.
 
 ## Verification And Completion
 

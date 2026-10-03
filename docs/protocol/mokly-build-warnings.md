@@ -2,7 +2,9 @@
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+The warning channel is implemented. Extending the ignored-owner warning to
+all stylesheets is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 ## Warning Boundary
 
@@ -56,14 +58,14 @@ path; `<href>` is the configured href on that route; `<route>` is the generated
 document route. The message has no `[mokly/...]` prefix; the reporter supplies
 that framing.
 
-| Code                                 | Deduplication context      | Exact message                                                                                                              |
-| ------------------------------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `removed-dependencies`               | Entry id                   | `dependencies has been removed; ignoring it on entry <id>. Delete the field.`                                              |
-| `removed-owned-dependencies`         | Component id               | `ownedDependencies has been removed; ignoring it on component <id>. Delete the field.`                                     |
-| `removed-shared-impact`              | Config path                | `review.sharedImpact has been removed; ignoring it. Delete the field.`                                                     |
-| `duplicate-component-stylesheet`     | Component id and real file | `duplicate component stylesheet <path> on component <id> is ignored; it is linked once.`                                   |
-| `missing-configured-stylesheet-link` | Route and configured href  | `configured stylesheet link <href> is absent from <route>; component stylesheets use another anchor.`                      |
-| `ignored-declared-resource-owner`    | Route and real file        | `renderer resources for declared stylesheet <path> on <route> are ignored; Mokly derives owners from rendered components.` |
+| Code                                 | Deduplication context      | Exact message                                                                                                        |
+| ------------------------------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `removed-dependencies`               | Entry id                   | `dependencies has been removed; ignoring it on entry <id>. Delete the field.`                                        |
+| `removed-owned-dependencies`         | Component id               | `ownedDependencies has been removed; ignoring it on component <id>. Delete the field.`                               |
+| `removed-shared-impact`              | Config path                | `review.sharedImpact has been removed; ignoring it. Delete the field.`                                               |
+| `duplicate-component-stylesheet`     | Component id and real file | `duplicate component stylesheet <path> on component <id> is ignored; it is linked once.`                             |
+| `missing-configured-stylesheet-link` | Route and configured href  | `configured stylesheet link <href> is absent from <route>; component stylesheets use another anchor.`                |
+| `ignored-stylesheet-resource-owner`  | Route and file identity    | `Stylesheet ownership for <path> on <route> is ignored. Changes follow the elements that each changed rule matches.` |
 
 For a duplicate declaration, `<path>` is its first authored public path. For
 removed root or folder metadata, the `removed-dependencies` code uses context
@@ -75,14 +77,19 @@ and `dependencies has been removed; ignoring it on folder <path>. Delete the fie
 where `<path>` is the JSON-quoted path joined with `/`. A component variant
 that supplies a removed field uses its own global id, never its parent's id.
 
-For
-an ignored renderer record, `<path>` is the first renderer-record public path
-for that real file in authored record order. A renderer record for a declared
-file warns even on a page
-without a rendered declarer; ignoring it cannot grant ownership. No warning is
-needed for a configured/declared overlap: the configured input supplies the
-link and the declaration still supplies ownership. Repeated or reordered
+For an ignored renderer record, `<path>` is the first renderer-record public
+path for that file identity in authored order. This warning replaces the old
+`ignored-declared-resource-owner` code; never emit both. It covers every CSS
+record, including unlinked files and pages with no rendered declarer. For an
+authored public file, identity is its confined real path. Generated CSS uses
+`generated:` followed by its canonical public route, whether pending or already
+written. This keeps one identity across all phases of a run. Repeated
+records and realpath aliases warn once per route and invocation scope. Invalid
+paths or unavailable generated routes still fail validation before a warning.
+
+No warning is needed for a configured/declared overlap: keep the link and its
+placement. Declarations do not supply resource ownership. Repeated or reordered
 renderer links remain authored output rather than discarded input, so only a
 missing configured href emits the configured-link warning, and only when
-component-link insertion needs an anchor. Invalid paths and
-ambiguous inputs retain their existing typed errors.
+component-link insertion needs an anchor. Non-CSS resource owners and document
+`styles` records retain their existing rules.

@@ -2,7 +2,10 @@
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Parsing, diffing and conservative exclusion are implemented. Element sets and
+uniform rule membership are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+Comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 Rule parsing, diffing, document matching, and classification apply to
 screen-only and component catalogues, live Serve, watched updates, and
@@ -48,7 +51,8 @@ when linked in a rendered document, under the
 [ownership rules](./mokly-component-stylesheet-ownership.md).
 The comparison-only removal of Mokly-inserted links does not remove those
 links from the actual final document used to discover CSS and match changed
-rules. An unlinked declaration has no CSS evidence or derived owner record.
+rules. An unlinked declaration has no CSS evidence. No stylesheet ownership
+record controls resource eligibility or attribution.
 
 Resources that are not stylesheets, including fonts, images, and embedded
 documents, keep their existing file-level attribution unchanged.
@@ -108,7 +112,8 @@ live classification snapshot or in static exports.
    produces no rule.
 2. **Matchability.** Test each diffed rule's selectors against the view's
    branch-point document and working-tree document. A match on either side
-   keeps the rule. Enclosing conditions are not evaluated: a rule inside
+   keeps the rule and retains all matched elements with their side, selector
+   and component containment. Enclosing conditions are not evaluated: a rule inside
    `@media` or `@container` is tested exactly like a rule outside it.
    Evaluating conditions needs a viewport and element sizes, which belongs to
    browser refinement.
@@ -131,6 +136,11 @@ live classification snapshot or in static exports.
    it does not contribute to Changes membership for that view.
    Any unresolved rule makes the reduced status `unresolved`, even if another
    rule matched. A failed stylesheet parse yields no partial selector evidence.
+4. **Attribute.** Join equal changed rules across stylesheets. Prove changed
+   components from kept own-page matches after nested filtering, then decide page rows. Retain page
+   evidence for outside matches and unresolved rules under the
+   [membership rule](./mokly-css-attribution-rules.md). Do not reduce away the
+   per-rule element sets before this step.
 
 ## Rule Diff Representation
 
@@ -220,8 +230,10 @@ normalization; the matcher performs no file reads or classification writes.
 CssDocumentPair, parser?: CssRuleParser): CssAnalysisOutcome` composes all three
 stages for one resource on one view. The default parser is
 `LightningCssRuleParser`; missing stylesheet sides use an empty string.
-The outcome is `{ kind: "kept", status: "matched" | "unresolved", selectors }`
-or `{ kind: "excluded" }`. No match means excluded, including a resolved empty
-diff. Callers remain responsible for reachability and `changedPaths` eligibility.
+The per-resource outcome retains per-rule matches for catalogue-wide attribution;
+its final wire shape is defined by [the evidence schema](./mokly-css-attribution-membership.md).
+No match means excluded, including a resolved empty diff. Callers remain
+responsible for reachability and `changedPaths` eligibility. CSS owner records
+never filter candidate rules or replace the kept own-page match proof.
 
 Membership and presentation continue in [CSS Attribution Membership](./mokly-css-attribution-membership.md).

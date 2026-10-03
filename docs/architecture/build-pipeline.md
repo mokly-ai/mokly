@@ -2,6 +2,10 @@
 
 ## Delivery Status
 
+CSS rule attribution and ignored stylesheet owner records are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
+Other behavior below remains implemented.
+
 Component CSS linking, manifest v8 and source-path-free classification were
 planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
 and implemented in Milestones 3, 6 and 4 respectively. The pipeline below
@@ -183,7 +187,8 @@ type Renderer = (input: RenderInput) => string | RenderResult;
 variant entry itself and `componentProps` carries its validated props.
 
 The returned string, or `RenderResult.html`, must be a complete HTML document.
-The optional structured result supplies exact component style/resource ownership;
+The optional structured result supplies document-style and non-CSS resource ownership;
+stylesheet resource-owner records are ignored with a warning;
 see the [component manifest](../protocol/mokly-component-manifest.md).
 Each component variant entry renders in every configured context through the
 same consumer graph. Wrappers record actual invocations, data, caller-owned

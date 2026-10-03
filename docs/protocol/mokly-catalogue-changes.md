@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Uniform CSS page membership and catalogue evidence are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md); the details display is planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+
 Implemented with [pages](./mokly-pages.md), variants, and publication. Catalogue
 impact/removal metadata is independent of the visual
 [comparison result](./mokly-changes.md); [removed previews](./mokly-removed-previews.md)
@@ -53,7 +56,7 @@ shell can place its Removed row under a surviving parent as the
 removed, each is its own removed entry. `variantOf` is not a parallel snapshot
 field; retaining the complete baseline DTO preserves it.
 
-`changedIds` is the sorted, unique union of affected current entry ids and the
+`changedIds` is the sorted, unique union of directly changed current entry ids and the
 selected removed-entry ids. Current entry attribution keeps the
 existing ID-based metadata, material generated-output, rendered-resource, and
 ancestry rules, extended with the page's single document. Apply the same paired
@@ -61,7 +64,10 @@ ignore normalization to page documents. For all catalogues, source paths,
 unreferenced files and removed entry path declarations neither add otherwise
 unchanged entries nor appear as comparison evidence. Component catalogues use
 the [ownership-aware classification](./mokly-component-changes.md)
-for screens, components and flows, unioned with material/metadata page Changes. Screen impact
+for screens, components and flows, unioned with page material, metadata and
+rendered-resource Changes. Every CSS delivery path uses own-page component
+matches kept after nested filtering and outside/unresolved page reasons under the
+[CSS rule contract](./mokly-css-attribution-rules.md). Screen impact
 continues to propagate to use cases through their screen steps. Current display
 metadata comes from the matching current catalogue; removed display metadata
 comes from `removedEntries`. No removed-use-case support is introduced here.
@@ -72,7 +78,8 @@ generation. The publisher must not discover removed pages by reading
 `ReviewResult.screens`; that array remains the source of screen comparisons.
 The shared catalogue snapshot drives its removed-entry pages, shell metadata,
 and filter/search rows before HTML capture. It requires no additional public
-endpoint or comparison JSON schema change.
+endpoint. CSS page evidence is carried by catalogue v4 `resourceEvidence`;
+[comparison v5 evidence](./mokly-css-attribution-membership.md) changes in place.
 
 ## Removal Selection And Precedence
 

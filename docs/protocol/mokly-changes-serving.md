@@ -2,6 +2,11 @@
 
 Continuation of [Changes And Screen Comparisons](./mokly-changes.md).
 
+## Delivery Status
+
+The expanded v5 per-rule and page evidence is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md); its comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+
 ## Generation and serving
 
 The existing Git branch-point comparison engine, ownership checks, dependency
@@ -149,10 +154,7 @@ interface ReviewResult {
       reasons?: readonly {
         kind: "dependency";
         path: string;
-        analysis?: {
-          status: "matched" | "unresolved";
-          selectors: readonly string[];
-        };
+        analysis?: DependencyAnalysis;
       }[];
       excludedResources?: readonly {
         path: string;
@@ -163,25 +165,27 @@ interface ReviewResult {
 }
 ```
 
-Version 4 addresses screens, components, variants, and views by entry id and
+Version 5 addresses screens, components, variants, and views by entry id and
 view axes and stores no route or artifact path. Snapshot paths come from
 `snapshotViewPath`; a side the
 view's state lacks (`added` has no `before`, `removed` has no `after`) has no
 document. Component catalogues add component, variant, use-case, and
 affected-consumer records addressed by entry id, defined by the
 [component comparison schema](./mokly-component-review.md). Readers accept
-only version 4.
+only version 5.
 
 Every catalogue emits the complete `ReviewResultV5` shape defined by the
 [component comparison schema](./mokly-component-review.md), which extends the
 screen fields above with `components`, `changes`, and `affectedConsumers`; a
-catalogue without registered components emits those arrays empty rather than
-a second screen-only shape.
+catalogue without registered components emits empty `components` and
+`affectedConsumers` arrays. Its `changes` still records directly changed
+screens and use cases; there is no second screen-only shape.
 
 Optional view `material`, `reasons`, and `excludedResources` implement
 [CSS change attribution](./mokly-css-attribution.md). `material` is present
 exactly when the view's normalized documents differ. Empty optional lists are
-omitted; results without them mean the analysis did not run. Retained resource
+omitted. `DependencyAnalysis` uses the [per-rule evidence schema](./mokly-css-attribution-membership.md);
+missing view evidence means no retained or excluded resources for that view. Retained resource
 reasons make paired views changed, and summary counts follow these states.
 
 The [review validation contract](./mokly-component-review-validation.md)

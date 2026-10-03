@@ -91,8 +91,9 @@ public CSS declared by actually rendered components there; otherwise it goes
 after shared CSS and before the matching scheme list. It is not a URL and
 cannot appear in a scheme-specific list. Component declarations accept only
 existing public `mockupsDir`-relative CSS, not HTTP(S) links. If a file is both
-configured and component-declared, Mokly keeps the configured link and gives
-the rendered declaring components ownership of it.
+configured and component-declared, Mokly keeps the configured link without
+adding another. Declarations control loading. Changed rules determine which
+components and pages appear in Changes.
 
 Imported CSS delivery appends the
 configured renderer stylesheet and then the entry stylesheet after those

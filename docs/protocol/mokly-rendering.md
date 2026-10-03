@@ -8,7 +8,10 @@ public exclusions.
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Removing derived CSS owners, filtering renderer CSS owners and recording root
+output boundaries are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The remaining contract is implemented.
 
 ## Rendering Boundary
 
@@ -58,7 +61,7 @@ For a component variant entry, `entry` is the variant entry itself and
 rendered on its own, and `RenderInput` has no `variantId` field.
 
 The string or `html` field must contain a complete `<html>` document. Optional
-style/resource records provide exact component ownership; unclaimed or mixed
+document-style and non-CSS resource records provide exact ownership; unclaimed or mixed
 material stays conservative. The [component contract](./mokly-components.md)
 and [attribution contract](./mokly-component-changes.md) define validation. Mokly
 serializes Review-ignore markers, adapts opt-in `MockLink asChild` controls,
@@ -138,9 +141,10 @@ stylesheets beside the renderer's configured links after rendering; see the
 [component stylesheet contract](./mokly-component-stylesheets.md) for marker
 placement and nearest-present-link fallback, and the linked
 [ownership contract](./mokly-component-stylesheet-ownership.md) for transient comparison provenance,
-post-transform owner pruning and style-offset rebasing. The compatibility
-transform may remove a declared link; only files still linked in its final
-output receive derived owners. A transform retaining an inserted link preserves
+final-link validation and style-offset rebasing. The compatibility transform
+may remove a declared link; only retained inserted links receive provenance.
+No CSS resource owners are derived. Renderer stylesheet owner records are
+ignored with a warning; document `styles` and non-CSS owners retain their meaning. A transform retaining an inserted link preserves
 its transient provenance token, which Mokly removes before writing HTML.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.

@@ -2,7 +2,9 @@
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Linking and provenance are implemented. The removal of CSS ownership records
+and uniform rule attribution are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The [ownership and comparison contract](./mokly-component-stylesheet-ownership.md) defines final link provenance and evidence.
 
@@ -93,12 +95,11 @@ No marker emits a literal `<link>`. A rule for another route has no effect.
 Configured stylesheet URL support is unchanged. A local file may be both
 configured and declared, including through aliases of one real file. On a
 matching route, keep the configured link at the renderer's position, add no
-second Mokly link, and give the file the rendered declaring components as
-owners. If the renderer omitted that configured link, insert one component
+second Mokly link, and retain the rendered declarations for link provenance. If the renderer omitted that configured link, insert one component
 link under the fallback rule and warn about the missing configured href. A
 declaration whose configured rule does not match this route follows
-ordinary component linking. Configuration supplies placement; the declaration
-supplies ownership. This overlap is not an error or an ignored input.
+ordinary component linking. Configuration supplies placement; declarations
+supply required links, not CSS ownership. This overlap is not an error or an ignored input.
 
 ## Document Linking
 
@@ -115,19 +116,19 @@ authored stylesheet list. Group declarations by resolved real file, not by
 their lexical paths: two components may name that file through different
 public aliases. Emit one link per real file that Mokly must link. The first
 occurrence determines its link position and the declared public path used for
-its href; all rendered components declaring that real file are owners. Do not
+its href; retain all rendered declaring ids for inserted-link provenance. Do not
 link the union of registered or saved-variant components: a component absent
-from this render contributes neither a link nor an owner. This order is stable
+from this render contributes neither a link nor provenance. This order is stable
 in Build, Check, on-demand Serve and transient comparison renders.
 
 Resolve each href relative to this document's output route, with the same
 per-segment URL encoding as configured local stylesheet links. Emit a normal
 `<link rel="stylesheet" href="...">` inside `<head>`. The path recorded for
-ownership is the decoded, `mockupsDir`-relative public path used by that link,
+provenance is the decoded, `mockupsDir`-relative public path used by that link,
 not its encoded href or the real filesystem path. For a Mokly-inserted link,
 the pre-transform href uses the first rendered declaration's lexical public
 path, even when later declarers use aliases of the same real file. The final
-ownership path follows the retained final link, including a transform's alias.
+provenance path follows the retained final link, including a transform's alias.
 Shared/scheme configured link ordering otherwise stays unchanged.
 
 `RenderInput.stylesheets` contains only configured hrefs in configured order;
@@ -136,12 +137,12 @@ it does not receive the marker or component-declared paths. Its component
 emits configured links as before. If it also emits a local stylesheet link to
 the same real file as a declaration, Mokly keeps that link at its authored
 position and does not insert another. Its decoded, `mockupsDir`-relative href
-path becomes the ownership-record path when no retained configured link to
-that real file takes precedence, even when an alias was declared first.
+path identifies the reused link even when an alias was declared first. A
+reused authored link gets no inserted-link span or resource owner record.
 Query and fragment suffixes on a renderer-authored local href do not change
-real-file identity; keep them on that link but omit them from the record path.
+real-file identity; keep them on that link but omit them from resource paths.
 If several renderer links already name the same real file, Mokly leaves them
-unchanged, adds none, and takes the first in document order for the record;
+unchanged and adds none;
 Mokly's one-link guarantee applies to links it inserts, not duplicates the
 renderer already authored. For files not already linked by the renderer, Mokly
 locates the configured links and inserts component links next to them.
@@ -169,7 +170,7 @@ See the [graceful-handling rule](./README.md#graceful-handling).
 ## Ownership And Comparison
 
 The linked [ownership and comparison contract](./mokly-component-stylesheet-ownership.md)
-defines transient provenance, final-document owner pruning, comparison-only
+defines transient provenance, the removal of CSS owner records, comparison-only
 link projection and Changes attribution. It retains renderer-authored links as
 page content and keeps CSS evidence based on final linked documents.
 
@@ -186,7 +187,7 @@ editing it triggers a reload/evidence refresh for the views that link it,
 without requiring a rebuild of source modules. Changes to the declaration or
 component source still rebuild. Imports and referenced assets retain the
 ordinary public-resource watch behavior. On-demand and transient renders use
-the same link and ownership rules as a full build. A missing or newly
+the same linking, provenance and warning rules as a full build. A missing or newly
 non-public file fails validation; last-good Serve output remains intact.
 
 The [source policy](./mokly-source-protection.md) treats declared stylesheets
@@ -207,6 +208,6 @@ of stylesheet loading from manually declared review dependencies.
   [component manifest](./mokly-component-manifest.md) define generated links
   and private view records.
 - [Ownership and comparison](./mokly-component-stylesheet-ownership.md)
-  defines final-document ownership and comparison provenance.
+  defines final-document provenance and rule-based comparison.
 - [Watch](./mokly-watch.md), [export](./mokly-export.md), and
   [publication](./mokly-publication.md) define delivery boundaries.

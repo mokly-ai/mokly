@@ -12,7 +12,11 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Uniform CSS attribution, root boundaries, evidence fields and stylesheet-owner
+warnings are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+Comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). Unreleased v8/v4/v5 change in place.
+
+The remaining contract is implemented.
 
 ## Graceful Handling
 
@@ -25,7 +29,7 @@ deduplication and terminal presentation for the affected cases. This rule does
 not waive public-file confinement, source protection or validation of the
 inputs Mokly actually uses. The current plan applies it to duplicate component
 CSS declarations, configured-link placement, configured/declared overlap,
-renderer ownership for declared CSS, and the removed authoring/configuration
+renderer ownership for every stylesheet, and the removed authoring/configuration
 fields; other validation contracts are unchanged.
 
 ## Supported Formats
@@ -71,9 +75,9 @@ Current manifest readers require v8. Historical readers accept v3 to v7, drop co
 - [Identity-derived artifact paths](./mokly-artifact-paths.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Component-declared stylesheets](./mokly-component-stylesheets.md) — implemented
-  link placement, validation, ownership, watching and delivery.
+  link placement, validation, provenance, watching and delivery.
 - [Component stylesheet ownership and comparison](./mokly-component-stylesheet-ownership.md)
-  — final-link owners and comparison-only provenance.
+  — final-link provenance, ignored CSS owners and comparison exclusion.
 
   - [Generated rendering contract](./mokly-rendering-generated.md).
 
@@ -151,10 +155,12 @@ Current manifest readers require v8. Historical readers accept v3 to v7, drop co
 - [Component usage records](./mokly-component-usage-records.md)
 - [Component comparison v5 schema](./mokly-component-review.md)
 - [Component review validation and canonical output](./mokly-component-review-validation.md)
+- [Design component attribution](./mokly-design-component-attribution.md) — CSS delivery and caller-input acceptance.
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — implemented
   rule-aware stylesheet evidence.
-  - [CSS attribution membership](./mokly-css-attribution-membership.md).
+  - [CSS rule membership and identity](./mokly-css-attribution-rules.md).
+  - [CSS attribution membership and evidence](./mokly-css-attribution-membership.md).
 - [Component review fast path](./mokly-component-review-fast-path.md)
 - [CSS evidence in the shell](./mokly-css-evidence-shell.md) — inspector and
   comparison-stage presentation of stylesheet evidence.

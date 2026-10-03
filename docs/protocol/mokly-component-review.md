@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+CSS per-rule attribution and the revised v5 evidence are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+
 The producer, source validator, artifact publisher, exporter, and browser decoder
 implement this unified Review schema v5 for [change attribution](./mokly-component-changes.md).
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
@@ -28,8 +31,9 @@ applicable reason, without deriving membership from raw fragment paths alone.
 
 A dependency reason names a `changedPaths` path. Independent reasons follow
 [component change attribution](./mokly-component-changes.md#rendered-resources-and-styles):
-only retained rendered resources supply path evidence. Ownership comes from
-view `styles` and `resources` records, including declared stylesheets. A
+only retained rendered resources supply path evidence. Non-CSS file ownership
+comes from `resources`; `styles` owns document ranges. CSS uses own-page rule
+matches kept after nested filtering, never stylesheet owner records. A
 stylesheet reason may carry the
 [CSS change attribution](./mokly-css-attribution.md) `analysis` record;
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
@@ -56,12 +60,14 @@ The linked contract defines eligibility, ownership projection, malformed
 markers, and one-sided range validation.
 
 Views omit empty `reasons` and `excludedResources` lists and sort both by path.
-Entry reasons merge retained view evidence by path, with a sorted selector
-union and unresolved precedence. Ownership may suppress a view resource reason
-from entry membership; one view's exclusion does not cancel another's reason.
-Components collect CSS kept at actual invocations when saved variants exclude
-it. The [CSS contract](./mokly-css-attribution.md) defines selector requirements;
-globs and declarations cannot override an excluded in-scope stylesheet.
+Entry reasons merge by path and rule key under the
+[CSS evidence schema](./mokly-css-attribution-membership.md). It adds per-rule
+changed component ids and page evidence in v5, without a new version. A
+component-only rule can be absent from a consumer's entry reasons while still
+appearing in its view evidence. CSS at an actual invocation cannot change a
+component whose own pages keep no match for that rule. Non-CSS resource
+ownership keeps its current suppression policy. One view's exclusion never
+cancels another's retained evidence.
 
 Each affected record groups one changed component and one canonical consumer.
 Its component id must appear in `changes` with kind component, and evidence

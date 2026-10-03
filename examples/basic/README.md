@@ -1,5 +1,10 @@
 # Basic Mokly Consumer
 
+## Delivery Status
+
+Uniform CSS rule attribution in this guide is planned for Milestone 19 of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 The example declares component CSS with `stylesheets`, uses manifest v8 and
 classifies Changes from rendered output rather than source-path declarations.
 See the [source-path removal plan](../../plans/remove-source-path-evidence.md)
@@ -28,8 +33,8 @@ Toolbar, with caller-owned slots. Action has Default, Disabled and Secondary
 variants plus text, boolean, number, optional hint and emphasis controls; Toolbar
 has an editable title and nested Action instances. Open Props in local Serve to
 edit them. Published exports provide the same saved examples read-only.
-`example-components.css` declares exact shared ownership, separate from global
-styles and the design mockups. Action and Toolbar are co-located with their
+`example-components.css` is declared by Action and Toolbar for linking.
+Changed rules use kept own-page matches, as global and design styles do. Action and Toolbar are co-located with their
 product-style implementations under `src/components/`: each directory holds
 the plain React component (`action.tsx`), its catalogue registration
 (`action.mokly.tsx`), and the entry module that exports it
@@ -231,8 +236,8 @@ preserves every entry's rendered-resource evidence. Linked stylesheets, includin
 imported sheets, are attributed by rule: a changed rule must potentially match
 a view or be unresolved to keep that dependency. A broad stylesheet glob cannot restore
 an excluded stylesheet or add an unreferenced public file to Changes. Actual
-rendered references, generated usage and component ownership determine the
-scope; regression tests cover each exclusive sheet and the mixed/global sheets.
+rendered references and own-page CSS matches determine stylesheet attribution;
+document styles and non-CSS resource owners keep their own policy; regression tests cover each exclusive sheet and the mixed/global sheets.
 
 The recorded tokens and responsive rules live in the
 [shell design contract](../../docs/protocol/mokly-shell-design.md); component

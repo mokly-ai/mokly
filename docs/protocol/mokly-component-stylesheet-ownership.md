@@ -2,14 +2,17 @@
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Link provenance and comparison exclusion are implemented. Removing derived
+CSS owners and ignoring all renderer CSS owner records are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+The page evidence display is planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 The [declaration and linking contract](./mokly-component-stylesheets.md) defines the stylesheet inputs and placement.
 
 ## Provenance And Comparison Material
 
 Mokly must distinguish only the links it inserts from renderer-authored links,
-including renderer links reused for ownership. Give each inserted link a
+including renderer links reused for declarations. Give each inserted link a
 unique transient `data-mokly-component-stylesheet` token before the optional
 compatibility transform. The attribute is reserved: a renderer-authored
 occurrence fails `build-invalid` because provenance would be ambiguous. The
@@ -36,61 +39,73 @@ documents **before** component projection and paired or single Review-ignore
 normalization. Rebase a comparison-only copy of range/style offsets through
 that removal; never change the stored final-document offsets. Do this on the
 complete path and before the unchanged-view fast decision's equality checks.
-On a component page, retain a recorded link when its owners include that
-page's root component id, even if a child also owns it; remove child-only
+On a component page, retain a recorded link when its declaring ids include that
+page's root component id, even if a child also declares it; remove child-only
 inserted links. A screen has no root exception. Renderer-authored and
-compatibility-authored links stay page content, even when their files have
-derived ownership. Public output and snapshots keep the final documents.
+compatibility-authored links stay page content, even when their files are
+also declared. Public output and snapshots keep the final documents.
 Resource discovery and CSS rule matching use those final documents with their
 normal Review-ignore policy, **without** stripping inserted links. Thus
-provenance affects page material only, not file-content evidence or owners.
+provenance affects page material only, not CSS rule attribution.
 
 ## Derived Ownership And Conflicts
 
-For every real file linked through a declaration, Mokly adds exactly one record
-to the current view's `ComponentViewRecord.resources`:
+Mokly stops deriving stylesheet `ComponentViewRecord.resources` records.
+No remaining use requires them. Keep rendered declarations temporarily while
+linking, grouped by real file with sorted declaring component ids. Use that
+linking data directly to make each surviving `insertedStylesheets` record.
+Its `componentIds` are provenance for the root-link exception, not CSS owners.
+A reused renderer link gets no inserted-link record. A removed inserted link
+gets no span; an unmarked replacement stays authored page material.
 
-```ts
-interface ComponentResourceOwnership {
-  path: string; // mockupsDir-relative public CSS file
-  componentIds: readonly string[]; // nonempty, sorted, unique ids
-}
-```
+The audit of existing uses requires these changes:
 
-Owners are exactly the rendered component ids declaring that real file (including
-the component root when applicable). Merge declarations from repeated
-instances/owners and realpath aliases of one file. When a configured link to
-that file remains in the final document, its decoded public path is the record
-path; otherwise use the first matching final link's decoded public path. Sort
-records by that path and ids by the manifest's lexical order; retain the
-separate link position. Never infer ownership from selectors, a configured
-link alone, or an import. Imported files remain unowned even when reached
-through a declared stylesheet.
+| Existing use                                                                                  | Required behavior                                                                                                                       |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `render.tsx` derives resource records during link insertion/reuse.                            | Keep link order, deduplication and declarer data in the linking pass; write no CSS resource records.                                    |
+| `stylesheet_provenance.ts` prunes owners and obtains ids from those records.                  | Resolve final tokens against the issued linking data directly. Preserve spans, ids, aliases, final-link validation and offset rebasing. |
+| Manifest serialization and resource validation carry the records.                             | Current v8 writes only non-stylesheet resource owners. Validate public CSS through declarations and the resource graph.                 |
+| `component_projection_resources.ts` suppresses owned CSS in consumers.                        | Never suppress a stylesheet through resource ownership. Match rules against actual normalized documents.                                |
+| `component_view.ts` treats root resource-owner changes as material.                           | Retain that check only for non-CSS owners. An added/removed declaration with no link, byte or other rendered change gives no reason.    |
+| `component_resource_attribution.ts` promotes invocation CSS to component reasons.             | Keep invocation attribution only for non-CSS resources. CSS requires own-page rule matches.                                             |
+| Fast-path usage equality, source validation and affected-consumer assembly use those records. | Ignore historical CSS owners, validate frozen per-rule proof and preserve complete/fast equivalence.                                    |
+| Public catalogue/inspection projection strips resource ownership.                             | Keep it private; expose rule evidence instead. No export, watch or publication file list depends on derived owners.                     |
 
-Renderer-supplied `styles` offsets and `resources` records still own other
-material. Ignore a renderer `resources` record for any declared real file on
-every page, even without a rendered declarer, and issue the
-[owner-record warning](./mokly-build-warnings.md#exact-messages). Do not
-validate its asserted component owners or merge it; it cannot grant
-ownership. Resolve the record's confined public path to establish real-file
-identity first; malformed or unsafe paths still fail normal validation.
-Validate other resource records against existing public-root and conflicting-
-owner rules. After compatibility transformation, rescan final stylesheet
-links recognized by normal resource discovery, by real file. Keep one derived
-owner record only for a declared file still directly linked in the final page;
-remove it if all its links disappeared. If an inserted link was removed but
-another final authored link to the same file remains, keep the owners and use
-that link's decoded public path. Derived records are private to manifest v8,
-not a public catalogue field.
+Older stored CSS resource records have no effect, including records in earlier
+unreleased v8 output. Historical normalization drops them before ownership
+validation, root-owner comparison or suppression. It never reconstructs them
+from declarations. New v8 usage records reject CSS resource entries after the
+renderer filter; normalization is a historical boundary, not permission for a
+current producer to keep emitting them.
+
+Ignore a renderer `resources` record naming any stylesheet, whether configured,
+declared, imported by CSS, generated from JavaScript, or not linked on that
+page, including a catalogue with no registered components. Filter before any
+empty-registry ownership rejection. Apply the public path grammar and confinement checks first, including
+realpath aliases and protected-source checks. A case-insensitive `.css` suffix
+on either the public path or its confined real target identifies CSS. Pending
+generated CSS uses its validated generated route; do not fall back to disk.
+Missing or unsafe files still fail normal validation. Do not validate ignored
+component ids, merge their owners, or grant them any effect.
+
+Emit the single `ignored-stylesheet-resource-owner` warning for each route/file
+identity under [Build Warnings](./mokly-build-warnings.md#exact-messages). This
+replaces `ignored-declared-resource-owner`, with no duplicate old-code warning.
+It applies even if no declaring or asserted component renders. This follows
+[graceful handling](./README.md#graceful-handling): the unnecessary ownership
+input can be discarded while keeping safe output.
+
+Renderer `resources` for non-stylesheets retain their existing ownership,
+public-root validation, conflicting-owner checks and actual-invocation rules.
+Renderer `styles` records retain ownership of exact document material ranges,
+including style-element text. They are not stylesheet-file ownership.
 
 ## Changes
 
-An edit to a declared stylesheet follows the same rendered-resource and CSS
-rule analysis as any linked public CSS file. Ownership attributes retained
-evidence to the declaring component(s); actual consuming screens/components
-are listed under Affected screens rather than added to Changes solely because
-they use that component. A changed import remains an unowned rendered resource
-unless another explicit renderer ownership record applies. A declared file
-that no current or baseline view links does not itself add an entry to Changes.
-See [component changes](./mokly-component-changes.md) and
-[CSS attribution](./mokly-css-attribution.md).
+Every stylesheet uses [rule membership](./mokly-css-attribution-rules.md).
+Only a kept own-page match under the nested-component test proves that the
+rule changes a component. Matches outside components changed by that rule,
+and unresolved rules, give the page its own row. Imports, generated copies,
+configuration and declarations follow the same rule. No CSS owner record can
+suppress a page reason or grant a component reason. Unlinked files add nothing.
+Declared links and `insertedStylesheets` keep the comparison exclusion above.

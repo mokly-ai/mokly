@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+CSS owner removal, root output boundaries and uniform rule evidence are
+planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 On-demand startup, rendering and evidence completion are implemented. The
 route-evidence loading and failed Usage states are implemented by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
@@ -60,7 +63,7 @@ before replacements start. Exhaustive background work uses one worker with a
 The single-document compiler reuses exhaustive Build's validation primitives: rendering,
 stylesheet selection, compatibility, logical links, ownership, component ranges,
 props, style/resource metadata, ignore markers, output confinement, and resource
-validation. It retains owners only for declared files linked after the
+validation. It retains provenance only for inserted links present after the
 compatibility transform and forwards render warnings to the Serve parent.
 Navigation without anchors needs the destination's registered route,
 

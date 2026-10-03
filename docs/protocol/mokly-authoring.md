@@ -6,6 +6,10 @@ consumer rendering follows the [rendering contract](./mokly-rendering.md).
 
 ## Delivery Status
 
+CSS rule attribution and ignored stylesheet owner records are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
+Other behavior below remains implemented.
+
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 ## Public Authoring API
@@ -66,7 +70,7 @@ Each entry provides a title, description and related docs. Source paths alone
 do not add entries to Browse Changes or comparison evidence: classification
 uses output, rendered resources, reviewable metadata, navigation paths and
 component usage. See [the Changes contract](./mokly-changes.md).
-Component-owned public CSS is declared through
+Public CSS for a component is linked through
 [component stylesheets](./mokly-component-stylesheets.md), not entry metadata.
 Kind and id determine each entry's stable route; use cases live under
 `user-flows/`. Screens may provide an address-bar label and use-case membership. Nested definitions

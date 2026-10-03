@@ -2,7 +2,10 @@
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Ignoring all CSS owner records after safety checks is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The remaining contract is implemented.
 
 ## Protected Inputs
 
@@ -138,8 +141,8 @@ remain public unless another protection rule or consumer exclusion matches.
 Declaring a file in a component's `stylesheets` grants no exception: reject
 protected or non-public CSS before rendering, and validate transitive imports
 and assets with the same confinement policy during Serve, comparison, export
-and publication. Only linked declared files gain derived ownership; imports
-remain unowned.
+and publication. CSS owner records are ignored after confinement checks;
+no declaration or owner claim can change CSS rule attribution.
 
 ## Complete Source Inventory
 

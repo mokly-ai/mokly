@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+The explicit root output target is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 Implemented as recorded in the
 [viewer library plan](../../plans/mokly-viewer-library.md), including resolution
 and source capture. Key and boundary formats are unchanged; this document
@@ -196,7 +199,9 @@ and serializes it as:
 ```
 
 `r-n` is allocated in DOM start-marker order, starting at zero. Range records
-map it to an instance key or slot key; the comment does not contain that key.
+map it to an instance key, slot key or `{ kind: "root" }`; the comment does
+not contain that target. A component saved page has one root output pair under
+the [usage contract](./mokly-component-usage-records.md#root-output-boundary).
 `parentId` is the nearest enclosing registered range, including a slot range.
 
 Every instance in a rendered view's manifest has at least one instance-targeted
@@ -209,8 +214,9 @@ can have a slot record without a range.
 
 Reject unknown, forged, missing, duplicate, crossing, reordered, or mismatched
 markers and incorrect range parentage. No template sentinel survives final
-serialization. Review-ignore regions cannot enclose component or caller-slot
-boundaries. Compatibility transforms must preserve validated pairs; adapters
+serialization. Review-ignore regions cannot enclose instance or caller-slot
+boundaries. The root-only pair preserves existing ignore admission under the
+[root output contract](./mokly-component-usage-records.md#root-output-boundary). Compatibility transforms must preserve validated pairs; adapters
 inspect current views using these comments without adding layout wrappers.
 Accepted baseline and current v8 documents use the same marker spelling and
 validation; historical marker translation is not supported.

@@ -209,6 +209,16 @@ PostCSS module processes imported CSS; see the Styles guide for plugin setup.
 The basic consumer example imports a CSS Module, a PNG-backed stylesheet, and
 preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 
+## Delivery Status
+
+Uniform CSS attribution is planned for Milestone 19 of the
+[source-path removal plan](./plans/remove-source-path-evidence.md); comparison
+details follow in Milestone 20. Configured, declared and imported stylesheets
+will use the same [CSS rule contract](./docs/protocol/mokly-css-attribution-rules.md).
+Components change through own-page matches kept after nested filtering. Outside matches
+and unresolved rules give a page its own row. Stylesheet owner records have no
+role in that decision. The plan keeps this target separate from delivered code.
+
 ## Review and share
 
 The local **Changes** view compares the working tree with the merge base of

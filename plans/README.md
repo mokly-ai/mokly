@@ -153,9 +153,10 @@
   entry `dependencies`, component `ownedDependencies` and
   `review.sharedImpact`; Changes and comparison evidence use only rendered
   output in every catalogue, and components declare the `stylesheets` that
-  Mokly links and attributes to them. Implemented, verified, pushed and
-  reviewed twice; merging main 0.13.0 and fixing
-  second-review finding 1 are in progress.
+  Mokly links. Milestone 16 merged main 0.13.0 and is pushed. Milestone 17
+  documents the 2026-10-03 uniform CSS rule; classification and comparison
+  details remain pending in Milestones 19 and 20. Earlier work was reviewed
+  twice; unselected review findings remain open.
 - [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
   pages embed the catalogue index plus only their own entry's component usage
   and serialise that state once. The public `catalogue.json` stays complete;

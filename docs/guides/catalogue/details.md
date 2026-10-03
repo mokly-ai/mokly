@@ -26,18 +26,26 @@ finished; it is never shown as zero consumers.
 ## Stylesheet evidence
 
 When a stylesheet you link has changed, the inspector names the changed styles
-that can apply to this screen, or says the change can apply anywhere on it.
+that apply to this screen outside the components changed by those styles,
+or says the change can apply anywhere on it.
 A stylesheet whose changed styles reach nothing on the screen is listed as
 examined and excluded instead, and never produces a Changes row. Selector text
 stays inside that secondary list, and a screen kept only by a stylesheet edit
 reads "Styles this screen uses changed" above its comparison.
 
 Screen-only catalogues show this evidence before you open a comparison.
-Opening one keeps those details and adds the evidence it retained. The file
-list combines changed files the screen uses with broader files that may affect
-it. A listed file can leave the screen unchanged and out of Changes. Files
-owned by a registered component or named by an exact dependency can still
-add their entry.
+Opening one keeps those details and adds the evidence it retained. Each
+stylesheet has its own selector list. For outside matches, the text says
+“These changed styles also apply outside the changed components on this
+screen:”. If no component changed through those rules, it says “Changed styles
+that apply to this screen:”. A rule inside an unchanged component invocation
+can appear in that list. Uncertain changes have a separate explanation.
+
+A component-only style change can leave a screen under Affected screens with
+no Changes row of its own. A component page with only a wrapper change has its
+own saved-view row, but that rule gives it no Affected screens. The details
+name the stylesheet actually loaded, including a generated stylesheet when CSS
+comes from JavaScript. Private source files do not supply comparison evidence.
 
 ## Component props
 

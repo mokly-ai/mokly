@@ -2,6 +2,10 @@
 
 ## Delivery Status
 
+CSS rule attribution and ignored stylesheet owner records are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
+Other behavior below remains implemented.
+
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 `mokly serve` watches by default; `--no-watch` serves one deterministic
@@ -85,7 +89,7 @@ directory scans, not inventoried files, configured modules or their ancestors.
 Classify logical and physical aliases by these distinct reasons before applying
 the required-input exception.
 Changing a declaration or imported source rebuilds; editing the declared
-public file reloads/evidence-refreshes documents rendering its owner without
+public file reloads/evidence-refreshes documents rendering its declarer without
 an explicit watch rule. See
 [component stylesheets](./mokly-component-stylesheets.md).
 Those package-owned classifications take precedence over additional watch rules.

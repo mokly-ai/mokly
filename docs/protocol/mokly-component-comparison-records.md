@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+The expanded `DependencyAnalysis` from the [CSS evidence schema](./mokly-css-attribution-membership.md)
+is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md), within v5.
+
 Implemented for the unified comparison v5 format. The [comparison contract](./mokly-component-review.md) owns attribution, and [validation](./mokly-component-review-validation.md) owns source coverage.
 
 ## Normative Result
@@ -46,10 +49,7 @@ type EntryChangeReason =
   | {
       kind: "dependency";
       path: string;
-      analysis?: {
-        status: "matched" | "unresolved";
-        selectors: readonly string[];
-      };
+      analysis?: DependencyAnalysis;
     }
   | { kind: "screen"; id: string };
 
@@ -127,8 +127,8 @@ removed, ignored-only, unchanged. A metadata/dependency-only entry can have
 unchanged rendered view states.
 
 View states describe the complete retained render after the existing manual-ignore
-rules, including changed component-owned resources. Component ownership controls
-direct Changes reasons separately; it never invents an `ignored-only` state for
+rules, including component-attributed CSS and owned non-CSS resources. Own-page
+CSS matches and non-CSS ownership control direct Changes reasons separately; it never invents an `ignored-only` state for
 a component-only edit. An affected-only screen or parent component can therefore
 have changed view results without a Changes row. Caller input changes can have
 unchanged view results when the current renderer does not display that prop.

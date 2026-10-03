@@ -2,7 +2,10 @@
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Uniform CSS attribution and warnings for all stylesheet owner records are
+planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The remaining contract is implemented.
 
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The
@@ -101,7 +104,8 @@ copying the parent's `navPath` and inheriting its `colorSchemes`,
 `variants` field and no views; its page shows its first variant entry, which
 is the default. There is no implicit merge between variants. Public component CSS is declared through `stylesheets` and linked under the [stylesheet contract](./mokly-component-stylesheets.md); it is absent from the renderer's `input.entry`.
 Repeating one real stylesheet links it once with a warning; renderer ownership
-for a declared file is ignored with a warning.
+for every stylesheet is ignored with a warning. CSS Changes follows
+[own-page rule matches](./mokly-css-attribution-rules.md), not file owners.
 
 The required [prop schema](./mokly-component-props.md) determines the adapter,
 wrapper, and variant data types. Its shared runtime validator checks typed and

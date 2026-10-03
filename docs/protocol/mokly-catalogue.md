@@ -2,6 +2,11 @@
 
 ## Delivery Status
 
+Optional per-view/page `resourceEvidence` and root usage ranges are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md); display is planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+Read model v4 changes in place. `ResourceEvidence` follows the
+[CSS evidence schema](./mokly-css-attribution-membership.md).
+
 Serve, export, repository preview, and the viewer share complete read model v4;
 live pages separately embed an entry-scoped shell projection. The private
 manifest rejects current/removed id collisions. [Removed previews](./mokly-removed-previews.md)
@@ -96,6 +101,7 @@ interface CatalogueView {
   colorScheme: ColorScheme;
   usage: CatalogueUsage;
   comparison: ComparisonSelection;
+  resourceEvidence?: ResourceEvidence;
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
@@ -107,6 +113,7 @@ interface CatalogueScreen extends CatalogueEntry {
 }
 interface CataloguePage extends CatalogueEntry {
   kind: "page";
+  resourceEvidence?: ResourceEvidence;
 }
 interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";
@@ -130,7 +137,8 @@ interface CatalogueComponentVariant extends CatalogueEntry {
 }
 ```
 
-No record carries a route or file path. A reader uses the
+Entry and view identities carry no route or file path; resource evidence names
+only rendered-resource paths. A reader uses the
 [artifact path contract](./mokly-artifact-paths.md): a current screen or
 component variant view is served at `static/<view route>`, a current page at
 `static/<route>`, and the shell at `/view/<route>`. Removed entries have

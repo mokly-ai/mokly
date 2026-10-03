@@ -1,5 +1,11 @@
 # Catalogue Compilation
 
+## Delivery Status
+
+Root output boundaries, independent stylesheet provenance and warnings for all
+CSS resource-owner records below are planned for Milestone 19 of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 This internal module loads consumer definitions, renders every configured view,
 validates the complete catalogue and produces deterministic HTML and manifest v8.
 The supported external interface is `mokly build` and `mokly check`; Serve,
@@ -236,10 +242,10 @@ Registry preparation validates component-declared public CSS, deduplicates
 same-real-file declarations, and reuses configured links for declared CSS.
 `render.ts` keeps the shared-list marker position outside `RenderInput`, while
 `components/render.tsx` inserts links beside the
-renderer-emitted configured links and derives their resource owners. Config
+renderer-emitted configured links and records inserted-link provenance. Config
 bundles use the same namespaced `Symbol.for` marker as consumer bundles.
 The renderer-facing component entry omits `stylesheets`; the internal
-registration still supplies declarations for linking and ownership.
+registration still supplies declarations for linking and provenance.
 `RenderInput.stylesheets` remains the configured href list. Watched Serve
 attaches its inventory watcher before evaluation, then validates registration
 and extends the watch set with declared CSS before index preparation.
@@ -247,8 +253,9 @@ Component stylesheet links use the nearest present configured link, or the end
 of head content when none exists. A transient marker survives a compatibility
 transform on retained inserted links; Mokly removes it before writing output
 and records private final-document spans for comparison projection.
-`stylesheet_provenance.ts` prunes derived owners after compatibility output;
-renderer owner records ignored for declared CSS are retained as structured
+`stylesheet_provenance.ts` keeps final inserted-link spans and declaring ids
+without deriving resource owners. Ignored renderer records for any stylesheet
+produce structured
 `BuildWarning` values on exhaustive compilations and requested documents.
 `warning_sink.ts` deduplicates them by code and context for one command or
 watched rebuild; the CLI presents them without changing output bytes or exit

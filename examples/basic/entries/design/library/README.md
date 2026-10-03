@@ -1,5 +1,10 @@
 # Shared Design Components
 
+## Delivery Status
+
+The uniform CSS rule policy below is planned for Milestone 19 of the
+[source-path removal plan](../../../../../plans/remove-source-path-evidence.md).
+
 These sixteen registered components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
@@ -108,7 +113,8 @@ disappears in Milestone 4 and declarations in Milestone 6.
 `metadata.ts` assigns each registered component its public
 `design-library/{group}/{slug}.css` relative to `mockupsDir` through
 `stylesheets`. Registered
-rendering and derived resource owners replace source-file ownership paths.
+rendering supplies links and provenance. CSS Changes uses own-page matches
+kept after nested-component filtering, not file ownership or source paths.
 Shared helpers and saved fixtures are metadata or rendered-output inputs, not
 independent comparison evidence.
 
@@ -125,9 +131,9 @@ Mokly inserts the links after the renderer returns for normal and transient
 renders and validates any missing configured neighbour. A hidden picker does
 not link chip CSS merely because another variant uses chips.
 
-Only exclusive selectors belong in an owned stylesheet. Tokens, resets, mixed
+Keep component selectors in its declared stylesheet. Tokens, resets, mixed
 selectors and cross-component layout/state rules stay in the shared design CSS.
-Keep shared host resets at zero specificity so owned component styles render
+Keep shared host resets at zero specificity so component styles render
 identically in standalone samples and in-screen compositions.
 Declared sheets reload automatically in Serve, including after an edit.
 

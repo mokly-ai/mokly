@@ -2,6 +2,11 @@
 
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 
+## Delivery Status
+
+Imported delivery is implemented. Uniform rule identity and Changes attribution
+are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 ## Assets, Links And Delivery
 
 CSS `url()` values beginning `data:`, `http:`, `https:` (schemes matched
@@ -138,7 +143,12 @@ reload. Committed export/publication capture checked disk bytes; derived
 export/publication and Changes capture validated compilation bytes, including
 binary assets, and keep imported sources private. Generated linked stylesheets
 are public resources analyzed by [CSS change attribution](./mokly-css-attribution.md);
-their original private CSS inputs are dependency evidence, not independently
-analyzed public sheets. The first derived baseline using the older toolchain
+configured, declared, CSS-imported and JavaScript-bundled rules all use
+[one membership rule](./mokly-css-attribution-rules.md). Equal normalized
+before/after rule tuples join copies across generated entry roots. Components
+change only from own-page matches kept after nested filtering; outside matches and unresolved
+rules give a page its own row. Screen-only CSS inside a consumer invocation
+never changes that component. Original private CSS inputs are rebuild inputs,
+not dependency evidence or independently analyzed public sheets. The first derived baseline using the older toolchain
 lacks these links, so affected views show a one-time Changes jump; later
 baselines settle on the new output.

@@ -2,7 +2,10 @@
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+CSS provenance without derived owners is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The remaining contract is implemented.
 
 ## Components And Saved Examples
 
@@ -186,7 +189,8 @@ changes, not path-based implementation evidence.
 Every library component declares its own exclusive public CSS file in
 `stylesheets`. The [component stylesheet contract](./mokly-component-stylesheets.md)
 links only components actually rendered in a view, including nested components
-and transient prop edits; an absent child adds no link or owner. Retain required
+and transient prop edits; an absent child adds no link. CSS changes use
+[own-page rule matches](./mokly-css-attribution-rules.md), not declared owners. Retain required
 mixed/global sheets in configured rules; remove
 only migrated selectors from them, preserving their remaining behavior.
 Use a minimal host for standalones, with design tokens, original root classes,

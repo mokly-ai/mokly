@@ -2,8 +2,8 @@
 
 ## Status And Outcome
 
-Status: implemented, verified, merged with `origin/main` (#115 and #119), pushed
-and reviewed twice. Milestones 9 to 11 fixed the review findings that the user
+Status: Milestones 1 to 16 are implemented, verified and pushed. The branch
+was reviewed twice after the earlier deliveries. Milestones 9 to 11 fixed the review findings that the user
 chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
 decisions. Milestones 16 to 21 merge main 0.13.0 and apply the 2026-10-03 CSS
 change rule, which replaces the finding 1 rule; findings 2 to 11 await the
@@ -12,6 +12,14 @@ Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
 instructions (#128), in addition to the five originally listed commits.
+Milestone 17 is complete and verified. It documents the uniform CSS change rule. Milestones 18 to 20 remain
+pending: mockups, classification and comparison details. The contract changes
+unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
+owners no longer route stylesheet changes; declared links and their provenance
+remain. The review refinement uses kept own-page matches for component
+membership. Nesting alone does not change enclosing components. Page rows
+retain inclusive containment. The current implementation will adopt that
+contract in Milestone 19.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -27,8 +35,12 @@ Remove the three author-maintained inputs that link mockups to repository paths:
 - `review.sharedImpact` in the configuration.
 
 Add one input: `stylesheets` on `defineComponent`. Mokly links a declared
-stylesheet into every document that renders the component and records that
-component as the stylesheet's owner.
+stylesheet into every document that renders the component. It records only
+inserted-link provenance for comparison exclusion. No derived CSS resource
+owner record remains. Changed rules identify changed components through
+kept matches on their own saved pages after the nested-component test;
+outside matches and unresolved rules give
+the page its own Changes row.
 
 Afterwards Changes and comparison evidence come only from generated output, the
 rendered resources a view references, reviewable metadata, navigation paths
@@ -65,8 +77,33 @@ milestone.
 
 - One Changes rule for all catalogues. A source path never adds an entry to
   Changes and never appears as comparison evidence. Rendered-resource evidence,
-  CSS rule analysis, Review-ignore, metadata, ancestry, flow propagation and
-  component usage attribution stay unchanged.
+  Review-ignore, metadata, ancestry, flow propagation, document-style ownership
+  and non-CSS resource attribution stay unchanged. CSS follows the binding
+  2026-10-03 rule for configured, declared, CSS-imported and JavaScript-bundled
+  stylesheets:
+  - Match every changed rule against both available documents after paired
+    Review-ignore. Keep matched elements and their side-specific output ranges.
+  - First collect every component's unfiltered own-page matches for the rule,
+    in any variant, viewport, scheme or before/after side. X changes only if it
+    keeps a match in its root output on an own page. A different nested Y takes
+    that match from X when Y has any own-page match for the same rule, before
+    filtering Y's nested output. Y need not be changed. A nested X never takes
+    its own match; the test needs no ordering and supports mutual nesting.
+    Only kept matches give X's saved variants component reasons. Renderer
+    wrappers outside the root are page elements. Consumer invocation matches
+    alone never establish a component's own-page matches.
+  - A page gets a direct row for any match outside components changed by that
+    same rule, or for unresolved rules. This page test includes all nested
+    output inside a changed component's occurrence. Otherwise consumers remain under those
+    components' Affected screens. A page-only component saved-view reason gives
+    that entry a row, but no affected consumers for that rule.
+  - Equal normalized before/after selectors and declarations identify the same
+    changed rule across stylesheets, including generated copies. Missing sides
+    distinguish additions, removals and edits. Paths and owner records are not
+    part of that identity.
+  - The result retains each rule's changed component ids and page selectors.
+    Comparison details group outside matches and unresolved evidence under the
+    actual stylesheet path. The protocols define exact product copy.
 - Component stylesheets replace the stylesheet role of `ownedDependencies`:
   - `defineComponent` accepts `stylesheets`: `mockupsDir`-relative public CSS
     files in authored order. HTTP(S) URLs are rejected, because Mokly must
@@ -87,12 +124,14 @@ milestone.
     or reordered configured links do not fail placement. `RenderInput.stylesheets`
     contains configured and generated imported links; declared component links
     are added internally, and `input.entry` omits `stylesheets`.
-  - Mokly records a `resources` ownership record for each linked declared
-    stylesheet, owned by the rendered components that declare it. A configured
-    link to that file is reused, not duplicated, and still gets those owners.
-    Renderer `resources` records for any declared file are ignored with a
-    warning on every page. After a compatibility transform, retain owners
-    only for declared files the final page still links. Imports stay unowned.
+  - Mokly stops deriving CSS `resources` records. The use audit is in the
+    stylesheet ownership contract. Temporary linking data supplies declarer ids
+    directly to `insertedStylesheets`; no remaining use needs derived owners.
+    Reuse a configured link without duplicating it. Renderer `resources`
+    records for every stylesheet are ignored after safety checks, with one
+    `ignored-stylesheet-resource-owner` warning per route/file identity. This
+    replaces the declared-only warning. Non-CSS `resources` and document
+    `styles` retain their current meaning.
   - Page comparison omits Mokly-inserted declared-stylesheet links except a
     component page's root-owned links. A private final-document provenance
     record identifies those links through compatibility and Review-ignore;
@@ -102,7 +141,8 @@ milestone.
     publication handle them as public resources.
   - This replaces the documented rule "Separate stylesheet loading from review
     dependency declaration" and the example's per-render style collector.
-    Renderer `styles` and `resources` records remain for all other material.
+    Renderer `styles` records remain for document material; `resources` records
+    remain only for files that are not stylesheets.
 - Removed inputs are ignored with a warning: `dependencies` on an entry,
   nested marker, root path metadata or variant, `ownedDependencies` on a
   component or saved component variant, and
@@ -124,6 +164,10 @@ milestone.
   `sharedImpact`. All catalogues use that one classifier and format. Public
   readers reject catalogue v1 to v3 and comparison v4 and earlier; regenerate
   older exports. The process-local live index adopts the v8 entry shape.
+  The unreleased versions change in place for CSS: v8 adds an explicit root
+  output range and stops writing CSS resource owners; v5 adds rule identity,
+  changed component ids and page evidence; v4 carries the same public evidence
+  on views and whole-document pages. Historical CSS owner records are ignored.
   Keep main's fixed pane paths and unchanged snapshot bytes. Historical v3–v6
   metadata with an older entry or view layout makes Changes unavailable, with
   the existing earlier-baseline message; do not add historical-origin handling.
@@ -777,9 +821,9 @@ stylesheet, or bundled from JavaScript imports.
 
 - Mokly finds the elements that the changed rule matches on each page that
   links the stylesheet, before or after the change.
-- A component is changed by the rule when the rule matches an element in the
-  component's own output on one of the component's own pages. That component
-  gets a Changes row.
+- A component is changed by the rule when it keeps a match in its own output
+  on one of its own pages, under the nested-component test refined below.
+  That component gets a Changes row.
 - A page gets its own row when the rule matches an element that is not in the
   output of a component that the rule changes, or when Mokly cannot decide
   (custom properties, global selectors, unreadable selectors). Otherwise the
@@ -798,6 +842,16 @@ Declared stylesheets keep their links, provenance and comparison exclusion.
 Ownership records remain for resources that are not CSS, and renderer `styles`
 records keep their current meaning. Review-ignore regions and the existing
 CSS rule analysis limits still apply.
+
+The Milestone 17 review refines the component test above. A different nested Y
+with any unfiltered own-page match for the rule takes covered matches from X
+on X's own pages, even if Y later keeps no match and is not changed. A nested X
+never takes its own match. Only kept matches change a component or give its
+saved variants component reasons. Page rows still subtract all output of
+components that the rule changes, including their nested output. If Y loses
+all its own-page matches to Z, an X-page match inside Y but outside changed Z
+can therefore leave X unchanged as a component and give X's saved view a page
+row. The change stays visible without an order-dependent component test.
 
 ## Milestone 16: Integrate `main` 0.13.0
 
@@ -960,16 +1014,46 @@ Integration evidence:
 
 ## Milestone 17: Document the CSS change rule
 
-- [ ] Define the 2026-10-03 CSS change rule in the CSS attribution, component
+Docs only. Define the contract for the later mockup, classification and details
+milestones. Keep implementation and runtime tests unchanged.
+
+- [x] Define the 2026-10-03 CSS change rule in the CSS attribution, component
       changes, component stylesheet ownership and imported styles contracts:
       matched elements, components changed by a rule, page rows, rule
       identity across stylesheets, the evidence text, and the interaction with
       ownership records, provenance, Review-ignore and unresolved rules.
-- [ ] Update the attribution tables with one row for each way CSS reaches a
+- [x] Update the attribution tables with one row for each way CSS reaches a
       page: configured, declared, imported by a stylesheet and bundled from a
       JavaScript import.
-- [ ] Update the Decisions And Scope bullets that the 2026-10-03 rule replaces.
-- [ ] Validate the changed Markdown and run the docs tests.
+- [x] Update the Decisions And Scope bullets that the 2026-10-03 rule replaces.
+- [x] Audit every use of derived CSS resource owners. Specify their removal,
+      independent inserted-link provenance, the all-stylesheet warning and
+      unchanged non-CSS/document-style ownership.
+- [x] Define explicit own-root output boundaries and the per-rule/page evidence
+      fields in unreleased v8/v4/v5. Update affected contracts, guides and READMEs.
+- [x] Apply the review's nested-component test, self-nesting exception and
+      order-independent own-page proof. Document the four requested cases and
+      preserve inclusive page containment.
+- [x] Add the required classification, schema, warning and details work to
+      Milestones 19 and 20. Keep delivery notes in protocol Delivery Status
+      sections, linked as M19/M20 so they do not record delivered history.
+- [x] Validate changed Markdown, run the six requested docs suites and the
+      complete unit suite at 100% after `npm run build`.
+- [x] Inspect the diff and approved deletions against `origin/main`. This
+      milestone adds no file deletions. The four earlier approved removals
+      remain unchanged.
+
+Verification: `npm run build` passes. Changed-file Prettier and all 26 tests in
+the six requested docs suites pass. The complete unit command passes twice,
+with 3,689 tests and zero failures, skips or cancellations on each run. Logs are
+under `.context/m17-*.log`. The commit changes only Markdown; code, tests and
+fixtures stay unchanged. No generated example output was hand-edited or added
+to the commit. Protocol files stay within their caps.
+`cargo xtask check` is not required for this docs-only milestone.
+The nested-component review refinement also passes the build, changed-file
+Prettier, all 26 focused docs tests and the complete 3,689-test unit suite,
+with zero failures, skips or cancellations. Its logs are under
+`.context/m17-review-*.log`.
 
 ## Milestone 18: Depict the outside-component evidence
 
@@ -997,6 +1081,62 @@ Tags: mockup
       stylesheets, and attribute each change by the 2026-10-03 rule. Remove
       CSS attribution through ownership records. Keep the complete and fast
       comparison paths equal.
+- [ ] Add failure-first coverage for these four nested-output cases:
+  - [ ] `.action` changes Action only; Toolbar's own-page matches are inside
+        Action, so Toolbar is under Action's Affected screens.
+  - [ ] `.toolbar .action` has no match on Action's own pages. Toolbar keeps
+        its matches and changes; its consumers are affected and Action is unchanged.
+  - [ ] With Icon inside Action inside Toolbar, `.icon` changes Icon only.
+  - [ ] Y's own-page matches all lie inside changed Z, so Y is not changed.
+        Y still takes an X-own-page match inside Y but outside Z. X keeps no
+        match and is not changed as a component; X's saved view gets a page
+        row, with no affected consumers from that page reason.
+- [ ] Test that self-nested X never takes a match from X, that mutually nested
+      components need no evaluation order, and that a variant gets a component
+      reason only for a match its parent keeps on that variant's own page.
+      Preserve inclusive nested containment for page-row subtraction.
+- [ ] Cover all saved variants/viewports/schemes, wrappers outside roots, empty
+      output, paired Review-ignore and missing historical root bounds. Preserve
+      previously valid Review-ignore around root-only output.
+- [ ] Add one explicit root output range per new component saved view in v8.
+      Keep it separate from instances and caller inputs. Update range readers,
+      compatibility validation, marker stripping and v4 inspection without
+      adding a phantom Used by occurrence or a marker-only material change.
+- [ ] Add the normalized before/after rule key, duplicate aggregation and
+      catalogue-wide unfiltered and kept own-page match collection. Evaluate
+      nested filtering only against unfiltered own-page sets, never against
+      the changed-component set. Test equal generated copies,
+      different declarations, conditions, added/removed rules and stylesheets,
+      added/removed views, embedded documents and parser-inserted elements.
+- [ ] Stop deriving CSS `resources`. Feed inserted-link provenance directly
+      from linking data. Preserve placement, aliases, final-token checks,
+      compatibility removal, root-link retention and comparison exclusion.
+- [ ] Remove CSS owner suppression, root-owner material reasons and invocation
+      promotion. Drop historical CSS owner records, including earlier v8
+      output. Keep non-CSS owners and document `styles` behavior unchanged.
+      Test a declaration-only edit that reuses an unchanged configured link.
+- [ ] Replace `ignored-declared-resource-owner` with
+      `ignored-stylesheet-resource-owner` and the exact documented message.
+      Ignore every renderer CSS owner record after public-file checks. Cover
+      unlinked/generated/imported CSS, no registered components or rendered
+      declarer, duplicate aliases, pending generated routes, unsafe paths and ignored invalid owner ids.
+      Test stable generated identities and one warning per route/file identity
+      in Build, Check, export, publish and Serve, including on-demand/transient rendering and IPC.
+- [ ] Extend comparison v5 with per-rule changed component ids, page selectors
+      and unresolved page evidence. Extend catalogue v4 view/page evidence;
+      keep whole-document pages outside visual comparison records. Update
+      strict readers, public allowlists, fixtures, canonical output and source
+      proof without a version increment or private match-coordinate exposure.
+      Validate component reasons against kept matches and preserve the raw
+      own-page sets needed to prove nested filtering.
+- [ ] Test independent component/page rules in one file, a selector matching
+      both inside and outside, partial unresolved evidence, component wrapper
+      page rows without affected consumers, parent versus saved-variant rows,
+      and unchanged non-CSS actual-invocation attribution.
+- [ ] Preserve complete/fast/Browse/watch/selected/export/publication agreement.
+      Carry the complete rule-to-component facts through accepted generations,
+      cache invalidation and selected projection. Test selection before/after
+      a component's own-page evidence changes, without rerunning consumer code.
 - [ ] Run the focused tests and the complete unit suite at 100%.
 
 ## Milestone 20: Show the outside-component evidence
@@ -1005,6 +1145,17 @@ Tags: ui
 
 - [ ] Show the evidence from Milestone 19 in the comparison details, as the
       Milestone 18 mockups depict it.
+- [ ] Render exact product copy for screens, saved component views and pages.
+      Group page selectors by actual stylesheet path. Keep component-only
+      selectors separate and preserve an unresolved paragraph beside proven
+      outside matches. Never expose rule keys or private source paths.
+- [ ] Merge live classification and loaded comparison evidence by path/rule
+      without duplicate paragraphs. Retain evidence in Current and All, keep
+      viewport-independent Details, clear stale generations and preserve
+      comparison eligibility and affected-consumer behavior.
+- [ ] Add viewer/browser coverage for all evidence states, generated bundle
+      paths, mixed component/page matches and component wrapper rows with no
+      affected consumers. Match the Milestone 18 mobile/desktop mockups.
 - [ ] Run the viewer and browser tests and smoke-test both widths.
 
 ## Milestone 21: Verify, deliver and review

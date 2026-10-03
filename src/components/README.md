@@ -1,5 +1,11 @@
 # Registered Components
 
+## Delivery Status
+
+Root output ranges, CSS owner removal and uniform CSS attribution below are
+planned for Milestone 19 of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 Use `defineComponent` to give a shared React component its own catalogue page,
 variants, controls, and recorded usage in screens or other components.
 Callers render the returned `Component` and export its `entries` in `mockups`.
@@ -86,8 +92,9 @@ directly.
 Local Serve edits declared text, boolean, number, and primitive preset controls.
 Component views defined in a helper module use the stylesheet of the entry
 that exported the component, including saved variants and both viewports.
-Renderer-declared component resources can name pending generated CSS or assets
-before Build writes them; missing generated resources never fall back to disk.
+Renderer resource records can name pending generated non-CSS assets before
+Build writes them. CSS owner records are ignored with a warning after safety
+checks. Missing generated resources never fall back to disk.
 Complex props remain inspectable; an adapter can map a primitive preset key to
 a complex consumer value. Optional controls distinguish unset from empty text
 or null. Reset restores the variant's declared props; navigating to another
@@ -98,24 +105,25 @@ current preview. Complete Used by data appears without resetting controls;
 per-view inspection continues to use the records from the actual displayed
 on-demand document.
 
-Material implementation or linked owned-resource changes belong to the component in Changes. Consuming screens are
-listed as affected; their own prop, slot, structure, layout, or explicit resource
-changes still count directly. Validated `stylesheets` links create derived
-resource ownership records for rendered declarers; renderer style or other
-resource records still handle material outside the component's body. Imports
-remain unowned. Global or mixed rendered resources remain conservatively
-attributed. Unrendered source edits do not create Changes or comparison evidence.
+Implementation and owned non-CSS resource changes retain component attribution.
+CSS changes X only through a kept match on X's own saved pages. A different
+nested Y takes a match from X when Y has an unfiltered own-page match for that
+rule. Self-nested X cannot take its own match. Y need not be changed. A consumer
+invocation match alone never changes its component. A page gets a direct row
+for outside matches or unresolved CSS, including a component page's renderer
+wrapper; that wrapper reason has no affected consumers. Unrendered source
+edits do not create Changes or evidence.
 Components declare public `mockupsDir`-relative CSS with `stylesheets`. Rendered
 instances (including null output and saved component roots) receive links in
-first-render order; the same pass derives resource ownership for each linked
-file. A configured link to the same real file is reused, while renderer owner
-records for declared CSS are ignored with a warning. Duplicate declarations
+first-render order; the same pass retains declaring ids for inserted-link
+provenance, without creating CSS resource ownership records. A configured link to the same real file is reused, while renderer owner
+records for every stylesheet are ignored with a warning. Duplicate declarations
 are linked once with a warning. The comparison omits Mokly-inserted links from
 consumer page material but retains a component page's own links; final
-post-transform links determine which derived owners remain.
+post-transform links determine which inserted spans remain.
 See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
 The [ownership and comparison contract](../../docs/protocol/mokly-component-stylesheet-ownership.md)
-defines final-link pruning and private link provenance.
+defines final-link validation and private link provenance.
 `stylesheet_provenance.ts` strips transient tokens from final HTML, while
 `comparison_stylesheets.ts` removes only proven inserted links from review
 material. `render.tsx` returns structured warnings for ignored renderer

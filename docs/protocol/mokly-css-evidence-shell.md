@@ -2,14 +2,17 @@
 
 ## Delivery Status
 
-Implemented. This document owns compact visual rules for evidence defined by
+Existing compact evidence is implemented. Outside-component comparison details
+are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence) of the [source-path removal plan](../../plans/remove-source-path-evidence.md),
+following its [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence) mockups. This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the
 [presentation contract](./mokly-css-evidence-presentation.md) owns derivation
 and exact copy.
 
 ## Shell Presentation
 
-The inspector shows kept selectors under a dependency reason and lists
+The inspector groups kept selectors by stylesheet and rule outcome, including
+separate outside-component page evidence, and lists
 excluded resources in a secondary details section. Headline copy is product
 language, for example "This stylesheet changed, but none of the changed styles
 apply to this screen"; selector text appears only in the details list. Excluded
@@ -29,7 +32,9 @@ these presentation rules:
   lists the changed styles that apply to the screen, while `unresolved` says
   the change can apply anywhere on the screen. With serialized selectors the
   unresolved sentence ends with a colon and a list; without them it ends with
-  a full stop and no list.
+  a full stop and no list. When a stylesheet also has proven outside-component
+  matches, retain their separate paragraph and selector list under that same
+  stylesheet. Unresolved evidence never hides that proof.
 - An excluded resource leads with the outcome, "This stylesheet changed, but
   none of the changed styles apply to this screen", and lists the stylesheet
   under an "Examined and excluded" heading. An excluded-only screen is not in

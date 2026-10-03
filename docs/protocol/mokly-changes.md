@@ -2,7 +2,10 @@
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Uniform CSS membership and evidence are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md); comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+
+The remaining contract is implemented.
 
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
@@ -39,7 +42,7 @@ may list its unchanged consumers under Affected screens; those consumers do
 not become Changes rows solely because of component usage.
 Mokly-inserted links for a rendered child component's declared CSS are not
 consumer page material. A component page keeps its root component's inserted
-links; renderer-authored links remain page content even if ownership is reused.
+links; renderer-authored links remain page content even if a declaration reuses them.
 Rendered-resource and CSS evidence use final linked documents, not this
 comparison-only projection. See the
 [component attribution contract](./mokly-component-changes.md).
@@ -62,8 +65,8 @@ and `navPath`; it excludes source locations and dependencies.
 Valid generated ownership headers are excluded from document comparison, so a
 source move alone stays unchanged. Stored snapshots retain the original headers.
 
-Changes to local resources referenced by a fragment also keep that screen in
-Changes. Follow CSS imports, CSS URLs, and embedded-document resources
+Changes to local resources referenced by a fragment supply resource evidence.
+Direct rows follow CSS rule attribution and non-CSS ownership below. Follow CSS imports, CSS URLs, and embedded-document resources
 transitively using the snapshot resource resolver and public-file confinement.
 Only references outside paired ignored regions participate; speculative
 preload/prefetch hints alone do not establish rendered impact. A linked resource
@@ -99,8 +102,10 @@ comparison produces the same retained evidence for every view.
 
 Linked stylesheet edits are narrowed by
 [CSS change attribution](./mokly-css-attribution.md): a changed stylesheet
-keeps a view in Changes only when a changed
-rule could match that view's document or the analysis cannot resolve the rule.
+keeps view evidence when a rule matches or is unresolved. Components change
+only through kept own-page matches after nested filtering. A page gets its own row for matches outside
+components changed by that rule, or for unresolved rules. All four CSS delivery
+paths follow [one rule](./mokly-css-attribution-rules.md).
 Stylesheets whose changed rules match nothing on a view are recorded as examined
 and excluded rather than as dependency evidence. Fonts, images, and embedded
 documents keep file-level attribution.

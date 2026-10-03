@@ -6,7 +6,10 @@ behavior, including imported CSS and optional PostCSS.
 
 ## Delivery Status
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Uniform CSS membership, independent of configured or declared delivery, is
+planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The remaining contract is implemented.
 
 The reserved CSS output directory, CSS delivery and `postcss` key are
 implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
@@ -204,7 +207,7 @@ Linked stylesheets, including transitive imports, are attributed by rule under
 a view's dependency evidence only when a changed rule could match its before or
 after document, or analysis is unresolved. Otherwise it is examined and excluded.
 Unreferenced public files cannot add entries to Changes; linked files retain
-the existing ownership and membership rules in
+the uniform CSS rule membership policy in
 [Changes](./mokly-changes.md) and [component attribution](./mokly-component-changes.md).
 
 `moduleResolution` has no defaults beyond esbuild's platform behavior. Package

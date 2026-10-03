@@ -2,6 +2,10 @@
 
 ## Delivery Status
 
+CSS rule attribution and ignored stylesheet owner records are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
+Other behavior below remains implemented.
+
 Public catalogue v4 and source-path-free comparison were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 7 and 4. Current packages emit manifest v8,
@@ -33,7 +37,8 @@ workspace layouts. At build time, React imports are resolved from the consumer's
 config file and every React-bearing source is bundled in one graph.
 
 The renderer is synchronous and returns a complete HTML document, either as a
-string or as `RenderResult` with optional validated style/resource ownership. This is the
+string or as `RenderResult` with optional validated document-style/non-CSS
+resource ownership. Stylesheet owner records are ignored with a warning. This is the
 only place an app should install theme providers, collect React Native Web's
 `AppRegistry` styles, inject product fonts, or establish other render context.
 Those actions depend on app-owned packages and policy, so moving them into the

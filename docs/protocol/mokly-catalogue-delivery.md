@@ -3,6 +3,11 @@
 Continuation of the [public catalogue contract](./mokly-catalogue.md).
 The schema and public types remain in that contract.
 
+## Delivery Status
+
+The v4 resource-evidence allowlist and root-range target are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 ## Projection And Privacy
 
 Construct an explicit allowlist projection from validated manifest v8, the
@@ -19,7 +24,11 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
 - Component parents retain schemas, read-only control descriptions, and
   declared slot names. Their variant entries follow them in authored order with
   validated wire props and supplied slot names; the first is the default, and
-  ready usage copies only instances/slots/ranges.
+  ready usage copies only instances/slots/ranges, including the root boundary
+  without inventing an instance. Ready view/page `resourceEvidence` copies only
+  the [public resource fields](./mokly-css-attribution-membership.md), including
+  rule keys, changed component ids and page selectors. No raw match nodes,
+  private declarations or source paths enter that evidence.
 - Derive the [section trees](./mokly-nav-paths.md#sections-and-path-derivation)
   from current entries. Variant grouping follows the
   [variant contract](./mokly-variants.md).
@@ -29,7 +38,7 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
   stay repository-relative metadata. They never become source-serving URLs.
 
 Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`, resolved
-dependency evidence, changed-path inventories, source graphs, Git commands,
+source dependency evidence, changed-path inventories, source graphs, Git commands,
 private manifest envelopes, content digests for source inputs, style offsets
 (`startOffset`/`endOffset`), style/resource ownership tables, absolute filesystem
 paths, credentials, or render-capability tokens. No source
