@@ -1247,6 +1247,23 @@ define.
       tests), browser (780), and hydration (238) suites. The dependency audit
       fails only on the known GHSA-vfj7-8cjw-p6xm.
 
+## Milestone 7C: Moved comparison wording mockup
+
+Tags: mockup
+
+The runtime's comparison details name a moved entry's previous path in words
+that fit every entry. The `design/changes/outcomes/moved` mockup said "the
+invoice at" instead, so the mockup takes the runtime wording.
+
+- [x] Change the moved screen's comparison details to "The previous version is
+      at `billing/invoice`, where it was before the move." and pin the
+      wording at both artboards (`tests/design_moved_evidence.test.ts`). No
+      contract text pins the old wording.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      and the design tests. The design unit tests (169) and design browser
+      tests (92) pass.
+- [ ] Commit and push.
+
 ## Milestone 8: Guides, verification, close-out, and review
 
 - [ ] Finalise the guides and READMEs for the recommended `specs/` layout and

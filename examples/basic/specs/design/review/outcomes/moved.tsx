@@ -12,7 +12,7 @@ import { MiniInvoice } from "../../parts/mini_invoice.js";
 function MovedEvidence() {
   return (
     <p>
-      The previous version is the invoice at{" "}
+      The previous version is at{" "}
       <code className="mbk-code">{PREVIOUS_PATHS.invoice}</code>, where it was
       before the move.
     </p>
