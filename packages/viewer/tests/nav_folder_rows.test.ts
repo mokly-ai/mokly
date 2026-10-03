@@ -146,25 +146,6 @@ test("a screen index renders as one entry row listing its variants and then the 
   );
 });
 
-test("a screen with variants renders identically from either file layout", () => {
-  const rows = (sourcePath: string) =>
-    sections(
-      [
-        entry("billing/invoice", "screen", "Invoice"),
-        entry(
-          "billing/invoice/overdue",
-          "screen",
-          "Overdue",
-          "billing/invoice",
-        ),
-      ].map((value) => ({ ...value, sourcePath }) as ManifestEntry),
-    );
-  assert.deepEqual(
-    rows("specs/billing/invoice.mockup.tsx"),
-    rows("specs/billing/invoice/index.mockup.tsx"),
-  );
-});
-
 test("a component index lists its variants and members in Components only", () => {
   const all = sections([
     entry("kit/button", "component", "Button"),

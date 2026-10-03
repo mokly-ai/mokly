@@ -26,6 +26,8 @@ export interface CatalogueReadModel {
   changesStatus: ChangesStatus;
   comparisonUrl: PublicPath | null;
   tree: readonly CatalogueNode[];
+  /** The top-level folder `order`, which each section applies again. */
+  treeOrder?: readonly string[];
   documents: readonly CatalogueDocument[];
   screens: readonly CatalogueScreen[];
   pages: readonly CataloguePage[];
@@ -52,12 +54,16 @@ export type CatalogueNode =
       title: string;
       index?: string;
       hidden?: true;
+      /** The folder record's `order`, which each section applies again. */
+      order?: readonly string[];
       children: readonly CatalogueNode[];
     }
   | {
       kind: "entry";
       path: string;
       hidden?: true;
+      /** The `order` of the folder whose own page this entry is. */
+      order?: readonly string[];
       children?: readonly CatalogueNode[];
     };
 export type CatalogueChanges =

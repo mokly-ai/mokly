@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–3, 3A, 3B, 6, and 6A are complete. This plan supersedes
+discussion in this workspace. Milestones 1–3, 3A, 3B, 6, 6A, and 6B are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -692,8 +692,10 @@ Status: Complete. Package (six consumer scenarios), unit (3,748), browser
 Clippy, and Rust tests pass. Two repository checks still fail on earlier work:
 GHSA-vfj7-8cjw-p6xm, the approved exception, and the source file-length audit,
 which flags 28 files that Milestones 3 and 3B changed and that were already
-over 300 lines. This milestone added no file to that list; its disposition
-awaits the orchestrator.
+over 300 lines. This milestone added no file to that list. The user decided
+to have those files split in a separate refactoring milestone after this branch
+merges, and to run `node scripts/verification/source-file-length.mjs` in every
+later milestone's verification.
 
 - [x] Add design screens, each with mobile and desktop variants, for: a screen
       that is its folder's own page with its variants and folder members under
@@ -725,6 +727,70 @@ awaits the orchestrator.
 - [x] Mark `design/browse/index-entries/member-changes` as a changed design
       in the comparison-eligibility browser spec, because it offers the
       comparison band.
+- [x] Commit and push (`916d3c0e`).
+
+## Milestone 6B: Viewer navigation review fixes
+
+Tags: ui
+
+Fix what an independent review of Milestone 6 found in the shell's rows,
+breadcrumb reveal, search, and tests. Every bug gets a failing test first.
+
+Status: Complete. Package (six consumer scenarios), unit (3,759), hydration
+(234), format, lint, repository ratchets, Rust formatting, Clippy, and Rust
+tests pass. The browser suite passes 756 of 757 tests. The failing test,
+`component_example.spec.ts` › desktop, fails on a cold server in this
+environment and passes when the server is warm; it fails in two of three
+fresh-server runs both at `916d3c0e` and on this branch, so it is not caused by
+this milestone. The dependency audit still fails on GHSA-vfj7-8cjw-p6xm, the
+approved exception, and the source file-length audit lists only the 28
+pre-existing files.
+
+- [x] Hide the variant and member rows of a hidden folder's own screen or
+      component in All and search, and keep a saved-open list hidden before
+      hydration when its parent row is hidden (`nav_tree.ts`,
+      `early_disclosures.ts`, `preferences.ts`); cover a hidden screen index
+      and a hidden component index in unit and browser tests.
+- [x] Make the breadcrumb reveal clear a tag-only query, and keep the reveal
+      pending until the folder row is visible, then focus and scroll it, also
+      when an embedded host commits the cleared selection later
+      (`store_actions.ts`, `nav_scroll.ts`).
+- [x] When search and the Changes filter hide a folder only together, clear
+      the search, then fall back to All (`nav_reveal.ts`), and state that order
+      in the folder contract.
+- [x] Sort a folder whose own page is in the other section by the row it
+      renders as in each section (`registry/hierarchy.ts`). The public tree
+      now carries each folder's `order` and the top-level `treeOrder`, so the
+      viewer orders each section as Serve does
+      (`docs/protocol/mokly-catalogue-tree.md`).
+- [x] Match search against folder titles, so a folder whose resolved title
+      matches shows with all its descendants (`nav_model.ts`), and state the
+      rule in the navigation contract.
+- [x] Use one shared helper for a row's search text, so Changes activation and
+      row visibility agree for removed variants (`changes_activation.ts`,
+      `nav_model.ts`).
+- [x] Make three tests prove their titles: v3 keys whose form v4 keeps in
+      `browse_disclosures.spec.ts`, both file layouts built through the real
+      registry (moved from `nav_folder_rows.test.ts` to
+      `tests/nav_file_layouts.test.ts`, because the registry lives in the root
+      package), and the pre-hydration state held back with `delayHydration` in
+      `browse_folder_rows.spec.ts`.
+- [x] Replace the stale Pages statements in `mokly-component-explorer.md` and
+      `examples/basic/README.md` (the README statement was already replaced in
+      Milestone 6A).
+- [x] Require the folder-title lookup in `revealSelection`,
+      `mergeSelection`, and `searchRow`, so no caller can leave folder titles
+      out of a search row.
+- [x] Move the shell destination queries from `mokly-navigation.md` to
+      `mokly-shell-destinations.md`, so the navigation contract states the
+      folder-title search rule within its reviewed cap, now 383 lines.
+- [x] Run the focused tests, Prettier on changed files, the full gate except
+      the known audit failure, and
+      `node scripts/verification/source-file-length.mjs`, which must list no
+      file beyond the 28 pre-existing ones; re-check parity for changed rows.
+      The example's section trees are identical before and after the change,
+      and no design state depicts a hidden folder, a cross-section folder
+      page, or a free-text search.
 - [ ] Commit and push.
 
 ## Milestone 7: Viewer Changes and document presentation

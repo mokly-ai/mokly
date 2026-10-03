@@ -12,7 +12,11 @@ import {
   encodeDisclosureMap,
 } from "./disclosure_storage.js";
 import { navigationFiltering } from "./nav_model.js";
-import { folderRevealPath, folderRevealSelection } from "./nav_reveal.js";
+import {
+  folderRevealPath,
+  folderRevealProposal,
+  folderRevealSelection,
+} from "./nav_reveal.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { clearTagTerm, parseSearchQuery, setTagTerm } from "./search_query.js";
 import type { ShellBrowserActions } from "./store_browser.js";
@@ -94,16 +98,11 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       if (!reveal) return;
       if (input.embedded) {
         const before = input.stateRef.current.selection;
-        const after = folderRevealSelection(reveal.node, before, input.context);
-        const cleared = after.search !== before.search;
-        if (after !== before)
-          input.propose(
-            {
-              ...(cleared ? { search: "", tags: [] } : {}),
-              ...(after.view === before.view ? {} : { view: after.view }),
-            },
-            cleared ? "" : undefined,
-          );
+        const proposal = folderRevealProposal(
+          before,
+          folderRevealSelection(reveal.node, before, input.context),
+        );
+        if (proposal) input.propose(proposal.selection, proposal.rawQuery);
       }
       const drawer = navigationDrawerShown();
       input.setState((current) => {
@@ -127,7 +126,10 @@ export function shellStore(input: StoreActionsInput): ShellStore {
           filterBaseline:
             filtered.filterBaseline &&
             openDisclosures(filtered.filterBaseline, reveal.keys),
-          revealedFolder: { key: reveal.keys.at(-1) ?? "" },
+          revealedFolder: {
+            key: reveal.keys.at(-1) ?? "",
+            selection: filtered.selection,
+          },
         };
       });
     },

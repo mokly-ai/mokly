@@ -1,5 +1,9 @@
 // Builds the Specs and Components sections from the one path tree.
 
+import {
+  folderTitleLookup,
+  type FolderTitleLookup,
+} from "../registry/folder_titles.js";
 import type {
   CatalogueHierarchy,
   HierarchyNode,
@@ -33,6 +37,12 @@ export interface NavLeafNode {
   snapshotId?: string;
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
+  /**
+   * Titles of the folders at or above the entry's path, outermost first,
+   * present only when there are any. Search matches them, so a folder whose
+   * title matches shows every row below it.
+   */
+  folderTitles?: readonly string[];
   /**
    * Entries this row discloses as variants, in manifest order. Present only
    * on a screen or component parent; a variant never owns variants itself.
@@ -78,14 +88,15 @@ export function buildNavSections(
 ): NavSectionNode[] {
   const adopted = adoptedVariants(hierarchy, additionalLeaves);
   const attached = new Set<NavLeafNode>();
+  const titles = folderTitleLookup(hierarchy);
   const tree = {
     specs: attachRemovedVariants(
-      hierarchy.roots.specs.map((node) => structuredNode(node)),
+      hierarchy.roots.specs.map((node) => structuredNode(node, titles)),
       adopted,
       attached,
     ),
     components: attachRemovedVariants(
-      hierarchy.roots.components.map((node) => structuredNode(node)),
+      hierarchy.roots.components.map((node) => structuredNode(node, titles)),
       adopted,
       attached,
     ),
@@ -187,9 +198,11 @@ function attachRemovedVariants(
 /** One entry row, with the variants and folder members it discloses. */
 function leafNode(
   entry: ManifestEntry,
+  titles: FolderTitleLookup,
   variants: readonly NavLeafNode[] = [],
   members: readonly NavNode[] = [],
 ): NavLeafNode {
+  const folderTitles = titles(entry.path);
   return {
     entryId: entry.path,
     entryKind: entry.kind,
@@ -198,6 +211,7 @@ function leafNode(
     label: entry.title,
     title: entry.title,
     ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
+    ...(folderTitles.length > 0 ? { folderTitles } : {}),
     ...(variants.length > 0 ? { variants } : {}),
     ...(members.length > 0 ? { members } : {}),
   };
@@ -219,9 +233,11 @@ function isVariantOf(
  * is a document, page, or use case, is its first child row. A screen or
  * component that is its folder's own page arrives as an entry node already,
  * so its row discloses its variants followed by the folder's other members.
+ * A hidden folder hides every row below it, variants included.
  */
 function structuredNode(
   node: HierarchyNode<ManifestEntry>,
+  titles: FolderTitleLookup,
   inheritedHidden = false,
   folder?: NavFolderContext,
 ): NavNode {
@@ -232,13 +248,13 @@ function structuredNode(
     const children = node.children ?? [];
     const variants = children.flatMap((child) =>
       child.kind === "entry" && isVariantOf(child, entry.path)
-        ? [leafNode(child.entry)]
+        ? [{ ...leafNode(child.entry, titles), ...visibility }]
         : [],
     );
     const members = children
       .filter((child) => !isVariantOf(child, entry.path))
-      .map((child) => structuredNode(child, hidden));
-    const leaf = leafNode(entry, variants, members);
+      .map((child) => structuredNode(child, titles, hidden));
+    const leaf = leafNode(entry, titles, variants, members);
     if (folder?.path !== entry.path) return { ...leaf, ...visibility };
     return {
       ...leaf,
@@ -250,7 +266,10 @@ function structuredNode(
   return {
     ...visibility,
     children: node.children.map((child) =>
-      structuredNode(child, hidden, { path: node.path, title: node.label }),
+      structuredNode(child, titles, hidden, {
+        path: node.path,
+        title: node.label,
+      }),
     ),
     key: `folder:${node.key}`,
     kind: "group",

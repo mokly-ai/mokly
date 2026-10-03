@@ -37,6 +37,17 @@ const folders: ManifestFolder[] = [
 const hierarchy = analyzeHierarchy(entries, folders).hierarchy;
 const sections = buildNavSections(hierarchy);
 
+const context = (changedEntries: readonly string[]): ShellContext => ({
+  base: "main",
+  changedEntries,
+  changesStatus: "ready",
+  updateVersion: 1,
+});
+const select = (partial: Partial<ViewerSelection>): ViewerSelection => ({
+  ...defaultSelection,
+  ...partial,
+});
+
 test("folder crumbs link to the folder's own page, reveal plain folders, and keep hidden ones as text", () => {
   assert.deepEqual(structuredCrumbTrail(hierarchy, "guide/setup/first"), [
     { href: "/view/guide/", label: "Guide" },
@@ -95,16 +106,6 @@ test("a reveal clears only the filters that hide the folder", () => {
     "billing/invoice/archive",
   );
   assert.ok(archive);
-  const context = (changedEntries: readonly string[]): ShellContext => ({
-    base: "main",
-    changedEntries,
-    changesStatus: "ready",
-    updateVersion: 1,
-  });
-  const select = (partial: Partial<ViewerSelection>): ViewerSelection => ({
-    ...defaultSelection,
-    ...partial,
-  });
   const matching = select({ search: "old" });
   assert.equal(
     folderRevealSelection(archive.node, matching, context([])),
@@ -134,5 +135,28 @@ test("a reveal clears only the filters that hide the folder", () => {
       context(["guide/setup/first"]),
     ),
     select({ view: "all", search: "old" }),
+  );
+});
+
+test("a reveal clears the search when it and Changes hide the folder only together", () => {
+  const billing = folderRevealPath(sections, "specs", "billing");
+  assert.ok(billing);
+  assert.deepEqual(
+    folderRevealSelection(
+      billing.node,
+      select({ view: "changes", search: "history" }),
+      context(["billing/invoice/archive/old"]),
+    ),
+    select({ view: "changes", search: "", tags: [] }),
+  );
+  const secret = folderRevealPath(sections, "specs", "guide/secret");
+  assert.ok(secret);
+  assert.deepEqual(
+    folderRevealSelection(
+      secret.node,
+      select({ view: "changes", search: "zzz" }),
+      context([]),
+    ),
+    select({ view: "all", search: "", tags: [] }),
   );
 });

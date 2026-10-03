@@ -40,7 +40,8 @@ including the responsive drawer:
 - Opening a variant marks its row `aria-current="page"` and opens its variant
   list, ancestor folders, and section.
 
-Search matches a variant's path segments, title, and tags. A parent remains
+Search matches a variant's path segments, title, tags, and the
+[folder titles](./mokly-folders.md#titles) at or above it. A parent remains
 visible while one of its variants or listed folder members matches. If a constraint retains only a
 variant, its list opens. Hiding a parent hides its complete leaf container and
 disclosure button. Tag terms, Changes, and free text compose as for every other

@@ -79,7 +79,10 @@ test("revealFolder opens and focuses a folder, saving v4 without touching earlie
   store.revealFolder("specs", "product/browse");
   assert.equal(state().disclosures[folder], true);
   assert.equal(state().disclosures["folder:specs:product"], true);
-  assert.deepEqual(state().revealedFolder, { key: folder });
+  assert.deepEqual(state().revealedFolder, {
+    key: folder,
+    selection: state().selection,
+  });
   assert.equal(state().drawerOpen, false);
   assert.equal(state().route, initial.route);
   assert.deepEqual(
@@ -160,6 +163,22 @@ test("an embedded reveal proposes the cleared filters and opens both disclosure 
   assert.equal(state().disclosures["folder:specs:product/browse"], true);
   assert.equal(state().filterBaseline?.["folder:specs:product/browse"], true);
   assert.equal(saved.size, 0);
+});
+
+test("an embedded reveal proposes a tag-only query cleared as a whole", (context) => {
+  fakeStorage(context);
+  const model = baseModel();
+  const initial = initialState(model, "/");
+  const tagged = withFilterSelection(initial, {
+    ...initial.selection,
+    tags: ["zzz"],
+  });
+  const { proposals, state, store } = harness(model, tagged, {
+    embedded: true,
+  });
+  store.revealFolder("specs", "product/browse");
+  assert.deepEqual(proposals, [[{ search: "", tags: [] }, ""]]);
+  assert.deepEqual(state().revealedFolder?.selection.tags, ["zzz"]);
 });
 
 test("revealing an unknown folder changes nothing", (context) => {

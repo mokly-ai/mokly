@@ -6,10 +6,14 @@ import {
 } from "../registry/hierarchy.js";
 import type { ManifestEntry } from "../registry/types.js";
 
-/** Retain the validated public tree's titles, order and hidden-folder flags. */
+/**
+ * Retain the validated public tree's titles, order and hidden-folder flags,
+ * with the folder `order` lists each section applies again.
+ */
 export function adoptCatalogueTree(
   hierarchy: CatalogueHierarchy<ManifestEntry>,
   nodes: readonly CatalogueNode[],
+  order?: readonly string[],
 ): CatalogueHierarchy<ManifestEntry> {
   const ancestors = new Map(hierarchy.ancestorsByPath);
   const convert = (
@@ -25,6 +29,7 @@ export function adoptCatalogueTree(
         key: node.path,
         label: node.title,
         ...(index ? { index } : {}),
+        ...(node.order ? { order: node.order } : {}),
         children: node.children.map((child) =>
           convert(
             child,
@@ -41,6 +46,7 @@ export function adoptCatalogueTree(
       entry,
       key: entry.path,
       label: entry.title,
+      ...(node.order ? { order: node.order } : {}),
       ...(node.children
         ? {
             children: node.children.map((child) =>
@@ -57,13 +63,15 @@ export function adoptCatalogueTree(
     };
   };
   const tree = nodes.map((node) => convert(node, []));
+  const { order: _previous, ...adopted } = hierarchy;
   return {
-    ...hierarchy,
+    ...adopted,
     ancestorsByPath: ancestors,
     tree,
+    ...(order ? { order } : {}),
     roots: {
-      specs: filterHierarchy(tree, false),
-      components: filterHierarchy(tree, true),
+      specs: filterHierarchy(tree, false, order),
+      components: filterHierarchy(tree, true, order),
     },
   };
 }

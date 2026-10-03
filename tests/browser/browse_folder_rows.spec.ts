@@ -1,6 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { readDisclosureStorage } from "./disclosure_storage.js";
+import {
+  buildDevelopmentBundle,
+  captureBrowserErrors,
+  delayHydration,
+  expectCleanHydration,
+} from "./react_shell_hydration_helpers.js";
 import { startWatchedServe, type WatchedServe } from "./watched_serve.js";
 
 const source = `import { defineFolder, definePage, defineScreen } from "@mokly/mokly";
@@ -18,8 +24,11 @@ export const billing = defineFolder({ path: "fixture/billing", title: "Billing &
 `;
 
 let server: WatchedServe;
+let developmentBundle: string;
 
 test.beforeAll(async () => {
+  test.setTimeout(120_000);
+  developmentBundle = await buildDevelopmentBundle();
   server = await startWatchedServe(source);
 });
 
@@ -171,6 +180,7 @@ test("a narrow breadcrumb reveal opens the drawer at the folder", async ({
 test("a saved list choice restores the contents label before and after hydration", async ({
   page,
 }) => {
+  const errors = captureBrowserErrors(page);
   await page.addInitScript(() => {
     if (window !== window.top) return;
     if (sessionStorage.getItem("seeded")) return;
@@ -183,11 +193,53 @@ test("a saved list choice restores the contents label before and after hydration
       }),
     );
   });
-  await page.goto(`${server.url}/view/fixture/tools/setup/`);
-  await expect(
-    page.getByRole("button", { name: "Hide contents of Invoice" }),
-  ).toHaveAttribute("aria-expanded", "true");
-  await expect(
-    page.locator('[data-nav-disclosure="variants:fixture/billing/invoice"]'),
-  ).toBeVisible();
+  const toggle = page.locator(
+    '[data-nav-variants-toggle][data-nav-variants-label="Invoice"]',
+  );
+  const list = page.locator(
+    '[data-nav-disclosure="variants:fixture/billing/invoice"]',
+  );
+  const gate = await delayHydration(page, developmentBundle);
+  const navigation = page.goto(`${server.url}/view/fixture/tools/setup/`);
+  try {
+    await gate.requested;
+    await expect(page.locator("html")).not.toHaveAttribute(
+      "data-mokly-hydrated",
+      "",
+    );
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(toggle).toHaveAccessibleName("Hide contents of Invoice");
+    await expect(list).toBeVisible();
+  } finally {
+    gate.release();
+    await navigation;
+  }
+  await expectCleanHydration(page, errors, "with the list saved open");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(toggle).toHaveAccessibleName("Hide contents of Invoice");
+  await expect(list).toBeVisible();
+});
+
+test("search through a folder's title shows its rows and keeps the query on navigation", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/fixture/guide/intro/`);
+  await page.fill("[data-mokly-search]", "payments");
+  for (const id of [
+    "fixture/billing/invoice",
+    "fixture/billing/invoice/overdue",
+    "fixture/billing/invoice/history",
+    "fixture/billing/invoice/archive/old",
+  ])
+    await expect(
+      page.locator(`a[data-nav-row][data-entry-id="${id}"]`),
+    ).toBeVisible();
+  await expect(folder(page, "fixture/tools")).toBeHidden();
+  await expect(folder(page, "fixture/guide")).toBeHidden();
+  await page
+    .locator('a[data-nav-row][data-entry-id="fixture/billing/invoice/history"]')
+    .click();
+  await expect(page).toHaveURL(/\/view\/fixture\/billing\/invoice\/history\/$/);
+  await expect(page.locator("#mb-main h2")).toHaveText("History");
+  await expect(page.locator("[data-mokly-search]")).toHaveValue("payments");
 });

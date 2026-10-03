@@ -60,5 +60,5 @@ every entry node names a current entry exactly once, every folder node's
 `path` is a proper prefix of each child's path, an `index` names a current
 entry that is the folder's first child, no folder node is empty, and no
 removed entry occurs. Entry-node `children` hold exactly the variants and
-members the [tree rule](./mokly-catalogue.md#tree) allows. Unknown fields follow the existing
+members the [tree rule](./mokly-catalogue-tree.md#shape) allows. Unknown fields follow the existing
 reader policy for public JSON.

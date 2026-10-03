@@ -4,7 +4,12 @@ import {
 } from "../catalogue/entry_selection.js";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
-import { parseSearchQuery, rowMatchesQuery } from "../shell/search_query.js";
+import type { FolderTitleLookup } from "../registry/folder_titles.js";
+import {
+  parseSearchQuery,
+  rowMatchesQuery,
+  searchRow,
+} from "../shell/search_query.js";
 
 import type { ViewerSelection } from "./types.js";
 
@@ -86,6 +91,7 @@ export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
 /** Merge one public proposal and normalize route-owned entry identity. */
 export function mergeSelection(
   model: ShellCatalogueReadModel,
+  folderTitles: FolderTitleLookup,
   current: ViewerSelection,
   partial: Partial<ViewerSelection>,
 ): ViewerSelection {
@@ -99,7 +105,7 @@ export function mergeSelection(
     delete candidate.snapshotId;
   const next = normalizeSelection(model, candidate);
   return screenSupplied || snapshotSupplied
-    ? revealSelection(model, next)
+    ? revealSelection(model, folderTitles, next)
     : next;
 }
 export function selectionQuery(value: ViewerSelection): string {
@@ -113,9 +119,14 @@ export function routedEntries(model: ShellCatalogueReadModel) {
     ...model.removedEntries.map(({ entry }) => entry),
   ];
 }
-/** Route activation clears only constraints hiding its actual destination. */
+/**
+ * Route activation clears only constraints hiding its actual destination.
+ * `folderTitles` names the folders at or above an entry, as the navigation
+ * rows do, so a query that matches the destination's folder title is kept.
+ */
 export function revealSelection(
   model: ShellCatalogueReadModel,
+  folderTitles: FolderTitleLookup,
   value: ViewerSelection,
 ): ViewerSelection {
   const entry =
@@ -126,11 +137,7 @@ export function revealSelection(
   if (!entry) return value;
   const matches = rowMatchesQuery(
     { freeText: value.search, tags: value.tags },
-    {
-      id: entry.path,
-      tags: entry.tags,
-      text: entry.title,
-    },
+    searchRow(entry, folderTitles(entry.path)),
   );
   return {
     ...value,

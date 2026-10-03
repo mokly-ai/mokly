@@ -121,7 +121,11 @@ export function viewerCatalogue(model: ShellCatalogueReadModel) {
   );
   return {
     ...catalogue,
-    hierarchy: adoptCatalogueTree(catalogue.hierarchy, model.tree),
+    hierarchy: adoptCatalogueTree(
+      catalogue.hierarchy,
+      model.tree,
+      model.treeOrder,
+    ),
     publicModel: model,
   };
 }

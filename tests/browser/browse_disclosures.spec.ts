@@ -7,6 +7,9 @@ const earlierVersions = {
     "section:pages": false,
     "folder:pages:example": false,
     "folder:pages:example/screens": true,
+    "section:components": false,
+    "folder:components:example": false,
+    "variants:example/screens/welcome": true,
   }),
   "mokly:nav-disclosure:v2": JSON.stringify([
     "collection:example",
@@ -33,6 +36,19 @@ test("earlier storage versions naming current folders are never read", async ({
   await expect(
     specs.locator('[data-nav-folder="folder:example/screens"]'),
   ).not.toHaveAttribute("open", "");
+  const components = page.locator('[data-nav-section="components"]');
+  await expect(components).toHaveAttribute("open", "");
+  await expect(
+    components.locator('[data-nav-disclosure="folder:components:example"]'),
+  ).toHaveAttribute("open", "");
+  await expect(
+    page.locator(
+      '[data-nav-variants-toggle][data-nav-variants-label="Welcome"]',
+    ),
+  ).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.locator('[data-nav-disclosure="variants:example/screens/welcome"]'),
+  ).toHaveAttribute("hidden", "");
 });
 
 test("saving v4 leaves earlier storage versions untouched", async ({

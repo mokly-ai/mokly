@@ -73,7 +73,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   rules and approved resolution/source-location target.
 - [Public catalogue read model](./mokly-catalogue.md) — path-keyed public
   inventory beside the private manifest, with its
-  [fetch rules](./mokly-catalogue-fetch.md).
+  [fetch rules](./mokly-catalogue-fetch.md) and
+  [tree and section order](./mokly-catalogue-tree.md).
 - [Standalone shell bootstrap](./mokly-shell-bootstrap.md) — entry-scoped Serve
   hydration, strict reading, evidence adoption, and static capture.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
@@ -171,7 +172,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [Watched development](./mokly-watch.md)
   - [Watch runtime and recovery](./mokly-watch-runtime.md).
 - [Catalogue navigation contract](./mokly-navigation.md), with
-  [logical link transformer validation](./mokly-link-transform-validation.md).
+  [logical link transformer validation](./mokly-link-transform-validation.md)
+  and [shell destination queries](./mokly-shell-destinations.md).
 - [Styled catalogue link controls](./mokly-link-controls.md)
 - [Shell design contract](./mokly-shell-design.md), with
   [device chrome and preview scheme](./mokly-shell-device-chrome.md), the

@@ -26,6 +26,7 @@ import {
   fixtureShellState,
 } from "./helpers/viewer_catalogue.js";
 
+const noTitles = (): readonly string[] => [];
 const welcome = leaf("welcome", "welcome/index.html", "Welcome", [
   "forms",
   "onboarding",
@@ -195,9 +196,12 @@ test("navigation clears only a query that hides its destination", () => {
     screenPath: "welcome",
     tags: ["onboarding"],
   };
-  assert.deepEqual(revealSelection(model, welcomeSelection), welcomeSelection);
   assert.deepEqual(
-    revealSelection(model, {
+    revealSelection(model, noTitles, welcomeSelection),
+    welcomeSelection,
+  );
+  assert.deepEqual(
+    revealSelection(model, noTitles, {
       ...welcomeSelection,
       screenPath: "product/browse/details",
     }),

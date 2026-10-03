@@ -217,7 +217,7 @@ export function LeafRow(props: {
             hidden={
               store
                 ? !navLeafVisible(variant, store.state.selection, store.context)
-                : Boolean(variant.removedVariant)
+                : Boolean(variant.removedVariant || variant.hidden)
             }
             key={variant.key}
             node={variant}

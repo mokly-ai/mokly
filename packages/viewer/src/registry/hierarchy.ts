@@ -16,6 +16,8 @@ export interface HierarchyLeaf<T extends HierarchyEntry> {
   label: string;
   children?: HierarchyNode<T>[];
   hidden?: true;
+  /** The `order` record of the folder whose own page this entry is. */
+  order?: readonly string[];
 }
 /** A folder derived from descendants, with optional own page. */
 export interface HierarchyFolder<T extends HierarchyEntry> {
@@ -26,6 +28,8 @@ export interface HierarchyFolder<T extends HierarchyEntry> {
   label: string;
   path: string;
   hidden?: true;
+  /** The folder record's `order`, applied again in each section. */
+  order?: readonly string[];
 }
 export type HierarchyNode<T extends HierarchyEntry> =
   HierarchyFolder<T> | HierarchyLeaf<T>;
@@ -33,6 +37,8 @@ export type HierarchyNode<T extends HierarchyEntry> =
 export interface CatalogueHierarchy<T extends HierarchyEntry> {
   ancestorsByPath: ReadonlyMap<string, readonly string[]>;
   byPath: ReadonlyMap<string, T>;
+  /** The top-level `order` record, applied again in each section. */
+  order?: readonly string[];
   tree: readonly HierarchyNode<T>[];
   roots: {
     specs: readonly HierarchyNode<T>[];
@@ -124,11 +130,10 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
     parent: string,
   ): HierarchyNode<T>[] => {
     const built = nodes.map((original): HierarchyNode<T> => {
+      const record = metadata.get(original.key);
       const node = {
         ...original,
-        ...(metadata.get(original.key)?.hidden
-          ? { hidden: true as const }
-          : {}),
+        ...(record?.hidden ? { hidden: true as const } : {}),
       };
       if (node.kind === "entry") {
         const variants = (variantsByPath.get(node.entry.path) ?? []).map(leaf);
@@ -136,10 +141,12 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
       }
       const members = build(node.children, node.path);
       const index = node.index;
+      const order = record?.order ? { order: record.order } : {};
       if (index?.kind === "screen" || index?.kind === "component") {
         return {
           ...leaf(index),
           ...(node.hidden ? { hidden: true } : {}),
+          ...order,
           children: [
             ...(variantsByPath.get(index.path) ?? []).map(leaf),
             ...members,
@@ -148,6 +155,7 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
       }
       return {
         ...node,
+        ...order,
         children: [...(index ? [leaf(index)] : []), ...members],
       };
     });
@@ -166,6 +174,7 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
       }),
     );
   }
+  const order = metadata.get("")?.order;
   return {
     hierarchy: {
       byPath,
@@ -173,9 +182,10 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
       variantsByPath,
       variantParentByPath,
       tree,
+      ...(order ? { order } : {}),
       roots: {
-        specs: filterHierarchy(tree, false),
-        components: filterHierarchy(tree, true),
+        specs: filterHierarchy(tree, false, order),
+        components: filterHierarchy(tree, true, order),
       },
     },
   };
@@ -198,14 +208,29 @@ function orderChildren<T extends HierarchyEntry>(
   return order.includes("...") ? result : [...result, ...rest];
 }
 
-/** Prune one shared tree by kind while retaining mixed-folder ancestry. */
+/**
+ * Prune one shared tree by kind while retaining mixed-folder ancestry. Each
+ * section orders the children it shows again, by the rows they render as
+ * there: a screen or component that is its folder's own page renders as a
+ * folder row in the other section. A folder's own page stays its first row,
+ * and variants keep their authored order.
+ */
 export function filterHierarchy<T extends HierarchyEntry>(
   nodes: readonly HierarchyNode<T>[],
   components: boolean,
+  order?: readonly string[],
 ): HierarchyNode<T>[] {
-  return nodes.flatMap((node): HierarchyNode<T>[] => {
-    const children = filterHierarchy(node.children ?? [], components);
+  const shown = nodes.flatMap((node): HierarchyNode<T>[] => {
     if (node.kind === "folder") {
+      const own = (child: HierarchyNode<T>) => child.key === node.key;
+      const children = [
+        ...filterHierarchy(node.children.filter(own), components),
+        ...filterHierarchy(
+          node.children.filter((child) => !own(child)),
+          components,
+          node.order,
+        ),
+      ];
       if (!children.length) return [];
       const { index, ...folder } = node;
       return [
@@ -218,11 +243,21 @@ export function filterHierarchy<T extends HierarchyEntry>(
         },
       ];
     }
+    const own = node.children ?? [];
+    const members = filterHierarchy(
+      own.filter((child) => !variantOf(child, node.entry.path)),
+      components,
+      node.order,
+    );
     if ((node.entry.kind === "component") === components) {
       const { children: _children, ...entry } = node;
+      const children = [
+        ...own.filter((child) => variantOf(child, node.entry.path)),
+        ...members,
+      ];
       return [{ ...entry, ...(children.length ? { children } : {}) }];
     }
-    return children.length
+    return members.length
       ? [
           {
             kind: "folder",
@@ -230,9 +265,18 @@ export function filterHierarchy<T extends HierarchyEntry>(
             key: node.key,
             label: node.label,
             ...(node.hidden ? { hidden: true } : {}),
-            children,
+            ...(node.order ? { order: node.order } : {}),
+            children: members,
           },
         ]
       : [];
   });
+  return orderChildren(shown, order);
+}
+
+function variantOf<T extends HierarchyEntry>(
+  node: HierarchyNode<T>,
+  path: string,
+): boolean {
+  return node.kind === "entry" && node.entry.variantOf === path;
 }

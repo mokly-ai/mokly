@@ -1,5 +1,6 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
+import { folderTitlesAt } from "../registry/folder_titles.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import {
@@ -9,7 +10,7 @@ import {
 } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { ShellRoute } from "./routes.js";
-import { rowMatchesQuery } from "./search_query.js";
+import { rowMatchesQuery, searchRow } from "./search_query.js";
 import { workspaceData } from "./workspace_data.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
@@ -119,15 +120,7 @@ function firstVisibleChangedVariant(
       context.changedEntries?.includes(entry.path) &&
       rowMatchesQuery(
         { freeText: selection.search, tags: selection.tags },
-        {
-          id: entry.path,
-          tags: entry.tags ?? [],
-          text: catalogue.manifest.entries.some(
-            (candidate) => candidate.path === entry.path,
-          )
-            ? entry.title
-            : `${entry.title} · Removed`,
-        },
+        searchRow(entry, folderTitlesAt(catalogue.hierarchy, entry.path)),
       ),
   );
 }

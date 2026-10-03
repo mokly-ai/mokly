@@ -25,13 +25,21 @@ entry remains represented once. Current section nodes use the shared
 folder-first comparator; flat removed rows use the combined ordering in the
 [variant navigation contract](../../../../docs/protocol/mokly-variant-navigation.md).
 Specs and Components keep independent section roots even when they reuse the
-same folder paths. Search compares a row's path, title, and tags, never a
-display label such as `Overview` or `· Removed`.
+same folder paths. `filterHierarchy` orders each section again by the rows it
+shows, applying the `order` each folder node carries, so a screen or component
+that is its folder's own page sorts as a folder row in the other section.
+Search compares a row's path, title, tags, and the titles of the folders at or
+above it (`registry/folder_titles.ts`), never a display label such as
+`Overview` or `· Removed`. `search_query.ts` owns that one search row, so row
+visibility, Changes activation, and route reveals match the same text.
 `crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
 links to it, a visible folder without one becomes a button that
 `nav_reveal.ts` resolves to the disclosures exposing that folder, and the
 store's `revealFolder` opens them, clears only a hiding filter, opens the
 drawer at narrow widths, and asks `nav_scroll.ts` to focus the folder row.
+An embedded reveal proposes the cleared query as a whole; `nav_scroll.ts`
+keeps the reveal pending until the host commits a selection that shows the
+row, and gives up when a commit leaves it hidden.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
 fixed prefixes and complete paths; display labels never enter a key. It rejects
 empty path segments and every earlier key form on restore.

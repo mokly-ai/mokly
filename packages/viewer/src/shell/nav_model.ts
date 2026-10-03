@@ -1,5 +1,6 @@
 /** Pure navigation-tree state used by SSR and the hydrated shell. */
 
+import { folderTitlesAt } from "../registry/folder_titles.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -7,7 +8,7 @@ import type { ShellContext } from "./context.js";
 import { folderDisclosureKey } from "./disclosure_keys.js";
 import { buildNavSections } from "./nav_tree.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
-import { queryConstrains, rowMatchesQuery } from "./search_query.js";
+import { queryConstrains, rowMatchesQuery, searchRow } from "./search_query.js";
 
 /** Build the complete current-and-removed tree displayed in the rail. */
 export function catalogueNavSections(
@@ -20,6 +21,7 @@ export function catalogueNavSections(
         "variantOf" in entry
           ? entry.variantOf
           : undefined;
+      const folderTitles = folderTitlesAt(catalogue.hierarchy, entry.path);
       return [
         {
           kind: "leaf",
@@ -29,6 +31,7 @@ export function catalogueNavSections(
           label: `${entry.title} · Removed`,
           title: entry.title,
           tags: entry.tags ?? [],
+          ...(folderTitles.length > 0 ? { folderTitles } : {}),
           removedPage: entry.kind === "page",
           ...(snapshotId ? { snapshotId } : {}),
           ...(variantOf === undefined ? {} : { variantOf }),
@@ -81,11 +84,14 @@ export function navLeafVisible(
     return false;
   return rowMatchesQuery(
     { freeText: selection.search, tags: selection.tags },
-    {
-      id: leaf.entryId,
-      tags: leaf.tags ?? [],
-      text: leaf.title,
-    },
+    searchRow(
+      {
+        path: leaf.entryId,
+        title: leaf.title,
+        ...(leaf.tags ? { tags: leaf.tags } : {}),
+      },
+      leaf.folderTitles ?? [],
+    ),
   );
 }
 
