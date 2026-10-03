@@ -288,6 +288,10 @@ manifest rejection are tested with isolated consumers.
 - `interactive_source_resolution.ts`: normalized, bounded repository request
   identities shared by capture, browser replay, and watched IPC.
 - `transaction.ts`, `check.ts`: safe output installation and verification.
+- `output_lock.ts`, `output_lock_file.ts`: the repository writer lock that
+  serializes every generated-output transaction across processes. Callers that
+  must read the tree they wrote use `withOutputLock` with
+  `writeLockedCompilation`; waiters reclaim only provably stopped holders.
 
 See the [build pipeline](../../docs/architecture/build-pipeline.md),
 [instance contract](../../docs/protocol/mokly-instances.md),

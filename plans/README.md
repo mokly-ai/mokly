@@ -110,6 +110,12 @@
   — publish consumes the release PR's validated CI evidence for the same
   tree instead of re-running the complete gate, with the complete gate as
   the fail-closed fallback.
+- [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
+  pages embed the catalogue index plus only their own entry's component usage
+  and serialise that state once. The public `catalogue.json` stays complete;
+  normalized non-client static content stays stable while viewer client changes
+  update deployment identity. Implementation is complete; move this plan to
+  Completed when its implementation PR merges.
 - [Id-Derived Routes, Unified Variants, And Identity-Keyed Wire](./id-derived-routes.md)
   — identity is kind plus id: documents derive as `screens/<id>.html`,
   `pages/<id>.html`, `user-flows/<id>.html`, and `components/<id>.html`;
@@ -125,66 +131,15 @@
 
 ## Completed
 
-- [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
-  pages embed the catalogue index plus only their own entry's component usage
-  and serialise that state once. The public `catalogue.json` stays complete;
-  normalized non-client static content stays stable while viewer client changes
-  update deployment identity. Implementation PR #120 is merged.
-- [Imported CSS Delivery](./imported-css-delivery.md) — shipped implementation
-  and authorized final-review fixes complete; finding 3 was resolved by the
-  separate `922c1ec` merge. Milestone 12 finding 1 was resolved in `d474975`;
-  authorized findings from the
-  [review record](../docs/reviews/imported-css-delivery.md) and
-  [Milestone 14 review](../docs/reviews/imported-css-delivery-milestone-14.md)
-  are resolved in Milestones 15–16 (`7b454b0`, `0ce4f20`). Unselected
-  findings remain open. Milestone 18 (`3aa7d67`) resolves finding 2 from the
-  [Milestone 17 review](../docs/reviews/imported-css-delivery-milestone-17.md)
-  and supersedes findings 3, 8 and 9; its other findings remain open, as do
-  the [Milestone 19 review](../docs/reviews/imported-css-delivery-milestone-19.md).
-  Milestone 20 (`9bab3d7`) resolves finding 1 and partly mitigates finding 2 without
-  changing other open findings. Findings in the
-  [Milestone 21 review](../docs/reviews/imported-css-delivery-milestone-21.md)
-  retain their individual resolution statuses.
-  Milestone 22 (`8a47cc5`) accepts only the approved selector-list part of finding 3;
-  its other parts remain open, as do findings in the
-  [Milestone 23 review](../docs/reviews/imported-css-delivery-milestone-23.md).
-  Milestone 24 (`7ba5628`) resolves the approved findings there; other findings
-  remain open. Milestone 26 (`266164b`) resolves the approved findings in the
-  [Milestone 25 review](../docs/reviews/imported-css-delivery-milestone-25.md).
-  Milestone 28 (`c482bd0`) resolves the approved findings in the
-  [Milestone 27 review](../docs/reviews/imported-css-delivery-milestone-27.md);
-  other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the
-  approved findings in the
-  [Milestone 29 review](../docs/reviews/imported-css-delivery-milestone-29.md).
-  Milestone 32 (`6a02190`) resolves only finding 1 in the
-  [Milestone 31 review](../docs/reviews/imported-css-delivery-milestone-31.md);
-  findings 2–4 remain open. Milestone 34 (`583af0a9`) resolves only finding 2 in the
-  [Milestone 33 review](../docs/reviews/imported-css-delivery-milestone-33.md);
-  findings 1 and 3 remain open, as do findings in the
-  [Milestone 35 review](../docs/reviews/imported-css-delivery-milestone-35.md).
-  Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` with imported
-  CSS, the v7 manifest, v3 read model, aligned comparison panes and delta
-  publishing. The full gate passed before PR #125 merged. Findings
-  in the [Milestone 37 review](../docs/reviews/imported-css-delivery-milestone-37.md)
-  were reconciled in Milestone 38 (`c260b5b2`). Milestone 39 merged main's
-  0.13.0 release (`3a2d90a8`) and passed the complete gate without removing
-  main content. Findings in the
-  [Milestone 40 review](../docs/reviews/imported-css-delivery-milestone-40.md)
-  were addressed selectively: Milestone 41 (`7f64f8b0`) replaces the custom
-  merge check for findings 1, 2, 4 and 11. Milestone 42 (`beab8560`) merges
-  main's release-runner fix at `b4a02a30`. Milestone 44 (`8729ec16`) addresses the selected
-  findings in the
-  [Milestone 43 review](../docs/reviews/imported-css-delivery-milestone-43.md).
-  Other findings remain outside this work. Findings in the
-  [Milestone 45 review](../docs/reviews/imported-css-delivery-milestone-45.md)
-  remain open for the user's decision. Milestone 46 addresses only the imported-CSS
-  watcher-test flakiness recorded as Milestone 40 finding 12 (`77a1f493`),
-  with an event-driven resource wait and a server-level content-order
-  regression. Findings in the
+- [Imported CSS Delivery](./imported-css-delivery.md) — delivered in PR #125
+  (`ff376d7`): imported CSS, CSS Modules, binary assets and optional consumer
+  PostCSS ship through Build, Check, Serve, export, publication and Changes.
+  The plan Status lists each review round. The
   [Milestone 47 review](../docs/reviews/imported-css-delivery-milestone-47.md)
-  remain open for the user's decision, as do other review findings.
-  The implementation PR is merged.
-
+  findings were resolved after the merge in `ec04332`, and a generated-output
+  writer race found while testing them is fixed in `01d5924` and `da916c0`;
+  other unselected findings remain open in their review records for the
+  user's decision.
 - [Screen Variants](./screen-variants.md) — PR #101's delivered scope is
   complete: authoring, navigation, Changes, per-view evidence, and the approved
   review fixes. Unfinished work is owned by

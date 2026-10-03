@@ -130,7 +130,7 @@ events are triggered by ordinary pointer input. Both adapters share this rule;
 explicit inspection requests still reject unavailable usage normally.
 
 The [frame usage adoption contract](./mokly-frame-usage-adoption.md) defines
-initial readiness, same-document updates, ordered adoption and restoration of
+synchronous readiness, same-document updates, ordered adoption and restoration of
 inspection presentation. It also defines cancellation and adapter fallbacks.
 
 Boxes are finite CSS pixels relative to the frame's visible content viewport,

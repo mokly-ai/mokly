@@ -172,3 +172,8 @@ The route allowlist, MIME mapping, HEAD handling and origin headers still apply.
 CSS asset query suffixes are accepted for these resources; other public-file
 queries and non-view generated routes remain refused. Source edits or deletion
 cannot change an accepted generation's modules or resource bytes.
+
+Generated-output writes use the repository writer lock. Live source replay and
+accepted resource delivery use their generation's in-memory bytes, so they keep
+working while another writer waits or replaces generated output. A replacement
+runtime supplies the next accepted bytes; a disk write alone does not adopt them.

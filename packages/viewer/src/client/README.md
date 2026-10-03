@@ -122,11 +122,10 @@ The viewer inspection owner restores valid presentation after adoption, retains
 explicit frame scope, and ends active picking with `evidence` when a referenced
 target or ready usage disappears. Pending activation is cancelled without events;
 subsequent inspection waits for refreshed usage. Superseded updates are fenced.
-`frame_session_lifecycle.ts` keeps the frame hook's unchanged identity comparison
-and disposal helpers in one focused owner. Initial usage synchronization ends initialization in the same synchronous
-turn as its final revision check. Evidence arriving in the next microtask uses
-the ordered update path and its readiness promise, so inspection cannot see a
-Ready session whose adapter still has unavailable usage. See the
+The shell's `frame_session_usage.ts` applies usage adopted during mounting before
+the frame reports Ready. Its final revision check and readiness callback run in
+the same synchronous step. Later evidence uses the ordered update path and its
+replacement readiness promise. See the
 [usage adoption contract](../../../../docs/protocol/mokly-frame-usage-adoption.md).
 Geometry raised during initial presentation shares that work instead of issuing
 a competing boundary read, so evidence cancellation retains one owner.

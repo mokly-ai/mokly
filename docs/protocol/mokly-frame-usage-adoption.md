@@ -5,12 +5,13 @@ This is the focused evidence-update contract for the
 
 ## Initialization handoff
 
-A mounted frame cannot become inspection-ready with usage that its adapter
-has not adopted. Initial synchronization and the end of initialization form
-one synchronous boundary. Evidence arriving in the following microtask must
-use the normal ordered update path and its replacement readiness promise.
-The initial readiness continuation must not skip that update. This rule also
-applies when an initially unavailable or pending view receives ready usage.
+A mounted frame applies every usage revision adopted during mounting before
+it reports Ready. The final revision check and the callback that ends
+initialization and resolves readiness run in the same synchronous step.
+Evidence adopted before that check joins the initial synchronization loop.
+Evidence adopted after it uses the ordered mounted-update path and its
+replacement readiness promise. Neither path can skip an adopted revision.
+This rule also applies when an unavailable or pending view receives ready usage.
 
 ## Updates and inspection
 

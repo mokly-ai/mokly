@@ -118,6 +118,10 @@ Each reference-observer session reuses a validated Git runner, avoiding a
 redundant top-level lookup on every poll.
 Shutdown cancels the current generation before draining preparation, preventing
 an in-flight Git resolution from launching a replacement during the drain.
+`demand/generation.ts` passes each generation's cancellation signal to its
+output write, so a superseded generation or a closing Serve stops waiting for
+the [generated-output writer lock](../../docs/protocol/mokly-rendering-generated.md#concurrent-writers)
+that a concurrent Build or export holds.
 
 Watched Serve sends that commit as `baselineCommit` on the existing versioned
 `update` IPC envelope. Omission retains the reader; null revokes it. The child
@@ -290,10 +294,17 @@ Imported-CSS watcher tests use `tests/helpers/watched_events.ts` to attach to th
 event stream before editing and wait for the expected resource bytes after a
 higher update version. Evidence-only updates and intermediate content versions
 do not prove that the final CSS is served; the wait reports the last version,
-status and resource excerpt if the expected bytes never arrive. A server-level
-test checks that an accepted stylesheet is installed before its content update
-is announced. Worker-exit tests wait for the watch failure report before
-checking shutdown; Serve startup is not subject to the worker-request timeout.
+status and resource excerpt if the expected bytes never arrive. Its direct tests
+(`tests/watched_resource_wait*.test.ts`) cover reconnects, the startup retry,
+the deadline on an open stream and repeated updates on one stream. Tests that
+use the real file watcher accept in-between states on purpose, so ordering
+guarantees need deterministic tests.
+`tests/watched_content_resource_order.test.ts` checks that an accepted
+stylesheet is installed before its content update is announced in two layers:
+one in-process server, and watched Serve's parent and real child, where a
+watcher that the test controls reports one CSS edit that rebuilds in place.
+Worker-exit tests wait for the watch failure report before checking shutdown;
+Serve startup is not subject to the worker-request timeout.
 
 See [review boundaries](../review/README.md), [baseline building](../baseline/README.md),
 and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.md).
