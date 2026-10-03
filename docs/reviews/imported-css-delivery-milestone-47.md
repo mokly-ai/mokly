@@ -100,6 +100,18 @@ the user's decision.
      note: real-watcher tests deliberately tolerate intermediate states, so
      ordering guarantees need deterministic tests. That rule stops this kind of
      gap from recurring.
+   - Resolved in `ec04332`, after PR #125 merged:
+     `tests/watched_content_resource_order.test.ts` now also runs `serve()`
+     with the real child and a watcher the test controls. One CSS edit
+     rebuilds in place. At each later event, the test reads the stylesheet
+     first; it checks those bytes only when the page's content version equals
+     that event's version, which marks the content update itself. The test
+     passed 24 of 24 runs under six-way load and failed 24 of 24 with the
+     child installing styles 100 ms late. It also fails when the parent
+     announces the update before it sends the styles. The four records now
+     name the layer each test checks, and `src/server/README.md` states that
+     real-watcher tests accept in-between states on purpose, so ordering
+     guarantees need deterministic tests.
 2. **Low — the helper's own tests do not cover its deadline on an open event
    stream or its startup retry.**
    - Context: in real Serve, the event stream stays open. If the expected
@@ -131,6 +143,16 @@ the user's decision.
      when the resource already matches before the edit, so a loose check
      cannot pass without the edit; C) leave as is.
    - Recommended: A. B is optional.
+   - Resolved in `ec04332` with option A: the new
+     `tests/watched_resource_wait_open_stream.test.ts` covers the deadline on
+     an open stream and a second update on one open stream, and
+     `tests/watched_resource_wait.test.ts` covers a startup retry that
+     succeeds and a shell that never answers. Each change named above now
+     fails a direct test: without the stream request's cancel signal, without
+     the startup retry, or when the helper reconnects instead of reading the
+     next update. The evidence test is renamed "resource wait reads old bytes
+     at an evidence-only update, then accepts the restarted child's ready" and
+     counts its resource reads. Option B was not adopted.
 3. **Low — the 3,000-file watcher test's "one event" count can no longer
    fail.**
    - Context: `tests/watch_postcss_scale.test.ts` counts the watcher's reports
@@ -146,6 +168,9 @@ the user's decision.
      for its report, and then check the count; C) leave as is.
    - Recommended: A, unless the watcher itself must report each file exactly
      once.
+   - Resolved in `ec04332` with option A: the count is removed, and the test
+     is renamed "a real 3,000-file watched directory becomes ready and reports
+     an added file".
 
 ## Other Timing Patterns
 

@@ -285,7 +285,7 @@ jobs:
       - name: Build package
         run: npm run build
       - name: Verify exclusive directory transactions
-        run: node --import tsx --test tests/export_rename.test.ts tests/export_destination_races.test.ts
+        run: node --import tsx --test tests/export_rename.test.ts tests/export_destination_races.test.ts tests/generated_output_lock.test.ts
       - name: Verify native CSS rule parsing and diffing
         run: node --import tsx --test tests/review_css_rules.test.ts tests/review_css_diff.test.ts
       - name: Verify native baseline commands
