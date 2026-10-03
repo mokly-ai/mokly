@@ -14,7 +14,12 @@ import { writeCompilation } from "./transaction.js";
 /** Filesystem boundary for generated catalogue snapshots. */
 export interface GeneratedOutputStore {
   check(compilation: Compilation, config: ResolvedConfig): void | Promise<void>;
-  write(compilation: Compilation, config: ResolvedConfig): Promise<void>;
+  /** Write under the repository writer lock; `signal` stops only the wait. */
+  write(
+    compilation: Compilation,
+    config: ResolvedConfig,
+    signal?: AbortSignal,
+  ): Promise<void>;
 }
 
 /** Transactional operating-system generated-output store. */
@@ -40,7 +45,11 @@ export class FileSystemGeneratedOutputStore implements GeneratedOutputStore {
     ).then(() => checkCompilation(compilation, config));
   }
 
-  write(compilation: Compilation, config: ResolvedConfig): Promise<void> {
-    return writeCompilation(compilation, config, this.committedGit);
+  write(
+    compilation: Compilation,
+    config: ResolvedConfig,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    return writeCompilation(compilation, config, this.committedGit, signal);
   }
 }

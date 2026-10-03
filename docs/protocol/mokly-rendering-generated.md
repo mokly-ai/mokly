@@ -102,6 +102,33 @@ absent or empty declaration is omitted, so an untagged catalogue serializes
 exactly as it did before the field existed.
 `sourcePath` and related docs use repository-relative POSIX paths. Source paths protect authored files and identify their origins; they never add comparison evidence. The manifest omits removed authoring path declarations.
 
+## Concurrent Writers
+
+Every generated-output write holds the repository writer lock,
+`<repoRoot>/.mokly-cache/locks/generated-output.lock`, from its first tree
+check until it prunes empty generated directories. Build, Serve's background
+generation, export and any other process that writes the same repository
+therefore never interleave backups or installs, and the later writer leaves
+exactly its own complete compilation. Every spelling of the repository root
+resolves to the same lock.
+
+The lock file records the holder's process id and a random token. A waiter
+retries every 50 ms. It reclaims a lock only when the recorded process no
+longer runs, or when the record names the waiter's own process with a token
+that process does not hold. A record without both values is never reclaimed.
+After 120 s the waiter fails with `build-invalid`; the message names the holder
+and the lock path, and tells the user to delete the lock only when no Mokly
+command is running. Release removes the lock, then `locks/` and `.mokly-cache/`
+while each is empty, so a repository without baseline history keeps no cache
+directory. If removal fails, the next writer reclaims the lock after its holder
+stops.
+
+Export holds the lock while it writes and captures generated output, and
+again while its final input check re-reads that output. Cancelling an export,
+superseding a Serve generation, or closing Serve stops a pending wait without
+changing the holder's lock. `.mokly-cache/` is package-private, so the lock
+never reaches watches, discovery or Changes evidence.
+
 ## Imported CSS Output
 
 Imported CSS adds deterministic routes under `mokly-generated/`:

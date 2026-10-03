@@ -45,7 +45,8 @@ Build phases distinguish discovery, bundling, evaluation, registry validation,
 rendering, compatibility transformation, component metadata validation, logical
 links, ignore rules, manifest construction/validation, resource validation,
 HTML links, output-path checks and runtime retention. Watcher attachment,
-resource discovery, transactional output, and Changes have separate spans.
+resource discovery, transactional output, and Changes have separate spans;
+`output.lock` measures the wait for the generated-output writer lock.
 Graph work for watcher inventory and source-freshness validation is deliberately
 visible even when it repeats compilation's graph work.
 

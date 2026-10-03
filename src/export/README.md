@@ -74,7 +74,10 @@ abort export while preserving the previous artifact. Cache trees and aliases
 cannot be exported or selected as a destination.
 `public_files.ts` never enumerates the reserved tree on disk in derived mode;
 its only CSS/assets come from the accepted compilation. Committed exports
-capture checked disk bytes. `resource_policy.ts` admits portable generated
+capture checked disk bytes. The export writes and captures generated output
+under one hold of the generated-output writer lock, and `inputs.ts` re-reads it
+under the lock again, so a concurrent Build or Serve write is never captured
+half-installed. `resource_policy.ts` admits portable generated
 CSS/asset routes even when they contain `dist`, `target` or
 `node_modules/@scope`; authored dependency trees and CSS inputs stay private.
 

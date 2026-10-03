@@ -6,7 +6,8 @@ internal binary and is not published to npm or crates.io.
 ## Responsibilities
 
 - Run the current source-level TypeScript, package, example, and Rust suite.
-- Fail verification when the live dependency audit reports an advisory or error.
+- Fail verification on uncovered Low-or-higher advisories, invalid exceptions,
+  or audit errors.
 - Enforce the Rust file-length limit.
 - Enforce changed repository-wide TypeScript/JavaScript (300 lines) and
   protocol Markdown (250 lines or an exact reviewed cap) limits against the
@@ -31,8 +32,11 @@ The Node unit/integration suite runs at most two test files concurrently;
 individual concurrency tests and their existing timeouts remain unchanged.
 The complete check starts with `npm run dependencies:check`, covering all
 workspace dependency categories. It requires registry access; an audit or network
-failure stops subsequent checks. Packed-consumer smokes separately audit the
-consumer's resolved production dependencies without workspace overrides.
+failure stops subsequent checks. Reviewed workspace exceptions have exact
+dev-only paths, inclusive UTC end dates, and a maximum 31-day window under the
+[dependency security contract](../docs/protocol/dependency-security.md).
+Packed-consumer smokes separately audit the consumer's resolved production
+dependencies without workspace overrides or audit exceptions.
 
 The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites

@@ -8,7 +8,8 @@ import type {
 
 import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { compileCatalogue } from "../build/compile.js";
-import { writeCompilation } from "../build/transaction.js";
+import { withOutputLock } from "../build/output_lock.js";
+import { writeLockedCompilation } from "../build/transaction.js";
 import { projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isCancellation, isMoklyError } from "../errors.js";
@@ -107,16 +108,24 @@ async function generateExport(
     );
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
-    await writeCompilation(compilation, config);
+    const publicFiles = await withOutputLock(
+      config.repoRoot,
+      options.signal ? { signal: options.signal } : {},
+      async (lock) => {
+        await writeLockedCompilation(lock, compilation, config);
+        return withPreInstallationCancellation(options.signal, () =>
+          capturePublicFiles(
+            config,
+            config.generatedOutput === "derived"
+              ? compilation.outputs
+              : undefined,
+          ),
+        );
+      },
+    );
     const result = await withPreInstallationCancellation(
       options.signal,
       async () => {
-        const publicFiles = await capturePublicFiles(
-          config,
-          config.generatedOutput === "derived"
-            ? compilation.outputs
-            : undefined,
-        );
         const assetReader = capturedAssetReader(publicFiles, config);
         const exclusions = [output, transaction.reservationRoot];
         const changed =
@@ -250,6 +259,7 @@ async function generateExport(
           changed,
           exclusions,
           baseline !== undefined,
+          options.signal,
         );
         assertExportActive(options.signal);
         if (

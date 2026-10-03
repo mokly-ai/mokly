@@ -14,7 +14,12 @@ including imported CSS (#125), route-scoped bootstraps (#120), and the STE
 instructions (#128), in addition to the five originally listed commits.
 Milestone 17 is complete and verified. It documents the uniform CSS change rule. Milestone 18 depicts the
 outside-component evidence in the design mockups. Milestone 19 is implemented
-and verified. Milestone 20 remains pending for comparison details. The contract changes
+and verified. Milestone 19A is implemented, verified and committed locally.
+It integrates main's output/frame race fixes (#129) and expiring audit exception
+(#130) through `800fe9f8`. The complete gate passes, including the audit.
+The two-parent merge and line-level preservation checks pass. The reviewer
+owns the pending push. Milestone 20 remains pending for comparison details.
+The contract changes
 unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
 owners no longer route stylesheet changes; declared links and their provenance
 remain. The review refinement uses kept own-page matches for component
@@ -1259,16 +1264,81 @@ frame-usage races. #130 adds an expiring audit exception for the `braces`
 advisory GHSA-vfj7-8cjw-p6xm. Merge it before the UI work, so that Milestone 20
 builds on main's viewer fixes and the complete gate can pass again.
 
-- [ ] Audit main's additions from the source tip, merge `origin/main` with
+- [x] Audit main's additions from the source tip, merge `origin/main` with
       exactly two parents, resolve conflicts path by path and review every
       remerge-diff path.
-- [ ] Compare every line that main added since `b2c82c15` with the merged
+- [x] Compare every line that main added since `b2c82c15` with the merged
       tree. Classify each absent line as an intended migration, a move or a
       loss, and restore every loss before the push.
-- [ ] Run the complete `cargo xtask check`, including the dependency audit,
+- [x] Run build, typecheck, lint, the six docs suites, main's new and changed
+      tests, and the exact complete unit command at 100% before committing.
+- [x] Run the complete `cargo xtask check`, including the dependency audit,
       and require 100%. Remove the audit workaround from Milestone 21.
-- [ ] Inspect `git diff --name-status origin/main` and its deletions, record
-      the result in this milestone, commit the merge and push the branch.
+- [x] Inspect `git diff --name-status origin/main` and its deletions, record
+      the result in this milestone, and commit the merge locally.
+- [ ] The reviewer pushes the branch after checking the local merge.
+
+Integration evidence:
+
+- Captured before merging: source tip `eda6cf840969e34860b7d8d8425d63da80bfa01a`,
+  merge base `b2c82c1591c91f2550a66c464833b1f864bdab07`, and fetched main
+  `800fe9f88a0173429b25baa1bcf41ed9e59b2256`. Main changes 67 paths.
+  The saved refs and path list are under `.context/m19a/`.
+- The merge has exactly two parents: that source tip and fetched main.
+  Reviewed every path from `git show --remerge-diff --stat`:
+  `docs/protocol/mokly-baseline-storage.md` combines the two contracts;
+  `tests/helpers/generated_output_fixture.ts` drops the retired input;
+  `plans/remove-source-path-evidence.md` records the integration and removes
+  Milestone 21's audit workaround. No other path needs a manual resolution.
+- `docs/protocol/mokly-baseline-storage.md` is the only conflict. The merged
+  paragraph keeps main's writer-lock location, empty-cache removal and five
+  ancestor-walk attempts. It keeps this branch's exclusion from rendered-resource
+  classification in place of the retired shared-impact globs.
+- The output lock covers writes, export capture and export input rechecks.
+  Serve passes its generation cancellation signal to the write. The frame hook
+  keeps main's final usage check and ready transition in the same task.
+  The audit exception and its validation remain as main defines them.
+- Post-commit line audit: all 3,581 non-blank main-added lines across all 67 paths
+  are present except the following one. Every added doc, README, source and
+  test line is included in `.context/m19a/main-lines.json`.
+  - `tests/helpers/generated_output_fixture.ts:9` — (a), intended migration.
+    The generated `defineScreen` line drops only `dependencies: []`, which
+    this branch retired. Its ids, navigation, metadata and both rendered views
+    remain. Main's concurrency and lock tests keep all their assertions.
+    The absent main line is:
+
+    ```text
+      defineScreen({ id: \`screen-\${index}\`, title: \`Screen \${index}\`, description: "Generated screen", navPath: ["Fixture"], dependencies: [], relatedDocs: [], desktop: <main>${label} {index}</main>, mobile: <main>${label} {index}</main> }),
+    ```
+
+  All other 66 paths retain every main-added non-blank line. No (b) moves or
+  (c) losses were found. Main's docs, READMEs, source and tests all retain their
+  added meaning. The eight output-lock, transaction/store, export-input,
+  baseline-confinement and frame-lifecycle source files match main byte for byte.
+
+- The 677-path main diff retains only the four approved deletions:
+  `examples/basic/entries/design/library/style_context.tsx`,
+  `src/components/dependency_validation.ts`,
+  `src/registry/dependency_paths.ts`, and
+  `tests/design_library_style_collector.test.tsx`. The catalogue fixture remains
+  a v3-to-v4 rename. Historical plans, review records and `CHANGELOG.md` match
+  main; no new edits were made to them.
+
+Verification: `npm run build`, `npm run typecheck` and `npm run lint` pass.
+The six requested docs suites pass all 26 tests. Main's 15 new or changed unit
+files pass all 127 tests. The frame lifecycle and new usage-race browser specs
+pass all 15 tests. The exact complete unit command passes all 3,883 tests.
+The complete `cargo xtask check` passes without a workaround: the live audit,
+formatting, lint, file limits, repository checks, 15 Rust tests, package checks,
+all six packed-consumer scenarios, 3,883 unit tests, 747 browser tests and
+224 hydration tests pass. There are no failed, skipped or cancelled tests.
+The example build and check pass with 438 files. The audit uses main's reviewed
+exception through 2026-11-03 UTC; package versions, the lockfile and overrides
+are unchanged. An initial plan-format check needed one indentation correction;
+the repeated check passes. Exact commands and results are in
+`.context/m19a/checks.jsonl` and `.context/m19a/report.md`.
+The reviewer owns the push and the later implementation review. Milestone 20
+has not started.
 
 ## Milestone 20: Show the outside-component evidence
 
@@ -1292,9 +1362,7 @@ Tags: ui
 ## Milestone 21: Verify, deliver and review
 
 - [ ] Run `cargo xtask check` at 100%, inspect the diff and deletions against
-      `origin/main`, commit and push. While GHSA-vfj7-8cjw-p6xm has no patched
-      `braces` release, run every other check step at 100% and record the
-      dependency-audit failure as the blocker.
+      `origin/main`, commit and push.
 - [ ] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
