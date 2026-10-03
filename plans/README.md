@@ -7,10 +7,13 @@
   `<mockupsDir>/mokly-generated/` tree with referenced authored assets, and
   removal of generated-file ownership machinery are implemented and verified;
   the approved directory rename avoids dot-path restrictions on static hosts.
-  Milestones 9–14 merge `main` into one `mokly-generated/` layout with its
-  imported CSS, rename `__mokly/` to `mokly-viewer/`, and apply the approved
-  lint and naming fixes; the other open review findings await the user's
-  decision before the PR merges.
+  Milestone 9 defines the approved unified CSS/output layout, manifest v8,
+  historical readers, viewer namespace/version gates and independent lint
+  contracts, with an audited preservation list for all 11 mainline commits.
+  Milestones 10–14 implement and verify that merge, rename `__mokly/` to
+  `mokly-viewer/`, and apply the approved lint fixes. Other review findings
+  await the user's decision; Cloud receiver/viewer rollout is a post-merge
+  follow-up.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.

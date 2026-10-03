@@ -27,6 +27,11 @@ These envelopes are disjoint; combining them is invalid. Explicit
 `compatibility.readManifestV2` permits the legacy v2-format fallback only
 when the historical primary file is absent, never when it is invalid.
 
+Milestone 9 of Generated Output Simplification defines an approved merge target,
+not another implemented format: private manifest v8, public catalogue v4,
+delivery v4, a versioned shell bootstrap, ownership v3 and upload v2. The
+contracts below define the implementation sequence and historical readers.
+
 ## Contracts
 
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
@@ -41,6 +46,17 @@ when the historical primary file is absent, never when it is invalid.
 - [Configuration contract](./mokly-configuration.md) — catalogue paths and settings.
 - [Generated output, Git state and asset closure](./mokly-generated-output.md)
   — implemented layout, manifest v6, tracked-state, closure and writer contracts.
+- [Unified generated output and imported styles](./mokly-unified-output.md)
+  — approved single-tree layout, reserved routes, reference policy, PostCSS and
+  CSS delivery without output modes.
+- [Generated manifest and historical readers](./mokly-generated-manifest.md)
+  — implemented v6 inventory and approved v8 identity schema, version-specific
+  readers and cache mapping.
+- [Portable viewer namespace and version gates](./mokly-viewer-namespace.md)
+  — approved `mokly-viewer/` paths, version errors and upload compatibility.
+- [Directory constants and import lint](./mokly-directory-lint.md)
+  — approved independent literal guard, retained source-ordering rule and
+  duplicate-import enforcement with folder coverage probes.
 - [Historical catalogue discovery and addressing](./mokly-baseline-addressing.md)
   — deterministic rebuild discovery, cache descriptors and cross-layout comparisons.
 - [Generated document delivery](./mokly-generated-delivery.md)

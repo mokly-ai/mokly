@@ -3,6 +3,10 @@
 ## Delivery Status
 
 Implemented for v6 and historical baselines in [Generated Output Simplification](../../plans/generated-output-simplification.md).
+The approved [v8 historical reader contract](./mokly-generated-manifest.md#historical-readers-and-layouts)
+extends this descriptor to `main`'s v7 and the unified v8 tree in Milestone 11.
+It replaces route-based cross-version pairing below with identity/view-axis
+pairing while retaining each side's actual file addresses.
 This supplements [per-commit selection](./mokly-derived-baselines.md) and
 [baseline storage](./mokly-baseline-storage.md). It does not inspect the head
 Git index: only `check` uses index tracking.

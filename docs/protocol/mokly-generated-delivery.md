@@ -3,6 +3,11 @@
 ## Delivery Status
 
 Implemented for v6 catalogues in [Generated Output Simplification](../../plans/generated-output-simplification.md); prefixless historical publications remain supported.
+The Milestones 11–12 target is defined separately by
+[unified output](./mokly-unified-output.md) and
+[viewer namespace/version gates](./mokly-viewer-namespace.md). Their public
+catalogue v4 supersedes the v1 compatibility policy below after implementation;
+this page records the pre-merge behavior until that milestone.
 This owns URL addressing for [catalogue read models](./mokly-catalogue.md),
 [viewer frames](./mokly-frame-adapter.md), [static export](./mokly-export-delivery.md)
 and [publication](./mokly-publication.md). It does not change logical route

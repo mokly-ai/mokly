@@ -6,6 +6,9 @@ Implemented by [Generated Output Simplification](../../plans/generated-output-si
 The cached rebuild infrastructure, `preparing` state, per-commit reader
 selection, v6 inventory verification and dedicated `mokly-generated/` layout are
 shipped. Only `check` inspects head Git index tracking.
+Milestone 11 will extend selection and compatibility under the approved
+[v8 manifest contract](./mokly-generated-manifest.md), including v7 styles and
+binary assets. The command and trust boundaries in this document stay in force.
 
 ## Purpose And Configuration
 

@@ -26,7 +26,9 @@ working tree equal the compilation goes away.
 names the catalogue directory; Mokly owns exactly `<mockupsDir>/mokly-generated/`
 and replaces it wholesale on every build. Authored assets stay in the
 catalogue directory and generated documents reference them in place with
-relative hrefs. The public surface is the referenced asset closure: stylesheet
+relative hrefs. The approved Milestone 9 merge contract also places imported
+CSS bundles and copied CSS assets in this tree, under `styles/` and `assets/`.
+The public surface is the referenced asset closure: stylesheet
 rules, renderer resource records, and every local URL reachable from generated
 documents and their CSS. For the example:
 
@@ -92,14 +94,20 @@ Decisions:
   the CLI and viewer, and guarded against other production literals by lint.
   The unreleased dot-directory spelling has no compatibility alias.
 - Closure files must be regular files under `mockupsDir`, outside
-  `mokly-generated`, and not protected source. Assets outside the catalogue
-  directory, including CSS imported from React components, are a follow-up.
+  `mokly-generated`, and not protected source. Milestone 11 preserves `main`'s
+  imported CSS pipeline for outside-catalogue sources by copying its compiled
+  styles and assets into the generated tree; direct outside-catalogue links
+  stay invalid. This replaces the former imported-CSS follow-up.
 - Moving the example's 28 tracked stylesheets out of `examples/basic/generated/`
   is authorized by the user's request for this layout.
 - A worktree-based cache outside the repository was discussed and parked; it
   is recorded under follow-up.
 - Backend and documentation only. No mockup or UI work.
 
+Approved merge targets: [unified output](../docs/protocol/mokly-unified-output.md),
+[manifest and historical readers](../docs/protocol/mokly-generated-manifest.md),
+[viewer namespace](../docs/protocol/mokly-viewer-namespace.md), and
+[lint contracts](../docs/protocol/mokly-directory-lint.md).
 Protocol owners: [configuration](../docs/protocol/mokly-configuration.md),
 [derived baselines](../docs/protocol/mokly-derived-baselines.md), and
 [baseline storage](../docs/protocol/mokly-baseline-storage.md). Related
@@ -571,6 +579,8 @@ user's decision.
 
 ## Milestone 9: Define the merged layout and review-fix contracts
 
+Status: complete (documentation only).
+
 Documentation only. The user approved these rename review decisions: 28 A
 (design one `mokly-generated/` layout with `main`'s imported CSS before
 merging), 29 B and C (separate lint rules, tested in every covered folder),
@@ -582,10 +592,10 @@ Meanwhile `origin/main` added imported CSS delivery under
 content deltas (#122), route-scoped shell bootstraps (#120), and manifest v7,
 and it still uses the committed and derived output modes.
 
-- [ ] Audit every addition on `origin/main` since the merge base
+- [x] Audit every addition on `origin/main` since the merge base
       (`git diff --name-status <base>..origin/main`) and list in this plan
       the features, contracts, and tests that the merge must preserve.
-- [ ] Define one `mokly-generated/` layout: pages at
+- [x] Define one `mokly-generated/` layout: pages at
       `mokly-generated/<route>`, the manifest at
       `mokly-generated/mokly-manifest.json`, `main`'s compiled stylesheets at
       `mokly-generated/styles/…` and copied assets at
@@ -594,31 +604,210 @@ and it still uses the committed and derived output modes.
       a defined error; one shared constant; and one rule for the files that
       pages may reference (generated pages, generated stylesheets and assets,
       and the authored closure).
-- [ ] Define the merged manifest: `main`'s v7 identity-derived routes plus
+- [x] Define the merged manifest: `main`'s v7 identity-derived routes plus
       this branch's `assetClosure`, `generatedFiles` inventory, and
       `blobHashAlgorithm` in a new schema version, with generated stylesheets
       and assets in the inventory and readers for every earlier version.
-- [ ] Define how imported CSS works without output modes: Git-index
+- [x] Define how imported CSS works without output modes: Git-index
       tracking, in-memory head output, per-commit baselines, `build --watch`
       and `serve --build`, PostCSS content scanning that excludes
       `mokly-generated/`, and change detection for generated stylesheets.
       Remove the post-merge follow-up item that `main` has now delivered.
-- [ ] Rename the `__mokly/` namespace to `mokly-viewer/` for Serve, export,
+- [x] Specify the `__mokly/` rename to `mokly-viewer/` for Serve, export,
       publication, viewer, and upload paths. Define its single constant, its
       lint guard, and a compatibility contract in which an older host or
       viewer fails with a clear version error instead of misreading an
       artifact. Record any cloud-product update as post-merge follow-up.
-- [ ] Reword the naming rule: no deployed name that a site visitor needs
+- [x] Reword the naming rule: no deployed name that a site visitor needs
       starts with `.`, `_`, `#`, or `~`; hosts may drop the optional
       `.mokly-export-artifact` marker; a leading dot remains only for local
       Mokly state.
-- [ ] Define the lint contracts: a local ESLint rule that rejects the
+- [x] Define the lint contracts: a local ESLint rule that rejects the
       spelled-out generated and viewer directory names in string, template,
       and regular-expression literals outside their defining modules;
       `main`'s `localeCompare` ban in its own rule; `import/no-duplicates`;
       and tests that probe every covered folder for each rule.
-- [ ] Update the plan index entry, run `npm run format:check`, review the
+- [x] Update the plan index entry, run `npm run format:check`, review the
       diff, commit, and push.
+
+Validation: `npm run format:check` passed after formatting the two new schema
+pages. `node --import tsx --test tests/component_protocol_docs.test.ts` passed
+both tests. The Markdown audit checked 13 changed files and 227 local links
+and anchors, all changed protocols at most 250 lines, unchanged Milestones
+1–8 and moved v6 prose, and no new main-relative file deletions.
+`git diff --check` passed. `cargo xtask check` is exempt for this documentation
+milestone. The full implementation review remains assigned to the orchestrator
+in Milestone 14; this milestone only inspected its documentation diff.
+
+### Mainline preservation audit
+
+Fetched `origin/main` before this audit. Branch tip before Milestone 9:
+`56a24c70b9b6ec12350946351e8fd1c7ab8cac51`. Audited source tip:
+`b2c82c1591c91f2550a66c464833b1f864bdab07`. Merge base:
+`bf9e3c9a4151fedacf8c7db5bc957609689a348b`. The 11 source commits below are the
+preservation boundary. Refresh this audit if the source tip changes before
+Milestone 11; do not assume a later tip has the same contents.
+
+The complete name/status audit used:
+
+```sh
+git diff --name-status bf9e3c9a4151fedacf8c7db5bc957609689a348b..origin/main
+```
+
+It reports 1,680 paths: 589 additions, 1,070 modifications, two renames and
+19 deletions. Every path belongs to the following inspected groups: `.github`
+actions/workflows; root runtime, package, lock, lint, ignore, changelog and agent
+files; docs/architecture, guides, protocol, fixtures, reviews and superpowers;
+plans; `examples/basic`; `packages/viewer`; scripts/package, preview, large
+and verification; all affected `src` areas; tests, browser tests, helpers and
+consumer fixtures; and `xtask`. Existing mainline deletions are part of its
+delivered architecture, not permission to remove surviving features. All
+added/changed tests, fixtures, docs and completed plans in these groups must
+survive the merge, with only the authorized adaptations listed below.
+
+Preserve each source commit's behavior and verification:
+
+1. `d4228f90` (#96): standalone Auto/Light/Dark appearance; embedded `theme`
+   prop; URL/store/system precedence; isolated preview schemes/backgrounds;
+   palette/contrast and host accent inheritance; authenticated frame reuse,
+   reconnect and latest-wins slow loads; disclosure/focus preservation; mobile
+   and desktop mockups. Preserve Node-range startup validation, `.node-version`
+   and Git-ignore-aware ESLint integration from this change. Keep appearance,
+   palette, same-origin, delayed-preview, `cli_bootstrap` and `eslint_gitignore`
+   tests, package contracts and appearance browser suites.
+2. `2ec4d837` (#115): precise `defineScreen` variant result types, effective
+   view resolution, inherited/overridden metadata, light fallback, reparented
+   history and matching design examples. Keep authoring-type, screen-variant,
+   view-status, history and reparented-design tests.
+3. `3699c566` (#119): shared Mokly logo/wordmark, exact 22px mark, accessible
+   branding and ink colors across the shell and example mockups. Keep the
+   brand/design assertions and inspection tests that wait for real geometry.
+4. `d71b03b7` (#121): immutable snapshot presentations with cancellation;
+   device-sized comparison frames, fixed/sticky content, page/inner-region
+   scrolling, two-axis matching, echoes, anchors, keyboard/touch input,
+   independent sections and Scroll together. Preserve all pane/region/scroll
+   protocols, mockups, `comparison_alignment*`, `comparison_regions*`,
+   `comparison_scroll*`, snapshot-presentation and controller tests.
+5. `b4314fec` (#123): navigation paths and folder conflicts replace collections;
+   id-derived entry/view/snapshot paths replace authored routes and `/id/`
+   aliases; component variants become ordinary entries with `variantOf`;
+   parent/variant order, breadcrumbs, removal identity, disclosure persistence
+   and fallback stay intact. Preserve manifest v7's identity-only entry model,
+   catalogue v3's complete allowlist/privacy model, delivery v3's atomic
+   deployment checks and review result v4, with only the planned version/path
+   adaptations. Preserve shared-impact Details evidence, own-source reason
+   validation, deleted-resource handling, source classification, component
+   fast paths, export confinement/cancellation fixes, lazy CLI/module boundaries,
+   and all related fixture/example conversions. Keep `nav_path_*`,
+   `id_keyed_wire_formats`, `artifact_paths`, variant/manifest/catalogue,
+   disclosure, historical identity, component reason/resource/fast-path,
+   private-metadata and export safety tests. The blanket pre-v7 rejection is
+   the one historical-compatibility behavior explicitly replaced below.
+6. `0c8245f8` (#122): content-addressed Plan → Blobs → Complete exchange;
+   SHA-256/size ownership inventory; immutable snapshot capture; per-project
+   deduplication; bounded parallelism; retry/expiry/re-plan rules; keep-first
+   commit/config identity; cancellation/recovery precedence; redaction and
+   uploaded/unchanged accounting. Keep public receiver fixtures, independent
+   packed consumers, `publish_*`, `upload_plan_contract`, `fake_receiver*`,
+   receiver-recovery/rejection suites, and all GitHub Action behavior. Retain
+   browser shard discovery, separate hydration evidence, release verification
+   and read-only remote-state workflow guards delivered with it.
+7. `5d1c37ad` (#107): CLI 0.13.0/viewer 0.4.0 release metadata, changelogs,
+   dependency pins and Release Please records. Do not roll back versions or
+   release history to this branch's older values.
+8. `b4a02a30` (#126): GitHub-hosted `ubuntu-24.04` release publishing and pinned
+   `actions/checkout` for npm trusted-publishing provenance. Keep exact-tree
+   evidence selection and release tests; do not restore the old release runner.
+9. `4d4e752f` (#128): STE instructions for all agent responses.
+10. `ff376d71` (#125): imported plain CSS and rename-only CSS Modules; renderer
+    and entry-root bundles, first-reachability ordering, renderer exclusion at
+    every import depth, exact scoped-selector/escape checks, `empty` loader
+    opt-outs, source mapping and authored diagnostics. Preserve PostCSS ESM/CJS
+    loading, isolated state, dependency/alias privacy and worker-failure rules;
+    asset formats/MIME/raw bytes, resource URL parsing, scoped npm assets,
+    generated byte evidence and delivered-source attribution. Keep all
+    `build_imported*`, `build_module*`, `css_module*`, `build_postcss*`,
+    `postcss_*`, `imported_styles*`, `serve_imported*`, `export_imported*`,
+    publication/publish imported-binary, watch-dependency and browser stylesheet
+    regressions. Preserve Tailwind/Autoprefixer examples and packed CSS smoke,
+    dependencies/lockfile security patches, `compareCodeUnits` and its locale
+    ban. Keep the repository quality gates: 300-line TS/JS and 250-line protocol
+    limits with existing reviewed caps; unused/internal/public export ratchets;
+    module ownership and CLI boundary tests; Markdown link/history tests;
+    script declaration type checks; PR-title validation; complete test discovery;
+    CI evidence, workflow, native and hydration suites. Preserve main's two-parent
+    merge/remerge-diff review rule in `AGENTS.md`.
+11. `b2c82c15` (#120): strict route-scoped live shell bootstraps; complete public
+    catalogue and private Usage evidence; Loading/Failed/Try again states;
+    current-request ownership after A → B → A; atomic navigation/refresh
+    adoption; serialize-once/zero-in-browser behavior; shared hydration bundle;
+    exact captured-scope validation; complete static external catalogue and
+    normalized output invariance; the 1 MiB real-example limit. Keep scoped
+    reader/host tests, `captured_shell_scope`, `server_route_scoped_bootstrap`,
+    route-scoped browser/return tests, static hydration and size invariance
+    tests, and mobile/desktop loading mockups. Version/path changes may alter
+    expected bytes, but must not weaken scope, privacy, identity or size checks.
+
+Main-only protocol names above and in the new contracts are plain text, not
+links. Milestone 11 must import them before adding links. The test names denote
+whole matching families, including helpers and browser/package counterparts;
+they are preservation requirements, not a reduced validation selection.
+
+### Fixed decisions for implementation
+
+- Use private manifest 8, extending v7 entries with v6 closure/blob fields.
+  Keep actual binary bytes in hashes. Retain the `generated-v6` cache layout
+  tag for its physical layout and distinguish schemas through `manifestVersion`.
+  Parse every supported historical schema separately. Preserve the unavailable
+  comparison outcome only when older parent-scoped component variant ids cannot
+  be projected losslessly into main's global-id model; never invent ids.
+- Reserve `styles` and `assets` case-insensitively for HTML first segments,
+  with the exact `build-invalid` error in the unified-output contract. One
+  pending-output/closure resolver owns references; no stale-disk fallback.
+- PostCSS directory scans always skip generated output. Explicit generated
+  dependencies still fail. Consumer scanners must also exclude it from their
+  own content reads; output tracking never changes these rules.
+- Add `VIEWER_DIRECTORY` beside the existing generated constant. Rename the
+  nested `__generations` to `generations` as required by decision 30's rule
+  for every visitor-needed segment. No old-path aliases are deployed.
+- Use public catalogue 4, delivery 4, a newly versioned bootstrap 1, ownership
+  3 and upload metadata 2. Keep Plan response 1 and comparison result 4.
+  Marker/upload gates make older receivers reject both current-only and
+  Changes-enabled artifacts before path interpretation. Ship updated fixtures;
+  Cloud's matching receiver/viewer rollout is an external follow-up.
+- Use `mokly/no-directory-literals`; keep `no-restricted-syntax` for `main`'s
+  unchanged locale ban. Probe the actual merged config in every matched folder
+  and every exact-file selector. Enable default `import/no-duplicates` and
+  apply its fixer without changing runtime behavior.
+
+### Authorized replacements and deferred work
+
+Decision 28 replaces main's split page/CSS roots and duplicate directory
+constant, committed/derived writer/capture branches, Git-ignore committability
+checks, mode-specific PostCSS directory scanning, per-file orphan ownership
+inside the fully disposable tree, and v7-only historical rejection. Their
+tests must change to prove the new contract, not disappear. Preserve every
+non-mode CSS, path, privacy, confinement, transaction and invalid-version check.
+This branch's previously authorized removal of `generatedOutput`,
+`publicExclude`, directory-wide public scans and ownership-header authority
+remains in force; main's new code must not restore them. Historical headers
+remain readable as data, never ownership proof.
+The branch's source-inventoried `entriesDir === mockupsDir` support also stays;
+main's directory-wide source/public ban must not replace it during integration.
+
+Decisions 29 and 33 replace the directory `no-restricted-syntax` options and
+duplicate import declarations only. Decision 30 replaces `__mokly/` and
+`__generations/` URL contracts and their public format versions; older artifact
+uploads/viewers must reject with the defined version error. Decision 31 only
+corrects the naming policy and marker exception. Milestone 9 removes no runtime
+feature or test; it moves the existing v6 manifest prose into its focused
+contract and removes the CSS follow-up already delivered on main.
+
+Findings 32, 34 and all other unapproved earlier findings remain deferred.
+Do not apply separate fixes under the merge. If a contract collision forces a
+change in one of those areas, make the smallest correct integration change and
+record it by path in the merge commit and milestone report. Milestone 14's
+final review belongs to the orchestrating agent after the final push.
 
 ## Milestone 10: Give the directory-name check its own lint rule
 
@@ -639,6 +828,9 @@ Backend.
 - [ ] Record the source tip and merge base, merge `origin/main`, resolve
       conflicts path by path while preserving every feature listed in
       Milestone 9, and record every authorized removal in the merge commit.
+- [ ] Merge and reconcile the main-only protocol pages named in Milestone 9,
+      then add their links. Preserve the current README and guide contracts
+      while replacing only the authorized layout, modes and version clauses.
 - [ ] Implement the Milestone 9 layout and manifest: one constant,
       generated stylesheets and assets relative to the generated directory,
       reserved route segments, the shared reference rule, and imported CSS
@@ -703,8 +895,12 @@ Backend.
   harvest, the tar parser and its confinement code, and every in-repository
   `.mokly-cache` special case, at the cost of worktree metadata management,
   a documented cache location, and deleting `node_modules` after each build.
-- Bring assets outside the catalogue directory into the closure, including
-  CSS imported from React components, by mapping them into `mokly-generated/`.
+- Coordinate the Cloud product's upload-v2/ownership-v3 receiver, catalogue-v4
+  reader, `/mokly-viewer/catalogue.json` fetch path, `diffs/generations/`
+  storage paths and embedded viewer/version-error handling. Until upgraded,
+  it must reject the new artifact with 426, not accept and misread it. Validate
+  a published current-only catalogue and one with Changes after that rollout;
+  this external update does not block completion of this branch's plan.
 - Smoke-test a fresh consumer with the next published package: `npx mokly`
   and `npx mokly export` produce nothing under `mokly-generated/`, `npx mokly
 build` produces it, `check` passes with the directory ignored, and a

@@ -2,6 +2,9 @@
 
 This is the storage and command contract for [per-commit baseline selection](./mokly-derived-baselines.md).
 Historical commands execute trusted repository code; preparation is never an HTTP operation.
+The approved [v8 manifest contract](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
+defines the Milestone 11 additions for v7/v8 readers and cache markers. It
+preserves the storage, process, lock and retention rules below.
 
 ## Rebuild Procedure
 

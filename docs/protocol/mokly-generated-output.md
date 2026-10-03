@@ -3,7 +3,11 @@
 ## Delivery Status
 
 Implemented contract for [Generated Output Simplification](../../plans/generated-output-simplification.md).
-See
+The approved [unified output](./mokly-unified-output.md),
+[manifest v8](./mokly-generated-manifest.md#approved-manifest-v8),
+[viewer namespace](./mokly-viewer-namespace.md), and
+[lint](./mokly-directory-lint.md) contracts govern Milestones 10–13; those
+changes are not implemented by the documentation-only Milestone 9. See
 [configuration](./mokly-configuration.md), [baseline selection](./mokly-derived-baselines.md),
 [baseline storage](./mokly-baseline-storage.md), and [terminal output](./mokly-terminal-output.md).
 
@@ -20,14 +24,20 @@ under the configured repository root through both lexical and real paths.
 
 Deployable generated content uses the plain, tool-owned directory name
 `mokly-generated/`: some static hosts and deployment tools skip or deny
-dot-directories. A leading dot is for Mokly's local-only state, such as
-`.mokly-cache/` and sibling transaction directories; the export ownership
-marker is a separate artifact file, not the generated-content directory.
+dot-directories. No deployed path segment that a visitor needs may start with
+`.`, `_`, `#`, or `~`. A host may drop the optional root
+`.mokly-export-artifact` marker; the viewer never needs it. Upload and local
+export recovery still require it. Apart from that optional marker, leading
+dots are reserved for local Mokly state such as `.mokly-cache/` and transaction
+directories. The remaining `__mokly/` and `__generations/` violations are
+removed under the approved [namespace contract](./mokly-viewer-namespace.md).
 Production code defines `GENERATED_DIRECTORY` once in
 `packages/viewer/src/catalogue/delivery_paths.ts`, exports it through
 `@mokly/viewer/data`, and the CLI imports that constant directly. ESLint
-rejects the spelled-out directory name in other production string and
-template literals under `src/`, `packages/viewer/src/`, and `scripts/preview/`.
+currently rejects other production string and template literals under
+`src/`, `packages/viewer/src/`, and `scripts/preview/`. The approved
+[lint contract](./mokly-directory-lint.md) adds regex literals and an independent
+rule so it can coexist with `main`'s source-ordering check.
 The former dot-directory name was never released and is not a read alias.
 
 Resolved entries, the renderer, compatibility transformer, module-resolution
@@ -128,69 +138,16 @@ are specified in [terminal output](./mokly-terminal-output.md).
 
 ## Manifest V6 And Per-Commit Baselines
 
-The current canonical manifest has `schemaVersion: 6`, retains v5 fields and
-adds:
+The [manifest contract](./mokly-generated-manifest.md) owns the implemented
+v6 fields, blob inventory, per-commit lookup and rebuild diagnostics. It also
+defines the approved v8 merge target and the separate historical readers.
+The current `schemaVersion: 6` envelope adds these fields to v5:
 
 ```ts
-assetClosure: string[]; // sorted, unique catalogue-relative POSIX file paths
-generatedFiles: { path: string; blobHash: string }[]; // sorted by path
+assetClosure: string[];
+generatedFiles: { path: string; blobHash: string }[];
 blobHashAlgorithm: "sha1" | "sha256";
 ```
-
-`generatedFiles` inventories **every generated file except the manifest
-itself**; a manifest cannot contain its own Git blob hash without a circular
-dependency. The manifest's presence and schema are checked separately. Each
-`path` is relative to `mokly-generated/`, never a closure file; generated HTML and
-fragments are included. `blobHash` is the lowercase hex digest of
-`<algorithm>(UTF8("blob " + byteLength) || 0x00 || exact UTF-8 file bytes)`;
-choose the repository's Git object format (`git rev-parse --show-object-format`),
-defaulting to `sha1` without Git. Require 40 hex digits for SHA-1 or 64 for
-SHA-256. This is Git's blob-object ID, **not** a digest of the path or rendered
-string. Validate uniqueness, sorting, safe confinement, algorithm and format
-at parse time. The resulting serialized manifest has canonical deterministic
-ordering. Readers of v2 (only with the existing compatibility switch), v3,
-both disjoint v4 forms, and v5 continue to work for historical comparisons;
-current live output requires v6.
-
-For **each pinned merge-base commit**, inspect its tree once with `git ls-tree`
-and look first for `<current repo-relative mockupsDir>/mokly-generated/mokly-manifest.json`,
-then for `<current repo-relative mockupsDir>/mokly-manifest.json`. When the
-canonical path is absent, historical `mokabook-manifest.json` and the opt-in
-v2 `mockbook-manifest.json` fallback remain at the legacy root; never override
-an existing but invalid canonical manifest with an older name. No manifest
-at those locations means **rebuild** using the base commit's own configured
-install/build recipe. A moved `mockupsDir` also rebuilds when the current root
-has no manifest. Deterministic discovery of the historical root and its cache
-descriptor is specified in [baseline addressing](./mokly-baseline-addressing.md).
-
-For v6, compare the tree's regular blob paths **exactly** with
-`generatedFiles` plus the manifest path, comparing each blob ID with its
-inventory hash. Missing, extra, non-regular, or mismatched blobs mean
-**rebuild** with an informational diagnostic before running the recipe.
-For v5 and earlier, retain the historical rule that a committed manifest is
-assumed complete and read its Git blobs; no inventory is fabricated for it.
-If the manifest is malformed, report `manifest-invalid` rather than silently
-trusting it. A Git read failure is not evidence of absent output. The head
-side of a comparison always uses validated, in-memory compilation; it never
-requires working-tree output to match. Baseline reader selection is per
-commit, never based on the head tracking state.
-
-Emit the following **info-level stderr diagnostic** only when inventory
-verification requests a rebuild (for normal CLI, watched Serve parent, and
-export/publication comparison preparation), with sorted generated-root-relative
-paths, using the first applicable reason in missing, mismatched, extra order
-(a non-regular path is missing for this purpose):
-
-```text
-Mokly baseline <commit>: rebuilding because generated output is missing: <comma-separated paths>.
-Mokly baseline <commit>: rebuilding because generated output has mismatched blob hashes: <comma-separated paths>.
-Mokly baseline <commit>: rebuilding because generated output has extra files: <comma-separated paths>.
-```
-
-No-manifest rebuilds need no inventory diagnostic. Do not log secrets or
-expose these diagnostics in the Browse shell. Baseline rebuilds execute trusted
-historical code only; `review.baselineBuild` remains available regardless of
-head tracking. See [baseline selection](./mokly-derived-baselines.md).
 
 ## Closure, URLs, And Publication
 
