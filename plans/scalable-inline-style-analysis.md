@@ -1177,11 +1177,60 @@ the original page; give identical texts a single-parse quick check.
       The checkpoint records intervals and raw reports. Non-audit Repository
       checks also pass. A new report commit follows; no amend or push.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] Use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+      The supervisor ran this review on local commits `ee4ead64` through
+      `b3a88d07` before the push, explicitly authorized while the audit blocker
+      holds it. Findings below are recorded verbatim for the user's decision,
+      not implemented. Push remains held and M8 remains unstarted.
+
+### Milestone 7 review findings
+
+Reported by the review of local commits `ee4ead64`, `b9e1256d`, `991071c5`,
+`4d6a9956`, `237c5a6c` and `b3a88d07`, run before the push because the push is
+held by the repository-wide `braces` audit blocker. Recorded for the user's
+decision.
+
+1. Medium. Page provenance relies on parse5 internals marked `@internal`: the
+   `Parser` class and its token callbacks, `static parse` constructing
+   `new this(...)`, and the tree builder passing each token's own `attrs`
+   array to `adoptAttributes` and `createElement`. The provenance contract
+   says upgrades are guarded by the extractor-corpus test, but `package.json`
+   declares `"parse5": "^8.0.1"` and the published package has no shrinkwrap
+   or tests, so consumer installs take the newest 8.x without that guard.
+   In isolated copies, renaming the start-tag callback makes page analysis
+   throw for practically every page, and copying the attribute array at the
+   two adoption-agency clone sites silently turns a clone of an ignored
+   `<b class="tag">` into a `.tag` match without any validation error.
+   Nobody is affected yet (8.0.1 is the newest release). Recommended: pin
+   `parse5` to exactly 8.0.1 in the manifest and lock, state the pin in the
+   provenance contract, and add a test that the dependency spec stays exact;
+   optionally add a first-use self-check that parses a fixed sample (nested
+   `<body>`, one adoption-agency clone, a stray `</p>`) and raises a typed error
+   naming the installed version if spans, originals or offsets differ.
+2. Low. The contract requires page analyses to be discarded with their view,
+   and the code appears correct (pair is view-local, side tables are weak, the
+   discovery cache keeps only seed identities and route sets, and cumulative
+   heap peaks stay near 280–290 MiB), but no test proves it, although the
+   analyses are the largest per-view objects and Milestone 3 showed such
+   retention escapes code reading. Recommended: a child-process `--expose-gc`
+   test that tracks every page-analysis document with a FinalizationRegistry
+   across an identical-text view, a settled non-identical view and a
+   fall-through view, asserting collection while readers stay alive, plus the
+   same for embedded-resource reader trees after classification; and a rule
+   that any contract setting a lifetime for a parse tree or cache needs a
+   production-path GC test.
+3. Low. Two report statements do not match the retained evidence: the browser
+   report's duration comparison used 705 tests passing in both runs, not 702
+   (the stated median and percentiles reproduce exactly with 705), and the
+   measurement report's system Chrome 153.0.8010.52 appears in no benchmark
+   JSON, log or command file, only as hard-coded report text. Recommended:
+   correct the count, mark the Chrome version as not recorded, and record the
+   browser executable and version in each sample's `machine` record (with a
+   benchmark-contract update and a test) so reports derive it from raw data.
 
 ## Milestone 8: Style-Only Route
 
