@@ -1,15 +1,12 @@
-import path from "node:path";
-
 import { isManifestComponentVariant } from "@mokly/viewer/data";
 import type {
   ChangedEntry,
   ComponentReview,
   EntryChangeReason,
-  ReviewResultV4,
-  ScreenReviewV4,
+  ReviewResultV5,
+  ScreenReviewV5,
 } from "@mokly/viewer/data";
 
-import { toPosixPath } from "../config/paths.js";
 import { timeAsync, timingCounts } from "../diagnostics/timings.js";
 
 import { affectedConsumers } from "./component_affected.js";
@@ -17,17 +14,16 @@ import {
   propagateImplementations,
   propagateUseCases,
 } from "./component_change_propagation.js";
+import { classificationContext } from "./component_classification_context.js";
 import {
   entryDependencies,
   entryViews,
-  prefetchClassificationViews,
 } from "./component_classification_entries.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
 import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
   baselineForCurrentIdentities,
-  ComponentDependencyPolicy,
   entryPairs,
   lexical,
   metadata,
@@ -41,27 +37,22 @@ import {
   resourceImpact,
   type OwnedCssReason,
 } from "./component_resource_attribution.js";
-import { ComponentMaterialReader } from "./component_resources.js";
 import type { DependencyReasonSources } from "./component_result_sources.js";
 import {
   classifyComponentVariants,
   componentVariantEntries,
 } from "./component_variant_classification.js";
-import {
-  compareComponentView,
-  type ComponentViewContext,
-} from "./component_view.js";
+import { compareComponentView } from "./component_view.js";
 import {
   analysisOwnsStylesheet,
   assertViewAnalysisScope,
 } from "./css/paths.js";
-import { CssResourceAnalysis } from "./css/resource_analysis.js";
-import { ResourceComparison } from "./resource_comparison.js";
+import { pairedEntryChanges } from "./entry_changes.js";
 import { aggregateIgnored, aggregateState } from "./screen_views.js";
 
 /** Internal classifier output for source validation and its regression fixtures. */
 export interface ComponentClassificationWithSources {
-  result: ReviewResultV4;
+  result: ReviewResultV5;
   implementationImpact: ReadonlySet<string>;
   sources: DependencyReasonSources;
 }
@@ -78,43 +69,13 @@ export async function classifyComponentsWithSources(
     (entry) => entry.kind === "component" && !isManifestComponentVariant(entry),
   );
   const { changedPaths, config } = input;
-  const dependencies = new ComponentDependencyPolicy(
+  const { dependencies, context } = await classificationContext(
+    input,
     before,
     after,
-    config.review.sharedImpact,
-  );
-  const beforeReader = new ComponentMaterialReader(input.beforeReader);
-  const afterReader = new ComponentMaterialReader(input.afterReader);
-  const changed = new Set(changedPaths);
-  const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const compareResourceBytes = config.generatedOutput === "derived";
-  const context: ComponentViewContext = {
-    beforeReader,
-    afterReader,
-    dependencies,
-    changed,
-    prefix,
-    resources: new ResourceComparison(
-      beforeReader,
-      afterReader,
-      changed,
-      prefix,
-      new CssResourceAnalysis(input.cssParser),
-      compareResourceBytes,
-    ),
-    compareResourceBytes,
-    ...(input.useFastPath === undefined
-      ? {}
-      : { useFastPath: input.useFastPath }),
-  };
-  await prefetchClassificationViews(
-    context,
-    before,
-    after,
-    input.beforeReader.readMany !== undefined,
   );
   const sharedImpact = dependencies.sharedPaths(changedPaths);
-  const screens: ScreenReviewV4[] = [];
+  const screens: ScreenReviewV5[] = [];
   const components: ComponentReview[] = [];
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();
@@ -126,6 +87,12 @@ export async function classifyComponentsWithSources(
   await timeAsync("review.compare-screens", async () => {
     for (const pair of pairs) {
       const entry = (pair.after ?? pair.before)!;
+      const componentParent = [pair.after, pair.before].find(
+        (candidate) =>
+          candidate?.kind === "component" &&
+          !isManifestComponentVariant(candidate),
+      );
+      if (entry.kind === "component" && !componentParent) continue;
       const sides = {
         ...(pair.before ? { before: address(pair.before) } : {}),
         ...(pair.after ? { after: address(pair.after) } : {}),
@@ -161,8 +128,20 @@ export async function classifyComponentsWithSources(
         ].sort(),
         sharedImpact: [] as string[],
       };
-      const baseViews = entryViews(pair.before, beforeVariantEntries);
-      const headViews = entryViews(pair.after, afterVariantEntries);
+      const baseViews = entryViews(
+        pair.before?.kind === "component" &&
+          isManifestComponentVariant(pair.before)
+          ? undefined
+          : pair.before,
+        beforeVariantEntries,
+      );
+      const headViews = entryViews(
+        pair.after?.kind === "component" &&
+          isManifestComponentVariant(pair.after)
+          ? undefined
+          : pair.after,
+        afterVariantEntries,
+      );
       const pairedViews = viewPairs(baseViews, headViews);
       const compared = await Promise.all(
         pairedViews.map((view) =>
@@ -171,7 +150,7 @@ export async function classifyComponentsWithSources(
             view.before,
             view.after,
             entry.kind === "component" && !isManifestComponentVariant(entry)
-              ? entry.id
+              ? entry.path
               : undefined,
           ),
         ),
@@ -215,7 +194,10 @@ export async function classifyComponentsWithSources(
           state: aggregateState(compared.map((result) => result.view.state)),
           views: compared.map((result) => result.view),
         });
-      if (entry.kind === "component" && !isManifestComponentVariant(entry)) {
+      if (
+        componentParent?.kind === "component" &&
+        !isManifestComponentVariant(componentParent)
+      ) {
         const classifiedVariants = classifyComponentVariants({
           ...(pair.before?.kind === "component" &&
           !isManifestComponentVariant(pair.before)
@@ -225,7 +207,7 @@ export async function classifyComponentsWithSources(
           !isManifestComponentVariant(pair.after)
             ? { after: pair.after }
             : {}),
-          entry,
+          entry: componentParent,
           compared,
           pairedViews,
           beforeEntries: beforeVariantEntries,
@@ -238,7 +220,7 @@ export async function classifyComponentsWithSources(
         reasons.push(...classifiedVariants.parentReasons);
         reasonSources.record(entry, classifiedVariants.parentReasons);
         if (classifiedVariants.parentReasons.length > 0)
-          impacting.add(entry.id);
+          impacting.add(entry.path);
         if (
           reasons.some(
             (reason) =>
@@ -247,7 +229,7 @@ export async function classifyComponentsWithSources(
               reason.kind === "dependency",
           )
         )
-          impacting.add(entry.id);
+          impacting.add(entry.path);
         components.push({
           ...common,
           state: aggregateState(variants.map((variant) => variant.state)),
@@ -275,15 +257,16 @@ export async function classifyComponentsWithSources(
     changes,
   );
   propagateUseCases(pairs, before, after, changes);
-  screens.sort((a, b) => lexical(a.id, b.id));
-  components.sort((a, b) => lexical(a.id, b.id));
+  screens.sort((a, b) => lexical(a.path, b.path));
+  components.sort((a, b) => lexical(a.path, b.path));
+  changes.splice(0, changes.length, ...pairedEntryChanges(changes, pairs));
   changes.sort(
     (a, b) =>
       lexical(a.kind, b.kind) ||
-      lexical((a.after ?? a.before)!.id, (b.after ?? b.before)!.id),
+      lexical((a.after ?? a.before)!.path, (b.after ?? b.before)!.path),
   );
-  const result: ReviewResultV4 = {
-    schemaVersion: 4,
+  const result: ReviewResultV5 = {
+    schemaVersion: 5,
     baseCommit: input.baseCommit,
     baseRef: input.baseRef,
     changedPaths: [...changedPaths].sort(),

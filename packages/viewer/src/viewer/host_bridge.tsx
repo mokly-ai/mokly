@@ -152,7 +152,7 @@ export function ViewerHostBridge({
     picking,
     pickSessions,
     report,
-    selectedEntryId: store.state.selection.screenId,
+    selectedEntryId: store.state.selection.screenPath,
   });
 
   const evidenceChanged = useViewerEvidenceRestoration({

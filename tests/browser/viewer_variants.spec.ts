@@ -27,7 +27,7 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
       window.viewerHarness.start("one", {
         cross,
         controlled,
-        defaultSelection: { screenId: "pane", viewport: "desktop" },
+        defaultSelection: { screenPath: "pane", viewport: "desktop" },
       }),
     { cross, controlled },
   );
@@ -41,18 +41,21 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
 function appendScreenVariant(
   node: CatalogueNode,
   parentId: string,
-  variantId: string,
+  variantPath: string,
 ): CatalogueNode {
-  if (node.kind === "entry" && node.id === parentId)
+  if (node.kind === "entry" && node.path === parentId)
     return {
       ...node,
-      children: [...(node.children ?? []), { kind: "entry", id: variantId }],
+      children: [
+        ...(node.children ?? []),
+        { kind: "entry", path: variantPath },
+      ],
     };
   return node.children
     ? {
         ...node,
         children: node.children.map((child) =>
-          appendScreenVariant(child, parentId, variantId),
+          appendScreenVariant(child, parentId, variantPath),
         ),
       }
     : node;
@@ -84,15 +87,14 @@ function screenVariantCatalogue(): CatalogueReadModel {
       changes: unmodified,
     })),
   };
-  const parentIndex = model.screens.findIndex(({ id }) => id === "home");
+  const parentIndex = model.screens.findIndex(({ path }) => path === "home");
   const parent = model.screens[parentIndex];
   if (!parent) throw new Error("Missing viewer screen fixture");
   const variant = {
     ...parent,
-    id: "home-error",
+    path: "home/error",
     title: "Save failed",
-    route: "screens/home-error.html",
-    variantOf: parent.id,
+    variantOf: parent.path,
     changes: {
       status: "ready" as const,
       kind: "changed" as const,
@@ -100,9 +102,6 @@ function screenVariantCatalogue(): CatalogueReadModel {
     },
     views: parent.views.map((view) => ({
       ...view,
-      fragmentPath: `static/screens/home-error.${view.viewport}${
-        view.colorScheme === "dark" ? ".dark" : ""
-      }.html`,
       comparison:
         view.viewport === "mobile" && view.colorScheme === "dark"
           ? {
@@ -126,12 +125,9 @@ function screenVariantCatalogue(): CatalogueReadModel {
       variant,
       ...model.screens.slice(parentIndex + 1),
     ],
-    tree: {
-      ...model.tree,
-      pages: model.tree.pages.map((node) =>
-        appendScreenVariant(node, parent.id, variant.id),
-      ),
-    },
+    tree: model.tree.map((node) =>
+      appendScreenVariant(node, parent.path, variant.path),
+    ),
   };
 }
 
@@ -145,7 +141,7 @@ async function openScreenVariantViewer(page: Page, controlled: boolean) {
         controlled,
         source: JSON.parse(catalogue) as CatalogueReadModel,
         defaultSelection: {
-          screenId: "home",
+          screenPath: "home",
           view: "changes",
           viewport: "both",
           colorScheme: "light",
@@ -159,7 +155,7 @@ async function openScreenVariantViewer(page: Page, controlled: boolean) {
 test("Changes proposes a variant screen and its first changed view atomically", async ({
   page,
 }) => {
-  const parent = 'a[data-nav-row][data-route="screens/home.html"]';
+  const parent = 'a[data-nav-row][data-route="home/index.html"]';
 
   await openScreenVariantViewer(page, false);
   expect(
@@ -178,7 +174,7 @@ test("Changes proposes a variant screen and its first changed view atomically", 
   );
   expect(committed?.value).toEqual(
     expect.objectContaining({
-      screenId: "home-error",
+      screenPath: "home/error",
       viewport: "mobile",
       colorScheme: "dark",
     }),
@@ -197,7 +193,7 @@ test("Changes proposes a variant screen and its first changed view atomically", 
   );
   expect(proposal).toEqual(
     expect.objectContaining({
-      screenId: "home-error",
+      screenPath: "home/error",
       viewport: "mobile",
       colorScheme: "dark",
     }),
@@ -230,7 +226,7 @@ for (const cross of [false, true]) {
     await page.evaluate(() =>
       window.viewerHarness
         .get("one")
-        .ref.current.select({ screenId: "pane-default" }),
+        .ref.current.select({ screenPath: "pane/default" }),
     );
     await expect(first).toHaveAttribute("aria-current", "page");
     await expect(
@@ -248,22 +244,22 @@ for (const cross of [false, true]) {
     expect(events).toEqual([
       {
         name: "navigate",
-        value: { screenId: "pane-second" },
+        value: { screenPath: "pane/second" },
       },
       {
         name: "selection",
         value: expect.objectContaining({
-          screenId: "pane-second",
+          screenPath: "pane/second",
         }),
       },
       {
         name: "navigate",
-        value: { screenId: "pane-default" },
+        value: { screenPath: "pane/default" },
       },
       {
         name: "selection",
         value: expect.objectContaining({
-          screenId: "pane-default",
+          screenPath: "pane/default",
         }),
       },
     ]);
@@ -290,7 +286,7 @@ for (const cross of [false, true]) {
           .events.find((event) => event.name === "selection")!.value,
     );
     expect(proposal).toEqual(
-      expect.objectContaining({ screenId: "pane-second" }),
+      expect.objectContaining({ screenPath: "pane/second" }),
     );
     await page.evaluate((selection) => {
       window.viewerHarness
@@ -317,7 +313,7 @@ for (const cross of [false, true]) {
             .get("one")
             .events.find((event) => event.name === "navigate")?.value,
       ),
-    ).toEqual({ screenId: "pane-second" });
+    ).toEqual({ screenPath: "pane/second" });
   });
 
   test(`${adapter} treats an unknown imperative entry as unavailable`, async ({
@@ -326,7 +322,7 @@ for (const cross of [false, true]) {
     await openViewer(page, cross);
     await page.evaluate(() => {
       window.viewerHarness.get("one").ref.current.select({
-        screenId: "missing",
+        screenPath: "missing",
       });
     });
     await expect(
@@ -346,18 +342,18 @@ for (const cross of [false, true]) {
   }) => {
     await openViewer(page, cross);
     const component = fixture.catalogue.components.find(
-      (entry) => entry.id === "pane",
+      (entry) => entry.path === "pane",
     )!;
     const variant = catalogueComponentVariants(
       fixture.catalogue,
-      component.id,
-    ).find((entry) => entry.id === "pane-second")!;
+      component.path,
+    ).find((entry) => entry.path === "pane/second")!;
     const view = variant.views.find(
       (entry) => entry.viewport === "desktop" && entry.colorScheme === "light",
     )!;
     if (view.usage.status !== "ready") throw new Error("Expected ready usage");
     const instance: InstanceRef = {
-      screenId: "pane-second",
+      screenPath: "pane/second",
       viewport: "desktop",
       colorScheme: "light",
       key: view.usage.instances[0]!.key,
@@ -365,7 +361,7 @@ for (const cross of [false, true]) {
     await page.evaluate(
       async ({ instance }) => {
         const viewer = window.viewerHarness.get("one").ref.current;
-        viewer.select({ screenId: "pane-second" });
+        viewer.select({ screenPath: "pane/second" });
         await viewer.scrollToInstance(instance);
         await viewer.highlightInstance(instance);
       },
@@ -376,7 +372,7 @@ for (const cross of [false, true]) {
     );
     const outcomes = await page.evaluate(async (instance) => {
       const viewer = window.viewerHarness.get("one").ref.current;
-      const mismatched = { ...instance, screenId: "pane-default" };
+      const mismatched = { ...instance, screenPath: "pane/default" };
       return Promise.all([
         viewer.highlightInstance(mismatched).then(
           () => "resolved",

@@ -10,20 +10,20 @@ import { serveStaticFiles } from "../helpers/static_server.js";
 
 export const HISTORY_ENTRIES = [
   {
-    previousId: "history-screen-old",
-    currentId: "history-screen",
+    previousPath: "history-screen-old",
+    currentPath: "history-screen",
     kind: "screen",
-    previousRoute: "screens/history-screen-old.html",
-    currentRoute: "screens/history-screen.html",
+    previousRoute: "history-screen-old/index.html",
+    currentRoute: "history-screen/index.html",
     previousTitle: "Previous screen",
     currentTitle: "Current screen",
   },
   {
-    previousId: "history-page-old",
-    currentId: "history-page",
+    previousPath: "history-page-old",
+    currentPath: "history-page",
     kind: "page",
-    previousRoute: "pages/history-page-old.html",
-    currentRoute: "pages/history-page.html",
+    previousRoute: "history-page-old/index.html",
+    currentRoute: "history-page/index.html",
     previousTitle: "Previous page",
     currentTitle: "Current page",
   },
@@ -36,15 +36,15 @@ function historySource(current: boolean): string {
 import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { description: "History fixture", dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, id: "history-screen${suffix}", title: "${version} screen", useCaseIds: [],
+  defineScreen({ ...metadata, path: "history-screen${suffix}", title: "${version} screen", useCasePaths: [],
     mobile: <main><h1>${version} mobile screen</h1></main>,
     desktop: <main><h1>${version} desktop screen</h1></main> }),
-  definePage({ ...metadata, id: "history-page${suffix}", title: "${version} page",
+  definePage({ ...metadata, path: "history-page${suffix}", title: "${version} page",
     render: () => '<!doctype html><html><body><h1>${version} page content</h1></body></html>' }),
 ];`;
 }
 
-/** A real Git baseline with a screen and page replaced under new IDs. */
+/** A real Git baseline with a screen and page replaced under new paths. */
 export async function startHistoricalSelectionHistory(
   mode: "serve" | "static",
 ) {

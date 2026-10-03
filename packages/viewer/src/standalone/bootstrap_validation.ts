@@ -3,7 +3,7 @@ import { readCatalogue } from "../catalogue/reader.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { parseStaticDelivery } from "../navigation/delivery.js";
-import { isEntryId, isLogicalFragment } from "../navigation/logical.js";
+import { isEntryPath, isLogicalFragment } from "../navigation/logical.js";
 import type { EntryRouteKind } from "../navigation/routes.js";
 
 import type {
@@ -104,7 +104,7 @@ function readView(value: Record<string, unknown>): BootstrapView {
     return { kind: "missing", requested: value["requested"] };
   if (
     value["kind"] === "target" &&
-    isEntryId(value["entryId"]) &&
+    isEntryPath(value["entryId"]) &&
     (value["snapshotId"] === undefined ||
       isHistoricalSnapshotId(value["snapshotId"])) &&
     ["component", "page", "screen", "use-case"].includes(
@@ -136,7 +136,7 @@ function validateTarget(
     view.kind === "target" &&
     !resolveCatalogueEntry(
       catalogue,
-      { id: view.entryId, kind: view.entryKind },
+      { path: view.entryId, kind: view.entryKind },
       view.snapshotId,
     )
   )

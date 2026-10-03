@@ -131,7 +131,7 @@ test("source capture resolves a nested configuration against repoRoot", async (t
   await fs.mkdir(path.join(fixture.root, "tools"));
   await fs.writeFile(
     path.join(fixture.root, "tools/mokly.config.ts"),
-    'export default { repoRoot: "..", entriesDir: "../entries", mockupsDir: "../mockups" };',
+    'export default { repoRoot: "..", roots: [{ dir: "../entries" }], mockupsDir: "../mockups" };',
   );
   const config = await loadConfig(fixture.root, "tools/mokly.config.ts");
   assert.ok(

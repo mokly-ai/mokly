@@ -38,7 +38,7 @@ element.style.cssText = "height:900px;width:1200px;position:relative";
 document.body.append(element);
 
 const selection: ViewerSelection = {
-  screenId: query.get("entry") ?? "removed-page",
+  screenPath: query.get("entry") ?? "removed-page",
   view: "changes",
   viewport: "both",
   colorScheme: "light",

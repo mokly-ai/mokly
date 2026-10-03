@@ -47,7 +47,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
     { label: "named", selector: "#named-link" },
   ]) {
     await test.step(activation.label, async () => {
-      await page.goto(`${navigation.url}/view/screens/home.html`);
+      await page.goto(`${navigation.url}/view/fixture/nested/home/`);
       const opened = page.context().waitForEvent("page");
       await page
         .frameLocator(".mbk-frame-mobile iframe")
@@ -60,16 +60,16 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
         });
       const popup = await opened;
       await expect(popup).toHaveURL(
-        /\/view\/screens\/details\.html\?fragment=section$/,
+        /\/view\/fixture\/nested\/details\/\?fragment=section$/,
       );
       expect(await popup.evaluate(() => window.opener)).toBeNull();
       await popup.close();
-      await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+      await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
     });
   }
 
   await test.step("Control-click", async () => {
-    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await page.goto(`${navigation.url}/view/fixture/nested/home/`);
     await page.evaluate(() => {
       const shell = window as typeof window & {
         __moklyOpenCalls?: unknown[][];
@@ -93,13 +93,17 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
         ),
       )
       .toEqual([
-        ["/view/screens/details.html?fragment=section", "_blank", "noopener"],
+        [
+          "/view/fixture/nested/details/?fragment=section",
+          "_blank",
+          "noopener",
+        ],
       ]);
-    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
   });
 
   await test.step("named target is opened at its canonical view URL", async () => {
-    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await page.goto(`${navigation.url}/view/fixture/nested/home/`);
     await page.evaluate(() => {
       const shell = window as typeof window & {
         __moklyOpenCalls?: unknown[][];
@@ -124,7 +128,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
       )
       .toEqual([
         [
-          "/view/screens/details.html?fragment=section",
+          "/view/fixture/nested/details/?fragment=section",
           "DetailsFrame",
           "noopener",
         ],
@@ -132,7 +136,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
   });
 
   for (const selector of ["#top-link", "#parent-link"]) {
-    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await page.goto(`${navigation.url}/view/fixture/nested/home/`);
     await page
       .frameLocator(".mbk-frame-mobile iframe")
       .locator(selector)
@@ -144,7 +148,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
 test("sandboxed direct and nested content cannot escape or invoke parent enhancement", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "sandbox",
@@ -220,7 +224,7 @@ test("sandboxed direct and nested content cannot escape or invoke parent enhance
 test("an unowned frame document stays frame-owned during shell replacement", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   await frame.locator("#unowned-details-link").click();
   await expect(frame.locator("#extra-link")).toBeVisible();
@@ -233,11 +237,14 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
-    reportRequest();
-    await requestReleased;
-    await route.continue();
-  });
+  await page.route(
+    "**/static/fixture/nested/home/index.mobile.dark.html",
+    async (route) => {
+      reportRequest();
+      await requestReleased;
+      await route.continue();
+    },
+  );
 
   try {
     await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
@@ -272,7 +279,7 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
     });
     expect(defaultPrevented).toBe(false);
     await page.waitForTimeout(100);
-    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
 
     releaseRequest();
@@ -293,27 +300,29 @@ test("JavaScript-disabled Browse keeps portable links inside the sandbox", async
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(
-    `${navigation.url}/view/screens/details.html?fragment=section`,
+    `${navigation.url}/view/fixture/nested/details/?fragment=section`,
   );
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "src",
-    /details\.mobile\.html#section$/,
+    /details\/index\.mobile\.html#section$/,
   );
 
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await page
     .frameLocator(".mbk-frame-mobile iframe")
     .locator("#mock-link")
     .click();
 
-  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+  await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await expect
     .poll(() =>
       page
         .frames()
         .some((candidate) =>
-          candidate.url().endsWith("details.mobile.html#section"),
+          candidate
+            .url()
+            .endsWith("/fixture/nested/details/index.mobile.html#section"),
         ),
     )
     .toBe(true);
@@ -323,7 +332,7 @@ test("JavaScript-disabled Browse keeps portable links inside the sandbox", async
 
 async function expectDestination(page: Page): Promise<void> {
   await expect(page).toHaveURL(
-    /\/view\/screens\/details\.html\?fragment=section$/,
+    /\/view\/fixture\/nested\/details\/\?fragment=section$/,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
 }

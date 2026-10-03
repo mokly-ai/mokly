@@ -10,9 +10,9 @@ export interface ManifestEntryBase {
   /** Explicit author declarations; source attribution is derived separately. */
   declaredDependencies: readonly string[];
   description: string;
-  id: string;
-  kind: "screen" | "page" | "use-case" | "component";
-  navPath: readonly string[];
+  path: string;
+  kind: "screen" | "page" | "document" | "use-case" | "component";
+  movedFrom?: string;
   rationale?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
@@ -27,8 +27,8 @@ export interface ManifestScreen extends ManifestEntryBase {
   kind: "screen";
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
-  useCaseIds: readonly string[];
-  /** Parent screen id, present only when this screen is a variant. */
+  useCasePaths: readonly string[];
+  /** Parent screen path, present only when this screen is a variant. */
   variantOf?: string;
 }
 
@@ -41,7 +41,11 @@ export interface ManifestPage extends ManifestEntryBase {
 /** Serializable use-case manifest entry. */
 export interface ManifestUseCase extends ManifestEntryBase {
   kind: "use-case";
-  steps: readonly { description?: string; screenId: string; title?: string }[];
+  steps: readonly {
+    description?: string;
+    screenPath: string;
+    title?: string;
+  }[];
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
 }
@@ -49,21 +53,23 @@ export interface ManifestUseCase extends ManifestEntryBase {
 /** Any entry emitted by the current manifest writer. */
 export type ManifestEntry =
   | ManifestScreen
+  | ManifestDocument
   | ManifestPage
   | ManifestUseCase
   | ManifestComponent
   | ManifestComponentVariant;
 
 /** Current canonical identity-only manifest. */
-export interface ManifestV7 {
+export interface ManifestV8 {
   entries: readonly ManifestEntry[];
   generatedBy: "mokly";
-  schemaVersion: 7;
+  schemaVersion: 8;
+  folders: readonly ManifestFolder[];
   sourceFiles: readonly string[];
 }
 
-/** A baseline accepted by the historical boundary is exactly manifest v7. */
-export type HistoricalManifest = ManifestV7;
+/** A baseline accepted by the historical boundary is exactly manifest v8. */
+export type HistoricalManifest = ManifestV8;
 
 /** Historical names express caller intent without introducing a second shape. */
 export type HistoricalManifestEntry = ManifestEntry;
@@ -71,5 +77,22 @@ export type HistoricalManifestScreen = ManifestScreen;
 export type HistoricalManifestPage = ManifestPage;
 export type HistoricalManifestUseCase = ManifestUseCase;
 
-/** Current and historical comparison inputs share the exact v7 contract. */
-export type Manifest = ManifestV7;
+/** Current and historical comparison inputs share the exact v8 contract. */
+export type Manifest = ManifestV8;
+
+/** Reserved whole-document entry rendered from Markdown. */
+export interface ManifestDocument extends ManifestEntryBase {
+  kind: "document";
+  colorSchemes: readonly ColorScheme[];
+  resources: readonly string[];
+  tags?: readonly string[];
+}
+/** Authored folder metadata; resolved titles remain derived. */
+export interface ManifestFolder {
+  path: string;
+  title?: string;
+  order?: readonly string[];
+  hidden?: boolean;
+  exclude?: readonly string[];
+  sourcePath: string;
+}

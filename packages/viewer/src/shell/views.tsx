@@ -61,7 +61,7 @@ function TargetView(props: {
   const removed =
     target.kind === "entry" &&
     props.catalogue.removedEntries.some(
-      ({ entry }) => entry.id === target.entry.id,
+      ({ entry }) => entry.path === target.entry.path,
     );
   const preview = removed
     ? removedPreviewData(props.catalogue, props.context, target.entry)
@@ -158,7 +158,7 @@ function activeIdForView(view: ShellView): string | undefined {
   if (view.kind !== "target") {
     return undefined;
   }
-  return view.target.entry.id;
+  return view.target.entry.path;
 }
 
 /** The browser document title for a shell view. */
@@ -181,7 +181,7 @@ export function ShellMain(props: {
   const mainId = useShellIdentifier("mb-main");
   const activeId = activeIdForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
-    ({ entry }) => entry.id === activeId,
+    ({ entry }) => entry.path === activeId,
   );
   return (
     <main
@@ -211,7 +211,7 @@ export function ShellMain(props: {
               props.view.target.entry.kind === "component" &&
               isManifestComponentVariant(props.view.target.entry)
                 ? props.view.target.entry.variantOf
-                : props.view.target.entry.id
+                : props.view.target.entry.path
             }
           />
         ) : (

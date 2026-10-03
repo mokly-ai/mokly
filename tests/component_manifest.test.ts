@@ -10,7 +10,7 @@ import type {
   ComponentViewRecord,
 } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
-  ManifestV7,
+  ManifestV8,
   ManifestScreen,
 } from "../packages/viewer/dist/registry/types.js";
 
@@ -23,26 +23,26 @@ type ComponentManifestScreen = ManifestScreen & {
 
 async function example(t: {
   after: (fn: () => Promise<void>) => void;
-}): Promise<ManifestV7> {
+}): Promise<ManifestV8> {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(result.manifest.schemaVersion, 7);
+  assert.equal(result.manifest.schemaVersion, 8);
   return result.manifest;
 }
 
-test("manifest v7 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
+test("manifest v8 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
   const original = await example(t);
   const edits: readonly [
     string,
     (
-      value: ManifestV7,
+      value: ManifestV8,
       screen: ComponentManifestScreen,
       component: ManifestComponent,
       variant: ManifestComponentVariant,
     ) => void,
   ][] = [
-    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 8 })],
+    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 99 })],
     [
       "unknown component field",
       (_v, _s, component) => Object.assign(component, { unexpected: true }),

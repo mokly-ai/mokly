@@ -72,7 +72,7 @@ export function WorkspaceProvider({
       data?.viewStates,
       selection?.comparisonEligible,
       variant?.status,
-      variant?.value.id,
+      variant?.value.path,
       viewport,
     ],
   );
@@ -85,7 +85,7 @@ export function WorkspaceProvider({
             selectedChangedViews(
               workspaceEvidenceEntry(workspace.data),
               workspace.data.changedViews,
-              variant?.value.id,
+              variant?.value.path,
             ),
             viewport,
             resolvedView.colorScheme,

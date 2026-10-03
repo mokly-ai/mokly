@@ -19,7 +19,7 @@ export interface ShellFrameIdentity {
   colorScheme?: "dark" | "light";
   entryId: string;
   stepIndex?: number;
-  variantId?: string;
+  variantPath?: string;
   viewport?: "desktop" | "mobile";
 }
 

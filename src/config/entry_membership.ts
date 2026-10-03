@@ -6,15 +6,19 @@ import { isInside, projectRealPath } from "./paths.js";
 import type { ResolvedConfig } from "./types.js";
 
 const lexicalIndexes = new WeakMap<readonly string[], ReadonlySet<string>>();
-const physicalIndexes = new WeakMap<readonly string[], ReadonlySet<string>>();
+const physicalIndexes = new WeakMap<
+  readonly string[],
+  {
+    modules: readonly string[];
+    paths: ReadonlyMap<string, string>;
+    files: ReadonlySet<string>;
+  }
+>();
 const rootIndexes = new WeakMap<readonly string[], readonly string[]>();
 
 /**
- * Return whether a path is authored entry source: a resolved entry module, or
- * any file beneath a configured `entriesDir` shorthand directory. The lexical
- * form touches no filesystem state; the physical form also matches through
- * the projected real paths of the shorthand directory or each entry module,
- * for callers that pass an already-projected candidate.
+ * Match only the resolved source set. Physical membership also accepts projected
+ * real paths so symlink aliases cannot expose authored files as public resources.
  */
 export function isAuthoredEntryPath(
   candidate: string,
@@ -22,20 +26,12 @@ export function isAuthoredEntryPath(
   physical = false,
 ): boolean {
   const absolute = path.resolve(candidate);
-  if (config.entriesDir !== undefined) {
-    if (isInside(config.entriesDir, absolute)) return true;
-    if (!physical) return false;
-    try {
-      return isInside(projectRealPath(config.entriesDir), absolute);
-    } catch {
-      return false;
-    }
-  }
-  const modules = config.entryModules;
+  const modules =
+    config.protectedFiles ?? config.resolvedFiles ?? config.entryModules;
   if (!modules) return false;
-  return (physical ? physicalIndex(modules) : lexicalIndex(modules)).has(
-    absolute,
-  );
+  return (
+    physical ? physicalIndex(config, modules).files : lexicalIndex(modules)
+  ).has(absolute);
 }
 
 /** Require registry attribution to name a resolved entry or inventoried input. */
@@ -54,8 +50,8 @@ export function isResolvedEntryOrInventoriedSource(
 
 /** Directories protected as authored entry roots for output and export boundaries. */
 export function entryModuleRoots(config: ResolvedConfig): readonly string[] {
-  if (config.entriesDir !== undefined) return [config.entriesDir];
-  const modules = config.entryModules;
+  const modules =
+    config.protectedFiles ?? config.resolvedFiles ?? config.entryModules;
   if (!modules) return [];
   let roots = rootIndexes.get(modules);
   if (!roots) {
@@ -74,13 +70,28 @@ function lexicalIndex(modules: readonly string[]): ReadonlySet<string> {
   return index;
 }
 
-function physicalIndex(modules: readonly string[]): ReadonlySet<string> {
-  let index = physicalIndexes.get(modules);
-  if (!index) {
-    index = new Set(
-      modules.flatMap((module) => [module, projectRealPath(module)]),
+/** Share matched-file projections with the full source inventory in this generation. */
+export function projectedEntryPaths(
+  config: ResolvedConfig,
+): ReadonlyMap<string, string> {
+  const modules =
+    config.protectedFiles ?? config.resolvedFiles ?? config.entryModules;
+  return modules ? physicalIndex(config, modules).paths : new Map();
+}
+
+function physicalIndex(config: ResolvedConfig, modules: readonly string[]) {
+  const key = config.sourceFiles ?? modules;
+  let index = physicalIndexes.get(key);
+  if (!index || index.modules !== modules) {
+    const paths = new Map(
+      modules.map((module) => [module, projectRealPath(module)]),
     );
-    physicalIndexes.set(modules, index);
+    index = {
+      modules,
+      paths,
+      files: new Set([...paths.keys(), ...paths.values()]),
+    };
+    physicalIndexes.set(key, index);
   }
   return index;
 }

@@ -18,9 +18,9 @@ for (const mobile of [false, true]) {
       reparentedEntrySource("screens") +
       `
       for (let i = 0; i < 40; i++) mockups.push(defineScreen({
-        id: "extra-" + i, title: "Extra " + i, description: "Scroll fixture",
-        route: "extra/" + i + ".html", mobile: <main>Extra {i}</main>,
-        desktop: <main>Extra {i}</main>, useCaseIds: [], dependencies: [], relatedDocs: []
+        path: "extra-" + i, title: "Extra " + i, description: "Scroll fixture",
+        mobile: <main>Extra {i}</main>,
+        desktop: <main>Extra {i}</main>, useCasePaths: [], dependencies: [], relatedDocs: []
       }));
     `;
     const fixture = await createFixture(source);
@@ -39,7 +39,7 @@ for (const mobile of [false, true]) {
       );
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      await page.goto(`${server.url}/view/screens/home.html`);
+      await page.goto(`${server.url}/view/fixture/screens/home/`);
       const frame = page.frameLocator(".mbk-frame-mobile iframe");
       await expect(frame.locator("#home-mobile")).toBeVisible();
       await frame
@@ -47,10 +47,10 @@ for (const mobile of [false, true]) {
         .evaluate((body) => body.setAttribute("data-test-retained", "true"));
       if (mobile) await page.locator("[data-mokly-menu]").click();
       await page
-        .locator('[data-nav-folder="folder:Fixture/Archive"] > summary')
+        .locator('[data-nav-folder="folder:fixture/archive"] > summary')
         .click();
       await page
-        .locator('[data-nav-folder="folder:Fixture/Screens"] > summary')
+        .locator('[data-nav-folder="folder:fixture/screens"] > summary')
         .click();
       await page.locator('[data-nav-section="pages"] > summary').click();
       await page.locator("[data-mokly-nav-scroll]").evaluate((tree) => {
@@ -78,7 +78,7 @@ for (const mobile of [false, true]) {
       await expect(page.locator('[data-filter="all"]')).toBeFocused();
       server.publishUpdate({
         kind: "evidence",
-        changedIds: ["details"],
+        changedEntries: ["fixture/screens/details"],
         changesStatus: "ready",
       });
       await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
@@ -98,7 +98,7 @@ for (const mobile of [false, true]) {
       const searched = await navigationState(page);
       server.publishUpdate({
         kind: "evidence",
-        changedIds: [],
+        changedEntries: [],
         changesStatus: "ready",
       });
       await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");

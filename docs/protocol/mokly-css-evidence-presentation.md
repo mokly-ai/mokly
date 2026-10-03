@@ -3,8 +3,7 @@
 ## Delivery Status
 
 Implemented; this split records the existing shell projection and corrected
-field names without changing behavior. Evidence is keyed by kind and id today;
-the [path identity plan](../../plans/path-identity.md) keys it by path.
+field names without changing behavior. Evidence is keyed by kind and path.
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact

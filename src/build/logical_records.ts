@@ -116,7 +116,7 @@ export function validateLogicalFragments(
   config: ResolvedConfig,
   anchorsFor?: (route: string) => ReadonlySet<string> | undefined,
 ): void {
-  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
   const anchorIndex = new Map<string, ReadonlySet<string>>();
   const anchors =
     anchorsFor ??
@@ -132,16 +132,16 @@ export function validateLogicalFragments(
   for (const record of records) {
     const fragment = record.destination.fragment;
     if (!fragment) continue;
-    const key = `${record.destination.id}#${fragment}`;
+    const key = `${record.destination.path}#${fragment}`;
     if (checked.has(key)) continue;
     checked.add(key);
-    const entry = byId.get(record.destination.id);
+    const entry = byPath.get(record.destination.path);
     if (entry?.kind === "page") {
-      const route = entryRoute("page", entry.id);
+      const route = entryRoute(entry.path);
       if (!anchors(route)?.has(fragment))
         throw new MoklyError(
           "build-invalid",
-          `${record.sourceRoute} logical fragment ${fragment} for ${entry.id} is missing from page ${route}`,
+          `${record.sourceRoute} logical fragment ${fragment} for ${entry.path} is missing from page ${route}`,
         );
       continue;
     }
@@ -155,19 +155,19 @@ export function validateLogicalFragments(
                 (candidate) =>
                   candidate.kind === "component" &&
                   isComponentVariantDefinition(candidate) &&
-                  candidate.variantOf === entry.id,
+                  candidate.variantOf === entry.path,
               )
           : entry?.kind === "use-case" && entry.steps[0]
-            ? byId.get(entry.steps[0].screenId)
+            ? byPath.get(entry.steps[0].screenPath)
             : undefined;
     if (screen?.kind !== "screen" && screen?.kind !== "component") continue;
     for (const viewport of VIEWPORTS) {
       for (const scheme of effectiveColorSchemes(screen, config.colorSchemes)) {
-        const route = viewRoute(screen.kind, screen.id, viewport, scheme);
+        const route = viewRoute(screen.path, viewport, scheme);
         if (!anchors(route)?.has(fragment)) {
           throw new MoklyError(
             "build-invalid",
-            `${record.sourceRoute} logical fragment ${fragment} for ${record.destination.id} is missing from ${viewport} ${scheme} view ${route}`,
+            `${record.sourceRoute} logical fragment ${fragment} for ${record.destination.path} is missing from ${viewport} ${scheme} view ${route}`,
           );
         }
       }

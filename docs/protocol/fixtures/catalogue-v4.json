@@ -8,7 +8,9 @@
         "kind": "unmodified",
         "status": "ready"
       },
-      "colorSchemes": ["light"],
+      "colorSchemes": [
+        "light"
+      ],
       "controls": {
         "label": {
           "kind": "text"
@@ -45,7 +47,9 @@
         "kind": "unmodified",
         "status": "ready"
       },
-      "colorSchemes": ["light"],
+      "colorSchemes": [
+        "light"
+      ],
       "comparison": {
         "status": "unavailable"
       },
@@ -61,7 +65,10 @@
       "kind": "component",
       "path": "components/action/default",
       "props": {
-        "label": ["string", "Continue"]
+        "label": [
+          "string",
+          "Continue"
+        ]
       },
       "suppliedSlots": [],
       "tags": [],
@@ -109,7 +116,9 @@
         "kind": "added",
         "status": "ready"
       },
-      "colorSchemes": ["light"],
+      "colorSchemes": [
+        "light"
+      ],
       "details": {
         "dependencies": [
           "specs/product/README.md",
@@ -137,7 +146,9 @@
         "status": "ready"
       },
       "details": {
-        "dependencies": ["specs/guide.mockup.tsx"],
+        "dependencies": [
+          "specs/guide.mockup.tsx"
+        ],
         "description": "The printable guide.",
         "relatedDocs": [],
         "sourcePath": "specs/guide.mockup.tsx"
@@ -157,7 +168,9 @@
           "status": "ready"
         },
         "details": {
-          "dependencies": ["specs/product/removed-page.mockup.tsx"],
+          "dependencies": [
+            "specs/product/removed-page.mockup.tsx"
+          ],
           "description": "A page that no longer exists.",
           "relatedDocs": [],
           "sourcePath": "specs/product/removed-page.mockup.tsx"
@@ -167,7 +180,9 @@
         "tags": [],
         "title": "Removed page"
       },
-      "folderTitles": ["Product overview"],
+      "folderTitles": [
+        "Product overview"
+      ],
       "preview": {
         "kind": "page"
       },
@@ -180,9 +195,13 @@
           "kind": "removed",
           "status": "ready"
         },
-        "colorSchemes": ["light"],
+        "colorSchemes": [
+          "light"
+        ],
         "details": {
-          "dependencies": ["specs/product/removed-screen.mockup.tsx"],
+          "dependencies": [
+            "specs/product/removed-screen.mockup.tsx"
+          ],
           "description": "A screen that no longer exists.",
           "relatedDocs": [],
           "sourcePath": "specs/product/removed-screen.mockup.tsx"
@@ -225,7 +244,9 @@
           }
         ]
       },
-      "folderTitles": ["Product overview"],
+      "folderTitles": [
+        "Product overview"
+      ],
       "preview": {
         "kind": "screen"
       },
@@ -244,9 +265,13 @@
         "kind": "unmodified",
         "status": "ready"
       },
-      "colorSchemes": ["light"],
+      "colorSchemes": [
+        "light"
+      ],
       "details": {
-        "dependencies": ["specs/product/browse/details.mockup.tsx"],
+        "dependencies": [
+          "specs/product/browse/details.mockup.tsx"
+        ],
         "description": "Details for one item.",
         "relatedDocs": [],
         "sourcePath": "specs/product/browse/details.mockup.tsx"
@@ -256,7 +281,9 @@
       "previousPath": "product/details",
       "tags": [],
       "title": "Details",
-      "useCasePaths": ["tour"],
+      "useCasePaths": [
+        "tour"
+      ],
       "views": [
         {
           "colorScheme": "light",
@@ -296,18 +323,26 @@
         "kind": "changed",
         "status": "ready"
       },
-      "colorSchemes": ["light"],
+      "colorSchemes": [
+        "light"
+      ],
       "details": {
-        "dependencies": ["specs/product/browse/home.mockup.tsx"],
+        "dependencies": [
+          "specs/product/browse/home.mockup.tsx"
+        ],
         "description": "The landing screen.",
         "relatedDocs": [],
         "sourcePath": "specs/product/browse/home.mockup.tsx"
       },
       "kind": "screen",
       "path": "product/browse/home",
-      "tags": ["landing"],
+      "tags": [
+        "landing"
+      ],
       "title": "Home",
-      "useCasePaths": ["tour"],
+      "useCasePaths": [
+        "tour"
+      ],
       "views": [
         {
           "colorScheme": "light",
@@ -347,16 +382,22 @@
         "kind": "unmodified",
         "status": "ready"
       },
-      "colorSchemes": ["light"],
+      "colorSchemes": [
+        "light"
+      ],
       "details": {
-        "dependencies": ["specs/product/browse/home.mockup.tsx"],
+        "dependencies": [
+          "specs/product/browse/home.mockup.tsx"
+        ],
         "description": "The landing screen with no items.",
         "relatedDocs": [],
         "sourcePath": "specs/product/browse/home.mockup.tsx"
       },
       "kind": "screen",
       "path": "product/browse/home/empty",
-      "tags": ["landing"],
+      "tags": [
+        "landing"
+      ],
       "title": "Empty",
       "useCasePaths": [],
       "variantOf": "product/browse/home",
@@ -462,7 +503,9 @@
         "status": "ready"
       },
       "details": {
-        "dependencies": ["specs/tour.mockup.tsx"],
+        "dependencies": [
+          "specs/tour.mockup.tsx"
+        ],
         "description": "A walk through the product.",
         "relatedDocs": [],
         "sourcePath": "specs/tour.mockup.tsx"

@@ -46,7 +46,7 @@ export function WorkspaceProps({
     return <p>Select a component instance to see its supplied props.</p>;
   const component = selection.instance
     ? data.components.find(
-        (item) => item.id === selection.instance?.componentId,
+        (item) => item.path === selection.instance?.componentId,
       )
     : undefined;
   const slots = selection.instance
@@ -71,7 +71,7 @@ export function WorkspaceProps({
             {` · ${selection.instance.id}`}
           </h3>
           {component ? (
-            <a href={viewHref("component", component.id)}>Open component</a>
+            <a href={viewHref(component.path)}>Open component</a>
           ) : null}
         </>
       ) : null}

@@ -68,7 +68,7 @@ test("comparisons generate on demand and retain immutable snapshots after refres
   const review = countingReview(path.join(fixture.root, ".review"));
   const server = await start(fixture, review);
   fixture.beforeRemove(() => server.close());
-  await fetch(`${server.url}/view/screens/home.html`);
+  await fetch(`${server.url}/view/home/`);
   assert.equal(review.generations, 0);
   assert.equal((await fetch(`${server.url}/review`)).status, 404);
   const first = await fetch(`${server.url}${endpoint}`);
@@ -190,9 +190,7 @@ test("static catalogue servers omit unavailable diff controls and Review routes"
   t.after(() => removeFixture(fixture));
   const server = await start(fixture);
   fixture.beforeRemove(() => server.close());
-  const html = await (
-    await fetch(`${server.url}/view/screens/home.html`)
-  ).text();
+  const html = await (await fetch(`${server.url}/view/home/`)).text();
   assert.doesNotMatch(html, /data-diff-mode|href="\/review"/);
   assert.equal((await fetch(`${server.url}${endpoint}`)).status, 404);
   assert.equal((await fetch(`${server.url}/review`)).status, 404);

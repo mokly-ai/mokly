@@ -38,19 +38,19 @@ function comparison(
   views: readonly ViewReview[],
   generation = GENERATION,
 ): LoadedComparison {
-  const address = { id: "home", title: "Home" };
+  const address = { path: "home", title: "Home" };
   const result: ReviewResult = {
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 4,
+    schemaVersion: 5 as const,
     screens: [
       {
         after: address,
         before: address,
         dependencies: [],
-        id: "home",
+        path: "home",
         sharedImpact: [],
         state: "changed",
         title: "Home",
@@ -110,10 +110,10 @@ test("selected views resolve both sides beneath the comparison generation", () =
     "home",
   );
   assert.deepEqual(selectedComparisonDocuments(both), [
-    `${GENERATION}snapshots/before/screens/home.mobile.html`,
-    `${GENERATION}snapshots/after/screens/home.mobile.html`,
-    `${GENERATION}snapshots/before/screens/home.desktop.html`,
-    `${GENERATION}snapshots/after/screens/home.desktop.html`,
+    `${GENERATION}snapshots/before/home/index.mobile.html`,
+    `${GENERATION}snapshots/after/home/index.mobile.html`,
+    `${GENERATION}snapshots/before/home/index.desktop.html`,
+    `${GENERATION}snapshots/after/home/index.desktop.html`,
   ]);
   const dark = selectedComparisonViews(
     loaded,
@@ -123,7 +123,7 @@ test("selected views resolve both sides beneath the comparison generation", () =
   );
   assert.equal(dark?.[0]?.mode, "side");
   assert.deepEqual(selectedComparisonDocuments(dark), [
-    `${GENERATION}snapshots/before/screens/home.desktop.dark.html`,
+    `${GENERATION}snapshots/before/home/index.desktop.dark.html`,
   ]);
   const fallback = selectedComparisonViews(
     loaded,

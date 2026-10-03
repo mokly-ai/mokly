@@ -54,12 +54,12 @@ export function EntryDetailsBody(props: {
           <ChangedViewsRow views={props.changedViews ?? []} />
         ) : null}
         {props.catalogue.removedEntries.find(
-          (removed) => removed.entry.id === entry.id,
+          (removed) => removed.entry.path === entry.path,
         ) ? (
           <MetaRow label="Location">
             {props.catalogue.removedEntries
-              .find((removed) => removed.entry.id === entry.id)
-              ?.entry.navPath.join(" › ")}
+              .find((removed) => removed.entry.path === entry.path)
+              ?.folderTitles.join(" › ")}
           </MetaRow>
         ) : null}
         <VariantOfChip catalogue={props.catalogue} entry={entry} />
@@ -78,7 +78,7 @@ export function EntryDetailsBody(props: {
         {entry.kind === "screen" ? (
           <UsedByChips
             catalogue={props.catalogue}
-            useCaseIds={entry.useCaseIds}
+            useCasePaths={entry.useCasePaths}
           />
         ) : null}
       </div>

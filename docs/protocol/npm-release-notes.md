@@ -190,3 +190,9 @@ opaque identity.
 
 Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
 the applicable upgrades above; the release PR owns versions and changelogs.
+
+The path identity change also removes the obsolete nested input types
+`NestedFolderMarker`, `NestedPageInput`, and `NestedScreenInput` from the authoring
+package, and `ViewHrefIdentity`, `navConflictKey`, `navPathKey`, and `validNavLabel`
+from the viewer data package. The public replacement is the path model described
+in [paths](./mokly-paths.md) and [entry modules](./mokly-entry-modules.md).

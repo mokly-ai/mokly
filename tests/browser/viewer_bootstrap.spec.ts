@@ -20,7 +20,7 @@ test("reload recovery starts without fetching another catalogue snapshot", async
     return catalogueAllowed ? route.continue() : route.abort();
   });
   try {
-    await page.goto(`${fixture.server.url}/view/screens/home.html`);
+    await page.goto(`${fixture.server.url}/view/fixture/screens/home/`);
     await expect.poll(() => connected).toBe(true);
     expect(catalogueRequests).toBe(0);
     await page.locator("html").evaluate((root) => {
@@ -74,7 +74,7 @@ test("early native disclosures survive delayed hydration and recovery", async ({
         version: 1,
         browse: {
           changedOnly: false,
-          disclosures: { "folder:pages:Fixture/Archive": false },
+          disclosures: { "folder:pages:fixture/archive": false },
           colorScheme: "light",
           detailsOpen: false,
           drawerOpen: false,
@@ -88,12 +88,12 @@ test("early native disclosures survive delayed hydration and recovery", async ({
     );
   });
   try {
-    await page.goto(`${fixture.server.url}/view/screens/home.html`, {
+    await page.goto(`${fixture.server.url}/view/fixture/screens/home/`, {
       waitUntil: "commit",
     });
     await requested;
-    const screens = page.locator('[data-nav-folder="folder:Fixture/Screens"]');
-    const archive = page.locator('[data-nav-folder="folder:Fixture/Archive"]');
+    const screens = page.locator('[data-nav-folder="folder:fixture/screens"]');
+    const archive = page.locator('[data-nav-folder="folder:fixture/archive"]');
     await screens.locator("summary").click();
     await archive.locator("summary").click();
     await expect(screens).not.toHaveAttribute("open", "");
@@ -106,8 +106,8 @@ test("early native disclosures survive delayed hydration and recovery", async ({
     await expect
       .poll(() => readDisclosureStorage(page))
       .toMatchObject({
-        "folder:pages:Fixture/Screens": false,
-        "folder:pages:Fixture/Archive": true,
+        "folder:pages:fixture/screens": false,
+        "folder:pages:fixture/archive": true,
       });
     await archive.locator("summary").click();
     await expect(archive).not.toHaveAttribute("open", "");

@@ -3,7 +3,6 @@ import { parse } from "parse5";
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import {
   logicalMarker,
-  parseLogicalTarget,
   type LogicalTarget,
   duplicateReservedAttributeName,
   type HtmlSourceLocation,
@@ -12,6 +11,7 @@ import {
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { MoklyError } from "../errors.js";
 
+import { parseAuthoredLink, resolveAuthoredLink } from "./authored_links.js";
 import {
   logicalNamespace,
   nativeLinkClass,
@@ -56,7 +56,7 @@ export function rewriteMockLinks(
   sourceRoute: string,
   viewport: Viewport,
   colorScheme: ColorScheme,
-  byId: ReadonlyMap<string, ResolvedRegistryEntry>,
+  byPath: ReadonlyMap<string, ResolvedRegistryEntry>,
   catalogueSchemes: readonly ColorScheme[],
 ): RewrittenLogicalLinks {
   const replacements: Replacement[] = [];
@@ -91,14 +91,19 @@ export function rewriteMockLinks(
         return [];
       }
       if (!attribute.value.startsWith("mock:")) return [];
-      const destination = parseLogicalTarget(attribute.value);
+      const destination = parseAuthoredLink(attribute.value);
       if (!destination) {
         throw invalid(
           sourceRoute,
           `has malformed logical link: ${attribute.value}`,
         );
       }
-      return [{ attribute, destination }];
+      return [
+        {
+          attribute,
+          destination: resolveAuthoredLink(destination, sourceRoute, byPath),
+        },
+      ];
     });
     if (logicalAttributes.length === 0) return;
     const destination = oneDestination(sourceRoute, logicalAttributes);
@@ -113,21 +118,18 @@ export function rewriteMockLinks(
         "has a logical href outside a native HTML or SVG link",
       );
     }
-    const target = byId.get(destination.id);
-    if (!target) {
-      throw invalid(sourceRoute, `links to unknown id: ${destination.id}`);
-    }
+    const target = byPath.get(destination.path)!;
     const targetRoute = artifactRouteForEntry(
       target,
       viewport,
       colorScheme,
-      byId,
+      byPath,
       catalogueSchemes,
     );
     if (!targetRoute) {
       throw invalid(
         sourceRoute,
-        `use case ${destination.id} has no screen as its first step`,
+        `use case ${destination.path} has no screen as its first step`,
       );
     }
     const linked = portableMockTarget(sourceRoute, targetRoute, destination);
@@ -195,12 +197,12 @@ function attributeReplacement(
 ): Replacement {
   const location = node.sourceCodeLocation?.attrs?.[name];
   if (!location)
-    throw invalid(sourceRoute, "has an id link without source location");
+    throw invalid(sourceRoute, "has a logical link without source location");
   const range = attributeValueRange(
     html.slice(location.startOffset, location.endOffset),
   );
   if (!range)
-    throw invalid(sourceRoute, "has an id link that cannot be rewritten");
+    throw invalid(sourceRoute, "has a logical link that cannot be rewritten");
   return {
     endOffset: location.startOffset + range.endOffset,
     startOffset: location.startOffset + range.startOffset,

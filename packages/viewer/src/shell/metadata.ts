@@ -1,21 +1,23 @@
 import type {
   HistoricalManifest,
   HistoricalManifestEntry,
-  ManifestV7,
+  ManifestV8,
 } from "../registry/types.js";
-import type { ReviewResultV4 } from "../review/component_types.js";
+import type { ReviewResultV5 } from "../review/component_types.js";
 import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
 
 export type CatalogueMetadata =
-  | ManifestV7
+  | ManifestV8
   | {
       schemaVersion: "live-index-1";
-      entries: ManifestV7["entries"];
+      entries: ManifestV8["entries"];
+      folders: ManifestV8["folders"];
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };
 export interface RemovedEntrySnapshot {
-  entry: HistoricalManifestEntry | ManifestV7["entries"][number];
+  entry: HistoricalManifestEntry | ManifestV8["entries"][number];
+  folderTitles: readonly string[];
   snapshotId?: string;
 }
 /**
@@ -24,12 +26,12 @@ export interface RemovedEntrySnapshot {
  * it without depending on the build.
  */
 export interface ScreenViewChanges {
-  id: string;
+  path: string;
   views: readonly Pick<ViewReview, "colorScheme" | "state" | "viewport">[];
 }
 export interface ShellEvidence {
   baseline: HistoricalManifest;
-  result?: ReviewResultV4;
+  result?: ReviewResultV5;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
 }

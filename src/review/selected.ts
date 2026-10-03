@@ -86,7 +86,7 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
     for (const side of ["before", "after"] as const) {
       const artifacts = selectedArtifacts(
         side === "before" ? source.before : source.after,
-        selection.id,
+        selection.path,
         side,
       );
       const routes = new Set(artifacts.map(({ route }) => route));
@@ -128,7 +128,7 @@ function selectedArtifacts(
 ) {
   const entry = manifest.entries.find(
     (candidate) =>
-      candidate.id === id &&
+      candidate.path === id &&
       (candidate.kind === "screen" ||
         (candidate.kind === "component" &&
           isManifestComponentVariant(candidate))),
@@ -139,8 +139,7 @@ function selectedArtifacts(
     route: view.path,
     snapshot: snapshotViewPath(
       side,
-      entry.kind,
-      entry.id,
+      entry.path,
       view.viewport,
       view.colorScheme,
     ),

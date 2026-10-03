@@ -2,8 +2,10 @@
 
 ## Delivery Status
 
-Approved contract. Current builds derive folders from `navPath` labels; the
-[path identity plan](../../plans/path-identity.md) delivers this contract.
+Folder records, title resolution, order, exclusions and path trees are implemented.
+The current shell keeps its existing Pages presentation; the final row and
+breadcrumb interactions below remain planned in the
+[path identity plan](../../plans/path-identity.md).
 
 A folder is a path with entries below it. It has no definition of its own, no
 status, and no Changes row. This contract owns the optional folder record that
@@ -20,7 +22,7 @@ A folder record describes exactly one folder, keyed by its path:
 | `path`    | `string`            | The folder's path. Required in code; implied by the directory file. |
 | `title`   | `string`            | Navigation title. Nonempty, no leading or trailing whitespace.      |
 | `order`   | `readonly string[]` | Child slugs in display order; `...` stands for the unnamed rest.    |
-| `hidden`  | `boolean`           | Removes the folder and its descendants from navigation and search.  |
+| `hidden`  | `boolean`           | Hides the folder and descendants in All/search; Changes keeps them. |
 | `exclude` | `readonly string[]` | Directory files only: safe relative globs of files to skip.         |
 
 Every field except `path` is optional. Unknown fields are rejected. A record
@@ -68,21 +70,37 @@ and transparent directories apply:
 The file is strict JSON with the fields above and no `path`. `exclude` globs
 use the safe relative glob grammar of `publicExclude` and match repository
 files relative to the directory; a matched file is neither an entry nor a
-document, though it stays an ordinary source file if a module imports it. A
+document. A file matched by a root's `files` globs stays a protected, watched
+source input even when excluded and never imported. Exclusions match whole file
+paths only: `drafts/**` excludes files below `drafts`, while `drafts` does not
+exclude that directory. A
 `_folder.json` directly inside a root with no prefix describes the catalogue
 top level and may contain only `order` and `exclude`. The file is never an
 entry and never a public file.
 
+A directory record must belong to exactly one root. A `_folder.json` found
+inside two root directories fails with the same `config-invalid` overlap
+message as other files, even when their entry globs are disjoint; see
+[roots validation](./mokly-configuration.md#roots). No root is selected silently.
+A vanished record does not discard its directory's entries. Other filesystem
+failures follow [root discovery](./mokly-root-discovery.md#traversal-and-races).
+
 ## Titles
 
 Mokly selects a folder's title with the first rule that applies:
+
+For a folder whose own page is a screen or component, the title is always that
+entry's title. Its record cannot set `title`; `order` and `hidden` remain valid.
+The entry row and every breadcrumb for this folder use that same title, including
+breadcrumbs for variants and ordinary descendants. For all other folders:
 
 1. the record's `title`;
 2. the title of the folder's own page, when the folder has an index entry or
    index document under the [index rule](./mokly-paths.md#derivation);
 3. the slug, with hyphens and underscores replaced by spaces and the first
    character uppercased; `account-billing` becomes `Account billing` and `API`
-   stays `API`.
+   stays `API`. If this conversion is blank (for example `_` or `---`), use
+   the unchanged slug so every valid folder has a nonempty title.
 
 Titles are free text and may repeat across folders. Breadcrumbs, the tree,
 search, and details use the resolved title; nothing uses a title as a key.
@@ -106,9 +124,12 @@ the same way; each section applies the order to the children it shows.
 
 ## Hidden Folders
 
-`hidden: true` removes the folder, its entries, and every descendant from the
-navigation tree and from search results in both sections. Their URLs, links to
-them, their generated files, and their Changes rows are unaffected. A hidden
+`hidden: true` stays on the folder node in the public tree, with all its children.
+A screen/component index represented as an entry node carries the same flag.
+The viewer hides that node and its descendants in All and search, pruning any
+ancestor left without visible children. Changes keeps hidden ancestry so changed
+entries still have rows inside their folders. URLs, links, generated files and
+breadcrumbs remain available. A hidden
 folder is still a folder: its entries keep their paths and its records keep
 applying below it.
 
@@ -151,12 +172,13 @@ location grammar of the [path contract](./mokly-paths.md#diagnostics).
 | `unknown-folder-child` | `<location>: order names <slug>, which is not a child of <path>`          |
 | `invalid-folder`       | `<location>: <reason>`                                                    |
 
-`invalid-folder` reasons are exactly: `invalid JSON: <parser message>`,
+`invalid-folder` reasons are exactly: `must be a JSON object`, `invalid JSON: <parser message>`,
 `unknown field <name>`, `title must be a nonempty string without leading or
 trailing whitespace`, `order must be an array of segments with at most one
 "..." and no duplicates`, `order cannot name index`, `hidden must be a boolean`,
 `exclude must be an array of safe relative globs`, and `<field> is not allowed
-at the top level`.
+at the top level`, and `title cannot be set for a folder whose own page is a
+screen or component; set the entry's title`.
 
 ## Verification
 

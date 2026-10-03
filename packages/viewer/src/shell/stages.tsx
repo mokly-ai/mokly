@@ -57,12 +57,14 @@ export function TargetStage(props: {
   fragment?: string;
   previewViews?: readonly GeneratedComponentView[];
   target: RouteTarget;
-  variantId?: string | undefined;
+  variantPath?: string | undefined;
 }) {
   const entry = props.target.entry;
   const model = props.catalogue.publicModel;
   if (model) {
-    const current = routedEntries(model).find((item) => item.id === entry.id)!;
+    const current = routedEntries(model).find(
+      (item) => item.path === entry.path,
+    )!;
     return (
       <PublicStage
         catalogue={model}
@@ -70,32 +72,34 @@ export function TargetStage(props: {
         hasDarkFragments={props.catalogue.hasDarkFragments}
         {...(props.fragment ? { fragment: props.fragment } : {})}
         {...(props.previewViews ? { previewViews: props.previewViews } : {})}
-        {...(props.variantId ? { variantId: props.variantId } : {})}
+        {...(props.variantPath ? { variantPath: props.variantPath } : {})}
       />
     );
   }
   if (entry.kind === "page")
     return (
       <EmbedStage
-        route={entryRoute("page", entry.id)}
+        route={entryRoute(entry.path)}
         title={entry.title}
         {...(props.fragment ? { fragment: props.fragment } : {})}
       />
     );
+  if (entry.kind === "document")
+    return <EmptyStage heading="Document unavailable">{null}</EmptyStage>;
   if (entry.kind === "component") {
     const parent = isManifestComponentVariant(entry)
-      ? props.catalogue.byId.get(entry.variantOf)
+      ? props.catalogue.byPath.get(entry.variantOf)
       : entry;
     if (parent?.kind !== "component" || isManifestComponentVariant(parent))
       return <EmptyStage heading="Component unavailable">{null}</EmptyStage>;
     const variants = (
-      props.catalogue.hierarchy.variantsById.get(parent.id) ?? []
+      props.catalogue.hierarchy.variantsByPath.get(parent.path) ?? []
     ).filter(
       (candidate): candidate is ManifestComponentVariant =>
         candidate.kind === "component" && isManifestComponentVariant(candidate),
     );
     const variant =
-      variants.find((item) => item.id === props.variantId) ?? variants[0]!;
+      variants.find((item) => item.path === props.variantPath) ?? variants[0]!;
     return (
       <ComponentStage
         title={parent.title}

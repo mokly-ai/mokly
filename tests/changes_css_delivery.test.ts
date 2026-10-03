@@ -27,10 +27,10 @@ for (const components of [false, true])
     await fixture.append(".guide { padding: 2px; }");
     const snapshot = await cache.read(1);
     assert.ok(snapshot);
-    assert.ok(!snapshot.changedIds?.includes("home"));
+    assert.ok(!snapshot.changedEntries?.includes("home"));
     const artifact = await fixture.compare();
     const expected = artifact.result.screens.find(
-      (entry) => entry.id === "home",
+      (entry) => entry.path === "home",
     )!;
     const server = await startCatalogueServer(fixture.config, {
       base: "main",
@@ -45,7 +45,7 @@ for (const components of [false, true])
     });
     t.after(() => server.close());
     const response = await fetch(
-      `${server.url}/__mokly/diffs/review.json?id=home`,
+      `${server.url}/__mokly/diffs/review.json?path=home`,
     );
     assert.equal(response.status, 200, await response.clone().text());
     const selected = parseReviewResult(await response.json());
@@ -56,7 +56,7 @@ for (const components of [false, true])
         (
           await fetch(
             new URL(
-              `snapshots/after/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+              `snapshots/after/${viewRoute("home", view.viewport, view.colorScheme)}`,
               response.url,
             ),
           )
@@ -87,9 +87,9 @@ for (const components of [false, true])
     cache.invalidate();
     const updated = await cache.read(2);
     assert.ok(updated);
-    assert.ok(updated?.changedIds?.includes("home"));
+    assert.ok(updated?.changedEntries?.includes("home"));
     const complete = await fixture.compare();
-    if (complete.result.schemaVersion === 4)
+    if (complete.result.schemaVersion === 5)
       assert.deepEqual(updated.result, complete.result);
   });
 
@@ -100,7 +100,7 @@ for (const components of [false, true])
       '[data-mokly-viewport="desktop"] .auth { padding: 3px; }',
     );
     const { result } = await fixture.compare();
-    const home = result.screens.find((entry) => entry.id === "home")!;
+    const home = result.screens.find((entry) => entry.path === "home")!;
     for (const view of home.views) {
       assert.equal(
         view.state,
@@ -109,9 +109,9 @@ for (const components of [false, true])
       assert.equal(Boolean(view.excludedResources), view.viewport === "mobile");
     }
     assert.deepEqual(home.sharedImpact, ["mockups/shared.css"]);
-    if (result.schemaVersion === 4)
+    if (result.schemaVersion === 5)
       assert.deepEqual(
-        result.changes.find((entry) => entry.after?.id === "home")?.reasons,
+        result.changes.find((entry) => entry.after?.path === "home")?.reasons,
         home.views.find((view) => view.viewport === "desktop")?.reasons,
       );
   });
@@ -126,5 +126,5 @@ for (const components of [false, true])
         entry.views.every((view) => !view.reasons && !view.excludedResources),
       ),
     );
-    if (result.schemaVersion === 4) assert.deepEqual(result.changes, []);
+    if (result.schemaVersion === 5) assert.deepEqual(result.changes, []);
   });

@@ -12,6 +12,7 @@ import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import { walkFiles } from "./discovery.js";
+import { previousArtifactOwner } from "./previous_ownership.js";
 import { sourceDenialMessage } from "./source_denial.js";
 import { isAuthoringSource } from "./source_inventory.js";
 
@@ -108,7 +109,7 @@ export function unclaimedGeneratedRoutes(config: ResolvedConfig): string[] {
       const source = readGeneratedSource(candidate);
       return source &&
         isSafeRepositoryPath(source) &&
-        !isAuthoredOwner(source, config)
+        !isOwned(candidate, config)
         ? [relative]
         : [];
     })
@@ -139,8 +140,14 @@ export function generatedOwnershipDenial(
     const source = readGeneratedSource(candidate);
     if (!source || !isSafeRepositoryPath(source))
       return "has no valid generated ownership header";
-    if (!isAuthoredOwner(source, config))
-      return "has an owner outside every configured entry glob and the source inventory";
+    if (
+      !isAuthoredOwner(source, config) &&
+      !(
+        previousArtifactOwner(relative, config) === source &&
+        readGeneratedSource(candidate, true) === source
+      )
+    )
+      return "has an owner outside every configured root file glob and the source inventory";
   } catch (error) {
     return `could not establish generated ownership: ${errorMessage(error)}`;
   }
@@ -148,7 +155,7 @@ export function generatedOwnershipDenial(
 
 /**
  * An owner is trusted when it is a resolved entry module, an inventoried input,
- * or a repository-relative path matched by a configured entry glob.
+ * or a repository-relative path matched by a configured root file glob.
  */
 export function isAuthoredOwner(
   sourceRelativePath: string,
@@ -159,19 +166,32 @@ export function isAuthoredOwner(
   if (!isInside(config.repoRoot, absolute)) return false;
   return (
     isResolvedEntryOrInventoriedSource(sourceRelativePath, config) ||
-    config.entryGlobs.some((glob) =>
-      minimatch(sourceRelativePath, glob, { dot: true }),
+    config.roots.some(
+      (root) =>
+        isInside(root.dir, absolute) &&
+        root.files.some((glob) =>
+          minimatch(toPosixPath(path.relative(root.dir, absolute)), glob, {
+            dot: true,
+          }),
+        ),
     )
   );
 }
 
-function readGeneratedSource(candidate: string): string | undefined {
+function readGeneratedSource(
+  candidate: string,
+  currentOnly = false,
+): string | undefined {
   try {
     const handle = fs.openSync(candidate, "r");
     try {
       const buffer = Buffer.alloc(8_192);
       const length = fs.readSync(handle, buffer, 0, buffer.length, 0);
-      return generatedSource(buffer.subarray(0, length).toString("utf8"));
+      const content = buffer.subarray(0, length).toString("utf8");
+      const encoded = content.match(ENCODED_HEADER_PATTERN)?.[1];
+      return currentOnly
+        ? encoded && decodeSource(encoded)
+        : generatedSource(content);
     } finally {
       fs.closeSync(handle);
     }

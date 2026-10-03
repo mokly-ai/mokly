@@ -46,12 +46,9 @@ test("server validates before bind and supports safe no-watch routes on port zer
   });
   assert.equal(removedAlias.status, 404);
   assert.match(await removedAlias.text(), /Item not found/);
+  assert.equal((await fetch(`${server.url}/view/home/`)).status, 200);
   assert.equal(
-    (await fetch(`${server.url}/view/screens/home.html`)).status,
-    200,
-  );
-  assert.equal(
-    (await fetch(`${server.url}/static/screens/home.mobile.html`)).status,
+    (await fetch(`${server.url}/static/home/index.mobile.html`)).status,
     200,
   );
   assert.equal(
@@ -124,15 +121,15 @@ test("malformed manifest identities fail before server readiness", async (contex
   const manifest = JSON.parse(
     await fs.promises.readFile(manifestPath, "utf8"),
   ) as {
-    entries: Array<{ id: string; kind: string }>;
+    entries: Array<{ path: string; kind: string }>;
   };
   const screen = manifest.entries.find((entry) => entry.kind === "screen");
   assert.ok(screen);
-  screen.id = "../outside";
+  screen.path = "../outside";
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
   await assert.rejects(
     () => startCatalogueServer(config, { base: "origin/main", port: 0 }),
-    /invalid manifest id/,
+    /invalid manifest path/,
   );
 });
 
@@ -146,17 +143,17 @@ test("manifest relationships retain their required entry kinds", async (context)
     await fs.promises.readFile(manifestPath, "utf8"),
   ) as {
     entries: Array<{
-      id: string;
+      path: string;
       kind: string;
-      steps?: Array<{ screenId: string }>;
-      useCaseIds?: string[];
+      steps?: Array<{ screenPath: string }>;
+      useCasePaths?: string[];
     }>;
   };
   const useCase = manifest.entries.find((entry) => entry.kind === "use-case");
   assert.ok(useCase?.steps?.[0]);
-  useCase.steps = [{ screenId: "fixture" }];
+  useCase.steps = [{ screenPath: "fixture" }];
   for (const entry of manifest.entries) {
-    if (entry.kind === "screen") entry.useCaseIds = [];
+    if (entry.kind === "screen") entry.useCasePaths = [];
   }
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
   await assert.rejects(
@@ -187,7 +184,7 @@ test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async 
   const url = await outputUrl(child.stdout);
   assert.equal((await fetch(url)).status, 200);
   assert.match(
-    await (await fetch(`${url}/static/screens/home.desktop.html`)).text(),
+    await (await fetch(`${url}/static/home/index.desktop.html`)).text(),
     /id="home"/,
   );
   await waitFor(async () =>
@@ -235,7 +232,7 @@ test(
       fixture.entryPath,
       validEntrySource({ body: '<a href="mock:home">Home</a>' }),
     );
-    let generated = path.join(fixture.mockupsDir, "screens/home.desktop.html");
+    let generated = path.join(fixture.mockupsDir, "home/index.desktop.html");
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes(
         'data-mokly-link="home"',
@@ -245,27 +242,27 @@ test(
     assert.equal(new URL(url).port, firstPort);
     await waitFor(async () =>
       (
-        await (await fetch(`${url}/static/screens/home.desktop.html`)).text()
+        await (await fetch(`${url}/static/home/index.desktop.html`)).text()
       ).includes('data-mokly-link="home"'),
     );
     await fs.promises.writeFile(
       fixture.entryPath,
-      sourceWithHomeRoute("screens/start.html", "Watched Home"),
+      sourceWithHomeRoute("start/index.html", "Watched Home"),
     );
-    generated = path.join(fixture.mockupsDir, "screens/start.desktop.html");
+    generated = path.join(fixture.mockupsDir, "start/index.desktop.html");
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes("Watched Home"),
     );
     assert.equal(await streamEnded(eventReader), true);
     await waitFor(
       async () =>
-        (await (await fetch(`${url}/view/screens/start.html`)).text()).includes(
+        (await (await fetch(`${url}/view/start/`)).text()).includes(
           "Watched Home",
         ),
       20_000,
     );
     assert.match(
-      await (await fetch(`${url}/static/screens/start.desktop.html`)).text(),
+      await (await fetch(`${url}/static/start/index.desktop.html`)).text(),
       /data-mokly-link="details"/,
     );
     await fs.promises.writeFile(
@@ -275,14 +272,16 @@ test(
         firstTitle: "Broken Home",
       }),
     );
-    await waitFor(async () => stderr().includes("unknown id: missing-screen"));
+    await waitFor(async () =>
+      stderr().includes("link target missing-screen does not exist"),
+    );
     assert.match(await fs.promises.readFile(generated, "utf8"), /Watched Home/);
     assert.equal((await fetch(url)).status, 200);
     await fs.promises.writeFile(
       fixture.entryPath,
       validEntrySource({ firstTitle: "Recovered Home" }),
     );
-    generated = path.join(fixture.mockupsDir, "screens/home.desktop.html");
+    generated = path.join(fixture.mockupsDir, "home/index.desktop.html");
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes(
         "Recovered Home",
@@ -291,7 +290,7 @@ test(
     await waitFor(async () => (await fetch(url)).status === 200);
     await fs.promises.writeFile(
       fixture.configPath,
-      `export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", review: { base: "config-reloaded", outDir: ".review" } };\n`,
+      `export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", review: { base: "config-reloaded", outDir: ".review" } };\n`,
     );
     await waitFor(
       async () =>
@@ -370,10 +369,10 @@ async function waitFor(
 }
 
 function sourceWithHomeRoute(route: string, title: string): string {
-  const id = route.slice("screens/".length, -".html".length);
+  const id = route.slice(0, -"/index.html".length);
   return validEntrySource({ firstTitle: title })
-    .replace('id: "home"', `id: ${JSON.stringify(id)}`)
-    .replace('screenId: "home"', `screenId: ${JSON.stringify(id)}`);
+    .replace('path: "home"', `path: ${JSON.stringify(id)}`)
+    .replace('screenPath: "home"', `screenPath: ${JSON.stringify(id)}`);
 }
 
 async function streamEnded(

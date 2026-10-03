@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { designLibrary } from "./helpers/design_library.js";
@@ -19,18 +19,19 @@ test("each exclusive library stylesheet changes its component and only affects r
       );
       const result = await fixture.compare();
       assert.deepEqual(
-        result.changes.map((change) => (change.after ?? change.before)!.id),
-        [`design-ui-${slug}`],
+        result.changes.map((change) => (change.after ?? change.before)!.path),
+        [`design/library/${group}/${slug}`],
       );
       const consumers = fixture.before.manifest.entries
         .flatMap((entry) =>
           entry.kind === "screen" &&
           generatedViews(entry).some((view) =>
             view.usage?.instances.some(
-              (instance) => instance.componentId === `design-ui-${slug}`,
+              (instance) =>
+                instance.componentId === `design/library/${group}/${slug}`,
             ),
           )
-            ? [entry.id]
+            ? [entry.path]
             : [],
         )
         .sort();
@@ -41,7 +42,7 @@ test("each exclusive library stylesheet changes its component and only affects r
       assert.deepEqual(
         result.affectedConsumers
           .flatMap((affected) =>
-            affected.consumer.kind === "screen" ? [affected.consumer.id] : [],
+            affected.consumer.kind === "screen" ? [affected.consumer.path] : [],
           )
           .sort(),
         consumers,
@@ -50,24 +51,24 @@ test("each exclusive library stylesheet changes its component and only affects r
         const topBar = result.affectedConsumers.find(
           (affected) =>
             affected.consumer.kind === "component" &&
-            affected.consumer.id === "design-ui-top-bar",
+            affected.consumer.path === "design/library/chrome/top-bar",
         );
         assert.ok(topBar);
         const variants = topBar.evidence.flatMap((evidence) =>
           evidence.context.kind === "component" &&
-          evidence.context.entry.id === "design-ui-top-bar"
-            ? [evidence.context.variantId]
+          evidence.context.entry.path === "design/library/chrome/top-bar"
+            ? [evidence.context.variantPath]
             : [],
         );
         assert.deepEqual(
           [...new Set(variants)],
-          ["design-ui-top-bar-tag-picker"],
+          ["design/library/chrome/top-bar/tag-picker"],
         );
         assert.ok(
           topBar.evidence.some(
             (evidence) =>
               evidence.via.map((item) => item.componentId).join("/") ===
-              "design-ui-top-bar/design-ui-tag-picker/design-ui-tag-chip",
+              "design/library/chrome/top-bar/design/library/controls/tag-picker/design/library/controls/tag-chip",
           ),
         );
       }
@@ -81,49 +82,49 @@ test("real implementation and saved metadata edits have distinct impact", async 
       "chrome/top-bar.view.tsx",
       'className="mbk-topbar"',
       'className="mbk-topbar revised"',
-      "top-bar",
+      "chrome/top-bar",
       true,
     ],
     [
       "controls/tag-chip.view.tsx",
       "{label}",
       "{label} revised",
-      "tag-chip",
+      "controls/tag-chip",
       true,
     ],
     [
       "chrome/top-bar.tsx",
       'title: "Search"',
       'title: "Filtered search"',
-      "top-bar-search",
+      "chrome/top-bar/search",
       false,
     ],
     [
       "chrome/top-bar.tsx",
       'label: "Query"',
       'label: "Search text"',
-      "top-bar",
+      "chrome/top-bar",
       false,
     ],
     [
       "chrome/top-bar.tsx",
       'query: "tag:forms"',
       'query: "tag:onboarding"',
-      "top-bar-search",
+      "chrome/top-bar/search",
       false,
     ],
   ] as const)
     await t.test(`${file}: ${from}`, async () => {
       await fixture.reset();
       await fixture.edit(
-        `examples/basic/entries/design/library/${file}`,
+        `examples/basic/specs/design/library/${file}`,
         (source) => source.replace(from, to),
       );
       const after = await fixture.build();
       const result = await fixture.compare(after);
       assert.deepEqual(
-        result.changes.map((change) => (change.after ?? change.before)!.id),
-        [`design-ui-${id}`],
+        result.changes.map((change) => (change.after ?? change.before)!.path),
+        [`design/library/${id}`],
       );
       assert.equal(result.affectedConsumers.length > 0, affects);
     });
@@ -131,7 +132,7 @@ test("real implementation and saved metadata edits have distinct impact", async 
 
 test("real screen inputs, destinations, slots and ordered instances remain screen-owned", async (t) => {
   const fixture = await designLibraryFixture(t);
-  const file = "examples/basic/entries/design/browse/views/use-case.tsx";
+  const file = "examples/basic/specs/design/browse/views/use-case.tsx";
   for (const [label, change] of [
     [
       "title",
@@ -142,8 +143,8 @@ test("real screen inputs, destinations, slots and ordered instances remain scree
       "destination",
       (source: string) =>
         source.replace(
-          "screenId={DESTINATIONS.welcome}",
-          "screenId={DESTINATIONS.details}",
+          "screenPath={DESTINATIONS.welcome}",
+          "screenPath={DESTINATIONS.details}",
         ),
     ],
     [
@@ -173,8 +174,8 @@ test("real screen inputs, destinations, slots and ordered instances remain scree
       const after = await fixture.build();
       const result = await fixture.compare(after);
       assert.deepEqual(
-        result.changes.map((change) => (change.after ?? change.before)!.id),
-        ["design-browse-use-case"],
+        result.changes.map((change) => (change.after ?? change.before)!.path),
+        ["design/browse/views/use-case"],
       );
       assert.deepEqual(result.affectedConsumers, []);
     });
@@ -187,23 +188,23 @@ test("screen query and field values remain direct changes in their owning design
       "browse/states/tags/picker.tsx",
       "design={DESTINATIONS.tagPicker}",
       'design={DESTINATIONS.tagPicker} tag="forms"',
-      ["design-browse-tag-picker"],
+      ["design/browse/views/screen/tag-picker"],
     ],
     [
       "components/controls/parts/fixtures.ts",
       "draft: { ...saved, cornerRadius: 40 }",
       "draft: { ...saved, cornerRadius: 50 }",
-      ["design-component-controls-invalid"],
+      ["design/components/controls/states/invalid"],
     ],
   ] as const)
     await t.test(file, async () => {
       await fixture.reset();
-      await fixture.edit(`examples/basic/entries/design/${file}`, (source) =>
+      await fixture.edit(`examples/basic/specs/design/${file}`, (source) =>
         source.replace(from, to),
       );
       const result = await fixture.compare(await fixture.build());
       assert.deepEqual(
-        result.changes.map((change) => (change.after ?? change.before)!.id),
+        result.changes.map((change) => (change.after ?? change.before)!.path),
         expected,
       );
       assert.deepEqual(result.affectedConsumers, []);
@@ -212,8 +213,7 @@ test("screen query and field values remain direct changes in their owning design
 
 test("the committed catalogue uses one baseline view batch and agrees across Serve and comparison", async (t) => {
   const fixture = await designLibraryFixture(t, "committed");
-  const file =
-    "examples/basic/entries/design/library/controls/tag-chip.view.tsx";
+  const file = "examples/basic/specs/design/library/controls/tag-chip.view.tsx";
   await fixture.edit(file, (source) =>
     source.replace("{label}", "{label} revised"),
   );
@@ -222,8 +222,8 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
   const git = fixture.git([file]);
   const expected = await fixture.compare(after);
   assert.deepEqual(
-    await computeChangedIds(fixture.config, "main", git),
-    expected.changes.map((change) => (change.after ?? change.before)!.id),
+    await computeChangedPaths(fixture.config, "main", git),
+    expected.changes.map((change) => (change.after ?? change.before)!.path),
   );
   const viewBatches = fixture.batches.filter((files) =>
     files.some((file) => file.endsWith(".html")),
@@ -244,8 +244,8 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
   );
   assert.ok(resourceReads.length <= fixture.resources.size);
   const { result } = await compareReview(after, fixture.config, git, "main");
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion === 4) {
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion === 5) {
     assert.deepEqual(result.changes, expected.changes);
     assert.deepEqual(result.affectedConsumers, expected.affectedConsumers);
   }

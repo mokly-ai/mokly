@@ -1,12 +1,22 @@
 import type { ObjectPropSchema } from "@mokly/viewer";
 import {
-  isEntryId,
   validateControlledValues,
   validateControls,
   invalidData,
   plainKeys,
   validatePropSchema,
 } from "@mokly/viewer/data";
+
+import { branded } from "../authoring/definitions.js";
+import { unknownFields, authoredInput } from "../authoring/fields.js";
+import {
+  COMPONENT_REGISTRATION,
+  VARIANT_PARENT,
+  VARIANT_INDEX,
+  DEFINITION,
+  DEFINITION_IDENTITY,
+  UNKNOWN_FIELDS,
+} from "../authoring/markers.js";
 
 import { componentInputs } from "./inputs.js";
 import type {
@@ -25,36 +35,50 @@ export function defineComponent<
   const Slots extends readonly string[] = readonly [],
 >(input: ComponentInput<S, Slots>): RegisteredComponent<S, Slots> {
   plainKeys(input, "Component");
-  const value = input as ComponentInput<S, Slots>;
+  const value = authoredInput(input, "component");
   if (!Array.isArray(value.variants) || !value.variants.length) {
     invalidData(
-      `Component ${String(value.id)}`,
+      value.path === undefined ? "Component" : `Component ${value.path}`,
       "at least one saved variant is required",
     );
   }
   const { variants, ...parentInput } = value;
   const definition = validateComponentDefinition(parentInput);
+  Object.assign(definition, unknownFields(input, "component"));
   const entries = [
     definition,
-    ...variants.map((variant) =>
-      componentVariantDefinition(definition, variant),
+    ...variants.map((variant, index) =>
+      componentVariantDefinition(definition, variant, index),
     ),
   ] as const;
   const Component = (props: Readonly<Record<string, unknown>>) =>
     renderInstance(definition, props);
   registerComponentWrapper(Component);
-  return { entries, Component } as unknown as RegisteredComponent<S, Slots>;
+  return {
+    entries,
+    Component,
+    [COMPONENT_REGISTRATION]: true,
+  } as unknown as RegisteredComponent<S, Slots>;
 }
 
 /** Validate and snapshot a definition at both authoring and registry boundaries. */
 export function validateComponentDefinition(
   input: unknown,
 ): ComponentDefinition {
-  plainKeys(input, "Component");
+  const descriptors =
+    input !== null && typeof input === "object"
+      ? Object.getOwnPropertyDescriptors(input)
+      : undefined;
+  if (descriptors) {
+    for (const marker of [DEFINITION, DEFINITION_IDENTITY, UNKNOWN_FIELDS])
+      Reflect.deleteProperty(descriptors, marker);
+    plainKeys(
+      Object.create(Object.getPrototypeOf(input), descriptors),
+      "Component",
+    );
+  } else plainKeys(input, "Component");
   const value = input as ComponentDefinition;
-  const at = `Component ${String(value.id)}`;
-  if (!isEntryId(value.id))
-    invalidData(at, "id must be globally unique kebab-case");
+  const at = value.path === undefined ? "Component" : `Component ${value.path}`;
   validatePropSchema(value.propSchema, at);
   if (value.propSchema.kind !== "object")
     invalidData(at, "propSchema must be an object schema");
@@ -95,16 +119,15 @@ export function validateComponentDefinition(
     )
   )
     invalidData(at, "ownedDependencies must be a subset of dependencies");
-  const definition: ComponentDefinition = {
+  const definition: ComponentDefinition = branded({
     ...value,
-    navPath: value.navPath === undefined ? [] : value.navPath,
     __viaDefine: true,
     kind: "component",
     propSchema: structuredClone(value.propSchema),
     controls: structuredClone(controls),
     slots: [...slots].sort(),
     ownedDependencies: [...new Set(owned)].sort(),
-  };
+  });
   return definition;
 }
 
@@ -113,10 +136,8 @@ export function validateComponentVariantDefinition(
   input: ComponentVariantDefinition,
   parent: ComponentDefinition,
 ): ComponentVariantDefinition {
-  const at = `Component ${parent.id} / ${String(input.id)}`;
-  if (!isEntryId(input.id))
-    invalidData(at, "variant id must be globally unique kebab-case");
-  if (input.variantOf !== parent.id)
+  const at = `Component ${parent.path} / ${String(input.path)}`;
+  if (input.variantOf !== parent.path)
     invalidData(at, "variantOf must name its component parent");
   const values = componentInputs(parent, input.props, at);
   validateControlledValues(parent.controls, values.data, at);
@@ -133,13 +154,11 @@ export function validateComponentVariantDefinition(
 function componentVariantDefinition(
   parent: ComponentDefinition,
   variant: ComponentVariant<Readonly<Record<string, unknown>>>,
+  index: number,
 ): ComponentVariantDefinition {
-  const at = `Component ${parent.id}`;
-  for (const key of plainKeys(variant, at))
-    if (!["id", "title", "description", "props"].includes(key))
-      invalidData(at, `unknown variant field ${key}`);
-  if (!isEntryId(variant.id))
-    invalidData(at, "variant id must be globally unique kebab-case");
+  const at =
+    parent.path === undefined ? "Component" : `Component ${parent.path}`;
+  plainKeys(variant, at);
   if (
     typeof variant.title !== "string" ||
     !variant.title.trim() ||
@@ -150,30 +169,33 @@ function componentVariantDefinition(
   const values = componentInputs(
     parent,
     variant.props,
-    `${at} / ${variant.id}`,
+    `${at} / ${variant.slug}`,
   );
   validateControlledValues(
     parent.controls,
     values.data,
-    `${at} / ${variant.id}`,
+    `${at} / ${variant.slug}`,
   );
-  const definition: ComponentVariantDefinition = {
+  const definition: ComponentVariantDefinition = branded({
     __viaDefine: true,
     ...(parent.colorSchemes ? { colorSchemes: [...parent.colorSchemes] } : {}),
     dependencies: [...parent.dependencies],
     description: variant.description ?? parent.description,
-    id: variant.id,
+    slug: variant.slug,
     kind: "component",
-    navPath: Array.isArray(parent.navPath)
-      ? [...parent.navPath]
-      : parent.navPath,
     props: { ...values.data, ...values.slots },
     relatedDocs: [...parent.relatedDocs],
     suppliedSlots: Object.keys(values.slots).sort(),
     ...(parent.tags ? { tags: [...parent.tags] } : {}),
     title: variant.title,
-    variantOf: parent.id,
-  };
+    variantOf: "",
+    [VARIANT_PARENT]: parent,
+    [VARIANT_INDEX]: index,
+    ...unknownFields(variant, "component-variant"),
+    ...(variant.movedFrom === undefined
+      ? {}
+      : { movedFrom: variant.movedFrom }),
+  });
   if (parent.definedIn !== undefined) definition.definedIn = parent.definedIn;
   return definition;
 }

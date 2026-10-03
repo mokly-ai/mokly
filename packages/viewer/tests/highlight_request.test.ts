@@ -57,14 +57,14 @@ function session(
     usageRevision: 0,
     ready: Promise.resolve(mounted),
     mounted,
-    source: `/static/screens/home.${viewport}.html`,
+    source: `/static/home/index.${viewport}.html`,
     status: "ready",
   };
 }
 
 function reference(viewport: "mobile" | "desktop", key: string): InstanceRef {
   return {
-    screenId: "home",
+    screenPath: "home",
     viewport,
     colorScheme: "light",
     key,
@@ -116,11 +116,11 @@ test("component variant frames match the documented instance reference shape", (
   const variant = session("desktop", 1);
   variant.identity = {
     ...variant.identity,
-    entryId: "action-disabled",
-    variantId: "action-disabled",
+    entryId: "action/disabled",
+    variantPath: "action/disabled",
   };
   const instance: InstanceRef = {
-    screenId: "action-disabled",
+    screenPath: "action/disabled",
     viewport: "desktop",
     colorScheme: "light",
     key: alpha,

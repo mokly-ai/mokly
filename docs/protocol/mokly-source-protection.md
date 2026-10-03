@@ -5,25 +5,23 @@
 Implemented for [pages](./mokly-pages.md), screens, flows, components, and
 compatible baselines, each with a validated source inventory. The same
 resolved inventory protects build, runtime, comparisons, and both publication
-options. Discovery through configured roots, Markdown documents, and manifest
-v8 are approved contracts; the current implementation still resolves `entries`
-globs and emits v7 until the
-[path identity plan](../../plans/path-identity.md) delivers them. Verification
-is tracked in [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md);
-the resolved-entry-set rule was delivered by the
-[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+options. Roots retain protected file inputs, including excluded glob matches,
+and emit manifest v8. Markdown matches are protected source inputs while their
+rendering remains planned in the [path identity plan](../../plans/path-identity.md).
 
 ## Protected Inputs
 
 Use one source-classification policy for current HTTP assets, generated-resource
 validation, Review resource reads, static publication, and public content-change
-classification. A file is protected if it is a resolved entry module or
-document, appears in the validated `sourceFiles` inventory, has a reserved
+classification. A file is protected if it matches a root glob (even when a folder exclusion
+skips it without an import), is a resolved entry module or document, appears in the validated `sourceFiles` inventory, has a reserved
 source basename, or matches a public exclusion. Every resolved entry module and
 document is also an inventoried source, so the resolved-file rule is a stable
 identity for entries rather than a second inventory. Apply each rule to both its
 requested path and its resolved repository-relative target. A public-looking
-symlink cannot make a protected target public. Existing regular-file and
+symlink cannot make a protected target public. Current reads protect new root
+matches immediately, before any candidate build succeeds. Historical reads use
+their validated inventory without guessing from current root globs. Existing regular-file and
 root-confinement checks remain mandatory. The same classifier runs over every
 resolved file at discovery, as defined by the
 [configuration contract](./mokly-configuration.md#roots). An entry may be nested
@@ -62,7 +60,8 @@ Only the dedicated historical baseline reader may read its completed output.
 
 Reserve basenames ending in `.source.html`, `.source.htm`, `.source.ts`,
 `.source.tsx`, `.source.js`, `.source.jsx`, `.source.mts`, `.source.cts`,
-`.source.mjs`, or `.source.cjs`, matched case-insensitively. Their protection is
+`.source.mjs`, or `.source.cjs`, and `_folder.json`, matched case-insensitively.
+Only the exact name `_folder.json` is a discovered folder-record carrier. Their protection is
 independent of imports, manifest membership, and whether a page still uses them.
 This is a file-access rule, not a source-discovery or navigation mechanism,
 and applies in every directory.

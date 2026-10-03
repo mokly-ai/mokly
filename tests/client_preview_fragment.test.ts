@@ -15,35 +15,39 @@ const ENCODED_FRAGMENT = "section%3Aone";
 
 test("preview fragment routes update every applicable frame source", () => {
   const model = catalogueModel();
-  const screen = model.screens[0]!;
+  const screen = model.screens.find(
+    (entry) => entry.path === "product/browse/home",
+  )!;
   const mobile = screen.views.find((view) => view.viewport === "mobile")!;
-  model.screens = [
-    {
-      ...screen,
-      colorSchemes: ["light", "dark"],
-      views: [
-        ...screen.views,
-        {
-          ...mobile,
-          colorScheme: "dark",
+  model.screens = model.screens.map((entry) =>
+    entry.path !== screen.path
+      ? entry
+      : {
+          ...screen,
+          colorSchemes: ["light", "dark"],
+          views: [
+            ...screen.views,
+            {
+              ...mobile,
+              colorScheme: "dark",
+            },
+          ],
         },
-      ],
-    },
-  ];
+  );
   const markup = renderRoute(
-    `https://example.test/view/screens/home.html?fragment=${ENCODED_FRAGMENT}`,
+    `https://example.test/view/product/browse/home/?fragment=${ENCODED_FRAGMENT}`,
     FRAGMENT,
     model,
   );
 
   const expected = [
-    `/static/screens/home.mobile.html#${ENCODED_FRAGMENT}`,
-    `/static/screens/home.desktop.html#${ENCODED_FRAGMENT}`,
+    `/static/product/browse/home/index.mobile.html#${ENCODED_FRAGMENT}`,
+    `/static/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
   ];
   assert.deepEqual(attributeValues(markup, "src"), expected);
   assert.deepEqual(attributeValues(markup, "data-fragment-light"), expected);
   assert.deepEqual(attributeValues(markup, "data-fragment-dark"), [
-    `/static/screens/home.mobile.dark.html#${ENCODED_FRAGMENT}`,
+    `/static/product/browse/home/index.mobile.dark.html#${ENCODED_FRAGMENT}`,
   ]);
 });
 
@@ -55,20 +59,21 @@ test("only the first flow step receives a preview fragment", () => {
       ...flow,
       steps: [
         ...flow.steps,
-        { screenId: model.screens[0]!.id, title: "Return home" },
+        { screenPath: "product/browse/home", title: "Return home" },
       ],
     },
   ];
 
   const markup = renderRoute(
-    `https://example.test/view/user-flows/tour.html?fragment=${ENCODED_FRAGMENT}`,
+    `https://example.test/view/tour/?fragment=${ENCODED_FRAGMENT}`,
     FRAGMENT,
     model,
   );
   const sources = attributeValues(markup, "src");
   assert.deepEqual(sources, [
-    `/static/screens/home.desktop.html#${ENCODED_FRAGMENT}`,
-    "/static/screens/home.desktop.html",
+    `/static/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
+    "/static/product/browse/details/index.desktop.html",
+    "/static/product/browse/home/index.desktop.html",
   ]);
   assert.equal(sources.filter((source) => source.includes("#")).length, 1);
 });
@@ -82,7 +87,9 @@ test("preview fragment routes fail closed before stage rendering", () => {
     "?fragment=1section",
     "?fragment=section+one",
   ]) {
-    const url = new URL(`https://example.test/view/screens/home.html${search}`);
+    const url = new URL(
+      `https://example.test/view/product/browse/home/${search}`,
+    );
     const catalogue = viewerCatalogue(catalogueModel());
     const route = routeFromUrl(catalogue, url);
     assert.equal(route.fragment, undefined, search);
@@ -92,12 +99,12 @@ test("preview fragment routes fail closed before stage rendering", () => {
 
 test("a valid absent anchor retains its encoded hash without a DOM lookup", () => {
   const markup = renderRoute(
-    "https://example.test/view/screens/home.html?fragment=absent",
+    "https://example.test/view/product/browse/home/?fragment=absent",
     "absent",
   );
   assert.deepEqual(attributeValues(markup, "src"), [
-    "/static/screens/home.mobile.html#absent",
-    "/static/screens/home.desktop.html#absent",
+    "/static/product/browse/home/index.mobile.html#absent",
+    "/static/product/browse/home/index.desktop.html#absent",
   ]);
 });
 

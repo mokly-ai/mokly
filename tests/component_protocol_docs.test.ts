@@ -12,7 +12,7 @@ import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
 const read = (file: string) =>
   fs.readFile(path.join(repositoryRoot, file), "utf8");
 
-test("manifest v7 ships before the identity-keyed comparison format", async (t) => {
+test("manifest v8 and review v5 share path identity", async (t) => {
   const index = await read("docs/protocol/README.md");
   const plain = validEntrySource();
   const components = componentEntrySource();
@@ -29,13 +29,13 @@ test("manifest v7 ships before the identity-keyed comparison format", async (t) 
       fixture.git,
       "main",
     );
-    assert.equal(fixture.after.manifest.schemaVersion, 7);
-    assert.equal(result.schemaVersion, 4);
+    assert.equal(fixture.after.manifest.schemaVersion, 8);
+    assert.equal(result.schemaVersion, 5);
     assert.match(
       index,
       after === components
-        ? /With registered components\s*\|\s*7\s*\|\s*4/
-        : /Without registered components\s*\|\s*7\s*\|\s*4/,
+        ? /With registered components\s*\|\s*8\s*\|\s*5/
+        : /Without registered components\s*\|\s*8\s*\|\s*5/,
     );
   }
 });
@@ -58,5 +58,5 @@ test("delivered component contracts do not retain superseded status or version i
     await read("docs/protocol/mokly-export.md"),
     /Keep `ReviewResult\.schemaVersion` at 2/,
   );
-  assert.match(await read("README.md"), /Current output uses manifest v7/);
+  assert.match(await read("README.md"), /Current output uses manifest v8/);
 });

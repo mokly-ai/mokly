@@ -20,13 +20,13 @@ test("affected usage keeps complete serialized identity and evidence order with 
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 4) assert.fail("Expected component result");
+  if (result.schemaVersion !== 5) assert.fail("Expected component result");
   const catalogue = createCatalogue(fixture.after.manifest);
-  const entry = catalogue.byId.get("action");
+  const entry = catalogue.byPath.get("action");
   if (entry?.kind !== "component" || "variantOf" in entry)
     assert.fail("Expected component");
   const base: UsageLink = {
-    entryId: "pane-default",
+    entryId: "pane/default",
     entryKind: "component",
     title: "Pane · Default",
     viewport: "desktop",
@@ -40,7 +40,7 @@ test("affected usage keeps complete serialized identity and evidence order with 
     base,
     { ...base, viewport: "mobile" },
     { ...base, colorScheme: "dark" },
-    { ...base, entryId: "action-disabled", title: "Action · Disabled" },
+    { ...base, entryId: "action/disabled", title: "Action · Disabled" },
     { ...base, direct: false },
     { ...base, instanceKey: "action-2" },
     { ...base, entryId: "removed", removed: true },
@@ -69,9 +69,9 @@ test("affected usage keeps complete serialized identity and evidence order with 
     side: "after",
     context: {
       ...(link.entryKind === "component"
-        ? { kind: "component", variantId: link.entryId }
+        ? { kind: "component", variantPath: link.entryId }
         : { kind: "screen" }),
-      entry: { id, title: link.title },
+      entry: { path: id, title: link.title },
       viewport: link.viewport,
       colorScheme: link.colorScheme,
     },
@@ -85,13 +85,13 @@ test("affected usage keeps complete serialized identity and evidence order with 
     ...result,
     affectedConsumers: [
       {
-        changedComponentId: entry.id,
-        consumer: { kind: "component" as const, id: "pane" },
+        changedComponentId: entry.path,
+        consumer: { kind: "component" as const, path: "pane" },
         evidence: inputs,
       },
       {
-        changedComponentId: entry.id,
-        consumer: { kind: "component" as const, id: "pane" },
+        changedComponentId: entry.path,
+        consumer: { kind: "component" as const, path: "pane" },
         evidence: [...inputs].reverse().map((item) => ({
           ...item,
           side: "before" as const,
@@ -99,7 +99,7 @@ test("affected usage keeps complete serialized identity and evidence order with 
       },
       {
         changedComponentId: "unrelated",
-        consumer: { kind: "component" as const, id: "pane" },
+        consumer: { kind: "component" as const, path: "pane" },
         evidence: [evidence({ ...base, title: "Not affected by Action" })],
       },
     ],

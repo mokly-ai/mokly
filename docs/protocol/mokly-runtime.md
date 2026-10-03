@@ -28,9 +28,8 @@ Canonical outer navigation from links inside fragment frames, request-visible
 fragment transport, ownership-aware preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-Path identity, manifest v8, Markdown documents, and move detection are approved
-contracts; the current implementation still uses kind-and-id identity until
-the [path identity plan](../../plans/path-identity.md) delivers them.
+Path identity and manifest v8 are implemented. Markdown documents and move
+detection await delivery through the [path identity plan](../../plans/path-identity.md).
 
 Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The
 public catalogue, optional frame transport, and package extraction are

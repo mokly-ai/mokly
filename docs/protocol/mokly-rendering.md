@@ -9,10 +9,9 @@ public exclusions.
 ## Delivery Status
 
 The rendering boundary, the compatibility transformer, and the generated-output
-lifecycle are implemented. Path-derived file names, manifest v8, and
-Mokly-rendered Markdown documents are approved contracts; current builds still
-derive routes from kind and id and emit manifest v7 until the
-[path identity plan](../../plans/path-identity.md) delivers them.
+lifecycle are implemented with path-derived file names and manifest v8.
+Mokly-rendered Markdown documents remain an approved contract awaiting delivery
+through the [path identity plan](../../plans/path-identity.md).
 
 ## Rendering Boundary
 
@@ -114,7 +113,7 @@ type CompatibilityTransformer = (input: CompatibilityTransformInput) => string;
 
 `availableRoutes` contains the complete pending output plus retained existing
 public static files; generated files scheduled for orphan removal are excluded.
-`logicalRoutes` maps path-derived logical entry routes (`<path>/index.html`)
+`logicalRoutes` maps complete entry paths (`<path>`)
 to concrete artifacts for the current viewport and color scheme. A dark document targets dark fragments
 when the destination supports them and otherwise falls back to the light
 fragment. `outputPath` is repository-relative; no absolute checkout path is

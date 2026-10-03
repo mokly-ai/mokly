@@ -64,7 +64,7 @@ export async function copyPublicFiles(
 function catalogueDocuments(catalogue: Catalogue): readonly string[] {
   return catalogue.manifest.entries.flatMap((entry) =>
     entry.kind === "page"
-      ? [entryRoute("page", entry.id)]
+      ? [entryRoute(entry.path)]
       : generatedViews(entry).map((view) => view.path),
   );
 }

@@ -112,15 +112,13 @@ function artifactViews(manifest: Manifest) {
       snapshot: {
         after: snapshotViewPath(
           "after",
-          entry.kind,
-          entry.id,
+          entry.path,
           view.viewport,
           view.colorScheme,
         ),
         before: snapshotViewPath(
           "before",
-          entry.kind,
-          entry.id,
+          entry.path,
           view.viewport,
           view.colorScheme,
         ),

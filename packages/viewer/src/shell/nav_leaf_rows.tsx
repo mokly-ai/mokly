@@ -74,9 +74,9 @@ function NavRowLink(props: {
   const store = useOptionalShellStore();
   const context = store?.context ?? props.context;
   const active = props.node.entryId === props.context.activeId;
-  const changed = context.changedIds?.includes(props.node.entryId) === true;
+  const changed = context.changedEntries?.includes(props.node.entryId) === true;
   const changedVariants = (props.node.variants ?? []).some((variant) =>
-    context.changedIds?.includes(variant.entryId),
+    context.changedEntries?.includes(variant.entryId),
   );
   const tags = props.node.tags ?? [];
   return (
@@ -92,9 +92,9 @@ function NavRowLink(props: {
       data-removed-page={props.node.removedPage ? "" : undefined}
       data-removed-variant={props.node.removedVariant ? "" : undefined}
       hidden={props.hidden}
-      data-route={entryRoute(props.node.entryKind, props.node.entryId)}
+      data-route={entryRoute(props.node.entryId)}
       data-tags={tags.length > 0 ? tags.join(" ") : undefined}
-      href={`${viewHref(props.node.entryKind, props.node.entryId)}${
+      href={`${viewHref(props.node.entryId)}${
         props.node.snapshotId ? `?snapshot=${props.node.snapshotId}` : ""
       }`}
       style={navRowStyle(props.depth)}
@@ -133,7 +133,9 @@ export function LeafRow(props: {
   );
   const leafVisible = store
     ? navLeafVisible(props.node, store.state.selection, store.context)
-    : !props.node.removedPage && !props.node.removedVariant;
+    : !props.node.removedPage &&
+      !props.node.removedVariant &&
+      !props.node.hidden;
   if (variants.length === 0 || parentId === undefined) {
     return (
       <NavRowLink
@@ -144,11 +146,11 @@ export function LeafRow(props: {
       />
     );
   }
-  const key = variantDisclosureKey(props.sectionId, parentId);
+  const key = variantDisclosureKey(parentId);
   const filtering = store ? navigationFiltering(store.state.selection) : false;
   const parentVisible = store
     ? navNodeVisible(props.node, store.state.selection, store.context)
-    : true;
+    : !props.node.hidden;
   const matchingVariants = store
     ? variants.filter((variant) =>
         navLeafVisible(variant, store.state.selection, store.context),
@@ -191,7 +193,7 @@ export function LeafRow(props: {
         }
         data-nav-disclosure={key}
         data-nav-variants=""
-        hidden={open ? undefined : true}
+        hidden={open && parentVisible ? undefined : true}
         id={listId}
       >
         {variants.map((variant) => (

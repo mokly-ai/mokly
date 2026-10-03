@@ -20,20 +20,20 @@ export function artifactRouteForEntry(
   entry: ResolvedRegistryEntry,
   viewport: Viewport,
   colorScheme: ColorScheme,
-  byId: ReadonlyMap<string, ResolvedRegistryEntry>,
+  byPath: ReadonlyMap<string, ResolvedRegistryEntry>,
   catalogueSchemes: readonly ColorScheme[],
 ): string | undefined {
-  if (entry.kind === "page") return entryRoute("page", entry.id);
+  if (entry.kind === "page") return entryRoute(entry.path);
   if (entry.kind === "component") {
     const variant = isComponentVariantDefinition(entry)
       ? entry
-      : [...byId.values()].find(
+      : [...byPath.values()].find(
           (
             candidate,
           ): candidate is ResolvedRegistryEntry & ComponentVariantDefinition =>
             candidate.kind === "component" &&
             isComponentVariantDefinition(candidate) &&
-            candidate.variantOf === entry.id,
+            candidate.variantOf === entry.path,
         );
     if (!variant) return undefined;
     const scheme = effectiveColorSchemes(variant, catalogueSchemes).includes(
@@ -41,13 +41,13 @@ export function artifactRouteForEntry(
     )
       ? colorScheme
       : "light";
-    return viewRoute("component", variant.id, viewport, scheme);
+    return viewRoute(variant.path, viewport, scheme);
   }
   const screen =
     entry.kind === "screen"
       ? entry
       : entry.kind === "use-case" && entry.steps[0]
-        ? byId.get(entry.steps[0].screenId)
+        ? byPath.get(entry.steps[0].screenPath)
         : undefined;
   if (screen?.kind !== "screen") return undefined;
   const targetScheme = effectiveColorSchemes(screen, catalogueSchemes).includes(
@@ -55,7 +55,7 @@ export function artifactRouteForEntry(
   )
     ? colorScheme
     : "light";
-  return viewRoute("screen", screen.id, viewport, targetScheme);
+  return viewRoute(screen.path, viewport, targetScheme);
 }
 
 /** Encode one logical destination relative to its generated source document. */

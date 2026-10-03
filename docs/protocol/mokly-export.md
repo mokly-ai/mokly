@@ -6,8 +6,7 @@ The consumer CLI, shared engine, and repository preview reuse artifact
 validation, [static delivery](./mokly-export-delivery.md), and one transaction.
 Serve/export share the viewer's server-rendered, hydrated React shell; consumer
 and comparison frames remain static. Build and comparison contracts stay
-authoritative. Path identity is approved; exports keep kind-and-id identity
-until the [path identity plan](../../plans/path-identity.md) delivers it.
+authoritative. Exports use path identity and nested artifact directories.
 
 ## Scope
 

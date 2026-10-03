@@ -5,7 +5,6 @@ import { Minimatch } from "minimatch";
 
 import { MoklyError } from "../errors.js";
 
-import { globStablePrefix } from "./entry_globs.js";
 import { projectRealPath, toPosixPath } from "./paths.js";
 import type { ResolvedConfig } from "./types.js";
 
@@ -17,9 +16,10 @@ export interface DiscoveryPaths {
     readonly lexical: string;
     readonly projected: string;
   };
-  readonly globs: readonly {
-    readonly glob: string;
-    readonly matcher: Minimatch;
+  readonly realFiles: Map<string, string>;
+  readonly roots: readonly {
+    readonly matchers: readonly Minimatch[];
+    readonly config: ResolvedConfig["roots"][number];
     readonly root: string;
     readonly projected: string;
   }[];
@@ -27,7 +27,7 @@ export interface DiscoveryPaths {
 
 /** Project shared roots once, retaining a lexical Review boundary if it is unavailable. */
 export function discoveryPaths(
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+  config: Pick<ResolvedConfig, "roots" | "repoRoot" | "review">,
 ): DiscoveryPaths {
   const lexical = path.resolve(config.review.outDir);
   let projected: string;
@@ -42,10 +42,12 @@ export function discoveryPaths(
   } catch (cause) {
     throw discoveryPathError(config.repoRoot, config.repoRoot, cause);
   }
-  const roots = new Map<string, string>([[config.repoRoot, realRepoRoot]]);
-  const globs = config.entryGlobs.map((glob) => {
-    const root = path.resolve(config.repoRoot, globStablePrefix(glob));
-    let realRoot = roots.get(root);
+  const projectedRoots = new Map<string, string>([
+    [config.repoRoot, realRepoRoot],
+  ]);
+  const roots = config.roots.map((configured) => {
+    const root = configured.dir;
+    let realRoot = projectedRoots.get(root);
     if (realRoot === undefined) {
       realRoot = root;
       try {
@@ -54,12 +56,14 @@ export function discoveryPaths(
         if (!isVanishedDirectory(cause))
           throw discoveryPathError(root, config.repoRoot, cause);
       }
-      roots.set(root, realRoot);
+      projectedRoots.set(root, realRoot);
     }
     return {
-      glob,
+      config: configured,
       root,
-      matcher: new Minimatch(glob, { dot: true }),
+      matchers: configured.files.map(
+        (glob) => new Minimatch(glob, { dot: true }),
+      ),
       projected: realRoot,
     };
   });
@@ -67,7 +71,8 @@ export function discoveryPaths(
     repoRoot: config.repoRoot,
     realRepoRoot,
     reviewOutput: { lexical, projected },
-    globs,
+    roots,
+    realFiles: new Map(),
   };
 }
 

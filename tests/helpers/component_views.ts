@@ -7,10 +7,10 @@ import type {
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
 import { isManifestComponentVariant } from "../../packages/viewer/dist/data.js";
-import type { ManifestV7 } from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
 
 /** Every actual screen and saved-variant view, in its own entry scope. */
-export function componentViews(manifest: ManifestV7): ComponentViewRecord[] {
+export function componentViews(manifest: ManifestV8): ComponentViewRecord[] {
   return manifest.entries.flatMap((entry) =>
     entry.kind === "screen"
       ? [...(entry.componentViews ?? [])]
@@ -21,10 +21,10 @@ export function componentViews(manifest: ManifestV7): ComponentViewRecord[] {
 }
 
 export function componentParent(
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   id: string,
 ): ManifestComponent {
-  const entry = manifest.entries.find((candidate) => candidate.id === id);
+  const entry = manifest.entries.find((candidate) => candidate.path === id);
   assert.ok(
     entry?.kind === "component" && !isManifestComponentVariant(entry),
     `Missing component ${id}`,
@@ -33,7 +33,7 @@ export function componentParent(
 }
 
 export function componentVariants(
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   parentId: string,
 ): ManifestComponentVariant[] {
   return manifest.entries.filter(

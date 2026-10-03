@@ -23,8 +23,8 @@ export function catalogueNavSections(
       return [
         {
           kind: "leaf",
-          key: `removed:${entry.id}`,
-          entryId: entry.id,
+          key: `removed:${entry.path}`,
+          entryId: entry.path,
           entryKind: entry.kind,
           label: `${entry.title} · Removed`,
           tags: entry.tags ?? [],
@@ -66,14 +66,15 @@ export function disclosurePath(
 /** Whether one leaf survives the current search and Changes constraints. */
 export function navLeafVisible(
   leaf: NavLeafNode,
-  selection: ViewerSelection,
+  selection: Pick<ViewerSelection, "view" | "search" | "tags">,
   context: ShellContext,
 ): boolean {
-  const status = context.changedIds ? "ready" : context.changesStatus;
+  const status = context.changedEntries ? "ready" : context.changesStatus;
   if (selection.view === "changes" && status !== "ready") return false;
+  if (selection.view !== "changes" && leaf.hidden) return false;
   if (
     selection.view === "changes"
-      ? !context.changedIds?.includes(leaf.entryId)
+      ? !context.changedEntries?.includes(leaf.entryId)
       : leaf.removedPage || leaf.removedVariant
   )
     return false;
@@ -90,9 +91,10 @@ export function navLeafVisible(
 /** Whether a group should remain in the filtered tree. */
 export function navNodeVisible(
   node: NavNode,
-  selection: ViewerSelection,
+  selection: Pick<ViewerSelection, "view" | "search" | "tags">,
   context: ShellContext,
 ): boolean {
+  if (selection.view !== "changes" && node.hidden) return false;
   if (node.kind === "leaf")
     return (
       navLeafVisible(node, selection, context) ||
@@ -100,7 +102,6 @@ export function navNodeVisible(
         navLeafVisible(variant, selection, context),
       )
     );
-  if (!navigationFiltering(selection)) return true;
   return node.children.some((child) =>
     navNodeVisible(child, selection, context),
   );
@@ -124,10 +125,7 @@ function collectDefaults(
   for (const node of nodes) {
     if (node.kind === "leaf") {
       if (node.variants?.length)
-        result[variantDisclosureKey(section, node.entryId)] = containsEntryId(
-          node,
-          id,
-        );
+        result[variantDisclosureKey(node.entryId)] = containsEntryId(node, id);
       continue;
     }
     result[folderDisclosureKey(section, node.key)] =
@@ -145,10 +143,10 @@ function nodePath(
     if (node.kind === "leaf") {
       if (node.entryId === id)
         return node.variants?.length
-          ? [variantDisclosureKey(section, node.entryId)]
+          ? [variantDisclosureKey(node.entryId)]
           : [];
       if (node.variants?.some((variant) => variant.entryId === id))
-        return [variantDisclosureKey(section, node.entryId)];
+        return [variantDisclosureKey(node.entryId)];
       continue;
     }
     const child = nodePath(node.children, section, id);
@@ -168,9 +166,6 @@ function containsEntryId(node: NavNode, id: string | undefined): boolean {
 }
 
 /** Persisted disclosure identity for one screen's variant list. */
-export function variantDisclosureKey(
-  section: NavSectionNode["id"],
-  parentId: string,
-): string {
-  return `variants:${section}:${parentId}`;
+export function variantDisclosureKey(parentId: string): string {
+  return `variants:${parentId}`;
 }

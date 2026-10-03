@@ -31,7 +31,7 @@ test("development React hydrates a finalized export cleanly", async ({
 }) => {
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page, developmentBundle);
-  await page.goto(`${exported.url}/view/screens/home.html`);
+  await page.goto(`${exported.url}/view/home/`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
   await expectCleanHydration(page, errors);
 });
@@ -59,7 +59,7 @@ test("static hydration adopts choices made after load while its catalogue is pen
     await route.continue();
   });
 
-  const navigation = page.goto(`${exported.url}/view/screens/home.html`);
+  const navigation = page.goto(`${exported.url}/view/home/`);
   await requested;
   await expect
     .poll(() => page.evaluate(() => document.readyState))
@@ -94,7 +94,7 @@ test("development React hydrates removed and replaced finalized routes", async (
 }) => {
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page, developmentBundle);
-  for (const route of ["pages/removed.html", "pages/renamed-old.html"]) {
+  for (const route of ["removed/index.html", "renamed-old/index.html"]) {
     const response = await page.goto(
       `${historical.url}/view/${encodeRoute(route)}`,
     );

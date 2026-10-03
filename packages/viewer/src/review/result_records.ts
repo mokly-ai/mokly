@@ -6,7 +6,7 @@ import {
   requireOrdered,
   reviewAddress,
   reviewArray,
-  reviewId,
+  reviewEntryPath,
   reviewIgnoreId,
   reviewInvalid,
   reviewObject,
@@ -21,7 +21,7 @@ import {
   validateResourceEvidence,
 } from "./result_resources.js";
 
-const screenKeys = ["dependencies", "id", "sharedImpact", "state", "title"];
+const screenKeys = ["dependencies", "path", "sharedImpact", "state", "title"];
 export function validateReviewScreen(
   value: unknown,
   component = false,
@@ -32,14 +32,14 @@ export function validateReviewScreen(
     [...screenKeys, component ? "variants" : "views"],
     ["before", "after"],
   );
-  reviewId(record.id);
+  reviewEntryPath(record.path);
   reviewString(record.title);
   reviewStrings(record.dependencies, reviewPath);
   reviewStrings(record.sharedImpact, reviewPath);
   reviewState(record.state);
   reviewSides(record);
   requireEqual(record.after ?? record.before, {
-    id: record.id,
+    path: record.path,
     title: record.title,
   });
   if (!component) validateReviewViews(record.views, record, changedPaths);
@@ -51,29 +51,32 @@ export function validateReviewScreen(
     for (const item of variants) {
       const variant = reviewObject(
         item,
-        ["id", "title", "state", "views"],
+        ["path", "title", "state", "views"],
         ["before", "after"],
       );
-      reviewId(variant.id);
+      reviewEntryPath(variant.path);
       reviewString(variant.title);
       reviewState(variant.state);
-      if (ids.has(variant.id) || (!variant.before && !variant.after))
+      if (ids.has(variant.path) || (!variant.before && !variant.after))
         reviewInvalid("invalid variant sides or identity");
       if (!variant.after) baselineOnly = true;
       else if (baselineOnly)
         reviewInvalid(
           "component variant order must put current variants before baseline-only variants",
         );
-      ids.add(variant.id);
+      ids.add(variant.path);
       for (const side of ["before", "after"] as const) {
         if (!variant[side]) continue;
         if (!record[side]) reviewInvalid("variant has no entry side");
         const address = reviewObject(
           variant[side],
-          ["id", "title", "props", "suppliedSlots"],
+          ["path", "title", "props", "suppliedSlots"],
           ["description"],
         );
-        requireEqual(address.id, variant.id);
+        requireEqual(
+          reviewEntryPath(address.path).toLowerCase(),
+          reviewEntryPath(variant.path).toLowerCase(),
+        );
         reviewString(address.title);
         if (address.description !== undefined)
           reviewString(address.description);
@@ -82,7 +85,7 @@ export function validateReviewScreen(
       }
       const preferred = reviewObject(
         variant.after ?? variant.before,
-        ["id", "title", "props", "suppliedSlots"],
+        ["path", "title", "props", "suppliedSlots"],
         ["description"],
       );
       requireEqual(preferred.title, variant.title);
@@ -142,7 +145,7 @@ export function validateChangedEntry(
       raw.kind === "dependency"
         ? ["kind", "path"]
         : raw.kind === "screen"
-          ? ["kind", "id"]
+          ? ["kind", "screenPath"]
           : ["kind"],
       raw.kind === "dependency" ? ["analysis"] : [],
     );
@@ -169,9 +172,9 @@ export function validateChangedEntry(
     if (reason.kind === "screen") {
       if (record.kind !== "use-case")
         reviewInvalid("screen propagation requires a use case");
-      reviewId(reason.id);
+      reviewEntryPath(reason.screenPath);
     }
-    keys.push(`${reason.kind}:${reason.path ?? reason.id ?? ""}`);
+    keys.push(`${reason.kind}:${reason.path ?? reason.screenPath ?? ""}`);
   }
   requireOrdered(keys, (key) => key);
   return record;
@@ -182,18 +185,18 @@ export function validateAffected(value: unknown): Record<string, unknown> {
     "consumer",
     "evidence",
   ]);
-  reviewId(record.changedComponentId);
+  reviewEntryPath(record.changedComponentId);
   const consumer = reviewObject(
     record.consumer,
     record.consumer &&
       typeof record.consumer === "object" &&
       "kind" in record.consumer &&
       record.consumer.kind === "screen"
-      ? ["kind", "id"]
-      : ["kind", "id"],
+      ? ["kind", "path"]
+      : ["kind", "path"],
   );
-  if (consumer.kind === "screen") reviewId(consumer.id);
-  else if (consumer.kind === "component") reviewId(consumer.id);
+  if (consumer.kind === "screen") reviewEntryPath(consumer.path);
+  else if (consumer.kind === "component") reviewEntryPath(consumer.path);
   else reviewInvalid("invalid affected consumer");
   const evidence = reviewArray(record.evidence);
   if (!evidence.length) reviewInvalid("affected evidence is empty");
@@ -205,11 +208,11 @@ export function validateAffected(value: unknown): Record<string, unknown> {
     const context = reviewObject(
       item.context,
       ["kind", "entry", "viewport", "colorScheme"],
-      ["variantId"],
+      ["variantPath"],
     );
     const entry = reviewAddress(context.entry);
-    if (context.kind === "component") reviewId(context.variantId);
-    else if (context.kind !== "screen" || context.variantId !== undefined)
+    if (context.kind === "component") reviewEntryPath(context.variantPath);
+    else if (context.kind !== "screen" || context.variantPath !== undefined)
       reviewInvalid("invalid usage context");
     if (
       !["mobile", "desktop"].includes(String(context.viewport)) ||
@@ -218,7 +221,7 @@ export function validateAffected(value: unknown): Record<string, unknown> {
       reviewInvalid("invalid usage view");
     const chain = reviewArray(item.via).map((raw) => {
       const edge = reviewObject(raw, ["componentId", "instanceKey"]);
-      reviewId(edge.componentId);
+      reviewEntryPath(edge.componentId);
       if (!/^[a-f0-9]{64}$/.test(reviewString(edge.instanceKey)))
         reviewInvalid("invalid instance key");
       return edge;
@@ -230,7 +233,7 @@ export function validateAffected(value: unknown): Record<string, unknown> {
     )
       reviewInvalid("invalid ownership chain");
     keys.push(
-      `${item.side === "before" ? 0 : 1}\u0000${entry.id}\u0000${context.variantId ?? ""}\u0000${context.viewport === "mobile" ? 0 : 1}\u0000${context.colorScheme === "light" ? 0 : 1}\u0000${canonicalJson(chain)}`,
+      `${item.side === "before" ? 0 : 1}\u0000${entry.path}\u0000${context.variantPath ?? ""}\u0000${context.viewport === "mobile" ? 0 : 1}\u0000${context.colorScheme === "light" ? 0 : 1}\u0000${canonicalJson(chain)}`,
     );
   }
   requireOrdered(keys, (key) => key);

@@ -11,9 +11,13 @@ export function entryChanges(
   if (input.changesStatus !== "ready") return { status: input.changesStatus };
   const included =
     removed ||
-    (input.changedIds ?? input.evidence?.changedIds ?? []).includes(entry.id);
+    (input.changedEntries ?? input.evidence?.changedEntries ?? []).includes(
+      entry.path,
+    );
   const before = input.evidence?.baseline.entries.find(
-    (candidate) => candidate.id === entry.id,
+    (candidate) =>
+      candidate.kind === entry.kind &&
+      candidate.path.toLowerCase() === entry.path.toLowerCase(),
   );
   return {
     status: "ready",

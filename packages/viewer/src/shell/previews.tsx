@@ -18,7 +18,7 @@ import { useRemovedPreview } from "./use_removed_preview.js";
 /** Everything the browser client needs to request one entry's previous version. */
 export interface RemovedPreviewData {
   /** Stable entry id, so another entry cannot adopt this response. */
-  id: string;
+  path: string;
   kind: "page" | "screen";
   title: string;
   /** Catalogue that owns the selected historical record. */
@@ -44,11 +44,11 @@ export function removedPreviewData(
   if (entry.kind !== "page" && entry.kind !== "screen") return undefined;
   const model = catalogue.publicModel ?? context.readModel;
   const removed = model?.removedEntries.find(
-    (removed) => removed.entry.id === entry.id,
+    (removed) => removed.entry.path === entry.path,
   );
   const published = removed?.preview;
   return {
-    id: entry.id,
+    path: entry.path,
     kind: entry.kind,
     title: entry.title,
     ...(model && removed?.snapshotId
@@ -111,7 +111,7 @@ function ScreenFrame(props: {
         <PhoneFrame>{content}</PhoneFrame>
       ) : (
         <BrowserFrame
-          address={props.data.address ?? entryRoute("screen", props.data.id)}
+          address={props.data.address ?? entryRoute(props.data.path)}
           expandable={false}
         >
           {content}

@@ -22,7 +22,7 @@ function historicalEntrySource(
   renamedId: string,
 ): string {
   const page = (id: string, title: string) =>
-    `definePage({ dependencies: [], description: ${JSON.stringify(`${title} guidance`)}, id: ${JSON.stringify(id)}, relatedDocs: [], render: () => ${JSON.stringify(`<!doctype html><html><body><h1>${title}</h1></body></html>`)}, title: ${JSON.stringify(title)} })`;
+    `definePage({ dependencies: [], description: ${JSON.stringify(`${title} guidance`)}, path: ${JSON.stringify(id)}, relatedDocs: [], render: () => ${JSON.stringify(`<!doctype html><html><body><h1>${title}</h1></body></html>`)}, title: ${JSON.stringify(title)} })`;
   return `import { definePage } from "@mokly/mokly";
 export const mockups = [
   ${includeRemoved ? `${page("removed", "Removed")},` : ""}
@@ -46,7 +46,7 @@ export async function startStaticFixture({
           body: `<h1>${changed ? "Current" : "Previous"} home</h1><a href="mock:details#details">Details</a><a href="mock:details#details" target="_blank">New tab</a><a href="mock:details#details" target="reference">Named tab</a>`,
         })
           .replace('id="details-mobile"', 'id="details"')
-          .replace('id: "home",', 'tags: ["forms"], id: "home",');
+          .replace('path: "home",', 'tags: ["forms"], path: "home",');
   const fixture = await createExportFixture(source(false), {
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
@@ -64,7 +64,7 @@ export async function startStaticFixture({
     const files = await directoryFiles(isolated);
     const server = await serveStaticFiles(isolated);
     try {
-      await assertServedShellMarker(server.url, "/view/screens/home.html");
+      await assertServedShellMarker(server.url, "/view/home/");
     } catch (error) {
       await server.close();
       throw error;
@@ -105,7 +105,7 @@ export async function startHistoricalStaticFixture() {
     await fixture.close();
     const server = await serveStaticFiles(isolated);
     try {
-      await assertServedShellMarker(server.url, "/view/pages/removed.html");
+      await assertServedShellMarker(server.url, "/view/removed/");
     } catch (error) {
       await server.close();
       throw error;

@@ -131,6 +131,23 @@ test("pinned presentations accept extensionless delivery and cache by address", 
   ]);
 });
 
+for (const suffix of ["/index.html", "/index", "/", ""]) {
+  test(`page snapshots accept the same directory response ${suffix || "without slash"}`, async () => {
+    const folder = `${GENERATION}snapshots/before/documents/removed`;
+    const requested = `${folder}/index.html`;
+    const fetch = environment(() => response(`${folder}${suffix}`));
+    const loader = createSnapshotPresentationLoader(
+      GENERATION,
+      ["before"],
+      { kind: "pinned", comparisonUrl: `${GENERATION}review.json` },
+      fetch.value,
+    );
+    const result = await loader.load(requested, AbortSignal.timeout(5_000));
+    assert.equal(result.snapshotAddress, requested);
+    assert.ok(result.srcdoc.includes(`<base href="${requested}">`));
+  });
+}
+
 test("live presentations use same-origin credentials", async () => {
   const fetch = environment(() => response(SNAPSHOT));
   const loader = createSnapshotPresentationLoader(

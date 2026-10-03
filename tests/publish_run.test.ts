@@ -45,7 +45,7 @@ function dependencies(duplicate = false) {
         [
           comparisonPath,
           JSON.stringify({
-            schemaVersion: 4,
+            schemaVersion: 5 as const,
             baseRef: "origin/main",
             baseCommit: base,
             changedPaths: [],

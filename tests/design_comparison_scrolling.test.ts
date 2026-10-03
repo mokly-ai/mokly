@@ -37,7 +37,7 @@ function reworded(before: Element, after: Element, where: string): void {
 }
 
 test("the panel overlay scrolls one app-shell panel for both versions", async () => {
-  const views = await renders("design-changes-overlay-panel");
+  const views = await renders("design/changes/diff-controls/overlay-panel");
   assert.equal(views.length, 4, "both viewports in both schemes");
   for (const { document, route } of views)
     for (const [viewport, preview] of previews(document)) {
@@ -95,7 +95,9 @@ test("the panel overlay scrolls one app-shell panel for both versions", async ()
 });
 
 test("Side by side scrolled apart leaves each version at its own place", async () => {
-  const views = await renders("design-changes-side-by-side-apart");
+  const views = await renders(
+    "design/changes/diff-controls/side-by-side-apart",
+  );
   assert.equal(views.length, 4, "both viewports in both schemes");
   for (const { document, route } of views)
     for (const [viewport, preview] of previews(document)) {
@@ -133,43 +135,43 @@ test("Side by side scrolled apart leaves each version at its own place", async (
 
 /** The screens and saved samples whose band shows a diff mode. */
 const DIFF_MODE_DESIGNS = [
-  "design-appearance-difference",
-  "design-appearance-side-by-side",
-  "design-changes-moved",
-  "design-changes-overlay",
-  "design-changes-overlay-long",
-  "design-changes-overlay-panel",
-  "design-changes-side-by-side-apart",
-  "design-component-comparison",
-  "design-component-controls-comparison",
-  "design-component-difference",
-  "design-component-overlay",
-  "design-component-overlay-tall",
-  "design-component-removed",
-  "design-review-changed",
-  "design-review-difference",
-  "design-review-style-matched",
-  "design-review-style-unnamed",
-  "design-review-style-unresolved",
-  "design-ui-comparison-toolbar-difference",
-  "design-ui-comparison-toolbar-overlay",
-  "design-ui-comparison-toolbar-side-by-side",
-  "design-ui-comparison-toolbar-side-by-side-apart",
+  "design/browse/appearance/workspaces/difference",
+  "design/browse/appearance/workspaces/side-by-side",
+  "design/changes/outcomes/moved",
+  "design/changes/diff-controls/overlay",
+  "design/changes/diff-controls/overlay-long",
+  "design/changes/diff-controls/overlay-panel",
+  "design/changes/diff-controls/side-by-side-apart",
+  "design/components/pages/comparison",
+  "design/components/controls/states/comparison",
+  "design/components/pages/stacked/difference",
+  "design/components/pages/stacked/overlay",
+  "design/components/pages/stacked/overlay-tall",
+  "design/components/states/removed",
+  "design/changes/outcomes/changed",
+  "design/changes/outcomes/difference",
+  "design/changes/impact/styles/matched",
+  "design/changes/impact/styles/unnamed",
+  "design/changes/impact/styles/unresolved",
+  "design/library/controls/comparison-toolbar/difference",
+  "design/library/controls/comparison-toolbar/overlay",
+  "design/library/controls/comparison-toolbar/side-by-side",
+  "design/library/controls/comparison-toolbar/side-by-side-apart",
 ];
 
 /** The designs that depict Scroll together switched off. */
 const SCROLLING_APART = new Set([
-  "design-changes-side-by-side-apart",
-  "design-ui-comparison-toolbar-side-by-side-apart",
+  "design/changes/diff-controls/side-by-side-apart",
+  "design/library/controls/comparison-toolbar/side-by-side-apart",
 ]);
 
 test("every diff-mode band draws Scroll together after its modes, and Current never does", async () => {
   const { manifest, outputs } = await designCatalogue;
   const views = manifest.entries.flatMap((entry) => {
     if (entry.kind !== "screen" && entry.kind !== "component") return [];
-    if (!entry.id.startsWith("design-")) return [];
+    if (!entry.path.startsWith("design/")) return [];
     return generatedViews(entry).map((view) => ({
-      id: entry.id,
+      id: entry.path,
       route: view.path,
     }));
   });
@@ -219,6 +221,6 @@ test("every diff-mode band draws Scroll together after its modes, and Current ne
       );
     }
   }
-  assert.deepEqual([...diffModes].sort(), DIFF_MODE_DESIGNS);
+  assert.deepEqual([...diffModes].sort(), [...DIFF_MODE_DESIGNS].sort());
   assert.ok(current > 0, "no Current band was checked");
 });

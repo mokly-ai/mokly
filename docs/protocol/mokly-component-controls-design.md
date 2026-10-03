@@ -4,9 +4,8 @@
 
 The completed [component explorer plan](../../plans/component-explorer.md) and
 [inspector revision](./mokly-component-inspector-design.md) shipped these states
-through registered components and local controls. Entry files derive from paths
-under the approved contract below; the design catalogue still authors ids until
-the [path identity plan](../../plans/path-identity.md) migrates it.
+through registered components and local controls. The design catalogue and
+its entry files use paths.
 
 ## Controls Panel
 
@@ -66,19 +65,19 @@ Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md); its folder owns gallery
 membership.
 
-| Entry                                        | State                                           |
-| -------------------------------------------- | ----------------------------------------------- |
-| `design-component-controls`                  | Default saved variant with all control types    |
-| `design-component-controls-edited`           | Edited values and matching preview              |
-| `design-component-controls-unset`            | Optional hint unset                             |
-| `design-component-controls-variant`          | Disabled saved variant selected                 |
-| `design-component-controls-reset`            | Reset to saved values                           |
-| `design-component-controls-pending`          | Last valid preview while an update is pending   |
-| `design-component-controls-invalid`          | Field validation with last valid preview        |
-| `design-component-controls-error`            | Render failure, retry, and reset                |
-| `design-component-controls-comparison`       | Saved variant comparison and read-only controls |
-| `design-component-controls-readonly`         | Read-only values and available saved variants   |
-| `design-component-controls-readonly-variant` | Disabled saved variant with read-only values    |
+| Entry                                                   | State                                           |
+| ------------------------------------------------------- | ----------------------------------------------- |
+| `design/components/controls/controls`                   | Default saved variant with all control types    |
+| `design/components/controls/editing/edited`             | Edited values and matching preview              |
+| `design/components/controls/editing/unset`              | Optional hint unset                             |
+| `design/components/controls/editing/variant`            | Disabled saved variant selected                 |
+| `design/components/controls/editing/reset`              | Reset to saved values                           |
+| `design/components/controls/states/pending`             | Last valid preview while an update is pending   |
+| `design/components/controls/states/invalid`             | Field validation with last valid preview        |
+| `design/components/controls/states/error`               | Render failure, retry, and reset                |
+| `design/components/controls/states/comparison`          | Saved variant comparison and read-only controls |
+| `design/components/controls/published/readonly`         | Read-only values and available saved variants   |
+| `design/components/controls/published/readonly-variant` | Disabled saved variant with read-only values    |
 
 ## Verification
 

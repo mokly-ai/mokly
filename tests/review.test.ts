@@ -25,7 +25,7 @@ import { writeReviewArtifact } from "../dist/review/write.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV7,
+  ManifestV8,
 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
@@ -80,38 +80,38 @@ test("Review classifies added, removed, and unchanged routes independently", asy
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const detail = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "details",
+    (entry) => entry.kind === "screen" && entry.path === "details",
   );
   const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   assert.ok(detail?.kind === "screen" && home?.kind === "screen");
   const old = {
     ...home,
-    id: "old-screen",
+    path: "old-screen",
     title: "Old screen",
-    useCaseIds: [],
+    useCasePaths: [],
   };
   const baseManifest = {
     ...compilation.manifest,
-    entries: [{ ...detail, useCaseIds: [] }, old],
+    entries: [{ ...detail, useCasePaths: [] }, old],
   };
   const gitFiles = new Map<string, string>([
     ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
     [
-      "mockups/screens/details.mobile.html",
-      compilation.outputs.get("screens/details.mobile.html") ?? "",
+      "mockups/details/index.mobile.html",
+      compilation.outputs.get("details/index.mobile.html") ?? "",
     ],
     [
-      "mockups/screens/details.desktop.html",
-      compilation.outputs.get("screens/details.desktop.html") ?? "",
+      "mockups/details/index.desktop.html",
+      compilation.outputs.get("details/index.desktop.html") ?? "",
     ],
     [
-      "mockups/screens/old-screen.mobile.html",
+      "mockups/old-screen/index.mobile.html",
       "<html><body>Old mobile</body></html>",
     ],
     [
-      "mockups/screens/old-screen.desktop.html",
+      "mockups/old-screen/index.desktop.html",
       "<html><body>Old desktop</body></html>",
     ],
   ]);
@@ -144,15 +144,16 @@ test("Review classifies added, removed, and unchanged routes independently", asy
     "HEAD",
   );
   assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "home")?.state,
+    artifact.result.screens.find((screen) => screen.path === "home")?.state,
     "added",
   );
   assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "old-screen")?.state,
+    artifact.result.screens.find((screen) => screen.path === "old-screen")
+      ?.state,
     "removed",
   );
   assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "details")?.state,
+    artifact.result.screens.find((screen) => screen.path === "details")?.state,
     "unchanged",
   );
 });
@@ -175,7 +176,7 @@ test("dark views compare and classify against a pre-dark base", async (context) 
     "HEAD",
   );
 
-  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  const home = artifact.result.screens.find((screen) => screen.path === "home");
   assert.ok(home);
   assert.deepEqual(
     home.views.map(({ colorScheme, state, viewport }) => ({
@@ -193,8 +194,8 @@ test("dark views compare and classify against a pre-dark base", async (context) 
   const reviewJson = JSON.parse(
     renderReviewArtifact(artifact).get("review.json") as string,
   ) as ReviewResult;
-  assert.equal(reviewJson.schemaVersion, 4);
-  const jsonHome = reviewJson.screens.find((screen) => screen.id === "home");
+  assert.equal(reviewJson.schemaVersion, 5);
+  const jsonHome = reviewJson.screens.find((screen) => screen.path === "home");
   assert.ok(jsonHome);
   assert.deepEqual(
     jsonHome.views.map(({ colorScheme, ignoredIds, state, viewport }) => ({
@@ -257,7 +258,7 @@ test("removing dark classifies dark views removed", async (context) => {
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: { outDir: ".review", sharedImpact: ["notes.md"] }
@@ -274,7 +275,7 @@ export default defineConfig({
     "HEAD",
   );
 
-  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  const home = artifact.result.screens.find((screen) => screen.path === "home");
   assert.ok(home);
   assert.deepEqual(
     home.views.map(({ colorScheme, state, viewport }) => ({
@@ -353,7 +354,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
     new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
   );
   assert.equal(
-    result.screens.find((screen) => screen.id === "home")?.state,
+    result.screens.find((screen) => screen.path === "home")?.state,
     "changed",
   );
   assert.deepEqual(result.sharedImpact, ["notes.md"]);
@@ -366,7 +367,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
       "utf8",
     ),
   ) as { baseCommit: string; schemaVersion: number };
-  assert.equal(reviewJson.schemaVersion, 4);
+  assert.equal(reviewJson.schemaVersion, 5);
   assert.match(reviewJson.baseCommit, /^[a-f0-9]{40}$/);
   assert.equal(
     fs.existsSync(path.join(config.review.outDir, "index.html")),
@@ -465,7 +466,7 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
 }
 
 function filesForCompilation(
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   compilation: Compilation,
 ): Map<string, string> {
   const files = new Map<string, string>([
@@ -478,7 +479,7 @@ function filesForCompilation(
   return files;
 }
 
-function withoutDarkFragments(manifest: ManifestV7): ManifestV7 {
+function withoutDarkFragments(manifest: ManifestV8): ManifestV8 {
   return {
     ...manifest,
     entries: manifest.entries.map((entry) => {
@@ -504,7 +505,7 @@ function withHomeIgnoredRegions(
   ids: readonly string[] = ["nav"],
 ): Compilation {
   const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   if (home?.kind !== "screen") throw new Error("missing home screen");
   const outputs = new Map(compilation.outputs);

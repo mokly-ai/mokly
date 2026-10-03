@@ -2,14 +2,13 @@
 
 ## Delivery Status
 
-Implemented in `@mokly/viewer` by the completed
-[viewer library plan](../../plans/mokly-viewer-library.md). Local
-Serve/export keep today's same-origin sandbox and visible behavior. Only an
-explicit cross-origin host uses the new inspector transport. Host marker
-consumption and the trailing geometry refresh are implemented by the
-[comment anchoring plan](../../plans/viewer-comment-anchoring.md). Navigation
-messages name entries by `screenPath` below; adapters still carry ids until the
-[path identity plan](../../plans/path-identity.md) delivers that wire change.
+Implemented in `@mokly/viewer`. Local Serve/export retain the same-origin
+sandbox and visible behavior; explicit cross-origin hosts use inspector
+transport. Host markers and trailing geometry refresh are implemented. Navigation
+messages name entries by `screenPath`. Same-origin frame identity accepts an
+`index.html` page at its containing directory with or without a trailing slash,
+and other HTML files without their final `.html`, while retaining origin and
+query identity.
 Historical pages and screens use the viewer-owned presentation defined by the
 [removed previews contract](./mokly-removed-previews.md). Neither adapter mounts
 those frames or enters an inspection handshake; the viewer presents a

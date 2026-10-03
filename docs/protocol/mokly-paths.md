@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-Approved contract. Current builds still derive routes from kind and id and
-store `navPath` labels; the
-[path identity plan](../../plans/path-identity.md) delivers this contract.
+Build, Check, Serve, export, and the viewer use file-derived paths.
+Markdown discovery and move pairing remain planned in the
+[path identity plan](../../plans/path-identity.md).
 
 This is the single contract for an entry's path: how it derives from the
 file that defines the entry, which strings are valid segments, how `index`
@@ -24,7 +24,11 @@ the public read model, the review result, links, flow steps, and comment
 anchors, and it is the entry's URL under [URLs](#urls). Nothing else
 identifies an entry: there is no authored id and no label list.
 
-A variant's path is its parent's path plus the variant's slug. The parent
+A variant's path is its parent's final path plus exactly one segment, its slug.
+Variants have no `path` input; only their parent may declare a complete path.
+A variant's slug `index` is an ordinary segment and never collapses. Variants
+do not derive from file or directory names; a parent's declared path therefore
+also bypasses those names for its variants. The parent
 declares the variant, so the relationship is derived and recorded; it is never
 authored as a reference. The [variant contract](./mokly-variants.md) owns
 inheritance and validation.
@@ -43,8 +47,10 @@ directories Mokly scans. Each root has:
 
 A matched `.md` file is a document. Every other matched file is an entry
 module. A root that does not exist, or whose globs match no file, fails with
-`config-invalid`. Several roots merge into one catalogue; the same path from
-two roots is a [duplicate path](#diagnostics). A root `path` is validated as a
+`config-invalid`. Several roots merge into one catalogue; the same path from two distinct files
+is a [duplicate path](#diagnostics). Each matched file belongs to exactly one
+root; the [roots validation contract](./mokly-configuration.md#roots) rejects a
+file matched by two roots and permits disjoint file sets in overlapping trees. A root `path` is validated as a
 path; each `transparent` name is validated as a segment.
 
 ## Derivation
@@ -52,10 +58,15 @@ path; each `transparent` name is validated as a segment.
 An entry's path is derived in three steps and no others:
 
 1. the root's `path` prefix, if any;
-2. the directories between the root and the file, in order, with every
+2. the directories between the root and the discovered exporting entry module
+   (or document file), in order, with every
    directory named in `transparent` removed;
 3. the leaf: a document's file name without `.md`, or an entry's slug under
    the [slug rule](./mokly-entry-modules.md#slugs).
+
+For TypeScript and JavaScript, "the file" always means the discovered entry
+module that exports the definition. A helper's defining-module attribution is
+independent and never changes the path or default slug.
 
 The leaf `index` collapses: it adds no segment, so the entry's path is the
 directory path and the entry is that folder's own page. A document named
@@ -66,7 +77,13 @@ is a build error; give the file a `path`.
 
 A declared `path`, on an entry or in document front matter, replaces the
 derived path completely. It is validated as a path and participates in every
-collision rule. A declared path is always complete.
+collision rule. File and directory names are not validated for that entry; this
+allows a file that cannot be renamed to declare its path. Any explicitly supplied
+slug still follows the segment grammar, and variants still require a slug.
+A declared path is always complete. Index-ness comes from the `index` slug or an
+index document's `README.md`/`index.md` name; the declared path says where that
+folder's own page lives. Its relative-link base is that complete path. These rules
+also apply to a document's front-matter path.
 
 No other input changes a path. Mokly never compares a file name with its
 directory name, never counts the entries in a file, never changes the
@@ -84,8 +101,11 @@ lowercase forms are equal name the same path for every collision rule, because
 generated files share case-insensitive hosts and filesystems. Links, URLs, and
 stored paths use the authored case.
 
-A file name, slug, declared path, root prefix, or transparent name outside
-this grammar fails the build under [diagnostics](#diagnostics). Mokly does not
+A file or directory name used in derivation, an explicitly supplied slug, a
+declared path, root prefix, or transparent name outside this grammar fails the
+build under [diagnostics](#diagnostics). A declared path bypasses file and directory
+grammar only for that entry; other entries using derivation in the same module
+still validate their names. Mokly does not
 rewrite names, so `Getting Started.md` is rejected rather than normalised, and
 no segment is percent-encoded when written. `@mokly/viewer/data` exports
 `isPathSegment`, `isEntryPath`, and `isWindowsDeviceName` as the shared
@@ -140,8 +160,9 @@ an entry module export and `[<index>]` for a member of an exported array.
 | `unknown-link-target` | `<location>: link target <path> does not exist`                                                        |
 | `moved-link-target`   | `<location>: link target <path> does not exist; it moved to <path>`                                    |
 
-`<field>` is `file name`, `slug`, `path`, `movedFrom`, `root path`, or
-`transparent`. `duplicate-path` lists locations in UTF-16 order. The
+`<field>` is `file name`, `directory name`, `slug`, `path`, or `movedFrom`.
+Root `path` and `transparent` errors use `config-invalid` as specified by
+[configuration](./mokly-configuration.md#roots). `duplicate-path` lists locations in UTF-16 order. The
 duplicate check runs after collapse and declared paths, so two slug-less
 entries in one module, a file beside a same-named directory, and two roots
 mapping onto one place all report it. `moved-link-target` is emitted instead

@@ -27,6 +27,7 @@ import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
+import { nonGeneratedOutputFiles } from "./output_collisions.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { renderFragments } from "./render.js";
@@ -58,6 +59,7 @@ export class DocumentCompiler {
       ),
   );
   private readonly links: HtmlValidationContext;
+  private collisionFiles?: readonly string[];
 
   constructor(
     readonly runtime: ComponentRuntime,
@@ -65,24 +67,24 @@ export class DocumentCompiler {
   ) {
     const registry = prepareRegistry(graph.definitions, runtime.config);
     this.entries = registry.entries;
-    this.compatibility = { byId: registry.byId, routeIndexes: new Map() };
+    this.compatibility = { byPath: registry.byPath, routeIndexes: new Map() };
     this.components = new Map(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "component" && !isManifestComponentVariant(entry)
-          ? [[entry.id, entry] as const]
+          ? [[entry.path, entry] as const]
           : [],
       ),
     );
     for (const entry of runtime.manifest.entries) {
       if (entry.kind === "page")
-        this.routes.set(entryRoute("page", entry.id), {
-          entryId: entry.id,
+        this.routes.set(entryRoute(entry.path), {
+          entryId: entry.path,
           viewport: "desktop",
           colorScheme: "light",
         });
       for (const view of generatedViews(entry))
         this.routes.set(view.path, {
-          entryId: entry.id,
+          entryId: entry.path,
           viewport: view.viewport,
           colorScheme: view.colorScheme,
         });
@@ -148,7 +150,8 @@ export class DocumentCompiler {
         `unknown generated document: ${route}`,
       );
     const config = this.runtime.config;
-    validateGeneratedOutputPaths([route], config);
+    this.collisionFiles ??= nonGeneratedOutputFiles(config);
+    validateGeneratedOutputPaths([route], config, this.collisionFiles);
     const views = new Map<string, ArtifactView>();
     const componentViews = new Map<string, ComponentViewRecord>();
     const outputs = renderFragments(
@@ -176,7 +179,7 @@ export class DocumentCompiler {
       this.compatibility,
     );
     const html = outputs.get(route)!;
-    const entry = this.compatibility.byId.get(target.entryId)!;
+    const entry = this.compatibility.byPath.get(target.entryId)!;
     validateGeneratedOwnershipHeaders(
       outputs,
       new Map([[route, entry.sourceRelativePath]]),

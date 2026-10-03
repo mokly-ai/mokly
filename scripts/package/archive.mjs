@@ -102,7 +102,7 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
     "docs/protocol/fixtures/export-ownership-v2.json",
     "docs/protocol/fixtures/upload-plan-v1.json",
     "docs/protocol/mokly-catalogue.md",
-    "docs/protocol/fixtures/catalogue-v3.json",
+    "docs/protocol/fixtures/catalogue-v4.json",
     "dist/catalogue/projection.js",
     "dist/components/definition.js",
     "dist/server/controls/worker.js",

@@ -21,7 +21,7 @@ async function openViewer(
   page: Page,
   cross: boolean,
   selection: Partial<{
-    screenId: string;
+    screenPath: string;
     viewport: "mobile" | "desktop" | "both";
     colorScheme: "light" | "dark";
   }> = {},
@@ -33,7 +33,7 @@ async function openViewer(
       window.viewerHarness.start("one", {
         cross,
         defaultSelection: {
-          screenId: "home",
+          screenPath: "home",
           viewport: "both",
           ...selection,
         },
@@ -50,7 +50,7 @@ function homeInstance(
   colorScheme: "light" | "dark",
 ): InstanceRef {
   const screen = fixture.catalogue.screens.find(
-    (entry) => entry.id === "home",
+    (entry) => entry.path === "home",
   )!;
   const view = screen.views.find(
     (candidate) =>
@@ -58,7 +58,7 @@ function homeInstance(
   )!;
   if (view.usage.status !== "ready") throw new Error("Expected ready usage");
   return {
-    screenId: screen.id,
+    screenPath: screen.path,
     viewport,
     colorScheme,
     key: view.usage.instances.find((instance) => instance.id === "action")!.key,
@@ -116,21 +116,21 @@ for (const cross of [false, true]) {
     const refs = await page.evaluate(() => {
       const host = window.viewerHarness.get("one");
       const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
-      const home = model.screens.find((entry) => entry.id === "home")!;
-      home.useCaseIds = ["tour"];
+      const home = model.screens.find((entry) => entry.path === "home")!;
+      home.useCasePaths = ["tour"];
       model.useCases = [
         {
           kind: "use-case",
-          id: "tour",
-          navPath: [],
+          path: "tour",
+
           title: "Tour",
           tags: [],
           details: home.details,
           changes: { status: "disabled" },
-          steps: [{ screenId: "home" }, { screenId: "home" }],
+          steps: [{ screenPath: "home" }, { screenPath: "home" }],
         },
       ];
-      model.tree.pages = [...model.tree.pages, { kind: "entry", id: "tour" }];
+      model.tree = [...model.tree, { kind: "entry", path: "tour" }];
       const view = home.views.find(
         (candidate) =>
           candidate.viewport === "desktop" && candidate.colorScheme === "light",
@@ -143,11 +143,11 @@ for (const cross of [false, true]) {
       host.props = {
         ...host.props,
         catalogue: model,
-        defaultSelection: { screenId: "tour", viewport: "both" },
+        defaultSelection: { screenPath: "tour", viewport: "both" },
       } as MoklyViewerProps;
       host.render();
       return [0, 1].map((stepIndex): InstanceRef => ({
-        screenId: "home",
+        screenPath: "home",
         stepIndex,
         viewport: "desktop",
         colorScheme: "light",

@@ -32,7 +32,7 @@ export function renderTransient(
   }
   const entry = compiler.entries.find(
     (entry) =>
-      entry.id === request.componentId &&
+      entry.path === request.componentId &&
       entry.kind === "component" &&
       !isComponentVariantDefinition(entry),
   );
@@ -41,13 +41,13 @@ export function renderTransient(
     (candidate) =>
       candidate.kind === "component" &&
       isComponentVariantDefinition(candidate) &&
-      candidate.id === request.variantId &&
-      candidate.variantOf === entry.id,
+      candidate.path === request.variantPath &&
+      candidate.variantOf === entry.path,
   );
   if (!saved) throw new Error("Missing component variant record");
   const route = [...compiler.routes].find(
     ([, target]) =>
-      target.entryId === saved.id &&
+      target.entryId === saved.path &&
       target.viewport === request.viewport &&
       target.colorScheme === request.colorScheme,
   )![0];

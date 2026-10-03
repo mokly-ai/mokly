@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Approved contract. The gate currently accepts manifest v7; the
-[path identity plan](../../plans/path-identity.md) moves it to v8.
+Current and historical readers accept manifest v8. Earlier baselines use the
+established Changes-unavailable outcome without conversion.
 
 This contract owns the version gate between a current catalogue and the Git
 comparison base used by Serve, export, and publication. Baseline storage and

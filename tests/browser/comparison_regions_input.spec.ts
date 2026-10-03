@@ -27,8 +27,8 @@ test.afterAll(async () => {
   await fixture?.close();
 });
 
-const shell = () => `${fixture.url}/view/screens/shell.html`;
-const pageScreen = () => `${fixture.url}/view/screens/page.html`;
+const shell = () => `${fixture.url}/view/shell/`;
+const pageScreen = () => `${fixture.url}/view/page/`;
 
 /** A region's vertical range in one version. */
 function yRange(frame: Locator, selector: string): Promise<number> {

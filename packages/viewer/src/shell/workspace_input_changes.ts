@@ -19,7 +19,7 @@ export interface InputChange {
   title: string;
   viewport: "mobile" | "desktop";
   colorScheme: "light" | "dark";
-  variantId?: string;
+  variantPath?: string;
   before: ComponentWireProps;
   after: ComponentWireProps;
 }
@@ -48,7 +48,7 @@ export function inputChanges(
       (view) =>
         view.viewport === after.viewport &&
         view.colorScheme === after.colorScheme &&
-        view.variantId === after.variantId,
+        view.variantPath === after.variantPath,
     );
     for (const current of after.usage?.instances ?? []) {
       if (current.owner.kind !== "entry") continue;
@@ -64,10 +64,11 @@ export function inputChanges(
       changes.push({
         instanceId: current.id,
         title:
-          catalogue.byId.get(current.componentId)?.title ?? current.componentId,
+          catalogue.byPath.get(current.componentId)?.title ??
+          current.componentId,
         viewport: after.viewport,
         colorScheme: after.colorScheme,
-        ...(after.variantId ? { variantId: after.variantId } : {}),
+        ...(after.variantPath ? { variantPath: after.variantPath } : {}),
         before: previous.props,
         after: current.props,
       });

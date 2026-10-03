@@ -31,7 +31,7 @@ export function RegistryHarnessFrame({
   const mounted = useMountedShellFrame({
     enabled: true,
     identity: {
-      entryId: entry.id,
+      entryId: entry.path,
       viewport: view.viewport,
       colorScheme: view.colorScheme,
     },

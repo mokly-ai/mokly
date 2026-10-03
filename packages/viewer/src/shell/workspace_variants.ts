@@ -32,9 +32,11 @@ export function workspaceVariants(
   known: boolean,
   parentRemoved: boolean,
   parentStatus: EntryStatus | undefined,
-  changedIds?: readonly string[],
+  changedEntries?: readonly string[],
 ): WorkspaceVariantSet {
-  const current = (catalogue.hierarchy.variantsById.get(entry.id) ?? []).filter(
+  const current = (
+    catalogue.hierarchy.variantsByPath.get(entry.path) ?? []
+  ).filter(
     (candidate): candidate is ManifestComponentVariant =>
       candidate.kind === "component" && isManifestComponentVariant(candidate),
   );
@@ -43,14 +45,14 @@ export function workspaceVariants(
       (candidate): candidate is ManifestComponentVariant =>
         candidate.kind === "component" &&
         isManifestComponentVariant(candidate) &&
-        candidate.variantOf === entry.id,
+        candidate.variantOf === entry.path,
     ) ?? []),
   ];
   const removed = catalogue.removedEntries.flatMap(
     ({ entry: candidate, snapshotId }) =>
       candidate.kind === "component" &&
       isManifestComponentVariant(candidate) &&
-      candidate.variantOf === entry.id
+      candidate.variantOf === entry.path
         ? [{ value: candidate, snapshotId }]
         : [],
   );
@@ -59,9 +61,11 @@ export function workspaceVariants(
     ...removed,
   ];
   const rows = values.map(({ value, snapshotId }): WorkspaceVariant => {
-    const review = comparison?.variants.find((item) => item.id === value.id);
+    const review = comparison?.variants.find(
+      (item) => item.path === value.path,
+    );
     const isRemoved =
-      parentRemoved || !current.some((item) => item.id === value.id);
+      parentRemoved || !current.some((item) => item.path === value.path);
     const status = !known
       ? undefined
       : isRemoved
@@ -69,7 +73,7 @@ export function workspaceVariants(
         : review?.state === "added"
           ? "Added"
           : review?.state === "changed" ||
-              changedIds?.includes(value.id) ||
+              changedEntries?.includes(value.path) ||
               (review?.before &&
                 review.after &&
                 JSON.stringify(review.before.props) !==
@@ -102,12 +106,12 @@ export function standaloneWorkspaceVariant(
   const baseline = snapshot?.baseline.entries.flatMap((candidate) =>
     candidate.kind === "component" &&
     isManifestComponentVariant(candidate) &&
-    candidate.id === entry.id
+    candidate.path === entry.path
       ? [candidate]
       : [],
   ) ?? [entry];
   const review = comparison?.variants.find(
-    (candidate) => candidate.id === entry.id,
+    (candidate) => candidate.path === entry.path,
   );
   const status = !known
     ? undefined

@@ -32,7 +32,10 @@ Hash UTF-8 bytes with no trailing newline, salt, whitespace, or path prefix.
 The result is exactly 64 lowercase hexadecimal characters. The historical
 `mokabook-instance-v1` domain string is frozen, including its spelling.
 `id` is the validated local `moklyInstance` value, defaulting to the registered
-component's slug when omitted. `owner` is `{ kind: "entry" }` or
+component's resolved path's final segment when omitted, including after index
+collapse or a declared path override. Explicit values retain lowercase kebab-case
+grammar; inferred defaults follow the component path's segment grammar.
+`owner` is `{ kind: "entry" }` or
 `{ kind: "instance", instanceKey }`. The separate receiving-slot key is the
 same digest operation over `["mokabook-slot-v1", instanceKey, name]`.
 
@@ -54,8 +57,7 @@ The input owner and physical range parent can differ.
 A digest changes if and only if its serialized preimage changes, subject to the
 usual SHA-256 collision assumption. Edits that change it are:
 
-- Changing the effective `moklyInstance` id, including changing the component
-  id when the invocation uses that id as its default.
+- Changing the effective `moklyInstance` id, including changing the final component path segment when it supplies the default.
 - Changing input ownership between entry and instance, or moving the invocation
   to a parent with a different instance key.
 - Changing the original receiving slot key, including entering/leaving a slot,

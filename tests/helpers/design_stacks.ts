@@ -20,7 +20,7 @@ export async function renders(
   id: string,
 ): Promise<{ dark: boolean; document: Document; route: string }[]> {
   const { manifest, outputs } = await designCatalogue;
-  const entry = manifest.entries.find((candidate) => candidate.id === id);
+  const entry = manifest.entries.find((candidate) => candidate.path === id);
   assert.ok(entry?.kind === "screen", id);
   return generatedViews(entry).map((view) => {
     const route = view.path;

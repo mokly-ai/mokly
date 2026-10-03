@@ -6,9 +6,8 @@ the catalogue, or snapshots other entries; exhaustive commands remain unchanged.
 
 ## Delivery Status
 
-Implemented with entries selected by kind and id; the
-[path identity plan](../../plans/path-identity.md) delivers the path-addressed
-requests and results below.
+Implemented with entries selected by path and review result v5. Markdown
+document previews await document rendering.
 
 ## Requests and evidence
 

@@ -12,12 +12,12 @@ nothing, so the stage reports the unavailable state instead of requesting an
 address the catalogue never published.
 
 [`request.ts`](./request.ts) resolves that descriptor to one metadata address.
-Development uses the stable selected endpoint (`id=` for a screen or component
+Development uses the stable selected endpoint (`path=` for a screen or component
 variant, `page=` for a page); static delivery uses `comparisonUrl` for a screen
-and `pagePreviewMetadataPath(id)` for a page, confined to that comparison
-generation. Page documents use `snapshotPagePath(id)` from the generation root.
+and `previewMetadataPath(path)` for a page, confined to that comparison
+generation. Page documents use `snapshotDocumentPath("before", path)` from the generation root.
 Screen documents use `snapshotViewPath("before", ...)` only for views whose
-review state is `removed`; review v4 carries no stored before/after paths.
+review state is `removed`; review v5 carries no stored before/after paths.
 Before accepting either kind, the request recomputes the selected historical
 identity from the metadata's baseline commit. A generation-backed selection
 must resolve from the immutable generation named by request and final response.
@@ -43,7 +43,8 @@ allowed `snapshots/<side>/` subtree, applies the comparison credential and
 cancellation rules, caches each accepted address, shares non-aborted in-flight
 work and removes failures for Retry. It accepts only a successful `text/html`
 response within 64 MiB whose final URL is the requested address or its
-provider-normalized extensionless form. It parses without scripting, removes
+provider-normalized extensionless form; an `index.html` document also accepts
+its containing directory with or without a trailing slash. It parses without scripting, removes
 consumer base and refresh directives, prepends the single effective base, and
 serializes the preserved doctype and other nodes for `srcdoc`. These edits
 affect only the in-memory presentation; snapshot and comparison bytes do not

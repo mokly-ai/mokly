@@ -282,7 +282,7 @@ function sameFrameIdentity(
     current.colorScheme === next.colorScheme &&
     current.entryId === next.entryId &&
     current.stepIndex === next.stepIndex &&
-    current.variantId === next.variantId &&
+    current.variantPath === next.variantPath &&
     current.viewport === next.viewport
   );
 }

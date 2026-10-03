@@ -207,7 +207,10 @@ export function classifyWatchPath(
   )
     return "rebuild";
   if (isAuthoredEntryPath(absolute, config)) return "rebuild";
-  if (isEntryGlobCandidate(absolute, config, directory)) return "rebuild";
+  if (
+    isEntryGlobCandidate(absolute, config, directory, { includeExcluded: true })
+  )
+    return "rebuild";
   if (config.renderer === absolute) return "rebuild";
   const relative = toPosixPath(path.relative(config.repoRoot, absolute));
   if (

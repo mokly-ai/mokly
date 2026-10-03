@@ -119,8 +119,15 @@ function parseRuntimeStartupMessage(
   if (
     !config ||
     typeof config.configPath !== "string" ||
-    !Array.isArray(config.entryGlobs) ||
-    !config.entryGlobs.every((glob) => typeof glob === "string") ||
+    !Array.isArray(config.roots) ||
+    !config.roots.every(
+      (root) =>
+        root &&
+        typeof root.dir === "string" &&
+        Array.isArray(root.files) &&
+        root.files.every((glob: unknown) => typeof glob === "string") &&
+        Array.isArray(root.transparent),
+    ) ||
     (config.entryModules !== undefined &&
       (!Array.isArray(config.entryModules) ||
         !config.entryModules.every((module) => typeof module === "string"))) ||
@@ -129,7 +136,7 @@ function parseRuntimeStartupMessage(
     !Array.isArray(config.publicExclude) ||
     !manifest ||
     !Array.isArray(manifest.entries) ||
-    (manifest.schemaVersion !== 7 &&
+    (manifest.schemaVersion !== 8 &&
       manifest.schemaVersion !== "live-index-1") ||
     !Array.isArray(manifest.sourceFiles)
   )

@@ -4,12 +4,13 @@ import path from "node:path";
 import {
   canonicalJson,
   entryRoute,
-  pagePreviewMetadataPath,
+  previewMetadataPath,
   parseRemovedPagePreview,
-  snapshotPagePath,
+  snapshotDocumentPath,
 } from "@mokly/viewer/data";
 import type {
   HistoricalManifestPage,
+  RemovedPagePreview,
   RemovedPagePreviewArtifact,
   ReviewArtifactContent,
 } from "@mokly/viewer/data";
@@ -43,12 +44,12 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
     signal: AbortSignal,
   ): Promise<RemovedPagePreviewArtifact> {
     const removed = source.removedEntries.find(
-      ({ entry }) => entry.kind === "page" && entry.id === selection.id,
+      ({ entry }) => entry.kind === "page" && entry.path === selection.path,
     );
     if (!removed || selection.kind !== "page") throw missingSelection();
     const historical = source.baseline.entries.find(
       (entry): entry is HistoricalManifestPage =>
-        entry.kind === "page" && entry.id === removed.entry.id,
+        entry.kind === "page" && entry.path === removed.entry.path,
     );
     if (
       !historical ||
@@ -70,10 +71,10 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
       signal,
     );
     const files = new Map<string, ReviewArtifactContent>();
-    const document = entryRoute("page", historical.id);
+    const document = entryRoute(historical.path);
     addArtifactFile(
       files,
-      snapshotPagePath(historical.id),
+      snapshotDocumentPath("before", historical.path, "light"),
       await reader.read(document),
     );
     await copySnapshotDependencies(
@@ -85,11 +86,11 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
     );
     signal.throwIfAborted();
     const preview = parseRemovedPagePreview({
-      schemaVersion: 2,
+      schemaVersion: 3,
       baseRef: source.baseRef,
       baseCommit: source.baseCommit,
-      id: removed.entry.id,
-    });
+      path: removed.entry.path,
+    } satisfies RemovedPagePreview);
     return { files, preview };
   }
 }
@@ -112,7 +113,7 @@ export async function captureRemovedPagePreviews(
 ): Promise<ReadonlyMap<string, RemovedPagePreviewArtifact>> {
   const artifacts = new Map<string, RemovedPagePreviewArtifact>();
   const ids = source.removedEntries
-    .flatMap(({ entry }) => (entry.kind === "page" ? [entry.id] : []))
+    .flatMap(({ entry }) => (entry.kind === "page" ? [entry.path] : []))
     .sort();
   for (const id of ids) {
     signal.throwIfAborted();
@@ -123,11 +124,11 @@ export async function captureRemovedPagePreviews(
       );
     const artifact = await provider.generate(
       source,
-      { kind: "page", id },
+      { kind: "page", path: id },
       signal,
     );
     if (
-      artifact.preview.id !== id ||
+      artifact.preview.path !== id ||
       artifact.preview.baseCommit !== source.baseCommit ||
       artifact.preview.baseRef !== source.baseRef
     )
@@ -148,14 +149,13 @@ export function packageRemovedPagePreviews(
 ): ReadonlyMap<string, ReviewArtifactContent> {
   const packaged = new Map(files);
   for (const [id, artifact] of artifacts) {
-    if (artifact.preview.id !== id)
+    if (artifact.preview.path !== id)
       throw new MoklyError(
         "review-invalid",
         `Removed page preview id does not match its selection: ${id}`,
       );
     for (const [name, content] of renderRemovedPagePreviewArtifact(artifact)) {
-      const target =
-        name === "preview.json" ? pagePreviewMetadataPath(id) : name;
+      const target = name === "preview.json" ? previewMetadataPath(id) : name;
       const previous = packaged.get(target);
       if (previous === undefined) packaged.set(target, content);
       else if (!Buffer.from(previous).equals(Buffer.from(content)))

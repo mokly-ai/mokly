@@ -3,14 +3,12 @@
 ## Delivery Status
 
 Delivered inventory for [design component adoption](./mokly-design-components.md).
-Source paths below are relative to `examples/basic/entries/design/` and identify
+Source paths below are relative to `examples/basic/specs/design/` and identify
 the original composition points, which now delegate to registered implementations
 in `library/{group}/{slug}.view.tsx`. Saved pages and consuming artboards share
-those implementations. The path vocabulary below is the approved contract; the
-library still authors ids until the
-[path identity plan](../../plans/path-identity.md) migrates the example, and
-that plan adds the `document` row kind, the browse-only folder row, and the
-`Overview` row to the navigation designs.
+those implementations and use path identity. The navigation designs include
+the `document` row kind, browse-only folders, and `Overview`; runtime delivery
+is tracked by the [path identity plan](../../plans/path-identity.md).
 
 ## Components And Saved Examples
 

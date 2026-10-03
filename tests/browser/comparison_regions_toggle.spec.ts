@@ -32,7 +32,7 @@ test.afterAll(async () => {
 });
 
 const STORAGE_KEY = "mokly:comparison-scroll-together";
-const pageScreen = () => `${fixture.url}/view/screens/page.html`;
+const pageScreen = () => `${fixture.url}/view/page/`;
 
 /** Snapshot documents requested after a comparison became ready. */
 function paneRequests(page: Page): string[] {
@@ -131,12 +131,7 @@ test("Scroll together is remembered across screens and reloads", async ({
     await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY),
   ).toBe("off");
 
-  await openComparison(
-    page,
-    `${fixture.url}/view/screens/solo.html`,
-    "desktop",
-    "Overlay",
-  );
+  await openComparison(page, `${fixture.url}/view/solo/`, "desktop", "Overlay");
   await expect(scrollTogether(page)).not.toBeChecked();
   const desktop = comparisonSection(page, "desktop");
   await wheelOverRegion(page, paneFrame(desktop, "after"), "#rg-solo", 200);

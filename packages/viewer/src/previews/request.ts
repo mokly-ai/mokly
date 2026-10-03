@@ -5,8 +5,8 @@ import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
 import {
-  pagePreviewMetadataPath,
-  snapshotPagePath,
+  previewMetadataPath,
+  snapshotDocumentPath,
   snapshotSidePath,
   snapshotViewPath,
 } from "../navigation/routes.js";
@@ -44,7 +44,7 @@ export interface PreviewRequest {
   endpoint: URL;
   /**
    * Generation root the historical documents resolve against. A packaged page
-   * descriptor sits under `pages/`, so its documents resolve against the
+   * descriptor sits under `previews/<path>/`, so its documents resolve against the
    * comparison's generation rather than the descriptor's own directory.
    */
   generation?: URL;
@@ -81,7 +81,10 @@ export function previewEndpoint(
 ): PreviewRequest | undefined {
   if (!delivery) {
     const endpoint = new URL(STABLE_ENDPOINT, base);
-    endpoint.searchParams.set(data.kind === "page" ? "page" : "id", data.id);
+    endpoint.searchParams.set(
+      data.kind === "page" ? "page" : "path",
+      data.path,
+    );
     if (refresh) endpoint.searchParams.set("refresh", "1");
     return { endpoint };
   }
@@ -93,7 +96,7 @@ export function previewEndpoint(
   const generation = new URL(`/${comparisonPath}`, base);
   if (advertised.kind === "screen") return { endpoint: generation };
   const prefix = comparisonPath.slice(0, -REVIEW_FILE.length);
-  const path = `${prefix}${pagePreviewMetadataPath(data.id)}`;
+  const path = `${prefix}${previewMetadataPath(data.path)}`;
   return {
     endpoint: new URL(`/${encodeUrlPath(path)}`, base),
     generation,
@@ -115,7 +118,7 @@ export function advertisedPreviewPaths(
       ...model.removedEntries.flatMap((removed) =>
         removed.preview?.kind === "page" && comparison !== null
           ? [
-              `${comparison.slice(0, -REVIEW_FILE.length)}${pagePreviewMetadataPath(removed.entry.id)}`,
+              `${comparison.slice(0, -REVIEW_FILE.length)}${previewMetadataPath(removed.entry.path)}`,
             ]
           : [],
       ),
@@ -145,7 +148,9 @@ function screenContent(
   base: string,
 ): ParsedPreview {
   const result = parseReviewResult(payload);
-  const screen = result.screens.find((candidate) => candidate.id === data.id);
+  const screen = result.screens.find(
+    (candidate) => candidate.path === data.path,
+  );
   if (!screen || "after" in screen) unavailable();
   const views = screen.views.flatMap((view) =>
     view.state === "removed"
@@ -156,8 +161,7 @@ function screenContent(
               encodeUrlPath(
                 snapshotViewPath(
                   "before",
-                  "screen",
-                  data.id,
+                  data.path,
                   view.viewport,
                   view.colorScheme,
                 ),
@@ -182,12 +186,15 @@ function pageContent(
   base: string,
 ): ParsedPreview {
   const preview = parseRemovedPagePreview(payload);
-  if (preview.id !== data.id) unavailable();
+  if (preview.path !== data.path) unavailable();
   return {
     baseCommit: preview.baseCommit,
     content: {
       kind: "page",
-      url: new URL(encodeUrlPath(snapshotPagePath(data.id)), base).href,
+      url: new URL(
+        encodeUrlPath(snapshotDocumentPath("before", data.path, "light")),
+        base,
+      ).href,
     },
   };
 }

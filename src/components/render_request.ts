@@ -34,7 +34,7 @@ export function validateRenderRequest(
       value,
       [
         "componentId",
-        "variantId",
+        "variantPath",
         "viewport",
         "colorScheme",
         "generation",
@@ -46,7 +46,7 @@ export function validateRenderRequest(
     const item = value as unknown as ComponentRenderRequest;
     if (
       typeof item.componentId !== "string" ||
-      typeof item.variantId !== "string" ||
+      typeof item.variantPath !== "string" ||
       !["mobile", "desktop"].includes(item.viewport) ||
       !["light", "dark"].includes(item.colorScheme) ||
       typeof item.generation !== "string" ||
@@ -66,13 +66,13 @@ export function validateRenderRequest(
       (entry): entry is ManifestComponent =>
         entry.kind === "component" &&
         !isManifestComponentVariant(entry) &&
-        entry.id === item.componentId,
+        entry.path === item.componentId,
     );
     const variant = manifest.entries.find(
       (entry): entry is ManifestComponentVariant =>
         entry.kind === "component" &&
         isManifestComponentVariant(entry) &&
-        entry.id === item.variantId &&
+        entry.path === item.variantPath &&
         entry.variantOf === item.componentId,
     );
     if (!component || !variant)
@@ -83,7 +83,7 @@ export function validateRenderRequest(
     if (
       !generatedViews(variant).some(
         (view) =>
-          view.variantId === item.variantId &&
+          view.variantPath === item.variantPath &&
           view.viewport === item.viewport &&
           view.colorScheme === item.colorScheme,
       )

@@ -5,10 +5,9 @@
 The shared component and screen workspace is implemented in Serve and static
 exports: saved variants, usage, comparison evidence, highlighting, and a resizable
 icon inspector. Local Serve additionally provides editable controls. The
-path-based identity below, the path chip, `/view/<path>/` links, and the
-kind-filtered sections, is the approved contract; the current implementation
-still uses kind-and-id identity until the
-[path identity plan](../../plans/path-identity.md) delivers it. See the
+path-based identity, `/view/<path>/` links, and kind-filtered sections are
+implemented. The shell retains Pages and its existing chip presentation while
+the [path identity plan](../../plans/path-identity.md) delivers the remaining UI. See the
 [component contract](./mokly-components.md), [attribution contract](./mokly-component-changes.md),
 and [component design catalogue](./mokly-component-design.md). Removed
 consumers open their historical screen through the behavior implemented by the
@@ -213,7 +212,7 @@ host picking and clears stale inspection under the viewer lifecycle contract.
 ## Mockups And Verification
 
 Before UI implementation, extend the existing design catalogue under
-`examples/basic/entries/design` and regenerate its local derived HTML. This is
+`examples/basic/specs/design` and regenerate its local derived HTML. This is
 Mokly's current owning mockup tree; do not introduce an unrelated Expo app
 or a second mockup generator. Provide mobile and desktop screen components for
 the component page/variants, changed component/Affected screens, screen inspector

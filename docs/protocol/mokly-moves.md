@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Approved contract. Current comparisons pair entries by kind and id and treat a
+Approved contract. Current comparisons pair entries by kind and case-folded path and treat a
 moved entry as a removal plus an addition; the
 [path identity plan](../../plans/path-identity.md) delivers this contract.
 

@@ -46,8 +46,7 @@ for (const code of ["ENOENT", "ENOTDIR"]) {
     });
     assert.throws(() => discoverEntryModules(config), {
       code: "config-invalid",
-      message:
-        /entries glob matches no module: src\/\*\*\/\*\.mockup\.tsx; not searched: src\/nested$/,
+      message: /root matches no file: src; not searched: src\/nested$/,
     });
   });
 }
@@ -73,7 +72,7 @@ test("discovery lists a vanished only match under not searched", async (context)
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
     message:
-      /entries glob matches no module: entries\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: entries\/fixture\.mockup\.tsx$/,
+      /root matches no file: entries; not searched: entries\/fixture\.mockup\.tsx$/,
   });
 });
 
@@ -115,7 +114,7 @@ test("discovery lists an only match deleted after listing under not searched", a
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
     message:
-      /entries glob matches no module: entries\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: entries\/fixture\.mockup\.tsx$/,
+      /root matches no file: entries; not searched: entries\/fixture\.mockup\.tsx$/,
   });
 });
 
@@ -143,7 +142,13 @@ test("filesystem race mutation runs once across repeated overlapping discovery",
   });
   const overlapping = {
     ...config,
-    entryGlobs: ["entries/**/*.mockup.{ts,tsx}", "entries/*.mockup.{ts,tsx}"],
+    roots: [
+      {
+        dir: path.resolve(config.repoRoot, "entries"),
+        files: ["**/*.mockup.{ts,tsx}", "*.mockup.{ts,tsx}"],
+        transparent: [],
+      },
+    ],
   };
 
   assert.deepEqual(discoverEntryModules(overlapping), [remaining]);
@@ -247,5 +252,17 @@ async function discoveryFixture(context: TestContext) {
     path.join(root, "nested/hidden.mockup.tsx"),
     validEntrySource(),
   );
-  return { config: { ...config, entryGlobs: ["src/**/*.mockup.tsx"] }, root };
+  return {
+    config: {
+      ...config,
+      roots: [
+        {
+          dir: path.resolve(config.repoRoot, "src"),
+          files: ["**/*.mockup.tsx"],
+          transparent: [],
+        },
+      ],
+    },
+    root,
+  };
 }

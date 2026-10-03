@@ -11,7 +11,7 @@ import {
 
 for (const name of [
   "index.html",
-  "view/screens/home.html",
+  "view/home/index.html",
   "__mokly/shell.css",
   "__mokly/client/appearance-startup.js",
   "__mokly/client/react-shell.js",
@@ -40,7 +40,7 @@ for (const name of [
     assert.equal(after.comparisonUrl, before.comparisonUrl);
     assert.notEqual(after.deploymentId, before.deploymentId);
     const files = await directoryFiles(fixture.output);
-    for (const shell of ["index.html", "404.html", "view/screens/home.html"])
+    for (const shell of ["index.html", "404.html", "view/home/index.html"])
       assert.equal(
         exportedDelivery(files, shell).deploymentId,
         after.deploymentId,
@@ -65,7 +65,7 @@ test("deployment identity covers alias edges and ignores map insertion order", a
             ["landing", "index.html"],
             [
               "latest",
-              changed ? "view/screens/details.html" : "view/screens/home.html",
+              changed ? "view/details/index.html" : "view/home/index.html",
             ],
           ] as const;
           return new Map(reverse ? [...aliases].reverse() : aliases);

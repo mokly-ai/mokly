@@ -2,10 +2,9 @@
 
 ## Delivery Status
 
-Approved contract. Pages are implemented with ids and `navPath`; the
-[path identity plan](../../plans/path-identity.md) delivers the path-based
-form. The [removed content previews plan](../../plans/removed-content-previews.md)
-implements the page-only historical capture and delivery boundary.
+Pages use file-derived paths and complete-document rendering. The
+[removed content previews plan](../../plans/removed-content-previews.md)
+implements page-only historical capture and delivery.
 
 ## Purpose And Boundary
 
@@ -64,10 +63,9 @@ for the path `documents/account-statement`. A page named `index.mockup.tsx`,
 or declaring `slug: "index"`, is its folder's own page under the
 [folder row rules](./mokly-folders.md#rows-and-clicks).
 
-Pages reject `mobile`, `desktop`, `colorSchemes`, `address`, `useCasePaths`,
-`steps`, `variants`, and `variantOf`, including keys whose value is
-`undefined`. Untyped JavaScript receives the same validation as typed
-authoring. A use-case `screenPath` cannot name a page. Duplicate paths and
+Pages apply the general unknown-field rule to every undeclared input key,
+including keys with an `undefined` value. Untyped JavaScript receives the same
+validation as typed authoring. A use-case `screenPath` cannot name a page. Duplicate paths and
 grammar violations fail registry validation under the
 [path contract](./mokly-paths.md#diagnostics).
 

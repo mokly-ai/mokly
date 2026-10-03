@@ -21,9 +21,10 @@ comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery. Comparison loaders also accept `snapshots/after/`; removed previews never do.
 
 Accept a response only when its final URL is the requested snapshot address
-or that address with only its final `.html` suffix removed, the
-provider-normalized form a static host may redirect to, with the same origin
-and no query or fragment; its status is OK; its `Content-Type` MIME essence is
+or that address with only its final `.html` suffix removed. An `index.html`
+document also accepts its containing directory with or without a trailing slash.
+These provider-normalized forms retain the same origin
+and no query or fragment; the status must be OK; its `Content-Type` MIME essence is
 `text/html`; and the body exposed by Fetch is at most 64 MiB (67,108,864
 bytes). MIME parameters are allowed. Count the body instead of trusting
 `Content-Length`; cancellation stops that read. Any other redirect or an

@@ -18,7 +18,7 @@ test("live host waits for explicit capabilities and repeated bootstrap stays sin
   const errors = captureErrors(page);
   await countHydrations(page);
   const gate = await delayHost(page);
-  await page.goto("/view/screens/example-welcome.html", {
+  await page.goto("/view/example/screens/welcome/", {
     waitUntil: "commit",
   });
   await gate.requested;
@@ -50,7 +50,7 @@ test("export auto-hydrates once without live capabilities", async ({
 }) => {
   const errors = captureErrors(page);
   await countHydrations(page);
-  await page.goto(new URL("/view/screens/home.html", exported.url).href);
+  await page.goto(new URL("/view/home/", exported.url).href);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
   await expect(page.locator("html")).not.toHaveAttribute(
     "data-mokly-host-capabilities",

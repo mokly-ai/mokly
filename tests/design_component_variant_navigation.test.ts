@@ -4,8 +4,8 @@ import { test } from "node:test";
 import {
   COMPONENT_PAGES,
   CONTROLS_PAGES,
-} from "../examples/basic/entries/design/components/parts/destinations.js";
-import { NAV_TREE } from "../examples/basic/entries/design/parts/nav_data.js";
+} from "../examples/basic/specs/design/components/parts/destinations.js";
+import { NAV_TREE } from "../examples/basic/specs/design/parts/nav_data.js";
 
 import {
   attribute,
@@ -193,8 +193,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 test("shared navigation data follows the real component variant ids and authored order", async () => {
   const { manifest } = await designCatalogue;
-  for (const parentId of ["example-action", "example-toolbar"]) {
-    const parent = manifest.entries.find((entry) => entry.id === parentId);
+  for (const parentId of [
+    "example/components/action",
+    "example/components/toolbar",
+  ]) {
+    const parent = manifest.entries.find((entry) => entry.path === parentId);
     assert.equal(parent?.kind, "component", parentId);
     const parentIndex = NAV_TREE.findIndex((row) => row.key === parentId);
     assert.notEqual(parentIndex, -1, `${parentId} navigation parent`);
@@ -207,7 +210,7 @@ test("shared navigation data follows the real component variant ids and authored
           "variantOf" in entry &&
           entry.variantOf === parentId,
       )
-      .map((entry) => [entry.id, entry.title, "component"]);
+      .map((entry) => [entry.path, entry.title, "component"]);
     const variants: [string, string, string | undefined][] = [];
     for (const row of NAV_TREE.slice(parentIndex + 1)) {
       if (row.kind !== "variant") break;
@@ -224,7 +227,7 @@ test("shared navigation data follows the real component variant ids and authored
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: the drawer shows component disclosures and authored variant rows`, async () => {
     const { document } = await designDocument(
-      "design-browse-navigation",
+      "design/browse/states/navigation",
       viewport,
     );
     const section = componentSection(document);
@@ -252,11 +255,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: the reparented removed variant keeps its former parent crumb as plain text`, async () => {
     const { document } = await designDocument(
-      "design-browse-variant-reparented",
+      "design/browse/variants/variant-reparented",
       viewport,
     );
     assert.deepEqual(headCrumbs(document), [
-      ["Catalogue home", "design-browse-home"],
+      ["Catalogue home", "design/browse/views/home"],
       ["Example", undefined],
       ["Screens", undefined],
       ["Welcome", undefined],
@@ -267,7 +270,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 test("component explorer and Changes mockups disclose the relevant variants", async () => {
   for (const [id, labels] of [
     [
-      "design-component-overview",
+      "design/components/overview",
       [
         "Example",
         "Components",
@@ -284,11 +287,11 @@ test("component explorer and Changes mockups disclose the relevant variants", as
       ],
     ],
     [
-      "design-component-affected",
+      "design/components/pages/affected",
       ["Example", "Components", "Action", "Default"],
     ],
     [
-      "design-component-removed",
+      "design/components/states/removed",
       ["Example", "Components", "Action", "Compact · Removed"],
     ],
   ] as const) {
@@ -299,11 +302,11 @@ test("component explorer and Changes mockups disclose the relevant variants", as
 
 test("component variant rows use a component-shaped glyph without changing the screen glyph", async () => {
   const component = await designDocument(
-    "design-component-overview",
+    "design/components/overview",
     "desktop",
   );
   const screen = await designDocument(
-    "design-browse-variant-selected",
+    "design/browse/variants/variant-selected",
     "desktop",
   );
   const [componentClass, componentIcon] = rowIcon(

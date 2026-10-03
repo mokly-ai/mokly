@@ -77,7 +77,7 @@ Users can browse, inspect, and compare the saved variants normally.
 
 Serve exposes private POST `/__mokly/components/render`. Its request carries
 the parent component's path, the variant entry's path, view axes, catalogue
-generation, page id, and declared control overrides. It accepts no module
+generation, entry path, and declared control overrides. It accepts no module
 path, source, callback, resource path, or renderer selection.
 
 The response's `view` uses [manifest usage records](./mokly-component-manifest.md).

@@ -2,7 +2,7 @@
 
 import { readViewerWorkspace } from "../client/workspace_descriptor.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
-import { providerNormalizedHtmlPath, viewHref } from "../navigation/routes.js";
+import { parseViewHref, viewHref } from "../navigation/routes.js";
 import { readShellDelivery } from "../shell/delivery.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
 
@@ -47,7 +47,7 @@ async function loadWorkspace(
   entry: WorkspaceData["entry"],
   signal: AbortSignal,
 ): Promise<WorkspaceData | undefined> {
-  const requested = new URL(viewHref(entry.kind, entry.id), win.location.href);
+  const requested = new URL(viewHref(entry.path), win.location.href);
   try {
     const response = await win.fetch(requested, {
       cache: "no-store",
@@ -63,7 +63,7 @@ async function loadWorkspace(
     if (
       !delivery ||
       !sameDeployment(delivery, installedDelivery) ||
-      delivery.canonicalPath !== viewHref(entry.kind, entry.id)
+      delivery.canonicalPath !== viewHref(entry.path)
     )
       return;
     const bootstrapValue = scriptValue(
@@ -79,14 +79,17 @@ async function loadWorkspace(
       ),
       delivery,
     );
-    if (!sameStaticSource(bootstrap, installed, entry.id, entry.kind)) return;
+    if (!sameStaticSource(bootstrap, installed, entry.path, entry.kind)) return;
     const workspace = readViewerWorkspace(workspaceValue, {
       base: installed.context.base,
       ...(installed.context.previewGeneration
         ? { previewGeneration: installed.context.previewGeneration }
         : {}),
     });
-    if (workspace.entry.id !== entry.id || workspace.entry.kind !== entry.kind)
+    if (
+      workspace.entry.path !== entry.path ||
+      workspace.entry.kind !== entry.kind
+    )
       return;
     return workspace;
   } catch {
@@ -102,11 +105,9 @@ function scriptValue(page: Document, selector: string): unknown {
 
 function sameResponseUrl(response: Response, requested: URL): boolean {
   const received = new URL(response.url, requested);
-  const normalized = providerNormalizedHtmlPath(requested.pathname);
   return (
     received.origin === requested.origin &&
-    (received.pathname === requested.pathname ||
-      (normalized !== undefined && received.pathname === normalized)) &&
+    parseViewHref(received.pathname) === parseViewHref(requested.pathname) &&
     received.search === "" &&
     received.hash === ""
   );

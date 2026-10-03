@@ -2,9 +2,8 @@
 
 ## Delivery Status
 
-Approved contract. Current variants carry global ids and an authored
-`variantOf`; the [path identity plan](../../plans/path-identity.md) delivers
-slug-based variants whose relationship is derived from the declaration.
+Variants use slugs and derived parent paths. The manifest and public tree retain
+those relationships and authored sibling order.
 
 ## Purpose And Boundary
 
@@ -43,7 +42,6 @@ interface ScreenVariantInput {
   desktop: ReactNode;
   mobile: ReactNode;
   movedFrom?: string;
-  path?: string;
   rationale?: string;
   relatedDocs?: readonly string[];
   slug: string;
@@ -59,7 +57,7 @@ interface ScreenInput extends EntryInput {
 ```
 
 `defineComponent` requires a non-empty `variants` list whose elements declare
-`slug`, `title`, optional `description`, optional `path`, optional
+`slug`, `title`, optional `description`, optional
 `movedFrom`, and `props`, as defined by the
 [component contract](./mokly-components.md). Both helpers flatten each variant
 into a full definition whose derived path is the parent's path plus the
@@ -97,25 +95,27 @@ variant's own. A component variant inherits the parent's `colorSchemes`,
 authored nonempty `description` replaces the parent's; omission copies the
 parent description into the flattened entry. `slug` is one segment under the
 [segment grammar](./mokly-paths.md#segment-grammar); `overdue` under
-`account/billing/invoice` gives `account/billing/invoice/overdue`. A declared
-`path` on a variant replaces the derived path but keeps the relationship.
+`account/billing/invoice` gives `account/billing/invoice/overdue`. Variants have no `path` input. Their path always consists of the parent's final
+path and their own slug; a declared parent path moves every variant with it.
 
 Validation rejects, with source attribution:
 
-- a variant that declares `variants` or `variantOf`, even when `undefined`;
+- a screen variant that declares `variants`, even when `undefined`;
 - a variant without a slug, or whose slug is outside the segment grammar;
 - two variants of one parent with equal slugs, which derive one path and fail
   as a [duplicate path](./mokly-paths.md#diagnostics);
-- a page, document, or use case carrying `variants` or `variantOf`, including
-  keys whose value is `undefined`;
+- undeclared input keys such as `path` under the general unknown-field rule, including keys
+  whose value is `undefined`;
 - a component with no variants.
 
-For screen definitions, each forbidden field produces an `invalid-variants`
-registry violation with exact text `a variant cannot declare <field>`,
+For screen variants, nested `variants` produces an `invalid-variants`
+registry violation with exact text `a variant cannot declare variants`.
+All other undeclared input fields use the authoring contract's general
+`invalid-field` rule. The nested-variant diagnostic is
 attributed to the source module; its authored-field marker survives bundling
-through `Symbol.for`. `defineComponent` validates its authored variant object
-earlier and throws `ComponentValidationError` with detail
-`Component <parent path>: unknown variant field <field>`.
+through `Symbol.for`. Unknown component-variant fields use the same general
+`invalid-field` rule after registry path resolution. The attributed variant path
+therefore always includes the final parent path; no provisional label is used.
 
 If a parent's own definition is invalid, preparation reports that parent's
 root-cause violations without also reporting a relationship violation for each
@@ -149,8 +149,7 @@ The manifest is schema v8. `variantOf` is present exactly on variant entries
 of either kind and holds the parent's path under the
 [manifest contract](./mokly-component-manifest.md). Validation requires the
 named parent to be a current entry of the same kind without `variantOf` and
-requires the variant's path to be the parent's path plus one segment unless
-the variant declared `path`. Canonical entry sorting places a parent's
+requires the variant's path to be the parent's path plus exactly one segment. Canonical entry sorting places a parent's
 variants directly after it in authored order.
 
 The hierarchy analysis exposes each parent's variants in authored order and

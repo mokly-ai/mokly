@@ -95,7 +95,7 @@ function comparisonEndpoint(
   if (!sameOrigin(baseUrl, endpoint))
     throw new Error("The comparison is unavailable.");
   if (delivery.kind === "live") {
-    endpoint.searchParams.set("id", scope.id);
+    endpoint.searchParams.set("path", scope.id);
   }
   if (refresh) endpoint.searchParams.set("refresh", "1");
   return endpoint;

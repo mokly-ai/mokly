@@ -29,7 +29,7 @@ export function workspaceComponent(
 ): ManifestComponent | undefined {
   if (entry.kind !== "component") return;
   const candidate = isManifestComponentVariant(entry)
-    ? catalogue.byId.get(entry.variantOf)
+    ? catalogue.byPath.get(entry.variantOf)
     : entry;
   return candidate?.kind === "component" &&
     !isManifestComponentVariant(candidate)

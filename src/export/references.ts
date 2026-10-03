@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath, snapshotSidePath } from "@mokly/viewer/data";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import {
@@ -16,7 +16,8 @@ import {
 import { exportError } from "./error.js";
 import { ExportPathIndex } from "./path_index.js";
 
-const SNAPSHOT_MARKER = `/${path.posix.dirname(snapshotSidePath("before"))}/`;
+const COMPARISON_SNAPSHOT =
+  /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/snapshots\//;
 
 /** Prove every local document/resource/module request has an exported target. */
 export function validateExportReferences(
@@ -58,7 +59,7 @@ export function validateExportReferences(
     if (extension === ".html" || extension === ".htm") {
       references.push(
         ...(documents.get(name)?.references ?? []).filter(
-          (item) => !item.checkFragment || !name.includes(SNAPSHOT_MARKER),
+          (item) => !item.checkFragment || !COMPARISON_SNAPSHOT.test(name),
         ),
       );
     } else if (extension === ".css")

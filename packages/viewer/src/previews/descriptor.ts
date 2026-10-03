@@ -32,7 +32,7 @@ export function readPreviewDescriptor(
   }
   if (!value || typeof value !== "object") return undefined;
   const record = value as Record<string, unknown>;
-  const id = text(record["id"]);
+  const id = text(record["path"]);
   const title = text(record["title"]);
   const kind = record["kind"];
   if (!id || !title) return undefined;
@@ -50,7 +50,7 @@ export function readPreviewDescriptor(
   )
     return undefined;
   return {
-    id,
+    path: id,
     kind,
     title,
     ...(address ? { address } : {}),
@@ -62,7 +62,7 @@ export function readPreviewDescriptor(
 /** Identity of one requested preview; a different entry can never adopt it. */
 export function previewKey(data: RemovedPreviewData): string {
   return JSON.stringify([
-    data.id,
+    data.path,
     data.kind,
     data.catalogueIdentity,
     data.snapshotId,

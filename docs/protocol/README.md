@@ -15,15 +15,16 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 7                  | 4                 |
-| With registered components    | 7                  | 4                 |
+| Without registered components | 8                  | 5                 |
+| With registered components    | 8                  | 5                 |
 
-Current output uses manifest v7 and review result v4, keyed by kind and id,
-with read model and delivery descriptor v3. The approved target is manifest
-v8, review result v5, and read model v4, keyed by path: the manifest carries
-paths, folder records, documents, declared dependencies, component variants,
-and per-view usage, but no derivable file name; the review result addresses
-entries and views by path and axes and carries `previousPath` for moves.
+Current output uses manifest v8, review result v5, and public read model v4,
+keyed by kind and path. The private catalogue-change snapshot is v2 and removed
+page preview metadata is v3. Delivery descriptors remain v3. The manifest stores
+folder records, declared dependencies, component variants and per-view usage,
+with no derivable file names. Document types and optional previous paths are
+reserved; Markdown rendering and move detection remain planned. Current review
+results omit `previousPath`.
 Current and baseline manifest readers accept only one version; earlier output
 follows [baseline compatibility](./mokly-baseline-compatibility.md).
 
@@ -40,6 +41,7 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   Complete requests, retries, expiry, and accounting.
 - [Catalogue upload validation v1](./mokly-upload-validation.md) — rejection
   categories, limits, and independent receiver validation.
+- [Root discovery and ownership](./mokly-root-discovery.md)
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, watched events, and shortcuts.
@@ -168,3 +170,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [GitHub publishing protections](./npm-github-protections.md)
 - [Dependency security](./dependency-security.md) — advisory gates, targeted
   updates, temporary overrides, and packed-consumer audit coverage.
+
+- [Catalogue serialization](./mokly-catalogue-serialization.md) — canonical bytes,
+  snapshot identity and strict current-format readers.
+- [Public exclusion configuration](./mokly-public-exclusions.md) — defaults,
+  validation and the public-file matching base.

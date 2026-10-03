@@ -144,13 +144,13 @@ export function targetHead(
 ): { crumbs: CatalogueCrumb[]; id?: string; title: string } {
   const ancestors =
     catalogue.removedEntries
-      .find(({ entry }) => entry.id === target.entry.id)
-      ?.entry.navPath.map((label) => ({ label })) ??
-    structuredCrumbTrail(catalogue.hierarchy, target.entry.id);
+      .find(({ entry }) => entry.path === target.entry.path)
+      ?.folderTitles.map((label) => ({ label })) ??
+    structuredCrumbTrail(catalogue.hierarchy, target.entry.path);
   const parent = catalogueVariantParent(catalogue, target.entry);
   const parentEntry = catalogueVariantParentEntry(catalogue, target.entry);
   const parentSnapshot = parent
-    ? catalogue.removedEntries.find(({ entry }) => entry.id === parent.id)
+    ? catalogue.removedEntries.find(({ entry }) => entry.path === parent.path)
         ?.snapshotId
     : undefined;
   return {
@@ -162,7 +162,7 @@ export function targetHead(
             {
               ...(parent
                 ? {
-                    href: `${viewHref(parent.kind, parent.id)}${
+                    href: `${viewHref(parent.path)}${
                       parentSnapshot ? `?snapshot=${parentSnapshot}` : ""
                     }`,
                   }
@@ -170,7 +170,7 @@ export function targetHead(
               label: parentEntry.title,
             },
           ],
-    id: target.entry.id,
+    id: target.entry.path,
     title:
       target.entry.kind === "component" &&
       "variantOf" in target.entry &&

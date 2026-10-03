@@ -52,7 +52,7 @@ export function entryViews(
   if (!entry) return [];
   if (entry.kind === "component" && !isManifestComponentVariant(entry))
     return [...variants.values()]
-      .filter((variant) => variant.variantOf === entry.id)
+      .filter((variant) => variant.variantOf === entry.path)
       .flatMap((variant) => generatedViews(variant));
   return generatedViews(entry);
 }

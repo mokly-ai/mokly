@@ -81,7 +81,7 @@ throw; the stderr implementation tolerates a closed diagnostic stream.
 the marker records the commands. A complete entry for different settings fails
 explicitly and remains intact. Remove that commit's cache entry before changing
 its catalogue/build settings. Partial entries are rebuilt under the entry lock.
-`manifest.ts` fully validates v7 during adoption. It retains a lower integer
+`manifest.ts` fully validates v8 during adoption. It retains a lower integer
 version or earlier-name sentinel as completed incompatible output so the
 historical gate can report the expected unavailable outcome without rerunning
 trusted baseline commands. The approved
@@ -137,7 +137,7 @@ repository-relative paths and the pinned commit; it strips the output prefix
 internally. It rejects symlinks at every ancestor and non-regular files. Bulk
 reads use the Git reader's 4,096-object / 48 MiB batch limits, with at most 32
 filesystem reads in flight. The review asset reader additionally applies the
-accepted v7 baseline's source inventory and reserved-name policy. Earlier output
+accepted v8 baseline's source inventory and reserved-name policy. Earlier output
 follows the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 

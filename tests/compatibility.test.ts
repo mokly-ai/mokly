@@ -14,7 +14,7 @@ import {
   validEntrySource,
 } from "./helpers/fixture.js";
 
-test("migration compatibility transforms documents and legacy id links", async (context) => {
+test("configured transforms rewrite document links using path-keyed logical routes", async (context) => {
   const fixture = await createFixture(
     validEntrySource({
       body: '<a href="#">Menu</a><a href="./details.html">Details</a><span data-nav-href="mock:details">Open</span>',
@@ -42,12 +42,12 @@ test("migration compatibility transforms documents and legacy id links", async (
     `import path from "node:path";
 import type { CompatibilityTransformInput } from "@mokly/mokly";
 export default function transform(input: CompatibilityTransformInput): string {
-  const logicalTarget = input.logicalRoutes["screens/details.html"];
+  const logicalTarget = input.logicalRoutes["details"];
   const relative = logicalTarget
     ? path.posix.relative(path.posix.dirname(input.route), logicalTarget)
     : "missing";
   return input.content
-    .replace('href="./details.html"', \`href="./\${relative}"\`)
+    .replace('href="./details.html"', \`href="\${relative}"\`)
     .replace("<body", \`<body data-color-scheme="\${input.colorScheme}" data-logical-target="\${logicalTarget}" data-output-path="\${input.outputPath}" data-viewport="\${input.viewport}"\`);
 }
 `,
@@ -57,7 +57,7 @@ export default function transform(input: CompatibilityTransformInput): string {
     `export default {
   compatibility: { transformer: "compatibility.ts" },
   colorSchemes: ["light", "dark"],
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: "."
 };\n`,
@@ -76,32 +76,29 @@ export default function transform(input: CompatibilityTransformInput): string {
     "legacy/ambiguous.source.ts",
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
   const mobileDark =
-    compilation.outputs.get("screens/home.mobile.dark.html") ?? "";
-  const legacy = compilation.outputs.get("pages/notice.html") ?? "";
-  const ambiguousLegacy = compilation.outputs.get("pages/ambiguous.html") ?? "";
+    compilation.outputs.get("home/index.mobile.dark.html") ?? "";
+  const legacy = compilation.outputs.get("notice/index.html") ?? "";
+  const ambiguousLegacy = compilation.outputs.get("ambiguous/index.html") ?? "";
 
   assert.match(mobile, /href="#"/);
-  assert.match(mobile, /href="\.\/details\.mobile\.html"/);
-  assert.match(mobile, /data-nav-href="\.\/details\.mobile\.html"/);
-  assert.match(
-    mobile,
-    /data-output-path="mockups\/screens\/home\.mobile\.html"/,
-  );
+  assert.match(mobile, /href="\.\.\/details\/index\.mobile\.html"/);
+  assert.match(mobile, /data-nav-href="\.\.\/details\/index\.mobile\.html"/);
+  assert.match(mobile, /data-output-path="mockups\/home\/index\.mobile\.html"/);
   assert.match(mobileDark, /data-color-scheme="dark"/);
   assert.match(
     mobileDark,
-    /data-logical-target="screens\/details\.mobile\.dark\.html"/,
+    /data-logical-target="details\/index\.mobile\.dark\.html"/,
   );
-  assert.match(legacy, /href="\.\.\/screens\/details\.desktop\.html"/);
+  assert.match(legacy, /href="\.\.\/details\/index\.desktop\.html"/);
   assert.match(ambiguousLegacy, /data-color-scheme="light"/);
   assert.match(ambiguousLegacy, /data-viewport="desktop"/);
   assert.match(
     ambiguousLegacy,
-    /data-logical-target="screens\/details\.desktop\.html"/,
+    /data-logical-target="details\/index\.desktop\.html"/,
   );
-  assert.match(ambiguousLegacy, /href="\.\.\/screens\/details\.desktop\.html"/);
+  assert.match(ambiguousLegacy, /href="\.\.\/details\/index\.desktop\.html"/);
   assert.equal(compilation.outputs.has("retired/skip.html"), false);
 });
 
@@ -125,7 +122,7 @@ export default function transform(input: CompatibilityTransformInput): string {
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { compatibility: { transformer: "compatibility.ts" }, colorSchemes: ["light", "dark"], entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { compatibility: { transformer: "compatibility.ts" }, colorSchemes: ["light", "dark"], roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
@@ -141,7 +138,7 @@ test("configured compatibility transformers are typed complete-document function
   context.after(() => removeFixture(fixture));
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { compatibility: { transformer: "compatibility.ts" }, entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { compatibility: { transformer: "compatibility.ts" }, roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
   await fs.promises.writeFile(
     path.join(fixture.root, "compatibility.ts"),
@@ -177,7 +174,7 @@ export default function transform(input: CompatibilityTransformInput): string {
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { compatibility: { transformer: "compatibility.ts" }, entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { compatibility: { transformer: "compatibility.ts" }, roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
   await assert.rejects(
@@ -202,14 +199,14 @@ export default function transform(input: CompatibilityTransformInput): string {
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
   const initial = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(initial), initial);
   await fs.promises.writeFile(fixture.entryPath, oneScreenSource());
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { compatibility: { transformer: "compatibility.ts" }, entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { compatibility: { transformer: "compatibility.ts" }, roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
   await compileCatalogue(await loadConfig(fixture.root));
@@ -222,10 +219,9 @@ export const mockups = [defineScreen({
   dependencies: [],
   description: "Home",
   desktop: <main>Home</main>,
-  id: "home",
+  path: "home",
   mobile: <main>Home</main>,
   relatedDocs: [],
-  route: "screens/home.html",
   title: "Home"
 })];
 `;

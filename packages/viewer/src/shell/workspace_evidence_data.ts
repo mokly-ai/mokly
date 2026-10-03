@@ -26,25 +26,25 @@ export interface WorkspaceComparisonEvidence {
 /** Keep catalogue facts while adding only the loaded selection's details. */
 export function workspaceComparisonEvidence(
   data: WorkspaceData,
-  variantId?: string,
+  variantPath?: string,
   loaded?: ReviewResult,
 ): WorkspaceComparisonEvidence {
   const componentId =
-    data.component?.id ??
+    data.component?.path ??
     (data.entry.kind === "component" && isManifestComponentVariant(data.entry)
       ? data.entry.variantOf
       : undefined);
   const selected = componentId
-    ? loaded?.components.find((item) => item.id === componentId)
-    : loaded?.screens.find((item) => item.id === data.entry.id);
+    ? loaded?.components.find((item) => item.path === componentId)
+    : loaded?.screens.find((item) => item.path === data.entry.path);
   const change = loaded?.changes.find(
     (item) =>
       item.kind === data.entry.kind &&
-      (item.after ?? item.before)?.id === data.entry.id,
+      (item.after ?? item.before)?.path === data.entry.path,
   );
   const views = [
-    ...comparisonViews(data.comparison, variantId),
-    ...comparisonViews(selected, variantId),
+    ...comparisonViews(data.comparison, variantPath),
+    ...comparisonViews(selected, variantPath),
   ];
   const resources = data.resourceEvidence ?? [];
   const comparison = data.comparison ?? selected;
@@ -56,7 +56,7 @@ export function workspaceComparisonEvidence(
       ...(data.change?.reasons ?? []),
       ...(change?.reasons ?? []),
       ...resources.flatMap((view) => view.reasons ?? []),
-      ...comparisonViews(selected, variantId).flatMap(
+      ...comparisonViews(selected, variantPath).flatMap(
         (view) => view.reasons ?? [],
       ),
     ]),
@@ -66,10 +66,11 @@ export function workspaceComparisonEvidence(
 
 function comparisonViews(
   comparison: ComponentReview | ScreenReview | undefined,
-  variantId?: string,
+  variantPath?: string,
 ): readonly ViewReview[] {
   return comparison && "variants" in comparison
-    ? (comparison.variants.find((item) => item.id === variantId)?.views ?? [])
+    ? (comparison.variants.find((item) => item.path === variantPath)?.views ??
+        [])
     : (comparison?.views ?? []);
 }
 
@@ -82,7 +83,7 @@ function mergeReasons(
       reason.kind === "dependency"
         ? reason.path
         : reason.kind === "screen"
-          ? reason.id
+          ? reason.screenPath
           : ""
     }`;
     const previous = merged.get(key);

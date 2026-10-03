@@ -14,44 +14,46 @@ be invented rather than real.
 ## Define a page
 
 `definePage` takes a synchronous `render` callback that runs once and returns
-one complete document, written at `pages/<id>.html`.
+one complete document.
 
 ```tsx
+// specs/documents/account-statement.mockup.tsx
 import { definePage } from "@mokly/mokly";
-import { source } from "../pages/handbook.source.js";
+import { source } from "./statement.source.js";
 
-export const mockups = [
-  definePage({
-    id: "handbook",
-    title: "Handbook",
-    description: "Product reference notes.",
-    navPath: ["Documents"],
-    dependencies: ["docs/mockups/src/pages/handbook.source.tsx"],
-    relatedDocs: [],
-    tags: ["documents"],
-    render: source,
-  }),
-];
+export default definePage({
+  title: "Account statement",
+  description: "The printable account statement.",
+  dependencies: ["specs/documents/statement.source.tsx"],
+  relatedDocs: [],
+  tags: ["documents"],
+  render: source,
+});
 ```
 
-Use `navPath: []` (or omit it) to show the page at the top of Pages.
-
-## Pages inside a tree
-
-The nested `page` marker derives its route from its id, like a flat page. The
-root's `navPath` and ancestor folder titles derive the leaf's `navPath`; do not
-author `navPath` on the nested marker.
+The page is `documents/account-statement`, written at
+`documents/account-statement/index.html` under `mockupsDir` and opened at
+`/view/documents/account-statement/`. Name the file `index.mockup.tsx`, or
+declare `slug: "index"`, to make the page the folder's own page. Pages are one
+light document regardless of the catalogue's color schemes.
 
 ## What a page shares with a screen
 
-Ids, `navPath`, links, tags, Changes, the source guards and the safe
-output transaction are the same. A title or folder label never changes a
-route; only the id does. Pages take part in Changes but have no visual
-comparison, because there is no second view to compare.
+Paths, `slug`, `path` and `movedFrom`, links, tags, Changes, the source guards
+and the safe output transaction are the same. A title or folder title never
+changes a path; only the file's place or a declared path does. Pages take part
+in Changes but have no visual comparison, because there is no second view to
+compare. A changed path currently appears as a removal and an addition.
+`movedFrom` records the authored previous path; move pairing is not available yet.
+
+## Markdown files
+
+Matched `.md` files remain protected, watched source inputs and are omitted
+from catalogue output. Markdown rendering is not available yet; a catalogue
+must contain at least one renderable definition.
 
 ## Exported types
 
 | Type                          | Use                                 |
 | ----------------------------- | ----------------------------------- |
 | `PageInput`, `PageDefinition` | What `definePage` takes and returns |
-| `NestedPageInput`             | What `page` takes inside a tree     |

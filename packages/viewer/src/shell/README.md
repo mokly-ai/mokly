@@ -23,7 +23,7 @@ rows use the combined ordering in the
 Components and Pages keep independent
 section roots even when they reuse the same folder labels.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
-fixed prefixes, never splitting on `:` inside a label. It rejects empty path
+fixed prefixes and complete paths; display labels never enter a key. It rejects empty path
 segments and ignores obsolete collection and legacy keys on restore.
 `disclosure_storage.ts` owns the v3 map codec and both storage key names;
 early capture, hydration, the shell store, and watched-reload recovery share
@@ -60,7 +60,7 @@ state, so navigation and controlled-host updates cannot leave stale indicators.
 `workspace_views_data.ts` derives the changed views themselves, preferring a
 ready comparison result and falling back to the lightweight screen-view
 evidence a screen-only catalogue records. Workspace data keys those lists by
-component variant entry id or screen entry id, so every reader must
+component variant path or screen path, so every reader must
 select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
 the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
@@ -84,8 +84,8 @@ selectors and shell-root `.mbk` selectors to the embedding scope without
 rewriting class names. Standalone Serve/export retain their original CSS and
 font delivery paths.
 
-`catalogue.ts` owns pure display indexing. Its `byId` index contains current and
-removed entries whose ids are unique across both sets; an explicit snapshot
+`catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
+removed entries whose paths are unique across both sets; an explicit snapshot
 selects its exact removed record. Baseline repository access remains in the
 CLI's `src/server/baseline_catalogue.ts`.
 `store.tsx` and the focused `store_*` modules own standalone route/history,
@@ -100,21 +100,21 @@ events from visible sessions in the owning `frame_registry.tsx`. An unavailable
 frame destination changes only an uncontrolled or standalone display;
 controlled viewers report the frame error and wait for host-owned selection.
 
-Static route parsing accepts a provider-normalized extensionless path only when
-the shared parser derives a kind and id that `byId` contains. Historical
+Static route parsing accepts the canonical slash, extensionless, and
+`index.html` forms; the shared parser resolves each path through `byPath`. Historical
 resolution binds that route to its published snapshot; an explicit query must
 match, while an inferred identity is canonicalized into the URL. Static
 delivery v3 carries only the page's canonical path, comparison URL, and
 deployment identity; entry destinations come from the shared route helpers.
 
 Authenticated frame navigation stays logical until `frame_event_router.tsx`
-resolves its id through `byId` and derives the canonical URL with `viewHref`.
+resolves its path through `byPath` and derives the canonical URL with `viewHref`.
 Primary, modified, middle, and named-target activations therefore share the
-same `/view/` destination. An unknown id installs the missing view only for
+same `/view/` destination. An unknown path installs the missing view only for
 standalone/uncontrolled shells and is recoverable by any later selection;
 controlled viewers emit an error and keep their display.
-Search matches authored ids, titles, and tags only. Details omits derived route
-and generated-path rows because the address bar and id chip already identify
+Search matches paths, titles, and tags only. Details omits derived route
+and generated-path rows because the address bar and path chip already identify
 the entry.
 
 Snapshot selection is route-owned state as well as public selection state. One

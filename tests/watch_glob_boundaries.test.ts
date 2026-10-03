@@ -27,9 +27,14 @@ test("entry candidates inside discovery-denied trees stay ignored", async (conte
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["**/*.mockup.{ts,tsx}"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "."),
+        files: ["**/*.mockup.{ts,tsx}"],
+        transparent: [],
+      },
+    ],
   };
-  delete config.entriesDir;
   for (const relative of [
     "node_modules/x/new.mockup.tsx",
     ".git/new.mockup.tsx",
@@ -53,10 +58,15 @@ test("a custom entry glob rebuilds for every file shape it matches", async (cont
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["src/**/*.ts"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "src"),
+        files: ["**/*.ts"],
+        transparent: [],
+      },
+    ],
     entryModules: [],
   };
-  delete config.entriesDir;
   assert.equal(
     classifyWatchPath(
       { path: path.join(fixture.root, "src/new-entry.ts"), kind: "change" },
@@ -72,10 +82,15 @@ test("denied directory names remain valid regular-file basenames", async (contex
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["src/**"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "src"),
+        files: ["**"],
+        transparent: [],
+      },
+    ],
     entryModules: [],
   };
-  delete config.entriesDir;
   const target = path.join(fixture.root, "src/target");
   await fs.promises.mkdir(path.dirname(target), { recursive: true });
   await fs.promises.writeFile(target, "export const mockups = [];\n");
@@ -107,10 +122,15 @@ test("watch pruning derives denied-leaf directory status from supplied stats", a
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["src/**"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "src"),
+        files: ["**"],
+        transparent: [],
+      },
+    ],
     entryModules: [],
   };
-  delete config.entriesDir;
   const deniedLeaf = path.join(fixture.root, "src/dist");
   await fs.promises.mkdir(deniedLeaf, { recursive: true });
   const unowned = path.join(fixture.mockupsDir, "unowned.html");
@@ -156,10 +176,15 @@ test("a notification gate reports classifier errors and keeps delivering", async
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["entries/**/*.mockup.{ts,tsx}"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "entries"),
+        files: ["**/*.mockup.{ts,tsx}"],
+        transparent: [],
+      },
+    ],
     entryModules: [fixture.entryPath],
   };
-  delete config.entriesDir;
   const candidate = path.join(fixture.root, "entries/new.mockup.tsx");
   const lstatSync = fs.lstatSync;
   context.mock.method(fs, "lstatSync", (value: fs.PathLike) => {
@@ -199,14 +224,19 @@ for (const kind of ["addDir", "change", "unlinkDir"] as const) {
     const loaded = await loadConfig(fixture.root);
     const config: ResolvedConfig = {
       ...loaded,
-      entryGlobs: ["src/**"],
+      roots: [
+        {
+          dir: path.resolve(fixture.root, "src"),
+          files: ["**"],
+          transparent: [],
+        },
+      ],
       entryModules: [],
       watch: {
         debounceMs: 0,
         rules: [{ action: "reload", paths: ["src/**"] }],
       },
     };
-    delete config.entriesDir;
     const candidate = path.join(fixture.root, "src/dist");
     await fs.promises.mkdir(candidate, { recursive: true });
     const stats = fs.statSync(candidate);
@@ -229,10 +259,15 @@ test("unlink of an ordinary matched entry rebuilds and add beneath dist stays ig
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["src/**"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "src"),
+        files: ["**"],
+        transparent: [],
+      },
+    ],
     entryModules: [],
   };
-  delete config.entriesDir;
   const candidate = path.join(fixture.root, "src/plain.ts");
   await fs.promises.mkdir(path.dirname(candidate), { recursive: true });
   await fs.promises.writeFile(candidate, "export const mockups = [];\n");
@@ -256,10 +291,15 @@ test("raw denied-leaf events and traversal fail open under descriptor exhaustion
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["src/**"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "src"),
+        files: ["**"],
+        transparent: [],
+      },
+    ],
     entryModules: [],
   };
-  delete config.entriesDir;
   const candidate = path.join(fixture.root, "src/dist");
   const failure = Object.assign(new Error("descriptor limit"), {
     code: "EMFILE",

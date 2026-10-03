@@ -6,7 +6,7 @@ import test from "node:test";
 import { readManifest } from "../dist/registry/manifest.js";
 import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
@@ -19,7 +19,7 @@ for (const reference of ["/root.css", "../notes.md", "missing.css"]) {
       validEntrySource(),
       {
         extraConfig:
-          'stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }],',
+          'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }],',
       },
       async ({ mockupsDir }) => {
         await fs.writeFile(path.join(mockupsDir, "home.css"), "body {}");
@@ -30,7 +30,7 @@ for (const reference of ["/root.css", "../notes.md", "missing.css"]) {
       `@import "${reference}";`,
     );
     assert.equal(
-      await computeChangedIds(
+      await computeChangedPaths(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -63,7 +63,7 @@ for (const replacement of ["outside", "source", "dangling", "directory"]) {
         image,
       );
     assert.equal(
-      await computeChangedIds(
+      await computeChangedPaths(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -79,7 +79,7 @@ test("Changes validates other resources after finding a changed resource", async
     validEntrySource(),
     {
       extraConfig:
-        'stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }],',
+        'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }],',
     },
     async ({ mockupsDir }) => {
       await fs.writeFile(
@@ -96,7 +96,7 @@ test("Changes validates other resources after finding a changed resource", async
     'p { background: url("/invalid.png"); }',
   );
   assert.equal(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -126,7 +126,7 @@ for (const state of ["changed", "added"]) {
     await fs.unlink(path.join(fixture.mockupsDir, "image.svg"));
     await fs.symlink("../notes.md", path.join(fixture.mockupsDir, "image.svg"));
     assert.equal(
-      await computeChangedIds(
+      await computeChangedPaths(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -141,23 +141,26 @@ test("Changes rejects resources symlinked into source roots inside mockupsDir", 
     t,
     validEntrySource({ body: '<img src="../image.svg" alt="Logo" />' }),
     undefined,
-    async ({ mockupsDir }) => {
+    async ({ mockupsDir, configPath }) => {
       await fs.writeFile(path.join(mockupsDir, "image.svg"), "<svg/>");
+      await fs.mkdir(path.join(mockupsDir, "private"));
+      await fs.writeFile(path.join(mockupsDir, "private/source.md"), "<svg/>");
+      await fs.writeFile(
+        configPath,
+        'export default {generatedOutput:"committed",mockupsDir:"mockups",roots:[{dir:"entries"},{dir:"mockups/private",files:["*.md"]}],review:{outDir:".review"}};',
+      );
     },
   );
-  const entriesDir = path.join(fixture.mockupsDir, "src/entries");
-  await fs.mkdir(entriesDir, { recursive: true });
-  await fs.writeFile(path.join(entriesDir, "private.svg"), "<svg/>");
   await fs.unlink(path.join(fixture.mockupsDir, "image.svg"));
   await fs.symlink(
-    "src/entries/private.svg",
+    "private/source.md",
     path.join(fixture.mockupsDir, "image.svg"),
   );
   assert.equal(
-    await computeChangedIds(
-      { ...fixture.config, entriesDir },
+    await computeChangedPaths(
+      fixture.config,
       "HEAD",
-      committedReviewRepository({ ...fixture.config, entriesDir }),
+      committedReviewRepository(fixture.config),
     ),
     undefined,
   );
@@ -182,7 +185,7 @@ test("Changes rejects invalid references inside a changed embedded document", as
     '<img src="/invalid.png" alt="Image">',
   );
   assert.equal(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -204,7 +207,7 @@ test("a removed resource beneath an escaping symlink is not a valid deletion", a
   await fs.rm(path.join(fixture.mockupsDir, "images"), { recursive: true });
   await fs.symlink("../entries", path.join(fixture.mockupsDir, "images"));
   assert.equal(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -225,7 +228,7 @@ test("Changes retains a legitimate deleted resource directory", async (t) => {
   );
   await fs.rm(path.join(fixture.mockupsDir, "images"), { recursive: true });
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

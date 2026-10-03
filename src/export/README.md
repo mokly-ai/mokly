@@ -9,7 +9,7 @@ The separate `mokly publish` command uploads through the
 independent `BaselineReader`, runs the normal build, captures public inputs,
 compares them through the existing review engine, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
-assemble one shell page per entry at `view/<route>`, package assets, and
+assemble one shell page per entry at `view/<path>/index.html`, package assets, and
 immutable comparisons. The approved
 [path identity plan](../../plans/path-identity.md) writes those shell pages at
 `view/<path>/index.html` and derives every snapshot and preview name from the
@@ -30,8 +30,8 @@ catalogue change snapshots. A removed variant retains its baseline parent
 relationship; removal preserves ancestor context without introducing visual
 comparisons.
 Changes-enabled delivery captures every removed page from the same pinned
-baseline before installation. `pagePreviewMetadataPath(id)` names its typed
-metadata beside `review.json`; `snapshotPagePath(id)` names its document, and
+baseline before installation. `previewMetadataPath(path)` names its typed
+metadata beside `review.json`; `snapshotDocumentPath("before", path, "light")` names its document, and
 the local closure shares the snapshot tree with screen comparisons. Removed
 page and screen descriptors are emitted only for a complete generation. These
 files enter comparison identity before the generation path is chosen, then the
@@ -47,14 +47,14 @@ The shared `server/changed_content.ts` calculation receives the same captured
 asset reader as comparisons, preserving Serve's material-output/resource Changes
 membership without reading a different current-file snapshot.
 For screen-only catalogues, `site.ts` projects per-view resource evidence from
-the unified v4 comparison into shell workspace data. Details can show matched,
+the unified v5 comparison into shell workspace data. Details can show matched,
 unresolved, and excluded stylesheets in Current without fetching comparison
 JSON, and no extra classification pass is needed for this projection.
 The projection omits views without retained or excluded resources and drops
 screens whose evidence slice is empty. Comparison JSON separately retains all
 view states and the material-change flag.
 
-Review result v4 is the only comparison result: a catalogue without
+Review result v5 is the only comparison result: a catalogue without
 registered components emits the same shape with empty component arrays.
 Snapshot roots and resources use `snapshotSidePath` and
 `snapshotResourcePath`; all builders are exported from `@mokly/viewer/data` and owned by the

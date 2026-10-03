@@ -40,10 +40,10 @@ export async function baselineManifestVersion(
     value && typeof value === "object" && "schemaVersion" in value
       ? (value as { schemaVersion?: unknown }).schemaVersion
       : undefined;
-  if (Number.isInteger(version) && (version as number) < 7)
+  if (Number.isInteger(version) && (version as number) < 8)
     return version as number;
   parseHistoricalManifest(value);
-  return 7;
+  return 8;
 }
 
 function join(prefix: string, name: string): string {

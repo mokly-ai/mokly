@@ -10,9 +10,9 @@ the [folder contract](./mokly-folders.md#order). The
 
 The v3 storage format, early activation capture, active-route reveal,
 filtered-recovery fallback, and in-place reconciliation are implemented. The
-path-keyed disclosure keys below are the approved contract; the current
-implementation still keys folders and variant lists by section and id until
-the [path identity plan](../../plans/path-identity.md) delivers them.
+implemented keys are `folder:<section>:<path>` and `variants:<path>`, using
+the current Pages/Components section ids. Storage v4, Specs, and the revised
+reconciliation below await the [path identity plan](../../plans/path-identity.md).
 
 ## Keys
 
@@ -96,8 +96,7 @@ baseline. Reject a snapshot containing `closedFolderKeys`,
 baseline without active filtering is invalid. The recovery parser remains
 strict for its other fields as defined by the [watch contract](./mokly-watch.md).
 
-Never read or migrate the v2 closed-list key `mokly:nav-disclosure:v2`; delete
-it on the first v3 write. Any change to the persisted value shape or storage
-key requires a new storage version; a disclosure key form that no longer occurs
+Any change to the persisted value shape or storage key requires a new storage
+version; a disclosure key form that no longer occurs
 in the current navigation is ignored on restore as above and needs none. Ignore
 older versions rather than partially interpreting them.

@@ -92,7 +92,7 @@ function matchingWorkspace(
 ): data is WorkspaceData {
   return (
     entry !== undefined &&
-    data?.entry.id === entry.id &&
+    data?.entry.path === entry.path &&
     data.entry.kind === entry.kind
   );
 }

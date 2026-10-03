@@ -85,10 +85,10 @@ export function TagChips(props: { values: readonly string[] }) {
 /** The use cases whose ordered steps include this screen. */
 export function UsedByChips(props: {
   catalogue: Catalogue;
-  useCaseIds: readonly string[];
+  useCasePaths: readonly string[];
 }) {
-  const useCases = props.useCaseIds
-    .map((id) => props.catalogue.byId.get(id))
+  const useCases = props.useCasePaths
+    .map((id) => props.catalogue.byPath.get(id))
     .filter(
       (entry): entry is ManifestUseCase =>
         entry !== undefined && entry.kind === "use-case",
@@ -102,8 +102,8 @@ export function UsedByChips(props: {
         {useCases.map((useCase) => (
           <a
             className="mbk-chip flow"
-            href={viewHref(useCase.kind, useCase.id)}
-            key={useCase.id}
+            href={viewHref(useCase.path)}
+            key={useCase.path}
           >
             <FlowIcon size={11} />
             {useCase.title}
@@ -123,17 +123,17 @@ export function VariantChips(props: {
     return null;
   }
   const historical = props.catalogue.removedEntries.some(
-    ({ entry }) => entry.id === props.entry.id,
+    ({ entry }) => entry.path === props.entry.path,
   );
   const variants = historical
     ? props.catalogue.removedEntries.flatMap(({ entry }) =>
         (entry.kind === "screen" || entry.kind === "component") &&
         "variantOf" in entry &&
-        entry.variantOf === props.entry.id
+        entry.variantOf === props.entry.path
           ? [entry]
           : [],
       )
-    : (props.catalogue.hierarchy.variantsById.get(props.entry.id) ?? []);
+    : (props.catalogue.hierarchy.variantsByPath.get(props.entry.path) ?? []);
   if (variants.length === 0) {
     return null;
   }
@@ -144,7 +144,7 @@ export function VariantChips(props: {
           <a
             className="mbk-chip screen"
             href={entryHref(props.catalogue, variant)}
-            key={variant.id}
+            key={variant.path}
           >
             <VariantIcon size={11} />
             {variant.title}
@@ -195,9 +195,9 @@ function entryHref(
   entry: CatalogueManifestEntry,
 ): string {
   const snapshotId = catalogue.removedEntries.find(
-    ({ entry: candidate }) => candidate.id === entry.id,
+    ({ entry: candidate }) => candidate.path === entry.path,
   )?.snapshotId;
-  return `${viewHref(entry.kind, entry.id)}${
+  return `${viewHref(entry.path)}${
     snapshotId ? `?snapshot=${snapshotId}` : ""
   }`;
 }

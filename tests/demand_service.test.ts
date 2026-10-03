@@ -44,21 +44,21 @@ test("demand worker coalesces, recovers after idle failure and keeps listeners b
     },
   });
   fixture.beforeRemove(() => service.close());
-  const first = service.read("screens/home.desktop.html");
-  assert.equal(service.read("screens/home.desktop.html"), first);
+  const first = service.read("home/index.desktop.html");
+  assert.equal(service.read("home/index.desktop.html"), first);
   workers[0]!.respond();
   await first;
   assert.deepEqual(busy, [true, false]);
   assert.equal(workers[0]!.listenerCount("error"), 1);
   workers[0]!.emit("error", new Error("idle failure"));
   workers[0]!.emit("exit", 1);
-  const next = service.read("screens/home.mobile.html");
+  const next = service.read("home/index.mobile.html");
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(workers.length, 2);
   workers[1]!.respond();
   await next;
   assert.equal(workers[1]!.listenerCount("error"), 1);
-  await service.read("screens/home.desktop.html");
+  await service.read("home/index.desktop.html");
   assert.equal(workers[1]!.requests.length, 1);
 });
 
@@ -84,12 +84,12 @@ test("a failed renderer terminates before its replacement starts", async (t) => 
     await service.close();
   });
   const first = assert.rejects(
-    service.read("screens/home.desktop.html"),
+    service.read("home/index.desktop.html"),
     /failed/,
   );
   workers[0]!.emit("error", new Error("failed"));
   await first;
-  const next = service.read("screens/home.mobile.html");
+  const next = service.read("home/index.mobile.html");
   void next.catch(() => {});
   assert.equal(workers.length, 1);
   release();
@@ -115,11 +115,11 @@ test("demand admission, deadline and shutdown reject work without poisoning a re
   });
   fixture.beforeRemove(() => service.close());
   const active = assert.rejects(
-    service.read("screens/home.desktop.html"),
+    service.read("home/index.desktop.html"),
     /too long/,
   );
-  const queued = service.read("screens/home.mobile.html");
-  await assert.rejects(service.read("screens/details.desktop.html"), /busy/);
+  const queued = service.read("home/index.mobile.html");
+  await assert.rejects(service.read("details/index.desktop.html"), /busy/);
   await active;
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(workers[0]!.terminated, true);
@@ -127,7 +127,7 @@ test("demand admission, deadline and shutdown reject work without poisoning a re
   const stopped = assert.rejects(queued, /stopped/);
   await service.close();
   await stopped;
-  await assert.rejects(service.read("screens/home.desktop.html"), /closed/);
+  await assert.rejects(service.read("home/index.desktop.html"), /closed/);
 });
 
 test("document cache bounds bytes and evicts least recently used documents", () => {

@@ -13,7 +13,7 @@ test("v7 source metadata round-trips deterministically and accepts its absence",
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(manifest.schemaVersion, 7);
+  assert.equal(manifest.schemaVersion, 8);
   const original = structuredClone(manifest);
   for (const view of componentViews(original))
     for (const instance of view.instances)
@@ -54,14 +54,14 @@ test("v7 source metadata round-trips deterministically and accepts its absence",
 
 test("authored data schemas, slots and forged manifest components reserve __moklySource", async (t) => {
   const input = {
-    id: "action",
+    path: "action",
     title: "Action",
     description: "Action",
     dependencies: [],
     relatedDocs: [],
     propSchema: { kind: "object" as const, properties: {} },
     render: () => null,
-    variants: [{ id: "action-default", title: "Default", props: {} }],
+    variants: [{ slug: "default", title: "Default", props: {} }],
   };
   assert.throws(
     () => defineComponent({ ...input, slots: ["__moklySource"] }),

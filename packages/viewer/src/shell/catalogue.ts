@@ -17,7 +17,7 @@ import { type RemovedEntrySnapshot } from "./metadata.js";
 /** Validated lookup model used by server routes. */
 export interface Catalogue {
   publicModel?: CatalogueReadModel;
-  byId: ReadonlyMap<string, CatalogueManifestEntry>;
+  byPath: ReadonlyMap<string, CatalogueManifestEntry>;
   /** Whether any current or retained view was rendered in the dark scheme. */
   hasDarkFragments: boolean;
   hierarchy: CatalogueHierarchy<ManifestEntry>;
@@ -40,7 +40,7 @@ export function catalogueRouteEntry(
   id: string,
   kind?: ManifestEntry["kind"],
 ): CatalogueManifestEntry | undefined {
-  const entry = catalogue.byId.get(id);
+  const entry = catalogue.byPath.get(id);
   return entry && (kind === undefined || entry.kind === kind)
     ? entry
     : undefined;
@@ -55,9 +55,9 @@ export function catalogueSelectionEntry(
   if (snapshotId !== undefined)
     return catalogue.removedEntries.find(
       (record) =>
-        record.entry.id === entryId && record.snapshotId === snapshotId,
+        record.entry.path === entryId && record.snapshotId === snapshotId,
     )?.entry;
-  return catalogue.byId.get(entryId);
+  return catalogue.byPath.get(entryId);
 }
 
 /** Resolve a current or retained variant's eligible same-kind parent. */
@@ -84,11 +84,11 @@ export function catalogueVariantParentEntry(
   )
     return;
   return (
-    catalogue.hierarchy.variantParentById.get(entry.id) ??
+    catalogue.hierarchy.variantParentByPath.get(entry.path) ??
     catalogue.removedEntries.find(
-      ({ entry: historical }) => historical.id === entry.variantOf,
+      ({ entry: historical }) => historical.path === entry.variantOf,
     )?.entry ??
-    catalogue.byId.get(entry.variantOf)
+    catalogue.byPath.get(entry.variantOf)
   );
 }
 
@@ -114,10 +114,10 @@ export function createCatalogue(
       ? [entry]
       : [],
   );
-  const byId = new Map<string, CatalogueManifestEntry>(
-    manifest.entries.map((entry) => [entry.id, entry]),
+  const byPath = new Map<string, CatalogueManifestEntry>(
+    manifest.entries.map((entry) => [entry.path, entry]),
   );
-  for (const { entry } of removedEntries) byId.set(entry.id, entry);
+  for (const { entry } of removedEntries) byPath.set(entry.path, entry);
   const hasDarkFragments = [
     ...manifest.entries,
     ...removedEntries.map(({ entry }) => entry),
@@ -127,10 +127,13 @@ export function createCatalogue(
         (entry.kind === "component" && isManifestComponentVariant(entry))) &&
       entry.colorSchemes.includes("dark"),
   );
-  const hierarchy = analyzeHierarchy<ManifestEntry>(manifest.entries).hierarchy;
+  const hierarchy = analyzeHierarchy<ManifestEntry>(
+    manifest.entries,
+    manifest.folders,
+  ).hierarchy;
   const tags = collectTags(manifest.entries);
   return {
-    byId,
+    byPath,
     hasDarkFragments,
     hierarchy,
     manifest,

@@ -86,7 +86,7 @@ test("slot changes keep selection and overlay excludes shell controls", async ({
   );
   const result = await page.evaluate(async () => {
     const host = window.viewerHarness.get("one");
-    host.ref.current.select({ screenId: null });
+    host.ref.current.select({ screenPath: null });
     host.props.slots = { ...host.props.slots, emptyState: "Updated host home" };
     host.render();
     await new Promise(requestAnimationFrame);
@@ -97,7 +97,7 @@ test("slot changes keep selection and overlay excludes shell controls", async ({
   expect(result).toBe(false);
   await expect(page.getByText("Updated host home")).toBeVisible();
   await page.evaluate(() =>
-    window.viewerHarness.get("one").ref.current.select({ screenId: "home" }),
+    window.viewerHarness.get("one").ref.current.select({ screenPath: "home" }),
   );
   const overlay = await page
     .locator('[data-mokly-slot="stageOverlay"]')

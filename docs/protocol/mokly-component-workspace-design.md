@@ -126,7 +126,7 @@ Parent status and variant status are distinct. Removing Compact from Action
 makes Compact its own Removed component variant entry, comparable with an
 explicit missing current side, while Action's status describes the parent
 only; Farewell is a Removed screen with no comparison controls.
-The `design-component-variants` mockup depicts the inverse boundary: the
+The `design/components/pages/variants` mockup depicts the inverse boundary: the
 selected Disabled variant entry is Unmodified and ineligible, so no comparison
 band appears, even though a sibling variant changed.
 The Added Badge example lives in States → Additions and shows its current saved
@@ -141,7 +141,7 @@ add a comparison disclosure below the canvas or a separate explanatory banner
 above it. The panel remains available on a Removed screen's stage even though
 that screen has no comparison modes. Ordinary Unmodified mockups omit the
 comparison section; a shared-impact-only component keeps its file list in Details.
-The `design-component-shared-impact` artboard in States → Shared impact depicts
+The `design/components/states/shared-impact/shared-impact` artboard in States → Shared impact depicts
 that Unmodified component with its Details open and no comparison band.
 
 Use structured evidence: entry/variant state, a generic output-change reason,

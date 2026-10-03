@@ -107,8 +107,8 @@ export async function buildPreview(config, output, options = {}) {
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
-            const route = viewHref(entry.kind, entry.id);
-            const name = route.slice(1);
+            const route = viewHref(entry.path);
+            const name = `${route.slice(1)}index.html`;
             await capturePage(server.url, route, stage, name);
             capturedShells.add(name);
           }
@@ -144,7 +144,7 @@ export async function buildPreview(config, output, options = {}) {
             : incompatible
               ? "unavailable"
               : "disabled",
-          changedIds: changes?.changedIds,
+          changedEntries: changes?.changedEntries,
           evidence: snapshot.componentChanges,
           comparison: comparison?.result,
           comparisonUrl: comparison

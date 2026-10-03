@@ -19,7 +19,7 @@ what you are reading.
 
 ## Find your way
 
-Breadcrumbs above a screen come from its `navPath` labels and end in a
+Breadcrumbs above a screen come from the folder titles along its path and end in a
 copyable id chip, so the name to use in a link is always in front of you. A
 link inside a screen opens its destination's canonical page, carries its
 fragment and reveals it in the tree.

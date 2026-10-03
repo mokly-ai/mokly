@@ -33,7 +33,7 @@ export function affectedConsumers(
               (candidate) =>
                 candidate.kind === "component" &&
                 !isManifestComponentVariant(candidate) &&
-                candidate.id === entry.variantOf,
+                candidate.path === entry.variantOf,
             )
           : entry;
       if (
@@ -54,7 +54,7 @@ export function affectedConsumers(
             : {
                 kind: "component",
                 entry: address(contextEntry),
-                variantId: entry.id,
+                variantPath: entry.path,
                 viewport: view.viewport,
                 colorScheme: view.colorScheme,
               };
@@ -77,18 +77,18 @@ export function affectedConsumers(
           }
           const consumers: AffectedConsumer["consumer"][] = [
             entry.kind === "screen"
-              ? { kind: "screen", id: entry.id }
-              : { kind: "component", id: contextEntry.id },
+              ? { kind: "screen", path: entry.path }
+              : { kind: "component", path: contextEntry.path },
             ...via.slice(0, -1).map((ancestor) => ({
               kind: "component" as const,
-              id: ancestor.componentId,
+              path: ancestor.componentId,
             })),
           ];
           const evidence: AffectedUsageEvidence = { side, context, via };
           for (const consumer of consumers) {
             if (
               consumer.kind === "component" &&
-              consumer.id === instance.componentId
+              consumer.path === instance.componentId
             )
               continue;
             const key = affectedConsumerOrderKey({
@@ -125,10 +125,10 @@ function compareEvidence(
   b: AffectedUsageEvidence,
 ): number {
   const variant = (item: AffectedUsageEvidence) =>
-    item.context.kind === "component" ? item.context.variantId : "";
+    item.context.kind === "component" ? item.context.variantPath : "";
   return (
     (a.side === "before" ? 0 : 1) - (b.side === "before" ? 0 : 1) ||
-    lexical(a.context.entry.id, b.context.entry.id) ||
+    lexical(a.context.entry.path, b.context.entry.path) ||
     lexical(variant(a), variant(b)) ||
     (a.context.viewport === "mobile" ? 0 : 1) -
       (b.context.viewport === "mobile" ? 0 : 1) ||

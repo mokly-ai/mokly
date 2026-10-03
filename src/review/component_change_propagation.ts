@@ -19,10 +19,11 @@ export function propagateImplementations(
 ): void {
   for (const id of actualImplementations) {
     impacting.add(id);
-    const component = components.find((entry) => entry.id === id)!;
+    const component = components.find((entry) => entry.path === id)!;
     const existing = changes.find(
       (entry) =>
-        entry.kind === "component" && (entry.after ?? entry.before)!.id === id,
+        entry.kind === "component" &&
+        (entry.after ?? entry.before)!.path === id,
     );
     if (existing)
       existing.reasons = uniqueReasons([
@@ -52,7 +53,7 @@ export function propagateUseCases(
     changes
       .filter((entry) => entry.kind === "screen")
       .flatMap((entry) =>
-        [entry.before?.id, entry.after?.id].filter(
+        [entry.before?.path, entry.after?.path].filter(
           (id): id is string => id !== undefined,
         ),
       ),
@@ -66,9 +67,9 @@ export function propagateUseCases(
           ? item.steps.flatMap((step) =>
               (index === 0 ? before : after).entries.flatMap((screen) =>
                 screen.kind === "screen" &&
-                screen.id === step.screenId &&
-                changedScreens.has(screen.id)
-                  ? [screen.id]
+                screen.path === step.screenPath &&
+                changedScreens.has(screen.path)
+                  ? [screen.path]
                   : [],
               ),
             )
@@ -79,11 +80,14 @@ export function propagateUseCases(
     const existing = changes.find(
       (change) =>
         change.kind === "use-case" &&
-        (change.after ?? change.before)?.id === entry.id,
+        (change.after ?? change.before)?.path === entry.path,
     );
     const reasons = uniqueReasons([
       ...(existing?.reasons ?? []),
-      ...[...screenIds].map((id) => ({ kind: "screen" as const, id })),
+      ...[...screenIds].map((id) => ({
+        kind: "screen" as const,
+        screenPath: id,
+      })),
     ]);
     if (existing) existing.reasons = reasons;
     else

@@ -8,9 +8,9 @@ screen/flow link and breadcrumb rules. The hydrated shell and
 [frame adapters](./mokly-frame-adapter.md) apply every marker, sandbox, target,
 and outer-navigation rule in Serve, export, and embedded hosts, and controlled
 and uncontrolled unknown-destination handling is implemented. Path-addressed
-links, `/view/<path>/` URLs, and folder rows below are approved; the shell still
-uses kind-and-id identity until the
-[path identity plan](../../plans/path-identity.md) delivers them.
+links and `/view/<path>/` URLs are implemented. The current shell keeps its Pages
+label and existing presentation; the final folder-row and breadcrumb interactions
+remain planned in the [path identity plan](../../plans/path-identity.md).
 
 ## Scope
 

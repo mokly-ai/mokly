@@ -12,7 +12,7 @@ export function usageHref(link: UsageLink): string {
     instance: link.instanceKey,
   });
   if (link.removed && link.comparisonEligible) query.set("comparison", "side");
-  return `${viewHref(link.entryKind, link.entryId)}?${query}`;
+  return `${viewHref(link.entryId)}?${query}`;
 }
 
 /** Usage and affected-consumer sections for the inspector. */

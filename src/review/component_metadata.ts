@@ -14,15 +14,15 @@ import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
 
 export type ReviewEntry = Exclude<
   ManifestEntry | HistoricalManifestEntry,
-  { kind: "page" }
+  { kind: "page" | "document" }
 >;
 export const address = (entry: ReviewEntry): ReviewEntryAddress => ({
-  id: entry.id,
+  path: entry.path,
   title: entry.title,
 });
-/** Pair every reviewable entry by its globally stable id. */
+/** Pair every reviewable entry by its case-folded kind and path. */
 export function entryPairKey(entry: ReviewEntry): string {
-  return `${entry.kind}:${entry.id}`;
+  return `${entry.kind}:${entry.path.toLowerCase()}`;
 }
 export const lexical = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
@@ -32,10 +32,12 @@ export function baselineForCurrentIdentities(
   after: Manifest,
 ): Manifest {
   const currentKinds = new Map(
-    after.entries.map((entry) => [entry.id, entry.kind] as const),
+    after.entries.map(
+      (entry) => [entry.path.toLowerCase(), entry.kind] as const,
+    ),
   );
   const entries = before.entries.filter((entry) => {
-    const currentKind = currentKinds.get(entry.id);
+    const currentKind = currentKinds.get(entry.path.toLowerCase());
     return currentKind === undefined || currentKind === entry.kind;
   });
   return entries.length === before.entries.length
@@ -48,16 +50,14 @@ export function entryPairs(
 ): { before: ReviewEntry | undefined; after: ReviewEntry | undefined }[] {
   const bases = new Map(
     before.entries.flatMap((entry) =>
-      entry.kind === "page" ||
-      (entry.kind === "component" && isManifestComponentVariant(entry))
+      entry.kind === "page" || entry.kind === "document"
         ? []
         : [[entryPairKey(entry), entry] as const],
     ),
   );
   const heads = new Map(
     after.entries.flatMap((entry) =>
-      entry.kind === "page" ||
-      (entry.kind === "component" && isManifestComponentVariant(entry))
+      entry.kind === "page" || entry.kind === "document"
         ? []
         : [[entryPairKey(entry), entry] as const],
     ),
@@ -67,19 +67,18 @@ export function entryPairs(
     .map((id) => ({ before: bases.get(id), after: heads.get(id) }));
 }
 export function metadata(entry: ReviewEntry): string {
-  const navPath = entry.navPath;
   const common = { ...entry } as Record<string, unknown>;
   for (const field of [
     "componentViews",
     "declaredDependencies",
-    "navPath",
     "sourcePath",
+    "movedFrom",
   ])
     Reflect.deleteProperty(common, field);
-  if (entry.kind === "component") {
-    return canonicalJson({ ...common, navPath });
-  }
-  return canonicalJson({ ...common, navPath });
+  common.path = entry.path.toLowerCase();
+  if (typeof common.variantOf === "string")
+    common.variantOf = common.variantOf.toLowerCase();
+  return canonicalJson(common);
 }
 
 /** Track owners, exact reasons, and unowned path evidence across both manifests. */
@@ -105,7 +104,7 @@ export class ComponentDependencyPolicy {
           entry.ownedDependencies.some((root) =>
             dependencyContainsChangedPath(root, changed),
           )
-            ? [entry.id]
+            ? [entry.path]
             : [],
         ),
       );
@@ -116,7 +115,7 @@ export class ComponentDependencyPolicy {
   independent(entry: ReviewEntry, changed: string): boolean {
     const owners = this.owners(changed);
     if (
-      owners.has(entry.id) &&
+      owners.has(entry.path) &&
       entry.kind === "component" &&
       !isManifestComponentVariant(entry)
     )
@@ -193,7 +192,7 @@ export function uniqueReasons(
 ): EntryChangeReason[] {
   const merged = new Map<string, EntryChangeReason>();
   for (const reason of reasons) {
-    const key = `${reason.kind}:${"path" in reason ? reason.path : "id" in reason ? reason.id : ""}`;
+    const key = `${reason.kind}:${"path" in reason ? reason.path : "screenPath" in reason ? reason.screenPath : ""}`;
     const previous = merged.get(key);
     if (reason.kind === "dependency" && previous?.kind === "dependency") {
       const analyses = [previous.analysis, reason.analysis].filter(
@@ -222,8 +221,8 @@ export function uniqueReasons(
     (a, b) =>
       lexical(a.kind, b.kind) ||
       lexical(
-        "path" in a ? a.path : "id" in a ? a.id : "",
-        "path" in b ? b.path : "id" in b ? b.id : "",
+        "path" in a ? a.path : "screenPath" in a ? a.screenPath : "",
+        "path" in b ? b.path : "screenPath" in b ? b.screenPath : "",
       ),
   );
 }

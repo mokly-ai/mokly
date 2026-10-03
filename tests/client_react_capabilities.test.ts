@@ -18,7 +18,7 @@ import {
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   ),
 );
 const descriptor: ViewerCapabilityDescriptor = {
@@ -99,7 +99,7 @@ test("React evidence refresh validates page descriptors before store adoption", 
     },
     workspace: {
       ...descriptor.workspace!,
-      relatedComponents: [{ id: "field", title: "Field" }],
+      relatedComponents: [{ path: "field", title: "Field" }],
     },
   };
   environment.responses.push(
@@ -168,9 +168,9 @@ test("React evidence refresh rejects mixed public and private revisions", async 
 test("route evidence loading fences revision, location, and cancellation", async () => {
   const environment = new FakeEnvironment();
   const entry = catalogue.screens[0]!;
-  const entryId = entry.id;
+  const entryId = entry.path;
   const request = { ...currentRequest(), entryId };
-  environment.location.href = `http://localhost${viewHref(entry.kind, entryId)}`;
+  environment.location.href = `http://localhost${viewHref(entryId)}`;
   environment.descriptor = {
     ...descriptor,
     workspace: workspaceEvidence(entryId),
@@ -183,7 +183,7 @@ test("route evidence loading fences revision, location, and cancellation", async
         request,
         new AbortController().signal,
       )
-    )?.workspace?.entry.id,
+    )?.workspace?.entry.path,
     entryId,
   );
 
@@ -227,11 +227,11 @@ test("route evidence loading fences revision, location, and cancellation", async
 test("route evidence atomically carries a newer public and private revision", async () => {
   const environment = new FakeEnvironment();
   const entry = catalogue.screens[0]!;
-  const entryId = entry.id;
+  const entryId = entry.path;
   const next = structuredClone(catalogue);
   next.revision.evidence += 2;
   environment.publicCatalogue = next;
-  environment.location.href = `http://localhost${viewHref(entry.kind, entryId)}`;
+  environment.location.href = `http://localhost${viewHref(entryId)}`;
   environment.descriptor = {
     ...descriptor,
     source: {
@@ -254,7 +254,7 @@ test("route evidence atomically carries a newer public and private revision", as
   assert.equal(revision.source.updateVersion, descriptor.source.updateVersion);
   assert.equal(revision.source.evidenceRevision, next.revision.evidence);
   assert.equal(revision.catalogue.revision.evidence, next.revision.evidence);
-  assert.equal(revision.workspace?.entry.id, entryId);
+  assert.equal(revision.workspace?.entry.path, entryId);
 
   environment.publicCatalogue = {
     ...next,
@@ -306,7 +306,7 @@ test("initial private workspace evidence is exact-source and route scoped", () =
     new FakeEnvironment(),
   );
   assert.equal(
-    capabilities.evidence.initialWorkspace(currentRequest())?.entry.id,
+    capabilities.evidence.initialWorkspace(currentRequest())?.entry.path,
     currentRequest().entryId,
   );
   assert.throws(() =>
@@ -325,7 +325,7 @@ test("initial private workspace evidence is exact-source and route scoped", () =
 
 function currentRequest(): ViewerCapabilityRequest {
   return {
-    entryId: descriptor.workspace!.entry.id,
+    entryId: descriptor.workspace!.entry.path,
     source: descriptor.source,
   };
 }
@@ -402,7 +402,7 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
   readonly responses: Response[] = [];
   readonly storage = new FakeStorage();
   readonly location = {
-    href: "http://localhost/view/components/button.html",
+    href: "http://localhost/view/button/",
     reloads: 0,
     reload() {
       this.reloads += 1;
@@ -450,15 +450,15 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
           : {}),
       },
       view: entry
-        ? { kind: "target", entryId: entry.id, entryKind: entry.kind }
+        ? { kind: "target", entryId: entry.path, entryKind: entry.kind }
         : { kind: "home" },
     };
   }
 }
 
-function workspaceEvidence(id = catalogue.components[0]!.id): WorkspaceData {
+function workspaceEvidence(id = catalogue.components[0]!.path): WorkspaceData {
   const entry = [...catalogue.screens, ...catalogue.components].find(
-    (candidate) => candidate.id === id,
+    (candidate) => candidate.path === id,
   );
   if (!entry) throw new Error("Unknown workspace fixture route.");
   return {

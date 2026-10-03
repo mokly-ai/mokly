@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Approved contract. Current builds emit manifest v7 with ids and `navPath`;
-the [path identity plan](../../plans/path-identity.md) delivers v8.
+Builds emit manifest v8 with paths and folder records. The document kind is
+reserved; matched Markdown files are watched inputs pending document rendering.
 
 These are the normative interfaces for the generated `mokly-manifest.json`.
 `Viewport` retains the [package contract](./mokly-package.md) and the named
@@ -55,7 +55,7 @@ interface ManifestScreen extends ManifestEntryBase {
   variantOf?: string;
   colorSchemes: readonly ColorScheme[];
   useCasePaths: readonly string[];
-  componentViews: readonly ComponentViewRecord[];
+  componentViews?: readonly ComponentViewRecord[];
 }
 
 interface ManifestUseCase extends ManifestEntryBase {
@@ -119,7 +119,9 @@ carrier, with its validated fields and the repository-relative source of the
 record: the `_folder.json` file or the entry module that exported
 `defineFolder`. A `_folder.json` at the top level of an unprefixed root is
 recorded with `path: ""`. Resolved titles are not stored; readers apply the
-title rule.
+title rule. The sorted `sourceFiles` inventory includes every folder record's
+`sourcePath`. Directory-only fields are rejected for code carriers, identified
+by a source path whose final segment is not `_folder.json`.
 
 Every entry requires `declaredDependencies`, the sorted unique paths
 explicitly authored in its definition; a document's list is empty and its
@@ -162,7 +164,10 @@ props. A current reader rejects any stored `id`, `navPath`, `route`,
 Paths follow the [segment grammar](./mokly-paths.md#segment-grammar) and are
 unique case-insensitively across all entries. A `variantOf` names a current
 entry of the same kind without `variantOf`, and the variant's path is that
-parent's path plus one segment. `useCasePaths` and `screenPath` reciprocate.
+parent's path plus exactly one segment, with no override.
+The manifest stores no override flag, so readers validate the parent relationship
+and path uniqueness without reconstructing derivation. `useCasePaths` and
+`screenPath` reciprocate.
 A `folders[].path` is below at least one entry path or is the top level, and
 folder paths are unique. Dependency roots, source paths, tags, resource
 confinement, and global output collisions retain their existing rules.

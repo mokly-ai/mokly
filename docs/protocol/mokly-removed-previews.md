@@ -6,10 +6,8 @@ The [removed content previews plan](../../plans/removed-content-previews.md)
 delivered typed capture, the Serve generation lifecycle, consumer export,
 repository preview, upload packaging, and the shared shell and viewer. The
 [viewer-owned historical previews plan](../../plans/viewer-owned-historical-previews.md)
-defines the host-independent presentation. Document previews, path-derived
-preview names, and the absence of a preview for a paired moved entry follow
-the [path identity plan](../../plans/path-identity.md); the current
-implementation names previews by kind and id. Nothing here changes ordinary
+defines the host-independent presentation. Preview names derive from paths. Document previews and suppression for paired
+moves remain planned in the [path identity plan](../../plans/path-identity.md). Nothing here changes ordinary
 browsing, Added entries, changed-screen comparisons, or removed component
 variants.
 

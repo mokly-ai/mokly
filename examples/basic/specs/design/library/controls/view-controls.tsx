@@ -1,0 +1,100 @@
+import { defineComponent, type ComponentProps } from "@mokly/mokly";
+
+import { libraryMetadata } from "../metadata.js";
+import { optionalFlag, previewViewport } from "../schemas.js";
+
+import { ViewControlsView } from "./view-controls.view.js";
+
+const propSchema = {
+  kind: "object",
+  properties: {
+    selection: previewViewport,
+    highlight: optionalFlag,
+    unavailable: {
+      schema: {
+        kind: "enum",
+        values: ["empty", "unavailable", "comparison", "removed"],
+      },
+      optional: true,
+    },
+    changedViews: {
+      schema: {
+        kind: "array",
+        items: {
+          kind: "object",
+          properties: {
+            viewport: {
+              schema: { kind: "enum", values: ["mobile", "desktop"] },
+            },
+            scheme: { schema: { kind: "enum", values: ["light", "dark"] } },
+          },
+        },
+      },
+      optional: true,
+    },
+  },
+} as const;
+export type ViewControlsProps = ComponentProps<typeof propSchema, []>;
+const sample = { selection: "desktop" } as const;
+export const viewControls = defineComponent({
+  ...libraryMetadata(
+    "controls",
+    "view-controls",
+    "View controls",
+    "Viewport and component highlighting controls.",
+  ),
+  propSchema,
+  controls: {
+    selection: {
+      kind: "select",
+      label: "Viewport",
+      options: previewViewport.schema.values.map((value) => ({
+        label: value,
+        value,
+      })),
+    },
+    highlight: { kind: "boolean", label: "Highlight components" },
+    unavailable: {
+      kind: "select",
+      label: "Unavailable reason",
+      options: propSchema.properties.unavailable.schema.values.map((value) => ({
+        label: value,
+        value,
+      })),
+    },
+  },
+  render: ViewControlsView,
+  variants: [
+    {
+      slug: "default",
+      title: "Default",
+      props: sample,
+    },
+    {
+      slug: "both",
+      title: "Both viewports",
+      props: { ...sample, selection: "both" },
+    },
+    {
+      slug: "highlighted",
+      title: "Highlighted",
+      props: { ...sample, highlight: true },
+    },
+    {
+      slug: "unavailable",
+      title: "Unavailable",
+      props: { ...sample, highlight: false, unavailable: "empty" },
+    },
+    {
+      slug: "changed-views",
+      title: "Changed views",
+      props: {
+        ...sample,
+        changedViews: [
+          { viewport: "mobile", scheme: "dark" },
+          { viewport: "desktop", scheme: "dark" },
+        ],
+      },
+    },
+  ],
+});

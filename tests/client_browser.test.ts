@@ -60,7 +60,7 @@ test("React host updates consume stale-URL recovery without applying it", () => 
     "mokly:live-update-recovery",
     JSON.stringify({
       browse: browseState(),
-      url: "http://127.0.0.1:4173/view/screens/other.html",
+      url: "http://127.0.0.1:4173/view/other/",
       version: 2,
     }),
   );
@@ -153,7 +153,7 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
   readonly source = new FakeEventSource();
   readonly storage = new FakeStorage();
   readonly location = {
-    href: "http://127.0.0.1:4173/view/screens/home.html",
+    href: "http://127.0.0.1:4173/view/home/",
     reloads: 0,
     reload() {
       this.reloads += 1;

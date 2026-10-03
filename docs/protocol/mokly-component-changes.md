@@ -3,9 +3,7 @@
 ## Delivery Status
 
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
-share this attribution policy, keyed today by kind and id; the
-[path identity plan](../../plans/path-identity.md) delivers the path-keyed
-result and changed-entry set named below. The
+share this attribution policy and its path-keyed result and changed-entry set. The
 [component explorer plan](../../plans/component-explorer.md) records delivery.
 Unregistered catalogues retain their ordinary behavior.
 

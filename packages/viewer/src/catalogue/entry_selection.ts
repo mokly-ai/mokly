@@ -18,6 +18,7 @@ export function currentCatalogueEntries(
   return [
     ...model.screens,
     ...model.pages,
+    ...model.documents,
     ...model.useCases,
     ...model.components,
   ];
@@ -48,16 +49,16 @@ export function resolveCatalogueSelection(
   if (snapshotId !== undefined) {
     const historical = model.removedEntries.find(
       (record) =>
-        record.entry.id === entryId && record.snapshotId === snapshotId,
+        record.entry.path === entryId && record.snapshotId === snapshotId,
     );
     return historical ? { entry: historical.entry, snapshotId } : undefined;
   }
   const current = currentCatalogueEntries(model).find(
-    (entry) => entry.id === entryId,
+    (entry) => entry.path === entryId,
   );
   if (current) return { entry: current };
   const historical = model.removedEntries.filter(
-    (record) => record.entry.id === entryId,
+    (record) => record.entry.path === entryId,
   );
   if (historical.length !== 1) return undefined;
   const [record] = historical;
@@ -71,9 +72,9 @@ export function resolveCatalogueSelection(
 /** Resolve one kind-and-id address, inferring its published snapshot when unique. */
 export function resolveCatalogueEntry(
   model: CatalogueReadModel,
-  identity: { id: string; kind: CatalogueRecord["kind"] },
+  identity: { path: string; kind: CatalogueRecord["kind"] },
   snapshotId?: string,
 ): ResolvedCatalogueEntry | undefined {
-  const selected = resolveCatalogueSelection(model, identity.id, snapshotId);
+  const selected = resolveCatalogueSelection(model, identity.path, snapshotId);
   return selected?.entry.kind === identity.kind ? selected : undefined;
 }

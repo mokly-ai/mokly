@@ -44,7 +44,7 @@ export async function renderCooperatively(
   for (const entry of ordered) {
     if (entry.kind === "page") {
       await render({
-        entryId: entry.id,
+        entryId: entry.path,
         viewport: "desktop",
         colorScheme: "light",
       });
@@ -58,7 +58,7 @@ export async function renderCooperatively(
           config.colorSchemes,
         ))
           await render({
-            entryId: entry.id,
+            entryId: entry.path,
             viewport,
             colorScheme,
           });

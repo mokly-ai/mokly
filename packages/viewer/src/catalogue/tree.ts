@@ -1,51 +1,32 @@
 import type {
   CatalogueHierarchy,
+  HierarchyEntry,
   HierarchyNode,
 } from "../registry/hierarchy.js";
-import { compareNavigationNodes } from "../registry/nav_paths.js";
 
-import type { CatalogueNode, CatalogueReadModel } from "./types.js";
-/** Project current section folders and entries using their shared sibling order. */
-interface TreeEntry {
-  id: string;
-  title: string;
-  kind: string;
-}
+import type { CatalogueNode } from "./types.js";
 
-/** Serialize independent folder trees with variants below their parent entry. */
-export function projectTree(
-  hierarchy: CatalogueHierarchy<TreeEntry>,
-): CatalogueReadModel["tree"] {
-  const section = (
-    nodes: readonly HierarchyNode<TreeEntry>[],
-  ): CatalogueNode[] => {
-    const project = (node: HierarchyNode<TreeEntry>): CatalogueNode => {
-      if (node.kind === "folder")
-        return {
+/** Serialize the shared path tree, preserving folder order and index rows. */
+export function projectTree<T extends HierarchyEntry>(
+  hierarchy: CatalogueHierarchy<T>,
+): readonly CatalogueNode[] {
+  const project = (node: HierarchyNode<T>): CatalogueNode =>
+    node.kind === "folder"
+      ? {
           kind: "folder",
-          label: node.label,
-          children: [...node.children]
-            .sort(compareNavigationNodes)
-            .map(project),
+          ...(node.hidden ? { hidden: true } : {}),
+          path: node.path,
+          title: node.label,
+          ...(node.index ? { index: node.index.path } : {}),
+          children: node.children.map(project),
+        }
+      : {
+          kind: "entry",
+          ...(node.hidden ? { hidden: true } : {}),
+          path: node.entry.path,
+          ...(node.children?.length
+            ? { children: node.children.map(project) }
+            : {}),
         };
-      const variants = hierarchy.variantsById.get(node.entry.id) ?? [];
-      return {
-        kind: "entry",
-        id: node.entry.id,
-        ...(variants.length > 0
-          ? {
-              children: variants.map((variant) => ({
-                kind: "entry" as const,
-                id: variant.id,
-              })),
-            }
-          : {}),
-      };
-    };
-    return [...nodes].sort(compareNavigationNodes).map(project);
-  };
-  return {
-    pages: section(hierarchy.roots.pages),
-    components: section(hierarchy.roots.components),
-  };
+  return hierarchy.tree.map(project);
 }

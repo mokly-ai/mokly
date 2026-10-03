@@ -16,13 +16,13 @@ test("stored obsolete collection keys do not close current folders", async ({
       ]),
     );
   });
-  await page.goto("/view/user-flows/example-tour.html");
+  await page.goto("/view/example/tour/");
   const pages = page.locator('[data-nav-section="pages"]');
   await expect(
-    pages.locator('[data-nav-folder="folder:Example"]'),
+    pages.locator('[data-nav-folder="folder:example"]'),
   ).toHaveAttribute("open", "");
   await expect(
-    pages.locator('[data-nav-folder="folder:Example/Screens"]'),
+    pages.locator('[data-nav-folder="folder:example/screens"]'),
   ).not.toHaveAttribute("open", "");
 });
 
@@ -36,19 +36,19 @@ test("a mixed v2 list does not open normally closed folders on upgrade", async (
       JSON.stringify([
         "collection:pages:Example/Screens",
         "section:pages",
-        "variants:pages:example-welcome",
+        "variants:example/screens/welcome",
       ]),
     );
   });
-  await page.goto("/view/user-flows/example-tour.html");
+  await page.goto("/view/example/tour/");
   await expect(
-    page.locator('[data-nav-folder="folder:Example/Screens"]'),
+    page.locator('[data-nav-folder="folder:example/screens"]'),
   ).not.toHaveAttribute("open", "");
   await expect
     .poll(() => readDisclosureStorage(page))
     .toMatchObject({
-      "folder:pages:Example": true,
-      "folder:pages:Example/Screens": false,
+      "folder:pages:example": true,
+      "folder:pages:example/screens": false,
       "section:pages": true,
       "section:components": true,
     });
@@ -62,10 +62,10 @@ test("folder disclosures persist across reload without closing the same path in 
 }) => {
   await page.goto("/");
   const pagesFolder = page.locator(
-    '[data-nav-section="pages"] [data-nav-folder="folder:Example"]',
+    '[data-nav-section="pages"] [data-nav-folder="folder:example"]',
   );
   const componentsFolder = page.locator(
-    '[data-nav-section="components"] [data-nav-folder="folder:Example"]',
+    '[data-nav-section="components"] [data-nav-folder="folder:example"]',
   );
   await expect(pagesFolder).toHaveAttribute("open", "");
   await expect(componentsFolder).toHaveAttribute("open", "");
@@ -73,7 +73,7 @@ test("folder disclosures persist across reload without closing the same path in 
   await expect(pagesFolder).not.toHaveAttribute("open", "");
   await expect
     .poll(() => readDisclosureStorage(page))
-    .toMatchObject({ "folder:pages:Example": false });
+    .toMatchObject({ "folder:pages:example": false });
   await page.reload();
   await expect(pagesFolder).not.toHaveAttribute("open", "");
   await expect(componentsFolder).toHaveAttribute("open", "");

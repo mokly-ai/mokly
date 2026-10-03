@@ -6,12 +6,46 @@ import {
   type ReactNode,
 } from "react";
 
-import { isCatalogueId, isLogicalFragment } from "@mokly/viewer/data";
+import { isLinkPath, isLogicalFragment } from "@mokly/viewer/data";
 
-/** Create an id-addressed link resolved during static generation. */
-export function mockLink(id: string, fragment?: string): string {
-  if (!isCatalogueId(id)) {
-    throw new TypeError("mockLink expected kebab-case catalogue id");
+import { definitionReference, isDefinition } from "./identity.js";
+import { COMPONENT_REGISTRATION } from "./markers.js";
+import type { EntryDefinition } from "./types.js";
+
+/** A logical path or imported definition, including a parent-first export array. */
+export type MockLinkTarget =
+  | string
+  | EntryDefinition
+  | readonly EntryDefinition[]
+  | {
+      readonly [COMPONENT_REGISTRATION]: true;
+      readonly entries: readonly EntryDefinition[];
+    };
+
+/** Create a path-addressed link resolved during static generation. */
+export function mockLink(to: MockLinkTarget, fragment?: string): string {
+  let definition: unknown = Array.isArray(to) ? to[0] : to;
+  if (
+    typeof definition === "object" &&
+    definition !== null &&
+    COMPONENT_REGISTRATION in definition &&
+    definition[COMPONENT_REGISTRATION] === true &&
+    "entries" in definition &&
+    Array.isArray(definition.entries)
+  )
+    definition = definition.entries[0];
+  const id =
+    isDefinition(definition) && definition.kind !== "folder"
+      ? definitionReference(definition)
+      : to;
+  if (
+    typeof id !== "string" ||
+    (!(isDefinition(definition) && definition.kind !== "folder") &&
+      !isLinkPath(id))
+  ) {
+    throw new TypeError(
+      "mockLink expected a complete path, relative path, or entry definition",
+    );
   }
   if (fragment !== undefined && !isLogicalFragment(fragment)) {
     throw new TypeError("mockLink fragment must be a bare HTML id");
@@ -27,14 +61,14 @@ interface AnchorLinkProps extends Omit<
   asChild?: false;
   children?: ReactNode;
   fragment?: string;
-  to: string;
+  to: MockLinkTarget;
 }
 
 interface ChildLinkProps {
   asChild: true;
   children: ReactElement;
   fragment?: string;
-  to: string;
+  to: MockLinkTarget;
 }
 
 /** Ordinary anchor props or an explicitly adapted single child control. */

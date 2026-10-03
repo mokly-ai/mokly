@@ -5,7 +5,7 @@ import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { componentChangeCases } from "./helpers/component_change_cases.js";
@@ -34,7 +34,7 @@ for (const [name, change, routes] of componentChangeCases)
       config: fixture.config,
     });
     assert.deepEqual(
-      result.changes.map((entry) => (entry.after ?? entry.before)!.id),
+      result.changes.map((entry) => (entry.after ?? entry.before)!.path),
       routes,
     );
     if (name === "screen-owned invisible data")
@@ -62,7 +62,7 @@ test("fast and complete paths agree for ignored-only documents", async (t) => {
     changedPaths: fixture.changedPaths,
     config: fixture.config,
   });
-  const screen = result.screens.find((entry) => entry.id === "home");
+  const screen = result.screens.find((entry) => entry.path === "home");
   assert.ok(screen);
   assert.ok(screen.views.every((view) => view.state === "ignored-only"));
   assert.ok(
@@ -94,7 +94,8 @@ for (const owned of [false, true])
     if (owned) {
       assert.ok(
         result.changes.some(
-          (entry) => entry.kind === "component" && entry.after?.id === "action",
+          (entry) =>
+            entry.kind === "component" && entry.after?.path === "action",
         ),
       );
       assert.ok(
@@ -112,19 +113,21 @@ test("derived byte-only image changes take the complete path", async (t) => {
   });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
-  await fs.mkdir(path.join(fixture.mockupsDir, "components"));
-  for (const route of ["image.svg", "components/image.svg"])
+  const images = ["image.svg", "action/image.svg", "pane/image.svg"];
+  for (const route of images) {
+    await fs.mkdir(path.dirname(path.join(fixture.mockupsDir, route)), {
+      recursive: true,
+    });
     await fs.writeFile(path.join(fixture.mockupsDir, route), "base-image");
+  }
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const baseImages = {
-    "image.svg": "base-image",
-    "components/image.svg": "base-image",
-  };
-  const headImages = {
-    "image.svg": "head-image",
-    "components/image.svg": "head-image",
-  };
+  const baseImages = Object.fromEntries(
+    images.map((image) => [image, "base-image"]),
+  );
+  const headImages = Object.fromEntries(
+    images.map((image) => [image, "head-image"]),
+  );
   const result = await assertFastPathEquivalent({
     before: compilation.manifest,
     after: compilation.manifest,
@@ -187,8 +190,8 @@ async function stylesheetFixture(
   );
   if (owned)
     source = source.replace(
-      'id: "action",',
-      'id: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],',
+      'path: "action",',
+      'path: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],',
     );
   const fixture = await createFixture(source, {
     extraConfig:
@@ -228,7 +231,7 @@ async function assetFiles(directory: string) {
   return files;
 }
 
-function allViews(result: ReviewResultV4) {
+function allViews(result: ReviewResultV5) {
   return [
     ...result.screens.flatMap((screen) => screen.views),
     ...result.components.flatMap((component) =>

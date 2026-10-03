@@ -21,12 +21,12 @@ switch of the
 [Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
 The path-derived files, the Specs section, and the component paths in Details
 below are the approved contract. These designs depict the kind-filtered
-sections and component paths; the catalogue still authors ids until the
-[path identity plan](../../plans/path-identity.md) migrates it to paths.
+sections and component paths, and the catalogue uses paths. The runtime Specs
+section awaits the [path identity plan](../../plans/path-identity.md).
 
 ## Owning Catalogue
 
-Source lives under `examples/basic/entries/design/components/`; generated
+Source lives under `examples/basic/specs/design/components/`; generated
 artboards live under `examples/basic/generated/<path>/` as their path-derived
 `index.<viewport>.html` views. The existing
 Specs → Design → Mokly design → Component explorer folder reaches every
@@ -41,31 +41,31 @@ Published galleries with four, four, and two screens. The linked inspector and
 controls contracts own their additional entry inventories. Every screen has a separate
 mobile component and desktop component; there are no new user-flow pages.
 
-| Entry                                       | State                                                     |
-| ------------------------------------------- | --------------------------------------------------------- |
-| `design-component-overview`                 | Action page, default variant, props, and Used by          |
-| `design-component-variants`                 | Disabled saved variant                                    |
-| `design-component-comparison`               | Saved variant before/current comparison                   |
-| `design-component-overlay`                  | Saved variant Overlay in one bordered frame               |
-| `design-component-difference`               | Saved variant Difference in one bordered frame            |
-| `design-component-overlay-tall`             | Component taller than its frame, part-way down in Overlay |
-| `design-component-affected`                 | One changed component and two affected screens            |
-| `design-component-toolbar`                  | Component consuming Action                                |
-| `design-component-help`                     | Invoked component with no visible region                  |
-| `design-component-inspection-details`       | Repeated instances and selected props                     |
-| `design-component-inspection-highlight`     | Outermost component cutouts                               |
-| `design-component-inspection-nested`        | Nested Action selected in the screen and Props            |
-| `design-component-inspection-direct-change` | Independent screen prop change; two Changes               |
-| `design-component-inspection-consumer`      | A second screen reached from Used by                      |
-| `design-component-inspection-toolbar`       | Selected container with its own props                     |
-| `design-component-inspection-help`          | Selected invisible instance                               |
-| `design-component-empty`                    | Validated empty usage                                     |
-| `design-component-unavailable`              | Missing inspection metadata                               |
-| `design-component-unused`                   | Saved component with no consumers                         |
-| `design-component-removed`                  | Removed saved variant and former consumer                 |
-| `design-component-removed-consumer`         | Former consumer's previous version behind a Removed badge |
-| `design-component-added`                    | Added Badge current preview without comparison controls   |
-| `design-component-shared-impact`            | Unmodified Action with shared-file evidence in Details    |
+| Entry                                                       | State                                                     |
+| ----------------------------------------------------------- | --------------------------------------------------------- |
+| `design/components/overview`                                | Action page, default variant, props, and Used by          |
+| `design/components/pages/variants`                          | Disabled saved variant                                    |
+| `design/components/pages/comparison`                        | Saved variant before/current comparison                   |
+| `design/components/pages/stacked/overlay`                   | Saved variant Overlay in one bordered frame               |
+| `design/components/pages/stacked/difference`                | Saved variant Difference in one bordered frame            |
+| `design/components/pages/stacked/overlay-tall`              | Component taller than its frame, part-way down in Overlay |
+| `design/components/pages/affected`                          | One changed component and two affected screens            |
+| `design/components/pages/toolbar`                           | Component consuming Action                                |
+| `design/components/pages/help`                              | Invoked component with no visible region                  |
+| `design/components/inspection/inspection-details`           | Repeated instances and selected props                     |
+| `design/components/inspection/inspection-highlight`         | Outermost component cutouts                               |
+| `design/components/inspection/inspection-nested`            | Nested Action selected in the screen and Props            |
+| `design/components/inspection/inspection-direct-change`     | Independent screen prop change; two Changes               |
+| `design/components/inspection/inspection-consumer`          | A second screen reached from Used by                      |
+| `design/components/inspection/selection/inspection-toolbar` | Selected container with its own props                     |
+| `design/components/inspection/selection/inspection-help`    | Selected invisible instance                               |
+| `design/components/states/empty`                            | Validated empty usage                                     |
+| `design/components/states/unavailable`                      | Missing inspection metadata                               |
+| `design/components/states/unused`                           | Saved component with no consumers                         |
+| `design/components/states/removed`                          | Removed saved variant and former consumer                 |
+| `design/components/states/removed-consumer`                 | Former consumer's previous version behind a Removed badge |
+| `design/components/states/additions/added`                  | Added Badge current preview without comparison controls   |
+| `design/components/states/shared-impact/shared-impact`      | Unmodified Action with shared-file evidence in Details    |
 
 Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md): its standalone views are
@@ -84,9 +84,9 @@ for brand, home breadcrumb, and the canonical mobile drawer. Component artboards
 select their own typed navigation state; they never inherit Welcome's tag,
 scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios. In Side by side, Overlay and Difference the band also draws the Scroll together switch, on, after the mode control and before Refresh, as the [shell design](./mokly-shell-design.md#in-place-comparisons) specifies; it toggles in place.
 Action's changed Default variant is one comparison family: its mode control
-links Current to `design-component-affected`, Side by side to
-`design-component-comparison`, and Overlay and Difference to
-`design-component-overlay` and `design-component-difference`, while the
+links Current to `design/components/pages/affected`, Side by side to
+`design/components/pages/comparison`, and Overlay and Difference to
+`design/components/pages/stacked/overlay` and `design/components/pages/stacked/difference`, while the
 selected mode stays a pressed button. Every other eligible depiction, including
 the tall Checklist, keeps all four modes as buttons. No mode control links into
 the Checklist, because it depicts another component; readers reach it beside

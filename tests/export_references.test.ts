@@ -43,9 +43,24 @@ test("comparison snapshot links retain their existing resource-only validation",
   validateExportReferences(
     new Map([
       [
-        "__mokly/diffs/__generations/test/snapshots/before/view.html",
+        `__mokly/diffs/__generations/${"a".repeat(64)}/snapshots/before/view.html`,
         '<a href="unpublished.html#missing">Historical link</a>',
       ],
     ]),
+  );
+});
+
+test("ordinary entry paths containing snapshots retain fragment validation", () => {
+  assert.throws(
+    () =>
+      validateExportReferences(
+        new Map([
+          [
+            "reports/snapshots/daily/index.html",
+            '<a href="#missing">Broken</a>',
+          ],
+        ]),
+      ),
+    /anchor/,
   );
 });

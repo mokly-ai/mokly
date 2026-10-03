@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -15,7 +15,7 @@ const source =
   validEntrySource() +
   `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "A document", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
+mockups.push(definePage({ path: "handbook", title: "Handbook", description: "A document", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
 `;
 
 for (const change of [
@@ -56,7 +56,7 @@ for (const change of [
       await fixture.build();
     }
     assert.deepEqual(
-      await computeChangedIds(
+      await computeChangedPaths(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -82,7 +82,7 @@ test("Changes cannot treat a historical authoring input as a deleted public reso
   await fs.writeFile(fixture.entryPath, validEntrySource());
   await fixture.build();
   await fs.rm(path.join(fixture.mockupsDir, "helper.js"));
-  const fragment = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const fragment = path.join(fixture.mockupsDir, "home/index.mobile.html");
   await fs.writeFile(
     fragment,
     (await fs.readFile(fragment, "utf8")).replace(
@@ -91,7 +91,7 @@ test("Changes cannot treat a historical authoring input as a deleted public reso
     ),
   );
   assert.equal(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

@@ -46,8 +46,9 @@ for (const loader of ["dataurl", "base64", "binary", "file", "text"]) {
     await fs.writeFile(asset, '<svg width="200"><rect width="20"/></svg>');
     const rebuilt = await compileCatalogue(config);
     assert.notEqual(
-      rebuilt.manifest.entries.find((entry) => entry.id === "home")?.title,
-      compilation.manifest.entries.find((entry) => entry.id === "home")?.title,
+      rebuilt.manifest.entries.find((entry) => entry.path === "home")?.title,
+      compilation.manifest.entries.find((entry) => entry.path === "home")
+        ?.title,
     );
   });
 }

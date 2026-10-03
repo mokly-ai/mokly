@@ -30,7 +30,7 @@ const catalogue = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -62,12 +62,12 @@ test("the provider exposes live capabilities and export-style omission", () => {
     },
   } satisfies ViewerHostCapabilities;
   const workspace = {
-    entry: { id: "action" },
+    entry: { path: "components/action" },
   } as unknown as WorkspaceData;
   const Probe = () => (
     <span>
       {useViewerCapabilities()?.source.catalogueId ?? "export"}:
-      {useViewerInitialWorkspace()?.entry.id ?? "none"}
+      {useViewerInitialWorkspace()?.entry.path ?? "none"}
     </span>
   );
   assert.equal(
@@ -79,18 +79,18 @@ test("the provider exposes live capabilities and export-style omission", () => {
         <Probe />
       </ViewerCapabilityBoundary>,
     ),
-    `<span>${catalogue.identity.id}:action</span>`,
+    `<span>${catalogue.identity.id}:components/action</span>`,
   );
   assert.equal(renderToStaticMarkup(<Probe />), "<span>export:none</span>");
 });
 
 test("a request scope cancels work when its source or route changes", () => {
-  const initial = viewerCapabilityRequest(source, "components/button.html");
+  const initial = viewerCapabilityRequest(source, "button/index.html");
   const scope = new ViewerCapabilityScope(initial);
   const first = scope.signal;
   assert.equal(scope.replace(initial), first);
   const second = scope.replace(
-    viewerCapabilityRequest(source, "components/card.html"),
+    viewerCapabilityRequest(source, "card/index.html"),
   );
   assert.equal(first.aborted, true);
   assert.equal(second.aborted, false);
@@ -99,7 +99,7 @@ test("a request scope cancels work when its source or route changes", () => {
     contentRevision: source.contentRevision + 1,
   };
   const third = scope.replace(
-    viewerCapabilityRequest(replacement, "components/card.html"),
+    viewerCapabilityRequest(replacement, "card/index.html"),
   );
   assert.equal(second.aborted, true);
   assert.equal(third.aborted, false);
@@ -190,7 +190,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const { publicModel: _publicModel, ...privateDisplay } = display;
   const view = viewerView(display, {
     ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
+    screenPath: catalogue.components[0]!.path,
   });
   const liveContext = {
     base: source.base,
@@ -216,7 +216,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   assert.equal(view.kind, "target");
   if (view.kind !== "target")
     throw new Error("Expected a target fixture view.");
-  assert.equal(descriptor.workspace.entry.id, view.target.entry.id);
+  assert.equal(descriptor.workspace.entry.path, view.target.entry.path);
   assert.equal(descriptor.workspace.base, source.base);
   assert.equal("renderCapability" in descriptor.workspace, false);
   for (const leaked of [{ token }, { renderCapability: { generation, token } }])

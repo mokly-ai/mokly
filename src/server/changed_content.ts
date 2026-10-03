@@ -4,7 +4,7 @@ import path from "node:path";
 
 import type {
   HistoricalManifest,
-  ManifestV7,
+  ManifestV8,
   ScreenResourceEvidence,
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
@@ -41,7 +41,7 @@ export interface ChangedContent {
  * Exclude authoring paths lexically so retargeted public aliases still reach validation.
  */
 export async function changedContentPaths(
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -68,7 +68,7 @@ export async function changedContentPaths(
 
 /** Preserve resource evidence from the v2 membership pass without repeating analysis. */
 export async function classifyChangedContent(
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -234,6 +234,6 @@ export async function classifyChangedContent(
     changedPaths: [...result].sort(),
     screens: [...screens.keys()]
       .sort()
-      .map((id) => ({ id, views: screens.get(id)! })),
+      .map((path) => ({ path, views: screens.get(path)! })),
   };
 }

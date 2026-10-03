@@ -7,9 +7,7 @@ replacement for the crowded Details disclosure. Runtime and mockups share the
 layout; non-component artboards retain the shell. Removed
 consumer stages retain this inspector around the previous version delivered by
 the [removed content previews plan](../../plans/removed-content-previews.md).
-Entry files derive from paths under the approved contract below; the design
-catalogue still authors ids until the
-[path identity plan](../../plans/path-identity.md) migrates it.
+The design catalogue and its entry files use paths.
 
 ## One Inspector
 
@@ -82,10 +80,10 @@ bounded Inspector gallery adds closed-panel states, each with its own mobile and
 desktop screen component. Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md):
 
-| Entry                                      | State                                      |
-| ------------------------------------------ | ------------------------------------------ |
-| `design-component-inspector-closed`        | Component with all inspector panels closed |
-| `design-component-screen-inspector-closed` | Screen with all inspector panels closed    |
+| Entry                                                 | State                                      |
+| ----------------------------------------------------- | ------------------------------------------ |
+| `design/components/inspector/inspector-closed`        | Component with all inspector panels closed |
+| `design/components/inspector/screen-inspector-closed` | Screen with all inspector panels closed    |
 
 ## Verification
 

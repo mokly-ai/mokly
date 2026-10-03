@@ -1,6 +1,6 @@
-import { isEntryId } from "@mokly/viewer/data";
+import { isEntryPath } from "@mokly/viewer/data";
 
-import { nestedAuthoredNavPath } from "../authoring/definitions.js";
+import { UNKNOWN_FIELDS } from "../authoring/markers.js";
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -23,16 +23,18 @@ export function validateEntry(
   config: ResolvedConfig,
 ): RegistryViolation[] {
   const violations: RegistryViolation[] = [];
-  for (const field of ["id", "title", "description"] as const) {
+  for (const field of entry[UNKNOWN_FIELDS] ?? [])
+    violations.push(problem(entry, "invalid-field", `unknown field ${field}`));
+  for (const field of ["path", "title", "description"] as const) {
     if (!nonEmpty(entry[field])) {
       violations.push(
         problem(entry, "missing-metadata", `${field} is required`),
       );
     }
   }
-  if (!isEntryId(entry.id)) {
+  if (!isEntryPath(entry.path)) {
     violations.push(
-      problem(entry, "invalid-id", "id must be globally unique kebab-case"),
+      problem(entry, "invalid-path", "path must be a valid catalogue path"),
     );
   }
   if (entry.__viaDefine !== true) {
@@ -68,36 +70,11 @@ export function validateEntry(
     );
   }
   validateTags(entry, violations);
-  if (nestedAuthoredNavPath(entry)) {
-    violations.push(
-      problem(
-        entry,
-        "invalid-nested-nav-path",
-        `nested entry ${entry.id} cannot author navPath`,
-      ),
-    );
-  }
   if (entry.kind === "page") {
     if (typeof entry.render !== "function")
       violations.push(
         problem(entry, "missing-render", "page render callback is required"),
       );
-    for (const field of [
-      "mobile",
-      "desktop",
-      "colorSchemes",
-      "address",
-      "useCaseIds",
-      "steps",
-      "viewports",
-      "fragments",
-      "darkFragments",
-    ]) {
-      if (field in entry)
-        violations.push(
-          problem(entry, "invalid-page-field", `pages do not support ${field}`),
-        );
-    }
   }
   if (entry.kind === "screen" || entry.kind === "component") {
     if (entry.colorSchemes !== undefined) {
@@ -135,7 +112,13 @@ export function validateEntry(
         problem(entry, "missing-render", "desktop render is required"),
       );
     }
-    validateTextList(entry, "useCaseIds", entry.useCaseIds, true, violations);
+    validateTextList(
+      entry,
+      "useCasePaths",
+      entry.useCasePaths,
+      true,
+      violations,
+    );
   }
   if (
     entry.kind === "use-case" &&
@@ -146,12 +129,22 @@ export function validateEntry(
     );
   } else if (entry.kind === "use-case") {
     for (const [index, step] of entry.steps.entries()) {
-      if (!record(step) || !nonEmpty(step.screenId)) {
+      if (record(step))
+        for (const field of Object.keys(step))
+          if (!["screenPath", "title", "description"].includes(field))
+            violations.push(
+              problem(
+                entry,
+                "invalid-field",
+                `step #${index + 1}: unknown field ${field}`,
+              ),
+            );
+      if (!record(step) || !nonEmpty(step.screenPath)) {
         violations.push(
           problem(
             entry,
             "invalid-step",
-            `step #${index + 1} needs a non-empty screenId`,
+            `step #${index + 1} needs a non-empty screenPath`,
           ),
         );
         continue;

@@ -14,7 +14,7 @@ import { createReactUpdateCapability } from "../dist/client/react_capability_upd
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   ),
 );
 
@@ -105,7 +105,7 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
   readonly source = new FakeSource();
   readonly storage = new FakeStorage();
   readonly location = {
-    href: "http://localhost/view/screens/home.html",
+    href: "http://localhost/view/product/browse/home/",
     reloads: 0,
     reload() {
       this.reloads += 1;

@@ -9,6 +9,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
+import { validateOutputCollisions } from "./output_collisions.js";
 import { sourceDenialMessage } from "./source_denial.js";
 import { isAuthoringSource } from "./source_inventory.js";
 
@@ -16,7 +17,10 @@ import { isAuthoringSource } from "./source_inventory.js";
 export function validateGeneratedOutputPaths(
   routes: Iterable<string>,
   config: ResolvedConfig,
+  collisionFiles?: readonly string[],
 ): void {
+  const outputRoutes = [...routes];
+  validateOutputCollisions(outputRoutes, config, collisionFiles);
   const realRepoRoot = fs.realpathSync(config.repoRoot);
   const realMockupsRoot = projectRealPath(config.mockupsDir);
   if (!isInside(realRepoRoot, realMockupsRoot)) {
@@ -25,7 +29,7 @@ export function validateGeneratedOutputPaths(
       "mockupsDir resolves outside repoRoot through a symlink",
     );
   }
-  for (const route of routes) {
+  for (const route of outputRoutes) {
     if (route !== MANIFEST_NAME && !isSafeCatalogueRoute(route)) {
       throw new MoklyError(
         "build-invalid",

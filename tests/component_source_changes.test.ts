@@ -8,7 +8,7 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { structureSignals } from "../dist/components/comparison_material.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import {
@@ -71,12 +71,12 @@ test("line and column shifts alone preserve bytes, keys and all Changes results"
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
   assert.deepEqual(result.affectedConsumers, []);
   assert.deepEqual(
-    await computeChangedIds(fixture.config, "main", fixture.git),
+    await computeChangedPaths(fixture.config, "main", fixture.git),
     [],
   );
 });
@@ -113,9 +113,9 @@ test("moving an invocation source file alone does not create material Changes", 
     "entries/nested/content.tsx",
   ]);
   const { result } = await compareReview(after, config, git, "main");
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
   assert.deepEqual(result.affectedConsumers, []);
-  assert.deepEqual(await computeChangedIds(config, "main", git), []);
+  assert.deepEqual(await computeChangedPaths(config, "main", git), []);
 });

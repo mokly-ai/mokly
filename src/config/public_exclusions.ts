@@ -22,17 +22,20 @@ export function resolvePublicExclude(value: unknown): readonly string[] {
 }
 
 /** Validate POSIX globs and brace alternatives; freeze a copy without adding defaults. */
-export function validatePublicExclude(value: unknown): readonly string[] {
-  if (!Array.isArray(value)) throw invalid(value);
+export function validatePublicExclude(
+  value: unknown,
+  label = "publicExclude",
+): readonly string[] {
+  if (!Array.isArray(value)) throw invalid(value, label);
   for (const item of value) {
-    if (typeof item !== "string" || !safeGlob(item)) throw invalid(item);
+    if (typeof item !== "string" || !safeGlob(item)) throw invalid(item, label);
     let alternatives: string[];
     try {
       alternatives = braceExpand(item);
     } catch {
-      throw invalid(item);
+      throw invalid(item, label);
     }
-    if (!alternatives.every(safeGlob)) throw invalid(item);
+    if (!alternatives.every(safeGlob)) throw invalid(item, label);
   }
   return Object.freeze([...value]);
 }
@@ -53,7 +56,7 @@ function safeGlob(glob: string): boolean {
   );
 }
 
-function invalid(item: unknown): MoklyError {
+function invalid(item: unknown, label: string): MoklyError {
   let description: string;
   try {
     description = JSON.stringify(item) ?? String(item);
@@ -62,6 +65,6 @@ function invalid(item: unknown): MoklyError {
   }
   return new MoklyError(
     "config-invalid",
-    `publicExclude requires safe relative POSIX globs; invalid item: ${description}`,
+    `${label} requires safe relative POSIX globs; invalid item: ${description}`,
   );
 }

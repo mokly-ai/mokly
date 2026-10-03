@@ -56,7 +56,7 @@ test("same-document history leaves focus with the native fragment target", async
 test("variant entry history stays separate from native fragment history", async ({
   page,
 }) => {
-  const path = "/view/components/design-ui-inspector.html";
+  const path = "/view/design/library/inspector/inspector/";
   await page.goto(path);
   await page.locator("html").evaluate((element) => {
     element.setAttribute("data-history-session", "retained");
@@ -76,23 +76,23 @@ test("variant entry history stays separate from native fragment history", async 
   await page.locator(".mbk-skip-link").focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(
-    /\/view\/components\/design-ui-inspector-props\.html#mb-main$/,
+    /\/view\/design\/library\/inspector\/inspector\/props\/#mb-main$/,
   );
   await page.goBack();
   await expect(page).toHaveURL(
-    /\/view\/components\/design-ui-inspector-props\.html$/,
+    /\/view\/design\/library\/inspector\/inspector\/props\/$/,
   );
   await expect(props).toHaveAttribute("aria-current", "page");
   await page.goBack();
   await expect(page).toHaveURL(
-    /\/view\/components\/design-ui-inspector\.html$/,
+    /\/view\/design\/library\/inspector\/inspector\/$/,
   );
   await expect(details).toHaveAttribute("aria-current", "page");
   await page.goForward();
   await expect(props).toHaveAttribute("aria-current", "page");
   await page.goForward();
   await expect(page).toHaveURL(
-    /\/view\/components\/design-ui-inspector-props\.html#mb-main$/,
+    /\/view\/design\/library\/inspector\/inspector\/props\/#mb-main$/,
   );
   await expect(props).toHaveAttribute("aria-current", "page");
   await expect(page.locator("html")).toHaveAttribute(
@@ -105,10 +105,10 @@ test("variant entry history stays separate from native fragment history", async 
 test("same-document Back cancels pending route metadata or screen navigation", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await page.locator(".mbk-skip-link").focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/welcome\.html#mb-main$/);
+  await expect(page).toHaveURL(/welcome\/#mb-main$/);
   let release = () => {};
   const gate = new Promise<void>((resolve) => {
     release = resolve;
@@ -117,7 +117,7 @@ test("same-document Back cancels pending route metadata or screen navigation", a
   const metadataRequested = new Promise<void>((resolve) => {
     markMetadataRequested = resolve;
   });
-  await page.route("**/view/screens/example-details.html", async (route) => {
+  await page.route("**/view/example/screens/details/", async (route) => {
     markMetadataRequested();
     await gate;
     await route.continue();
@@ -126,7 +126,7 @@ test("same-document Back cancels pending route metadata or screen navigation", a
   page.on("request", (request) => {
     if (
       request.resourceType() === "fetch" &&
-      request.url().endsWith("/view/screens/example-details.html")
+      request.url().endsWith("/view/example/screens/details/")
     )
       requests.push(request.url());
   });
@@ -134,10 +134,10 @@ test("same-document Back cancels pending route metadata or screen navigation", a
     .locator("[data-mokly-view]")
     .evaluate((view) => view.setAttribute("data-route-owner", "retained"));
   await page
-    .locator('a[data-nav-row][data-route="screens/example-details.html"]')
+    .locator('a[data-nav-row][data-route="example/screens/details/index.html"]')
     .click();
   await metadataRequested;
-  await expect(page).toHaveURL(/details\.html$/);
+  await expect(page).toHaveURL(/details\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect(page.locator("[data-mokly-view]")).toHaveAttribute(
     "data-route-owner",
@@ -145,7 +145,7 @@ test("same-document Back cancels pending route metadata or screen navigation", a
   );
   expect(requests).toHaveLength(1);
   const aborted = page.waitForEvent("requestfailed", (request) =>
-    request.url().endsWith("/view/screens/example-details.html"),
+    request.url().endsWith("/view/example/screens/details/"),
   );
   try {
     await page.goBack();
@@ -153,7 +153,7 @@ test("same-document Back cancels pending route metadata or screen navigation", a
     release();
   }
   await aborted;
-  await expect(page).toHaveURL(/welcome\.html#mb-main$/);
+  await expect(page).toHaveURL(/welcome\/#mb-main$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator("[data-mokly-view]")).toHaveAttribute(
     "data-route-owner",

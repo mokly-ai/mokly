@@ -92,7 +92,7 @@ export function startEvidenceHarness(
       if (view.usage.status !== "ready")
         throw new Error("Expected ready fixture");
       return {
-        screenId: home.id,
+        screenPath: home.path,
         viewport: view.viewport,
         colorScheme: view.colorScheme,
         key: view.usage.instances.find((instance) => instance.id === "action")!
@@ -139,7 +139,7 @@ export function startEvidenceHarness(
   };
   const selection: ViewerSelection = {
     colorScheme: "light",
-    screenId: home.id,
+    screenPath: home.path,
     search: "",
     tags: [],
     view: "all",
@@ -210,7 +210,7 @@ function EvidenceRuntime({
     catalogue: model,
     defaultSelection: {
       colorScheme: "light",
-      screenId: home.id,
+      screenPath: home.path,
       viewport: "both",
     },
     onError: () => probe.events.push("error"),

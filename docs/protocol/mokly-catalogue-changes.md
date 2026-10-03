@@ -2,13 +2,11 @@
 
 ## Delivery Status
 
-Approved contract. Catalogue impact/removal metadata is implemented with
-[pages](./mokly-pages.md), variants, and publication, keyed by kind and id;
-the [path identity plan](../../plans/path-identity.md) delivers the path-keyed
-form below with documents, folder titles, and moves. The metadata is
+Catalogue impact/removal metadata uses kind and path, with baseline folder
+titles for removed entries. Move detection and document rendering remain planned
+in the [path identity plan](../../plans/path-identity.md). This snapshot is
 independent of the visual [comparison result](./mokly-changes.md);
-[removed previews](./mokly-removed-previews.md) owns baseline documents and
-delivery descriptors.
+[removed previews](./mokly-removed-previews.md) owns baseline capture and delivery.
 
 ## Shared Metadata Contract
 

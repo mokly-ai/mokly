@@ -3,11 +3,13 @@ import { expect, test, type Page } from "@playwright/test";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
-const welcomeRow = 'a[data-nav-row][data-route="screens/example-welcome.html"]';
-const detailsRow = 'a[data-nav-row][data-route="screens/example-details.html"]';
+const welcomeRow =
+  'a[data-nav-row][data-route="example/screens/welcome/index.html"]';
+const detailsRow =
+  'a[data-nav-row][data-route="example/screens/details/index.html"]';
 const designHomeRow =
-  'a[data-nav-row][data-route="screens/design-browse-home.html"]';
-const tourRow = 'a[data-nav-row][data-route="user-flows/example-tour.html"]';
+  'a[data-nav-row][data-route="design/browse/views/home/index.html"]';
+const tourRow = 'a[data-nav-row][data-route="example/tour/index.html"]';
 const appearance = ".mbk-topbar [data-mokly-appearance-control]";
 const appearanceSelect = "[data-mokly-appearance-select]";
 const face = (value: string) =>
@@ -37,7 +39,7 @@ function hasMarker(page: Page): Promise<boolean> {
  */
 async function openScreensGroup(page: Page): Promise<void> {
   const group = page.locator(
-    'details[data-nav-folder="folder:Example/Screens"]',
+    'details[data-nav-folder="folder:example/screens"]',
   );
   if ((await group.getAttribute("open")) === null) {
     await group.locator("summary").click();
@@ -93,7 +95,7 @@ function overlayStyle(
 }
 
 test("durable links load complete server-rendered views", async ({ page }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "sandbox",
@@ -140,7 +142,7 @@ test("progressive navigation swaps the main view without reloads", async ({
   await markPage(page);
   await openScreensGroup(page);
   await page.click(welcomeRow);
-  await expect(page).toHaveURL(/\/view\/screens\/example-welcome\.html$/);
+  await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   expect(await hasMarker(page)).toBe(true);
   await expect(page.locator(welcomeRow)).toHaveAttribute(
@@ -153,7 +155,7 @@ test("progressive navigation swaps the main view without reloads", async ({
   await expect(page.locator("#mb-status")).toContainText("Welcome");
 
   await page.click(detailsRow);
-  await expect(page).toHaveURL(/details\.html$/);
+  await expect(page).toHaveURL(/details\/$/);
   await page.goBack();
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await page.goForward();
@@ -164,7 +166,7 @@ test("progressive navigation swaps the main view without reloads", async ({
 test("breadcrumbs track hierarchy through progressive history", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   const crumbs = page.getByLabel("Catalogue location");
   await expect(crumbs).toHaveText("Example›Screens");
   await expect(crumbs.locator("a")).toHaveCount(0);
@@ -180,7 +182,7 @@ test("breadcrumbs track hierarchy through progressive history", async ({
 
 test("Back and Forward restore each route's stage scroll", async ({ page }) => {
   await page.setViewportSize({ height: 500, width: 1_280 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await page.click(detailsRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   const destinationScroll = await page.evaluate(() => {
@@ -232,9 +234,9 @@ test("search state is retained across in-shell navigation", async ({
   expect(await hasMarker(page)).toBe(true);
 });
 
-test("search matches authored page ids", async ({ page }) => {
+test("search matches authored entry paths", async ({ page }) => {
   await page.goto("/");
-  await page.fill("[data-mokly-search]", "example-details");
+  await page.fill("[data-mokly-search]", "example/screens/details");
 
   await expect(page.locator(detailsRow)).toBeVisible();
   await expect(page.locator(welcomeRow)).toBeHidden();
@@ -243,7 +245,7 @@ test("search matches authored page ids", async ({ page }) => {
 
 test("details starts collapsed and remembers disclosure", async ({ page }) => {
   const details = page.locator("[data-workspace-inspector]");
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(details).not.toHaveAttribute("data-open", "true");
   await page.getByRole("tab", { name: "Details", exact: true }).click();
   await expect(details).toHaveAttribute("data-open", "true");
@@ -258,9 +260,9 @@ test("details starts collapsed and remembers disclosure", async ({ page }) => {
     document
       .querySelector<HTMLElement>('[data-inspector-tab="details"]')
       ?.click();
-    window.location.assign("/view/screens/example-welcome.html");
+    window.location.assign("/view/example/screens/welcome/");
   });
-  await page.waitForURL(/\/view\/screens\/example-welcome\.html$/);
+  await page.waitForURL(/\/view\/example\/screens\/welcome\/$/);
   await expect(details).not.toHaveAttribute("data-open", "true");
 });
 
@@ -268,7 +270,7 @@ test("searching opens groups and clearing restores their disclosure", async ({
   page,
 }) => {
   await page.goto("/");
-  const screensGroup = 'details[data-nav-folder="folder:Example/Screens"]';
+  const screensGroup = 'details[data-nav-folder="folder:example/screens"]';
   await page.evaluate((selector) => {
     document.querySelector<HTMLDetailsElement>(selector)!.open = false;
   }, screensGroup);
@@ -295,7 +297,7 @@ test("searching opens groups and clearing restores their disclosure", async ({
 test("details tag chips enter, keep, and clear their term", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(page.locator(tourRow)).toBeVisible();
   await markPage(page);
 
@@ -326,7 +328,7 @@ test("overlapping navigations are latest-wins", async ({ page }) => {
   await page.goto("/");
   await markPage(page);
   await openScreensGroup(page);
-  await page.route("**/view/screens/example-welcome.html", async (route) => {
+  await page.route("**/view/example/screens/welcome/", async (route) => {
     if (route.request().resourceType() !== "fetch") return route.continue();
     await new Promise((resolve) => setTimeout(resolve, 700));
     return route.continue();
@@ -334,7 +336,7 @@ test("overlapping navigations are latest-wins", async ({ page }) => {
   await page.click(welcomeRow);
   await page.click(detailsRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
-  await expect(page).toHaveURL(/details\.html$/);
+  await expect(page).toHaveURL(/details\/$/);
   await page.waitForTimeout(900);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   expect(await hasMarker(page)).toBe(true);
@@ -343,31 +345,31 @@ test("overlapping navigations are latest-wins", async ({ page }) => {
 test("failed route evidence keeps public navigation and rejects the previous owner", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-details.html");
+  await page.goto("/view/example/screens/details/");
   await markPage(page);
-  await expect.poll(() => workspaceRoute(page)).toBe("example-details");
+  await expect.poll(() => workspaceRoute(page)).toBe("example/screens/details");
   let fetches = 0;
-  await page.route("**/view/screens/example-welcome.html", (route) =>
+  await page.route("**/view/example/screens/welcome/", (route) =>
     route.request().resourceType() === "fetch"
       ? ((fetches += 1), route.abort())
       : route.continue(),
   );
   await page.click(welcomeRow);
-  await expect(page).toHaveURL(/welcome\.html$/);
+  await expect(page).toHaveURL(/welcome\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect.poll(() => fetches).toBe(1);
-  await expect.poll(() => workspaceRoute(page)).toBe("example-welcome");
+  await expect.poll(() => workspaceRoute(page)).toBe("example/screens/welcome");
   expect(await hasMarker(page)).toBe(true);
 });
 
 async function workspaceRoute(page: Page): Promise<string | undefined> {
   const state = await page.locator("script[data-workspace-data]").textContent();
   if (!state) return;
-  return (JSON.parse(state) as { entry?: { id?: string } }).entry?.id;
+  return (JSON.parse(state) as { entry?: { path?: string } }).entry?.path;
 }
 
 test("viewport controls switch device frames", async ({ page }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(
     page.locator(".mbk-screen-head [data-workspace-viewport]"),
   ).toBeVisible();
@@ -383,10 +385,10 @@ test("viewport controls switch device frames", async ({ page }) => {
 });
 
 test("color scheme switch swaps device frames", async ({ page }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/example-welcome\.mobile\.html$/,
+    /example\/screens\/welcome\/index\.mobile\.html$/,
   );
   await expectSchemeSelected(page, "light");
 
@@ -397,11 +399,11 @@ test("color scheme switch swaps device frames", async ({ page }) => {
   );
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/example-welcome\.mobile\.dark\.html$/,
+    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
   );
   await expectFrameSource(
     page.locator(desktopFrame),
-    /screens\/example-welcome\.desktop\.dark\.html$/,
+    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
   );
   await expectSchemeSelected(page, "dark");
 
@@ -412,18 +414,18 @@ test("color scheme switch swaps device frames", async ({ page }) => {
   );
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/example-welcome\.mobile\.html$/,
+    /example\/screens\/welcome\/index\.mobile\.html$/,
   );
   await expectFrameSource(
     page.locator(desktopFrame),
-    /screens\/example-welcome\.desktop\.html$/,
+    /example\/screens\/welcome\/index\.desktop\.html$/,
   );
   await expectSchemeSelected(page, "light");
 });
 
 test("dark device screens keep their surface and edge", async ({ page }) => {
   await page.setViewportSize({ height: 800, width: 1_280 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   const phoneScreen = ".mbk-frame-mobile .phone-screen";
   expect(await overlayStyle(page, phoneScreen, "boxShadow")).toBe("none");
 
@@ -445,7 +447,7 @@ test("dark device screens keep their surface and edge", async ({ page }) => {
 test("view controls retain mounted screen frames and their selected sources", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await chooseScheme(page, "dark");
   const mobile = await page.locator(mobileFrame).elementHandle();
   const desktop = await page.locator(desktopFrame).elementHandle();
@@ -457,11 +459,11 @@ test("view controls retain mounted screen frames and their selected sources", as
   expect(await desktop?.evaluate((node) => node.isConnected)).toBe(true);
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/example-welcome\.mobile\.dark\.html$/,
+    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
   );
   await expectFrameSource(
     page.locator(desktopFrame),
-    /screens\/example-welcome\.desktop\.dark\.html$/,
+    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
   );
 
   await mobile?.dispose();
@@ -469,7 +471,7 @@ test("view controls retain mounted screen frames and their selected sources", as
 });
 
 test("view controls retain mounted component frames", async ({ page }) => {
-  await page.goto("/view/components/example-action.html");
+  await page.goto("/view/example/components/action/");
   const mobileFrame = page.locator('[data-workspace-frame="mobile"]');
   const desktopFrame = page.locator('[data-workspace-frame="desktop"]');
   const mobile = await mobileFrame.elementHandle();
@@ -486,7 +488,7 @@ test("view controls retain mounted component frames", async ({ page }) => {
 });
 
 test("a light-only screen keeps light frames and says so", async ({ page }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await chooseScheme(page, "dark");
   await page.fill("[data-mokly-search]", "home");
   await page.click(designHomeRow);
@@ -494,11 +496,11 @@ test("a light-only screen keeps light frames and says so", async ({ page }) => {
 
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/design-browse-home\.mobile\.html$/,
+    /design\/browse\/views\/home\/index\.mobile\.html$/,
   );
   await expectFrameSource(
     page.locator(desktopFrame),
-    /screens\/design-browse-home\.desktop\.html$/,
+    /design\/browse\/views\/home\/index\.desktop\.html$/,
   );
   await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
     "data-color-scheme-fallback",
@@ -528,7 +530,7 @@ test("a light-only screen keeps light frames and says so", async ({ page }) => {
 test("use-case steps follow the selected scheme without a caption", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await chooseScheme(page, "dark");
   await page.fill("[data-mokly-search]", "tour");
   await page.click(tourRow);
@@ -538,11 +540,11 @@ test("use-case steps follow the selected scheme without a caption", async ({
   await expect(steps).toHaveCount(2);
   await expectFrameSource(
     steps.nth(0),
-    /screens\/example-welcome\.desktop\.dark\.html$/,
+    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
   );
   await expectFrameSource(
     steps.nth(1),
-    /screens\/example-details\.desktop\.dark\.html$/,
+    /example\/screens\/details\/index\.desktop\.dark\.html$/,
   );
   await expect(page.locator(".mbk-flow-screen .mbk-frame-label")).toHaveCount(
     0,
@@ -550,17 +552,17 @@ test("use-case steps follow the selected scheme without a caption", async ({
 });
 
 test("scheme selection survives progressive navigation", async ({ page }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await chooseScheme(page, "dark");
   await page.click(detailsRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/example-details\.mobile\.dark\.html$/,
+    /example\/screens\/details\/index\.mobile\.dark\.html$/,
   );
   await expectFrameSource(
     page.locator(desktopFrame),
-    /screens\/example-details\.desktop\.dark\.html$/,
+    /example\/screens\/details\/index\.desktop\.dark\.html$/,
   );
   await expectSchemeSelected(page, "dark");
 
@@ -568,7 +570,7 @@ test("scheme selection survives progressive navigation", async ({ page }) => {
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/example-welcome\.mobile\.dark\.html$/,
+    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
   );
   await expectSchemeSelected(page, "dark");
 
@@ -576,13 +578,13 @@ test("scheme selection survives progressive navigation", async ({ page }) => {
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/example-details\.mobile\.dark\.html$/,
+    /example\/screens\/details\/index\.mobile\.dark\.html$/,
   );
 });
 
 test("Appearance stays reachable at both widths", async ({ page }) => {
   await page.setViewportSize({ height: 844, width: 390 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   // Narrow, the control keeps its glyph and drops only its label, so search
   // and the menu keep their room.
   await expect(page.locator(appearance)).toBeVisible();
@@ -597,7 +599,7 @@ test("Appearance stays reachable at both widths", async ({ page }) => {
   await chooseScheme(page, "dark");
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/example-welcome\.mobile\.dark\.html$/,
+    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
   );
 
   await page.setViewportSize({ height: 800, width: 1_280 });
@@ -632,11 +634,11 @@ test("ID chips copy their ID without navigating", async ({ page }) => {
       },
     });
   });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   const url = page.url();
   const idChip = page.locator("[data-copy-id]");
 
-  await expect(idChip).toHaveText("#example-welcome");
+  await expect(idChip).toHaveText("#example/screens/welcome");
   await idChip.hover();
   expect(
     await idChip.evaluate((element) => getComputedStyle(element).cursor),
@@ -656,10 +658,10 @@ test("ID chips copy their ID without navigating", async ({ page }) => {
         () => (window as Window & { __copiedId?: string }).__copiedId,
       ),
     )
-    .toBe("example-welcome");
+    .toBe("example/screens/welcome");
   await expect(page).toHaveURL(url);
   await expect(page.locator("#mb-status")).toHaveText(
-    "Copied ID example-welcome",
+    "Copied ID example/screens/welcome",
   );
 });
 
@@ -677,7 +679,7 @@ test("the address pill copies its address from its copy icon", async ({
       },
     });
   });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   const icon = page.locator(".browser-bar .address-copy svg");
   await expect(icon).toBeVisible();
   const box = await icon.boundingBox();
@@ -698,7 +700,7 @@ test("the address pill copies its address from its copy icon", async ({
 test("the expand toggle swaps its icon while the frame is expanded", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   const expandIcon = page.locator(".browser-expand .i-expand svg");
   const collapseIcon = page.locator(".browser-expand .i-collapse svg");
   await expect(expandIcon).toBeVisible();
@@ -718,7 +720,7 @@ test("the expand toggle swaps its icon while the frame is expanded", async ({
 test("the browser frame expands to an overlay and collapses again", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await page.click(".browser-expand");
   await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
   expect(
@@ -882,10 +884,10 @@ test("the shell works without JavaScript", async ({ baseURL, browser }) => {
   const page = await context.newPage();
   await page.goto("/");
   await page
-    .locator('details[data-nav-folder="folder:Example/Screens"] summary')
+    .locator('details[data-nav-folder="folder:example/screens"] summary')
     .click();
   await page.click(welcomeRow);
-  await expect(page).toHaveURL(/welcome\.html$/);
+  await expect(page).toHaveURL(/welcome\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator(".mbk-frame-mobile")).toBeVisible();
   await expect(page.locator(".mbk-frame-desktop")).toBeVisible();

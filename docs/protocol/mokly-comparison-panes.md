@@ -16,9 +16,7 @@ and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,
 current previews, or [removed previews](./mokly-removed-previews.md) beyond the
 shared pipeline named here. Snapshot addresses below derive from paths under
-the approved [artifact path contract](./mokly-artifact-paths.md); current panes
-still use kind and id until the [path identity plan](../../plans/path-identity.md)
-delivers review v5.
+the [artifact path contract](./mokly-artifact-paths.md) and review v5.
 
 ## Behavior
 

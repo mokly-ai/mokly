@@ -3,7 +3,7 @@ import path from "node:path";
 import { generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifest,
-  ManifestV7,
+  ManifestV8,
   ViewReview,
 } from "@mokly/viewer/data";
 
@@ -11,13 +11,13 @@ import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 export interface ScreenViewChanges {
-  id: string;
+  path: string;
   views: readonly Pick<ViewReview, "viewport" | "colorScheme" | "state">[];
 }
 
 /** Retain the completed material pass's per-view decisions without generating comparisons. */
 export function screenViewChanges(
-  current: ManifestV7,
+  current: ManifestV8,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   materialPaths: readonly string[],
@@ -27,12 +27,12 @@ export function screenViewChanges(
   const before = new Map(
     baseline.entries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.id, entry]),
+      .map((entry) => [entry.path, entry]),
   );
   const after = new Map(
     current.entries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.id, entry]),
+      .map((entry) => [entry.path, entry]),
   );
   return [...new Set([...before.keys(), ...after.keys()])].sort().map((id) => {
     const previous = before.get(id),
@@ -67,6 +67,6 @@ export function screenViewChanges(
         ];
       }),
     );
-    return { id, views };
+    return { path: id, views };
   });
 }

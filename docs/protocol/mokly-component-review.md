@@ -2,10 +2,8 @@
 
 ## Delivery Status
 
-Approved contract. The producer, source validator, artifact publisher,
-exporter, and browser decoder currently implement schema v4, keyed by kind and
-id; the [path identity plan](../../plans/path-identity.md) delivers this
-component-aware schema v5 for
+The producer, source validator, artifact publisher, exporter, and browser
+decoder implement this path-keyed component-aware schema v5 for
 [change attribution](./mokly-component-changes.md). `ReviewResult`,
 `ScreenReview`, `ViewReview`, and `ReviewState` refer to the base
 [Changes contract](./mokly-changes.md) and

@@ -23,7 +23,7 @@ test("development React hydrates a fresh desktop document cleanly", async ({
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page);
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
 });
 
@@ -35,7 +35,7 @@ test("development React hydrates a restored dark appearance cleanly", async ({
     localStorage.setItem("mokly:theme", "dark");
   });
   await installDevelopmentBundle(page);
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
   await expect(page.locator("body")).toHaveAttribute(
     "data-mokly-color-scheme",
@@ -83,7 +83,7 @@ test("development React hydrates controls and persisted details as live state", 
     localStorage.setItem("mokly:details-disclosure", "open");
   });
   await installDevelopmentBundle(page);
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
   await expect(page.locator("[data-workspace-inspector]")).toHaveAttribute(
     "data-open",
@@ -122,7 +122,7 @@ test("development React hydrates live component controls before enabling them", 
       contentType: "text/javascript",
     });
   });
-  const navigation = page.goto("/view/components/example-action.html");
+  const navigation = page.goto("/view/example/components/action/");
   await requested;
   const props = page.locator('[data-inspector-panel="props"]');
   await expect(props.locator("[data-controls-status]")).toHaveText(
@@ -165,7 +165,7 @@ test("development React hands persisted navigation width off after hydration", a
   });
   await installDevelopmentBundle(page);
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
   await expect(page.locator("[data-mokly-nav-resize]")).toHaveAttribute(
     "aria-valuenow",
@@ -186,7 +186,7 @@ test("development React hydrates a mobile document cleanly", async ({
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
 });
 
@@ -210,7 +210,7 @@ test("an early native disclosure wins hydration before reload promotes active an
       contentType: "text/javascript",
     });
   });
-  const navigation = page.goto("/view/screens/example-welcome.html");
+  const navigation = page.goto("/view/example/screens/welcome/");
   await requested;
   const disclosure = page.locator(
     'details[data-nav-disclosure="section:pages"]',

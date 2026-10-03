@@ -11,7 +11,7 @@ export async function inspectConsumerExport(
   relative,
   base,
   expected = [],
-  schemaVersion = 4,
+  schemaVersion = 5,
 ) {
   const output = path.join(root, relative);
   const read = (name) => fs.promises.readFile(path.join(output, name), "utf8");
@@ -91,8 +91,7 @@ export async function inspectConsumerExport(
       for (const side of sides) {
         const snapshot = snapshotViewPath(
           side,
-          entry.kind,
-          entry.id,
+          entry.path,
           view.viewport,
           view.colorScheme,
         );

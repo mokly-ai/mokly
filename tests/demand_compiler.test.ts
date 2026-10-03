@@ -60,7 +60,7 @@ test("demand links reject a generated orphan even while its old file exists", as
     entrySources: runtime.bundle.entrySources,
   });
   assert.throws(
-    () => compiler.render("screens/home.desktop.html"),
+    () => compiler.render("home/index.desktop.html"),
     /missing target/,
   );
 });

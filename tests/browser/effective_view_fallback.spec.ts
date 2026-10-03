@@ -14,18 +14,16 @@ test("a light-only screen deep link keeps effective Light evidence through a bac
   const fixture = await startEvidenceFixture(comparisonEntrySource(true));
   const { compilation, server } = fixture;
   try {
-    await page.goto(
-      `${server.url}/view/screens/details.html?scheme=dark&comparison=side`,
-    );
+    await page.goto(`${server.url}/view/details/?scheme=dark&comparison=side`);
     server.publishUpdate({
       kind: "evidence",
-      changedIds: ["details"],
+      changedEntries: ["details"],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
         screenViews: [
           {
-            id: "details",
+            path: "details",
             views: [
               {
                 viewport: "mobile",
@@ -65,8 +63,8 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
   page,
 }) => {
   const source = controlsEntrySource().replace(
-    'id: "action",',
-    'id: "action", colorSchemes: ["light"],',
+    'path: "action",',
+    'path: "action", colorSchemes: ["light"],',
   );
   const fixture = await startEvidenceFixture(source);
   const { compilation, server } = fixture;
@@ -77,19 +75,17 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
       .filter(({ colorScheme }) => colorScheme === "light")
       .map((view) => ({
         ...view,
-        state: variant.id === "action-disabled" ? "changed" : "unchanged",
+        state: variant.path === "action/disabled" ? "changed" : "unchanged",
       }));
   }
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [],
+      changedEntries: [],
       changesStatus: "ready",
       componentChanges: { baseline: compilation.manifest, result },
     });
-    await page.goto(
-      `${server.url}/view/components/action-disabled.html?scheme=dark`,
-    );
+    await page.goto(`${server.url}/view/action/disabled/?scheme=dark`);
 
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
     await expect(page.locator(TOOLBAR)).toBeVisible();

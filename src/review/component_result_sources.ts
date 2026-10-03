@@ -5,7 +5,7 @@ import {
   requireEqual,
   reviewInvalid,
 } from "@mokly/viewer/data";
-import type { Manifest, ReviewResultV4, ViewReview } from "@mokly/viewer/data";
+import type { Manifest, ReviewResultV5, ViewReview } from "@mokly/viewer/data";
 
 import { affectedConsumers } from "./component_affected.js";
 import {
@@ -27,7 +27,7 @@ export interface DependencyReasonSources {
 
 /** Validate result coverage, addresses, dependency sources, and usage against both manifests. */
 export function validateComponentReviewSources(
-  result: ReviewResultV4,
+  result: ReviewResultV5,
   before: Manifest,
   after: Manifest,
   implementationImpact: ReadonlySet<string>,
@@ -42,8 +42,10 @@ export function validateComponentReviewSources(
     (pair) => (pair.after ?? pair.before)!.kind === "screen",
   );
   const expectedComponents = pairs.filter((pair) => {
-    const entry = (pair.after ?? pair.before)!;
-    return entry.kind === "component" && !isManifestComponentVariant(entry);
+    return [pair.before, pair.after].some(
+      (entry) =>
+        entry?.kind === "component" && !isManifestComponentVariant(entry),
+    );
   });
   if (
     expectedScreens.length !== result.screens.length ||
@@ -58,11 +60,20 @@ export function validateComponentReviewSources(
     };
     const record =
       entry.kind === "screen"
-        ? result.screens.find((screen) => screen.id === entry.id)
-        : entry.kind === "component" && !isManifestComponentVariant(entry)
-          ? result.components.find((component) => component.id === entry.id)
+        ? result.screens.find((screen) => screen.path === entry.path)
+        : entry.kind === "component" &&
+            [pair.before, pair.after].some(
+              (candidate) =>
+                candidate?.kind === "component" &&
+                !isManifestComponentVariant(candidate),
+            )
+          ? result.components.find((component) => component.path === entry.path)
           : undefined;
-    if (entry.kind !== "use-case" && !record)
+    if (
+      entry.kind !== "use-case" &&
+      !(entry.kind === "component" && isManifestComponentVariant(entry)) &&
+      !record
+    )
       reviewInvalid("source entry has no result");
     if (record)
       requireEqual({ before: record.before, after: record.after }, sides);
@@ -76,16 +87,28 @@ export function validateComponentReviewSources(
       );
       continue;
     }
-    const baseVariants = variantsFor(beforeVariants, entry.id);
-    const headVariants = variantsFor(afterVariants, entry.id);
+    const baseVariants = variantsFor(
+      beforeVariants,
+      pair.before?.kind === "component" &&
+        !isManifestComponentVariant(pair.before)
+        ? pair.before.path
+        : undefined,
+    );
+    const headVariants = variantsFor(
+      afterVariants,
+      pair.after?.kind === "component" &&
+        !isManifestComponentVariant(pair.after)
+        ? pair.after.path
+        : undefined,
+    );
     const ids = [...new Set([...headVariants.keys(), ...baseVariants.keys()])];
     requireEqual(
-      record.variants.map((variant) => variant.id),
-      ids,
+      record.variants.map((variant) => variant.path),
+      ids.map((key) => (headVariants.get(key) ?? baseVariants.get(key))!.path),
     );
     for (const variant of record.variants) {
-      const base = baseVariants.get(variant.id);
-      const head = headVariants.get(variant.id);
+      const base = baseVariants.get(variant.path.toLowerCase());
+      const head = headVariants.get(variant.path.toLowerCase());
       requireEqual(
         { before: variant.before, after: variant.after },
         {
@@ -98,7 +121,6 @@ export function validateComponentReviewSources(
         base ? generatedViews(base) : [],
         head ? generatedViews(head) : [],
       );
-      validateChange(result, base, head, sources, before, after);
     }
   }
   requireEqual(
@@ -108,7 +130,7 @@ export function validateComponentReviewSources(
 }
 
 function validateChange(
-  result: ReviewResultV4,
+  result: ReviewResultV5,
   beforeEntry: ReviewEntry | undefined,
   afterEntry: ReviewEntry | undefined,
   sources: DependencyReasonSources,
@@ -120,7 +142,7 @@ function validateChange(
   const change = result.changes.find(
     (candidate) =>
       candidate.kind === selected.kind &&
-      (candidate.after ?? candidate.before)?.id === selected.id,
+      (candidate.after ?? candidate.before)?.path === selected.path,
   );
   if (!change) return;
   requireEqual(
@@ -153,8 +175,8 @@ function validateChange(
             (index === 0 ? before : after).entries.some(
               (screen) =>
                 screen.kind === "screen" &&
-                screen.id === step.screenId &&
-                screen.id === reason.id,
+                screen.path === step.screenPath &&
+                screen.path === reason.screenPath,
             ),
           ),
       )
@@ -182,7 +204,7 @@ function variantParentTitleChanged(
       (entry) =>
         entry.kind === "component" &&
         !isManifestComponentVariant(entry) &&
-        entry.id === id,
+        entry.path === id,
     )?.title;
   return (
     parentTitle(before, beforeEntry.variantOf) !==
@@ -192,12 +214,12 @@ function variantParentTitleChanged(
 
 function variantsFor(
   variants: ReturnType<typeof componentVariantEntries>,
-  parentId: string,
+  parentId: string | undefined,
 ) {
   return new Map(
     [...variants.values()]
       .filter((variant) => variant.variantOf === parentId)
-      .map((variant) => [variant.id, variant]),
+      .map((variant) => [variant.path.toLowerCase(), variant]),
   );
 }
 

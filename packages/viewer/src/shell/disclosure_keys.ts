@@ -1,6 +1,6 @@
 /** Stable, section-scoped identities for persisted navigation disclosures. */
 
-import { validNavLabel } from "../registry/nav_paths.js";
+import { isEntryPath } from "../navigation/logical.js";
 
 import type { NavSectionNode } from "./nav_tree.js";
 
@@ -17,12 +17,15 @@ export function folderDisclosureKey(
 /** Accept only current, well-formed persistence identities. */
 export function isDisclosureKey(value: string): boolean {
   if (value === "section:pages" || value === "section:components") return true;
-  if (/^variants:(?:pages|components):[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))
+  if (
+    value.startsWith("variants:") &&
+    isEntryPath(value.slice("variants:".length))
+  )
     return true;
   for (const prefix of ["folder:pages:", "folder:components:"]) {
     if (value.startsWith(prefix)) {
       const pathKey = value.slice(prefix.length);
-      return pathKey.length > 0 && pathKey.split("/").every(validNavLabel);
+      return isEntryPath(pathKey);
     }
   }
   return false;

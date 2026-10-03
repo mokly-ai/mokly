@@ -5,9 +5,10 @@ This is the detailed configuration boundary of the
 
 ## Delivery Status
 
-Approved contract. Current builds configure `entries` globs or the
-`entriesDir` shorthand; the [path identity plan](../../plans/path-identity.md)
-delivers `roots`. Every other setting in this document is implemented.
+Roots and their defaults, globs, prefixes and transparent directories are
+implemented. Matched Markdown files are protected, watched source inputs but
+are omitted from compilation; a catalogue needs at least one renderable definition.
+Markdown rendering remains planned. Every other setting below is implemented.
 
 ## Configuration Discovery
 
@@ -244,78 +245,26 @@ under the [entry module contract](./mokly-entry-modules.md). The glob alone
 defines the shape, so `files: ["**/*.ts"]` evaluates every matched TypeScript
 file as a module.
 
-Before any walk, discovery projects the repository identity and every distinct
-root identity once for the pass, and `review.outDir` once with a lexical
-fallback only for that Review boundary. A non-benign repository or root
-projection error fails before per-root validation. Walks run in declared root
-order and validate matched files during each walk. The first denial or
-empty-root failure stops the pass. Accepted and vanished candidates are each
-validated once per pass. Walks skip either Review identity and directories
-that vanish or are replaced (`ENOENT` or `ENOTDIR`). Other read or projection
-errors fail with `config-invalid`, naming the repository-relative path and
-error code (`unknown` if absent). A matched file that is deleted or replaced by
-something other than a regular file between listing and validation is dropped
-and listed under `not searched` when its root is then empty.
+Every `_folder.json` inside a walked root is also owned by exactly one root,
+independently of `files`. Overlapping roots that encounter that record fail with
+`config-invalid`: `file <file> is matched by roots[<first>] and roots[<second>]`,
+where `<file>` is repository-relative and the indices are in configured order.
+
+The [root discovery contract](./mokly-root-discovery.md) defines physical
+confinement, filesystem races and the retained ownership inventory.
 
 Every root must retain a file; otherwise `root matches no file: <dir>` lists
 denied and vanished paths, including dropped files, sorted under
-`; not searched: <repository-relative paths>`. The union across roots is
-sorted and deduplicated by repository-relative path. A file matched by two
-roots derives two paths and fails as a duplicate path unless the roots are
-identical, which configuration already rejects.
-
-Every resolved file is classified before bundling. Discovery fails with
-`config-invalid` naming the file and the matched rule when it lies inside
-`review.outDir`, inside `.mokly-cache/`, below a denied directory relative to
-its root, or resolves outside `repoRoot` through a symlink. A file below
-`mockupsDir` is protected authored source under the
-[source-protection contract](./mokly-source-protection.md), cannot be served
-or exported as a public file, and remains protected through aliases.
-Generated output is collision-checked against it.
-
-Discovery runs when the configuration is resolved, so every resolved config
-carries its sorted file set beside `roots`, and again at the start of each
-compilation so watched Serve observes created, renamed, or deleted files as
-defined by the [watch contract](./mokly-watch.md). The set is retained beside
-`sourceFiles` across build, check, watched Serve, publication, and the
-component runtime; later stages consume it and never repeat the walk within
-one compilation. Generated output is trusted for replacement when its recorded
-repository-relative owner is a resolved file, an inventoried source, or lies
-below a configured root and matches one of its `files` globs with dotfile
-matching enabled. The match rule keeps output owned after a matched file is
-renamed, moved, or deleted, which the [move contract](./mokly-moves.md)
-depends on. An ownership header that satisfies none of the three branches is
-unclaimed: committed `check` reports it, while Build, Serve, and Export leave
-the file untouched. Registry attribution remains narrower and accepts only a
-resolved entry module or inventoried source.
-
-A matched barrel that re-exports another matched module's definitions derives
-the same paths twice and fails as a duplicate path. Narrow the globs, rename
-the barrel so no glob matches it, or stop re-exporting definitions.
+`; not searched: <repository-relative paths>`. The union across roots is sorted by repository-relative path. Every matched
+entry module or Markdown file belongs to exactly one root, including through
+physical aliases. If a file matches two roots after exclusions, discovery fails
+with `config-invalid` and exact text `file <path> is matched by roots[<n>] and
+roots[<m>]`, naming its repository-relative path and both zero-based root
+indices. Overlapping directories remain legal when their file sets are disjoint.
+Discovery retains that ownership, so a file derives from the root that selected
+it rather than the deepest directory that happens to contain it.
 
 ## Public Exclusion Configuration
 
-`publicExclude?: readonly string[]` extends the defaults in the
-[source-protection contract](./mokly-source-protection.md#public-exclusions):
-`**/README`, `**/README.*`, `**/tsconfig.json`, and `**/tsconfig.*.json`.
-The case-folded defaults are prepended without mutating consumer input;
-omission and an empty array produce the defaults alone.
-The resolved list is frozen. Watched children require this already-resolved
-array and use the shared glob validator to adopt a frozen copy with exactly
-the transferred entries, without prepending defaults again. Missing, non-array
-or unsafe values reject the startup message. Repeated globs are harmless and
-do not fail config.
-
-Validate the array and each string at config load. A safe relative POSIX glob
-is nonempty and contains no absolute/drive/UNC prefix, backslash,
-colon, NUL/control character, or empty, `.` or `..` path segment. Reject
-whitespace-only strings, leading `!` negation, and leading `#` comment syntax.
-Use the repository's minimatch glob syntax; any brace-expanded alternative must
-also satisfy those path rules. Invalid input fails with the typed `config-invalid`
-error naming `publicExclude` and the offending item, before publication or serving.
-
-Match the whole candidate path relative to `mockupsDir`, not relative to
-`repoRoot` or the config directory, with case-insensitive and dotfile matching.
-For example, `publicExclude: ["internal/**"]` hides that directory's contents
-under `mockupsDir` in addition to every shipped default. Realpath aliases and
-all public-resource boundaries use the same source-protection policy.
+The [public exclusion contract](./mokly-public-exclusions.md) defines
+`publicExclude` defaults, frozen resolution, safe glob validation and matching.

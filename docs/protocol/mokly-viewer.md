@@ -8,10 +8,9 @@ runs in Serve, export, and application-owned hosts; every selection names an
 entry path. [Appearance](./mokly-viewer-appearance.md) and
 [removed previews](./mokly-removed-previews.md) retain their host-specific
 controls and shared presentation in that tree. The host event and
-instance-reference corrections are implemented. Path-named selection and event
-fields, `/view/<path>/` routes, documents, and `Moved` rows below are approved;
-the shell still uses kind-and-id identity until the
-[path identity plan](../../plans/path-identity.md) delivers them.
+instance-reference corrections, path-named fields, and `/view/<path>/` routes
+are implemented. Markdown documents and `Moved` rows await delivery through the
+[path identity plan](../../plans/path-identity.md).
 
 ## Package And Props
 

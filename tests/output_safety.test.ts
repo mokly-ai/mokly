@@ -48,15 +48,24 @@ test("build rejects non-canonical repository dependency paths", async (context) 
   );
 });
 
-test("build rejects generated routes inside nested authored roots", async (context) => {
-  const fixture = await createFixture();
+test("build rejects an output that would overwrite an imported source document", async (context) => {
+  const fixture = await createFixture(
+    validEntrySource({ body: "{template}" }) +
+      '\nimport template from "../mockups/home/index.mobile.html";',
+    { extraConfig: 'moduleResolution:{loaders:{".html":"text"}},' },
+  );
   context.after(() => removeFixture(fixture));
-  await nestEntriesUnderMockups(fixture, "screens");
+  await fs.promises.mkdir(path.join(fixture.mockupsDir, "home"));
+  const authored = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  await fs.promises.writeFile(authored, "Authored template");
   const config = await loadConfig(fixture.root);
-
   await assert.rejects(
-    () => compileCatalogue(config),
-    /generated route overlaps a resolved entry module/,
+    compileCatalogue(config),
+    /generated route overlaps an authoring input listed in sourceFiles/,
+  );
+  assert.equal(
+    await fs.promises.readFile(authored, "utf8"),
+    "Authored template",
   );
 });
 
@@ -67,15 +76,24 @@ test("writer rejects crafted output inside nested authored roots", async (contex
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const outputs = new Map(compilation.outputs);
-  outputs.set("src/entries/injected.html", "<html></html>\n");
-  const unsafe: Compilation = { manifest: compilation.manifest, outputs };
+  outputs.set("src/entries/index.html", "<html></html>\n");
+  const unsafe: Compilation = {
+    manifest: {
+      ...compilation.manifest,
+      sourceFiles: [
+        ...compilation.manifest.sourceFiles,
+        "mockups/src/entries/index.html",
+      ].sort(),
+    },
+    outputs,
+  };
 
   await assert.rejects(
     () => writeCompilation(unsafe, config),
-    /generated route overlaps a resolved entry module/,
+    /generated route overlaps an authoring input listed in sourceFiles/,
   );
   assert.equal(
-    fs.existsSync(path.join(fixture.mockupsDir, "src/entries/injected.html")),
+    fs.existsSync(path.join(fixture.mockupsDir, "src/entries/index.html")),
     false,
   );
 });
@@ -99,13 +117,13 @@ test("build rejects generated routes through authored-root symlinks", async (con
   context.after(() => removeFixture(fixture));
   await fs.promises.symlink(
     "../entries",
-    path.join(fixture.mockupsDir, "screens"),
+    path.join(fixture.mockupsDir, "home"),
   );
   const config = await loadConfig(fixture.root);
 
   await assert.rejects(
     () => compileCatalogue(config),
-    /generated route overlaps a resolved entry module/,
+    /generated route escapes mockupsDir/,
   );
 });
 
@@ -121,6 +139,6 @@ async function nestEntriesUnderMockups(
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: ${JSON.stringify(`mockups/${directory}`)}, mockupsDir: "mockups", repoRoot: "." };\n`,
+    `export default { roots: [{dir: ${JSON.stringify(`mockups/${directory}`)}}], mockupsDir: "mockups", repoRoot: "." };\n`,
   );
 }

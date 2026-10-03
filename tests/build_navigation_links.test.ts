@@ -26,17 +26,17 @@ test("logical hrefs mark every supported native link owner", async (context) => 
   context.after(() => removeFixture(fixture));
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
 
   assert.equal((mobile.match(/data-mokly-link="details"/g) ?? []).length, 4);
   assert.match(
     mobile,
-    /<span data-nav-href="\.\/details\.mobile\.html">Metadata<\/span>/,
+    /<span data-nav-href="\.\.\/details\/index\.mobile\.html">Metadata<\/span>/,
   );
   assert.doesNotMatch(mobile, /<span[^>]+data-mokly-link="details"/);
   assert.match(
     mobile,
-    /data-nav-href="\.\/details\.mobile\.html" href="\.\/details\.mobile\.html"[^>]+data-mokly-link="details"/,
+    /data-nav-href="\.\.\/details\/index\.mobile\.html" href="\.\.\/details\/index\.mobile\.html"[^>]+data-mokly-link="details"/,
   );
 });
 
@@ -73,10 +73,11 @@ test("metadata-only logical references stay marker-free on any owner", async (co
   context.after(() => removeFixture(fixture));
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
 
   assert.equal(
-    (mobile.match(/data-nav-href="\.\/details\.mobile\.html"/g) ?? []).length,
+    (mobile.match(/data-nav-href="\.\.\/details\/index\.mobile\.html"/g) ?? [])
+      .length,
     4,
   );
   assert.doesNotMatch(mobile, /data-mokly-link/);
@@ -102,7 +103,7 @@ test("activatable links reject base URLs but retain base targets", async (contex
     }),
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
   assert.match(mobile, /<base target="catalogue"/);
   assert.match(mobile, /data-mokly-link="details"/);
 
@@ -123,14 +124,14 @@ test("logical fragments require one anchor across every target view", async (con
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   for (const route of [
-    "screens/home.mobile.html",
-    "screens/home.desktop.html",
-    "screens/home.mobile.dark.html",
-    "screens/home.desktop.dark.html",
+    "home/index.mobile.html",
+    "home/index.desktop.html",
+    "home/index.mobile.dark.html",
+    "home/index.desktop.dark.html",
   ]) {
     const output = compilation.outputs.get(route) ?? "";
     assert.match(output, /data-mokly-link="details#section"/);
-    assert.match(output, /href="\.\/details\.[^"]+\.html#section"/);
+    assert.match(output, /href="\.\.\/details\/index\.[^"]+\.html#section"/);
   }
 
   await fs.promises.writeFile(
@@ -169,11 +170,11 @@ test("logical destinations include use cases and reject non-routed ids", async (
   context.after(() => removeFixture(fixture));
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const light = compilation.outputs.get("screens/home.mobile.html") ?? "";
-  const dark = compilation.outputs.get("screens/home.desktop.dark.html") ?? "";
-  assert.match(light, /href="\.\/details\.mobile\.html#section"/);
+  const light = compilation.outputs.get("home/index.mobile.html") ?? "";
+  const dark = compilation.outputs.get("home/index.desktop.dark.html") ?? "";
+  assert.match(light, /href="\.\.\/details\/index\.mobile\.html#section"/);
   assert.match(light, /data-mokly-link="tour#section"/);
-  assert.match(dark, /href="\.\/details\.desktop\.html#section"/);
+  assert.match(dark, /href="\.\.\/details\/index\.desktop\.html#section"/);
   assert.match(dark, /data-mokly-link="tour#section"/);
 
   for (const destination of ["missing", "fixture"]) {
@@ -183,7 +184,7 @@ test("logical destinations include use cases and reject non-routed ids", async (
     );
     await assert.rejects(
       async () => compileCatalogue(await loadConfig(fixture.root)),
-      new RegExp(`unknown id: ${destination}`),
+      new RegExp(`link target ${destination} does not exist`),
     );
   }
 });
@@ -191,10 +192,10 @@ test("logical destinations include use cases and reject non-routed ids", async (
 function fragmentSource(mobileAnchor: string, desktopAnchor: string): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], navPath: ["Fixture"], relatedDocs: [], useCaseIds: [] };
+const metadata = { dependencies: [], relatedDocs: [], useCasePaths: [] };
 export const mockups = [
-  defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:details#section">Details</a></main>, id: "home", mobile: <main><a href="mock:details#section">Details</a></main>, route: "screens/home.html", title: "Home" }),
-  defineScreen({ ...metadata, description: "Details", desktop: <main id=${JSON.stringify(desktopAnchor)}>Details</main>, id: "details", mobile: <main id=${JSON.stringify(mobileAnchor)}>Details</main>, route: "screens/details.html", title: "Details" })
+  defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:details#section">Details</a></main>, path: "home", mobile: <main><a href="mock:details#section">Details</a></main>, title: "Home" }),
+  defineScreen({ ...metadata, description: "Details", desktop: <main id=${JSON.stringify(desktopAnchor)}>Details</main>, path: "details", mobile: <main id=${JSON.stringify(mobileAnchor)}>Details</main>, title: "Details" })
 ];
 `;
 }
@@ -202,11 +203,11 @@ export const mockups = [
 function useCaseFragmentSource(): string {
   return `import { defineScreen, defineUseCase } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], navPath: ["Fixture"], relatedDocs: [] };
+const metadata = { dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:tour#section">Tour</a></main>, id: "home", mobile: <main><a href="mock:tour#section">Tour</a></main>, route: "screens/home.html", title: "Home", useCaseIds: [] }),
-  defineScreen({ ...metadata, colorSchemes: ["light"], description: "Details", desktop: <main id="section">Details</main>, id: "details", mobile: <main id="section">Details</main>, route: "screens/details.html", title: "Details", useCaseIds: ["tour"] }),
-  defineUseCase({ ...metadata, description: "Tour", id: "tour", route: "user-flows/tour.html", steps: [{ screenId: "details" }], title: "Tour" })
+  defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:tour#section">Tour</a></main>, path: "home", mobile: <main><a href="mock:tour#section">Tour</a></main>, title: "Home", useCasePaths: [] }),
+  defineScreen({ ...metadata, colorSchemes: ["light"], description: "Details", desktop: <main id="section">Details</main>, path: "details", mobile: <main id="section">Details</main>, title: "Details", useCasePaths: ["tour"] }),
+  defineUseCase({ ...metadata, description: "Tour", path: "tour", steps: [{ screenPath: "details" }], title: "Tour" })
 ];
 `;
 }

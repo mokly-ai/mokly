@@ -165,7 +165,7 @@ function readEvidenceRevision(
     (expected === undefined) !== (workspace === undefined) ||
     (expected &&
       workspace &&
-      (workspace.entry.id !== expected.id ||
+      (workspace.entry.path !== expected.path ||
         workspace.entry.kind !== expected.kind))
   )
     return;
@@ -230,6 +230,6 @@ function workspaceEntry(catalogue: CatalogueReadModel, entryId: string | null) {
   ].find(
     (entry) =>
       (entry.kind === "screen" || entry.kind === "component") &&
-      entry.id === entryId,
+      entry.path === entryId,
   );
 }

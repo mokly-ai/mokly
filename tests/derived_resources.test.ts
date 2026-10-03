@@ -23,14 +23,14 @@ for (const components of [false, true]) {
       t,
       source,
       Object.fromEntries(
-        ["image.svg", "components/image.svg"].map((route) => [
+        ["image.svg", "action/image.svg", "pane/image.svg"].map((route) => [
           route,
           '<svg xmlns="http://www.w3.org/2000/svg"><title>Base</title></svg>',
         ]),
       ),
     );
     const prepared = await prepareReviewRepository(fixture.config, "HEAD");
-    for (const route of ["image.svg", "components/image.svg"])
+    for (const route of ["image.svg", "action/image.svg", "pane/image.svg"])
       await fs.writeFile(
         path.join(fixture.mockupsDir, route),
         '<svg xmlns="http://www.w3.org/2000/svg"><title>Changed</title></svg>',
@@ -52,7 +52,7 @@ for (const components of [false, true]) {
     );
     if (components) {
       assert.equal(
-        changes.result?.components.find((entry) => entry.id === "action")
+        changes.result?.components.find((entry) => entry.path === "action")
           ?.state,
         "changed",
       );
@@ -62,14 +62,14 @@ for (const components of [false, true]) {
         ),
       );
       assert.deepEqual(changes.result?.changedPaths, []);
-    } else assert.deepEqual(changes.changedIds, ["home", "tour"]);
+    } else assert.deepEqual(changes.changedEntries, ["home", "tour"]);
   });
 }
 
 test("derived whole-document pages compare source-only material changes", async (t) => {
   const source = `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Original guide</p></body></html>" }));`;
+mockups.push(definePage({ path: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Original guide</p></body></html>" }));`;
   const fixture = await derivedFixture(t, source);
   await fs.writeFile(
     fixture.entryPath,
@@ -80,5 +80,5 @@ mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", dep
     "HEAD",
     await prepareReviewRepository(fixture.config, "HEAD"),
   );
-  assert.deepEqual(changes.changedIds, ["guide"]);
+  assert.deepEqual(changes.changedEntries, ["guide"]);
 });

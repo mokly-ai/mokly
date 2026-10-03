@@ -5,9 +5,8 @@
 Implemented portable serving for [consumer export](./mokly-export.md), with
 Cloudflare normalization confined to its repository adapter. Public catalogue,
 viewer, inspector, and [removed previews](./mokly-removed-previews.md) share
-delivery descriptor v3 and one shell page per entry. Path-derived shell paths
-and read model v4 are approved; current exports still write kind-and-id routes
-until the [path identity plan](../../plans/path-identity.md) delivers them.
+delivery descriptor v3 and one path-derived shell page per entry. Exports
+write read model v4 and the `/view/<path>/` directory layout.
 
 ## Hosting Contract
 

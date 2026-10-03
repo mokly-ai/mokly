@@ -67,7 +67,8 @@ export function useViewerCapabilityStore(input: {
   const [snapshot, setSnapshot] = useState<ViewerCapabilitySnapshot>(() => ({
     catalogue: input.catalogue,
     ...(initialRequest ? { source: initialRequest.source } : {}),
-    ...(initialRequest && initialWorkspace?.entry.id === initialRequest.entryId
+    ...(initialRequest &&
+    initialWorkspace?.entry.path === initialRequest.entryId
       ? { workspace: { request: initialRequest, value: initialWorkspace } }
       : {}),
   }));

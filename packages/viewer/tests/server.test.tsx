@@ -11,7 +11,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -48,22 +48,22 @@ test("SSR renders the public fixture, default state and every host slot", () => 
   assert.match(html, /pointer-events:none/);
   assert.doesNotMatch(html, /<script|Pick components/);
 });
-for (const screenId of [
+for (const screenPath of [
   null,
-  ...fixture.screens.map((entry) => entry.id),
-  ...fixture.components.map((entry) => entry.id),
+  ...fixture.screens.map((entry) => entry.path),
+  ...fixture.components.map((entry) => entry.path),
   "unknown-item",
 ])
-  test(`SSR renders ${screenId ?? "home"} from catalogue data`, () => {
+  test(`SSR renders ${screenPath ?? "product/browse/home"} from catalogue data`, () => {
     const html = renderViewer({
       viewerId: "fixture",
       catalogue: fixture,
       baseUrl: "https://catalogue.example",
-      defaultSelection: { screenId },
+      defaultSelection: { screenPath },
     });
     assert.match(html, /data-mokly-shell/);
-    if (screenId === "unknown-item") assert.match(html, /Item not found/);
-    else if (screenId)
+    if (screenPath === "unknown-item") assert.match(html, /Item not found/);
+    else if (screenPath)
       assert.match(html, /src="https:\/\/catalogue.example\/static\//);
   });
 
@@ -96,7 +96,7 @@ test("SSR and hydratable React render agree for selection and all slots", async 
     catalogue: fixture,
     baseUrl: "https://catalogue.example",
     defaultSelection: {
-      screenId: fixture.screens[0]!.id,
+      screenPath: fixture.screens[0]!.path,
       viewport: "mobile" as const,
       colorScheme: "dark" as const,
       search: "TAG:forms phrase",
@@ -116,7 +116,7 @@ test("independent SSR viewers keep IDs and references root-local", () => {
       viewerId,
       catalogue: fixture,
       baseUrl: "https://catalogue.example",
-      defaultSelection: { screenId: fixture.components[0]!.id },
+      defaultSelection: { screenPath: fixture.components[0]!.path },
     });
   const first = render("primary");
   const second = render("secondary");
@@ -138,7 +138,7 @@ test("distinct valid viewer IDs cannot absorb dynamic control IDs", () => {
   const model = structuredClone(fixture);
   const component = model.components[0]!;
   if ("variantOf" in component) throw new Error("Missing component parent");
-  const variant = catalogueComponentVariants(model, component.id)[0]!;
+  const variant = catalogueComponentVariants(model, component.path)[0]!;
   component.controls = {
     ...component.controls,
     "mb-main": component.controls.label!,
@@ -163,7 +163,7 @@ test("distinct valid viewer IDs cannot absorb dynamic control IDs", () => {
         viewerId,
         catalogue: model,
         baseUrl: "https://catalogue.example",
-        defaultSelection: { screenId: component.id },
+        defaultSelection: { screenPath: component.path },
       }),
     );
   const firstIds = render("x");
@@ -181,7 +181,7 @@ test("server and React viewer IDs share one validation contract", async () => {
   const props = {
     catalogue: fixture,
     baseUrl: "https://catalogue.example",
-    defaultSelection: { screenId: null },
+    defaultSelection: { screenPath: null },
   };
   for (const viewerId of ["", "-viewer", "viewer space", "é", "v".repeat(65)]) {
     assert.throws(
@@ -201,53 +201,61 @@ test("server and React viewer IDs share one validation contract", async () => {
 test("SSR selects a component variant entry in navigation, chrome, and preview", () => {
   const model = structuredClone(fixture);
   const component = model.components[0]!;
-  const original = catalogueComponentVariants(model, component.id)[0]!;
+  const original = catalogueComponentVariants(model, component.path)[0]!;
   model.components = [
     ...model.components,
     {
       ...structuredClone(original),
-      id: "action-second",
+      path: "components/action/second",
       title: "Second",
       views: original.views.map((view) => structuredClone(view)),
     },
   ];
-  const actionNode = (
-    model.tree.components[0]?.kind === "folder"
-      ? model.tree.components[0].children
-      : []
-  ).find((node) => node.kind === "entry" && node.id === component.id);
+  const componentFolder = model.tree.find(
+    (node) => node.kind === "folder" && node.path === "components",
+  );
+  const actionNode = componentFolder?.children?.find(
+    (node) => node.kind === "entry" && node.path === component.path,
+  );
   if (actionNode?.kind === "entry")
     actionNode.children = [
       ...(actionNode.children ?? []),
-      { kind: "entry", id: "action-second" },
+      { kind: "entry", path: "components/action/second" },
     ];
   const html = renderViewer({
     viewerId: "fixture",
     catalogue: model,
     baseUrl: "https://catalogue.example",
-    defaultSelection: { screenId: "action-second" },
+    defaultSelection: { screenPath: "components/action/second" },
   });
   assert.match(html, /<h2>Action<\/h2>/);
-  assert.match(html, /#<!-- -->action-second<\/button>/);
+  assert.match(html, /#<!-- -->components\/action\/second<\/button>/);
   assert.match(
     html,
-    /aria-label="Catalogue location"[^]*href="\/view\/components\/action\.html"[^]*Action/,
+    /aria-label="Catalogue location"[^]*href="\/view\/components\/action\/"[^]*Action/,
   );
   assert.match(
     html,
-    /aria-label="Saved variants"[^]*aria-current="page"[^]*href="\/view\/components\/action-second\.html"[^]*Second/,
+    /aria-label="Saved variants"[^]*aria-current="page"[^]*href="\/view\/components\/action\/second\/"[^]*Second/,
   );
   assert.match(
     html,
-    /data-nav-disclosure="variants:components:action"[^]*data-route="components\/action-second\.html"/,
+    /data-nav-disclosure="variants:components\/action"[^]*data-route="components\/action\/second\/index\.html"/,
   );
-  assert.match(html, /action-second\.(?:mobile|desktop)\.html/);
+  assert.match(
+    html,
+    /components\/action\/second\/index\.(?:mobile|desktop)\.html/,
+  );
 });
 
 test("SSR resolves light fallback evidence across status, marks and comparison", () => {
   const model = structuredClone(fixture);
-  const screen = model.screens.find((entry) => entry.id === "home");
-  const component = model.components.find((entry) => entry.id === "action");
+  const screen = model.screens.find(
+    (entry) => entry.path === "product/browse/home",
+  );
+  const component = model.components.find(
+    (entry) => entry.path === "components/action",
+  );
   if (!screen || !component || "variantOf" in component)
     throw new Error("Missing mixed-view fixture");
   screen.changes = { status: "ready", kind: "changed", included: true };
@@ -260,7 +268,7 @@ test("SSR resolves light fallback evidence across status, marks and comparison",
     },
   }));
   component.colorSchemes = ["light", "dark"];
-  for (const variant of catalogueComponentVariants(model, component.id)) {
+  for (const variant of catalogueComponentVariants(model, component.path)) {
     variant.colorSchemes = ["light", "dark"];
     variant.views = variant.views.flatMap((view) => [
       view,
@@ -276,7 +284,7 @@ test("SSR resolves light fallback evidence across status, marks and comparison",
     catalogue: model,
     baseUrl: "https://catalogue.example",
     defaultSelection: {
-      screenId: screen.id,
+      screenPath: screen.path,
       viewport: "mobile",
       colorScheme: "dark",
     },
@@ -290,7 +298,9 @@ test("SSR resolves light fallback evidence across status, marks and comparison",
 
 test("SSR preserves comparison ineligibility while view evidence is unknown", () => {
   const model = structuredClone(fixture);
-  const component = model.components.find((entry) => entry.id === "action");
+  const component = model.components.find(
+    (entry) => entry.path === "components/action",
+  );
   if (!component || "variantOf" in component)
     throw new Error("Missing component fixture");
   component.changes = { status: "ready", kind: "changed", included: true };
@@ -299,7 +309,7 @@ test("SSR preserves comparison ineligibility while view evidence is unknown", ()
     viewerId: "unknown-evidence",
     catalogue: model,
     baseUrl: "https://catalogue.example",
-    defaultSelection: { screenId: component.id },
+    defaultSelection: { screenPath: component.path },
   });
 
   assert.match(html, /data-workspace-status="">Changed</);
@@ -315,7 +325,7 @@ test("incomplete current view axes are rejected", () => {
       viewerId: "fixture",
       catalogue: model,
       baseUrl: "https://catalogue.example",
-      defaultSelection: { screenId: screen.id },
+      defaultSelection: { screenPath: screen.path },
     }),
   );
 });

@@ -14,7 +14,7 @@ for (const includeChanges of [false, true]) {
     const source = `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
 for (const directory of ["target", "node_modules"])
-  mockups.push(definePage({ id: directory.replaceAll("_", "-"), title: directory, description: "A public document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
+  mockups.push(definePage({ path: directory.replaceAll("_", "-"), title: directory, description: "A public document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
     const fixture = await changedFixture(context, source);
     const output = path.join(fixture.root, ".context/published");
     const options = includeChanges
@@ -26,16 +26,13 @@ for (const directory of ["target", "node_modules"])
     await buildPreview(fixture.config, output, options);
     for (const id of ["target", "node-modules"])
       assert.match(
-        await fs.readFile(
-          path.join(output, "view/pages", `${id}.html`),
-          "utf8",
-        ),
+        await fs.readFile(path.join(output, "view", id, "index.html"), "utf8"),
         new RegExp(`data-entry-id="${id}"`),
       );
     for (const id of ["target", "node-modules"])
       assert.match(
         await fs.readFile(
-          path.join(output, "static/pages", `${id}.html`),
+          path.join(output, "static", id, "index.html"),
           "utf8",
         ),
         /Handbook/,

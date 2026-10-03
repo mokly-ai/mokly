@@ -80,13 +80,13 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
 
   const base = baseModel();
   const current = viewerCatalogue(base);
-  const state = initialState(base, "/view/screens/home.html");
+  const state = initialState(base, "/view/product/browse/home/");
   assert.equal(Object.hasOwn(state.disclosures, variantKey), false);
   const added = withRemovedVariant(base, base.revision.evidence + 1);
   const adopted = commitViewerEvidence(
     { catalogue: current, source: source(base) },
     state,
-    revision(added, source(base), "home"),
+    revision(added, source(base), "product/browse/home"),
   );
   assert.ok(adopted);
   assert.equal(adopted.state.disclosures[variantKey], true);
@@ -95,7 +95,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
     Object.keys(
       defaultDisclosures(
         catalogueNavSections(adopted.snapshot.catalogue),
-        "home",
+        "product/browse/home",
       ),
     ).sort(),
   );
@@ -118,7 +118,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
   const retracted = commitViewerEvidence(
     adopted.snapshot,
     currentStore.state(),
-    revision(removed, adopted.snapshot.source!, "home"),
+    revision(removed, adopted.snapshot.source!, "product/browse/home"),
   );
   assert.ok(retracted);
   assert.equal(Object.hasOwn(retracted.state.disclosures, variantKey), false);
@@ -127,7 +127,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
     Object.keys(
       defaultDisclosures(
         catalogueNavSections(retracted.snapshot.catalogue),
-        "home",
+        "product/browse/home",
       ),
     ).sort(),
   );
@@ -187,8 +187,8 @@ test("filtered evidence reconciles current and pre-filter baseline independently
 test("background evidence preserves a collapsed active folder with and without new navigation", () => {
   const base = baseModel();
   const current = viewerCatalogue(base);
-  const activeFolder = "folder:pages:Product/Browse";
-  const initial = initialState(base, "/view/screens/home.html");
+  const activeFolder = "folder:pages:product/browse";
+  const initial = initialState(base, "/view/product/browse/home/");
   assert.equal(initial.disclosures[activeFolder], true);
   const collapsed = {
     ...initial,
@@ -201,7 +201,7 @@ test("background evidence preserves a collapsed active folder with and without n
   const unchanged = commitViewerEvidence(
     { catalogue: current, source: source(base) },
     collapsed,
-    revision(unchangedModel, source(base), "home"),
+    revision(unchangedModel, source(base), "product/browse/home"),
   );
   assert.ok(unchanged);
   assert.equal(unchanged.state.disclosures[activeFolder], false);
@@ -210,7 +210,7 @@ test("background evidence preserves a collapsed active folder with and without n
   const changed = commitViewerEvidence(
     unchanged.snapshot,
     unchanged.state,
-    revision(added, unchanged.snapshot.source!, "home"),
+    revision(added, unchanged.snapshot.source!, "product/browse/home"),
   );
   assert.ok(changed);
   assert.equal(changed.state.disclosures[activeFolder], false);

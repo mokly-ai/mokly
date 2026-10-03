@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { entryRoute, type ArtifactView } from "@mokly/viewer/data";
+import { type ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { walkFiles } from "../build/discovery.js";
@@ -28,8 +28,8 @@ export function transformCompatibilityDocuments(
   retainedRoutes?: readonly string[],
   context?: CompatibilityContext,
 ): readonly LogicalReferenceRecord[] {
-  const byId =
-    context?.byId ?? new Map(entries.map((entry) => [entry.id, entry]));
+  const byPath =
+    context?.byPath ?? new Map(entries.map((entry) => [entry.path, entry]));
   const records: LogicalReferenceRecord[] = [];
   const outputRoutes = [...outputs.keys()];
   const availableRoutes = graph.compatibilityTransformer
@@ -50,7 +50,7 @@ export function transformCompatibilityDocuments(
       route,
       viewport,
       colorScheme,
-      byId,
+      byPath,
       config.colorSchemes,
     );
     records.push(...linked.records);
@@ -108,7 +108,7 @@ export function transformCompatibilityDocuments(
 
 /** Immutable-route indexes reused across documents of one consumer generation. */
 export interface CompatibilityContext {
-  byId: ReadonlyMap<string, ResolvedRegistryEntry>;
+  byPath: ReadonlyMap<string, ResolvedRegistryEntry>;
   availableRoutes?: string[];
   routeIndexes: Map<string, LogicalArtifactRouteIndex>;
 }
@@ -121,20 +121,21 @@ function logicalArtifactRoutes(
   colorScheme: Parameters<typeof artifactRouteForEntry>[2],
   catalogueSchemes: Parameters<typeof artifactRouteForEntry>[4],
 ): LogicalArtifactRouteIndex {
-  const byId = new Map(entries.map((entry) => [entry.id, entry]));
-  return Object.fromEntries(
-    entries.flatMap((entry) => {
-      const artifact = artifactRouteForEntry(
-        entry,
-        viewport,
-        colorScheme,
-        byId,
-        catalogueSchemes,
-      );
-      return artifact
-        ? [[entryRoute(entry.kind, entry.id), artifact] as const]
-        : [];
-    }),
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  return Object.assign(
+    Object.create(null) as Record<string, string>,
+    Object.fromEntries(
+      entries.flatMap((entry) => {
+        const artifact = artifactRouteForEntry(
+          entry,
+          viewport,
+          colorScheme,
+          byPath,
+          catalogueSchemes,
+        );
+        return artifact ? [[entry.path, artifact] as const] : [];
+      }),
+    ),
   );
 }
 

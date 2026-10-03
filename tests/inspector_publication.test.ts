@@ -29,10 +29,10 @@ test("published copies receive only accepted identities after ownership/range va
   t.after(() => removeFixture(fixture));
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);
-  const original = compilation.outputs.get("screens/home.mobile.html")!;
+  const original = compilation.outputs.get("home/index.mobile.html")!;
   const adapted = adaptBrowseDocument(
     original,
-    "screens/home.mobile.html",
+    "home/index.mobile.html",
     catalogue,
   );
   const json = /<template data-mokly-inspector>(.*?)<\/template>/.exec(
@@ -45,7 +45,7 @@ test("published copies receive only accepted identities after ownership/range va
   if (metadata) {
     assert.ok(metadataKeys(metadata).length > 0);
     assert.deepEqual(metadata.links, [
-      { id: "action", target: { kind: "self" } },
+      { screenPath: "action", target: { kind: "self" } },
     ]);
     assert.ok(metadata.ranges.some((range) => range[1] !== null));
   }
@@ -70,13 +70,13 @@ test("published copies receive only accepted identities after ownership/range va
   ]) {
     const copy = adaptBrowseDocument(
       candidate,
-      "screens/home.mobile.html",
+      "home/index.mobile.html",
       catalogue,
     );
     assert.deepEqual(bodyTags(copy), bodyTags(candidate));
     assert.match(copy, /<head><template data-mokly-inspector>/);
   }
-  assert.equal(compilation.outputs.get("screens/home.mobile.html"), original);
+  assert.equal(compilation.outputs.get("home/index.mobile.html"), original);
   const unowned = "<!doctype html><p>Unowned</p>";
   assert.equal(
     adaptBrowseDocument(unowned, "unowned.html", catalogue),
@@ -88,7 +88,7 @@ test("published copies receive only accepted identities after ownership/range va
         "mokly-component:start:r-0",
         "mokly-component:start:r-999",
       ),
-      "screens/home.mobile.html",
+      "home/index.mobile.html",
       catalogue,
     ),
   );
@@ -99,7 +99,7 @@ test("published copies receive only accepted identities after ownership/range va
           /<body[^>]*>/,
           "$&<template data-mokly-inspector></template>",
         ),
-        "screens/home.mobile.html",
+        "home/index.mobile.html",
         catalogue,
       ),
     /reserved inspector/,
@@ -108,12 +108,12 @@ test("published copies receive only accepted identities after ownership/range va
 
 test("oversized or invalid metadata explicitly disables cross-origin inspection", () => {
   const links = Array.from({ length: 1025 }, (_, index) => ({
-    id: `link-${index}`,
+    screenPath: `link-${index}`,
     target: { kind: "self" as const },
   }));
   assert.match(inspectorMarkup(undefined, links), /"error":"limit"/);
   const huge = Array.from({ length: 1024 }, (_, index) => ({
-    id: `link-${index}`,
+    screenPath: `link-${index}`,
     fragment: "a".repeat(256),
     target: { kind: "named" as const, name: "a".repeat(256) },
   }));
@@ -127,7 +127,7 @@ test("oversized or invalid metadata explicitly disables cross-origin inspection"
     { ranges: [["a".repeat(64), null, null]], links: [] },
     {
       ranges: [],
-      links: [{ id: "screen", target: { kind: "self", extra: 1 } }],
+      links: [{ screenPath: "screen", target: { kind: "self", extra: 1 } }],
     },
   ])
     assert.equal(readMetadata(JSON.stringify(value)), undefined);
@@ -175,7 +175,7 @@ test("repository preview adds its inspector after validating portable consumer r
   assert.ok(published.has("__mokly/client/appearance-startup.js"));
   assert.ok(published.has("__mokly/client/inspector.js"));
   assert.match(
-    published.get("static/screens/home.mobile.html")!.toString(),
+    published.get("static/home/index.mobile.html")!.toString(),
     /data-mokly-inspector/,
   );
   assert.deepEqual(await directoryFiles(fixture.config.mockupsDir), original);

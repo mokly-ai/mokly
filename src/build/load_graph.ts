@@ -4,7 +4,10 @@ import { build } from "esbuild";
 
 import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
-import { discoverEntryModules } from "../config/entry_discovery.js";
+import {
+  discoverEntries,
+  type EntryDiscovery,
+} from "../config/entry_discovery.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage, isMoklyError } from "../errors.js";
@@ -24,6 +27,8 @@ import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
 export interface LoadedGraph {
+  /** Fresh filesystem inventory; a bundle replay uses its already accepted config. */
+  discovery?: EntryDiscovery;
   compatibilityTransformer?: CompatibilityTransformer;
   definitions: unknown[];
   entrySources: readonly string[];
@@ -46,10 +51,9 @@ async function loadGraph(
   config: ResolvedConfig,
   evaluate: boolean,
 ): Promise<LoadedGraph> {
-  const entrySources = timeSync("graph.discover", () =>
-    discoverEntryModules(config),
-  );
-  config = { ...config, entryModules: entrySources };
+  const discovery = timeSync("graph.discover", () => discoverEntries(config));
+  const entrySources = discovery.entryModules;
+  config = { ...config, ...discovery };
   timingCounts("graph", () => ({ entryModules: entrySources.length }));
   const outputPath = path.join(
     path.dirname(config.configPath),
@@ -100,7 +104,8 @@ async function loadGraph(
           config.repoRoot,
         ),
         ...(config.configSourceFiles ?? [config.configPath]),
-        ...entrySources,
+        ...(config.protectedFiles ?? config.resolvedFiles ?? entrySources),
+        ...(config.folderRecords ?? []).map((folder) => folder.sourcePath),
         ...(config.renderer ? [config.renderer] : []),
         ...(config.compatibility.transformer
           ? [config.compatibility.transformer]
@@ -111,6 +116,7 @@ async function loadGraph(
     if (!evaluate)
       return {
         definitions: [],
+        discovery,
         entrySources,
         sourceFiles,
         renderWithComponents: () => {
@@ -153,6 +159,7 @@ async function loadGraph(
           }
         : {}),
       definitions: imported.definitions,
+      discovery,
       entrySources,
       sourceFiles,
       renderer: imported.renderer as Renderer,

@@ -93,7 +93,9 @@ prefix `components`, and its file names follow the
 [artifact path contract](./mokly-artifact-paths.md). Each variant contains a
 slug, title, complete typed props, and an optional description. An authored description must be nonempty and becomes the variant
 entry's description; when omitted, the flattened entry copies the parent's
-description. `defineComponent` rejects unknown variant fields. A variant's path is the
+description. `defineComponent` retains unknown variant fields for general `invalid-field` validation after
+the final parent path is known; the diagnostic follows the
+[variant contract](./mokly-variants.md#authoring). A variant's path is the
 parent's path plus its slug, such as `components/action/default`, and each
 variant flattens into its own `kind: "component"` entry carrying the derived
 `variantOf`, `props`, and `suppliedSlots` and inheriting the parent's

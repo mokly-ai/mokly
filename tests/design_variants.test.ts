@@ -22,29 +22,32 @@ import {
 
 const variantScreens = [
   [
-    "design-browse-variant-selected",
-    "screens/design-browse-variant-selected.html",
+    "design/browse/variants/variant-selected",
+    "design/browse/variants/variant-selected/index.html",
   ],
   [
-    "design-browse-variant-changes",
-    "screens/design-browse-variant-changes.html",
+    "design/browse/variants/variant-changes",
+    "design/browse/variants/variant-changes/index.html",
   ],
   [
-    "design-browse-variant-removed",
-    "screens/design-browse-variant-removed.html",
+    "design/browse/variants/variant-removed",
+    "design/browse/variants/variant-removed/index.html",
   ],
   [
-    "design-browse-variant-reparented",
-    "screens/design-browse-variant-reparented.html",
+    "design/browse/variants/variant-reparented",
+    "design/browse/variants/variant-reparented/index.html",
   ],
-  ["design-browse-changed-views", "screens/design-browse-changed-views.html"],
+  [
+    "design/browse/variants/changed-views",
+    "design/browse/variants/changed-views/index.html",
+  ],
 ] as const;
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: variant states render as light-only shells`, async () => {
     for (const [id, route] of variantScreens) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entryRoute("screen", entry.id), route, id);
+      assert.equal(entryRoute(entry.path), route, id);
       assert.deepEqual(entry.colorSchemes, ["light"], id);
       assert.equal(byClass(document, "mbk-shell").length, 1, id);
     }
@@ -52,15 +55,15 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: a selected variant keeps its parent's breadcrumb and title`, async () => {
     const { document } = await designDocument(
-      "design-browse-variant-selected",
+      "design/browse/variants/variant-selected",
       viewport,
     );
     assert.equal(headTitle(document), "Empty workspace");
     assert.deepEqual(headCrumbs(document), [
-      ["Catalogue home", "design-browse-home"],
-      ["Example", "design-browse-folder-overview"],
+      ["Catalogue home", "design/browse/views/home"],
+      ["Example", "design/browse/views/folder-overview"],
       ["Screens", undefined],
-      ["Welcome", "design-browse-screen"],
+      ["Welcome", "design/browse/views/screen"],
     ]);
     assert.equal(
       textContent(byClass(document, "mbk-idchip")[0]!).trim(),
@@ -75,12 +78,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: a changed variant is its own Changes row with a comparison band`, async () => {
     const { document } = await designDocument(
-      "design-browse-variant-changes",
+      "design/browse/variants/variant-changes",
       viewport,
     );
     assert.equal(headTitle(document), "Save failed");
     assert.deepEqual(headCrumbs(document), [
-      ["Catalogue home", "design-browse-home"],
+      ["Catalogue home", "design/browse/views/home"],
       ["Example", undefined],
       ["Screens", undefined],
       ["Welcome", undefined],
@@ -91,8 +94,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: a removed variant shows its previous version`, async () => {
     for (const id of [
-      "design-browse-variant-removed",
-      "design-browse-variant-reparented",
+      "design/browse/variants/variant-removed",
+      "design/browse/variants/variant-reparented",
     ]) {
       const { document } = await designDocument(id, viewport);
       assert.match(textContent(document), /Showing previous version/, id);
@@ -103,13 +106,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
       assert.ok(details, id);
       assert.match(textContent(details), /Previous version/, id);
       assert.doesNotMatch(textContent(details), /Generated/, id);
-      assert.doesNotMatch(textContent(details), /screens\/welcome\.html/, id);
+      assert.doesNotMatch(textContent(details), /welcome\/index\.html/, id);
     }
   });
 
   test(`${viewport}: changed views are marked on the view controls and listed in details`, async () => {
     const { document } = await designDocument(
-      "design-browse-changed-views",
+      "design/browse/variants/changed-views",
       viewport,
     );
     const viewportControl = byClass(document, "ce-viewport-control")[0];
@@ -139,7 +142,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.match(textContent(details), /Mobile · Dark, Desktop · Dark/);
     const changedLink = elements(
       details,
-      (node) => attribute(node, "data-mokly-link") === "design-review-changed",
+      (node) =>
+        attribute(node, "data-mokly-link") ===
+        "design/changes/outcomes/changed",
     );
     assert.equal(changedLink.length, 1);
     assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0);
@@ -147,7 +152,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
 }
 
 test("the canonical tree keeps Welcome's variant list collapsed", async () => {
-  const { document } = await designDocument("design-browse-screen", "desktop");
+  const { document } = await designDocument(
+    "design/browse/views/screen",
+    "desktop",
+  );
   const toggles = variantToggles(document).filter((toggle) =>
     attribute(toggle, "aria-label")?.endsWith("variants of Welcome"),
   );
@@ -163,7 +171,7 @@ test("the canonical tree keeps Welcome's variant list collapsed", async () => {
 
 test("a selected variant discloses its parent's variant rows", async () => {
   const { document } = await designDocument(
-    "design-browse-variant-selected",
+    "design/browse/variants/variant-selected",
     "desktop",
   );
   const toggles = variantToggles(document).filter((toggle) =>
@@ -193,7 +201,7 @@ test("a selected variant discloses its parent's variant rows", async () => {
   assert.equal(attribute(selected, "aria-current"), "page");
   assert.equal(
     attribute(selected, "data-mokly-link"),
-    "design-browse-variant-selected",
+    "design/browse/variants/variant-selected",
   );
   const unselected = rows.find((row) => rowLabel(row) === "Save failed");
   assert.equal(unselected?.tagName, "span");
@@ -207,7 +215,7 @@ test("a selected variant discloses its parent's variant rows", async () => {
 
 test("variant rows carry their own icon, not the screen icon", async () => {
   const { document } = await designDocument(
-    "design-browse-variant-selected",
+    "design/browse/variants/variant-selected",
     "desktop",
   );
   const [emptyClass, emptyIcon] = rowIcon(document, "Empty workspace");
@@ -225,7 +233,7 @@ test("variant rows carry their own icon, not the screen icon", async () => {
 
 test("Changes shows the changed variant row and marks its parent", async () => {
   const { document } = await designDocument(
-    "design-browse-variant-changes",
+    "design/browse/variants/variant-changes",
     "desktop",
   );
   assert.deepEqual(rowLabels(document), [
@@ -248,20 +256,20 @@ test("Changes shows the changed variant row and marks its parent", async () => {
   const parent = rows.find((row) => rowLabel(row) === "Welcome");
   assert.equal(
     attribute(parent!, "data-mokly-link"),
-    "design-browse-variant-changes",
+    "design/browse/variants/variant-changes",
     "the parent opens its first changed variant",
   );
   assert.equal(attribute(parent!, "aria-current"), undefined);
   const variant = rows.find((row) => rowLabel(row) === "Save failed");
   assert.equal(attribute(variant!, "class"), "mbk-nav-row active");
   assert.deepEqual(filterTargets(document), [
-    ["All", "design-browse-variant-selected"],
+    ["All", "design/browse/variants/variant-selected"],
   ]);
 });
 
 test("a removed variant stays under its surviving parent", async () => {
   const { document } = await designDocument(
-    "design-browse-variant-removed",
+    "design/browse/variants/variant-removed",
     "desktop",
   );
   assert.deepEqual(rowLabels(document), [
@@ -279,12 +287,14 @@ test("a removed variant stays under its surviving parent", async () => {
     ),
     "mbk-nav-row active",
   );
-  assert.deepEqual(filterTargets(document), [["All", "design-browse-screen"]]);
+  assert.deepEqual(filterTargets(document), [
+    ["All", "design/browse/views/screen"],
+  ]);
 });
 
 test("a change confined to other views keeps the parent row closed", async () => {
   const { document } = await designDocument(
-    "design-browse-changed-views",
+    "design/browse/variants/changed-views",
     "desktop",
   );
   assert.deepEqual(rowLabels(document), ["Example", "Screens", "Welcome"]);
@@ -292,5 +302,7 @@ test("a change confined to other views keeps the parent row closed", async () =>
   assert.equal(toggles.length, 1);
   assert.equal(attribute(toggles[0]!, "aria-expanded"), "false");
   assert.equal(byClass(document, "mbk-nav-changed").length, 1);
-  assert.deepEqual(filterTargets(document), [["All", "design-browse-screen"]]);
+  assert.deepEqual(filterTargets(document), [
+    ["All", "design/browse/views/screen"],
+  ]);
 });

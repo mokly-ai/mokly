@@ -2,9 +2,8 @@
 
 ## Delivery Status
 
-Approved contract. Current builds still author `id` and `navPath`, export a
-`mockups` array, and derive routes from kind and id; the
-[path identity plan](../../plans/path-identity.md) delivers this contract.
+The path-based TypeScript authoring API is implemented. Markdown authoring
+remains planned in the [path identity plan](../../plans/path-identity.md).
 
 This contract expands the [package API](./mokly-package.md). Configuration
 follows the [configuration contract](./mokly-configuration.md); consumer
@@ -79,7 +78,7 @@ under the [component contract](./mokly-components.md); it returns a renderable
 
 A screen or component may declare `variants`. Each variant declares a `slug`
 and flattens into a complete entry of the parent's kind whose path is the
-parent's path plus that slug; the relationship is derived from the declaration
+parent's final path plus that slug. A variant has no `path` input; the relationship is derived from the declaration
 and recorded as `variantOf`, never authored. The
 [variant contract](./mokly-variants.md) owns inheritance, validation, and the
 return shape of `defineScreen`, which is one definition without `variants`
@@ -100,9 +99,13 @@ sorted. Tags are optional catalogue vocabulary, not a second hierarchy.
 
 The TypeScript input types are the authoring contract. A key they do not
 declare, such as a former `id`, `navPath`, `route`, or `variantOf`, is a type
-error in TypeScript and is ignored at runtime like any other unknown key;
-there is no runtime migration guard. `defineComponent` keeps rejecting unknown
-variant fields under the component contract.
+error in TypeScript and a registry `invalid-field` violation at runtime with
+the exact text `unknown field <field>`, attributed to the entry's source.
+Unknown flow-step fields use the same code and the text
+`step #<n>: unknown field <field>`, with one-based step numbers.
+Folder inputs use `invalid-folder` with the same `unknown field <field>` reason
+under the folder-record schema. Component variants use the same general
+`invalid-field` rule after their parent's final path is resolved.
 
 ## Paths And URLs
 
@@ -163,7 +166,14 @@ Authors address another entry with `mockLink(to, fragment?)` or
 - a path relative to the linking entry's folder, starting with `./` or
   `../`, such as `./invoice`;
 - a definition reference: the imported export of another entry module, which
-  Mokly resolves to that entry's path at build time.
+  Mokly resolves to that entry's path at build time. A parent-first definition
+  array or a component registration refers to its parent entry.
+
+Relative paths use one shared base rule for links and flow references. An
+ordinary entry uses the parent of its path; an index entry uses its own path;
+a variant uses its parent entry's base. A declared path changes the path used
+by these same rules. For example, an invoice and its variants link from the
+same billing folder, while a folder index links from the folder it describes.
 
 Complete raw `mock:<path>[#fragment]` values, with the same two string forms
 of `<path>`, may also appear in `href` or `data-nav-href`. The fragment is a

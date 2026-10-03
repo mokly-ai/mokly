@@ -13,8 +13,8 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("deep recursive usage keeps fixed-size deterministic keys", async (t) => {
   const source = componentEntrySource({
-    extra: `const chain = defineComponent({ ...metadata, id: "chain", title: "Chain", description: "Nested ownership", route: "components/chain.html", propSchema: { kind: "object", properties: { depth: { schema: { kind: "number", integer: true, minimum: 0, maximum: 32 } } } }, render: (props) => props.depth ? <div><chain.Component depth={props.depth - 1} /></div> : <action.Component label="Leaf" />, variants: [{ id: "chain-default", title: "Default", props: { depth: 32 } }] });`,
-    exports: "action.entries, pane.entries, chain.entries,",
+    extra: `const chain = defineComponent({ ...metadata, path: "chain", title: "Chain", description: "Nested ownership", propSchema: { kind: "object", properties: { depth: { schema: { kind: "number", integer: true, minimum: 0, maximum: 32 } } } }, render: (props) => props.depth ? <div><chain.Component depth={props.depth - 1} /></div> : <action.Component label="Leaf" />, variants: [{ slug: "default",  title: "Default", props: { depth: 32 } }] });`,
+    exports: "...action.entries, ...pane.entries, ...chain.entries,",
     body: "<chain.Component depth={32} />",
   });
   const fixture = await createFixture(source);
@@ -60,12 +60,12 @@ test("saved variants share transactional orphan protection", async (t) => {
   const config = await loadConfig(fixture.root);
   const first = await compileCatalogue(config);
   await writeCompilation(first, config);
-  const oldRoute = "components/action-disabled.desktop.dark.html";
+  const oldRoute = "action/disabled/index.desktop.dark.html";
   assert.ok(first.outputs.has(oldRoute));
   await fs.writeFile(
     fixture.entryPath,
     source.replace(
-      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );
@@ -111,11 +111,11 @@ for (const [name, transform, error] of [
   });
 
 test("an actually invoked wrapper must be exported", async (t) => {
-  const source = componentEntrySource({ exports: "pane.entries," });
+  const source = componentEntrySource({ exports: "...pane.entries," });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /component action is not exported/,
+    /component definition is not exported in the registry/,
   );
 });

@@ -2,9 +2,8 @@
 
 ## Delivery Status
 
-Approved contract. Current output derives `screens/<id>.html`-style routes
-from kind and id; the [path identity plan](../../plans/path-identity.md)
-delivers this contract.
+Path-derived documents, snapshots, previews and canonical shell URLs are
+implemented. Document-kind naming is reserved for Markdown rendering.
 
 This is the single contract for entry documents, generated view names,
 comparison snapshot names, preview metadata, shell documents, URL parsing, and
@@ -15,9 +14,8 @@ reserved prefixes. Every name derives from an entry's path under the
 
 Every entry owns one directory named by its path. Its own document, when it
 has one, is `index.html` inside that directory, and its rendered views sit
-beside it with viewport and scheme suffixes. Because `index` never ends an
-entry path and segments contain no dot, no child entry can collide with these
-files, and a folder page coexists with the folder's children on every static
+beside it with viewport and scheme suffixes. Because path segments contain no dot, no child entry directory can collide
+with these HTML filenames, and a folder page coexists with the folder's children on every static
 host.
 
 | Kind              | Documents under `static/`                        |
@@ -124,8 +122,8 @@ function providerNormalizedHtmlPath(pathname: string): string | undefined;
 It accepts a canonical shell pathname produced by `viewHref`, a
 `/view/<path>/index.html` document path, or a confined `/static/**.html`
 artifact path and returns the form a host serves for it: the canonical
-trailing-slash URL for shell documents and the pathname without its final
-`.html` for static artifacts. A query, fragment, encoded separator, dot
+trailing-slash URL for shell documents and static `index.html` documents,
+and the pathname without its final `.html` for other static artifacts. A query, fragment, encoded separator, dot
 segment, or other prefix returns `undefined`; callers preserve an already
 separated query and hash. The former `unavailableViewHref` is unnecessary:
 `viewHref` of a path with no entry opens the missing view.

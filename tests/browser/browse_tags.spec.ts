@@ -1,13 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const detailsRow = 'a[data-nav-row][data-route="screens/example-details.html"]';
+const detailsRow =
+  'a[data-nav-row][data-route="example/screens/details/index.html"]';
 const inspectorChip =
   '[data-inspector-panel="details"] [data-mokly-tag="forms"]';
 const panel = "#mb-tag-picker";
 const search = "[data-mokly-search]";
 const toggle = "[data-mokly-tag-toggle]";
-const tourRow = 'a[data-nav-row][data-route="user-flows/example-tour.html"]';
-const welcomeRow = 'a[data-nav-row][data-route="screens/example-welcome.html"]';
+const tourRow = 'a[data-nav-row][data-route="example/tour/index.html"]';
+const welcomeRow =
+  'a[data-nav-row][data-route="example/screens/welcome/index.html"]';
 
 function chip(tag: string): string {
   return `${panel} [data-mokly-tag="${tag}"]`;
@@ -25,7 +27,7 @@ async function expectClosed(page: Page): Promise<void> {
 }
 
 test("the picker enters, keeps, and clears a tag term", async ({ page }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(page.locator(tourRow)).toBeVisible();
 
   await openPicker(page);
@@ -65,7 +67,7 @@ test("the picker enters, keeps, and clears a tag term", async ({ page }) => {
 test("the open picker takes Escape ahead of the expanded frame", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await page.fill(search, "welcome");
   await page.click(".browser-expand");
   await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
@@ -99,7 +101,7 @@ test("a click outside closes the picker without taking focus", async ({
 test("an inspector tag closes the open picker and restores toggle focus", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await page.getByRole("tab", { name: "Details", exact: true }).click();
   await openPicker(page);
 

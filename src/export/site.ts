@@ -23,7 +23,7 @@ import {
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { staticRemovedPreviews } from "../publication/removed_previews.js";
-import { changedManifestIds } from "../registry/changed_ids.js";
+import { changedManifestPaths } from "../registry/changed_paths.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import {
   loadBrowserClientModules,
@@ -109,7 +109,7 @@ export function assembleExport(
       );
     inventory.add(`${prefix}/${name}`, bytes);
   }
-  const materialIds = changedManifestIds(
+  const materialIds = changedManifestPaths(
     compilation.manifest,
     baseline,
     config,
@@ -117,13 +117,13 @@ export function assembleExport(
   );
   const pageIds = new Set(
     compilation.manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.id] : [],
+      entry.kind === "page" ? [entry.path] : [],
     ),
   );
   const changes = comparison
     ? [
         ...comparison.result.changes.map(
-          (item) => (item.after ?? item.before)!.id,
+          (item) => (item.after ?? item.before)!.path,
         ),
         ...materialIds.filter((id) => pageIds.has(id)),
       ]
@@ -132,16 +132,16 @@ export function assembleExport(
     base: comparison?.result.baseRef ?? "",
     ...(changesStatus === "ready" && comparison
       ? {
-          changedIds: [
-            ...new Set([...changes, ...removed.map((entry) => entry.id)]),
+          changedEntries: [
+            ...new Set([...changes, ...removed.map((entry) => entry.path)]),
           ],
           comparisons: true,
           componentChanges: {
             baseline,
             result: comparison.result,
             screenEvidence: comparison.result.screens
-              .map(({ id, views }) => ({
-                id,
+              .map(({ path, views }) => ({
+                path,
                 views: views
                   .filter(
                     (view) =>
@@ -162,8 +162,8 @@ export function assembleExport(
                   ),
               }))
               .filter((screen) => screen.views.length > 0),
-            screenViews: comparison.result.screens.map(({ id, views }) => ({
-              id,
+            screenViews: comparison.result.screens.map(({ path, views }) => ({
+              path,
               views: views.map(({ viewport, colorScheme, state }) => ({
                 viewport,
                 colorScheme,
@@ -180,7 +180,7 @@ export function assembleExport(
     configPath: toPosixPath(path.relative(config.repoRoot, config.configPath)),
     catalogue,
     changesStatus,
-    changedIds: context.changedIds,
+    changedEntries: context.changedEntries,
     evidence: context.componentChanges,
     comparison: comparison?.result,
     comparisonUrl: delivery.comparisonUrl?.slice(1) ?? null,
@@ -200,12 +200,12 @@ export function assembleExport(
     notFoundDelivery,
   );
   for (const entry of entries) {
-    const route = entryRoute(entry.kind, entry.id);
-    const canonicalPath = viewHref(entry.kind, entry.id);
+    const route = entryRoute(entry.path);
+    const canonicalPath = viewHref(entry.path);
     const descriptor = { ...delivery, canonicalPath };
     const html = viewPage(entry, catalogue, {
       ...context,
-      activeId: entry.id,
+      activeId: entry.path,
       delivery: descriptor,
     });
     addShell(`view/${route}`, html, descriptor);

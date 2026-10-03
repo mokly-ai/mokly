@@ -14,13 +14,13 @@ import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_
 import { browseState } from "./helpers/browse_recovery_state.js";
 import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
-test("stored disclosures accept valid folder paths, including colons, but not empty segments", () => {
+test("stored disclosures accept valid folder paths, including uppercase and underscores, but not empty segments", () => {
   for (const key of [
     "section:pages",
     "section:components",
-    "variants:pages:my-screen",
-    "folder:pages:Design: System/Browse",
-    "folder:components:Design: System/Browse",
+    "variants:my-screen",
+    "folder:pages:Design_System/Browse",
+    "folder:components:Design_System/Browse",
   ])
     assert.equal(isDisclosureKey(key), true, key);
   for (const key of [
@@ -133,8 +133,8 @@ test("a current recovery snapshot filters invalid disclosure entries", () => {
 test("disclosure v3 codec round-trips explicit values and rejects malformed storage", () => {
   const values = {
     "section:pages": false,
-    "folder:pages:Design: System/Browse": true,
-    "variants:pages:my-screen": false,
+    "folder:pages:Design_System/Browse": true,
+    "variants:my-screen": false,
   };
   assert.deepEqual(parseDisclosureMap(encodeDisclosureMap(values)), values);
   for (const value of [null, false, 42, [], ["section:pages"]])
@@ -145,7 +145,7 @@ test("disclosure v3 codec round-trips explicit values and rejects malformed stor
       JSON.stringify([
         "collection:pages:Product",
         "section:pages",
-        "variants:pages:home",
+        "variants:product/browse/home",
       ]),
     ),
     {},
@@ -200,8 +200,8 @@ test("a renamed folder and descendants use defaults while unrelated keys retain 
 });
 
 test("recovery and its baseline reconcile listed, missing, obsolete, and invalid keys", () => {
-  const folder = "folder:pages:Product/Browse";
-  const unrelated = "folder:components:Product";
+  const folder = "folder:pages:product/browse";
+  const unrelated = "folder:components:components";
   const modes = [
     { name: "unfiltered", query: "", view: "all", filtered: false },
     { name: "search", query: "home", view: "all", filtered: true },

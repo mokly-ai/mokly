@@ -3,8 +3,8 @@ import path from "node:path";
 import { generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifest,
-  ManifestV7,
-  ReviewResultV4,
+  ManifestV8,
+  ReviewResultV5,
   ScreenResourceEvidence,
 } from "@mokly/viewer/data";
 
@@ -13,7 +13,7 @@ import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isMoklyError } from "../errors.js";
-import { changedManifestIds } from "../registry/changed_ids.js";
+import { changedManifestPaths } from "../registry/changed_paths.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import { GitReviewAssetReader } from "../review/assets.js";
 import {
@@ -41,8 +41,8 @@ import {
 
 export interface ComponentChangeSnapshot {
   baseline: HistoricalManifest;
-  changedIds?: readonly string[];
-  result?: ReviewResultV4;
+  changedEntries?: readonly string[];
+  result?: ReviewResultV5;
   comparison?: ReviewEvidence;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
@@ -62,7 +62,7 @@ export interface CatalogueClassificationInputs {
 export interface CatalogueChangeClassifier {
   read(
     config: ResolvedConfig,
-    manifest: ManifestV7,
+    manifest: ManifestV8,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
@@ -75,7 +75,7 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
 
   async read(
     config: ResolvedConfig,
-    manifest: ManifestV7,
+    manifest: ManifestV8,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
@@ -144,7 +144,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
   private git: ReadOnlyReviewRepository;
   constructor(
     private readonly config: ResolvedConfig,
-    private readonly manifest: ManifestV7,
+    private readonly manifest: ManifestV8,
     private readonly base: string,
     private readonly signal?: AbortSignal,
     commands?: GitCommandRunner,
@@ -186,7 +186,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
 /** Classify pages and ownership-aware component views against one pinned baseline. */
 export async function readCatalogueChanges(
   config: ResolvedConfig,
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   base: string,
   git: ReadOnlyReviewRepository,
   commit: string,
@@ -231,10 +231,10 @@ export async function readCatalogueChanges(
   });
   const pageIds = new Set(
     manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.id] : [],
+      entry.kind === "page" ? [entry.path] : [],
     ),
   );
-  const ids = changedManifestIds(
+  const ids = changedManifestPaths(
     manifest,
     baseline,
     config,
@@ -266,11 +266,11 @@ export async function readCatalogueChanges(
     ...(!components && content.screens.length
       ? { screenEvidence: content.screens }
       : {}),
-    changedIds: [
+    changedEntries: [
       ...new Set([
         ...ids,
         ...(components
-          ? result.changes.map((entry) => (entry.after ?? entry.before)!.id)
+          ? result.changes.map((entry) => (entry.after ?? entry.before)!.path)
           : []),
       ]),
     ].sort(),

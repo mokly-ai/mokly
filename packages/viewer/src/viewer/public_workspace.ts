@@ -61,10 +61,10 @@ function publishedChangedViewsBySelection(
   variants: readonly CatalogueComponentVariant[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
-    return { [entry.id]: publishedChangedViews(entry.views) };
+    return { [entry.path]: publishedChangedViews(entry.views) };
   return Object.fromEntries(
     variants.map((variant) => [
-      variant.id,
+      variant.path,
       publishedChangedViews(variant.views),
     ]),
   );
@@ -95,12 +95,14 @@ function publishedViewStatesBySelection(
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
     const states = publishedViewStates(entry.views);
-    return states === undefined ? {} : { [entry.id]: states };
+    return states === undefined
+      ? (Object.create(null) as Record<string, readonly ViewState[]>)
+      : { [entry.path]: states };
   }
-  const evidence: Record<string, readonly ViewState[]> = {};
+  const evidence: Record<string, readonly ViewState[]> = Object.create(null);
   for (const variant of variants) {
     const states = publishedViewStates(variant.views);
-    if (states !== undefined) evidence[variant.id] = states;
+    if (states !== undefined) evidence[variant.path] = states;
   }
   return evidence;
 }
@@ -111,7 +113,7 @@ export function publicWorkspace(
   comparisons = model.comparisonUrl !== null,
   snapshotId?: string,
 ): WorkspaceData {
-  const selected = resolveCatalogueSelection(model, entry.id, snapshotId);
+  const selected = resolveCatalogueSelection(model, entry.path, snapshotId);
   const original =
     selected?.entry.kind === entry.kind ? selected.entry : undefined;
   if (
@@ -125,7 +127,7 @@ export function publicWorkspace(
       ? "variantOf" in original
         ? (model.components.find(
             (candidate): candidate is CatalogueComponent =>
-              candidate.id === original.variantOf &&
+              candidate.path === original.variantOf &&
               !("variantOf" in candidate),
           ) ??
           model.removedEntries
@@ -133,7 +135,7 @@ export function publicWorkspace(
             .find(
               (candidate): candidate is CatalogueComponent =>
                 candidate.kind === "component" &&
-                candidate.id === original.variantOf &&
+                candidate.path === original.variantOf &&
                 !("variantOf" in candidate),
             ))
         : original
@@ -153,7 +155,7 @@ export function publicWorkspace(
     "variantOf" in original &&
     publicComponent === undefined;
   const componentId =
-    component?.id ?? (orphanVariant ? original.variantOf : undefined);
+    component?.path ?? (orphanVariant ? original.variantOf : undefined);
   const parentRemoved = publicComponent
     ? model.removedEntries.some(({ entry }) => entry === publicComponent)
     : false;
@@ -162,9 +164,9 @@ export function publicWorkspace(
     if (owner.kind !== "screen" && owner.kind !== "component") continue;
     for (const view of generatedViews(displayEntry(owner)))
       for (const instance of view.usage?.instances ?? [])
-        if (instance.componentId === (componentId ?? entry.id))
+        if (instance.componentId === (componentId ?? entry.path))
           usedBy.push({
-            entryId: owner.id,
+            entryId: owner.path,
             entryKind: owner.kind,
             title: publicEntryTitle(model, owner),
             viewport: view.viewport,
@@ -179,7 +181,7 @@ export function publicWorkspace(
   }
   const entryStatus = status(original);
   const sourceVariants = publicComponent
-    ? catalogueComponentVariants(model, publicComponent.id)
+    ? catalogueComponentVariants(model, publicComponent.path)
     : orphanVariant
       ? [original]
       : [];
@@ -213,7 +215,7 @@ export function publicWorkspace(
       : [];
   const selectedVariant =
     entry.kind === "component" && isManifestComponentVariant(entry)
-      ? variants.find((variant) => variant.value.id === entry.id)
+      ? variants.find((variant) => variant.value.path === entry.path)
       : undefined;
   const workspaceStatus = selectedVariant?.status ?? entryStatus;
   return {
@@ -229,7 +231,7 @@ export function publicWorkspace(
         (component): component is CatalogueComponent =>
           !("variantOf" in component),
       )
-      .map(({ id, title }) => ({ id, title })),
+      .map(({ path, title }) => ({ path, title })),
     views:
       component || orphanVariant
         ? variants.flatMap(({ value }) => generatedViews(value))
@@ -275,7 +277,7 @@ function publicEntryTitle(
     (candidate) =>
       candidate.kind === "component" &&
       !("variantOf" in candidate) &&
-      candidate.id === entry.variantOf,
+      candidate.path === entry.variantOf,
   );
   return parent ? `${parent.title} · ${entry.title}` : entry.title;
 }

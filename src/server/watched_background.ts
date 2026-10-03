@@ -54,12 +54,12 @@ export class WatchedBackground {
         const duration = Date.now() - this.changesStartedAt;
         if (snapshot)
           options.reporter.changesReady(
-            snapshot.changedIds?.length ?? 0,
+            snapshot.changedEntries?.length ?? 0,
             duration,
           );
         else options.reporter.changesUnavailable(duration);
         options.running.notifyUpdate(
-          snapshot?.changedIds,
+          snapshot?.changedEntries,
           snapshot,
           snapshot ? "ready" : "unavailable",
           "evidence",

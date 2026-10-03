@@ -2,11 +2,14 @@ import { isValidElement, useContext, type ReactNode } from "react";
 
 import type { ComponentSlotRecord, ComponentRangeTarget } from "@mokly/viewer";
 import {
-  isCatalogueId,
+  isKebabCase,
+  isPathSegment,
   invalidData,
   slotKey,
   validateComponentSource,
 } from "@mokly/viewer/data";
+
+import { definitionPath, definitionSlug } from "../authoring/identity.js";
 
 import { componentInputs } from "./inputs.js";
 import { ComponentContext, type ComponentScope } from "./render_context.js";
@@ -26,7 +29,7 @@ export function renderInstance(
   const scope = useContext(ComponentContext);
   if (!scope)
     invalidData(
-      definition.id,
+      definitionPath(definition),
       "registered component requires a catalogue render and an exported entry",
     );
   const descriptors = Object.getOwnPropertyDescriptors(rawProps);
@@ -36,7 +39,7 @@ export function renderInstance(
     invalidData(scope.collector.label, "instance id cannot be an accessor");
   const id: unknown =
     instanceDescriptor?.value === undefined
-      ? definition.id
+      ? definitionSlug(definition)
       : instanceDescriptor.value;
   delete descriptors.moklyInstance;
   const sourceDescriptor = descriptors.__moklySource;
@@ -46,7 +49,12 @@ export function renderInstance(
   delete descriptors.__moklySource;
   if (source !== undefined)
     validateComponentSource(source, `${scope.collector.label}.source`);
-  if (!isCatalogueId(id))
+  if (
+    typeof id !== "string" ||
+    (instanceDescriptor?.value === undefined
+      ? !isPathSegment(id)
+      : !isKebabCase(id))
+  )
     invalidData(scope.collector.label, "moklyInstance must be a kebab-case id");
   const input = Object.defineProperties({}, descriptors) as Record<
     string,
@@ -55,7 +63,7 @@ export function renderInstance(
   const { data, slots } = componentInputs(
     definition,
     input,
-    `${scope.collector.label} / ${definition.id}`,
+    `${scope.collector.label} / ${definitionPath(definition)}`,
   );
   const instance = scope.collector.register(
     definition,

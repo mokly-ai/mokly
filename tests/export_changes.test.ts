@@ -11,7 +11,7 @@ import {
   CommittedRepository,
 } from "../dist/review/git.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
@@ -35,7 +35,7 @@ for (const resource of ["nested.css", "image.svg"]) {
       validEntrySource(),
       {
         extraConfig:
-          'stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }],',
+          'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }],',
       },
       async ({ mockupsDir }) => {
         await fs.writeFile(
@@ -57,7 +57,7 @@ for (const resource of ["nested.css", "image.svg"]) {
       resource.endsWith(".css") ? "\nmain { color: red; }" : "\n",
     );
     assert.deepEqual(
-      await computeChangedIds(
+      await computeChangedPaths(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -90,7 +90,7 @@ test("screen-only exports retain dark-only changed-view evidence", async (contex
     validEntrySource(),
     {
       extraConfig: `colorSchemes: ["light", "dark"],
-stylesheets: [{ match: "screens/home.html", stylesheets: [], darkStylesheets: ["dark.css"] }],`,
+stylesheets: [{ match: "home/index.html", stylesheets: [], darkStylesheets: ["dark.css"] }],`,
     },
     async ({ mockupsDir }) => {
       await fs.writeFile(
@@ -109,7 +109,7 @@ stylesheets: [{ match: "screens/home.html", stylesheets: [], darkStylesheets: ["
     base: "HEAD",
   });
   const html = await fs.readFile(
-    path.join(result.outDir, "view/screens/home.html"),
+    path.join(result.outDir, "view/home/index.html"),
     "utf8",
   );
   const serialized = html.match(
@@ -145,7 +145,7 @@ test("material Changes can use captured documents without reading current file b
   const fixture = await changedFixture(context);
   const manifest = readManifest(fixture.config);
   const captured = await directoryFiles(fixture.mockupsDir);
-  const fragment = "screens/home.mobile.html";
+  const fragment = "home/index.mobile.html";
   captured.set(
     fragment,
     Buffer.from(captured.get(fragment)!.toString().replace("Details", "Next")),
@@ -176,15 +176,20 @@ test("material Changes can use captured documents without reading current file b
 });
 
 test("review export retains a removed variant route and parent context", async (context) => {
-  const fixture = await createExportFixture(screenVariantEntrySource());
+  const fixture = await createExportFixture(
+    screenVariantEntrySource().replace('path: "home"', 'path: "fixture/home"'),
+  );
   context.after(() => fixture.close());
   await fs.writeFile(
     fixture.entryPath,
-    screenVariantEntrySource({ includeVariant: false }),
+    screenVariantEntrySource({ includeVariant: false }).replace(
+      'path: "home"',
+      'path: "fixture/home"',
+    ),
   );
 
   await exportCatalogue(fixture.config, { outDir: "site" });
-  const route = "screens/home-empty.html";
+  const route = "fixture/home/empty/index.html";
   const removed = await fs.readFile(
     path.join(fixture.output, "view", route),
     "utf8",
@@ -194,7 +199,7 @@ test("review export retains a removed variant route and parent context", async (
   assert.doesNotMatch(documentText(removed), /This screen was removed/);
   assert.match(
     removed,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
+    /<div class="mbk-nav-variants" data-nav-disclosure="variants:fixture\/home"[^>]*id="mb-nav-variants-pages-fixture\/home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
   );
   assert.match(removed, /Home empty · Removed/);
   await assert.rejects(fs.access(path.join(fixture.output, "id")));
@@ -206,12 +211,13 @@ test("review export retains a removed variant route and parent context", async (
     ),
   ) as {
     removedEntries: {
-      entry: { id: string; navPath: readonly string[]; variantOf?: string };
+      entry: { path: string; variantOf?: string };
+      folderTitles: readonly string[];
     }[];
   };
   const snapshot = catalogue.removedEntries.find(
-    ({ entry }) => entry.id === "home-empty",
+    ({ entry }) => entry.path === "fixture/home/empty",
   );
-  assert.equal(snapshot?.entry.variantOf, "home");
-  assert.deepEqual(snapshot?.entry.navPath, ["Fixture"]);
+  assert.equal(snapshot?.entry.variantOf, "fixture/home");
+  assert.deepEqual(snapshot?.folderTitles, ["Fixture"]);
 });

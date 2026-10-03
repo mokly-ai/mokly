@@ -5,7 +5,7 @@ import {
   viewRoute,
   VIEWPORTS,
 } from "@mokly/viewer/data";
-import type { ManifestV7, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV8, ArtifactView } from "@mokly/viewer/data";
 
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
@@ -34,7 +34,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
-  manifest: ManifestV7;
+  manifest: ManifestV8;
   outputs: ReadonlyMap<string, string>;
 }
 
@@ -53,6 +53,7 @@ async function compileMeasured(
   const graph = accepted?.graph ?? (await loadConsumerGraph(config));
   config = {
     ...config,
+    ...graph.discovery,
     entryModules: graph.entrySources,
     sourceFiles: graph.sourceFiles,
   };
@@ -94,10 +95,7 @@ async function compileMeasured(
   const generatedOwners = new Map<string, string>();
   for (const entry of registry.entries) {
     if (entry.kind === "page")
-      generatedOwners.set(
-        entryRoute("page", entry.id),
-        entry.sourceRelativePath,
-      );
+      generatedOwners.set(entryRoute(entry.path), entry.sourceRelativePath);
     if (
       entry.kind !== "screen" &&
       !(entry.kind === "component" && isComponentVariantDefinition(entry))
@@ -110,7 +108,7 @@ async function compileMeasured(
           config.colorSchemes,
         )) {
           generatedOwners.set(
-            viewRoute(entry.kind, entry.id, viewport, colorScheme),
+            viewRoute(entry.path, viewport, colorScheme),
             entry.sourceRelativePath,
           );
         }
@@ -160,6 +158,7 @@ async function compileMeasured(
       graph.sourceFiles,
       config.colorSchemes,
       componentViews,
+      registry.folders,
     ),
   );
   timeSync("manifest.validate", () => parseManifest(manifest));

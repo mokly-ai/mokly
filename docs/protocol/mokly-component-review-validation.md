@@ -2,9 +2,8 @@
 
 This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
 Canonical order enforcement and the shared affected-consumer key are
-implemented by both the producer and the strict reader, which currently accept
-v4 keyed by kind and id; the [path identity plan](../../plans/path-identity.md)
-delivers the path-keyed v5 described here.
+implemented by both the producer and the strict reader, which accept the
+path-keyed v5 described here.
 
 ## Validation And Canonical Output
 
@@ -87,3 +86,11 @@ versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,
 and identical served/published membership. This coverage is required.
+
+## Path Identity
+
+Pair entries by kind and case-folded path. A case-only rename keeps one identity
+and has no removed record; classify it by metadata and material content. Component
+parents and variants share this pairing namespace, so changing between the two
+shapes produces one Changed record with both sides. Grouped component comparison
+records retain the views belonging to each component side.

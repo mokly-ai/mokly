@@ -18,9 +18,10 @@ import type {
 } from "./types.js";
 import {
   array,
+  tag,
   boolean,
   choice,
-  id,
+  entryPath,
   object,
   relatedDoc,
   repositoryPath,
@@ -90,17 +91,13 @@ function readView(value: unknown): CatalogueView {
 }
 function common(input: Record<string, unknown>): CatalogueEntry {
   const details = object(input.details);
-  const navPath = array(input.navPath).map((value) => {
-    const label = string(value);
-    if (label.length === 0)
-      invalidData("$catalogue", "expected a nonempty navPath label");
-    return label;
-  });
   const result: CatalogueEntry = {
-    id: id(input.id),
+    path: entryPath(input.path),
     title: text(input.title),
-    tags: array(input.tags).map(id),
-    navPath,
+    tags: array(input.tags).map(tag),
+    ...(input.previousPath === undefined
+      ? {}
+      : { previousPath: entryPath(input.previousPath) }),
     changes: readChanges(input.changes),
     details: {
       description: string(details.description),
@@ -121,6 +118,7 @@ export function readEntry(value: unknown): CatalogueRecord {
   const kind = choice(input.kind, [
     "screen",
     "page",
+    "document",
     "use-case",
     "component",
   ] as const);
@@ -136,7 +134,7 @@ export function readEntry(value: unknown): CatalogueRecord {
       steps: array(input.steps).map((raw) => {
         const step = object(raw);
         return {
-          screenId: id(step.screenId),
+          screenPath: entryPath(step.screenPath),
           ...(step.title !== undefined ? { title: text(step.title) } : {}),
           ...(step.description !== undefined
             ? { description: string(step.description) }
@@ -149,18 +147,19 @@ export function readEntry(value: unknown): CatalogueRecord {
       choice(value, ["light", "dark"] as const),
     ),
   };
+  if (kind === "document") return { ...base, kind, ...axes };
   if (kind === "screen")
     return {
       ...base,
       kind,
       ...axes,
       views: array(input.views).map(readView),
-      useCaseIds: array(input.useCaseIds).map(id),
+      useCasePaths: array(input.useCasePaths).map(entryPath),
       ...(input.address !== undefined
         ? { address: string(input.address) }
         : {}),
       ...(input.variantOf !== undefined
-        ? { variantOf: id(input.variantOf) }
+        ? { variantOf: entryPath(input.variantOf) }
         : {}),
     };
   if (input.variantOf !== undefined)
@@ -168,7 +167,7 @@ export function readEntry(value: unknown): CatalogueRecord {
       ...base,
       kind,
       ...axes,
-      variantOf: id(input.variantOf),
+      variantOf: entryPath(input.variantOf),
       props: readProps(input.props),
       suppliedSlots: array(input.suppliedSlots).map(string),
       views: array(input.views).map(readView),

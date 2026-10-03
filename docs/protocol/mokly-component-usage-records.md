@@ -2,10 +2,8 @@
 
 ## Delivery Status
 
-Implemented for manifest v7, including strict admission of baseline usage
-records; the [path identity plan](../../plans/path-identity.md) carries the
-same records in manifest v8, where `componentId` names a component parent by
-its path.
+Implemented for manifest v8, including strict admission of baseline usage
+records. `componentId` names a component parent by its path.
 
 This contract owns the per-view component instance, slot, range, style, and
 resource records stored by [manifest v8](./mokly-component-manifest.md).

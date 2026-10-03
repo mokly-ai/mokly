@@ -51,7 +51,10 @@ entrypoints and shares containing-block-aware clipping with the inspector in
 mask, labels, selection and observer lifecycle.
 
 `same_origin_identity.ts` is the single document-authentication boundary for
-same-origin mounts. It records authenticated `Document` objects without
+same-origin mounts. Its shared pathname normalization accepts a page’s
+`index.html` and its directory with or without a trailing slash; viewport
+files also accept the host’s extensionless form. Origins and queries still
+match exactly. It records authenticated `Document` objects without
 retaining them, transfers mount-time navigation ownership only when the exact
 current object was previously authenticated for that frame, and separately
 checks every watcher or `load` candidate against the assigned resource through

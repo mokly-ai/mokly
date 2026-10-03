@@ -287,7 +287,7 @@ difference result.
 
 ## Mockup Contract
 
-The owning catalogue is `examples/basic/entries/design`, generated under
+The owning catalogue is `examples/basic/specs/design`, generated under
 `examples/basic/generated/design`; use its registered shared components and
 existing screen compositions. Appearance screens and their affected shared
 component samples publish Light and Dark fragments for both viewports through
@@ -317,17 +317,17 @@ fallback caption in the Dark render, because that is a fact about the screen.
 Device-screen tokens stay independent of the interface palette.
 
 A linked Appearance section sits under Browse, with matching source directories
-under `examples/basic/entries/design/browse/appearance/`. Each design page
+under `examples/basic/specs/design/browse/appearance/`. Each design page
 names a canonical screen; other screens can share its folder. The folder
 itself has no page of its own. Folders below are the resolved folder titles
 under `Design › Mokly design › Browse shell`.
 
-| Folder                              | Owning screens                                                                                        |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Appearance                          | `design-appearance-overview`: the canonical interface around a selected screen, all light or all dark |
-| Appearance › Appearance states      | Auto selector, light-only screen fallback                                                             |
-| Appearance › Panels and comparisons | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference            |
-| Appearance › Status and recovery    | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow                        |
+| Folder                              | Owning screens                                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Appearance                          | `design/browse/appearance/overview`: the canonical interface around a selected screen, all light or all dark |
+| Appearance › Appearance states      | Auto selector, light-only screen fallback                                                                    |
+| Appearance › Panels and comparisons | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference                   |
+| Appearance › Status and recovery    | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow                               |
 
 The catalogue groups the overview and its three nested families; artboards
 carry no navigation footer. Each screen has its own mobile and desktop
@@ -337,11 +337,11 @@ exact entries are listed in the
 [shell design inventory](./mokly-shell-design-inventory.md). The
 branch-only `light-preview` and `dark-preview` scenarios are removed by the
 single-control correction. `design-review-dark-scheme` is removed;
-`design-review-changed` renders in both schemes and subsumes its comparison
-state. The existing `design-browse-dark-scheme` and `design-browse-light-only`
+`design/changes/outcomes/changed` renders in both schemes and subsumes its comparison
+state. The existing `design/browse/views/screen/dark-scheme` and `design/browse/views/screen/light-only`
 entries remain as Welcome variants with generated Light and Dark artboards.
-Their content now follows the one Appearance selector, as do `design-browse-screen`
-and `design-browse-details-screen`; none depicts a separate preview-scheme
+Their content now follows the one Appearance selector, as do `design/browse/views/screen`
+and `design/browse/views/details-screen`; none depicts a separate preview-scheme
 control. `controls/view-controls` carries no scheme control, and the design
 catalogue authors no scheme link pairs. Update inventories, style ownership and
 example documentation, and keep notes outside the screens.

@@ -1,5 +1,5 @@
 import { canonicalJson } from "../components/data.js";
-import { isCatalogueId, isEntryId } from "../navigation/logical.js";
+import { isKebabCase, isEntryPath } from "../navigation/logical.js";
 
 export function reviewInvalid(message: string): never {
   throw new Error(`[mokly/review] ${message}`);
@@ -44,14 +44,14 @@ export function reviewString(value: unknown): string {
     reviewInvalid("expected a nonempty string");
   return value;
 }
-export function reviewId(value: unknown): string {
-  const id = reviewString(value);
-  if (!isEntryId(id)) reviewInvalid("invalid entry id");
-  return id;
+export function reviewEntryPath(value: unknown): string {
+  const path = reviewString(value);
+  if (!isEntryPath(path)) reviewInvalid("invalid entry path");
+  return path;
 }
 export function reviewIgnoreId(value: unknown): string {
   const id = reviewString(value);
-  if (!isCatalogueId(id)) reviewInvalid("invalid ReviewIgnore id");
+  if (!isKebabCase(id)) reviewInvalid("invalid ReviewIgnore id");
   return id;
 }
 export function reviewPath(value: unknown): string {
@@ -91,8 +91,8 @@ export function requireEqual(a: unknown, b: unknown): void {
     reviewInvalid("inconsistent sides or references");
 }
 export function reviewAddress(value: unknown): Record<string, unknown> {
-  const entry = reviewObject(value, ["id", "title"]);
-  reviewId(entry.id);
+  const entry = reviewObject(value, ["path", "title"]);
+  reviewEntryPath(entry.path);
   reviewString(entry.title);
   return entry;
 }

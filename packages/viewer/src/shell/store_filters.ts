@@ -28,7 +28,7 @@ export function withRoute(
   catalogue: Catalogue,
   sections: readonly NavSectionNode[],
 ): ShellState {
-  let selection = { ...state.selection, screenId: routeScreenId(route) };
+  let selection = { ...state.selection, screenPath: routeScreenId(route) };
   if (route.snapshot) selection.snapshotId = route.snapshot;
   else delete selection.snapshotId;
   if (route.viewport) selection.viewport = route.viewport;
@@ -36,7 +36,7 @@ export function withRoute(
     selection = revealSelection(catalogue.publicModel, selection);
   let next = withSelection(state, selection, false);
   if (route.view.kind === "target") {
-    const path = disclosurePath(sections, route.view.target.entry.id);
+    const path = disclosurePath(sections, route.view.target.entry.path);
     next = {
       ...next,
       disclosures: openDisclosures(next.disclosures, path),

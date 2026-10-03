@@ -15,11 +15,7 @@ import {
   type ShellBrowserActions,
 } from "./store_browser_actions.js";
 import { sameShellRoute } from "./store_browser_routes.js";
-import {
-  browserRouteHref,
-  canonicalHistoricalUrl,
-  isProviderNormalizedRoute,
-} from "./store_browser_urls.js";
+import { canonicalRouteUrl } from "./store_browser_urls.js";
 import { withRoute } from "./store_filters.js";
 import {
   captureScrolls,
@@ -46,7 +42,6 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
   const stateRef = useRef(input.state);
   stateRef.current = input.state;
   const sequence = useRef<AbortController | undefined>(undefined);
-  const providerNormalizedRoutes = useRef(false);
   const installedDocumentKey = useRef<string | undefined>(undefined);
   const pendingScroll = useRef<Readonly<Record<string, number>> | undefined>(
     undefined,
@@ -66,6 +61,8 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       if (push) {
         persistScroll(win, captureScrolls(document));
         win.history.pushState({ scrolls: {} }, "", url);
+      } else if (win.location.href !== url.href) {
+        win.history.replaceState(win.history.state, "", url);
       }
       installedDocumentKey.current = routeDocumentKey(url);
       if (restore) {
@@ -92,20 +89,18 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       const sameDocument =
         installedDocumentKey.current === routeDocumentKey(requested);
       const requestedRoute = routeFromUrl(input.catalogue, requested);
-      let canonical = requested;
-      if (requestedRoute.view.kind === "target")
+      let canonical = canonicalRouteUrl(requested, requestedRoute);
+      if (requestedRoute.view.kind === "target") {
         canonical = new URL(
-          browserRouteHref(
-            routeHref(
-              requestedRoute.view.target.entry.kind,
-              requestedRoute.view.target.entry.id,
-              requestedRoute.fragment,
-              requestedRoute,
-            ),
-            providerNormalizedRoutes.current,
+          routeHref(
+            requestedRoute.view.target.entry.path,
+            requestedRoute.fragment,
+            requestedRoute,
           ),
           requested,
         );
+        canonical.hash = requested.hash;
+      }
       const controller = new AbortController();
       sequence.current?.abort();
       sequence.current = controller;
@@ -156,17 +151,9 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     if (!input.interactive) return;
     const win = window;
     if (win.history.scrollRestoration) win.history.scrollRestoration = "manual";
-    providerNormalizedRoutes.current = isProviderNormalizedRoute(
-      win.location.pathname,
-      input.context.delivery?.canonicalPath,
-    );
     let initialUrl = new URL(win.location.href);
     let initialRoute = routeFromUrl(input.catalogue, initialUrl);
-    const canonicalInitial = canonicalHistoricalUrl(
-      initialUrl,
-      initialRoute,
-      providerNormalizedRoutes.current,
-    );
+    const canonicalInitial = canonicalRouteUrl(initialUrl, initialRoute);
     if (canonicalInitial.href !== initialUrl.href) {
       win.history.replaceState(win.history.state, "", canonicalInitial);
       initialUrl = canonicalInitial;

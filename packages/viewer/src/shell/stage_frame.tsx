@@ -33,7 +33,7 @@ export function StageFrame({
   hasDarkFragments,
   previewViews,
   stepIndex,
-  variantId,
+  variantPath,
   views,
   viewport,
 }: {
@@ -43,7 +43,7 @@ export function StageFrame({
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
   stepIndex?: number;
-  variantId?: string;
+  variantPath?: string;
   views: readonly CatalogueView[];
   viewport: "desktop" | "mobile";
 }) {
@@ -58,11 +58,16 @@ export function StageFrame({
   );
   const previewLight = generatedView(
     previewViews,
-    variantId,
+    variantPath,
     viewport,
     "light",
   );
-  const previewDark = generatedView(previewViews, variantId, viewport, "dark");
+  const previewDark = generatedView(
+    previewViews,
+    variantPath,
+    viewport,
+    "dark",
+  );
   const selected = selection.colorScheme === "dark" ? (dark ?? light) : light;
   const preview =
     selection.colorScheme === "dark"
@@ -76,15 +81,15 @@ export function StageFrame({
   const previewAdapter = useMemo(temporaryPreviewAdapter, []);
   const identity = useMemo<ShellFrameIdentity>(
     () => ({
-      entryId: entry.id,
+      entryId: entry.path,
       viewport,
       ...(preview || selected
         ? { colorScheme: preview?.colorScheme ?? selected!.colorScheme }
         : {}),
       ...(stepIndex === undefined ? {} : { stepIndex }),
-      ...(variantId ? { variantId } : {}),
+      ...(variantPath ? { variantPath } : {}),
     }),
-    [entry.id, preview, selected, stepIndex, variantId, viewport],
+    [entry.path, preview, selected, stepIndex, variantPath, viewport],
   );
   const mounted = useMountedShellFrame({
     ...(temporary ? { adapter: previewAdapter } : {}),
@@ -135,7 +140,7 @@ export function StageFrame({
     <PhoneFrame>{frame}</PhoneFrame>
   ) : (
     <BrowserFrame
-      address={entry.address ?? entryRoute("screen", entry.id)}
+      address={entry.address ?? entryRoute(entry.path)}
       frameKey={frameIdentityKey(identity)}
     >
       {frame}
@@ -181,10 +186,10 @@ export function DocumentStageFrame({
 }) {
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
-  const source = framePath(`static/${entryRoute("page", entry.id)}`, fragment);
+  const source = framePath(`static/${entryRoute(entry.path)}`, fragment);
   const identity = useMemo<ShellFrameIdentity>(
-    () => ({ entryId: entry.id }),
-    [entry.id],
+    () => ({ entryId: entry.path }),
+    [entry.path],
   );
   const mounted = useMountedShellFrame({
     enabled: store?.interactive ?? false,
@@ -247,7 +252,7 @@ function FrameLabel({
 function frameIdentityKey(identity: ShellFrameIdentity): string {
   return JSON.stringify([
     identity.entryId,
-    identity.variantId,
+    identity.variantPath,
     identity.stepIndex,
     identity.viewport,
   ]);

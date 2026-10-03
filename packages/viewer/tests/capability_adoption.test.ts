@@ -20,11 +20,13 @@ import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
+import { withoutTreeEntries } from "./catalogue_fixture.js";
+
 const fixtureModel = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -41,10 +43,10 @@ test("live evidence rebinds records while preserving interaction state", () => {
   const current = viewerCatalogue(model);
   const route = routeFromUrl(
     current,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, ["home"]);
+  const nextModel = evidenceRevision(model, ["product/browse/home"]);
   const revision = viewerRevision(nextModel, source, route);
   const next = adoptedViewerCatalogue(current, source, route, revision);
   assert.ok(next);
@@ -63,7 +65,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
       drawerOpen: true,
       filterBaselineDisclosures: null,
       navScroll: 73,
-      query: "home",
+      query: "product/browse/home",
       regionScrolls: { stage: 29 },
       view: "all",
       viewport: "mobile",
@@ -74,7 +76,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
   assert.equal(adopted.detailsOpen, true);
   assert.equal(adopted.drawerOpen, true);
   assert.equal(adopted.navScroll, 73);
-  assert.equal(adopted.query, "home");
+  assert.equal(adopted.query, "product/browse/home");
   assert.deepEqual(adopted.regionScrolls, { stage: 29 });
   assert.equal(adopted.selection.viewport, "mobile");
   assert.equal(adopted.route.view.kind, "target");
@@ -87,7 +89,10 @@ test("live evidence rebinds records while preserving interaction state", () => {
     adopted,
   );
   assert.equal(projected.updateVersion, 5);
-  assert.deepEqual(projected.changedIds, ["home"]);
+  assert.deepEqual(projected.changedEntries, [
+    "product/browse/home",
+    "product",
+  ]);
 });
 
 test("live evidence preserves host shell mode and comparison availability", () => {
@@ -95,7 +100,7 @@ test("live evidence preserves host shell mode and comparison availability", () =
   const catalogue = viewerCatalogue(model);
   const route = routeFromUrl(
     catalogue,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const source = capabilitySource(model, 4);
   const context = {
@@ -125,10 +130,10 @@ test("newer evidence adopts when the server update version is unchanged", () => 
   const current = viewerCatalogue(model);
   const route = routeFromUrl(
     current,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, ["home"]);
+  const nextModel = evidenceRevision(model, ["product/browse/home"]);
   const revision = viewerRevision(nextModel, source, route);
   revision.source = { ...revision.source, updateVersion: source.updateVersion };
   const context = {
@@ -157,7 +162,10 @@ test("newer evidence adopts when the server update version is unchanged", () => 
   );
   assert.deepEqual(commit.snapshot.source, revision.source);
   assert.deepEqual(commit.snapshot.workspace?.request.source, revision.source);
-  assert.equal(commit.snapshot.workspace?.value.entry.id, "home");
+  assert.equal(
+    commit.snapshot.workspace?.value.entry.path,
+    "product/browse/home",
+  );
 });
 
 test("live evidence retains unchanged identity-less historical metadata", () => {
@@ -165,12 +173,13 @@ test("live evidence retains unchanged identity-less historical metadata", () => 
   const historical: CatalogueReadModel = {
     ...model,
     screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen }],
+    tree: withoutTreeEntries(model.tree, [screen.path]),
+    removedEntries: [{ folderTitles: [], entry: screen }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
+    new URL(`https://example.test${viewHref(screen.path)}`),
   );
   const source = capabilitySource(historical, 4);
   const unchanged: CatalogueReadModel = {
@@ -185,7 +194,7 @@ test("live evidence retains unchanged identity-less historical metadata", () => 
   assert.ok(next);
   const context = viewerContext(historical, {
     ...defaultSelection,
-    screenId: screen.id,
+    screenPath: screen.path,
   });
   const state = createInitialShellState(
     current,
@@ -209,12 +218,13 @@ test("live evidence rejects changed or removed identity-less history", () => {
   const historical: CatalogueReadModel = {
     ...model,
     screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen }],
+    tree: withoutTreeEntries(model.tree, [screen.path]),
+    removedEntries: [{ folderTitles: [], entry: screen }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
+    new URL(`https://example.test${viewHref(screen.path)}`),
   );
   const source = capabilitySource(historical, 4);
   const changed: CatalogueReadModel = {
@@ -223,7 +233,9 @@ test("live evidence rejects changed or removed identity-less history", () => {
       ...historical.revision,
       evidence: historical.revision.evidence + 1,
     },
-    removedEntries: [{ entry: { ...screen, title: "Earlier home" } }],
+    removedEntries: [
+      { folderTitles: [], entry: { ...screen, title: "Earlier home" } },
+    ],
   };
   const removed: CatalogueReadModel = {
     ...changed,
@@ -246,7 +258,7 @@ test("live evidence rejects private workspace removal drift", () => {
   const current = viewerCatalogue(model);
   const route = routeFromUrl(
     current,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const source = capabilitySource(model, 4);
   const nextModel = evidenceRevision(model, []);
@@ -262,9 +274,9 @@ test("live evidence rejects private workspace removal drift", () => {
 
 function evidenceRevision(
   value: CatalogueReadModel,
-  changedIds: readonly string[],
+  changedEntries: readonly string[],
 ): CatalogueReadModel {
-  const changed = new Set(changedIds);
+  const changed = new Set(changedEntries);
   return {
     ...value,
     revision: { ...value.revision, evidence: value.revision.evidence + 1 },
@@ -272,8 +284,8 @@ function evidenceRevision(
       ...entry,
       changes: {
         status: "ready" as const,
-        kind: changed.has(entry.id) ? "changed" : "unmodified",
-        included: changed.has(entry.id),
+        kind: changed.has(entry.path) ? "changed" : "unmodified",
+        included: changed.has(entry.path),
       },
     })),
   };
@@ -299,7 +311,7 @@ function viewerRevision(
 ): ViewerEvidenceRevision {
   const next = viewerCatalogue(value);
   const routeValue =
-    route.view.kind === "target" ? route.view.target.entry.id : undefined;
+    route.view.kind === "target" ? route.view.target.entry.path : undefined;
   const entry = routeValue ? catalogueRouteEntry(next, routeValue) : undefined;
   const workspace =
     entry &&

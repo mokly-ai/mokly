@@ -150,11 +150,12 @@ async function generateExport(
           const pagePreviews = await captureRemovedPagePreviews(
             new RepositoryRemovedPagePreview(config, prepared.reader),
             {
-              schemaVersion: 1,
+              schemaVersion: 2,
+              movedEntries: [],
               baseline,
               baseCommit: comparison.result.baseCommit,
               baseRef: comparison.result.baseRef,
-              changedIds: removedEntries.map(({ entry }) => entry.id),
+              changedEntries: removedEntries.map(({ entry }) => entry.path),
               removedEntries,
             },
             options.signal ?? new AbortController().signal,

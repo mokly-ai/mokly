@@ -8,26 +8,26 @@ import {
 
 test("watch update messages preserve available and unavailable route state", () => {
   assert.deepEqual(childUpdateMessage(2, ["home"]), {
-    changedIds: ["home"],
+    changedEntries: ["home"],
     componentChanges: null,
     type: "update",
     version: 2,
   });
   assert.deepEqual(childUpdateMessage(3, undefined), {
-    changedIds: null,
+    changedEntries: null,
     componentChanges: null,
     type: "update",
     version: 3,
   });
   assert.deepEqual(
     parseChildUpdateMessage({
-      changedIds: [],
+      changedEntries: [],
       componentChanges: null,
       type: "update",
       version: 4,
     }),
     {
-      changedIds: [],
+      changedEntries: [],
       componentChanges: null,
       type: "update",
       version: 4,
@@ -42,28 +42,43 @@ test("watch update parsing rejects incomplete or unsafe IPC values", () => {
     { ...childUpdateMessage(2, undefined), kind: null },
     { ...childUpdateMessage(2, undefined), changesStatus: "unknown" },
     { ...childUpdateMessage(2, undefined), changesStatus: null },
-    { changedIds: null, componentChanges: null, type: "reload", version: 2 },
-    { changedIds: null, componentChanges: null, type: "update", version: 0 },
     {
-      changedIds: null,
+      changedEntries: null,
+      componentChanges: null,
+      type: "reload",
+      version: 2,
+    },
+    {
+      changedEntries: null,
+      componentChanges: null,
+      type: "update",
+      version: 0,
+    },
+    {
+      changedEntries: null,
       componentChanges: null,
       type: "update",
       version: 1.5,
     },
     {
-      changedIds: undefined,
+      changedEntries: undefined,
       componentChanges: null,
       type: "update",
       version: 2,
     },
     {
-      changedIds: ["../home.html"],
+      changedEntries: ["../home.html"],
       componentChanges: null,
       type: "update",
       version: 2,
     },
-    { changedIds: [42], componentChanges: null, type: "update", version: 2 },
-    { changedIds: null, type: "update", version: 2 },
+    {
+      changedEntries: [42],
+      componentChanges: null,
+      type: "update",
+      version: 2,
+    },
+    { changedEntries: null, type: "update", version: 2 },
   ]) {
     assert.equal(parseChildUpdateMessage(value), undefined);
   }

@@ -1,6 +1,6 @@
 /** Pair current view documents with their baseline paths and material-change eligibility. */
 import type { ColorScheme, Viewport } from "@mokly/viewer";
-import type { HistoricalManifest, ManifestV7 } from "@mokly/viewer/data";
+import type { HistoricalManifest, ManifestV8 } from "@mokly/viewer/data";
 import { entryRoute, VIEWPORTS } from "@mokly/viewer/data";
 
 import { fragmentForView, unionColorSchemes } from "../review/screen_views.js";
@@ -14,21 +14,21 @@ export interface DocumentPair {
 }
 
 export function documentPairs(
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   baseline: HistoricalManifest,
   changed: ReadonlySet<string>,
   documents: "all" | "pages",
 ): DocumentPair[] {
-  const bases = new Map(baseline.entries.map((entry) => [entry.id, entry]));
+  const bases = new Map(
+    baseline.entries.map((entry) => [entry.path.toLowerCase(), entry]),
+  );
   const pairs: DocumentPair[] = [];
   for (const screen of manifest.entries) {
-    const baseEntry = bases.get(screen.id);
+    const baseEntry = bases.get(screen.path.toLowerCase());
     if (screen.kind === "page") {
       const base =
-        baseEntry?.kind === "page"
-          ? entryRoute("page", baseEntry.id)
-          : undefined;
-      const head = entryRoute("page", screen.id);
+        baseEntry?.kind === "page" ? entryRoute(baseEntry.path) : undefined;
+      const head = entryRoute(screen.path);
       pairs.push({
         ...(base ? { base } : {}),
         head,
@@ -49,9 +49,9 @@ export function documentPairs(
         pairs.push({
           ...(before ? { base: before } : {}),
           head: after,
-          context: `${entryRoute("screen", screen.id)} (${viewport}, ${scheme})`,
+          context: `${entryRoute(screen.path)} (${viewport}, ${scheme})`,
           changed: before !== after || changed.has(after),
-          view: { id: screen.id, viewport, colorScheme: scheme },
+          view: { id: screen.path, viewport, colorScheme: scheme },
         });
       }
     }

@@ -25,7 +25,7 @@ for (const preference of [undefined, "closed"] as const) {
         localStorage.setItem("mokly:details-disclosure", value);
       }, preference);
     const gate = await delayHydration(page, developmentBundle);
-    const navigation = page.goto("/view/pages/example-handbook.html");
+    const navigation = page.goto("/view/example/getting-started/");
     await gate.requested;
     const details = page.locator("[data-mokly-details]");
     await details.locator("summary").click();
@@ -71,7 +71,7 @@ test("an early navigation disclosure beats reload recovery", async ({
     );
   });
   const gate = await delayHydration(page, developmentBundle);
-  const navigation = page.goto("/view/screens/example-welcome.html");
+  const navigation = page.goto("/view/example/screens/welcome/");
   await gate.requested;
   const pages = page.locator('details[data-nav-disclosure="section:pages"]');
   await pages.locator(":scope > summary").click();
@@ -98,7 +98,7 @@ test("Details remains usable for the session when localStorage is unavailable", 
     });
   });
   const gate = await delayHydration(page, developmentBundle);
-  const navigation = page.goto("/view/screens/example-welcome.html");
+  const navigation = page.goto("/view/example/screens/welcome/");
   await gate.requested;
   const inspector = page.locator("[data-workspace-inspector]");
   await expect(inspector).not.toHaveAttribute("data-open", "true");
@@ -110,7 +110,7 @@ test("Details remains usable for the session when localStorage is unavailable", 
   await expect(inspector).toHaveAttribute("data-open", "true");
 
   await page
-    .locator('a[data-nav-row][data-route="screens/example-details.html"]')
+    .locator('a[data-nav-row][data-route="example/screens/details/index.html"]')
     .click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect(inspector).toHaveAttribute("data-open", "true");
@@ -127,20 +127,20 @@ test("stored closed active ancestry is open for the first React render", async (
       "mokly:nav-disclosure:v3",
       JSON.stringify({
         "section:pages": false,
-        "folder:pages:Example": false,
-        "folder:pages:Example/Screens": false,
+        "folder:pages:example": false,
+        "folder:pages:example/screens": false,
       }),
     );
   });
   const gate = await delayHydration(page, developmentBundle);
-  const navigation = page.goto("/view/screens/example-welcome.html");
+  const navigation = page.goto("/view/example/screens/welcome/");
   await gate.requested;
   const pages = page.locator('details[data-nav-disclosure="section:pages"]');
   const example = page.locator(
-    'details[data-nav-disclosure="folder:pages:Example"]',
+    'details[data-nav-disclosure="folder:pages:example"]',
   );
   const screens = page.locator(
-    'details[data-nav-disclosure="folder:pages:Example/Screens"]',
+    'details[data-nav-disclosure="folder:pages:example/screens"]',
   );
   await expect(pages).not.toHaveAttribute("open", "");
   await expect(example).not.toHaveAttribute("open", "");

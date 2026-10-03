@@ -4,9 +4,8 @@
 
 The basic consumer records shared instances without changing existing design
 screens. Registered entries live under Components → Design → Shared components,
-beside Example Action and Toolbar. The generated manifest owns all counts. The
-path vocabulary below is approved; the library keeps ids and `navPath` until the
-[path identity plan](../../plans/path-identity.md) migrates the example.
+beside Example Action and Toolbar. The generated manifest owns all counts;
+the library and its consuming screens use paths.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
 define delivery; [shell design](./mokly-shell-design.md) and
@@ -21,7 +20,7 @@ implementations used by those pages. One component implementation or owned-style
 edit appears at its component entry; consuming artboards are affected unless
 they also have independent changes.
 
-This is adoption under `examples/basic/entries/design`, the repository's owning
+This is adoption under `examples/basic/specs/design`, the repository's owning
 mockup catalogue. It does not replace the package's actual browser/server shell
 with example code or move consumer fixtures into package runtime code. Existing
 Example Action/Toolbar components, miniature subject screens and pictured usage
@@ -49,14 +48,14 @@ the inventory; each parent's variant entries nest beneath its row under the
 [variant contract](./mokly-variants.md) rather than adding folder members.
 
 Export `defineComponent` definitions from entry modules under
-`entries/design/library/`; each component's path derives from its module
+`specs/design/library/`; each component's path derives from its module
 location, or a declared `path`, under the [path contract](./mokly-paths.md).
 
 For inventory group `G` and slug `S`:
 
 - Component slug: `design-ui-S`; its path places it in gallery `G` under the
   [path contract](./mokly-paths.md).
-- Registration/schema/variants: `entries/design/library/G/S.tsx`, split into
+- Registration/schema/variants: `specs/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its
   exclusive implementation helpers. Source and visible hierarchy must agree.
 - Public stylesheet: `generated/design-library/G/S.css` when styles are owned

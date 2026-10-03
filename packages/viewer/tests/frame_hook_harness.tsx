@@ -179,7 +179,7 @@ export function installFrameHookHarness(): void {
         pendingUpdates: [],
         registry: undefined,
         root: createRoot(element),
-        source: "/static/screens/frame-hook.html",
+        source: "/static/frame-hook/index.html",
         status: "unavailable",
         strict: options.strict ?? false,
         supportsUsageUpdates: options.supportsUsageUpdates ?? true,

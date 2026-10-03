@@ -33,7 +33,7 @@ export async function assertFreshSourceInventory(
   config.configSourceFiles = current.configSourceFiles ?? [];
   validateGeneratedOutputPaths(
     manifest.entries.flatMap((entry) => {
-      if (entry.kind === "page") return [entryRoute("page", entry.id)];
+      if (entry.kind === "page") return [entryRoute(entry.path)];
       return generatedViews(entry).map((view) => view.path);
     }),
     config,

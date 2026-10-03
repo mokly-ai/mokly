@@ -1,5 +1,5 @@
 import { generatedViews, orderedInstances } from "../components/views.js";
-import type { ReviewResultV4 } from "../review/component_types.js";
+import type { ReviewResultV5 } from "../review/component_types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { dedupeUsageLinks } from "./usage_links.js";
@@ -25,11 +25,11 @@ export interface UsageLink {
 /** Project review evidence into navigable affected-consumer links. */
 export function affectedUsageLinks(
   catalogue: Catalogue,
-  result: ReviewResultV4 | undefined,
+  result: ReviewResultV5 | undefined,
   componentId: string | undefined,
 ): UsageLink[] {
   const currentEntriesById = new Map(
-    catalogue.manifest.entries.map((candidate) => [candidate.id, candidate]),
+    catalogue.manifest.entries.map((candidate) => [candidate.path, candidate]),
   );
   const links: UsageLink[] = (result?.affectedConsumers ?? [])
     .filter((item) => item.changedComponentId === componentId)
@@ -37,12 +37,12 @@ export function affectedUsageLinks(
       item.evidence.map((evidence) => {
         const entryId =
           evidence.context.kind === "component"
-            ? evidence.context.variantId
-            : evidence.context.entry.id;
+            ? evidence.context.variantPath
+            : evidence.context.entry.path;
         const destination =
           currentEntriesById.get(entryId) ??
           catalogue.removedEntries.find(
-            ({ entry: candidate }) => candidate.id === entryId,
+            ({ entry: candidate }) => candidate.path === entryId,
           )?.entry;
         const current = currentEntriesById.get(entryId);
         const removed = current === undefined;
@@ -77,9 +77,9 @@ export function usedByUsageLinks(
     if (owner.kind !== "screen" && owner.kind !== "component") return [];
     return generatedViews(owner).flatMap((view) =>
       orderedInstances(view.usage)
-        .filter((instance) => instance.componentId === evidenceEntry.id)
+        .filter((instance) => instance.componentId === evidenceEntry.path)
         .map((instance) => ({
-          entryId: owner.id,
+          entryId: owner.path,
           entryKind: owner.kind,
           title: workspaceEntryTitle(catalogue, owner),
           viewport: view.viewport,

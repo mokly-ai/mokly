@@ -4,10 +4,9 @@
 
 Variant entry navigation, component-shaped icons, sibling comparison
 continuity, removed-variant Dark availability, and fallback breadcrumbs are
-implemented. The path-keyed rows, the `variants:<path>` disclosure key, the
-Specs section, and the `Moved` label below are the approved contract; the
-current implementation still uses section-and-id keys and ids until the
-[path identity plan](../../plans/path-identity.md) delivers them.
+implemented with path-keyed rows and the `variants:<path>` disclosure key.
+The shell retains Pages; the Specs section and `Moved` label await delivery
+through the [path identity plan](../../plans/path-identity.md).
 
 This contract owns the shell presentation of screen and component variants.
 Variant authoring, inheritance, manifest relationships, and generated views are

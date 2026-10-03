@@ -1,10 +1,7 @@
-import path from "node:path";
-
 import { expect, test, type Page } from "@playwright/test";
 
-import { renderReviewArtifact } from "../../dist/review/artifact.js";
-import { compareReview } from "../../dist/review/compare.js";
-import { writeReviewArtifact } from "../../dist/review/write.js";
+import { readCatalogueChanges } from "../../dist/server/component_changes.js";
+import { configuredServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
@@ -19,7 +16,7 @@ test.beforeAll(async () => {
       source
         .replace(/ {2}defineScreen\([^\n]+\)\n/, "")
         .replace(
-          ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+          ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
           "",
         )
         .replace(
@@ -27,32 +24,19 @@ test.beforeAll(async () => {
           '<button className="changed" data-viewport=',
         ),
   );
-  const compared = await compareReview(
-    fixture.after,
+  const changes = await readCatalogueChanges(
     fixture.config,
-    fixture.git,
+    fixture.after.manifest,
     "main",
+    fixture.git,
+    "a".repeat(40),
   );
-  if (compared.result.schemaVersion !== 4)
-    throw new Error("Expected component result");
+  if (!changes.result) throw new Error("Expected component result");
   server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
-    componentChanges: {
-      baseline: fixture.before.manifest,
-      result: compared.result,
-    },
-    review: {
-      base: "main",
-      outDir: path.join(fixture.root, ".review"),
-      generate: async () => {
-        await writeReviewArtifact(
-          renderReviewArtifact(compared),
-          path.join(fixture.root, ".review"),
-          fixture.config,
-        );
-      },
-    },
+    componentChanges: changes,
+    review: configuredServedReview(fixture.config, "main", fixture.git),
   });
   fixture.beforeRemove(() => server.close());
 });
@@ -78,7 +62,7 @@ async function expectRemovedPrevious(page: Page) {
 test("removed affected-screen links and legacy comparison URLs stay current", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   const removed = page
     .getByRole("region", { name: "Inspector", exact: true })
@@ -87,25 +71,26 @@ test("removed affected-screen links and legacy comparison URLs stay current", as
   await removed.click();
   await expectRemovedPrevious(page);
 
-  await page.goto(`${server.url}/view/screens/home.html?comparison=side`);
+  await page.goto(`${server.url}/view/home/?comparison=side`);
   await expectRemovedPrevious(page);
 });
 
 test("removed component variants still honor eligible comparison URLs", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
+  await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
   await page.click('[data-filter="changed"]');
   const removed = page.locator(
-    'a[data-nav-row][data-route="components/action-disabled.html"]',
+    'a[data-nav-row][data-route="action/disabled/index.html"]',
   );
   await expect(removed).toHaveAttribute(
     "href",
-    /\/view\/components\/action-disabled\.html\?snapshot=[a-f0-9]{64}$/,
+    /\/view\/action\/disabled\/\?snapshot=[a-f0-9]{64}$/,
   );
   await removed.click();
   await expect(page).toHaveURL(
-    /\/view\/components\/action-disabled\.html\?snapshot=[a-f0-9]{64}$/,
+    /\/view\/action\/disabled\/\?snapshot=[a-f0-9]{64}$/,
   );
   await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
     "Disabled · Removed",

@@ -60,7 +60,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("saved variants share a page pattern and consuming-screen links work by keyboard", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("overview", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/overview", viewport),
+      );
       await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
       await expect(page.locator(".phone-frame, .browser-frame")).toHaveCount(0);
       await page
@@ -68,7 +70,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         .getByRole("link", { name: "Disabled", exact: true })
         .click();
       await expect(page).toHaveURL(
-        componentDesignUrl("pages/variants", viewport),
+        componentDesignUrl("design/components/pages/variants", viewport),
       );
       const preview = page.getByRole("region", {
         name: `${viewport === "desktop" ? "Desktop" : "Mobile"} component preview`,
@@ -86,7 +88,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await welcome.focus();
       await page.keyboard.press("Enter");
       await expect(page).toHaveURL(
-        componentDesignUrl("inspection/details", viewport),
+        componentDesignUrl(
+          "design/components/inspection/inspection-details",
+          viewport,
+        ),
       );
       await expect(page.locator(".mbk-screen-head h2")).toHaveText("Welcome");
       await expect(
@@ -97,7 +102,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("view and comparison controls expose keyboard focus and selected state", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("overview", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/overview", viewport),
+      );
       const selectedView = page.getByRole("combobox", {
         name: "Preview viewport",
       });
@@ -107,7 +114,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await expect(
         page.getByRole("switch", { name: "Dark preview" }),
       ).toHaveCount(0);
-      await page.goto(componentDesignUrl("pages/affected", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/pages/affected", viewport),
+      );
       await expect(
         page
           .getByRole("group", { name: "Comparison mode" })
@@ -118,7 +127,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("component-only and independent screen changes have different membership and counts", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("pages/affected", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/pages/affected", viewport),
+      );
       const count =
         viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
       await expect(page.locator(count)).toHaveText("1");
@@ -136,7 +147,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
           page.locator(".mbk-nav-scroll .mbk-nav-changed"),
         ).toHaveCount(2);
       }
-      await page.goto(componentDesignUrl("inspection/direct-change", viewport));
+      await page.goto(
+        componentDesignUrl(
+          "design/components/inspection/inspection-direct-change",
+          viewport,
+        ),
+      );
       await expect(page.locator(count)).toHaveText("2");
       await expect(
         page.locator(".ce-selected-instance .ce-props"),
@@ -162,7 +178,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ],
         ["nested", [[".ce-nested-cutout", ".ce-demo-toolbar .ce-action"]]],
       ] as const) {
-        await page.goto(componentDesignUrl(`inspection/${route}`, viewport));
+        await page.goto(
+          componentDesignUrl(
+            `design/components/inspection/inspection-${route}`,
+            viewport,
+          ),
+        );
         await expect(
           page.getByRole("switch", { name: "Highlight components" }),
         ).toBeChecked();
@@ -219,18 +240,27 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("missing metadata, empty usage, invisible instances, and removed states stay distinct", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("states/empty", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/states/empty", viewport),
+      );
       await expect(
         page.getByText("No registered components are used in this view."),
       ).toBeVisible();
-      await page.goto(componentDesignUrl("states/unavailable", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/states/unavailable", viewport),
+      );
       await expect(
         page.getByText("Component inspection is unavailable for this screen."),
       ).toBeVisible();
       await expect(
         page.getByRole("switch", { name: "Highlight components" }),
       ).toBeDisabled();
-      await page.goto(componentDesignUrl("inspection/details", viewport));
+      await page.goto(
+        componentDesignUrl(
+          "design/components/inspection/inspection-details",
+          viewport,
+        ),
+      );
       await page
         .getByRole("button", { name: "Components", exact: true })
         .click();
@@ -241,11 +271,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await expect(
         page.getByText("No visible region", { exact: true }),
       ).toBeVisible();
-      await page.goto(componentDesignUrl("states/unused", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/states/unused", viewport),
+      );
       await expect(
         page.getByText("No screens or components use Badge yet."),
       ).toBeVisible();
-      await page.goto(componentDesignUrl("states/removed", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/states/removed", viewport),
+      );
       await expect(
         page
           .locator(".ce-preview-view:visible")
@@ -256,7 +290,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         .getByRole("link", { name: "Farewell" })
         .click();
       await expect(page).toHaveURL(
-        componentDesignUrl("states/removed-consumer", viewport),
+        componentDesignUrl(
+          "design/components/states/removed-consumer",
+          viewport,
+        ),
       );
       await expect(page.locator(".mbk-previous")).toHaveText(
         "Showing previous version",
@@ -299,7 +336,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
           .getByRole("link", {
             name: viewport === "desktop" ? "Action" : /Changes/,
           }),
-      ).toHaveAttribute("data-mokly-link", "design-component-removed");
+      ).toHaveAttribute("data-mokly-link", "design/components/states/removed");
       await expect(
         page.getByRole("button", { name: "Details", exact: true }),
       ).toBeVisible();

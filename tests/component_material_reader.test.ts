@@ -206,18 +206,19 @@ test("fall-through views reuse actual discovery in derived mode", async (t) => {
 
 test("projected discovery applies root-specific ownership before reading", async (t) => {
   const image = '<img loading="lazy" src="../image.svg" />';
-  const componentImage = '<img loading="lazy" src="./image.svg" />';
+  const componentImage =
+    '<img loading="lazy" src="../../components/image.svg" />';
   const source = componentEntrySource({
     paneRender:
       "(props) => <select><pane2.Component>{props.children}</pane2.Component></select>",
-    paneVariants: `[{ id: "pane-default", title: "Default", props: { children: ${componentImage} } }]`,
+    paneVariants: `[{ slug: "default", title: "Default", props: { children: ${componentImage} } }]`,
     body: `<pane.Component>${image}</pane.Component>`,
     extra:
-      'const pane2 = defineComponent({ ...metadata, id: "pane2", title: "Pane2", description: "Nested receiver", route: "components/pane2.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{ id: "pane2-default", title: "Default", props: { children: <b>Saved</b> } }] });',
-    exports: "action.entries, pane.entries, pane2.entries,",
+      'const pane2 = defineComponent({ ...metadata, path: "pane2", title: "Pane2", description: "Nested receiver", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{ slug: "default",  title: "Default", props: { children: <b>Saved</b> } }] });',
+    exports: "...action.entries, ...pane.entries, ...pane2.entries,",
   }).replace(
-    'id: "pane", title:',
-    'id: "pane", dependencies: ["mockups/image.svg", "mockups/components/image.svg"], ownedDependencies: ["mockups/image.svg", "mockups/components/image.svg"], title:',
+    'path: "pane", title:',
+    'path: "pane", dependencies: ["mockups/image.svg", "mockups/components/image.svg"], ownedDependencies: ["mockups/image.svg", "mockups/components/image.svg"], title:',
   );
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
@@ -231,7 +232,7 @@ test("projected discovery applies root-specific ownership before reading", async
   const compilation = await compileCatalogue(config);
   for (const id of ["home", "pane"] as const) {
     const entry = compilation.manifest.entries.find(
-      (item) => item.id === (id === "pane" ? "pane-default" : id),
+      (item) => item.path === (id === "pane" ? "pane/default" : id),
     );
     assert.ok(entry);
     const view = generatedViews(entry)[0];

@@ -4,165 +4,117 @@ import type { ColorScheme } from "@mokly/viewer";
 
 import type { ComponentEntryDefinition } from "../components/types.js";
 
-/** Metadata shared by all structured catalogue entries. */
+import type {
+  DEFINITION,
+  DEFINITION_IDENTITY,
+  VARIANT_PARENT,
+  VARIANT_INDEX,
+  UNKNOWN_FIELDS,
+} from "./markers.js";
+
+/** Metadata shared by every authored catalogue entry. */
 export interface EntryInput {
   dependencies: readonly string[];
   description: string;
-  id: string;
-  navPath?: readonly string[];
+  movedFrom?: string;
+  path?: string;
   rationale?: string;
   relatedDocs: readonly string[];
+  slug?: string;
   title: string;
 }
-
 /** One authored state flattened beneath its parent screen. */
-export interface ScreenVariantInput {
+export interface ScreenVariantInput extends Omit<
+  EntryInput,
+  "dependencies" | "relatedDocs" | "slug" | "path"
+> {
   address?: string;
   colorSchemes?: readonly ColorScheme[];
   dependencies?: readonly string[];
-  description: string;
   desktop: ReactNode;
-  id: string;
   mobile: ReactNode;
-  rationale?: string;
   relatedDocs?: readonly string[];
+  slug: string;
   tags?: readonly string[];
-  title: string;
-  useCaseIds?: readonly string[];
+  useCasePaths?: readonly string[];
 }
-
 /** One screen with distinct mobile and desktop renders. */
 export interface ScreenInput extends EntryInput {
   address?: string;
   colorSchemes?: readonly ColorScheme[];
   desktop: ReactNode;
   mobile: ReactNode;
-  /** Lowercase kebab-case classification tags, e.g. ["forms"]. */
   tags?: readonly string[];
-  useCaseIds?: readonly string[];
+  useCasePaths?: readonly string[];
   variants?: readonly ScreenVariantInput[] | undefined;
 }
-
 /** One complete HTML document rendered without device variants. */
 export interface PageInput extends EntryInput {
   render: () => string;
   tags?: readonly string[];
 }
-
-/** One canonical screen reference in an ordered use case. */
+/** One path-addressed screen reference in an ordered flow. */
 export interface UseCaseStep {
   description?: string;
-  screenId: string;
+  screenPath: string;
   title?: string;
 }
-
 /** A journey composed from existing screens. */
 export interface UseCaseInput extends EntryInput {
   steps: readonly UseCaseStep[];
-  /** Lowercase kebab-case classification tags, e.g. ["forms"]. */
   tags?: readonly string[];
 }
-
-interface DefinitionBrand {
+/** Optional presentation of an existing folder. */
+export interface FolderInput {
+  path: string;
+  title?: string;
+  order?: readonly string[];
+  hidden?: boolean;
+}
+/** Private facts retained across prepared copies and the consumer bundle. */
+export interface DefinitionBrand {
   readonly __viaDefine: true;
+  readonly [DEFINITION]: true;
+  readonly [DEFINITION_IDENTITY]: { path?: string; slug?: string };
+  readonly [UNKNOWN_FIELDS]?: readonly string[];
+  [VARIANT_PARENT]?: EntryDefinition;
+  [VARIANT_INDEX]?: number;
   definedIn?: string;
 }
-
-/** Validated screen definition created by `defineScreen`. */
-export interface ScreenDefinition extends ScreenInput, DefinitionBrand {
+/** Source-attributed screen definition returned by defineScreen. */
+export interface ScreenDefinition
+  extends Omit<ScreenInput, "variants">, DefinitionBrand {
   kind: "screen";
-  navPath: readonly string[];
-  useCaseIds: readonly string[];
-  /** Parent screen id when this definition is a flattened screen variant. */
+  useCasePaths: readonly string[];
   variantOf?: string;
 }
-
-/** Source-attributed whole-document definition. */
+/** Source-attributed complete document. */
 export interface PageDefinition extends PageInput, DefinitionBrand {
   kind: "page";
-  navPath: readonly string[];
 }
-
-/** Validated use-case definition created by `defineUseCase`. */
+/** Source-attributed flow definition. */
 export interface UseCaseDefinition extends UseCaseInput, DefinitionBrand {
   kind: "use-case";
-  navPath: readonly string[];
 }
-
-/** Any structured catalogue definition. */
-export type RegistryDefinition =
+/** Branded folder record collected beside entries. */
+export interface FolderDefinition extends FolderInput, DefinitionBrand {
+  kind: "folder";
+}
+/** An authored renderable entry. */
+export type EntryDefinition =
   | ScreenDefinition
   | PageDefinition
   | UseCaseDefinition
   | ComponentEntryDefinition;
-
-/** Fields inherited by a nested child from its ancestors. */
-export interface NestedInherited {
-  address?: string;
-  dependencies?: readonly string[];
-  relatedDocs?: readonly string[];
-}
-
-/** A screen in a nested definition tree. */
-export interface NestedScreenInput extends NestedInherited {
-  colorSchemes?: readonly ColorScheme[];
-  description: string;
-  desktop: ReactNode;
-  id: string;
-  mobile: ReactNode;
-  rationale?: string;
-  /** Lowercase kebab-case classification tags; never inherited from ancestors. */
-  tags?: readonly string[];
-  title: string;
-  useCaseIds?: readonly string[];
-  variants?: readonly ScreenVariantInput[] | undefined;
-}
-
-/** Whole document nested beneath a navigation path. */
-export interface NestedPageInput extends Omit<
-  PageInput,
-  "dependencies" | "relatedDocs" | "navPath"
-> {
-  dependencies?: readonly string[];
-  relatedDocs?: readonly string[];
-}
-
-/** Source-attributed marker for nested page composition. */
-export interface NestedPageMarker extends NestedPageInput {
-  __nested: "page";
-  definedIn?: string;
-}
-
-/** A folder in a nested definition tree, without an independent entry. */
-export interface NestedFolderInput extends NestedInherited {
-  children: readonly NestedChild[];
-  title: string;
-}
-
-/** Root position and children for a nested definition tree. */
-export interface RootInput extends NestedInherited {
-  children: readonly NestedChild[];
-  navPath?: readonly string[];
-}
-
-/** Marker returned by `screen` for nested composition. */
-export interface NestedScreenMarker extends NestedScreenInput {
-  __nested: "screen";
-  definedIn?: string;
-}
-
-/** Marker returned by `folder` for nested composition. */
-export interface NestedFolderMarker extends NestedFolderInput {
-  __nested: "folder";
-  definedIn?: string;
-}
-
-/** A nested screen, page, or folder. */
-export type NestedChild =
-  NestedScreenMarker | NestedPageMarker | NestedFolderMarker;
-
-/** A definition annotated with its authored source module. */
-export type ResolvedRegistryEntry = RegistryDefinition & {
+/** Every value collected from a module export. */
+export type RegistryDefinition = EntryDefinition | FolderDefinition;
+/** An entry with its fully derived identity and source location. */
+export type ResolvedRegistryEntry = EntryDefinition & {
+  path: string;
+  slug: string;
+  index: boolean;
+  linkBase: string;
+  location: string;
   sourcePath: string;
   sourceRelativePath: string;
 };

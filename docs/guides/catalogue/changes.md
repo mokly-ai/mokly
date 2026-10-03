@@ -10,7 +10,7 @@ order: 3
 Changes compares your working tree with the branch point shared by `HEAD` and
 the Git base your configuration names, which is `origin/main` unless you say
 otherwise. It compares the generated documents, the local resources they
-render, entry metadata and the `navPath` an entry sits in.
+render, entry metadata and the folder containing an entry.
 
 Commits added to the base branch after you diverged do not appear as your
 changes. Staged, unstaged and untracked edits in your working tree do.

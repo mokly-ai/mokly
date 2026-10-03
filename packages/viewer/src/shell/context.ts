@@ -33,7 +33,7 @@ export interface ShellContext {
    */
   embedded?: boolean;
   /** Entry ids changed since the base-ref branch point; absent when unknown. */
-  changedIds?: readonly string[];
+  changedEntries?: readonly string[];
   /** Whether on-demand comparison serving is available. */
   comparisons?: boolean;
   /** Validated lightweight component evidence, independent of snapshots. */
@@ -49,12 +49,12 @@ export interface ShellContext {
 /** Create one page context from the current mutable server snapshot. */
 export function shellContext(
   base: string,
-  changedIds: readonly string[] | undefined,
+  changedEntries: readonly string[] | undefined,
   updateVersion: number,
 ): ShellContext {
   return {
     base,
-    ...(changedIds ? { changedIds } : {}),
+    ...(changedEntries ? { changedEntries } : {}),
     updateVersion,
   };
 }

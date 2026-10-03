@@ -22,7 +22,7 @@ const welcome = {
   text: "Welcome",
 };
 const details = {
-  id: "details",
+  id: "product/browse/details",
   tags: ["forms"],
   text: "Details",
 };
@@ -51,14 +51,14 @@ function selectionModel(detailsChanged: boolean): CatalogueReadModel {
       {
         ...template,
         changes: changes(false),
-        id: "welcome",
+        path: "welcome",
         tags: welcome.tags,
         title: welcome.text,
       },
       {
         ...template,
         changes: changes(detailsChanged),
-        id: "details",
+        path: "product/browse/details",
         tags: details.tags,
         title: details.text,
       },
@@ -71,13 +71,13 @@ test("active-row selection clears only constraints that hide it", () => {
   assert.deepEqual(
     revealSelection(unchanged, {
       ...defaultSelection,
-      screenId: "details",
+      screenPath: "product/browse/details",
       search: "welcome",
       view: "changes",
     }),
     {
       ...defaultSelection,
-      screenId: "details",
+      screenPath: "product/browse/details",
       search: "",
       view: "all",
     },
@@ -85,14 +85,14 @@ test("active-row selection clears only constraints that hide it", () => {
   const changed = selectionModel(true);
   const matching = {
     ...defaultSelection,
-    screenId: "details",
+    screenPath: "product/browse/details",
     search: "details",
     view: "changes" as const,
   };
   assert.deepEqual(revealSelection(changed, matching), matching);
   const derivedRouteOnly = {
     ...defaultSelection,
-    screenId: "details",
+    screenPath: "product/browse/details",
     search: "screens/details",
   };
   assert.deepEqual(revealSelection(unchanged, derivedRouteOnly), {
@@ -104,34 +104,37 @@ test("active-row selection clears only constraints that hide it", () => {
 test("a tag term clears the query only for a row that lacks the tag", () => {
   const model = selectionModel(false);
   const selected = (
-    screenId: string,
+    screenPath: string,
     search: string,
     tags: readonly string[],
   ) =>
     revealSelection(model, {
       ...defaultSelection,
-      screenId,
+      screenPath,
       search,
       tags,
     });
   assert.deepEqual(selected("welcome", "", ["onboarding"]), {
     ...defaultSelection,
-    screenId: "welcome",
+    screenPath: "welcome",
     tags: ["onboarding"],
   });
-  assert.deepEqual(selected("details", "", ["onboarding"]), {
+  assert.deepEqual(selected("product/browse/details", "", ["onboarding"]), {
     ...defaultSelection,
-    screenId: "details",
+    screenPath: "product/browse/details",
   });
-  assert.deepEqual(selected("details", "details", ["forms"]), {
+  assert.deepEqual(
+    selected("product/browse/details", "product/browse/details", ["forms"]),
+    {
+      ...defaultSelection,
+      screenPath: "product/browse/details",
+      search: "product/browse/details",
+      tags: ["forms"],
+    },
+  );
+  assert.deepEqual(selected("product/browse/details", "welcome", ["forms"]), {
     ...defaultSelection,
-    screenId: "details",
-    search: "details",
-    tags: ["forms"],
-  });
-  assert.deepEqual(selected("details", "welcome", ["forms"]), {
-    ...defaultSelection,
-    screenId: "details",
+    screenPath: "product/browse/details",
   });
 });
 
@@ -213,7 +216,10 @@ test("row tags lowercase defensively though authoring can never emit them", () =
 });
 
 test("an unmatched tag term hides a row free text alone would match", () => {
-  assert.equal(rowMatchesQuery(parseSearchQuery("details"), details), true);
+  assert.equal(
+    rowMatchesQuery(parseSearchQuery("product/browse/details"), details),
+    true,
+  );
   assert.equal(
     rowMatchesQuery(parseSearchQuery("tag:onboarding details"), details),
     false,

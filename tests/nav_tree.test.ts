@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { targetHead } from "../packages/viewer/dist/shell/head.js";
 import {
@@ -16,20 +16,18 @@ import { toRouteTarget } from "../packages/viewer/dist/shell/target.js";
 function screen(
   id: string,
   title: string,
-  navPath: readonly string[] = [],
   variantOf?: string,
-): ManifestV7["entries"][number] {
+): ManifestV8["entries"][number] {
   return {
     colorSchemes: ["light"],
     declaredDependencies: [],
     description: title,
-    id,
+    path: id,
     kind: "screen",
-    navPath,
     relatedDocs: [],
     sourcePath: `entries/${id}.tsx`,
     title,
-    useCaseIds: [],
+    useCasePaths: [],
     ...(variantOf ? { variantOf } : {}),
   };
 }
@@ -38,24 +36,25 @@ function page(
   id: string,
   title: string,
   _route: string,
-): ManifestV7["entries"][number] {
+): ManifestV8["entries"][number] {
   return {
     declaredDependencies: [],
     description: title,
-    id,
+    path: id,
     kind: "page",
-    navPath: [],
+
     relatedDocs: [],
     sourcePath: `entries/${id}.tsx`,
     title,
   };
 }
 
-function tree(entries: ManifestV7["entries"]) {
-  const manifest: ManifestV7 = {
+function tree(entries: ManifestV8["entries"]) {
+  const manifest: ManifestV8 = {
     entries,
     generatedBy: "mokly",
-    schemaVersion: 7,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
@@ -78,8 +77,8 @@ function group(nodes: readonly NavNode[], key: string): NavGroupNode {
 
 test("identical path labels merge and keep path-based folder keys", () => {
   const { nodes } = tree([
-    screen("second", "Second", ["Design", "Browse"]),
-    screen("first", "First", ["Design", "Browse"]),
+    screen("Design/Browse/second", "Second"),
+    screen("Design/Browse/first", "First"),
   ]);
   assert.deepEqual(
     nodes.map(({ key }) => key),
@@ -98,13 +97,13 @@ test("identical path labels merge and keep path-based folder keys", () => {
   );
 });
 
-test("changing only navPath reparents navigation and breadcrumb labels", () => {
-  const before = tree([screen("target", "Target", ["Alpha"])]);
-  const after = tree([screen("target", "Target", ["Beta"])]);
-  assert.deepEqual(structuredCrumbTrail(before.hierarchy, "target"), [
+test("changing an entry path reparents navigation and breadcrumb labels", () => {
+  const before = tree([screen("Alpha/target", "Target")]);
+  const after = tree([screen("Beta/target", "Target")]);
+  assert.deepEqual(structuredCrumbTrail(before.hierarchy, "Alpha/target"), [
     { label: "Alpha" },
   ]);
-  assert.deepEqual(structuredCrumbTrail(after.hierarchy, "target"), [
+  assert.deepEqual(structuredCrumbTrail(after.hierarchy, "Beta/target"), [
     { label: "Beta" },
   ]);
   assert.equal(
@@ -125,9 +124,9 @@ test("top-level entries do not gain a folder or breadcrumb", () => {
 
 test("screen variants stay under their parent in authored order", () => {
   const { catalogue, hierarchy, nodes } = tree([
-    screen("welcome", "Welcome", ["Example", "Screens"]),
-    screen("welcome-zeta", "Zeta", ["Example", "Screens"], "welcome"),
-    screen("welcome-alpha", "Alpha", ["Example", "Screens"], "welcome"),
+    screen("Example/Screens/welcome", "Welcome"),
+    screen("Example/Screens/welcome-zeta", "Zeta", "Example/Screens/welcome"),
+    screen("Example/Screens/welcome-alpha", "Alpha", "Example/Screens/welcome"),
   ]);
   const children = group(
     group(nodes, "folder:Example").children,
@@ -142,13 +141,13 @@ test("screen variants stay under their parent in authored order", () => {
   if (parent?.kind === "leaf")
     assert.deepEqual(
       parent.variants?.map(({ entryId }) => entryId),
-      ["welcome-zeta", "welcome-alpha"],
+      ["Example/Screens/welcome-zeta", "Example/Screens/welcome-alpha"],
     );
-  assert.deepEqual(structuredCrumbTrail(hierarchy, "welcome-zeta"), [
-    { label: "Example" },
-    { label: "Screens" },
-  ]);
-  const variant = catalogue.byId.get("welcome-zeta");
+  assert.deepEqual(
+    structuredCrumbTrail(hierarchy, "Example/Screens/welcome-zeta"),
+    [{ label: "Example" }, { label: "Screens" }],
+  );
+  const variant = catalogue.byPath.get("Example/Screens/welcome-zeta");
   assert.ok(variant);
   const target = toRouteTarget(variant);
   assert.ok(target);
@@ -158,10 +157,10 @@ test("screen variants stay under their parent in authored order", () => {
   );
 });
 
-test("removed rows follow the complete current hierarchy in route and id order", () => {
+test("removed rows follow the complete current hierarchy in kind and path order", () => {
   const { hierarchy } = tree([
     screen("current", "Zed current"),
-    screen("nested", "Nested", ["Folders"]),
+    screen("Folders/nested", "Nested"),
   ]);
   const removed = (id: string, _route: string): NavLeafNode => ({
     entryId: id,
@@ -188,7 +187,7 @@ test("removed rows follow the complete current hierarchy in route and id order",
   );
 });
 
-test("page ids stay unique and routes never create directory groups", () => {
+test("page paths stay unique even when titles match", () => {
   const { nodes, sections } = tree([
     page("first", "Same Name", "same-name/index.html"),
     page("second", "Same Name", "same_name/index.html"),
@@ -210,20 +209,20 @@ test("page ids stay unique and routes never create directory groups", () => {
 
 test("declared entry tags reach navigation leaves and variant rows never enter folders", () => {
   const { nodes } = tree([
-    { ...screen("parent", "Parent", ["Screens"]), tags: ["review"] },
-    screen("variant", "Variant", ["Screens"], "parent"),
+    { ...screen("Screens/parent", "Parent"), tags: ["review"] },
+    screen("Screens/variant", "Variant", "Screens/parent"),
   ]);
   const children = group(nodes, "folder:Screens").children;
   assert.deepEqual(
     children.map(({ key }) => key),
-    ["entry:parent"],
+    ["entry:Screens/parent"],
   );
   assert.equal(children[0]?.kind, "leaf");
   if (children[0]?.kind !== "leaf") return;
   assert.deepEqual(children[0].tags, ["review"]);
   assert.deepEqual(
     children[0].variants?.map(({ key }) => key),
-    ["entry:variant"],
+    ["entry:Screens/variant"],
   );
   assert.deepEqual(
     nodes.map(({ key }) => key),
@@ -240,18 +239,18 @@ test("a screen without variants carries no variant list", () => {
 test("declared screen and use-case tags reach their leaves without inventing page tags", () => {
   const { nodes } = tree([
     {
-      ...screen("welcome", "Welcome", ["Screens"]),
+      ...screen("Screens/welcome", "Welcome"),
       tags: ["forms", "onboarding"],
     },
     {
       declaredDependencies: [],
       description: "Tour",
-      id: "tour",
+      path: "Screens/tour",
       kind: "use-case",
-      navPath: ["Screens"],
+
       relatedDocs: [],
       sourcePath: "entries/tour.tsx",
-      steps: [{ screenId: "welcome" }],
+      steps: [{ screenPath: "Screens/welcome" }],
       tags: ["onboarding"],
       title: "Tour",
     },
@@ -274,9 +273,9 @@ test("declared screen and use-case tags reach their leaves without inventing pag
 
 test("variants never become section roots or folder members", () => {
   const { nodes } = tree([
-    screen("welcome", "Welcome", ["Screens"]),
-    screen("welcome-empty", "Empty", ["Screens"], "welcome"),
-    screen("loose-empty", "Loose variant", [], "loose"),
+    screen("Screens/welcome", "Welcome"),
+    screen("Screens/welcome/empty", "Empty", "Screens/welcome"),
+    screen("loose-empty", "Loose variant", "loose"),
     screen("loose", "Loose"),
   ]);
   assert.deepEqual(
@@ -285,7 +284,7 @@ test("variants never become section roots or folder members", () => {
   );
   assert.deepEqual(
     group(nodes, "folder:Screens").children.map(({ key }) => key),
-    ["entry:welcome"],
+    ["entry:Screens/welcome"],
   );
   const loose = nodes.find(({ key }) => key === "entry:loose");
   assert.equal(loose?.kind, "leaf");

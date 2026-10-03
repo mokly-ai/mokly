@@ -88,12 +88,13 @@ test("generated page routes cannot overwrite a manifest through an alias", async
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
+  await fs.promises.mkdir(path.join(fixture.mockupsDir, "page"));
   await fs.promises.symlink(
-    MANIFEST_NAME,
-    path.join(fixture.mockupsDir, "page.html"),
+    `../${MANIFEST_NAME}`,
+    path.join(fixture.mockupsDir, "page/index.html"),
   );
   assert.throws(
-    () => validateGeneratedOutputPaths(["page.html"], config),
+    () => validateGeneratedOutputPaths(["page/index.html"], config),
     /targets internal catalogue metadata/,
   );
   validateGeneratedOutputPaths([MANIFEST_NAME], config);
@@ -172,7 +173,7 @@ for (const route of metadataRoutes) {
       );
       await assert.rejects(
         compileCatalogue(config),
-        /screens\/home.*(?:private|protected|missing target)/,
+        /home\/index.*(?:private|protected|missing target)/,
         body,
       );
     }
@@ -251,7 +252,7 @@ test("an earlier manifest name is only an incompatibility sentinel", async (cont
   };
   assert.throws(
     () => parseManifest(formerManifest),
-    /expected Mokly manifest schema version 7/,
+    /expected Mokly manifest schema version 8/,
   );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),

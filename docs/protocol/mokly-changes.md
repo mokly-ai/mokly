@@ -2,10 +2,10 @@
 
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
-Screen and Review-ignore behavior remains below. Pairing by path, moved
-entries, and documents are approved contract; the current implementation
-still pairs by kind and id until the
-[path identity plan](../../plans/path-identity.md) delivers them.
+Screen and Review-ignore behavior remains below. Pairing uses kind and path;
+review result v5 omits `previousPath` until move detection is implemented.
+Document rendering and move pairing remain planned in the
+[path identity plan](../../plans/path-identity.md).
 
 The catalogue's All / Changes filter narrows one navigation tree. There is no
 Review tab, report, or `mokly review`; `--out` belongs only to static `export`.
@@ -273,7 +273,7 @@ set is one logical batch request; transitively referenced assets are grouped by
 dependency depth. File modes are still checked before any blob is accepted, so
 batching does not weaken symlink or non-regular-file rejection.
 
-Entries pair by kind and path. The [move contract](./mokly-moves.md) then
+Entries pair by kind and case-folded path. The [move contract](./mokly-moves.md) then
 pairs the remaining baseline and current entries of one kind and records
 `previousPath`; a paired entry's before side is the paired baseline entry. A
 baseline entry whose path now belongs to a current entry of another kind is an

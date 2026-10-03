@@ -1,12 +1,10 @@
-import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
 import { expect, test } from "@playwright/test";
 
 import { componentRuntime } from "../../dist/build/component_runtime.js";
-import { renderReviewArtifact } from "../../dist/review/artifact.js";
-import { compareReview } from "../../dist/review/compare.js";
-import { writeReviewArtifact } from "../../dist/review/write.js";
+import { readCatalogueChanges } from "../../dist/server/component_changes.js";
+import { configuredServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
@@ -22,17 +20,12 @@ function withSecondControlledComponent(source: string): string {
   const alternate = source
     .slice(actionStart, paneStart)
     .replace("const action =", "const alternate =")
-    .replace('id: "action"', 'id: "alternate"')
-    .replaceAll('"action-default"', '"alternate-default"')
-    .replaceAll('"action-disabled"', '"alternate-disabled"')
-    .replace('title: "Action"', 'title: "Alternate"')
-    .replace(
-      'route: "components/action.html"',
-      'route: "components/alternate.html"',
-    );
+    .replace('path: "action"', 'path: "alternate"')
+    .replace('title: "Action"', 'title: "Alternate"');
+  expect(alternate).toContain('path: "alternate"');
   return `${source.slice(0, paneStart)}${alternate}${source.slice(paneStart)}`.replace(
-    "action.entries, pane.entries,",
-    "action.entries, alternate.entries, pane.entries,",
+    "...action.entries, ...pane.entries,",
+    "...action.entries, ...alternate.entries, ...pane.entries,",
   );
 }
 
@@ -52,31 +45,20 @@ test.beforeAll(async () => {
       ),
     withSecondControlledComponent(controlsEntrySource()),
   );
-  const compared = await compareReview(
-    fixture.after,
+  const changes = await readCatalogueChanges(
     fixture.config,
-    fixture.git,
+    fixture.after.manifest,
     "main",
+    fixture.git,
+    "a".repeat(40),
   );
-  if (compared.result.schemaVersion !== 4)
-    throw new Error("Expected component comparison");
-  const result = compared.result;
+  if (!changes.result) throw new Error("Expected component comparison");
   server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
     componentRuntime: componentRuntime(fixture.after),
-    componentChanges: { baseline: fixture.before.manifest, result },
-    review: {
-      base: "main",
-      outDir: path.join(fixture.root, ".review"),
-      generate: async () => {
-        await writeReviewArtifact(
-          renderReviewArtifact(compared),
-          path.join(fixture.root, ".review"),
-          fixture.config,
-        );
-      },
-    },
+    componentChanges: changes,
+    review: configuredServedReview(fixture.config, "main", fixture.git),
   });
   fixture.beforeRemove(() => server.close());
 });
@@ -95,7 +77,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     );
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto(`${server.url}/view/components/action.html`);
+    await page.goto(`${server.url}/view/action/`);
     await page.getByLabel("Viewport", { exact: true }).selectOption(viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
@@ -164,7 +146,7 @@ for (const viewport of ["desktop", "mobile"] as const)
 test("failed and superseded edits keep the last valid preview; comparisons restore saved props", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   const frame = page.frameLocator('[data-workspace-frame="desktop"]');
@@ -195,7 +177,7 @@ test("failed and superseded edits keep the last valid preview; comparisons resto
 test("expired previews can be rendered again and navigation discards temporary edits", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   let expire = true;
@@ -225,7 +207,7 @@ test("expired previews can be rendered again and navigation discards temporary e
 test("component navigation discards a pending edit owned by the previous route", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   let release: () => void = () => undefined;
@@ -264,7 +246,7 @@ test("component navigation discards a pending edit owned by the previous route",
 test("changing context while the first edit is pending cannot apply an obsolete preview", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   await page.route("**/__mokly/components/render", async (route) => {

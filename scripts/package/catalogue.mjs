@@ -11,7 +11,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
     "utf8",
   );
   const model = JSON.parse(json);
-  assert.equal(model.schemaVersion, 3);
+  assert.equal(model.schemaVersion, 4);
   assert.match(model.identity.id, /^[a-f0-9]{64}$/);
   assert.match(model.deploymentId, /^[a-f0-9]{64}$/);
   assert.equal(model.comparisonUrl, comparisonPath);
@@ -36,14 +36,14 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
   ];
   assert.ok(entries.length > 0);
   for (const entry of entries) {
-    const shell = path.join(root, "view", entryRoute(entry.kind, entry.id));
+    const shell = path.join(root, "view", entryRoute(entry.path));
     assert.ok((await fs.stat(shell)).isFile(), shell);
     const views = "views" in entry ? entry.views : [];
     for (const view of views) {
       const file = path.join(
         root,
         "static",
-        viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme),
+        viewRoute(entry.path, view.viewport, view.colorScheme),
       );
       assert.ok((await fs.stat(file)).isFile(), file);
     }

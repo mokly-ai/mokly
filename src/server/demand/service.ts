@@ -51,7 +51,7 @@ export class DocumentService {
     this.routes = new Set(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "page"
-          ? [entryRoute("page", entry.id)]
+          ? [entryRoute(entry.path)]
           : generatedViews(entry).map((view) => view.path),
       ),
     );

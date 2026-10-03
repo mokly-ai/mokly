@@ -6,8 +6,10 @@ import {
   __attributeDefinition,
   defineScreen,
 } from "../dist/authoring/definitions.js";
+import { unknownFields } from "../dist/authoring/fields.js";
 import type {
   RegistryDefinition,
+  EntryDefinition,
   ResolvedRegistryEntry,
   ScreenVariantInput,
 } from "../dist/authoring/types.js";
@@ -16,11 +18,13 @@ import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import { defineUseCase } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
+import { collectModuleExports } from "../dist/registry/export_collection.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
 import type { RegistryViolation } from "../dist/registry/prepared_types.js";
 import { crossReferenceViolations } from "../dist/registry/relationships.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { resolvedEntry } from "./helpers/resolved.js";
 
 const sourceRelativePath = "tests/variant_validation.test.ts";
 const config: ResolvedConfig = {
@@ -29,8 +33,13 @@ const config: ResolvedConfig = {
   colorSchemes: ["light"],
   compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
-  entriesDir: path.join(repositoryRoot, "tests"),
-  entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
+  roots: [
+    {
+      dir: path.join(repositoryRoot, "tests"),
+      files: ["**/*.test.ts"],
+      transparent: [],
+    },
+  ],
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
@@ -41,28 +50,23 @@ const config: ResolvedConfig = {
 };
 
 test("variant authoring rejects only the retained forbidden fields", () => {
-  for (const field of ["variants", "navPath"] as const) {
+  for (const field of ["variants", "variantOf"] as const) {
     const input = {
-      ...variant(`welcome-${field}`),
+      ...variant(field),
       [field]: [],
     };
     assertViolation(
       allViolations(screenDefinitions([input])),
-      "invalid-variants",
-      `welcome-${field}`,
+      field === "variants" ? "invalid-variants" : "invalid-field",
+      `welcome/${field}`,
     );
   }
 
-  const legacy = {
-    ...variant("welcome-legacy"),
-    route: "screens/custom.html",
-    slug: "custom",
-  } as unknown as ScreenVariantInput;
-  const definitions = screenDefinitions([legacy]);
-  assert.equal(Object.hasOwn(definitions[1] ?? {}, "route"), false);
-  assert.equal(
-    allViolations(definitions).some(({ code }) => code === "invalid-variants"),
-    false,
+  const unknown = { ...variant("unknown"), route: "custom/index.html" };
+  assertViolation(
+    allViolations(screenDefinitions([unknown])),
+    "invalid-field",
+    "welcome/unknown",
   );
 });
 
@@ -74,21 +78,21 @@ for (const kind of ["screen", "component"] as const) {
     assertViolation(
       allViolations([parent, unknown]),
       "invalid-variant-of",
-      child.id,
+      child.path,
     );
     const nested = {
       ...child,
-      id: `${parent.id}-nested`,
-      variantOf: child.id,
+      path: `${parent.path}-nested`,
+      variantOf: child.path,
     } as ResolvedRegistryEntry;
     assertViolation(
       allViolations([parent, child, nested]),
       "invalid-variant-of",
-      nested.id,
+      nested.path,
     );
     const wrongParent = {
       ...invalidNonScreen("page"),
-      id: "page-parent",
+      path: "page-parent",
     } as ResolvedRegistryEntry;
     const childOfPage = {
       ...child,
@@ -97,26 +101,21 @@ for (const kind of ["screen", "component"] as const) {
     assertViolation(
       allViolations([wrongParent, childOfPage]),
       "invalid-variant-of",
-      child.id,
+      child.path,
     );
   });
 
-  test(`${kind} variants retain their parent's navigation path`, () => {
+  test(`${kind} variant paths are the parent path followed by their slug`, () => {
     const [parent, child] = variantDefinitions(kind);
     assert.ok(parent && child);
-    const moved = { ...child, navPath: ["Elsewhere"] };
-    assertViolation(
-      allViolations([parent, moved]),
-      "invalid-variants",
-      child.id,
-    );
+    assert.deepEqual(allViolations([parent, child]), []);
   });
 }
 
 test("component parents require at least one variant", () => {
   const [parent] = variantDefinitions("component");
   assert.ok(parent);
-  assertViolation(allViolations([parent]), "invalid-variants", parent.id);
+  assertViolation(allViolations([parent]), "invalid-variants", parent.path);
 });
 
 for (const [field, value] of [
@@ -129,7 +128,14 @@ for (const [field, value] of [
     const [parent, child] = variantDefinitions("component");
     assert.ok(parent && child);
     assert.throws(
-      () => prepareRegistry([parent, { ...child, [field]: value }], config),
+      () =>
+        prepareRegistry(
+          collectModuleExports(
+            { default: [parent, Object.assign(child, { [field]: value })] },
+            sourceRelativePath,
+          ),
+          config,
+        ),
       new RegExp(`must inherit ${field}`),
     );
   });
@@ -138,7 +144,7 @@ test("non-screen entries reject variant fields even when undefined", () => {
   for (const kind of ["page", "use-case", "component"] as const) {
     const violations = validateEntry(invalidNonScreen(kind), config);
     assert.equal(
-      violations.filter(({ code }) => code === "invalid-variants").length,
+      violations.filter(({ code }) => code === "invalid-field").length,
       kind === "component" ? 1 : 2,
       kind,
     );
@@ -151,26 +157,40 @@ test("non-screen entries reject variant fields even when undefined", () => {
 });
 
 test("omitted variant use-case membership does not inherit from its parent", () => {
-  const prepared = prepareRegistry(flowWithVariant(), config);
+  const prepared = prepareRegistry(
+    collectModuleExports({ default: flowWithVariant() }, sourceRelativePath),
+    config,
+  );
 
   assert.equal(prepared.entries.length, 3);
 });
 
 test("declared variant use-case membership remains reciprocal", () => {
-  assert.throws(() => prepareRegistry(flowWithVariant(["tour"]), config), {
-    code: "build-invalid",
-    message: /\[missing-step\].*welcome-empty/,
-  });
+  assert.throws(
+    () =>
+      prepareRegistry(
+        collectModuleExports(
+          { default: flowWithVariant(["tour"]) },
+          sourceRelativePath,
+        ),
+        config,
+      ),
+    {
+      code: "build-invalid",
+      message: /\[missing-step\].*welcome\/empty/,
+    },
+  );
 });
 
 function screenDefinitions(
   variants: readonly ScreenVariantInput[],
 ): ResolvedRegistryEntry[] {
   const definitions = defineScreen({
+    slug: "welcome",
     dependencies: [],
     description: "Welcome",
     desktop: "Desktop",
-    id: "welcome",
+    path: "welcome",
     mobile: "Mobile",
     relatedDocs: [],
     title: "Welcome",
@@ -183,25 +203,32 @@ function screenDefinitions(
 function variantDefinitions(
   kind: "component" | "screen",
 ): ResolvedRegistryEntry[] {
-  if (kind === "screen") return screenDefinitions([variant("welcome-empty")]);
+  if (kind === "screen") return screenDefinitions([variant("empty")]);
   return defineComponent({
     dependencies: [],
     description: "Action",
-    id: "action",
-    navPath: ["Shared"],
+    path: "action",
+
     propSchema: { kind: "object", properties: {} },
     relatedDocs: [],
     render: () => null,
     title: "Action",
-    variants: [{ id: "action-default", props: {}, title: "Default" }],
+    variants: [
+      {
+        slug: "default",
+
+        props: {},
+        title: "Default",
+      },
+    ],
   }).entries.map((definition) => resolved(attributed(definition)));
 }
 
 function variant(id: string): ScreenVariantInput {
   return {
+    slug: id,
     description: `${id} description`,
     desktop: `${id} desktop`,
-    id,
     mobile: `${id} mobile`,
     title: id,
   };
@@ -211,29 +238,30 @@ function flowWithVariant(
   variantUseCaseIds?: readonly string[],
 ): RegistryDefinition[] {
   const screens = defineScreen({
+    slug: "welcome",
     dependencies: [],
     description: "Welcome",
     desktop: "Desktop",
-    id: "welcome",
+    path: "welcome",
     mobile: "Mobile",
     relatedDocs: [],
     title: "Welcome",
-    useCaseIds: ["tour"],
+    useCasePaths: ["tour"],
     variants: [
       {
-        ...variant("welcome-empty"),
+        ...variant("empty"),
         ...(variantUseCaseIds === undefined
           ? {}
-          : { useCaseIds: variantUseCaseIds }),
+          : { useCasePaths: variantUseCaseIds }),
       },
     ],
   });
   const tour = defineUseCase({
     dependencies: [],
     description: "Tour",
-    id: "tour",
+    path: "tour",
     relatedDocs: [],
-    steps: [{ screenId: "welcome" }],
+    steps: [{ screenPath: "welcome" }],
     title: "Tour",
   });
   return [...screens, tour].map((definition) => attributed(definition));
@@ -257,7 +285,7 @@ function assertViolation(
     violations.some(
       (violation) =>
         violation.code === code &&
-        violation.id === id &&
+        violation.path === id &&
         violation.sourceRelativePath === sourceRelativePath,
     ),
     JSON.stringify(violations),
@@ -268,12 +296,11 @@ function attributed<T extends object>(value: T): T & { definedIn: string } {
   return __attributeDefinition(value, sourceRelativePath);
 }
 
-function resolved(definition: RegistryDefinition): ResolvedRegistryEntry {
-  return {
-    ...definition,
-    sourcePath: path.join(repositoryRoot, sourceRelativePath),
-    sourceRelativePath,
-  };
+function resolved(definition: EntryDefinition): ResolvedRegistryEntry {
+  return Object.assign(
+    definition,
+    resolvedEntry(definition, sourceRelativePath),
+  );
 }
 
 function invalidNonScreen(
@@ -283,9 +310,9 @@ function invalidNonScreen(
     __viaDefine: true as const,
     dependencies: [],
     description: `${kind} entry`,
-    id: `${kind}-entry`,
+    path: `${kind}-entry`,
     kind,
-    navPath: [],
+
     relatedDocs: [],
     sourcePath: path.join(repositoryRoot, sourceRelativePath),
     sourceRelativePath,
@@ -297,7 +324,11 @@ function invalidNonScreen(
     kind === "page"
       ? { render: () => "<html></html>" }
       : kind === "use-case"
-        ? { steps: [{ screenId: "welcome" }] }
+        ? { steps: [{ screenPath: "welcome" }] }
         : {};
-  return { ...common, ...specific } as unknown as ResolvedRegistryEntry;
+  return {
+    ...common,
+    ...specific,
+    ...unknownFields({ variants: undefined, variantOf: undefined }, kind),
+  } as unknown as ResolvedRegistryEntry;
 }

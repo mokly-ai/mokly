@@ -1,5 +1,5 @@
 /** Optional changed-route detection powering the Browse changed/all filter. */
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -22,13 +22,13 @@ export interface ResolvedCatalogueChanges extends CatalogueChangeSnapshot {
 }
 
 /** Compute routes affected since the base branch point, if available. */
-export async function computeChangedIds(
+export async function computeChangedPaths(
   config: ResolvedConfig,
   base: string,
   git: ReadOnlyReviewRepository,
 ): Promise<readonly string[] | undefined> {
   try {
-    return (await computeCatalogueChanges(config, base, git)).changedIds;
+    return (await computeCatalogueChanges(config, base, git)).changedEntries;
   } catch (error) {
     if (error instanceof MoklyError && error.code === "config-invalid")
       throw error;
@@ -41,7 +41,7 @@ export async function computeCatalogueChanges(
   config: ResolvedConfig,
   base: string,
   git: ReadOnlyReviewRepository,
-  manifest?: ManifestV7,
+  manifest?: ManifestV8,
 ): Promise<ResolvedCatalogueChanges> {
   const compilation =
     config.generatedOutput === "derived" && !manifest
@@ -57,18 +57,19 @@ export async function computeCatalogueChanges(
     commit,
     compilation?.outputs,
   );
-  const { baseline, changedIds } = componentChanges;
+  const { baseline, changedEntries } = componentChanges;
   const removedEntries = removedManifestEntries(manifest, baseline);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    movedEntries: [],
     componentChanges,
     baseRef: base,
     baseCommit: commit,
     removedEntries,
-    changedIds: [
+    changedEntries: [
       ...new Set([
-        ...(changedIds ?? []),
-        ...removedEntries.map(({ entry }) => entry.id),
+        ...(changedEntries ?? []),
+        ...removedEntries.map(({ entry }) => entry.path),
       ]),
     ].sort(),
   };

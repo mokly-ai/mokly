@@ -20,6 +20,7 @@ export async function prepareLiveRuntime(
     const graph = await loadConsumerGraph(config);
     config = {
       ...config,
+      ...graph.discovery,
       entryModules: graph.entrySources,
       sourceFiles: graph.sourceFiles,
     };
@@ -28,11 +29,12 @@ export async function prepareLiveRuntime(
       registry.entries,
       graph.sourceFiles,
       config.colorSchemes,
+      registry.folders,
     );
     validateGeneratedOutputPaths(
       manifest.entries.flatMap((entry) =>
         entry.kind === "page"
-          ? [entryRoute("page", entry.id)]
+          ? [entryRoute(entry.path)]
           : generatedViews(entry).map((view) => view.path),
       ),
       config,

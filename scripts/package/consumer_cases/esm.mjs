@@ -47,16 +47,16 @@ export async function smokeEsmConsumer(context) {
   await runBin(root, ["build"], { cwd: nested });
   await runBin(root, ["check"]);
   const fragment = await fs.promises.readFile(
-    path.join(root, "mockups/screens/packed-home.desktop.html"),
+    path.join(root, "mockups/packed-home/index.desktop.html"),
     "utf8",
   );
   assert.match(fragment, /data-fixture="esm-desktop"/);
   assert.match(
     fragment,
-    /href="\.\/packed-detail\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
+    /href="\.\.\/packed-detail\/index\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
   );
   const coLocated = await fs.promises.readFile(
-    path.join(root, "mockups/screens/packed-card.desktop.html"),
+    path.join(root, "mockups/packed-card/index.desktop.html"),
     "utf8",
   );
   assert.match(coLocated, /data-packed-card=""/);
@@ -67,7 +67,7 @@ export async function smokeEsmConsumer(context) {
     ),
   );
   assert.equal(
-    packedManifest.entries.find((entry) => entry.id === "packed-card")
+    packedManifest.entries.find((entry) => entry.path === "packed-card")
       ?.sourcePath,
     "src/components/card/card.mockup.tsx",
   );
@@ -93,17 +93,17 @@ export async function smokeEsmConsumer(context) {
     review = await response.json();
   });
   assert.equal(
-    review.screens.find((screen) => screen.id === "packed-home")?.state,
+    review.screens.find((screen) => screen.path === "packed-home")?.state,
     "changed",
   );
   await runBin(root, ["export", "--out", "published", "--base", "HEAD"], {
     cwd: nested,
   });
   const exported = await inspectConsumerExport(root, "published", "HEAD", [
-    "view/screens/packed-home.html",
+    "view/packed-home/index.html",
   ]);
   assert.equal(
-    exported.screens.find((screen) => screen.id === "packed-home")?.state,
+    exported.screens.find((screen) => screen.path === "packed-home")?.state,
     "changed",
   );
   await smokeViewer(root);

@@ -18,10 +18,10 @@ export function advertisePublicationShell(
 ): string {
   if (!previews) return html;
   const entry = removed.find(
-    (candidate) => viewHref(candidate.kind, candidate.id) === canonicalPath,
+    (candidate) => viewHref(candidate.path) === canonicalPath,
   );
   if (!entry || (entry.kind !== "page" && entry.kind !== "screen")) return html;
-  const published = previews.get(entry.id);
+  const published = previews.get(entry.path);
   return published
     ? advertisePublicationPreview(name, html, entry, published)
     : html;
@@ -65,15 +65,16 @@ export function advertisePublicationPreview(
   }
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
     throw invalidShell(name);
-  const descriptor = parsed as Record<string, unknown>;
   if (
-    descriptor["id"] !== entry.id ||
-    descriptor["kind"] !== entry.kind ||
+    !("path" in parsed) ||
+    !("kind" in parsed) ||
+    parsed.path !== entry.path ||
+    parsed.kind !== entry.kind ||
     (published.kind === "screen" && entry.kind !== "screen") ||
     (published.kind === "page" && entry.kind !== "page")
   )
     throw invalidShell(name);
-  const replacement = attribute({ ...descriptor, published });
+  const replacement = attribute({ ...parsed, published });
   return `${html.slice(0, location.startOffset)}${replacement}${html.slice(location.endOffset)}`;
 }
 

@@ -19,19 +19,19 @@ test("trusted frame activation returns logical catalogue destinations", () => {
   assert.deepEqual(classifyFrameActivation(primary), {
     activation: "primary",
     fragment: "section",
-    id: "details",
+    screenPath: "details",
     target: { kind: "self" },
   });
   assert.deepEqual(classifyFrameActivation({ ...primary, marker: "tour" }), {
     activation: "primary",
-    id: "tour",
+    screenPath: "tour",
     target: { kind: "self" },
   });
   for (const target of ["_top", "_parent"]) {
     assert.deepEqual(classifyFrameActivation({ ...primary, target }), {
       activation: "primary",
       fragment: "section",
-      id: "details",
+      screenPath: "details",
       target: { kind: target.slice(1) },
     });
   }
@@ -44,7 +44,7 @@ test("modified and explicit new-context activation stays parent-owned", () => {
       {
         activation: "modified",
         fragment: "section",
-        id: "details",
+        screenPath: "details",
         target: { kind: "self" },
       },
     );
@@ -58,14 +58,14 @@ test("modified and explicit new-context activation stays parent-owned", () => {
     {
       activation: "middle",
       fragment: "section",
-      id: "details",
+      screenPath: "details",
       target: { kind: "self" },
     },
   );
   assert.deepEqual(classifyFrameActivation({ ...primary, target: "_blank" }), {
     activation: "primary",
     fragment: "section",
-    id: "details",
+    screenPath: "details",
     target: { kind: "blank" },
   });
   assert.deepEqual(
@@ -73,7 +73,7 @@ test("modified and explicit new-context activation stays parent-owned", () => {
     {
       activation: "primary",
       fragment: "section",
-      id: "details",
+      screenPath: "details",
       target: { kind: "named", name: "Report.Frame" },
     },
   );

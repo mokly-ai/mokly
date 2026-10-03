@@ -12,7 +12,7 @@ import {
   repositoryRoot,
 } from "./helpers/fixture.js";
 
-const input = { entriesDir: "entries", mockupsDir: "mockups" };
+const input = { roots: [{ dir: "entries" }], mockupsDir: "mockups" };
 
 test("the example rebuilds derived baselines with its own package tooling", async () => {
   const configPath = path.join(
@@ -30,7 +30,7 @@ test("the example rebuilds derived baselines with its own package tooling", asyn
   assert.deepEqual(
     resolveConfig(
       {
-        entriesDir: "entries",
+        roots: [{ dir: "specs" }],
         mockupsDir: "generated",
         repoRoot: "../..",
         review: { baselineBuild: recipe },
@@ -43,7 +43,7 @@ test("the example rebuilds derived baselines with its own package tooling", asyn
     () =>
       resolveConfig(
         {
-          entriesDir: "entries",
+          roots: [{ dir: "specs" }],
           mockupsDir: "generated",
           repoRoot: "../..",
           generatedOutput: "committed",
@@ -73,7 +73,7 @@ test("generated output defaults to derived and derives exact default argv", asyn
   const configPath = path.join(fixture.root, "config", "catalogue.ts");
   const nested = resolveConfig(
     {
-      entriesDir: "../entries",
+      roots: [{ dir: "../entries" }],
       mockupsDir: "../mockups",
       repoRoot: "..",
     },

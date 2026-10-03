@@ -149,10 +149,10 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
   assert.equal(manifest.baseSha, null);
 });
 
-test("a v8 baseline stays invalid and never uses earlier-version copy", async (t) => {
+test("a v9 baseline stays invalid and never uses earlier-version copy", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
-  await installBaseline(fixture, { version: 8 });
+  await installBaseline(fixture, { version: 9 });
   const messages: string[] = [];
   await assert.rejects(
     exportCatalogue(fixture.config, {
@@ -170,10 +170,10 @@ test("a v8 baseline stays invalid and never uses earlier-version copy", async (t
   assert.deepEqual(messages, []);
 });
 
-test("Serve reports v8 through its ordinary safe diagnostic", async (t) => {
+test("Serve reports v9 through its ordinary safe diagnostic", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
-  await installBaseline(fixture, { version: 8 });
+  await installBaseline(fixture, { version: 9 });
   const output: string[] = [];
   const running = await serve(
     fixture.config,

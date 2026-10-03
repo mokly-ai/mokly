@@ -2,7 +2,9 @@
 
 This internal module compares current validated output with a historical
 baseline. The supported consumer interface remains the catalogue and CLI;
-these modules are not public package exports.
+these modules are not public package exports. Pairing uses kind and path;
+a changed path produces a removal plus an addition. Authored `movedFrom` stays
+in the manifest, while review v5 omits `previousPath` until move pairing lands.
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
 and `BaselineReader` (historical files) interfaces. Paths at the reader boundary
@@ -35,7 +37,7 @@ the same confinement, source exclusions, regular-file checks, transitive
 resource traversal and 64 MiB bound as screen panes. It returns typed
 `RemovedPagePreview` metadata plus the baseline files; the artifact renderer adds
 strictly validated `preview.json` without creating page records in `review.json`.
-Current and baseline manifests both require v7; recognized earlier output is
+Current and baseline manifests both require v8; recognized earlier output is
 handled before comparison under the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 The approved [path identity plan](../../plans/path-identity.md) moves pairing
@@ -75,7 +77,7 @@ aliases are excluded before dependency or shared-impact matching. Component
 catalogues follow the [path evidence rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles):
 `component_metadata.ts` owns glob matching, owned/exact reasons, and unowned
 directory evidence. The classifier combines that evidence with reasons to
-preserve the [v4 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
+preserve the [v5 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 The classifier records each entry's scope-filtered path reasons, retained view
 paths, exact screen stylesheet reasons, and actual-invocation owned CSS by entry
 pair. Source validation accepts dependency reasons only from that record; it
@@ -94,18 +96,18 @@ and [export boundary](../export/README.md).
 
 `css/` provides parsing, diffing, and document matching for
 [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
-Review v4, live membership, watched updates and publishing use it to
+Review v5, live membership, watched updates and publishing use it to
 exclude changed stylesheets whose changed rules cannot match a view. Public
 resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
 
-Review result v4 replaces both earlier result versions; a catalogue without
+Review result v5 replaces both earlier result versions; a catalogue without
 registered components emits the same shape with empty component arrays.
 
 `analysisOwnsStylesheet` owns the shared public-output boundary. Source/token
 stylesheets outside that boundary retain file-level evidence under
 [CSS attribution](../../docs/protocol/mokly-css-attribution.md) and the
-[v4 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
+[v5 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 After comparing views, both producers call `assertViewAnalysisScope` to reject
 analysed reasons outside that boundary with `review-invalid`. The shared decoder
 checks stylesheet identity; only producers have the resolved scope configuration.
@@ -226,7 +228,7 @@ material resource-byte changes without inventing dependency paths.
 Unexpected parser or matcher failures keep only the failing resource
 unresolved, with any recoverable changed selectors, and classification continues.
 
-Review v4 retains `material: true` exactly when the actual paired,
+Review v5 retains `material: true` exactly when the actual paired,
 ignore-normalized documents differ, including added and removed views. Ownership
 projections do not define this flag. A material change keeps the ordinary screen
 heading even when stylesheet evidence is also present. Both versions retain
@@ -241,7 +243,7 @@ component path rule.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
 `ViewResourceEvidence` records without requesting snapshots. Export projects
-the same slice from its unified v4 result;
+the same slice from its unified v5 result;
 both producers omit empty views and screens left without evidence. The inspector
 merges it with loaded comparison details. Result schemas and
 classification policy stay unchanged.
@@ -263,7 +265,7 @@ cargo xtask check
 
 Key code:
 
-- `compare.ts`, `component_compare.ts`: the unified v4 comparison and retained
+- `compare.ts`, `component_compare.ts`: the unified v5 comparison and retained
   artifacts for every catalogue.
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
 - `artifact_files.ts` and the shared viewer-data builders: collision-checked
@@ -271,10 +273,10 @@ Key code:
 - `deleted_resource.ts`: shared verification and byte comparison for a
   currently referenced resource that may have been deleted.
 - `component_variant_classification.ts`: flat component variant entry pairing,
-  reasons, view evidence, and grouped v4 result records.
+  reasons, view evidence, and grouped v5 result records.
 - `component_classification_sources.ts`, `component_classification_entries.ts`,
   `component_reason_sources.ts`, and `component_result_sources.ts`:
-  source-complete v4 assembly, entry-view preparation, and validation.
+  source-complete v5 assembly, entry-view preparation, and validation.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
   `compareComponentView` has two paths: an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology
@@ -326,3 +328,8 @@ Key code:
 See the [Changes contract](../../docs/protocol/mokly-changes.md),
 [component attribution contract](../../docs/protocol/mokly-component-changes.md),
 and [component result schema](../../docs/protocol/mokly-component-review.md).
+
+Entry pairing uses kind and case-folded path, including component parents and
+variants at the same identity. Grouped comparison records retain their owning
+component views; Changes merges their reasons into one entry record. Reserved
+documents are excluded until document material comparison is implemented.

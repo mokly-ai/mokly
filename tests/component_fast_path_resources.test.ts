@@ -42,7 +42,7 @@ for (const direction of ["added", "removed"] as const)
   });
 
 for (const generatedOutput of ["derived", "committed"] as const)
-  test(`legacy route fields cannot relocate views in ${generatedOutput} mode`, async (t) => {
+  test(`source-only formatting preserves component artifact paths in ${generatedOutput} mode`, async (t) => {
     const fixture = await relocatedFixture(t);
     const beforePath = actionViewPath(fixture.before);
     const afterPath = actionViewPath(fixture.after);
@@ -52,16 +52,22 @@ for (const generatedOutput of ["derived", "committed"] as const)
       fixture.after.outputs.get(afterPath),
     );
     const changedPaths = ["entries/fixture.mockup.tsx"];
-    if (generatedOutput === "committed") changedPaths.push("mockups/image.svg");
-    const beforeResources = {
-      "image.svg": "image",
-      "components/image.svg": "image",
-    };
-    const afterResources = {
-      ...beforeResources,
-      ...(generatedOutput === "committed" ? { "image.svg": "updated" } : {}),
-      "components/nested/image.svg": "image",
-    };
+    if (generatedOutput === "committed")
+      changedPaths.push(
+        "mockups/image.svg",
+        "mockups/action/image.svg",
+        "mockups/pane/image.svg",
+      );
+    const images = ["image.svg", "action/image.svg", "pane/image.svg"];
+    const beforeResources = Object.fromEntries(
+      images.map((image) => [image, "image"]),
+    );
+    const afterResources = Object.fromEntries(
+      images.map((image) => [
+        image,
+        generatedOutput === "committed" ? "updated" : "image",
+      ]),
+    );
     const result = await assertFastPathEquivalent({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
@@ -71,7 +77,7 @@ for (const generatedOutput of ["derived", "committed"] as const)
       config: { ...fixture.config, generatedOutput },
     });
     assert.equal(
-      result.components.find((component) => component.id === "action")?.state,
+      result.components.find((component) => component.path === "action")?.state,
       generatedOutput === "committed" ? "changed" : "unchanged",
     );
   });
@@ -83,23 +89,17 @@ async function relocatedFixture(t: TestContext) {
   });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
-  await fs.mkdir(path.join(fixture.mockupsDir, "components/nested"), {
-    recursive: true,
-  });
-  for (const route of [
-    "image.svg",
-    "components/image.svg",
-    "components/nested/image.svg",
-  ])
+  for (const route of ["image.svg", "action/image.svg", "pane/image.svg"]) {
+    await fs.mkdir(path.dirname(path.join(fixture.mockupsDir, route)), {
+      recursive: true,
+    });
     await fs.writeFile(path.join(fixture.mockupsDir, route), "image");
+  }
   const config = await loadConfig(fixture.root);
   const before = await compileCatalogue(config);
   await fs.writeFile(
     fixture.entryPath,
-    source.replace(
-      'id: "action",',
-      'id: "action", route: "components/nested/action.html",',
-    ),
+    source.replace('path: "action",', 'path: "action", '),
   );
   const after = await compileCatalogue(config);
   return { before, after, config };
@@ -107,7 +107,7 @@ async function relocatedFixture(t: TestContext) {
 
 function actionViewPath(compilation: Compilation): string {
   const action = compilation.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "action-default",
+    (entry) => entry.kind === "component" && entry.path === "action/default",
   );
   assert.ok(action);
   return generatedViews(action)[0]!.path;

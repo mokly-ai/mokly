@@ -16,7 +16,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     page.on("response", (response) => {
       if (response.status() >= 400) failures.push(response.url());
     });
-    await page.goto("/view/components/example-action.html");
+    await page.goto("/view/example/components/action/");
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
@@ -58,6 +58,10 @@ for (const viewport of ["desktop", "mobile"] as const)
         exact: true,
       })
       .click();
+    await expect(frame.locator(".example-toolbar")).toHaveCSS(
+      "border-radius",
+      "12px",
+    );
     await page
       .getByRole("tab", { name: "Nested components", exact: true })
       .click();

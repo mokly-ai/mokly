@@ -28,11 +28,11 @@ mockups whose runtime-backed states are identified in their own contract.
 The path identity contract renames the Pages section to Specs, makes folder
 rows browse-only, and adds the `Overview` first-child row, the path chip,
 Markdown document pages, and `Moved` Changes rows. Those states are approved
-below and designed in `design-browse-folder-overview`,
-`design-browse-document`, `design-changes-moved`, and the updated Browse,
-page, and component designs. The shell keeps ids, the Pages section, and moves
-shown as removals until the [path identity plan](../../plans/path-identity.md)
-delivers them.
+below and designed in `design/browse/views/folder-overview`,
+`design/browse/pages/document`, `design/changes/outcomes/moved`, and the updated Browse,
+page, and component designs. The shell uses paths while retaining the Pages
+section and treating moves as removals plus additions until the
+[path identity plan](../../plans/path-identity.md) delivers the remaining behavior.
 
 Auto/Light/Dark interface appearance is designed in the
 `design-appearance-*` mockups and specified by the
@@ -63,7 +63,7 @@ previous view; the shell renders the note fixed by the
 
 ## Design Mockups
 
-The approved screens are authored in `examples/basic/entries/design/`. The
+The approved screens are authored in `examples/basic/specs/design/`. The
 [shell design inventory](./mokly-shell-design-inventory.md) lists every Browse
 and Changes design screen with its folder and depicted state, describes the
 fixture catalogue they browse, and owns the dual-scheme and owning-group rules;
@@ -200,7 +200,7 @@ scrollable region scrolls internally:
   Changes retain their filter-free layout. The catalogue-navigation component's
   `loading`, `preparing`, and `unavailable` variants are the mobile/desktop
   owning mockups for the three non-ready states.
-  `design-review-preparing` and `design-review-unavailable` additionally own
+  `design/changes/availability/preparing` and `design/changes/availability/unavailable` additionally own
   the preparing and failed states inside the complete shell, where Changes is
   selected and the chosen screen stays available. The preparing state exists only
   for derived baselines; see
@@ -240,8 +240,8 @@ scrollable region scrolls internally:
     because its label already ends in `· Removed` or `· Moved`; a moved entry,
     edited or not, keeps that one row at its new place. The
     [variant contract](./mokly-variants.md) owns the behavior, and
-    `design-browse-variant-selected`, `design-browse-variant-changes`, and
-    `design-browse-variant-removed` own its mockups.
+    `design/browse/variants/variant-selected`, `design/browse/variants/variant-changes`, and
+    `design/browse/variants/variant-removed` own its mockups.
   - Catalogue-link navigation opens the active section and every folder on the active
     row's path and scrolls that row into view. Search and Changes filtering may
     stay selected only while the active row remains visible. Reapplying an
@@ -349,9 +349,9 @@ remain secondary and never invent pixel measurements. Exact presentation,
 scrolling, switch geometry, responsive wrapping, app-shell dimensions, and
 fixed-row depictions live in the linked comparison contracts above.
 
-The canonical states are `design-changes-current`, `design-changes-overlay`,
-`design-changes-overlay-long`, `design-changes-overlay-panel`, and
-`design-changes-side-by-side-apart`, each with path-derived
+The canonical states are `design/changes/diff-controls/current`, `design/changes/diff-controls/overlay`,
+`design/changes/diff-controls/overlay-long`, `design/changes/diff-controls/overlay-panel`, and
+`design/changes/diff-controls/side-by-side-apart`, each with path-derived
 `index.<viewport>.html` documents and mobile and desktop artboards. See
 [Changes](./mokly-changes.md), [component designs](./mokly-component-design.md),
 and [CSS evidence](./mokly-css-evidence-shell.md).

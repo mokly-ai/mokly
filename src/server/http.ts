@@ -126,11 +126,13 @@ export async function startCatalogueServer(
   let activeCatalogue = componentChanges
     ? catalogueAtBaseline(manifest, componentChanges.baseline)
     : catalogue;
-  let changedIds =
-    changes?.changedIds ?? options.changedIds ?? componentChanges?.changedIds;
+  let changedEntries =
+    changes?.changedEntries ??
+    options.changedEntries ??
+    componentChanges?.changedEntries;
   let changesStatus: ChangesStatus =
     options.changesStatus ??
-    (changedIds || componentChanges ? "ready" : "unavailable");
+    (changedEntries || componentChanges ? "ready" : "unavailable");
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
   let publicComparison: PublicComparison | undefined;
@@ -152,11 +154,11 @@ export async function startCatalogueServer(
     livePublicInput(
       activeCatalogue,
       publicChangesStatus(
-        changedIds,
+        changedEntries,
         componentChanges !== undefined,
         changesStatus,
       ),
-      changedIds,
+      changedEntries,
       componentChanges,
       comparison,
     );
@@ -170,7 +172,7 @@ export async function startCatalogueServer(
       activity,
       activeCatalogue: () => activeCatalogue,
       assets: { clientModules, fontAssets, navigationModules },
-      changedIds: () => changedIds,
+      changedEntries: () => changedEntries,
       changesStatus: () => changesStatus,
       componentChanges: () => componentChanges,
       config,
@@ -237,7 +239,7 @@ export async function startCatalogueServer(
         {
           catalogue,
           activeCatalogue,
-          changedIds,
+          changedEntries,
           componentChanges,
           changesStatus,
           updateVersion,
@@ -250,11 +252,11 @@ export async function startCatalogueServer(
         livePublicInput(
           next.activeCatalogue,
           publicChangesStatus(
-            next.changedIds,
+            next.changedEntries,
             next.componentChanges !== undefined,
             next.changesStatus,
           ),
-          next.changedIds,
+          next.changedEntries,
           next.componentChanges,
           undefined,
         ),
@@ -263,7 +265,7 @@ export async function startCatalogueServer(
       );
       ({
         activeCatalogue,
-        changedIds,
+        changedEntries,
         componentChanges,
         changesStatus,
         updateVersion,

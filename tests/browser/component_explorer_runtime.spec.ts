@@ -1,10 +1,7 @@
-import path from "node:path";
-
 import { expect, test } from "@playwright/test";
 
-import { renderReviewArtifact } from "../../dist/review/artifact.js";
-import { compareReview } from "../../dist/review/compare.js";
-import { writeReviewArtifact } from "../../dist/review/write.js";
+import { readCatalogueChanges } from "../../dist/server/component_changes.js";
+import { configuredServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
@@ -29,45 +26,35 @@ test.beforeAll(async () => {
           '<button className="revised" data-viewport=',
         )
         .replace(
-          '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }]',
-          '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }, { id: "action-new", title: "New", props: { label: "New" } }]',
+          '{ slug: "disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }]',
+          '{ slug: "disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }, { slug: "new", title: "New", props: { label: "New" } }]',
         ),
     componentEntrySource({
-      body: '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink><MockLink to="action-disabled">Open Disabled Action</MockLink>',
+      body: '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink><MockLink to="action/disabled">Open Disabled Action</MockLink>',
     }).replace(
-      '{ id: "action-disabled", title: "Disabled", props:',
-      '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props:',
+      '{ slug: "disabled", title: "Disabled", props:',
+      '{ slug: "disabled", title: "Disabled", description: "The saved action is unavailable.", props:',
     ),
   );
-  const compared = await compareReview(
-    fixture.after,
+  const changes = await readCatalogueChanges(
     fixture.config,
-    fixture.git,
+    fixture.after.manifest,
     "main",
+    fixture.git,
+    "a".repeat(40),
   );
-  if (compared.result.schemaVersion !== 4)
-    throw new Error("Expected component result");
-  const result = compared.result;
+  if (!changes.result) throw new Error("Expected component result");
+  const result = changes.result;
   server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
-    componentChanges: { baseline: fixture.before.manifest, result },
-    changedIds: result.components.flatMap((component) =>
+    componentChanges: changes,
+    changedEntries: result.components.flatMap((component) =>
       component.variants
         .filter((variant) => variant.state !== "unchanged")
-        .map((variant) => variant.id),
+        .map((variant) => variant.path),
     ),
-    review: {
-      base: "main",
-      outDir: path.join(fixture.root, ".review"),
-      generate: async () => {
-        await writeReviewArtifact(
-          renderReviewArtifact(compared),
-          path.join(fixture.root, ".review"),
-          fixture.config,
-        );
-      },
-    },
+    review: configuredServedReview(fixture.config, "main", fixture.git),
   });
   fixture.beforeRemove(() => server.close());
 });
@@ -80,18 +67,18 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(
     page.locator(
-      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-default.html"]',
+      '[data-nav-disclosure="variants:action"] [data-route="action/default/index.html"]',
     ),
   ).toBeVisible();
   await expect(
     page.locator(
-      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-disabled.html"]',
+      '[data-nav-disclosure="variants:action"] [data-route="action/disabled/index.html"]',
     ),
   ).toBeVisible();
   await expect(
@@ -109,13 +96,13 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     variants.getByRole("link", { name: "Default", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await variants.getByRole("link", { name: "Disabled", exact: true }).click();
-  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Copy ID action-disabled" }),
-  ).toHaveText("#action-disabled");
+    page.getByRole("button", { name: "Copy ID action/disabled" }),
+  ).toHaveText("#action/disabled");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
   await expect(
     page.getByLabel("Catalogue location").getByRole("link"),
@@ -135,13 +122,13 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     0,
   );
   await page.goBack();
-  await expect(page).toHaveURL(/\/view\/components\/action\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/$/);
   await expect(
     variants.getByRole("link", { name: "Default", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await expect(mobile.getByRole("button", { name: "Continue" })).toBeEnabled();
   await page.goForward();
-  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
   await expect(
     variants.getByRole("link", { name: "Disabled", exact: true }),
   ).toHaveAttribute("aria-current", "page");
@@ -151,21 +138,21 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
 test("Changes lists changed component variants beneath their parent", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await page.click('[data-filter="changed"]');
 
   const parent = page.locator(
-    'a[data-nav-row][data-route="components/action.html"]',
+    'a[data-nav-row][data-route="action/index.html"]',
   );
   await expect(parent).toHaveAttribute("data-changed-variants", "true");
   await expect(
     page.locator(
-      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-default.html"]',
+      '[data-nav-disclosure="variants:action"] [data-route="action/default/index.html"]',
     ),
   ).toBeVisible();
   await expect(
     page.locator(
-      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-disabled.html"]',
+      '[data-nav-disclosure="variants:action"] [data-route="action/disabled/index.html"]',
     ),
   ).toBeVisible();
 });
@@ -173,13 +160,13 @@ test("Changes lists changed component variants beneath their parent", async ({
 test("a generated MockLink opens a component variant entry", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await page
     .frameLocator('[data-workspace-frame="mobile"]')
     .getByRole("link", { name: "Open Disabled Action", exact: true })
     .click();
 
-  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
@@ -193,7 +180,7 @@ test("a generated MockLink opens a component variant entry", async ({
 test("a standalone frame miss keeps navigation available for a later route", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   const link = page
     .frameLocator('[data-workspace-frame="mobile"]')
     .getByRole("link", { name: "Open Disabled Action", exact: true });
@@ -201,13 +188,13 @@ test("a standalone frame miss keeps navigation available for a later route", asy
     element.setAttribute("data-mokly-link", "missing-entry"),
   );
   await link.click();
-  await expect(page).toHaveURL(/\/view\/missing-entry$/);
+  await expect(page).toHaveURL(/\/view\/missing-entry\/$/);
   await expect(
     page.getByRole("heading", { name: "Item not found", exact: true }),
   ).toBeVisible();
 
   await page.getByRole("link", { name: "Home", exact: true }).click();
-  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+  await expect(page).toHaveURL(/\/view\/home\/$/);
   await expect(
     page.getByRole("heading", { name: "Home", exact: true }),
   ).toBeVisible();
@@ -216,7 +203,7 @@ test("a standalone frame miss keeps navigation available for a later route", asy
 test("Side by side stays authoritative while switching sibling variants", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action-default.html`);
+  await page.goto(`${server.url}/view/action/default/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
   await loadComparison(page, "Side by side");
 
@@ -236,10 +223,10 @@ test("Side by side stays authoritative while switching sibling variants", async 
 test("screen inspection records real nested, repeated and hidden instances without listing the screen in Changes", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
   await expect(
-    page.locator('[data-nav-row][data-route="screens/home.html"]'),
+    page.locator('[data-nav-row][data-route="home/index.html"]'),
   ).not.toHaveAttribute("data-changed", "true");
   await page.getByRole("tab", { name: "Components", exact: true }).click();
   await expect(
@@ -279,7 +266,7 @@ test("desktop divider stays centered while resizing and mobile sheet keeps the p
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/components/pane.html`);
+  await page.goto(`${server.url}/view/pane/`);
   const divider = page.getByRole("separator", { name: "Resize inspector" });
   await expect(divider).toBeVisible();
   const before = await page.locator("[data-workspace-inspector]").boundingBox();
@@ -317,7 +304,7 @@ test("the inspector divider lights up like the navigation divider", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/components/pane.html`);
+  await page.goto(`${server.url}/view/pane/`);
   await page.addStyleTag({
     content: "*, *::after { transition: none !important; }",
   });
@@ -361,7 +348,7 @@ test("the inspector divider lights up like the navigation divider", async ({
 test("component comparisons follow changed variants while added variants stay current", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
   await loadComparison(page, "Overlay");
   await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(2);
@@ -387,7 +374,7 @@ test("component comparisons follow changed variants while added variants stay cu
   await chooseVariant(page, "Disabled");
   await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
     PANE_SOURCE,
-    /disabled\.mobile\.html$/,
+    /disabled\/index\.mobile\.html$/,
   );
   await page.getByRole("button", { name: "Current", exact: true }).click();
   await expect(
@@ -410,7 +397,7 @@ test("component comparisons follow changed variants while added variants stay cu
 test("Used by links select a real screen instance and clear stale selection on navigation", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   await page
     .getByRole("tabpanel", { name: "Usage", exact: true })
@@ -418,7 +405,7 @@ test("Used by links select a real screen instance and clear stale selection on n
     .first()
     .click();
   await expect(page).toHaveURL(
-    /screens\/home\.html\?viewport=mobile&scheme=light&instance=[a-f0-9]{64}/,
+    /home\/\?viewport=mobile&scheme=light&instance=[a-f0-9]{64}/,
   );
   await expect(
     page.getByRole("tab", { name: "Props", exact: true }),
@@ -451,7 +438,7 @@ test("Used by links select a real screen instance and clear stale selection on n
 test("nested selection and frame Escape preserve focus and consumer markup", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await expect(
     page.getByRole("button", { name: "Highlight components", exact: true }),

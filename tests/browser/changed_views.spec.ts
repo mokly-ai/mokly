@@ -10,8 +10,8 @@ import { reparentedEntrySource } from "../helpers/fixture.js";
 
 import { chooseVariant, expectFrameSource } from "./workspace_actions.js";
 
-const HOME = "screens/home.html";
-const HOME_ID = "home";
+const HOME = "fixture/screens/home/index.html";
+const HOME_PATH = "fixture/screens/home";
 const HOME_ROW = `a[data-nav-row][data-route="${HOME}"]`;
 const SCHEME_DOT = '[data-view-changed="scheme"]';
 const VIEWPORT_DOT = '[data-view-changed="viewport"]';
@@ -48,7 +48,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [HOME_ID],
+      changedEntries: [HOME_PATH],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
@@ -165,13 +165,13 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [HOME_ID],
+      changedEntries: [HOME_PATH],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
         screenViews: [
           {
-            id: HOME_ID,
+            path: HOME_PATH,
             views: [
               {
                 viewport: "mobile",
@@ -198,7 +198,7 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
     );
     await expectFrameSource(
       page.locator('[data-workspace-frame="mobile"]'),
-      /screens\/home\.mobile\.html$/,
+      /home\/index\.mobile\.html$/,
     );
     await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
       "data-color-scheme-fallback",
@@ -233,7 +233,7 @@ test("a background classification moves the marks without reloading the frames",
 
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [HOME_ID],
+      changedEntries: [HOME_PATH],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
@@ -262,14 +262,14 @@ test("component view evidence follows the selected saved variant", async ({
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [],
+      changedEntries: [],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
         result: secondVariantDarkOnlyResult(),
       },
     });
-    await page.goto(`${server.url}/view/components/action.html`);
+    await page.goto(`${server.url}/view/action/`);
 
     const row = page.locator("[data-workspace-changed-views]");
     const scheme = page.getByLabel("Appearance", { exact: true });
@@ -299,17 +299,17 @@ test("Changes lands on the first changed view and every other arrival stays stic
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [HOME_ID],
+      changedEntries: [HOME_PATH],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
         screenViews: darkOnlyScreenViews(),
       },
     });
-    await page.goto(`${server.url}/view/screens/details.html`);
+    await page.goto(`${server.url}/view/fixture/screens/details/`);
 
     await page.locator(HOME_ROW).click();
-    await expect(page).toHaveURL(new RegExp("screens/home\\.html$"));
+    await expect(page).toHaveURL(new RegExp("fixture/screens/home/$"));
     await expect(page.locator("body")).toHaveAttribute(
       "data-mokly-color-scheme",
       "light",
@@ -319,19 +319,19 @@ test("Changes lands on the first changed view and every other arrival stays stic
     );
     await expectFrameSource(
       page.locator('[data-workspace-frame="mobile"]'),
-      /screens\/home\.mobile\.html/,
+      /home\/index\.mobile\.html/,
     );
     await expectShownStatus(page, "Unmodified", false);
 
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp("screens/details\\.html$"));
+    await expect(page).toHaveURL(new RegExp("fixture/screens/details/$"));
     await expectShownStatus(page, "Unmodified", false);
 
     await page.locator('[data-filter="changed"]').click();
     await expect(page.locator(HOME_ROW)).toBeVisible();
     await page.locator(HOME_ROW).click();
 
-    await expect(page).toHaveURL(new RegExp("screens/home\\.html$"));
+    await expect(page).toHaveURL(new RegExp("fixture/screens/home/$"));
     await expect(page.locator("body")).toHaveAttribute(
       "data-mokly-color-scheme",
       "dark",
@@ -341,18 +341,18 @@ test("Changes lands on the first changed view and every other arrival stays stic
     );
     await expectFrameSource(
       page.locator('[data-workspace-frame="mobile"]'),
-      /screens\/home\.mobile\.dark\.html/,
+      /home\/index\.mobile\.dark\.html/,
     );
     await expect(page.locator(SCHEME_DOT)).toBeHidden();
     await expect(page.locator(VIEWPORT_DOT)).toBeVisible();
     await expectShownStatus(page, "Changed", true);
 
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp("screens/details\\.html$"));
+    await expect(page).toHaveURL(new RegExp("fixture/screens/details/$"));
     await expectShownStatus(page, "Unmodified", false);
 
     await page.goForward();
-    await expect(page).toHaveURL(new RegExp("screens/home\\.html$"));
+    await expect(page).toHaveURL(new RegExp("fixture/screens/home/$"));
     await page.reload();
     await expect(page.locator("body")).toHaveAttribute(
       "data-mokly-color-scheme",

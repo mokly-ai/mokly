@@ -1,8 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1 and 2 are complete. This plan
-supersedes
+discussion in this workspace. Milestones 1–3 are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -52,9 +51,10 @@ user should reconsider):**
    extension; `README.md` and `index.md` are the folder's own page, detected
    case-insensitively. A TypeScript entry's leaf is `slug`, defaulting to the
    file name; two slug-less entries in one file collide and fail the build.
-   The slug `index`, from a file name or the field, makes the entry the
-   folder's own page. `path` overrides the derived path and is allowed on any
-   entry; a written path is always complete.
+   The slug `index`, from a file name or the field, makes a non-variant entry the
+   folder's own page. `path` overrides the derived path on non-variant entries;
+   a written path is always complete. Variants take their path from the parent
+   and slug only and have no `path` input.
 4. **Segment grammar.** Letters, digits, hyphens, and underscores, ASCII only,
    case preserved, no dots, no spaces, no Windows device names. Two segments
    that differ only by case are the same segment. A file name outside the
@@ -300,72 +300,180 @@ Replace ids and nav paths with derived paths end to end, so `mokly build`,
 updated here so the current shell keeps rendering; shell presentation changes
 wait for Milestone 6.
 
-- [ ] Configuration (`src/config`): add `roots` with `dir`, `files`, `path`,
+Status: Complete. The only full-gate blocker is pre-existing GHSA-vfj7-8cjw-p6xm in development dependencies; package, unit (2,948), browser (726), hydration (221), and all remaining repository checks pass, and the orchestrator authorized commit and push without an audit exemption or dependency change.
+
+- [x] Configuration (`src/config`): add `roots` with `dir`, `files`, `path`,
       and `transparent`; the `[{ dir: "specs" }]` default; validation against
       `mockupsDir`, review output, and export destinations; remove `entries`,
       `entriesDir`, and the glob modules they used.
-- [ ] Discovery (`src/build/discovery.ts`, `src/config/entry_discovery*.ts`,
+- [x] Discovery (`src/build/discovery.ts`, `src/config/entry_discovery*.ts`,
       `src/build/source_inventory.ts`): walk roots, apply `files` and
       `_folder.json` `exclude`, and keep ownership and watch membership keyed
       by the resolved file set.
-- [ ] Authoring API (`src/authoring`): `slug`, `path`, `movedFrom`,
+- [x] Enforce the general unknown-input-field rule at runtime and in the typed
+      helpers, including unknown flow-step fields; reconcile the authoring
+      contract's former ignored-key wording with the clean-break requirement.
+- [x] Authoring API (`src/authoring`): `slug`, `path`, `movedFrom`,
       `defineFolder`, variants with `slug`, flow steps by path, `mockLink`
       accepting complete paths, relative paths, and definition references;
       remove `id`, `navPath`, `defineRoot`, `folder`, nested `screen` and
       `page`, and `variantOf` from inputs. Keep `ReviewIgnore` ids unchanged.
-- [ ] Module export collection (`src/build/consumer_entry.ts`,
+- [x] Cover the orchestrator's clarified export-location and link-base rules:
+      paths derive from the discovered exporting module while `sourcePath` stays
+      the defining module; deduplicate aliases within one module, reject the
+      same definition object across modules with `duplicate-export`, and resolve
+      variant links from the parent entry's base folder.
+- [x] Module export collection (`src/build/consumer_entry.ts`,
       `src/registry/prepare.ts`): default and named exports, arrays, brand
       detection, ignored exports, and the empty-module error.
-- [ ] Path derivation and grammar as a pure module under `src/registry`:
+- [x] Path derivation and grammar as a pure module under `src/registry`:
       prefix, directory, leaf, transparent directories, `index`, case-folded
       uniqueness, and attributed errors.
-- [ ] Folder records: the `_folder.json` loader with schema validation, the
+- [x] Folder records: the `_folder.json` loader with schema validation, the
       `defineFolder` definition, merging, title resolution, `order`, `hidden`,
       and the duplicate, unused-path, and unknown-child errors.
-- [ ] Registry validation (`src/registry/entry_validation.ts`,
+- [x] Preserve explicit local instance-name grammar while accepting a component
+      path segment as the inferred default, in authoring and persisted view readers.
+- [x] Registry validation (`src/registry/entry_validation.ts`,
       `variant_validation.ts`, `relationships.ts`, `entry_order.ts`): per-kind
       rules, one-level variants, mixed folder children, the sibling comparator,
       and path-addressed flow membership.
-- [ ] Manifest v8 (`src/registry/manifest*.ts`): path, authored `movedFrom`,
+- [x] Reject conflicting folder-prefix casing in persisted manifest and public
+      readers too, including entries omitted from the visible tree.
+- [x] Manifest v8 (`src/registry/manifest*.ts`): path, authored `movedFrom`,
       derived variant relationships, folder records, kind `document` reserved,
       and no stored routes.
-- [ ] Artifact paths (`packages/viewer/src/data/paths.ts`,
+- [x] Artifact paths (`packages/viewer/src/data/paths.ts`,
       `src/build/output_paths.ts`, `src/export/paths.ts`,
       `packages/viewer/src/navigation/routes.ts`): the confirmed layout, the
       `/view/<path>` parser, provider-normalised paths, snapshot and preview
       paths, and unavailable-view hrefs.
-- [ ] Build output (`src/build`): nested output directories, ownership and
+- [x] Keep ownership when a discovered module and its defining helper move
+      together, including a fixed declared path and cleanup of the old artifact path.
+- [x] Build output (`src/build`): nested output directories, ownership and
       orphan cleanup across moves, collision checks, link resolution for
       complete, relative, and typed links in `mock_links.ts`,
       `mock_link_routes.ts`, and `html_links.ts`, and `logicalRoutes` keyed by
       path.
-- [ ] Read model v4 emission (`src/catalogue`) and the viewer data layer
+- [x] Read model v4 emission (`src/catalogue`) and the viewer data layer
       (`packages/viewer/src/catalogue`, `packages/viewer/src/navigation`,
       `packages/viewer/src/shell/disclosure_keys.ts`): one tree split by
       kind, path-keyed disclosure keys, and unchanged presentation.
-- [ ] Review pairing by kind and path without move detection, review result v5
+- [x] Fix removed-page preview emission to use a statically checked v3 path DTO,
+      so live selection and export cannot emit a stale identity field.
+- [x] Review pairing by kind and path without move detection, review result v5
       with `previousPath` absent, and the v8-only baseline gate
       (`src/review`, `src/baseline`).
-- [ ] Migrate `examples/basic/entries` to the recommended layout with
+- [x] Align the companion wire boundaries: catalogue-change snapshot v2,
+      removed-preview metadata v3, frame navigation `screenPath`, and selected
+      comparison requests using `path`. Keep move lists empty until move pairing.
+- [x] Include the protocol-size ratchet correction supplied by the orchestrator:
+      remove the two obsolete sub-250-line oversized caps.
+- [x] Migrate `examples/basic/entries` to the recommended layout with
       directories per area, slugs, and `_folder.json` where titles need
       characters outside the grammar; migrate `scripts/large`; regenerate and
       run `npm run example:check`.
-- [ ] Re-apply the drafted guides from commit `d65417d` for `docs/guides/start`,
+- [x] Re-apply the drafted guides from commit `d65417d` for `docs/guides/start`,
       `docs/guides/authoring`, and `docs/guides/cli`, the root `README.md`
       quick start and authoring table, and `packages/viewer/README.md`, then
       reconcile them with the implemented API so `tests/guides_*` pass,
       including the config-field and export-coverage checks.
-- [ ] Add unit tests for derivation, grammar, collisions, folder records,
+- [x] Validate folder carrier source inventories and the reserved document shape;
+      make invalid runtime flow-step inputs produce attributed validation errors.
+- [x] Split configuration traversal and source ownership into a protocol companion
+      so the roots clarification stays within the existing document size ratchet.
+- [x] Preserve unchanged output directories during replacement to avoid spurious
+      watch reloads cancelling component edits; back up case-only renames using
+      actual on-disk spelling and test directory pruning/rollback.
+- [x] Share matched-file physical projections with the source inventory to avoid
+      resolving every matched file twice while retaining generation invalidation.
+- [x] Add unit tests for derivation, grammar, collisions, folder records,
       export collection, variants, manifest v8, artifact paths, the route
       parser, and read model v4; update the existing suites and fixtures;
       update the browser suites that assert routes or disclosure keys.
-- [ ] Smoke-test `npm run dev`: open entries at `/view/<path>`, follow links,
+- [x] Preserve product component CSS class names while migrating example identities.
+- [x] Restore the ordinary preview fixture's focused catalogue using roots and path destinations.
+- [x] Preserve local instance-name grammar through public catalogue projection and reading.
+- [x] Keep default titles nonempty for valid folder segments made only of hyphens or underscores.
+- [x] Authenticate provider-normalized page directories consistently in same-origin frame ownership, readiness and geometry checks.
+- [x] Accept directory-normalized index snapshots from static hosts while retaining exact generation confinement and the authored resource base.
+- [x] Preserve native fragment hashes when restoring another entry through browser history.
+- [x] Smoke-test `npm run dev`: open entries at `/view/<path>`, follow links,
       run `check`, and export.
-- [ ] Run `cargo xtask check`, then commit and push.
+- [x] Split catalogue serialization and public-exclusion configuration into focused
+      companions so review clarifications fit the protocol size ratchet.
+- [x] Address orchestrator review batch 1 with regression coverage:
+  - [x] Retain hidden folder nodes in v4; filter only All/search, retaining Changes rows.
+  - [x] Exclude hidden children from All folder counts while retaining Changes ancestry.
+  - [x] Protect excluded root matches and reserve `_folder.json` case-insensitively (1, 16).
+  - [x] Reject folder carriers owned by two roots, including disjoint entry globs (2).
+  - [x] Sort index entries by rendered row kind and prune filtered children correctly (3, 4).
+  - [x] Pair Changes by kind and case-folded path, including parent/variant shape changes (5, 7, 8).
+  - [x] Pin historical snapshot identity namespace v3 (6).
+  - [x] Harden path-keyed dictionaries against prototype names (9).
+  - [x] Close public-reader tree, removed-record and private-metadata gaps (10).
+  - [x] Exclude reserved documents from component review until document review lands (11).
+  - [x] Restore persisted manifest tree validation and remove obsolete identity naming (12).
+  - [x] Match folder exclusions against files only in discovery and watch (13).
+  - [x] Preserve directory discovery during folder-file races; attribute filesystem failures (14).
+  - [x] Align folder-object, directory-segment and configuration diagnostics (15, 18).
+  - [x] Apply general unknown-input validation to `defineFolder` (17).
+- [x] Protect and watch newly created root matches before candidate acceptance,
+      including excluded files and invalid modules; preserve historical inventories.
+- [x] Keep unknown input properties out of resolved relationships and attribution,
+      so each produces only the general unknown-field diagnostic.
+- [x] Apply the clarified variant identity rule: variants have no `path` input.
+  - [x] Remove variant `path` inputs and derive every variant from parent plus slug.
+  - [x] Require the same direct-parent path in both persisted readers, including history.
+  - [x] Migrate examples, package fixtures and all tests to derived variant paths.
+  - [x] Cover unknown `path` inputs, TypeScript excess keys and non-collapsing `index` slugs.
+  - [x] A parent declared path must bypass invalid file/directory names for its variants too.
+- [x] Address orchestrator review batch 2a with regression coverage:
+  - [x] Reject unknown persisted use-case step fields (1).
+  - [x] Verify parent declared paths bypass filename grammar; variant slugs never collapse `index` (2, 10).
+  - [x] Ignore ordinary nested helper data; reject nested definitions (3).
+  - [x] Reject copied branded objects and suppress duplicate-export follow-on noise (4, 5).
+  - [x] Retain variant declaration order independently of export order (6).
+  - [x] Remove former-field special cases and reject variant excess keys statically (7, 8).
+  - [x] Attribute non-string flow-membership errors without coercion (9).
+  - [x] Keep definition-reference tokens private and report unexported references by source/title (11).
+- [x] Address orchestrator review batch 2b with regression coverage:
+  - [x] Publish removed screen/page metadata by path (1).
+  - [x] Accept all parser-supported URL forms for static evidence and remove dead route branches (2, 6).
+  - [x] Prune empty output ancestors on installation and rollback (3).
+  - [x] Preserve output ownership across defining-helper moves (4).
+  - [x] Scope export snapshot exemptions to the comparison prefix (5).
+  - [x] Cache public-file collision inventory per generation (7).
+  - [x] Give transformer logical routes a null prototype (8).
+  - [x] Update package smoke scripts to paths and current wire versions (9).
+- [x] Run `cargo xtask check`, then commit and push.
+  - [x] Verify formatting, lint, root/viewer types, repository ratchets, and Rust checks.
+  - [x] Run the package suite, including all five packed consumer scenarios.
+  - [x] Reproduce the new dependency-audit failure on pristine `3dc7663`:
+        GHSA-vfj7-8cjw-p6xm reports 13 high findings through the existing
+        `braces` dependency tree; no dependency manifests changed in this milestone.
+  - [x] Record the approved audit disposition: no patched version is available;
+        commit with every other check passing and no audit suppression or dependency change.
+  - [x] Complete the independently selected unit, browser, and hydration suites
+        (2,948 unit tests, 726 browser tests, 221 hydration tests; zero skips).
+        The orchestrator reviews each milestone; the implementation review remains the
+        final item in Milestone 8.
 
 ## Milestone 4: Markdown documents
 
 Add Markdown files as `document` entries.
+
+- [ ] Add document material-change classification beside pages and document previews
+      beside page previews; reserved documents are excluded from component pairing today.
+
+- [ ] Wire front-matter `path` through the shared declared-path rules: bypass
+      file/directory grammar, retain README/index own-page status, and resolve
+      relative links from the declared index path.
+- [ ] Replace the interim discovery filter that retains matched `.md` files as
+      protected, watched source inputs but omits them from executable entry
+      modules and catalogue output. Markdown rendering and entry collection
+      begin in this milestone; a catalogue still needs a renderable definition
+      during Milestone 3.
 
 - [ ] Select the Markdown and front matter parser, add it with `npm install`
       at the current version, and record it where
@@ -428,6 +536,8 @@ Bring the shell to the Milestone 2 mockups.
       `css_nav_variants.ts`).
 - [ ] Make a breadcrumb folder segment open the folder page when it exists and
       otherwise expand the folder.
+- [ ] Remove obsolete storage-key cleanup while moving to v4; earlier keys
+      must remain unread, untranslated and untouched.
 - [ ] Move disclosure keys to `folder:<path>`, `variants:<path>`, and the
       `specs` and `components` section keys, with reconciliation and Collapse
       all (`disclosure_keys.ts`, `disclosure_storage.ts`).

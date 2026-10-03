@@ -45,21 +45,20 @@ export function projectCatalogue(
         (entry) =>
           entry.kind === "component" && !isManifestComponentVariant(entry),
       )
-      .map((entry) => entry.id),
+      .map((entry) => entry.path),
   );
   if (
-    catalogue.manifest.schemaVersion !== 7 &&
+    catalogue.manifest.schemaVersion !== 8 &&
     catalogue.manifest.schemaVersion !== "live-index-1"
   )
     invalidData(
       "$catalogue",
-      "current projection requires manifest v7 or live metadata",
+      "current projection requires manifest v8 or live metadata",
     );
   const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
-    id: entry.id,
+    path: entry.path,
     title: entry.title,
     tags: [...(entry.tags ?? [])],
-    navPath: [...entry.navPath],
     details: {
       description: entry.description,
       sourcePath: repositoryPath(entry.sourcePath),
@@ -76,12 +75,18 @@ export function projectCatalogue(
         ...base,
         kind: "page",
       };
+    if (entry.kind === "document")
+      return {
+        ...base,
+        kind: "document",
+        colorSchemes: [...entry.colorSchemes],
+      };
     if (entry.kind === "use-case")
       return {
         ...base,
         kind: "use-case",
         steps: entry.steps.map((step) => ({
-          screenId: step.screenId,
+          screenPath: step.screenPath,
           ...(step.title !== undefined ? { title: step.title } : {}),
           ...(step.description !== undefined
             ? { description: step.description }
@@ -94,7 +99,7 @@ export function projectCatalogue(
         kind: "screen",
         colorSchemes: [...entry.colorSchemes],
         views: projectViews(input, retainedComponents, entry, removed),
-        useCaseIds: [...entry.useCaseIds],
+        useCasePaths: [...entry.useCasePaths],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
@@ -102,8 +107,8 @@ export function projectCatalogue(
       };
     if (isManifestComponentVariant(entry)) {
       const review = (input.comparison ?? input.evidence?.result)?.components
-        .find((item) => item.id === entry.variantOf)
-        ?.variants.find((item) => item.id === entry.id);
+        .find((item) => item.path === entry.variantOf)
+        ?.variants.find((item) => item.path === entry.path);
       return {
         ...base,
         kind: "component",
@@ -148,12 +153,12 @@ export function projectCatalogue(
           ({ entry }) => entry,
         ).flatMap((item) => ("removed" in item ? [item] : []))
       : [];
-  const removedIds = new Set(removedSnapshots.map(({ entry }) => entry.id));
+  const removedPaths = new Set(removedSnapshots.map(({ entry }) => entry.path));
   for (const id of input.removedPreviews?.keys() ?? [])
-    if (!removedIds.has(id))
-      invalidData("$catalogue", "preview id is not a removed entry");
+    if (!removedPaths.has(id))
+      invalidData("$catalogue", "preview path is not a removed entry");
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {
@@ -164,23 +169,29 @@ export function projectCatalogue(
     comparisonUrl,
     tree: projectTree(catalogue.hierarchy),
     screens: entries.filter((entry) => entry.kind === "screen"),
+    documents: entries.filter((entry) => entry.kind === "document"),
     pages: entries.filter((entry) => entry.kind === "page"),
     useCases: entries.filter((entry) => entry.kind === "use-case"),
     components: entries.filter((entry) => entry.kind === "component"),
-    removedEntries: removedSnapshots.map(({ entry }) => ({
-      entry: record(entry, true),
+    removedEntries: removedSnapshots.map((snapshot) => ({
+      folderTitles: [
+        ...catalogue.removedEntries.find(
+          (record) => record.entry.path === snapshot.entry.path,
+        )!.folderTitles,
+      ],
+      entry: record(snapshot.entry, true),
       ...(snapshotSource
         ? {
             snapshotId: historicalSnapshotId(
               identity.id,
               snapshotSource,
-              entry,
+              snapshot.entry,
             ),
           }
         : {}),
       ...projectPreview(
-        entry,
-        input.removedPreviews?.get(entry.id),
+        snapshot.entry,
+        input.removedPreviews?.get(snapshot.entry.path),
         comparisonUrl,
       ),
     })),
@@ -227,8 +238,11 @@ function projectPreview(
 }
 
 function entryDependencies(entry: ManifestEntry): string[] {
-  const historical = (entry as { dependencies?: unknown }).dependencies;
-  return Array.isArray(historical)
-    ? [...(historical as string[])].sort()
-    : [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort();
+  return [
+    ...new Set([
+      entry.sourcePath,
+      ...entry.declaredDependencies,
+      ...(entry.kind === "document" ? entry.resources : []),
+    ]),
+  ].sort();
 }

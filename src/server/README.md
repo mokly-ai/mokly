@@ -14,8 +14,8 @@ unfinished responses cannot keep shutdown waiting for the browser.
 boundaries that retain each stable prefix without exempting its ignored
 descendants. Discovery and watching share one denied-directory policy below the
 relevant glob root: traversal uses the deepest containing root, and entry-file
-classification uses the deepest matching root. The glob itself defines every
-entry-file shape that can trigger rediscovery. Traversal also skips
+classification uses the deepest matching root. Root `files` globs define entry shapes. Folder exclusions control entry collection; root matches, including new excluded
+files, remain protected source-watch candidates. Traversal also skips
 `review.outDir`. A denied leaf's directory status comes from watcher stats,
 else from its event kind, else from one stat that treats any error as a file.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
@@ -33,7 +33,7 @@ lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
-GET/HEAD `/__mokly/catalogue.json` returns the public v3
+GET/HEAD `/__mokly/catalogue.json` returns the public v4
 [read model](../catalogue/README.md) as JSON with `Cache-Control: no-store`.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
 background usage/Changes or actual on-demand view records arrive. Requests only
@@ -42,14 +42,11 @@ evidence revisions advance independently. Failed candidates preserve the last
 snapshot, and superseded generations cannot replace it. `catalogue_update.ts`
 prepares updates before publication; `http_types.ts` owns the lifecycle types.
 
-Entry shells are served at canonical `/view/<kind-prefix>/<id>.html` and the
-matching provider-normalized `/view/<kind-prefix>/<id>` path; both return the
-same 200 shell when the identity exists, while generated links stay canonical.
-ID-alias paths receive the ordinary not-found shell and are never redirected.
-The approved [path identity plan](../../plans/path-identity.md) moves these
-routes to `/view/<path>/` under the
-[artifact path contract](../../docs/protocol/mokly-artifact-paths.md); the
-current implementation is described here.
+Entry shells use canonical `/view/<path>/` URLs. Extensionless `/view/<path>`
+and `/view/<path>/index.html` forms select the same entry; browser history is
+normalized without dropping its query or fragment. The
+[artifact path contract](../../docs/protocol/mokly-artifact-paths.md) defines
+all shell, generated document, view and snapshot names.
 
 Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
@@ -103,20 +100,20 @@ unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
 
-Both readers accept only manifest v7. Recognized earlier output follows the
+Both readers accept only manifest v8. Recognized earlier output follows the
 successful unavailable behavior and single terminal line in the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 `classification_result.ts` carries that expected typed outcome across the
 background worker without converting it into a generic classifier failure;
-unsupported newer or malformed v7 data keeps the normal safe diagnostic path.
+unsupported newer or malformed v8 data keeps the normal safe diagnostic path.
 
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison
 route fails with typed `review-invalid` ("The comparison is not prepared")
 until a derived reader is available. `selected_review_routes.ts` owns one
 bounded generation service for screen/component comparisons and removed-page
-previews. Pages use `review.json?page=<page-id>`, while screens and component
-variants use `review.json?id=<entry-id>`; each redirects to immutable metadata
+previews. Pages use `review.json?page=<page-path>`, while screens and component
+variants use `review.json?path=<entry-path>`; each redirects to immutable metadata
 and serves only its captured `snapshots/before/**` closure. Both selection kinds
 share coalescing, refresh, admission, timeout, byte, retention, epoch and
 shutdown bounds. `review_sources.ts` derives selections only from accepted

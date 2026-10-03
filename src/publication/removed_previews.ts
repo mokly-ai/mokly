@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { RemovedEntryPreview } from "@mokly/viewer";
 import {
-  pagePreviewMetadataPath,
+  previewMetadataPath,
   parseRemovedPagePreview,
   type RemovedPagePreviewArtifact,
   type ReviewArtifact,
@@ -52,9 +52,10 @@ export async function capturePublicationPagePreviews(
         baseline: changes.componentChanges.baseline,
         baseCommit: changes.baseCommit,
         baseRef: changes.baseRef,
-        changedIds: changes.changedIds,
+        changedEntries: changes.changedEntries,
         removedEntries: changes.removedEntries,
-        schemaVersion: 1,
+        schemaVersion: 2,
+        movedEntries: [],
       },
       new AbortController().signal,
     );
@@ -81,7 +82,7 @@ export function staticRemovedPreviews(
     for (const { entry } of removed) {
       if (entry.kind === "screen") {
         const screen = comparison.result.screens.find(
-          (candidate) => candidate.id === entry.id,
+          (candidate) => candidate.path === entry.path,
         );
         if (
           !screen ||
@@ -92,29 +93,29 @@ export function staticRemovedPreviews(
           screen.views.some((view) => view.state !== "removed")
         )
           throw publicationError(
-            `Removed screen preview is incomplete: ${entry.id}`,
+            `Removed screen preview is incomplete: ${entry.path}`,
           );
-        previews.set(entry.id, { kind: "screen" });
+        previews.set(entry.path, { kind: "screen" });
       }
       if (entry.kind === "page") {
-        const name = pagePreviewMetadataPath(entry.id);
+        const name = previewMetadataPath(entry.path);
         const bytes = files.get(name);
         if (bytes === undefined)
           throw publicationError(
-            `Removed page preview is missing: ${entry.id}`,
+            `Removed page preview is missing: ${entry.path}`,
           );
         const preview = parseRemovedPagePreview(
           JSON.parse(Buffer.from(bytes).toString("utf8")),
         );
         if (
-          preview.id !== entry.id ||
+          preview.path !== entry.path ||
           preview.baseCommit !== comparison.result.baseCommit ||
           preview.baseRef !== comparison.result.baseRef
         )
           throw publicationError(
-            `Removed page preview does not match the comparison: ${entry.id}`,
+            `Removed page preview does not match the comparison: ${entry.path}`,
           );
-        previews.set(entry.id, { kind: "page" });
+        previews.set(entry.path, { kind: "page" });
       }
     }
     return previews;

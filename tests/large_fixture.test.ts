@@ -108,7 +108,7 @@ test("scaled consumer exercises the same render, hierarchy, resource and compone
     ),
   );
   const html = compilation.outputs.get(
-    viewRoute("screen", screen.id, "desktop", "light"),
+    viewRoute(screen.path, "desktop", "light"),
   )!;
   assert.match(html, /react-native-stylesheet/);
   assert.match(html, /data-mokly-link/);

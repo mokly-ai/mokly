@@ -255,7 +255,7 @@ function reference(session: ShellFrameSession): InstanceRef {
   return {
     colorScheme: "light",
     key: instanceKey(session.identity.entryId),
-    screenId: session.identity.entryId,
+    screenPath: session.identity.entryId,
     viewport: "desktop",
   };
 }
