@@ -6,6 +6,18 @@
 
 * **viewer:** preserve the `.mbk-body` and `.mbk-details-body` selectors while scoping embedded styles, apply shell-root layout rules, and keep search usable beside compact host slots
 
+## [0.5.0](https://github.com/mokly-ai/mokly/compare/viewer-v0.4.0...viewer-v0.5.0) (2026-10-03)
+
+
+### Features
+
+* **viewer:** add route-scoped shell bootstraps ([#120](https://github.com/mokly-ai/mokly/issues/120)) ([b2c82c1](https://github.com/mokly-ai/mokly/commit/b2c82c1591c91f2550a66c464833b1f864bdab07))
+
+
+### Bug Fixes
+
+* prevent output write and frame usage races ([#129](https://github.com/mokly-ai/mokly/issues/129)) ([800fe9f](https://github.com/mokly-ai/mokly/commit/800fe9f88a0173429b25baa1bcf41ed9e59b2256))
+
 ## [0.4.0](https://github.com/mokly-ai/mokly/compare/viewer-v0.3.0...viewer-v0.4.0) (2026-09-30)
 
 
