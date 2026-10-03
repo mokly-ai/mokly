@@ -27,6 +27,7 @@ export function catalogueNavSections(
           entryId: entry.path,
           entryKind: entry.kind,
           label: `${entry.title} · Removed`,
+          title: entry.title,
           tags: entry.tags ?? [],
           removedPage: entry.kind === "page",
           ...(snapshotId ? { snapshotId } : {}),
@@ -83,7 +84,7 @@ export function navLeafVisible(
     {
       id: leaf.entryId,
       tags: leaf.tags ?? [],
-      text: leaf.label,
+      text: leaf.title,
     },
   );
 }
@@ -100,6 +101,9 @@ export function navNodeVisible(
       navLeafVisible(node, selection, context) ||
       (node.variants ?? []).some((variant) =>
         navLeafVisible(variant, selection, context),
+      ) ||
+      (node.members ?? []).some((member) =>
+        navNodeVisible(member, selection, context),
       )
     );
   return node.children.some((child) =>
@@ -124,12 +128,14 @@ function collectDefaults(
 ): void {
   for (const node of nodes) {
     if (node.kind === "leaf") {
-      if (node.variants?.length)
-        result[variantDisclosureKey(node.entryId)] = containsEntryId(node, id);
+      if (node.variants?.length || node.members?.length)
+        result[variantDisclosureKey(node.entryId)] = navNodeContains(node, id);
+      if (node.members)
+        collectDefaults(node.members, section, id, depth + 1, result);
       continue;
     }
     result[folderDisclosureKey(section, node.key)] =
-      depth === 0 || containsEntryId(node, id);
+      depth === 0 || navNodeContains(node, id);
     collectDefaults(node.children, section, id, depth + 1, result);
   }
 }
@@ -141,12 +147,13 @@ function nodePath(
 ): string[] | undefined {
   for (const node of nodes) {
     if (node.kind === "leaf") {
+      const list = variantDisclosureKey(node.entryId);
       if (node.entryId === id)
-        return node.variants?.length
-          ? [variantDisclosureKey(node.entryId)]
-          : [];
+        return node.variants?.length || node.members?.length ? [list] : [];
       if (node.variants?.some((variant) => variant.entryId === id))
-        return [variantDisclosureKey(node.entryId)];
+        return [list];
+      const member = node.members && nodePath(node.members, section, id);
+      if (member) return [list, ...member];
       continue;
     }
     const child = nodePath(node.children, section, id);
@@ -155,17 +162,25 @@ function nodePath(
   return undefined;
 }
 
-function containsEntryId(node: NavNode, id: string | undefined): boolean {
+/** Whether a row, its variants, its members, or its children hold `id`. */
+export function navNodeContains(
+  node: NavNode,
+  id: string | undefined,
+): boolean {
   return (
     id !== undefined &&
     (node.kind === "leaf"
       ? node.entryId === id ||
-        (node.variants ?? []).some((variant) => variant.entryId === id)
-      : node.children.some((child) => containsEntryId(child, id)))
+        (node.variants ?? []).some((variant) => variant.entryId === id) ||
+        (node.members ?? []).some((member) => navNodeContains(member, id))
+      : node.children.some((child) => navNodeContains(child, id)))
   );
 }
 
-/** Persisted disclosure identity for one screen's variant list. */
+/**
+ * Persisted disclosure identity for one entry's list: its variants and, for a
+ * folder's own screen or component, the folder's other members.
+ */
 export function variantDisclosureKey(parentId: string): string {
   return `variants:${parentId}`;
 }

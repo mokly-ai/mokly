@@ -399,7 +399,7 @@ Serve and export keep these origin-local preferences in `localStorage`:
 | Key                                | Choice                            |
 | ---------------------------------- | --------------------------------- |
 | `mokly:theme`                      | Explicit Light or Dark appearance |
-| `mokly:nav-disclosure:v3`          | Open catalogue groups             |
+| `mokly:nav-disclosure:v4`          | Open catalogue groups             |
 | `mokly:details-disclosure`         | Details open or closed            |
 | `mokly:navigation-width:v1`        | Navigation split width            |
 | `mokly:comparison-scroll-together` | `on` or `off`; missing means on   |

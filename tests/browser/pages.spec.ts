@@ -58,7 +58,7 @@ for (const width of [390, 1280]) {
         .click();
     await expect(
       page.locator(
-        '[data-nav-section="pages"] [data-nav-folder="folder:example"]',
+        '[data-nav-section="specs"] [data-nav-folder="folder:example"]',
       ),
     ).toHaveCount(1);
     await expect(

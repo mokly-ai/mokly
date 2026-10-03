@@ -52,7 +52,7 @@ function persistedStore(model: CatalogueReadModel, initial: ShellState) {
   return { store, state: () => state };
 }
 
-test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves", (context) => {
+test("adopting a Removed variant reconciles Collapse all, recovery, and v4 saves", (context) => {
   const saved = new Map<string, string>();
   const previousStorage = Object.getOwnPropertyDescriptor(
     globalThis,
@@ -107,7 +107,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
     false,
   );
   assert.equal(
-    JSON.parse(saved.get("mokly:nav-disclosure:v3") ?? "{}")?.[variantKey],
+    JSON.parse(saved.get("mokly:nav-disclosure:v4") ?? "{}")?.[variantKey],
     false,
   );
 
@@ -142,7 +142,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
   retractedStore.store.collapseAll();
   assert.equal(
     Object.hasOwn(
-      JSON.parse(saved.get("mokly:nav-disclosure:v3") ?? "{}"),
+      JSON.parse(saved.get("mokly:nav-disclosure:v4") ?? "{}"),
       variantKey,
     ),
     false,
@@ -187,7 +187,7 @@ test("filtered evidence reconciles current and pre-filter baseline independently
 test("background evidence preserves a collapsed active folder with and without new navigation", () => {
   const base = baseModel();
   const current = viewerCatalogue(base);
-  const activeFolder = "folder:pages:product/browse";
+  const activeFolder = "folder:specs:product/browse";
   const initial = initialState(base, "/view/product/browse/home/");
   assert.equal(initial.disclosures[activeFolder], true);
   const collapsed = {

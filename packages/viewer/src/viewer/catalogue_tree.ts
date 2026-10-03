@@ -62,7 +62,7 @@ export function adoptCatalogueTree(
     ancestorsByPath: ancestors,
     tree,
     roots: {
-      pages: filterHierarchy(tree, false),
+      specs: filterHierarchy(tree, false),
       components: filterHierarchy(tree, true),
     },
   };

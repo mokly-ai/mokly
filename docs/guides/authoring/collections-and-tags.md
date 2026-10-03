@@ -13,11 +13,13 @@ A folder is every path segment before an entry's last one. The file
 folder with no entry below it does not exist. The same directory can hold
 screens, pages, flows and components.
 
-In the catalogue, a folder appears in the Pages section when it holds
-screens, pages or flows, and in the Components section when it
+In the catalogue, a folder appears in the Specs section when it holds
+screens, pages, documents or flows, and in the Components section when it
 holds components, with each section showing only its own kind of children. A
-folder row only expands or collapses; it never opens anything. Breadcrumbs
-use folder titles in order.
+folder row only expands or collapses; it never opens anything. A folder's own
+page is its first row, called Overview when it shares the folder's title.
+Breadcrumbs use folder titles in order: a folder with its own page opens
+that page, and any other folder opens in the navigation tree.
 
 ## Give a folder a title and an order
 

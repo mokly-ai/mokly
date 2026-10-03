@@ -8,11 +8,9 @@ the [folder contract](./mokly-folders.md#order). The
 
 ## Delivery Status
 
-The v3 storage format, early activation capture, active-route reveal,
-filtered-recovery fallback, and in-place reconciliation are implemented. The
-implemented keys are `folder:<section>:<path>` and `variants:<path>`, using
-the current Pages/Components section ids. Storage v4, Specs, and the revised
-reconciliation below await the [path identity plan](../../plans/path-identity.md).
+The v4 storage format, the Specs and Components keys, early activation capture,
+active-route reveal, breadcrumb folder reveal, filtered-recovery fallback, and
+in-place reconciliation are implemented.
 
 ## Keys
 
@@ -33,7 +31,8 @@ the [path contract](./mokly-paths.md); it may contain `_`, uppercase letters,
 and digits but never `:`, so a key is parsed by its fixed prefix and the rest
 is the path. A folder whose own page is a screen or component renders as that
 entry's row under the [folder row rules](./mokly-folders.md#rows-and-clicks),
-so its only disclosure is that entry's `variants:<path>` list.
+so its only disclosure is that entry's `variants:<path>` list, which holds the
+variants and then the folder's other members.
 
 ## Storage And Defaults
 
@@ -47,11 +46,14 @@ storage write does not discard the current in-memory choice.
 
 The server default opens each present section and each top-level folder. A
 deeper folder is open only if it contains the active route. A parent entry's
-variant list is open when the active route is that parent **or** one of its
-variants; other variant lists are closed. The active-route reveal opens the
-destination's section, folder ancestors, and parent variant list on every
-navigation, overriding any stored closed values for those keys. Unrelated
-stored values are preserved.
+variant list is open when the active route is that parent, one of its
+variants, or within a folder member the list holds; other variant lists are
+closed. The active-route reveal opens the destination's section, folder
+ancestors, and every variant list on its path on every navigation, overriding
+any stored closed values for those keys. Unrelated stored values are
+preserved. A breadcrumb folder reveal opens the folder's section, ancestors,
+enclosing variant lists, and the folder itself, and saves the result like a
+user toggle when no filter is active.
 
 ## Restore And Reconcile
 

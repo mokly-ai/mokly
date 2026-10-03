@@ -23,6 +23,7 @@ const removed = {
   kind: "leaf" as const,
   label: "Save failed · Removed",
   removedPage: true,
+  title: "Save failed",
   variantOf: "welcome",
 };
 
@@ -69,6 +70,38 @@ test("removed variants remain represented exactly once across parent transitions
       current.label,
     );
   }
+});
+
+test("a removed variant attaches to a parent listed among a folder's own screen members", () => {
+  const nestedRemoved = {
+    ...removed,
+    entryId: "billing/welcome/error",
+    key: "removed:billing/welcome/error",
+    variantOf: "billing/welcome",
+  };
+  const sections = buildNavSections(
+    createCatalogue(
+      manifest([
+        screen("billing", "Billing"),
+        screen("billing/welcome", "Welcome"),
+      ]),
+    ).hierarchy,
+    [nestedRemoved],
+  );
+  const nodes = sections.flatMap(({ children }) => children);
+  const index = nodes[0];
+  assert.ok(index?.kind === "leaf");
+  assert.equal(index.entryId, "billing");
+  const parent = index.members?.[0];
+  assert.ok(parent?.kind === "leaf");
+  assert.deepEqual(
+    parent.variants?.map(({ entryId, removedVariant }) => [
+      entryId,
+      removedVariant,
+    ]),
+    [["billing/welcome/error", true]],
+  );
+  assert.equal(nodes.length, 1);
 });
 
 test("an ineligible former parent remains a plain-text breadcrumb", () => {

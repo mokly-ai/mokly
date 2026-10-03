@@ -44,6 +44,11 @@ export function EntryDetailsBody(props: {
         ) : null}
       </div>
       <div className="mbk-meta">
+        {entry.kind === "component" ? (
+          <MetaRow label="Path">
+            <code className="mbk-code">{entry.path}</code>
+          </MetaRow>
+        ) : null}
         <MetaRow label="Source">
           <code className="mbk-code">{entry.sourcePath}</code>
         </MetaRow>

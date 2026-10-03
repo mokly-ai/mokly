@@ -4,7 +4,6 @@ import { isDisclosureKey } from "../shell/disclosure_keys.js";
 import {
   disclosureStorageKey,
   encodeDisclosureMap,
-  obsoleteDisclosureStorageKey,
   parseDisclosureMap,
 } from "../shell/disclosure_storage.js";
 import { queryConstrains, parseSearchQuery } from "../shell/search_query.js";
@@ -178,7 +177,6 @@ function rememberDisclosures(
       disclosureStorageKey,
       encodeDisclosureMap(disclosures),
     );
-    win.localStorage.removeItem(obsoleteDisclosureStorageKey);
   } catch {
     return;
   }
@@ -208,7 +206,7 @@ function storedDisclosures(
   }
 }
 
-/** Read either a native group or a screen-variant list disclosure. */
+/** Read either a native group or an entry's variant list disclosure. */
 function disclosureOpen(group: HTMLElement): boolean {
   return group.hasAttribute("data-nav-variants")
     ? !group.hidden
@@ -233,9 +231,10 @@ export function setDisclosureOpen(group: HTMLElement, open: boolean): void {
   if (!toggle) return;
   toggle.setAttribute("aria-expanded", String(open));
   const label = toggle.getAttribute("data-nav-variants-label");
+  const noun = toggle.getAttribute("data-nav-variants-noun") ?? "variants";
   if (label)
     toggle.setAttribute(
       "aria-label",
-      `${open ? "Hide" : "Show"} variants of ${label}`,
+      `${open ? "Hide" : "Show"} ${noun} of ${label}`,
     );
 }

@@ -81,12 +81,12 @@ test("background baselines reconcile removed rows and invalidate changed histori
     await expect(removed).toHaveCount(4);
     await expect(
       page.locator(
-        '[data-nav-section="pages"] a[data-route="old-screen/index.html"]',
+        '[data-nav-section="specs"] a[data-route="old-screen/index.html"]',
       ),
     ).toHaveCount(1);
     await expect(
       page.locator(
-        '[data-nav-section="pages"] a[data-route="old-page/index.html"]',
+        '[data-nav-section="specs"] a[data-route="old-page/index.html"]',
       ),
     ).toHaveCount(1);
     await expect(

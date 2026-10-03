@@ -30,8 +30,8 @@ rows browse-only, and adds the `Overview` first-child row, the path chip,
 Markdown document pages, and `Moved` Changes rows. Those states are approved
 below and designed in `design/browse/views/folder-overview`,
 `design/browse/pages/document`, `design/changes/outcomes/moved`, and the updated Browse,
-page, and component designs. The shell uses paths while retaining the Pages
-section and treating moves as removals plus additions until the
+page, and component designs. The shell implements the Specs rows, breadcrumbs,
+and path chip; it treats moves as removals plus additions until the
 [path identity plan](../../plans/path-identity.md) delivers the remaining behavior.
 
 Auto/Light/Dark interface appearance is designed in the
@@ -269,8 +269,8 @@ scrollable region scrolls internally:
   a visually hidden `Other theme changed` or `Other viewport changed` through
   `aria-describedby`; the dot stays distinct from selection and draws no rail.
 - **Stage** — dotted-grid background (22px radial dots), centred frames with
-  40px gap, internal `overflow: auto`, `MOBILE` / `DESKTOP` uppercase frame
-  labels, and no separate toolbar above the grid.
+  40px gap that stack from the top below 760px, internal `overflow: auto`,
+  `MOBILE` / `DESKTOP` uppercase frame labels, and no toolbar above the grid.
 - **Details inspector** — the shared icon footer opens the chosen tab in place;
   closing it leaves no icon selected. Desktop uses a centered grip on the divider
   and mobile uses a full-workspace-width rounded bottom sheet with an iOS-style

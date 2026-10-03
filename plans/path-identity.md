@@ -556,33 +556,56 @@ Tags: ui
 
 Bring the shell to the Milestone 2 mockups.
 
-- [ ] Rename the Pages section to Specs across `packages/viewer/src/shell`
+- [x] Rename the Pages section to Specs across `packages/viewer/src/shell`
       (`nav.tsx`, `nav_model.ts`, `nav_tree.ts`, `entry_wording.ts`) and
       build the Components section from entries of kind `component` and the
       Specs section from every other kind.
-- [ ] Make folder rows browse-only, add the Overview first-child row with the
+- [x] Make folder rows browse-only, add the Overview first-child row with the
       title fallback, and keep the entry-with-variants row
       (`nav_rows.tsx`, `nav_leaf_rows.tsx`, `css_nav_rows.ts`,
       `css_nav_variants.ts`).
-- [ ] Make a breadcrumb folder segment open the folder page when it exists and
+- [x] Make a breadcrumb folder segment open the folder page when it exists and
       otherwise expand the folder.
-- [ ] Remove obsolete storage-key cleanup while moving to v4; earlier keys
+- [x] Remove obsolete storage-key cleanup while moving to v4; earlier keys
       must remain unread, untranslated and untouched.
-- [ ] Move disclosure keys to `folder:<path>`, `variants:<path>`, and the
-      `specs` and `components` section keys, with reconciliation and Collapse
-      all (`disclosure_keys.ts`, `disclosure_storage.ts`).
-- [ ] Match search against path segments and titles
+- [x] Move disclosure keys to `folder:<section>:<path>`, `variants:<path>`,
+      and the `specs` and `components` section keys, with reconciliation and
+      Collapse all (`disclosure_keys.ts`, `disclosure_storage.ts`).
+- [x] Match search against path segments and titles
       (`nav_filter.tsx`, `search_query.ts`).
-- [ ] Route `/view/<path>` through the store and history
+- [x] Route `/view/<path>` through the store and history
       (`store_browser_routes.ts`, `store_browser_urls.ts`) and keep the
       missing view for unknown paths.
-- [ ] Add the document icon; an Overview row uses its index page's own icon,
+- [x] Add the document icon; an Overview row uses its index page's own icon,
       with no dedicated folder-page icon. Show the component path in component
       details.
-- [ ] Update and add browser tests under `tests/browser` for browsing,
+- [x] Replace the `#`-prefixed ID chip with the path chip, which shows the
+      path as written and announces `Copied path <path>`.
+- [x] Render a breadcrumb folder without its own page as a button that opens
+      its section, ancestors, enclosing entry lists, and the folder, clears
+      only a hiding filter, opens the drawer below the breakpoint, and
+      focuses the folder row; keep hidden folders and removed entries' crumbs
+      as text.
+- [x] Name an entry row's toggle `contents` instead of `variants` when its
+      list also holds folder members, before and after hydration.
+- [x] Retitle the watched folder test at
+      `tests/browser/watch_folders.spec.ts` as a title change and add a case
+      that changes the folder's path and proves the old keys leave saved
+      storage.
+- [x] Rewrite the obsolete-key tests in `nav_sections.test.ts`,
+      `client_disclosures.test.ts`, `client_browse_navigation.test.ts`,
+      `client_browse.test.ts`, and `tests/browser/browse_disclosures.spec.ts`
+      with current folder paths and v3 storage, so they prove earlier keys
+      are never read, translated, or removed.
+- [x] Show the path chip before the change status, as the screen header
+      design does.
+- [x] Start stacked frames at the top of a narrow stage so the first frame
+      and its label stay reachable, a defect found by the parity check
+      (`css_views_responsive.ts`, `tests/browser/stage_stacking.spec.ts`).
+- [x] Update and add browser tests under `tests/browser` for browsing,
       disclosures, variants, and navigation, and the viewer unit tests under
       `packages/viewer/tests`; verify parity with the Milestone 2 screens.
-- [ ] Re-apply the drafted `docs/guides/catalogue/browse.md`,
+- [x] Re-apply the drafted `docs/guides/catalogue/browse.md`,
       `search-and-filters.md`, and `details.md` from commit `d65417d` and
       reconcile them with the implemented shell.
 - [ ] Run `cargo xtask check`, then commit and push.

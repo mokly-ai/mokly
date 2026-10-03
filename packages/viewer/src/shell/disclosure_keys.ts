@@ -16,13 +16,13 @@ export function folderDisclosureKey(
 
 /** Accept only current, well-formed persistence identities. */
 export function isDisclosureKey(value: string): boolean {
-  if (value === "section:pages" || value === "section:components") return true;
+  if (value === "section:specs" || value === "section:components") return true;
   if (
     value.startsWith("variants:") &&
     isEntryPath(value.slice("variants:".length))
   )
     return true;
-  for (const prefix of ["folder:pages:", "folder:components:"]) {
+  for (const prefix of ["folder:specs:", "folder:components:"]) {
     if (value.startsWith(prefix)) {
       const pathKey = value.slice(prefix.length);
       return isEntryPath(pathKey);

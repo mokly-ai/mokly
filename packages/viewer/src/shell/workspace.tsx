@@ -208,7 +208,7 @@ export function ComponentWorkspace({
         }
         crumbs={head.crumbs}
         heading={head.title}
-        id={head.id}
+        path={head.path}
         status={
           <span
             className="mbk-entry-status"

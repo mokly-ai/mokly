@@ -65,16 +65,17 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
       key: `removed:${entry.path}`,
       kind: "leaf",
       label: `${entry.title} · Removed`,
+      title: entry.title,
       ...(entry.kind === "screen" && entry.variantOf !== undefined
         ? { variantOf: entry.variantOf }
         : {}),
     }),
   );
-  const pages = buildNavSections(catalogue.hierarchy, removedLeaves).find(
-    ({ id }) => id === "pages",
+  const specs = buildNavSections(catalogue.hierarchy, removedLeaves).find(
+    ({ id }) => id === "specs",
   );
-  assert.ok(pages);
-  const parentLeaf = findLeaf(pages.children, parent.path);
+  assert.ok(specs);
+  const parentLeaf = findLeaf(specs.children, parent.path);
   assert.ok(parentLeaf);
   assert.deepEqual(
     parentLeaf.variants?.map(({ entryId, removedVariant }) => ({

@@ -29,13 +29,13 @@ export interface HierarchyFolder<T extends HierarchyEntry> {
 }
 export type HierarchyNode<T extends HierarchyEntry> =
   HierarchyFolder<T> | HierarchyLeaf<T>;
-/** One tree with projections for today's Pages and Components sections. */
+/** One tree with its projections for the Specs and Components sections. */
 export interface CatalogueHierarchy<T extends HierarchyEntry> {
   ancestorsByPath: ReadonlyMap<string, readonly string[]>;
   byPath: ReadonlyMap<string, T>;
   tree: readonly HierarchyNode<T>[];
   roots: {
-    pages: readonly HierarchyNode<T>[];
+    specs: readonly HierarchyNode<T>[];
     components: readonly HierarchyNode<T>[];
   };
   variantsByPath: ReadonlyMap<string, readonly T[]>;
@@ -174,7 +174,7 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
       variantParentByPath,
       tree,
       roots: {
-        pages: filterHierarchy(tree, false),
+        specs: filterHierarchy(tree, false),
         components: filterHierarchy(tree, true),
       },
     },

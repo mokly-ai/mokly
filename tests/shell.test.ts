@@ -312,7 +312,7 @@ test("nav tree nests pages and screens in one declared hierarchy", () => {
   );
 });
 
-test("page breadcrumbs use path folders without invented Overview links", () => {
+test("page breadcrumbs reveal path folders without inventing Overview links", () => {
   const catalogue = createCatalogue(manifest);
   const entry = catalogue.byPath.get("example/old");
   assert.ok(entry);
@@ -320,9 +320,12 @@ test("page breadcrumbs use path folders without invented Overview links", () => 
     ...context,
     activeId: "example/old",
   });
-  assert.match(
-    html,
-    /aria-label="Catalogue location" class="mbk-crumbs"><span>Example<\/span>/,
+  const crumbs = html.match(/<p aria-label="Catalogue location"[\s\S]*?<\/p>/);
+  assert.equal(
+    crumbs?.[0],
+    '<p aria-label="Catalogue location" class="mbk-crumbs"><span>' +
+      '<button class="mbk-crumb-link" data-crumb-folder="example" type="button">Example</button>' +
+      "</span></p>",
   );
   assert.match(html, /class="mbk-stage-embed"/);
 });
@@ -355,11 +358,11 @@ test("catalogue nav marks active, changed, and iconed rows", () => {
   );
   assert.match(
     html,
-    /data-nav-disclosure="section:pages" data-nav-section="pages"/,
+    /data-nav-disclosure="section:specs" data-nav-section="specs"/,
   );
   assert.doesNotMatch(html, /data-nav-section="components"/);
   assert.match(html, /data-nav-folder="folder:example\/screens"/);
-  assert.match(html, /data-nav-disclosure="folder:pages:example\/screens"/);
+  assert.match(html, /data-nav-disclosure="folder:specs:example\/screens"/);
   assert.match(html, /data-entry-kind="screen"/);
   assert.match(html, /class="mbk-nav-ico folder"><svg/);
   assert.match(html, /class="mbk-nav-count">2</);
@@ -405,18 +408,18 @@ test("screen page renders device chrome, viewport switch, and details", () => {
   assert.match(html, /aria-label="Viewport" data-workspace-viewport=""/);
   assert.equal(html.includes('class="mbk-viewbar"'), false);
   assert.match(html, /class="mbk-crumbs"/);
-  const idButton = requiredElement(
+  const pathButton = requiredElement(
     html,
     (element) =>
-      attribute(element, "data-copy-id") === "example/screens/welcome",
+      attribute(element, "data-copy-path") === "example/screens/welcome",
   );
-  assertAttributes(idButton, {
-    "aria-label": "Copy ID example/screens/welcome",
-    class: "mbk-idchip",
+  assertAttributes(pathButton, {
+    "aria-label": "Copy path example/screens/welcome",
+    class: "mbk-pathchip",
     href: undefined,
     type: "button",
   });
-  assert.equal(textContent(idButton), "#example/screens/welcome");
+  assert.equal(textContent(pathButton), "example/screens/welcome");
   assert.match(html, /Proves the shell/);
   assert.match(html, /notes\.md/);
   const inspector = requiredElement(
@@ -917,10 +920,10 @@ test("shell stylesheet stays aligned with the design contract", () => {
 
   assert.match(SHELL_CSS, /prefers-reduced-motion/);
   assert.match(SHELL_CSS, /InterVariable\.woff2/);
-  assert.match(SHELL_CSS, /\.mbk-idchip \{[\s\S]*cursor: pointer;/);
+  assert.match(SHELL_CSS, /\.mbk-pathchip \{[\s\S]*cursor: pointer;/);
   assert.match(
     SHELL_CSS,
-    /\.mbk-idchip:active \{[\s\S]*transform: translateY\(1px\);/,
+    /\.mbk-pathchip:active \{[\s\S]*transform: translateY\(1px\);/,
   );
 });
 

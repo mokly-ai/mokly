@@ -113,6 +113,7 @@ export function createInitialShellState(
     navScroll: recovery?.navScroll ?? 0,
     query: recovery?.query ?? "",
     regionScrolls: recovery?.regionScrolls ?? {},
+    revealedFolder: undefined,
     route,
     selection,
     tagPickerIndex: 0,

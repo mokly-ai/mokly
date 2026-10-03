@@ -129,25 +129,28 @@ export function reparentedEntrySource(
     body?: string;
     firstTitle?: string;
     screensTitle?: string;
+    /** Slug of the screens folder; changing it moves that folder's path. */
+    screensSlug?: string;
     sharedChildTitle?: string;
   } = {},
 ): string {
   const child = options.sharedChildTitle ? "/states" : "";
+  const screens = `fixture/${options.screensSlug ?? "screens"}`;
   const folders = [
     { path: "fixture", title: "Fixture" },
     { path: "fixture/archive", title: options.archiveTitle ?? "Archive" },
-    { path: "fixture/screens", title: options.screensTitle ?? "Screens" },
+    { path: screens, title: options.screensTitle ?? "Screens" },
     ...(options.sharedChildTitle
       ? [
           { path: "fixture/archive/states", title: options.sharedChildTitle },
-          { path: "fixture/screens/states", title: options.sharedChildTitle },
+          { path: `${screens}/states`, title: options.sharedChildTitle },
         ]
       : []),
   ];
   return fixtureEntrySource(
     {
-      home: `fixture/${homeParent}${child}/home`,
-      details: `fixture/screens${child}/details`,
+      home: `${homeParent === "screens" ? screens : "fixture/archive"}${child}/home`,
+      details: `${screens}${child}/details`,
       tour: `fixture/archive${child}/tour`,
     },
     folders,

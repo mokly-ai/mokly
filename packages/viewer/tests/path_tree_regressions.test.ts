@@ -59,7 +59,7 @@ test("section pruning removes opposite-kind children from index entry rows", () 
     entry("account", "screen"),
     entry("account/button", "component"),
   ]).hierarchy;
-  const pages = hierarchy.roots.pages[0];
+  const pages = hierarchy.roots.specs[0];
   assert.equal(pages?.kind, "entry");
   assert.equal(pages?.children, undefined);
   assert.equal(

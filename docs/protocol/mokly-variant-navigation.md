@@ -3,10 +3,10 @@
 ## Delivery Status
 
 Variant entry navigation, component-shaped icons, sibling comparison
-continuity, removed-variant Dark availability, and fallback breadcrumbs are
-implemented with path-keyed rows and the `variants:<path>` disclosure key.
-The shell retains Pages; the Specs section and `Moved` label await delivery
-through the [path identity plan](../../plans/path-identity.md).
+continuity, removed-variant Dark availability, fallback breadcrumbs, the Specs
+section, and entry rows for a folder's own screen or component are implemented
+with path-keyed rows and the `variants:<path>` disclosure key. The `Moved`
+label awaits delivery through the [path identity plan](../../plans/path-identity.md).
 
 This contract owns the shell presentation of screen and component variants.
 Variant authoring, inheritance, manifest relationships, and generated views are
@@ -19,8 +19,10 @@ including the responsive drawer:
 
 - A parent without variants renders as an ordinary entry.
 - A parent with variants renders its ordinary link beside a separate disclosure
-  button with `aria-expanded`, `aria-controls`, and an accessible name derived
-  from the parent title. Toggling never navigates.
+  button with `aria-expanded`, `aria-controls`, and the accessible name
+  `Show variants of <title>` or `Hide variants of <title>`, using the parent's
+  own title; when the list also holds folder members it names `contents`
+  instead of `variants`. Toggling never navigates.
 - The disclosed list contains one leaf per variant in authored order, one indent
   deeper. Screen variants use the overlapping-screen outline; component
   variants use the equivalent overlapping-component outline. Both remain muted,
@@ -37,7 +39,7 @@ including the responsive drawer:
   list, ancestor folders, and section.
 
 Search matches a variant's path segments, title, and tags. A parent remains
-visible while one of its variants matches. If a constraint retains only a
+visible while one of its variants or listed folder members matches. If a constraint retains only a
 variant, its list opens. Hiding a parent hides its complete leaf container and
 disclosure button. Tag terms, Changes, and free text compose as for every other
 entry.

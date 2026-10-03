@@ -51,11 +51,11 @@ export function actions() {
 
 export function shellRecovery() {
   return {
-    disclosures: { "folder:pages:fixture": false },
+    disclosures: { "folder:specs:fixture": false },
     colorScheme: "dark" as const,
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineDisclosures: { "folder:pages:fixture": false },
+    filterBaselineDisclosures: { "folder:specs:fixture": false },
     navScroll: 18,
     query: "product/browse/home",
     regionScrolls: { stage: 42 },

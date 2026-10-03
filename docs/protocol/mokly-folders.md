@@ -2,10 +2,9 @@
 
 ## Delivery Status
 
-Folder records, title resolution, order, exclusions and path trees are implemented.
-The current shell keeps its existing Pages presentation; the final row and
-breadcrumb interactions below remain planned in the
-[path identity plan](../../plans/path-identity.md).
+Folder records, title resolution, order, exclusions, path trees, the Specs
+and Components rows, the `Overview` row, entry rows for a folder's own screen
+or component, and breadcrumb links and folder reveals are implemented.
 
 A folder is a path with entries below it. It has no definition of its own, no
 status, and no Changes row. This contract owns the optional folder record that
@@ -155,10 +154,23 @@ A folder's own page renders by the kind of its index:
   with variants and `invoice/index.mockup.tsx` with the same variants produce
   identical rows.
 
-A breadcrumb segment for a folder opens the folder's own page when one exists
-and otherwise expands that folder in the tree. The public read model emits
-these shapes directly under the [catalogue contract](./mokly-catalogue.md#tree)
-so the viewer applies no further rule.
+A breadcrumb segment for a folder opens the folder's own page when one exists;
+for a screen or component index that page is the entry, so the segment shows
+and links to it. Otherwise the segment is a button that reveals the folder in
+the viewed entry's section without changing the content area. The reveal opens
+the section, every ancestor folder, any entry list the folder is listed in,
+and the folder itself, then moves focus to the folder row and scrolls it into
+the nearest visible part of the tree. It clears a search that would hide the
+folder and switches Changes to All when no changed row lies inside; filters
+that leave the folder visible stay. Below the responsive breakpoint it also
+opens the navigation drawer. Without active filtering the opened disclosures
+are saved like a user toggle under the
+[persistence contract](./mokly-disclosure-persistence.md#storage-and-defaults).
+A hidden folder without its own page has no row in All, so its segment is
+plain text, as are the baseline folder titles of a removed entry. The public
+read model emits these shapes directly under the
+[catalogue contract](./mokly-catalogue.md#tree) so the viewer applies no
+further rule.
 
 ## Diagnostics
 

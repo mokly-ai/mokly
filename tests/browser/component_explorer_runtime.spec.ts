@@ -101,8 +101,8 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Copy ID action/disabled" }),
-  ).toHaveText("#action/disabled");
+    page.getByRole("button", { name: "Copy path action/disabled" }),
+  ).toHaveText("action/disabled");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
   await expect(
     page.getByLabel("Catalogue location").getByRole("link"),

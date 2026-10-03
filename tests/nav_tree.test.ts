@@ -3,10 +3,10 @@ import test from "node:test";
 
 import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { structuredCrumbTrail } from "../packages/viewer/dist/shell/crumbs.js";
 import { targetHead } from "../packages/viewer/dist/shell/head.js";
 import {
   buildNavSections,
-  structuredCrumbTrail,
   type NavGroupNode,
   type NavLeafNode,
   type NavNode,
@@ -64,7 +64,7 @@ function tree(entries: ManifestV8["entries"]) {
   return {
     catalogue,
     hierarchy: catalogue.hierarchy,
-    nodes: sections.find(({ id }) => id === "pages")?.children ?? [],
+    nodes: sections.find(({ id }) => id === "specs")?.children ?? [],
     sections,
   };
 }
@@ -101,10 +101,10 @@ test("changing an entry path reparents navigation and breadcrumb labels", () => 
   const before = tree([screen("Alpha/target", "Target")]);
   const after = tree([screen("Beta/target", "Target")]);
   assert.deepEqual(structuredCrumbTrail(before.hierarchy, "Alpha/target"), [
-    { label: "Alpha" },
+    { folder: { path: "Alpha", section: "specs" }, label: "Alpha" },
   ]);
   assert.deepEqual(structuredCrumbTrail(after.hierarchy, "Beta/target"), [
-    { label: "Beta" },
+    { folder: { path: "Beta", section: "specs" }, label: "Beta" },
   ]);
   assert.equal(
     group(before.nodes, "folder:Alpha").children[0]?.label,
@@ -145,7 +145,13 @@ test("screen variants stay under their parent in authored order", () => {
     );
   assert.deepEqual(
     structuredCrumbTrail(hierarchy, "Example/Screens/welcome-zeta"),
-    [{ label: "Example" }, { label: "Screens" }],
+    [
+      { folder: { path: "Example", section: "specs" }, label: "Example" },
+      {
+        folder: { path: "Example/Screens", section: "specs" },
+        label: "Screens",
+      },
+    ],
   );
   const variant = catalogue.byPath.get("Example/Screens/welcome-zeta");
   assert.ok(variant);
@@ -169,6 +175,7 @@ test("removed rows follow the complete current hierarchy in kind and path order"
     kind: "leaf",
     label: `A ${id} · Removed`,
     removedPage: true,
+    title: `A ${id}`,
   });
   const sections = buildNavSections(hierarchy, [
     removed("last", "z.html"),
@@ -176,7 +183,7 @@ test("removed rows follow the complete current hierarchy in kind and path order"
     removed("first", "a.html"),
   ]);
   assert.deepEqual(
-    sections.find(({ id }) => id === "pages")?.children.map(({ key }) => key),
+    sections.find(({ id }) => id === "specs")?.children.map(({ key }) => key),
     [
       "folder:Folders",
       "entry:current",

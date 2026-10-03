@@ -187,28 +187,31 @@ test("recovery parses its tag query into the selected chips", () => {
   assert.deepEqual(state.selection.tags, ["forms"]);
 });
 
-test("recovery matches stable disclosure keys and ignores label paths", () => {
+test("recovery matches current disclosure keys and ignores earlier forms of their paths", () => {
+  const stored = {
+    "/product": true,
+    "collection:product": true,
+    "folder:pages:product": true,
+    "folder:specs:product": false,
+    "/components": false,
+    "collection:components:components": false,
+    "folder:pages:components": false,
+  };
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        disclosures: {
-          "/Same title": false,
-          "collection:Product": false,
-          "folder:pages:product": false,
-        },
-        filterBaselineDisclosures: {
-          "/Same title": false,
-          "collection:Product": false,
-          "folder:pages:product": false,
-        },
+        disclosures: stored,
+        filterBaselineDisclosures: stored,
       }),
     },
   });
-  assert.equal(state.disclosures["folder:pages:product"], false);
+  assert.equal(state.disclosures["folder:specs:product"], false);
   assert.equal(state.disclosures["folder:components:components"], true);
-  assert.equal(state.filterBaseline?.["folder:pages:product"], false);
-  assert.equal(Object.hasOwn(state.disclosures, "/Same title"), false);
+  assert.equal(state.filterBaseline?.["folder:specs:product"], false);
+  assert.equal(state.filterBaseline?.["folder:components:components"], true);
+  for (const key of ["/product", "folder:pages:product", "/components"])
+    assert.equal(Object.hasOwn(state.disclosures, key), false, key);
 });
 
 function darkCatalogue(): CatalogueReadModel {

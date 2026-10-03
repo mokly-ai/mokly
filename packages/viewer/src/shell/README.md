@@ -10,25 +10,34 @@ defines the tree and its state model; the
 Serve, export and the public viewer converged on this tree.
 
 `nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
-native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their
-entry-kind glyph, and a screen or component's variants as a container the row's chevron
-button discloses, because a row cannot be both a link and a `<summary>`. A
-deleted variant whose non-variant parent survives joins that container as a
-Removed row. `nav_tree.ts` records actual attachment before removing the row
-from flat fallback, so a former parent that is now a variant cannot make its
-historical child disappear and every removed entry remains represented once.
-Current section nodes use the shared folder-first comparator; flat removed
-rows use the combined ordering in the
+native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
+carrying their entry-kind glyph, and a screen or component's variants as a
+container the row's chevron button discloses, because a row cannot be both a
+link and a `<summary>`. `nav_tree.ts` lists a folder's own document, page, or
+use case as the folder's first child row, labelled `Overview` when its title
+is the folder's title, and renders a folder whose own page is a screen or
+component as that entry's row, whose container holds the variants and then
+the folder's other members. A deleted variant whose non-variant parent
+survives joins that container as a Removed row. `nav_tree.ts` records actual
+attachment before removing the row from flat fallback, so a former parent that
+is now a variant cannot make its historical child disappear and every removed
+entry remains represented once. Current section nodes use the shared
+folder-first comparator; flat removed rows use the combined ordering in the
 [variant navigation contract](../../../../docs/protocol/mokly-variant-navigation.md).
-Components and Pages keep independent
-section roots even when they reuse the same folder labels.
+Specs and Components keep independent section roots even when they reuse the
+same folder paths. Search compares a row's path, title, and tags, never a
+display label such as `Overview` or `· Removed`.
+`crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
+links to it, a visible folder without one becomes a button that
+`nav_reveal.ts` resolves to the disclosures exposing that folder, and the
+store's `revealFolder` opens them, clears only a hiding filter, opens the
+drawer at narrow widths, and asks `nav_scroll.ts` to focus the folder row.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
-fixed prefixes and complete paths; display labels never enter a key. It rejects empty path
-segments and ignores obsolete collection and legacy keys on restore.
-`disclosure_storage.ts` owns the v3 map codec and both storage key names;
-early capture, hydration, the shell store, and watched-reload recovery share
-its validation so renamed keys never override current server defaults. The
-first v3 write removes the obsolete v2 closed list.
+fixed prefixes and complete paths; display labels never enter a key. It rejects
+empty path segments and every earlier key form on restore.
+`disclosure_storage.ts` owns the v4 map codec and its storage key; early
+capture, hydration, the shell store, and watched-reload recovery share its
+validation. Earlier storage versions are never read, translated, or removed.
 `routes.ts` resolves URL paths to current or retained manifest entries;
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)

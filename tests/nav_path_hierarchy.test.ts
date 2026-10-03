@@ -25,7 +25,7 @@ test("folder identities stay stable when titles change and kinds share one folde
     },
   ]).hierarchy;
   assert.equal(first.tree[0]?.key, second.tree[0]?.key);
-  assert.equal(first.roots.pages[0]?.key, first.roots.components[0]?.key);
+  assert.equal(first.roots.specs[0]?.key, first.roots.components[0]?.key);
   assert.deepEqual(second.ancestorsByPath.get("mixed/page"), [
     "Renamed folder",
   ]);

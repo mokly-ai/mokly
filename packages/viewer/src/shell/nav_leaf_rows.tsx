@@ -1,11 +1,14 @@
 /** Leaf rows and entry-variant disclosures for the React shell. */
 
+import type { ReactNode } from "react";
+
 import { entryRoute, viewHref } from "../navigation/routes.js";
 
 import type { ShellContext } from "./context.js";
 import {
   ChevronIcon,
   ComponentVariantIcon,
+  DocumentIcon,
   FlowIcon,
   PageIcon,
   ScreenIcon,
@@ -20,6 +23,7 @@ import {
 import { navRowStyle } from "./nav_guides.js";
 import {
   navLeafVisible,
+  navNodeContains,
   navNodeVisible,
   navigationFiltering,
   variantDisclosureKey,
@@ -56,6 +60,8 @@ function LeafGlyph(props: {
         <WorkspaceIcon name="components" />
       ) : props.entryKind === "page" ? (
         <PageIcon />
+      ) : props.entryKind === "document" ? (
+        <DocumentIcon />
       ) : (
         <ScreenIcon />
       )}
@@ -87,6 +93,7 @@ function NavRowLink(props: {
       data-changed-variants={changedVariants ? "true" : undefined}
       data-entry-id={props.node.entryId}
       data-entry-kind={props.node.entryKind}
+      data-nav-index={props.node.index ? "" : undefined}
       data-nav-row=""
       data-nav-removed={props.node.key.startsWith("removed:") ? "" : undefined}
       data-removed-page={props.node.removedPage ? "" : undefined}
@@ -115,11 +122,14 @@ function NavRowLink(props: {
 }
 
 /**
- * A leaf row. An entry that owns variants pairs its link with a chevron
- * button and is followed by the list that button discloses; the list is open
- * on the server only while the active route is the parent or one of them.
+ * A leaf row. An entry that owns variants, or a folder's own screen or
+ * component with other members, pairs its link with a chevron button and is
+ * followed by the list that button discloses: the variants, then the members
+ * rendered by `children`. The list is open on the server only while it holds
+ * the active route or the active route is the parent itself.
  */
 export function LeafRow(props: {
+  children?: ReactNode;
   context: ShellContext;
   depth: number;
   node: NavLeafNode;
@@ -127,6 +137,7 @@ export function LeafRow(props: {
 }) {
   const store = useOptionalShellStore();
   const variants = props.node.variants ?? [];
+  const members = props.node.members ?? [];
   const parentId = props.node.entryId;
   const listId = useShellIdentifier(
     `mb-nav-variants-${props.sectionId}-${parentId ?? "unknown"}`,
@@ -136,7 +147,7 @@ export function LeafRow(props: {
     : !props.node.removedPage &&
       !props.node.removedVariant &&
       !props.node.hidden;
-  if (variants.length === 0 || parentId === undefined) {
+  if ((variants.length === 0 && members.length === 0) || !parentId) {
     return (
       <NavRowLink
         context={props.context}
@@ -151,17 +162,19 @@ export function LeafRow(props: {
   const parentVisible = store
     ? navNodeVisible(props.node, store.state.selection, store.context)
     : !props.node.hidden;
-  const matchingVariants = store
-    ? variants.filter((variant) =>
+  const listMatches = store
+    ? variants.some((variant) =>
         navLeafVisible(variant, store.state.selection, store.context),
+      ) ||
+      members.some((member) =>
+        navNodeVisible(member, store.state.selection, store.context),
       )
-    : variants.filter((variant) => !variant.removedVariant);
-  const active =
-    props.node.entryId === props.context.activeId ||
-    variants.some((variant) => variant.entryId === props.context.activeId);
+    : true;
+  const active = navNodeContains(props.node, props.context.activeId);
   const open = filtering
-    ? matchingVariants.length > 0
+    ? listMatches
     : (store?.state.disclosures[key] ?? active);
+  const noun = members.length > 0 ? "contents" : "variants";
   const link = (
     <NavRowLink context={props.context} depth={props.depth} node={props.node} />
   );
@@ -172,9 +185,10 @@ export function LeafRow(props: {
         <button
           aria-controls={listId}
           aria-expanded={open ? "true" : "false"}
-          aria-label={`${open ? "Hide" : "Show"} variants of ${props.node.label}`}
+          aria-label={`${open ? "Hide" : "Show"} ${noun} of ${props.node.title}`}
           className="mbk-nav-variants-toggle"
-          data-nav-variants-label={props.node.label}
+          data-nav-variants-label={props.node.title}
+          data-nav-variants-noun={noun}
           data-nav-variants-toggle={listId}
           onClick={() => store?.setDisclosure(key, !open)}
           type="button"
@@ -210,6 +224,7 @@ export function LeafRow(props: {
             variant
           />
         ))}
+        {props.children}
       </div>
     </>
   );

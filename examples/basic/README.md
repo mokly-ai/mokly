@@ -75,7 +75,7 @@ Details, and the Overlay comparison. The
 [depicted catalogue](../../docs/protocol/mokly-shell-design-inventory.md#depicted-catalogue)
 lists its folders, paths, and transitions.
 
-The tree is shared by the Pages and Components sections, each pruned by kind.
+The tree is shared by the Specs and Components sections, each pruned by kind.
 Folder labels may change without changing entry identity. Shell URLs are
 `/view/<path>/`; generated documents use `<path>/index.html` and viewport
 files use `<path>/index.<viewport>[.dark].html`.

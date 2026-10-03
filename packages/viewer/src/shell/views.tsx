@@ -92,7 +92,7 @@ function TargetView(props: {
         }
         crumbs={head.crumbs}
         heading={head.title}
-        id={head.id}
+        path={head.path}
         status={
           removed ? (
             <span className="mbk-entry-status" data-status="Removed">

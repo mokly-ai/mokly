@@ -137,7 +137,7 @@ test("a committed baseline places a removed variant under its parent row", async
 
   assert.match(
     html,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="home\/empty\/index\.html"/,
+    /<div class="mbk-nav-variants" data-nav-disclosure="variants:home"[^>]*id="mb-nav-variants-specs-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="home\/empty\/index\.html"/,
   );
   assert.match(html, /Home empty · Removed<span class="mbk-nav-changed-text"/);
   assert.match(html, /<span class="mbk-nav-filter-count">1<\/span>/);

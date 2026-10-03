@@ -26,7 +26,7 @@ import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_
 
 import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
-test("page and component sections preserve only their relevant hierarchy", () => {
+test("Specs and Components sections preserve only their relevant hierarchy", () => {
   const catalogue = createCatalogue(
     manifest([
       screen("Product/Screens/welcome", "Welcome"),
@@ -39,7 +39,7 @@ test("page and component sections preserve only their relevant hierarchy", () =>
   assert.deepEqual(
     sections.map(({ id, key, label }) => [id, key, label]),
     [
-      ["pages", "section:pages", "Pages"],
+      ["specs", "section:specs", "Specs"],
       ["components", "section:components", "Components"],
     ],
   );
@@ -79,12 +79,12 @@ test("screen variant leaves follow manifest order", () => {
   };
   const catalogue = createCatalogue(manifest([parent, zeta, alpha]));
 
-  const pages = buildNavSections(catalogue.hierarchy).find(
-    ({ id }) => id === "pages",
+  const specs = buildNavSections(catalogue.hierarchy).find(
+    ({ id }) => id === "specs",
   );
-  assert.ok(pages);
+  assert.ok(specs);
   const parentLeaf = leaf(
-    group(pages.children, "folder:Screens").children,
+    group(specs.children, "folder:Screens").children,
     parent.title,
   );
   assert.deepEqual(
@@ -93,19 +93,19 @@ test("screen variant leaves follow manifest order", () => {
   );
 });
 
-test("page and component section disclosures persist independently", () => {
-  const pagesClosed = fixtureShellState({
+test("Specs and Components section disclosures persist independently", () => {
+  const specsClosed = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery({ "section:pages": false }) },
+    initial: { recovery: recovery({ "section:specs": false }) },
   });
-  assert.equal(pagesClosed.disclosures["section:pages"], false);
-  assert.equal(pagesClosed.disclosures["section:components"], true);
+  assert.equal(specsClosed.disclosures["section:specs"], false);
+  assert.equal(specsClosed.disclosures["section:components"], true);
 
   const componentsClosed = fixtureShellState({
     href: "https://example.test/",
     initial: { recovery: recovery({ "section:components": false }) },
   });
-  assert.equal(componentsClosed.disclosures["section:pages"], true);
+  assert.equal(componentsClosed.disclosures["section:specs"], true);
   assert.equal(componentsClosed.disclosures["section:components"], false);
 });
 
@@ -126,42 +126,47 @@ test("folder identities use paths and remain section-local", () => {
   }
   const defaults = defaultDisclosures(sections, undefined);
   assert.deepEqual(disclosurePath(sections, "design-system/Browse/a"), [
-    "section:pages",
-    "folder:pages:design-system",
-    "folder:pages:design-system/Browse",
+    "section:specs",
+    "folder:specs:design-system",
+    "folder:specs:design-system/Browse",
   ]);
-  assert.equal(defaults["folder:pages:design-system/Browse"], false);
+  assert.equal(defaults["folder:specs:design-system/Browse"], false);
   assert.equal(defaults["folder:components:design-system/Browse"], false);
   assert.deepEqual(
     reconcileDisclosures(
       defaults,
-      { "folder:pages:design-system": false },
+      { "folder:specs:design-system": false },
       "default",
     ),
-    { ...defaults, "folder:pages:design-system": false },
+    { ...defaults, "folder:specs:design-system": false },
   );
-  const pagesClosed = fixtureShellState({
+  const specsClosed = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery({ "folder:pages:product": false }) },
+    initial: { recovery: recovery({ "folder:specs:product": false }) },
   });
-  assert.equal(pagesClosed.disclosures["folder:pages:product"], false);
-  assert.equal(pagesClosed.disclosures["folder:components:components"], true);
+  assert.equal(specsClosed.disclosures["folder:specs:product"], false);
+  assert.equal(specsClosed.disclosures["folder:components:components"], true);
 });
 
-test("obsolete sectioned and pre-section collection keys never close folders", () => {
+test("earlier key forms naming current folder paths are never read or translated", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        "collection:pages:Product": false,
-        "collection:components:Product": false,
-        "collection:Product": false,
-        "legacy:Product": false,
+        "section:pages": false,
+        "folder:pages:product": false,
+        "collection:pages:product": false,
+        "collection:components:components": false,
+        "collection:product": false,
+        "legacy:product": false,
       }),
     },
   });
-  assert.equal(state.disclosures["folder:pages:product"], true);
+  assert.equal(state.disclosures["section:specs"], true);
+  assert.equal(state.disclosures["folder:specs:product"], true);
   assert.equal(state.disclosures["folder:components:components"], true);
+  for (const key of ["section:pages", "folder:pages:product"])
+    assert.equal(Object.hasOwn(state.disclosures, key), false, key);
 });
 
 test("unknown disclosure keys never create unknown disclosure state", () => {
@@ -171,7 +176,7 @@ test("unknown disclosure keys never create unknown disclosure state", () => {
       recovery: recovery({ "/Product": false, "section:other": false }),
     },
   });
-  assert.equal(state.disclosures["folder:pages:product"], true);
+  assert.equal(state.disclosures["folder:specs:product"], true);
   assert.equal(state.disclosures["folder:components:components"], true);
   assert.equal(Object.hasOwn(state.disclosures, "section:other"), false);
 });
