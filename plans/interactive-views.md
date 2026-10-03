@@ -479,7 +479,7 @@ was right-aligned, which no artboard shows.
 
 ### Mainline integration record
 
-Merge 1 from `b2c82c15` keeps imported CSS delivery (#125) and entry-scoped
+Merge 1 (`e7d0ee2214aec9d0fb9d6a3492fc47b563419632`) from `b2c82c15` keeps imported CSS delivery (#125) and entry-scoped
 shell bootstraps (#120). Live replays the accepted Node graph's stylesheet
 JavaScript and serves its accepted generated CSS and asset bytes. CSS Module
 symlinks retain separate logical class maps. Installed stylesheet modules use
@@ -560,6 +560,115 @@ A separate merge brings main's strict, expiring audit exception from #130
 (`1dc91580`). The exception, expiry, dependency path and tests stay unchanged.
 The complete integration gate runs after that merge; the branch is pushed
 only after the final gate passes.
+
+Both parents of merge 1 are verified: `3d411390` and `b2c82c15`.
+Its remerge diff lists 101 paths. All paths were read before merge 2.
+No implementation or test was lost. The user’s review found one missing
+branch contract statement about interactive identity fences during evidence
+adoption. The follow-up restores it in
+[mokly-interactive-host-integration.md](../docs/protocol/mokly-interactive-host-integration.md#evidence-adoption-fences)
+and links it beside main’s unchanged atomic-adoption paragraph in
+`docs/protocol/mokly-live-capabilities.md`. The content-reload sentence group
+moves to that focused section. Both docs stay within 250 lines; no cap changes.
+Partial-clone transient-blob diagnostics did not cut any saved diff. No parent
+comparison fallback or clone repair was needed.
+
+The Markdown link check found the root `README.md` still linked to the removed
+branch-only preview asset helper. The follow-up points to main's equivalent
+`scripts/preview/capture.mjs`. The failing link check captures that defect.
+
+The table above records the 35 original conflicts. The following table
+records every other path in merge 1’s remerge diff and its reason.
+
+| Other remerge path                                                       | Reason                                                                                                                      |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `docs/protocol/mokly-export-public-files.md`                             | Keep main’s binary resource export rules and the branch’s private Live/status exclusions.                                   |
+| `docs/protocol/mokly-interactive-source-pinning.md`                      | State the accepted stylesheet-module capture, logical CSS identities and private resource pinning.                          |
+| `docs/protocol/mokly-interactive-views-serve.md`                         | State accepted generated CSS/asset delivery without reserved disk fallback.                                                 |
+| `docs/protocol/mokly-shell-bootstrap.md`                                 | Keep main’s scoped bootstrap and pair it with private Live/status state.                                                    |
+| `examples/basic/entries/catalogue.mockup.tsx`                            | Render main’s Workspace note through its registered component wrapper on Welcome.                                           |
+| `examples/basic/src/components/workspace-note/workspace-note.mockup.tsx` | Expose main’s product component as a saved component view for Static/Live parity.                                           |
+| `examples/basic/src/components/workspace-note/workspace-note.mokly.tsx`  | Register main’s component with declared ownership and desktop/mobile saved renders.                                         |
+| `packages/viewer/src/shell/capability_route_evidence.ts`                 | Move main’s every-target evidence loader and retry state into the branch’s focused owner.                                   |
+| `packages/viewer/src/shell/workspace_inspector.tsx`                      | Pass main’s Usage delivery state while keeping Live inspection notices.                                                     |
+| `packages/viewer/tests/host_capabilities_rendering.test.tsx`             | Retain both sides’ SSR and private export assertions in main’s rendering test owner.                                        |
+| `packages/viewer/tests/preview_mode.test.ts`                             | Move only Live origin cases to the new origin suite to meet the length limit.                                               |
+| `packages/viewer/tests/preview_mode_origin.test.ts`                      | Retain all moved origin and logical Live path cases.                                                                        |
+| `packages/viewer/tests/scoped_shell_usage.test.tsx`                      | Set the new explicit inactive Live state in main’s existing scope test.                                                     |
+| `plans/imported-css-delivery.md`                                         | Mark #125 complete after its implementation PR merged; retain all review records.                                           |
+| `plans/interactive-views.md`                                             | Record conflict decisions, semantic adaptations and verification without reopening milestones.                              |
+| `plans/route-scoped-shell-bootstrap.md`                                  | Mark #120 complete after its implementation PR merged.                                                                      |
+| `scripts/preview/assets.mjs`                                             | Remove this branch-only duplicate; main’s capture.mjs owns the full binary-safe asset capture.                              |
+| `src/build/interactive_source_capture.ts`                                | Capture exact accepted stylesheet JavaScript and resolutions; retain ordinary repository byte capture.                      |
+| `src/build/interactive_source_loaders.ts`                                | Extract loader selection; replay accepted CSS modules with the JavaScript loader.                                           |
+| `src/build/interactive_source_paths.ts`                                  | Extract logical CSS identities and preserve confined authored aliases.                                                      |
+| `src/build/styles/collect.ts`                                            | Record each existing Node stylesheet loader result without changing Static processing.                                      |
+| `src/interactive/README.md`                                              | Describe accepted module replay, CSS symlink identities and generated-resource delivery.                                    |
+| `src/interactive/server_static.ts`                                       | Serve only accepted allowlisted generated CSS/asset bytes with existing headers and confinement.                            |
+| `src/interactive/source_resolution.ts`                                   | Replay captured CSS modules in repository and installed-package resolution paths.                                           |
+| `src/server/README.md`                                                   | Document the extracted watch queue and retained classification/debounce owners.                                             |
+| `src/server/client_modules.ts`                                           | Extract timed catalogue asset loading without changing the asset inventory.                                                 |
+| `src/server/generated_static.ts`                                         | Extract main’s committed startup resource discovery and accepted-byte snapshot.                                             |
+| `src/server/http_initial.ts`                                             | Retain main’s snapshot validation in the branch’s startup snapshot owner.                                                   |
+| `src/server/serve_lifecycle.ts`                                          | Replace the branch’s source refresh with main’s equivalent hydrateWatchInventory, which includes PostCSS watch directories. |
+| `src/server/watch_action_queue.ts`                                       | Move the complete serialized queue and progress observer into a focused owner.                                              |
+| `src/server/watch_events.ts`                                             | Keep classification, gates and debounce; share priority with the extracted queue.                                           |
+| `tests/authoring.test.tsx`                                               | Share registry configuration and move rendering cases without dropping assertions.                                          |
+| `tests/authoring_rendering.test.tsx`                                     | Retain the moved ReviewIgnore, MockLink and material-key rendering cases.                                                   |
+| `tests/browser/interactive_fixture.ts`                                   | Read main’s generated view outputs through its binary-safe text helper.                                                     |
+| `tests/browser/interactive_imported_styles.spec.ts`                      | Test exact styles and screenshots for Workspace note and Welcome on desktop and mobile.                                     |
+| `tests/cli_reporter.test.ts`                                             | Move only Live origin reporting into a focused suite to meet the length limit.                                              |
+| `tests/cli_reporter_live.test.ts`                                        | Retain the moved plain/rich Live origin output and terminal-width assertions.                                               |
+| `tests/client_route_interactive_evidence.test.ts`                        | Adapt branch eligibility adoption assertions to main’s scoped public bootstrap.                                             |
+| `tests/design_links_inventory.test.ts`                                   | Include interactive and rebuild design specs in main’s exact inventory check.                                               |
+| `tests/design_screen_counts.test.ts`                                     | Accept the combined ninety light-only screens in the existing written-count parser.                                         |
+| `tests/helpers/interactive_styles.ts`                                    | Share a real CSS Module/plain CSS/PostCSS fixture and accepted Live compilation helpers.                                    |
+| `tests/helpers/react_capability_environment.ts`                          | Retain main’s scoped fixtures and add private interactive/rebuild event support.                                            |
+| `tests/helpers/registry_validation.ts`                                   | Share the unchanged complete registry-only configuration between test owners.                                               |
+| `tests/helpers/shell_css.ts`                                             | Extract stylesheet normalization and dark-token selector readers.                                                           |
+| `tests/helpers/shell_fixture.ts`                                         | Extract the complete catalogue fixtures and shell assertion helpers.                                                        |
+| `tests/helpers/watch_boundary_runtime.ts`                                | Extract unchanged watcher integration doubles to meet the length limit.                                                     |
+| `tests/interactive_example_adoption.test.ts`                             | Use main’s binary-safe output reader and include the registered Workspace note eligibility.                                 |
+| `tests/interactive_imported_styles.test.ts`                              | Test exact Static class maps, empty plain modules, edit/delete/break pinning and uncaptured failure.                        |
+| `tests/interactive_server.test.ts`                                       | Move listener lifecycle and authority cases without changing the remaining route/header cases.                              |
+| `tests/interactive_server_authority.test.ts`                             | Retain every moved listener lifecycle and Host authority assertion.                                                         |
+| `tests/interactive_source_ipc.test.ts`                                   | Add main’s required style output fields to existing capture transport fixtures.                                             |
+| `tests/interactive_styles_alias.test.ts`                                 | Test distinct path-derived CSS Module maps and pinning after alias deletion.                                                |
+| `tests/interactive_styles_delivery.test.ts`                              | Test accepted CSS/assets in both output modes, links, headers, HEAD and confinement.                                        |
+| `tests/interactive_styles_packages.test.ts`                              | Test accepted installed CSS exports without leaking package paths into public source inventory.                             |
+| `tests/rebuild_status.test.ts`                                           | Update the queue import after its extraction; retain status phase and fence cases.                                          |
+| `tests/server_reporting.test.ts`                                         | Update the queue import after its extraction; retain reporter and debounce cases.                                           |
+| `tests/shell.test.ts`                                                    | Keep rendering cases and move the other complete groups to focused suites.                                                  |
+| `tests/shell_appearance.test.ts`                                         | Retain all moved appearance, startup and embedded-viewer cases.                                                             |
+| `tests/shell_chrome.test.ts`                                             | Retain all moved brand, search, browser-icon and divider assertions.                                                        |
+| `tests/shell_navigation.test.ts`                                         | Retain all moved tree, breadcrumbs, active rows, missing routes and filter assertions.                                      |
+| `tests/shell_preview_colors.test.ts`                                     | Retain all moved dark-device, scheme-label and breakpoint assertions.                                                       |
+| `tests/shell_styles.test.ts`                                             | Retain all moved design-contract, tag-chip and tag-picker CSS assertions.                                                   |
+| `tests/shell_tags.test.ts`                                               | Retain all moved details, tag inventory and search-picker assertions.                                                       |
+| `tests/variant_validation.test.ts`                                       | Reuse the unchanged registry fixture without changing variant validation cases.                                             |
+| `tests/watch.test.ts`                                                    | Update the queue import after its extraction; retain all watch cases.                                                       |
+| `tests/watch_boundaries.test.ts`                                         | Move only integration doubles to the helper; retain every boundary case.                                                    |
+
+Merge 2 (`0afd96cf41d1311b654dff0763b261d713ecab7e`) has exactly two
+parents: merge 1 and `1dc91580`. It adds main’s reviewed audit exception (#130)
+without changing its path, inclusive `2026-11-03` UTC end date, evaluator,
+runner, declarations, fixtures, tests or security docs. The manifest and
+lockfile match main. The merge has no conflicts and no remerge-diff paths.
+The three automatically combined files were read separately:
+
+| Merge 2 path changed on both sides | Reason                                                                                                         |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `README.md`                        | Keep the branch’s Live/status description and add main’s exception policy and strict packed-consumer boundary. |
+| `docs/protocol/README.md`          | Keep both feature indexes and main’s audit exception/consumer contract description.                            |
+| `tests/package.test.ts`            | Keep branch private-state exclusions and main’s exclusion of scripts from the package.                         |
+
+`npm ci`, `npm run dependencies:check`, the audit/security/package tests
+(82 cases), source length and all repository ratchets pass for merge 2.
+All 24 one-sided files match main exactly. Merge 1 deletes no file from its
+actual source. Its temporary audit against newer main listed only the 16
+not-yet-merged #130 additions. Merge 2 has no deletion against current main.
+The final complete gate runs after this record commit. The user owns the
+independent post-push implementation review.
 
 ## Post-merge follow-up (non-blocking)
 

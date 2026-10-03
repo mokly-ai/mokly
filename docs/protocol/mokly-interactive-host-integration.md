@@ -102,6 +102,17 @@ descriptor is not ready, presents the pending state, and mounts only after
 ready. Events, results, and evidence cannot move one generation from `ready`
 or `failed` back to `building`.
 
+## Evidence Adoption Fences
+
+Route evidence reads and watched evidence refreshes fence interactive
+generation, port, and optional explicit origin against the installed descriptor.
+Readiness state may advance for the same identity. A successful
+`ViewerEvidenceRevision` contains the matching interactive descriptor when
+the capability exists.
+
+Content, render-generation, or interactive-generation changes are never
+adopted as evidence. They retain the full reload lifecycle.
+
 ## Shell State And Static Boundaries
 
 Preview mode is Static or Live. It persists across in-shell navigation,

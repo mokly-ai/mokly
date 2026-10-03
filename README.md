@@ -386,7 +386,7 @@ review rules, and the temporary Braces exception.
 - [`src/publish`](./src/publish/README.md) — content-addressed publication exchange.
 - [`packages/viewer`](./packages/viewer/README.md) — React shell, catalogue read
   model, navigation, frames, and inspection.
-- [`scripts/preview/assets.mjs`](./scripts/preview/assets.mjs),
+- [`scripts/preview/capture.mjs`](./scripts/preview/capture.mjs),
   [`baseline.mjs`](./scripts/preview/baseline.mjs), and
   [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
   asset copying, baseline availability, and provider-path adapters.

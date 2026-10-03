@@ -203,15 +203,14 @@ route's scoped catalogue, complete private workspace when the route owns one,
 and the source for the next request. The store replaces both public and private
 evidence in one commit. Frames and shell state are updated in place by the
 consumer; the capability does not mutate DOM.
+Interactive identity and matching descriptors follow the
+[evidence fence](./mokly-interactive-host-integration.md#evidence-adoption-fences).
 
 The adopted workspace includes the current route's `interactive` value when
 the interactive descriptor exists and eligibility is known. Evidence refreshes
 and route loads validate that optional private value with the same source and
 route fences; watched content replacement still crosses the full-reload
 boundary and obtains the value from the replacement runtime generation.
-
-Content, render-generation, or interactive-generation changes are never
-adopted as evidence. They retain the full reload lifecycle.
 
 ## Recovery And Optional Transports
 
