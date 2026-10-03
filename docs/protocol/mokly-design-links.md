@@ -248,7 +248,7 @@ Excluded styles shows All with one changed Welcome: one changed sheet matches an
 | Matched evidence: All filter      | Excluded stylesheet evidence, `design-review-style-excluded` |
 | Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                |
 
-Matched and unresolved show only their changed screen in Changes. Mode destinations without an owning mockup remain depictions, and these states add no tag transitions.
+Matched and unresolved show only their changed screen in Changes. Mode destinations without an owning mockup remain depictions, and these states add no tag transitions. The component explorer's stylesheet stories keep their own Changes lists under the [component design contract](./mokly-component-design.md#component-pages): Styles outside a changed component links Action, from its row and from Details, to `design-component-style-changed`, whose Affected screens open the existing Welcome and Details inspection screens; their unlinked variant rows stay depictions.
 
 Tag interactions are restricted to the canonical Welcome states:
 

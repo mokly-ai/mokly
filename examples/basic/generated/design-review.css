@@ -40,6 +40,20 @@
   margin-top: 14px;
 }
 
+/* A changed file's outcome sentences and style lists sit under that file,
+   with the card's spacing in the shell card and in the component inspector. */
+.mbk-evidence-files p,
+.mbk-evidence-files ul,
+.ce-inspector .mbk-evidence-files p,
+.ce-inspector .mbk-evidence-files ul {
+  margin: 8px 0 0;
+}
+
+.mbk-evidence-files ul + p,
+.ce-inspector .mbk-evidence-files ul + p {
+  margin-top: 14px;
+}
+
 .mbk-compare {
   align-items: start;
   display: grid;

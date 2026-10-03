@@ -4,7 +4,8 @@
 
 Existing stylesheet details are implemented. Rule and page evidence delivery
 is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-The grouping and exact outside-component copy below are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+The grouping and exact outside-component copy below are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence),
+as the [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence) mockups depict them.
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact
@@ -57,7 +58,9 @@ Screen Details lists only sorted retained rendered-resource reasons beneath “C
 
 For each stylesheet with `analysis.pageEvidence`, show its path once in the
 secondary comparison details. Under that path, list only its proven page
-selectors as outside-component matches. Use the serialized strings from the
+selectors as outside-component matches. The path is the file's one item in the
+files list, and its sentences and selector lists nest in that item, as the
+[shell layout](./mokly-css-evidence-shell.md#shell-presentation) fixes. Use the serialized strings from the
 result, sorted and duplicate-free. Do not replace the path with a declaring
 component file, an importing stylesheet or a private source path. Keep emitted
 bundle paths as the real public evidence. Escape paths and selectors as text.

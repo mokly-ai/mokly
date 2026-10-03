@@ -12,8 +12,9 @@ Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
 instructions (#128), in addition to the five originally listed commits.
-Milestone 17 is complete and verified. It documents the uniform CSS change rule. Milestones 18 to 20 remain
-pending: mockups, classification and comparison details. The contract changes
+Milestone 17 is complete and verified. It documents the uniform CSS change rule. Milestone 18 depicts the
+outside-component evidence in the design mockups. Milestones 19 and 20 remain
+pending: classification and comparison details. The contract changes
 unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
 owners no longer route stylesheet changes; declared links and their provenance
 remain. The review refinement uses kept own-page matches for component
@@ -1059,10 +1060,50 @@ with zero failures, skips or cancellations. Its logs are under
 
 Tags: mockup
 
-- [ ] Add the outside-component stylesheet evidence to the stylesheet evidence
+- [x] Add the outside-component stylesheet evidence to the stylesheet evidence
       design screens, at mobile and desktop widths.
-- [ ] Build and check the example, run the design tests and smoke-test the
+  - [x] Component explorer › Empty and change states › Stylesheet evidence
+        gains `design-component-style-changed`: Action and its three saved
+        variants are in Changes because a changed rule styles only Action's
+        output, and Welcome and Details appear only under Affected screens.
+  - [x] It also gains `design-component-style-outside`: the rule that changes
+        Action also styles Welcome's own link outside Action, so Welcome has
+        its own row. Details show the stylesheet and, under it, the exact
+        outside-component sentence and selector, and link Action.
+  - [x] Add failure-first unit and browser tests for both screens.
+- [x] Build and check the example, run the design tests and smoke-test the
       changed screens.
+- [x] Align `design-component-shared-impact` (Component with excluded styles)
+      with the new rule and its own description: open it from All, with no
+      Changes entry. It depicted Action as changed in Changes, which the new
+      rule forbids when no changed rule matches Action's own pages. A
+      failure-first test captures this.
+- [x] Show the per-stylesheet grouping that the M17 contract adopted: each
+      changed file is one list item, with its sentences and selector lists
+      nested under it. Apply it to the Matched, Unresolved, Unnamed and
+      Excluded style cards with unchanged copy, and to the component inspector.
+      Share one evidence part and the exact contract copy between both.
+- [x] Update the design inventory, link, count, attribution and reachability
+      tests, the design contracts and the example README. Correct two stale
+      shell-design statements: the impact group has two screens, and Excluded
+      styles shows a changed Welcome with Current controls.
+- [x] Run the complete unit suite and every available `cargo xtask check` step
+      at 100%.
+
+Verification: build, `npm run example:build` and `npm run example:check` pass
+with 438 files. The 190 design tests and the 26 tests of the six docs suites
+pass. The new unit tests failed first with nine failures, and the spacing
+browser spec failed without its CSS rule. Typecheck, lint and changed-file
+Prettier pass. `cargo xtask check --suite unit` passes 3,698 tests,
+`--suite browser` 746 and `--suite hydration` 224, with zero failures, skips
+or cancellations; `--suite package` passes all six consumer scenarios. Every
+repository step passes except `npm run dependencies:check`, which still
+reports GHSA-vfj7-8cjw-p6xm for `braces` with no patched release. Smoke
+screenshots of the seven changed screens at 390 px and 1440 px are under
+`.context/screenshots/m18/`, and logs are under `.context/m18/`. In the first
+complete unit run, the watched Serve warning test waited 936 seconds in its
+cleanup until a second SIGTERM stopped its Serve child. The clean xtask unit
+run did not repeat this.
 
 ## Milestone 19: Classify CSS by where its rules match
 

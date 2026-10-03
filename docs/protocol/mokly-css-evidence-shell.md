@@ -2,9 +2,10 @@
 
 ## Delivery Status
 
-Existing compact evidence is implemented. Outside-component comparison details
-are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence) of the [source-path removal plan](../../plans/remove-source-path-evidence.md),
-following its [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence) mockups. This document owns visual rules for evidence defined by
+Existing compact evidence is implemented. The [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence)
+mockups of the [source-path removal plan](../../plans/remove-source-path-evidence.md)
+depict the outside-component evidence and the per-file layout below; the shell
+implements them in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the
 [presentation contract](./mokly-css-evidence-presentation.md) owns derivation
 and exact copy.
@@ -22,9 +23,23 @@ The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
 [shell design inventory](./mokly-shell-design.md#design-mockups) as
 `design-review-style-matched`, `design-review-style-unresolved`,
-`design-review-style-unnamed`, and `design-review-style-excluded`. It fixes
-these presentation rules:
+`design-review-style-unnamed`, and `design-review-style-excluded`, and the
+component explorer's Stylesheet evidence gallery, recorded in the
+[component design inventory](./mokly-component-design.md#owning-catalogue) as
+`design-component-style-changed`, `design-component-style-outside`, and
+`design-component-shared-impact`. It fixes these presentation rules:
 
+- The files lead names each retained file once, as one list item. That item
+  holds the file's outcome sentences, each followed by its selector list, so
+  no list mixes two stylesheets. A file without analysed outcomes, such as a
+  font or image, is its path alone. Excluded stylesheets keep their separate
+  "Examined and excluded" list after the files list.
+- A screen whose page selectors come from rules that also changed a component
+  reads "These changed styles also apply outside the changed components on
+  this screen:" under that stylesheet, and its Details link those changed
+  components. Their own pages keep the matched-component sentence. A consumer
+  whose matches all lie inside them stays under Affected screens, without a
+  row of its own.
 - A `matched` or `unresolved` reason reads as one outcome in the comparison
   stage heading, "Styles this screen uses changed". That heading is rendered
   only inside a loaded comparison; the plain current preview has no stage
@@ -44,9 +59,10 @@ these presentation rules:
   follows the entry kind through one shared helper.
 - The evidence container and the approved mockup card both render eight
   pixels above each paragraph or list and fourteen pixels between a list and
-  the paragraph that follows it. The mockup card must render that spacing as
-  authored, whatever other inspector stylesheets the design page loads. The
-  shell keeps its separator treatment rather than the mockup's bordered card.
+  the paragraph that follows it, including the sentences and lists nested in a
+  file's item. The mockup card must render that spacing as authored, whatever
+  other inspector stylesheets the design page loads. The shell keeps its
+  separator treatment rather than the mockup's bordered card.
 - No design screen without a comparison toolbar renders a comparison stage
   heading. A screen depicted in Current mode, whether unchanged, excluded-only,
   or ignored-only, shows the plain preview with no heading.

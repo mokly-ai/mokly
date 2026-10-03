@@ -143,8 +143,11 @@ add a comparison disclosure below the canvas or a separate explanatory banner
 above it. The panel remains available on a Removed screen's stage even though
 that screen has no comparison modes. Ordinary Unmodified mockups omit the
 comparison section unless there is retained or excluded rendered-resource evidence.
-The `design-component-shared-impact` artboard in States → Excluded styles depicts
+The `design-component-shared-impact` artboard in States → Stylesheet evidence depicts
 Unmodified Action with excluded stylesheet evidence in Details and no comparison band.
+Its `design-component-style-changed` and `design-component-style-outside`
+siblings depict a changed Action and a screen styled outside it; each changed
+file lists its outcomes under that file.
 
 Use structured evidence: entry/variant state, a generic output-change reason,
 the component-level changed-file list and style outcomes, selected-variant

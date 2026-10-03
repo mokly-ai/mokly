@@ -115,6 +115,7 @@ export const COMPONENT_ENTRY_BY_STATE = {
   "usage-loading": COMPONENT_ENTRIES.action,
   "usage-failed": COMPONENT_ENTRIES.action,
   "shared-impact": COMPONENT_ENTRIES.action,
+  "style-changed": COMPONENT_ENTRIES.action,
   closed: COMPONENT_ENTRIES.action,
 } as const satisfies Record<ComponentPageState, ComponentEntryMetadata>;
 

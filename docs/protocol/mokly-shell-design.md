@@ -160,17 +160,17 @@ Additional owning groups keep each new page at no more than five screens:
 - `design-review-style-matched`, `design-review-style-unresolved`,
   `design-review-style-unnamed`, and `design-review-style-excluded` specify
   rule-aware stylesheet evidence beneath the impact states, so the impact group
-  itself keeps its three screens.
+  itself keeps its two screens.
   Matched, unresolved, and unnamed stay in Changes and open the loaded
   side-by-side comparison with the "Styles this screen uses changed" stage
   heading; `design-review-style-unnamed` is the same reach with no style name, so its lead
-  sentence ends with a full stop and no list. Excluded is viewed from All, stays
-  out, and shows the plain current preview with no comparison band, no stage
-  heading, and the terminal status line. Their evidence contract is
+  sentence ends with a full stop and no list. Excluded is viewed from All: one
+  sheet is excluded while another keeps Welcome changed, so it shows Current
+  controls and no stage heading. Each card nests its outcomes under its file, per
   [CSS evidence in the shell](./mokly-css-evidence-shell.md).
 - `design-review-preparing` and `design-review-unavailable` specify the two
   Changes states that carry no comparison data yet, keeping the impact group
-  to its own three aggregate outcomes.
+  to its own two aggregate outcomes.
 - `design-appearance-overview` is the canonical appearance screen; the
   `Appearance states` folder beneath it owns two screens and
   `Panels and comparisons` and `Status and recovery` own five each. Their previews follow the artboard. They specify the

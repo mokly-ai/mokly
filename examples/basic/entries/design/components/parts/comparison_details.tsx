@@ -3,6 +3,11 @@ import { MockLink } from "@mokly/mokly";
 import { useDesignInstance } from "../../library/composition.js";
 import { changeStatusBadge } from "../../library/controls/change-status.js";
 import { MetaRow } from "../../parts/metadata_row.js";
+import {
+  COMPONENT_STYLE_COPY,
+  SCREEN_STYLE_COPY,
+  StylesheetEvidenceList,
+} from "../../parts/stylesheet_evidence.js";
 
 import type { ChangeStatus, ComparisonFixture } from "./comparison_fixtures.js";
 
@@ -18,8 +23,11 @@ export function ChangeStatusBadge({ status }: { status: ChangeStatus }) {
 /** Factual evidence belongs to the inspector, with no generated visual narrative. */
 export function ComparisonDetails({
   comparison,
+  subject,
 }: {
   comparison?: ComparisonFixture | undefined;
+  /** Whose evidence this is, which selects the stylesheet copy. */
+  subject: "component" | "screen";
 }) {
   if (!comparison) return null;
   const detail = comparison.status === "unmodified" ? undefined : comparison;
@@ -28,12 +36,15 @@ export function ComparisonDetails({
       ? comparison.excludedStylesheets
       : undefined;
   const prop = detail?.propChange;
+  const styleCopy =
+    subject === "component" ? COMPONENT_STYLE_COPY : SCREEN_STYLE_COPY;
   const reasons = {
     output: "Rendered output changed",
     inputs: "Supplied props changed",
     added: "Added since the comparison baseline",
     removed: "Removed since the comparison baseline",
     "variant-removed": "Saved variant removed",
+    styles: styleCopy.stylesChanged,
   } as const;
   return (
     <section className="ce-comparison-evidence" aria-label="Comparison details">
@@ -67,16 +78,19 @@ export function ComparisonDetails({
       {excludedStylesheets ? (
         <>
           <h4>Examined and excluded</h4>
-          <p>
-            This stylesheet changed, but none of the changed styles apply to
-            this variant.
-          </p>
+          <p>{COMPONENT_STYLE_COPY.excluded}</p>
           <ul className="ce-comparison-paths">
             {excludedStylesheets.map((path) => (
               <li key={path}>{path}</li>
             ))}
           </ul>
         </>
+      ) : null}
+      {detail?.stylesheets ? (
+        <StylesheetEvidenceList
+          lead={styleCopy.files}
+          stylesheets={detail.stylesheets}
+        />
       ) : null}
       {prop ? (
         <>

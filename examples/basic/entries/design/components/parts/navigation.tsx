@@ -16,9 +16,21 @@ import {
   type ComponentDesignDestination,
 } from "./destinations.js";
 import type { CatalogueIdentity } from "./metadata.js";
+import {
+  isStyleScenario,
+  STYLE_CHANGES,
+  styleScenarioRows,
+  type StyleScenario,
+} from "./style_navigation.js";
 
 export type ChangeScenario =
-  "all" | "component" | "screen" | "removed" | "added" | "checklist";
+  | "all"
+  | "component"
+  | "screen"
+  | "removed"
+  | "added"
+  | "checklist"
+  | StyleScenario;
 
 /** Scenarios whose Changes hold one component outside Action's story. */
 const SOLE_CHANGES = {
@@ -31,7 +43,7 @@ const SOLE_CHANGES = {
 } as const;
 
 function nodes(
-  scenario: ChangeScenario,
+  scenario: Exclude<ChangeScenario, StyleScenario>,
   active: CatalogueIdentity,
   design: ComponentDesignDestination,
   activeKey?: string,
@@ -218,16 +230,20 @@ export function ExplorerShell({
   scenario?: ChangeScenario;
   viewport: ArtboardViewport;
 }) {
+  const style = isStyleScenario(scenario) ? STYLE_CHANGES[scenario] : undefined;
   const navProps = {
     activeDestination: design,
     changedCount:
-      scenario === "all"
+      style?.count ??
+      (scenario === "all"
         ? 0
         : scenario === "screen" || scenario === "removed"
           ? 2
-          : 1,
+          : 1),
     changedOnly: scenario !== "all",
-    nodes: nodes(scenario, active, design, activeKey),
+    nodes: isStyleScenario(scenario)
+      ? styleScenarioRows(scenario)
+      : nodes(scenario, active, design, activeKey),
     ...(activeKey === undefined ? {} : { activeKey }),
   };
   return (
@@ -249,13 +265,15 @@ export function ExplorerShell({
           ) : (
             <MockLink
               to={
-                scenario === "added" || scenario === "checklist"
-                  ? SOLE_CHANGES[scenario].to
-                  : scenario === "removed"
-                    ? "design-component-removed"
-                    : scenario === "screen"
-                      ? "design-component-inspection-direct-change"
-                      : "design-component-affected"
+                style
+                  ? style.to
+                  : scenario === "added" || scenario === "checklist"
+                    ? SOLE_CHANGES[scenario].to
+                    : scenario === "removed"
+                      ? "design-component-removed"
+                      : scenario === "screen"
+                        ? "design-component-inspection-direct-change"
+                        : "design-component-affected"
               }
             >
               Changes{" "}

@@ -3,6 +3,10 @@ import { MiniWelcome } from "./mini_screens.js";
 import { NavDrawer, NavTree, type ChangesStatus, type NavNode } from "./nav.js";
 import { REMOVED_SCREEN_ROWS } from "./nav_data.js";
 import { BrowserFrame, PhoneFrame } from "./stage.js";
+import {
+  SCREEN_STYLE_COPY,
+  StylesheetEvidenceList,
+} from "./stylesheet_evidence.js";
 
 /** Comparison classification states depicted inside a loaded comparison. */
 export type ReviewState = "added" | "changed" | "removed" | "styles-changed";
@@ -138,61 +142,58 @@ export function IgnoredImpactCard() {
   return <p>Excluded content: example-nav.</p>;
 }
 
+/** The configured stylesheet that the matched, unresolved and unnamed cards name. */
+const STYLES = "generated/styles.css";
+
 /** A changed stylesheet whose changed styles reach this screen. */
 export function MatchedStyleCard() {
   return (
-    <>
-      <p>Changes to these files may affect this screen:</p>
-      <ul>
-        <li>generated/styles.css</li>
-      </ul>
-      <p>Changed styles that apply to this screen:</p>
-      <ul>
-        <li>
-          <code className="mbk-code">.example-head</code>
-        </li>
-        <li>
-          <code className="mbk-code">main a</code>
-        </li>
-      </ul>
-    </>
+    <StylesheetEvidenceList
+      lead={SCREEN_STYLE_COPY.files}
+      stylesheets={[
+        {
+          path: STYLES,
+          outcomes: [
+            {
+              lead: SCREEN_STYLE_COPY.matched,
+              selectors: [".example-head", "main a"],
+            },
+          ],
+        },
+      ]}
+    />
   );
 }
 
 /** A changed stylesheet whose change can reach anything on the screen. */
 export function UnresolvedStyleCard() {
   return (
-    <>
-      <p>Changes to these files may affect this screen:</p>
-      <ul>
-        <li>generated/styles.css</li>
-      </ul>
-      <p>
-        This change can apply anywhere on the screen, so the screen stays in
-        Changes:
-      </p>
-      <ul>
-        <li>
-          <code className="mbk-code">:root</code>
-        </li>
-      </ul>
-    </>
+    <StylesheetEvidenceList
+      lead={SCREEN_STYLE_COPY.files}
+      stylesheets={[
+        {
+          path: STYLES,
+          outcomes: [
+            { lead: SCREEN_STYLE_COPY.unresolved, selectors: [":root"] },
+          ],
+        },
+      ]}
+    />
   );
 }
 
 /** A changed stylesheet whose change has no style name to show. */
 export function UnnamedStyleCard() {
   return (
-    <>
-      <p>Changes to these files may affect this screen:</p>
-      <ul>
-        <li>generated/styles.css</li>
-      </ul>
-      <p>
-        This change can apply anywhere on the screen, so the screen stays in
-        Changes.
-      </p>
-    </>
+    <StylesheetEvidenceList
+      lead={SCREEN_STYLE_COPY.files}
+      stylesheets={[
+        {
+          path: STYLES,
+          outcomes: [{ lead: SCREEN_STYLE_COPY.unnamed, selectors: [] }],
+        },
+      ]}
+    />
   );
 }
 
@@ -200,14 +201,11 @@ export function UnnamedStyleCard() {
 export function ExcludedStyleCard() {
   return (
     <>
-      <p>Changes to these files may affect this screen:</p>
-      <ul>
-        <li>generated/styles.css</li>
-      </ul>
-      <p>
-        This stylesheet changed, but none of the changed styles apply to this
-        screen.
-      </p>
+      <StylesheetEvidenceList
+        lead={SCREEN_STYLE_COPY.files}
+        stylesheets={[{ path: STYLES, outcomes: [] }]}
+      />
+      <p>{SCREEN_STYLE_COPY.excluded}</p>
       <p>Examined and excluded:</p>
       <ul>
         <li>generated/excluded.css</li>

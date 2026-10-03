@@ -146,6 +146,7 @@ const DIFF_MODE_DESIGNS = [
   "design-component-overlay",
   "design-component-overlay-tall",
   "design-component-removed",
+  "design-component-style-changed",
   "design-review-changed",
   "design-review-difference",
   "design-review-style-matched",

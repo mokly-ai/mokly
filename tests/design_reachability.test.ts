@@ -48,6 +48,7 @@ const treeOnly = [
   "design-component-overlay-tall",
   "design-component-screen-inspector-closed",
   "design-component-shared-impact",
+  "design-component-style-outside",
   "design-component-unavailable",
   "design-component-usage-failed",
   "design-component-usage-loading",

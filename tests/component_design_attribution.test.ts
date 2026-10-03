@@ -46,12 +46,12 @@ test("declared library CSS is owned only by rendered design components", async (
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [stylesheet, screens, components] of [
-    ["design-components.css", 39, 67],
-    ["design-component-inspection.css", 39, 67],
-    ["design-component-details.css", 39, 67],
+    ["design-components.css", 41, 67],
+    ["design-component-inspection.css", 41, 67],
+    ["design-component-details.css", 41, 67],
     ["design-component-inspector.css", "all-design", 67],
     ["design-component-workspace.css", "all-design", 67],
-    ["design-component-view.css", 39, 67],
+    ["design-component-view.css", 41, 67],
     ["design-component-controls.css", 11, 67],
     ["design.css", "all-design", 67],
     ["design-library.css", 0, 67],

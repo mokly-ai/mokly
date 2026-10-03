@@ -21,6 +21,7 @@ export const COMPONENT_PAGES = {
   "usage-loading": "design-component-usage-loading",
   "usage-failed": "design-component-usage-failed",
   "shared-impact": "design-component-shared-impact",
+  "style-changed": "design-component-style-changed",
 } as const satisfies Record<ComponentPageState, string>;
 
 /** Screen inspection states remain separate from the existing Browse subjects. */
@@ -37,6 +38,7 @@ export const INSPECTION_PAGES = {
   unavailable: "design-component-unavailable",
   "inspection-loading": "design-component-inspection-loading",
   "removed-consumer": "design-component-removed-consumer",
+  "style-outside": "design-component-style-outside",
 } as const satisfies Record<ScreenPageState, string>;
 
 export const CONTROLS_PAGES = {

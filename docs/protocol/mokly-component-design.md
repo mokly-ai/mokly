@@ -67,6 +67,8 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design-component-removed-consumer`         | Former consumer's previous version behind a Removed badge      |
 | `design-component-added`                    | Added Badge current preview without comparison controls        |
 | `design-component-shared-impact`            | Unmodified Action with excluded stylesheet evidence in Details |
+| `design-component-style-changed`            | Action changed by its own styles, with affected consumers      |
+| `design-component-style-outside`            | Welcome's own row for a style outside changed Action           |
 | `design-component-usage-loading`            | Component Usage waiting for private entry evidence             |
 | `design-component-inspection-loading`       | Screen inspection waiting for displayed-view usage             |
 | `design-component-usage-failed`             | Usage read failure with a Try again action                     |
@@ -75,7 +77,7 @@ Each entry's route is `screens/<id>.html` under the
 [derived route rule](./mokly-authoring.md#derived-routes); its standalone views
 insert `.mobile` or `.desktop` before `.html`, and gallery membership is the
 entry's `navPath`. The Loading and recovery folder sits below Empty and change
-states and contains exactly the three states above. All thirty-nine component
+states and contains exactly the three states above. All forty-one component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
@@ -174,9 +176,16 @@ It also links the Loading and recovery child gallery. That gallery shows
 `Waiting for the component preview.`, and `Usage couldn’t be loaded.` with a
 `Try again` button. Loading and failed states never reuse validated-empty or
 unavailable-metadata copy.
-Its Excluded styles child gallery shows an unchanged Action component opened
-from All, with excluded stylesheet evidence in Details and no comparison band
-or Changes entry.
+Its Stylesheet evidence child gallery holds three stories that change only
+`styles/actions.css`. In Component with changed styles, the changed rule styles
+only Action's own output: Action and its three saved variants have four Changes
+rows, Side by side reads "Default variant · Styles this variant uses changed",
+and Welcome and Details appear only under Affected screens. In Styles outside a
+changed component, the rule also styles Welcome's own Not now link, so Welcome
+has its own row beside Action, five in all, and Details links Action to the
+first story. Variants own no artboard there, so their rows and options stay
+unlinked. Component with excluded styles opens an unchanged Action from All,
+with excluded stylesheet evidence in Details and no comparison band or Changes row.
 Comparison evidence appears only in the Details panel. Its typed fixture records
 show output/variant changes, paired prop values, and related changed components;
 they do not generate visual-analysis prose or a separate banner. See the
@@ -216,7 +225,7 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, scoped to the
 `screens/design-component-*.html` documents.
-Route-scoped rules link the required mixed/global sheets from the thirty-nine component design routes. Registered components declare exclusive CSS through `stylesheets`; the `componentStylesheets` marker keeps their links between base and layout sheets. Folder metadata supplies navigation and related docs, without source-path evidence. The controls stylesheet remains scoped to its eleven owning entries. Watched Serve reloads configured and declared CSS.
+Route-scoped rules link the required mixed/global sheets from the forty-one component design routes. Registered components declare exclusive CSS through `stylesheets`; the `componentStylesheets` marker keeps their links between base and layout sheets. Folder metadata supplies navigation and related docs, without source-path evidence. The controls stylesheet remains scoped to its eleven owning entries. Watched Serve reloads configured and declared CSS.
 Shared fixtures and reusable screen parts live beside the owning screen modules.
 
 `tests/component_design_attribution.test.ts` exercises each component stylesheet

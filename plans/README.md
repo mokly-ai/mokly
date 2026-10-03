@@ -154,9 +154,10 @@
   `review.sharedImpact`; Changes and comparison evidence use only rendered
   output in every catalogue, and components declare the `stylesheets` that
   Mokly links. Milestone 16 merged main 0.13.0 and is pushed. Milestone 17
-  documents the 2026-10-03 uniform CSS rule; classification and comparison
-  details remain pending in Milestones 19 and 20. Earlier work was reviewed
-  twice; unselected review findings remain open.
+  documents the 2026-10-03 uniform CSS rule, and Milestone 18 depicts its
+  outside-component evidence in the design mockups; classification and
+  comparison details remain pending in Milestones 19 and 20. Earlier work was
+  reviewed twice; unselected review findings remain open.
 - [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
   pages embed the catalogue index plus only their own entry's component usage
   and serialise that state once. The public `catalogue.json` stays complete;

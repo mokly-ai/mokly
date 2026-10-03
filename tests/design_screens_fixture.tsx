@@ -41,6 +41,38 @@ export const stylesheetEvidence = [
   ],
 ] as const;
 
+/** Each card names its stylesheet once and nests that file's outcomes. */
+export const stylesheetCardGroups = [
+  [
+    "design-review-style-matched",
+    [
+      [
+        "Changed styles that apply to this screen:",
+        [".example-head", "main a"],
+      ],
+    ],
+  ],
+  [
+    "design-review-style-unresolved",
+    [
+      [
+        "This change can apply anywhere on the screen, so the screen stays in Changes:",
+        [":root"],
+      ],
+    ],
+  ],
+  [
+    "design-review-style-unnamed",
+    [
+      [
+        "This change can apply anywhere on the screen, so the screen stays in Changes.",
+        [],
+      ],
+    ],
+  ],
+  ["design-review-style-excluded", []],
+] as const;
+
 export const comparedStyleScreens = [
   "design-review-style-matched",
   "design-review-style-unresolved",

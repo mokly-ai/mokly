@@ -52,7 +52,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 101 design screens now use 16 registered shared components, including
+Mokly's 103 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 67 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -142,7 +142,7 @@ The `Design` navigation group is the owning design catalogue for Mokly's
 Browse and Changes views. Its sixty-two Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 scrolling, stylesheet evidence, the preparing and unavailable comparison states,
-and the previous-version states of removed documents and screens. Thirty-nine
+and the previous-version states of removed documents and screens. Forty-one
 component explorer screens add component pages, saved variants, stacked
 comparisons, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
@@ -176,8 +176,13 @@ the mobile menu, and the Usage icon use centered SVGs. Known entries show
 Added, Changed, Removed, or Unmodified; removing a variant lists it as its own
 Removed entry beneath its surviving component, whose row carries an aggregate
 mark. The States → Additions gallery demonstrates a newly added Badge.
-States → Excluded styles shows an Unmodified Action opened from All with
-excluded stylesheet evidence in Details and no comparison band.
+States → Stylesheet evidence shows three stories. In the first, a changed
+style applies only to Action, so Action is in Changes and Welcome and Details
+are only under Affected screens. In the second, the changed style also applies
+to a Welcome link outside Action, so Welcome has its own Changes row. In the
+third, an Unmodified Action opened from All shows excluded stylesheet evidence
+in Details and no comparison band. Details names each changed file once, with
+its sentences and styles under it.
 The Pages → Stacked comparisons gallery holds Action's Overlay and Difference in
 one bordered frame, reached from its comparison mode control, and a Checklist
 taller than that frame, drawn part-way down it.
@@ -202,7 +207,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Seventy-seven design screens use `colorSchemes: ["light"]` and draw only the light
+Seventy-nine design screens use `colorSchemes: ["light"]` and draw only the light
 Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
 settings: thirteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
@@ -224,8 +229,8 @@ screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. Unreferenced source paths do not add Changes or comparison
 evidence.
 
-The shared inspector/workspace sheets cover all 101 design screens and standalone
-library hosts. Other mixed component-design sheets remain scoped to the 39
+The shared inspector/workspace sheets cover all 103 design screens and standalone
+library hosts. Other mixed component-design sheets remain scoped to the 41
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. Removed source-path declarations
 and globs provide no evidence. A renderer or token edit that changes a document

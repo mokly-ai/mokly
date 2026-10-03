@@ -33,6 +33,7 @@ export type ComponentPageState =
   | "usage-loading"
   | "usage-failed"
   | "shared-impact"
+  | "style-changed"
   | "closed";
 
 function ComponentChildren() {
@@ -112,7 +113,8 @@ export function ComponentDetails({ state }: { state: ComponentPageState }) {
     state === "comparison" ||
     state === "overlay" ||
     state === "difference" ||
-    state === "removed";
+    state === "removed" ||
+    state === "style-changed";
   const usageDelivery =
     state === "usage-loading"
       ? "loading"
@@ -137,7 +139,10 @@ export function ComponentDetails({ state }: { state: ComponentPageState }) {
           content: (
             <>
               <ComponentInfo entry={entry} />
-              <ComparisonDetails comparison={componentComparison(state)} />
+              <ComparisonDetails
+                comparison={componentComparison(state)}
+                subject="component"
+              />
             </>
           ),
         },

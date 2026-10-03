@@ -32,7 +32,13 @@ export function ScreenPage({
       design={INSPECTION_PAGES[state]}
       active={identity}
       scenario={
-        removed ? "removed" : state === "direct-change" ? "screen" : "all"
+        removed
+          ? "removed"
+          : state === "direct-change"
+            ? "screen"
+            : state === "style-outside"
+              ? "styles-outside"
+              : "all"
       }
       viewport={viewport}
     >

@@ -5,6 +5,7 @@ import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import {
   comparedStyleScreens,
+  stylesheetCardGroups,
   stylesheetEvidence,
 } from "./design_screens_fixture.js";
 import {
@@ -14,6 +15,7 @@ import {
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
+import { stylesheetGroups } from "./helpers/design_evidence.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: component inspector has no declared dependency row`, async () => {
@@ -91,6 +93,24 @@ for (const viewport of ["mobile", "desktop"] as const) {
     }
   });
 }
+
+for (const viewport of ["mobile", "desktop"] as const)
+  test(`${viewport}: stylesheet evidence nests each outcome under its stylesheet`, async () => {
+    for (const [id, outcomes] of stylesheetCardGroups) {
+      const { document } = await designDocument(id, viewport);
+      const card = byClass(document, "mbk-comparison-details")[0];
+      assert.ok(card, id);
+      assert.deepEqual(stylesheetGroups(card, id), {
+        lead: "Changes to these files may affect this screen:",
+        files: [
+          [
+            "generated/styles.css",
+            outcomes.map(([lead, selectors]) => [lead, [...selectors]]),
+          ],
+        ],
+      });
+    }
+  });
 
 test("stylesheet evidence states are entered and left through the filter", async () => {
   for (const [source, filter, target] of [

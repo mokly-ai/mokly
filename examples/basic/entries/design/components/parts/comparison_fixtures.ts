@@ -1,3 +1,9 @@
+import {
+  COMPONENT_STYLE_COPY,
+  SCREEN_STYLE_COPY,
+  type StylesheetEvidence,
+} from "../../parts/stylesheet_evidence.js";
+
 import type { ComponentPageState } from "./component_details.js";
 import type { ComponentDesignDestination } from "./destinations.js";
 import type { ScreenPageState } from "./screen_preview.js";
@@ -6,7 +12,8 @@ export type ChangeStatus = "unmodified" | "added" | "changed" | "removed";
 
 interface ChangedComparisonFixture {
   status: Exclude<ChangeStatus, "unmodified">;
-  reason: "output" | "inputs" | "added" | "removed" | "variant-removed";
+  reason:
+    "output" | "inputs" | "added" | "removed" | "variant-removed" | "styles";
   variant?: string;
   savedPropsUnchanged?: boolean;
   propChange?: {
@@ -15,6 +22,8 @@ interface ChangedComparisonFixture {
     before: string;
     after: string;
   };
+  /** Changed stylesheets, each with the evidence it retained for this entry. */
+  stylesheets?: readonly StylesheetEvidence[];
   changedComponents?: readonly {
     title: string;
     to: ComponentDesignDestination;
@@ -52,6 +61,25 @@ const checklistComparison = {
   savedPropsUnchanged: true,
 } as const satisfies ComparisonFixture;
 
+/** The one stylesheet all three stylesheet stories change. */
+const ACTION_STYLES = "styles/actions.css";
+
+/** Its changed `.action` rule styles only Action's own output. */
+const actionStyleComparison = {
+  status: "changed",
+  reason: "styles",
+  variant: "Default",
+  savedPropsUnchanged: true,
+  stylesheets: [
+    {
+      path: ACTION_STYLES,
+      outcomes: [
+        { lead: COMPONENT_STYLE_COPY.matched, selectors: [".action"] },
+      ],
+    },
+  ],
+} as const satisfies ComparisonFixture;
+
 /** These are authored comparison records, not analysis of rendered pixels. */
 const componentComparisons: Partial<
   Record<ComponentPageState, ComparisonFixture>
@@ -65,8 +93,9 @@ const componentComparisons: Partial<
   removed: { status: "changed", reason: "variant-removed", variant: "Compact" },
   "shared-impact": {
     status: "unmodified",
-    excludedStylesheets: ["styles/actions.css"],
+    excludedStylesheets: [ACTION_STYLES],
   },
+  "style-changed": actionStyleComparison,
 };
 
 const screenComparisons: Partial<
@@ -79,6 +108,19 @@ const screenComparisons: Partial<
     changedComponents: [{ title: "Action", to: "design-component-affected" }],
   },
   "removed-consumer": { status: "removed", reason: "removed" },
+  "style-outside": {
+    status: "changed",
+    reason: "styles",
+    stylesheets: [
+      {
+        path: ACTION_STYLES,
+        outcomes: [{ lead: SCREEN_STYLE_COPY.outside, selectors: [".action"] }],
+      },
+    ],
+    changedComponents: [
+      { title: "Action", to: "design-component-style-changed" },
+    ],
+  },
 };
 
 export function componentComparison(state: ComponentPageState) {
