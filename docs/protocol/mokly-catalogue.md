@@ -2,9 +2,8 @@
 
 ## Delivery Status
 
-Serve, export, repository preview and the viewer use path-keyed read model v4.
-Live pages use [scoped bootstraps](./mokly-shell-bootstrap.md). Document records
-and previous paths remain reserved for Markdown rendering and move detection.
+Serve, export and viewers use path-keyed v4 with rendered documents and
+[scoped bootstraps](./mokly-shell-bootstrap.md). Move detection remains planned.
 
 ## Location And Types
 
@@ -199,8 +198,9 @@ spread a manifest, entry, or internal evidence object into public JSON.
 - Details retain authored display metadata already exposed by the inspector.
   `details.dependencies` lists the entry's source path, declared paths, and
   for a document its resources as repository-relative display labels only.
-  `sourcePath`, optional invocation `source.path`, and local related-doc paths
-  stay repository-relative metadata. They never become source-serving URLs.
+  Source paths stay repository-relative and never serve source bytes. Matched
+  `relatedDocs` use validated `mock:<path>` references to current documents
+  under the [document contract](./mokly-documents.md).
 
 Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`,
 `movedFrom`, folder `exclude` globs, resolved dependency evidence,

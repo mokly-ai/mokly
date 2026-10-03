@@ -117,7 +117,7 @@ export function assembleExport(
   );
   const pageIds = new Set(
     compilation.manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.path] : [],
+      entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
     ),
   );
   const changes = comparison

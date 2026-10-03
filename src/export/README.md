@@ -234,3 +234,7 @@ shared workspace; removed components and variants retain baseline snapshots.
 Controls have no rendering capability in exported pages, while usage,
 highlighting and navigation between variant entries remain available without
 the consumer repository.
+
+Markdown documents join current shell and static inventories in each scheme.
+Their copied resources remain byte-exact. Removed documents use page preview
+metadata and capture every historical scheme and its full resource closure.

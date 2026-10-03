@@ -8,6 +8,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { isDocumentResource } from "../documents/resource_paths.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
@@ -149,6 +150,12 @@ export function generatedOwnershipDenial(
     });
     if (denial) return sourceDenialMessage(denial);
     if (relative === MANIFEST_NAME) return;
+    if (
+      isDocumentResource(relative) &&
+      previousArtifactOwner(relative, config) &&
+      fs.lstatSync(candidate).isFile()
+    )
+      return;
     if (!candidate.endsWith(".html")) return "is not generated HTML";
     if (!fs.lstatSync(candidate).isFile()) return "is not a regular file";
     const source = readGeneratedSource(candidate);

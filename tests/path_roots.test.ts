@@ -7,7 +7,7 @@ import { resolveConfig } from "../dist/config/validate.js";
 
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
-test("default roots discover specs and retain Markdown as protected source only", async (t) => {
+test("default roots discover specs and render Markdown while retaining protected sources", async (t) => {
   const fixture = await pathFixture(
     {
       "specs/account/page.mockup.ts": pageSource(),
@@ -22,7 +22,7 @@ test("default roots discover specs and retain Markdown as protected source only"
   const built = await fixture.compile();
   assert.deepEqual(
     built.manifest.entries.map((entry) => entry.path),
-    ["account/page"],
+    ["account", "account/page"],
   );
   assert.ok(built.manifest.sourceFiles.includes("specs/account/README.md"));
 });

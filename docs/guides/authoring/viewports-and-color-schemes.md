@@ -10,7 +10,7 @@ order: 4
 Every screen owns one mobile node and one desktop node, and the build writes a
 document for each, `index.mobile.html` and `index.desktop.html` inside the
 screen's directory. The catalogue's viewport control switches between them,
-and a link keeps the viewport you are in. Pages have no
+and a link keeps the viewport you are in. Pages and Markdown documents have no
 viewport: each is one document.
 
 ## Turn on dark
@@ -35,8 +35,8 @@ export default function render(input: RenderInput): string {
 
 Mokly re-renders the same mobile and desktop nodes for dark output, so a
 screen is never written twice, and the dark views sit beside the light ones as
-`index.mobile.dark.html` and `index.desktop.dark.html`. Markdown inputs do
-not render yet; pages from `definePage` have one complete HTML document.
+`index.mobile.dark.html` and `index.desktop.dark.html`. Markdown documents also have `index.dark.html`, rendered with Mokly's
+dark palette. Pages from `definePage` have one complete light document.
 The catalogue shows a Light and Dark switch once the catalogue has dark
 documents.
 

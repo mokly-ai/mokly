@@ -3,13 +3,14 @@
 // by home and missing routes. All embedded consumer documents are sandboxed
 // without script permission.
 
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
 
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
-import { entryRoute } from "../navigation/routes.js";
+import { entryRoute, documentRoute } from "../navigation/routes.js";
+import { DisplaySelection } from "../viewer/display_context.js";
 import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -27,6 +28,8 @@ function EmbedStage(props: {
   route: string;
   title: string;
   fragment?: string;
+  lightRoute?: string;
+  darkRoute?: string;
 }) {
   return (
     <div className="mbk-stage-embed" data-mokly-scroll="embed">
@@ -34,6 +37,16 @@ function EmbedStage(props: {
         className="mbk-frag"
         sandbox="allow-same-origin"
         data-mokly-fragment-frame=""
+        data-fragment-light={
+          props.lightRoute
+            ? fragmentSrc(props.lightRoute, props.fragment)
+            : undefined
+        }
+        data-fragment-dark={
+          props.darkRoute
+            ? fragmentSrc(props.darkRoute, props.fragment)
+            : undefined
+        }
         src={fragmentSrc(props.route, props.fragment)}
         title={props.title}
       />
@@ -59,6 +72,7 @@ export function TargetStage(props: {
   target: RouteTarget;
   variantPath?: string | undefined;
 }) {
+  const selection = useContext(DisplaySelection);
   const entry = props.target.entry;
   const model = props.catalogue.publicModel;
   if (model) {
@@ -76,16 +90,31 @@ export function TargetStage(props: {
       />
     );
   }
-  if (entry.kind === "page")
+  if (entry.kind === "page" || entry.kind === "document")
     return (
       <EmbedStage
-        route={entryRoute(entry.path)}
+        route={
+          entry.kind === "page"
+            ? entryRoute(entry.path)
+            : documentRoute(
+                entry.path,
+                entry.colorSchemes.includes(selection.colorScheme)
+                  ? selection.colorScheme
+                  : "light",
+              )
+        }
         title={entry.title}
+        {...(entry.kind === "document"
+          ? {
+              lightRoute: documentRoute(entry.path, "light"),
+              ...(entry.colorSchemes.includes("dark")
+                ? { darkRoute: documentRoute(entry.path, "dark") }
+                : {}),
+            }
+          : {})}
         {...(props.fragment ? { fragment: props.fragment } : {})}
       />
     );
-  if (entry.kind === "document")
-    return <EmptyStage heading="Document unavailable">{null}</EmptyStage>;
   if (entry.kind === "component") {
     const parent = isManifestComponentVariant(entry)
       ? props.catalogue.byPath.get(entry.variantOf)

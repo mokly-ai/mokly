@@ -245,9 +245,12 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
   const availableResources = new Set(
     [
       ...fixture.resources.keys(),
-      ...[...fixture.before.outputs.keys()].filter((route) =>
-        route.startsWith("mokly-generated/"),
-      ),
+      ...[...fixture.before.outputs]
+        .filter(
+          ([route, content]) =>
+            route.startsWith("mokly-generated/") || typeof content !== "string",
+        )
+        .map(([route]) => route),
     ].map((route) => `examples/basic/generated/${route}`),
   );
   assert.ok(resourceReads.length <= availableResources.size);

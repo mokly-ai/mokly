@@ -31,6 +31,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
   const entries = [
     ...model.screens,
     ...model.pages,
+    ...model.documents,
     ...model.useCases,
     ...model.components,
   ];

@@ -6,8 +6,8 @@ Implemented for [pages](./mokly-pages.md), screens, flows, components, and
 compatible baselines, each with a validated source inventory. The same
 resolved inventory protects build, runtime, comparisons, and both publication
 options. Roots retain protected file inputs, including excluded glob matches,
-and emit manifest v8. Markdown matches are protected source inputs while their
-rendering remains planned in the [path identity plan](../../plans/path-identity.md).
+and emit manifest v8. Markdown documents and copied resource inputs join the same private inventory;
+only their generated HTML and resource copies are public.
 
 ## Protected Inputs
 

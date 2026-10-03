@@ -34,3 +34,6 @@ node --import tsx --test tests/entry_exports.test.ts tests/nav_path_authoring.te
 See [authoring](../../docs/protocol/mokly-authoring.md),
 [entry modules](../../docs/protocol/mokly-entry-modules.md), and
 [links](../../docs/protocol/mokly-navigation.md).
+
+Internal resolved entries also include Markdown documents from `src/documents`.
+Those files need no public helper or definition brand.

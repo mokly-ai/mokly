@@ -161,6 +161,11 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 
 ### Selection
 
+Markdown documents use the existing whole-page frame and the selected Light or
+Dark scheme. They have no viewport or usage axis. Removed documents load their
+historical scheme from the advertised preview generation. In catalogue v4, a
+related-doc match uses `mock:<path>`; source labels remain repository-relative.
+
 `screenPath` names one catalogue entry by its path, such as
 `checkout/overview`. Screen and component variants use their own paths, the
 parent's path plus their slug, just like parents, pages, documents and flows;

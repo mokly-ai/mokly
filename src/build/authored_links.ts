@@ -34,7 +34,11 @@ export function resolveAuthoredLink(
   let reference: string | undefined;
   if (target.path.startsWith("~definition-")) {
     const definition = [...entries.values()]
-      .map((entry) => referencedDefinition(target.path, entry))
+      .map((entry) =>
+        entry.kind === "document"
+          ? undefined
+          : referencedDefinition(target.path, entry),
+      )
       .find((value) => value !== undefined);
     if (definition && definition[DEFINITION_IDENTITY].path === undefined)
       throw new MoklyError(

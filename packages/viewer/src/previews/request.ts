@@ -4,15 +4,10 @@ import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
-import {
-  previewMetadataPath,
-  snapshotDocumentPath,
-  snapshotSidePath,
-  snapshotViewPath,
-} from "../navigation/routes.js";
-import { parseRemovedPagePreview } from "../review/page_preview.js";
-import { parseReviewResult } from "../review/result_validation.js";
+import { previewMetadataPath, snapshotSidePath } from "../navigation/routes.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
+
+import { pageContent, screenContent } from "./content.js";
 
 const STABLE_ENDPOINT = "/__mokly/diffs/review.json";
 const REVIEW_FILE = "review.json";
@@ -27,6 +22,10 @@ export interface PreviewScreenView {
 /** The historical documents one loaded preview renders. */
 export type PreviewContent =
   | { kind: "page"; url: string }
+  | {
+      kind: "document";
+      views: readonly { colorScheme: ColorScheme; url: string }[];
+    }
   | { kind: "screen"; views: readonly PreviewScreenView[] };
 
 /** A parsed preview and the immutable address its documents resolve against. */
@@ -82,7 +81,7 @@ export function previewEndpoint(
   if (!delivery) {
     const endpoint = new URL(STABLE_ENDPOINT, base);
     endpoint.searchParams.set(
-      data.kind === "page" ? "page" : "path",
+      data.kind === "screen" ? "path" : "page",
       data.path,
     );
     if (refresh) endpoint.searchParams.set("refresh", "1");
@@ -116,7 +115,9 @@ export function advertisedPreviewPaths(
     files: [
       ...(comparison === null ? [] : [comparison]),
       ...model.removedEntries.flatMap((removed) =>
-        removed.preview?.kind === "page" && comparison !== null
+        (removed.preview?.kind === "page" ||
+          removed.preview?.kind === "document") &&
+        comparison !== null
           ? [
               `${comparison.slice(0, -REVIEW_FILE.length)}${previewMetadataPath(removed.entry.path)}`,
             ]
@@ -135,68 +136,6 @@ export function advertisedPreviewPaths(
 
 function unavailable(): never {
   throw new Error("The previous version is unavailable.");
-}
-
-interface ParsedPreview {
-  baseCommit: string;
-  content: PreviewContent;
-}
-
-function screenContent(
-  data: RemovedPreviewData,
-  payload: unknown,
-  base: string,
-): ParsedPreview {
-  const result = parseReviewResult(payload);
-  const screen = result.screens.find(
-    (candidate) => candidate.path === data.path,
-  );
-  if (!screen || "after" in screen) unavailable();
-  const views = screen.views.flatMap((view) =>
-    view.state === "removed"
-      ? [
-          {
-            colorScheme: view.colorScheme,
-            url: new URL(
-              encodeUrlPath(
-                snapshotViewPath(
-                  "before",
-                  data.path,
-                  view.viewport,
-                  view.colorScheme,
-                ),
-              ),
-              base,
-            ).href,
-            viewport: view.viewport,
-          },
-        ]
-      : [],
-  );
-  if (!views.length) unavailable();
-  return {
-    baseCommit: result.baseCommit,
-    content: { kind: "screen", views },
-  };
-}
-
-function pageContent(
-  data: RemovedPreviewData,
-  payload: unknown,
-  base: string,
-): ParsedPreview {
-  const preview = parseRemovedPagePreview(payload);
-  if (preview.path !== data.path) unavailable();
-  return {
-    baseCommit: preview.baseCommit,
-    content: {
-      kind: "page",
-      url: new URL(
-        encodeUrlPath(snapshotDocumentPath("before", data.path, "light")),
-        base,
-      ).href,
-    },
-  };
 }
 
 function generationFromUrl(value: string | URL): string | undefined {

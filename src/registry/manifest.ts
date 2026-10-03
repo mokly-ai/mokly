@@ -136,6 +136,14 @@ function toManifestEntry(
       ...componentManifestEntry(entry, common, catalogueSchemes),
       declaredDependencies: common.declaredDependencies,
     };
+  if (entry.kind === "document")
+    return {
+      ...common,
+      kind: "document",
+      colorSchemes: [...catalogueSchemes],
+      resources: [...entry.resources],
+      ...(entry.tags?.length ? { tags: [...entry.tags] } : {}),
+    };
   if (entry.kind === "page")
     return {
       ...common,

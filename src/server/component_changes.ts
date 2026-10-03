@@ -217,7 +217,7 @@ export async function readCatalogueChanges(
   });
   const pageIds = new Set(
     manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.path] : [],
+      entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
     ),
   );
   const ids = changedManifestPaths(

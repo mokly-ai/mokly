@@ -31,14 +31,15 @@ export function referencedRoutes(
   return [
     ...new Set(
       references.flatMap((reference) => {
-        const resolved = resolveReference(sourceRoute, reference);
+        const resolved = resolveResourceReference(sourceRoute, reference);
         return resolved ? [resolved] : [];
       }),
     ),
   ].sort();
 }
 
-function resolveReference(
+/** Resolve one reference with the same confinement used by resource traversal. */
+export function resolveResourceReference(
   sourceRoute: string,
   rawReference: string,
 ): string | undefined {

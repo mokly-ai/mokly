@@ -5,6 +5,7 @@ import path from "node:path";
 import { runCommand } from "../command.mjs";
 import { smokeRegisteredComponents } from "../components.mjs";
 import { consumerPackage } from "../consumer_package.mjs";
+import { inspectMarkdownDocuments } from "../documents.mjs";
 import { inspectConsumerExport } from "../export.mjs";
 import {
   copyFixture,
@@ -46,6 +47,7 @@ export async function smokeEsmConsumer(context) {
   await fs.promises.mkdir(nested, { recursive: true });
   await runBin(root, ["build"], { cwd: nested });
   await runBin(root, ["check"]);
+  await inspectMarkdownDocuments(root, "mockups");
   const fragment = await fs.promises.readFile(
     path.join(root, "mockups/packed-home/index.desktop.html"),
     "utf8",
@@ -142,6 +144,7 @@ export async function smokeEsmConsumer(context) {
     exported.screens.find((screen) => screen.path === "packed-home")?.state,
     "changed",
   );
+  await inspectMarkdownDocuments(root, "published", true);
   await smokeViewer(root);
   await smokeRegisteredComponents(context, root);
   await smokeConsumerPublish(context, root);

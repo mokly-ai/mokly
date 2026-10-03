@@ -3,6 +3,7 @@ import { parse } from "parse5";
 import {
   duplicateReservedAttributeName,
   entryRoute,
+  documentRoute,
   type HtmlSourceLocation,
   effectiveColorSchemes,
   viewRoute,
@@ -136,6 +137,17 @@ export function validateLogicalFragments(
     if (checked.has(key)) continue;
     checked.add(key);
     const entry = byPath.get(record.destination.path);
+    if (entry?.kind === "document") {
+      for (const scheme of config.colorSchemes) {
+        const route = documentRoute(entry.path, scheme);
+        if (!anchors(route)?.has(fragment))
+          throw new MoklyError(
+            "build-invalid",
+            `${record.sourceRoute} logical fragment ${fragment} for ${entry.path} is missing from document ${route}`,
+          );
+      }
+      continue;
+    }
     if (entry?.kind === "page") {
       const route = entryRoute(entry.path);
       if (!anchors(route)?.has(fragment))

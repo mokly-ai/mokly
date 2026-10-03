@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { ColorScheme } from "@mokly/viewer";
 
 import type { ComponentEntryDefinition } from "../components/types.js";
+import type { DocumentDefinition } from "../documents/types.js";
 
 import type {
   DEFINITION,
@@ -109,7 +110,7 @@ export type EntryDefinition =
 /** Every value collected from a module export. */
 export type RegistryDefinition = EntryDefinition | FolderDefinition;
 /** An entry with its fully derived identity and source location. */
-export type ResolvedRegistryEntry = EntryDefinition & {
+export type ResolvedRegistryEntry = (EntryDefinition | DocumentDefinition) & {
   path: string;
   slug: string;
   index: boolean;

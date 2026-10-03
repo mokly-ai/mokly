@@ -71,11 +71,17 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
       )
       .map((entry) => [entry.path, entry]),
   );
+  const documentPaths = new Set(model.documents.map((entry) => entry.path));
   for (const entry of all) {
     if ("variantOf" in entry && entry.variantOf !== undefined)
       require(entry.path.split("/").slice(0, -1).join("/") ===
         entry.variantOf, "variant path must be parent path plus one segment");
     unique(entry.tags);
+    for (const link of entry.details.relatedDocs)
+      if (link.startsWith("mock:"))
+        require(documentPaths.has(
+          link.slice(5),
+        ), "related document must name a current document");
     const removed = !current.includes(entry);
     require(entry.changes.status ===
       model.changesStatus, "entry status must match snapshot");

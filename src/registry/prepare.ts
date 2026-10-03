@@ -12,6 +12,7 @@ import type {
   ComponentVariantDefinition,
 } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
+import type { ResolvedDocument } from "../documents/load.js";
 import { MoklyError } from "../errors.js";
 
 import { problem } from "./entry_metadata.js";
@@ -32,6 +33,7 @@ import { resolveDefinitions } from "./resolve_definitions.js";
 export function prepareRegistry(
   values: readonly unknown[],
   config: ResolvedConfig,
+  documents: readonly ResolvedDocument[] = [],
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
   const entries: ResolvedRegistryEntry[] = [];
@@ -39,7 +41,7 @@ export function prepareRegistry(
   const resolved = resolveDefinitions(values, config);
   for (const diagnostic of resolved.diagnostics)
     violations.push({ ...diagnostic, sourceRelativePath: "" });
-  for (const entry of resolved.entries) {
+  for (const entry of [...resolved.entries, ...documents]) {
     const { sourcePath, sourceRelativePath } = entry;
     if (entry.kind === "screen" && Array.isArray(entry.useCasePaths))
       entry.useCasePaths = entry.useCasePaths.map((target) =>
@@ -111,7 +113,10 @@ export function prepareRegistry(
     folders: resolved.folders,
     references: new Map(
       orderedEntries.flatMap((entry) => {
-        const reference = existingDefinitionReference(entry);
+        const reference =
+          entry.kind === "document"
+            ? undefined
+            : existingDefinitionReference(entry);
         return reference ? [[reference, entry.path] as const] : [];
       }),
     ),

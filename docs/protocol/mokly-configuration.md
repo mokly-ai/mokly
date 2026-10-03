@@ -7,9 +7,9 @@ behavior, including imported CSS and optional PostCSS.
 ## Delivery Status
 
 Roots and their defaults, globs, prefixes and transparent directories are
-implemented. Matched Markdown files are protected, watched source inputs but
-are omitted from compilation; a catalogue needs at least one renderable definition.
-Markdown rendering remains planned. Every other setting below is implemented.
+implemented. Matched Markdown files become document entries. Their sources and
+resource inputs remain protected and watched. A catalogue may contain only
+documents. Every setting below is implemented.
 The reserved CSS output directory, CSS delivery and `postcss` key are
 implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
 and [diagnostics](./mokly-imported-styles-errors.md) for exact errors.

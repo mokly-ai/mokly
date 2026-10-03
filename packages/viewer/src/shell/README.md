@@ -357,3 +357,9 @@ recomputes that metadata from the active preview selection immediately after
 hydration. The early appearance script already selected the preview files;
 this metadata handoff preserves those frames and avoids rebuilding the shell
 when stored Dark appearance differs from the server's initial Light evidence.
+
+Markdown documents use `DocumentStageFrame` and the plain manifest embed with
+scheme-specific routes. `previews.tsx` and `use_removed_preview.ts` select the
+historical document's scheme through the same page preview lifecycle. Documents
+have no viewport or usage axis. The standalone envelope accepts their entry kind
+so route-scoped bootstraps hydrate and logical links reach the parent shell.

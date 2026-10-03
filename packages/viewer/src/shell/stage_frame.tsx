@@ -8,7 +8,7 @@ import type {
 } from "../catalogue/scoped_types.js";
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { entryRoute } from "../navigation/routes.js";
+import { entryRoute, documentRoute } from "../navigation/routes.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { useMountedShellFrame } from "./frame_mount_hook.js";
@@ -183,12 +183,21 @@ export function DocumentStageFrame({
   entry,
   fragment,
 }: {
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" }>;
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" | "document" }>;
   fragment?: string;
 }) {
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
-  const source = framePath(`static/${entryRoute(entry.path)}`, fragment);
+  const selection = useContext(DisplaySelection);
+  const scheme =
+    entry.kind === "document" &&
+    entry.colorSchemes.includes(selection.colorScheme)
+      ? selection.colorScheme
+      : "light";
+  const source = framePath(
+    `static/${documentRoute(entry.path, scheme)}`,
+    fragment,
+  );
   const identity = useMemo<ShellFrameIdentity>(
     () => ({ entryPath: entry.path }),
     [entry.path],
@@ -209,7 +218,7 @@ export function DocumentStageFrame({
     <div
       className="mbk-stage-embed"
       data-mokly-scroll="embed"
-      data-preview-color-scheme="light"
+      data-preview-color-scheme={scheme}
     >
       {source ? (
         <iframe
@@ -217,6 +226,22 @@ export function DocumentStageFrame({
           className="mbk-frag"
           data-mokly-fragment-frame=""
           data-mokly-frame-state={mounted.status}
+          data-fragment-light={
+            entry.kind === "document"
+              ? framePath(
+                  `static/${documentRoute(entry.path, "light")}`,
+                  fragment,
+                )
+              : undefined
+          }
+          data-fragment-dark={
+            entry.kind === "document" && entry.colorSchemes.includes("dark")
+              ? framePath(
+                  `static/${documentRoute(entry.path, "dark")}`,
+                  fragment,
+                )
+              : undefined
+          }
           ref={mounted.frameRef}
           sandbox="allow-same-origin"
           src={initialSource}

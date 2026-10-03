@@ -1,6 +1,7 @@
 import { isKebabCase, isEntryPath } from "@mokly/viewer/data";
 
 import { validateManifestComponent } from "../components/manifest_entry_validation.js";
+import { documentResourceRoute } from "../documents/resource_paths.js";
 import { MoklyError } from "../errors.js";
 
 import {
@@ -66,8 +67,33 @@ export function validateManifestEntry(
     validateColorSchemes(entry.colorSchemes, String(entry.path));
     if (!stringArray(entry.resources))
       failure(`${String(entry.path)} has invalid resources`);
-    for (const resource of entry.resources)
+    if (
+      (entry.relatedDocs as string[]).length ||
+      (entry.declaredDependencies as string[]).length
+    )
+      failure(
+        `${String(entry.path)} documents cannot declare dependencies or relatedDocs`,
+      );
+    if (
+      JSON.stringify(entry.resources) !==
+      JSON.stringify([...new Set(entry.resources)].sort())
+    )
+      failure(`${String(entry.path)} resources must be sorted and unique`);
+    for (const resource of entry.resources) {
       validateRepoPath(resource, "resources");
+      if (
+        !documentResourceRoute(
+          {
+            path: entry.path as string,
+            sourcePath: entry.sourcePath as string,
+          },
+          resource,
+        )
+      )
+        failure(
+          `${String(entry.path)} has invalid document resource: ${resource}`,
+        );
+    }
   }
   validateKnownFields(entry, components);
 }

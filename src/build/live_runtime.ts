@@ -1,7 +1,7 @@
 /** Prepare a last-good routing generation without invoking a consumer renderer. */
 import { randomBytes } from "node:crypto";
 
-import { entryRoute, generatedViews } from "@mokly/viewer/data";
+import { entryRoute, documentRoute, generatedViews } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -25,7 +25,11 @@ export async function prepareLiveRuntime(
       sourceFiles: graph.sourceFiles,
       postcssWatchDirectories: graph.postcssWatchDirectories ?? [],
     };
-    const registry = prepareRegistry(graph.definitions, config);
+    const registry = prepareRegistry(
+      graph.definitions,
+      config,
+      graph.documents,
+    );
     const manifest = createCatalogueIndex(
       registry.entries,
       graph.sourceFiles,
@@ -35,9 +39,13 @@ export async function prepareLiveRuntime(
     validateGeneratedOutputPaths(
       [
         ...manifest.entries.flatMap((entry) =>
-          entry.kind === "page"
-            ? [entryRoute(entry.path)]
-            : generatedViews(entry).map((view) => view.path),
+          entry.kind === "document"
+            ? entry.colorSchemes.map((scheme) =>
+                documentRoute(entry.path, scheme),
+              )
+            : entry.kind === "page"
+              ? [entryRoute(entry.path)]
+              : generatedViews(entry).map((view) => view.path),
         ),
         ...graph.styleOutputs.keys(),
       ],

@@ -25,7 +25,7 @@ produce misleading child relationship errors. `move_hints.ts` checks current
 
 `manifest.ts` emits schema v8 with paths, authored move hints, folder records and
 source inventory. `manifest_validation.ts` is the shared strict current/baseline
-reader. It reserves the document kind, derives artifact names, and rejects unknown
+reader. It validates document resources, derives artifact names, and rejects unknown
 fields. An earlier comparison base produces the established unavailable outcome.
 The live catalogue index describes available views without claiming rendered usage.
 

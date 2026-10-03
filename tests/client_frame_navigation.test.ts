@@ -85,7 +85,7 @@ test("frame activation declines untrusted or ineligible candidates", () => {
     { ...primary, button: 2 },
     { ...primary, download: true },
     { ...primary, eventType: "auxclick" as const, button: 0 },
-    { ...primary, marker: "details#1section" },
+    { ...primary, marker: "details#unsafe/section" },
     { ...primary, marker: "mock:details" },
     { ...primary, target: " invalid" },
   ]) {

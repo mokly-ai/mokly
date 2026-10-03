@@ -1,10 +1,7 @@
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
-  roots: [
-    { dir: "entries", files: ["**/*.mockup.{ts,tsx}"] },
-    { dir: "src", files: ["**/*.mockup.{ts,tsx}"] },
-  ],
+  roots: [{ dir: "entries" }, { dir: "src", files: ["**/*.mockup.{ts,tsx}"] }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: {

@@ -5,6 +5,7 @@ import { isDeepStrictEqual } from "node:util";
 import {
   analyzeHierarchy,
   entryRoute,
+  documentRoute,
   generatedViews,
   isManifestComponentVariant,
   type CatalogueHierarchy,
@@ -141,15 +142,21 @@ function changedPathCandidates(
 ): string[] {
   const prefix = mockupsPrefix ? `${mockupsPrefix}/` : "";
   const current =
-    entry.kind === "page"
-      ? [entryRoute(entry.path)]
-      : generatedViews(entry).map((view) => view.path);
+    entry.kind === "document"
+      ? entry.colorSchemes.map((scheme) => documentRoute(entry.path, scheme))
+      : entry.kind === "page"
+        ? [entryRoute(entry.path)]
+        : generatedViews(entry).map((view) => view.path);
   const baseline =
-    baseEntry?.kind === "page"
-      ? [entryRoute(baseEntry.path)]
-      : baseEntry
-        ? generatedViews(baseEntry).map((view) => view.path)
-        : [];
+    baseEntry?.kind === "document"
+      ? baseEntry.colorSchemes.map((scheme) =>
+          documentRoute(baseEntry.path, scheme),
+        )
+      : baseEntry?.kind === "page"
+        ? [entryRoute(baseEntry.path)]
+        : baseEntry
+          ? generatedViews(baseEntry).map((view) => view.path)
+          : [];
   return [...new Set([...current, ...baseline])].map(
     (candidate) => `${prefix}${candidate}`,
   );

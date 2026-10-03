@@ -105,8 +105,9 @@ CSS Modules mutation checklist:
 `config/entry_discovery.ts` walks configured roots once per compilation. Each
 matched file has one root owner; overlapping root directories are allowed when
 their matched file sets are disjoint. The result includes executable modules,
-matched Markdown inputs, and directory folder records. Markdown inputs remain
-protected and watched until document rendering is implemented. Candidate discovery
+matched Markdown inputs, and directory folder records. `documents/load.ts` parses
+file definitions and their confined resources before registry preparation. These
+inputs remain protected and watched. Candidate discovery
 returns a new inventory and cannot mutate an accepted runtime after a failed build.
 
 `load_graph.ts` bundles executable modules, their imported helpers, the renderer,
@@ -204,7 +205,8 @@ last segment of the component's resolved path, including for index components.
 
 ## Documents and links
 
-Every entry owns `<path>/index.html` as its logical route. Pages write that file;
+Every entry owns `<path>/index.html` as its logical route. Pages and documents
+write that file; documents also write `index.dark.html` when dark is enabled;
 screens and component variants write `index.<viewport>[.dark].html` beside it.
 Flow and component parent documents are assembled by the shell.
 
@@ -258,3 +260,12 @@ current encoded header must match that entry's source. This permits replacement
 and orphan cleanup after helper renames without treating an old source inventory
 as blanket ownership. Missing, malformed, earlier or foreign manifests grant no
 additional ownership. Current source and public-exclusion denials still win.
+
+The retained graph and consumer bundle carry parsed Markdown definitions. The
+existing non-HTML `styleOutputs` inventory also carries copied document assets;
+worker replay uses these accepted bytes without rereading source files. Copied
+resource ownership comes from exact routes in the previous validated manifest.
+
+Document inputs join the graph input set before the CSS pass. A nested source
+root can share an image between Markdown and imported CSS without making an
+unrelated public asset private. Both aliases retain source protection.

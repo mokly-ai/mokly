@@ -29,9 +29,9 @@ mockups root. Historical reads reject non-regular files and do not resolve alias
 through the current filesystem.
 `compare.ts` builds complete comparisons; `selected.ts` retains only a requested
 view's checked snapshot closure. Neither reader executes historical code.
-`page_preview.ts` captures one page selected from an accepted removed-entry
+`page_preview.ts` captures a page or every scheme of a document from an accepted removed-entry
 snapshot. Its caller supplies the pinned `BaselineReader`; the provider verifies
-the page against that snapshot's baseline manifest, then reuses
+the entry against that snapshot's baseline manifest, then reuses
 `GitReviewAssetReader`, `SelectedAssetReader` and `copySnapshotDependencies` for
 the same confinement, source exclusions, regular-file checks, transitive
 resource traversal and 64 MiB bound as screen panes. It returns typed
@@ -346,5 +346,8 @@ and [component result schema](../../docs/protocol/mokly-component-review.md).
 
 Entry pairing uses kind and case-folded path, including component parents and
 variants at the same identity. Grouped comparison records retain their owning
-component views; Changes merges their reasons into one entry record. Reserved
-documents are excluded until document material comparison is implemented.
+component views; Changes merges their reasons into one entry record. Documents
+use page-style material comparison for each scheme, resources and metadata.
+
+Document previews seed capture with declared attachments still linked from their
+historical HTML, including PDFs. Pages keep their existing rendered-resource rule.

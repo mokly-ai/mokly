@@ -6,6 +6,7 @@ import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 import {
   entryRoute,
+  documentRoute,
   effectiveColorSchemes,
   viewRoute,
   VIEWPORTS,
@@ -24,6 +25,7 @@ import {
   publicFileFailureReason,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { documentTemplate } from "../documents/template.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
@@ -60,6 +62,20 @@ export function renderFragments(
   ];
   for (const entry of ordered) {
     if (selection && selection.entryId !== entry.path) continue;
+    if (entry.kind === "document") {
+      for (const colorScheme of config.colorSchemes) {
+        if (selection && selection.colorScheme !== colorScheme) continue;
+        const route = documentRoute(entry.path, colorScheme);
+        addOutput(
+          outputs,
+          route,
+          generatedHeader(entry.sourceRelativePath) +
+            documentTemplate(entry.title, entry.body, colorScheme),
+        );
+        fragmentViews.set(route, { colorScheme, viewport: "desktop" });
+      }
+      continue;
+    }
     if (entry.kind === "page") {
       const route = entryRoute(entry.path);
       addOutput(outputs, route, renderPage(entry));

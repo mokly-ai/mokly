@@ -23,10 +23,15 @@ export function validateEntry(
   config: ResolvedConfig,
 ): RegistryViolation[] {
   const violations: RegistryViolation[] = [];
-  for (const field of entry[UNKNOWN_FIELDS] ?? [])
+  for (const field of (entry.kind === "document"
+    ? []
+    : entry[UNKNOWN_FIELDS]) ?? [])
     violations.push(problem(entry, "invalid-field", `unknown field ${field}`));
   for (const field of ["path", "title", "description"] as const) {
-    if (!nonEmpty(entry[field])) {
+    if (
+      !(entry.kind === "document" && field === "description") &&
+      !nonEmpty(entry[field])
+    ) {
       violations.push(
         problem(entry, "missing-metadata", `${field} is required`),
       );
@@ -37,7 +42,7 @@ export function validateEntry(
       problem(entry, "invalid-path", "path must be a valid catalogue path"),
     );
   }
-  if (entry.__viaDefine !== true) {
+  if (entry.kind !== "document" && entry.__viaDefine !== true) {
     violations.push(
       problem(
         entry,

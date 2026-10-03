@@ -38,3 +38,7 @@ npx tsx --test tests/preview_removed_pages.test.ts tests/removed_preview_deliver
 See the [publication contract](../../docs/protocol/mokly-publication.md),
 [removed-preview contract](../../docs/protocol/mokly-removed-previews.md), and
 [export internals](../export/README.md).
+
+Markdown document previews share page metadata and generation packaging, with
+one historical document per enabled scheme. Current document resources come
+from the accepted compilation and pass the normal source and inventory guards.

@@ -15,6 +15,7 @@ import {
 } from "../build/styles/routes.js";
 import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { isDocumentResource } from "../documents/resource_paths.js";
 import { errorMessage } from "../errors.js";
 
 import { contentType, safeDecodePath, send } from "./respond.js";
@@ -33,9 +34,15 @@ export function serveStatic(
     return send(response, 400, "text/plain", "Invalid static path", method);
   }
   const candidate = path.resolve(config.mockupsDir, relative);
-  if (isGeneratedRoute(relative)) {
+  if (
+    isGeneratedRoute(relative) ||
+    (isDocumentResource(relative) && acceptedGenerated.has(relative))
+  ) {
     const content = acceptedGenerated.get(relative);
-    if (content === undefined || !isPublicGeneratedRoute(relative))
+    if (
+      content === undefined ||
+      (isGeneratedRoute(relative) && !isPublicGeneratedRoute(relative))
+    )
       return send(response, 404, "text/plain", "Not found", method);
     response.writeHead(200, {
       "cache-control": "no-store",

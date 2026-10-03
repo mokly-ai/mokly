@@ -124,6 +124,7 @@ export function createCatalogue(
   ].some(
     (entry) =>
       (entry.kind === "screen" ||
+        entry.kind === "document" ||
         (entry.kind === "component" && isManifestComponentVariant(entry))) &&
       entry.colorSchemes.includes("dark"),
   );

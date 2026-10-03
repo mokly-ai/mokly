@@ -84,7 +84,7 @@ test("preview fragment routes fail closed before stage rendering", () => {
     "?fragment=one&fragment=two",
     "?fragment=%23section",
     "?fragment=%2523section",
-    "?fragment=1section",
+    "?fragment=section%2Fone",
     "?fragment=section+one",
   ]) {
     const url = new URL(

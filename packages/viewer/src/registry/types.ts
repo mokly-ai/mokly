@@ -80,7 +80,7 @@ export type HistoricalManifestUseCase = ManifestUseCase;
 /** Current and historical comparison inputs share the exact v8 contract. */
 export type Manifest = ManifestV8;
 
-/** Reserved whole-document entry rendered from Markdown. */
+/** Whole-document entry rendered from Markdown. */
 export interface ManifestDocument extends ManifestEntryBase {
   kind: "document";
   colorSchemes: readonly ColorScheme[];

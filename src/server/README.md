@@ -246,3 +246,10 @@ and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.
 `generated_static.ts` resolves and snapshots the accepted CSS and asset inventory
 at startup. `config/root_membership.ts` owns file exclusions used by watch discovery;
 protection still covers excluded matches.
+
+Markdown documents use the page route and demand compiler, with one route per
+scheme. Their copied assets come from the accepted in-memory generation even
+before background writes complete. Source and resource edits rebuild together.
+
+Document Changes follows declared attachment links as well as rendered media.
+The shared resource graph uses normalized HTML so ignored regions remain excluded.

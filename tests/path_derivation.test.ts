@@ -9,6 +9,18 @@ import {
 
 const location = "specs/account/invoice.mockup.tsx export default";
 
+test("document leaves stop at the first dot; only exact index names collapse", () => {
+  for (const [file, slug] of [
+    ["release.notes.md", "release"],
+    ["README.extra.md", "README"],
+    ["index.draft.md", "index"],
+  ] as const)
+    assert.deepEqual(
+      deriveEntryPath({ file: `account/${file}`, document: true, location }),
+      { path: `account/${slug}`, slug, index: false },
+    );
+});
+
 test("derivation uses roots, transparent directories and file names only", () => {
   assert.deepEqual(
     deriveEntryPath({

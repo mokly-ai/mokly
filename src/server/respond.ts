@@ -44,6 +44,7 @@ export function safeDecodePath(value: string): string | undefined {
 /** The response content type for a served artifact or static file. */
 export function contentType(candidate: string): string {
   const extension = path.extname(candidate).toLowerCase();
+  if (extension === ".pdf") return "application/pdf";
   if (extension === ".json") return "application/json; charset=utf-8";
   const assetType = ASSET_MIME_TYPES.get(extension);
   if (assetType) return assetType;

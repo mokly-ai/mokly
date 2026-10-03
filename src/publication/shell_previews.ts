@@ -20,7 +20,13 @@ export function advertisePublicationShell(
   const entry = removed.find(
     (candidate) => viewHref(candidate.path) === canonicalPath,
   );
-  if (!entry || (entry.kind !== "page" && entry.kind !== "screen")) return html;
+  if (
+    !entry ||
+    (entry.kind !== "page" &&
+      entry.kind !== "document" &&
+      entry.kind !== "screen")
+  )
+    return html;
   const published = previews.get(entry.path);
   return published
     ? advertisePublicationPreview(name, html, entry, published)
@@ -71,7 +77,8 @@ export function advertisePublicationPreview(
     parsed.path !== entry.path ||
     parsed.kind !== entry.kind ||
     (published.kind === "screen" && entry.kind !== "screen") ||
-    (published.kind === "page" && entry.kind !== "page")
+    (published.kind === "page" && entry.kind !== "page") ||
+    (published.kind === "document" && entry.kind !== "document")
   )
     throw invalidShell(name);
   const replacement = attribute({ ...parsed, published });

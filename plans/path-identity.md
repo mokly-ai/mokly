@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–3, 3A, 3B, 6, 6A, and 6B are complete. This plan supersedes
+discussion in this workspace. Milestones 1–4, 3A, 3B, 6, 6A, and 6B are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -28,8 +28,8 @@ location the same string. The catalogue already speaks repository paths in
 scans, with an optional file pattern, an optional path prefix, and optional
 transparent directory names. An entry's path is the root prefix, then the
 directories between the root and the file, then a leaf. A Markdown file's
-leaf is its file name; a TypeScript entry's leaf is its declared `slug`, which
-defaults to the file name. `index` collapses onto the directory path. No rule
+leaf is its file name up to the first dot; a TypeScript entry's leaf is its declared `slug`, which
+defaults to the file name. Index entries collapse onto the directory path. No rule
 depends on an entry's kind. Folder titles, order, and exclusions come from a
 folder record carried by a `defineFolder` export or a `_folder.json` file. The
 manifest becomes v8, the public read model v4, and the review result v5; all
@@ -47,8 +47,8 @@ user should reconsider):**
    file name with its directory name, counts the entries in a file, or
    rewrites a name. A rule may use the file's own name and location and the
    root configuration, nothing else.
-3. **Leaf and `index`.** A Markdown file's leaf is its file name without the
-   extension; `README.md` and `index.md` are the folder's own page, detected
+3. **Leaf and `index`.** A Markdown file's leaf is its file name up to its
+   first `.`; `README.md` and `index.md` are the folder's own page, detected
    case-insensitively. A TypeScript entry's leaf is `slug`, defaulting to the
    file name; two slug-less entries in one file collide and fail the build.
    The slug `index`, from a file name or the field, makes a non-variant entry the
@@ -548,44 +548,96 @@ The orchestrator reviews this milestone; the implementation review remains at M8
 
 Add Markdown files as `document` entries.
 
-- [ ] Restore the Markdown passages drafted in `d65417d` in README and the
+Status: Complete. Package (six consumer scenarios), unit (3,793), browser (745),
+hydration (229), and the remaining repository checks pass. The orchestrator's
+approved exceptions are GHSA-vfj7-8cjw-p6xm in development dependencies and the
+28 existing source-file-length violations. All 28 files are unchanged from
+`bda69311`; this milestone adds no violation or advisory and no audit exemption.
+
+- [x] Clarify first-dot document leaves, exact index file names, file-link versus
+      logical-link bases, and generated resource ownership; add regressions first.
+- [x] Retain documents and copied resources across live graph replay, source
+      inventory checks, scoped bootstraps, and transactional orphan cleanup.
+- [x] Exercise Markdown in the packed consumer, including exported resource bytes.
+- [x] Preserve copied-resource ownership when the config file is renamed; keep
+      prior helper ownership scoped to its original config.
+- [x] Align logical fragments with numeric and Unicode Markdown heading ids;
+      retain rejection of encoded helper arguments and unsafe fragment syntax.
+
+- [x] Restore the Markdown passages drafted in `d65417d` in README and the
       start/authoring/CLI guides once document rendering works; reconcile examples.
 
-- [ ] Add document material-change classification beside pages and document previews
+- [x] Add document material-change classification beside pages and document previews
       beside page previews; reserved documents are excluded from component pairing today.
 
-- [ ] Wire front-matter `path` through the shared declared-path rules: bypass
+- [x] Wire front-matter `path` through the shared declared-path rules: bypass
       file/directory grammar, retain README/index own-page status, and resolve
       relative links from the declared index path.
-- [ ] Replace the interim discovery filter that retains matched `.md` files as
+- [x] Replace the interim discovery filter that retains matched `.md` files as
       protected, watched source inputs but omits them from executable entry
       modules and catalogue output. Markdown rendering and entry collection
       begin in this milestone; a catalogue still needs a renderable definition
       during Milestone 3.
 
-- [ ] Select the Markdown and front matter parser, add it with `npm install`
+- [x] Select the Markdown and front matter parser, add it with `npm install`
       at the current version, and record it where
       `docs/protocol/dependency-security.md` requires.
-- [ ] Discover `.md` files through roots, apply the grammar to file names,
+- [x] Discover `.md` files through roots, apply the grammar to file names,
       detect `README.md` and `index.md` as index pages, and parse front
       matter.
-- [ ] Render documents with a Mokly-owned template: shell typography that
+- [x] Render documents with a Mokly-owned template: shell typography that
       follows the colour scheme, raw HTML disabled, heading anchors, code
       blocks, relative links resolved to entry paths or validated repository
       files, images copied as generated resources, and external links kept.
-- [ ] Emit `document` entries in manifest v8 and read model v4 with the
+- [x] Emit `document` entries in manifest v8 and read model v4 with the
       artifact `<path>/index.html`; classify them in Changes by normalised
       rendered content.
-- [ ] Resolve a `relatedDocs` path that matches a discovered document to that
+- [x] Resolve a `relatedDocs` path that matches a discovered document to that
       entry in the read model.
-- [ ] Accept kind `document` in the viewer data layer and render it through
+- [x] Accept kind `document` in the viewer data layer and render it through
       the existing page view.
-- [ ] Add documents to the example catalogue, including a folder README, and
+- [x] Add documents to the example catalogue, including a folder README, and
       regenerate.
-- [ ] Add unit tests for parsing, rendering, link and image resolution,
+- [x] Add unit tests for parsing, rendering, link and image resolution,
       front matter, and Changes classification; smoke-test documents through
       `npm run dev`.
-- [ ] Run `cargo xtask check`, then commit and push.
+- [x] Verify empty file-link fragments and decoded Unicode heading links.
+- [x] Verify document scheme metadata for pre-hydration appearance and reload.
+- [x] Keep example fixture copies free of ignored generated resources, and
+      update tag inventory and fragment rejection tests for the new contracts.
+- [x] Align the scroll test's small pane to the row's fractional pixel grid;
+      preserve its exact visibility assertion and all navigation behavior.
+- [x] Keep plain-text repository link targets private and watched, including
+      source files below `mockupsDir`, without importing them.
+- [x] Advertise Dark for document-only catalogues and historical documents.
+- [x] Share explicit document source inputs with the CSS pass in nested roots;
+      keep unrelated public assets outside that private-input permission.
+- [x] Include linked attachments, such as PDFs, in document Changes and
+      historical resource capture; preserve normalized ignore boundaries.
+- [x] Remove the remaining reserved-document statement from the review README;
+      clarify the resource-path example's folder README base in the contract
+      and authoring guide, and include linked attachments in the guide.
+- [x] Fetch `origin/main` and run `node scripts/verification/source-file-length.mjs`;
+      verify that all 28 reported files are byte-identical to `bda69311`.
+      The orchestrator assigned those existing violations to a later refactoring
+      milestone after the navigation branch is merged. This milestone adds none.
+- [x] Run `cargo xtask check`, then commit and push.
+  - [x] Run the package suite: both packages pass all six packed consumer scenarios;
+        example Build and Check validate 452 generated files.
+  - [x] Run the unit, browser and hydration suites: 3,793, 745 and 229 passed,
+        respectively, with no failures, skips or cancellations.
+  - [x] Pass formatting, lint, all four repository ratchets, Rust formatting,
+        Clippy, all 15 Rust tests and the 9-file Rust length audit.
+  - [x] Pass 82 focused regressions, 32 final guide/protocol tests, changed-file
+        Prettier and `git diff --check`; inspect deletions and the staged diff.
+  - [x] Verify the existing audit advisory and all 28 source-length failures under
+        the orchestrator's approved disposition, without changing their dependencies
+        or adding an exemption. Record npm's changed fix suggestions separately.
+  - [x] Smoke-test README and ordinary document routes, relative links, heading
+        fragments, resource loading, Dark and reload through Serve and static export.
+
+The orchestrator reviews this milestone; the complete implementation review
+remains the final item in Milestone 8.
 
 ## Milestone 5: Move detection
 
@@ -793,9 +845,52 @@ pre-existing files.
       page, or a free-text search.
 - [x] Commit and push (`f01a6e2f`).
 
+## Milestone 6C: Integrate Milestone 4
+
+Bring Milestone 4's Markdown documents into this branch, so the later
+integration with the feature branch meets only Milestone 5's changes, and
+reconcile documents with the viewer navigation.
+
+- [x] Fetch the feature branch, record the source tip `4b10b657` and the
+      additions audit from `bda69311` (one commit, `1b0eb703`: 27 added and
+      108 changed files, no deletions), and merge it; resolve each conflict
+      path by path.
+- [ ] Reconcile documents with the navigation: a `README.md` or `index.md`
+      folder page renders as the Overview row with the document icon;
+      documents use the document icon in the tree and in search; search
+      covers their titles, path segments, and tags; breadcrumbs open document
+      folder pages; the example's README documents produce the rows the
+      mockups show.
+- [ ] Re-check parity against `design/browse/views/folder-overview` and
+      `design/browse/pages/document` with the real example, and save
+      screenshots under `.context/`.
+- [ ] Run the full gate and, after `git fetch origin main`,
+      `node scripts/verification/source-file-length.mjs`; only the 28 known
+      files may be listed. The known exceptions are the dependency audit and
+      the cold-server `component_example.spec.ts` desktop failure.
+- [ ] Commit and push.
+
+Merge decisions (no file is deleted):
+
+- `docs/protocol/mokly-changes.md`: keep Milestone 4's statement that
+  documents use the page material rules, and keep Milestone 6A's statement
+  that opening a folder screen's first changed member remains planned.
+- `examples/basic/README.md`: keep this branch's statement that the runtime
+  renders the Specs tree, because Milestone 6 replaced the Pages label; take
+  Milestone 4's description of the real example documents; name the design
+  screens as the subject of the next sentence, which had become ambiguous.
+- `plans/path-identity.md`: list both sides' complete milestones in the
+  header; in Milestone 7, keep Milestone 4's extended `relatedDocs` TODO and
+  Milestone 6A's container-row TODO.
+
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui
+
+- [ ] Treat removed document rows like removed page rows when filtering All and
+      Changes; keep the document icon and final navigation behavior with the UI work.
+- [ ] Show the existing Light-only fallback note when a current or removed document
+      has no dark scheme but the reader selects Dark.
 
 - [ ] Label paired entries "Moved" in Changes rows and details, show the
       previous path in details, and drive the baseline side of comparisons
@@ -804,7 +899,8 @@ Tags: ui
       `packages/viewer/src/catalogue/snapshot_identity.ts`).
 - [ ] Present documents in the page view with the document title, breadcrumbs,
       and the source path in details; link `relatedDocs` matches to their
-      document entries.
+      document entries (`details.relatedDocs` now emits validated `mock:<path>`
+      references for discovered current documents).
 - [ ] In Changes, keep an unchanged screen or component index whose only
       changed rows are folder members as a container row with no change dot,
       and make activating that row open its first visible changed member, as

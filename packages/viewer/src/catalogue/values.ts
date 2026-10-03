@@ -67,6 +67,7 @@ export function comparisonPath(value: unknown): string | null {
 }
 export function relatedDoc(value: unknown): string {
   const result = text(value);
+  if (result.startsWith("mock:") && isEntryPath(result.slice(5))) return result;
   if (/^https?:\/\//.test(result)) {
     const url = new URL(result);
     if (url.username || url.password)

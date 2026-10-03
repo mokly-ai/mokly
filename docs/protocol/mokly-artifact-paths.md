@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Path-derived documents, snapshots, previews and canonical shell URLs are
-implemented. Document-kind naming is reserved for Markdown rendering.
+implemented for every entry kind, including Markdown documents.
 
 This is the single contract for entry documents, generated view names,
 comparison snapshot names, preview metadata, shell documents, URL parsing, and

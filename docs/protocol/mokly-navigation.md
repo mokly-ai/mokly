@@ -84,8 +84,8 @@ is not a destination; its own page, when it has one, shares its path. A use-case
 destination opens the use-case page, even though its portable fragment fallback
 resolves through the first screen in that use case.
 
-A logical fragment begins with an ASCII letter and then contains only ASCII
-letters, digits, `_`, `:`, `.`, or `-`. It names an HTML `id`, not a CSS
+A logical fragment contains one or more Unicode letters, numbers or combining
+marks, `_`, `:`, `.`, or `-`. It names an HTML `id`, not a CSS
 selector. The builder validates that it exists in every generated mobile,
 desktop, light, and applicable dark artifact that Browse may show for the
 destination screen, or in every generated document of a destination page or
