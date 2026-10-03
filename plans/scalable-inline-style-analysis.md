@@ -1153,6 +1153,9 @@ the original page; give identical texts a single-parse quick check.
       sources and outputs restore byte-identically. M8 remains unstarted.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
+      Documentation is delivered; the full command was run with pinned Chromium
+      but remains audit-blocked. All individually run suites and other Repository
+      checks pass; retain this gate item until the user's decision, not a waiver.
 - [ ] Discovered: the final pinned-Chromium `cargo xtask check` stops at the
       dependency audit, before any suite, on the unpatched braces advisory
       `GHSA-vfj7-8cjw-p6xm` (13 transitive high reports through React Native/Metro).
@@ -1162,12 +1165,17 @@ the original page; give identical texts a single-parse quick check.
       separate final hydration passes 219/219 and report/docs checks pass.
       The supervisor approves a new local evidence commit only, with the audit
       blocker in its body; push remains held for the user's gate decision.
-- [ ] Discovered: after the local evidence commit, run package, unit,
+- [x] Discovered: after the local evidence commit, run package, unit,
       pinned-Chromium browser and hydration individually through xtask. Record
       every result in the checkpoint in new commits, never amends. Only known
       host-timing browser signatures are allowed; leave dependencies, overrides
       and the gate untouched. Stop without pushing or starting M8, which also
       waits for decisions on recorded M5 finding 1 and M6 finding 2.
+      Clean `237c5a6c` passes package, all 3,482 unit tests, all 725 pinned browser
+      tests and all 219 hydration tests; no failures/skips/cancellations. Every
+      known browser timing spec passes this run, so no exception is needed.
+      The checkpoint records intervals and raw reports. Non-audit Repository
+      checks also pass. A new report commit follows; no amend or push.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

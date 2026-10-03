@@ -286,15 +286,15 @@ affects braces through 3.0.3, lists no patched release, and was reviewed/updated
 October 2. The audit gives `fixAvailable: false` for braces; its suggested forced
 React Native Worklets downgrade is not a safe, authorized M7 fix.
 
-This is **not** an approved browser-timing exception. The full command never
-reaches unit, browser or hydration; no fresh browser result is claimed. Separate
-pinned hydration passes **219/219**, with zero skips/cancellations. Reporting
-passes seven documentation tests, Prettier, 151 local link targets and ratchets.
-Dependencies, UI and audit thresholds remain unchanged. The supervisor approves
-a new local evidence commit, but **holds the push** for the user's gate decision.
-Remaining package/unit/pinned-browser/hydration suites run individually through
-xtask; no exception is inferred. M8 also waits for M5 finding 1 and M6 finding 2.
+This is **not** an approved browser-timing exception. The combined gate never
+reaches the suites. The supervisor approves local evidence commit `237c5a6c`,
+but **holds the push** for the user's gate decision; dependencies, overrides,
+UI, timeouts and audit thresholds stay unchanged. Subsequent independent xtask
+suites all pass: package, **3,482 unit**, **725 pinned browser** and **219 hydration**,
+with no failures/skips/cancellations. All timing specs pass; no exception is needed.
+The [checkpoint](./shared-page-analysis-checkpoint.md#post-measurement-verification-and-push-hold)
+records exact intervals and remaining Repository checks; M8 stays unstarted.
 
 Evidence is in `.context/delegation/scalable/m7-measurements/`:
 `final-check.log/.exit`, before/after observations, `final-audit.json/.exit`,
-and `final-hydration.log/.json/.exit`. Neither failure is silently retried away.
+and `remaining-*.log/.exit` plus unit/browser/hydration JSON. Prior failures remain.

@@ -292,7 +292,8 @@ worker ends, membership, counts, ratios, exclusive work and conservative margins
 from reports/logs. `html-retention.json`, both `*.setup-{before,after}.sha256`,
 build logs, runner sources and all three driver logs remain alongside them.
 
-Final verification explicitly uses **`PLAYWRIGHT_CHANNEL=chromium`** under
-Node 24.19.0, matching CI rather than the measurement browser. Its results are
-recorded with the [host-timing gate](./shared-page-browser-gate.md); no timeout/UI
-code changes, contract exceptions or M8 implementation are introduced here.
+Final verification uses **`PLAYWRIGHT_CHANNEL=chromium`**, Node 24.19.0:
+individual xtask package, 3,482 unit, 725 browser and 219 hydration checks pass.
+The combined gate stops at the unpatched dependency audit; **push remains held**.
+The [checkpoint](./shared-page-analysis-checkpoint.md#post-measurement-verification-and-push-hold)
+retains results; no dependencies/gate/timeouts change and M8 remains unstarted.

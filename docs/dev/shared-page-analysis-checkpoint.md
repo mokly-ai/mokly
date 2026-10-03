@@ -238,3 +238,42 @@ reductions match M6's roughly 80%/83% model. Source-location/inventory overhead,
 the separate page pass, timing spread and the changed host remain explicit.
 Final verification uses pinned Chromium; the linked browser report records its
 result and the supervisor-approved host-timing boundary before push.
+
+## Post-measurement Verification And Push Hold
+
+The supervisor authorizes local evidence commit `237c5a6c`, not a push or audit
+exception. `PLAYWRIGHT_CHANNEL=chromium cargo xtask check` exits 1 at its first
+dependency-audit command, with 13 transitive high-severity reports from unpatched
+braces `GHSA-vfj7-8cjw-p6xm`. That failure remains recorded, not overridden.
+
+On clean `237c5a6c`, Node 24.19.0, each remaining suite runs **once**, separately
+through `cargo xtask check --suite <suite>`, with its own preparation. Browser
+and hydration explicitly use `PLAYWRIGHT_CHANNEL=chromium`, matching CI.
+No other build/suite runs concurrently, and no prepared output is silently reused.
+
+| Suite     | UTC interval, October 3, 2026 | Result                                                                                   | Exit |
+| --------- | ----------------------------- | ---------------------------------------------------------------------------------------- | ---- |
+| package   | 03:46:38–03:49:19             | Build, typecheck, example validation, both packed packages' five consumer scenarios pass | 0    |
+| unit      | 03:49:51–04:06:39             | 3,482/3,482 pass; no failures, skips or cancellations                                    | 0    |
+| browser   | 04:12:04–04:43:53             | 725/725 pass; no failures, skips or cancellations                                        | 0    |
+| hydration | 04:48:23–05:07:08             | 219/219 pass; no failures, skips or cancellations                                        | 0    |
+
+**No browser exception is needed in this run.** Every previously recorded
+host-timing spec passes, including Browse and the component-preview wait.
+The ordinary-preview export completes in 213,412.60 ms, inside its unchanged
+300 s setup limit. This green run does not erase the previous failures/control
+evidence or waive M10's reference-machine acceptance requirement.
+
+All Repository checks after the blocked audit also pass when run directly:
+Prettier, ESLint, repository ratchets, Rust formatting, Clippy, 11 Rust tests and
+the nine-file Rust length audit. No dependency, override, UI, timeout or gate
+changes occur. The audit is the **only observed verification blocker**;
+passing the individual suites is not a successful combined `cargo xtask check`.
+
+Evidence remains under `.context/delegation/scalable/m7-measurements/`:
+`remaining-{package,unit,browser,hydration}.log/.exit`, each before/after record,
+unit/browser/hydration `.json` reports and `remaining-repository.log/.exit`.
+The supervisor reports main's Repository job passed October 2 at 09:24 UTC,
+before the advisory reached npm audit at 22:36 UTC; this is supplied context,
+not an independent main audit. Push remains held for the user's gate decision.
+M8 remains unstarted and also waits for M5 finding 1 and M6 finding 2 decisions.
