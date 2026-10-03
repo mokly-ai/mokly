@@ -1,7 +1,9 @@
 import type {
+  CssRuleAttribution,
   DependencyAnalysis,
   DependencyReason,
 } from "../../packages/viewer/dist/data.js";
+import { cssAnalysis } from "../../packages/viewer/dist/review/css/evidence.js";
 
 /** Synthetic wire evidence for reader and presentation fixtures, never product data. */
 export function fixtureCssAnalysis(
@@ -42,4 +44,25 @@ export function resourceReasonSummaries(
     ...reason,
     ...(reason.analysis ? { analysis: cssSummary(reason.analysis) } : {}),
   }));
+}
+
+/** One synthetic changed rule; omitted arrays are empty and the key is fixed. */
+export function cssRule(
+  rule: Partial<CssRuleAttribution> & Pick<CssRuleAttribution, "selectors">,
+): CssRuleAttribution {
+  return {
+    ruleKey: "b".repeat(64),
+    status: "matched",
+    changedComponentIds: [],
+    pageSelectors: [],
+    ...rule,
+  };
+}
+
+/** A stylesheet reason whose summary the product derives from its rules. */
+export function cssReason(
+  path: string,
+  rules: readonly CssRuleAttribution[],
+): DependencyReason {
+  return { kind: "dependency", path, analysis: cssAnalysis(rules) };
 }

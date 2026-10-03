@@ -18,12 +18,17 @@ import type { WorkspaceData } from "./workspace_data.js";
 /** Complete evidence projected into one Details panel. */
 export interface WorkspaceComparisonEvidence {
   comparison: ComponentReview | ScreenReview | undefined;
+  /** Parent id of a component workspace, whose own rules keep its sentence. */
+  componentId: string | undefined;
   views: readonly ViewReview[];
   resourceViews: readonly ViewResourceEvidence[];
   reasons: readonly EntryChangeReason[];
 }
 
-/** Keep catalogue facts while adding only the loaded selection's details. */
+/**
+ * Keep catalogue facts, including the selected views' live evidence in
+ * Current, while adding only the loaded selection's details.
+ */
 export function workspaceComparisonEvidence(
   data: WorkspaceData,
   variantId?: string,
@@ -50,15 +55,14 @@ export function workspaceComparisonEvidence(
   const comparison = data.comparison ?? selected;
   return {
     comparison,
+    componentId,
     views,
     resourceViews: [...resources, ...views],
     reasons: mergeReasons([
       ...(data.change?.reasons ?? []),
       ...(change?.reasons ?? []),
       ...resources.flatMap((view) => view.reasons ?? []),
-      ...comparisonViews(selected, variantId).flatMap(
-        (view) => view.reasons ?? [],
-      ),
+      ...views.flatMap((view) => view.reasons ?? []),
     ]),
   };
 }

@@ -5,7 +5,7 @@
 Existing compact evidence is implemented. The [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence)
 mockups of the [source-path removal plan](../../plans/remove-source-path-evidence.md)
 depict the outside-component evidence and the per-file layout below; the shell
-implements them in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). This document owns visual rules for evidence defined by
+implements them for screens and component saved views in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the
 [presentation contract](./mokly-css-evidence-presentation.md) owns derivation
 and exact copy.
@@ -33,7 +33,9 @@ component explorer's Stylesheet evidence gallery, recorded in the
   holds the file's outcome sentences, each followed by its selector list, so
   no list mixes two stylesheets. A file without analysed outcomes, such as a
   font or image, is its path alone. Excluded stylesheets keep their separate
-  "Examined and excluded" list after the files list.
+  "Examined and excluded" list after the files list. The shell renders the
+  approved card's structure: one files list whose items hold the path text,
+  then each sentence paragraph and its list of selector code chips.
 - A screen whose page selectors come from rules that also changed a component
   reads "These changed styles also apply outside the changed components on
   this screen:" under that stylesheet, and its Details link those changed

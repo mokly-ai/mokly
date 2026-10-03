@@ -4,8 +4,11 @@
 
 Existing stylesheet details are implemented. Rule and page evidence delivery
 is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-The grouping and exact outside-component copy below are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence),
+The per-file grouping and exact copy for screens and component saved views are
+implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence),
 as the [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence) mockups depict them.
+The whole-document page display is planned for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence),
+after its [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence) mockup.
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact
@@ -19,11 +22,17 @@ excluded resources. Catalogue v4 exposes it as `resourceEvidence` on views and
 single-document pages under the [evidence schema](./mokly-css-attribution-membership.md). Paths remain repository-relative. The workspace projects the
 selected screen's views as optional `resourceEvidence`; it does not invent
 component reasons, component results, or comparison states. Static exports
-project the same slice from review result v5. A new classification generation
-replaces the slice and clears stale evidence while Changes is pending or
-unavailable.
+project the same slice from review result v5. A workspace built only from the
+published catalogue projects the catalogue v4 `resourceEvidence` of the
+selected screen's views, or of the selected saved view's views on a component
+route: the routed variant, or the first saved variant on a parent route. A new
+classification generation replaces the slice and clears stale evidence while
+Changes is pending or unavailable.
 
 One inspector renderer merges classification evidence with a loaded selected
+comparison. Classification evidence is the entry's own reasons, the projected
+`resourceEvidence`, and the live comparison's views of the selected screen or
+saved view, so Current shows the same files and sentences as a loaded
 comparison. Dependency reasons merge by path and rule key, with sorted selector unions
 and unresolved precedence. Keep each rule's changed components and page evidence. Retained paths suppress exclusions across all selected
 views; rendered-resource and ignored-content details remain available. Loaded
@@ -82,7 +91,9 @@ names in product copy. A whole-document page still has no comparison controls.
 When `pageEvidence.unresolved` is true, show a separate paragraph under that
 same path. Use the existing unresolved screen/component sentences, with
 “saved view” in place of “component” for a component page reason, and “page” in
-place of “screen” for a whole-document page. The exact base sentences are:
+place of “screen” for a whole-document page. A component page reason is an
+unresolved rule whose changed component ids omit the workspace's component;
+one that names it keeps the component sentence. The exact base sentences are:
 
 - With selectors: “This change can apply anywhere on the screen, so the screen stays in Changes:”
 - Without selectors: “This change can apply anywhere on the screen, so the screen stays in Changes.”
@@ -113,3 +124,37 @@ Exclusions are the sorted path union minus any retained path. Use singular or
 plural excluded copy by file count. Viewport and scheme controls do not change
 Details; desktop and mobile present the same facts. Loaded comparisons and
 classification evidence merge once, without duplicate paragraphs or files.
+
+## File Outcomes
+
+Each retained path is one item of the files list, sorted by path and named
+once. After its records merge by rule key, the item lists these outcomes in
+this order. Each outcome is its sentence and its sorted, unique selectors; an
+empty selector list uses the full-stop form and no list.
+
+1. Own component rules, only in a component workspace. The workspace's
+   component is the parent of the routed component or variant. Matched rules
+   whose changed component ids include it read “Changed styles that apply to
+   this component:”. Unresolved rules that include it read the component
+   unresolved sentence.
+2. Page selectors from every rule, in the column chosen above.
+3. Other unresolved rules, with the screen or saved-view unresolved sentence.
+4. Only if none of these apply, every rule is matched and covered by changed
+   components on this page. The item keeps its full matched evidence: the
+   screen or component matched sentence with every selector of its rules.
+
+So an affected-only screen or a consuming component keeps its styles, while a
+file with page or unresolved outcomes never lists the selectors of its other
+component-only rules. A file without analysis, such as a font or image, is its
+path alone. No outcome shows rule keys or changed component ids.
+
+## Status Lines
+
+The terminal line, “No changes to this screen.” or “No changes to this saved
+view.”, appears only when the routed entry is unmodified. In a component
+workspace, the selected saved view must also be unmodified. Each changed
+component that the entry consumes is linked as “Changed component: Title”. The
+sentence “Shared component changes affect this preview. This page has no
+independent entry in Changes.” appears only when the entry has no Changes row
+of its own, consumes at least one changed component, and a selected view
+changed. A saved view with only wrapper or page reasons therefore never says it.

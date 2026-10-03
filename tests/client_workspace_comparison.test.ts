@@ -9,7 +9,11 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
-import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
+import {
+  cssReason,
+  cssRule,
+  fixtureCssAnalysis,
+} from "./helpers/css_evidence.js";
 
 test("loaded comparison details merge with classification, deduplicate selectors and suppress retained exclusions", () => {
   const data = workspace();
@@ -38,11 +42,18 @@ test("loaded comparison details merge with classification, deduplicate selectors
           ...loaded.screens[0]!.views[0]!,
           ignoredIds: ["chrome"],
           reasons: [
-            {
-              kind: "dependency",
-              path: "mockups/shared.css",
-              analysis: fixtureCssAnalysis("unresolved", [".auth", ".global"]),
-            },
+            cssReason("mockups/shared.css", [
+              cssRule({
+                ruleKey: "a".repeat(64),
+                selectors: [".auth"],
+                pageSelectors: [".auth"],
+              }),
+              cssRule({
+                ruleKey: "c".repeat(64),
+                status: "unresolved",
+                selectors: [".global"],
+              }),
+            ]),
             {
               kind: "dependency",
               path: "mockups/unused.css",
@@ -67,7 +78,7 @@ test("loaded comparison details merge with classification, deduplicate selectors
   assert.match(markup, /This change can apply anywhere on the screen/);
   for (const selector of [".auth", ".global", ".saved"])
     assert.equal(markup.split(`>${selector}</code>`).length - 1, 1);
-  assert.equal(markup.split("<li>mockups/shared.css</li>").length - 1, 1);
+  assert.equal(markup.split("<li>mockups/shared.css<p>").length - 1, 1);
   assert.doesNotMatch(markup, /mockups\/logo\.svg/);
   assert.match(markup, /mockups\/shared\.css/);
   assert.match(markup, /Excluded content: chrome/);
@@ -130,7 +141,7 @@ test("loaded v5 evidence omits source-only paths and deduplicates retained resou
 
   assert.match(
     markup,
-    /Changes to these files may affect this screen:<\/p><ul><li>entries\/beta\.ts<\/li><\/ul>/,
+    /Changes to these files may affect this screen:<\/p><ul class="mbk-evidence-files"><li>entries\/beta\.ts<\/li><\/ul>/,
   );
   assert.doesNotMatch(markup, /entries\/alpha\.ts/);
   assert.equal(markup.split("<li>entries/beta.ts</li>").length - 1, 1);

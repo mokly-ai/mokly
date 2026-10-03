@@ -12,40 +12,57 @@ import {
   excludedStylesheets,
   isStyleOnlyView,
   retainedPaths,
-  styleOutcomes,
 } from "../packages/viewer/dist/shell/workspace_style_evidence.js";
+import { stylesheetEvidence } from "../packages/viewer/dist/shell/workspace_stylesheet_evidence.js";
 
 import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
 
 const SHARED = "mockups/shared.css";
 const TOKENS = "mockups/tokens.css";
 
-test("analysed reasons group into one list per retained outcome", () => {
-  const outcomes = styleOutcomes([
-    { kind: "material" },
-    { kind: "dependency", path: "mockups/logo.svg" },
-    {
-      kind: "dependency",
-      path: SHARED,
-      analysis: fixtureCssAnalysis("matched", ["main a", ".auth"]),
-    },
-    {
-      kind: "dependency",
-      path: TOKENS,
-      analysis: fixtureCssAnalysis("matched", [".auth"]),
-    },
-    {
-      kind: "dependency",
-      path: "mockups/root.css",
-      analysis: fixtureCssAnalysis("unresolved", [":root"]),
-    },
-  ]);
+test("analysed reasons keep one list per file, so no list mixes two stylesheets", () => {
+  const evidence = stylesheetEvidence(
+    [
+      { kind: "material" },
+      { kind: "dependency", path: "mockups/logo.svg" },
+      {
+        kind: "dependency",
+        path: SHARED,
+        analysis: fixtureCssAnalysis("matched", ["main a", ".auth"]),
+      },
+      {
+        kind: "dependency",
+        path: TOKENS,
+        analysis: fixtureCssAnalysis("matched", [".auth"]),
+      },
+      {
+        kind: "dependency",
+        path: "mockups/root.css",
+        analysis: fixtureCssAnalysis("unresolved", [":root"]),
+      },
+    ],
+    { kind: "screen" },
+  );
 
-  assert.deepEqual(outcomes, [
-    { status: "matched", selectors: [".auth", "main a"] },
-    { status: "unresolved", selectors: [":root"] },
+  const matched = "Changed styles that apply to this screen:";
+  assert.deepEqual(evidence, [
+    { path: "mockups/logo.svg", outcomes: [] },
+    {
+      path: "mockups/root.css",
+      outcomes: [
+        {
+          lead: "This change can apply anywhere on the screen, so the screen stays in Changes:",
+          selectors: [":root"],
+        },
+      ],
+    },
+    {
+      path: SHARED,
+      outcomes: [{ lead: matched, selectors: [".auth", "main a"] }],
+    },
+    { path: TOKENS, outcomes: [{ lead: matched, selectors: [".auth"] }] },
   ]);
-  assert.deepEqual(styleOutcomes(undefined), []);
+  assert.deepEqual(stylesheetEvidence([], { kind: "screen" }), []);
 });
 
 test("retained paths keep every changed dependency once, in order", () => {
@@ -150,10 +167,11 @@ test("matched evidence names the changed files and then the applying styles", ()
   assert.ok(
     markup.includes(
       "<p>Changes to these files may affect this screen:</p>" +
-        `<ul><li>${SHARED}</li></ul>` +
+        `<ul class="mbk-evidence-files"><li>${SHARED}` +
         "<p>Changed styles that apply to this screen:</p>" +
         '<ul><li><code class="mbk-code">.auth</code></li>' +
-        '<li><code class="mbk-code">main a</code></li></ul>',
+        '<li><code class="mbk-code">main a</code></li></ul>' +
+        "</li></ul>",
     ),
   );
 });

@@ -5,7 +5,7 @@
 Parsing, diffing and conservative exclusion are implemented. Element sets and
 uniform rule membership are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
-Comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+Comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 Rule parsing, diffing, document matching, and classification apply to
 screen-only and component catalogues, live Serve, watched updates, and

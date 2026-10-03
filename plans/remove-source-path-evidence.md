@@ -14,11 +14,14 @@ including imported CSS (#125), route-scoped bootstraps (#120), and the STE
 instructions (#128), in addition to the five originally listed commits.
 Milestone 17 is complete and verified. It documents the uniform CSS change rule. Milestone 18 depicts the
 outside-component evidence in the design mockups. Milestone 19 is implemented
-and verified. Milestone 19A is implemented, verified and committed locally.
+and verified. Milestone 19A is implemented and verified.
 It integrates main's output/frame race fixes (#129) and expiring audit exception
 (#130) through `800fe9f8`. The complete gate passes, including the audit.
-The two-parent merge and line-level preservation checks pass. The reviewer
-owns the pending push. Milestone 20 remains pending for comparison details.
+The two-parent merge and line-level preservation checks pass. Milestone 20 is
+implemented, verified and committed locally for screens and component saved
+views; the reviewer owns the push. It found that no approved design shows
+evidence in a whole-document page's Details, so Milestones 20A (mockup) and
+20B (ui) now hold that display.
 The contract changes
 unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
 owners no longer route stylesheet changes; declared links and their provenance
@@ -1344,20 +1347,112 @@ has not started.
 
 Tags: ui
 
-- [ ] Show the evidence from Milestone 19 in the comparison details, as the
+- [x] Show the evidence from Milestone 19 in the comparison details, as the
       Milestone 18 mockups depict it.
-- [ ] Render exact product copy for screens, saved component views and pages.
+- [x] Render exact product copy for screens and saved component views.
       Group page selectors by actual stylesheet path. Keep component-only
       selectors separate and preserve an unresolved paragraph beside proven
-      outside matches. Never expose rule keys or private source paths.
-- [ ] Merge live classification and loaded comparison evidence by path/rule
+      outside matches. Never expose rule keys or private source paths. The
+      whole-document page part of this item moved to Milestone 20B, still
+      open: no approved design shows evidence in a page's Details, so
+      Milestone 20A depicts it first.
+  - [x] Screens: page, outside-component, unresolved and affected-only
+        sentences under each stylesheet path.
+  - [x] Component saved views: the component's own sentence, the saved-view
+        page and outside sentences, and the saved-view unresolved paragraph.
+  - [x] Keep component-only selectors out of a file's page list, keep the
+        unresolved paragraph beside proven outside matches, and never show rule
+        keys, changed component ids or private source paths.
+- [x] Merge live classification and loaded comparison evidence by path/rule
       without duplicate paragraphs. Retain evidence in Current and All, keep
       viewport-independent Details, clear stale generations and preserve
       comparison eligibility and affected-consumer behavior.
-- [ ] Add viewer/browser coverage for all evidence states, generated bundle
+- [x] Add viewer/browser coverage for all evidence states, generated bundle
       paths, mixed component/page matches and component wrapper rows with no
       affected consumers. Match the Milestone 18 mobile/desktop mockups.
-- [ ] Run the viewer and browser tests and smoke-test both widths.
+- [x] Run the viewer and browser tests and smoke-test both widths.
+- [x] Define the per-file outcome order, the component's own sentences and the
+      two status lines in the presentation contract. Mark M20 delivery in the
+      protocol Delivery Status notes, the Details guide and the READMEs.
+- [x] Show the selected saved view's live evidence on component routes in
+      Current. Project the selected views' catalogue v4 `resourceEvidence` in a
+      workspace built from the published catalogue.
+- [x] Base the terminal line on the routed entry and the selected saved view.
+      Show the affected-preview sentence only for an entry that consumes a
+      changed component, so wrapper-only saved views never claim it.
+- [x] Move the published workspace's per-view helpers into
+      `public_workspace_views.ts`, so changed TypeScript files stay within
+      300 lines.
+
+Implementation notes:
+
+- Details name each changed file once, in one files list. Each item holds its
+  outcome sentences and selector lists, with the M18 card's markup and
+  spacing. `workspace_stylesheet_evidence.ts` merges a file's records by rule
+  key and orders the outcomes: the component's own rules, proven page
+  selectors, other unresolved rules, else the full matched styles.
+- Current shows the selected saved view's live evidence on component routes.
+  A workspace built from the published catalogue projects catalogue v4 view
+  evidence for the selected screen or saved view. Loaded comparisons merge by
+  path and rule key without duplicate files or paragraphs.
+- The terminal line needs an unmodified routed entry and saved view. The
+  affected-preview sentence needs a consumed changed component.
+- Smoke used `npm run dev -- --base HEAD` on the real example. Ten temporary
+  CSS cases covered configured, declared and JavaScript-imported CSS:
+  outside, component-only, outside with unresolved, matched, unresolved,
+  unnamed, excluded only, excluded beside matched, wrapper and generated
+  bundle. Every edit was restored and the example Git status is clean.
+  Screenshots at 1440 px and 390 px are under `.context/screenshots/m20/`;
+  results are in `.context/m20/smoke-results*.json`.
+- The per-file list, copy and spacing match the M18 cards and the two
+  component stories. Two older differences remain outside M20: the explorer
+  mockup's Change, Saved variant and Saved props rows and its "Changed
+  components used here" heading, where the shell shows "Changed component:"
+  links. Both predate M18 (#48).
+- This milestone deletes no files. The four earlier plan-approved deletions
+  and the v3-to-v4 fixture rename against `origin/main` remain unchanged.
+
+Verification: `npm run build`, `npm run typecheck` and `npm run lint` pass.
+Changed-file Prettier and the six requested docs suites (26 tests) pass. The
+new grouping, Details markup and published-workspace tests failed first: the
+module was missing, all seven markup tests failed, and two of three published
+tests failed. The focused client and viewer run passes 448 tests. Against the
+old viewer code the four CSS evidence browser specs failed 23 of 40 tests;
+with the change all 40 pass. The related evidence, design and export specs pass
+67 tests, and hydration passes 224. The exact complete unit command passes
+3,908 tests. The complete `cargo xtask check` passes in 45 minutes: the audit
+with main's accepted exception, formatting, lint, file limits, repository
+ratchets, 15 Rust tests, typecheck, the example check with 438 files, all six
+packed-consumer scenarios, 3,908 unit tests, 762 browser tests and 224
+hydration tests. No test failed, was skipped or was cancelled. Logs are under
+`.context/m20/logs/`.
+
+## Milestone 20A: Depict whole-document page evidence
+
+Tags: mockup
+
+The presentation contract defines whole-document page copy, but no approved
+design shows comparison evidence in a page's Details. Milestone 20 found this
+mockup gap, so the page display waits for this milestone.
+
+- [ ] Depict a whole-document page whose Details hold the per-file stylesheet
+      evidence with the page copy: “Changed styles that apply to this page:”,
+      the outside-component page sentence and the page unresolved paragraph.
+      Show it at mobile and desktop widths, reachable from the page designs,
+      without comparison controls.
+- [ ] Update the design inventory, link, count and reachability tests and the
+      design contracts. Run the example build and check and the design tests,
+      and smoke-test the changed screens.
+
+## Milestone 20B: Show whole-document page evidence
+
+Tags: ui
+
+- [ ] Render exact product copy for whole-document pages in their Details,
+      from live `pageEvidence` and catalogue v4 page `resourceEvidence`, with
+      the same per-file grouping as screens. Moved from Milestone 20.
+- [ ] Add failure-first viewer and browser tests at both widths, match the
+      Milestone 20A mockups, run the viewer and browser tests, and smoke-test.
 
 ## Milestone 21: Verify, deliver and review
 

@@ -132,9 +132,18 @@ server bytes during hydration. `comparison_views.tsx` renders React-owned frame
 chrome around the snapshots from validated comparison metadata. The CLI
 supplies its private live capabilities through typed server context.
 
-`workspace_evidence_data.ts` selects an entry's catalogue or loaded comparison
-record for Details; `workspace_evidence.tsx` shows retained rendered-resource
-paths while keeping stylesheet exclusions separate.
+`workspace_evidence_data.ts` merges an entry's own reasons, the selected
+screen's or saved view's projected and live view evidence, and a loaded
+comparison by path and rule key, so Current and a loaded comparison show the
+same facts once. `workspace_stylesheet_evidence.ts` turns that evidence into
+one item per changed file, with the contract's outcome sentences in order: own
+component rules, page selectors, unresolved rules, or else the full matched
+styles. `workspace_stylesheet_list.tsx` renders each file once with its
+sentences and selector lists nested in its item, like the approved card.
+`workspace_evidence.tsx` keeps stylesheet exclusions, ignored content and the
+status lines separate. A workspace built from the published catalogue projects
+the selected views' catalogue `resourceEvidence` through
+`../viewer/public_workspace_views.ts`.
 
 A live entry-scoped fallback never derives cross-entry Usage from `omitted`
 views: `use_workspace_data.ts` exposes loading until matching private evidence

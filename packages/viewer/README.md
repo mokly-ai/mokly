@@ -35,7 +35,11 @@ by instance. Catalogue v4 exposes optional `resourceEvidence` on views and
 whole-document pages while Changes is ready. Comparison v5 carries the same
 rule identities, changed component ids and page evidence. The readers validate
 these fields without receiving private match coordinates. These unreleased
-formats change in place; regenerate earlier output.
+formats change in place; regenerate earlier output. Details show the selected
+screen's or saved view's evidence in Current, before a comparison loads: each
+changed stylesheet once, with its sentences and selectors under it, as the
+[CSS evidence presentation](../../docs/protocol/mokly-css-evidence-presentation.md)
+contract defines.
 
 > Need to create a catalogue? Use
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly). The viewer is a

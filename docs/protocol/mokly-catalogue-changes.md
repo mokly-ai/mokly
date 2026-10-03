@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Uniform CSS page membership and catalogue evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
-of the [source-path removal plan](../../plans/remove-source-path-evidence.md); the details display is planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md); the screen and saved-view details display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is planned for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
 Implemented with [pages](./mokly-pages.md), variants, and publication. Catalogue
 impact/removal metadata is independent of the visual

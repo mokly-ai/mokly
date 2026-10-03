@@ -11,6 +11,7 @@ import {
   STYLESHEET,
   UNRESOLVED_LEAD,
   VARIANT_TERMINAL,
+  evidenceFiles,
   evidenceSpacing,
   openCatalogue,
   openComparison,
@@ -50,9 +51,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
-      await expect(evidence.getByRole("listitem").first()).toHaveText(
-        STYLESHEET,
-      );
+      const files = [[STYLESHEET, [[MATCHED_LEAD, [".auth"]]]]];
+      expect(await evidenceFiles(evidence)).toEqual(files);
       await expect(
         evidence.getByText(MATCHED_LEAD, { exact: true }),
       ).toBeVisible();
@@ -64,7 +64,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       expect(await evidenceSpacing(evidence)).toEqual({
         paragraph: "8px",
         list: "8px",
-        afterList: "14px",
+        sentence: "8px",
+        styles: "8px",
       });
 
       for (const scheme of ["dark", "light"] as const)
@@ -74,7 +75,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
           await expect(
             evidence.getByText(MATCHED_LEAD, { exact: true }),
           ).toBeVisible();
-          await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);
+          expect(await evidenceFiles(evidence)).toEqual(files);
         }
     });
 
@@ -96,6 +97,11 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(SCREEN_TERMINAL, { exact: true }),
       ).toBeVisible();
+      expect(await evidenceSpacing(evidence)).toEqual({
+        paragraph: "8px",
+        list: "8px",
+        afterList: "14px",
+      });
       await expect(evidence).not.toContainText(FILES_LEAD);
       await expect(evidence).not.toContainText(MATCHED_LEAD);
       await expect(evidence).not.toContainText(VARIANT_TERMINAL);

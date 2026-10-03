@@ -33,19 +33,23 @@ examined and excluded instead, and never produces a Changes row. Selector text
 stays inside that secondary list, and a screen kept only by a stylesheet edit
 reads "Styles this screen uses changed" above its comparison.
 
-Screen-only catalogues show this evidence before you open a comparison.
-Opening one keeps those details and adds the evidence it retained. Each
-stylesheet has its own selector list. For outside matches, the text says
-“These changed styles also apply outside the changed components on this
-screen:”. If no component changed through those rules, it says “Changed styles
-that apply to this screen:”. A rule inside an unchanged component invocation
-can appear in that list. Uncertain changes have a separate explanation.
+The inspector shows this evidence before you open a comparison, for screens
+and component pages alike. Opening one keeps those details and adds the
+evidence it retained. Each stylesheet is listed once, with its own sentences
+and selector lists beneath it. For outside matches, the text says “These
+changed styles also apply outside the changed components on this screen:”. If
+no component changed through those rules, it says “Changed styles that apply
+to this screen:”. A rule inside an unchanged component invocation can appear
+in that list. Uncertain changes have a separate explanation beside it.
 
 A component-only style change can leave a screen under Affected screens with
-no Changes row of its own. A component page with only a wrapper change has its
-own saved-view row, but that rule gives it no Affected screens. The details
-name the stylesheet actually loaded, including a generated stylesheet when CSS
-comes from JavaScript. Private source files do not supply comparison evidence.
+no Changes row of its own. That screen keeps the changed styles it uses. On the
+component's own page the details say “Changed styles that apply to this
+component:”. A component page with only a wrapper change has its own
+saved-view row, says “Changed styles that apply to this saved view:”, and that
+rule gives it no Affected screens. The details name the stylesheet actually
+loaded, including a generated stylesheet when CSS comes from JavaScript.
+Private source files do not supply comparison evidence.
 
 ## Component props
 

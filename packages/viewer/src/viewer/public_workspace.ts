@@ -8,24 +8,23 @@ import type {
   ShellCatalogueComponent,
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
-  ShellCatalogueScreen,
   ShellCatalogueVariant,
-  ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import { catalogueHasOmittedUsage } from "../catalogue/usage_scope.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { generatedViews } from "../components/views.js";
-import type { ReviewState } from "../review/types.js";
-import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
-import type { ViewState, ViewStatesBySelection } from "../shell/view_status.js";
 import type {
   EntryStatus,
   UsageLink,
   WorkspaceData,
 } from "../shell/workspace_data.js";
-import type { ChangedViewsBySelection } from "../shell/workspace_views_data.js";
 
 import { displayEntry } from "./projection.js";
+import {
+  publishedChangedViewsBySelection,
+  publishedResourceEvidence,
+  publishedViewStatesBySelection,
+} from "./public_workspace_views.js";
 import { routedEntries } from "./selection.js";
 
 const statuses = {
@@ -34,81 +33,11 @@ const statuses = {
   removed: "Removed",
   unmodified: "Unmodified",
 } as const;
-const reviewStates: Readonly<Record<keyof typeof statuses, ReviewState>> = {
-  added: "added",
-  changed: "changed",
-  removed: "removed",
-  unmodified: "unchanged",
-};
 
 function status(entry: ShellCatalogueRoutedEntry): EntryStatus | undefined {
   return entry.changes.status === "ready"
     ? statuses[entry.changes.kind]
     : undefined;
-}
-
-/** Published per-view comparisons name the same changed views the shell derives. */
-function publishedChangedViews(
-  views: readonly ShellCatalogueView[],
-): readonly ChangedView[] {
-  return orderChangedViews(
-    views.flatMap((view) =>
-      view.comparison.status === "ready" &&
-      view.comparison.kind !== "unmodified"
-        ? [{ colorScheme: view.colorScheme, viewport: view.viewport }]
-        : [],
-    ),
-  );
-}
-
-/** Key public comparison evidence exactly like the served workspace data. */
-function publishedChangedViewsBySelection(
-  entry: ShellCatalogueScreen | ShellCatalogueComponent | ShellCatalogueVariant,
-  variants: readonly ShellCatalogueVariant[] = [],
-): ChangedViewsBySelection {
-  if (entry.kind === "screen")
-    return { [entry.id]: publishedChangedViews(entry.views) };
-  return Object.fromEntries(
-    variants.map((variant) => [
-      variant.id,
-      publishedChangedViews(variant.views),
-    ]),
-  );
-}
-
-/** Keep only published views whose comparison state is ready. */
-function publishedViewStates(
-  views: readonly ShellCatalogueView[],
-): readonly ViewState[] | undefined {
-  const states = views.flatMap((view) =>
-    view.comparison.status === "ready"
-      ? [
-          {
-            colorScheme: view.colorScheme,
-            state: reviewStates[view.comparison.kind],
-            viewport: view.viewport,
-          },
-        ]
-      : [],
-  );
-  return states.length > 0 ? states : undefined;
-}
-
-/** Key published ready states like the served workspace evidence. */
-function publishedViewStatesBySelection(
-  entry: ShellCatalogueScreen | ShellCatalogueComponent | ShellCatalogueVariant,
-  variants: readonly ShellCatalogueVariant[] = [],
-): ViewStatesBySelection {
-  if (entry.kind === "screen") {
-    const states = publishedViewStates(entry.views);
-    return states === undefined ? {} : { [entry.id]: states };
-  }
-  const evidence: Record<string, readonly ViewState[]> = {};
-  for (const variant of variants) {
-    const states = publishedViewStates(variant.views);
-    if (states !== undefined) evidence[variant.id] = states;
-  }
-  return evidence;
 }
 
 export function publicWorkspace(
@@ -230,6 +159,11 @@ export function publicWorkspace(
       ? variants.find((variant) => variant.value.id === entry.id)
       : undefined;
   const workspaceStatus = selectedVariant?.status ?? entryStatus;
+  const resourceEvidence = publishedResourceEvidence(
+    original.kind === "screen" || "variantOf" in original
+      ? original.views
+      : (sourceVariants[0]?.views ?? []),
+  );
   return {
     entry,
     ...(component ? { component } : {}),
@@ -275,6 +209,7 @@ export function publicWorkspace(
     inputChanges: [],
     ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
+    ...(resourceEvidence.length ? { resourceEvidence } : {}),
   };
 }
 

@@ -14,9 +14,9 @@ import { propText } from "./workspace_props.js";
 import {
   excludedStylesheets,
   retainedPaths,
-  styleOutcomeLead,
-  styleOutcomes,
 } from "./workspace_style_evidence.js";
+import { stylesheetEvidence } from "./workspace_stylesheet_evidence.js";
+import { StylesheetEvidenceList } from "./workspace_stylesheet_list.js";
 
 /** Comparison facts for the current entry and optional loaded comparison. */
 export function WorkspaceEvidence({
@@ -31,8 +31,17 @@ export function WorkspaceEvidence({
   const evidence = workspaceComparisonEvidence(data, variantId, loaded);
   const wording = entryWording(data.entry.kind);
   const hidden = data.status === undefined && !evidence.comparison;
-  const retained = [...retainedPaths(evidence.reasons)].sort();
-  const excluded = excludedStylesheets(evidence.resourceViews, retained);
+  const stylesheets = stylesheetEvidence(
+    evidence.reasons,
+    data.entry.kind === "component"
+      ? { kind: "component", componentId: evidence.componentId }
+      : { kind: "screen" },
+  );
+  const excluded = excludedStylesheets(
+    evidence.resourceViews,
+    retainedPaths(evidence.reasons),
+  );
+  const savedView = data.variants.find((item) => item.value.id === variantId);
   const ignored = evidence.comparison
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
     : [];
@@ -77,26 +86,12 @@ export function WorkspaceEvidence({
           {evidence.reasons.map((reason, index) => (
             <Reason key={`${reasonKey(reason)}/${index}`} reason={reason} />
           ))}
-          {retained.length ? (
-            <>
-              <p>{wording.filesLead}</p>
-              <PathList paths={retained} />
-            </>
+          {stylesheets.length ? (
+            <StylesheetEvidenceList
+              lead={wording.filesLead}
+              stylesheets={stylesheets}
+            />
           ) : null}
-          {styleOutcomes(evidence.reasons).map((outcome) => (
-            <Fragment key={outcome.status}>
-              <p>{styleOutcomeLead(outcome, data.entry.kind)}</p>
-              {outcome.selectors.length ? (
-                <ul>
-                  {outcome.selectors.map((selector) => (
-                    <li key={selector}>
-                      <code className="mbk-code">{selector}</code>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </Fragment>
-          ))}
           {excluded.length ? (
             <>
               <p>
@@ -114,6 +109,7 @@ export function WorkspaceEvidence({
           {evidence.comparison &&
           data.comparison &&
           !data.change &&
+          data.relatedComponents.length > 0 &&
           evidence.views.some((view) => view.state === "changed") ? (
             <p>
               Shared component changes affect this preview. This page has no
@@ -132,7 +128,10 @@ export function WorkspaceEvidence({
               <pre>{propText(decodeProps(variant.after.props))}</pre>
             </>
           ) : null}
-          {data.status === "Unmodified" ? <p>{wording.noChanges}</p> : null}
+          {data.status === "Unmodified" &&
+          (savedView?.status ?? "Unmodified") === "Unmodified" ? (
+            <p>{wording.noChanges}</p>
+          ) : null}
         </>
       ) : null}
     </section>

@@ -14,7 +14,8 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 Uniform CSS attribution, root boundaries, evidence fields and stylesheet-owner
 warnings are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-Comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). Unreleased v8/v4/v5 change in place.
+Comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence);
+the whole-document page display is planned for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). Unreleased v8/v4/v5 change in place.
 
 The remaining contract is implemented.
 

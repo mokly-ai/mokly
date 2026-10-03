@@ -8,7 +8,11 @@ import type { EntryChangeReason } from "../packages/viewer/dist/review/component
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
-import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
+import {
+  cssReason,
+  cssRule,
+  fixtureCssAnalysis,
+} from "./helpers/css_evidence.js";
 
 const SHARED = "mockups/shared.css";
 const TOKENS = "mockups/tokens.css";
@@ -106,9 +110,10 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
       "<p>Compared with the branch point on main.</p>" +
       "<p>Rendered content changed.</p>" +
       "<p>Changes to these files may affect this screen:</p>" +
-      `<ul><li>${SHARED}</li></ul>` +
+      `<ul class="mbk-evidence-files"><li>${SHARED}` +
       "<p>Changed styles that apply to this screen:</p>" +
       '<ul><li><code class="mbk-code">.auth</code></li></ul>' +
+      "</li></ul>" +
       "<p>This stylesheet changed, but none of the changed styles apply to this screen.</p>" +
       "<p>Examined and excluded:</p>" +
       `<ul><li>${TOKENS}</li></ul>` +
@@ -157,16 +162,8 @@ for (const kind of ["screen", "component"] as const) {
     const markup = renderKindEvidence(
       kind,
       [
-        {
-          kind: "dependency",
-          path: SHARED,
-          analysis: fixtureCssAnalysis("matched", [".action"]),
-        },
-        {
-          kind: "dependency",
-          path: TOKENS,
-          analysis: fixtureCssAnalysis("unresolved", [":root"]),
-        },
+        entryReason(kind, SHARED, "matched", [".action"]),
+        entryReason(kind, TOKENS, "unresolved", [":root"]),
       ],
       ["mockups/excluded.css"],
     );
@@ -177,21 +174,15 @@ for (const kind of ["screen", "component"] as const) {
       copy.oneExcluded,
     ])
       assert.ok(markup.includes(`<p>${sentence}</p>`), sentence);
-    assert.ok(markup.includes(`<li>${SHARED}</li>`));
-    assert.ok(markup.includes(`<li>${TOKENS}</li>`));
+    assert.ok(markup.includes(`<li>${SHARED}<p>${copy.matched}</p>`));
+    assert.ok(markup.includes(`<li>${TOKENS}<p>${copy.unresolved}</p>`));
     if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
   });
 
   test(`${kind} Details names unresolved styles without selectors and several exclusions`, () => {
     const markup = renderKindEvidence(
       kind,
-      [
-        {
-          kind: "dependency",
-          path: SHARED,
-          analysis: fixtureCssAnalysis("unresolved", []),
-        },
-      ],
+      [entryReason(kind, SHARED, "unresolved", [])],
       ["mockups/excluded-a.css", "mockups/excluded-b.css"],
     );
     for (const sentence of [
@@ -202,7 +193,7 @@ for (const kind of ["screen", "component"] as const) {
       assert.ok(markup.includes(`<p>${sentence}</p>`), sentence);
     assert.ok(
       markup.includes(
-        `<p>${copy.unresolvedWithoutSelectors}</p><p>${copy.severalExcluded}</p>`,
+        `<p>${copy.unresolvedWithoutSelectors}</p></li></ul><p>${copy.severalExcluded}</p>`,
       ),
     );
     if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
@@ -219,6 +210,21 @@ for (const kind of ["screen", "component"] as const) {
     assert.ok(markup.includes(`<p>${copy.matchedWithoutSelectors}</p>`));
     if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
   });
+}
+
+/** Screen page evidence, or a rule that changed the component on its own pages. */
+function entryReason(
+  kind: "screen" | "component",
+  path: string,
+  status: "matched" | "unresolved",
+  selectors: readonly string[],
+): EntryChangeReason {
+  const analysis = fixtureCssAnalysis(status, selectors);
+  return kind === "screen"
+    ? { kind: "dependency", path, analysis }
+    : cssReason(path, [
+        cssRule({ status, selectors, changedComponentIds: ["action"] }),
+      ]);
 }
 
 function renderKindEvidence(
@@ -264,6 +270,7 @@ function renderKindEvidence(
       status: "Changed",
       change: { kind, after: address, reasons },
       comparison,
+      ...(kind === "component" ? { component: { ...address, kind } } : {}),
       components: [],
       comparisonEligible: true,
       comparisons: true,
