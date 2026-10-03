@@ -76,8 +76,9 @@ platform tar executable or walking the output again.
 `cargo xtask check` is the complete repository and release gate. It orchestrates
 npm, Node and Rust commands from the workspace root and includes:
 
-- a live audit of all workspace dependency categories, failing on any known
-  advisory or registry error;
+- a live audit of all workspace dependency categories, failing on any uncovered
+  Low-or-higher advisory, invalid exception, or registry error; reviewed path
+  exceptions follow [dependency security](./dependency-security.md);
 - formatting and lint checks;
 - TypeScript typechecking with no unexplained source exclusions;
 - unit and integration tests with a 100% pass rate;
@@ -87,7 +88,8 @@ npm, Node and Rust commands from the workspace root and includes:
 - package-file inspection with `npm pack --dry-run --json`;
 - packed-tarball installs in clean ESM, NodeNext, themed, and alternate-layout
   consumers;
-- a production-dependency audit of the freshly resolved packed ESM consumer;
+- a strict production-dependency audit of the freshly resolved packed ESM
+  consumer, with no workspace audit exceptions;
 - local-npx and clean-cache npx-style execution from the packed artifact;
 - consumer exports from the installed CLI, including custom configs/bases,
   cross-platform renderers, registered pages, and the compiled static client

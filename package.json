@@ -42,7 +42,7 @@
   "scripts": {
     "build": "npm run -s build --workspace @mokly/viewer && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs",
     "clean": "node scripts/clean.mjs",
-    "dependencies:check": "npm audit --audit-level=low --include=prod --include=dev --include=optional --include=peer",
+    "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dev": "npm run -s build && node dist/cli/bin.js serve --config examples/basic/mokly.config.ts",
     "dev:large": "node scripts/large/cli.mjs serve",
     "fixture:large": "npm run build && tsx scripts/large/cli.mjs generate",
