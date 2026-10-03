@@ -31,9 +31,7 @@ export function deriveEntryPath(
 ): DerivedPath | PathDiagnostic {
   const parts = input.file.split("/");
   const filename = parts.pop() ?? "";
-  const fallback = input.document
-    ? filename.replace(/\.md$/i, "")
-    : filename.split(".")[0];
+  const fallback = filename.split(".")[0];
   const slug =
     input.slug === undefined && input.parentPath === undefined
       ? fallback
@@ -41,7 +39,9 @@ export function deriveEntryPath(
   const index =
     input.parentPath === undefined &&
     typeof slug === "string" &&
-    (input.document ? /^(?:readme|index)$/i.test(slug) : slug === "index");
+    (input.document
+      ? /^(?:readme|index)\.md$/i.test(filename)
+      : slug === "index");
   if (input.parentPath === undefined && input.path !== undefined) {
     if (!isEntryPath(input.path))
       return invalidPath(input.location, "path", input.path);

@@ -1,6 +1,7 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   entryRoute,
+  documentRoute,
   effectiveColorSchemes,
   viewRoute,
   VIEWPORTS,
@@ -62,12 +63,12 @@ async function compileMeasured(
     sourceFiles: graph.sourceFiles,
   };
   const registry = timeSync("registry.prepare", () =>
-    prepareRegistry(graph.definitions, config),
+    prepareRegistry(graph.definitions, config, graph.documents),
   );
   timingCounts("catalogue", () => ({
     entries: registry.entries.length,
     ...Object.fromEntries(
-      ["screen", "component", "use-case", "page"].map((kind) => [
+      ["screen", "component", "use-case", "page", "document"].map((kind) => [
         kind,
         registry.entries.filter((entry) => entry.kind === kind).length,
       ]),
@@ -103,6 +104,12 @@ async function compileMeasured(
   pending.addHtmlMap(outputs);
   const generatedOwners = new Map<string, string>();
   for (const entry of registry.entries) {
+    if (entry.kind === "document")
+      for (const scheme of config.colorSchemes)
+        generatedOwners.set(
+          documentRoute(entry.path, scheme),
+          entry.sourceRelativePath,
+        );
     if (entry.kind === "page")
       generatedOwners.set(entryRoute(entry.path), entry.sourceRelativePath);
     if (

@@ -4,6 +4,7 @@ import type { ColorScheme, Viewport } from "@mokly/viewer";
 import {
   encodeUrlPath,
   entryRoute,
+  documentRoute,
   effectiveColorSchemes,
   type LogicalTarget,
   viewRoute,
@@ -23,6 +24,11 @@ export function artifactRouteForEntry(
   byPath: ReadonlyMap<string, ResolvedRegistryEntry>,
   catalogueSchemes: readonly ColorScheme[],
 ): string | undefined {
+  if (entry.kind === "document")
+    return documentRoute(
+      entry.path,
+      catalogueSchemes.includes(colorScheme) ? colorScheme : "light",
+    );
   if (entry.kind === "page") return entryRoute(entry.path);
   if (entry.kind === "component") {
     const variant = isComponentVariantDefinition(entry)

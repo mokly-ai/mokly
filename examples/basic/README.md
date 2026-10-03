@@ -61,9 +61,11 @@ Helpers remain ordinary TypeScript modules. The exporting entry module determine
 identity while the defining helper remains the source attribution.
 
 The design screens depict the planned final navigation and move presentation.
-The outer runtime keeps its Pages label; Markdown rendering and move detection
-remain planned. Matched Markdown files stay watched source inputs until document
-rendering is implemented.
+The outer runtime keeps its Pages label; move detection remains planned.
+`specs/example/README.md` is the Example folder page. Its workspace guide links
+to that README, headings and screens and copies `workspace.svg` as a resource.
+Both documents follow the selected Light or Dark appearance. The shared library
+README is also a discovered document. Their source files remain private.
 Their shell shows the Specs and Components sections of one tree, browse-only
 folder rows, the Example folder's README as its first `Overview` row, path
 chips such as `example/screens/welcome`, and an Account › Billing & Payments

@@ -13,6 +13,11 @@ await checkPackagePair(repositoryRoot, pair);
 const packageJson = JSON.parse(
   await fs.promises.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
 );
+if (!packageJson.dependencies.marked)
+  throw new Error("Markdown parser must be a runtime dependency");
+await fs.promises.access(
+  path.join(repositoryRoot, "dist/documents/markdown.js"),
+);
 const required = [
   "name",
   "version",

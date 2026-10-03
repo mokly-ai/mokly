@@ -5,6 +5,7 @@ import {
   generatedViews,
   encodeUrlPath,
   entryRoute,
+  documentRoute,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
 import type { LogicalTarget } from "@mokly/viewer/data";
@@ -26,6 +27,14 @@ export function trustedDocument(
   catalogue: Catalogue,
 ): TrustedBrowseDocument | undefined {
   for (const entry of catalogue.manifest.entries) {
+    if (entry.kind === "document")
+      for (const colorScheme of entry.colorSchemes)
+        if (documentRoute(entry.path, colorScheme) === route)
+          return {
+            colorScheme,
+            sourcePath: entry.sourcePath,
+            viewport: "desktop",
+          };
     if (entry.kind === "page" && entryRoute(entry.path) === route)
       return {
         colorScheme: "light",
@@ -65,6 +74,7 @@ export function expectedPortableHref(
           : undefined;
   if (
     entry?.kind !== "page" &&
+    entry?.kind !== "document" &&
     screen?.kind !== "screen" &&
     screen?.kind !== "component"
   ) {
@@ -77,10 +87,17 @@ export function expectedPortableHref(
     ? generatedViews(screen).filter((view) => view.viewport === source.viewport)
     : [];
   const targetRoute =
-    entry?.kind === "page"
-      ? entryRoute(entry.path)
-      : (views.find((view) => view.colorScheme === source.colorScheme)?.path ??
-        views[0]!.path);
+    entry?.kind === "document"
+      ? documentRoute(
+          entry.path,
+          entry.colorSchemes.includes(source.colorScheme)
+            ? source.colorScheme
+            : "light",
+        )
+      : entry?.kind === "page"
+        ? entryRoute(entry.path)
+        : (views.find((view) => view.colorScheme === source.colorScheme)
+            ?.path ?? views[0]!.path);
   const relative = path.posix.relative(
     path.posix.dirname(sourceRoute),
     targetRoute,

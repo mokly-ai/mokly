@@ -1,6 +1,6 @@
 const PATH_SEGMENT = /^[A-Za-z0-9_-]+$/;
 const WINDOWS_DEVICE_NAME = /^(?:aux|con|nul|prn|com[1-9]|lpt[1-9])$/i;
-const LOGICAL_FRAGMENT = /^[A-Za-z][A-Za-z0-9_:.-]*$/;
+const LOGICAL_FRAGMENT = /^[\p{L}\p{N}\p{M}_:.-]+$/u;
 
 /** A parsed complete logical catalogue destination. */
 export interface LogicalTarget {

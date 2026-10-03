@@ -13,6 +13,7 @@ import { isAuthoringSource } from "../build/source_inventory.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
+import { documentResourceIndex } from "../documents/resource_references.js";
 import { MoklyError } from "../errors.js";
 import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 import {
@@ -157,6 +158,10 @@ export async function classifyChangedContent(
     normalizedDocuments,
     undefined,
     derived,
+    {
+      before: documentResourceIndex(baseline.entries),
+      after: documentResourceIndex(manifest.entries),
+    },
   );
   await timeAsync("review.compare-screens", async () => {
     for (let offset = 0; offset < pairs.length; offset += 32) {

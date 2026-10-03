@@ -32,8 +32,7 @@ export function PublicStage({
   variantPath?: string;
 }) {
   const selection = useContext(DisplaySelection);
-  if (entry.kind === "document") return <p>Document unavailable</p>;
-  if (entry.kind === "page")
+  if (entry.kind === "page" || entry.kind === "document")
     return (
       <DocumentStageFrame entry={entry} {...(fragment ? { fragment } : {})} />
     );

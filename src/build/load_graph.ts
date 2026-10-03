@@ -14,6 +14,7 @@ import {
 } from "../config/postcss_loader.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
+import { loadDocuments, type ResolvedDocument } from "../documents/load.js";
 import { MoklyError, errorMessage, isMoklyError } from "../errors.js";
 import type { Renderer } from "../renderer/types.js";
 
@@ -44,13 +45,14 @@ export interface LoadedGraph {
   discovery?: EntryDiscovery;
   compatibilityTransformer?: CompatibilityTransformer;
   definitions: unknown[];
+  documents?: readonly ResolvedDocument[];
   entrySources: readonly string[];
   sourceFiles: readonly string[];
   renderer: Renderer;
   renderWithComponents: ComponentGraphRenderer;
   /** Per-root generated CSS routes (renderer and entries only). */
   stylesheetRoutes: ReadonlyMap<string, string>;
-  /** CSS text and opaque assets for this compilation. */
+  /** Non-HTML outputs: CSS and copied stylesheet/document resource bytes. */
   styleOutputs: ReadonlyMap<string, GeneratedFile>;
   /** Authored CSS-pass inputs and assets actually delivered by a root. */
   deliveredStyleSources: readonly string[];
@@ -78,6 +80,7 @@ async function loadGraph(
   const discovery = timeSync("graph.discover", () => discoverEntries(config));
   const entrySources = discovery.entryModules;
   config = { ...config, ...discovery };
+  const documents = loadDocuments(config, discovery);
   timingCounts("graph", () => ({ entryModules: entrySources.length }));
   const outputPath = path.join(
     path.dirname(config.configPath),
@@ -145,10 +148,17 @@ async function loadGraph(
       config.mockupsDir,
       mapper,
     );
+    const documentSources = normalizeSourceFiles(
+      documents.sources,
+      config.repoRoot,
+      config.mockupsDir,
+    );
     const deliveryRoots = roots.filter((root) => root.emit);
     const transformerStyles = roots.find((root) => !root.emit)?.styles ?? [];
     const graphInputs = new Set(
-      graphFiles.map((file) => path.resolve(config.repoRoot, file)),
+      [...graphFiles, ...documentSources].map((file) =>
+        path.resolve(config.repoRoot, file),
+      ),
     );
     const bundled = deliveryRoots.some((root) => root.styles.length)
       ? await bundleStyles(
@@ -178,6 +188,7 @@ async function loadGraph(
     const sourceFiles = normalizeSourceFiles(
       [
         ...graphFiles,
+        ...documentSources,
         ...bundled.sourceFiles,
         ...transformerFiles,
         ...styles.preprocessor.sourceFiles,
@@ -205,7 +216,8 @@ async function loadGraph(
         entrySources,
         sourceFiles,
         stylesheetRoutes: bundled.routes,
-        styleOutputs: bundled.outputs,
+        styleOutputs: new Map([...bundled.outputs, ...documents.outputs]),
+        documents: documents.entries,
         deliveredStyleSources,
         postcssWatchDirectories: dependencies.watchDirectories,
         renderWithComponents: () => {
@@ -219,6 +231,7 @@ async function loadGraph(
       code: built.outputFiles!.find((file) => file.path === outputPath)!.text,
       filename: outputPath,
       entrySources,
+      documents: documents.entries,
     };
     const imported = timeSync("graph.evaluate", () => evaluateBundle(bundle));
     timingCounts("graph.bundle", () => ({
@@ -252,7 +265,8 @@ async function loadGraph(
       entrySources,
       sourceFiles,
       stylesheetRoutes: bundled.routes,
-      styleOutputs: bundled.outputs,
+      styleOutputs: new Map([...bundled.outputs, ...documents.outputs]),
+      documents: documents.entries,
       deliveredStyleSources,
       postcssWatchDirectories: dependencies.watchDirectories,
       renderer: imported.renderer as Renderer,

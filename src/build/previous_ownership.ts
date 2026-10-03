@@ -3,8 +3,10 @@ import path from "node:path";
 
 import { documentRoute, entryRoute, generatedViews } from "@mokly/viewer/data";
 
+import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { documentResourceRoute } from "../documents/resource_paths.js";
 import { MANIFEST_NAME, parseManifest } from "../registry/manifest.js";
 
 interface PreviousOwnership {
@@ -55,7 +57,7 @@ function readOwners(
     const configSource = toPosixPath(
       path.relative(config.repoRoot, config.configPath),
     );
-    if (!manifest.sourceFiles.includes(configSource)) return owners;
+    const ownsConfig = manifest.sourceFiles.includes(configSource);
     for (const entry of manifest.entries) {
       const routes =
         entry.kind === "page"
@@ -65,7 +67,17 @@ function readOwners(
                 documentRoute(entry.path, scheme),
               )
             : generatedViews(entry).map((view) => view.path);
-      for (const route of routes) owners.set(route, entry.sourcePath);
+      if (
+        entry.kind === "document" &&
+        (ownsConfig ||
+          isResolvedEntryOrInventoriedSource(entry.sourcePath, config))
+      )
+        for (const resource of entry.resources) {
+          const route = documentResourceRoute(entry, resource);
+          if (route) owners.set(route, entry.sourcePath);
+        }
+      if (ownsConfig)
+        for (const route of routes) owners.set(route, entry.sourcePath);
     }
   } catch {
     return owners;

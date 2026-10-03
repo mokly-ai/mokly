@@ -19,7 +19,8 @@ import { useRemovedPreview } from "./use_removed_preview.js";
 export interface RemovedPreviewData {
   /** Stable entry id, so another entry cannot adopt this response. */
   path: string;
-  kind: "page" | "screen";
+  kind: "page" | "document" | "screen";
+  colorSchemes?: readonly ("light" | "dark")[];
   title: string;
   /** Catalogue that owns the selected historical record. */
   catalogueIdentity?: string;
@@ -41,7 +42,12 @@ export function removedPreviewData(
   context: ShellContext,
   entry: CatalogueManifestEntry,
 ): RemovedPreviewData | undefined {
-  if (entry.kind !== "page" && entry.kind !== "screen") return undefined;
+  if (
+    entry.kind !== "page" &&
+    entry.kind !== "document" &&
+    entry.kind !== "screen"
+  )
+    return undefined;
   const model = catalogue.publicModel ?? context.readModel;
   const removed = model?.removedEntries.find(
     (removed) => removed.entry.path === entry.path,
@@ -51,6 +57,7 @@ export function removedPreviewData(
     path: entry.path,
     kind: entry.kind,
     title: entry.title,
+    ...(entry.kind === "document" ? { colorSchemes: entry.colorSchemes } : {}),
     ...(model && removed?.snapshotId
       ? {
           catalogueIdentity: model.identity.id,
@@ -131,14 +138,20 @@ export function ReadyPreview(props: {
   viewport: "both" | "desktop" | "mobile";
 }) {
   const content = props.loaded.content;
-  if (content.kind === "page") {
-    const presentation = presentationFor(props.presentations, content.url);
+  if (content.kind === "page" || content.kind === "document") {
+    const view =
+      content.kind === "document"
+        ? (content.views.find(
+            (view) => view.colorScheme === props.colorScheme,
+          ) ?? content.views[0]!)
+        : { url: content.url, colorScheme: "light" };
+    const presentation = presentationFor(props.presentations, view.url);
     if (!presentation) return <PreviewUnavailable retry={props.retry} />;
     return (
       <div
         className="mbk-stage-embed"
         data-mokly-scroll="embed"
-        data-preview-color-scheme="light"
+        data-preview-color-scheme={view.colorScheme}
       >
         <PreviewFrame presentation={presentation} title={props.data.title} />
       </div>

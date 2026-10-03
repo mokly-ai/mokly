@@ -45,12 +45,12 @@ rendering context.
 - **Use real product UI.** Screens are React nodes composed from the same
   components, providers, styles, and assets as the product.
 - **See the whole product in one place.** Folders that mirror your spec tree,
-  search, tags, mobile and desktop views, color schemes, pages, components, screen and component variants, and user flows share
+  search, tags, mobile and desktop views, color schemes, pages, Markdown documents, components, screen and component variants, and user flows share
   one catalogue. Variants remain grouped beneath their parent while keeping
   their own path and address.
 - **Review outcomes, not file lists.** The Changes view compares rendered
   screens and their reachable resources with the branch point of your Git base,
-  while removed screens and pages retain a read-only previous version.
+  while removed screens, pages and documents retain a read-only previous version.
 - **Inspect reusable components.** Register typed props, variants, slots, and
   local controls, then see where each component is used.
 - **Keep delivery simple.** A catalogue can be exported as static files and
@@ -85,9 +85,8 @@ export default defineConfig({
 
 Paths are relative to the config file. Mokly reads the `specs` directory
 beside the config by default: every `.mockup.ts` or `.mockup.tsx` file in it
-is an entry module, and its location in that tree is its place in the
-catalogue. Matched Markdown files remain protected source inputs; Markdown
-rendering is not available yet. List `roots` to read other
+is an entry module and every `.md` file is a document. A file's location
+in that tree is its place in the catalogue. List `roots` to read other
 directories, such as a component library with
 `{ dir: "packages/ui/src", path: "components" }`, or to keep mockups beside
 product code with a transparent directory name; every root must match at
@@ -138,8 +137,7 @@ specs/generated/mokly-generated/
 ```
 
 Current output uses manifest v8, and comparison-base output must do the same.
-Paths derive from exporting files and root configuration. Markdown rendering,
-move pairing and the remaining navigation presentation are tracked in the
+Paths derive from exporting files and root configuration. Move pairing and the remaining navigation presentation are tracked in the
 [implementation plans](./plans/README.md).
 
 ### 4. Open the catalogue
@@ -197,7 +195,7 @@ catalogue; your React tree still owns what each screen looks like.
 | Components       | Typed props, variants, controls, and usage inspection                                     | [Components](./docs/guides/authoring/components.md)                 |
 | Use-case flows   | Ordered journeys composed from existing screens                                           | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
 | Pages            | Existing complete HTML documents without device variants                                  | [Pages and documents](./docs/guides/authoring/pages.md)             |
-| Markdown inputs  | Matched files stay protected and watched; document rendering is not available yet         | [Pages and documents](./docs/guides/authoring/pages.md)             |
+| Documents        | Markdown files rendered as catalogue documents, including a folder's README               | [Pages and documents](./docs/guides/authoring/pages.md)             |
 | `MockLink`       | Portable links between catalogue entries by path                                          | [Links](./docs/guides/authoring/links.md)                           |
 | Styles           | Imported CSS, modules, assets and optional PostCSS                                        | [Styles](./docs/guides/authoring/styles.md)                         |
 
@@ -224,7 +222,7 @@ evidence keeps known unchanged views marked Unmodified without offering a
 comparison. A light-only screen or component variant uses its effective Light
 view for status and marks even while Dark stays selected for the rest of the
 catalogue. Missing per-view evidence preserves the selected entry's existing
-comparison eligibility. Removed screens and pages load their read-only
+comparison eligibility. Removed screens, pages and documents load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
 point. Changing an entry's path currently produces a removal and an addition.
 `movedFrom` is validated as authoring metadata; it does not pair entries yet.

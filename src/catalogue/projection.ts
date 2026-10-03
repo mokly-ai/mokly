@@ -55,6 +55,13 @@ export function projectCatalogue(
       "$catalogue",
       "current projection requires manifest v8 or live metadata",
     );
+  const documentPaths = new Map(
+    catalogue.manifest.entries.flatMap((entry) =>
+      entry.kind === "document"
+        ? [[entry.sourcePath, entry.path] as const]
+        : [],
+    ),
+  );
   const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
     path: entry.path,
     title: entry.title,
@@ -62,7 +69,12 @@ export function projectCatalogue(
     details: {
       description: entry.description,
       sourcePath: repositoryPath(entry.sourcePath),
-      relatedDocs: entry.relatedDocs.map(relatedDoc),
+      relatedDocs: entry.relatedDocs.map((source) => {
+        const documentPath = documentPaths.get(source);
+        return documentPath && !removed
+          ? `mock:${documentPath}`
+          : relatedDoc(source);
+      }),
       dependencies: entryDependencies(entry).map(repositoryPath),
       ...(entry.rationale !== undefined ? { rationale: entry.rationale } : {}),
     },
@@ -232,7 +244,9 @@ function projectPreview(
       invalidData("$catalogue", "screen preview requires a removed screen");
     return { preview: { kind: "screen" } };
   }
-  if (entry.kind !== "page")
+  if (entry.kind === "document" && preview.kind === "document")
+    return { preview: { kind: "document" } };
+  if (entry.kind !== "page" || preview.kind !== "page")
     invalidData("$catalogue", "page preview requires a removed page");
   return { preview: { kind: "page" } };
 }

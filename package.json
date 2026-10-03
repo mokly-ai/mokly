@@ -78,6 +78,7 @@
     "icss-utils": "^5.1.0",
     "koffi": "^3.2.1",
     "lightningcss": "^1.33.0",
+    "marked": "^18.0.14",
     "minimatch": "^10.2.6",
     "parse5": "^8.0.1",
     "postcss": "^8.5.28",

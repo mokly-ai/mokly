@@ -97,7 +97,7 @@ export function staticRemovedPreviews(
           );
         previews.set(entry.path, { kind: "screen" });
       }
-      if (entry.kind === "page") {
+      if (entry.kind === "page" || entry.kind === "document") {
         const name = previewMetadataPath(entry.path);
         const bytes = files.get(name);
         if (bytes === undefined)
@@ -115,7 +115,7 @@ export function staticRemovedPreviews(
           throw publicationError(
             `Removed page preview does not match the comparison: ${entry.path}`,
           );
-        previews.set(entry.path, { kind: "page" });
+        previews.set(entry.path, { kind: entry.kind });
       }
     }
     return previews;

@@ -1,11 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { isInside, projectRealPath } from "../config/paths.js";
 import { isInternalCatalogueFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { isDocumentResource } from "../documents/resource_paths.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
@@ -42,7 +43,12 @@ export function validateGeneratedOutputPaths(
         "build-invalid",
         `generated route is unsafe: ${route}; use mokly-generated/styles/<root path>.css or mokly-generated/assets/<asset path> with supported extensions`,
       );
-    if (!reserved && route !== MANIFEST_NAME && !isSafeCatalogueRoute(route)) {
+    if (
+      !reserved &&
+      route !== MANIFEST_NAME &&
+      !isSafeCatalogueRoute(route) &&
+      !(isSafeRepositoryPath(route) && isDocumentResource(route))
+    ) {
       throw new MoklyError(
         "build-invalid",
         `generated route is unsafe: ${route}`,

@@ -122,7 +122,7 @@ test("the picker chips answer the arrow, Home, and End keys", async ({
     "tabindex",
     "0",
   );
-  for (const tag of ["forms", "onboarding"])
+  for (const tag of ["forms", "guide", "onboarding"])
     await expect(page.locator(chip(tag))).toHaveAttribute("tabindex", "-1");
 
   await page.keyboard.press("ArrowRight");
@@ -132,6 +132,8 @@ test("the picker chips answer the arrow, Home, and End keys", async ({
     "-1",
   );
   await expect(page.locator(chip("forms"))).toHaveAttribute("tabindex", "0");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator(chip("guide"))).toBeFocused();
   await page.keyboard.press("ArrowRight");
   await expect(page.locator(chip("onboarding"))).toBeFocused();
   await page.keyboard.press("ArrowRight");

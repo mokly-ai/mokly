@@ -1,7 +1,7 @@
 /** Pair current view documents with their baseline paths and material-change eligibility. */
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import type { HistoricalManifest, ManifestV8 } from "@mokly/viewer/data";
-import { entryRoute, VIEWPORTS } from "@mokly/viewer/data";
+import { entryRoute, documentRoute, VIEWPORTS } from "@mokly/viewer/data";
 
 import { fragmentForView, unionColorSchemes } from "../review/screen_views.js";
 
@@ -25,6 +25,23 @@ export function documentPairs(
   const pairs: DocumentPair[] = [];
   for (const screen of manifest.entries) {
     const baseEntry = bases.get(screen.path.toLowerCase());
+    if (screen.kind === "document") {
+      for (const scheme of screen.colorSchemes) {
+        const base =
+          baseEntry?.kind === "document" &&
+          baseEntry.colorSchemes.includes(scheme)
+            ? documentRoute(baseEntry.path, scheme)
+            : undefined;
+        const head = documentRoute(screen.path, scheme);
+        pairs.push({
+          ...(base ? { base } : {}),
+          head,
+          context: head,
+          changed: base !== head || changed.has(head),
+        });
+      }
+      continue;
+    }
     if (screen.kind === "page") {
       const base =
         baseEntry?.kind === "page" ? entryRoute(baseEntry.path) : undefined;

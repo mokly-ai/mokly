@@ -85,10 +85,17 @@ The current maintenance choices are:
   adds Node 24. Native binaries must remain installed; the Node package does not
   automatically fall back to WASM. See the
   [release platform contract](./npm-release.md#continuous-integration).
-- A CommonMark/GFM Markdown parser and a front matter parser are production
-  dependencies selected by the [path identity plan](../../plans/path-identity.md)
-  for Markdown documents. They participate in the workspace and
-  packed-consumer audits like every other runtime dependency.
+- [`marked`](https://github.com/markedjs/marked) 18.0.14 is the production
+  CommonMark/GFM parser for Markdown documents. It is MIT licensed, pure
+  JavaScript, ESM compatible, and has no runtime dependencies. Its typed token
+  renderers support destination rewriting, escaped raw HTML, heading anchors
+  and fenced-code language classes without plugins. Front matter uses Mokly's
+  small pure grammar parser, not a YAML dependency. Both workspace and packed
+  consumer checks exercise the installed parser. Adding it leaves the existing
+  13 development-tree findings from GHSA-vfj7-8cjw-p6xm unchanged; it adds no
+  advisory. npm changed its downgrade suggestions to `fixAvailable: false`
+  for ten existing records; the affected versions, paths and advisory are unchanged.
+  The live audit remains mandatory and has no exemption.
 
 ## Required Evidence
 

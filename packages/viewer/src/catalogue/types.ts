@@ -132,7 +132,7 @@ export interface CatalogueComponentVariant extends CatalogueEntry {
   comparison: ComparisonSelection;
 }
 
-/** Reserved Markdown document entry, with colour schemes and no viewports. */
+/** Markdown document entry, with colour schemes and no viewports. */
 export interface CatalogueDocument extends CatalogueEntry {
   kind: "document";
   colorSchemes: readonly ColorScheme[];

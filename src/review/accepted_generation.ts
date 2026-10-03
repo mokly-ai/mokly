@@ -2,6 +2,7 @@ import type { Compilation } from "../build/compile.js";
 import type { GeneratedFile } from "../build/generated_file.js";
 import type { LoadedGraph } from "../build/load_graph.js";
 import { isValidGeneratedRoute } from "../build/styles/routes.js";
+import { isDocumentResource } from "../documents/resource_paths.js";
 
 /** Immutable accepted CSS/asset scope used by one Changes classification. */
 export interface AcceptedGeneration {
@@ -16,7 +17,9 @@ export function acceptedGenerationFromCompilation(
 ): AcceptedGeneration {
   return {
     routes: [...compilation.outputs.keys()]
-      .filter(isValidGeneratedRoute)
+      .filter(
+        (route) => isValidGeneratedRoute(route) || isDocumentResource(route),
+      )
       .sort(),
     outputs: compilation.outputs,
     deliveredStyleSources: compilation.deliveredStyleSources,
@@ -28,7 +31,11 @@ export function acceptedGenerationFromInventory(
   graph: Pick<LoadedGraph, "styleOutputs" | "deliveredStyleSources">,
 ): AcceptedGeneration {
   return {
-    routes: [...graph.styleOutputs.keys()].filter(isValidGeneratedRoute).sort(),
+    routes: [...graph.styleOutputs.keys()]
+      .filter(
+        (route) => isValidGeneratedRoute(route) || isDocumentResource(route),
+      )
+      .sort(),
     deliveredStyleSources: graph.deliveredStyleSources,
   };
 }

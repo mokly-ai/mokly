@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Build, Check, Serve, export, and the viewer use file-derived paths.
-Markdown rendering and move pairing remain planned in the
+Move pairing remains planned in the
 [path identity plan](../../plans/path-identity.md).
 
 This is the single contract for an entry's path: how it derives from the
@@ -61,18 +61,17 @@ An entry's path is derived in three steps and no others:
 2. the directories between the root and the discovered exporting entry module
    (or document file), in order, with every
    directory named in `transparent` removed;
-3. the leaf: a document's file name without `.md`, or an entry's slug under
+3. the leaf: a document's file name up to its first `.`, or an entry's slug under
    the [slug rule](./mokly-entry-modules.md#slugs).
 
 For TypeScript and JavaScript, "the file" always means the discovered entry
 module that exports the definition. A helper's defining-module attribution is
 independent and never changes the path or default slug.
 
-The leaf `index` collapses: it adds no segment, so the entry's path is the
-directory path and the entry is that folder's own page. A document named
-`README.md` or `index.md`, compared case-insensitively, is an index document.
-An entry whose slug is `index`, from its file name or its `slug` field, is an
-index entry. An index at a root without a prefix would have an empty path and
+A module entry's slug `index`, from its file name or field, collapses: it adds
+no segment, so the entry owns its folder's path. A document is an index only
+when its complete file name is `README.md` or `index.md`, compared without case.
+Thus `index.draft.md` has the ordinary leaf `index`; it does not collapse. An index at a root without a prefix would have an empty path and
 is a build error; give the file a `path`.
 
 A declared `path`, on an entry or in document front matter, replaces the

@@ -150,7 +150,7 @@ test("logical fragments require one anchor across every target view", async (con
 
 test("logical link syntax and reserved metadata fail closed", async () => {
   for (const body of [
-    `<a href="mock:details#1section">Details</a>`,
+    `<a href="mock:details#unsafe/section">Details</a>`,
     `<a href="mock:details#section%20name">Details</a>`,
     `<a data-mokly-link="details" href="mock:details">Details</a>`,
     `<a data-nav-href="mock:home" href="mock:details">Conflict</a>`,

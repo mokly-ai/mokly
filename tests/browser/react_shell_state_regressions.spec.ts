@@ -71,13 +71,18 @@ async function expectInitialVariantEntry(page: Page): Promise<void> {
     );
 }
 
+/** Align the fixture edges so integer scroll offsets can meet exact containment. */
 async function moveOutsidePane(pane: Locator, selector: string): Promise<void> {
   await pane.evaluate((element, selector) => {
     const active = element.querySelector<HTMLElement>(selector);
     if (!active) throw new Error("active catalogue row is unavailable");
-    element.style.height = "120px";
-    element.style.maxHeight = "120px";
-    element.style.minHeight = "120px";
+    const relativeBottom =
+      active.getBoundingClientRect().bottom -
+      element.getBoundingClientRect().top;
+    const height = `${120 + relativeBottom - Math.floor(relativeBottom)}px`;
+    element.style.height = height;
+    element.style.maxHeight = height;
+    element.style.minHeight = height;
     element.scrollTop = 0;
     const paneBox = element.getBoundingClientRect();
     const rowBox = active.getBoundingClientRect();

@@ -16,3 +16,19 @@ test("logical navigation validators fail closed for non-string values", () => {
     assert.equal(parseLogicalMarker(value), undefined);
   }
 });
+
+test("logical fragments accept Markdown heading ids and still reject unsafe syntax", () => {
+  for (const fragment of ["1section", "café", "日本語", "_name", "a-b-2"])
+    assert.deepEqual(parseLogicalTarget(`mock:guide#${fragment}`), {
+      path: "guide",
+      fragment,
+    });
+  for (const fragment of [
+    "space here",
+    "unsafe/part",
+    "#heading",
+    "café%20",
+    '"quoted"',
+  ])
+    assert.equal(isLogicalFragment(fragment), false);
+});

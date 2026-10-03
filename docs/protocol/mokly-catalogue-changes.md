@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Catalogue impact/removal metadata uses kind and path, with baseline folder
-titles for removed entries. Move detection and document rendering remain planned
+titles for removed entries. Documents use page-style material and removal rules. Move detection remains planned
 in the [path identity plan](../../plans/path-identity.md). This snapshot is
 independent of the visual [comparison result](./mokly-changes.md);
 [removed previews](./mokly-removed-previews.md) owns baseline capture and delivery.

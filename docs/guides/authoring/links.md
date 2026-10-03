@@ -40,8 +40,9 @@ The string helper is `mockLink(to, fragment?)`, and both produce
 `mock:<path>[#fragment]`, which you may also write by hand in an `href` or
 `data-nav-href`. Neither helper accepts `path#fragment`, percent-encoded
 syntax or a `mock:` value in `to`. A link may name any entry, including a
-screen or component variant or a page; a link to a component opens its first
-variant.
+screen or component variant, a page or a Markdown document; a link to a component
+opens its first variant. In Markdown, a relative link to another discovered
+`.md` file becomes a catalogue link. `mock:<path>` works there too.
 
 Relative links share the same base as flow references: an ordinary entry uses
 its parent path, an index uses its own folder path, and a variant uses its

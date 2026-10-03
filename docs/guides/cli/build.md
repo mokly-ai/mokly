@@ -22,7 +22,8 @@ npx mokly build
 
 Under `mockupsDir`, one directory per entry named by its path: a document per
 effective viewport and color scheme for each screen and component variant,
-the document of each page, generated CSS/assets beneath `mokly-generated/`,
+the document of each page, Markdown documents per enabled scheme and their
+copied resources, generated CSS/assets beneath `mokly-generated/`,
 and `mokly-manifest.json`. Writes are transactional, so a failed build leaves
 the previous output in place.
 

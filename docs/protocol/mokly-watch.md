@@ -164,8 +164,9 @@ bypass an in-progress cleanup or contend with the failed child's still-bound por
 The supervisor retains the five-minute readiness safety allowance for the child
 to receive the accepted config, live index and retained renderer, construct its
 catalogue and bind. The interactive performance target is under five seconds;
-the timeout is not an acceptable startup duration. Startup transfers no rendered
-HTML and avoids rereading the large manifest file. The child
+the timeout is not an acceptable startup duration. Startup transfers no complete
+rendered view files and avoids rereading the large manifest file. The retained
+graph includes parsed Markdown bodies for demand compilation in each scheme. The child
 still validates the transferred metadata and re-resolves the config and consumer
 input graphs to enforce source-inventory freshness before binding. These checks
 are visible separately with `--debug-timings`. Local controls are available at

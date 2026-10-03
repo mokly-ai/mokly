@@ -103,7 +103,7 @@ function readView(value: Record<string, unknown>): BootstrapView {
     isEntryPath(value["entryPath"]) &&
     (value["snapshotId"] === undefined ||
       isHistoricalSnapshotId(value["snapshotId"])) &&
-    ["component", "page", "screen", "use-case"].includes(
+    ["component", "document", "page", "screen", "use-case"].includes(
       String(value["entryKind"]),
     )
   )

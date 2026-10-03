@@ -7,6 +7,10 @@ import { parse } from "parse5";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { timeAsync } from "../diagnostics/timings.js";
+import {
+  linkedDocumentResources,
+  type DocumentResourceIndex,
+} from "../documents/resource_references.js";
 import { referencedRoutes } from "../review/asset_references.js";
 import type {
   OptionalReviewAssetReader,
@@ -46,6 +50,10 @@ export class ChangedResourceGraph {
     private readonly documents: ReadonlyMap<string, string>,
     private readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
     private readonly compareBytes = false,
+    private readonly documentResources: {
+      before: DocumentResourceIndex;
+      after: DocumentResourceIndex;
+    } = { before: new Map(), after: new Map() },
   ) {
     this.#base = new ComponentMaterialReader(baseline);
     this.#head = new ComponentMaterialReader({
@@ -67,9 +75,11 @@ export class ChangedResourceGraph {
         ),
       readReferences: async (route) =>
         /\.(css|html?)$/i.test(route)
-          ? referencedRoutes(route, await this.#base.resourceText(route), {
-              resourceHints: false,
-            })
+          ? this.referencePaths(
+              route,
+              await this.#base.resourceText(route),
+              "before",
+            )
           : [],
     });
   }
@@ -91,9 +101,7 @@ export class ChangedResourceGraph {
     const cached = this.#viewResources.get(source);
     if (cached?.document === document) return cached.resources;
     const resources = await timeAsync("review.resource-graph", () =>
-      this.#graph.collect(
-        referencedRoutes(source, document, { resourceHints: false }),
-      ),
+      this.#graph.collect(this.referencePaths(source, document, "after")),
     );
     this.#viewResources.set(source, { document, resources });
     return resources;
@@ -114,9 +122,7 @@ export class ChangedResourceGraph {
     const bases =
       before && (this.compareBytes || changedStylesheet || changedDocument)
         ? await this.#baseGraph.collect(
-            referencedRoutes(before.path, before.html, {
-              resourceHints: false,
-            }),
+            this.referencePaths(before.path, before.html, "before"),
           )
         : new Set<string>();
     const all = [...new Set([...bases, ...resources])];
@@ -219,6 +225,17 @@ export class ChangedResourceGraph {
       if (extension !== ".css") content = await this.#head.resourceText(route);
     }
     this.#contents.set(route, content);
-    return referencedRoutes(route, content, { resourceHints: false });
+    return this.referencePaths(route, content, "after");
+  }
+
+  private referencePaths(
+    route: string,
+    html: string,
+    side: "before" | "after",
+  ): readonly string[] {
+    return [
+      ...referencedRoutes(route, html, { resourceHints: false }),
+      ...linkedDocumentResources(route, html, this.documentResources[side]),
+    ];
   }
 }

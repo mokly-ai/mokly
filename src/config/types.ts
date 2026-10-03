@@ -125,7 +125,7 @@ export interface ResolvedConfig {
   configSourceFiles?: readonly string[];
   /** Validated roots in authored order. */
   roots: readonly ResolvedRoot[];
-  /** Sorted absolute files retained by discovery, including reserved documents. */
+  /** Sorted absolute files retained by discovery, including Markdown documents. */
   resolvedFiles?: readonly string[];
   /** Root-glob matches, including files excluded from entry discovery. */
   protectedFiles?: readonly string[];

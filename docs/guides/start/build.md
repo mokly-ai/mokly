@@ -11,7 +11,7 @@ order: 4
 npx mokly build
 ```
 
-Build validates your entries, renders every screen and page and
+Build validates your entries, renders every screen, page and Markdown document and
 writes the result under `mockupsDir`: one directory per entry named by its
 path, holding a document per viewport and color scheme, the `mokly-generated/` stylesheet and asset tree when imported CSS is used, plus
 `mokly-manifest.json`. Writes are transactional, so a failed build leaves the

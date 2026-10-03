@@ -22,11 +22,10 @@ export default defineConfig({
 
 Mokly scans `specs` for two kinds of file: entry modules named
 `*.mockup.ts` or `*.mockup.tsx`, which define screens, pages, flows and
-components in TypeScript, and Markdown files, which stay protected and watched
-but do not render yet. The folder you put an entry module in is its folder in
-the catalogue: `specs/account/billing/invoice.mockup.tsx` produces
-`account/billing/invoice`. Use `definePage` in `specs/account/index.mockup.ts`
-for a complete HTML page at `account`.
+components in TypeScript, and Markdown files, which become documents.
+The folder you put a file in is its catalogue folder:
+`specs/account/billing/invoice.mockup.tsx` produces `account/billing/invoice`,
+and `specs/account/README.md` is the page of the `account` folder.
 
 ## Choose your own roots
 

@@ -17,8 +17,9 @@ its prefix even when a deeper root selects different files. Folder exclusions se
 inputs, including unimported excluded files. Exclusions match file paths only.
 Directory records also have one root owner, even with disjoint entry globs.
 
-Matched Markdown files currently remain private watched inputs and are not bundled
-or emitted as catalogue entries. `_folder.json` files supply folder metadata, remain
+Matched Markdown files become document entries through `src/documents`; their
+sources and copied-resource inputs remain private and watched. They never enter
+the executable bundle. `_folder.json` files supply folder metadata, remain
 private, and join the graph's source inventory. Entry, document and metadata edits
 trigger the appropriate rebuild without making generated output public source.
 

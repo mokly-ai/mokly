@@ -51,6 +51,7 @@ export function runtimeGraph(runtime: ComponentRuntime): LoadedGraph {
   return {
     ...evaluateBundle(runtime.bundle),
     entrySources: runtime.bundle.entrySources,
+    documents: runtime.bundle.documents ?? [],
     sourceFiles: runtime.config.sourceFiles ?? [],
     stylesheetRoutes: new Map(runtime.stylesheetRoutes),
     styleOutputs: new Map(runtime.styleOutputs),

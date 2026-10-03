@@ -2,8 +2,9 @@
 
 ## Delivery Status
 
-Approved contract. Current builds have no document kind; the
-[path identity plan](../../plans/path-identity.md) delivers this contract.
+Build, Check, Serve and export render documents. The viewer uses its existing
+page frame. Final navigation and Details presentation remain in the
+[path identity plan](../../plans/path-identity.md).
 
 A document is a Markdown file that a [root](./mokly-paths.md#roots) matches.
 It becomes an entry of kind `document` with a path derived like every other
@@ -17,7 +18,8 @@ for documents.
 A matched file whose name ends in `.md` is a document; `.markdown` and `.mdx`
 are not recognised. The leaf is the file name up to its first `.`, so
 `getting-started.md` gives `getting-started`, and `README.md` or `index.md`,
-compared case-insensitively, is the folder's index document. A directory with
+compared case-insensitively as complete file names, is the folder's index document.
+`release.notes.md` gives `release`; `index.draft.md` is an ordinary `index` leaf. A directory with
 both is a [duplicate index](./mokly-paths.md#diagnostics). A file name outside
 the [segment grammar](./mokly-paths.md#segment-grammar) fails the build; Mokly
 does not rename it. Documents have no variants and no `defineX` helper; the
@@ -42,7 +44,12 @@ A key outside this table, a repeated key, a malformed line, or an unclosed
 block fails the build with `<location>: front matter <reason>`, where the
 reason is `unknown field <name>`, `repeated field <name>`, `line <n> is not
 "key: value"`, `<name> must be a string`, `<name> must be an array of strings`,
-or `block is not closed`. The block is removed before rendering.
+or `block is not closed`. Line numbers count from the first delimiter as line 1.
+Blank and indented field lines are malformed. CRLF and LF are accepted.
+JSON-shaped values starting with `"`, `[` or `{` must parse as JSON and have
+that field's type; other bare values, including `true` and `123`, stay strings.
+Title and tag values then pass the shared nonempty-title and unique kebab-case
+metadata rules. Description may be empty. The block is removed before rendering.
 
 ## Title And Description
 
@@ -58,7 +65,10 @@ Mokly renders CommonMark with GitHub-style tables, strikethrough, task-list
 items, and autolink literals. Raw HTML, inline or block, is rendered as literal
 text. Each heading receives an `id` built GitHub-style from its text:
 lowercase, spaces to hyphens, punctuation removed, and `-2`, `-3` suffixes for
-repeats. Fenced code keeps its language as a class and is not highlighted.
+repeats. Unicode letters, numbers and underscores remain. Suffix selection
+skips ids already used by any earlier heading. Logical links accept these ids;
+file-link fragments are percent-decoded once before logical validation.
+An empty file-link fragment opens the document without an anchor. Fenced code keeps its language as a class and is not highlighted.
 The output is one complete HTML document per effective colour scheme with a
 Mokly-owned template: `<html lang="en">`, the title in `<head>`, a
 package-owned stylesheet inlined with shell-consistent typography, and no
@@ -71,7 +81,13 @@ ownership header, final HTML validation, and transactional write as pages.
 ## Links And Resources
 
 A Markdown link or image destination is resolved against the document's
-repository location before the body renders:
+repository location before the body renders. File links use the directory of
+the source Markdown file, even when front matter declares another path or a
+root removes transparent directories. Logical `mock:` links use the shared
+entry base: an ordinary document uses its path's parent; an exact README/index
+document uses its own path, including a declared path. Thus both rules select
+siblings for an ordinary document and children for a folder README; only file
+links retain repository spelling when catalogue placement differs:
 
 - A relative destination that names a discovered document becomes a catalogue
   link to that document's path, with the fragment kept and validated against
@@ -81,20 +97,47 @@ repository location before the body renders:
 - A relative destination that names a file with an extension in `png`, `jpg`,
   `jpeg`, `gif`, `svg`, `webp`, `avif`, or `pdf` is a resource. Mokly copies it
   to `static/<folder path>/<relative path>`, where the folder path is the
-  document's folder and the relative path is the destination as written after
-  normalisation; `../shared/a.png` from `account/billing` writes
+  document's logical-link base folder and the relative path is the destination as written after
+  normalisation; `../shared/a.png` from a folder README at `account/billing` writes
   `static/account/shared/a.png`. The file must exist inside the same root's
   directory; a destination that escapes it fails with
   `<location>: resource <destination> is outside the root`. Resources join the
-  public-file inventory and its collision rules.
+  public-file inventory and its collision rules. Both lexical and physical paths
+  must stay in the root. In-root symlink aliases are rejected too; a configured
+  root alias is allowed. Resources may not escape the output or enter
+  `mokly-generated/`. Their original bytes are retained, without decoding.
+  Inputs join `sourceFiles` for source protection, freshness and watch. They
+  enter the graph before imported CSS validation, so a nested source root can
+  share an explicitly referenced asset with CSS. Unrelated public files keep
+  the CSS pass's existing protection. Exact
+  output ownership derives from the document source, path and `resources` in a
+  validated previous manifest for this configuration, or a document still
+  resolved or inventoried by the current config. Thus a config rename retains
+  its documents' resource ownership. No unowned file may be replaced. The same transaction installs copies and removes owned orphans.
 - A relative destination that names any other existing repository file, such
   as a source file, renders as plain text showing the link text; Mokly never
-  serves sources.
+  serves sources. These referenced files join the private source inventory,
+  including when they sit below `mockupsDir`; edits and removals rebuild the
+  document without importing or executing those files.
 - A relative destination that names no file fails with
   `<location>: link target <destination> does not exist`.
 - An absolute `http:`, `https:`, or `mailto:` destination is kept unchanged.
   A fragment-only destination is validated against the document's own heading
-  ids.
+  ids. A link's query is retained for resources; discovered-document links
+  reject queries because logical catalogue links have no query field.
+
+Resource paths are decoded once before filesystem resolution and encoded per
+segment in HTML. Root-absolute paths, protocol-relative paths, backslashes,
+control characters, malformed encoding and unsupported URL schemes fail with
+`<location>: link target <destination> is not a portable relative path`.
+Repository escapes fail with `<location>: link target <destination> is outside
+the repository`. Other resource errors use `resource <destination> is outside
+the output`, `resource <destination> must be a regular file without symlink
+aliases`, or `resource <destination> collides with another generated resource
+at <route>`, each prefixed with `<location>: `. Document queries fail with
+`<location>: link target <destination> must not contain a query`.
+An image destination that names a discovered document renders as a text link
+using its alternative text; a non-served source renders only that text.
 
 The rendered document then passes the shared logical-link rewriting that
 screens and pages use, so served and exported documents navigate the shell
@@ -116,7 +159,11 @@ interface ManifestDocument extends ManifestEntryBase {
 the document references; `declaredDependencies` is empty and `relatedDocs` is
 empty. The public read model emits `CatalogueDocument` with `kind:
 "document"` and `colorSchemes` under the [catalogue contract](./mokly-catalogue.md).
-Details show the description, tags, and source path.
+Details show the description, tags, and source path. When another entry's
+`relatedDocs` repository path names a current document, projection emits
+`mock:<document path>` in `details.relatedDocs`. Other paths stay display labels;
+removed entries retain baseline repository labels. Public readers validate the
+logical reference against current documents. The viewer derives its URL.
 
 ## Changes
 
@@ -125,7 +172,10 @@ scheme, its resources, and its reviewable metadata are compared with the
 baseline under the [material rules](./mokly-changes.md), and a removed
 document shows its [previous version](./mokly-removed-previews.md). Documents
 and pages are the only kinds that the [move contract](./mokly-moves.md) pairs
-by similarity. A change to a referenced resource marks the document changed.
+by similarity. A change to a referenced resource marks the document changed. This includes
+linked attachments such as PDFs. Changes follows declared attachment links
+that remain in the normalized document, so paired ignored regions still apply.
+Removed previews retain attachments linked from the original historical HTML.
 
 ## Navigation
 

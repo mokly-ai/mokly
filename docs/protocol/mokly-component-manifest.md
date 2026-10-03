@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Builds emit manifest v8 with paths and folder records. The document kind is
-reserved; matched Markdown files are watched inputs pending document rendering.
+Builds emit manifest v8 with paths, folder records, and rendered Markdown
+documents. Copied document resources also remain private watched source inputs.
 
 These are the normative interfaces for the generated `mokly-manifest.json`.
 `Viewport` retains the [package contract](./mokly-package.md) and the named

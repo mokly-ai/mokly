@@ -1,6 +1,6 @@
 # Previous versions of removed entries
 
-These modules turn a removed page or screen into the version from the pinned
+These modules turn a removed page, Markdown document or screen into the version from the pinned
 Changes baseline, for the served shell, a static export and an embedded
 `@mokly/viewer` alike. They implement the
 [removed previews contract](../../../../docs/protocol/mokly-removed-previews.md).
@@ -13,9 +13,11 @@ address the catalogue never published.
 
 [`request.ts`](./request.ts) resolves that descriptor to one metadata address.
 Development uses the stable selected endpoint (`path=` for a screen or component
-variant, `page=` for a page); static delivery uses `comparisonUrl` for a screen
+variant, `page=` for a page or document); static delivery uses `comparisonUrl` for a screen
 and `previewMetadataPath(path)` for a page, confined to that comparison
-generation. Page documents use `snapshotDocumentPath("before", path)` from the generation root.
+generation. Pages use the light `snapshotDocumentPath`; Markdown documents use
+each historical scheme. `content.ts` derives these paths, and selection loads
+only the requested document scheme, with a light fallback.
 Screen documents use `snapshotViewPath("before", ...)` only for views whose
 review state is `removed`; review v5 carries no stored before/after paths.
 Before accepting either kind, the request recomputes the selected historical

@@ -2,6 +2,7 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   entryRoute,
+  documentRoute,
   isManifestComponentVariant,
   validateComponentViewRecord,
   generatedViews,
@@ -91,7 +92,11 @@ export class DocumentCompiler {
     private readonly graph: LoadedGraph,
     seams: DocumentValidationSeams = defaultValidationSeams,
   ) {
-    const registry = prepareRegistry(graph.definitions, runtime.config);
+    const registry = prepareRegistry(
+      graph.definitions,
+      runtime.config,
+      graph.documents,
+    );
     this.entries = registry.entries;
     this.compatibility = { byPath: registry.byPath, routeIndexes: new Map() };
     this.components = new Map(
@@ -102,6 +107,13 @@ export class DocumentCompiler {
       ),
     );
     for (const entry of runtime.manifest.entries) {
+      if (entry.kind === "document")
+        for (const colorScheme of entry.colorSchemes)
+          this.routes.set(documentRoute(entry.path, colorScheme), {
+            entryId: entry.path,
+            viewport: "desktop",
+            colorScheme,
+          });
       if (entry.kind === "page")
         this.routes.set(entryRoute(entry.path), {
           entryId: entry.path,

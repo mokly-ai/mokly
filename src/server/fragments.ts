@@ -7,6 +7,7 @@ import type { ManifestComponentVariant } from "@mokly/viewer";
 import {
   generatedViews,
   entryRoute,
+  documentRoute,
   isLogicalFragment,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
@@ -31,6 +32,21 @@ export async function requestedFragment(
   if (values.length === 0) return undefined;
   const fragment = values.length === 1 ? values[0] : undefined;
   if (!fragment || !isLogicalFragment(fragment)) return null;
+  if (entry?.kind === "document")
+    return (
+      await Promise.all(
+        entry.colorSchemes.map((scheme) =>
+          containsFragment(
+            documentRoute(entry.path, scheme),
+            fragment,
+            config,
+            documents,
+          ),
+        ),
+      )
+    ).every(Boolean)
+      ? fragment
+      : null;
   if (entry?.kind === "page")
     return (await containsFragment(
       entryRoute(entry.path),
