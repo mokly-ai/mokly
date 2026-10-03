@@ -31,8 +31,14 @@ export function assertSafeGeneratedTree(config: ResolvedConfig): void {
       return;
     }
     if (stats?.isDirectory()) {
-      for (const name of fs.readdirSync(candidate).sort())
-        walk(path.join(candidate, name));
+      let names: string[];
+      try {
+        names = fs.readdirSync(candidate);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+        throw error;
+      }
+      for (const name of names.sort()) walk(path.join(candidate, name));
     }
   }
 }

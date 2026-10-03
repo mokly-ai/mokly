@@ -6,12 +6,13 @@ import { entryRoute, documentRoute, generatedViews } from "@mokly/viewer/data";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { createCatalogueIndex } from "../registry/catalogue_index.js";
+import { MANIFEST_NAME } from "../registry/manifest.js";
 import { prepareRegistry } from "../registry/prepare.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
 import { consumerBundle } from "./consumer_bundle.js";
 import { loadConsumerGraph } from "./load_graph.js";
-import { validateGeneratedOutputPaths } from "./output_paths.js";
+import { captureOutputSnapshot } from "./output_snapshot.js";
 
 export async function prepareLiveRuntime(
   config: ResolvedConfig,
@@ -36,8 +37,9 @@ export async function prepareLiveRuntime(
       config.colorSchemes,
       registry.folders,
     );
-    validateGeneratedOutputPaths(
+    const outputSnapshot = await captureOutputSnapshot(
       [
+        MANIFEST_NAME,
         ...manifest.entries.flatMap((entry) =>
           entry.kind === "document"
             ? entry.colorSchemes.map((scheme) =>
@@ -52,6 +54,7 @@ export async function prepareLiveRuntime(
       config,
     );
     return {
+      outputSnapshot,
       bundle: consumerBundle(graph),
       config,
       generation: randomBytes(16).toString("hex"),

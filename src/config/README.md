@@ -27,6 +27,9 @@ trigger the appropriate rebuild without making generated output public source.
 lexical and physical confinement with Build, Serve, Review and export. Review and
 export destinations cannot overlap the directories holding matched inputs. Source
 protection is based on the resolved file set and complete graph inventory.
+Path projection retries a vanished ordinary ancestor at most five times.
+Dangling symlinks still fail. An internal manifest that disappears between an
+existence check and realpath is absent; lexical metadata denials still apply.
 `public_names.ts` owns the lexical public-file rules shared by export and copied
 Markdown resources. It has no filesystem reads or configuration state.
 

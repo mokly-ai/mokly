@@ -29,7 +29,11 @@ import { generatedByteLength, type GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
-import { validateGeneratedOutputPaths } from "./output_paths.js";
+import {
+  captureOutputSnapshot,
+  assertSnapshotRoutes,
+  type OutputSnapshot,
+} from "./output_snapshot.js";
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
@@ -48,14 +52,24 @@ export interface Compilation {
 /** Compile all expected bytes without mutating consumer output. */
 export async function compileCatalogue(
   config: ResolvedConfig,
-  accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
+  accepted?: {
+    graph: LoadedGraph;
+    checkpoint: () => Promise<void>;
+    outputSnapshot: OutputSnapshot;
+  },
+  signal?: AbortSignal,
 ): Promise<Compilation> {
-  return timeAsync("compile", () => compileMeasured(config, accepted));
+  return timeAsync("compile", () => compileMeasured(config, accepted, signal));
 }
 
 async function compileMeasured(
   config: ResolvedConfig,
-  accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
+  accepted?: {
+    graph: LoadedGraph;
+    checkpoint: () => Promise<void>;
+    outputSnapshot: OutputSnapshot;
+  },
+  signal?: AbortSignal,
 ): Promise<Compilation> {
   const graph = accepted?.graph ?? (await loadConsumerGraph(config));
   config = {
@@ -191,18 +205,20 @@ async function compileMeasured(
   timeSync("manifest.serialize", () =>
     outputs.set(MANIFEST_NAME, serializeManifest(manifest)),
   );
-  timeSync("html.links-and-resources", () =>
-    validateHtmlLinks(outputs, config, {
-      pending,
-      parsed: new Map(),
-      onDemand: false,
-    }),
-  );
   const compilationOutputs = new Map<string, GeneratedFile>(outputs);
   for (const [route, content] of graph.styleOutputs)
     compilationOutputs.set(route, content);
-  timeSync("output.paths", () =>
-    validateGeneratedOutputPaths(compilationOutputs.keys(), config),
+  const outputSnapshot =
+    accepted?.outputSnapshot ??
+    (await captureOutputSnapshot(compilationOutputs.keys(), config, signal));
+  assertSnapshotRoutes(outputSnapshot, compilationOutputs.keys());
+  timeSync("html.links-and-resources", () =>
+    validateHtmlLinks(outputs, config, {
+      pending,
+      pendingOrphans: new Set(outputSnapshot.orphanRoutes),
+      parsed: new Map(),
+      onDemand: false,
+    }),
   );
   const compilation = {
     manifest,
@@ -215,7 +231,9 @@ async function compileMeasured(
       ]),
     ),
   };
-  timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
+  timeSync("runtime.retain", () =>
+    rememberRuntime(compilation, graph, config, outputSnapshot),
+  );
   timingCounts("output", () => ({
     files: compilationOutputs.size,
     views: fragmentViews.size,

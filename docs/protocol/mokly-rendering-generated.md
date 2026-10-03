@@ -125,6 +125,21 @@ superseding a Serve generation, or closing Serve stops a pending wait without
 changing the holder's lock. `.mokly-cache/` is package-private, so the lock
 never reaches watches, discovery or Changes evidence.
 
+Compile-time collision, ownership and target-realpath checks use a short hold of
+this same lock. Build captures the snapshot after rendering; live Serve captures
+it while accepting the metadata generation. The snapshot contains validated
+output routes and owned orphan routes, never rendered bytes. Demand, Props and
+background workers reuse that accepted snapshot instead of caching a tree read
+mid-transaction. Writers still revalidate the live tree under their own lock.
+No consumer render, import or compatibility callback runs under the snapshot
+lock. Export cancellation also cancels an initial or recheck snapshot wait.
+
+Other read-only path probes can overlap a writer. A disappearing ordinary
+ancestor restarts path projection at most five times; a dangling symlink and
+other filesystem errors still fail. A vanished directory is absent from an
+output walk, and an internal manifest that disappears during alias comparison
+is absent from that comparison; lexical metadata protection remains in force.
+
 ## Imported CSS Output
 
 Imported CSS adds deterministic routes under `mokly-generated/`:

@@ -17,7 +17,6 @@ import {
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
-import type { ResolvedConfig } from "../config/types.js";
 import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
@@ -35,12 +34,11 @@ import {
   moveTargetsForGeneration,
   type AcceptedMoveTargets,
 } from "./move_targets.js";
-import { nonGeneratedOutputFiles } from "./output_collisions.js";
-import { validateGeneratedOutputPaths } from "./output_paths.js";
 import {
-  pendingGeneratedOrphanRoutes,
-  validateGeneratedOwnershipHeaders,
-} from "./ownership.js";
+  assertSnapshotRoutes,
+  type OutputSnapshot,
+} from "./output_snapshot.js";
+import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 
@@ -60,15 +58,12 @@ interface DocumentTarget extends ArtifactView {
 
 /** Pure/countable boundaries used once per accepted document generation. */
 export interface DocumentValidationSeams {
-  readonly orphanRoutes: (
-    config: ResolvedConfig,
-    expected: Iterable<string>,
-  ) => readonly string[];
+  readonly orphanRoutes: (snapshot: OutputSnapshot) => readonly string[];
   readonly parseCss: (text: string) => readonly string[];
 }
 
 const defaultValidationSeams: DocumentValidationSeams = {
-  orphanRoutes: pendingGeneratedOrphanRoutes,
+  orphanRoutes: (snapshot) => snapshot.orphanRoutes,
   parseCss: extractCssReferences,
 };
 
@@ -85,7 +80,6 @@ export class DocumentCompiler {
       ),
   );
   private readonly links: HtmlValidationContext;
-  private collisionFiles?: readonly string[];
   private readonly pending: PendingGeneratedFiles;
   private activeRead: ((route: string) => PreparedDocument) | undefined;
 
@@ -135,11 +129,10 @@ export class DocumentCompiler {
       (route) => (this.activeRead?.(route) ?? this.prepare(route)).html,
       seams.parseCss,
     );
+    assertSnapshotRoutes(runtime.outputSnapshot, this.pending.routes());
     this.links = {
       pending: this.pending,
-      pendingOrphans: new Set(
-        seams.orphanRoutes(runtime.config, this.pending.routes()),
-      ),
+      pendingOrphans: new Set(seams.orphanRoutes(runtime.outputSnapshot)),
       parsed: new Map(),
       onDemand: true,
     };
@@ -208,8 +201,6 @@ export class DocumentCompiler {
         `unknown generated document: ${route}`,
       );
     const config = this.runtime.config;
-    this.collisionFiles ??= nonGeneratedOutputFiles(config);
-    validateGeneratedOutputPaths([route], config, this.collisionFiles);
     const views = new Map<string, ArtifactView>();
     const componentViews = new Map<string, ComponentViewRecord>();
     const outputs = renderFragments(

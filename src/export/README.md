@@ -5,6 +5,11 @@ hosting. Consumers use `mokly export --out <path>`, not a JavaScript deep import
 The separate `mokly publish` command uploads through the
 [public upload boundary](../publish/README.md); export itself performs no upload.
 
+Initial and final input-check compilation capture output-validation evidence
+under a short writer-lock hold. Their pending waits obey export cancellation.
+Rendering stays outside the lock; capture and installation retain their existing
+separate writer-lock boundaries.
+
 `run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
 independent `BaselineReader`, runs the normal build, captures public inputs,
 constructs one typed authored-plus-generated `ChangeEvidence` shared by Review

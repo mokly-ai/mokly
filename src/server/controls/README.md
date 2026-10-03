@@ -27,6 +27,10 @@ Worker failures retain their diagnostic as a server-only detail, logged to stder
 by the HTTP boundary. Responses keep the generic preview failure message and
 never include resource paths, exclusion globs, or other diagnostic details.
 
+Private runtime IPC includes the accepted output route/orphan snapshot. Props
+uses the parent-validated snapshot and performs no independent output-tree scan;
+rendering never holds the repository writer lock.
+
 `transient.ts` uses Build's stylesheet selection, renderer, compatibility/link
 transformation, ownership, range, prop, per-view metadata and resource checks.
 It retains one `DocumentCompiler` per generation instead of cloning and validating

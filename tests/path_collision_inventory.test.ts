@@ -21,17 +21,23 @@ test("demand output collision inventory is scanned once and renewed for each gen
     generatedHeader("specs/one.mockup.ts") + "<html><body>Old</body></html>",
   );
   const config = await fixture.config();
-  const runtime = await prepareLiveRuntime(config);
   const readdir = fs.readdirSync;
   let scans = 0;
   t.mock.method(fs, "readdirSync", (...args: unknown[]) => {
     if (args[0] === config.mockupsDir) scans++;
     return Reflect.apply(readdir, fs, args);
   });
+  const runtime = await prepareLiveRuntime(config);
+  const captured = scans;
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   compiler.render("one/index.html");
   const initial = scans;
   assert.ok(initial > 0);
+  assert.equal(
+    initial,
+    captured,
+    "demand rendering cannot scan a half-written tree",
+  );
   compiler.render("two/index.html");
   assert.equal(
     scans,

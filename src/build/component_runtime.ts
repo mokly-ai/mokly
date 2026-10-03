@@ -15,8 +15,10 @@ import {
 } from "./consumer_bundle.js";
 import type { GeneratedFile } from "./generated_file.js";
 import type { LoadedGraph } from "./load_graph.js";
+import type { OutputSnapshot } from "./output_snapshot.js";
 
 export interface ComponentRuntime {
+  outputSnapshot: OutputSnapshot;
   bundle: ConsumerBundle;
   config: ResolvedConfig;
   generation: string;
@@ -31,8 +33,10 @@ export function rememberRuntime(
   compilation: Compilation,
   graph: LoadedGraph,
   config: ResolvedConfig,
+  outputSnapshot: OutputSnapshot,
 ): void {
   runtimes.set(compilation, {
+    outputSnapshot,
     bundle: consumerBundle(graph),
     config,
     generation: randomBytes(16).toString("hex"),

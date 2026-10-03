@@ -7,7 +7,6 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
 import { extractCssReferences } from "../dist/css_references.js";
 import { startCatalogueServer } from "../dist/server/http.js";
@@ -20,16 +19,16 @@ import {
 } from "./helpers/fixture.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";
 
-test("multiple on-demand views scan orphans and parse CSS only once per generation", async (t) => {
+test("multiple on-demand views adopt retained orphans and parse CSS only once per generation", async (t) => {
   const fixture = await styleFixture(".entry{color:red}");
   t.after(() => removeFixture(fixture));
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   let orphanScans = 0;
   let cssParses = 0;
   const seams = {
-    orphanRoutes: (config, expected) => {
+    orphanRoutes: (snapshot) => {
       orphanScans += 1;
-      return pendingGeneratedOrphanRoutes(config, expected);
+      return snapshot.orphanRoutes;
     },
     parseCss: (text) => {
       cssParses += 1;

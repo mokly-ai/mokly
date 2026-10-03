@@ -193,7 +193,8 @@ The current maintenance choices are:
   13 development-tree findings from GHSA-vfj7-8cjw-p6xm unchanged; it adds no
   advisory. npm changed its downgrade suggestions to `fixAvailable: false`
   for ten existing records; the affected versions, paths and advisory are unchanged.
-  The live audit remains mandatory and has no exemption.
+  The live audit remains mandatory. Marked adds no advisory; the only exception
+  is the reviewed Braces record above.
 
 ## Required Evidence
 

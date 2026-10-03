@@ -231,6 +231,13 @@ steps and memberships. `logicalRoutes` supplied to a transformer is keyed by
 complete entry path. Fragments, ownership markers, control metadata and all
 referenced HTML/CSS/resources are validated again after transformation.
 
+`output_snapshot.ts` validates output routes, ownership and realpaths under a
+short writer-lock hold. Build captures it after rendering; live Serve captures
+it during generation preparation. The retained private runtime supplies this
+proof to demand, Props and background workers, so they never scan partial output
+or hold a writer lock while running consumer code. Each real write still checks
+the current tree under its own lock. Export snapshot waits accept cancellation.
+
 `output_collisions.ts` checks the portable file namespace, including case-folded
 public-file versus generated-directory collisions. Proven generated orphans do
 not block moves. Demand compilation caches this inventory within its generation.

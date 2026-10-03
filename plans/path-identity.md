@@ -1242,6 +1242,50 @@ Merge review:
 The orchestrator owns the later viewer merge and length split. The complete
 implementation review remains the final item in Milestone 8.
 
+## Milestone 6H: Main integration review fixes
+
+Close the remaining compile/read race and integration gaps. Capture stable
+output-validation evidence without holding the writer lock while rendering.
+Write failing regressions first and preserve the native safety checks.
+
+Status: Complete. Package (six consumer scenarios), unit (4,059), browser (746)
+and hydration (229) pass. Audit and the remaining repository checks pass.
+Only the same 26 source-length files retain their approved disposition.
+
+- [x] Capture compile and Serve output-validation snapshots under the writer
+      lock; handle vanished paths and manifest reads without hiding unsafe
+      symlinks. Prove case-only and ordinary directory moves with two processes (1).
+- [x] Clarify that marked adds no advisory and the reviewed Braces record is
+      the live audit's only exception (2).
+- [x] Run path transaction regressions on native macOS/Windows CI and pin
+      the workflow coverage in its test (3).
+- [x] Assert the lock inside output-tree mkdir/rmdir calls during pruning,
+      installation, rollback and final reserved-directory cleanup (4).
+- [x] Retain validated output routes and orphan evidence in private runtime IPC;
+      keep demand/background workers free of filesystem snapshot reads and locks.
+- [x] Preserve export cancellation while its initial and recheck compilations
+      wait for an output snapshot; keep the Serve close test focused on write waits.
+- [x] Use directory-entry spelling for case-only assertions and native path
+      separators for rollback injection in the newly enabled native tests.
+- [x] Update the affected contracts and READMEs; keep files within their limits.
+- [x] Run the unmodified aggregate gate and all remaining suites/commands under
+      the existing 26-file length disposition; inspect deletions and staged output.
+  - [x] Package checks pass all six consumer scenarios and validate 452 example files.
+  - [x] Unit: 4,059 passed, with zero failures, skips or cancellations.
+  - [x] Browser: 746 passed. All three known flaky cases and the frame-usage
+        race regression pass on the first run.
+  - [x] Hydration: 229 passed, with zero failures, skips or cancellations.
+  - [x] Repository audit, formatting, lint, four ratchets, Rust fmt/Clippy,
+        15 Rust tests and the 9-file Rust length audit pass. Source length
+        retains exactly the 26 known files; no override or exemption changed.
+  - [x] Focused regressions pass: 42 lifecycle/snapshot/resource checks, 102
+        boundary/config/privacy checks and 22 final targeted checks. Protocol and
+        guide checks pass all 32 tests. Changed-file Prettier passes all 36 files.
+- [x] Commit and fast-forward push the feature branch.
+
+The orchestrator owns the next viewer merge. The complete implementation review
+remains the final item in Milestone 8.
+
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui

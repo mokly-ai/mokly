@@ -100,7 +100,7 @@ async function generateExport(
       });
     const compilation = await withPreInstallationCancellation(
       options.signal,
-      () => compileCatalogue(config),
+      () => compileCatalogue(config, undefined, options.signal),
     );
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);

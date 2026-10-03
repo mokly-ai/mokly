@@ -266,6 +266,10 @@ and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.
 at startup. `config/root_membership.ts` owns file exclusions used by watch discovery;
 protection still covers excluded matches.
 
+Accepted runtimes carry the output route/orphan snapshot captured under the
+writer lock during generation preparation. Demand and background workers reuse
+that private proof instead of taking a filesystem snapshot during a write.
+
 Markdown documents use the page route and demand compiler, with one route per
 scheme. Their copied assets come from the accepted in-memory generation even
 before background writes complete. Source and resource edits rebuild together.
