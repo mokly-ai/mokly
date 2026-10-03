@@ -7,6 +7,10 @@ starting commit is `96ddc06c`; the task-start host reports Intel Xeon @ 2.90GHz,
 2899.930 MHz. No benchmark measurement or default-size fixture regeneration
 occurs here; the small generated fixtures are test inputs.
 
+The [supervisor-fix checkpoint](./style-only-route-supervisor-checkpoint.md)
+records the follow-up to `b76a2a90`: resource/source fallbacks, the approved
+ignore-state decision, isolated guard mutations and production path counts.
+
 ## Implementation
 
 `component_style_route.ts` runs after the unchanged quick check and before full
@@ -48,10 +52,11 @@ conservative source/span fallback, preserving full evidence without adding anoth
 discovery policy. The owning contract clarifies condition 6 and adds this precise
 case to its sole test list. Regression-first evidence is retained in
 `.context/delegation/scalable/m8-source-proof-before.log`; the fixed test covers
-both modes. The existing identical-text shortcut's behavior is unchanged.
-After the marker guard below, a second case places ignore markers in style tag
-attributes, outside eligible content. It independently proves seed coverage
-rather than relying on the new content-prefix fallback.
+both modes. The initial checkpoint left the identical-text shortcut unchanged.
+The supervisor fixes now reject dropped style references there too. A second
+case puts ignore markers in style tag attributes; the later shared paired-ignore
+fallback subsumes it. Stage-level tests and mutations isolate the guards rather
+than treating this overlapping end-to-end case as an independent seed proof.
 
 ## Supervisor-approved Marker Gap Fix
 

@@ -21,6 +21,7 @@ import type {
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import type { PageAnalysisPair } from "./page_pair.js";
 import { identicalPageQuickCheck } from "./page_quick_check.js";
+import { pairedIgnoreTouchesStyles } from "./style_source_safety.js";
 
 export interface UnchangedComponentAttempt {
   comparison?: ComparedComponentView;
@@ -51,6 +52,18 @@ export async function compareUnchangedComponentView(
     pages?.normalization ?? normalizeReviewPair(base, head, after.path);
   if (retained.base !== retained.head) return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
+  if (pages) {
+    const paired = pages.pairedIgnoreIds;
+    for (const side of [pages.beforeAnalysis, pages.afterAnalysis])
+      if (
+        pairedIgnoreTouchesStyles(
+          side.inlineStyles(paired),
+          side.ignored(paired),
+        ) ||
+        side.hasDroppedStyleReferences(paired)
+      )
+        return {};
+  }
 
   const strippedBase = stripMarkers(
     base,

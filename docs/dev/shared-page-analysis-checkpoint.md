@@ -3,7 +3,9 @@
 Milestone 7 of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
 implements the [page-analysis contract](../protocol/mokly-page-analysis.md)
 through its identical-text quick check. Fingerprints and the style-only route
-remain pending. The [approved same-host measurements](./shared-page-analysis-measurements.md)
+were pending at this checkpoint; M8 is now covered by the
+[style-route checkpoint](./style-only-route-checkpoint.md).
+The [approved same-host measurements](./shared-page-analysis-measurements.md)
 record all M7/control samples and retained work, not performance acceptance.
 
 ## Delivered Boundaries
@@ -21,7 +23,9 @@ record all M7/control samples and retained work, not performance acceptance.
 - Same path, original bytes and canonical topology use only head analysis.
   Committed proof traverses the head reader; derived proof traverses both
   independently and compares membership/bytes. No projection, material hashing
-  or inline analysis is needed. Fall-through shares analyses and discovery.
+  or inline analysis runs on success. M8 adds fallback when source-span removal
+  drops an eligible-style reference that canonical rules could retain.
+  Fall-through shares analyses and discovery.
 - The scope flag comes from either **input** manifest registering components,
   before identity-kind reconciliation. Component-free shared loops and the
   separate `classifyChangedContent` page path retain their matching/cache policy.
@@ -58,6 +62,13 @@ provenance/context differences instead of allowing unrelated mismatches.
 | `page_analysis_context_receivers.test.ts`, table and SVG caller-slot receivers                                     | No Home entry reason: body-context copies lose table `td` style and SVG `image href` references | Home receives dependency (committed) or material (derived) evidence from the original receiving context. Actual resource evidence already makes the M6 per-view state `changed`; the difference is the entry reason. |
 | `page_analysis_adopted_context.test.ts`, ignored root `.page` before visible `.visible`                            | Unchanged: removing the ignored tag loses `.page`                                               | Changed: the browser's adopted `.page` stays on the original root. References supplied by the ignored tag still drop by span.                                                                                        |
 | `page_analysis_adopted_context.test.ts`, ignored root `.hidden` shadows visible `.visible`                         | Changed: removing `.hidden` makes `.visible` adoptable                                          | Unchanged: the original root retains the first `.hidden` class, so `.visible` does not match. Reversed source order retains visible-first precedence on both engines.                                                |
+
+M8's supervisor fixes tighten that raw-reference proof: an eligible-style
+reference record dropped by paired-ignore or removed-span intersection requires
+full fallback, because canonical rules can retain its URL. Non-identical quick
+checks also fall through when paired regions or their markers intersect an
+eligible style. Successful quick checks still do no inline analysis; the
+complete path remains authoritative for state and ignore evidence.
 
 ## Parse And Reader Bounds
 

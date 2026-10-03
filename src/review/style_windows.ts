@@ -4,6 +4,10 @@ import type { SourceSpan } from "../components/material_recipe.js";
 import type { InlineStyleSpan } from "./css/inline_styles.js";
 import { reviewIgnoreRegions, reviewMaterialSpans } from "./ignore.js";
 import type { PageAnalysisPair } from "./page_pair.js";
+import {
+  pairedIgnoreTouchesStyles,
+  styleTagsContainReviewMarker,
+} from "./style_source_safety.js";
 
 export interface StyleWindows {
   before: SourceSpan;
@@ -48,7 +52,8 @@ export function styleWindowSpans(
   const after = head.inlineStyles(paired);
   const ignored = head.ignored(paired);
   if (
-    after.some((span) => ignored.some((region) => cutsIgnorePair(span, region)))
+    pairedIgnoreTouchesStyles(after, ignored) ||
+    after.some(styleTagsContainReviewMarker)
   )
     return;
   const edited = after.find(
@@ -62,49 +67,43 @@ export function styleWindowSpans(
   const delta = windows.before.end - windows.after.end;
   const contentStart = edited.contentStart!;
   const contentEnd = edited.contentEnd! + delta;
-  if (windows.before.start < contentStart || windows.before.end > contentEnd)
-    return;
-  if (
-    pages.baseText.slice(edited.start, contentStart) !==
-      pages.headText.slice(edited.start, contentStart) ||
-    pages.baseText.slice(contentEnd, edited.end + delta) !==
-      pages.headText.slice(edited.contentEnd, edited.end)
-  )
-    return;
   const baseRegions = reviewIgnoreRegions(
     pages.baseText,
     pages.before.path,
   ).filter(({ id }) => paired.includes(id));
   for (const [window, spans] of [
-    [windows.before, [...baseRegions, ...reviewMaterialSpans(pages.baseText)]],
-    [windows.after, [...ignored, ...reviewMaterialSpans(pages.headText)]],
+    [windows.before, reviewMaterialSpans(pages.baseText)],
+    [windows.after, reviewMaterialSpans(pages.headText)],
   ] as const)
     if (spans.some((span) => intersects(window, span))) return;
-  return {
-    after,
-    before: after.map((span) => {
-      if (span.end <= edited.start) return span;
-      if (span === edited)
-        return {
-          ...span,
-          end: span.end + delta,
-          contentEnd,
-          source: pages.baseText.slice(span.start, span.end + delta),
-          text: pages.baseText.slice(contentStart, contentEnd),
-        };
+  const before = after.map((span) => {
+    if (span.end <= edited.start) return span;
+    if (span === edited)
       return {
         ...span,
-        start: span.start + delta,
         end: span.end + delta,
-        ...(span.contentStart === undefined
-          ? {}
-          : { contentStart: span.contentStart + delta }),
-        ...(span.contentEnd === undefined
-          ? {}
-          : { contentEnd: span.contentEnd + delta }),
+        contentEnd,
+        source: pages.baseText.slice(span.start, span.end + delta),
+        text: pages.baseText.slice(contentStart, contentEnd),
       };
-    }),
-  };
+    return {
+      ...span,
+      start: span.start + delta,
+      end: span.end + delta,
+      ...(span.contentStart === undefined
+        ? {}
+        : { contentStart: span.contentStart + delta }),
+      ...(span.contentEnd === undefined
+        ? {}
+        : { contentEnd: span.contentEnd + delta }),
+    };
+  });
+  if (
+    pairedIgnoreTouchesStyles(before, baseRegions) ||
+    before.some(styleTagsContainReviewMarker)
+  )
+    return;
+  return { before, after };
 }
 
 /** Condition 4 includes empty windows and the code unit exactly eight places before. */
@@ -116,11 +115,4 @@ function intersects(window: SourceSpan, span: SourceSpan): boolean {
   return window.start === window.end
     ? span.start < window.start && window.start < span.end
     : window.start < span.end && span.start < window.end;
-}
-
-/** The start offset follows its marker; the end offset precedes its marker. */
-function cutsIgnorePair(span: SourceSpan, region: SourceSpan): boolean {
-  const startRemoved = span.start < region.start && region.start <= span.end;
-  const endRemoved = span.start <= region.end && region.end < span.end;
-  return startRemoved !== endRemoved;
 }

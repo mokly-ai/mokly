@@ -36,12 +36,11 @@ Every condition must hold, otherwise use the full comparison:
    base window is in the same element, with unchanged start/end tags and attrs.
    The windows are disjoint from paired ignore regions and material-signal
    spans; validation and the existing one-sided-material rule still apply.
-   No eligible outer span may remove just one marker of a paired ignore
-   region: that would leave a lone marker for full material validation.
-   This includes markers in unchanged tag attributes, outside style content;
-   it is an uncertain source/span proof and must fall through.
-   A start marker ending exactly at the outer span's end is removed; an end
-   marker starting there is retained.
+   Fall back when any paired ignore region, including either of its markers,
+   intersects any eligible unowned style's outer span on either side. Also
+   fall back for any `<!--mokly-review-` substring in an eligible style's
+   start-tag or end-tag text. These checks include unchanged elements and
+   preserve full material normalization and validation after style removal.
 4. Neither window contains `<`, nor do the up-to-eight code units immediately
    before either window. Check actual code units, not serialized selectors or
    a decoded string. This rules out a partial raw-text end-tag transition at
@@ -61,16 +60,21 @@ Every condition must hold, otherwise use the full comparison:
    any eligible element's original content on either side, or in any composed
    canonical actual/projected material on either side. Check composed text
    because serialization can produce the spelling from a CSS string escape
-   such as `\3c !--mokly-component:`. This supervisor-approved M8 contract-gap
-   fix covers component, ignore, material and future inline-fingerprint markers
-   with one prefix. It preserves the full path's normalization and validation;
-   it changes no Decision or full-path result. Ordinary `mokly` text is allowed.
-6. The quick check's resource proof passes using the head analysis's shared
-   raw reference seeds. In committed mode traverse only the **head reader's
+   such as `\3c !--mokly-component:`. The prefix covers component, ignore,
+   material and inline-fingerprint markers, preserving full-path normalization
+   and validation. Ordinary `mokly` text is allowed.
+6. The edited element's raw reference values from `extractCssReferences`
+   must be identical on both sides, including their order and multiplicity.
+   Stored rule references omit selectors; the raw detector can find `url()`
+   inside selector arguments, so reference-free rule deltas alone do not prove
+   equal raw seeds. The quick check's resource proof then passes using the
+   head analysis's shared raw reference seeds. In committed mode traverse only the **head reader's
    closure** and require no changed reachable Git path. In derived mode
    traverse both readers independently, reject changed reachable paths and
    require equal closure membership and bytes. These are transitive checks,
    not seed-path checks; a union cannot replace the derived comparisons.
+   A missing base seed is a failed proof and takes fallback, never a required
+   read error from the optimization.
    Prove those shared seeds cover the stored references of the canonical
    rules as well. A source record touching a paired ignore span can be dropped
    while inline canonicalization retains its rule reference. Missing seed
@@ -105,8 +109,10 @@ therefore see identical trees. Attribute both sides' diffed rules using the
 head original tree and original ranges, with the ordinary closed keep list
 and input-owner/root resolution. Unresolved selectors remain conservative.
 
-All changed rules lack references, while unchanged reference-bearing rules
-have identical values. The shared seed proof is conservative over potential
+All changed rules lack stored references, while unchanged reference-bearing
+rules have identical values. Equal raw references in the edited element also
+cover selector-argument URLs that stored rule references omit. Missing base
+seeds fail the proof before required base traversal. The shared seed proof is conservative over potential
 actual/projected reachability and rules out resource evidence on either side.
 Equal topology and identical implementation markup leave no non-inline
 implementation difference to discover. No projection, full HTML material,
@@ -174,10 +180,16 @@ both `useStylePath` and `useFastPath`. This section owns M8's test obligations:
   the reserved prefix must still route. Reuse prepared runs and safe diff
   attribution on fallback; unchanged reference pairs retain two-tree matching
   when their child-content selectors can distinguish the two texts.
-  Also preserve full-path validation failure when an unchanged eligible style's
-  tag contains one ignore boundary and its paired boundary lies outside the
-  element; prove both original sides reach the full path without counting a
-  failed view as completed.
+  Also preserve full-path validation failure when an eligible style's tags
+  contain one or both ignore boundaries and removal leaves a lone boundary or
+  a material signal without its region. Cover paired regions inside content,
+  across styles and in tag attributes, including an unchanged eligible element.
+  Prove both original sides reach the full path without counting a failed view
+  as completed. Test the base-only raw-end-tag and plain `<` cases, attribute
+  edits beyond the eight-code-unit guard, and each original/composed prefix
+  guard independently. Selector failures `&`, `:is()` and `:where()` retain
+  unresolved evidence on the route. Assert exact production path counts for
+  the cumulative fixture and a mixed routed/fallback batch.
 - Run seeded single-window edits on real React Native Web sheets, including
   marker lookalikes. Assert each view's path and exact route-disabled result
   equality whenever the route is taken; print the seed on failure.

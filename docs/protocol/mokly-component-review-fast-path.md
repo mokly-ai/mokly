@@ -38,7 +38,11 @@ Apply these steps in order:
 1. Retain v7 component markers on both sides and apply paired manual-ignore
    normalization. If documents differ outside paired ignored regions, take the
    fall-through. Marker-stripped equality is insufficient because marker
-   positions participate in ownership projection.
+   positions participate in ownership projection. For non-identical sources,
+   also take fall-through when any paired ignore region, including either
+   marker, intersects any eligible unowned style's outer span on either side.
+   Inline canonicalization may remove that region; the complete path decides
+   state and ignore evidence from its actual materials with its existing rules.
 2. Compare usage records canonically. Neither side having usage is eligible;
    exactly one side having it takes fall-through. When both exist, every
    field must match except `props` and `propsKey` on entry-owned instances.
@@ -116,5 +120,9 @@ ordinary addition or removal.
 
 Inline references require conservative proof even when a complete analysis
 would omit them as owned or excluded. A potentially changed reference takes
-fall-through. No fast-path view, including a reference-bearing one, runs inline
+fall-through. A resource record inside an eligible unowned style's outer span
+that touches a paired-ignore or removed span also requires fall-through:
+canonical rules can retain references dropped by raw source provenance.
+This check uses source records and spans, without inline analysis. A missing
+base seed in the derived shared-seed proof is a failed proof, not an error. No fast-path view, including a reference-bearing one, runs inline
 analysis or emits its evidence.

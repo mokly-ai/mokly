@@ -93,6 +93,7 @@ for (const mode of ["committed", "derived"] as const)
           "complete",
         );
       });
+    // Bypass the earlier quick check to exercise the style route's span guards.
     const ignore = (text: string) =>
       `<!--mokly-review-ignore:start:clock-->${text}<!--mokly-review-ignore:end:clock-->`;
     for (const [name, left, right] of [

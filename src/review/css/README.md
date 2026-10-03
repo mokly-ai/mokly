@@ -51,6 +51,10 @@ The style route rejects `<!--mokly-` in original content or composed canonical
 material, including serialization-produced spellings. On fall-through, its
 view-local preparation reuses proved diff attributions while unchanged reference
 pairs still use both original trees, preserving their text-dependent matching.
+Raw reference values in the edited element must also agree across sides: unlike
+stored rule references, the raw detector includes selector-argument URLs.
+Paired-ignore intersections and review markers in eligible tags take full
+fallback before analysis; canonical material remains the state/ignore oracle.
 
 `rule_identity.ts` stores address/identity, rank, canonical text and references
 once in a weak rule association; the custom-property flag stays on the record.

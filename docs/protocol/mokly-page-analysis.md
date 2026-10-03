@@ -2,15 +2,13 @@
 
 ## Delivery Status
 
-Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
-implemented in [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis):
-analysis, derived references, original-page matching and the quick
-check; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
-delivers fingerprints. [M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
-implements parse-site instrumentation; counters are owned by
-[timings](./mokly-timings.md#component-analysis-counts).
-M7 [measurements](../dev/shared-page-analysis-measurements.md) record delivered work.
-Its provenance, ignore-subject and material fixes clarify documentation gaps, not behavior.
+[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
+implements analysis, derived references, original matching and the quick check;
+[M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
+delivers fingerprints. [Timings](./mokly-timings.md#component-analysis-counts)
+owns parse counters; [M7 measurements](../dev/shared-page-analysis-measurements.md)
+record delivered work. Provenance, ignore-subject and material clarifications
+close documentation gaps without changing their policies.
 
 ## Scope And Lifetime
 
@@ -52,11 +50,10 @@ with the existing document diagnostic, never with an optimization fallback.
 
 ## Contents And Ignore Pairing
 
-The analysis supplies validated instance/slot ranges and owner lookup,
-eligible unowned style outer/content spans under
-[inline scope](./mokly-inline-styles.md#scope), the element tree, reference
-records, and validated ignore regions/material signals. Source-less implied
-elements remain matcher context but cannot acquire a source-range owner.
+The analysis supplies validated ranges/owners, eligible unowned style
+outer/content spans under [inline scope](./mokly-inline-styles.md#scope),
+the tree, reference records and validated ignore regions/material signals.
+Source-less implied elements remain context without a source-range owner.
 
 Scan the two texts with the existing flat marker validator before deciding
 paired ids: current start/end ignore comments must be well formed, unique,
@@ -66,11 +63,14 @@ an id having a material signal on only one side. Such one-sided adoption, or
 an id present on only one side, remains ordinary material. Preserve contract
 tokens for different one-sided id sets and existing material-key normalization.
 
-Record a region's content from the end of its start marker through the start
-of its end marker. `pairedIgnoreIds` are sorted; `ignoredIds` are only paired
-ids whose content differs, sorted, as in the delivered normalizer. Selection
-and normalization use these same spans/ids, not a second marker parser on
-already inserted ignore tokens.
+Original flat spans own region validation, pairing and content recording.
+Record content from the end of the start marker through the start of the end
+marker. Original pair normalization records sorted `pairedIgnoreIds` and
+sorted differing paired ids. View state and emitted `ignoredIds` follow the
+actual-material rules in [inline styles](./mokly-inline-styles.md#membership-and-states)
+and [Changes](./mokly-changes.md): canonicalization can remove a region.
+This does not give original ignore evidence precedence over actual materials.
+Selection uses the original spans/paired ids, never offsets in inserted tokens.
 Cache the original pair's normalization once for retained/matching material
 and paired ids. Boundary enclosure uses flat regions exclusively, even when
 one marker is a DOM comment and the other is inside raw text.
@@ -170,39 +170,39 @@ original-context matching outcomes change; differentials assert actual-tree resu
 
 ## Identical-text Quick Check
 
-The [unchanged decision](./mokly-component-review-fast-path.md) owns decision
-ordering. First test same path, exact original-text equality, and canonical
-usage-topology equality (which still allows entry-owned input changes).
-Validate current ignore syntax and required ranges through the head analysis;
-use it for both sides' range/style/reference questions, without projection,
-rewritten materials, hashing, inline rule analysis or implementation comparison.
+The [unchanged decision](./mokly-component-review-fast-path.md) first tests same
+path, exact original-text equality and canonical usage-topology equality,
+allowing entry-owned input changes. Validate ignores/ranges through the head
+analysis and share it for both sides, without projection, rewritten materials,
+hashing, inline analysis or implementation comparison.
 
 Its discovery seeds conservatively include original records **and** potential
 caller-slot-copy records. Both sides use the same raw seeds and route. Under
 the [resource proof](./mokly-component-review-fast-path.md#resource-and-one-sided-rules),
 committed mode traverses only the head reader's closure and rejects a changed
 Git path in it; derived mode traverses both readers independently and requires
-equal closure membership/bytes as well. Resource proof failure falls through
-with the prepared analysis and discovery. A non-identical fast-path attempt's
-unattributed projection is not a complete inline-analysis result: fall-through
-builds the attributed materials from the same original analyses. Equal original bytes need no canonical CSS parse
-to settle content.
+equal closure membership/bytes. Failure reuses analysis/discovery on fall-through.
+A non-identical attempt's unattributed projection is not a complete inline result:
+fall-through builds attributed materials from the same original analyses.
 On success state is `unchanged`, `ignoredIds` is empty, `material`/inline/
 resource evidence and owned sets are absent/empty. Preserve usage `inputs`
 and `structure` signals as reasons; metadata/dependency reasons outside the
 per-view decision remain independent.
 
-For non-identical sources keep the delivered marker-retaining/topology,
-actual/projected equality and resource proof, using analyses and derived
-references rather than parsing materials.
-Only ownership text edits require projection/projected-resource proof; without
-them actual seeds come directly from the analyses. The projected exclusion
-predicate is stable for the view, so equal discovery identities on fall-through
-reuse the quick attempt's closure rather than traversing it again.
+Non-identical sources retain marker/topology, actual/projected equality and
+resource proofs using analyses/derived references, never parsed materials.
+Only ownership edits require projection/projected-resource proof; otherwise
+actual seeds come directly from analyses. Stable per-view projected exclusion
+and equal discovery identities reuse the quick attempt's closure on fall-through.
 The fast path **never runs inline analysis**, including for reference-bearing
-rules: a changed possibly reachable
-reference takes fall-through; otherwise raw reference proof is conservative
-and sufficient. Prepared analyses and discoveries are reused on fall-through.
+rules. A changed possibly reachable reference takes fall-through. So does a
+resource record within an eligible unowned style's outer span that touches a
+paired-ignore or removed span: canonicalization may retain its reference after
+raw provenance drops it. Detect this from the original records and spans,
+without parsing CSS. Non-identical quick checks also reject any paired region
+or marker intersecting such a style's outer span. These fallbacks preserve the
+complete path's material states and validation. Prepared analyses and discoveries
+are reused on fall-through; a missing base seed fails the derived resource proof.
 
 ## Fingerprinted Materials
 

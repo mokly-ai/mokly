@@ -1150,51 +1150,53 @@ the original page; give identical texts a single-parse quick check.
       24 matrix samples (22 ok, two incomplete M6 style), four supplemental
       uncapped samples (all ok), no retries or browser-channel switches.
       Ratios/spread, CPU/MHz/steal and raw evidence are linked above; all setup
-      sources and outputs restore byte-identically. M8 remains unstarted.
-- [ ] Update `src/review/README.md` and the contracts' Delivery Status for
+      sources and outputs restore byte-identically. M8 was unstarted at that
+      measurement checkpoint; its implementation checkpoint is now delivered.
+- [x] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
-      Documentation is delivered; the full command was run with pinned Chromium
-      but remains audit-blocked. All individually run suites and other Repository
-      checks pass; retain this gate item until the user's decision, not a waiver.
-- [ ] Discovered: the final pinned-Chromium `cargo xtask check` stops at the
+      Documentation and individual suites/non-audit Repository checks pass.
+      The pinned-Chromium combined command remains audit-blocked, not passed.
+      The supervisor closed M7 for the authorized push described below; the
+      audit-exception decision for merging to `main` remains open for the user.
+- [x] Discovered: the final pinned-Chromium `cargo xtask check` stopped at the
       dependency audit, before any suite, on the unpatched braces advisory
       `GHSA-vfj7-8cjw-p6xm` (13 transitive high reports through React Native/Metro).
-      Resolve this unrelated gate blocker or obtain an explicit scoped user
-      decision before push; do not change dependencies or waive the audit
-      under the browser-only exception. The browser report retains both audits;
-      separate final hydration passes 219/219 and report/docs checks pass.
-      The supervisor approves a new local evidence commit only, with the audit
-      blocker in its body; push remains held for the user's gate decision.
+      The supervisor pushed `96ddc06c` on October 3, 2026 under the user's
+      instruction to continue all milestones, with the audit blocker documented
+      in commit bodies. This resolves the former decision-before-push hold only;
+      dependencies, overrides and the gate are unchanged, and the merge-to-main
+      audit exception remains the user's decision. The browser report retains
+      both audits; separate hydration passes 219/219 and report/docs checks pass.
 - [x] Discovered: after the local evidence commit, run package, unit,
       pinned-Chromium browser and hydration individually through xtask. Record
-      every result in the checkpoint in new commits, never amends. Only known
-      host-timing browser signatures are allowed; leave dependencies, overrides
-      and the gate untouched. Stop without pushing or starting M8, which also
-      waits for decisions on recorded M5 finding 1 and M6 finding 2.
-      Clean `237c5a6c` passes package, all 3,482 unit tests, all 725 pinned browser
+      every result in the checkpoint in new commits, never amends. Clean
+      `237c5a6c` passes package, all 3,482 unit tests, all 725 pinned browser
       tests and all 219 hydration tests; no failures/skips/cancellations. Every
-      known browser timing spec passes this run, so no exception is needed.
-      The checkpoint records intervals and raw reports. Non-audit Repository
-      checks also pass. A new report commit follows; no amend or push.
+      known browser timing spec passes this run, so no browser exception is
+      needed. Non-audit Repository checks also pass. The initial push/M8 hold
+      was subsequently resolved by the supervisor's October 3 instructions:
+      retain M5's cancellation contract and defer M6's residual-equality proposal.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-      The supervisor pushed `96ddc06c` on October 3, 2026 with the known
-      `braces` audit blocker documented in the commit bodies.
+      The supervisor pushed `96ddc06c` on October 3, 2026 under the user's
+      instruction to continue all milestones, with the known `braces` audit
+      blocker documented in the commit bodies.
 - [x] Use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
       The supervisor ran this review on local commits `ee4ead64` through
-      `b3a88d07` before the push, explicitly authorized while the audit blocker
-      holds it. Findings below are recorded verbatim for the user's decision,
-      not implemented. Push remains held and M8 remains unstarted.
+      `b3a88d07` before the push, explicitly authorized during the audit hold.
+      The later push above resolved that hold; M8's code checkpoint is delivered.
+      Findings below remain recorded for the user's decision, not implemented.
 
 ### Milestone 7 review findings
 
 Reported by the review of local commits `ee4ead64`, `b9e1256d`, `991071c5`,
-`4d6a9956`, `237c5a6c` and `b3a88d07`, run before the push because the push is
-held by the repository-wide `braces` audit blocker. Recorded for the user's
-decision.
+`4d6a9956`, `237c5a6c` and `b3a88d07`, run before the push while it was held
+by the repository-wide `braces` audit blocker. The supervisor subsequently
+pushed `96ddc06c` on October 3, 2026 as recorded above. Findings remain for the
+user's decision; the audit exception for merging to `main` is still open.
 
 1. Medium. Page provenance relies on parse5 internals marked `@internal`: the
    `Parser` class and its token callbacks, `static parse` constructing
@@ -1246,6 +1248,16 @@ residual-multiset equality TODO was removed by the supervisor (see M6 finding
 2): M8 composes and compares retained multisets exactly as the route contract
 states. The candidate is recorded under M9A, not approved for implementation.
 
+Supervisor decision on finding 4, October 3, 2026: option B is a pure fallback.
+The complete path remains the oracle under Decision 6; original ignore spans
+validate/pair/record content, while actual canonical materials decide state and
+emitted ignore evidence. Non-identical quick checks and the style route reject
+paired regions or markers intersecting eligible unowned style outer spans.
+The original proposal recommending A is retained as evidence; A is not approved
+and no complete-path result or Decision changes. The reserved `<!--mokly-`
+condition-5 gap fix was separately approved earlier; approval history lives here
+and in checkpoint reports, outside the normative rule.
+
 - [x] Implement the route between the quick check and the full comparison
       with every Style-Only Route condition, and the test-only switch that
       disables it.
@@ -1282,6 +1294,26 @@ states. The candidate is recorded under M9A, not approved for implementation.
       The [code checkpoint](../docs/dev/style-only-route-checkpoint.md) records all
       completed implementation/proof work, the supervisor-approved gap fix and final
       verification. Measurements, the combined gate and push remain pending approval.
+
+- [x] Discovered: address supervisor findings 1–4 with failing regressions first:
+      equal raw edited-style references and missing-base-seed fallback; dropped
+      eligible-style reference proof; review markers in tags; and option B's
+      shared paired-ignore/style intersection fallback. Preserve complete-path
+      semantics and clarify the three contracts together.
+- [x] Discovered: close findings 5–10 with isolated per-view guard tests in both
+      modes, confirmed mutation failures, and production path-count assertions
+      on the cumulative RNW fixture and a mixed batch. Remove the dead tag-slice
+      proof and explain why route-only fallback tests bypass the quick check.
+- [x] Discovered: correct M7 push/audit history and move approval history out
+      of normative condition 5 (findings 11–12). Record the supervisor's option B
+      decision and retain the ignore-evidence proposal and reproduction logs.
+- [x] Discovered: finish targeted, full unit/pinned-Chromium browser/hydration
+      and static checks after the supervisor fixes; make new local Conventional
+      Commits and stop before measuring or pushing. The
+      [supervisor checkpoint](../docs/dev/style-only-route-supervisor-checkpoint.md)
+      records regression-first evidence, 15 rejected mutations, 673 targeted,
+      3,757 unit, 725 browser and 219 hydration passes, package/static checks
+      and the unchanged-source verification snapshots.
 
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for

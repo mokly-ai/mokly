@@ -97,7 +97,7 @@ export class PageAnalysis {
       ];
   }
 
-  ignored(paired: readonly string[]): readonly SourceSpan[] {
+  ignored(paired: readonly string[]): readonly ReviewIgnoreRegion[] {
     return this.regions.filter(({ id }) => paired.includes(id));
   }
 
@@ -122,6 +122,23 @@ export class PageAnalysis {
       ...this.removedMarkers,
       ...this.ignored(paired),
     ]);
+  }
+
+  /** Canonical rules can restore a reference lost by raw source-span removal. */
+  hasDroppedStyleReferences(paired: readonly string[]): boolean {
+    const styles = this.inlineStyles(paired);
+    const removed = [...this.removedMarkers, ...this.ignored(paired)];
+    return this.references.some(
+      (record) =>
+        record.kind !== "anchor" &&
+        record.kind !== "navigation" &&
+        styles.some(
+          (span) => span.start <= record.start && record.end <= span.end,
+        ) &&
+        removed.some(
+          (span) => span.start < record.end && record.start < span.end,
+        ),
+    );
   }
 
   conservativeReferences(paired: readonly string[]) {

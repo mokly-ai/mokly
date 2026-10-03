@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import {
+  runWithTimings,
+  type TimingEvent,
+} from "../dist/diagnostics/timings.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -49,7 +53,24 @@ test("every eligible cumulative RNW component-style view routes with exact catal
         useStylePath,
         useFastPath,
       });
-    const actual = await classify(true);
+    const events: TimingEvent[] = [];
+    const actual = await runWithTimings(true, "test", () => classify(true), {
+      write: (event) => events.push(event),
+    });
+    const records = events.filter(
+      ({ stage, event }) =>
+        stage === "review.compare-screens" && event === "counts",
+    );
+    assert.equal(records.length, 1);
+    const counts = records[0]!.counts!;
+    assert.ok(Number.isFinite(counts.heapPeakMiB) && counts.heapPeakMiB! > 0);
+    assert.deepEqual(counts, {
+      views: 64,
+      stylePath: 64,
+      fastPath: 0,
+      completePath: 0,
+      heapPeakMiB: counts.heapPeakMiB,
+    });
     assert.deepEqual(actual, await classify(false));
     assert.deepEqual(actual, await classify(false, false));
     assert.deepEqual(

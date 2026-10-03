@@ -3,6 +3,7 @@ import type { ViewReview } from "@mokly/viewer/data";
 
 import { componentUsageSignals } from "../components/comparison_material.js";
 
+import { referenceRoutes } from "./asset_references.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type {
   ComparedComponentView,
@@ -15,6 +16,8 @@ export async function identicalPageQuickCheck(
   pages: PageAnalysisPair,
   view: ViewReview,
 ): Promise<ComparedComponentView | undefined> {
+  if (pages.afterAnalysis.hasDroppedStyleReferences(pages.pairedIgnoreIds))
+    return;
   if (!(await unchangedPageResources(context, pages))) return;
   const signals = componentUsageSignals(pages.before.usage, pages.after.usage);
   return {
@@ -48,6 +51,10 @@ export async function unchangedPageResources(
     undefined,
     seeds,
   );
+  if (context.compareResourceBytes)
+    for (const route of referenceRoutes(head.route, seeds))
+      if ((await context.beforeReader.readIfExists(route)) === undefined)
+        return false;
   const beforeResources = context.compareResourceBytes
     ? await context.beforeReader.resources(
         head.route,

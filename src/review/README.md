@@ -389,3 +389,11 @@ Its [same-host measurements](../../docs/dev/shared-page-analysis-measurements.md
 retain the M6 controls, original-source payload bounds and exclusive work.
 The [style-route checkpoint](../../docs/dev/style-only-route-checkpoint.md)
 records per-view oracles, parse interception and the conservative seed proof.
+`style_source_safety.ts` shares the paired-ignore/style intersection fallback
+between non-identical quick checks and the route. Original spans validate and
+pair regions; full canonical materials still decide state and ignore evidence.
+Quick checks reject eligible-style resource records dropped by source removal,
+without parsing CSS. Route resource proof also requires equal raw references
+in the edited element, including selector arguments; missing derived base seeds
+fall through before required reads. Review markers in eligible tags and reserved
+prefixes in original/composed CSS preserve full material validation.

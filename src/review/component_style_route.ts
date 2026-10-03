@@ -5,6 +5,7 @@ import {
   componentUsageSignals,
   componentUsageTopologyEqual,
 } from "../components/comparison_material.js";
+import { extractCssReferences } from "../css_references.js";
 import { documentWorkSync, timeSync } from "../diagnostics/timings.js";
 
 import { prepareInlineEvidence } from "./component_projection_resources.js";
@@ -104,6 +105,18 @@ export async function compareStyleOnlyView(
           .map((rule) => [rule.change, rule]),
       ),
     };
+  const edited = spans.after.findIndex(
+    (span) =>
+      span.contentStart! <= windows.after.start &&
+      windows.after.end <= span.contentEnd!,
+  );
+  const baseReferences = extractCssReferences(spans.before[edited]!.text);
+  const headReferences = extractCssReferences(spans.after[edited]!.text);
+  if (
+    baseReferences.length !== headReferences.length ||
+    baseReferences.some((value, index) => value !== headReferences[index])
+  )
+    return;
   // Condition 6 shares the identical-text quick check's raw seeds and closure policy.
   if (
     !(await unchangedPageResources(
