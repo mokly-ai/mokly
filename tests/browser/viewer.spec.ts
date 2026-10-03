@@ -216,7 +216,7 @@ test("postMessage frames emit pick/hover/click and support imperative rejection"
             .at(-1)?.value,
       ),
     )
-    .toEqual({ instance: null, boxes: [], frame: { entryId: "home" } });
+    .toEqual({ instance: null, boxes: [], frame: { entryPath: "home" } });
   await frame.getByText("Visible", { exact: true }).click();
   await expect
     .poll(() =>

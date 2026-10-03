@@ -9,22 +9,22 @@ const fields = {
 };
 defineScreen({
   ...fields,
-  // @ts-expect-error Every variant input rejects undeclared keys.
   variants: [
     {
       ...fields,
       slug: "state",
+      // @ts-expect-error A fresh variant literal rejects undeclared keys.
       variantOf: "screen",
     },
   ],
 });
 defineScreen({
   ...fields,
-  // @ts-expect-error Every variant input rejects undeclared keys.
   variants: [
     {
       ...fields,
       slug: "state",
+      // @ts-expect-error A fresh variant literal rejects undeclared keys.
       id: "state",
     },
   ],

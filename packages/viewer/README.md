@@ -245,7 +245,8 @@ frame sessions.
 
 ### Component instance references
 
-Instance events return an `InstanceRef` scoped to a screen, component variant
+Instance events carry `frame: { entryPath, stepIndex? }` and an `InstanceRef`
+scoped to a screen, component variant
 or flow step, viewport, color scheme and stable component key. Persist that
 value to reconnect external data such as a review comment. `resolveInstance`
 compares a saved component record with its corresponding current record from a

@@ -31,8 +31,17 @@ sorted repo-relative symlink (even dangling), FIFO, socket or device without
 following it. Derived Check uses Git tracking for output ownership after its
 graph load. Successful Build prunes empty
 directories beneath the root (including it), never during rollback. Catalogue
-routes cannot begin with `mokly-generated/`; only portable `styles/**.css` and
+paths cannot have a first segment equal to `mokly-generated`, compared
+case-insensitively; only portable `styles/**.css` and
 supported `assets/**` can be generated inside it, never HTML.
+
+Generated route segments allow a leading letter, digit, underscore or hyphen;
+subsequent characters may also include dot and tilde. Device-name stems and
+trailing dots remain invalid. A nonportable module file or directory name cannot
+produce a stylesheet route, even when an entry declares a valid `path`. Build
+fails with `cannot deliver imported CSS for {module}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`,
+where `{module}` is repository-relative. Entry identity and CSS delivery routes
+have distinct inputs; the override changes only entry identity.
 
 Reject root directories and `roots[].files` static prefixes, and `review.outDir`,
 at or inside the reserved tree, and local `stylesheets` (shared/light/dark) paths

@@ -95,6 +95,20 @@ test("artifact names derive from paths and validated axes", () => {
     () => documentRoute("guide", "sepia" as "light"),
     () => viewRoute("guide", "tablet" as "mobile", "light"),
     () => snapshotSidePath("sideways" as "before"),
+    () =>
+      snapshotViewPath(
+        "sideways" as "before",
+        "account/invoice",
+        "mobile",
+        "light",
+      ),
+    ...["", "../outside", "account/./invoice", "/absolute", "aux"].flatMap(
+      (value) => [
+        () => previewMetadataPath(value),
+        () => viewHref(value),
+        () => snapshotViewPath("before", value, "mobile", "light"),
+      ],
+    ),
     ...[
       "",
       "/root.css",
@@ -150,6 +164,7 @@ test("provider normalization confines shell and static artifact paths", () => {
   for (const value of [
     "/view/account/Invoice",
     "/static/../secret.html",
+    "/static/./secret.html",
     "/static/%2e%2e/secret.html",
     "/static/a%2fb.html",
     "/static/a.html?query=1",

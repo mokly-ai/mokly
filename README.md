@@ -120,8 +120,10 @@ source files or directories in `dependencies`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports its definitions from any export,
 default or named. Mokly derives everything else from the file's place: this
 screen is `account/account-home`, it lives at `/view/account/account-home/`,
-and its views are written as `static/account/account-home/index.mobile.html`
-and `index.desktop.html`, one file per viewport and color scheme. The `account`
+and its views are written under `mockupsDir` as
+`account/account-home/index.mobile.html` and `index.desktop.html`, one file
+per viewport and color scheme. Serve exposes them below `/static/`; export
+writes them below `static/`. The `account`
 directory is a folder in the catalogue; a `_folder.json` file or a
 `defineFolder` export gives it a title and an order.
 
@@ -195,7 +197,7 @@ catalogue; your React tree still owns what each screen looks like.
 | Components       | Typed props, variants, controls, and usage inspection                                     | [Components](./docs/guides/authoring/components.md)                 |
 | Use-case flows   | Ordered journeys composed from existing screens                                           | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
 | Pages            | Existing complete HTML documents without device variants                                  | [Pages and documents](./docs/guides/authoring/pages.md)             |
-| Documents        | Markdown files rendered as catalogue pages, including a folder's README                   | [Pages and documents](./docs/guides/authoring/pages.md)             |
+| Markdown inputs  | Matched files stay protected and watched; document rendering is not available yet         | [Pages and documents](./docs/guides/authoring/pages.md)             |
 | `MockLink`       | Portable links between catalogue entries by path                                          | [Links](./docs/guides/authoring/links.md)                           |
 | Styles           | Imported CSS, modules, assets and optional PostCSS                                        | [Styles](./docs/guides/authoring/styles.md)                         |
 
@@ -224,9 +226,8 @@ view for status and marks even while Dark stays selected for the rest of the
 catalogue. Missing per-view evidence preserves the selected entry's existing
 comparison eligibility. Removed screens and pages load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
-point. An entry that moved to a new path is paired with its baseline entry and
-shown as Moved with its previous path, instead of a removal and an addition,
-under the [move contract](./docs/protocol/mokly-moves.md).
+point. Changing an entry's path currently produces a removal and an addition.
+`movedFrom` is validated as authoring metadata; it does not pair entries yet.
 
 Read [how Changes works](./docs/guides/catalogue/changes.md), then export a
 standalone site:

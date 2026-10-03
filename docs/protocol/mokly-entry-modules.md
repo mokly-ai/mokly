@@ -40,6 +40,8 @@ import { InvoiceView } from "@app/account/billing/InvoiceView";
 export default defineScreen({
   title: "Invoice",
   description: "A paid invoice.",
+  dependencies: [],
+  relatedDocs: [],
   mobile: <InvoiceView device="mobile" />,
   desktop: <InvoiceView device="desktop" />,
   variants: [

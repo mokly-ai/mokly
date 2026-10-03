@@ -6,6 +6,7 @@ import { catalogueNavigation } from "../examples/basic/specs/design/library/chro
 import { DUAL_SCHEME_SAMPLES } from "../examples/basic/specs/design/library/metadata.js";
 import { NAV_TREE } from "../examples/basic/specs/design/parts/nav_data.js";
 import {
+  analyzeHierarchy,
   entryRoute,
   generatedViews,
   viewRoute,
@@ -94,6 +95,16 @@ test("all sixteen shared components have connected pages, controls and saved exa
     manifest.entries.some((entry) => entry.path === "design-root"),
     false,
   );
+  const hierarchy = analyzeHierarchy(
+    manifest.entries,
+    manifest.folders,
+  ).hierarchy;
+  const groupTitles = {
+    chrome: "Chrome",
+    controls: "Controls",
+    inspector: "Inspector",
+    preview: "Preview",
+  };
   for (const [group, slug, variants] of designLibrary) {
     const id = `design/library/${group}/${slug}`;
     const entry = componentParent(manifest, id);
@@ -104,7 +115,11 @@ test("all sixteen shared components have connected pages, controls and saved exa
       variants.map((variant) => `${id}/${variant}`),
     );
     assert.ok(Object.keys(entry.controls).length > 0, id);
-    assert.ok(entry.path.startsWith(`design/library/${group}/`));
+    assert.deepEqual(hierarchy.ancestorsByPath.get(entry.path), [
+      "Design",
+      "Shared components",
+      groupTitles[group],
+    ]);
     assert.ok(
       components.filter((component) =>
         component.path.startsWith(`design/library/${group}/`),

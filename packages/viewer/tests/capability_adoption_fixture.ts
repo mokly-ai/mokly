@@ -64,9 +64,9 @@ export function viewerRevision(
   route: ReturnType<typeof routeFromUrl>,
 ): ViewerEvidenceRevision {
   const next = viewerCatalogue(value);
-  const entryId =
+  const entryPath =
     route.view.kind === "target" ? route.view.target.entry.path : undefined;
-  const entry = entryId ? catalogueRouteEntry(next, entryId) : undefined;
+  const entry = entryPath ? catalogueRouteEntry(next, entryPath) : undefined;
   const workspace =
     entry &&
     (entry.kind === "screen" ||

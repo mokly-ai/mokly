@@ -191,7 +191,7 @@ test("flow events preserve the screen key and identify the owning step", async (
           viewport: "desktop",
           stepIndex: 1,
         }),
-        frame: { entryId: "tour", stepIndex: 1 },
+        frame: { entryPath: "tour", stepIndex: 1 },
       }),
     );
 });

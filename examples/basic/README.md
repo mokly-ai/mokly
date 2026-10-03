@@ -172,7 +172,7 @@ independently of that interface palette.
 The header toolbar selects Mobile/Desktop/Both previews and offers highlighting
 where relevant; the top-bar Appearance selector changes the standalone scheme.
 Retained Welcome appearance variants publish both schemes under their stable
-ids, and embedded component previews follow their host's controls. Leaf components omit Nested components;
+paths, and embedded component previews follow their host's controls. Leaf components omit Nested components;
 Toolbar demonstrates composition. Unchanged fixtures show Unmodified and omit
 comparison modes. The fixed desktop shell contains separate preview and inspector
 panes; drag the centered grip on the divider line to resize the inspector. Mobile uses a
@@ -307,7 +307,7 @@ npm run preview:build
 ```
 
 This example uses the default `generatedOutput: "derived"`. Generated HTML,
-the schema-v7 manifest, and `generated/mokly-generated/` stylesheets and binary
+the schema-v8 manifest, and `generated/mokly-generated/` stylesheets and binary
 assets are ignored local artifacts, absent in a fresh clone.
 `example:build` writes them transactionally; `example:check` validates the current
 compilation and rejects tracked generated output without requiring files on disk.

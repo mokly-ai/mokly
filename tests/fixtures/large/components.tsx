@@ -8,11 +8,11 @@ const metadata = {
 };
 const noop = () => {};
 
-export function createComponents() {
+export function createComponents(area: string) {
   const action = defineComponent({
     ...metadata,
 
-    slug: "action",
+    path: `${area}/components/action`,
     title: "Action",
     description: "A reusable action.",
     propSchema: {
@@ -54,7 +54,7 @@ export function createComponents() {
   const panel = defineComponent({
     ...metadata,
 
-    slug: "panel",
+    path: `${area}/components/panel`,
     title: "Panel",
     description: "A summary with caller-owned content.",
     propSchema: {

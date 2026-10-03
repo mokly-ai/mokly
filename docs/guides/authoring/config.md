@@ -63,8 +63,8 @@ A root is a directory Mokly reads, with up to three refinements:
 | `path`        | A prefix placed before every path derived from this root                  |
 | `transparent` | Directory names removed from derived paths                                |
 
-Every matched `.md` file is a document, and every other matched file is an
-entry module whose exported definitions join the catalogue. The glob alone
+Matched `.md` files stay protected and watched but do not render yet. Every
+other matched file is an entry module whose exported definitions join the catalogue. The glob alone
 decides the shape: `files: ["**/*.ts"]` reads every TypeScript file below the
 root as a module. A file's path is the root's `path`, then the directories
 between the root and the file with transparent names removed, then the file
@@ -81,11 +81,11 @@ alternative keeps every mockup beside the code it describes, for example
 Each root must exist, must not equal `mockupsDir`, and must match at least
 one file; a root that matches nothing lists the directories it could not
 search. Two roots cannot share a `dir`, and a file matched by two roots is
-reported as a duplicate path. Below a root, Mokly skips `.git`,
+a `config-invalid` error: `file <path> is matched by roots[<n>] and roots[<m>]`. Below a root, Mokly skips `.git`,
 `node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`, `test-results`,
 `playwright-report` and `.context`. A `_folder.json` file is read as a folder
-record, never as an entry, and its `exclude` globs remove files from that
-directory before anything else looks at them.
+record, never as an entry. Its `exclude` globs skip matching files as entries;
+those files remain protected source inputs and stay watched.
 
 Helpers imported by an entry module are attributed to their own file: a
 component registered in `button.mokly.tsx` beside `button.tsx` records that

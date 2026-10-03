@@ -35,8 +35,8 @@ export default function render(input: RenderInput): string {
 
 Mokly re-renders the same mobile and desktop nodes for dark output, so a
 screen is never written twice, and the dark views sit beside the light ones as
-`index.mobile.dark.html` and `index.desktop.dark.html`. A Markdown document
-gets a dark rendering too, `index.dark.html`, with Mokly's own dark palette.
+`index.mobile.dark.html` and `index.desktop.dark.html`. Markdown inputs do
+not render yet; pages from `definePage` have one complete HTML document.
 The catalogue shows a Light and Dark switch once the catalogue has dark
 documents.
 

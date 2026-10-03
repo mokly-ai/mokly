@@ -82,6 +82,7 @@ export function deriveEntryPath(
       code: "root-index",
       message: `${input.location} has no folder to be the index of; give it a path`,
     };
+  if (!isEntryPath(path)) return invalidPath(input.location, "path", path);
   return { path, slug, index: input.parentPath === undefined && index };
 }
 

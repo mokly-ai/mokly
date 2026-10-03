@@ -85,7 +85,7 @@ export function StageFrame({
   const previewAdapter = useMemo(temporaryPreviewAdapter, []);
   const identity = useMemo<ShellFrameIdentity>(
     () => ({
-      entryId: entry.path,
+      entryPath: entry.path,
       viewport,
       ...(preview || selected
         ? { colorScheme: preview?.colorScheme ?? selected!.colorScheme }
@@ -190,7 +190,7 @@ export function DocumentStageFrame({
   const registry = useOptionalShellFrameRegistry();
   const source = framePath(`static/${entryRoute(entry.path)}`, fragment);
   const identity = useMemo<ShellFrameIdentity>(
-    () => ({ entryId: entry.path }),
+    () => ({ entryPath: entry.path }),
     [entry.path],
   );
   const mounted = useMountedShellFrame({
@@ -253,7 +253,7 @@ function FrameLabel({
 
 function frameIdentityKey(identity: ShellFrameIdentity): string {
   return JSON.stringify([
-    identity.entryId,
+    identity.entryPath,
     identity.variantPath,
     identity.stepIndex,
     identity.viewport,

@@ -5,6 +5,11 @@ The public package exposes `defineScreen`, `definePage`, `defineUseCase`,
 optional slug and complete path override; the discovered exporting module supplies
 the default location. `movedFrom` records an authored previous path.
 
+Generic `defineScreen` wrappers retain precise return types. Fresh variant
+literals in direct calls receive excess-key checks; generic inference can accept extra top-level
+keys. Use `satisfies ScreenInput` for static checks there. Registry preparation
+rejects all unknown fields, including through structurally typed variables.
+
 A screen without a variants array returns one definition. A present array returns
 parent-first definitions, including for an empty array. Components return a typed
 renderable facade and their parent-first entries. Export those values directly or

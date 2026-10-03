@@ -207,7 +207,7 @@ test("route adoption replaces scoped usage and private workspace atomically", ()
   );
   assert.ok(commit);
   assert.equal(commit.snapshot.workspace?.value.entry.path, screen.path);
-  assert.equal(commit.snapshot.routeEvidence?.entryId, screen.path);
+  assert.equal(commit.snapshot.routeEvidence?.entryPath, screen.path);
   const adopted = commit.snapshot.catalogue.publicModel!;
   assert.ok(
     adopted.screens[0]!.views.every(({ usage }) => usage.status !== "omitted"),

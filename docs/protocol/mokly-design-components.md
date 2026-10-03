@@ -38,12 +38,12 @@ samples contain no implementation notes, environment badges or extra footers.
 ## Catalogue And Source Ownership
 
 Add `Components → Design → Shared components` beneath the same `Design` folder
-as `Specs → Design → Mokly design`: a folder holding both kinds appears in both
+as `Pages → Design`: a folder holding both kinds appears in both
 sections with its own children in each, under the
 [catalogue tree rule](./mokly-catalogue.md#tree). Keep the existing Component
 explorer design section and Components → Example → Components group. The
 gallery folders are `Design → Shared components` and its `Chrome`, `Controls`,
-`Inspector`, and `Preview` children. They contain the 15 component parents in
+`Inspector`, and `Preview` children. They contain the 16 component parents in
 the inventory; each parent's variant entries nest beneath its row under the
 [variant contract](./mokly-variants.md) rather than adding folder members.
 
@@ -53,7 +53,7 @@ location, or a declared `path`, under the [path contract](./mokly-paths.md).
 
 For inventory group `G` and slug `S`:
 
-- Component slug: `design-ui-S`; its path places it in gallery `G` under the
+- Component slug: `S` (for example, `style`); its path places it in gallery `G` under the
   [path contract](./mokly-paths.md).
 - Registration/schema/variants: `specs/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its

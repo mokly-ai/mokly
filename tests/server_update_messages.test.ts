@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   childUpdateMessage,
   parseChildUpdateMessage,
+  parseCatalogueCompleteMessage,
 } from "../dist/server/update_messages.js";
 
 test("watch update messages preserve available and unavailable route state", () => {
@@ -152,4 +153,27 @@ test("baseline handoffs preserve pinned commits and explicit revocation", () => 
       undefined,
     );
   }
+});
+
+test("catalogue completion accepts manifest v8 and rejects the preceding v7 envelope", () => {
+  const message = {
+    type: "catalogue-complete",
+    generation: "a".repeat(32),
+    version: 1,
+    manifest: {
+      schemaVersion: 8,
+      generatedBy: "mokly",
+      entries: [],
+      folders: [],
+      sourceFiles: [],
+    },
+  };
+  assert.deepEqual(parseCatalogueCompleteMessage(message), message);
+  assert.equal(
+    parseCatalogueCompleteMessage({
+      ...message,
+      manifest: { ...message.manifest, schemaVersion: 7 },
+    }),
+    undefined,
+  );
 });

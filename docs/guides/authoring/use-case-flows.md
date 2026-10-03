@@ -57,8 +57,8 @@ already publishes; the flow writes no document of its own. A link whose
 destination is a use case opens the flow page. When a screen changes, Changes
 carries that through to the flows it appears in, and moving a screen to a new
 path means updating the steps and memberships that name it, because a step
-that names a path with no screen fails the build, naming the new path when
-Mokly can tell where the screen went.
+that names a path with no screen fails the build. The error names the
+missing path; it does not detect where a screen moved.
 
 ## Exported types
 

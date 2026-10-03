@@ -10,7 +10,7 @@ import {
 import {
   adoptedViewerCatalogue,
   shellStateWithViewerEvidence,
-  viewerCapabilityEntryId,
+  viewerCapabilityEntryPath,
 } from "./capability_adoption.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellState } from "./store_state.js";
@@ -51,7 +51,7 @@ export function commitViewerEvidence(
   if (!nextState) return;
   const request = viewerCapabilityRequest(
     revision.source,
-    viewerCapabilityEntryId(nextState.route),
+    viewerCapabilityEntryPath(nextState.route),
   );
   return {
     snapshot: {

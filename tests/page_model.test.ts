@@ -43,6 +43,16 @@ test("page path changes create an addition and a removal", async (context) => {
   assert.ok(
     changedManifestPaths(after, before, config, []).includes("app/handbook"),
   );
+  const removed = removedManifestEntries(after, before);
+  assert.deepEqual(
+    removed.map(({ entry }) => [entry.kind, entry.path]),
+    [["page", "app/book/handbook"]],
+  );
+  assert.deepEqual(removed[0]?.folderTitles, ["App", "Book"]);
+  assert.equal(
+    after.entries.some((entry) => entry.path === "app/book/handbook"),
+    false,
+  );
   const catalogue = createCatalogue(after);
   assert.deepEqual(
     buildNavSections(catalogue.hierarchy)[0]!

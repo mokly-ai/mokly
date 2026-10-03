@@ -18,7 +18,7 @@ test("shell requests reuse only an unchanged validated public revision", () => {
   const updated = readPublicCatalogue(source);
   assert.notEqual(updated, first);
   assert.equal(updated.revision.evidence, first.revision.evidence + 1);
-  bytes = JSON.stringify({ ...next, schemaVersion: 1 });
+  bytes = JSON.stringify({ ...next, schemaVersion: 3 });
   assert.throws(() => readPublicCatalogue(source));
   bytes = JSON.stringify(next);
   assert.equal(readPublicCatalogue(source), updated);

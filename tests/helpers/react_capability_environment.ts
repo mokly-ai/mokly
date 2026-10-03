@@ -37,7 +37,7 @@ export const descriptor: ViewerCapabilityDescriptor = {
 
 export function currentRequest(): ViewerCapabilityRequest {
   return {
-    entryId: descriptor.workspace!.entry.path,
+    entryPath: descriptor.workspace!.entry.path,
     source: descriptor.source,
   };
 }

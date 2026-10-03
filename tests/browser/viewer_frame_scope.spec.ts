@@ -215,7 +215,9 @@ for (const cross of [false, true]) {
         stepIndex,
       };
       const clicked = await highlight(page, instance, cross, stepIndex);
-      expect(clicked).toMatchObject({ frame: { entryId: "tour", stepIndex } });
+      expect(clicked).toMatchObject({
+        frame: { entryPath: "tour", stepIndex },
+      });
     }
   });
 }

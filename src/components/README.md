@@ -71,7 +71,7 @@ a slug and derived parent relationship, grouped beneath its component in
 navigation with its own route `<parent path>/<slug>/index.html`, its own Changes
 row, and its own comparison. Both viewports and every configured scheme are
 built for each variant. `MockLink to="action"` opens the component page, which
-shows its first variant; `MockLink to="action-disabled"` opens that variant
+shows its first variant; `MockLink to="action/disabled"` opens that variant
 directly.
 
 Local Serve edits declared text, boolean, number, and primitive preset controls.

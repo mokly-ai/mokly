@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–3 and 3A are complete. This plan supersedes
+discussion in this workspace. Milestones 1–3 and 3A are complete; Milestone 3B is in progress. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -90,8 +90,10 @@ user should reconsider):**
    real directory, `exclude` globs relative to that directory. No `mount`:
    re-rooting is configuration only. Two carriers produce the same record: a
    `defineFolder` export in any entry module, and a `_folder.json` file in a
-   directory. Title resolution: record title, then the index page's title,
-   then the slug with hyphens as spaces and a capital first letter. Default
+   directory. A folder whose own page is a screen or component always takes
+   that entry's title; a record `title` is invalid, while `order` and `hidden`
+   remain valid. Otherwise title resolution is record title, then the index
+   page's title, then the slug with hyphens as spaces and a capital first letter. Default
    order is folders before leaves, each by title. `order` lists children
    first; `...` stands for the unnamed rest; omitting `...` still appends the
    rest. Two records for one path, a record for an unused path, and an `order`
@@ -367,8 +369,9 @@ Status: Complete. The only full-gate blocker is pre-existing GHSA-vfj7-8cjw-p6xm
 - [x] Align the companion wire boundaries: catalogue-change snapshot v2,
       removed-preview metadata v3, frame navigation `screenPath`, and selected
       comparison requests using `path`. Keep move lists empty until move pairing.
-- [x] Include the protocol-size ratchet correction supplied by the orchestrator:
-      remove the two obsolete sub-250-line oversized caps.
+- [x] Lower the catalogue, configuration, design-components, export-delivery,
+      export, frame-adapter, runtime and viewer caps to their M3 lengths. The
+      two obsolete sub-250-line cap removals were already delivered by M2.
 - [x] Migrate `examples/basic/entries` to the recommended layout with
       directories per area, slugs, and `_folder.json` where titles need
       characters outside the grammar; migrate `scripts/large`; regenerate and
@@ -489,9 +492,64 @@ Status: Complete. The only full-gate blocker is pre-existing GHSA-vfj7-8cjw-p6xm
 
 The orchestrator reviews this integration; the implementation review remains at M8.
 
+## Milestone 3B: Identity core review fixes
+
+Restore focused identity-core coverage and generic authoring helpers, then align
+current guides and examples with the implemented API. Milestones 3 and 3A remain
+closed. Folder-rename/disclosure tests assigned to Milestone 6 stay out of scope.
+
+Status: Complete. Package (six consumer scenarios), unit (3,714), browser (743),
+hydration (226), and all remaining repository checks pass. The approved full-gate
+exception remains pre-existing GHSA-vfj7-8cjw-p6xm in development dependencies;
+no dependency change or audit exemption was added.
+
+- [x] Restore exact catalogue-reader error assertions and mutations that reach each tree rule (1).
+- [x] Restore generic `defineScreen` wrappers and precise return types; retain concrete
+      excess-key typing only where it also supports wrappers, and document any trade-off (2).
+- [x] Restore genuine module-evaluation errors and one attributed facade presentation check (3).
+- [x] Pin the immediately preceding version at every bumped wire boundary and correct test titles (4).
+- [x] Assert real ancestor titles for the design-library hierarchy (5).
+- [x] Restore invalid preview, snapshot, view-href and provider-normalization path coverage (6).
+- [x] Restore the large fixture's nested hierarchy and verify its generator (7).
+- [x] Exercise file-derived paths and both folder-record carriers in a packed consumer (8).
+- [x] Make the page addition/removal and variant-relationship tests prove their stated behavior (9).
+- [x] Cover the missing derivation, link diagnostic, equivalent tree/carrier, folder-title,
+      top-level record-field and strict manifest-field rules (10).
+- [x] Restore the removed-comparison flow in the default both viewport (11).
+      The original unchanged-parent fixture selects Mobile; a genuinely changed
+      parent preserves Both under the existing sticky-axis rule. Cover both.
+      Untouched main passes the original fixture; no production behavior changed.
+- [x] Align the current documentation with identity core (12):
+  - [x] Remove premature Markdown/move claims from README and guides; add the M4/M5 restoration TODOs (docs 1).
+  - [x] Correct build paths, overlapping roots, instance defaults, folder titles and decision 8 (docs 2–5).
+  - [x] Fix protocol examples, page-id wording and stale implementation statements (docs 6–8).
+  - [x] Replace obsolete design paths/titles and example references; correct cap provenance (docs 9–11).
+- [x] Reject the reserved first path segment `mokly-generated` case-insensitively, with
+      attributed diagnostics for derived/declared paths and root-prefix coverage (13).
+- [x] Accept leading underscores and hyphens in generated CSS/asset routes; add a precise
+      diagnostic for nonportable module paths despite a declared entry path (14).
+- [x] Correct the imported-CSS export-collection description and restore comparison-serving
+      configuration, ownership and ignored-region rules (15–16).
+- [x] Rename live capability requests and instance-frame fields to `entryPath` throughout
+      code, types, tests and viewer docs, without an `entryId` alias (17).
+- [x] Run focused coverage, the large generator, changed-file Prettier, all four verification
+      suites and the remaining repository checks under the approved dependency-audit disposition.
+  - [x] Focused regressions, default large generator, packed API types and changed-file formatting.
+  - [x] Package suite: both packages pass all six consumer scenarios; example Check validates 445 files.
+  - [x] Unit suite: 3,714 pass, with zero skips or cancellations.
+  - [x] Repository formatting, lint, ratchets, Rust formatting, Clippy, 15 Rust tests and file-length audit.
+  - [x] Browser suite: 743 pass, with zero skips; both known base-flaky tests pass first run.
+  - [x] Hydration suite: 226 pass, with zero skips or cancellations.
+- [x] Commit and push the completed fixes, then report each item and its covering tests.
+
+The orchestrator reviews this milestone; the implementation review remains at M8.
+
 ## Milestone 4: Markdown documents
 
 Add Markdown files as `document` entries.
+
+- [ ] Restore the Markdown passages drafted in `d65417d` in README and the
+      start/authoring/CLI guides once document rendering works; reconcile examples.
 
 - [ ] Add document material-change classification beside pages and document previews
       beside page previews; reserved documents are excluded from component pairing today.
@@ -532,6 +590,9 @@ Add Markdown files as `document` entries.
 ## Milestone 5: Move detection
 
 Pair moved entries with their baseline and carry `previousPath`.
+
+- [ ] Restore the move passages drafted in `d65417d` in README and the guides
+      once pairing and moved-target diagnostics work; reconcile examples.
 
 - [ ] Validate `movedFrom`: grammar, complete path, not the current path, and
       a baseline entry of the same kind.

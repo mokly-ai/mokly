@@ -23,7 +23,9 @@ or inside a declared dependency folder can appear in Details without adding
 the screen to Changes. The entry's source file alone does not add it either;
 it appears in Details when it also matches one of those file groups. A
 registered component's own file or a dependency named by its exact path can
-still add its entry. Moving files around does not fill Changes.
+still add its entry. An entry whose path changes appears as a removal and an
+addition. Moving source files while keeping the same declared path retains
+the entry pairing; output and metadata still determine its change status.
 Regions marked with Review-ignore are classified as ignored, and a stylesheet
 edit marks a screen only when a changed rule could apply to it or cannot be
 resolved; rules that reach nothing on the screen are recorded as examined and

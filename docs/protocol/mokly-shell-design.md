@@ -35,7 +35,7 @@ and path chip; it treats moves as removals plus additions until the
 [path identity plan](../../plans/path-identity.md) delivers the remaining behavior.
 
 Auto/Light/Dark interface appearance is designed in the
-`design-appearance-*` mockups and specified by the
+`design/browse/appearance/**` mockups and specified by the
 [semantic palette](./mokly-viewer-palette.md). The shell now carries that
 palette in both appearances, selected on a viewer root, and an embedded host
 chooses one with `theme`. A standalone document carries the delivered Appearance

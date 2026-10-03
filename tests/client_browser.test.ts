@@ -88,7 +88,7 @@ function descriptor(updateVersion: number): ViewerCapabilityDescriptor {
 }
 
 function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
-  return { entryId: null, source: value.source };
+  return { entryPath: null, source: value.source };
 }
 
 function shellState(): ShellRecoverySnapshot {

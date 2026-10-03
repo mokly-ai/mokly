@@ -320,7 +320,7 @@ A linked Appearance section sits under Browse, with matching source directories
 under `examples/basic/specs/design/browse/appearance/`. Each design page
 names a canonical screen; other screens can share its folder. The folder
 itself has no page of its own. Folders below are the resolved folder titles
-under `Design › Mokly design › Browse shell`.
+under `Design › Browse shell`.
 
 | Folder                              | Owning screens                                                                                               |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |

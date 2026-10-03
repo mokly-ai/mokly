@@ -80,6 +80,12 @@ definition. Exporting either result directly is valid; collection flattens
 the one array level. `defineComponent` always returns its entries as an array
 beside the renderable facade.
 
+Generic `defineScreen` wrappers accept `T extends ScreenInput` without extra
+constraints. Fresh variant literals in direct calls retain excess-key checks. Generic inference
+can accept extra top-level keys; `satisfies ScreenInput` or an explicit input
+annotation checks them statically. Registry preparation rejects every unknown
+field regardless of TypeScript inference.
+
 A variant's file names derive from its own path under the
 [artifact path contract](./mokly-artifact-paths.md); the parent's path is the
 prefix and plays no other part.

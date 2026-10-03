@@ -23,6 +23,8 @@ test("derived Changes and selected comparisons use compiled source when generate
     await prepareReviewRepository(fixture.config, "HEAD"),
   );
   assert.deepEqual(changes.changedEntries, ["home", "tour"]);
+  assert.equal(changes.schemaVersion, 2);
+  assert.deepEqual(changes.movedEntries, []);
   const snapshot = changes.componentChanges!;
   assert.ok(snapshot.comparison);
   assert.ok(snapshot.comparison.headOutputs);
