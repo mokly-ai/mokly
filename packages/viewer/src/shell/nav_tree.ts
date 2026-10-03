@@ -19,6 +19,10 @@ export interface NavLeafNode {
    * is `Overview` when its title is also the folder's title.
    */
   index?: true;
+  /**
+   * A retained baseline page or document: a flat Changes row that All and
+   * search hide, as removed screens are not.
+   */
   removedPage?: boolean;
   /**
    * A retained baseline variant placed under its surviving parent. Like a

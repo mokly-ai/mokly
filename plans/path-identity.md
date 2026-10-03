@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–4, 3A, 3B, and 6–6D are complete. This plan supersedes
+discussion in this workspace. Milestones 1–4, 3A, 3B, and 6–6E and the first part of Milestone 7 are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -951,7 +951,8 @@ so mock it up first.
       `generated/design.css`, because an artboard states its own appearance
       exactly once; add the screen's own stylesheet rule so it reads in the
       shell's Markdown typography; update the design counts.
-- [ ] Commit and push.
+- [x] Commit and push (`2b213e96`, pushed with the first part of
+      Milestone 7).
 
 ## Milestone 7: Viewer Changes and document presentation
 
@@ -960,29 +961,61 @@ Tags: ui
 The first part implements what does not depend on move data. The second part
 follows the merge of Milestone 5.
 
-- [ ] Treat removed document rows like removed page rows when filtering All and
+- [x] Treat removed document rows like removed page rows when filtering All and
       Changes; keep the document icon and final navigation behavior with the UI work.
-- [ ] Show the existing Light-only fallback note when a current or removed document
+      A removed document is now a flat row that only Changes shows, with the
+      document icon (`nav_model.ts`; `removed_document_rows.test.ts`,
+      `document_changes.spec.ts`).
+- [x] Show the existing Light-only fallback note when a current or removed document
       has no dark scheme but the reader selects Dark; match the Milestone 6E
-      screen.
-- [ ] Present documents in the page view with the document title, breadcrumbs,
+      screen. `scheme_fallback.tsx` decides the fallback. A current document
+      gets a band above its pane, and a removed one a suffix on
+      `Showing previous version`; the stylesheet shows the note only under
+      Dark. A Git fixture with a light-only baseline proves that the retained
+      document keeps its light render under Dark
+      (`document_light_only.test.tsx`, `document_light_only.spec.ts`).
+- [x] Present documents in the page view with the document title, breadcrumbs,
       the path chip, and Details showing the description, tags, and Markdown
       source file; link `relatedDocs` matches to their document entries
       (`details.relatedDocs` now emits validated `mock:<path>` references for
-      discovered current documents).
-- [ ] In Changes, keep an unchanged screen or component index whose only
+      discovered current documents). Serve and export read the manifest, which
+      keeps repository paths, so the row also links a path that names a
+      current document's source; a removed entry keeps labels. The served
+      Dependencies row now lists a document's resources, as projection does
+      (`document_details.test.tsx`, `document_pages.spec.ts`,
+      `document_changes.spec.ts`).
+- [x] In Changes, keep an unchanged screen or component index whose only
       changed rows are folder members as a container row with no change dot,
       and make activating that row open its first visible changed member, as
       an unchanged variant parent opens its first changed variant
-      (`changes_activation.ts`); match the Milestone 6A screens.
-- [ ] Add browser tests for document pages in Light and Dark at both widths,
+      (`changes_activation.ts`); match the Milestone 6A screens. The
+      activation walks the section's own rows in list order
+      (`index_container_activation.test.ts`, `document_changes.spec.ts`). The
+      rows, dots, selection, crumbs, statuses, and comparison band match. The
+      redirect lands on the member's first changed view, as `mokly-changes.md`
+      requires, but `member-changes` shows Both; the difference is reported
+      for a decision.
+- [x] Add browser tests for document pages in Light and Dark at both widths,
       the index-entry container rule, and the removed-document filters; verify
       parity with `design/browse/pages/document`,
       `design/browse/views/folder-overview`, and the four
-      `design/browse/index-entries/*` screens.
-- [ ] Re-apply the drafted `docs/guides/catalogue/export-and-host.md` from
-      commit `d65417d` and reconcile it with the implemented export.
-- [ ] Run the full gate for the first part, then commit and push.
+      `design/browse/index-entries/*` screens. The screenshots are under
+      `.context/m7/`. Besides the known `Catalogue home` crumb and Details bar
+      (Milestone 6C), the runtime also shows status chips and changed dots in
+      All, which the designs show only under Changes; `origin/main` already
+      behaves this way.
+- [x] Re-apply the drafted `docs/guides/catalogue/export-and-host.md` from
+      commit `d65417d` and reconcile it with the implemented export. The
+      draft matches the export layout and the URL forms unchanged; a new
+      `static_example.spec.ts` test opens an exported document from each URL
+      form.
+- [x] Run the full gate for the first part, then commit and push. The gate
+      passed on the final code: format, lint, file length (only the 28 known
+      files), ratchets, Rust fmt, Clippy, tests, and file length, and the
+      package, unit (3,853 tests), browser (771), and hydration (238) suites.
+      The dependency audit fails only on the known GHSA-vfj7-8cjw-p6xm. The
+      first unit run failed one CSS assertion in `tests/shell.test.ts`; the
+      document note now has its own rule, and a viewer test guards it.
 
 Second part, after Milestone 5 merges:
 

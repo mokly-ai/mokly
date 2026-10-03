@@ -21,8 +21,10 @@ the folder's other members. A deleted variant whose non-variant parent
 survives joins that container as a Removed row. `nav_tree.ts` records actual
 attachment before removing the row from flat fallback, so a former parent that
 is now a variant cannot make its historical child disappear and every removed
-entry remains represented once. Current section nodes use the shared
-folder-first comparator; flat removed rows use the combined ordering in the
+entry remains represented once. A removed page or document is a flat row
+that only Changes shows; All and search hide it. Current section nodes use the
+shared folder-first comparator; flat removed rows use the combined ordering in
+the
 [variant navigation contract](../../../../docs/protocol/mokly-variant-navigation.md).
 Specs and Components keep independent section roots even when they reuse the
 same folder paths. `filterHierarchy` orders each section again by the rows it
@@ -56,15 +58,18 @@ server row and each React store update use the same presentation contract;
 `data-changed-variants` alone. `nav_model.ts` applies search and Changes
 visibility to parents and their variant children. `changes_activation.ts`
 owns Changes-filter activation for both standalone and embedded shells: an
-aggregate-only parent selects its first visible changed variant, and a changed
+unmodified container row selects the first visible changed entry it lists (its
+variants, then its members, descending into member folders), and a changed
 destination selects its first changed view only when the current selection is
 not already a changed entry. Later navigation within Changes keeps the sticky
-view axes; aggregate-parent redirection still applies. The shared typed query
+view axes; container redirection still applies. The shared typed query
 parser applies each valid viewport or scheme independently and ignores invalid
 or repeated values; the embedded host and standalone router consume the same
 route result. `details_rows.tsx` owns the inspector's
-metadata rows, including links between a screen and its variants and the
-`Changed views` row.
+metadata rows, including links between a screen and its variants, the
+`Changed views` row, and Related docs links. A related doc links to its
+document when it is a public `mock:<path>` reference or, in Serve and export,
+the source path of a current document; a removed entry keeps plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
 axes that name a view, their canonical order and reader label, and the rule
@@ -251,6 +256,11 @@ through navigation and browser history. Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues. Startup
 updates this frame value before changing a fragment source.
+`scheme_fallback.tsx` decides when a document keeps its light file under Dark
+in a catalogue with a dark axis. A current document then gets a band above its
+pane, and a removed one a suffix on `Showing previous version`; both carry the
+`Light only` note, which the stylesheet shows only under Dark, so server and
+hydrated markup agree.
 `css_preview_scheme.ts` owns every preview surface background and iframe
 color scheme. Transparent content therefore keeps its selected Light or Dark
 base in screen, page, component, historical and comparison frames, independently

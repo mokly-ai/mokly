@@ -4,11 +4,11 @@
 
 Variant entry navigation, component-shaped icons, sibling comparison
 continuity, removed-variant Dark availability, fallback breadcrumbs, the Specs
-section, and entry rows for a folder's own screen or component are implemented
-with path-keyed rows and the `variants:<path>` disclosure key. The `Moved`
-label and the Changes activation of a container row whose changed rows are only
-folder members, designed in `design/browse/index-entries/**`, await delivery
-through the [path identity plan](../../plans/path-identity.md).
+section, entry rows for a folder's own screen or component, and the Changes
+activation of a container row whose changed rows are only folder members
+(`design/browse/index-entries/**`) are implemented with path-keyed rows and the
+`variants:<path>` disclosure key. The `Moved` label awaits delivery through the
+[path identity plan](../../plans/path-identity.md).
 
 This contract owns the shell presentation of screen and component variants.
 Variant authoring, inheritance, manifest relationships, and generated views are

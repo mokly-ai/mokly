@@ -3,9 +3,9 @@
 ## Delivery Status
 
 Implemented in the path-addressed design catalogue. The outer shell renders the
-folder pages, entry rows, and path chips below; Markdown documents, `Moved`
-rows, and opening a folder screen's first changed member from its Changes row
-await the [path identity plan](../../plans/path-identity.md).
+folder pages, entry rows, path chips, Markdown documents, and the first changed
+member that a folder screen's Changes row opens; `Moved` rows await the
+[path identity plan](../../plans/path-identity.md).
 
 This document describes the fixture catalogue that the Browse and Changes
 design screens browse, the branches they depict, and their transitions. The

@@ -60,8 +60,9 @@ slugs supply complete paths; `_folder.json` records supply readable folder title
 Helpers remain ordinary TypeScript modules. The exporting entry module determines
 identity while the defining helper remains the source attribution.
 
-The design screens depict the planned final navigation and move presentation.
-The outer runtime renders the same Specs tree; move detection remains planned.
+The design screens depict the final navigation and the planned move
+presentation. The outer runtime renders the same Specs tree; move detection
+remains planned.
 `specs/example/README.md` is the Example folder page. Its workspace guide links
 to that README, headings and screens and copies `workspace.svg` as a resource.
 Both documents follow the selected Light or Dark appearance. The shared library

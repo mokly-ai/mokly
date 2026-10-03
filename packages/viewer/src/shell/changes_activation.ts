@@ -1,6 +1,8 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
 import { folderTitlesAt } from "../registry/folder_titles.js";
+import type { HierarchyLeaf, HierarchyNode } from "../registry/hierarchy.js";
+import type { ManifestEntry } from "../registry/types.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import {
@@ -39,7 +41,7 @@ export function changesActivation(
         entry: requested,
         ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
       }
-    : firstVisibleChangedVariant(catalogue, context, selection, requested.path);
+    : firstVisibleChangedEntry(catalogue, context, selection, requested.path);
   if (!destination) return route;
   const redirected = destination.entry.path !== requested.path;
   const next: ShellRoute = redirected
@@ -92,7 +94,12 @@ function selectionHasChangedRoute(
     : false;
 }
 
-function firstVisibleChangedVariant(
+/**
+ * The first visible changed entry an unmodified container row lists, in list
+ * order: its variants, retained removed variants after them, then its folder
+ * members, descending into member folders and member lists.
+ */
+function firstVisibleChangedEntry(
   catalogue: Catalogue,
   context: ShellContext,
   selection: ViewerSelection,
@@ -105,22 +112,83 @@ function firstVisibleChangedVariant(
     !catalogue.manifest.entries.some((entry) => entry.path === parent.path)
   )
     return;
-  const current = (catalogue.hierarchy.variantsByPath.get(parentId) ?? []).map(
-    (entry) => ({ entry }),
-  );
-  const removed = catalogue.removedEntries.flatMap(({ entry, snapshotId }) =>
-    entry.kind === parent.kind &&
-    "variantOf" in entry &&
-    entry.variantOf === parentId
-      ? [{ entry, ...(snapshotId ? { snapshotId } : {}) }]
-      : [],
-  );
-  return [...current, ...removed].find(
+  const roots =
+    parent.kind === "component"
+      ? catalogue.hierarchy.roots.components
+      : catalogue.hierarchy.roots.specs;
+  const node = entryNode(roots, parentId);
+  const listed = node
+    ? entryList(catalogue, node)
+    : [
+        ...(catalogue.hierarchy.variantsByPath.get(parentId) ?? []).map(
+          (entry) => ({ entry }),
+        ),
+        ...removedVariants(catalogue, parent),
+      ];
+  return listed.find(
     ({ entry }) =>
       context.changedEntries?.includes(entry.path) &&
       rowMatchesQuery(
         { freeText: selection.search, tags: selection.tags },
         searchRow(entry, folderTitlesAt(catalogue.hierarchy, entry.path)),
       ),
+  );
+}
+
+/** One section's row for an entry path, wherever it is listed. */
+function entryNode(
+  nodes: readonly HierarchyNode<ManifestEntry>[],
+  path: string,
+): HierarchyLeaf<ManifestEntry> | undefined {
+  for (const node of nodes) {
+    if (node.kind === "entry" && node.key === path) return node;
+    const found = entryNode(node.children ?? [], path);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/** The entries an entry row's list holds, in the order the list shows them. */
+function entryList(
+  catalogue: Catalogue,
+  node: HierarchyLeaf<ManifestEntry>,
+): ChangedDestination[] {
+  const children = node.children ?? [];
+  const variant = (child: HierarchyNode<ManifestEntry>) =>
+    child.kind === "entry" &&
+    "variantOf" in child.entry &&
+    child.entry.variantOf === node.entry.path;
+  return [
+    ...children.flatMap((child) =>
+      child.kind === "entry" && variant(child) ? [{ entry: child.entry }] : [],
+    ),
+    ...removedVariants(catalogue, node.entry),
+    ...children
+      .filter((child) => !variant(child))
+      .flatMap((child) => listedRows(catalogue, child)),
+  ];
+}
+
+/** A member row followed by everything its folder or list holds. */
+function listedRows(
+  catalogue: Catalogue,
+  node: HierarchyNode<ManifestEntry>,
+): ChangedDestination[] {
+  return node.kind === "folder"
+    ? node.children.flatMap((child) => listedRows(catalogue, child))
+    : [{ entry: node.entry }, ...entryList(catalogue, node)];
+}
+
+/** Retained baseline variants that a surviving entry still lists. */
+function removedVariants(
+  catalogue: Catalogue,
+  parent: CatalogueManifestEntry,
+): ChangedDestination[] {
+  return catalogue.removedEntries.flatMap(({ entry, snapshotId }) =>
+    entry.kind === parent.kind &&
+    "variantOf" in entry &&
+    entry.variantOf === parent.path
+      ? [{ entry, ...(snapshotId ? { snapshotId } : {}) }]
+      : [],
   );
 }

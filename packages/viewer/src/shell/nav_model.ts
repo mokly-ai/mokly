@@ -32,7 +32,7 @@ export function catalogueNavSections(
           title: entry.title,
           tags: entry.tags ?? [],
           ...(folderTitles.length > 0 ? { folderTitles } : {}),
-          removedPage: entry.kind === "page",
+          removedPage: entry.kind === "page" || entry.kind === "document",
           ...(snapshotId ? { snapshotId } : {}),
           ...(variantOf === undefined ? {} : { variantOf }),
         },

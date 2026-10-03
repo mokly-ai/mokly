@@ -2,9 +2,10 @@
 
 ## Delivery Status
 
-Build, Check, Serve and export render documents. The viewer uses its existing
-page frame. Final navigation, Details presentation, and the `Light only` note
-remain in the [path identity plan](../../plans/path-identity.md).
+Build, Check, Serve and export render documents. The shell presents them in
+the page view with their rows, breadcrumbs, path chip, Details, Related docs
+links, and `Light only` note. Move pairing remains planned in the
+[path identity plan](../../plans/path-identity.md).
 
 A document is a Markdown file that a [root](./mokly-paths.md#roots) matches.
 It becomes an entry of kind `document` with a path derived like every other
@@ -169,14 +170,17 @@ interface ManifestDocument extends ManifestEntryBase {
 the document references; `declaredDependencies` is empty and `relatedDocs` is
 empty. The public read model emits `CatalogueDocument` with `kind:
 "document"` and `colorSchemes` under the [catalogue contract](./mokly-catalogue.md).
-Details show the description, tags, and source path. When another entry's
+Details show the description, tags, and source path, and the Dependencies
+row lists the source with its resources. When another entry's
 `relatedDocs` repository path names a current document, projection emits
 `mock:<document path>` in `details.relatedDocs`. Other paths stay display labels;
 removed entries retain baseline repository labels. Public readers validate the
 logical reference against current documents. The viewer derives its URL: the
 Related docs row shows each such reference as a link to the document's
 `/view/<path>/`, labelled with the document's title, and every other value as
-its display label.
+its display label. Serve and export read the manifest instead, so their row
+links each repository path that names a current document's source in the same
+way, and a removed entry's row keeps every value as a label.
 
 ## Changes
 

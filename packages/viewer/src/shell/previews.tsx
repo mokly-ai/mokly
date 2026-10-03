@@ -12,6 +12,7 @@ import type { ShellContext } from "./context.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
 import { PreviewFrame } from "./preview_frame.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
+import { documentLightOnly } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
 
@@ -30,6 +31,8 @@ export interface RemovedPreviewData {
   address?: string;
   /** The delivery's advertised descriptor; absent when nothing is published. */
   published?: RemovedEntryPreview;
+  /** A document with no historical dark render in a catalogue with Dark. */
+  lightOnly?: true;
 }
 
 /**
@@ -68,12 +71,28 @@ export function removedPreviewData(
       ? { address: entry.address }
       : {}),
     ...(published ? { published } : {}),
+    ...(documentLightOnly(entry, catalogue.hasDarkFragments)
+      ? { lightOnly: true as const }
+      : {}),
   };
 }
 
-/** The quiet band naming what the stage below it holds. */
-function PreviousVersionLabel() {
-  return <p className="mbk-previous">Showing previous version</p>;
+/**
+ * The quiet band naming what the stage below it holds. A light-only document
+ * always carries the note, which the stylesheet shows only under Dark.
+ */
+function PreviousVersionLabel(props: { lightOnly: boolean }) {
+  return (
+    <p
+      className="mbk-previous"
+      data-color-scheme-fallback={props.lightOnly ? "" : undefined}
+    >
+      Showing previous version
+      {props.lightOnly ? (
+        <span className="mbk-frame-scheme-note"> — Light only</span>
+      ) : null}
+    </p>
+  );
 }
 
 function MissingView(props: { viewport: "desktop" | "mobile" }) {
@@ -256,7 +275,7 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
   const viewport = store?.state.selection.viewport ?? "both";
   return (
     <>
-      <PreviousVersionLabel />
+      <PreviousVersionLabel lightOnly={props.data.lightOnly === true} />
       <div
         aria-live="polite"
         className="mbk-preview"

@@ -34,7 +34,11 @@ export function PublicStage({
   const selection = useContext(DisplaySelection);
   if (entry.kind === "page" || entry.kind === "document")
     return (
-      <DocumentStageFrame entry={entry} {...(fragment ? { fragment } : {})} />
+      <DocumentStageFrame
+        entry={entry}
+        hasDarkFragments={hasDarkFragments}
+        {...(fragment ? { fragment } : {})}
+      />
     );
   if (entry.kind === "use-case")
     return (
