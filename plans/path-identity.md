@@ -791,7 +791,7 @@ pre-existing files.
       The example's section trees are identical before and after the change,
       and no design state depicts a hidden folder, a cross-section folder
       page, or a free-text search.
-- [ ] Commit and push.
+- [x] Commit and push (`f01a6e2f`).
 
 ## Milestone 7: Viewer Changes and document presentation
 
