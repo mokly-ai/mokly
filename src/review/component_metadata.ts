@@ -92,6 +92,7 @@ export function metadata(
   entry: ReviewEntry,
   mapPath: (path: string) => string = (path) => path,
   mapDocument: (source: string) => string = (source) => source,
+  mapSource: (source: string) => string = (source) => source,
 ): string {
   const common = { ...entry } as Record<string, unknown>;
   for (const field of [
@@ -103,6 +104,8 @@ export function metadata(
     Reflect.deleteProperty(common, field);
   common.path = mapPath(entry.path).toLowerCase();
   common.relatedDocs = entry.relatedDocs.map(mapDocument);
+  if (entry.kind === "component" && !isManifestComponentVariant(entry))
+    common.ownedDependencies = entry.ownedDependencies.map(mapSource).sort();
   if (typeof common.variantOf === "string")
     common.variantOf = mapPath(common.variantOf).toLowerCase();
   if (entry.kind === "screen")

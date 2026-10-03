@@ -12,6 +12,10 @@ the server's content generations.
 controlled preview diagnostics. Pending evidence, runtime replacement and
 unavailable Changes clear the map. Background classification shares one pairing
 with public catalogue projection, removals and selected comparison capture.
+Only accepted generations report ambiguity and unmatched `movedFrom` diagnostics
+through the terminal reporter; stale background results remain silent.
+Accepted document bodies also travel privately with background compilation so
+Markdown similarity never reads a newer filesystem generation.
 `watch_inventory.ts` refreshes exact watch inputs before watcher attachment.
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or

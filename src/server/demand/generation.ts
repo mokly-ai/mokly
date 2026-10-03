@@ -152,6 +152,10 @@ export class BackgroundGeneration {
             timingCounts("changes.publish", () => ({
               changedEntries: snapshot.changedEntries?.length ?? 0,
             }));
+          for (const diagnostic of snapshot?.pairing?.diagnostics ?? []) {
+            if (this.options.diagnostic) this.options.diagnostic(diagnostic);
+            else new PlainServeReporter().runtimeDiagnostic(diagnostic);
+          }
           this.classified(snapshot);
         }
       } catch (error) {

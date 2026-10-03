@@ -1,5 +1,10 @@
 # Markdown catalogue documents
 
+Parsed Markdown bodies remain private in the document definition and accepted
+compilation. Move similarity compares those bodies with inventoried source bytes
+at the pinned baseline commit. Generated template lines supply no similarity
+signal. Rendered HTML still owns material change classification.
+
 This internal module turns discovered Markdown files into document entries.
 The file is the definition. Consumers need no React component or authoring helper.
 

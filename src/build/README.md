@@ -7,6 +7,11 @@ Final Markdown documents also pass `documents/safety.ts` after logical links and
 compatibility transforms. This independent parse5 allowlist rejects unsafe body
 markup while preserving the owned template and later delivery instrumentation.
 
+Completed compilations retain private document Markdown bodies for move
+similarity. They travel with the accepted generation, never with manifest or
+public catalogue JSON. Resource discovery and comparison share the CSS URL
+tokenizer in `src/css_references.ts`.
+
 `move_targets.ts` accepts current authored hints for initial link diagnostics.
 Later document renders can receive accepted comparison pairs tied to that runtime
 generation. A known prior target produces `moved-link-target`; links never follow

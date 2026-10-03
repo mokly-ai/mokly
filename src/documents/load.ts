@@ -89,6 +89,7 @@ export function loadDocuments(
       entryRoot: sourcePath,
       linkBase: entryLinkBase(identity.path, identity.index),
       body: "",
+      markdown: body,
     };
     return { entry, body, markdown, root };
   });

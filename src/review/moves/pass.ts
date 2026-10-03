@@ -12,19 +12,31 @@ export function matchMovePass(
   after: readonly MoveCandidate[],
   score: (before: MoveCandidate, after: MoveCandidate) => number,
   bestOnly = false,
+  candidates?: (head: MoveCandidate) => readonly MoveCandidate[],
 ): {
   pairs: readonly { before: MoveCandidate; after: MoveCandidate }[];
   ambiguous: readonly { entry: MoveCandidate; diagnostic: string }[];
 } {
   const edges: MoveEdge[] = [];
   for (const head of after)
-    for (const base of before) {
+    for (const base of candidates?.(head) ?? before) {
       if (!compatibleMove(base, head)) continue;
       const value = score(base, head);
       if (value >= 0.5) edges.push({ before: base, after: head, score: value });
     }
+  const beforeEdges = new Map<MoveCandidate, MoveEdge[]>();
+  const afterEdges = new Map<MoveCandidate, MoveEdge[]>();
+  for (const edge of edges) {
+    const bases = beforeEdges.get(edge.before) ?? [];
+    const heads = afterEdges.get(edge.after) ?? [];
+    bases.push(edge);
+    heads.push(edge);
+    beforeEdges.set(edge.before, bases);
+    afterEdges.set(edge.after, heads);
+  }
   const matches = (entry: MoveCandidate, side: "before" | "after") => {
-    const found = edges.filter((edge) => edge[side] === entry);
+    const found =
+      (side === "before" ? beforeEdges : afterEdges).get(entry) ?? [];
     if (!bestOnly || !found.length) return found;
     const best = Math.max(...found.map((edge) => edge.score));
     return found.filter((edge) => edge.score === best);

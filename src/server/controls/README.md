@@ -39,7 +39,8 @@ to the Props-render bundle. Reserved generated resources come only from that
 generation's retained outputs:
 a stale stylesheet or asset on disk cannot satisfy a transient preview link.
 The capture keeps font/image bytes opaque and parses only stylesheet text for
-referenced resources.
+referenced resources. The URL tokenizer is shared with Build and comparison
+normalisation through `src/css_references.ts`.
 Generated inline styles remain part of its HTML. No generated file, manifest,
 watch event, Review artifact, or export inventory is written by this service.
 

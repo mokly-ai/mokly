@@ -7,6 +7,7 @@ import {
 import {
   generatedBytes,
   generatedText,
+  type GeneratedFile,
 } from "../../dist/build/generated_file.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
@@ -48,10 +49,14 @@ export async function componentReviewFixture(
 export function componentGit(
   compilation: Compilation,
   changedPaths: readonly string[] = [],
+  inputs: ReadonlyMap<string, GeneratedFile> = new Map(),
 ): ReadOnlyReviewRepository {
-  const files = new Map(
-    [...compilation.outputs].map(([route, html]) => [`mockups/${route}`, html]),
-  );
+  const files = new Map([
+    ...[...compilation.outputs].map(
+      ([route, html]) => [`mockups/${route}`, html] as const,
+    ),
+    ...inputs,
+  ]);
   const read = (route: string) => {
     const result = files.get(route);
     if (result === undefined) throw new Error(`Missing fixture: ${route}`);

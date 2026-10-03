@@ -25,6 +25,12 @@ export interface MovePairing {
 
 /** Pure material signals supplied after the caller reads the validated documents. */
 export interface MoveSignals {
+  /** Production signals group content before equality; tests may supply only comparisons. */
+  fingerprint?(
+    entry: MoveCandidate,
+    side: "before" | "after",
+    accepted: readonly EntryMove[],
+  ): { hash: string; ignores: string };
   identical(
     before: MoveCandidate,
     after: MoveCandidate,

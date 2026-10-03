@@ -24,6 +24,7 @@ import type { ComponentMaterialReader } from "./component_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import type { ReviewLinkNormalization } from "./ignore.js";
+import type { MoveResources } from "./moves/resources.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
@@ -34,6 +35,7 @@ export interface ComparedComponentView {
   ownedResources: readonly OwnedCssReason[];
 }
 export interface ComponentViewContext {
+  resourceIdentity?: MoveResources;
   beforeReader: ComponentMaterialReader;
   afterReader: ComponentMaterialReader;
   dependencies: ComponentDependencyPolicy;
@@ -158,6 +160,7 @@ export async function compareComponentView(
         ),
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     : new Set<string>();
   if ([...byteChanges].some((route) => !context.changed.has(repoPath(route))))
@@ -168,6 +171,7 @@ export async function compareComponentView(
         await context.afterReader.resources(after!.path, actualAfter),
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     : new Set<string>();
   const actualResourceChange =

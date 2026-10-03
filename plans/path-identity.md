@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–5 and the Milestone 4A review fixes are complete. This plan supersedes
+discussion in this workspace. Milestones 1–5 and the Milestone 4A/5A review fixes are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -767,6 +767,69 @@ No dependency change, new violation or exemption was added.
   - [x] Unit: 3,849 passed, with zero skips or cancellations. Run suites without
         overlapping preparation builds so their assets remain stable.
   - [x] Inspect the staged diff, commit and fast-forward push.
+
+The orchestrator reviews this milestone; the complete implementation review
+remains the final item in Milestone 8.
+
+## Milestone 5A: Move detection review fixes
+
+Correct move evidence so authored content, resources and references retain their
+identity through a directory move. Keep matching efficient and diagnostics visible
+to authors. Write failing regressions before each fix, and update the contracts
+with the implementation.
+
+Status: Complete. Package (six consumer scenarios), unit (3,946), browser (745)
+and hydration (229) pass. The repository checks pass under the existing braces
+advisory and 28-file source-length dispositions. No dependency, new exception
+or shell presentation change was added.
+
+- [x] Compare document similarity using Markdown after front matter; define
+      page similarity from authored visible body content and reject unrelated
+      short documents while retaining edited moves (1).
+- [x] Normalize resource references by resolved identity, pair source-derived
+      generated routes by content, and suppress byte-identical moved resource
+      dependency/shared-impact reasons in material classification (2).
+- [x] Repeat identical-content pairing to a fixed point with newly accepted
+      pairs; preserve permanent ambiguity across iterations and later signals (3).
+- [x] Group normalized content by hash before full equality comparisons, with
+      pairwise fallback only for differing ignore-region sets; prove linear
+      full-comparison counts for unique content (4).
+- [x] Strengthen removed-ambiguity and pass-order tests, restore unpaired
+      kind-reuse discard coverage, and extend move fixtures with depth, CSS,
+      cross-file links, separate flows, component users and unrelated documents (5).
+- [x] Report ambiguity and unmatched movedFrom diagnostics in Serve and export
+      terminal output through the existing terminal presentation boundary (6).
+- [x] Retain accepted Markdown bodies privately, with a separate committed-source
+      reader for derived baselines; never read a newer body for an accepted generation.
+- [x] Share the CSS URL tokenizer with resource canonicalisation; resolve each
+      original srcset token once, including repeated destinations.
+- [x] Map generated styles for moved re-exporting entry roots by their accepted
+      views; keep surviving consumers of a formerly shared route unchanged.
+- [x] Include complete parent variant evidence in the fingerprint read set, even
+      when a variant path already exists; skip incompatible candidate roles.
+- [x] Preserve imported-resource identity when a source directory moves but an
+      explicit entry path stays fixed; do not emit a move for that stable path.
+- [x] Normalize inventoried owned-source paths through defining-module moves;
+      suppress relocated dependency evidence only when confined file bytes match.
+- [x] Update moves/Changes contracts, affected guides and READMEs; keep source
+      files within their limits without altering the 28 existing violations.
+- [x] Smoke-test a real directory move, with and without edits, including
+      imported CSS, links, a flow and a component with users. Prove all pairs,
+      unmodified pure moves, changed edits, old before paths and no paired removals.
+- [x] Run package, unit, browser and hydration suites serially plus all repository
+      checks and changed-file Prettier under the approved audit/length dispositions.
+  - [x] Package: both packages pass all six packed consumer scenarios; Build/Check
+        validate 452 example files and all declaration checks pass.
+  - [x] Final unit: 3,946 passed, with zero failures, skips or cancellations.
+  - [x] Browser: 745 passed. All three known base-flaky cases passed first run.
+  - [x] Hydration: 229 passed, with zero failures, skips or cancellations.
+  - [x] The 113 focused move/deletion/path-reuse regressions pass. Initial full-unit run:
+        3,938 of 3,940 passed; fixed resource-validation error order. The second
+        run passed 3,944 of 3,946; fixed complete parent fingerprint reads for
+        the two existing parent/variant path-reuse cases. The final run passes all.
+  - [x] Repository format, lint, four ratchets, Rust fmt/Clippy, 15 Rust tests
+        and the 9-file Rust length audit pass. The existing audit advisory remains.
+- [x] Inspect deletions and staged changes, then commit and fast-forward push.
 
 The orchestrator reviews this milestone; the complete implementation review
 remains the final item in Milestone 8.

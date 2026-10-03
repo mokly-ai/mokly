@@ -9,6 +9,7 @@ export interface AcceptedGeneration {
   readonly routes: readonly string[];
   readonly outputs?: ReadonlyMap<string, GeneratedFile>;
   readonly deliveredStyleSources: readonly string[];
+  readonly documentMarkdown?: ReadonlyMap<string, string>;
 }
 
 /** Pin one completed compilation's generated evidence before another edit. */
@@ -23,12 +24,18 @@ export function acceptedGenerationFromCompilation(
       .sort(),
     outputs: compilation.outputs,
     deliveredStyleSources: compilation.deliveredStyleSources,
+    ...(compilation.documentMarkdown
+      ? { documentMarkdown: compilation.documentMarkdown }
+      : {}),
   };
 }
 
 /** Reuse one validated inventory load when accepted bytes are read from disk. */
 export function acceptedGenerationFromInventory(
-  graph: Pick<LoadedGraph, "styleOutputs" | "deliveredStyleSources">,
+  graph: Pick<
+    LoadedGraph,
+    "styleOutputs" | "deliveredStyleSources" | "documents"
+  >,
 ): AcceptedGeneration {
   return {
     routes: [...graph.styleOutputs.keys()]
@@ -37,5 +44,11 @@ export function acceptedGenerationFromInventory(
       )
       .sort(),
     deliveredStyleSources: graph.deliveredStyleSources,
+    documentMarkdown: new Map(
+      (graph.documents ?? []).map((entry) => [
+        entry.sourceRelativePath,
+        entry.markdown,
+      ]),
+    ),
   };
 }

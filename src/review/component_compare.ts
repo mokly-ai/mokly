@@ -22,6 +22,8 @@ import {
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
+import type { BaselineReader } from "./git.js";
+import type { MarkdownMoveSources } from "./moves/markdown_sources.js";
 import { prepareMoveClassification } from "./moves/prepare.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
@@ -35,6 +37,8 @@ export async function compareComponentCatalogue(
   baseCommit: string,
   baseRef: string,
   useFastPath?: boolean,
+  markdown?: MarkdownMoveSources,
+  sourceReader?: BaselineReader,
 ): Promise<ReviewArtifact> {
   const baseArtifacts = artifactViews(baseline);
   const headArtifacts = artifactViews(compilation.manifest);
@@ -72,6 +76,8 @@ export async function compareComponentCatalogue(
     changedPaths,
     baseCommit,
     baseRef,
+    ...(markdown ? { markdown } : {}),
+    ...(sourceReader ? { sourceReader } : {}),
     ...(useFastPath === undefined ? {} : { useFastPath }),
   });
   const result = await classifyComponents(prepared);

@@ -42,6 +42,7 @@ import {
 } from "./css/paths.js";
 import { baselinePathMapper } from "./moves/identity.js";
 import { prepareMoveClassification } from "./moves/prepare.js";
+import { movedSourcePaths } from "./moves/source_moves.js";
 import { previousPathFields, type MovePairing } from "./moves/types.js";
 import { aggregateState } from "./screen_views.js";
 
@@ -71,6 +72,8 @@ export async function classifyComponentsWithSources(
     after.entries,
     pairing.moves,
   );
+  const sources = movedSourcePaths(input.before, after, pairing.moves);
+  const mapSource = (path: string) => sources.get(path) ?? path;
   const beforeVariantEntries = componentVariantEntries(before.entries);
   const beforeDocuments = relatedDocumentReferences(before.entries, mapBefore);
   const afterDocuments = relatedDocumentReferences(after.entries);
@@ -114,7 +117,7 @@ export async function classifyComponentsWithSources(
       if (
         pair.before &&
         pair.after &&
-        (metadata(pair.before, mapBefore, beforeDocuments) !==
+        (metadata(pair.before, mapBefore, beforeDocuments, mapSource) !==
           metadata(pair.after, undefined, afterDocuments) ||
           variantParentTitleChanged(pair.before, pair.after, before, after))
       )

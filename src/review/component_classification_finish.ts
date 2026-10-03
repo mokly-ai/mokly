@@ -22,6 +22,7 @@ import {
 } from "./component_resource_attribution.js";
 import { pairedEntryChanges } from "./entry_changes.js";
 import { baselinePathMapper } from "./moves/identity.js";
+import { movedSourcePaths } from "./moves/source_moves.js";
 import type { MovePairing } from "./moves/types.js";
 import { aggregateIgnored } from "./screen_views.js";
 
@@ -76,6 +77,7 @@ export function finishComponentClassification(input: {
   );
   screens.sort((a, b) => lexical(a.path, b.path));
   components.sort((a, b) => lexical(a.path, b.path));
+  const sources = movedSourcePaths(before, after, pairing.moves);
   changes.splice(
     0,
     changes.length,
@@ -88,6 +90,7 @@ export function finishComponentClassification(input: {
         baselinePathMapper(before.entries, after.entries, pairing.moves),
       ),
       relatedDocumentReferences(after.entries),
+      (path) => sources.get(path) ?? path,
     ),
   );
   changes.sort(

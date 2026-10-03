@@ -109,6 +109,7 @@ export async function compareUnchangedComponentView(
         afterResources,
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     ).size > 0
   )
@@ -121,6 +122,7 @@ export async function compareUnchangedComponentView(
         projectedAfterResources,
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     ).size > 0
   )

@@ -1,9 +1,14 @@
+import path from "node:path";
+
 import { generatedViews } from "@mokly/viewer/data";
 
+import { toPosixPath } from "../../config/paths.js";
 import { cachedReviewAssets } from "../cached_assets.js";
 import type { ComponentClassificationInput } from "../component_classification_input.js";
 
 import { readMovePairing } from "./read.js";
+import { readMoveResources } from "./resources.js";
+import { unchangedMovedSources } from "./source_moves.js";
 import type { MovePairing } from "./types.js";
 
 /** Bind one accepted pairing and retained readers before any entry is classified. */
@@ -25,11 +30,47 @@ export async function prepareMoveClassification(
       ),
     ),
   ]);
-  const pairing = await readMovePairing(
+  const resourceEvidence = await readMoveResources(
     input.before.entries,
     input.after.entries,
     beforeReader,
     afterReader,
   );
-  return { ...input, beforeReader, afterReader, pairing };
+  const pairing = await readMovePairing(
+    input.before.entries,
+    input.after.entries,
+    beforeReader,
+    afterReader,
+    input.markdown,
+    resourceEvidence,
+  );
+  const resources = resourceEvidence.paired(
+    input.before.entries,
+    input.after.entries,
+    pairing.moves,
+  );
+  const prefix = toPosixPath(
+    path.relative(input.config.repoRoot, input.config.mockupsDir),
+  );
+  const unchanged = new Set([
+    ...resources.unchangedPaths(prefix),
+    ...(await unchangedMovedSources(
+      input.before,
+      input.after,
+      pairing.moves,
+      input.config,
+      input.sourceReader,
+      input.baseCommit,
+    )),
+  ]);
+  return {
+    ...input,
+    beforeReader,
+    afterReader,
+    pairing,
+    resources,
+    changedPaths: input.changedPaths.filter(
+      (changed) => !unchanged.has(changed),
+    ),
+  };
 }

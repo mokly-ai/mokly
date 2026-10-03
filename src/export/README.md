@@ -16,6 +16,9 @@ under the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md).
 Review and catalogue classification share one accepted move pairing. Paired
 current entries carry prior paths and never produce removed previews. Capture
 uses the original baseline paths, including component and screen variants.
+Accepted move diagnostics pass through the command's terminal reporter before
+publication removes summary files. Baseline source reads for Markdown similarity
+remain separate from rebuilt public-output reads; neither enters the exported site.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback

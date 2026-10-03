@@ -151,6 +151,9 @@ async function generateExport(
             {
               evidence: pinnedEvidence(prepared.commit, changed),
               reader: prepared.reader,
+              ...(prepared.sourceReader
+                ? { sourceReader: prepared.sourceReader }
+                : {}),
             },
             base,
             transaction.stage,
@@ -158,6 +161,8 @@ async function generateExport(
             exclusions,
             { changeEvidence },
           );
+          for (const diagnostic of comparison.pairing?.diagnostics ?? [])
+            options.diagnostic?.(diagnostic);
           contentChanges = await changedContentPaths(
             compilation.manifest,
             baseline,

@@ -24,7 +24,7 @@ function document(path: string): ManifestDocument {
   };
 }
 
-test("identical document content requires the complete scheme set while similarity uses only Light", () => {
+test("identical document content requires the complete scheme set while similarity uses authored Markdown", () => {
   const before = document("old");
   const after = document("new");
   const signals = contentMoveSignals(
@@ -38,6 +38,10 @@ test("identical document content requires the complete scheme set while similari
       ["new/index.html", "one\ntwo\nchanged\nlast\n"],
       ["new/index.dark.html", "unrelated dark after\n"],
     ]),
+    {
+      before: new Map([[before.sourcePath, "one\ntwo\nthree\nfour\n"]]),
+      after: new Map([[after.sourcePath, "one\ntwo\nchanged\nlast\n"]]),
+    },
   );
   assert.equal(signals.identical(before, after, []), false);
   assert.equal(signals.similarity(before, after, []), 0.5);
@@ -50,6 +54,10 @@ test("identical document content requires the complete scheme set while similari
       ["old/index.dark.html", "same"],
     ]),
     new Map([["new/index.html", "same"]]),
+    {
+      before: new Map([[before.sourcePath, "same"]]),
+      after: new Map([[after.sourcePath, "same"]]),
+    },
   );
   assert.equal(equalLight.identical(before, lightOnly, []), false);
   assert.equal(equalLight.similarity(before, lightOnly, []), 1);

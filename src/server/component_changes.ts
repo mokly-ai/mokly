@@ -29,6 +29,7 @@ import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
 import { derivedHeadOutputs } from "../review/head_assets.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
+import { readMoveMarkdown } from "../review/moves/markdown_sources.js";
 import { prepareMoveClassification } from "../review/moves/prepare.js";
 import type { MovePairing } from "../review/moves/types.js";
 import {
@@ -207,6 +208,15 @@ export async function readCatalogueChanges(
     changedPaths,
     beforeReader,
     afterReader: reader,
+    sourceReader: git.sourceReader ?? git.reader,
+    markdown: await readMoveMarkdown(
+      baseline,
+      manifest,
+      config,
+      git.sourceReader ?? git.reader,
+      commit,
+      accepted?.documentMarkdown,
+    ),
   });
   const content = await classifyChangedContent(
     manifest,
@@ -217,7 +227,11 @@ export async function readCatalogueChanges(
     changedPaths,
     reader,
     components ? "pages" : "all",
-    { pairing: prepared.pairing, beforeReader: prepared.beforeReader },
+    {
+      pairing: prepared.pairing,
+      beforeReader: prepared.beforeReader,
+      ...(prepared.resources ? { resources: prepared.resources } : {}),
+    },
   );
   const result = await classifyComponents(prepared);
   const pageIds = new Set(

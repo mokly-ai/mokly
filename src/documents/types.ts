@@ -6,4 +6,6 @@ export interface DocumentDefinition extends EntryInput {
   tags?: readonly string[];
   resources: readonly string[];
   body: string;
+  /** Private accepted source body for similarity; never emitted in public artifacts. */
+  markdown: string;
 }

@@ -46,6 +46,10 @@ Review result v5 first pairs by kind and case-folded path, then by the
 [move contract](../../docs/protocol/mokly-moves.md). `ReviewArtifact.pairing`
 retains all-kind moves and diagnostics beside the visual result, so pages and
 documents contribute move counts without synthetic visual review records.
+Candidate matching repeats with accepted references and uses hashed material
+before full comparison. Similarity reads private authored Markdown or visible
+page body lines. Generated resource routes resolve through accepted source moves;
+equal mapped bytes produce no dependency/shared-impact reasons.
 Snapshots keep original before/after paths and bytes; logical reference
 normalization affects equality only. Resource traversal and CSS matching keep
 real URLs. Moved variants group under their current component parent, while

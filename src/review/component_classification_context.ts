@@ -41,7 +41,12 @@ export async function classificationContext(
     moves,
   );
   const context: ComponentViewContext = {
-    links: catalogueLinkNormalizer(input.before.entries, after.entries, moves),
+    links: catalogueLinkNormalizer(
+      input.before.entries,
+      after.entries,
+      moves,
+      input.resources,
+    ),
     beforeUsage: (usage) => mapUsagePaths(usage, mapBefore),
     beforeReader,
     afterReader,
@@ -55,8 +60,10 @@ export async function classificationContext(
       prefix,
       new CssResourceAnalysis(input.cssParser),
       compareResourceBytes,
+      input.resources,
     ),
     compareResourceBytes,
+    ...(input.resources ? { resourceIdentity: input.resources } : {}),
     ...(input.useFastPath === undefined
       ? {}
       : { useFastPath: input.useFastPath }),
