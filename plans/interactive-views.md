@@ -809,6 +809,16 @@ component, output-lock, watched-resource, Live and imported-style tests.
 Then run one complete `cargo xtask check` without concurrent edits, audit main
 deletions again and push once. The user owns the independent post-push review.
 
+#### Post-push review
+
+The independent review at `51f0aa7b` found no lost content from either side in
+the three merges or their follow-up commits. It found one Medium finding:
+stylesheet requests from installed-package JavaScript still resolve through the
+file system, so deleting such a stylesheet after acceptance fails that
+generation's Live bundle. The user chose option A.
+[Serve Rebuild Status Milestone 9](./serve-rebuild-status.md#milestone-9-pin-installed-stylesheet-requests)
+owns the fix.
+
 ## Post-merge follow-up (non-blocking)
 
 - Live inspection: measure boundaries in the mounted DOM and re-enable

@@ -293,6 +293,50 @@ then recovered is reported as a source failure, showing a false notice.
       accepted generation's Live bundle can change or fail after it is edited
       or deleted.
 
+## Milestone 9: Pin installed stylesheet requests
+
+Backend. Closes finding 1 of the independent review of the mainline
+integrations at `51f0aa7b` (option A, chosen by the user). The accepted graph
+records the stylesheet module for installed-package CSS, but it records
+resolutions only for repository and entry importers. A stylesheet request from
+installed-package JavaScript, such as a package that imports its own CSS
+Module by package name, still resolves through the file system. Deleting that
+stylesheet after acceptance therefore fails the accepted generation's Live
+bundle.
+
+- [ ] Update `docs/protocol/mokly-interactive-source-pinning.md`: the accepted
+      graph also records each stylesheet request from installed-package
+      JavaScript whose target is a captured stylesheet module, and Live
+      answers it from the record before any file-system resolution, for
+      relative and package-name specifiers. Define the installed importer
+      identity, its wire projection, bounds and validation, the behavior when
+      the browser build selects an installed module that the accepted graph
+      did not evaluate, and the behavior for stylesheets outside the
+      repository. Installed JavaScript stays file-system-resolved and
+      unpinned. Requests from installed importers to linked repository
+      workspace packages keep their current behavior, because the Milestone 8
+      review finding awaits a decision.
+- [ ] Add failing tests first: after generation G is accepted, delete, edit and
+      syntactically break a CSS Module and a plain stylesheet that a
+      physically installed package imports by relative path and by its own
+      package name, and require G's Live bundle to compile with G's accepted
+      modules. Also cover a repository module that imports installed CSS by
+      package name.
+- [ ] Record these resolutions during the accepted graph build, carry them
+      through the runtime IPC with strict validation, and replay them in the
+      browser resolver before any file-system resolution.
+- [ ] Tests: a later accepted generation sees the change; an unrecorded
+      stylesheet load keeps the typed `source-not-captured` failure; the
+      documented behavior when the browser build selects a different installed
+      module; strict IPC validation of the new importer identity; the record
+      stays absent while `interactive` is off and outside exports and
+      publication; the example catalogue's Live bundle is unchanged.
+- [ ] Update `src/interactive/README.md` and `src/build/README.md`; run
+      `cargo xtask check`; commit and push.
+- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+      against `origin/main` and report numbered findings with severity,
+      impact and lettered options, without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Consider presenting background Changes failures the same way if the existing

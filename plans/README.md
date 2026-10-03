@@ -12,8 +12,10 @@
 - [Serve Rebuild Status](./serve-rebuild-status.md) — tell the Browse shell
   when watched Serve could not load the latest changes and while an update is
   in progress, and compile Live previews from each generation's accepted
-  sources. Implementation is complete. Milestones 7 and 8 fixed the Milestone
-  6 review's two Medium findings. Awaiting a decision: the Milestone 8
+  sources. Milestones 1 to 8 are complete. Milestones 7 and 8 fixed the
+  Milestone 6 review's two Medium findings. Milestone 9 pins stylesheet
+  requests from installed packages, which fixes the mainline integration
+  review's Medium finding (option A). Awaiting a decision: the Milestone 8
   review's Medium finding (installed packages importing linked repository
   workspace packages bypass Live source pinning) and the Milestone 6 review's
   Low finding (eight-bit terminal string sequences in failure detail). Move
