@@ -5,10 +5,11 @@
 Status: implemented, verified, merged with `origin/main` (#115 and #119), pushed
 and reviewed twice. Milestones 9 to 11 fixed the review findings that the user
 chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
-decisions. Milestones 16 to 21 merge main 0.13.0 and fix second-review
-finding 1; findings 2 to 11 await the user's decision.
-Milestone 16 is implemented, verified and committed locally. The reviewer owns
-the push. The merge includes main through `b2c82c15`,
+decisions. Milestones 16 to 21 merge main 0.13.0 and apply the 2026-10-03 CSS
+change rule, which replaces the finding 1 rule; findings 2 to 11 await the
+user's decision.
+Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
+includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
 instructions (#128), in addition to the five originally listed commits.
 The binding Decisions And Scope remove all three inputs and adopt
@@ -766,6 +767,38 @@ Files that no component brings in keep today's screen-row behavior. The
 screen's comparison details name the component file and the selectors that
 matched outside the component.
 
+On 2026-10-03 the user decided that imported CSS must be handled the same way
+as other CSS. This replaces the 2026-10-02 finding 1 rule above, including its
+exception for files that no component brings in, such as CSS that JavaScript
+imports (#125).
+One rule applies to every changed CSS rule, whatever way its stylesheet
+reaches a page: configured, declared in `stylesheets`, imported by another
+stylesheet, or bundled from JavaScript imports.
+
+- Mokly finds the elements that the changed rule matches on each page that
+  links the stylesheet, before or after the change.
+- A component is changed by the rule when the rule matches an element in the
+  component's own output on one of the component's own pages. That component
+  gets a Changes row.
+- A page gets its own row when the rule matches an element that is not in the
+  output of a component that the rule changes, or when Mokly cannot decide
+  (custom properties, global selectors, unreadable selectors). Otherwise the
+  page is under the Affected screens of those components.
+- Two changed rules in different stylesheets are the same rule when their
+  selectors and their declarations before and after the change are equal.
+  Generated stylesheets copy the same source rules into each entry root, so
+  this identity finds the rule on a component's own page.
+- The page's comparison details name the stylesheet and the selectors that
+  matched outside the changed components.
+
+Thus screen CSS that styles the inside of a component, but does not reach the
+component's own page, gives the screen its own row and leaves the component
+unchanged. Ownership records no longer decide where a stylesheet change goes.
+Declared stylesheets keep their links, provenance and comparison exclusion.
+Ownership records remain for resources that are not CSS, and renderer `styles`
+records keep their current meaning. Review-ignore regions and the existing
+CSS rule analysis limits still apply.
+
 ## Milestone 16: Integrate `main` 0.13.0
 
 - [x] Record source tip `b2928191`, merge base `3699c566`, and fetched main
@@ -925,10 +958,17 @@ Integration evidence:
   - `src/registry/dependency_paths.ts`: retire source-path matching.
   - `tests/design_library_style_collector.test.tsx`: retain its unique checks in the declaration tests.
 
-## Milestone 17: Document the finding 1 rule
+## Milestone 17: Document the CSS change rule
 
-- [ ] Define the finding 1 rule in the stylesheet ownership, component changes
-      and CSS attribution contracts, including the evidence text.
+- [ ] Define the 2026-10-03 CSS change rule in the CSS attribution, component
+      changes, component stylesheet ownership and imported styles contracts:
+      matched elements, components changed by a rule, page rows, rule
+      identity across stylesheets, the evidence text, and the interaction with
+      ownership records, provenance, Review-ignore and unresolved rules.
+- [ ] Update the attribution tables with one row for each way CSS reaches a
+      page: configured, declared, imported by a stylesheet and bundled from a
+      JavaScript import.
+- [ ] Update the Decisions And Scope bullets that the 2026-10-03 rule replaces.
 - [ ] Validate the changed Markdown and run the docs tests.
 
 ## Milestone 18: Depict the outside-component evidence
@@ -942,14 +982,21 @@ Tags: mockup
 
 ## Milestone 19: Classify CSS by where its rules match
 
-- [ ] Failure-first tests: a rule in an imported file that styles a screen
-      element puts the screen in Changes; a rule in the declared file that
-      styles a screen element does the same; a rule in either file that styles
-      only the component puts the component in Changes with the screen under
-      Affected screens; an unresolved rule puts the screen in Changes.
-- [ ] Record which elements each changed rule matches, use the component output
-      markers to decide inside or outside, and attribute the change by the
-      finding 1 rule. Keep the complete and fast comparison paths equal.
+- [ ] Failure-first tests for each way CSS reaches a page (configured, declared,
+      imported by a declared stylesheet, bundled from a JavaScript import):
+  - [ ] A changed rule that styles only a component's output puts that
+        component in Changes, with its consumers under Affected screens.
+  - [ ] A changed rule that styles an element outside the component output
+        puts the page in Changes.
+  - [ ] Screen CSS that styles the inside of a component, but does not reach
+        the component's own page, puts the screen in Changes and leaves the
+        component unchanged.
+  - [ ] An unresolved rule puts the page in Changes.
+- [ ] Record which elements each changed rule matches, decide inside or
+      outside with the component output markers, identify the same rule across
+      stylesheets, and attribute each change by the 2026-10-03 rule. Remove
+      CSS attribution through ownership records. Keep the complete and fast
+      comparison paths equal.
 - [ ] Run the focused tests and the complete unit suite at 100%.
 
 ## Milestone 20: Show the outside-component evidence
@@ -963,7 +1010,9 @@ Tags: ui
 ## Milestone 21: Verify, deliver and review
 
 - [ ] Run `cargo xtask check` at 100%, inspect the diff and deletions against
-      `origin/main`, commit and push.
+      `origin/main`, commit and push. While GHSA-vfj7-8cjw-p6xm has no patched
+      `braces` release, run every other check step at 100% and record the
+      dependency-audit failure as the blocker.
 - [ ] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
