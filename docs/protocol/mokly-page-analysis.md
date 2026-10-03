@@ -9,8 +9,8 @@ check; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprin
 delivers fingerprints. [M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
 implements parse-site instrumentation; counters are owned by
 [timings](./mokly-timings.md#component-analysis-counts).
-The M7 supervisor fixes clarify existing provenance, ignore-subject and
-material rules below; they are documentation-gap clarifications, not new behavior.
+M7 [measurements](../dev/shared-page-analysis-measurements.md) record delivered work.
+Its provenance, ignore-subject and material fixes clarify documentation gaps, not behavior.
 
 ## Scope And Lifetime
 

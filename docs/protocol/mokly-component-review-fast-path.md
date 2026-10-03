@@ -10,6 +10,8 @@ implements the analysis-backed quick check below with no inline work;
 adds the equivalent style-only attempt before complete fall-through; M8 remains pending.
 M7's ownership-only projection and stable discovery policy clarify existing
 rules, closing documentation gaps rather than introducing new behavior.
+The [M7 checkpoint](../dev/shared-page-analysis-measurements.md) records its
+same-host quick-check/complete-path work; performance acceptance remains pending.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by

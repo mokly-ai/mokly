@@ -9,7 +9,7 @@ implements heap/document counts and complete sample outcomes;
 implements segment counts; [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
 implements shared `pageAnalysis` parses; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
 delivers `stylePath`, still pending; M2 records the reference in the fixture README.
-M7 supervisor fixes clarify existing discovery rules, not new behavior.
+M7 [measurements](../dev/shared-page-analysis-measurements.md) retain per-step work.
 
 ## Opt-in timings
 

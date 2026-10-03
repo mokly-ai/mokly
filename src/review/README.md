@@ -378,3 +378,5 @@ See the [Changes contract](../../docs/protocol/mokly-changes.md),
 and [component result schema](../../docs/protocol/mokly-component-review.md).
 The [shared-page checkpoint](../../docs/dev/shared-page-analysis-checkpoint.md)
 records the captured oracle, exact parse bounds and intentional changed outcomes.
+Its [same-host measurements](../../docs/dev/shared-page-analysis-measurements.md)
+retain the M6 controls, original-source payload bounds and exclusive work.

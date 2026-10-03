@@ -1118,17 +1118,21 @@ the original page; give identical texts a single-parse quick check.
       Final `cargo xtask check` uses explicit `PLAYWRIGHT_CHANNEL=chromium`;
       record that setting. Scale benchmarks keep default system Chrome; stop
       and report interactive failure, never silently change the channel.
-- [ ] Discovered: report retained HTML bytes and per-step work, including the
+- [x] Discovered: report retained HTML bytes and per-step work, including the
       page pass and resource documents, against M6's roughly 80% identical-view
       and 83% complete-style byte reductions. Account for source-location and
       reference-inventory overhead rather than treating byte ratios as timings.
+      [Same-host M7 evidence](../docs/dev/shared-page-analysis-measurements.md)
+      records the delivered 79.76%/82.99% cumulative byte reductions, original
+      per-view source payload bounds, scoped page counts and every exclusive
+      counter. These payload/workload bytes are not live DOM or total heap.
 - [x] Run the fast-path, comparison-mode and Changes equivalence suites;
       preserve assertions outside the page contract's explicit provenance/
       ignore-eligibility/context cases. Retain the delivered text-material
       oracle and record old
       and new expectations for every intentionally adapted test, including
       select/template and malformed-HTML projected-resource fixtures.
-- [ ] Record the no-change and component-style samples of both fixtures.
+- [x] Record the no-change and component-style samples of both fixtures.
       Discovered: after the supervisor's code check, prepare clean M6
       `e5025e64` separately (same analysis code as measured `1887eff6`) on this
       host, using identical commands for cold/warm no-change and component-style
@@ -1142,8 +1146,28 @@ the original page; give identical texts a single-parse quick check.
       and spread; label M2–M6 cross-host numbers as historical context. Record
       `machine.cpu`, `/proc/cpuinfo` model/MHz and CPU steal time per snapshot.
       Do not change Decision 13's machine requirement or its contract.
+      Completed October 2–3, 2026 on clean `4d6a9956` and `e5025e64`:
+      24 matrix samples (22 ok, two incomplete M6 style), four supplemental
+      uncapped samples (all ok), no retries or browser-channel switches.
+      Ratios/spread, CPU/MHz/steal and raw evidence are linked above; all setup
+      sources and outputs restore byte-identically. M8 remains unstarted.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
+- [ ] Discovered: the final pinned-Chromium `cargo xtask check` stops at the
+      dependency audit, before any suite, on the unpatched braces advisory
+      `GHSA-vfj7-8cjw-p6xm` (13 transitive high reports through React Native/Metro).
+      Resolve this unrelated gate blocker or obtain an explicit scoped user
+      decision before push; do not change dependencies or waive the audit
+      under the browser-only exception. The browser report retains both audits;
+      separate final hydration passes 219/219 and report/docs checks pass.
+      The supervisor approves a new local evidence commit only, with the audit
+      blocker in its body; push remains held for the user's gate decision.
+- [ ] Discovered: after the local evidence commit, run package, unit,
+      pinned-Chromium browser and hydration individually through xtask. Record
+      every result in the checkpoint in new commits, never amends. Only known
+      host-timing browser signatures are allowed; leave dependencies, overrides
+      and the gate untouched. Stop without pushing or starting M8, which also
+      waits for decisions on recorded M5 finding 1 and M6 finding 2.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

@@ -292,6 +292,10 @@ The [M4 parse-reuse](../../../docs/dev/large-fixture-parse-reuse.md) and
 retain all smoke outcomes and the provisionally accepted cold-cost regression.
 The [M6 cost checkpoint](../../../docs/dev/large-fixture-cost-checkpoint.md) records
 matrices, profiles, margins and noise-aware projections of residual sheet work.
+The [M7 shared-page measurements](../../../docs/dev/shared-page-analysis-measurements.md)
+retain same-host M6/M7 matrices, uncapped pairs for incomplete control cells,
+CPU/steal observations, delivery margins and original-text/per-step reductions.
+They are not cross-host Decision 13 acceptance.
 
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),

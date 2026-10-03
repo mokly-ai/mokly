@@ -261,9 +261,40 @@ must stop and be reported, never silently switch channels.
 
 After approval, M7 scale evidence uses same-session, same-host M6/M7 comparisons:
 prepare a separate clean `e5025e64` worktree (same analysis code as measured
-`1887eff6`), and interleave **M6, M7, M7, M6** per fixture. Each pass records
+`1887eff6`), and interleave **M6, M7, M7, M6** for default; cumulative runs M6
+then M7 once each, under the supervisor's third-round brief. Each pass records
 no-change/component-style cold and warm scenarios. Report ratio spreads, not
 direct comparisons with M2–M6's different-host times. Each machine snapshot
 records `machine.cpu`, `/proc/cpuinfo` model/MHz and CPU steal time. Decision 13's
 same-reference-machine acceptance remains unchanged; its host question is for
 the user, not a contract amendment at this checkpoint.
+
+The [approved M7 measurements](./shared-page-analysis-measurements.md) now retain
+those comparisons and paired unprofiled uncapped style runs for the two M6
+fixed-wait failures. All system-Chrome interactive checks succeed. Final
+verification explicitly exports `PLAYWRIGHT_CHANNEL=chromium`; results follow
+in the final-gate record without changing browser timeouts or product UI.
+
+## Final Measurement Gate: Dependency Blocker
+
+After all approved scale runs, `PLAYWRIGHT_CHANNEL=chromium cargo xtask check`
+under Node 24.19.0 exits 1 at its **first** command, `npm run dependencies:check`.
+It reports 13 high-severity transitive issues from `braces` through micromatch,
+Metro and React Native. An independent audit reproduces the same result.
+The [reviewed advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+affects braces through 3.0.3, lists no patched release, and was reviewed/updated
+October 2. The audit gives `fixAvailable: false` for braces; its suggested forced
+React Native Worklets downgrade is not a safe, authorized M7 fix.
+
+This is **not** an approved browser-timing exception. The full command never
+reaches unit, browser or hydration; no fresh browser result is claimed. Separate
+pinned hydration passes **219/219**, with zero skips/cancellations. Reporting
+passes seven documentation tests, Prettier, 151 local link targets and ratchets.
+Dependencies, UI and audit thresholds remain unchanged. The supervisor approves
+a new local evidence commit, but **holds the push** for the user's gate decision.
+Remaining package/unit/pinned-browser/hydration suites run individually through
+xtask; no exception is inferred. M8 also waits for M5 finding 1 and M6 finding 2.
+
+Evidence is in `.context/delegation/scalable/m7-measurements/`:
+`final-check.log/.exit`, before/after observations, `final-audit.json/.exit`,
+and `final-hydration.log/.json/.exit`. Neither failure is silently retried away.

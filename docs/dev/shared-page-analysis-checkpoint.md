@@ -3,7 +3,8 @@
 Milestone 7 of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
 implements the [page-analysis contract](../protocol/mokly-page-analysis.md)
 through its identical-text quick check. Fingerprints and the style-only route
-remain pending. This is a code checkpoint, not a performance acceptance run.
+remain pending. The [approved same-host measurements](./shared-page-analysis-measurements.md)
+record all M7/control samples and retained work, not performance acceptance.
 
 ## Delivered Boundaries
 
@@ -229,9 +230,11 @@ every failed/interrupted run and three cold direct-export timings. No UI code,
 browser assertions or timeouts change. M10 requires the complete green suites
 in CI or on a reference-CPU host before final acceptance.
 
-After supervisor approval, record both fixtures' no-change/component-style
-cold/warm samples, inline delivery headroom and retained HTML-byte/per-step
-work against M6. Source-location/inventory overhead and the separate page pass
-remain explicit; fewer parsed bytes are not a predicted timing ratio. No fixture
-is regenerated or measured at this checkpoint. `cargo xtask check` and push
-remain after the approved measurements, as instructed.
+The [measurement companion](./shared-page-analysis-measurements.md) records the
+approved default ABBA and cumulative M6-then-M7 comparison, all fixed-wait
+outcomes and supplementary uncapped pairs, inline headroom and retained work.
+Same-host no-change improves about 65% cumulative, style about 50%; parsed-byte
+reductions match M6's roughly 80%/83% model. Source-location/inventory overhead,
+the separate page pass, timing spread and the changed host remain explicit.
+Final verification uses pinned Chromium; the linked browser report records its
+result and the supervisor-approved host-timing boundary before push.
