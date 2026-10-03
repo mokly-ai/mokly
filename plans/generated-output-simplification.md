@@ -569,6 +569,133 @@ and silently replace each other on merge, and that exports still contain
 is overstated. The 26 earlier findings remain open; each finding awaits the
 user's decision.
 
+## Milestone 9: Define the merged layout and review-fix contracts
+
+Documentation only. The user approved these rename review decisions: 28 A
+(design one `mokly-generated/` layout with `main`'s imported CSS before
+merging), 29 B and C (separate lint rules, tested in every covered folder),
+30 C (rename the `__mokly/` namespace so that no deployed name starts with
+`_` or `.`), 31 A (reword the naming rule), and 33 B (`import/no-duplicates`).
+Meanwhile `origin/main` added imported CSS delivery under
+`<mockupsDir>/mokly-generated/styles/` and `assets/` with its own
+`GENERATED_DIRECTORY` constant (#125), navigation paths (#123), publish
+content deltas (#122), route-scoped shell bootstraps (#120), and manifest v7,
+and it still uses the committed and derived output modes.
+
+- [ ] Audit every addition on `origin/main` since the merge base
+      (`git diff --name-status <base>..origin/main`) and list in this plan
+      the features, contracts, and tests that the merge must preserve.
+- [ ] Define one `mokly-generated/` layout: pages at
+      `mokly-generated/<route>`, the manifest at
+      `mokly-generated/mokly-manifest.json`, `main`'s compiled stylesheets at
+      `mokly-generated/styles/…` and copied assets at
+      `mokly-generated/assets/…` with paths relative to the generated
+      directory; `styles` and `assets` reserved as first route segments with
+      a defined error; one shared constant; and one rule for the files that
+      pages may reference (generated pages, generated stylesheets and assets,
+      and the authored closure).
+- [ ] Define the merged manifest: `main`'s v7 identity-derived routes plus
+      this branch's `assetClosure`, `generatedFiles` inventory, and
+      `blobHashAlgorithm` in a new schema version, with generated stylesheets
+      and assets in the inventory and readers for every earlier version.
+- [ ] Define how imported CSS works without output modes: Git-index
+      tracking, in-memory head output, per-commit baselines, `build --watch`
+      and `serve --build`, PostCSS content scanning that excludes
+      `mokly-generated/`, and change detection for generated stylesheets.
+      Remove the post-merge follow-up item that `main` has now delivered.
+- [ ] Rename the `__mokly/` namespace to `mokly-viewer/` for Serve, export,
+      publication, viewer, and upload paths. Define its single constant, its
+      lint guard, and a compatibility contract in which an older host or
+      viewer fails with a clear version error instead of misreading an
+      artifact. Record any cloud-product update as post-merge follow-up.
+- [ ] Reword the naming rule: no deployed name that a site visitor needs
+      starts with `.`, `_`, `#`, or `~`; hosts may drop the optional
+      `.mokly-export-artifact` marker; a leading dot remains only for local
+      Mokly state.
+- [ ] Define the lint contracts: a local ESLint rule that rejects the
+      spelled-out generated and viewer directory names in string, template,
+      and regular-expression literals outside their defining modules;
+      `main`'s `localeCompare` ban in its own rule; `import/no-duplicates`;
+      and tests that probe every covered folder for each rule.
+- [ ] Update the plan index entry, run `npm run format:check`, review the
+      diff, commit, and push.
+
+## Milestone 10: Give the directory-name check its own lint rule
+
+Backend. This runs before the merge, so `main`'s `no-restricted-syntax`
+block and this branch's check never share one ESLint rule.
+
+- [ ] Replace the `no-restricted-syntax` directory-name check with the local
+      ESLint rule, and prove that a string, a template, and a
+      regular-expression literal are reported.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; commit and push.
+
+## Milestone 11: Merge `main` and unify the generated directory
+
+Backend.
+
+- [ ] Record the source tip and merge base, merge `origin/main`, resolve
+      conflicts path by path while preserving every feature listed in
+      Milestone 9, and record every authorized removal in the merge commit.
+- [ ] Implement the Milestone 9 layout and manifest: one constant,
+      generated stylesheets and assets relative to the generated directory,
+      reserved route segments, the shared reference rule, and imported CSS
+      with Git-index tracking, in-memory head output, per-commit baselines,
+      and the opt-in writers.
+- [ ] Update the tests and fixtures from both sides. Add tests that page
+      routes cannot collide with `styles/` or `assets/`, and that a page loads
+      its imported stylesheet from disk, through Serve, and in an export.
+- [ ] Smoke test the example: build, `check`, Serve with Changes against
+      `origin/main`, an export served by a static file server, and a screen
+      with imported CSS that is styled in all three.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; commit and push.
+
+## Milestone 12: Rename the `__mokly/` namespace to `mokly-viewer/`
+
+Backend.
+
+- [ ] Define the name once, import it everywhere, and extend the local lint
+      rule to it.
+- [ ] Rename the Serve routes, export and publication paths, viewer URLs,
+      and upload archive paths, and apply the Milestone 9 compatibility
+      contract.
+- [ ] Extend the export and upload regression tests: no path segment
+      starts with `.`, `_`, `#`, or `~`, except `.mokly-export-artifact`.
+- [ ] Smoke test Serve, an export served by a static file server, and a
+      publication archive.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; commit and push.
+
+## Milestone 13: Lint coverage after the merge
+
+Backend.
+
+- [ ] Add tests that probe every folder covered by the directory-name rule
+      and by `main`'s `localeCompare` rule, so that neither rule can stop
+      applying without a test failure.
+- [ ] Enable `import/no-duplicates` and apply its automatic fix to the
+      merged code.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; commit and push.
+
+## Milestone 14: Verify and review the merged branch
+
+- [ ] Re-read every document changed in Milestones 9 to 13 against the
+      shipped behaviour and fix drift.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; `git add -A`; commit with Conventional Commits; push the
+      branch.
+- [ ] After the push, review the complete local diff against `origin/main`
+      using `docs/implementation-review-prompt.md`; report numbered findings
+      with severities and recommendations without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Parked: replace archive extraction with Git worktrees in a cache outside

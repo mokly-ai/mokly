@@ -7,9 +7,10 @@
   `<mockupsDir>/mokly-generated/` tree with referenced authored assets, and
   removal of generated-file ownership machinery are implemented and verified;
   the approved directory rename avoids dot-path restrictions on static hosts.
-  The 26 earlier and 7 rename review findings (one high: `main` now uses
-  `mokly-generated/` for generated CSS) await the user's decision before the
-  PR merges.
+  Milestones 9–14 merge `main` into one `mokly-generated/` layout with its
+  imported CSS, rename `__mokly/` to `mokly-viewer/`, and apply the approved
+  lint and naming fixes; the other open review findings await the user's
+  decision before the PR merges.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.
