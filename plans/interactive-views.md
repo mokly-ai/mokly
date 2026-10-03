@@ -670,6 +670,14 @@ not-yet-merged #130 additions. Merge 2 has no deletion against current main.
 The final complete gate runs after this record commit. The user owns the
 independent post-push implementation review.
 
+The first complete gate on the combined tip passed the repository and package
+suites. The unit suite ran 3,842 tests and found one guide-copy failure:
+`docs/guides/start/serve.md` named a repository-only example path. Main's
+existing `tests/guides_copy.test.ts` captures this rule. The follow-up removes
+that path and keeps every Live example instruction. The example README already
+owns the repository source locations. The complete unit suite and then the
+complete gate run again after the follow-up commit.
+
 ## Post-merge follow-up (non-blocking)
 
 - Live inspection: measure boundaries in the mounted DOM and re-enable

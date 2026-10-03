@@ -64,7 +64,7 @@ local component state and catalogue links respond. An entry that declares
 `interactive: false` stays Static and shows no control. Changes, comparisons,
 Build, Check, Export, and Publish continue to use static documents.
 
-The basic example under `examples/basic` enables Live. Open **Example →
+The basic example catalogue enables Live. Open **Example →
 Screens → Plan your visit**, switch to Live, change the guest count, and
 follow its Details link. The registered Guest picker also has two saved
 variants under **Example → Components**; the Details screen is the
