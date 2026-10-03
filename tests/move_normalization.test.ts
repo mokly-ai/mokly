@@ -18,7 +18,7 @@ function page(path: string): ManifestEntry {
   };
 }
 
-test("move normalization changes catalogue destinations while preserving every other byte", () => {
+test("move normalization maps catalogue links and resolves resource routes while preserving prose", () => {
   const links = catalogueLinkNormalizer(
     [page("old/target")],
     [page("new/target")],
@@ -31,11 +31,13 @@ test("move normalization changes catalogue destinations while preserving every o
     'data-mokly-link="new/target',
   );
   const normalized = normalizeReviewPair(before, after, "linker", links);
-  assert.equal(normalized.base, normalized.head);
+  assert.notEqual(normalized.base, normalized.head);
+  assert.equal(normalized.resourceBase, before);
+  assert.equal(normalized.resourceHead, after);
   assert.ok(normalized.head.includes('href="mock:new/target#part"'));
   assert.ok(normalized.head.includes('data-nav-href="mock:new/target#part"'));
   assert.ok(normalized.head.includes("<h1>old/target</h1>"));
-  assert.ok(normalized.head.includes('<img src="logo.png">'));
+  assert.ok(normalized.head.includes('<img src="new/linker/logo.png">'));
   assert.ok(normalized.head.includes('href="https://example.com/old/target"'));
 });
 
@@ -89,5 +91,33 @@ test("normalization distinguishes a reused current path from its moved former ki
   assert.notEqual(
     normalizeReviewPair(before, before, "linker", links).base,
     normalizeReviewPair(before, before, "linker", links).head,
+  );
+});
+
+test("resource URLs use resolved routes across depth, including CSS and srcset duplicates", () => {
+  const links = catalogueLinkNormalizer(
+    [],
+    [],
+    [],
+  )("old/view/index.html", "new/deep/view/index.html");
+  const before =
+    '<link href="../../theme.css"><img srcset="../../logo.svg 1x, ../../logo.svg 2x"><div style="background: url(../../logo.svg)"></div><style>@import "../../theme.css";</style>';
+  const after = before.replaceAll("../../", "../../../");
+  const pair = normalizeReviewPair(before, after, "test", links);
+  assert.equal(pair.base, pair.head);
+  assert.ok(pair.head.includes('srcset="logo.svg 1x, logo.svg 2x"'));
+  assert.equal(pair.resourceBase, before);
+  assert.equal(pair.resourceHead, after);
+});
+
+test("repeated srcset destinations normalize each original token exactly once", () => {
+  const links = catalogueLinkNormalizer(
+    [],
+    [],
+    [],
+  )("folder/index.html", "folder/index.html");
+  assert.equal(
+    links.before('<img srcset="logo.svg 1x, logo.svg 2x">'),
+    '<img srcset="folder/logo.svg 1x, folder/logo.svg 2x">',
   );
 });

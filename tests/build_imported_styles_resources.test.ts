@@ -9,7 +9,7 @@ import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
-import { extractCssReferences } from "../dist/html_references.js";
+import { extractCssReferences } from "../dist/css_references.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";

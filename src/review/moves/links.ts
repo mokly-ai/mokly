@@ -15,6 +15,8 @@ import {
 import type { ReviewLinkNormalization } from "../ignore.js";
 
 import { baselinePathMapper } from "./identity.js";
+import { normalizeResourceLinks } from "./resource_links.js";
+import type { MoveResources, MoveSide } from "./resources.js";
 import type { EntryMove } from "./types.js";
 
 type HtmlNode = DefaultTreeAdapterMap["node"];
@@ -24,6 +26,7 @@ export function catalogueLinkNormalizer(
   before: readonly ManifestEntry[],
   after: readonly ManifestEntry[],
   moves: readonly EntryMove[],
+  resources?: MoveResources,
 ): (beforeRoute: string, afterRoute: string) => ReviewLinkNormalization {
   const current = new Map(
     after.map((entry) => [entry.path.toLowerCase(), entry.path]),
@@ -32,28 +35,37 @@ export function catalogueLinkNormalizer(
   const mapAfter = (value: string) => current.get(value.toLowerCase()) ?? value;
   const baseRoutes = routeIndex(before);
   const headRoutes = routeIndex(after);
-  const base = cachedRewrite(baseRoutes, mapBefore);
-  const head = cachedRewrite(headRoutes, mapAfter);
+  const base = cachedRewrite(baseRoutes, mapBefore, "before", resources);
+  const head = cachedRewrite(headRoutes, mapAfter, "after", resources);
   return (beforeRoute, afterRoute) => ({
-    before: (html) => base(beforeRoute, html),
-    after: (html) => head(afterRoute, html),
+    before: (html) => base(beforeRoute, html, afterRoute),
+    after: (html) => head(afterRoute, html, beforeRoute),
   });
 }
 
 function cachedRewrite(
   routes: ReadonlyMap<string, string>,
   mapPath: (path: string) => string,
+  side: MoveSide,
+  resources?: MoveResources,
 ) {
   const documents = new Map<string, Map<string, string>>();
-  return (route: string, html: string): string => {
-    let cache = documents.get(route);
+  return (route: string, html: string, counterpart: string): string => {
+    const key = `${route}\0${counterpart}`;
+    let cache = documents.get(key);
     if (!cache) {
       cache = new Map();
-      documents.set(route, cache);
+      documents.set(key, cache);
     }
     let normalized = cache.get(html);
     if (normalized === undefined) {
-      normalized = rewrite(html, route, routes, mapPath);
+      normalized = normalizeResourceLinks(
+        rewrite(html, route, routes, mapPath),
+        route,
+        side,
+        resources,
+        counterpart,
+      );
       cache.set(html, normalized);
     }
     return normalized;

@@ -103,6 +103,21 @@ export function normalizeSingleDocument(
   return links ? links(normalized) : normalized;
 }
 
+/** Independent material is comparable only when both ignore contracts match. */
+export function reviewFingerprintMaterial(
+  html: string,
+  route: string,
+  links?: (html: string) => string,
+): { material: string; ignores: string } {
+  const parsed = parseDocument(html, route);
+  const regions = [...parsed.regions.keys()].sort();
+  const material = render(parsed, new Set(regions));
+  return {
+    material: links ? links(material) : material,
+    ignores: JSON.stringify([regions, [...parsed.materials.keys()].sort()]),
+  };
+}
+
 function parseDocument(content: string, route: string): ParsedDocument {
   if (generatedSource(content))
     content = content.slice(content.indexOf("\n") + 1);

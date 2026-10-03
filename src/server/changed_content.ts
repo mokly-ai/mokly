@@ -9,13 +9,11 @@ import type {
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
 
-import { isAuthoringSource } from "../build/source_inventory.js";
-import { isInside, toPosixPath } from "../config/paths.js";
+import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { documentResourceIndex } from "../documents/resource_references.js";
 import { MoklyError } from "../errors.js";
-import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
@@ -30,9 +28,17 @@ import {
   normalizeSingleDocument,
 } from "../review/ignore.js";
 import { catalogueLinkNormalizer } from "../review/moves/links.js";
+import {
+  readMoveResources,
+  type MoveResources,
+} from "../review/moves/resources.js";
 import type { MovePairing } from "../review/moves/types.js";
 
-import { documentPairs, type DocumentPair } from "./changed_document_pairs.js";
+import {
+  publicChangedRoutes,
+  documentPairs,
+  type DocumentPair,
+} from "./changed_document_pairs.js";
 import { ChangedResourceGraph } from "./changed_resources.js";
 
 /** Material membership and per-view resource evidence from one traversal. */
@@ -45,6 +51,7 @@ export interface ChangedContent {
 export interface ChangedContentComparison {
   pairing?: MovePairing;
   beforeReader?: ReviewAssetReader;
+  resources?: MoveResources;
 }
 
 /**
@@ -95,21 +102,7 @@ export async function classifyChangedContent(
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
-  const publicChanges = new Set(
-    changedPaths.flatMap((changed) => {
-      const candidate = path.resolve(config.repoRoot, changed);
-      if (
-        !isInside(config.mockupsDir, candidate) ||
-        isAuthoringSource(candidate, config, "exclusions") !== undefined
-      )
-        return [];
-      const route = toPosixPath(path.relative(config.mockupsDir, candidate));
-      return route === MANIFEST_NAME ||
-        EARLIER_MANIFEST_NAMES.includes(route as never)
-        ? []
-        : [route];
-    }),
-  );
+  const publicChanges = publicChangedRoutes(changedPaths, config);
   const derived = config.generatedOutput === "derived";
   if (
     !derived &&
@@ -118,11 +111,6 @@ export async function classifyChangedContent(
   )
     return { changedPaths: [], screens: [] };
   const moves = comparison?.pairing?.moves ?? [];
-  const links = catalogueLinkNormalizer(
-    baseline.entries,
-    manifest.entries,
-    moves,
-  );
   const pairs = documentPairs(
     manifest,
     baseline,
@@ -139,6 +127,22 @@ export async function classifyChangedContent(
       commit,
       prefix,
     );
+  const identities =
+    comparison?.resources ??
+    (
+      await readMoveResources(
+        baseline.entries,
+        manifest.entries,
+        baseReader,
+        headReader,
+      )
+    ).paired(baseline.entries, manifest.entries, moves);
+  const links = catalogueLinkNormalizer(
+    baseline.entries,
+    manifest.entries,
+    moves,
+    identities,
+  );
   const result = new Set<string>();
   const normalizedDocuments = new Map<string, string>();
   const normalizedBases = new Map<string, string>();
@@ -210,6 +214,7 @@ export async function classifyChangedContent(
       before: documentResourceIndex(baseline.entries),
       after: documentResourceIndex(manifest.entries),
     },
+    identities,
   );
   await timeAsync("review.compare-screens", async () => {
     for (let offset = 0; offset < pairs.length; offset += 32) {

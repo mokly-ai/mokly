@@ -41,6 +41,8 @@ export interface Compilation {
   outputs: ReadonlyMap<string, GeneratedFile>;
   /** Repository-relative inputs of delivered CSS and asset routes. */
   deliveredStyleSources: readonly string[];
+  /** Accepted authored Markdown bodies, keyed by repository source path. */
+  documentMarkdown?: ReadonlyMap<string, string>;
 }
 
 /** Compile all expected bytes without mutating consumer output. */
@@ -206,6 +208,12 @@ async function compileMeasured(
     manifest,
     outputs: compilationOutputs,
     deliveredStyleSources: graph.deliveredStyleSources,
+    documentMarkdown: new Map(
+      (graph.documents ?? []).map((entry) => [
+        entry.sourceRelativePath,
+        entry.markdown,
+      ]),
+    ),
   };
   timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
   timingCounts("output", () => ({

@@ -25,6 +25,7 @@ import {
   type ResourceEvidence,
 } from "../review/css/resource_analysis.js";
 import { decideReferencedResource } from "../review/deleted_resource.js";
+import type { MoveResources } from "../review/moves/resources.js";
 import { ResourceGraph } from "../review/resource_graph.js";
 
 /** Cache shared resource edges for one immutable changed-route calculation. */
@@ -55,6 +56,7 @@ export class ChangedResourceGraph {
       before: DocumentResourceIndex;
       after: DocumentResourceIndex;
     } = { before: new Map(), after: new Map() },
+    private readonly identities?: MoveResources,
   ) {
     this.#base = new ComponentMaterialReader(baseline);
     this.#head = new ComponentMaterialReader({
@@ -127,14 +129,18 @@ export class ChangedResourceGraph {
           )
         : new Set<string>();
     const all = [...new Set([...bases, ...resources])];
-    const equivalent = await equivalentDocumentResources(
-      source,
-      document,
-      before,
-      this.documentResources,
-      this.baseline,
-      this.reader,
+    const equivalent = new Set(
+      await equivalentDocumentResources(
+        source,
+        document,
+        before,
+        this.documentResources,
+        this.baseline,
+        this.reader,
+      ),
     );
+    for (const route of this.identities?.equivalent(bases, resources) ?? [])
+      equivalent.add(route);
     const eligible = all.filter(
       (route) =>
         !equivalent.has(route) &&

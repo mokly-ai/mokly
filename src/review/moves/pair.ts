@@ -1,3 +1,4 @@
+import { fingerprintCandidates } from "./fingerprints.js";
 import { matchMovePass } from "./pass.js";
 import {
   compatibleMove,
@@ -87,23 +88,38 @@ export function pairMoves(
         : 0,
   ];
   for (const [index, score] of passes.entries()) {
-    const result = matchMovePass(
-      bases.filter((entry) => !unavailable.has(entry)),
-      heads.filter((entry) => !unavailable.has(entry)),
-      score,
-      index === 3,
-    );
-    for (const pair of result.pairs)
-      if (index === 0 || !pair.after.variantOf) accept(pair.before, pair.after);
-    variants();
-    for (const pair of result.pairs)
-      if (!unavailable.has(pair.before) && !unavailable.has(pair.after))
-        accept(pair.before, pair.after);
-    for (const { entry, diagnostic } of result.ambiguous) {
-      if (unavailable.has(entry)) continue;
-      unavailable.add(entry);
-      diagnostics.push(diagnostic);
-    }
+    let count: number;
+    do {
+      count = moves.length;
+      const remainingBefore = bases.filter((entry) => !unavailable.has(entry));
+      const remainingAfter = heads.filter((entry) => !unavailable.has(entry));
+      const result = matchMovePass(
+        remainingBefore,
+        remainingAfter,
+        score,
+        index === 3,
+        index === 1
+          ? fingerprintCandidates(
+              remainingBefore,
+              remainingAfter,
+              signals,
+              moves,
+            )
+          : undefined,
+      );
+      for (const pair of result.pairs)
+        if (index === 0 || !pair.after.variantOf)
+          accept(pair.before, pair.after);
+      variants();
+      for (const pair of result.pairs)
+        if (!unavailable.has(pair.before) && !unavailable.has(pair.after))
+          accept(pair.before, pair.after);
+      for (const { entry, diagnostic } of result.ambiguous) {
+        if (unavailable.has(entry)) continue;
+        unavailable.add(entry);
+        diagnostics.push(diagnostic);
+      }
+    } while (index === 1 && moves.length > count);
   }
   return { moves: moves.sort(byPath), diagnostics };
 }

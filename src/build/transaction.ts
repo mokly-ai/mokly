@@ -12,6 +12,11 @@ import type { Compilation } from "./compile.js";
 import { walkFiles } from "./discovery.js";
 import { generatedBytes } from "./generated_file.js";
 import { OutputDirectories } from "./output_directories.js";
+import {
+  assertOutputLockHeld,
+  withOutputLock,
+  type OutputLock,
+} from "./output_lock.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import {
   generatedOwnershipDenial,
@@ -22,12 +27,29 @@ import {
   pruneEmptyGeneratedDirectories,
 } from "./reserved_tree.js";
 
-/** Atomically replace owned generated files with rollback on any failure. */
+/**
+ * Atomically replace owned generated files with rollback on any failure, while
+ * holding the repository writer lock. `signal` stops only the wait for the lock.
+ */
 export async function writeCompilation(
   compilation: Compilation,
   config: ResolvedConfig,
   runner?: GitCommandRunner,
+  signal?: AbortSignal,
 ): Promise<void> {
+  return withOutputLock(config.repoRoot, signal ? { signal } : {}, (lock) =>
+    writeLockedCompilation(lock, compilation, config, runner),
+  );
+}
+
+/** Write under a lock the caller holds so it can also read the tree it wrote. */
+export async function writeLockedCompilation(
+  lock: OutputLock,
+  compilation: Compilation,
+  config: ResolvedConfig,
+  runner?: GitCommandRunner,
+): Promise<void> {
+  assertOutputLockHeld(lock, config.repoRoot);
   return timeAsync("output.write", () =>
     writeMeasured(compilation, config, runner),
   );

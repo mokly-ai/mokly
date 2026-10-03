@@ -13,6 +13,10 @@ function events(version: number, update = false): Response {
   );
 }
 
+function refused(): TypeError {
+  return new TypeError("fetch failed", { cause: { code: "ECONNREFUSED" } });
+}
+
 for (const code of [
   "ECONNREFUSED",
   "ECONNRESET",
@@ -57,9 +61,10 @@ for (const code of [
   });
 }
 
-test("resource wait ignores an old child's evidence update until the new ready", async () => {
+test("resource wait reads old bytes at an evidence-only update, then accepts the restarted child's ready", async () => {
   let connections = 0;
   let shells = 0;
+  let reads = 0;
   const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
     if (String(input).endsWith("/__mokly/events"))
       return events(++connections === 1 ? 1 : 3, connections === 1);
@@ -67,6 +72,7 @@ test("resource wait ignores an old child's evidence update until the new ready",
       return new Response(
         `<main data-mokly-content-version="${++shells === 1 || connections === 1 ? 1 : 3}">`,
       );
+    reads += 1;
     return new Response(connections === 1 ? "old" : "new", { status: 200 });
   }) as typeof fetch;
   const css = await waitForWatchedResource({
@@ -80,6 +86,7 @@ test("resource wait ignores an old child's evidence update until the new ready",
   });
   assert.equal(css, "new");
   assert.equal(connections, 2);
+  assert.equal(reads, 2);
 });
 
 test("resource wait rethrows unrelated fetch failures", async () => {
@@ -162,3 +169,63 @@ test("resource wait timeout reports the last versions, status and value", async 
     /last content version 2.*last update version 2.*last resource status 200.*last resource value .*color:red/u,
   );
 });
+
+test("resource wait retries an unreachable shell before the edit until it answers", async () => {
+  let shells = 0;
+  let edits = 0;
+  const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
+    if (String(input).endsWith("/__mokly/events")) return events(1, true);
+    if (String(input) === origin) {
+      if (++shells === 1) throw refused();
+      return new Response(
+        `<main data-mokly-content-version="${shells === 2 ? 1 : 2}">`,
+      );
+    }
+    return new Response(".theme{color:blue}", { status: 200 });
+  }) as typeof fetch;
+  const css = await waitForWatchedResource({
+    origin,
+    previous: 1,
+    resource,
+    edit: async () => {
+      edits += 1;
+    },
+    read: (response) => response.text(),
+    accept: (value) => value.includes("blue"),
+    fetcher,
+  });
+  assert.equal(css, ".theme{color:blue}");
+  assert.equal(shells, 3);
+  assert.equal(edits, 1);
+});
+
+test(
+  "resource wait reports an unavailable shell when it never answers before the deadline",
+  { timeout: 5_000 },
+  async () => {
+    let shells = 0;
+    let edits = 0;
+    const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
+      assert.equal(String(input), origin);
+      shells += 1;
+      throw refused();
+    }) as typeof fetch;
+    await assert.rejects(
+      waitForWatchedResource({
+        origin,
+        previous: 1,
+        resource,
+        edit: async () => {
+          edits += 1;
+        },
+        read: (response) => response.text(),
+        accept: (value) => value.includes("blue"),
+        fetcher,
+        timeoutMs: 200,
+      }),
+      /^Error: watched shell was unavailable before the edit$/u,
+    );
+    assert.ok(shells > 1, `expected retries, saw ${shells} shell requests`);
+    assert.equal(edits, 0);
+  },
+);

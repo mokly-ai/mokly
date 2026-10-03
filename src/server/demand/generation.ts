@@ -101,7 +101,12 @@ export class BackgroundGeneration {
           existing !== undefined,
         );
         if (!current()) return;
-        if (!existing) await this.store.write(compilation, runtime.config);
+        if (!existing)
+          await this.store.write(
+            compilation,
+            runtime.config,
+            controller.signal,
+          );
         if (!current()) return;
         prepared?.adopt();
         this.completed(compilation, runtime);
@@ -152,6 +157,10 @@ export class BackgroundGeneration {
             timingCounts("changes.publish", () => ({
               changedEntries: snapshot.changedEntries?.length ?? 0,
             }));
+          for (const diagnostic of snapshot?.pairing?.diagnostics ?? []) {
+            if (this.options.diagnostic) this.options.diagnostic(diagnostic);
+            else new PlainServeReporter().runtimeDiagnostic(diagnostic);
+          }
           this.classified(snapshot);
         }
       } catch (error) {

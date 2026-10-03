@@ -130,7 +130,7 @@ test("packed package contains only the declared public surface", async () => {
     31,
   );
   assert.ok(files.has("README.md"));
-  for (const excluded of ["examples/", "plans/", "site/", "tests/"])
+  for (const excluded of ["examples/", "plans/", "scripts/", "site/", "tests/"])
     assert.equal(
       [...files].some((file) => file.startsWith(excluded)),
       false,

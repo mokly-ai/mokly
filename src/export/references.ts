@@ -3,15 +3,13 @@ import path from "node:path";
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
+import { extractCssReferences } from "../css_references.js";
 import {
   fragmentViolation,
   htmlResource,
   type ResourceReference,
 } from "../html_link_validation.js";
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../html_references.js";
+import { extractHtmlReferences } from "../html_references.js";
 import { classifyResourceUrl } from "../resource_url.js";
 
 import { exportError } from "./error.js";

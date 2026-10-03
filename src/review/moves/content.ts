@@ -14,8 +14,11 @@ import {
 import { MoklyError } from "../../errors.js";
 import { normalizeReviewPair } from "../ignore.js";
 
+import { contentFingerprint } from "./content_fingerprint.js";
 import { baselinePathMapper } from "./identity.js";
 import { catalogueLinkNormalizer } from "./links.js";
+import type { MarkdownMoveSources } from "./markdown_sources.js";
+import type { MoveResources } from "./resources.js";
 import { documentSimilarity } from "./similarity.js";
 import {
   moveIdentity,
@@ -23,6 +26,7 @@ import {
   type MoveCandidate,
   type MoveSignals,
 } from "./types.js";
+import { visiblePageText } from "./visible_text.js";
 
 /** One complete rendered document and its optional component ownership evidence. */
 export interface MoveDocument {
@@ -53,6 +57,8 @@ export function contentMoveSignals(
   after: readonly ManifestEntry[],
   baseDocuments: ReadonlyMap<string, string>,
   headDocuments: ReadonlyMap<string, string>,
+  markdown?: MarkdownMoveSources,
+  resources?: MoveResources,
 ): MoveSignals {
   const bases = new Map(before.map((entry) => [moveIdentity(entry), entry]));
   const heads = new Map(after.map((entry) => [moveIdentity(entry), entry]));
@@ -74,7 +80,7 @@ export function contentMoveSignals(
         moves,
         count: moves.length,
         mapPath: baselinePathMapper(before, after, moves),
-        links: catalogueLinkNormalizer(before, after, moves),
+        links: catalogueLinkNormalizer(before, after, moves, resources),
       };
     return scope;
   };
@@ -124,6 +130,21 @@ export function contentMoveSignals(
     });
   };
   return {
+    fingerprint(candidate, side, moves) {
+      const entry = (side === "before" ? bases : heads).get(
+        moveIdentity(candidate),
+      )!;
+      const scope = scopeFor(moves);
+      return contentFingerprint(
+        entry,
+        side === "before" ? baseDocuments : headDocuments,
+        side,
+        scope.links,
+        side === "before" ? scope.mapPath : (path) => path,
+        side === "before" ? before : after,
+        moves,
+      );
+    },
     identical(old, next, moves) {
       const { base, head } = entries(old, next);
       const { mapPath } = scopeFor(moves);
@@ -168,11 +189,22 @@ export function contentMoveSignals(
     },
     similarity(old, next, moves) {
       const { base, head } = entries(old, next);
+      if (base.kind === "document" && head.kind === "document") {
+        const left = markdown?.before.get(base.sourcePath),
+          right = markdown?.after.get(head.sourcePath);
+        return left?.trim() && right?.trim()
+          ? documentSimilarity(left, right)
+          : 0;
+      }
       const left = moveDocuments(base).find((view) => view.key === "light");
       const right = moveDocuments(head).find((view) => view.key === "light");
       if (!left || !right) return 0;
       const pair = normalized(left, right, moves);
-      return documentSimilarity(pair.base, pair.head);
+      const beforeText = visiblePageText(pair.base),
+        afterText = visiblePageText(pair.head);
+      return beforeText && afterText
+        ? documentSimilarity(beforeText, afterText)
+        : 0;
     },
   };
 }

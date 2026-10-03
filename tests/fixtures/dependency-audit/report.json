@@ -1,0 +1,121 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@firna/ui": {
+      "name": "@firna/ui",
+      "severity": "high",
+      "via": ["react-native"],
+      "effects": [],
+      "nodes": ["node_modules/@firna/ui"]
+    },
+    "@react-native/community-cli-plugin": {
+      "name": "@react-native/community-cli-plugin",
+      "severity": "high",
+      "via": ["@react-native/metro-config", "metro", "metro-config"],
+      "effects": ["react-native"],
+      "nodes": ["node_modules/@react-native/community-cli-plugin"]
+    },
+    "@react-native/metro-config": {
+      "name": "@react-native/metro-config",
+      "severity": "high",
+      "via": ["metro-config"],
+      "effects": [
+        "@react-native/community-cli-plugin",
+        "react-native-worklets"
+      ],
+      "nodes": ["node_modules/@react-native/metro-config"]
+    },
+    "@react-native/virtualized-lists": {
+      "name": "@react-native/virtualized-lists",
+      "severity": "high",
+      "via": ["react-native"],
+      "effects": ["react-native"],
+      "nodes": ["node_modules/@react-native/virtualized-lists"]
+    },
+    "braces": {
+      "name": "braces",
+      "severity": "high",
+      "via": [
+        {
+          "name": "braces",
+          "dependency": "braces",
+          "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+          "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+          "severity": "high"
+        }
+      ],
+      "effects": ["micromatch"],
+      "nodes": ["node_modules/braces"]
+    },
+    "metro": {
+      "name": "metro",
+      "severity": "high",
+      "via": ["metro-config", "metro-file-map", "metro-transform-worker"],
+      "effects": [
+        "@react-native/community-cli-plugin",
+        "metro-config",
+        "metro-transform-worker"
+      ],
+      "nodes": ["node_modules/metro"]
+    },
+    "metro-config": {
+      "name": "metro-config",
+      "severity": "high",
+      "via": ["metro"],
+      "effects": [
+        "@react-native/community-cli-plugin",
+        "@react-native/metro-config"
+      ],
+      "nodes": ["node_modules/metro-config"]
+    },
+    "metro-file-map": {
+      "name": "metro-file-map",
+      "severity": "high",
+      "via": ["micromatch"],
+      "effects": ["metro"],
+      "nodes": ["node_modules/metro-file-map"]
+    },
+    "metro-transform-worker": {
+      "name": "metro-transform-worker",
+      "severity": "high",
+      "via": ["metro"],
+      "effects": [],
+      "nodes": ["node_modules/metro-transform-worker"]
+    },
+    "micromatch": {
+      "name": "micromatch",
+      "severity": "high",
+      "via": ["braces"],
+      "effects": ["metro-file-map"],
+      "nodes": ["node_modules/micromatch"]
+    },
+    "react-native": {
+      "name": "react-native",
+      "severity": "high",
+      "via": [
+        "@react-native/community-cli-plugin",
+        "@react-native/virtualized-lists"
+      ],
+      "effects": [
+        "@firna/ui",
+        "@react-native/virtualized-lists",
+        "react-native-reanimated"
+      ],
+      "nodes": ["node_modules/react-native"]
+    },
+    "react-native-reanimated": {
+      "name": "react-native-reanimated",
+      "severity": "high",
+      "via": ["react-native"],
+      "effects": [],
+      "nodes": ["node_modules/react-native-reanimated"]
+    },
+    "react-native-worklets": {
+      "name": "react-native-worklets",
+      "severity": "high",
+      "via": ["@react-native/metro-config", "react-native"],
+      "effects": [],
+      "nodes": ["node_modules/react-native-worklets"]
+    }
+  }
+}

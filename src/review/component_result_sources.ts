@@ -23,6 +23,7 @@ import { variantAddress } from "./component_pairing.js";
 import { componentVariantEntries } from "./component_variant_classification.js";
 import { groupedVariantPairs } from "./component_variant_pairs.js";
 import { baselinePathMapper } from "./moves/identity.js";
+import { movedSourcePaths } from "./moves/source_moves.js";
 import { previousPathFields, type EntryMove } from "./moves/types.js";
 
 /** Classifier evidence that can justify an entry's `dependency` reasons. */
@@ -43,6 +44,8 @@ export function validateComponentReviewSources(
   parseReviewResult(result);
   before = baselineForCurrentIdentities(before, after, moves);
   const mapBefore = baselinePathMapper(before.entries, after.entries, moves);
+  const sourcePaths = movedSourcePaths(before, after, moves);
+  const mapSource = (path: string) => sourcePaths.get(path) ?? path;
   const beforeVariants = componentVariantEntries(before.entries);
   const afterVariants = componentVariantEntries(after.entries);
   const pairs = entryPairs(before, after, moves);
@@ -98,6 +101,7 @@ export function validateComponentReviewSources(
       before,
       after,
       mapBefore,
+      mapSource,
     );
     if (!record) continue;
     if ("views" in record) {
@@ -160,6 +164,7 @@ function validateChange(
   before: Manifest,
   after: Manifest,
   mapBefore: (path: string) => string,
+  mapSource: (path: string) => string,
 ): void {
   const selected = afterEntry ?? beforeEntry;
   if (!selected) return;
@@ -198,6 +203,7 @@ function validateChange(
           beforeEntry,
           mapBefore,
           relatedDocumentReferences(before.entries, mapBefore),
+          mapSource,
         ) ===
           metadata(
             afterEntry,

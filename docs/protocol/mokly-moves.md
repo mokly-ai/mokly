@@ -55,7 +55,14 @@ pairing or identical view evidence for every variant, not schema and slugs alone
    path. This pass is exact and runs first so authors can resolve any other
    outcome.
 2. **Identical content.** The normalised content of the two entries is equal
-   under [normalisation](#normalisation).
+   under [normalisation](#normalisation). Repeat this pass with each new set of
+   accepted pairs until it accepts no more pairs. Every iteration evaluates its
+   full remaining candidate set; ambiguity is permanent across iterations.
+   Recompute logical-reference signatures after accepting pairs. Group candidates
+   by kind, component role, ignore contract and a hash of normalised material.
+   Full equality checks run only within equal hash groups, except that different
+   ignore-region sets or material-key presence require paired comparison.
+   A hash is a prefilter, never proof of equality.
 3. **Same source and title.** Both entries come from the same repository
    source module and have equal titles. Documents never use this signal,
    because the file is the source.
@@ -75,34 +82,63 @@ is the normalised document per scheme; for a use case it is its ordered step
 paths and step metadata; for a component parent it is its prop schema, slots,
 and controls together with the pairing of every variant. A link's logical
 destination is the target's current path when the target is current, the
-target's paired current path when the target was paired in an earlier pass, and
+target's paired current path when an earlier pass or iteration accepted it, and
 otherwise the written path. Content is identical only when every corresponding
 view or document is identical and the set of views is the same.
 
 The shared paired-ignore normalizer retains real URLs separately for resource
 traversal and CSS selector matching. Link canonicalization changes equality
 material only; it never changes captured documents or the selector matching tree.
-Copied document resources at corresponding relative references remain unmodified
-when their confined before/after bytes match. This proof is scoped to that document.
+Resource references compare by their resolved mockups-relative route, with query
+and fragment retained. Relative spelling and directory depth are not material.
+During candidate matching, generated styles, assets and copied document resources
+at different routes can use equal content digests; same-route resources keep
+route identity. CSS digests resolve their URL tokens recursively. Accepted entry
+moves map root-module stylesheet routes and assets under corresponding source
+directories. Document resources map by their source-relative reference. Re-exporting entry roots use the corresponding accepted view's generated
+references: pair unique equal digests, or its sole removed and added resource of
+the same generated kind. Accept only unique aliases present in the retained
+sets, and scope HTML rewriting to the paired current view's references.
+Compare the mapped bytes as well; CSS compares bytes after resolving its URLs
+through the same resource map. Equal moved resources suppress current generated
+dependency and shared-impact evidence. A different image or stylesheet remains
+resource evidence under the ordinary attribution rules. A per-view byte proof
+requires both corresponding references, so an unrelated equal file cannot hide
+an edit. These aliases affect comparison only, never Serve or snapshot routes.
+Inventoried source paths relocated under accepted defining-module moves also
+share logical identity for ownership metadata. Confined baseline/current reads
+must prove equal bytes before their relocation loses dependency evidence; edits
+keep that evidence. Missing source proof never suppresses a dependency reason.
+
 Reviewable references use the same paired identities: flow steps, memberships,
 variant parents, component usage and `relatedDocs` links to discovered documents.
 Unmatched repository document labels remain literal metadata.
 
 ## Similarity
 
-The similarity score of two documents or pages is computed over the lines of
-their normalised documents for the light scheme, after trailing whitespace is
-removed and line endings are unified. With `shared` the size of the multiset
-intersection of the two line lists, the score is
-`2 × shared ÷ (linesBefore + linesAfter)`, a number from `0` to `1`. The
-threshold is `0.5`, inclusive, and ties for the best score make the entry
-ambiguous.
+Similarity uses author content, never the generated document template. A
+Markdown document uses its body after the BOM and front matter are removed.
+Current bodies come from the accepted compilation; baseline bodies come from
+regular, inventoried source files at the pinned commit, including when public
+output was rebuilt. They remain private and never enter a public artifact.
+Unavailable source content supplies no similarity evidence; there is no fallback
+to generated HTML or a later current-file generation.
 
+A page uses text from the body of its light-scheme, paired-ignore-normalised
+output. Block elements and `br` end a line; table cells separate text with a
+space. Inline source whitespace collapses to one space, while `pre` retains line
+breaks. Trim lines and omit empty lines. Exclude head, script, style, template,
+noscript, `hidden` and `aria-hidden="true"` subtrees. This static text rule needs
+no browser, CSS evaluation or shared head markup. Changed tags or attributes
+still count in ordinary material classification, but cannot inflate similarity.
+
+Remove trailing whitespace and unify LF/CRLF. With `shared` the multiset
+intersection of the two line lists, the score is
+`2 × shared ÷ (linesBefore + linesAfter)`. The threshold is `0.5`, inclusive.
 An LF or CRLF terminates a line without adding an extra trailing empty line;
-interior empty lines count. Two empty documents have score `1`; exactly one
-empty document has score `0`. A tie counts only among eligible scores at or
-above the threshold, independently on each side, even if only one tied edge
-would otherwise be mutual.
+interior empty Markdown lines count. Empty or unavailable author content cannot
+justify a similar-content pair. Ties at or above the threshold make each tied
+side ambiguous, even when only one edge would otherwise be mutual.
 
 ## Declared Moves
 
@@ -140,8 +176,13 @@ the catalogue snapshot and read model, not synthetic visual review records.
 The internal `ReviewArtifact.pairing` and `ComponentChangeSnapshot.pairing`
 retain `{ moves: { kind, path, previousPath }[], diagnostics: string[] }` for all
 kinds. The artifact summary consumes these fields for its all-kind `moved`
-count and exact diagnostics. They are not fields of `review.json` or public
-catalogue JSON. Plain builds publish no inferred or authored `previousPath`.
+count and exact diagnostics. Serve reports each diagnostic through its terminal
+reporter when the classification generation is accepted. Superseded generations
+stay silent. Export and publish report them through the one-shot diagnostic
+callback during comparison, even though publication omits `summary.md`. Plain
+mode writes the exact diagnostic and a newline; rich mode uses the existing
+bounded diagnostic presentation under [terminal output](./mokly-terminal-output.md).
+They are not fields of `review.json` or public catalogue JSON. Plain builds publish no inferred or authored `previousPath`.
 
 Complete and selected capture retain each side's actual spelling and source
 documents. A moved component variant groups beneath its current parent; a
@@ -178,10 +219,13 @@ failure remains `unknown-link-target`. Links never follow a move automatically.
 
 Coverage must prove each signal in isolation, the pass order, uniqueness and
 ambiguity with its exact diagnostic, variant pairing through parents, link
-normalisation across an earlier pair, the similarity formula at and around the
+normalisation across passes and iterations, the similarity formula at and around the
 threshold, every `movedFrom` validation and the no-match diagnostic, the
 `previousPath` fields and counts in the review result and read model,
-suppressed removed previews, and the `moved-link-target` text.
+suppressed removed previews, and the `moved-link-target` text. Regressions cover
+unrelated short Markdown, edited moves, depth-changing resource URLs and imported
+CSS, linked screens/flows/component users moving together, permanent ambiguity,
+linear full-comparison counts for unique material, and Serve/export diagnostics.
 
 ## Related Docs
 

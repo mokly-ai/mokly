@@ -1,9 +1,7 @@
+import { extractCssReferences } from "../css_references.js";
 import type { ParsedResource } from "../html_link_validation.js";
 import { htmlResource } from "../html_link_validation.js";
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../html_references.js";
+import { extractHtmlReferences } from "../html_references.js";
 
 import type { GeneratedFile } from "./generated_file.js";
 

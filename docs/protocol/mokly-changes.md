@@ -55,7 +55,14 @@ scheme participate. Metadata includes address, titles, descriptions,
 rationale, tags, related-doc links, flow steps and memberships, and view
 structure; it excludes folder titles, source locations, and dependencies.
 Valid generated ownership headers are excluded from document comparison, so a
-source move alone stays unchanged. Stored snapshots retain the original headers.
+source move alone stays unchanged. Resource URLs compare by their resolved route;
+accepted source moves map generated styles/assets and copied document resources
+under the [move normalisation rule](./mokly-moves.md#normalisation). Equal mapped
+resource bytes do not add material, dependency or shared-impact reasons. CSS URL
+spellings use that same map; real resource edits retain normal attribution.
+Inventoried owned sources relocated with their defining module compare by
+logical path and confined bytes; only byte-identical moves lose dependency
+reasons. Stored snapshots retain the original headers, paths and resource URLs.
 
 Changes to local resources referenced by a fragment also keep that screen in
 Changes. Follow CSS imports, CSS URLs, and embedded-document resources

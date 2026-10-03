@@ -91,7 +91,13 @@ test("removed ambiguity cannot choose one added entry or pair in a later pass", 
   assert.deepEqual(
     pairMoves(
       [moveEntry("old")],
-      [moveEntry("new-b"), moveEntry("new-a")],
+      [
+        moveEntry("new-b"),
+        moveEntry("new-a", {
+          title: "old",
+          sourcePath: "specs/old.mockup.tsx",
+        }),
+      ],
       moveSignals({ identical: () => true }),
     ),
     {
@@ -101,6 +107,24 @@ test("removed ambiguity cannot choose one added entry or pair in a later pass", 
       ],
     },
   );
+});
+
+test("same source and title wins before a better similarity score", () => {
+  const common = {
+    kind: "page" as const,
+    title: "Guide",
+    sourcePath: "shared.ts",
+  };
+  const result = pairMoves(
+    [moveEntry("source", common), moveEntry("similar", { kind: "page" })],
+    [moveEntry("new", common)],
+    moveSignals({
+      similarity: (before) => (before.path === "similar" ? 1 : 0.5),
+    }),
+  );
+  assert.deepEqual(result.moves, [
+    { kind: "page", path: "new", previousPath: "source" },
+  ]);
 });
 
 test("a moved parent pairs same-slug variants before later signals", () => {

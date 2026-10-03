@@ -44,7 +44,7 @@ and the safe output transaction are the same. A title or folder title never
 changes a path; only the file's place or a declared path does. Pages take part
 in Changes but have no visual comparison, because there is no second view to
 compare. Changes can pair a moved page even when its content changes: the
-normalised light documents must be at least half alike and be each other's
+visible body text lines must be at least half alike and be each other's
 unique best match. Set `movedFrom` to declare the complete previous path when
 the content cannot identify the move.
 
@@ -110,7 +110,10 @@ Documents join Changes like pages: the rendered document, its resources
 and its metadata are compared with the branch point, a removed document shows
 its previous version, and a moved document pairs with its earlier version by
 content or its front-matter `movedFrom` declaration. A paired document produces
-no removed entry.
+no removed entry. Similarity compares the Markdown body after front matter;
+the shared document template cannot make unrelated notes look like a move.
+Serve and export report uncertain matches in the terminal. Use `movedFrom`
+when the content cannot establish one unique pair.
 
 ## Exported types
 

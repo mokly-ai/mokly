@@ -1,8 +1,14 @@
 /** Pair current view documents with their baseline paths and material-change eligibility. */
+import path from "node:path";
+
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import type { HistoricalManifest, ManifestV8 } from "@mokly/viewer/data";
 import { entryRoute, documentRoute, VIEWPORTS } from "@mokly/viewer/data";
 
+import { isAuthoringSource } from "../build/source_inventory.js";
+import { isInside, toPosixPath } from "../config/paths.js";
+import type { ResolvedConfig } from "../config/types.js";
+import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 import { baselineEntryIndex } from "../review/moves/entries.js";
 import { moveIdentity, type EntryMove } from "../review/moves/types.js";
 import { fragmentForView, unionColorSchemes } from "../review/screen_views.js";
@@ -75,4 +81,26 @@ export function documentPairs(
     }
   }
   return pairs;
+}
+
+/** Keep only public output evidence before material and resource comparison. */
+export function publicChangedRoutes(
+  changedPaths: readonly string[],
+  config: ResolvedConfig,
+): Set<string> {
+  return new Set(
+    changedPaths.flatMap((changed) => {
+      const candidate = path.resolve(config.repoRoot, changed);
+      if (
+        !isInside(config.mockupsDir, candidate) ||
+        isAuthoringSource(candidate, config, "exclusions") !== undefined
+      )
+        return [];
+      const route = toPosixPath(path.relative(config.mockupsDir, candidate));
+      return route === MANIFEST_NAME ||
+        EARLIER_MANIFEST_NAMES.includes(route as never)
+        ? []
+        : [route];
+    }),
+  );
 }

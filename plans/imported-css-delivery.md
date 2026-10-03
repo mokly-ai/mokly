@@ -7,7 +7,8 @@ records below retain the versions and API names used by their historical commits
 
 ## Status
 
-Active until the implementation PR merges. Created 2026-09-24 from the
+Complete: implementation PR #125 merged as `ff376d7` on 2026-10-02.
+Created 2026-09-24 from the
 CSS-in-JS investigation on this branch. Milestones 13, 15 and 16 resolve the
 authorized review findings; finding 3 was resolved in the separate `922c1ec`
 merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
@@ -66,12 +67,14 @@ Other previously unselected findings remain out of scope. Findings in the
 [Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md)
 remain open for the user's decision. Milestone 46 addresses only the imported-CSS
 watcher-test flakiness recorded as Milestone 40 finding 12. The final helper
-follows intermediate versions and child restarts; a server-level test pins
-stylesheet availability before content updates. Milestone 46 (`77a1f493`)
+follows intermediate versions and child restarts; an in-process server test
+checks that stylesheet installation precedes the content update, without
+running the watched child. Milestone 46 (`77a1f493`)
 passed the full gate and resolves that finding; other review findings remain
 open. Findings in the
 [Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md)
-remain open for the user's decision; the plan stays active until the PR merges.
+were resolved after the merge in `ec04332`; other review findings remain open
+for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -1085,7 +1088,7 @@ preserving the browser-visible event contract.
 - [x] Add a shared branch-owned resource wait that follows ready/update events across child restarts, retries only restart transport errors, and has direct retry/rethrow tests.
 - [x] Fix the worker-exit close test to wait for its rebuild failure report, and update the real-watcher and PostCSS dependency tests to wait for accepted resource bytes.
 - [x] Audit other branch-added watcher tests for the same patterns and fix affected cases without changing main-owned tests or helpers.
-- [x] Check product ordering with a deterministic server-level test; no product bug or protocol change is needed.
+- [x] Check the in-process server's install-then-announce order with a deterministic test; no product bug or protocol change is needed. This test does not run the watched child; Milestone 47 finding 1 records that gap.
 - [x] Verify load and serial repetitions, both CI unit shards, the full gate, Markdown, and deletion checks; record the finding's resolution.
 
 The original six-way load failed 24/24 worker-close runs (including one hung
@@ -1107,6 +1110,13 @@ the user.
 
 - Watch the first derived comparison on a consumer catalogue that adopts this
   version and confirm the documented one-time jump settles on the next commit.
+- Done in `ec04332`: resolve the Milestone 47 review findings with a
+  cross-process imported-CSS order test, direct helper tests for open streams
+  and startup retries, and an exact 3,000-file watcher test name.
+- Done in `01d5924` and `da916c0`: serialize generated-output writers with a
+  repository writer lock. Load tests for the Milestone 47 fixes showed that
+  watched Serve's background write and an export in the same process could
+  interleave their renames and fail with `ENOENT`.
 
 ## Follow-up plans (not part of this change)
 

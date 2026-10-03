@@ -44,10 +44,16 @@ version at the old path.
 Mokly pairs a moved entry when exactly one baseline entry of the same kind
 matches it: first by a `movedFrom` you declared, then by identical content,
 then by the same source module and title, and, for pages and Markdown
-documents only, by content that is at least half alike. When more than one
-candidate matches, nothing is paired and the comparison reports the
-ambiguity, suggesting `movedFrom`. Declare it on the entry, or in a
-document's front matter, with the complete previous path:
+documents only, by content that is at least half alike. The identical-content
+pass repeats after each round of new pairs, so entries that link to each other
+and move together still compare equal. A resource compares by the route it
+resolves to and by its bytes, not by how its link is spelled, so an unchanged
+image or stylesheet that moves with its entry adds no change. Similarity counts
+only what you wrote: a Markdown document's body without its front matter, and
+the text in a page's rendered body, never the shared template around them.
+When more than one candidate matches, nothing is paired, and Serve and export
+print the ambiguity in the terminal, suggesting `movedFrom`. Declare it on the
+entry, or in a document's front matter, with the complete previous path:
 
 ```tsx
 defineScreen({
@@ -56,8 +62,8 @@ defineScreen({
 });
 ```
 
-A `movedFrom` that names nothing in the baseline leaves the entry Added and
-is reported. Once the base branch contains the move, the declaration names no
+A `movedFrom` that names nothing in the baseline leaves the entry Added, and
+the terminal reports it. Once the base branch contains the move, the declaration names no
 removed entry and can be deleted; keeping it is harmless. A moved screen with
 variants carries its variants with it, pairing each by slug. A variant you
 delete during the move stays listed under the screen at its new place,

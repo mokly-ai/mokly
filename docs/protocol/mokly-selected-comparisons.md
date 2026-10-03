@@ -6,8 +6,8 @@ the catalogue, or snapshots other entries; exhaustive commands remain unchanged.
 
 ## Delivery Status
 
-Implemented with entries selected by path and review result v5. Markdown
-document previews await document rendering.
+Implemented with entries selected by path and review result v5. Removed pages
+and Markdown documents use the shared selected-preview boundary.
 
 ## Requests and evidence
 

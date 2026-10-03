@@ -3,9 +3,9 @@ import path from "node:path";
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
+import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
 import {
-  extractCssReferences,
   extractHtmlReferences,
   type HtmlReferenceOptions,
 } from "../html_references.js";

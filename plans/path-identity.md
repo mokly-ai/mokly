@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 6–6F, 7, 7A, and 7B are complete. This plan supersedes
+discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 5A, 6–6G, 7, 7A, and 7B are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -771,6 +771,69 @@ No dependency change, new violation or exemption was added.
 The orchestrator reviews this milestone; the complete implementation review
 remains the final item in Milestone 8.
 
+## Milestone 5A: Move detection review fixes
+
+Correct move evidence so authored content, resources and references retain their
+identity through a directory move. Keep matching efficient and diagnostics visible
+to authors. Write failing regressions before each fix, and update the contracts
+with the implementation.
+
+Status: Complete. Package (six consumer scenarios), unit (3,946), browser (745)
+and hydration (229) pass. The repository checks pass under the existing braces
+advisory and 28-file source-length dispositions. No dependency, new exception
+or shell presentation change was added.
+
+- [x] Compare document similarity using Markdown after front matter; define
+      page similarity from authored visible body content and reject unrelated
+      short documents while retaining edited moves (1).
+- [x] Normalize resource references by resolved identity, pair source-derived
+      generated routes by content, and suppress byte-identical moved resource
+      dependency/shared-impact reasons in material classification (2).
+- [x] Repeat identical-content pairing to a fixed point with newly accepted
+      pairs; preserve permanent ambiguity across iterations and later signals (3).
+- [x] Group normalized content by hash before full equality comparisons, with
+      pairwise fallback only for differing ignore-region sets; prove linear
+      full-comparison counts for unique content (4).
+- [x] Strengthen removed-ambiguity and pass-order tests, restore unpaired
+      kind-reuse discard coverage, and extend move fixtures with depth, CSS,
+      cross-file links, separate flows, component users and unrelated documents (5).
+- [x] Report ambiguity and unmatched movedFrom diagnostics in Serve and export
+      terminal output through the existing terminal presentation boundary (6).
+- [x] Retain accepted Markdown bodies privately, with a separate committed-source
+      reader for derived baselines; never read a newer body for an accepted generation.
+- [x] Share the CSS URL tokenizer with resource canonicalisation; resolve each
+      original srcset token once, including repeated destinations.
+- [x] Map generated styles for moved re-exporting entry roots by their accepted
+      views; keep surviving consumers of a formerly shared route unchanged.
+- [x] Include complete parent variant evidence in the fingerprint read set, even
+      when a variant path already exists; skip incompatible candidate roles.
+- [x] Preserve imported-resource identity when a source directory moves but an
+      explicit entry path stays fixed; do not emit a move for that stable path.
+- [x] Normalize inventoried owned-source paths through defining-module moves;
+      suppress relocated dependency evidence only when confined file bytes match.
+- [x] Update moves/Changes contracts, affected guides and READMEs; keep source
+      files within their limits without altering the 28 existing violations.
+- [x] Smoke-test a real directory move, with and without edits, including
+      imported CSS, links, a flow and a component with users. Prove all pairs,
+      unmodified pure moves, changed edits, old before paths and no paired removals.
+- [x] Run package, unit, browser and hydration suites serially plus all repository
+      checks and changed-file Prettier under the approved audit/length dispositions.
+  - [x] Package: both packages pass all six packed consumer scenarios; Build/Check
+        validate 452 example files and all declaration checks pass.
+  - [x] Final unit: 3,946 passed, with zero failures, skips or cancellations.
+  - [x] Browser: 745 passed. All three known base-flaky cases passed first run.
+  - [x] Hydration: 229 passed, with zero failures, skips or cancellations.
+  - [x] The 113 focused move/deletion/path-reuse regressions pass. Initial full-unit run:
+        3,938 of 3,940 passed; fixed resource-validation error order. The second
+        run passed 3,944 of 3,946; fixed complete parent fingerprint reads for
+        the two existing parent/variant path-reuse cases. The final run passes all.
+  - [x] Repository format, lint, four ratchets, Rust fmt/Clippy, 15 Rust tests
+        and the 9-file Rust length audit pass. The existing audit advisory remains.
+- [x] Inspect deletions and staged changes, then commit and fast-forward push.
+
+The orchestrator reviews this milestone; the complete implementation review
+remains the final item in Milestone 8.
+
 ## Milestone 6: Viewer navigation
 
 Tags: ui
@@ -1089,6 +1152,122 @@ milestone aligns the mockup with that rule, as
       comparison band (`.context/m6f/`).
 - [x] Commit and push (`99032ff2`).
 
+## Milestone 6G: Integrate main
+
+Preserve main's audited dependency exception and output/frame race fixes while
+adapting them to file-derived paths, nested output transactions and path-keyed
+frame usage. Keep the viewer branch separate until the orchestrator requests it.
+
+Status: Complete. Package (six consumer scenarios), unit (4,050), browser (746)
+and hydration (229) pass. The dependency audit now passes with main's unchanged,
+reviewed exception. Only 26 members of the old 28-file length list remain.
+The two-parent merge and every remerge-diff path were reviewed before push.
+
+- [x] Fetch main, capture the source tip and merge base, and save every main
+      addition in `.context/main-additions-6g.txt` before integration.
+- [x] Merge `origin/main` and resolve each conflict path by path. Preserve the
+      audit evaluator, exception, fixtures and tests without alteration.
+- [x] Retain the writer lock, cancellation and export capture/recheck protection
+      around nested output installation, pruning and rollback.
+- [x] Retain frame usage synchronization and its race test with path-keyed
+      identity; migrate every new main regression to the path layout.
+- [x] Audit every main addition, source README and protocol change for feature
+      preservation; enumerate every authorized deletion relative to main.
+- [x] Run focused regressions and the unmodified `cargo xtask check`; run every
+      remaining suite and repository command if the known length check stops it.
+      Keep only the known 28-file length disposition for Milestone 6I.
+- [x] Commit the two-parent merge with its resolution and deletion decisions.
+      Immediately confirm exactly two parents and inspect every remerge-diff path.
+- [x] Finish any required post-merge verification, then fast-forward push the
+      feature branch and report the merge review and test results.
+
+Preservation record:
+
+- Source tip: `25afbc75bbae5638acf5a70b0a7385de3be41f1f`; merge base:
+  `b2c82c15`; main tip: `800fe9f88a0173429b25baa1bcf41ed9e59b2256`.
+  The saved additions audit lists 67 paths, including 28 additions. All remain.
+- `docs/protocol/README.md`: keep main's exception/audit description and the
+  feature's catalogue serialization and public-exclusion links.
+- `plans/README.md`: retain Path Identity as Active, update its status, and keep
+  main's completed Imported CSS Delivery entry instead of its stale Active copy.
+- `src/build/README.md`: retain the path-specific module guide and add main's
+  lock APIs and transaction guidance without duplicating existing module entries.
+- `src/build/transaction.ts`: retain both `OutputDirectories` and the lock imports.
+  Main's lock surrounds validation, backup, nested-directory pruning, installation,
+  rollback, cleanup and final generated-directory pruning. Case-folded target
+  discovery and previous-manifest ownership remain unchanged.
+- `packages/viewer/src/shell/frame_mount_hook.ts` keeps `entryPath`/`variantPath`
+  while main's unchanged `frame_session_usage.ts` finishes usage adoption in the
+  same task as its final revision check. Keep the extracted fake and race test;
+  migrate the harness's replacement URL to `<path>/index.html`.
+- `tests/helpers/generated_output_fixture.ts` uses complete nested paths instead
+  of `id`/`navPath`. The concurrency test retains main's exact-byte/tree checks
+  and also proves removal of obsolete screen directories. The existing rollback
+  test asserts the lock remains held; the no-directory-watch test now permits
+  only the lock's private cache-directory cleanup, not generated-directory churn.
+- Preserve every audit evaluator, exception, fixture and audit test byte for byte
+  from main. Keep export's locked write/capture and recheck, Serve wait cancellation,
+  baseline ancestor retries, streaming watch helpers, and native CI lock coverage.
+- `mokly-component-explorer.md`: state the retained mount/usage rule in concise
+  prose so the merged document stays within its existing 250-line cap.
+- Main's frame hook and harness extraction resolves two of the old 28 length
+  violations. The audit now lists 26 members of that original set, with no new
+  violation or exemption; Milestone 6I owns the remaining split.
+
+Authorized deletions relative to main:
+
+All 17 deletions predate this merge and follow the accepted Milestone 1/3 path
+migration and decision 14. No main addition is deleted. The exact paths and
+preserved replacements are:
+
+- `docs/protocol/mokly-nav-paths.md`: Milestone 1 replaces navigation labels with `mokly-paths.md` and `mokly-folders.md`.
+- `docs/protocol/mokly-nested-authoring.md`: Milestone 1 replaces the old nesting model with roots and folder contracts.
+- `examples/basic/entries/design/browse/appearance/index.tsx`: Milestone 3 splits discovery into `specs/design/browse/appearance/*.mockup.ts` and preserves the overview and child render helpers.
+- `examples/basic/entries/design/components/controls/index.tsx`: Milestone 3 relocates the controls definition to `specs/design/components/controls/index.tsx` with an `index.mockup.ts` entry.
+- `examples/basic/entries/design/components/index.tsx`: Milestone 3 relocates the component overview to `specs/design/components/index.tsx` with an `index.mockup.ts` entry.
+- `examples/basic/entries/design/components/pages/stacked/screens.tsx`: Milestone 3 preserves these screens at `specs/design/components/pages/stacked/screens.tsx`.
+- `examples/basic/entries/design/components/parts/destinations.ts`: Milestone 3 preserves the destination map at `specs/design/components/parts/destinations.ts`, using paths.
+- `examples/basic/entries/design/components/states/additions/screens.tsx`: Milestone 3 preserves these screens at `specs/design/components/states/additions/screens.tsx`.
+- `examples/basic/entries/design/components/states/loading/screens.tsx`: Milestone 3 preserves these screens at `specs/design/components/states/loading/screens.tsx`.
+- `examples/basic/entries/design/components/states/shared-impact/screens.tsx`: Milestone 3 preserves these screens at `specs/design/components/states/shared-impact/screens.tsx`.
+- `examples/basic/entries/design/design.mockup.tsx`: Milestone 3 replaces the `defineRoot`/`folder` aggregator with discovered `.mockup.ts` entries and `_folder.json` records under `specs/design`.
+- `examples/basic/entries/design/library/library.mockup.ts`: Milestone 3 replaces the aggregate export with one `.mockup.ts` entry beside each library component under `specs/design/library`.
+- `examples/basic/entries/design/parts/destinations.ts`: Milestone 3 preserves the path-based destination map at `specs/design/parts/destinations.ts`.
+- `examples/basic/entries/design/parts/screen_heads.tsx`: Milestone 3 preserves the header components at `specs/design/parts/screen_heads.tsx`.
+- `packages/viewer/src/registry/hierarchy_conflicts.ts`: Milestone 3 replaces navPath/title conflicts with path collision validation and the path-derived hierarchy.
+- `src/config/entry_globs.ts`: Milestone 3 replaces the single entry-glob model with `roots.ts`, `root_membership.ts` and root-scoped discovery.
+- `src/registry/changed_ids.ts`: Milestone 3 replaces ID comparison with `src/registry/changed_paths.ts`.
+
+Focused integration checks: 122 passed. Package checks pass all six consumer
+scenarios and validate 452 example files. Unit checks pass all 4,050 tests with
+zero failures, skips or cancellations. Browser checks pass all 746 tests, including
+main's frame-usage race regression; all three known flaky tests pass first run.
+Hydration passes 229 tests with zero failures, skips or cancellations. All four
+repository ratchets, Rust fmt/Clippy, 15 Rust tests and the 9-file Rust length
+audit pass. Changed-file Prettier and whitespace checks pass.
+The unmodified aggregate gate passes
+its audit, format and lint steps, then stops at the 26 remaining known length
+violations. No other exception is added; the remaining commands run separately.
+
+Merge review:
+
+- Confirmed exactly two parents immediately after committing: the saved source
+  tip `25afbc75` and main `800fe9f8`. No octopus or viewer merge was created.
+- Reviewed all 11 remerge-diff paths: the protocol index, component-explorer
+  contract, shell README, frame hook harness, plan index, this plan, build README,
+  transaction, concurrency test, generated-output fixture and path transaction
+  regressions. Each difference is accounted for by the preservation record above.
+- No lost main feature was found. The subsequent amendment only completes this
+  review record and verification status; repeat the two-parent and every-path
+  remerge checks after that amendment, before pushing.
+- Rechecked all 17 authorized deletions against main. They exactly match the
+  pre-integration ledger; this merge removes no file from its feature parent.
+- The 6A–6F text is a plan-only copy from the viewer branch, with its separate
+  branch status stated above. The viewer implementation remains unmerged.
+
+The orchestrator owns the later viewer merge and length split. The complete
+implementation review remains the final item in Milestone 8.
+
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui
@@ -1263,6 +1442,47 @@ invoice at" instead, so the mockup takes the runtime wording.
       and the design tests. The design unit tests (169) and design browser
       tests (92) pass.
 - [ ] Commit and push.
+
+## Milestone 7D: Moved presentation review fixes
+
+Tags: ui
+
+An independent review of Milestone 7 (`9d827811`) found gaps on moved
+component paths, which the browser tests never moved, and a changed mark that
+All shows for a pure move. Each fix starts with a failing test.
+
+Before the fixes, this branch merged `origin/calummoore/file-paths-vs-navpath`
+at `943fd190` (Milestones 5A and 6G) into `a34a883e`; the merge base is
+`f817a1c4`. The feature branch adds 47 files and changes 98, and deletes none;
+the merge deletes none of its files. Merge decisions:
+
+- `plans/path-identity.md`: list both sides' complete milestones in the
+  header. The feature branch carried copies of Milestones 6A–6F and a note
+  that their implementation was not integrated there; this branch owns that
+  implementation, so the merged plan keeps one copy and drops the note.
+- `plans/README.md`: combine both sides' status for this plan, and take
+  main's move of Imported CSS Delivery to Completed.
+- `docs/guides/catalogue/changes.md`: match the pairing paragraph to the
+  merged move contract from Milestone 5A.
+
+- [ ] A moved component variant with only a metadata edit reads Changed:
+      decide pure moves from the material change set, not the visual review
+      state.
+- [ ] A variant deleted during a component move opens with its parent's
+      workspace: resolve the parent through the move map, and match removed
+      variants through the parent's `previousPath` in Serve, export, and the
+      embedded viewer, from the first paint.
+- [ ] Moved component variants keep their nested-input details: map each
+      current view's `variantPath` and nested `componentId` through the move
+      map before pairing views.
+- [ ] In All, a pure move carries no changed mark: mark a moved row only when
+      the entry is in the material change set, and keep the Changes
+      presentation.
+- [ ] Cover the fixes: a moved component in the browser fixture, with a
+      deleted variant, a metadata-only variant edit, and a nested-input
+      change; real reasons in the evidence unit test; and the moved specs
+      through an embedded viewer host as well as Serve and export.
+- [ ] Run the full gate, then commit and push.
 
 ## Milestone 8: Guides, verification, close-out, and review
 

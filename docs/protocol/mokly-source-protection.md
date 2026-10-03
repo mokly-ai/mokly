@@ -52,7 +52,8 @@ preventing unrelated public files from loading.
 [Markdown file links](./mokly-documents.md#links-and-resources) classify output
 targets before inventory: reject proven Mokly-owned output and metadata, and
 render public-resource targets as plain text without adding them to `sourceFiles`.
-Source references and copied input resources keep their private inventory rules.
+Sources stay private. [Move evidence](./mokly-moves.md) uses confined internal
+reads; it never exposes source bytes as resources or snapshots.
 
 The repository's `.mokly-cache/` is package-private in every mode, including
 physical aliases. Public readers, export, resource references, change evidence
