@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–3 and 3A are complete; Milestone 3B is in progress. This plan supersedes
+discussion in this workspace. Milestones 1–3, 3A, 3B, and 6 are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -617,6 +617,12 @@ Tags: ui
 
 Bring the shell to the Milestone 2 mockups.
 
+Status: Complete. After merging Milestone 3B, package (six consumer
+scenarios), unit (3,738), browser (751), hydration (226), and all remaining
+repository checks pass. The approved full-gate exception remains pre-existing
+GHSA-vfj7-8cjw-p6xm in development dependencies; no dependency change or
+audit exemption was added.
+
 - [x] Rename the Pages section to Specs across `packages/viewer/src/shell`
       (`nav.tsx`, `nav_model.ts`, `nav_tree.ts`, `entry_wording.ts`) and
       build the Components section from entries of kind `component` and the
@@ -669,7 +675,7 @@ Bring the shell to the Milestone 2 mockups.
 - [x] Re-apply the drafted `docs/guides/catalogue/browse.md`,
       `search-and-filters.md`, and `details.md` from commit `d65417d` and
       reconcile them with the implemented shell.
-- [ ] Run `cargo xtask check`, then commit and push.
+- [x] Run `cargo xtask check`, then commit and push.
 
 ## Milestone 7: Viewer Changes and document presentation
 
