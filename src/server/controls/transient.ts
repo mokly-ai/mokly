@@ -5,6 +5,7 @@ import type { ComponentRenderRequest } from "@mokly/viewer/data";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCompiler } from "../../build/document_compiler.js";
 import type { LoadedGraph } from "../../build/load_graph.js";
+import type { AcceptedMoveTargets } from "../../build/move_targets.js";
 import { validateRenderRequest } from "../../components/render_request.js";
 import { isComponentVariantDefinition } from "../../components/types.js";
 
@@ -19,6 +20,7 @@ export function renderTransient(
   runtime: ComponentRuntime,
   graph: LoadedGraph,
   request: ComponentRenderRequest,
+  moveTargets?: AcceptedMoveTargets,
 ): TransientRender {
   const { props } = validateRenderRequest(
     request,
@@ -51,7 +53,7 @@ export function renderTransient(
       target.viewport === request.viewport &&
       target.colorScheme === request.colorScheme,
   )![0];
-  const document = compiler.render(route, props);
+  const document = compiler.render(route, props, moveTargets);
   return {
     route,
     props: encodeProps(props),

@@ -11,6 +11,7 @@ import {
   reviewInvalid,
   reviewObject,
   reviewPath,
+  reviewPreviousPath,
   reviewSides,
   reviewState,
   reviewString,
@@ -30,7 +31,7 @@ export function validateReviewScreen(
   const record = reviewObject(
     value,
     [...screenKeys, component ? "variants" : "views"],
-    ["before", "after"],
+    ["before", "after", "previousPath"],
   );
   reviewEntryPath(record.path);
   reviewString(record.title);
@@ -45,14 +46,15 @@ export function validateReviewScreen(
   if (!component) validateReviewViews(record.views, record, changedPaths);
   else {
     const variants = reviewArray(record.variants);
-    if (!variants.length) reviewInvalid("component variants are missing");
+    if (!variants.length && !record.before)
+      reviewInvalid("component variants are missing");
     const ids = new Set();
     let baselineOnly = false;
     for (const item of variants) {
       const variant = reviewObject(
         item,
         ["path", "title", "state", "views"],
-        ["before", "after"],
+        ["before", "after", "previousPath"],
       );
       reviewEntryPath(variant.path);
       reviewString(variant.title);
@@ -66,8 +68,12 @@ export function validateReviewScreen(
         );
       ids.add(variant.path);
       for (const side of ["before", "after"] as const) {
-        if (!variant[side]) continue;
-        if (!record[side]) reviewInvalid("variant has no entry side");
+        if (variant[side] === undefined) continue;
+        if (
+          !record[side] &&
+          !(side === "before" && variant.previousPath && variant.after)
+        )
+          reviewInvalid("variant has no entry side");
         const address = reviewObject(
           variant[side],
           ["path", "title", "props", "suppliedSlots"],
@@ -75,7 +81,11 @@ export function validateReviewScreen(
         );
         requireEqual(
           reviewEntryPath(address.path).toLowerCase(),
-          reviewEntryPath(variant.path).toLowerCase(),
+          reviewEntryPath(
+            side === "before"
+              ? (variant.previousPath ?? variant.path)
+              : variant.path,
+          ).toLowerCase(),
         );
         reviewString(address.title);
         if (address.description !== undefined)
@@ -83,6 +93,7 @@ export function validateReviewScreen(
         reviewStrings(address.suppliedSlots);
         decodeProps(address.props);
       }
+      reviewPreviousPath(variant);
       const preferred = reviewObject(
         variant.after ?? variant.before,
         ["path", "title", "props", "suppliedSlots"],
@@ -130,12 +141,17 @@ export function validateChangedEntry(
   value: unknown,
   changedPaths: readonly string[],
 ): Record<string, unknown> {
-  const record = reviewObject(value, ["kind", "reasons"], ["before", "after"]);
+  const record = reviewObject(
+    value,
+    ["kind", "reasons"],
+    ["before", "after", "previousPath"],
+  );
   if (!["screen", "component", "use-case"].includes(String(record.kind)))
     reviewInvalid("unknown changed entry kind");
   reviewSides(record);
   const reasons = reviewArray(record.reasons);
-  if (!reasons.length) reviewInvalid("change reasons are empty");
+  if (!reasons.length && record.previousPath === undefined)
+    reviewInvalid("change reasons are empty");
   const keys: string[] = [];
   for (const raw of reasons) {
     if (!raw || typeof raw !== "object" || !("kind" in raw))
@@ -228,7 +244,6 @@ export function validateAffected(value: unknown): Record<string, unknown> {
     });
     if (
       !chain.length ||
-      chain.at(-1)!.componentId !== record.changedComponentId ||
       new Set(chain.map((edge) => edge.instanceKey)).size !== chain.length
     )
       reviewInvalid("invalid ownership chain");

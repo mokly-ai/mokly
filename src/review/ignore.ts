@@ -31,6 +31,15 @@ export interface NormalizedReviewPair {
   base: string;
   head: string;
   ignoredIds: readonly string[];
+  /** Paired ignore material with real URLs retained for resource and CSS analysis. */
+  resourceBase?: string;
+  resourceHead?: string;
+}
+
+/** Generation-local logical-link rewriting shared by move and material comparison. */
+export interface ReviewLinkNormalization {
+  before(html: string): string;
+  after(html: string): string;
 }
 
 /** Normalize only well-formed ignored regions present on both sides. */
@@ -38,6 +47,7 @@ export function normalizeReviewPair(
   baseHtml: string,
   headHtml: string,
   route: string,
+  links?: ReviewLinkNormalization,
 ): NormalizedReviewPair {
   const base = parseDocument(baseHtml, route);
   const head = parseDocument(headHtml, route);
@@ -67,16 +77,30 @@ export function normalizeReviewPair(
     normalizedHead += contractToken(headOnly);
   }
   const ignoredIds = [...paired]
-    .filter(
-      (id) => base.regions.get(id)?.content !== head.regions.get(id)?.content,
-    )
+    .filter((id) => {
+      const left = base.regions.get(id)!.content;
+      const right = head.regions.get(id)!.content;
+      return (links?.before(left) ?? left) !== (links?.after(right) ?? right);
+    })
     .sort();
-  return { base: normalizedBase, head: normalizedHead, ignoredIds };
+  return {
+    base: links?.before(normalizedBase) ?? normalizedBase,
+    head: links?.after(normalizedHead) ?? normalizedHead,
+    ignoredIds,
+    ...(links
+      ? { resourceBase: normalizedBase, resourceHead: normalizedHead }
+      : {}),
+  };
 }
 
 /** Validate and strip markers while retaining real child content. */
-export function normalizeSingleDocument(html: string, route: string): string {
-  return render(parseDocument(html, route), new Set());
+export function normalizeSingleDocument(
+  html: string,
+  route: string,
+  links?: (html: string) => string,
+): string {
+  const normalized = render(parseDocument(html, route), new Set());
+  return links ? links(normalized) : normalized;
 }
 
 function parseDocument(content: string, route: string): ParsedDocument {

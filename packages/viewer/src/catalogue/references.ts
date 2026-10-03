@@ -57,6 +57,26 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
     (entry) => !currentPaths.has(entry.path.toLowerCase()),
   ), "current and removed entries cannot share a path");
   const all = [...current, ...historical];
+  const previousPaths = new Set<string>();
+  const removedPaths = new Set(
+    historical.map((entry) => entry.path.toLowerCase()),
+  );
+  for (const entry of current) {
+    if (entry.previousPath === undefined) continue;
+    const previous = entry.previousPath.toLowerCase();
+    require(previous !==
+      entry.path.toLowerCase(), "previousPath must name a different identity");
+    require(entry.changes.status === "ready" &&
+      entry.changes.included &&
+      (entry.changes.kind === "changed" ||
+        entry.changes.kind ===
+          "unmodified"), "moved entry needs included changed or unmodified Changes");
+    require(!previousPaths.has(previous), "previous paths must be unique");
+    require(!removedPaths.has(
+      previous,
+    ), "paired previous path cannot be removed");
+    previousPaths.add(previous);
+  }
   unique(model.removedEntries.map(({ entry }) => entry.path.toLowerCase()));
   unique(
     model.removedEntries.flatMap(({ snapshotId }) =>

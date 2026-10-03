@@ -12,12 +12,14 @@ import { normalizeReviewPair } from "./ignore.js";
 export function validateArtifactResources(artifact: ReviewArtifact): void {
   const views: {
     path: string;
+    previousPath?: string;
     kind: "component" | "screen";
     view: ViewReview;
   }[] = [
     ...artifact.result.screens.flatMap((screen) =>
       screen.views.map((view) => ({
         path: screen.path,
+        ...(screen.previousPath ? { previousPath: screen.previousPath } : {}),
         kind: "screen" as const,
         view,
       })),
@@ -26,6 +28,9 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
       entry.variants.flatMap((variant) =>
         variant.views.map((view) => ({
           path: variant.path,
+          ...(variant.previousPath
+            ? { previousPath: variant.previousPath }
+            : {}),
           kind: "component" as const,
           view,
         })),
@@ -54,7 +59,7 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
         ? undefined
         : snapshotViewPath(
             "before",
-            item.path,
+            item.previousPath ?? item.path,
             view.viewport,
             view.colorScheme,
           );

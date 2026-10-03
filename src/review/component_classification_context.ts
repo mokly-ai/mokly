@@ -10,6 +10,8 @@ import { ComponentDependencyPolicy } from "./component_metadata.js";
 import { ComponentMaterialReader } from "./component_resources.js";
 import type { ComponentViewContext } from "./component_view.js";
 import { CssResourceAnalysis } from "./css/resource_analysis.js";
+import { baselinePathMapper, mapUsagePaths } from "./moves/identity.js";
+import { catalogueLinkNormalizer } from "./moves/links.js";
 import { ResourceComparison } from "./resource_comparison.js";
 
 /** Bind generation-local readers, resources and dependency ownership before comparison. */
@@ -32,7 +34,15 @@ export async function classificationContext(
   const changed = new Set(changedPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const compareResourceBytes = config.generatedOutput === "derived";
+  const moves = input.pairing?.moves ?? [];
+  const mapBefore = baselinePathMapper(
+    input.before.entries,
+    after.entries,
+    moves,
+  );
   const context: ComponentViewContext = {
+    links: catalogueLinkNormalizer(input.before.entries, after.entries, moves),
+    beforeUsage: (usage) => mapUsagePaths(usage, mapBefore),
     beforeReader,
     afterReader,
     dependencies,

@@ -21,7 +21,9 @@ import {
 } from "./component_metadata.js";
 import { variantAddress } from "./component_pairing.js";
 import type { ComponentReasonSources } from "./component_reason_sources.js";
+import type { ComponentVariantPair } from "./component_variant_pairs.js";
 import type { ComparedComponentView } from "./component_view.js";
+import { previousPathFields } from "./moves/types.js";
 import { aggregateState } from "./screen_views.js";
 
 type ComponentParent = ManifestComponent;
@@ -36,8 +38,10 @@ interface VariantClassificationInput {
     before: GeneratedComponentView | undefined;
     after: GeneratedComponentView | undefined;
   }[];
-  beforeEntries: ReadonlyMap<string, ReviewComponentVariant>;
-  afterEntries: ReadonlyMap<string, ReviewComponentVariant>;
+  pairs: readonly ComponentVariantPair[];
+  mapBefore: (path: string) => string;
+  beforeDocuments: (source: string) => string;
+  afterDocuments: (source: string) => string;
   dependencies: ComponentDependencyPolicy;
   reasonSources: ComponentReasonSources;
   changes: ChangedEntry[];
@@ -52,20 +56,12 @@ interface VariantClassification {
 export function classifyComponentVariants(
   input: VariantClassificationInput,
 ): VariantClassification {
-  const bases = variants(input.before, input.beforeEntries);
-  const heads = variants(input.after, input.afterEntries);
   const reviews: ComponentVariantReview[] = [];
   const parentReasons: EntryChangeReason[] = [];
-  for (const key of [
-    ...new Set([
-      ...heads.map((variant) => variant.path.toLowerCase()),
-      ...bases.map((variant) => variant.path.toLowerCase()),
-    ]),
-  ]) {
-    const base = bases.find((variant) => variant.path.toLowerCase() === key);
-    const head = heads.find((variant) => variant.path.toLowerCase() === key);
+  for (const { before: base, after: head } of input.pairs) {
     const selected = (head ?? base)!;
     const id = selected.path;
+    const key = id.toLowerCase();
     const comparisons = input.compared.filter(
       (_result, index) =>
         (
@@ -73,14 +69,16 @@ export function classifyComponentVariants(
         )?.variantPath?.toLowerCase() === key,
     );
     const views = comparisons.map((result) => result.view);
-    const beforeEntry = input.beforeEntries.get(key);
-    const afterEntry = input.afterEntries.get(key);
+    const beforeEntry = base;
+    const afterEntry = head;
+    const moved = previousPathFields(base, head);
     const reasons: EntryChangeReason[] = [];
     if (!base) reasons.push({ kind: "added" });
     if (!head) reasons.push({ kind: "removed" });
     const metadataChanged =
       Boolean(beforeEntry && afterEntry) &&
-      (metadata(beforeEntry!) !== metadata(afterEntry!) ||
+      (metadata(beforeEntry!, input.mapBefore, input.beforeDocuments) !==
+        metadata(afterEntry!, undefined, input.afterDocuments) ||
         input.before?.title !== input.after?.title);
     if (metadataChanged) reasons.push({ kind: "metadata" });
     const comparedReasons = comparisons.flatMap(
@@ -128,6 +126,7 @@ export function classifyComponentVariants(
       parentReasons.push(...comparedReasons);
     reviews.push({
       path: id,
+      ...moved,
       title: selected.title,
       ...(base ? { before: variantAddress(base) } : {}),
       ...(head ? { after: variantAddress(head) } : {}),
@@ -135,10 +134,11 @@ export function classifyComponentVariants(
       views,
     });
     const selectedEntry = afterEntry ?? beforeEntry;
-    if (reasons.length > 0 && selectedEntry) {
+    if ((reasons.length > 0 || moved.previousPath) && selectedEntry) {
       const unique = uniqueReasons(reasons);
       input.changes.push({
         kind: "component",
+        ...moved,
         ...(beforeEntry ? { before: address(beforeEntry) } : {}),
         ...(afterEntry ? { after: address(afterEntry) } : {}),
         reasons: unique,
@@ -160,15 +160,6 @@ export function componentVariantEntries(
         : [],
     ),
   );
-}
-
-function variants(
-  parent: ComponentParent | undefined,
-  entries: ReadonlyMap<string, ReviewComponentVariant>,
-): readonly ReviewComponentVariant[] {
-  return parent
-    ? [...entries.values()].filter((entry) => entry.variantOf === parent.path)
-    : [];
 }
 
 function slotScopedInputsChanged(

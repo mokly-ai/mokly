@@ -19,9 +19,14 @@ import {
   repositoryPath,
 } from "@mokly/viewer/data";
 
+import { relatedDocumentReferences } from "../documents/references.js";
 import { orderEntriesWithVariants } from "../registry/entry_order.js";
 
-import { entryChanges, comparisonSelection } from "./changes.js";
+import {
+  entryChanges,
+  entryPreviousPath,
+  comparisonSelection,
+} from "./changes.js";
 import type { CatalogueProjectionInput } from "./projection_input.js";
 import { catalogueIdentity, ZERO_DEPLOYMENT_ID } from "./serialization.js";
 import { projectViews } from "./views.js";
@@ -55,25 +60,21 @@ export function projectCatalogue(
       "$catalogue",
       "current projection requires manifest v8 or live metadata",
     );
-  const documentPaths = new Map(
-    catalogue.manifest.entries.flatMap((entry) =>
-      entry.kind === "document"
-        ? [[entry.sourcePath, entry.path] as const]
-        : [],
-    ),
+  const documentReference = relatedDocumentReferences(
+    catalogue.manifest.entries,
   );
   const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
     path: entry.path,
+    ...(!removed && entryPreviousPath(entry, input)
+      ? { previousPath: entryPreviousPath(entry, input)! }
+      : {}),
     title: entry.title,
     tags: [...(entry.tags ?? [])],
     details: {
       description: entry.description,
       sourcePath: repositoryPath(entry.sourcePath),
       relatedDocs: entry.relatedDocs.map((source) => {
-        const documentPath = documentPaths.get(source);
-        return documentPath && !removed
-          ? `mock:${documentPath}`
-          : relatedDoc(source);
+        return relatedDoc(removed ? source : documentReference(source));
       }),
       dependencies: entryDependencies(entry).map(repositoryPath),
       ...(entry.rationale !== undefined ? { rationale: entry.rationale } : {}),

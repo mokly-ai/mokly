@@ -24,6 +24,10 @@ and transactional checks as pages. Manifest v8 records source resources; public
 catalogue v4 exposes documents without source bytes. Changes compares rendered
 documents in each scheme, resources and reviewable metadata. Removed previews
 capture historical schemes and resources through the existing baseline reader.
+`moved_resources.ts` proves equal bytes at corresponding resource references
+for one document pair. That proof cannot suppress changes in another document.
+`references.ts` shares discovered-document links between public projection and
+move-aware metadata comparison.
 
 ```sh
 npm run build

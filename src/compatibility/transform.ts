@@ -19,6 +19,7 @@ import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
+import type { EntryMove } from "../review/moves/types.js";
 
 /** Resolve catalogue id links and apply an explicitly configured migration bridge. */
 export function transformCompatibilityDocuments(
@@ -55,6 +56,7 @@ export function transformCompatibilityDocuments(
       colorScheme,
       byPath,
       config.colorSchemes,
+      context?.moves,
     );
     records.push(...linked.records);
     const transformer = graph.compatibilityTransformer;
@@ -114,6 +116,7 @@ export interface CompatibilityContext {
   byPath: ReadonlyMap<string, ResolvedRegistryEntry>;
   availableRoutes?: string[];
   routeIndexes: Map<string, LogicalArtifactRouteIndex>;
+  moves?: readonly EntryMove[];
 }
 
 type LogicalArtifactRouteIndex = Readonly<Record<string, string>>;

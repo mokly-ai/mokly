@@ -137,7 +137,7 @@ specs/generated/mokly-generated/
 ```
 
 Current output uses manifest v8, and comparison-base output must do the same.
-Paths derive from exporting files and root configuration. Move pairing and the remaining navigation presentation are tracked in the
+Paths derive from exporting files and root configuration. Remaining navigation presentation is tracked in the
 [implementation plans](./plans/README.md).
 
 ### 4. Open the catalogue
@@ -224,8 +224,10 @@ view for status and marks even while Dark stays selected for the rest of the
 catalogue. Missing per-view evidence preserves the selected entry's existing
 comparison eligibility. Removed screens, pages and documents load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
-point. Changing an entry's path currently produces a removal and an addition.
-`movedFrom` is validated as authoring metadata; it does not pair entries yet.
+point. Changes pairs a moved entry with its earlier version when the evidence
+is unique. Use `movedFrom` to declare the previous path when needed. Pure moves
+stay included without counting as output changes; see the
+[move contract](./docs/protocol/mokly-moves.md).
 
 Read [how Changes works](./docs/guides/catalogue/changes.md), then export a
 standalone site:

@@ -7,7 +7,9 @@ carries resolved folder titles, order, hidden flags, indexes and variants.
 The current shell still labels its non-component section Pages. Documents share
 the page frame and publish their effective schemes and resource dependencies.
 Matched related-doc paths become validated `mock:<path>` references; other paths
-remain source labels. Move pairing is not implemented here.
+remain source labels. Accepted comparison pairs supply `previousPath` on current
+entries. Pure moves remain unmodified and included; paired baseline records
+produce no removals. Plain builds do not infer or publish previous paths.
 Live shell pages derive
 a separate entry-scoped bootstrap from it, retaining the whole index but
 replacing out-of-scope usage with the viewer runtime's `omitted` state. The

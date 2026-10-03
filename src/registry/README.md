@@ -23,6 +23,10 @@ Component parents validate before their children's data; invalid parents do not
 produce misleading child relationship errors. `move_hints.ts` checks current
 `movedFrom` authoring facts only; baseline validation and pairing remain separate.
 
+`changed_paths.ts` consumes accepted review pairs for metadata membership.
+It compares flow, variant-parent and discovered-document references through
+the same identities. `changes.ts` suppresses paired removals in every producer.
+
 `manifest.ts` emits schema v8 with paths, authored move hints, folder records and
 source inventory. `manifest_validation.ts` is the shared strict current/baseline
 reader. It validates document resources, derives artifact names, and rejects unknown

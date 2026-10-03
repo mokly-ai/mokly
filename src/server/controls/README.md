@@ -30,7 +30,9 @@ never include resource paths, exclusion globs, or other diagnostic details.
 `transient.ts` uses Build's stylesheet selection, renderer, compatibility/link
 transformation, ownership, range, prop, per-view metadata and resource checks.
 It retains one `DocumentCompiler` per generation instead of cloning and validating
-the full catalogue for each keystroke. Existing
+the full catalogue for each keystroke. Accepted comparison pairs travel in the
+private worker envelope for generation-bound diagnostics; they never become
+consumer props or a public request field. Existing
 public resources are copied into the edited document's immutable memory bundle.
 The pending generation supplies linked CSS and referenced opaque asset bytes
 to the Props-render bundle. Reserved generated resources come only from that

@@ -38,10 +38,15 @@ export function removedPagePreviewSource(
   const removedEntries = removedManifestEntries(
     catalogue.manifest,
     changes.baseline,
+    changes.pairing?.moves,
   );
   return {
     schemaVersion: 2,
-    movedEntries: [],
+    movedEntries:
+      changes.pairing?.moves.map(({ path, previousPath }) => ({
+        path,
+        previousPath,
+      })) ?? [],
     baseline: changes.baseline,
     baseCommit: changes.comparison.baseCommit,
     baseRef: changes.comparison.baseRef,

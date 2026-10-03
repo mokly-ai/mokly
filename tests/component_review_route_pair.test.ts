@@ -58,7 +58,7 @@ test("non-identity metadata cannot split one screen id's view evidence", async (
   );
 });
 
-test("classification drops a baseline entry whose id changed kind", async (t) => {
+test("a path reused by another kind retains both accepted same-kind moves", async (t) => {
   const beforeSource = componentEntrySource();
   const fixture = await componentReviewFixture(
     t,
@@ -95,7 +95,18 @@ test("classification drops a baseline entry whose id changed kind", async (t) =>
       Boolean(entry.before),
       Boolean(entry.after),
     ]),
-    [["component", false, true]],
+    [["component", true, true]],
+  );
+  assert.equal(reused[0]!.previousPath, "action");
+  const movedScreen = classified.result.screens.find(
+    (entry) => entry.path === "new-home",
+  )!;
+  assert.equal(movedScreen.previousPath, "home");
+  assert.equal(movedScreen.before?.path, "home");
+  assert.ok(
+    !classified.result.changes.some((entry) =>
+      entry.reasons.some((reason) => reason.kind === "removed"),
+    ),
   );
   assert.deepEqual(parseReviewResult(classified.result), classified.result);
 });

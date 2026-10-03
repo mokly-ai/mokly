@@ -69,10 +69,14 @@ export async function computeCatalogueChanges(
     acceptedEvidence,
   );
   const { baseline, changedEntries } = componentChanges;
-  const removedEntries = removedManifestEntries(manifest, baseline);
+  const moves = componentChanges.pairing?.moves ?? [];
+  const removedEntries = removedManifestEntries(manifest, baseline, moves);
   return {
     schemaVersion: 2,
-    movedEntries: [],
+    movedEntries: moves.map(({ path, previousPath }) => ({
+      path,
+      previousPath,
+    })),
     componentChanges,
     baseRef: base,
     baseCommit: commit,
@@ -80,6 +84,7 @@ export async function computeCatalogueChanges(
     changedEntries: [
       ...new Set([
         ...(changedEntries ?? []),
+        ...moves.map((move) => move.path),
         ...removedEntries.map(({ entry }) => entry.path),
       ]),
     ].sort(),

@@ -10,6 +10,7 @@ import {
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { MoklyError } from "../errors.js";
+import type { EntryMove } from "../review/moves/types.js";
 
 import { parseAuthoredLink, resolveAuthoredLink } from "./authored_links.js";
 import {
@@ -58,6 +59,7 @@ export function rewriteMockLinks(
   colorScheme: ColorScheme,
   byPath: ReadonlyMap<string, ResolvedRegistryEntry>,
   catalogueSchemes: readonly ColorScheme[],
+  moves: readonly EntryMove[] = [],
 ): RewrittenLogicalLinks {
   const replacements: Replacement[] = [];
   const records: LogicalReferenceRecord[] = [];
@@ -101,7 +103,12 @@ export function rewriteMockLinks(
       return [
         {
           attribute,
-          destination: resolveAuthoredLink(destination, sourceRoute, byPath),
+          destination: resolveAuthoredLink(
+            destination,
+            sourceRoute,
+            byPath,
+            moves,
+          ),
         },
       ];
     });

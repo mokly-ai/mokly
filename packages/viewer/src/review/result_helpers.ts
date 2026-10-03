@@ -101,6 +101,23 @@ export function reviewSides(record: Record<string, unknown>): void {
     reviewInvalid("at least one side is required");
   for (const side of ["before", "after"] as const)
     if (record[side] !== undefined) reviewAddress(record[side]);
+  reviewPreviousPath(record);
+}
+
+/** Different side paths require one explicit prior path; case-only changes do not. */
+export function reviewPreviousPath(record: Record<string, unknown>): void {
+  const before = record.before as Record<string, unknown> | undefined;
+  const after = record.after as Record<string, unknown> | undefined;
+  const moved =
+    before &&
+    after &&
+    reviewEntryPath(before.path).toLowerCase() !==
+      reviewEntryPath(after.path).toLowerCase();
+  if (moved) {
+    if (record.previousPath !== before.path)
+      reviewInvalid("previousPath must match the before side");
+  } else if (record.previousPath !== undefined)
+    reviewInvalid("previousPath requires a paired move");
 }
 export function reviewState(value: unknown): void {
   if (

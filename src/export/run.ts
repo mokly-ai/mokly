@@ -167,16 +167,22 @@ async function generateExport(
             changeEvidence,
             assetReader,
             hasRegisteredComponents(compilation.manifest) ? "pages" : "all",
+            { ...(comparison.pairing ? { pairing: comparison.pairing } : {}) },
           );
           const removedEntries = removedManifestEntries(
             compilation.manifest,
             baseline,
+            comparison.pairing?.moves,
           );
           const pagePreviews = await captureRemovedPagePreviews(
             new RepositoryRemovedPagePreview(config, prepared.reader),
             {
               schemaVersion: 2,
-              movedEntries: [],
+              movedEntries:
+                comparison.pairing?.moves.map(({ path, previousPath }) => ({
+                  path,
+                  previousPath,
+                })) ?? [],
               baseline,
               baseCommit: comparison.result.baseCommit,
               baseRef: comparison.result.baseRef,

@@ -210,7 +210,8 @@ Controlled changes are proposals until the host passes the new selection back.
 Do not provide `defaultSelection` in controlled mode, and remount the viewer if
 you need to change modes.
 
-Removed entries advertise an optional opaque `snapshotId`. Supply it with the
+Current paired entries carry `previousPath`; comparisons select the original
+before-side path. Removed entries advertise an optional opaque `snapshotId`. Supply it with the
 removed entry's `screenPath` to select that exact historical record. The viewer
 carries it through controlled proposals, navigation events and axis/filter
 changes. A path-only selection of a removed record normalizes to its published

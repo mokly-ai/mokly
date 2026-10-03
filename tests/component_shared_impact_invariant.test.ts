@@ -117,22 +117,22 @@ function singleSideSource(source: string, side: "removed" | "added"): string {
     .replace(
       "export const mockups = [",
       `const oneSide = defineComponent({
-  ...metadata, path: "${componentId}", title: "One-sided component",
+  ...metadata, path: "${componentId}", title: "${side} component",
   description: "Only this side declares its shared folder",
   dependencies: ["src/one-side/${componentId}"],
   propSchema: { kind: "object", properties: {} },
-  render: () => <span>One side</span>,
-  variants: [{ slug:"default",  title: "Default", props: {} }]
+  render: () => <span>${side} content</span>,
+  variants: [{ slug:"default",  title: "${side} default", props: {} }]
 });
 export const mockups = [...oneSide.entries,`,
     )
     .replace(
       "\n];",
       `,\n  defineScreen({
-  ...metadata, path: "${screenPath}", title: "One-sided screen",
+  ...metadata, path: "${screenPath}", title: "${side} screen",
   description: "Only this side declares its shared folder",
   dependencies: ["src/one-side/${screenPath}"],
-  mobile: <main>One side</main>, desktop: <main>One side</main>
+  mobile: <main>${side} content</main>, desktop: <main>${side} content</main>
 })\n];`,
     );
 }

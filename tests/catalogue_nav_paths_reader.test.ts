@@ -166,6 +166,7 @@ const invalid: readonly {
     name: "removed Changes on a current entry",
     reason: "current entry cannot have removed Changes",
     mutate(value) {
+      Reflect.deleteProperty(value.screens[0]!, "previousPath");
       value.screens[0]!.changes = {
         status: "ready",
         kind: "removed",

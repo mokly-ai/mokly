@@ -15,6 +15,7 @@ export async function classifyComponents(
     input.after,
     classified.implementationImpact,
     classified.sources,
+    classified.pairing.moves,
   );
   return classified.result;
 }

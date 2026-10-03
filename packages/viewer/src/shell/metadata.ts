@@ -4,7 +4,11 @@ import type {
   ManifestV8,
 } from "../registry/types.js";
 import type { ReviewResultV5 } from "../review/component_types.js";
-import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
+import type {
+  ReviewArtifact,
+  ScreenResourceEvidence,
+  ViewReview,
+} from "../review/types.js";
 
 export type CatalogueMetadata =
   | ManifestV8
@@ -31,6 +35,9 @@ export interface ScreenViewChanges {
 }
 export interface ShellEvidence {
   baseline: HistoricalManifest;
+  /** Actual material/metadata changes, independent of pure-move membership. */
+  changedEntries?: readonly string[];
+  pairing?: NonNullable<ReviewArtifact["pairing"]>;
   result?: ReviewResultV5;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];

@@ -15,6 +15,7 @@ export interface ReviewEntryAddress {
 export interface ReviewEntrySides {
   before?: ReviewEntryAddress;
   after?: ReviewEntryAddress;
+  previousPath?: string;
 }
 export interface ScreenReviewV5 extends ScreenReview, ReviewEntrySides {}
 export interface ReviewVariantAddress {
@@ -26,6 +27,7 @@ export interface ReviewVariantAddress {
 }
 export interface ComponentVariantReview {
   path: string;
+  previousPath?: string;
   title: string;
   before?: ReviewVariantAddress;
   after?: ReviewVariantAddress;

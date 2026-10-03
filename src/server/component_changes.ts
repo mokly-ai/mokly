@@ -29,6 +29,8 @@ import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
 import { derivedHeadOutputs } from "../review/head_assets.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
+import { prepareMoveClassification } from "../review/moves/prepare.js";
+import type { MovePairing } from "../review/moves/types.js";
 import {
   baselineReaderForCommit,
   comparisonNotPrepared,
@@ -45,6 +47,7 @@ import {
 
 export interface ComponentChangeSnapshot {
   baseline: HistoricalManifest;
+  pairing?: MovePairing;
   changedEntries?: readonly string[];
   result?: ReviewResultV5;
   comparison?: ReviewEvidence;
@@ -195,17 +198,7 @@ export async function readCatalogueChanges(
       accepted?.deliveredStyleSources,
       accepted?.routes,
     ));
-  const content = await classifyChangedContent(
-    manifest,
-    baseline,
-    config,
-    git.reader,
-    commit,
-    changedPaths,
-    reader,
-    components ? "pages" : "all",
-  );
-  const result = await classifyComponents({
+  const prepared = await prepareMoveClassification({
     before: baseline,
     after: manifest,
     config,
@@ -215,6 +208,18 @@ export async function readCatalogueChanges(
     beforeReader,
     afterReader: reader,
   });
+  const content = await classifyChangedContent(
+    manifest,
+    baseline,
+    config,
+    git.reader,
+    commit,
+    changedPaths,
+    reader,
+    components ? "pages" : "all",
+    { pairing: prepared.pairing, beforeReader: prepared.beforeReader },
+  );
+  const result = await classifyComponents(prepared);
   const pageIds = new Set(
     manifest.entries.flatMap((entry) =>
       entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
@@ -225,12 +230,14 @@ export async function readCatalogueChanges(
     baseline,
     config,
     content.changedPaths,
+    prepared.pairing.moves,
   ).filter((id) => !components || pageIds.has(id));
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry))
       if (!reader.digests[view.path]) await reader.read(view.path);
   return {
     baseline,
+    pairing: prepared.pairing,
     comparison: {
       baseCommit: commit,
       baseRef: base,
@@ -253,6 +260,7 @@ export async function readCatalogueChanges(
             baseline,
             config,
             content.changedPaths,
+            prepared.pairing.moves,
           ),
         }
       : {}),
@@ -263,7 +271,9 @@ export async function readCatalogueChanges(
       ...new Set([
         ...ids,
         ...(components
-          ? result.changes.map((entry) => (entry.after ?? entry.before)!.path)
+          ? result.changes
+              .filter((entry) => entry.reasons.length > 0)
+              .map((entry) => (entry.after ?? entry.before)!.path)
           : []),
       ]),
     ].sort(),

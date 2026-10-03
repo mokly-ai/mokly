@@ -2,9 +2,11 @@
 
 This internal module compares current validated output with a historical
 baseline. The supported consumer interface remains the catalogue and CLI;
-these modules are not public package exports. Pairing uses kind and path;
-a changed path produces a removal plus an addition. Authored `movedFrom` stays
-in the manifest, while review v5 omits `previousPath` until move pairing lands.
+these modules are not public package exports. `moves/prepare.ts` retains one
+accepted pairing and cached readers for classification and capture. The pure
+policy uses declared hints, identical material, source/title and document/page
+similarity in order. Review v5 emits `previousPath` on paired records; pure
+moves retain empty reasons and do not inflate material output counts.
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
 and `BaselineReader` (historical files) interfaces. Paths at the reader boundary
@@ -40,8 +42,14 @@ strictly validated `preview.json` without creating page records in `review.json`
 Current and baseline manifests both require v8; recognized earlier output is
 handled before comparison under the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
-Review result v5 pairs by kind and case-folded path. Move detection and
-`previousPath` remain planned under the [move contract](../../docs/protocol/mokly-moves.md).
+Review result v5 first pairs by kind and case-folded path, then by the
+[move contract](../../docs/protocol/mokly-moves.md). `ReviewArtifact.pairing`
+retains all-kind moves and diagnostics beside the visual result, so pages and
+documents contribute move counts without synthetic visual review records.
+Snapshots keep original before/after paths and bytes; logical reference
+normalization affects equality only. Resource traversal and CSS matching keep
+real URLs. Moved variants group under their current component parent, while
+affected-consumer evidence retains historical context and usage paths.
 
 Server classification and export use the same interfaces. Export pins only
 repository evidence and retains the same baseline reader, including its optional

@@ -55,7 +55,7 @@ export async function capturePublicationPagePreviews(
         changedEntries: changes.changedEntries,
         removedEntries: changes.removedEntries,
         schemaVersion: 2,
-        movedEntries: [],
+        movedEntries: changes.movedEntries,
       },
       new AbortController().signal,
     );

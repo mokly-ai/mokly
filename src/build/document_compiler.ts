@@ -33,6 +33,10 @@ import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
+import {
+  moveTargetsForGeneration,
+  type AcceptedMoveTargets,
+} from "./move_targets.js";
 import { nonGeneratedOutputFiles } from "./output_collisions.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import {
@@ -147,7 +151,12 @@ export class DocumentCompiler {
   render(
     route: string,
     componentProps?: Readonly<Record<string, unknown>>,
+    moveTargets?: AcceptedMoveTargets,
   ): CompiledDocument {
+    this.compatibility.moves = moveTargetsForGeneration(
+      moveTargets,
+      this.runtime.generation,
+    );
     const document = componentProps
       ? this.prepare(route, componentProps)
       : this.prepare(route);

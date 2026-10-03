@@ -12,6 +12,8 @@ import type {
 
 import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
 
+import type { EntryMove } from "./moves/types.js";
+
 export type ReviewEntry = Exclude<
   ManifestEntry | HistoricalManifestEntry,
   { kind: "page" | "document" }
@@ -30,7 +32,11 @@ export const lexical = (a: string, b: string): number =>
 export function baselineForCurrentIdentities(
   before: Manifest,
   after: Manifest,
+  moves: readonly EntryMove[] = [],
 ): Manifest {
+  const moved = new Set(
+    moves.map((move) => `${move.kind}:${move.previousPath.toLowerCase()}`),
+  );
   const currentKinds = new Map(
     after.entries.map(
       (entry) => [entry.path.toLowerCase(), entry.kind] as const,
@@ -38,7 +44,11 @@ export function baselineForCurrentIdentities(
   );
   const entries = before.entries.filter((entry) => {
     const currentKind = currentKinds.get(entry.path.toLowerCase());
-    return currentKind === undefined || currentKind === entry.kind;
+    return (
+      currentKind === undefined ||
+      currentKind === entry.kind ||
+      moved.has(`${entry.kind}:${entry.path.toLowerCase()}`)
+    );
   });
   return entries.length === before.entries.length
     ? before
@@ -47,12 +57,24 @@ export function baselineForCurrentIdentities(
 export function entryPairs(
   before: Manifest,
   after: Manifest,
+  moves: readonly EntryMove[] = [],
 ): { before: ReviewEntry | undefined; after: ReviewEntry | undefined }[] {
+  const moved = new Map(
+    moves.map((move) => [
+      `${move.kind}:${move.previousPath.toLowerCase()}`,
+      `${move.kind}:${move.path.toLowerCase()}`,
+    ]),
+  );
   const bases = new Map(
     before.entries.flatMap((entry) =>
       entry.kind === "page" || entry.kind === "document"
         ? []
-        : [[entryPairKey(entry), entry] as const],
+        : [
+            [
+              moved.get(entryPairKey(entry)) ?? entryPairKey(entry),
+              entry,
+            ] as const,
+          ],
     ),
   );
   const heads = new Map(
@@ -66,7 +88,11 @@ export function entryPairs(
     .sort()
     .map((id) => ({ before: bases.get(id), after: heads.get(id) }));
 }
-export function metadata(entry: ReviewEntry): string {
+export function metadata(
+  entry: ReviewEntry,
+  mapPath: (path: string) => string = (path) => path,
+  mapDocument: (source: string) => string = (source) => source,
+): string {
   const common = { ...entry } as Record<string, unknown>;
   for (const field of [
     "componentViews",
@@ -75,10 +101,43 @@ export function metadata(entry: ReviewEntry): string {
     "movedFrom",
   ])
     Reflect.deleteProperty(common, field);
-  common.path = entry.path.toLowerCase();
+  common.path = mapPath(entry.path).toLowerCase();
+  common.relatedDocs = entry.relatedDocs.map(mapDocument);
   if (typeof common.variantOf === "string")
-    common.variantOf = common.variantOf.toLowerCase();
+    common.variantOf = mapPath(common.variantOf).toLowerCase();
+  if (entry.kind === "screen")
+    common.useCasePaths = entry.useCasePaths.map(mapPath);
+  if (entry.kind === "use-case")
+    common.steps = entry.steps.map((step) => ({
+      ...step,
+      screenPath: mapPath(step.screenPath),
+    }));
   return canonicalJson(common);
+}
+
+/** A variant also displays its owning entry's title, independently of its own title. */
+export function variantParentTitleChanged(
+  beforeEntry: ReviewEntry,
+  afterEntry: ReviewEntry,
+  before: Manifest,
+  after: Manifest,
+): boolean {
+  const parent = (entry: ReviewEntry) =>
+    entry.kind === "screen" ||
+    (entry.kind === "component" && isManifestComponentVariant(entry))
+      ? entry.variantOf
+      : undefined;
+  const left = parent(beforeEntry),
+    right = parent(afterEntry);
+  if (!left || !right) return false;
+  return (
+    before.entries.find(
+      (entry) => entry.kind === beforeEntry.kind && entry.path === left,
+    )?.title !==
+    after.entries.find(
+      (entry) => entry.kind === afterEntry.kind && entry.path === right,
+    )?.title
+  );
 }
 
 /** Track owners, exact reasons, and unowned path evidence across both manifests. */

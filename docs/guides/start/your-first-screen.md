@@ -55,8 +55,9 @@ Each screen owns one directory under `mockupsDir` named by its path. This one
 is written as `account/account-home/index.mobile.html` and
 `account/account-home/index.desktop.html` under `mockupsDir`, with `.dark` before `.html`
 once the catalogue renders a dark scheme. Moving the file to another folder
-moves the screen, its files and its address together. Changes currently shows
-a changed path as a removal and an addition.
+moves the screen, its files and its address together. Changes pairs a moved
+screen with its earlier version when it finds one unique match. Declare
+`movedFrom` with the complete previous path when the match needs help.
 
 ## Next
 

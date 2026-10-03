@@ -2,9 +2,9 @@
 
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
-Screen and Review-ignore behavior remains below. Pairing uses kind and path;
-review result v5 omits `previousPath` until move detection is implemented.
-Documents use the page material rules. Move pairing remains planned in the
+Screen and Review-ignore behavior remains below. Pairing uses kind and path,
+then the move signals; review result v5 carries `previousPath` on paired moves.
+Documents use the page material rules. Remaining viewer presentation follows the
 [path identity plan](../../plans/path-identity.md).
 
 The catalogue's All / Changes filter narrows one navigation tree. There is no

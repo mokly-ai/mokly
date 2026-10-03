@@ -1,6 +1,8 @@
 import { type Catalogue } from "@mokly/viewer/server";
 
-import { catalogueAtBaseline } from "./baseline_catalogue.js";
+import { includeMovedEntries } from "../review/moves/entries.js";
+
+import { catalogueWithChanges } from "./baseline_catalogue.js";
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type { CatalogueUpdate, ChangesStatus } from "./update_messages.js";
 
@@ -33,10 +35,7 @@ export function advanceCatalogueState(
   if (Object.hasOwn(update, "componentChanges")) {
     next.componentChanges = update.componentChanges ?? undefined;
     next.activeCatalogue = next.componentChanges
-      ? catalogueAtBaseline(
-          current.catalogue.manifest,
-          next.componentChanges.baseline,
-        )
+      ? catalogueWithChanges(current.catalogue.manifest, next.componentChanges)
       : current.catalogue;
   }
   if (
@@ -46,6 +45,10 @@ export function advanceCatalogueState(
     next.changesStatus =
       next.changedEntries || next.componentChanges ? "ready" : "unavailable";
   next.changesStatus = update.changesStatus ?? next.changesStatus;
+  next.changedEntries = includeMovedEntries(
+    next.changedEntries,
+    next.componentChanges?.pairing?.moves,
+  );
   if (next.changesStatus !== "ready") {
     next.changedEntries = undefined;
     next.componentChanges = undefined;
