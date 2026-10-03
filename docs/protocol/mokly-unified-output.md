@@ -52,8 +52,10 @@ Keep authored entries, renderer, transformer, package roots and PostCSS modules
 outside this tree through both lexical and physical aliases. Broad entry globs
 skip it; explicit inputs inside it fail the existing `config-invalid` setting
 diagnostic. Stylesheet rules stay catalogue-relative and cannot target this
-child. Retain this branch's supported `entriesDir === mockupsDir` layout with
-protected source inventory; do not restore `main`'s old directory-wide ban or
+child. Entry modules may sit below `mockupsDir` as protected authored sources,
+but `entriesDir` must not equal `mockupsDir`, including through a real-path
+alias. Preserve the current `config-invalid` error:
+`authored source directories must not equal mockupsDir`. Do not restore
 `publicExclude`. Imported CSS keeps `main`'s public-source privacy checks.
 
 Reserve `styles` and `assets` as the first segment of any generated HTML page

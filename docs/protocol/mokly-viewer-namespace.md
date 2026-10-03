@@ -33,7 +33,7 @@ All package-owned public and private Serve routes move to this root:
 Apply the prefix change to every descendant endpoint, including any retained
 local generation aliases, without changing their authentication, retention or
 generation identity rules. Rename the nested `__generations` segment to
-`generations` too; otherwise visitor-needed paths would still start with `_`.
+`generations` too; otherwise a Mokly-owned path segment would still start with `_`.
 Retain generation-local `snapshots/before/`, `snapshots/after/` and page metadata
 paths. Do not change their identity-derived names or review-v4 content shape.
 
@@ -151,15 +151,24 @@ or prerequisite to completing this branch. Until then, publish fails 426.
 
 ## Names And Acceptance
 
-No deployed path segment needed by a visitor may start with `.`, `_`, `#` or
-`~`. This covers generated output, authored closure destinations, package
-assets and comparison generations. Validate decoded names before publication;
-reject an authored asset that violates the rule, without silently renaming it.
-Retain `main`'s portable-output diagnostics. A root `.mokly-export-artifact`
-is the sole optional deployment marker: a static host may omit it because
-the viewer never reads it. Leading dots otherwise identify local-only cache
-and transaction state. Provider metadata is optional host configuration and
-must not become a visitor dependency.
+Fixed deployed names that Mokly chooses must not start with `.`, `_`, `#` or
+`~`. This applies to the generated tree, viewer namespace, `generations`, and
+other fixed path segments written by Mokly. It adds no validation rule for
+authored closure names, entry ids, or repository paths mirrored below `styles/`
+and `assets/`. Those user-chosen names retain `main`'s existing path validation
+and diagnostics, including its hidden-segment rejection. Do not reject or
+rename an otherwise accepted authored path to enforce this naming policy.
+
+The plain Mokly directory names do not guarantee that every consumer path is
+portable to every host. For example, GitHub Pages with Jekyll can also omit a
+user-chosen name starting with `_`. Consumers must configure their host or
+choose compatible authored names; Mokly adds no build error for this caveat.
+
+A root `.mokly-export-artifact` is the optional deployment marker: a static
+host may omit it because the viewer never reads it. Upload and local export
+recovery still require it. Other dot-prefixed fixed Mokly names identify
+local-only cache and transaction state. Provider metadata is optional host
+configuration and must not become a visitor dependency.
 
 Before implementation, add failure tests for an old receiver rejecting new
 current-only and Changes-enabled uploads, new readers rejecting old/unknown
@@ -170,7 +179,11 @@ tests. Update installed-package fixtures for catalogue v4, ownership v3 and
 upload v2. No source or private manifest enters any artifact.
 
 Smoke-test Serve, a plain static-server export with the optional marker removed,
-and a publication Plan/Blobs/Complete round trip. Check the full exported and
-reconstructed path inventories for prohibited segments, with only the root
-marker exception. Include Changes-enabled artifacts so `generations/`, removed
-previews and binary CSS resources are covered. Stop every server after testing.
+and a publication Plan/Blobs/Complete round trip. Keep the export and upload
+regression on the example artifact: inspect every segment in its complete
+exported and reconstructed inventories for `.`, `_`, `#` or `~` prefixes,
+with only the root marker exception. This is an assertion about that fixture,
+not a validator for arbitrary consumer names. Add a unit test that enumerates
+the fixed deployed names Mokly chooses and checks the same rule. Include
+Changes-enabled example artifacts so `generations/`, removed previews and
+binary CSS resources are covered. Stop every server after testing.

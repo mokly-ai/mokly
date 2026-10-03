@@ -24,11 +24,15 @@ under the configured repository root through both lexical and real paths.
 
 Deployable generated content uses the plain, tool-owned directory name
 `mokly-generated/`: some static hosts and deployment tools skip or deny
-dot-directories. No deployed path segment that a visitor needs may start with
-`.`, `_`, `#`, or `~`. A host may drop the optional root
+dot-directories. Fixed deployed path segments chosen by Mokly must not start
+with `.`, `_`, `#`, or `~`. This adds no rejection for user-chosen names:
+authored closure paths, mirrored repository paths and ids retain their existing
+rules. Hosts such as GitHub Pages with Jekyll can still omit user-chosen names
+starting with `_`; consumers must configure the host or choose suitable names.
+A host may drop the optional root
 `.mokly-export-artifact` marker; the viewer never needs it. Upload and local
 export recovery still require it. Apart from that optional marker, leading
-dots are reserved for local Mokly state such as `.mokly-cache/` and transaction
+dots in fixed Mokly names are reserved for local state such as `.mokly-cache/` and transaction
 directories. The remaining `__mokly/` and `__generations/` violations are
 removed under the approved [namespace contract](./mokly-viewer-namespace.md).
 Production code defines `GENERATED_DIRECTORY` once in

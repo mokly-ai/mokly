@@ -584,7 +584,7 @@ Status: complete (documentation only).
 Documentation only. The user approved these rename review decisions: 28 A
 (design one `mokly-generated/` layout with `main`'s imported CSS before
 merging), 29 B and C (separate lint rules, tested in every covered folder),
-30 C (rename the `__mokly/` namespace so that no deployed name starts with
+30 C (rename the `__mokly/` namespace so that no fixed Mokly name starts with
 `_` or `.`), 31 A (reword the naming rule), and 33 B (`import/no-duplicates`).
 Meanwhile `origin/main` added imported CSS delivery under
 `<mockupsDir>/mokly-generated/styles/` and `assets/` with its own
@@ -618,7 +618,7 @@ and it still uses the committed and derived output modes.
       lint guard, and a compatibility contract in which an older host or
       viewer fails with a clear version error instead of misreading an
       artifact. Record any cloud-product update as post-merge follow-up.
-- [x] Reword the naming rule: no deployed name that a site visitor needs
+- [x] Reword the naming rule: no fixed Mokly name that a site visitor needs
       starts with `.`, `_`, `#`, or `~`; hosts may drop the optional
       `.mokly-export-artifact` marker; a leading dot remains only for local
       Mokly state.
@@ -769,7 +769,8 @@ they are preservation requirements, not a reduced validation selection.
   own content reads; output tracking never changes these rules.
 - Add `VIEWER_DIRECTORY` beside the existing generated constant. Rename the
   nested `__generations` to `generations` as required by decision 30's rule
-  for every visitor-needed segment. No old-path aliases are deployed.
+  for fixed Mokly path segments. No old-path aliases are deployed; authored
+  names retain main's existing rules and the documented host caveat.
 - Use public catalogue 4, delivery 4, a newly versioned bootstrap 1, ownership
   3 and upload metadata 2. Keep Plan response 1 and comparison result 4.
   Marker/upload gates make older receivers reject both current-only and
@@ -792,8 +793,10 @@ This branch's previously authorized removal of `generatedOutput`,
 `publicExclude`, directory-wide public scans and ownership-header authority
 remains in force; main's new code must not restore them. Historical headers
 remain readable as data, never ownership proof.
-The branch's source-inventoried `entriesDir === mockupsDir` support also stays;
-main's directory-wide source/public ban must not replace it during integration.
+Entry modules may remain below `mockupsDir` as protected authored sources.
+Preserve the branch's rejection of `entriesDir` equal to `mockupsDir`, including
+real-path aliases. The conflicting guide text is open finding 17; this work
+does not change that guide or resolve the finding.
 
 Decisions 29 and 33 replace the directory `no-restricted-syntax` options and
 duplicate import declarations only. Decision 30 replaces `__mokly/` and
@@ -810,6 +813,47 @@ record it by path in the merge commit and milestone report. Milestone 14's
 final review belongs to the orchestrating agent after the final push.
 
 ## Milestone 10: Give the directory-name check its own lint rule
+
+### Milestone 9 review corrections
+
+1. [x] Correct the `entriesDir` equality claim to match current code, verify
+       the other current-branch claims in the four new contracts, and preserve
+       finding 17 for the user's decision.
+2. [x] Limit the new naming rule to fixed names Mokly chooses. Preserve
+       existing rules for authored names, document the hosting caveat, and specify
+       example-artifact regression tests plus a unit test of Mokly's fixed names.
+
+Commit these documentation corrections before the Milestone 10 code commit.
+Historical-reader correction 3 awaits the user's decision. Leave that text
+unchanged and do not start Milestone 11 until the orchestrator supplies it.
+
+Current-branch claims were checked against the implementation, not the guides:
+
+- `mokly-unified-output.md`: `src/config/path_validation.ts` rejects equal
+  shorthand/catalogue roots and real-path aliases; entry discovery and
+  `src/config/public_files.ts` retain nested source protection. The generated
+  constant is owned by `packages/viewer/src/catalogue/delivery_paths.ts`.
+  `src/build/output_store.ts`, `tracked_output.ts`, `transaction.ts`,
+  `src/server/static_routes.ts` and `src/export/public_files.ts` confirm the
+  index boundary, generated-tree writer, in-memory static reads and closure
+  capture. Imported CSS and the merged layout remain future targets.
+- `mokly-generated-manifest.md`: `src/build/compile.ts`,
+  `src/registry/manifest.ts`, `manifest_validation.ts` and `blob_hash.ts`
+  confirm the current v6 fields, current/historical reader split and Git blob
+  hashing. `src/review/prepare.ts`, `tree_inventory.ts` and
+  `src/baseline/manifest.ts`, `catalogue.ts`, `cache_layout.ts`, `harvest.ts`
+  confirm current lookup, inventory diagnostics, descriptors and harvest.
+  Historical-reader target text is unchanged pending correction 3; this audit
+  grants no permission to resolve other open findings.
+- `mokly-viewer-namespace.md`: `src/publication/removed_previews.ts`,
+  `src/publish/manifest.ts`, `src/export/ownership.ts` and the viewer's catalogue
+  reader confirm the old namespace and strict current versions. New namespace,
+  version gates and main's delta exchange remain targets, not current-branch
+  claims. The fixed-name policy now excludes user-chosen names.
+- `mokly-directory-lint.md`: `eslint.config.js` and `package.json` confirm the
+  existing literal guard, covered roots and installed import plugin. The local
+  rule is Milestone 10 work; main's locale ban and merged folder coverage remain
+  later work. No extra current-branch behavior is asserted.
 
 Backend. This runs before the merge, so `main`'s `no-restricted-syntax`
 block and this branch's check never share one ESLint rule.
@@ -855,8 +899,11 @@ Backend.
 - [ ] Rename the Serve routes, export and publication paths, viewer URLs,
       and upload archive paths, and apply the Milestone 9 compatibility
       contract.
-- [ ] Extend the export and upload regression tests: no path segment
-      starts with `.`, `_`, `#`, or `~`, except `.mokly-export-artifact`.
+- [ ] Extend the example-artifact export and upload regressions: no path
+      segment starts with `.`, `_`, `#`, or `~`, except the root
+      `.mokly-export-artifact` marker. Add a unit test for the fixed deployed
+      names Mokly chooses. Preserve existing validation of user-chosen names;
+      do not turn the example assertion into a new consumer path rejection.
 - [ ] Smoke test Serve, an export served by a static file server, and a
       publication archive.
 - [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
