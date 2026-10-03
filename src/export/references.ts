@@ -71,9 +71,7 @@ export function validateExportReferences(
         })),
       );
     else if (extension === ".js" && name.startsWith("__mokly/")) {
-      for (const match of content.matchAll(
-        /\b(?:from|import)\s*["']([^"']+)["']/g,
-      ))
+      for (const match of content.matchAll(MODULE_SPECIFIER))
         references.push({ value: match[1] ?? "", checkFragment: false });
     }
     for (const reference of references) {
@@ -97,6 +95,13 @@ export function validateExportReferences(
     }
   }
 }
+
+/**
+ * A module specifier after `from` or `import` in a client bundle. Specifier
+ * characters exclude code punctuation, so a minified string that merely ends
+ * in "from" or "import", such as a "Moved from" label, never reads as an import.
+ */
+const MODULE_SPECIFIER = /\b(?:from|import)\s*["']([\w@./~%?#=&-]+)["']/g;
 
 function referenceTarget(source: string, value: string): string | undefined {
   const reference = value.trim();

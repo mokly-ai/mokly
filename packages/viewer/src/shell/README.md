@@ -2,7 +2,9 @@
 
 `metadata.ts` carries accepted move evidence privately. `comparison_selection.ts`
 uses each side's original path for snapshot URLs, including moved variants.
-These data rules do not depend on a visible move label.
+`catalogue.ts` keeps each paired current entry's branch-point path in
+`previousPaths`: Serve and export pass the accepted pairs to `createCatalogue`,
+and the public viewer reads `previousPath` from the read model.
 
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document

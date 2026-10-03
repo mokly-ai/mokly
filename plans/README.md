@@ -9,8 +9,9 @@
   2026-10-02; contracts, shell mockups, identity core, main integration,
   review fixes, Markdown documents, viewer navigation and its review fixes,
   index entry mockups, document typography parity, the light-only document
-  mockup, and the document presentation and index-entry Changes rows are
-  complete. Move detection and the Moved presentation remain.
+  and member landing view mockups, the document presentation and index-entry
+  Changes rows, move detection, and the document review fixes are complete.
+  The Moved presentation and the close-out remain.
 - [Imported CSS Delivery](./imported-css-delivery.md) — shipped implementation
   and authorized final-review fixes complete; finding 3 was resolved by the
   separate `922c1ec` merge. Milestone 12 finding 1 was resolved in `d474975`;

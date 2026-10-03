@@ -73,7 +73,11 @@ export function assembleExport(
         )
       : [];
   const removed = removedSnapshots.map(({ entry }) => entry);
-  const catalogue = createCatalogue(compilation.manifest, removedSnapshots);
+  const catalogue = createCatalogue(
+    compilation.manifest,
+    removedSnapshots,
+    changesStatus === "ready" ? (comparison?.pairing?.moves ?? []) : [],
+  );
   const entries = [...compilation.manifest.entries, ...removed];
   const comparisonFiles = new Map(comparison?.files);
   if (comparison) parseReviewResult(comparison.result);

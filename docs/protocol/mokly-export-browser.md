@@ -11,7 +11,11 @@ with the shell tree, plus the transport, geometry and protocol modules it
 imports (frame adapters, message transport, geometry, catalogue revision
 adoption). Export delivers the viewer-owned inventory from the generated manifest
 of the completed package build outputs; Serve also delivers the CLI-owned live
-host modules. Each manifest must match its directory files exactly. Static mode
+host modules. Each manifest must match its directory files exactly. Export
+reference validation resolves every module specifier that follows `from` or
+`import` in these scripts. A specifier holds only letters, digits, and
+`_ @ . / ~ % ? # = & -`, so a string literal that merely ends in either word,
+such as a `Moved from` label, is never read as an import. Static mode
 never activates live host capabilities or starts update requests. Its separate
 static evidence reader can issue only the same-origin destination-shell read
 defined by the delivery contract and receives no host token or behavior.

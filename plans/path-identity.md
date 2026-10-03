@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, and 6–6E and the first part of Milestone 7 are complete. This plan supersedes
+discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 6–6F, and 7 are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -1087,7 +1087,7 @@ milestone aligns the mockup with that rule, as
       design unit tests (167) and design browser tests (92) pass. At both
       artboard widths the screen shows Mobile with the viewport mark and the
       comparison band (`.context/m6f/`).
-- [ ] Commit and push.
+- [x] Commit and push (`99032ff2`).
 
 ## Milestone 7: Viewer Changes and document presentation
 
@@ -1168,6 +1168,46 @@ Second part, after Milestone 5 merges:
     header, keep Milestone 5's ticked section unchanged, keep this branch's
     two-part Milestone 7, and move Milestone 5's new removed-variant TODO
     into the second part, because it depends on move data.
+- [x] Merge `origin/calummoore/file-paths-vs-navpath` at `f817a1c4`
+      (Milestone 4A) into this branch at `74b15a13`; the merge base is
+      `52753e26`. Milestone 4A adds 10 files and changes 18, and deletes none;
+      the merge deletes none. Merge decisions:
+  - `plans/path-identity.md`: list both sides' complete milestones in the
+    header.
+  - `src/documents/README.md`: take Milestone 4A's hardened rendering
+    description and keep this branch's typography sentence.
+- [x] Move the remaining TODOs to Milestones 7A and 7B. Serve and export did
+      not give the shell catalogue the accepted pairs, and export's script
+      reference check read a minified `Moved from` label as an import, so that
+      backend work comes first.
+
+## Milestone 7A: Move data in the shell catalogue
+
+The shell needs each paired entry's previous path in Serve, export, and the
+public viewer, and export must accept a `Moved from` label in its scripts.
+
+- [x] Give `createCatalogue` the accepted move pairs and keep each paired
+      current entry's branch-point path in `previousPaths`. Serve's change
+      snapshots and updates, and export, pass the pairs; the public viewer
+      reads `previousPath` from the read model
+      (`packages/viewer/tests/moved_catalogue.test.ts`).
+- [x] Accept only module-specifier characters after `from` or `import` when
+      export checks `__mokly/` scripts, so text that ends in either word is
+      never read as an import (`tests/export_references.test.ts`); record the
+      rule in the export browser contract.
+- [x] Run the full gate, then commit and push. The gate passed: format,
+      lint, file length (only the 28 known files), ratchets, Rust fmt,
+      Clippy, tests, and file length, and the package, unit (3,977 tests),
+      browser (773), and hydration (238) suites. The dependency audit fails
+      only on the known GHSA-vfj7-8cjw-p6xm.
+
+## Milestone 7B: Moved presentation
+
+Tags: ui
+
+Present paired entries as the Milestone 2 mockups and the shell contract
+define.
+
 - [ ] Attach a removed variant to its moved parent through the current parent's
       `previousPath`; the removed record retains its baseline `variantOf`.
 - [ ] Label paired entries "Moved" in Changes rows and details, show the

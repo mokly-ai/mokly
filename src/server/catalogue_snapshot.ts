@@ -54,7 +54,7 @@ export async function loadCatalogueSnapshot(
   return {
     [configIdentity]: config,
     catalogue: timeSync("catalogue.index", () =>
-      createCatalogue(manifest, changes?.removedEntries),
+      createCatalogue(manifest, changes?.removedEntries, changes?.movedEntries),
     ),
     ...(changes ? { changes } : {}),
     ...(changes?.componentChanges

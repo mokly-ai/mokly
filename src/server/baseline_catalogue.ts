@@ -17,6 +17,7 @@ export function catalogueAtBaseline(
   return createCatalogue(
     manifest,
     removedManifestEntries(manifest, baseline, moves),
+    moves,
   );
 }
 

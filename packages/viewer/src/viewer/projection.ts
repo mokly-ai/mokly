@@ -93,23 +93,22 @@ export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
 }
 
 export function viewerCatalogue(model: ShellCatalogueReadModel) {
+  const current = [
+    ...model.screens,
+    ...model.pages,
+    ...model.documents,
+    ...model.useCases,
+    ...model.components,
+  ];
   const manifest: ManifestV8 = {
     schemaVersion: 8,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: [],
-    entries: [
-      ...[
-        ...model.screens,
-        ...model.pages,
-        ...model.documents,
-        ...model.useCases,
-        ...model.components,
-      ].map((entry) => ({
-        ...displayEntry(entry),
-        declaredDependencies: entry.details.dependencies,
-      })),
-    ],
+    entries: current.map((entry) => ({
+      ...displayEntry(entry),
+      declaredDependencies: entry.details.dependencies,
+    })),
   };
   const catalogue = createCatalogue(
     manifest,
@@ -118,6 +117,9 @@ export function viewerCatalogue(model: ShellCatalogueReadModel) {
       entry: displayEntry(entry),
       ...(snapshotId ? { snapshotId } : {}),
     })),
+    current.flatMap(({ path, previousPath }) =>
+      previousPath === undefined ? [] : [{ path, previousPath }],
+    ),
   );
   return {
     ...catalogue,
