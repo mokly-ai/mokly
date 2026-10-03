@@ -1,0 +1,14 @@
+[
+  {
+    "advisory": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "path": [
+      "node_modules/metro-file-map",
+      "node_modules/micromatch",
+      "node_modules/braces"
+    ],
+    "until": "2026-11-03",
+    "reason": "Dev-only React Native peer dependency. The repository does not run Metro or send untrusted patterns to it. No patched release is available.",
+    "tracking": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
+  }
+]
