@@ -103,7 +103,11 @@
   outside-component evidence in the design mockups. Milestones 19 and 20
   classify CSS by where its rules match and show that evidence for screens and
   saved views. Milestone 20A depicts whole-document page evidence, and
-  Milestone 20B shows it. Earlier work was reviewed twice; unselected review
+  Milestone 20B shows it. Milestone 21 verification passes the complete gate,
+  the separate unit suite, all 16 CSS smoke cases at both widths and all three
+  removed-field checks. Part 1 records the evidence in a local commit only;
+  the reviewer owns the push and the later review. The plan stays Active until
+  its pull request merges. Earlier work was reviewed twice; unselected review
   findings remain open.
 - [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
   pages embed the catalogue index plus only their own entry's component usage

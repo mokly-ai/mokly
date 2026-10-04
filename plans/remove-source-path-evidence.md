@@ -2,7 +2,8 @@
 
 ## Status And Outcome
 
-Status: Milestones 1 to 16 are implemented, verified and pushed. The branch
+Status: Milestones 1 to 20B, including 19A, are implemented, verified and
+pushed. The branch
 was reviewed twice after the earlier deliveries. Milestones 9 to 11 fixed the review findings that the user
 chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
 decisions. Milestones 16 to 21 merge main 0.13.0 and apply the 2026-10-03 CSS
@@ -23,7 +24,11 @@ pushed it as `1bd54f7e`. Milestone 20 is implemented, verified and pushed as
 design shows evidence in a whole-document page's Details, so Milestones 20A
 (mockup) and 20B (ui) now hold that display. Milestone 20A is implemented,
 verified and pushed as `0f43cf0a`. Milestone 20B is implemented, verified and
-committed locally; the reviewer owns the push.
+pushed as `710e2d5d`. Milestone 21 verification is complete. The complete gate,
+the separate required unit command and the browser smoke checks pass at 100%.
+Part 1 records this evidence in a local commit only. The reviewer owns the
+push and the review after the push. Both remain open, and the plan stays active
+until the pull request merges.
 The contract changes
 unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
 owners no longer route stylesheet changes; declared links and their provenance
@@ -1576,9 +1581,83 @@ test failed, was skipped or was cancelled. Logs are under `.context/m20b/logs/`.
 
 ## Milestone 21: Verify, deliver and review
 
-- [ ] Run `cargo xtask check` at 100%, inspect the diff and deletions against
-      `origin/main`, commit and push.
+- [x] Run `cargo xtask check` and the separate required unit command at 100%.
+      Smoke-test all four CSS delivery paths and all three removed fields at
+      mobile and desktop widths. Restore all temporary edits. Inspect the
+      diff and deletions against `origin/main`, record the evidence and update
+      the active plan index.
+- [x] Run `git add -A`, commit with a Conventional Commit, and push the branch.
 - [ ] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
       changing the implementation.
+
+Verification evidence (2026-10-04):
+
+- `git fetch origin main` succeeds. Main is
+  `800fe9f88a0173429b25baa1bcf41ed9e59b2256`; the verified source is
+  `710e2d5df342af859bf51efd92eb73e648926306`.
+  `git log --oneline HEAD..origin/main` is empty, and
+  `git merge-base --is-ancestor origin/main HEAD` exits 0. No merge was needed.
+- The complete `cargo xtask check` exits 0. It passes the audit, formatting,
+  lint, file limits, repository checks, typecheck, 15 Rust tests, all six
+  packed-consumer scenarios, 3,925 unit tests, 772 browser tests and 225
+  hydration tests. No test failed, was skipped or was cancelled. The normal
+  example build and check pass with 440 files.
+- The exact separate command
+  `npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"`
+  passes all 3,925 tests, with no failures, skips, cancellations or TODOs.
+  It ran after all browser work stopped and all smoke edits were restored.
+- Smoke used a temporary copy of the full example with every entry and the
+  renderer retained. It added four delivery links before a fixed committed
+  baseline, so link setup did not add unrelated Changes rows. The fixture
+  build and check pass with 442 files. The repository's `npm run dev` served
+  this copy with `--config .context/m21/example/examples/basic/mokly.config.ts`
+  and `--base HEAD --port 0`. The complete gate separately covers the normal
+  derived example.
+- All 16 CSS cases pass at 390 × 844 and 1440 × 1000. Each of configured CSS,
+  declared `stylesheets`, CSS imported by a declared stylesheet, and CSS
+  imported from JavaScript was tested with these rules:
+
+  - `.example-action { opacity: 0.97; }`: only Action and its three saved
+    variants enter Changes. Welcome, Welcome empty, Details and Toolbar Default
+    appear under Affected screens and components.
+  - `.example-head h1 { letter-spacing: 0.75px; }`: Welcome, Welcome empty,
+    Details and Example tour get their own rows. Action stays unchanged and
+    has no affected consumers.
+  - `.example-screen .example-action { opacity: 0.96; }`: the same four
+    screen/flow rows appear. The screen-scoped rule matches inside Action on
+    screens but has no own-page match. Action stays unchanged.
+  - `.example-action, .example-head h1 { opacity: 0.95; }`: the four component
+    entries and four screen/flow entries get rows. Screen Details show only
+    `.example-head h1` under the exact outside-component sentence.
+
+- The browser checks Changes rows, Affected screens, computed styles and
+  exact Details text at both widths. Current and loaded Side by side show
+  the same file and selectors once. The selected comparison API agrees with
+  catalogue evidence. JavaScript delivery names the emitted bundle, with no
+  private imported source path. No browser page error occurred.
+- Each removed field was tested alone with an edit to its named, unrendered
+  `examples/basic/notes.md` file. Each build succeeds and prints its exact
+  warning once: `dependencies` on Welcome, `ownedDependencies` on Action,
+  and `review.sharedImpact` in configuration. All generated bytes, including
+  the manifest, remain equal to the fixture baseline. At both widths,
+  Changes stays empty and Details and Usage show no resource evidence or
+  affected consumers. Every temporary edit was restored. The fixture was
+  rebuilt, checked, confirmed clean with Git, and removed. The real example
+  has no tracked edits.
+- `git diff --name-status origin/main` has 709 inspected paths. The repeated
+  scan matches the first scan. The deletion command
+  `git diff --diff-filter=D --name-status origin/main` contains only the four
+  earlier approved deletions:
+  `examples/basic/entries/design/library/style_context.tsx`,
+  `src/components/dependency_validation.ts`,
+  `src/registry/dependency_paths.ts`, and
+  `tests/design_library_style_collector.test.tsx`. The approved v3-to-v4
+  catalogue fixture rename remains. This task adds no deletion and changes
+  only this plan and `plans/README.md`.
+- Logs, exact commands, the smoke matrix and results are under `.context/m21/`.
+  Screenshots are under `.context/screenshots/m21/`. The audit still uses
+  main's reviewed Braces exception through 2026-11-03 UTC. Dependencies,
+  overrides and the audit are unchanged. Earlier unselected review findings
+  remain open. This task does not run the implementation review or push.
