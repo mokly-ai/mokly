@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import { GENERATED_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type { FrameAdapter } from "../client/frame_adapter.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 import type { ViewerSelection } from "../viewer/types.js";
@@ -155,11 +154,6 @@ export function ShellStoreProvider({
             : {})}
         >
           <ShellFrameRegistryProvider
-            {...(activeCatalogue.publicModel?.generatedPathPrefix ||
-            activeCatalogue.manifest.schemaVersion === 8 ||
-            activeCatalogue.manifest.schemaVersion === "live-index-1"
-              ? { generatedPathPrefix: GENERATED_DIRECTORY }
-              : {})}
             {...(frameAdapter ? { adapter: frameAdapter } : {})}
             {...(frameBaseUrl ? { baseUrl: frameBaseUrl } : {})}
           >

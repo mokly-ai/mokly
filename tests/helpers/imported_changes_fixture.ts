@@ -14,7 +14,7 @@ import { createFixture, removeFixture, validEntrySource } from "./fixture.js";
 /** A Git branch point whose generated CSS is committed or reproducibly derived. */
 export async function importedChangesFixture(
   context: TestContext,
-  mode: "committed" | "derived",
+  storage: "blobs" | "rebuild",
   kind: "plain" | "module" | "asset" | "new",
 ) {
   const usesModule = kind === "module";
@@ -78,16 +78,14 @@ export const mockups = [defineScreen({
     );
   await fs.writeFile(
     fixture.configPath,
-    (await fs.readFile(fixture.configPath, "utf8"))
-      .replace('"committed"', JSON.stringify(mode))
-      .replace(
-        'sharedImpact: ["notes.md"]',
-        `sharedImpact: ["entries/**", "notes.md"]${mode === "derived" ? ', baselineBuild: [["node", "baseline.mjs"]]' : ""}`,
-      ),
+    (await fs.readFile(fixture.configPath, "utf8")).replace(
+      'sharedImpact: ["notes.md"]',
+      `sharedImpact: ["entries/**", "notes.md"]${storage === "rebuild" ? ', baselineBuild: [["node", "baseline.mjs"]]' : ""}`,
+    ),
   );
   const config = await loadConfig(fixture.root);
   const baseline = await compileCatalogue(config);
-  if (mode === "committed") await writeCompilation(baseline, config);
+  if (storage === "blobs") await writeCompilation(baseline, config);
   else {
     await fs.writeFile(
       path.join(fixture.root, "baseline.json"),
@@ -121,7 +119,7 @@ for (const [route, encoded] of JSON.parse(await fs.readFile("baseline.json", "ut
   git("add", ".");
   git("commit", "-qm", "test: imported styles baseline");
   const repository =
-    mode === "derived"
+    storage === "rebuild"
       ? await prepareReviewRepository(config, "HEAD")
       : committedReviewRepository(config);
   return { ...fixture, config, cssPath, git, repository };

@@ -37,7 +37,6 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     removedEntries: [{ entry }],
     revision: { content: 1, evidence: 1 },
     schemaVersion: 4,
-    generatedPathPrefix: "mokly-generated",
     screens: [],
     tree: { components: [], pages: [] },
     useCases: [],

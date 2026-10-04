@@ -11,10 +11,11 @@ interface TreeEntry {
   readonly hash: string;
 }
 
-/** One whole-tree request supplies manifest discovery and inventory verification. */
+/** One generated-subtree request supplies manifest and inventory verification. */
 export async function readCommitTree(
   runner: GitCommandRunner,
   commit: string,
+  generatedRoot: string,
 ): Promise<ReadonlyMap<string, TreeEntry>> {
   const output = await runner.run([
     "ls-tree",
@@ -23,6 +24,8 @@ export async function readCommitTree(
     "-z",
     "--full-tree",
     commit,
+    "--",
+    `:(literal)${generatedRoot}`,
   ]);
   const entries = new Map<string, TreeEntry>();
   for (const item of output.split("\0")) {

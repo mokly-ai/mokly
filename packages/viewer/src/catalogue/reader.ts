@@ -1,6 +1,5 @@
 import { exactKeys, invalidData } from "../components/data.js";
 
-import { GENERATED_DIRECTORY } from "./delivery_paths.js";
 import { CHANGE_STATUSES, readEntry, readShellEntry } from "./entry_reader.js";
 import { assertPublicCatalogue } from "./privacy.js";
 import { validateCatalogueReferences } from "./references.js";
@@ -8,10 +7,6 @@ import type {
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
 } from "./scoped_types.js";
-import {
-  comparisonGeneration,
-  historicalSnapshotId,
-} from "./snapshot_identity.js";
 import type {
   CatalogueNode,
   CatalogueReadModel,
@@ -67,15 +62,12 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
   const input = object(value);
   if (input.schemaVersion !== 4)
     throw new MoklyVersionError("catalogue", input.schemaVersion, 4);
-  if (input.generatedPathPrefix !== GENERATED_DIRECTORY)
-    invalidData("$catalogue", "unsupported generatedPathPrefix");
   assertPublicCatalogue(input);
   const identity = object(input.identity),
     revision = object(input.revision),
     tree = object(input.tree);
   const catalogueIdentity = hash(identity.id);
   const comparisonUrl = comparisonPath(input.comparisonUrl);
-  const legacyGeneration = comparisonGeneration(comparisonUrl);
   const entries = <Kind extends Entry["kind"]>(field: string, kind: Kind) =>
     array(input[field]).map((raw) => {
       const entry = readRoutedEntry(raw);
@@ -85,7 +77,6 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
     });
   return {
     schemaVersion: 4,
-    generatedPathPrefix: GENERATED_DIRECTORY,
     identity: { id: catalogueIdentity, title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
     revision: {
@@ -105,16 +96,13 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
     removedEntries: array(input.removedEntries).map((raw) => {
       const removed = object(raw);
       const entry = readRoutedEntry(removed.entry);
+      if (removed.snapshotId === undefined && comparisonUrl !== null)
+        invalidData(
+          "$catalogue",
+          "removed entry needs snapshotId when a comparison generation exists",
+        );
       const snapshotId =
-        removed.snapshotId === undefined
-          ? legacyGeneration
-            ? historicalSnapshotId(
-                catalogueIdentity,
-                { kind: "generation", identity: legacyGeneration },
-                entry,
-              )
-            : undefined
-          : hash(removed.snapshotId);
+        removed.snapshotId === undefined ? undefined : hash(removed.snapshotId);
       return {
         entry,
         ...(snapshotId ? { snapshotId } : {}),

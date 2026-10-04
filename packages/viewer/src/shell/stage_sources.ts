@@ -1,9 +1,6 @@
 /** Source and usage projection for saved and temporary stage views. */
 
-import {
-  currentDocumentPath,
-  type GeneratedPathPrefix,
-} from "../catalogue/delivery_paths.js";
+import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type {
   ShellCatalogueUsage,
   ShellCatalogueView,
@@ -64,11 +61,10 @@ export function generatedFrameSource(
   view: GeneratedComponentView,
   fragment?: string,
   stepIndex?: number,
-  prefix?: GeneratedPathPrefix,
 ): string {
   const source = view.path.startsWith("/")
     ? view.path
-    : framePath(currentDocumentPath(view.path, prefix));
+    : framePath(currentDocumentPath(view.path));
   return fragment && (stepIndex === undefined || stepIndex === 0)
     ? `${source}#${encodeURIComponent(fragment)}`
     : source;

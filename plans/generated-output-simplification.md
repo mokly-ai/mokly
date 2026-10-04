@@ -1911,10 +1911,12 @@ from the reader. A removed record with a comparison generation must supply its
 id; a missing id is invalid. No-identity records remain supported without
 invented ids. Keep the current writer's generation-based hash construction.
 
-Invalid cache data, including request/recipe disagreement, is partial rather
-than a fail-intact compatibility branch. Cancellation still aborts. Retention
-validates output and removes unlocked invalid entries regardless of the retained
-count. Atomic marker publication uses a unique sibling temporary and rename;
+Invalid cache data is partial. A valid v8 marker with different requested
+catalogue/build settings keeps main's exact fail-intact error. Validate the
+marker, compare settings, then validate output. Earlier or invalid markers
+rebuild before settings comparison. Cancellation still aborts. Retention reads
+only the marker and inputs; it removes unlocked invalid metadata entries without
+reading or hashing output. Full output validation runs only on reuse. Atomic marker publication uses a unique sibling temporary and rename;
 rename is the commit point. Keep safe lock, confinement and process checks.
 
 Documentation removal shrinks reviewed oversized protocol pages. Their existing
@@ -1966,31 +1968,684 @@ Implement the Milestone 16 contracts. Remove each approved item with its
 tests, fixtures and references. Add tests for each new behaviour. The product
 works at the end of the milestone.
 
-- [ ] Base selection and baselines (items 1–3). Add tests: a base with a
+- [x] Base selection and baselines (items 1–3). Add tests: a base with a
       committed root-level v7 manifest and no `mokly-generated/` selects a
       rebuild; a base whose rebuild writes v7 gives the earlier-version
       outcome through `prepareReviewRepository` and export; empty, truncated
       and earlier-format cache markers lead to a rebuild; the marker write is
       atomic.
-- [ ] Remove the compatibility transformer (item 4). Keep the other
+- [x] Remove the compatibility transformer (item 4). Keep the other
       assertions of tests that configured a transformer. Test the
       `compatibility` removed-key error.
-- [ ] Remove the export items (items 5, 6 and 8) and update their tests.
-- [ ] Remove items 7, 9 and 10, with their tests.
-- [ ] Remove the layout prefix from the viewer (item 11). Update the public
+- [x] Remove the export items (items 5, 6 and 8) and update their tests.
+- [x] Remove items 7, 9 and 10, with their tests.
+- [x] Remove the layout prefix from the viewer (item 11). Update the public
       types, the tests and the catalogue fixture.
-- [ ] Remove the output-mode leftovers (item 12).
-- [ ] Search the code again for compatibility paths (for example `legacy`,
+- [x] Remove the output-mode leftovers (item 12).
+- [x] Search the code again for compatibility paths (for example `legacy`,
       `former`, `obsolete`, `earlier` and older version numbers). Record every
       result in this milestone. Remove a result only if it matches the
       approved scope, and report every other result.
-- [ ] Smoke-test build, check, Serve (a styled screen and Changes), an export
+- [x] Smoke-test build, check, Serve (a styled screen and Changes), an export
       on a static server, and Changes against a base that also commits a
       stale root-level v7 manifest.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits and
       a `BREAKING CHANGE` footer; push.
+
+### Implementation choices and scope
+
+Items 1–3 now list only the committed generated subtree and probe its canonical
+manifest. A stale root-level v7 file cannot disable Changes before the build.
+The base's own recipe still produces the result. If it produces a root-level
+pre-v8 manifest, preparation and export keep the exact unavailable outcome and
+do not publish a cache marker. Canonical pre-v8 committed generated manifests
+still hit the version gate. Moved-root discovery and v8 inventory checks stay.
+
+Cache reuse reads bounded metadata, compares settings, then validates output.
+A valid marker with a different requested path or command list fails intact with
+`Cached baseline uses different build settings; remove <entry> before changing catalogues or commands`.
+Invalid metadata is partial before that comparison. Retention reads only the
+marker and `inputs.json`, rechecks a partial candidate under its own free lock,
+and never reads or hashes output. Completion uses a unique sibling temporary
+and atomic rename. Tests cover write, rename and cancellation failures, plus
+cancellation at the rename commit point. These choices incorporate all three
+corrections to Milestone 16; no different mismatch or retention rule is adopted.
+
+Item 4 removes the transformer API and graph roots. `document_links.ts` retains
+ordinary child-control adaptation and portable link resolution for full and
+on-demand compilation. Config presence, including undefined, fails with
+`compatibility was removed; author portable links directly`. Mixed-purpose tests
+keep CSS syntax, pending-style delivery, workspace symlink assets, custom/page
+renderers, metadata-only native links, and final-anchor validation.
+
+Items 5–10 remove earlier export adoption and messages, former notice stripping,
+hashed-reservation admission, v2 disclosure writes and snapshot-id inference.
+The repository preview uses v3 export ownership and no longer writes its own
+earlier ownership marker. Its browser fixture now checks current ownership.
+This is required by item 6 and does not change fixture preparation, deadlines
+or the deferred Milestone 14 performance question. The shared-example corruption
+test now expects its existing warm-cache assertion after invalid output becomes
+a cache miss; it still refuses fallback rebuilding.
+
+Item 11 removes the serialized prefix, mount fields/attribute and helper
+parameters. Current URL validation retains its existing security checks and
+uses the shared constant. It does not fix the separately deferred double decode.
+Catalogue v4 keeps its unreleased number. The fixture's pinned size and digest
+change with that field removal. Item 12 removes byte-comparison opt-outs,
+restores the generated consumer in `changedPaths`, and removes inert mode loops.
+Real blob/rebuild and fresh/retained setup differences keep separate coverage.
+
+The export README again states every current closure/privacy/watch fact from
+the correction. The resource policy admits both generated inventory and authored
+closure. The other changed READMEs were checked for similar losses; their current
+facts remain. Review again states that the first imported stylesheet changes
+affected views against a v8 baseline without imported CSS; the existing test
+covers this current behavior. The shell README names only the current storage key.
+The internal-export ratchet identifies four helpers after their compatibility
+callers disappear. `manifestEnvelopeVersion` and the link-control `attribute`
+remain private helpers. `walkFiles` and its sole-module `src/build/discovery.ts`
+are removed with the transformer. The old-preview-only `isExportPublicName`
+wrapper and its unused build-directory option are removed; the confined
+`exportResourceDenial` policy remains. The existing source-order lint rule still
+covers its exact discovery path, and its synthetic probe remains. These are
+items 3, 4 and 6, with no new authored-name restriction.
+No other open finding is changed.
+
+### Smoke evidence
+
+`node --import tsx .context/milestone-17/smoke.ts` passes under Node 22.14.0.
+The isolated source-only example commit is
+`59ce920158bd9ca378940aa2efa2e9bfa68b91bb`. It commits
+`examples/basic/mokly-manifest.json` with v7 and has no generated subtree.
+Its own recipe runs `npm ci`, `npm run build` and `npm run example:build`.
+Head `npm run example:check` passes with 32 valid untracked files.
+
+Preparation selects `rebuild`, reports a cold completion, and publishes a v8
+cache. Serve reports `ready` Changes at
+`http://127.0.0.1:46427/view/screens/example-welcome.html`. The screen uses Inter,
+a 32px heading and six stylesheets. Authored and imported CSS return 200.
+
+The export top level is `.mokly-export-artifact`, `404.html`, `index.html`,
+`mokly-viewer`, `static` and `view`. A plain static server returns 200 for
+`http://127.0.0.1:39375/mokly-viewer/catalogue.json`, with catalogue v4 and
+`ready` Changes. Its Welcome screen has the same styling. Browser loads have no
+HTTP failures. All 147 export files were scanned; the only path segment starting
+with `.`, `_`, `#` or `~` is `.mokly-export-artifact`. Screenshots and command receipts are under
+`.context/milestone-17/`. All smoke servers and browsers stopped in cleanup.
+
+### Mainline removals and title inventory
+
+Main remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`. No merge occurs in this milestone.
+Items refer to the twelve approved removals in Milestone 16. The following
+eight main files are removed. No other new main file deletion is authorized:
+
+- `src/build/discovery.ts` — item 4; its only caller was the transformer.
+- `src/build/styles/lightning.ts` — item 4.
+- `src/build/styles/transformer_inventory.ts` — item 4.
+- `src/compatibility/transform.ts` — item 4.
+- `src/compatibility/types.ts` — item 4.
+- `tests/compatibility.test.ts` — item 4.
+- `tests/compatibility_link_controls.test.ts` — item 4.
+- `tests/compatibility_navigation.test.ts` — item 4.
+  The branch-only file `tests/private_metadata_baselines.test.ts` is also removed
+  under item 2. Its main-origin test title is listed below; main keeps that title
+  in its original `tests/private_metadata.test.ts` file.
+
+The five earlier Milestone 11 deletions remain: `src/build/committable_output.ts`,
+`src/build/ownership.ts`, `src/build/tracked_ownership.ts`,
+`src/config/public_exclusions.ts` and `tests/build_check_unclaimed.test.ts`.
+No audit policy, write lock, frame-session race fix or unrelated main contract is removed.
+
+The title audit compares all test declarations at the starting tip and main.
+All missing declarations map to the approved scope. The list below also expands
+every changed main title template into its concrete titles. A renamed title does
+not mean that its coverage was deleted. Ordinary CSS, custom rendering, link
+controls, anchors, source confinement and byte checks remain. The renderer
+casing test moves unchanged to `build_link_control_casing.test.ts`; final
+navigation checks move to `build_final_navigation.test.ts`.
+
+| Main test file                                        | Removed main title                                                                             | Item and disposition                                                                  |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `tests/build_imported_styles_alias.test.ts`           | `transformer-only legacy CSS does not reject deliverable CSS syntax`                           | 4: Renamed; non-transformer coverage retained.                                        |
+| `tests/build_imported_styles_alias.test.ts`           | `transformer-only legacy CSS is inventoried without strict parsing`                            | 4: Removed transformer-only coverage.                                                 |
+| `tests/build_imported_styles_graph.test.ts`           | `transformer-only CSS and its nested assets are private, not delivered`                        | 4: Removed transformer-only coverage.                                                 |
+| `tests/build_imported_styles_resources.test.ts`       | `compatibility route discovery includes pending styles and omits reserved disk orphans`        | 4: Renamed; non-transformer coverage retained.                                        |
+| `tests/build_link_controls.test.ts`                   | `custom and legacy renderers adapt controls before compatibility checks`                       | 4: Renamed; non-transformer coverage retained.                                        |
+| `tests/build_postcss_dependencies.test.ts`            | `explicit generated output fails in both modes before public file validation`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `committed plain imported CSS narrows shared-impact evidence to matching views`                | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `committed module imported CSS narrows shared-impact evidence to matching views`               | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `derived plain imported CSS narrows shared-impact evidence to matching views`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `derived module imported CSS narrows shared-impact evidence to matching views`                 | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `committed changed generated font affects every view linking its stylesheet`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `derived changed generated font affects every view linking its stylesheet`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `committed baseline predating imported CSS reports a one-time jump`                            | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `derived baseline predating imported CSS reports a one-time jump`                              | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/changes_imported_styles.test.ts`               | `committed Changes ignores syntactically valid stray generated output`                         | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/compatibility.test.ts`                         | `migration compatibility transforms documents and legacy id links`                             | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility.test.ts`                         | `compatibility transforms reuse the logical route index for each view`                         | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility.test.ts`                         | `configured compatibility transformers are typed complete-document functions`                  | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility.test.ts`                         | `compatibility output fails closed on unresolved navigation links`                             | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility_link_controls.test.ts`           | `compatibility transforms cannot introduce or alter owned control metadata`                    | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility_link_controls.test.ts`           | `compatibility cannot add control metadata to a document without child links`                  | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility_link_controls.test.ts`           | `compatibility preserves generated metadata while allowing harmless edits and literal names`   | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility_navigation.test.ts`              | `compatibility transforms preserve complete logical-link records`                              | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility_navigation.test.ts`              | `compatibility transforms cannot duplicate reserved Browse metadata`                           | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility_navigation.test.ts`              | `identity transforms preserve metadata-only native links`                                      | 4: Renamed; non-transformer coverage retained.                                        |
+| `tests/compatibility_navigation.test.ts`              | `compatibility transforms cannot add base URLs to activatable documents`                       | 4: Removed transformer-only coverage.                                                 |
+| `tests/compatibility_navigation.test.ts`              | `compatibility transforms cannot remove an anchor from one target view`                        | 4: Renamed; non-transformer coverage retained.                                        |
+| `tests/component_build_edges.test.ts`                 | `compatibility rejects removed ownership`                                                      | 4: Removed transformer-only coverage.                                                 |
+| `tests/component_build_edges.test.ts`                 | `compatibility rejects changed owned head styles`                                              | 4: Removed transformer-only coverage.                                                 |
+| `tests/component_material_reader.test.ts`             | `fall-through views reuse actual discovery in derived mode`                                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_changes_membership.test.ts`    | `committed plain exported and published Changes match live rule attribution`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_changes_membership.test.ts`    | `committed module exported and published Changes match live rule attribution`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_changes_membership.test.ts`    | `committed asset exported and published Changes match live rule attribution`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_changes_membership.test.ts`    | `derived plain exported and published Changes match live rule attribution`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_changes_membership.test.ts`    | `derived module exported and published Changes match live rule attribution`                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_changes_membership.test.ts`    | `derived asset exported and published Changes match live rule attribution`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_styles.test.ts`                | `committed export retains generated asset routes containing dist and target`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_styles.test.ts`                | `derived export retains generated asset routes containing dist and target`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_styles.test.ts`                | `committed export captures scoped CSS assets without shipping private inputs`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_styles.test.ts`                | `derived export captures scoped CSS assets without shipping private inputs`                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_imported_styles.test.ts`                | `derived public capture never adopts stray reserved files from disk`                           | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/export_migration.test.ts`                      | `only the repository adapter migrates a valid legacy preview`                                  | 6: Replaced with the current-only rejection/ownership contract.                       |
+| `tests/export_reservations.test.ts`                   | `legacy hashed reservations must be explicitly recovered`                                      | 8: Replaced with the current-only rejection/ownership contract.                       |
+| `tests/historical_snapshot_identity.test.ts`          | `reader safely derives older generation-backed identities`                                     | 10: Replaced with the current-only rejection/ownership contract.                      |
+| `tests/imported_styles_accepted_changes.test.ts`      | `accepted committed classification does not rerun PostCSS`                                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/imported_styles_accepted_changes.test.ts`      | `catalogue freshness shares one inventory graph with committed Changes`                        | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/imported_styles_low_delivery.test.ts`          | `committed generated assets have specific types in static, on-demand and transient delivery`   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/imported_styles_low_delivery.test.ts`          | `derived generated assets have specific types in static, on-demand and transient delivery`     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/imported_styles_workspace_package.test.ts`     | `transformer-only workspace-package CSS inventories a linked image`                            | 4: Renamed; non-transformer coverage retained.                                        |
+| `tests/private_metadata.test.ts`                      | `a stale historical-manifest alias does not prevent ordinary public resources`                 | 2: Replaced with the current-only rejection/ownership contract.                       |
+| `tests/private_metadata.test.ts`                      | `an earlier manifest name is only an incompatibility sentinel`                                 | 2: Replaced with the current-only rejection/ownership contract.                       |
+| `tests/publication_imported_styles.test.ts`           | `committed publication captures generated CSS and scoped binary assets without private inputs` | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publication_imported_styles.test.ts`           | `derived publication captures generated CSS and scoped binary assets without private inputs`   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_compile_cancellation.test.ts`          | `committed publish cancels when esbuild exits before the signal listener runs`                 | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_compile_cancellation.test.ts`          | `derived publish cancels when esbuild exits before the signal listener runs`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_imported_binary_snapshots.test.ts`     | `committed publish retains exact scoped binary bytes on both snapshot sides`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_imported_binary_snapshots.test.ts`     | `derived publish retains exact scoped binary bytes on both snapshot sides`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_pre_installation_cancellation.test.ts` | `committed publish cancels during comparison`                                                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_pre_installation_cancellation.test.ts` | `committed publish cancels during staging`                                                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_pre_installation_cancellation.test.ts` | `committed publish cancels during input-recheck`                                               | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_pre_installation_cancellation.test.ts` | `derived publish cancels during comparison`                                                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_pre_installation_cancellation.test.ts` | `derived publish cancels during staging`                                                       | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/publish_pre_installation_cancellation.test.ts` | `derived publish cancels during input-recheck`                                                 | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/serve_imported_styles.test.ts`                 | `accepted committed generated bytes are served without consulting stale disk`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/serve_imported_styles.test.ts`                 | `accepted derived generated bytes are served without consulting stale disk`                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/serve_imported_styles.test.ts`                 | `committed watched Serve returns accepted scoped bytes`                                        | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/serve_imported_styles.test.ts`                 | `committed no-watch Serve returns accepted scoped bytes`                                       | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/serve_imported_styles.test.ts`                 | `derived watched Serve returns accepted scoped bytes`                                          | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/serve_imported_styles.test.ts`                 | `derived no-watch Serve returns accepted scoped bytes`                                         | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/serve_transient_imported_styles.test.ts`       | `committed transient HTTP delivers scoped CSS assets from memory for GET and HEAD`             | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/serve_transient_imported_styles.test.ts`       | `derived transient HTTP delivers scoped CSS assets from memory for GET and HEAD`               | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/server_changed_lazy_base.test.ts`              | `non-CSS evidence does not traverse a supplied base resource graph`                            | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
+| `tests/source_boundary.test.ts`                       | `transformer imports reject authoring inputs outside repoRoot`                                 | 4: Removed only this obsolete parameterized case.                                     |
+| `tests/private_metadata.test.ts`                      | `build rejects a resource or link to internal metadata: mokabook-manifest.json`                | 2: Removed only this obsolete parameterized case.                                     |
+| `tests/private_metadata.test.ts`                      | `build rejects a resource or link to internal metadata: mockbook-manifest.json`                | 2: Removed only this obsolete parameterized case.                                     |
+
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed stylesheet, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed image, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed embedded HTML, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived stylesheet, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived image, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived embedded HTML, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed image, absent at branch point, absent now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived embedded HTML, absent at branch point, absent now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed stylesheet, absent at branch point, absent now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived image, absent at branch point, absent now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed image, regular at branch point, dangling now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived image, regular at branch point, escaping now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed image, regular at branch point, source-root now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
+
+The twelve nested mutation subtests of `compatibility transforms cannot
+introduce or alter owned control metadata` also disappear with that parent.
+Their exact titles are the twelve transformer expressions recorded below.
+
+```text
+input.content.replace('</body>', '<template DATA-MOKLY-LINK-CHILD-END=""></template></body>')
+input.content.replace('</body>', '<a DATA-MOKLY-LINK-CONTROL="button">Unrelated</a></body>')
+input.content.replace('</body>', '<template><a data-mokly-link-control="span">Inert</a></template></body>')
+input.content.replace('</head>', '<style DATA-MOKLY-LINK-CONTROL-STYLES=""></style></head>')
+input.content.replace('data-mokly-link-control="button"', 'data-mokly-link-control="div"')
+input.content.replace(' data-mokly-link-control="button"', '')
+input.content.replace(' data-mokly-link-control="button"', '').replace('id="ordinary"', 'id="ordinary" data-mokly-link-control="button"')
+input.content.replace('data-mokly-link-control="button"', 'data-mokly-link-control="button" DATA-MOKLY-LINK-CONTROL="div"')
+input.content.replace('width:fit-content', 'width:100%')
+input.content.replace('data-mokly-link-control-styles=""', 'data-mokly-link-control-styles="changed"')
+input.content.replace(/<style data-mokly-link-control-styles="">[^]*?<\/style>/, '')
+input.content.replace('id="ordinary"', 'id="ordinary" data-mokly-link-control-future=""')
+```
+
+Branch-only removed titles cover old cache diagnosis, former notice handling,
+old layout prefixes and old export-version messages. Their replacements assert
+the new contracts. The obsolete export baseline parameter `legacy manifest name`
+is removed; all canonical pre-v8 cases stay. Both former manifest-name route
+cases above disappear; canonical metadata and symlink privacy coverage remains.
+Item 12 changes mode names only where the fixture still has real blob/rebuild
+or fresh/retained differences. It removes duplicate runs where the mode did
+nothing. All original MIME, HTTP method, binary, cancellation-phase and
+watched/no-watch dimensions remain.
+
+### Compatibility search results
+
+The final search covers CLI, viewer, scripts, both test trees and protocol JSON
+fixtures. Generated output is excluded. It uses `rg -n -i` with
+`legacy|former|obsolete|earlier|backward.?compat|fallback|schemaVersion.{0,8}[12367]\b|ManifestV[2-7]\b`
+and the extensions `ts`, `tsx`, `mjs`, `cjs` and `json`. It returns 665 lines.
+Every result is recorded below by file, exact source line and disposition.
+Line references describe this milestone's implementation before commit.
+
+- F — Keep the current format number or its positive/negative parser fixture.
+- B — Keep the earlier-baseline outcome, canonical version gate or its test.
+- N — Keep rejection of removed input, ignored old names or invalid stored keys.
+- C — Keep current fallback, cancellation, CSS syntax or ordinary operation ordering.
+- T — Keep authored/sample names, test vocabulary or unrelated test infrastructure.
+- D — Outside the twelve approved items. Keep and report for the user's decision.
+
+All 665 hits remain. They are kept checks, current behavior, test vocabulary
+or the separate candidates listed next. Removing an API does not authorize
+removing ordinary authored callback pages, browser Light fallback, obsolete-work
+cancellation, native launch behavior, release fallback or version-negative tests.
+
+| File                                                                  | Exact matching lines                                                                                                                                                                                                                                      | Disposition |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `docs/protocol/fixtures/export-ownership-v3.json`                     | 2, 8, 32, 40, 59, 77, 96, 125, 154, 168, 182, 196, 211, 229, 278, 286, 295, 304, 313, 327, 341, 355, 370, 385, 400, 415, 430, 445, 460, 475, 490, 505, 520, 535, 550, 565, 580, 595, 610, 625, 645, 665, 685, 705, 725, 740, 755, 770, 785, 800, 815, 828 | F           |
+| `docs/protocol/fixtures/upload-plan-v1.json`                          | 2, 15, 32, 46, 65, 85, 102, 119, 136, 153, 170, 187, 220, 233, 250, 267, 284, 301, 318, 331, 345, 362, 379, 395, 411, 427, 441, 458, 475, 492, 509, 526, 543, 560, 577, 594, 611, 628, 645, 662, 679, 706, 724, 748, 765                                  | F           |
+| `packages/viewer/src/client/host_capabilities.ts`                     | 198                                                                                                                                                                                                                                                       | C           |
+| `packages/viewer/src/client/host_capability_descriptor.ts`            | 31, 72, 85, 94                                                                                                                                                                                                                                            | F           |
+| `packages/viewer/src/review/page_preview.ts`                          | 8, 28, 35                                                                                                                                                                                                                                                 | F           |
+| `packages/viewer/src/shell/comparison_chrome.tsx`                     | 54                                                                                                                                                                                                                                                        | C           |
+| `packages/viewer/src/shell/comparison_presentation.ts`                | 11                                                                                                                                                                                                                                                        | C           |
+| `packages/viewer/src/shell/comparison_region_match.ts`                | 16, 29, 39, 75                                                                                                                                                                                                                                            | C           |
+| `packages/viewer/src/shell/comparison_selection.ts`                   | 53                                                                                                                                                                                                                                                        | C           |
+| `packages/viewer/src/shell/css_views_responsive.ts`                   | 8                                                                                                                                                                                                                                                         | C           |
+| `packages/viewer/src/shell/disclosure_storage.ts`                     | 45, 49, 55                                                                                                                                                                                                                                                | C           |
+| `packages/viewer/src/shell/manifest_stages.tsx`                       | 42, 49, 53, 79, 89, 91, 110, 112, 146, 150                                                                                                                                                                                                                | C           |
+| `packages/viewer/src/shell/previews.tsx`                              | 91, 101, 106                                                                                                                                                                                                                                              | C           |
+| `packages/viewer/src/shell/stage_frame.tsx`                           | 158, 167, 241, 244, 250                                                                                                                                                                                                                                   | C           |
+| `packages/viewer/src/shell/use_workspace_data.ts`                     | 52, 66                                                                                                                                                                                                                                                    | C           |
+| `packages/viewer/src/shell/view_status.ts`                            | 22, 28, 32, 33, 38, 39, 55, 56, 57, 61, 72, 78, 80, 86, 89, 120, 125                                                                                                                                                                                      | C           |
+| `packages/viewer/src/shell/workspace_views.ts`                        | 25, 68, 87, 88                                                                                                                                                                                                                                            | C           |
+| `packages/viewer/src/shell/workspace_views_data.ts`                   | 2                                                                                                                                                                                                                                                         | D           |
+| `packages/viewer/src/standalone/appearance_bridge.ts`                 | 53, 58, 67                                                                                                                                                                                                                                                | C           |
+| `packages/viewer/src/standalone/bootstrap.ts`                         | 46                                                                                                                                                                                                                                                        | F           |
+| `packages/viewer/src/standalone/bootstrap_envelope.ts`                | 37, 47, 56                                                                                                                                                                                                                                                | F           |
+| `packages/viewer/src/standalone/bootstrap_validation.ts`              | 49                                                                                                                                                                                                                                                        | F           |
+| `packages/viewer/src/viewer/failures.ts`                              | 1, 11                                                                                                                                                                                                                                                     | C           |
+| `packages/viewer/src/viewer/host_bridge.tsx`                          | 35, 198, 218                                                                                                                                                                                                                                              | C           |
+| `packages/viewer/src/viewer/host_bridge_evidence.ts`                  | 16, 161                                                                                                                                                                                                                                                   | C           |
+| `packages/viewer/src/viewer/inspection_work.ts`                       | 4, 18, 27, 36                                                                                                                                                                                                                                             | C           |
+| `packages/viewer/src/viewer/picking.ts`                               | 1, 35, 38, 46, 50, 61                                                                                                                                                                                                                                     | C           |
+| `packages/viewer/tests/appearance_startup.test.ts`                    | 246, 253                                                                                                                                                                                                                                                  | C           |
+| `packages/viewer/tests/bootstrap.test.ts`                             | 34                                                                                                                                                                                                                                                        | F           |
+| `packages/viewer/tests/capability_history_adoption.test.ts`           | 85                                                                                                                                                                                                                                                        | T           |
+| `packages/viewer/tests/comparison_documents.test.ts`                  | 128, 134                                                                                                                                                                                                                                                  | C           |
+| `packages/viewer/tests/comparison_region_match.test.ts`               | 143, 144, 146, 150, 165                                                                                                                                                                                                                                   | C           |
+| `packages/viewer/tests/component_workspace.test.tsx`                  | 120                                                                                                                                                                                                                                                       | C           |
+| `packages/viewer/tests/disclosure_evidence_fixture.ts`                | 55                                                                                                                                                                                                                                                        | N           |
+| `packages/viewer/tests/frame_geometry_refresh.test.ts`                | 46, 105, 106, 133, 139, 149, 150                                                                                                                                                                                                                          | C           |
+| `packages/viewer/tests/frame_hook_harness.tsx`                        | 94                                                                                                                                                                                                                                                        | C           |
+| `packages/viewer/tests/frame_inspection_controller.test.ts`           | 97                                                                                                                                                                                                                                                        | C           |
+| `packages/viewer/tests/inspection_work.test.ts`                       | 8, 12, 60, 61                                                                                                                                                                                                                                             | C           |
+| `packages/viewer/tests/scoped_bootstrap.test.ts`                      | 57, 83, 173, 207                                                                                                                                                                                                                                          | F           |
+| `packages/viewer/tests/scoped_catalogue_projection.test.ts`           | 78                                                                                                                                                                                                                                                        | F           |
+| `packages/viewer/tests/scoped_shell_usage.test.tsx`                   | 28                                                                                                                                                                                                                                                        | C           |
+| `packages/viewer/tests/server_color_schemes.test.tsx`                 | 9                                                                                                                                                                                                                                                         | C           |
+| `packages/viewer/tests/source.test.ts`                                | 77                                                                                                                                                                                                                                                        | F           |
+| `packages/viewer/tests/theme.test.tsx`                                | 145, 157, 165, 166                                                                                                                                                                                                                                        | C           |
+| `packages/viewer/tests/theme.test.tsx`                                | 81                                                                                                                                                                                                                                                        | F           |
+| `scripts/large/timings.mjs`                                           | 16                                                                                                                                                                                                                                                        | F           |
+| `scripts/package/consumer_cases/themed.mjs`                           | 72                                                                                                                                                                                                                                                        | T           |
+| `scripts/package/ownership.mjs`                                       | 23, 86                                                                                                                                                                                                                                                    | F           |
+| `scripts/package/publish.mjs`                                         | 90, 186                                                                                                                                                                                                                                                   | F           |
+| `scripts/package/upload_plan.mjs`                                     | 17, 43                                                                                                                                                                                                                                                    | F           |
+| `scripts/preview/baseline.mjs`                                        | 2, 3, 44, 45, 62, 63                                                                                                                                                                                                                                      | B           |
+| `scripts/preview/baseline.mjs`                                        | 12                                                                                                                                                                                                                                                        | C           |
+| `scripts/verification/process-owner-records.mjs`                      | 59, 194, 210                                                                                                                                                                                                                                              | F           |
+| `scripts/verification/report-validation.mjs`                          | 2                                                                                                                                                                                                                                                         | F           |
+| `scripts/verification/run-browser.mjs`                                | 77                                                                                                                                                                                                                                                        | F           |
+| `scripts/verification/unit-runner.mjs`                                | 77                                                                                                                                                                                                                                                        | F           |
+| `src/baseline/cache_layout.ts`                                        | 15, 88                                                                                                                                                                                                                                                    | F           |
+| `src/baseline/compatibility.ts`                                       | 3, 4, 8, 10, 16, 19                                                                                                                                                                                                                                       | B           |
+| `src/baseline/compatibility.ts`                                       | 5, 11, 15                                                                                                                                                                                                                                                 | C           |
+| `src/baseline/discovery.ts`                                           | 10, 35, 91                                                                                                                                                                                                                                                | B           |
+| `src/baseline/discovery.ts`                                           | 81                                                                                                                                                                                                                                                        | C           |
+| `src/baseline/process_owner.ts`                                       | 58, 138                                                                                                                                                                                                                                                   | F           |
+| `src/baseline/rebuild.ts`                                             | 17, 243                                                                                                                                                                                                                                                   | B           |
+| `src/baseline/rebuild.ts`                                             | 168                                                                                                                                                                                                                                                       | F           |
+| `src/cli/errors.ts`                                                   | 17                                                                                                                                                                                                                                                        | B           |
+| `src/cli/reporter/plain.ts`                                           | 3, 57                                                                                                                                                                                                                                                     | B           |
+| `src/cli/reporter/rich.ts`                                            | 3, 130                                                                                                                                                                                                                                                    | B           |
+| `src/config/validate.ts`                                              | 63, 66                                                                                                                                                                                                                                                    | N           |
+| `src/diagnostics/timings.ts`                                          | 7, 164                                                                                                                                                                                                                                                    | F           |
+| `src/errors.ts`                                                       | 10, 39                                                                                                                                                                                                                                                    | B           |
+| `src/errors.ts`                                                       | 115, 118                                                                                                                                                                                                                                                  | C           |
+| `src/export/backup.ts`                                                | 21                                                                                                                                                                                                                                                        | C           |
+| `src/export/cleanup.ts`                                               | 21                                                                                                                                                                                                                                                        | C           |
+| `src/export/ignored.ts`                                               | 131                                                                                                                                                                                                                                                       | F           |
+| `src/export/ownership.ts`                                             | 28, 63, 94, 116                                                                                                                                                                                                                                           | F           |
+| `src/export/rename.ts`                                                | 8, 25                                                                                                                                                                                                                                                     | C           |
+| `src/export/run.ts`                                                   | 5, 88, 106                                                                                                                                                                                                                                                | B           |
+| `src/export/run.ts`                                                   | 189                                                                                                                                                                                                                                                       | F           |
+| `src/export/transaction.ts`                                           | 72                                                                                                                                                                                                                                                        | F           |
+| `src/export/types.ts`                                                 | 35                                                                                                                                                                                                                                                        | B           |
+| `src/publication/removed_previews.ts`                                 | 58                                                                                                                                                                                                                                                        | F           |
+| `src/publish/manifest.ts`                                             | 43                                                                                                                                                                                                                                                        | F           |
+| `src/publish/plan.ts`                                                 | 126, 155                                                                                                                                                                                                                                                  | F           |
+| `src/publish/run.ts`                                                  | 86                                                                                                                                                                                                                                                        | F           |
+| `src/publish/types.ts`                                                | 11, 41                                                                                                                                                                                                                                                    | F           |
+| `src/registry/changes.ts`                                             | 21                                                                                                                                                                                                                                                        | F           |
+| `src/registry/manifest.ts`                                            | 97                                                                                                                                                                                                                                                        | C           |
+| `src/registry/manifest_validation.ts`                                 | 4, 37                                                                                                                                                                                                                                                     | B           |
+| `src/review/component_view_fast_path.ts`                              | 58, 60, 95, 106, 117                                                                                                                                                                                                                                      | C           |
+| `src/review/css/rules.ts`                                             | 71, 76, 77                                                                                                                                                                                                                                                | C           |
+| `src/review/page_preview.ts`                                          | 91                                                                                                                                                                                                                                                        | F           |
+| `src/server/changed.ts`                                               | 70                                                                                                                                                                                                                                                        | F           |
+| `src/server/classification_result.ts`                                 | 3, 4, 18, 22, 24                                                                                                                                                                                                                                          | B           |
+| `src/server/classification_result.ts`                                 | 5, 26                                                                                                                                                                                                                                                     | C           |
+| `src/server/client_modules.ts`                                        | 106, 111                                                                                                                                                                                                                                                  | F           |
+| `src/server/component_changes.ts`                                     | 12, 108                                                                                                                                                                                                                                                   | B           |
+| `src/server/component_changes.ts`                                     | 109                                                                                                                                                                                                                                                       | C           |
+| `src/server/demand/baseline.ts`                                       | 2, 80                                                                                                                                                                                                                                                     | B           |
+| `src/server/demand/generation.ts`                                     | 2, 15, 52, 161, 165, 177                                                                                                                                                                                                                                  | B           |
+| `src/server/reporter.ts`                                              | 3, 63                                                                                                                                                                                                                                                     | B           |
+| `src/server/review_sources.ts`                                        | 43                                                                                                                                                                                                                                                        | F           |
+| `src/server/watch_classification.ts`                                  | 9, 43                                                                                                                                                                                                                                                     | B           |
+| `tests/baseline_cache.test.ts`                                        | 57                                                                                                                                                                                                                                                        | F           |
+| `tests/baseline_compatibility.test.ts`                                | 18, 21, 41, 49, 57, 77, 81, 103, 142, 153, 162, 192                                                                                                                                                                                                       | B           |
+| `tests/baseline_compatibility.test.ts`                                | 112                                                                                                                                                                                                                                                       | F           |
+| `tests/baseline_compatibility.test.ts`                                | 19                                                                                                                                                                                                                                                        | T           |
+| `tests/baseline_discovery.test.ts`                                    | 60                                                                                                                                                                                                                                                        | T           |
+| `tests/baseline_executable.test.ts`                                   | 39                                                                                                                                                                                                                                                        | C           |
+| `tests/baseline_executable.test.ts`                                   | 47                                                                                                                                                                                                                                                        | T           |
+| `tests/baseline_older_cache.test.ts`                                  | 42                                                                                                                                                                                                                                                        | F           |
+| `tests/baseline_older_cache.test.ts`                                  | 10                                                                                                                                                                                                                                                        | T           |
+| `tests/baseline_rebuilt_version.test.ts`                              | 6, 27, 35                                                                                                                                                                                                                                                 | B           |
+| `tests/baseline_rebuilt_version.test.ts`                              | 20                                                                                                                                                                                                                                                        | F           |
+| `tests/baseline_rebuilt_version.test.ts`                              | 49                                                                                                                                                                                                                                                        | T           |
+| `tests/browse_document_adapter.test.ts`                               | 202, 205, 206, 208, 212, 223, 229                                                                                                                                                                                                                         | T           |
+| `tests/browser/browse_assertions.ts`                                  | 60                                                                                                                                                                                                                                                        | T           |
+| `tests/browser/browse_disclosures.spec.ts`                            | 5, 15                                                                                                                                                                                                                                                     | N           |
+| `tests/browser/browse_navigation.spec.ts`                             | 190, 216                                                                                                                                                                                                                                                  | T           |
+| `tests/browser/browse_view_controls.spec.ts`                          | 155                                                                                                                                                                                                                                                       | C           |
+| `tests/browser/changed_views.spec.ts`                                 | 153, 204                                                                                                                                                                                                                                                  | C           |
+| `tests/browser/comparison_regions_helpers.ts`                         | 168                                                                                                                                                                                                                                                       | T           |
+| `tests/browser/component_controls_runtime.spec.ts`                    | 264                                                                                                                                                                                                                                                       | C           |
+| `tests/browser/component_design_fixture.ts`                           | 19, 56                                                                                                                                                                                                                                                    | D           |
+| `tests/browser/component_evidence.spec.ts`                            | 50                                                                                                                                                                                                                                                        | T           |
+| `tests/browser/design_appearance_toggle.spec.ts`                      | 58, 81                                                                                                                                                                                                                                                    | C           |
+| `tests/browser/design_library.spec.ts`                                | 208                                                                                                                                                                                                                                                       | C           |
+| `tests/browser/design_scroll_together.spec.ts`                        | 73, 74                                                                                                                                                                                                                                                    | T           |
+| `tests/browser/evidence_removed.spec.ts`                              | 121, 125                                                                                                                                                                                                                                                  | T           |
+| `tests/browser/frame_hook_lifecycle.spec.ts`                          | 185, 201                                                                                                                                                                                                                                                  | C           |
+| `tests/browser/frame_hook_lifecycle.spec.ts`                          | 103, 109, 114, 118                                                                                                                                                                                                                                        | T           |
+| `tests/browser/navigation_fixture.ts`                                 | 94                                                                                                                                                                                                                                                        | F           |
+| `tests/browser/navigation_fixture.ts`                                 | 61, 62, 64, 65, 85                                                                                                                                                                                                                                        | T           |
+| `tests/browser/preview_fixture_owner.ts`                              | 51, 52                                                                                                                                                                                                                                                    | C           |
+| `tests/browser/preview_pages.spec.ts`                                 | 28                                                                                                                                                                                                                                                        | T           |
+| `tests/browser/removed_comparison_eligibility.spec.ts`                | 78                                                                                                                                                                                                                                                        | T           |
+| `tests/browser/removed_preview_presentation.spec.ts`                  | 164                                                                                                                                                                                                                                                       | C           |
+| `tests/browser/removed_preview_views.spec.ts`                         | 39, 51                                                                                                                                                                                                                                                    | C           |
+| `tests/browser/review_failure_reload.spec.ts`                         | 50                                                                                                                                                                                                                                                        | F           |
+| `tests/browser/scoped_shell_fixture.ts`                               | 52, 67                                                                                                                                                                                                                                                    | C           |
+| `tests/browser/viewer_inspection_ownership.spec.ts`                   | 73                                                                                                                                                                                                                                                        | C           |
+| `tests/browser/viewer_namespace_embedded.spec.ts`                     | 24, 28                                                                                                                                                                                                                                                    | F           |
+| `tests/browser/viewer_namespace_versions.spec.ts`                     | 30, 40                                                                                                                                                                                                                                                    | F           |
+| `tests/browser/viewer_view_resolution.spec.ts`                        | 55                                                                                                                                                                                                                                                        | C           |
+| `tests/build_check_extra.test.ts`                                     | 24, 37                                                                                                                                                                                                                                                    | T           |
+| `tests/build_imported_styles_module_equivalence.test.ts`              | 35                                                                                                                                                                                                                                                        | C           |
+| `tests/build_link_controls.test.ts`                                   | 141                                                                                                                                                                                                                                                       | C           |
+| `tests/build_links.test.ts`                                           | 156                                                                                                                                                                                                                                                       | N           |
+| `tests/build_mainline_navigation.test.ts`                             | 148, 151, 155, 165                                                                                                                                                                                                                                        | T           |
+| `tests/captured_shell_scope.test.ts`                                  | 28                                                                                                                                                                                                                                                        | F           |
+| `tests/catalogue_export.test.ts`                                      | 28, 85                                                                                                                                                                                                                                                    | F           |
+| `tests/catalogue_projection.test.ts`                                  | 214, 215                                                                                                                                                                                                                                                  | F           |
+| `tests/client_browse_navigation.test.ts`                              | 52, 60, 65, 153, 154, 155                                                                                                                                                                                                                                 | T           |
+| `tests/client_browser.test.ts`                                        | 79                                                                                                                                                                                                                                                        | F           |
+| `tests/client_catalogue_refresh.test.ts`                              | 61, 160                                                                                                                                                                                                                                                   | F           |
+| `tests/client_css_material.test.ts`                                   | 65                                                                                                                                                                                                                                                        | C           |
+| `tests/client_disclosures.test.ts`                                    | 59, 202, 266                                                                                                                                                                                                                                              | B           |
+| `tests/client_disclosures.test.ts`                                    | 34, 58, 60, 218, 272                                                                                                                                                                                                                                      | N           |
+| `tests/client_modules.test.ts`                                        | 119                                                                                                                                                                                                                                                       | F           |
+| `tests/client_navigation_state.test.ts`                               | 207, 209                                                                                                                                                                                                                                                  | T           |
+| `tests/client_react_host.test.ts`                                     | 12                                                                                                                                                                                                                                                        | F           |
+| `tests/client_removed_preview_requests.test.ts`                       | 181, 220                                                                                                                                                                                                                                                  | F           |
+| `tests/compatibility_removal_baselines.test.ts`                       | 17, 52                                                                                                                                                                                                                                                    | F           |
+| `tests/component_comparison_material.test.ts`                         | 19, 20                                                                                                                                                                                                                                                    | T           |
+| `tests/component_controls_state.test.ts`                              | 12                                                                                                                                                                                                                                                        | F           |
+| `tests/component_controls_watch.test.ts`                              | 99                                                                                                                                                                                                                                                        | C           |
+| `tests/component_fast_path_resources.test.ts`                         | 46                                                                                                                                                                                                                                                        | N           |
+| `tests/component_instance_resolution.test.ts`                         | 38                                                                                                                                                                                                                                                        | C           |
+| `tests/component_protocol_docs.test.ts`                               | 81                                                                                                                                                                                                                                                        | F           |
+| `tests/config.test.ts`                                                | 214                                                                                                                                                                                                                                                       | N           |
+| `tests/config_removed_compatibility.test.ts`                          | 6                                                                                                                                                                                                                                                         | N           |
+| `tests/css_module_rename_only.test.ts`                                | 46                                                                                                                                                                                                                                                        | C           |
+| `tests/css_module_rename_only.test.ts`                                | 34                                                                                                                                                                                                                                                        | T           |
+| `tests/derived_composition.test.ts`                                   | 97                                                                                                                                                                                                                                                        | F           |
+| `tests/design_appearance_variants.test.ts`                            | 214, 226                                                                                                                                                                                                                                                  | C           |
+| `tests/design_component_variant_navigation.test.ts`                   | 249                                                                                                                                                                                                                                                       | T           |
+| `tests/design_modern_controls.test.ts`                                | 45, 80                                                                                                                                                                                                                                                    | T           |
+| `tests/export_deployment.test.ts`                                     | 148                                                                                                                                                                                                                                                       | F           |
+| `tests/export_migration.test.ts`                                      | 18                                                                                                                                                                                                                                                        | F           |
+| `tests/export_migration.test.ts`                                      | 12                                                                                                                                                                                                                                                        | T           |
+| `tests/export_ownership_contract.test.ts`                             | 63, 124, 155, 156, 170, 194                                                                                                                                                                                                                               | F           |
+| `tests/export_paths.test.ts`                                          | 62, 69                                                                                                                                                                                                                                                    | F           |
+| `tests/export_rename.test.ts`                                         | 67                                                                                                                                                                                                                                                        | C           |
+| `tests/export_reservations.test.ts`                                   | 69                                                                                                                                                                                                                                                        | F           |
+| `tests/export_watch.test.ts`                                          | 68, 117                                                                                                                                                                                                                                                   | F           |
+| `tests/fake_receiver.test.ts`                                         | 124                                                                                                                                                                                                                                                       | F           |
+| `tests/fixtures/consumers/nodenext/api.tsx`                           | 267, 268, 274, 278                                                                                                                                                                                                                                        | T           |
+| `tests/fixtures/consumers/themed/catalogue/entries/themed.mockup.tsx` | 14, 48                                                                                                                                                                                                                                                    | T           |
+| `tests/generated_marker.test.ts`                                      | 23                                                                                                                                                                                                                                                        | T           |
+| `tests/generated_wire_versions.test.ts`                               | 8, 10, 13                                                                                                                                                                                                                                                 | N           |
+| `tests/guides_ci.test.ts`                                             | 92                                                                                                                                                                                                                                                        | F           |
+| `tests/helpers/bootstrap_fixture.ts`                                  | 122, 124, 127                                                                                                                                                                                                                                             | F           |
+| `tests/helpers/browser_timing.ts`                                     | 18                                                                                                                                                                                                                                                        | F           |
+| `tests/helpers/example_descriptor.ts`                                 | 71                                                                                                                                                                                                                                                        | C           |
+| `tests/helpers/example_descriptor.ts`                                 | 29, 113                                                                                                                                                                                                                                                   | F           |
+| `tests/helpers/example_preparation.ts`                                | 141                                                                                                                                                                                                                                                       | B           |
+| `tests/helpers/example_profiles.ts`                                   | 134, 158                                                                                                                                                                                                                                                  | C           |
+| `tests/helpers/fake_receiver.ts`                                      | 192                                                                                                                                                                                                                                                       | F           |
+| `tests/helpers/fake_receiver_documents.ts`                            | 29, 77, 102                                                                                                                                                                                                                                               | F           |
+| `tests/helpers/fake_receiver_fixture.ts`                              | 17                                                                                                                                                                                                                                                        | F           |
+| `tests/helpers/fixture_timing.ts`                                     | 16, 52, 148                                                                                                                                                                                                                                               | F           |
+| `tests/helpers/guides_ci_context.ts`                                  | 52                                                                                                                                                                                                                                                        | F           |
+| `tests/helpers/legacy_catalogue_gate.ts`                              | 7                                                                                                                                                                                                                                                         | F           |
+| `tests/helpers/legacy_catalogue_gate.ts`                              | 5                                                                                                                                                                                                                                                         | N           |
+| `tests/helpers/ownership_marker.ts`                                   | 16, 28                                                                                                                                                                                                                                                    | F           |
+| `tests/helpers/preview_comparison_fixture.ts`                         | 98                                                                                                                                                                                                                                                        | T           |
+| `tests/helpers/publish_exchange_fixture.ts`                           | 79                                                                                                                                                                                                                                                        | F           |
+| `tests/helpers/react_capability_environment.ts`                       | 21, 164                                                                                                                                                                                                                                                   | F           |
+| `tests/helpers/removed_page_preview_fixture.ts`                       | 93                                                                                                                                                                                                                                                        | F           |
+| `tests/helpers/removed_preview_fixture.ts`                            | 19                                                                                                                                                                                                                                                        | C           |
+| `tests/helpers/shared_example.ts`                                     | 56                                                                                                                                                                                                                                                        | F           |
+| `tests/helpers/timing_events.ts`                                      | 41                                                                                                                                                                                                                                                        | F           |
+| `tests/helpers/verification_evidence.ts`                              | 44                                                                                                                                                                                                                                                        | F           |
+| `tests/historical_snapshot_identity.test.ts`                          | 83, 87                                                                                                                                                                                                                                                    | T           |
+| `tests/id_keyed_wire_formats.test.ts`                                 | 72                                                                                                                                                                                                                                                        | B           |
+| `tests/id_keyed_wire_formats.test.ts`                                 | 70, 101, 108                                                                                                                                                                                                                                              | F           |
+| `tests/imported_styles_supervision_watch.test.ts`                     | 70                                                                                                                                                                                                                                                        | T           |
+| `tests/large_baseline_benchmark.test.ts`                              | 46                                                                                                                                                                                                                                                        | F           |
+| `tests/manifest_files.test.ts`                                        | 29, 197                                                                                                                                                                                                                                                   | F           |
+| `tests/manifest_files.test.ts`                                        | 23, 39, 43, 47, 160, 195, 199, 200                                                                                                                                                                                                                        | N           |
+| `tests/nav_sections.test.ts`                                          | 152, 160                                                                                                                                                                                                                                                  | T           |
+| `tests/nav_tree.test.ts`                                              | 260                                                                                                                                                                                                                                                       | T           |
+| `tests/nav_tree_removed_variants.test.ts`                             | 39, 76                                                                                                                                                                                                                                                    | T           |
+| `tests/pages.test.ts`                                                 | 75, 81, 83                                                                                                                                                                                                                                                | T           |
+| `tests/preview_fixture.test.ts`                                       | 210, 218, 248                                                                                                                                                                                                                                             | F           |
+| `tests/preview_fixture_cleanup.test.ts`                               | 202                                                                                                                                                                                                                                                       | F           |
+| `tests/preview_output_safety.test.ts`                                 | 33                                                                                                                                                                                                                                                        | F           |
+| `tests/protocol_structure.test.ts`                                    | 32, 33, 34                                                                                                                                                                                                                                                | T           |
+| `tests/public_exclusions.test.ts`                                     | 81                                                                                                                                                                                                                                                        | T           |
+| `tests/public_review_retention.test.ts`                               | 54, 107                                                                                                                                                                                                                                                   | F           |
+| `tests/publish_action.test.ts`                                        | 42, 144                                                                                                                                                                                                                                                   | T           |
+| `tests/publish_blobs.test.ts`                                         | 12                                                                                                                                                                                                                                                        | F           |
+| `tests/publish_bundle.test.ts`                                        | 13                                                                                                                                                                                                                                                        | F           |
+| `tests/publish_cli.test.ts`                                           | 176                                                                                                                                                                                                                                                       | F           |
+| `tests/publish_complete.test.ts`                                      | 12                                                                                                                                                                                                                                                        | F           |
+| `tests/publish_metadata.test.ts`                                      | 15, 178                                                                                                                                                                                                                                                   | F           |
+| `tests/publish_namespace_versions.test.ts`                            | 17                                                                                                                                                                                                                                                        | C           |
+| `tests/publish_namespace_versions.test.ts`                            | 57, 58, 62                                                                                                                                                                                                                                                | F           |
+| `tests/publish_namespace_versions.test.ts`                            | 27                                                                                                                                                                                                                                                        | T           |
+| `tests/publish_plan.test.ts`                                          | 15, 46                                                                                                                                                                                                                                                    | F           |
+| `tests/publish_progress.test.ts`                                      | 68                                                                                                                                                                                                                                                        | F           |
+| `tests/publish_run.test.ts`                                           | 34, 64, 119, 159, 198                                                                                                                                                                                                                                     | F           |
+| `tests/release.test.ts`                                               | 157, 165                                                                                                                                                                                                                                                  | C           |
+| `tests/removed_page_previews.test.ts`                                 | 33, 196, 203                                                                                                                                                                                                                                              | F           |
+| `tests/repository_ratchets.test.ts`                                   | 39, 40, 56, 57                                                                                                                                                                                                                                            | T           |
+| `tests/repository_ratchets_git.test.ts`                               | 10, 137, 152, 167                                                                                                                                                                                                                                         | T           |
+| `tests/review_css_rules.test.ts`                                      | 204                                                                                                                                                                                                                                                       | T           |
+| `tests/route_scoped_catalogue_real.test.ts`                           | 80                                                                                                                                                                                                                                                        | F           |
+| `tests/server_catalogue_model.test.ts`                                | 21                                                                                                                                                                                                                                                        | F           |
+| `tests/server_removed_preview_lifecycle_fixture.ts`                   | 45, 86                                                                                                                                                                                                                                                    | F           |
+| `tests/server_removed_preview_limits.test.ts`                         | 37, 90                                                                                                                                                                                                                                                    | F           |
+| `tests/server_review.test.ts`                                         | 47                                                                                                                                                                                                                                                        | F           |
+| `tests/server_review_generation_safety.test.ts`                       | 265                                                                                                                                                                                                                                                       | F           |
+| `tests/server_review_shutdown.test.ts`                                | 102                                                                                                                                                                                                                                                       | F           |
+| `tests/server_update_state.test.ts`                                   | 20                                                                                                                                                                                                                                                        | F           |
+| `tests/shared_example.test.ts`                                        | 118                                                                                                                                                                                                                                                       | B           |
+| `tests/shared_example_failures.test.ts`                               | 40                                                                                                                                                                                                                                                        | F           |
+| `tests/shell.test.ts`                                                 | 233, 234                                                                                                                                                                                                                                                  | T           |
+| `tests/shell_fixture_2.ts`                                            | 29, 30                                                                                                                                                                                                                                                    | D           |
+| `tests/shell_frames.test.ts`                                          | 44, 48, 50, 51, 54, 55, 57, 67, 68, 76, 79, 116, 127, 145, 147, 150                                                                                                                                                                                       | C           |
+| `tests/shell_styles.test.ts`                                          | 225                                                                                                                                                                                                                                                       | C           |
+| `tests/static_delivery.test.ts`                                       | 143                                                                                                                                                                                                                                                       | F           |
+| `tests/upload_plan_contract.test.ts`                                  | 79, 103                                                                                                                                                                                                                                                   | F           |
+| `tests/variant_validation.test.ts`                                    | 36, 37, 41                                                                                                                                                                                                                                                | T           |
+| `tests/verification_dependency_audit_runner.test.ts`                  | 96                                                                                                                                                                                                                                                        | C           |
+| `tests/verification_process.test.ts`                                  | 107, 109, 130, 188                                                                                                                                                                                                                                        | C           |
+| `tests/view_status.test.ts`                                           | 71, 99, 100, 113, 114, 126, 139, 140, 146                                                                                                                                                                                                                 | C           |
+| `tests/viewer_generated_delivery.test.ts`                             | 22                                                                                                                                                                                                                                                        | F           |
+| `tests/viewer_generated_delivery.test.ts`                             | 19                                                                                                                                                                                                                                                        | T           |
+| `tests/viewer_namespace.test.ts`                                      | 74, 75, 100, 117                                                                                                                                                                                                                                          | F           |
+| `tests/watcher_events.test.ts`                                        | 39                                                                                                                                                                                                                                                        | C           |
+
+A second search for the removed symbols finds no production implementation.
+Its remaining results are negative checks only:
+
+- `tests/viewer_generated_delivery.test.ts:21:  assert.equal(Object.hasOwn(catalogue, "generatedPathPrefix"), false);`
+- `tests/viewer_generated_delivery.test.ts:44:  assert.equal(Object.hasOwn(fixture, "generatedPathPrefix"), false);`
+- `tests/viewer_generated_delivery.test.ts:46:    Object.hasOwn(readCatalogue(fixture), "generatedPathPrefix"),`
+- `tests/baseline_older_cache.test.ts:9:for (const format of ["flat-v7", "generated-v6"] as const) {`
+- `tests/baseline_older_cache.test.ts:34:async function seed(format: "flat-v7" | "generated-v6") {`
+- `tests/baseline_older_cache.test.ts:39:    format === "generated-v6"`
+- `tests/baseline_older_cache.test.ts:40:      ? { ...completed.marker, manifestVersion: 6, layout: "generated-v6" }`
+- `tests/baseline_older_cache.test.ts:50:    format === "generated-v6"`
+- `scripts/package/catalogue.mjs:15:  assert.equal(Object.hasOwn(model, "generatedPathPrefix"), false);`
+
+Additional source tracing records these candidates outside the approved list.
+No change is made to any of them:
+
+1. `src/catalogue/projection.ts:229` still reads a historical `dependencies`
+   field before current source/declaration fields. This is separate from snapshot ids.
+2. `packages/viewer/src/standalone/recovery.ts:38` accepts missing
+   `filterBaselineDisclosures` as null; `validChangesStatus` also accepts absence.
+   `tests/client_disclosures.test.ts:58` tests this stored-state case.
+3. `src/client/react_update_controller.ts:106` adopts a first ready version when
+   the initial page version is unknown. Current hosts may use this optional input.
+4. `packages/viewer/src/shell/workspace_views_data.ts:153` falls back to current
+   per-view classification while a full comparison is pending. Its comment also
+   says legacy. Removing this requires a separate current-behavior decision.
+5. `tests/browser/component_design_fixture.ts:19` maps historical fixture route
+   labels to current design ids. `tests/shell_fixture_2.ts:29` accepts two inspector
+   markup shapes. These test helpers are outside the transformer/layout API work.
+6. `tests/catalogue_removed_previews.test.ts:40` names old catalogues while
+   exercising omitted optional preview descriptors on a v4 model. The current
+   reader still accepts that absence; preview descriptors are not item 10's ids.
+
+Stable hash domains, including `mokly-historical-snapshot-v2` and component
+instance-key domains, remain unchanged. The disclosure v2 key appears only
+as negative test data. Old notices now remain ordinary text.
+
+The separate marker search finds `src/publication/files.ts:154–162` still
+rejects source references inside a tree marked `.mokly-preview-artifact`.
+This is a protected-artifact check, not ownership adoption. It stays unchanged.
+Its negative fixture uses remain in `tests/export_migration.test.ts` and
+`tests/preview_output_safety.test.ts`; `tests/preview.test.ts` asserts that no
+current preview writes that marker. No old marker can authorize replacement.
+
+### Final validation and completion
+
+All checks use Node `22.14.0` first on `PATH`, npm `11.11.0` and temporary
+paths under `.context/`. The final full gate passes:
+
+| Command                                                                  | Result                                                                                                                   |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `npm run format:check`                                                   | Pass, including the clean build and final Markdown update.                                                               |
+| `npm run lint`                                                           | Pass.                                                                                                                    |
+| `npm run typecheck`                                                      | Pass, including the clean build.                                                                                         |
+| `npm test`                                                               | 3,768 pass; zero failures, skips or cancellations.                                                                       |
+| `npm run test:browser -- --output .context/milestone-17/browser-results` | 970 pass, including hydration; zero retries or skips.                                                                    |
+| `npm run example:check`                                                  | 436 valid untracked files.                                                                                               |
+| `cargo xtask check`                                                      | Pass; 15 Rust tests, six packed-consumer scenarios, another 3,768 unit tests, 747 browser cases and 223 hydration cases. |
+
+The complete cargo retry took 4,146.323 seconds. The direct browser command took
+2,331.617 seconds. These are validation timings, not a controlled performance
+comparison. The 600-second fixture limit, workers, retries and assertions remain
+unchanged. A clean build before browser/cargo verification removes every compiled
+file for the deleted modules. The source-size check covers 984 files. All four
+repository ratchets pass with no new exemption or raised cap. The release-export
+check records four documented removed exports.
+
+The dependency audit keeps main's unchanged record and strict packed-consumer
+audits. The accepted repository risk output is:
+
+```text
+Accepted dependency risk: GHSA-vfj7-8cjw-p6xm; package: braces.
+Path: node_modules/metro-file-map -> node_modules/micromatch -> node_modules/braces
+End date: 2026-11-03 UTC; 30 days left.
+Reason: Dev-only React Native peer dependency. The repository does not run Metro or send untrusted patterns to it. No patched release is available.
+Tracking: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
+```
+
+The required baseline regressions failed before implementation: stale root v7,
+empty/truncated cache markers and direct marker writes. Their exact errors were:
+
+```text
+[mokly/baseline-incompatible-earlier] the comparison base was built by an earlier Mokly version
+[mokly/baseline-output-invalid] Invalid completed baseline cache
+[mokly/baseline-output-invalid] Invalid completed baseline cache
+[mokly/baseline-output-invalid] Could not prepare baseline: Never write complete.json in place
+```
+
+The first complete unit run passed 3,763 of 3,768 tests. Five stale expectations
+failed: fixture bytes, two former-notice assertions and two preview migration
+setups. Their diagnostics included these exact lines:
+
+```text
+9509 !== 9553
+The input was expected to not match the regular expression /Generated by/. Input:
++ '<!-- Generated by mokly; ownership=v1; source-base64=c29tZS9vdGhlci9vd25lci50cw==. Do not edit. -->\n' +
++   '<html><body>Unchanged</body></html>\n'
+- '<html><body>Unchanged</body></html>\n'
+refusing to replace unowned preview directory: /home/vercel-sandbox/mokly/.context/mokly-test-SZ5ruu/.context/published. [mokly/export-invalid] Export ownership is missing; choose an empty directory.
+refusing to replace unowned preview directory: /home/vercel-sandbox/mokly/.context/mokly-test-1fStGm/.context/published. [mokly/export-invalid] Export ownership is missing; choose an empty directory.
+```
+
+The fixture pins its new exact hash/size. Former notices remain ordinary text.
+Preview route tests replace a valid current artifact; only their migration
+setup is removed. All route assertions remain. The 16 focused bootstrap/Browse
+checks and four notice/preview checks pass, followed by both complete unit runs.
+
+The internal-export check first reported the four helpers described above.
+Narrowing/removing their obsolete exports resolves that check. The first cargo
+attempt then found the packed API test's annotation on the wrong line:
+
+```text
+api.tsx(276,1): error TS2578: Unused '@ts-expect-error' directive.
+api.tsx(279,3): error TS2353: Object literal may only specify known properties, and 'compatibility' does not exist in type 'MoklyConfig'.
+[xtask/command] `npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts` failed with status 1
+```
+
+Moving the annotation onto the rejected property preserves the negative type
+check. The six packed scenarios pass, followed by the full cargo retry above.
+No dependency, audit, timeout or retry policy changes. Development diagnostics,
+raw logs, full file summaries and exact removed-title lists are retained under
+`.context/milestone-17/`. The final Markdown tests and `git diff --check` pass.
+The main tip remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge occurs.
+Branch checks precede the Conventional Commit and explicit branch push.
+Milestone 18 and its user-owned final review follow after this push.
 
 ## Milestone 18: Verify and review the compatibility removal
 

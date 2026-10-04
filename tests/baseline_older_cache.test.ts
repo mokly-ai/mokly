@@ -7,52 +7,27 @@ import { cacheLayout } from "../dist/baseline/cache_layout.js";
 import { baselineFixture } from "./helpers/baseline_fixture.js";
 
 for (const format of ["flat-v7", "generated-v6"] as const) {
-  test(`${format} cache proves incompatibility without commands or content reads`, async () => {
-    const fixture = await seed(format);
-    const { builder, request, fs, calls, layout, manifest } = fixture;
+  test(`${format} cache rebuilds without reading earlier output`, async () => {
+    const { builder, request, fs, calls, layout, manifest } =
+      await seed(format);
     const commands = calls.length;
     fs.reads.length = 0;
-    await assert.rejects(builder.build(request), {
-      code: "baseline-incompatible-earlier",
-    });
-    assert.equal(calls.length, commands);
-    assert.deepEqual(
-      fs.reads.sort(),
-      [layout.marker, path.join(layout.entry, "inputs.json"), manifest].sort(),
-    );
+    const result = await builder.build(request);
+    assert.equal(result.cacheHit, false);
+    assert.equal(result.marker.manifestVersion, 8);
+    assert.ok(calls.length > commands);
+    assert.equal(fs.reads.includes(manifest), false);
     assert.ok(await fs.stat(layout.marker));
-    assert.ok(await fs.stat(manifest));
   });
 
-  test(`${format} cache retains malformed or mismatched evidence`, async () => {
-    for (const contents of [
-      "{",
-      JSON.stringify({ schemaVersion: 8 }),
-      JSON.stringify({ schemaVersion: 9 }),
-    ]) {
-      const { builder, request, fs, calls, manifest, layout } =
-        await seed(format);
-      fs.put(manifest, "regular", Buffer.from(contents));
-      const count = calls.length;
-      await assert.rejects(builder.build(request), {
-        code: "baseline-output-invalid",
-      });
-      assert.equal(calls.length, count);
-      assert.ok(await fs.stat(layout.marker));
-      assert.equal(
-        Buffer.from(await fs.read(manifest, 1024)).toString(),
-        contents,
-      );
-    }
-  });
-
-  test(`${format} cache cannot bypass recipe identity`, async () => {
-    const { builder, request, fs, layout } = await seed(format);
-    await assert.rejects(
-      builder.build({ ...request, commands: [["other-build"]] }),
-      /different build settings; remove/,
-    );
-    assert.ok(await fs.stat(layout.marker));
+  test(`${format} invalid marker rebuilds before comparing recipe settings`, async () => {
+    const { builder, request, calls } = await seed(format);
+    const commands = [["other-build"]];
+    const count = calls.length;
+    const result = await builder.build({ ...request, commands });
+    assert.equal(result.cacheHit, false);
+    assert.deepEqual(result.marker.commands, commands);
+    assert.ok(calls.length > count);
   });
 }
 

@@ -10,18 +10,15 @@ import type {
 } from "../components/prop_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
-import type { GENERATED_DIRECTORY } from "./delivery_paths.js";
-
 export type ChangesStatus =
   "preparing" | "pending" | "ready" | "unavailable" | "disabled";
 export type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 export type PublicPath = string;
 export type RemovedEntryPreview = { kind: "screen" } | { kind: "page" };
 
-/** Public v3 contract, independent of private build and comparison inventories. */
+/** Public v4 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
   schemaVersion: 4;
-  generatedPathPrefix: typeof GENERATED_DIRECTORY;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };

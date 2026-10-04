@@ -12,7 +12,7 @@ import {
   baselineManifest,
 } from "./helpers/baseline_fixture.js";
 
-test("an earlier rebuilt sentinel is rejected without harvesting output", async () => {
+test("an unrecognized rebuilt filename cannot identify output", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
@@ -31,7 +31,7 @@ test("an earlier rebuilt sentinel is rejected without harvesting output", async 
     return result;
   };
   await assert.rejects(fixture.builder.build(fixture.request), {
-    code: "baseline-incompatible-earlier",
+    code: "baseline-output-invalid",
   });
   assert.equal(
     await fixture.fs.stat(
@@ -41,7 +41,7 @@ test("an earlier rebuilt sentinel is rejected without harvesting output", async 
   );
 });
 
-test("the oldest rebuilt sentinel is rejected without parsing its contents", async () => {
+test("an unrecognized malformed rebuilt filename is never parsed", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
@@ -64,7 +64,7 @@ test("the oldest rebuilt sentinel is rejected without parsing its contents", asy
     return result;
   };
   await assert.rejects(fixture.builder.build(fixture.request), {
-    code: "baseline-incompatible-earlier",
+    code: "baseline-output-invalid",
   });
   assert.equal(
     await fixture.fs.stat(
@@ -74,7 +74,7 @@ test("the oldest rebuilt sentinel is rejected without parsing its contents", asy
   );
 });
 
-test("corrupt completed cache data fails intact with an explicit diagnostic", async () => {
+test("corrupt completed cache data rebuilds after marker validation", async () => {
   const { builder, request, fs } = baselineFixture();
   const result = await builder.build(request);
   assert.equal(
@@ -100,16 +100,12 @@ test("corrupt completed cache data fails intact with an explicit diagnostic", as
     "mockups/mokly-generated/mokly-manifest.json",
   );
   fs.put(manifest, "regular", Buffer.from("{}"));
-  await assert.rejects(builder.build(request), {
-    code: "baseline-output-invalid",
-  });
+  assert.equal((await builder.build(request)).cacheHit, false);
   const layout = cacheLayout(request.repoRoot, request.commit);
   fs.put(
     layout.marker,
     "regular",
     Buffer.from(JSON.stringify({ ...result.marker, commit: "b".repeat(40) })),
   );
-  await assert.rejects(builder.build(request), {
-    code: "baseline-output-invalid",
-  });
+  assert.equal((await builder.build(request)).cacheHit, false);
 });

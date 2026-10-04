@@ -111,7 +111,9 @@ against the pinned branch-point reader, even when Git ignores generated output.
 It merges those route changes with Git's authored paths and removes file-level
 shared impact for **every** delivered CSS source whenever any generated
 stylesheet's bytes change, or for an
-asset whose matching generated route changed. Only v8 content is compared. Unrelated PostCSS candidate sources retain
+asset whose matching generated route changed. Only v8 content is compared.
+The first imported stylesheet marks the views it affects as changed against a
+v8 baseline without imported CSS. Unrelated PostCSS candidate sources retain
 their independent impact. Review result v4 and live Changes
 use the same byte comparison and source filter.
 Accepted generations carry their stylesheet/asset route index, output bytes

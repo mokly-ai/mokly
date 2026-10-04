@@ -16,9 +16,9 @@ export interface CompletionMarker {
   readonly commit: string;
   readonly finishedAt: string;
   readonly commands: readonly (readonly string[])[];
-  readonly manifestVersion: number;
-  readonly historicalCatalogueRoot?: string;
-  readonly layout?: "generated-v8" | "generated-v6" | "legacy";
+  readonly manifestVersion: 8;
+  readonly historicalCatalogueRoot: string;
+  readonly layout: "generated-v8";
 }
 
 export interface CacheLayout {
@@ -90,23 +90,19 @@ export function parseCompletionMarker(
     typeof marker.finishedAt !== "string" ||
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
-    !Number.isInteger(marker.manifestVersion) ||
-    (marker.manifestVersion as number) > 8 ||
-    (marker.manifestVersion === 8 &&
-      (marker.layout !== "generated-v8" ||
-        !marker.historicalCatalogueRoot ||
-        (marker.historicalCatalogueRoot !== "." &&
-          !isSafeRepositoryPath(marker.historicalCatalogueRoot)))) ||
-    (marker.layout === "generated-v6" && !marker.historicalCatalogueRoot) ||
-    (marker.manifestVersion !== 8 && marker.layout === "generated-v8") ||
-    (marker.layout !== undefined &&
-      marker.layout !== "generated-v8" &&
-      marker.layout !== "generated-v6" &&
-      marker.layout !== "legacy") ||
-    (marker.historicalCatalogueRoot !== undefined &&
-      marker.historicalCatalogueRoot !== "." &&
+    marker.manifestVersion !== 8 ||
+    marker.layout !== "generated-v8" ||
+    typeof marker.historicalCatalogueRoot !== "string" ||
+    (marker.historicalCatalogueRoot !== "." &&
       !isSafeRepositoryPath(marker.historicalCatalogueRoot))
   )
     return;
   return marker as CompletionMarker;
+}
+
+/** A completion temporary belongs to the entry's exclusive writer. */
+export function isCompletionTemporary(name: string): boolean {
+  return /^complete-[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\.tmp$/.test(
+    name,
+  );
 }

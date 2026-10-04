@@ -16,7 +16,6 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const sourceRelativePath = "tests/authoring_variants.test.tsx";
 const config: ResolvedConfig = {
   colorSchemes: ["light"],
-  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],

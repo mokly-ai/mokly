@@ -39,7 +39,7 @@ test("composition selects committed reads without building and pins repository e
     },
     builder: {
       async build() {
-        throw new Error("committed mode must not build");
+        throw new Error("complete committed output must not rebuild");
       },
     },
   });

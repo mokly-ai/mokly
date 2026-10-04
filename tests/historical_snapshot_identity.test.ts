@@ -79,7 +79,7 @@ test("projection rejects conflicting accepted baseline identities", () => {
   );
 });
 
-test("reader safely derives older generation-backed identities", () => {
+test("reader requires published snapshot ids when a generation exists", () => {
   const legacy = projectCatalogue({
     ...projectionInput(undefined),
     comparisonUrl: `mokly-viewer/diffs/generations/${GENERATION}/review.json`,
@@ -87,11 +87,7 @@ test("reader safely derives older generation-backed identities", () => {
   const value = JSON.parse(serializeCatalogue(legacy));
   delete value.removedEntries[0].snapshotId;
 
-  const first = readCatalogue(value);
-  const second = readCatalogue(structuredClone(value));
-  assert.match(snapshot(first), /^[a-f0-9]{64}$/);
-  assert.equal(snapshot(second), snapshot(first));
-
+  assert.throws(() => readCatalogue(value), /removed entry needs snapshotId/);
   value.comparisonUrl = null;
   const identityLess = readCatalogue(value);
   assert.equal(identityLess.removedEntries[0]?.snapshotId, undefined);

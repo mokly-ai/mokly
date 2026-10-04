@@ -21,16 +21,12 @@ export function graphStyleRoots(
   ),
 ): readonly {
   readonly path: string;
-  readonly emit: boolean;
   readonly styles: readonly string[];
 }[] {
   const workingDir = path.dirname(config.configPath);
   const roots = [
-    ...(config.renderer ? [{ path: config.renderer, emit: true }] : []),
-    ...entries.map((entry) => ({ path: entry, emit: true })),
-    ...(config.compatibility.transformer
-      ? [{ path: config.compatibility.transformer, emit: false }]
-      : []),
+    ...(config.renderer ? [{ path: config.renderer }] : []),
+    ...entries.map((entry) => ({ path: entry })),
   ].map((root) => ({
     ...root,
     styles: orderedStyles(

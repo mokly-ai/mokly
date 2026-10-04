@@ -59,10 +59,10 @@ test("cancellation at the marker commit point completes and skips cleanup", asyn
   const { builder, request, fs, calls } = baselineFixture();
   const layout = cacheLayout(request.repoRoot, request.commit);
   const controller = new AbortController();
-  const write = fs.write.bind(fs);
-  t.mock.method(fs, "write", async (file: string, bytes: Uint8Array) => {
-    await write(file, bytes);
-    if (file === layout.marker) controller.abort();
+  const rename = fs.rename.bind(fs);
+  t.mock.method(fs, "rename", async (from: string, to: string) => {
+    await rename(from, to);
+    if (to === layout.marker) controller.abort();
   });
   const list = fs.list.bind(fs);
   const cleanup = t.mock.method(fs, "list", async (directory: string) => {
@@ -75,6 +75,7 @@ test("cancellation at the marker commit point completes and skips cleanup", asyn
     signal: controller.signal,
     onProgress: (event) => events.push(event),
   });
+  assert.equal(controller.signal.aborted, true);
   assert.equal(result.cacheHit, false);
   assert.deepEqual(
     events.map((event) => event.type),

@@ -54,7 +54,13 @@ test("a mixed v2 list does not open normally closed folders on upgrade", async (
     });
   expect(
     await page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
-  ).toBeNull();
+  ).toBe(
+    JSON.stringify([
+      "collection:pages:Example/Screens",
+      "section:pages",
+      "variants:pages:example-welcome",
+    ]),
+  );
 });
 
 test("folder disclosures persist across reload without closing the same path in another section", async ({

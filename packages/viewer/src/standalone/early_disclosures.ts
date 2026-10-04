@@ -4,7 +4,6 @@ import { isDisclosureKey } from "../shell/disclosure_keys.js";
 import {
   disclosureStorageKey,
   encodeDisclosureMap,
-  obsoleteDisclosureStorageKey,
   parseDisclosureMap,
 } from "../shell/disclosure_storage.js";
 import { queryConstrains, parseSearchQuery } from "../shell/search_query.js";
@@ -178,7 +177,6 @@ function rememberDisclosures(
       disclosureStorageKey,
       encodeDisclosureMap(disclosures),
     );
-    win.localStorage.removeItem(obsoleteDisclosureStorageKey);
   } catch {
     return;
   }

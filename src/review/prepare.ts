@@ -1,8 +1,6 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
-
 import { completedBaseline } from "../baseline/cache.js";
 import { cacheLayout } from "../baseline/cache_layout.js";
 import type { CompletionMarker } from "../baseline/cache_layout.js";
@@ -12,7 +10,6 @@ import {
   type BaselineCatalogue,
 } from "../baseline/catalogue.js";
 import { SystemBaselineClock } from "../baseline/clock.js";
-import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { assertBaselineActive, BaselineError } from "../baseline/errors.js";
 import { NodeBaselineFileSystem } from "../baseline/filesystem.js";
 import { StderrBaselineMaintenanceReporter } from "../baseline/maintenance.js";
@@ -29,7 +26,6 @@ import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import {
-  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseHistoricalManifest,
 } from "../registry/manifest.js";
@@ -113,41 +109,25 @@ export async function prepareReviewRepository(
   const blobReader = new CommittedBaselineReader(runner);
   let selection: BaselineSelection = "rebuild";
   let descriptor = baselineCatalogue(commit, prefix, "generated-v8");
-  const tree = await readCommitTree(runner, commit);
-  for (const filename of [
-    `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`,
-    MANIFEST_NAME,
-    ...EARLIER_MANIFEST_NAMES,
-  ]) {
-    const candidate = joinCataloguePath(prefix, filename);
-    const kind = treeEntryKind(tree.get(candidate));
-    if (kind === "missing") continue;
+  const tree = await readCommitTree(runner, commit, descriptor.generatedRoot);
+  const candidate = joinCataloguePath(descriptor.generatedRoot, MANIFEST_NAME);
+  const kind = treeEntryKind(tree.get(candidate));
+  if (kind !== "missing") {
     if (kind !== "regular")
       throw new MoklyError(
         "manifest-invalid",
         `historical manifest is not a regular file: ${candidate}`,
       );
-    if (EARLIER_MANIFEST_NAMES.some((name) => name === filename))
-      throw incompatibleEarlierBaseline();
     try {
       const manifest = parseHistoricalManifest(
         JSON.parse(await blobReader.readFile(commit, candidate)),
       );
-      if (filename !== `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`)
-        throw new MoklyError(
-          "manifest-invalid",
-          `historical v8 manifest must be in the generated directory: ${candidate}`,
-        );
-      descriptor = baselineCatalogue(commit, prefix);
-      if (manifest.schemaVersion === 8 && "generatedFiles" in manifest) {
-        const issue = incompleteGeneratedInventory(tree, descriptor, manifest);
-        if (issue) {
-          const line = inventoryDiagnostic(commit, issue);
-          if (options.diagnostic) options.diagnostic(line);
-          else process.stderr.write(`${line}\n`);
-          break;
-        }
-      }
+      const issue = incompleteGeneratedInventory(tree, descriptor, manifest);
+      if (issue) {
+        const line = inventoryDiagnostic(commit, issue);
+        if (options.diagnostic) options.diagnostic(line);
+        else process.stderr.write(`${line}\n`);
+      } else selection = "blobs";
     } catch (error) {
       if (error instanceof MoklyError) throw error;
       throw new MoklyError(
@@ -156,8 +136,6 @@ export async function prepareReviewRepository(
         { cause: error },
       );
     }
-    selection = "blobs";
-    break;
   }
   const request = {
     repoRoot: config.repoRoot,
@@ -180,16 +158,10 @@ export async function prepareReviewRepository(
           )
         ).build(request)
       : undefined;
-  if (rebuilt && rebuilt.marker.manifestVersion !== 8)
-    throw incompatibleEarlierBaseline();
-  if (
-    rebuilt?.marker.historicalCatalogueRoot &&
-    rebuilt.marker.layout === "generated-v8"
-  )
+  if (rebuilt)
     descriptor = baselineCatalogue(
       commit,
       rebuilt.marker.historicalCatalogueRoot,
-      rebuilt.marker.layout,
     );
   return {
     commit,

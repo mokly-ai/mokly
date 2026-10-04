@@ -1,90 +1,73 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
-
-import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
+import {
+  MANIFEST_NAME,
+  parseHistoricalManifest,
+} from "../registry/manifest.js";
 import { MAX_BATCH_OUTPUT_BYTES } from "../review/git_batch.js";
 
 import {
-  MAX_MARKER_BYTES,
-  parseCompletionMarker,
+  isCompletionTemporary,
   type CacheLayout,
   type CompletionMarker,
 } from "./cache_layout.js";
-import { incompatibleEarlierBaseline } from "./compatibility.js";
+import { readCacheMetadata } from "./cache_metadata.js";
+import { baselineCatalogue, joinCataloguePath } from "./catalogue.js";
 import { confinedBaselineStat } from "./confinement.js";
 import { validateBuiltInventory } from "./discovery.js";
-import { BaselineError } from "./errors.js";
-import { historicalCatalogueAt, manifestEnvelopeVersion } from "./manifest.js";
+import { assertBaselineActive, BaselineError } from "./errors.js";
 import type { BaselineBuildRequest, BaselineFileSystem } from "./types.js";
 
-/** Validate identity before interpreting output; earlier caches never become readers. */
+/** Validate metadata, compare settings, then validate current output for reuse. */
 export async function completedBaseline(
   fs: BaselineFileSystem,
   layout: CacheLayout,
   request: BaselineBuildRequest,
 ): Promise<CompletionMarker | undefined> {
+  const metadata = await readCacheMetadata(
+    fs,
+    layout,
+    request.commit,
+    request.signal,
+  );
+  if (!metadata) return;
+  const { marker, mockupsPath } = metadata;
   if (
-    !(await fs.stat(layout.marker)) ||
-    !(await fs.stat(layout.output)) ||
-    !(await fs.stat(path.join(layout.entry, "inputs.json")))
+    mockupsPath !== request.mockupsPath ||
+    !isDeepStrictEqual(marker.commands, request.commands)
   )
-    return;
-  try {
-    if ((await fs.stat(layout.marker))?.kind !== "regular")
-      throw new Error("Completion marker is not regular");
-    const marker = parseCompletionMarker(
-      JSON.parse(
-        Buffer.from(await fs.read(layout.marker, MAX_MARKER_BYTES)).toString(
-          "utf8",
-        ),
-      ),
-      request.commit,
+    throw new BaselineError(
+      "baseline-output-invalid",
+      `Cached baseline uses different build settings; remove ${layout.entry} before changing catalogues or commands`,
     );
-    if (!marker) throw new Error("Invalid baseline completion marker");
+  try {
+    if ((await fs.stat(layout.output))?.kind !== "directory") return;
+    const descriptor = baselineCatalogue(
+      request.commit,
+      marker.historicalCatalogueRoot,
+    );
+    const file = joinCataloguePath(descriptor.generatedRoot, MANIFEST_NAME);
     if (
-      (await fs.stat(layout.output))?.kind !== "directory" ||
-      !(await fs.stat(path.join(layout.entry, "inputs.json")))
+      (await confinedBaselineStat(fs, layout.output, file, request.signal))
+        ?.kind !== "regular"
     )
       return;
-    if (
-      (await fs.stat(path.join(layout.entry, "inputs.json")))?.kind !==
-      "regular"
-    )
-      throw new Error("Baseline inputs are not regular");
-    const mockupsPath: unknown = JSON.parse(
-      Buffer.from(
-        await fs.read(path.join(layout.entry, "inputs.json"), MAX_MARKER_BYTES),
-      ).toString("utf8"),
+    const manifest = parseHistoricalManifest(
+      JSON.parse(
+        Buffer.from(
+          await fs.read(path.join(layout.output, file), MAX_BATCH_OUTPUT_BYTES),
+        ).toString("utf8"),
+      ),
     );
-    if (
-      mockupsPath !== request.mockupsPath ||
-      !isDeepStrictEqual(marker.commands, request.commands)
-    )
-      throw new BaselineError(
-        "baseline-output-invalid",
-        `Cached baseline uses different build settings; remove ${layout.entry} before changing catalogues or commands`,
-      );
-    if (marker.manifestVersion < 8) {
-      if (!(await olderCacheExists(fs, layout, marker, request.signal))) return;
-      return marker;
-    }
-    const selected = await historicalCatalogueAt(
+    await validateBuiltInventory(
       fs,
       layout.output,
-      path.join(layout.output, marker.historicalCatalogueRoot!),
-      request.commit,
+      { descriptor, manifest, version: 8 },
       request.signal,
     );
-    if (!selected) return;
-    if ("incompatible" in selected)
-      throw new Error(
-        "Cached manifest version disagrees with completion marker",
-      );
-    await validateBuiltInventory(fs, layout.output, selected, request.signal);
-    for (const file of selected.manifest.assetClosure) {
-      const relative = path.posix.join(selected.descriptor.catalogueRoot, file);
+    for (const asset of manifest.assetClosure) {
+      const relative = joinCataloguePath(descriptor.catalogueRoot, asset);
       if (
         (
           await confinedBaselineStat(
@@ -95,61 +78,16 @@ export async function completedBaseline(
           )
         )?.kind !== "regular"
       )
-        throw new Error(`Missing cached authored resource: ${file}`);
+        return;
     }
     return marker;
-  } catch (error) {
-    if (request.signal?.aborted || error instanceof BaselineError) throw error;
-    throw new BaselineError(
-      "baseline-output-invalid",
-      "Invalid completed baseline cache",
-      error,
-    );
+  } catch {
+    assertBaselineActive(request.signal);
+    return;
   }
 }
 
-async function olderCacheExists(
-  fs: BaselineFileSystem,
-  layout: CacheLayout,
-  marker: CompletionMarker,
-  signal?: AbortSignal,
-): Promise<boolean> {
-  const names =
-    marker.layout === "generated-v6"
-      ? [
-          path.posix.join(
-            marker.historicalCatalogueRoot!,
-            GENERATED_DIRECTORY,
-            MANIFEST_NAME,
-          ),
-        ]
-      : [MANIFEST_NAME, ...EARLIER_MANIFEST_NAMES];
-  for (const name of names) {
-    const stat = await confinedBaselineStat(fs, layout.output, name, signal);
-    if (!stat) continue;
-    if (stat.kind !== "regular")
-      throw new Error("Cached historical manifest is not regular");
-    if (EARLIER_MANIFEST_NAMES.some((earlier) => earlier === name)) return true;
-    const value: unknown = JSON.parse(
-      Buffer.from(
-        await fs.read(path.join(layout.output, name), MAX_BATCH_OUTPUT_BYTES),
-      ).toString("utf8"),
-    );
-    if (manifestEnvelopeVersion(value) !== marker.manifestVersion)
-      throw new Error(
-        "Cached manifest version disagrees with completion marker",
-      );
-    return true;
-  }
-  return false;
-}
-
-/** Raise only after cache validation so callers retain the completed old entry. */
-export function assertCurrentCache(marker: CompletionMarker): void {
-  if (marker.manifestVersion < 8) throw incompatibleEarlierBaseline();
-}
-
-/** Remove partial output and installed dependencies without removing the held lock. */
+/** Remove partial content under the entry lock, preserving lock ownership. */
 export async function removePartialBaseline(
   fs: BaselineFileSystem,
   layout: CacheLayout,
@@ -159,6 +97,9 @@ export async function removePartialBaseline(
     layout.source,
     layout.output,
     path.join(layout.entry, "inputs.json"),
+    ...(await fs.list(layout.entry))
+      .filter(isCompletionTemporary)
+      .map((name) => path.join(layout.entry, name)),
   ])
     await fs.remove(file);
 }

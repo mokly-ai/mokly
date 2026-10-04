@@ -25,7 +25,7 @@ section roots even when they reuse the same folder labels.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
 fixed prefixes, never splitting on `:` inside a label. It rejects empty path
 segments and ignores obsolete collection and legacy keys on restore.
-`disclosure_storage.ts` owns the v3 map codec and both storage key names;
+`disclosure_storage.ts` owns the v3 map codec and its storage key;
 early capture, hydration, the shell store, and watched-reload recovery share
 its validation so renamed keys never override current server defaults. The
 writer touches only the current v3 map key.

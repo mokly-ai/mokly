@@ -38,6 +38,7 @@ import {
 import type { MoklyConfig, ResolvedConfig } from "./types.js";
 
 const REMOVED_CONFIG_KEYS = [
+  { key: "compatibility", guidance: "author portable links directly" },
   {
     key: "generatedOutput",
     guidance: "use Git tracking for check and run mokly build to write output",
@@ -102,12 +103,6 @@ export function resolveConfig(
     "renderer",
   );
   const postcss = validatePostcssPath(input.postcss, repoRoot, configDir);
-  const compatibilityTransformer = optionalModule(
-    repoRoot,
-    configDir,
-    input.compatibility?.transformer,
-    "compatibility.transformer",
-  );
   const moduleResolution = resolveModuleResolution(
     input.moduleResolution,
     repoRoot,
@@ -117,7 +112,6 @@ export function resolveConfig(
     ["entriesDir", entriesDir],
     ["renderer", renderer],
     ["postcss", postcss],
-    ["compatibility.transformer", compatibilityTransformer],
     ...moduleResolution.packageRoots.map((root, index) => [
       `moduleResolution.packageRoots[${index}]`,
       root,
@@ -166,11 +160,6 @@ export function resolveConfig(
   const resolved: ResolvedConfig = {
     generatedDir,
     colorSchemes,
-    compatibility: {
-      ...(compatibilityTransformer
-        ? { transformer: compatibilityTransformer }
-        : {}),
-    },
     configPath,
     entryGlobs: entryGlobs.globs,
     ...(entriesDir ? { entriesDir } : {}),

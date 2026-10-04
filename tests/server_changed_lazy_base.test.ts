@@ -82,23 +82,25 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
     );
   });
 
-test("non-CSS evidence does not traverse a supplied base resource graph", async (t) => {
+test("non-CSS evidence compares the supplied baseline resources", async (t) => {
   const fixture = await cssAttributionFixture(t, false);
   const document = await fs.readFile(
     path.join(fixture.config.generatedDir, "screens/home.mobile.html"),
     "utf8",
   );
+  const reads: string[] = [];
+  const baselineReader = new FileSystemReviewAssetReader(fixture.config);
   const graph = new ChangedResourceGraph(
     new FileSystemReviewAssetReader(fixture.config),
     {
-      read: async () => {
-        throw new Error("Unexpected base graph traversal");
+      read: async (route) => {
+        reads.push(route);
+        return baselineReader.read(route);
       },
     },
     new Set(["image.svg"]),
     new Map(),
     undefined,
-    false,
   );
   assert.deepEqual(
     await graph.compare("mokly-generated/screens/home.mobile.html", document, {
@@ -109,6 +111,8 @@ test("non-CSS evidence does not traverse a supplied base resource graph", async 
       reasons: [{ kind: "dependency", path: "image.svg" }],
     },
   );
+  assert.ok(reads.includes("image.svg"));
+  assert.ok(reads.includes("shared.css"));
 });
 
 test("deleted stylesheet resources still retain their consumers", async (t) => {
@@ -125,6 +129,11 @@ test("deleted stylesheet resources still retain their consumers", async (t) => {
     await git.evidence.mergeBase("main", "HEAD"),
     asChangeEvidence(["mockups/shared.css"]),
     new CompiledReviewAssetReader(fixture.config, accepted.outputs),
+  );
+  assert.ok(
+    result.changedPaths.includes(
+      "mockups/mokly-generated/screens/home.mobile.html",
+    ),
   );
   assert.equal(
     result.screens[0]?.views[0]?.reasons?.[0]?.analysis?.status,

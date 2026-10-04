@@ -28,13 +28,10 @@ export class ResourceComparison {
     readonly changed: ReadonlySet<string>,
     readonly prefix: string,
     readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
-    readonly compareBytes = false,
   ) {
     before.pairWith(after, "before");
     after.pairWith(before, "after");
-    after.allowMissingResources(
-      (route) => this.compareBytes || this.changed.has(this.path(route)),
-    );
+    after.allowMissingResources(() => true);
   }
 
   async compare(
@@ -59,19 +56,10 @@ export class ResourceComparison {
     );
     const current = new Map<string, ResourceDecision>();
     for (const route of discovered)
-      if (
-        heads.has(route) &&
-        (this.compareBytes || this.changed.has(this.path(route)))
-      )
+      if (heads.has(route))
         current.set(
           route,
-          await decideReferencedResource(
-            route,
-            this.before,
-            this.after,
-            this.changed.has(this.path(route)),
-            this.compareBytes,
-          ),
+          await decideReferencedResource(route, this.before, this.after),
         );
     const baseChanged = await this.before.optionalTexts(changedRoutes);
     const headChanged = await this.after.optionalTexts(changedRoutes);

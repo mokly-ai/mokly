@@ -18,7 +18,7 @@ const fixture = JSON.parse(
 
 test("current catalogues require the generated layout and reject earlier versions", () => {
   const catalogue = readCatalogue(fixture);
-  assert.equal(catalogue.generatedPathPrefix, "mokly-generated");
+  assert.equal(Object.hasOwn(catalogue, "generatedPathPrefix"), false);
   for (const schemaVersion of [1, 2, 3])
     assert.throws(
       () => readCatalogue({ ...fixture, schemaVersion }),
@@ -27,29 +27,23 @@ test("current catalogues require the generated layout and reject earlier version
     );
   const route = "screens/home.mobile.html";
   assert.equal(currentDocumentPath(route), `static/mokly-generated/${route}`);
-  assert.equal(
-    currentDocumentPath(route, catalogue.generatedPathPrefix),
-    `static/mokly-generated/${route}`,
-  );
+  assert.equal(currentDocumentPath(route), `static/mokly-generated/${route}`);
   assert.equal(currentDocumentRoute(`/static/mokly-generated/${route}`), route);
-  assert.equal(
-    currentDocumentRoute(`/static/mokly-generated/${route}`, "mokly-generated"),
-    route,
-  );
+  assert.equal(currentDocumentRoute(`/static/mokly-generated/${route}`), route);
   for (const pathname of [
     `/static/${route}`,
     "/static/mokly-generated/../screens/home.mobile.html",
     "/static/mokly-generated/screens%2Fhome.mobile.html",
   ]) {
     assert.equal(currentDocumentRoute(pathname), undefined);
-    assert.equal(currentDocumentRoute(pathname, "mokly-generated"), undefined);
+    assert.equal(currentDocumentRoute(pathname), undefined);
   }
 });
 
-test("catalogue validation rejects absent and alternate generated prefixes", () => {
-  for (const generatedPathPrefix of [undefined, "generated", ".generated"])
-    assert.throws(
-      () => readCatalogue({ ...fixture, generatedPathPrefix }),
-      /generatedPathPrefix/,
-    );
+test("current frame paths require no serialized layout field", () => {
+  assert.equal(Object.hasOwn(fixture, "generatedPathPrefix"), false);
+  assert.equal(
+    Object.hasOwn(readCatalogue(fixture), "generatedPathPrefix"),
+    false,
+  );
 });

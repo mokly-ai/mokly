@@ -2,7 +2,6 @@ import path from "node:path";
 
 import { build } from "esbuild";
 
-import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import { discoverEntryModules } from "../config/entry_discovery.js";
 import {
@@ -32,11 +31,9 @@ import { GraphStyles } from "./styles/collect.js";
 import { collectPostcssDependencies } from "./styles/dependency_inventory.js";
 import { createStyleProcessor } from "./styles/processor_setup.js";
 import { graphStyleRoots } from "./styles/root_graph.js";
-import { inventoryTransformerStyles } from "./styles/transformer_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
 export interface LoadedGraph {
-  compatibilityTransformer?: CompatibilityTransformer;
   definitions: unknown[];
   entrySources: readonly string[];
   sourceFiles: readonly string[];
@@ -139,15 +136,13 @@ async function loadGraph(
       config.mockupsDir,
       mapper,
     );
-    const deliveryRoots = roots.filter((root) => root.emit);
-    const transformerStyles = roots.find((root) => !root.emit)?.styles ?? [];
     const graphInputs = new Set(
       graphFiles.map((file) => path.resolve(config.repoRoot, file)),
     );
-    const bundled = deliveryRoots.some((root) => root.styles.length)
+    const bundled = roots.some((root) => root.styles.length)
       ? await bundleStyles(
           config,
-          deliveryRoots,
+          roots,
           graphInputs,
           styles.preprocessor,
           styles.classMaps,
@@ -157,13 +152,6 @@ async function loadGraph(
           routes: new Map<string, string>(),
           sourceFiles: new Set<string>(),
         };
-    const transformerFiles = await inventoryTransformerStyles(
-      config,
-      transformerStyles,
-      graphInputs,
-      styles.preprocessor,
-      bundled.sourceFiles,
-    );
     const dependencies = collectPostcssDependencies(
       config,
       styles.preprocessor.reports,
@@ -173,15 +161,11 @@ async function loadGraph(
       [
         ...graphFiles,
         ...bundled.sourceFiles,
-        ...transformerFiles,
         ...styles.preprocessor.sourceFiles,
         ...dependencies.sourceFiles,
         ...(config.configSourceFiles ?? [config.configPath]),
         ...entrySources,
         ...(config.renderer ? [config.renderer] : []),
-        ...(config.compatibility.transformer
-          ? [config.compatibility.transformer]
-          : []),
       ],
       config.repoRoot,
       config.mockupsDir,
@@ -223,22 +207,7 @@ async function loadGraph(
         "renderer module must default-export a function",
       );
     }
-    if (
-      config.compatibility.transformer &&
-      typeof imported.compatibilityTransformer !== "function"
-    ) {
-      throw new MoklyError(
-        "build-invalid",
-        "compatibility transformer module must default-export a function",
-      );
-    }
     const graph: LoadedGraph = {
-      ...(typeof imported.compatibilityTransformer === "function"
-        ? {
-            compatibilityTransformer:
-              imported.compatibilityTransformer as CompatibilityTransformer,
-          }
-        : {}),
       definitions: imported.definitions,
       entrySources,
       sourceFiles,

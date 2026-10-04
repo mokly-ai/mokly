@@ -70,11 +70,11 @@ for (const filePath of probes.filter((file) => !file.endsWith(".mjs")))
   test(`type import consolidation retains emitted values in ${filePath}`, async () => {
     await requireLintRule(filePath, rule);
     const source = [
-      'import type { GeneratedPathPrefix } from "@mokly/viewer/data";',
+      'import type { Viewport } from "@mokly/viewer/data";',
       'import type { ColorScheme } from "@mokly/viewer/data";',
       'import { GENERATED_DIRECTORY } from "@mokly/viewer/data";',
       "export const root = GENERATED_DIRECTORY;",
-      "export type State = [GeneratedPathPrefix, ColorScheme];",
+      "export type State = [Viewport, ColorScheme];",
     ].join("\n");
     const fixed = await lintProbe(source, filePath, true);
     assert.ok(fixed.output);
@@ -95,5 +95,5 @@ for (const filePath of probes.filter((file) => !file.endsWith(".mjs")))
       emitted.outputText,
       /export (?:const|var) root = GENERATED_DIRECTORY/u,
     );
-    assert.doesNotMatch(emitted.outputText, /GeneratedPathPrefix|ColorScheme/u);
+    assert.doesNotMatch(emitted.outputText, /Viewport|ColorScheme/u);
   });

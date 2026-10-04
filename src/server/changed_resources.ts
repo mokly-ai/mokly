@@ -45,7 +45,6 @@ export class ChangedResourceGraph {
     private readonly changed: ReadonlySet<string>,
     private readonly documents: ReadonlyMap<string, string>,
     private readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
-    private readonly compareBytes = false,
   ) {
     this.#base = new ComponentMaterialReader(baseline);
     this.#head = new ComponentMaterialReader({
@@ -106,19 +105,13 @@ export class ChangedResourceGraph {
     before?: { path: string; html: string },
   ): Promise<ResourceEvidence & { resourceChanged?: true }> {
     const resources = await this.resources(source, document);
-    const changedStylesheet = [...resources].some(
-      (route) => isStylesheetPath(route) && this.isChanged(route),
-    );
-    const changedDocument =
-      before && (before.path !== source || before.html !== document);
-    const bases =
-      before && (this.compareBytes || changedStylesheet || changedDocument)
-        ? await this.#baseGraph.collect(
-            referencedRoutes(before.path, before.html, {
-              resourceHints: false,
-            }),
-          )
-        : new Set<string>();
+    const bases = before
+      ? await this.#baseGraph.collect(
+          referencedRoutes(before.path, before.html, {
+            resourceHints: false,
+          }),
+        )
+      : new Set<string>();
     const all = [...new Set([...bases, ...resources])];
     const eligible = all.filter(
       (route) =>
@@ -203,8 +196,6 @@ export class ChangedResourceGraph {
             this.baseline.read(candidate),
         },
         { readIfExists: async () => asset.content },
-        this.isChanged(route),
-        this.compareBytes,
       );
       if (decision.kind === "verified-deletion") {
         this.#byteChanges.add(route);

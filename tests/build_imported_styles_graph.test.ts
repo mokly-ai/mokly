@@ -6,15 +6,10 @@ import test from "node:test";
 
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConsumerGraph } from "../dist/build/load_graph.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import {
-  runWithTimings,
-  type TimingEvent,
-} from "../dist/diagnostics/timings.js";
 
-import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { removeFixture } from "./helpers/fixture.js";
 import {
   compileFixture,
   entryStyle,
@@ -110,43 +105,6 @@ test("JavaScript re-exports and dynamic imports join first-reachability DFS", as
   ) as string;
   assert.ok(output.indexOf(".first") < output.indexOf(".second"), output);
   assert.ok(output.indexOf(".second") < output.indexOf(".third"), output);
-});
-
-test("transformer-only CSS and its nested assets are private, not delivered", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'compatibility: { transformer: "transform.ts" },',
-  });
-  t.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'import "./a.css"; export default ({content}) => content;',
-  );
-  await fs.writeFile(path.join(fixture.root, "a.css"), '@import "./b.css";');
-  await fs.writeFile(
-    path.join(fixture.root, "b.css"),
-    '.a { background: url("./image.png") }',
-  );
-  await fs.writeFile(path.join(fixture.root, "image.png"), Buffer.from([0xff]));
-  const config = await loadConfig(fixture.root);
-  const graph = await loadConsumerGraph(config, false);
-  const timings: TimingEvent[] = [];
-  const compiled = await runWithTimings(
-    true,
-    "test",
-    () => compileCatalogue(config),
-    {
-      write: (event) => timings.push(event),
-    },
-  );
-  assert.deepEqual(compiled.manifest.sourceFiles, graph.sourceFiles);
-  for (const source of ["a.css", "b.css", "image.png"])
-    assert.ok(compiled.manifest.sourceFiles.includes(source), source);
-  assert.ok(
-    ![...compiled.outputs.keys()].some((route) =>
-      /^(?:styles|assets)\//.test(route),
-    ),
-  );
-  assert.ok(!timings.some((event) => event.stage === "styles.bundle"));
 });
 
 test("stylesheet output and inventory repeat byte-identically", async (t) => {

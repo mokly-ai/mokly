@@ -183,8 +183,6 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
             "/static/mokly-generated/screens/home.desktop.html",
             origin,
           ),
-          route: "screens/home.desktop.html",
-          generatedPathPrefix: "mokly-generated",
           usage: { status: "ready", ...usage },
         },
       );

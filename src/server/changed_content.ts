@@ -14,7 +14,7 @@ import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
-import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
+import { MANIFEST_NAME } from "../registry/manifest.js";
 import {
   GitReviewAssetReader,
   FileSystemReviewAssetReader,
@@ -97,10 +97,7 @@ export async function classifyChangedContent(
       )
         return [];
       const route = toPosixPath(path.relative(config.mockupsDir, candidate));
-      return route === MANIFEST_NAME ||
-        EARLIER_MANIFEST_NAMES.includes(route as never)
-        ? []
-        : [route];
+      return route === MANIFEST_NAME ? [] : [route];
     }),
   );
   const pairs = documentPairs(manifest, baseline, publicChanges, documents);
@@ -158,7 +155,6 @@ export async function classifyChangedContent(
     publicChanges,
     normalizedDocuments,
     undefined,
-    true,
   );
   await timeAsync("review.compare-screens", async () => {
     for (let offset = 0; offset < pairs.length; offset += 32) {

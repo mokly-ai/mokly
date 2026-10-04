@@ -26,12 +26,6 @@ import { validateManifest } from "./manifest_validation.js";
 /** Canonical generated manifest filename. */
 export const MANIFEST_NAME = "mokly-manifest.json";
 
-/** Earlier manifest names retained only as incompatibility sentinels and stale output. */
-export const EARLIER_MANIFEST_NAMES = [
-  "mokabook-manifest.json",
-  "mockbook-manifest.json",
-] as const;
-
 /** Entry/source metadata before a complete compilation supplies its inventory. */
 export type ManifestMetadata = Pick<
   ManifestV8,

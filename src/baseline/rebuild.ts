@@ -1,13 +1,10 @@
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 import { timeAsync } from "../diagnostics/timings.js";
 import { errorMessage } from "../errors.js";
 
-import {
-  assertCurrentCache,
-  completedBaseline,
-  removePartialBaseline,
-} from "./cache.js";
+import { completedBaseline, removePartialBaseline } from "./cache.js";
 import {
   assertMockupsPath,
   cacheLayout,
@@ -106,7 +103,6 @@ export class CachedBaselineBuilder implements BaselineBuilder {
         const cached = await completedBaseline(this.fs, layout, request);
         if (cached) {
           adopted = true;
-          assertCurrentCache(cached);
           request.onProgress?.({
             type: "complete",
             commit: request.commit,
@@ -182,10 +178,16 @@ export class CachedBaselineBuilder implements BaselineBuilder {
               Buffer.from(JSON.stringify(request.mockupsPath)),
             );
             assertBaselineActive(request.signal);
+            const temporary = path.join(
+              layout.entry,
+              `complete-${randomUUID()}.tmp`,
+            );
             await this.fs.write(
-              layout.marker,
+              temporary,
               Buffer.from(`${JSON.stringify(marker)}\n`),
             );
+            assertBaselineActive(request.signal);
+            await this.fs.rename(temporary, layout.marker);
             adopted = true;
             return {
               commit: request.commit,

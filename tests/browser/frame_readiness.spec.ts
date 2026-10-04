@@ -49,8 +49,6 @@ for (const cross of [false, true]) {
                 "/static/mokly-generated/screens/home.mobile.html",
                 cross ? origin : location.origin,
               ),
-              route: "screens/home.mobile.html",
-              generatedPathPrefix: "mokly-generated",
               usage: { status },
             },
           )) as ReadinessWindow["mounted"];

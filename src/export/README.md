@@ -68,7 +68,7 @@ cannot be exported or selected as a destination.
 from accepted memory and reads only the authored closure from disk. Export and
 its input recheck never take the generated-output writer lock. Recompilation and
 confined authored reads prove capture stability. `resource_policy.ts` admits
-only validated generated inventory paths, including CSS assets mirrored from
+validated generated inventory and authored closure paths, including CSS assets mirrored from
 `node_modules/@scope`; authored dependency trees and CSS sources stay private.
 
 `stage.ts` shares ownership assembly, alias/reference validation, and staged
@@ -179,9 +179,13 @@ validator enforces that scope at preflight and before installation.
 `reservation.ts` uses filesystem-native per-output directory names under an
 owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Only the current reservation namespace controls writer admission.
-`resource_policy.ts` admits
-only validated generated inventory paths, including CSS assets mirrored from
-`node_modules/@scope`; authored dependency trees and CSS sources stay private.
+Export captures only compiled `mokly-generated/` files and the v8
+`assetClosure`. Reference validation, Review and content-change classification
+use the same confined closure. Manifest and cache privacy is unconditional.
+A protected closure reference fails with its referring route; unreferenced
+HTTP paths return 404. Build and export share HTML anchor validation through
+`html_link_validation.ts`. Watch ignores `mokly-generated/` by prefix and
+observes referenced authored assets in place.
 
 `backup.ts` revalidates captured output and centralizes safe restoration and
 allowlisted, non-recursive cleanup. `operations.ts` is the injectable filesystem

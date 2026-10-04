@@ -38,7 +38,6 @@ export interface ComponentViewContext {
   changed: ReadonlySet<string>;
   prefix: string;
   resources: ResourceComparison;
-  compareResourceBytes?: boolean;
   useFastPath?: boolean;
 }
 /** Compare material and declared inputs without altering the retained view documents. */
@@ -133,32 +132,24 @@ export async function compareComponentView(
     { path: before!.path, html: actual.base },
     { path: after!.path, html: actual.head },
   );
-  const byteChanges = context.compareResourceBytes
-    ? await changedResourceBytes(
-        await context.beforeReader.resources(
-          before!.path,
-          projected.before,
-          excluded,
-        ),
-        await context.afterReader.resources(
-          after!.path,
-          projected.after,
-          excluded,
-        ),
-        context.beforeReader,
-        context.afterReader,
-      )
-    : new Set<string>();
+  const byteChanges = await changedResourceBytes(
+    await context.beforeReader.resources(
+      before!.path,
+      projected.before,
+      excluded,
+    ),
+    await context.afterReader.resources(after!.path, projected.after, excluded),
+    context.beforeReader,
+    context.afterReader,
+  );
   if ([...byteChanges].some((route) => !context.changed.has(repoPath(route))))
     reasons.push({ kind: "material" });
-  const actualByteChanges = context.compareResourceBytes
-    ? await changedResourceBytes(
-        await context.beforeReader.resources(before!.path, actual.base),
-        await context.afterReader.resources(after!.path, actual.head),
-        context.beforeReader,
-        context.afterReader,
-      )
-    : new Set<string>();
+  const actualByteChanges = await changedResourceBytes(
+    await context.beforeReader.resources(before!.path, actual.base),
+    await context.afterReader.resources(after!.path, actual.head),
+    context.beforeReader,
+    context.afterReader,
+  );
   const actualResourceChange =
     Boolean(actualEvidence.reasons?.length) ||
     [...actualByteChanges].some(

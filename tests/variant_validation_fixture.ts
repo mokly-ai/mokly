@@ -23,7 +23,6 @@ export const sourceRelativePath = "tests/variant_validation.test.ts";
 
 export const config: ResolvedConfig = {
   colorSchemes: ["light"],
-  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],

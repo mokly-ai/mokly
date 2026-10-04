@@ -33,8 +33,6 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
           "/static/mokly-generated/screens/home.mobile.html",
           location.origin,
         ),
-        route: "screens/home.mobile.html",
-        generatedPathPrefix: "mokly-generated",
         usage: {
           status: "ready",
           ...(JSON.parse(json) as ComponentViewRecord),
@@ -116,8 +114,6 @@ test("valid local logical navigation works without instance usage", async ({
           "/static/mokly-generated/screens/home.mobile.html",
           location.origin,
         ),
-        route: "screens/home.mobile.html",
-        generatedPathPrefix: "mokly-generated",
         usage: { status: "unavailable" },
       },
     );

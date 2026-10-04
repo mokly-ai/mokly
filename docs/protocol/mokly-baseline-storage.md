@@ -25,7 +25,7 @@ and is not converted to a baseline history error.
    acquire its entry lock, including on cache hits. Sweep safe crash leftovers
    under that lock as a best-effort maintenance step.
 3. Reuse only complete valid v8 output with the matching commit, requested
-   catalogue and recipe. Every other entry is partial; remove its owned
+   catalogue and recipe. Invalid, incomplete or unreadable data is partial; remove its owned
    contents under the lock, then
    extract the commit with Git's archive format into
    the entry's `source` directory. Entries that escape the directory, symlinks
@@ -114,11 +114,15 @@ A reusable entry requires regular bounded JSON files for `complete.json` and
 path and argv arrays, and complete valid v8 output. Verify generated membership,
 blob hashes and every authored closure file with the same confinement rules.
 Keep the completion-marker and manifest version checks; no earlier layout is
-parsed or adapted.
+parsed or adapted. Validate the marker first, then the stored catalogue path and
+command list, then the output. A valid v8 marker with settings different from
+the request fails intact with `Cached baseline uses different build settings; remove <entry> before changing catalogues or commands`.
+Invalid or earlier markers are partial before this comparison. Never replace a
+settings-mismatch error with a rebuild.
 
-Anything that fails this check is partial: missing files, invalid or empty JSON,
-truncation, unreadable data, earlier/newer marker versions, wrong identities,
-unsafe paths, invalid v8 data, stale bytes or incomplete closure. Return a miss,
+Invalid or incomplete entry data is partial: missing files, invalid or empty JSON,
+truncation, unreadable data, earlier/newer marker versions, unsafe paths,
+invalid v8 data, stale bytes or incomplete closure. Return a miss,
 not a content reader or an earlier-version outcome. Cancellation still aborts
 instead of rebuilding. Under the held lock, remove only owned partial content
 without following symlinks; cleanup failure cannot permit reuse of bad bytes.
@@ -146,9 +150,9 @@ After a successful rebuild the builder removes complete entries beyond the
 retained count, newest markers first, defaulting to three. It never removes the
 entry it just built or an entry another process holds locked. Invalid and
 partial entries do not consume retention slots: acquire each candidate's own
-lock and remove it safely, regardless of the retained count. Validate completed
-v8 output before ranking it; never retain an invalid entry solely because its
-marker has a recent timestamp. Cleanup records each entry's stat, lock,
+lock and remove it safely, regardless of the retained count. Retention classifies
+only the completion marker and `inputs.json`. It never reads or hashes output.
+Full inventory and closure validation runs only on reuse. Cleanup records each entry's stat, lock,
 rename, remove and release failures, continues with other eligible entries,
 and reports those failures on stderr. A concurrent entry removal is tolerated.
 Root listing failures skip cleanup. Failure or cancellation of these post-steps

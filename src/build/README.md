@@ -129,7 +129,7 @@ escapes `repoRoot` through a symlink. Entries nested below `mockupsDir` remain
 protected inventoried source; public reads and generated route collisions use
 the same lexical and alias-aware source boundaries.
 `load_graph.ts` then bundles those modules, imported helpers,
-the renderer together and refreshes the
+and the renderer together and refreshes the
 resolved set on the config as `entryModules`. `styles/collect.ts` replaces
 esbuild's discarded sibling CSS output with class bindings and records graph
 imports. `styles/order.ts` walks metafile imports, while `metafile_paths.ts`

@@ -20,7 +20,7 @@ import {
   validEntrySource,
 } from "./helpers/fixture.js";
 
-test("historical generated first lines normalize without authenticating their owner", () => {
+test("former generated notices remain material text", () => {
   const html = "<html><body>Unchanged</body></html>\n";
   const encoded = Buffer.from("some/other/owner.ts", "utf8").toString("base64");
   const oldLines = [
@@ -35,9 +35,13 @@ test("historical generated first lines normalize without authenticating their ow
       GENERATED_MARKER + html,
       "screen.html",
     );
-    assert.equal(pair.base, pair.head);
-    assert.equal(normalizeSingleDocument(oldLine + html, "screen.html"), html);
-    assert.equal(stripGeneratedFirstLine(oldLine + html), html);
+    assert.equal(pair.base, oldLine + html);
+    assert.equal(pair.head, html);
+    assert.equal(
+      normalizeSingleDocument(oldLine + html, "screen.html"),
+      oldLine + html,
+    );
+    assert.equal(stripGeneratedFirstLine(oldLine + html), oldLine + html);
   }
   assert.equal(
     stripGeneratedFirstLine(GENERATED_MARKER.replace("\n", "\r\n") + html),

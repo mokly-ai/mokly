@@ -1,7 +1,6 @@
 import {
   VIEWER_DIRECTORY,
   currentDocumentRoute,
-  type GeneratedPathPrefix,
 } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
@@ -58,13 +57,12 @@ export function localFramePath(frame: HTMLIFrameElement): string | undefined {
 export function localFrameReady(
   frame: HTMLIFrameElement,
   path: string,
-  prefix?: GeneratedPathPrefix,
 ): boolean {
   const pathname = localFramePath(frame);
   return (
     localFrameAccess(frame).document()?.readyState === "complete" &&
     pathname !== undefined &&
-    currentDocumentRoute(pathname, prefix) === path
+    currentDocumentRoute(pathname) === path
   );
 }
 
@@ -85,8 +83,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
       if (!win) throw new FrameError("unavailable");
       const url = resolveUrl(frame, view, win.location.origin);
       const pathname = decodeURIComponent(url.pathname);
-      const inspectionPath =
-        currentDocumentRoute(pathname, view.generatedPathPrefix) ?? pathname;
+      const inspectionPath = currentDocumentRoute(pathname) ?? pathname;
       let usage = frameUsage(view.usage);
       view.signal?.throwIfAborted();
       const mounting = mountLocalDocument(

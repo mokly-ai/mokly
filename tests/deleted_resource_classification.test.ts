@@ -33,18 +33,18 @@ interface DeletionCase {
   current: CurrentState;
   expected: "changed" | Readonly<Record<ClassifierName, RejectionKind>>;
   kind: ResourceKind;
-  mode: "committed" | "derived";
+  storage: "blobs" | "rebuild";
   unsafe?: boolean;
 }
 
 const deletionCases: readonly DeletionCase[] = [
-  ...(["committed", "derived"] as const).flatMap((mode) =>
+  ...(["blobs", "rebuild"] as const).flatMap((storage) =>
     (["stylesheet", "image", "embedded HTML"] as const).map((kind) => ({
       baseline: "regular" as const,
       current: "deleted" as const,
       expected: "changed" as const,
       kind,
-      mode,
+      storage,
     })),
   ),
   {
@@ -52,21 +52,21 @@ const deletionCases: readonly DeletionCase[] = [
     current: "absent",
     expected: rejected("baseline-missing", "current-missing"),
     kind: "image",
-    mode: "committed",
+    storage: "blobs",
   },
   {
     baseline: "absent",
     current: "absent",
     expected: rejected("baseline-missing", "current-missing"),
     kind: "embedded HTML",
-    mode: "derived",
+    storage: "rebuild",
   },
   {
     baseline: "absent",
     current: "absent",
     expected: rejected("baseline-missing", "unsafe-view"),
     kind: "stylesheet",
-    mode: "committed",
+    storage: "blobs",
     unsafe: true,
   },
   {
@@ -74,7 +74,7 @@ const deletionCases: readonly DeletionCase[] = [
     current: "absent",
     expected: rejected("baseline-missing", "current-missing"),
     kind: "image",
-    mode: "derived",
+    storage: "rebuild",
     unsafe: true,
   },
   {
@@ -82,26 +82,26 @@ const deletionCases: readonly DeletionCase[] = [
     current: "dangling",
     expected: rejected("dangling", "dangling"),
     kind: "image",
-    mode: "committed",
+    storage: "blobs",
   },
   {
     baseline: "regular",
     current: "escaping",
     expected: rejected("escaping", "escaping"),
     kind: "image",
-    mode: "derived",
+    storage: "rebuild",
   },
   {
     baseline: "regular",
     current: "source-root",
     expected: rejected("source-root", "source-root"),
     kind: "image",
-    mode: "committed",
+    storage: "blobs",
   },
 ];
 
 for (const scenario of deletionCases) {
-  const label = `${scenario.mode} ${scenario.kind}, ${scenario.baseline} at branch point, ${scenario.current} now`;
+  const label = `${scenario.storage} ${scenario.kind}, ${scenario.baseline} at branch point, ${scenario.current} now`;
   test(`deleted-resource classifiers agree: ${label}`, async (t) => {
     const route = resourceRoute(scenario.kind);
     const reference = `../../${route}`;

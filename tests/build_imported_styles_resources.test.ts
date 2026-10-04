@@ -199,18 +199,12 @@ test("component resources reject stale reserved disk files absent from pending o
   );
 });
 
-test("compatibility route discovery includes pending styles and omits reserved disk orphans", async (t) => {
-  const fixture = await styleFixture(".entry{color:red}", {
-    extraConfig: 'compatibility: { transformer: "transform.ts" },',
-  });
+test("pending stylesheet delivery omits reserved disk orphans", async (t) => {
+  const fixture = await styleFixture(".entry{color:red}");
   t.after(() => removeFixture(fixture));
   const stale = path.join(fixture.mockupsDir, "mokly-generated/styles/old.css");
   await fs.mkdir(path.dirname(stale), { recursive: true });
   await fs.writeFile(stale, "stale");
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'export default ({content, availableRoutes}) => content.replace("</body>", `<output data-available="${availableRoutes.join("|")}"></output></body>`);',
-  );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   const html = compiled.outputs.get("screens/home.mobile.html") as string;
   assert.match(html, /styles\/entries\/fixture\.mockup\.tsx\.css/);

@@ -45,8 +45,6 @@ for (const transport of ["same-origin", "postMessage"] as const) {
                 "/static/mokly-generated/screens/home.mobile.html",
                 location.origin,
               ),
-              route: "screens/home.mobile.html",
-              generatedPathPrefix: "mokly-generated",
               usage: { status: "ready", ...usage },
             });
         }, JSON.stringify(fixture.usage));

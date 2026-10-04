@@ -10,13 +10,13 @@ import { computeCatalogueChanges } from "../dist/server/changed.js";
 
 import { importedChangesFixture } from "./helpers/imported_changes_fixture.js";
 
-for (const mode of ["committed", "derived"] as const) {
+for (const storage of ["blobs", "rebuild"] as const) {
   for (const kind of ["plain", "module"] as const) {
-    test(`${mode} ${kind} imported CSS narrows shared-impact evidence to matching views`, async (context) => {
-      const fixture = await importedChangesFixture(context, mode, kind);
+    test(`${storage} ${kind} imported CSS narrows shared-impact evidence to matching views`, async (context) => {
+      const fixture = await importedChangesFixture(context, storage, kind);
       await fs.appendFile(fixture.cssPath, "\n.auth { padding: 2px; }\n");
       const compilation = await compileCatalogue(fixture.config);
-      if (mode === "committed")
+      if (storage === "blobs")
         await writeCompilation(compilation, fixture.config);
       const artifact = await compareReview(
         compilation,
@@ -28,7 +28,7 @@ for (const mode of ["committed", "derived"] as const) {
         fixture.config,
         "HEAD",
         fixture.repository,
-        mode === "committed" ? compilation.manifest : undefined,
+        storage === "blobs" ? compilation.manifest : undefined,
       );
       assert.deepEqual(
         artifact.result.screens
@@ -45,14 +45,14 @@ for (const mode of ["committed", "derived"] as const) {
       );
     });
   }
-  test(`${mode} changed generated font affects every view linking its stylesheet`, async (context) => {
-    const fixture = await importedChangesFixture(context, mode, "asset");
+  test(`${storage} changed generated font affects every view linking its stylesheet`, async (context) => {
+    const fixture = await importedChangesFixture(context, storage, "asset");
     await fs.writeFile(
       path.join(fixture.entriesDir, "font.woff2"),
       Buffer.from([0, 255, 2]),
     );
     const compilation = await compileCatalogue(fixture.config);
-    if (mode === "committed")
+    if (storage === "blobs")
       await writeCompilation(compilation, fixture.config);
     const artifact = await compareReview(
       compilation,
@@ -78,7 +78,7 @@ for (const mode of ["committed", "derived"] as const) {
       fixture.config,
       "HEAD",
       fixture.repository,
-      mode === "committed" ? compilation.manifest : undefined,
+      storage === "blobs" ? compilation.manifest : undefined,
     );
     assert.equal(live.changedIds.includes("home"), true);
     assert.equal(live.changedIds.includes("details"), true);
@@ -90,12 +90,12 @@ for (const mode of ["committed", "derived"] as const) {
       ),
     );
   });
-  test(`${mode} baseline predating imported CSS reports a one-time jump`, async (context) => {
-    const fixture = await importedChangesFixture(context, mode, "new");
+  test(`${storage} baseline predating imported CSS reports a one-time jump`, async (context) => {
+    const fixture = await importedChangesFixture(context, storage, "new");
     await fs.writeFile(fixture.cssPath, ".auth { color: red; }");
     await fs.appendFile(fixture.entryPath, '\nimport "./theme.css";\n');
     const compilation = await compileCatalogue(fixture.config);
-    if (mode === "committed")
+    if (storage === "blobs")
       await writeCompilation(compilation, fixture.config);
     const artifact = await compareReview(
       compilation,
@@ -110,8 +110,8 @@ for (const mode of ["committed", "derived"] as const) {
   });
 }
 
-test("committed Changes ignores syntactically valid stray generated output", async (context) => {
-  const fixture = await importedChangesFixture(context, "committed", "plain");
+test("Git-blob Changes ignores syntactically valid stray generated output", async (context) => {
+  const fixture = await importedChangesFixture(context, "blobs", "plain");
   const route = "mokly-generated/styles/stray.css";
   await fs.mkdir(path.join(fixture.mockupsDir, "mokly-generated/styles"), {
     recursive: true,

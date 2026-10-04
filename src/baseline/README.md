@@ -87,9 +87,11 @@ are in [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
 `inputs.json` records the requested current repository-relative catalogue
 path; new completion markers record v8, `generated-v8`, the discovered root
 and the commands. Only a complete valid v8 cache with matching inputs and
-recipe is reusable. Every invalid, missing, truncated or earlier-format entry
+recipe is reusable. A valid v8 marker with different settings fails intact
+before validating its output. Every invalid, missing, truncated or earlier-format entry
 is partial and is removed under its lock before rebuilding. Cleanup also removes
-unlocked invalid entries rather than ranking them for retention.
+unlocked entries with missing or invalid markers/inputs rather than ranking
+them for retention. Cleanup never reads or hashes output; reuse validates it.
 The marker is written to `complete-<uuid>.tmp` and atomically renamed to
 `complete.json` after adoption and source removal. The rename commits the result.
 Committed selection probes only the generated subtree. A stale root-level

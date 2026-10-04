@@ -5,11 +5,7 @@
 
 import type { ReactNode } from "react";
 
-import {
-  GENERATED_DIRECTORY,
-  currentDocumentPath,
-  type GeneratedPathPrefix,
-} from "../catalogue/delivery_paths.js";
+import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
@@ -23,16 +19,11 @@ import { PublicStage } from "./public_stage.js";
 import { framePath } from "./stage_sources.js";
 import type { RouteTarget } from "./target.js";
 
-function fragmentSrc(
-  route: string,
-  fragment?: string,
-  prefix?: GeneratedPathPrefix,
-): string {
-  return framePath(currentDocumentPath(route, prefix), fragment);
+function fragmentSrc(route: string, fragment?: string): string {
+  return framePath(currentDocumentPath(route), fragment);
 }
 
 function EmbedStage(props: {
-  prefix?: GeneratedPathPrefix;
   route: string;
   title: string;
   fragment?: string;
@@ -43,7 +34,7 @@ function EmbedStage(props: {
         className="mbk-frag"
         sandbox="allow-same-origin"
         data-mokly-fragment-frame=""
-        src={fragmentSrc(props.route, props.fragment, props.prefix)}
+        src={fragmentSrc(props.route, props.fragment)}
         title={props.title}
       />
     </div>
@@ -69,11 +60,6 @@ export function TargetStage(props: {
   variantId?: string | undefined;
 }) {
   const entry = props.target.entry;
-  const prefix =
-    props.catalogue.manifest.schemaVersion === 8 ||
-    props.catalogue.manifest.schemaVersion === "live-index-1"
-      ? GENERATED_DIRECTORY
-      : undefined;
   const model = props.catalogue.publicModel;
   if (model) {
     const current = routedEntries(model).find((item) => item.id === entry.id)!;
@@ -120,7 +106,6 @@ export function TargetStage(props: {
   }
   return entry.kind === "screen" ? (
     <FramesStage
-      {...(prefix ? { prefix } : {})}
       {...(props.fragment ? { fragment: props.fragment } : {})}
       hasDarkFragments={props.catalogue.hasDarkFragments}
       screen={entry}

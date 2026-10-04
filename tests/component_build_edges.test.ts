@@ -81,38 +81,6 @@ test("saved variants share tree replacement and collision protection", async (t)
   checkCompilation(next, config);
 });
 
-for (const [name, transform, error] of [
-  [
-    "removed ownership",
-    'content.replace(/<!--mokly-component:[\\s\\S]*?-->/g, "")',
-    /component boundar/,
-  ],
-  [
-    "changed owned head styles",
-    'content.replace(".owned{color:red}", ".owned{color:blue}")',
-    /preserved text/,
-  ],
-] as const)
-  test(`compatibility rejects ${name}`, async (t) => {
-    const fixture = await createFixture(componentEntrySource(), {
-      extraConfig:
-        'compatibility: { transformer: "transform.ts" }, renderer: "renderer.tsx",',
-    });
-    t.after(() => removeFixture(fixture));
-    await fs.writeFile(
-      path.join(fixture.root, "transform.ts"),
-      `export default ({ content }) => ${transform};`,
-    );
-    await fs.writeFile(
-      path.join(fixture.root, "renderer.tsx"),
-      `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => { const css = ".owned{color:red}"; const html = '<html><head><style>' + css + '</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return { html, styles: [{ startOffset: html.indexOf(css), endOffset: html.indexOf(css) + css.length, componentIds: ["action"] }] }; };`,
-    );
-    await assert.rejects(
-      compileCatalogue(await loadConfig(fixture.root)),
-      error,
-    );
-  });
-
 test("an actually invoked wrapper must be exported", async (t) => {
   const source = componentEntrySource({ exports: "pane.entries," });
   const fixture = await createFixture(source);

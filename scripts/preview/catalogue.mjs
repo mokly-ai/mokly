@@ -25,7 +25,7 @@ import { publicationOptions } from "../../dist/publication/options.js";
 import { copyPublicFiles } from "../../dist/publication/resources.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 
-import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
+import { stagePreviewArtifact } from "./artifact.mjs";
 import {
   publicationSnapshot,
   preparePublicationBaseline,
@@ -41,20 +41,19 @@ import { capturePublicationInputs } from "./inputs.mjs";
 
 /** Capture a validated in-memory compilation; the npm wrapper also prepares the example. */
 export async function buildPreview(config, output, options = {}) {
-  const ownership = previewOwnership(config);
   const capability = publicationOptions(options);
   assertSafeOutput(output, config.repoRoot);
   const contextRoot = path.join(config.repoRoot, ".context");
   const destination = resolveExportOutput(config, output, contextRoot);
   try {
-    await assertExportOwnership(destination, ownership);
+    await assertExportOwnership(destination);
   } catch (cause) {
     throw new Error(
       `refusing to replace unowned preview directory: ${output}. ${errorMessage(cause)}`,
       { cause },
     );
   }
-  const transaction = await ExportTransaction.open(destination, ownership);
+  const transaction = await ExportTransaction.open(destination);
   try {
     await withExportCleanup(
       async () => {

@@ -111,7 +111,6 @@ export function StageFrame({
   const component = entry.kind === "component";
   const frame = source ? (
     <iframe
-      data-mokly-generated-prefix={registry?.generatedPathPrefix}
       aria-busy={mounted.status === "loading" ? true : undefined}
       className="mbk-frag"
       data-mokly-fragment-frame={!flow || stepIndex === 0 ? "" : undefined}

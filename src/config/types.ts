@@ -42,12 +42,6 @@ export interface ReviewConfig {
   sharedImpact?: readonly string[];
 }
 
-/** Temporary compatibility accepted during a consumer cutover. */
-export interface CompatibilityConfig {
-  /** Config-relative module applying a temporary deterministic document bridge. */
-  transformer?: string;
-}
-
 /** Esbuild loaders allowed for consumer-authored module extensions. */
 export type ModuleLoader =
   | "base64"
@@ -103,16 +97,11 @@ export interface MoklyConfig {
   review?: ReviewConfig;
   /** Watch settings. */
   watch?: WatchConfig;
-  /** Temporary manifest compatibility. */
-  compatibility?: CompatibilityConfig;
 }
 
 /** Absolute, validated configuration consumed by runtime engines. */
 export interface ResolvedConfig {
   colorSchemes: readonly ColorScheme[];
-  compatibility: {
-    transformer?: string;
-  };
   configPath: string;
   /** Complete authoring inventory retained across compile and serving boundaries. */
   sourceFiles?: readonly string[];

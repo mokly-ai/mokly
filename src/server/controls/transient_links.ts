@@ -48,7 +48,7 @@ export function rebaseTransientNavigation(
           : undefined;
         const staticPath =
           generatedRoute && generatedRoutes.has(generatedRoute)
-            ? currentDocumentPath(generatedRoute, GENERATED_DIRECTORY)
+            ? currentDocumentPath(generatedRoute)
             : `static/${target}`;
         const value = `/${encodeUrlPath(staticPath)}${href.slice(pathname!.length)}`;
         replacements.push({

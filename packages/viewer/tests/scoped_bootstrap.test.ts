@@ -186,10 +186,10 @@ test("the canonical public v4 fixture bytes remain stable", () => {
       import.meta.url,
     ),
   );
-  assert.equal(bytes.byteLength, 9553);
+  assert.equal(bytes.byteLength, 9509);
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "6d6ba6bf1f5faf53dff746e642c3c6028559ef730a2755d98668b5690f2e2740",
+    "7f87d120f10680daf884242853a7ddc897508e7b3486990be358eebe96ab87ad",
   );
   assert.doesNotThrow(() => readCatalogue(JSON.parse(bytes.toString("utf8"))));
 });

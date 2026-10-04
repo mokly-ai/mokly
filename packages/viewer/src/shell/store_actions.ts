@@ -10,7 +10,6 @@ import {
   decodeDisclosureMap,
   disclosureStorageKey,
   encodeDisclosureMap,
-  obsoleteDisclosureStorageKey,
 } from "./disclosure_storage.js";
 import { navigationFiltering } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
@@ -201,7 +200,6 @@ function persistDisclosures(
         disclosureStorageKey,
         encodeDisclosureMap(disclosures),
       );
-      localStorage.removeItem(obsoleteDisclosureStorageKey);
     } catch {
       return;
     }

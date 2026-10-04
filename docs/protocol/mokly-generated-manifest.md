@@ -101,8 +101,10 @@ A v8 manifest at the flat location is invalid.
 
 A cache entry is reusable only when it is complete, valid v8 output for the
 requested commit, catalogue and recipe. Empty, truncated, earlier-format,
-unreadable, mismatched or incomplete entries are partial. The builder removes
-them under its lock and rebuilds. It never uses them as incompatibility evidence.
+unreadable or incomplete entries are partial. The builder removes only those
+partial entries under its lock and rebuilds. It never uses them as
+incompatibility evidence. A valid v8 marker with different requested catalogue
+or build settings fails intact before output validation.
 [Storage](./mokly-baseline-storage.md#cache-layout) defines validation,
 safe cleanup and atomic marker publication.
 

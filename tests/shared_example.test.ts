@@ -113,9 +113,10 @@ test("a copied cache is revalidated against its actual generated inventory", asy
       ),
       "changed bytes",
     );
-    await assert.rejects(validateWarmExample(copy.config, copy.commit), {
-      code: "baseline-output-invalid",
-    });
+    await assert.rejects(
+      validateWarmExample(copy.config, copy.commit),
+      /A complete warm example baseline is required; no fixture fallback is allowed/,
+    );
     assert.equal(
       await exampleFingerprint(shared.root),
       shared.descriptor.templateHash,

@@ -18,14 +18,9 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  metadataRoutes,
-  publicJson,
-} from "./private_metadata_fixture.js";
+import { metadataRoutes, publicJson } from "./private_metadata_fixture.js";
 
-test("a stale historical-manifest alias does not prevent ordinary public resources", async (context) => {
+test("a dangling canonical-manifest alias does not prevent ordinary public resources", async (context) => {
   const fixture = await createFixture(
     validEntrySource({ body: '<a href="../../public.json">Public</a>' }),
   );
@@ -38,7 +33,7 @@ test("a stale historical-manifest alias does not prevent ordinary public resourc
   await writeCompilation(await compileCatalogue(config), config);
   await fs.promises.symlink(
     "missing.json",
-    path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
+    path.join(fixture.mockupsDir, MANIFEST_NAME),
   );
   const server = await startCatalogueServer(config, { base: "HEAD", port: 0 });
   fixture.beforeRemove(() => server.close());
@@ -47,7 +42,7 @@ test("a stale historical-manifest alias does not prevent ordinary public resourc
     publicJson,
   );
   assert.equal(
-    (await fetch(`${server.url}/static/${LEGACY_MANIFEST_NAME}`)).status,
+    (await fetch(`${server.url}/static/${MANIFEST_NAME}`)).status,
     404,
   );
 });
@@ -59,10 +54,11 @@ test("a pending manifest is not a public resource on the first build", async (co
     }),
   );
   context.after(() => removeFixture(fixture));
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /mokly-manifest.json.*(?:targets generated output|internal catalogue metadata)/,
-  );
+  await assert.rejects(compileCatalogue(await loadConfig(fixture.root)), {
+    code: "build-invalid",
+    message:
+      "[mokly/build-invalid] document links and resources are invalid:\n- mokly-generated/screens/home.desktop.html: protected target ../mokly-manifest.json: targets internal catalogue metadata\n- mokly-generated/screens/home.mobile.html: protected target ../mokly-manifest.json: targets internal catalogue metadata",
+  });
   assert.equal(
     fs.existsSync(
       path.join(fixture.mockupsDir, "mokly-generated", MANIFEST_NAME),
@@ -101,11 +97,7 @@ test("HTTP and current Review deny internal manifests and aliases but allow publ
   await writeCompilation(compilation, config);
   await fs.promises.copyFile(
     path.join(config.generatedDir, MANIFEST_NAME),
-    path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-  );
-  await fs.promises.copyFile(
-    path.join(config.generatedDir, MANIFEST_NAME),
-    path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
+    path.join(fixture.mockupsDir, MANIFEST_NAME),
   );
   await fs.promises.symlink(
     `mokly-generated/${MANIFEST_NAME}`,
@@ -142,11 +134,7 @@ for (const route of metadataRoutes) {
     await writeCompilation(await compileCatalogue(config), config);
     await fs.promises.copyFile(
       path.join(config.generatedDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-    );
-    await fs.promises.copyFile(
-      path.join(config.generatedDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
+      path.join(fixture.mockupsDir, MANIFEST_NAME),
     );
     await fs.promises.symlink(
       `mokly-generated/${MANIFEST_NAME}`,
@@ -183,11 +171,7 @@ for (const includeChanges of [false, true]) {
     await writeCompilation(await compileCatalogue(config), config);
     await fs.promises.copyFile(
       path.join(config.generatedDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-    );
-    await fs.promises.copyFile(
-      path.join(config.generatedDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
+      path.join(fixture.mockupsDir, MANIFEST_NAME),
     );
     await fs.promises.symlink(
       `mokly-generated/${MANIFEST_NAME}`,

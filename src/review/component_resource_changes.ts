@@ -1,7 +1,7 @@
 import type { ComponentMaterialReader } from "./component_resources.js";
 import { decideReferencedResource } from "./deleted_resource.js";
 
-/** Derived resources may be ignored by Git, so compare their retained bytes as well. */
+/** Compare retained resource membership and bytes independently of Git tracking. */
 export async function changedResourceBytes(
   before: ReadonlySet<string>,
   after: ReadonlySet<string>,
@@ -18,8 +18,6 @@ export async function changedResourceBytes(
       resource,
       beforeReader,
       afterReader,
-      !before.has(resource),
-      true,
     );
     if (!before.has(resource) || decision.byteChanged) changed.add(resource);
   }

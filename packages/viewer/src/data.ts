@@ -192,7 +192,6 @@ export {
   currentDocumentPath,
   currentDocumentRoute,
 } from "./catalogue/delivery_paths.js";
-export type { GeneratedPathPrefix } from "./catalogue/delivery_paths.js";
 export {
   ComponentRenderError,
   renderStatus,

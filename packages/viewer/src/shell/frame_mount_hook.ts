@@ -9,7 +9,6 @@ import {
 } from "react";
 import type { RefObject } from "react";
 
-import { currentDocumentRoute } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type { FrameAdapter, FrameEvent } from "../client/frame_adapter.js";
 import { FrameError } from "../client/frame_error.js";
@@ -107,17 +106,6 @@ export function useMountedShellFrame(input: MountedFrameInput): {
       .then(() => {
         mountedUsageRevision = session.usageRevision;
         return (input.adapter ?? registry.adapter).mount(element, {
-          ...(registry.generatedPathPrefix
-            ? { generatedPathPrefix: registry.generatedPathPrefix }
-            : {}),
-          ...(currentDocumentRoute(url.pathname, registry.generatedPathPrefix)
-            ? {
-                route: currentDocumentRoute(
-                  url.pathname,
-                  registry.generatedPathPrefix,
-                )!,
-              }
-            : {}),
           onEvent: receive,
           signal: controller.signal,
           url,

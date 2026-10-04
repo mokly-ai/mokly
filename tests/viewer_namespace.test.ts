@@ -92,7 +92,7 @@ test("the namespace policy adds no rejection of user-chosen path segments", () =
   );
 });
 
-test("old export markers fail before mutation with a version and recovery remedy", async (t) => {
+test("old export markers fail before mutation with the current ownership error", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
@@ -101,9 +101,10 @@ test("old export markers fail before mutation with a version and recovery remedy
   await fs.writeFile(path.join(output, EXPORT_MARKER), marker);
   await assert.rejects(assertExportOwnership(output), (error: unknown) => {
     assert.ok(error instanceof Error);
-    assert.match(error.message, /unsupported.*version 2/i);
-    assert.ok(error.message.includes("Move any files you added"));
-    assert.ok(error.message.includes(`delete ${output} and export again`));
+    assert.equal(
+      error.message,
+      "[mokly/export-invalid] Invalid export ownership inventory.",
+    );
     return true;
   });
   assert.equal(

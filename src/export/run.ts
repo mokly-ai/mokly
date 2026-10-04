@@ -56,10 +56,7 @@ export async function exportCatalogue(
   const outputRoot = options.adapter?.outputRoot;
   const output = resolveExportOutput(config, options.outDir, outputRoot);
   assertExportActive(options.signal);
-  const transaction = await ExportTransaction.open(
-    output,
-    options.adapter?.legacyOwnership,
-  );
+  const transaction = await ExportTransaction.open(output);
   return withExportCleanup(
     () => generateExport(config, options, output, transaction, outputRoot),
     () => transaction.close(),

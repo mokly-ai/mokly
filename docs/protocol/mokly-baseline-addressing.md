@@ -88,8 +88,8 @@ file. The Git reader uses that path directly; the cache reader appends it to
 
 A completed cache has one current format. The
 [storage validator](./mokly-baseline-storage.md#cache-layout) returns a warm
-entry only for matching complete v8 output. Other entries are partial and
-are removed under the entry lock before a rebuild. No older cache proves an
+entry only for matching complete v8 output. Invalid or incomplete entries are partial and are removed under the entry
+lock before a rebuild. Different settings on a valid v8 entry fail intact. No older cache proves an
 earlier-baseline outcome.
 
 ## Comparison Namespaces

@@ -10,10 +10,6 @@ import {
 import type { ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import {
-  transformCompatibilityDocuments,
-  type CompatibilityContext,
-} from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
@@ -27,6 +23,7 @@ import { normalizeSingleDocument } from "../review/ignore.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
+import { resolveDocumentLinks } from "./document_links.js";
 import type { GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
@@ -63,7 +60,7 @@ const defaultValidationSeams: DocumentValidationSeams = {
 export class DocumentCompiler {
   readonly entries: readonly ResolvedRegistryEntry[];
   readonly routes = new Map<string, DocumentTarget>();
-  private readonly compatibility: CompatibilityContext;
+  private readonly byId: ReadonlyMap<string, ResolvedRegistryEntry>;
   private readonly components;
   private readonly prepared = new DocumentCache<PreparedDocument>(
     32 * 1024 * 1024,
@@ -83,7 +80,7 @@ export class DocumentCompiler {
   ) {
     const registry = prepareRegistry(graph.definitions, runtime.config);
     this.entries = registry.entries;
-    this.compatibility = { byId: registry.byId, routeIndexes: new Map() };
+    this.byId = registry.byId;
     this.components = new Map(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "component" && !isManifestComponentVariant(entry)
@@ -205,18 +202,15 @@ export class DocumentCompiler {
       { routes: this.graph.stylesheetRoutes, pending: this.pending },
     );
     const original = outputs.get(route)!;
-    const records = transformCompatibilityDocuments(
+    const records = resolveDocumentLinks(
       outputs,
       this.entries,
       config,
-      this.graph,
       views,
-      [...this.routes.keys()],
-      this.compatibility,
-      this.pending,
+      this.byId,
     );
     const html = outputs.get(route)!;
-    const entry = this.compatibility.byId.get(target.entryId)!;
+    const entry = this.byId.get(target.entryId)!;
     normalizeSingleDocument(html, route);
     const captured = componentViews.get(route);
     const view = captured

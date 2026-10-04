@@ -10,7 +10,7 @@ import { isAuthoringSource } from "../build/source_inventory.js";
 import { entryModuleRoots } from "../config/entry_membership.js";
 import { isInside, projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
+import { MANIFEST_NAME } from "../registry/manifest.js";
 
 const PRIVATE_DIRECTORIES = new Set([
   "node_modules",
@@ -21,33 +21,23 @@ const PRIVATE_DIRECTORIES = new Set([
   "playwright-report",
 ]);
 
-/** Public names cannot identify private modules, hidden paths, or cache trees. */
-export function isExportPublicName(
-  name: string,
-  config: ResolvedConfig,
-  options: { allowBuildDirectories?: boolean; resolveAliases?: boolean } = {},
-): boolean {
-  return exportPublicNameDenial(name, config, options) === undefined;
-}
-
 function exportPublicNameDenial(
   name: string,
   config: ResolvedConfig,
-  options: { allowBuildDirectories?: boolean; resolveAliases?: boolean },
+  resolveAliases: boolean,
 ): string | undefined {
   if (!isSafeRepositoryPath(name))
     return "is not a safe repository-relative path";
   const denial = isAuthoringSource(
     path.resolve(config.mockupsDir, name),
     config,
-    options.resolveAliases === false ? "none" : "all",
+    resolveAliases ? "all" : "none",
   );
   if (denial) return sourceDenialMessage(denial);
-  if ([MANIFEST_NAME, ...EARLIER_MANIFEST_NAMES].includes(name as never))
-    return "targets internal catalogue metadata";
+  if (name === MANIFEST_NAME) return "targets internal catalogue metadata";
   for (const part of name.split("/")) {
     if (part.startsWith(".")) return "contains a hidden path segment";
-    if (!options.allowBuildDirectories && PRIVATE_DIRECTORIES.has(part))
+    if (PRIVATE_DIRECTORIES.has(part))
       return `is inside a private build or dependency directory (${part})`;
   }
   if (/\.(?:[cm]?[jt]sx?|map)$/i.test(name))
@@ -97,10 +87,7 @@ export function exportResourceDenial(
       reason: "is the catalogue configuration module",
     },
     { path: config.renderer, reason: "is the configured renderer module" },
-    {
-      path: config.compatibility.transformer,
-      reason: "is the configured compatibility transformer",
-    },
+
     ...(config.sourceFiles ?? []).map((name) => ({
       path: path.resolve(config.repoRoot, name),
       reason: sourceDenialMessage({ kind: "listed" }),
@@ -119,7 +106,7 @@ export function exportResourceDenial(
       return generatedRoutes.has(generated) && generated !== MANIFEST_NAME
         ? undefined
         : "is not an accepted generated resource";
-    const denial = exportPublicNameDenial(name, config, { resolveAliases });
+    const denial = exportPublicNameDenial(name, config, resolveAliases);
     if (denial) return denial;
     const candidates = [
       path.resolve(config.mockupsDir, name),

@@ -173,14 +173,13 @@ test("child links retain use-case identity, fragments, and light fallback", asyn
   );
 });
 
-test("custom and legacy renderers adapt controls before compatibility checks", async (context) => {
+test("custom renderers and page callbacks adapt child controls", async (context) => {
   const fixture = await createFixture(
     source(
       '<MockLink asChild to="details"><div role="button">Continue</div></MockLink>',
     ),
     {
-      extraConfig:
-        'renderer: "renderer.tsx",  compatibility: { transformer: "transform.ts" },',
+      extraConfig: 'renderer: "renderer.tsx",',
     },
   );
   context.after(() => removeFixture(fixture));
@@ -189,24 +188,17 @@ test("custom and legacy renderers adapt controls before compatibility checks", a
     `import { renderToStaticMarkup } from "react-dom/server";
 export default input => '<!doctype html><html><body data-custom="yes">'+renderToStaticMarkup(input.node)+'</body></html>';`,
   );
-  await fs.promises.mkdir(path.join(fixture.root, "legacy"));
+  await fs.promises.mkdir(path.join(fixture.root, "pages-src"));
   await fs.promises.writeFile(
-    path.join(fixture.root, "legacy/old.source.tsx"),
+    path.join(fixture.root, "pages-src/old.source.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server"; import { MockLink } from "@mokly/mokly";
-export const source = () => '<html><body>'+renderToStaticMarkup(<MockLink asChild to="details"><button>Legacy</button></MockLink>)+'</body></html>';`,
-  );
-  const transformer = path.join(fixture.root, "transform.ts");
-  await fs.promises.writeFile(
-    transformer,
-    `export default input => {
-if (input.content.includes("<template")) throw new Error("unconsumed child link");
-return input.content; };`,
+export const source = () => '<html><body>'+renderToStaticMarkup(<MockLink asChild to="details"><button>Page</button></MockLink>)+'</body></html>';`,
   );
   await registerFixturePage(
     fixture,
     "old",
     "old.html",
-    "legacy/old.source.tsx",
+    "pages-src/old.source.tsx",
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
@@ -215,21 +207,9 @@ return input.content; };`,
       textOutput(compilation.outputs, route) ?? "",
       /data-mokly-link="details"/,
     );
+    assert.doesNotMatch(
+      textOutput(compilation.outputs, route) ?? "",
+      /<template|data-mokly-link-child-/,
+    );
   }
-  await fs.promises.writeFile(
-    transformer,
-    `export default input => input.content.replace('data-mokly-link="details"', 'data-mokly-link="home"');`,
-  );
-  await assert.rejects(
-    async () => compileCatalogue(config),
-    /logical|marker|record/i,
-  );
-  await fs.promises.writeFile(
-    transformer,
-    `export default input => input.content.replace('</body>', '<template data-mokly-link-child-end=""></template></body>');`,
-  );
-  await assert.rejects(
-    async () => compileCatalogue(config),
-    /unconsumed markers/,
-  );
 });

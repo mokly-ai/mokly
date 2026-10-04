@@ -149,8 +149,6 @@ export async function mountCrossFrame(
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
           url: new URL(path, origin),
-          route: "screens/home.mobile.html",
-          generatedPathPrefix: "mokly-generated",
           usage: { status: "ready", ...usage },
         },
       );

@@ -44,7 +44,7 @@ async function baseline(
   return { fixture, config, compilation, commit, counter };
 }
 
-test("accepted committed classification does not rerun PostCSS", async (context) => {
+test("accepted classification does not rerun PostCSS", async (context) => {
   const { fixture, config, counter, commit } = await baseline(context, true);
   await fs.appendFile(
     path.join(fixture.entriesDir, "fixture.css"),
@@ -86,7 +86,7 @@ test("accepted generation stays classifiable after a newer CSS-importing entry a
   assert.deepEqual(snapshot.changedIds, []);
 });
 
-test("catalogue freshness shares one inventory graph with committed Changes", async (context) => {
+test("catalogue freshness shares one inventory graph with Git-blob Changes", async (context) => {
   const { fixture, config, counter } = await baseline(context, true);
   await fs.appendFile(
     path.join(fixture.entriesDir, "fixture.css"),

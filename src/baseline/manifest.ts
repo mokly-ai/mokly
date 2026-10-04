@@ -6,7 +6,6 @@ import {
 } from "@mokly/viewer/data";
 
 import {
-  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseHistoricalManifest,
 } from "../registry/manifest.js";
@@ -34,7 +33,7 @@ export type CatalogueProbe =
       readonly incompatible: true;
     };
 
-/** Probe ordered names without reading earlier entries or resource inventories. */
+/** Probe the generated manifest, then the root canonical name only after rebuilding. */
 export async function historicalCatalogueAt(
   fs: BaselineFileSystem,
   extraction: string,
@@ -47,15 +46,12 @@ export async function historicalCatalogueAt(
   for (const filename of [
     `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`,
     MANIFEST_NAME,
-    ...EARLIER_MANIFEST_NAMES,
   ]) {
     const repoPath = joinCataloguePath(relative, filename);
     const stat = await confinedBaselineStat(fs, extraction, repoPath, signal);
     if (!stat) continue;
     if (stat.kind !== "regular")
       throw new Error(`Historical manifest is not a regular file: ${repoPath}`);
-    if (EARLIER_MANIFEST_NAMES.some((name) => name === filename))
-      return { root: relative, version: 6, incompatible: true };
     const value: unknown = JSON.parse(
       Buffer.from(
         await fs.read(path.join(extraction, repoPath), MAX_BATCH_OUTPUT_BYTES),
@@ -76,7 +72,7 @@ export async function historicalCatalogueAt(
   }
 }
 
-export function manifestEnvelopeVersion(value: unknown): number {
+function manifestEnvelopeVersion(value: unknown): number {
   const version =
     value &&
     typeof value === "object" &&

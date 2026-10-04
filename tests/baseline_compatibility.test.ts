@@ -45,7 +45,6 @@ test("Serve reports an earlier v6 baseline once and keeps All available", async 
 
 for (const baseline of [
   ...[2, 3, 4, 5, 6, 7].map((version) => ({ name: `v${version}`, version })),
-  { name: "legacy manifest name", legacyName: "mokabook-manifest.json" },
 ]) {
   test(`export treats an earlier ${baseline.name} baseline as unavailable`, async (t) => {
     const fixture = await createExportFixture();
@@ -222,21 +221,12 @@ test("a controlled v8 baseline still produces Changes", async (t) => {
 
 async function installBaseline(
   fixture: Awaited<ReturnType<typeof createExportFixture>>,
-  baseline:
-    | { version: number; legacyName?: never }
-    | { legacyName: string; version?: never },
+  baseline: { version: number },
 ): Promise<void> {
   const canonical = path.join(fixture.generatedDir, "mokly-manifest.json");
-  if (baseline.legacyName) {
-    await fs.rename(
-      canonical,
-      path.join(fixture.mockupsDir, baseline.legacyName),
-    );
-  } else {
-    const manifest = JSON.parse(await fs.readFile(canonical, "utf8"));
-    manifest.schemaVersion = baseline.version;
-    await fs.writeFile(canonical, `${JSON.stringify(manifest)}\n`);
-  }
+  const manifest = JSON.parse(await fs.readFile(canonical, "utf8"));
+  manifest.schemaVersion = baseline.version;
+  await fs.writeFile(canonical, `${JSON.stringify(manifest)}\n`);
   await fixture.git("add", "-A");
   await fixture.git("commit", "-qm", "test: install historical baseline");
   await fixture.git("update-ref", "refs/remotes/origin/main", "HEAD");

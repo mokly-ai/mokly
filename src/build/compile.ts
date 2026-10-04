@@ -2,7 +2,6 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import {} from "@mokly/viewer/data";
 import type { ManifestV8, ArtifactView } from "@mokly/viewer/data";
 
-import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
@@ -22,6 +21,7 @@ import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
 import { rememberRuntime } from "./component_runtime.js";
+import { resolveDocumentLinks } from "./document_links.js";
 import {
   generatedByteLength,
   generatedBytes,
@@ -101,19 +101,10 @@ async function compileMeasured(
         ),
       );
   pending.addHtmlMap(outputs);
-  const beforeTransform = new Map(outputs);
+  const beforeLinks = new Map(outputs);
   await accepted?.checkpoint();
-  const logicalRecords = timeSync("html.compatibility", () =>
-    transformCompatibilityDocuments(
-      outputs,
-      registry.entries,
-      config,
-      graph,
-      fragmentViews,
-      undefined,
-      undefined,
-      pending,
-    ),
+  const logicalRecords = timeSync("html.links", () =>
+    resolveDocumentLinks(outputs, registry.entries, config, fragmentViews),
   );
   pending.addHtmlMap(outputs);
   timeSync("components.validate-metadata", () => {
@@ -123,7 +114,7 @@ async function compileMeasured(
       componentViews.set(route, {
         ...view,
         styles: rebaseStyleOwnership(
-          beforeTransform.get(route)!,
+          beforeLinks.get(route)!,
           final,
           view.styles,
         ),

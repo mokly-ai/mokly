@@ -15,7 +15,7 @@ test("the legacy v3 catalogue gate rejects v4 before any entry or path read", ()
         get screens(): never {
           throw new Error("Unexpected entry read");
         },
-        get generatedPathPrefix(): never {
+        get comparisonUrl(): never {
           throw new Error("Unexpected path read");
         },
       }),

@@ -1,10 +1,6 @@
 /** Screen and use-case stages rendered from the manifest-backed catalogue. */
 
-import { GENERATED_DIRECTORY } from "../catalogue/delivery_paths.js";
-import {
-  currentDocumentPath,
-  type GeneratedPathPrefix,
-} from "../catalogue/delivery_paths.js";
+import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { Viewport } from "../data/axes.js";
 import { entryRoute, viewHref, viewRoute } from "../navigation/routes.js";
 import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
@@ -18,12 +14,8 @@ interface FragmentSources {
   light: string | undefined;
 }
 
-function fragmentSrc(
-  route: string,
-  fragment?: string,
-  prefix?: GeneratedPathPrefix,
-): string {
-  return framePath(currentDocumentPath(route, prefix), fragment);
+function fragmentSrc(route: string, fragment?: string): string {
+  return framePath(currentDocumentPath(route), fragment);
 }
 
 function fragmentSources(
@@ -31,7 +23,6 @@ function fragmentSources(
   viewport: Viewport,
   hasDarkFragments: boolean,
   fragment?: string,
-  prefix?: GeneratedPathPrefix,
 ): FragmentSources {
   if (!hasDarkFragments) {
     return { dark: undefined, light: undefined };
@@ -40,11 +31,10 @@ function fragmentSources(
     ? viewRoute("screen", screen.id, viewport, "dark")
     : undefined;
   return {
-    dark: dark === undefined ? undefined : fragmentSrc(dark, fragment, prefix),
+    dark: dark === undefined ? undefined : fragmentSrc(dark, fragment),
     light: fragmentSrc(
       viewRoute("screen", screen.id, viewport, "light"),
       fragment,
-      prefix,
     ),
   };
 }
@@ -68,7 +58,6 @@ function FrameLabel(props: { fallback: boolean; text: string }) {
 }
 
 export function FramesStage(props: {
-  prefix?: GeneratedPathPrefix;
   fragment?: string;
   hasDarkFragments: boolean;
   screen: ManifestScreen;
@@ -80,14 +69,12 @@ export function FramesStage(props: {
     "mobile",
     props.hasDarkFragments,
     props.fragment,
-    props.prefix,
   );
   const desktop = fragmentSources(
     screen,
     "desktop",
     props.hasDarkFragments,
     props.fragment,
-    props.prefix,
   );
   const fallback = isSchemeFallback(screen, props.hasDarkFragments);
   return (
@@ -144,7 +131,6 @@ export function FramesStage(props: {
 }
 
 function FlowScreen(props: {
-  prefix?: GeneratedPathPrefix;
   fragment?: string;
   stepIndex: number;
   hasDarkFragments: boolean;
@@ -156,7 +142,6 @@ function FlowScreen(props: {
     "desktop",
     props.hasDarkFragments,
     props.fragment,
-    props.prefix,
   );
   const fallback = isSchemeFallback(screen, props.hasDarkFragments);
   return (
@@ -215,10 +200,6 @@ export function UseCaseFlowStage(props: {
               </div>
               {screen ? (
                 <FlowScreen
-                  {...(props.catalogue.manifest.schemaVersion === 8 ||
-                  props.catalogue.manifest.schemaVersion === "live-index-1"
-                    ? { prefix: GENERATED_DIRECTORY }
-                    : {})}
                   {...(index === 0 && props.fragment
                     ? { fragment: props.fragment }
                     : {})}

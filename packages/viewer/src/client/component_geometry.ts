@@ -2,7 +2,6 @@
 
 import {
   VIEWER_DIRECTORY,
-  GENERATED_DIRECTORY,
   currentDocumentRoute,
 } from "../catalogue/delivery_paths.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
@@ -40,13 +39,9 @@ export function authenticateRanges(
       location.origin !== parent.defaultView?.location.origin
     )
       return;
-    const prefix =
-      frame.dataset["moklyGeneratedPrefix"] === GENERATED_DIRECTORY
-        ? GENERATED_DIRECTORY
-        : undefined;
     const actual = path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)
       ? decodeURIComponent(location.pathname)
-      : currentDocumentRoute(location.pathname, prefix);
+      : currentDocumentRoute(location.pathname);
     if (actual !== path) return;
     return authenticateDocumentRanges(
       doc,

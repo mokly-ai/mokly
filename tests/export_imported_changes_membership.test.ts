@@ -27,13 +27,13 @@ async function readMembership(
   return new Map(catalogue.screens.map((entry) => [entry.id, entry.changes]));
 }
 
-for (const mode of ["committed", "derived"] as const)
+for (const storage of ["blobs", "rebuild"] as const)
   for (const kind of ["plain", "module", "asset"] as const) {
     test(
-      `${mode} ${kind} exported and published Changes match live rule attribution`,
+      `${storage} ${kind} exported and published Changes match live rule attribution`,
       { timeout: 120_000 },
       async (context) => {
-        const fixture = await importedChangesFixture(context, mode, kind);
+        const fixture = await importedChangesFixture(context, storage, kind);
         if (kind === "asset")
           await fs.writeFile(
             path.join(fixture.entriesDir, "font.woff2"),
@@ -41,7 +41,7 @@ for (const mode of ["committed", "derived"] as const)
           );
         else
           await fs.appendFile(fixture.cssPath, "\n.auth { padding: 2px; }\n");
-        if (mode === "committed")
+        if (storage === "blobs")
           await writeCompilation(
             await compileCatalogue(fixture.config),
             fixture.config,

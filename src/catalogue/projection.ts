@@ -6,7 +6,6 @@ import type {
 } from "@mokly/viewer";
 import type { ManifestEntry } from "@mokly/viewer/data";
 import {
-  GENERATED_DIRECTORY,
   invalidData,
   isManifestComponentVariant,
   readControls,
@@ -155,7 +154,6 @@ export function projectCatalogue(
       invalidData("$catalogue", "preview id is not a removed entry");
   return {
     schemaVersion: 4,
-    generatedPathPrefix: GENERATED_DIRECTORY,
     identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {

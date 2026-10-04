@@ -167,8 +167,12 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(await read(output, "404.html"), /Item not found/);
   assert.doesNotMatch(await read(output, "_redirects"), /^\/id\//m);
   assert.equal(
-    await read(output, ".mokly-preview-artifact"),
-    "schemaVersion=1\n",
+    JSON.parse(await read(output, ".mokly-export-artifact")).schemaVersion,
+    3,
+  );
+  assert.equal(
+    fs.existsSync(path.join(output, ".mokly-preview-artifact")),
+    false,
   );
 });
 

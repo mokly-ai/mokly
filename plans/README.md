@@ -25,8 +25,10 @@
   (35–57: 1 high, 8 medium, 14 low). Milestones 16–18 remove all
   backward-compatibility code, including `main`'s, by the user's decision;
   version checks that stop on older data stay. Milestone 16 defines the
-  contracts and proves current snapshot writers supply ids. Its Markdown
-  checks pass; the implementation and final verification follow.
+  contracts and proves current snapshot writers supply ids. Milestone 17 removes
+  the twelve approved paths and passes the full gate, including 3,768 unit tests
+  and 970 browser cases. The documentation check and user-owned final review
+  in Milestone 18 follow.
   Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.

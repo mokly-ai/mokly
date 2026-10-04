@@ -3,7 +3,6 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import type { GeneratedPathPrefix } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type {
   FrameAdapter,
@@ -57,7 +56,6 @@ export class ShellFrameRegistry {
   constructor(
     readonly adapter: FrameAdapter,
     readonly baseUrl?: string | URL,
-    readonly generatedPathPrefix?: GeneratedPathPrefix,
   ) {
     this.geometry = new ShellFrameGeometryController(this);
     this.inspection = new ShellInspectionController(this);
@@ -120,18 +118,16 @@ export function ShellFrameRegistryProvider({
   adapter,
   baseUrl,
   children,
-  generatedPathPrefix,
 }: {
   adapter?: FrameAdapter;
   baseUrl?: string | URL;
   children: ReactNode;
-  generatedPathPrefix?: GeneratedPathPrefix;
 }) {
   const [localAdapter] = useState(sameOriginAdapter);
   const selected = adapter ?? localAdapter;
   const registry = useMemo(
-    () => new ShellFrameRegistry(selected, baseUrl, generatedPathPrefix),
-    [baseUrl, generatedPathPrefix, selected],
+    () => new ShellFrameRegistry(selected, baseUrl),
+    [baseUrl, selected],
   );
   return (
     <FrameRegistryContext.Provider value={registry}>

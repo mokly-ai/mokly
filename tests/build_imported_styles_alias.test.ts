@@ -65,36 +65,11 @@ test("a nested import cannot privatize authored public CSS", async (context) => 
   );
 });
 
-test("transformer-only legacy CSS does not reject deliverable CSS syntax", async (context) => {
+test("deliverable CSS accepts supported declaration syntax", async (context) => {
   const fixture = await styleFixture(
     '.clearfix{*zoom:1}.clearfix:after{content:"";display:table}',
-    {
-      extraConfig: 'compatibility: { transformer: "transform.ts" },',
-    },
   );
   context.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'import "./entries/fixture.css"; export default ({ content }) => content;',
-  );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   assert.ok(compiled.outputs.has(entryStyle));
-});
-
-test("transformer-only legacy CSS is inventoried without strict parsing", async (context) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'compatibility: { transformer: "transform.ts" },',
-  });
-  context.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "legacy.css"),
-    ".clearfix{*zoom:1}",
-  );
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'import "./legacy.css"; export default ({ content }) => content;',
-  );
-  const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  assert.ok(compiled.manifest.sourceFiles.includes("legacy.css"));
-  assert.equal(compiled.outputs.has(entryStyle), false);
 });

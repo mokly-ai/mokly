@@ -27,10 +27,8 @@ export function frameUrl(
   expectedOrigin: string,
 ): URL {
   return validatedFrameUrl(frame, view, expectedOrigin, (pathname) => {
-    const route = currentDocumentRoute(pathname, view.generatedPathPrefix);
-    return (
-      route !== undefined && (view.route === undefined || route === view.route)
-    );
+    const route = currentDocumentRoute(pathname);
+    return route !== undefined;
   });
 }
 

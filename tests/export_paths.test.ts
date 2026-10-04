@@ -68,16 +68,10 @@ test("export refuses unowned, malformed, and mixed output", async (context) => {
     marker,
     JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
   );
-  await assert.rejects(
-    assertExportOwnership(output),
-    (error: unknown) =>
-      error instanceof Error &&
-      "code" in error &&
-      error.code === "export-invalid" &&
-      error.message.includes(output) &&
-      error.message.includes("Move any files you added") &&
-      error.message.includes(`delete ${output} and export again`),
-  );
+  await assert.rejects(assertExportOwnership(output), {
+    code: "export-invalid",
+    message: "[mokly/export-invalid] Invalid export ownership inventory.",
+  });
   await fs.promises.writeFile(
     marker,
     JSON.stringify(
