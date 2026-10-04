@@ -8,7 +8,8 @@ was reviewed twice after the earlier deliveries. Milestones 9 to 11 fixed the re
 chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
 decisions. Milestones 16 to 21 merge main 0.13.0 and apply the 2026-10-03 CSS
 change rule, which replaces the finding 1 rule; findings 2 to 11 await the
-user's decision.
+user's decision. Milestones 22 to 25 apply the user's 2026-10-04 decisions on
+the third review.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -1672,3 +1673,88 @@ Verification evidence (2026-10-04):
   main's reviewed Braces exception through 2026-11-03 UTC. Dependencies,
   overrides and the audit are unchanged. Earlier unselected review findings
   remain open. This task does not run the implementation review or push.
+
+On 2026-10-04 the user decided the third-review findings:
+
+1. Remove the historical marker rename and its tests. The project keeps no
+   backward-compatibility code for the former `mokabook-` marker spelling.
+   A comment with that spelling is ordinary page content. This matches the
+   existing rule in `docs/protocol/mokly-instances.md`: historical marker
+   translation is not supported.
+2. Option A: show "Compared with the branch point on <name>." only when the
+   name is known. Change the shared heading once for screens, saved views and
+   pages.
+3. Option B: one protocol owns the complete `RenderInput.stylesheets` list,
+   and the other docs refer to it.
+4. Option B: remove the stale stylesheet-ownership sentence from the component
+   guide and refer readers to the Changes guide by name.
+
+Second-review findings 2 to 11 still await the user's decision.
+
+## Milestone 22: Document the third-review decisions
+
+Docs only. Define the contract for Milestones 23 and 24, and fix the two stale
+docs (findings 3 and 4).
+
+- [ ] Remove every statement that describes translation of the former
+      `mokabook-` marker spelling, including in `src/components/README.md`.
+      State in the component usage and instance contracts that a comment with
+      the former spelling is ordinary page content on both sides: Mokly never
+      reads it as a marker, never removes it and never fails on it. Keep the
+      rule that historical marker translation is not supported.
+- [ ] Define the branch-point sentence rule in the CSS evidence presentation
+      and shell contracts: show "Compared with the branch point on <name>."
+      only when the name is known, for screens, saved views and pages. An
+      embedded catalogue without a name shows no sentence and keeps the rest
+      of its Details. No mockup change: the mockups show only catalogues with a
+      known name.
+- [ ] Make `docs/protocol/mokly-rendering.md`, which defines `RenderInput`, the
+      single owner of the complete `RenderInput.stylesheets` list and its order:
+      configured shared and scheme links, and the generated links for imported
+      CSS. Move the definition from `mokly-imported-styles-assets.md` without
+      a change in meaning. Replace the copies in
+      `mokly-imported-styles-assets.md`, `mokly-component-stylesheets.md` and
+      `src/build/README.md` with a reference. Keep each doc within its cap.
+- [ ] Remove the stylesheet-ownership sentence from
+      `docs/guides/authoring/components.md` and refer readers to the Changes
+      guide by name. Guides contain no links.
+- [ ] Validate the changed Markdown and run the docs tests.
+
+## Milestone 23: Remove the historical marker rename
+
+- [ ] Failure-first: an unchanged page whose script contains each former
+      marker spelling stays unchanged, and classification succeeds, in the
+      complete comparison, the fast path and CSS containment. A real comment
+      with the former spelling is ordinary content and creates no range.
+- [ ] Remove `FORMER_MARKERS` and `normalizeHistoricalDocument` from
+      `src/review/ignore.ts`, `stripHistoricalMarkers`, the comment rename in
+      `src/components/ranges.ts`, the former spelling in
+      `src/review/css/normalized_ranges.ts`, and every call site. Remove the
+      `historical` range dialect if nothing else needs it.
+- [ ] Remove or rewrite the tests that only cover the translation. Keep
+      `main`'s tests.
+- [ ] Update the READMEs near the changed code. Run the focused tests and the
+      complete unit suite at 100%.
+
+## Milestone 24: Hide the branch-point sentence when the name is unknown
+
+Tags: ui
+
+- [ ] Failure-first viewer tests with a real embedded catalogue (the
+      `@mokly/viewer` public catalogue with no branch name) for a screen, a
+      saved component view and a document page: Details show no branch-point
+      sentence and keep the rest of the evidence. A served catalogue with a
+      name still shows the sentence.
+- [ ] Make the change once, in the shared comparison heading.
+- [ ] Run the viewer and browser tests. Smoke-test an embedded and a served
+      catalogue at mobile and desktop widths.
+
+## Milestone 25: Verify, deliver and review
+
+- [ ] Run `cargo xtask check` at 100%, inspect the diff and deletions against
+      `origin/main`, and record the evidence.
+- [ ] Run `git add -A`, commit with a Conventional Commit, and push the branch.
+- [ ] After the push, review the complete diff against `origin/main` using
+      `docs/implementation-review-prompt.md`. Report numbered findings with
+      severity, impact, lettered options and a recommendation, without
+      changing the implementation.
