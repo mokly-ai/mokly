@@ -68,6 +68,17 @@ export const CSS_VIEWS_LAYOUT = `
   letter-spacing: -0.01em;
 }
 
+@media (max-width: 56.25rem) {
+  .mbk-title-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .mbk-title-row h2 {
+    font-size: 17px;
+  }
+}
+
 .mbk-idchip {
   padding: 2px 8px;
   border: 1px solid var(--chrome-border);

@@ -51,6 +51,12 @@ rule gives it no Affected screens. The details name the stylesheet actually
 loaded, including a generated stylesheet when CSS comes from JavaScript.
 Private source files do not supply comparison evidence.
 
+A document page has no comparison to open, so its own Details carry the same
+evidence once Changes is ready, with “page” in each sentence, for example
+“Changed styles that apply to this page:”. Its status sits beside its title. An
+unchanged document that links an examined stylesheet ends with “No changes to
+this page.”
+
 ## Component props
 
 On a component page the inspector shows the component's variant entries and

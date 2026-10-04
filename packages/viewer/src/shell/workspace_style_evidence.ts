@@ -1,7 +1,7 @@
 /** Pure stylesheet path and view facts for the React Details panel. */
 
 import type { EntryChangeReason } from "../review/component_types.js";
-import type { ViewReview, ViewResourceEvidence } from "../review/types.js";
+import type { ResourceEvidence, ViewReview } from "../review/types.js";
 
 /** Whether stylesheet analysis is the only reason a changed view was retained. */
 export function isStyleOnlyView(view: ViewReview): boolean {
@@ -27,9 +27,12 @@ export function retainedPaths(
   ];
 }
 
-/** Stylesheets excluded in every supplied view after retaining known paths. */
+/**
+ * Stylesheets excluded in every supplied view or page record after retaining
+ * known paths.
+ */
 export function excludedStylesheets(
-  views: readonly ViewResourceEvidence[],
+  views: readonly ResourceEvidence[],
   retained: readonly string[],
 ): readonly string[] {
   const kept = new Set(retained);

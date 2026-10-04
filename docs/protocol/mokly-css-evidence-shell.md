@@ -7,8 +7,8 @@ mockups of the [source-path removal plan](../../plans/remove-source-path-evidenc
 depict the outside-component evidence and the per-file layout below; the shell
 implements them for screens and component saved views in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
-mockup depicts the whole-document page rule below; the shell display is planned
-for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). This document owns visual rules for evidence defined by
+mockup depicts the whole-document page rule below; the shell implements it in
+[M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the
 [presentation contract](./mokly-css-evidence-presentation.md) owns derivation
 and exact copy.
@@ -74,6 +74,11 @@ component explorer's Stylesheet evidence gallery, recorded in the
   comparison details and files list, led by "Changes to these files may affect
   this page:", with the page sentences of the presentation contract under each
   file. A page consumes no components, so its Details link no changed component.
+  Its status sits beside its title, as a screen's does. The open Details panel
+  takes at most 60% of the main region and scrolls, with its bar kept in view,
+  so long evidence stays reachable and the document stays visible. On narrow
+  screens every title row wraps its chips below the title before the title
+  itself wraps.
 - No design screen without a comparison toolbar renders a comparison stage
   heading. A screen depicted in Current mode, whether unchanged, excluded-only,
   or ignored-only, shows the plain preview with no heading.

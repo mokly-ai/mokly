@@ -1,12 +1,26 @@
 /** Details inspector styles: the collapsible bottom panel, its two-column
- * body, and the metadata rows and chips it renders. The chip rules also dress
- * the tag picker the search field drops, so both surfaces draw one chip. */
+ * body, a whole-document page's comparison details, and the metadata rows and
+ * chips it renders. The chip rules also dress the tag picker the search field
+ * drops, so both surfaces draw one chip. */
 
 /** Details inspector and shared chip styles. */
 export const SHELL_DETAILS_CSS = `
 .mbk-details {
   flex-shrink: 0;
   border-top: 1px solid var(--chrome-border);
+  background: var(--chrome-surface);
+}
+
+details.mbk-details[open] {
+  max-height: 60%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+details.mbk-details[open] > summary.mbk-details-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   background: var(--chrome-surface);
 }
 
@@ -58,6 +72,16 @@ details.mbk-details[open] > summary.mbk-details-bar .chev svg {
   grid-template-columns: 1.35fr 1fr;
   gap: 30px;
   padding: 6px 24px 20px;
+}
+
+.mbk-details > .mbk-comparison-evidence {
+  margin: 0 24px;
+  padding-bottom: 20px;
+}
+
+.mbk-details > .mbk-comparison-evidence h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
 }
 
 .mbk-details-desc {

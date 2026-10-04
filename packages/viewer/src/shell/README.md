@@ -140,10 +140,16 @@ one item per changed file, with the contract's outcome sentences in order: own
 component rules, page selectors, unresolved rules, or else the full matched
 styles. `workspace_stylesheet_list.tsx` renders each file once with its
 sentences and selector lists nested in its item, like the approved card.
-`workspace_evidence.tsx` keeps stylesheet exclusions, ignored content and the
-status lines separate. A workspace built from the published catalogue projects
-the selected views' catalogue `resourceEvidence` through
-`../viewer/public_workspace_views.ts`.
+`evidence_details.tsx` holds the shared comparison heading and the files and
+exclusions block, so `workspace_evidence.tsx` and a page's Details render the
+same markup; `workspace_evidence.tsx` keeps ignored content and the status
+lines separate. A workspace built from the published catalogue projects the
+selected views' catalogue `resourceEvidence` through
+`../viewer/public_workspace_views.ts`. A whole-document page has no workspace:
+`page_evidence_data.ts` reads its status and one evidence record from the
+published page record, or from live `pageEvidence` for a private catalogue,
+and `page_evidence.tsx` renders them in the page's `details.tsx` panel with the
+page wording. `views.tsx` shows that status beside the page title.
 
 A live entry-scoped fallback never derives cross-entry Usage from `omitted`
 views: `use_workspace_data.ts` exposes loading until matching private evidence

@@ -21,9 +21,19 @@ export const COMPONENT_LEAD = "Changed styles that apply to this component:";
 export const SAVED_VIEW_LEAD = "Changed styles that apply to this saved view:";
 export const SAVED_VIEW_UNRESOLVED_LEAD =
   "This change can apply anywhere on the saved view, so the saved view stays in Changes:";
+/** The whole-document page sentences of the same contract. */
+export const PAGE_FILES_LEAD = "Changes to these files may affect this page:";
+export const PAGE_MATCHED_LEAD = "Changed styles that apply to this page:";
+export const PAGE_OUTSIDE_LEAD =
+  "These changed styles also apply outside the changed components on this page:";
+export const PAGE_UNRESOLVED_LEAD =
+  "This change can apply anywhere on the page, so the page stays in Changes:";
+export const PAGE_EXCLUDED_LEAD =
+  "This stylesheet changed, but none of the changed styles apply to this page.";
 /** Terminal status lines, which follow the kind of entry on display. */
 export const SCREEN_TERMINAL = "No changes to this screen.";
 export const VARIANT_TERMINAL = "No changes to this saved view.";
+export const PAGE_TERMINAL = "No changes to this page.";
 /** Comparison stage headings derived from the view's own evidence. */
 export const STYLE_HEADING = "Styles this screen uses changed";
 export const CHANGED_HEADING = "Screen changed";
@@ -46,6 +56,22 @@ export async function openEvidence(page: Page): Promise<Locator> {
   const evidence = page.locator("[data-workspace-evidence]");
   await expect(async () => {
     if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
+    await expect(evidence).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+  await expect(evidence).toContainText("Comparison details");
+  return evidence;
+}
+
+/**
+ * Open a whole-document page's Details and return its comparison details.
+ * The panel keeps its last choice, so open it only while it is closed.
+ */
+export async function openPageEvidence(page: Page): Promise<Locator> {
+  const details = page.locator("[data-mokly-details]");
+  const evidence = page.locator("[data-page-evidence]");
+  await expect(async () => {
+    if (!(await details.evaluate((element) => element.hasAttribute("open"))))
+      await details.locator("summary").click();
     await expect(evidence).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 15_000 });
   await expect(evidence).toContainText("Comparison details");

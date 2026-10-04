@@ -34,7 +34,10 @@ const statuses = {
   unmodified: "Unmodified",
 } as const;
 
-function status(entry: ShellCatalogueRoutedEntry): EntryStatus | undefined {
+/** The status beside a published entry's title, once its Changes are ready. */
+export function publicEntryStatus(
+  entry: ShellCatalogueRoutedEntry,
+): EntryStatus | undefined {
   return entry.changes.status === "ready"
     ? statuses[entry.changes.kind]
     : undefined;
@@ -125,7 +128,7 @@ export function publicWorkspace(
               comparisonEligible: false,
             });
     }
-  const entryStatus = status(original);
+  const entryStatus = publicEntryStatus(original);
   const variants =
     component || orphanVariant
       ? sourceVariants.map((source) => {

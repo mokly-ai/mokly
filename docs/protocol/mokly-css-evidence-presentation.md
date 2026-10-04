@@ -9,7 +9,7 @@ implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-sho
 as the [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence) mockups depict them.
 The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
 mockup, `design-review-style-page`, depicts the whole-document page display;
-the shell display is planned for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
+the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact
@@ -42,6 +42,14 @@ Component change facts come from the complete own-page rule analysis and
 entry reasons. Do not infer them from a consumer's matches, file owners or the
 loaded comparison subset. A page-only component-view reason adds no Affected
 screens. Pending or unavailable generations clear all page evidence.
+
+A whole-document page has no workspace and no views. Its Details read the
+page record's catalogue v4 `resourceEvidence` when the shell renders a public
+catalogue, which Serve, exports and hosts all do. A shell rendered from private
+live data reads the matching live `pageEvidence` instead. That one record holds
+the page's reasons and exclusions, so no view merge applies. The grouping is
+the screen's, with the page wording. A removed page, and Changes that are not
+ready, have no page status and no page evidence.
 
 `ReviewState` has no resource-only variant. A view says “Styles this screen uses
 changed” when its state is `changed`, `material` is absent, it retains at least
@@ -168,3 +176,9 @@ entry has no Changes row of its own, consumes at least one changed component,
 and a selected view changed. A saved view with only wrapper or page reasons
 therefore never says it. A whole-document page consumes no components, so its
 Details never link a changed component or say that sentence.
+
+A current whole-document page shows Added, Changed or Unmodified beside its
+title once its Changes are ready, from the catalogue change kind. Private live
+data gives Added when the baseline lacks the page, Changed when Changes names
+it, and otherwise Unmodified. A removed page keeps its Removed badge. The page's
+Details show the comparison details whenever its status is known.

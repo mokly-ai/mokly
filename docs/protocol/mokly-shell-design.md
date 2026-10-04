@@ -25,7 +25,7 @@ shared shell. Whole documents use a plain bordered pane and omit
 device/comparison controls. Removed pages are flat Changes rows; baseline
 breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
-same navigation, search, tags, and variants. `design-review-style-page` depicts a changed page's stylesheet evidence in Details ([M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)); the shell display is planned for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
+same navigation, search, tags, and variants. `design-review-style-page` depicts a changed page's stylesheet evidence in Details ([M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)); the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
 The comparison designs implement the [pane](./mokly-comparison-panes.md),
 [scrolling](./mokly-comparison-scrolling.md), and

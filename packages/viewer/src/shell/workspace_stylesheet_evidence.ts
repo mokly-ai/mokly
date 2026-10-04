@@ -23,10 +23,13 @@ export interface StylesheetEvidence {
 
 /**
  * Whose Details the evidence describes. A component workspace names its parent
- * id, so the rules that changed that component keep the component sentence.
+ * id, so the rules that changed that component keep the component sentence. A
+ * whole-document page has the screen outcomes with page wording.
  */
 export type EvidenceSubject =
-  { kind: "screen" } | { kind: "component"; componentId?: string | undefined };
+  | { kind: "screen" }
+  | { kind: "page" }
+  | { kind: "component"; componentId?: string | undefined };
 
 const union = (values: readonly string[]) => [...new Set(values)].sort();
 

@@ -2,6 +2,8 @@
 // two-column body with prose on the left and metadata rows on the right —
 // populated from the manifest entry for the selected route.
 
+import type { ReactNode } from "react";
+
 import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
@@ -81,9 +83,13 @@ export function EntryDetailsBody(props: {
   );
 }
 
-/** The collapsed-by-default details panel for the selected route. */
+/**
+ * The collapsed-by-default details panel for the selected route. Any
+ * comparison details follow the authored metadata.
+ */
 export function DetailsPanel(props: {
   catalogue: Catalogue;
+  children?: ReactNode;
   target: RouteTarget;
 }) {
   const store = useOptionalShellStore();
@@ -107,12 +113,11 @@ export function DetailsPanel(props: {
           Description, rationale, source, related docs, and use cases
         </span>
       </summary>
-      {
-        <EntryDetailsBody
-          catalogue={props.catalogue}
-          entry={props.target.entry}
-        />
-      }
+      <EntryDetailsBody
+        catalogue={props.catalogue}
+        entry={props.target.entry}
+      />
+      {props.children}
     </details>
   );
 }

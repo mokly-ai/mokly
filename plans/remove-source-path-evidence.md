@@ -22,8 +22,8 @@ pushed it as `1bd54f7e`. Milestone 20 is implemented, verified and pushed as
 `d91e1443` for screens and component saved views. It found that no approved
 design shows evidence in a whole-document page's Details, so Milestones 20A
 (mockup) and 20B (ui) now hold that display. Milestone 20A is implemented,
-verified and committed locally; the reviewer owns the push. Milestone 20B has
-not started.
+verified and pushed as `0f43cf0a`. Milestone 20B is implemented, verified and
+committed locally; the reviewer owns the push.
 The contract changes
 unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
 owners no longer route stylesheet changes; declared links and their provenance
@@ -1500,11 +1500,79 @@ Screenshots are under `.context/screenshots/m20a/`; logs are under
 
 Tags: ui
 
-- [ ] Render exact product copy for whole-document pages in their Details,
+- [x] Render exact product copy for whole-document pages in their Details,
       from live `pageEvidence` and catalogue v4 page `resourceEvidence`, with
       the same per-file grouping as screens. Moved from Milestone 20.
-- [ ] Add failure-first viewer and browser tests at both widths, match the
+- [x] Add failure-first viewer and browser tests at both widths, match the
       Milestone 20A mockups, run the viewer and browser tests, and smoke-test.
+- [x] Show the page's status beside its title, as the Milestone 20A mockup
+      does: Added, Changed or Unmodified once Changes is ready. A removed page
+      keeps its Removed badge. Define the rule in the presentation contract.
+- [x] Render screens, saved views and pages through one Details block: move
+      the comparison heading and the files and exclusions markup into
+      `evidence_details.tsx`, used by `workspace_evidence.tsx` and the page.
+- [x] Keep long page evidence reachable. Cap the open Details panel at 60% of
+      the main region, scroll its body and keep its bar in view. On narrow
+      screens, wrap every title row's chips below the title, as the screen
+      head already did, so the page title stays on one line.
+
+Implementation notes:
+
+- `page_evidence_data.ts` reads a current page's status and its one evidence
+  record from the public page record. Serve, exports and hosts all render from
+  that record. A shell rendered from private live data reads live
+  `pageEvidence` and derives the status like a workspace. Removed pages and
+  Changes that are not ready give no status and no evidence.
+- `page_evidence.tsx` renders the comparison heading, the shared files and
+  exclusions block with the page wording, and "No changes to this page." for
+  an unmodified page. `DetailsPanel` places it after the authored metadata.
+  `views.tsx` shows the page status beside the title.
+- The page wording joins `entry_wording.ts`; the grouping subject gains the
+  page kind. Rule keys, changed component ids and private source paths never
+  reach the copy. A page consumes no components, so its Details link none.
+- Published pages expose only resource evidence, so page Details add no
+  material or metadata reason lines.
+- A newer live evidence revision on a page route needs no workspace. The shell
+  adopts it and replaces the page's status and Details in place; a unit test
+  covers this path, because a content edit reloads the tab first.
+- The evidence matches the Milestone 20A mockups: copy, per-file nesting,
+  spacing, the Changed status and no comparison controls. Two older
+  differences remain outside this milestone. The shell's page Details are the
+  existing disclosure bar below the document, where the page designs depict
+  the icon inspector. The shell puts the status before the ID chip, for
+  screens as well.
+- The narrow title-row rule moves from the workspace stylesheet to the shared
+  head stylesheet, so screens and components keep the same layout.
+- Smoke used `npm run dev -- --base HEAD` on the real example. The handbook
+  links no stylesheet at `HEAD`, so every case also linked `styles.css` and
+  `example-components.css` from the handbook and added one `.example-action`
+  element. This also gives the page a material change; it does not alter its
+  evidence. Four cases passed at 1440 px and 390 px: an outside match
+  (`.example-action`, which also changes Action), a match with no changed
+  component (`article h2`), an unresolved rule (`:root`), and all three
+  together, as the mockup shows. A last step kept the page open and removed
+  the `:root` rule; the example's watch rule reloaded the tab, and its Details
+  then showed only `article h2`. Every edit was restored, and the example Git
+  status is clean. Screenshots are under `.context/screenshots/m20b/`; results
+  are in `.context/m20b/smoke-results.json`.
+- This milestone deletes no files. The four earlier plan-approved deletions
+  and the v3-to-v4 fixture rename against `origin/main` remain unchanged.
+
+Verification: `npm run build`, `npm run typecheck` and `npm run lint` pass.
+Changed-file Prettier and the six requested docs suites (26 tests) pass. The
+new unit tests failed first: 8 of 10 before the change, with the 2
+preservation tests passing; against the old viewer source the page and
+adoption tests failed 6 of 8. All 8 new browser tests failed against the old
+viewer. With the display alone, the 2 layout tests still failed: a two-line
+mobile title and a 36 px document. All 8 pass with the layout rules. The
+focused client and viewer run passes 489 tests, the related evidence, page,
+removed-preview, layout and design specs pass 141, and hydration passes 225.
+The exact complete unit command passes 3,925 tests. The complete
+`cargo xtask check` passes in 45 minutes: the audit with main's accepted
+exception, formatting, lint, file limits, repository ratchets, 15 Rust tests,
+typecheck, the example check with 440 files, all six packed-consumer
+scenarios, 3,925 unit tests, 772 browser tests and 225 hydration tests. No
+test failed, was skipped or was cancelled. Logs are under `.context/m20b/logs/`.
 
 ## Milestone 21: Verify, deliver and review
 

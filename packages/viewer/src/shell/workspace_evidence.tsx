@@ -8,15 +8,10 @@ import type { EntryChangeReason } from "../review/component_types.js";
 import type { ReviewResult } from "../review/types.js";
 
 import { entryWording } from "./entry_wording.js";
+import { ComparisonHeading, StylesheetDetails } from "./evidence_details.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceComparisonEvidence } from "./workspace_evidence_data.js";
 import { propText } from "./workspace_props.js";
-import {
-  excludedStylesheets,
-  retainedPaths,
-} from "./workspace_style_evidence.js";
-import { stylesheetEvidence } from "./workspace_stylesheet_evidence.js";
-import { StylesheetEvidenceList } from "./workspace_stylesheet_list.js";
 
 /** Comparison facts for the current entry and optional loaded comparison. */
 export function WorkspaceEvidence({
@@ -31,16 +26,6 @@ export function WorkspaceEvidence({
   const evidence = workspaceComparisonEvidence(data, variantId, loaded);
   const wording = entryWording(data.entry.kind);
   const hidden = data.status === undefined && !evidence.comparison;
-  const stylesheets = stylesheetEvidence(
-    evidence.reasons,
-    data.entry.kind === "component"
-      ? { kind: "component", componentId: evidence.componentId }
-      : { kind: "screen" },
-  );
-  const excluded = excludedStylesheets(
-    evidence.resourceViews,
-    retainedPaths(evidence.reasons),
-  );
   const savedView = data.variants.find((item) => item.value.id === variantId);
   const ignored = evidence.comparison
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
@@ -57,8 +42,7 @@ export function WorkspaceEvidence({
     >
       {!hidden ? (
         <>
-          <h3>Comparison details</h3>
-          <p>Compared with the branch point on {data.base}.</p>
+          <ComparisonHeading base={data.base} />
           {data.relatedComponents.map((component) => (
             <p key={component.id}>
               Changed component:{" "}
@@ -86,23 +70,15 @@ export function WorkspaceEvidence({
           {evidence.reasons.map((reason, index) => (
             <Reason key={`${reasonKey(reason)}/${index}`} reason={reason} />
           ))}
-          {stylesheets.length ? (
-            <StylesheetEvidenceList
-              lead={wording.filesLead}
-              stylesheets={stylesheets}
-            />
-          ) : null}
-          {excluded.length ? (
-            <>
-              <p>
-                {excluded.length === 1
-                  ? wording.excludedStylesheet
-                  : wording.excludedStylesheets}
-              </p>
-              <p>Examined and excluded:</p>
-              <PathList paths={excluded} />
-            </>
-          ) : null}
+          <StylesheetDetails
+            reasons={evidence.reasons}
+            resources={evidence.resourceViews}
+            subject={
+              data.entry.kind === "component"
+                ? { kind: "component", componentId: evidence.componentId }
+                : { kind: "screen" }
+            }
+          />
           {ignored.length ? (
             <p>Excluded content: {ignored.join(", ")}.</p>
           ) : null}
@@ -154,16 +130,6 @@ function Reason({ reason }: { reason: EntryChangeReason }) {
         ? `A screen in this flow changed: ${reason.id}`
         : labels[reason.kind]}
     </p>
-  );
-}
-
-function PathList({ paths }: { paths: readonly string[] }) {
-  return (
-    <ul>
-      {paths.map((path) => (
-        <li key={path}>{path}</li>
-      ))}
-    </ul>
   );
 }
 

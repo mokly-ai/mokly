@@ -213,7 +213,8 @@ preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 
 Uniform CSS attribution is implemented in Milestone 19 of the
 [source-path removal plan](./plans/remove-source-path-evidence.md); comparison
-details follow in Milestone 20. Configured, declared and imported stylesheets
+details for screens and saved views are implemented in Milestone 20, and for
+whole-document pages in Milestone 20B. Configured, declared and imported stylesheets
 use the same [CSS rule contract](./docs/protocol/mokly-css-attribution-rules.md).
 Components change through own-page matches kept after nested filtering. Outside matches
 and unresolved rules give a page its own row. Stylesheet owner records have no

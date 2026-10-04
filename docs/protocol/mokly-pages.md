@@ -158,7 +158,10 @@ A page appears once at its `navPath`, using the existing page
 icon. The heading uses its title; breadcrumbs use those folder labels;
 the ID chip, search by ID/title/tags, tag picker, details, and home counts
 include pages. Details show authored description, rationale,
-and related docs.
+and related docs. Once Changes is ready, the heading also shows the page's
+status, and Details add its comparison details, as the
+[CSS evidence presentation](./mokly-css-evidence-presentation.md#status-lines)
+contract defines.
 
 Reuse the complete-document frame, responsive shell, expansion control,
 ownership authentication, and script-free sandbox. Do not add device chrome
