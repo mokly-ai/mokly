@@ -816,7 +816,7 @@ the three merges or their follow-up commits. It found one Medium finding:
 stylesheet requests from installed-package JavaScript still resolve through the
 file system, so deleting such a stylesheet after acceptance fails that
 generation's Live bundle. The user chose option A.
-[Serve Rebuild Status Milestone 9](./serve-rebuild-status.md#milestone-9-pin-installed-stylesheet-requests)
+[Serve Rebuild Status Milestone 9](./serve-rebuild-status.md#milestone-9-pin-installed-stylesheet-requests--completed)
 owns the fix.
 
 ## Post-merge follow-up (non-blocking)

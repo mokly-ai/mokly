@@ -201,7 +201,7 @@ Tags: ui
       `docs/guides/cli/serve.md` and the root README; run `cargo xtask check`;
       commit and push.
 
-## Milestone 6: Smoke test and review
+## Milestone 6: Smoke test and review — completed
 
 - [x] Smoke through `npm run dev` with the example catalogue: break and fix a
       screen, a component and the config at desktop and mobile widths in
@@ -256,7 +256,7 @@ an accepted generation's Live bundle.
 - [x] Update `src/interactive/README.md`; run `cargo xtask check`; commit and
       push.
 
-## Milestone 8: Separate source failures from delivery failures
+## Milestone 8: Separate source failures from delivery failures — completed
 
 Backend. Closes Milestone 6 review finding 2 (option A, chosen by the user): a
 rebuild whose source was accepted but whose first child restart failed and
@@ -294,7 +294,7 @@ then recovered is reported as a source failure, showing a false notice.
       accepted generation's Live bundle can change or fail after it is edited
       or deleted.
 
-## Milestone 9: Pin installed stylesheet requests
+## Milestone 9: Pin installed stylesheet requests — completed
 
 Backend. Closes finding 1 of the independent review of the mainline
 integrations at `51f0aa7b` (option A, chosen by the user). The accepted graph
@@ -342,9 +342,16 @@ bundle.
 - [x] Keep installed-style fixture helpers private when no other test uses them.
 - [x] Update `src/interactive/README.md` and `src/build/README.md`; run
       `cargo xtask check`; commit and push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+- [x] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
       impact and lettered options, without changing the implementation.
+      Reviewed at `6ce10475`: no findings. The reviewer reproduced the
+      original deletion case outside the repository, with relative,
+      package-name and extensionless-export requests, and the first Live
+      bundle kept its accepted bytes after each stylesheet was deleted, edited
+      or broken. Importer matching, the fast path and the IPC validation held
+      for symlinked roots and pnpm layouts, and unrelated aliases could not
+      replay a saved record.
 
 ## Post-merge follow-up (non-blocking)
 
