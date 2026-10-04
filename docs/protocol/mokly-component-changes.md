@@ -181,7 +181,7 @@ Component-generated style material can live in the document head rather than
 inside a component boundary. Extend the renderer result with optional typed
 style/resource ownership records while continuing to accept a plain HTML string.
 Records identify exact style ranges or public resource paths and component
-owners. Validate them against the rendered document and final compatibility
+owners. Validate them against the rendered document and final rendered
 output. Only proven component-owned material is excluded from the consuming
 screen projection; mixed or unclaimed head material remains material.
 

@@ -135,11 +135,6 @@ input types, hierarchy, derived routes, and catalogue links.
 The [rendering contract](./mokly-rendering.md#rendering-boundary) defines the
 consumer renderer, React resolution, stylesheet application, and validation.
 
-### Temporary Document Compatibility
-
-The [temporary transformer contract](./mokly-rendering.md#temporary-document-compatibility)
-defines the consumer cutover adapter and its route/link constraints.
-
 ## Generated Contract
 
 The [generated-output contract](./mokly-rendering.md#generated-contract) defines

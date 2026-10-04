@@ -111,13 +111,12 @@ against the pinned branch-point reader, even when Git ignores generated output.
 It merges those route changes with Git's authored paths and removes file-level
 shared impact for **every** delivered CSS source whenever any generated
 stylesheet's bytes change, or for an
-asset whose matching generated route changed. A baseline predating generated
-CSS makes a one-time jump; unrelated transformer-only and PostCSS candidate
-sources retain their independent impact. Review result v4 and live Changes
+asset whose matching generated route changed. Only v8 content is compared. Unrelated PostCSS candidate sources retain
+their independent impact. Review result v4 and live Changes
 use the same byte comparison and source filter.
 Accepted generations carry their stylesheet/asset route index, output bytes
 when available, and delivered sources through the runtime and background
-worker. Committed classification no longer reloads the graph or PostCSS;
+worker. Accepted-generation classification does not reload the graph or PostCSS;
 classification without an accepted generation performs one inventory load.
 After comparing views, both producers call `assertViewAnalysisScope` to reject
 analysed reasons outside that boundary with `review-invalid`. The shared decoder
@@ -224,20 +223,19 @@ depth; optional counterpart CSS reads distinguish missing files from invalid
 ones. Per-side readers cache bytes, and the injected parser caches identical CSS
 text for the run. Live resource validation additionally retains its alias and
 verified-deletion behavior. `deleted_resource.ts` owns that one decision for
-both unified and screen-level classification, including derived byte comparison
+both unified and screen-level classification, including baseline byte comparison
 and paired embedded-document normalization; each caller still supplies its
 confinement-aware current and baseline readers.
-Committed live classification batches base documents for changed or moved documents and
-for views with changed stylesheet resources. Only an unchanged, unmoved view
-without changed CSS skips base view reads and base graph traversal, so verified
-deletions of non-stylesheet resources are still discovered from the before side. Current resource validation still checks Git
-counterparts for verified deletions and pairs embedded documents' ignored regions.
-Changed documents retain discovery of resources removed from their before side.
-Derived classification reads every baseline view from its prepared reader. It
-applies rule attribution to stylesheets with Git change evidence and preserves
-material resource-byte changes without inventing dependency paths.
-Unexpected parser or matcher failures keep only the failing resource
-unresolved, with any recoverable changed selectors, and classification continues.
+Every classification reads baseline views through its prepared reader and
+compares generated and authored resource bytes independently of changed Git
+paths. There is no output-mode switch or byte-comparison opt-out. Changed paths
+remain source evidence; they do not replace rendered-resource comparison.
+Current validation still checks Git counterparts for verified deletions and
+pairs embedded documents' ignored regions. Changed documents retain discovery
+of resources removed from their before side. Rule attribution keeps material
+byte changes without inventing dependency paths. Unexpected parser or matcher
+failures keep only the failing resource unresolved, retain recoverable changed
+selectors and allow classification to continue.
 
 Review v4 retains `material: true` exactly when the actual paired,
 ignore-normalized documents differ, including added and removed views. Ownership

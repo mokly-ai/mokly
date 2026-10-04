@@ -58,7 +58,7 @@ before replacements start. Exhaustive background work uses one worker with a
 1 GiB heap limit and yields between documents and major validation phases.
 
 The single-document compiler reuses exhaustive Build's validation primitives: rendering,
-stylesheet selection, compatibility, logical links, component ranges,
+stylesheet selection, logical links, component ranges,
 props, style/resource metadata, ignore markers, output confinement, and resource
 validation. Navigation without anchors needs the destination's registered entry,
 not its rendered HTML. Anchors require the actual destination document; logical

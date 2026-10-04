@@ -26,20 +26,19 @@ names the base's root, never today's configured root. The head uses the same
 v8 layout at the current root. No descriptor or resource reader is constructed
 for an earlier-version outcome.
 
-At the current requested root, select the first existing manifest in the
-[manifest lookup order](./mokly-generated-manifest.md#selection-cache-and-resource-addressing).
-An earlier committed envelope or sentinel returns incompatibility immediately,
-without inventory reads or commands. Invalid/nonregular selected files fail;
-never hide them behind another filename. A valid v8 child manifest selects
-blobs only when its inventory is complete. Missing manifests or incomplete v8
-output select the trusted rebuild path, not a scan of other committed roots.
+At the requested root, inspect only
+`mokly-generated/mokly-manifest.json` in the generated subtree. Complete v8
+inventory selects Git blobs; a missing manifest or incomplete inventory selects
+the base's own rebuild. A committed root-level manifest cannot suppress it.
+The version check at the selected current location remains strict.
 
 ## Discovery After A Rebuild
 
 After the base's own commands finish successfully and before adopting output:
 
-1. Inspect the current requested root in the same ordered lookup. An existing
-   preferred file is authoritative. Earlier output returns
+1. Inspect `mokly-generated/mokly-manifest.json` at the requested root, then
+   root-level `mokly-manifest.json` solely for the version check. The first
+   existing file is authoritative. Earlier output returns
    `baseline-incompatible-earlier`; malformed/nonregular/newer output or v8 at
    the flat location fails `baseline-output-invalid`. No fallback masks it.
 2. If no recognized filename exists there, walk the extraction in UTF-16
@@ -47,11 +46,11 @@ After the base's own commands finish successfully and before adopting output:
    depth. Never follow symlinks. Keep confined `lstat`, bounded manifest reads
    and the 65,536-entry traversal limit.
 3. At each directory inspect the first existing eligible name: canonical in
-   its generated child, direct canonical, then the two former sentinels. A
+   its generated child, direct canonical, with no other filename. A
    valid v8 child is a compatible candidate. An earlier integer canonical
-   envelope or former sentinel is an incompatible candidate, without reading
+   envelope is an incompatible candidate, without reading
    old entries. A malformed/newer preferred file makes that directory ineligible;
-   never try its older names. Do not count the generated child again as a flat
+   never retry another manifest path in that directory. Do not count the generated child again as a flat
    catalogue when its manifest belongs to the parent candidate.
 4. Exactly one candidate is required, whether compatible or incompatible.
    Zero or several fail `baseline-output-invalid` with
@@ -87,11 +86,11 @@ set or authored closure under that descriptor, and reads a confined regular
 file. The Git reader uses that path directly; the cache reader appends it to
 `output/`. No reader strips a legacy root to access flat output.
 
-The [storage compatibility probe](./mokly-baseline-storage.md#cache-layout)
-can inspect a previous completion marker and old manifest envelope solely to
-return `baseline-incompatible-earlier`. It cannot return a content reader,
-convert entries, relabel a v6 cache as v8 or reuse an old closure. Request/recipe
-mismatches retain the existing fail-intact/remove-entry guidance.
+A completed cache has one current format. The
+[storage validator](./mokly-baseline-storage.md#cache-layout) returns a warm
+entry only for matching complete v8 output. Other entries are partial and
+are removed under the entry lock before a rebuild. No older cache proves an
+earlier-baseline outcome.
 
 ## Comparison Namespaces
 

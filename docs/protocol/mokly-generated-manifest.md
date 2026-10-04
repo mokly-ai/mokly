@@ -56,49 +56,30 @@ fields remain invalid.
 
 ## Historical Readers And Layouts
 
-There is one readable schema and one content layout: v8 under
-`<catalogueRoot>/mokly-generated/mokly-manifest.json`. Detecting an older
-version is an envelope check, not a reader for that schema's entries or files.
-
-A canonical JSON object with an integer `schemaVersion` below 8 yields
-`baseline-incompatible-earlier`, including every v2–v7 form and this branch's
-v6. Do not validate or translate its old entry fields, inspect its inventory,
-read its documents, or retry it through another filename. The former
-`mokabook-manifest.json` and `mockbook-manifest.json` names are earlier-output
-sentinels when no preferred canonical file exists; do not parse their contents.
-Remove the old v2 compatibility switch and readers as `main` already did.
-
-A version above 8, invalid JSON, a non-object root, missing/non-integer version,
-malformed v8 data, nonregular selected file, or misplaced v8 manifest follows
-the existing invalid-baseline path. None becomes the earlier-version outcome
-or a successful empty comparison. Source confinement and bounded reads apply
-before version classification. Git I/O errors are not evidence of absence.
+The only content layout is v8 at
+`<catalogueRoot>/mokly-generated/mokly-manifest.json`. Mokly recognizes only
+the canonical `mokly-manifest.json` name. It has no former-name sentinels,
+old entry readers, layout conversion or old cache readers.
 
 ## Selection, Cache And Resource Addressing
 
-Pin the merge-base commit, then inspect its tree at the requested current
-catalogue root in this exact precedence:
+Pin the merge-base commit and derive the requested repository-relative
+`<catalogueRoot>/mokly-generated/` prefix. List only that generated subtree
+with a literal Git pathspec, retaining repository-relative paths. Never list
+the whole commit to choose a baseline. Probe only the canonical manifest
+inside this subtree. A committed root-level manifest, including stale v7,
+has no effect on selection.
 
-1. `mokly-generated/mokly-manifest.json`;
-2. `mokly-manifest.json` at that root;
-3. `mokabook-manifest.json`, then `mockbook-manifest.json` at that root.
+If the selected manifest is absent, rebuild with that commit's own recipe.
+A regular manifest below v8 in the current generated location retains the
+typed earlier-version outcome. Invalid JSON, non-object data, missing or
+non-integer versions, newer versions and nonregular selected files remain
+invalid; do not treat I/O errors as absence. Validate v8 fully before its
+inventory. Complete matching v8 blobs select the Git reader. Missing,
+nonregular, mismatched or extra inventory files select a rebuild.
 
-The first existing file wins. A committed earlier canonical envelope or former
-sentinel decides `baseline-incompatible-earlier` **without a rebuild**, even
-if an old inventory is incomplete or a cache contains different output. A
-selected invalid file fails without fallback. A v8 file is valid only at the
-first location; validate its full schema before checking generated blobs.
-
-For v8, compare the commit's generated subtree exactly with `generatedFiles`
-plus the manifest. Missing, nonregular, mismatched or extra blobs select a
-rebuild using that commit's own recipe. A complete inventory selects Git blobs.
-If every known manifest location is absent, select a rebuild; do not search
-other Git-tree roots to avoid it. Thus a moved catalogue root can require a
-rebuild even when the commit stored a manifest elsewhere. Neither selection
-nor comparison reads the head Git index or requires current disk output.
-
-Inventory-triggered rebuilds keep these info-level stderr diagnostics, with
-sorted generated-relative paths and the first reason in the listed order:
+Keep these inventory diagnostics, with sorted generated-relative paths and
+the first reason in the order below:
 
 ```text
 Mokly baseline <commit>: rebuilding because generated output is missing: <comma-separated paths>.
@@ -106,18 +87,24 @@ Mokly baseline <commit>: rebuilding because generated output has mismatched blob
 Mokly baseline <commit>: rebuilding because generated output has extra files: <comma-separated paths>.
 ```
 
-A no-manifest rebuild needs no inventory diagnostic. The historical recipe uses
-its own source, lockfile and tooling; never rebuild old sources through today's
-Mokly package just to force an upgrade. After success, apply the same version
-gate to the selected output. If that build wrote an earlier manifest, decide
-`baseline-incompatible-earlier` **after the rebuild**, with no old-content
-harvest, reader or comparison. The exact moved-root search and ambiguity rules
-are in [baseline addressing](./mokly-baseline-addressing.md).
+A missing-manifest rebuild needs no inventory diagnostic. Rebuilds use the
+pinned commit's own source, lockfile, dependencies, configuration and tooling.
+Do not inject today's Mokly package into historical source.
 
-A previously completed cache holding an older manifest can also prove the
-incompatible outcome without commands. It is never a readable baseline. The
-[storage contract](./mokly-baseline-storage.md#cache-layout) defines the bounded
-compatibility probe, identity checks, retention and fresh-build cleanup.
+After the commands succeed, discover output under
+[baseline addressing](./mokly-baseline-addressing.md). Prefer the canonical
+manifest in the generated child. Only after a rebuild, a canonical manifest
+below v8 at `<catalogueRoot>/mokly-manifest.json` proves the earlier-version
+outcome. Do not harvest it or cache the outcome. This check prevents an old
+build from being mistaken for current output without restoring a flat reader.
+A v8 manifest at the flat location is invalid.
+
+A cache entry is reusable only when it is complete, valid v8 output for the
+requested commit, catalogue and recipe. Empty, truncated, earlier-format,
+unreadable, mismatched or incomplete entries are partial. The builder removes
+them under its lock and rebuilds. It never uses them as incompatibility evidence.
+[Storage](./mokly-baseline-storage.md#cache-layout) defines validation,
+safe cleanup and atomic marker publication.
 
 ## Earlier-Baseline Outcome
 
@@ -143,26 +130,16 @@ normal preparation and can restore Changes without restarting Serve. Use the
 typed error code, never message matching. Invalid/newer manifests retain normal
 safe diagnostics in Serve and failure for explicit comparison captures.
 
-## Kept And Removed Machinery
+## Reader And Verification Boundary
 
-Keep per-commit blob/rebuild selection, v8 blob inventory verification, trusted
-recipe execution, bounded moved-root discovery, root-specific descriptors,
-cache locks/cleanup, and generated-versus-authored resource addressing. Both
-comparison sides are v8: pair by kind/id and view axes, resolve resources using
-each side's actual catalogue root, and compare closure membership and bytes.
-A moved root does not authorize reading under today's root on the base side.
+Keep per-commit blob/rebuild selection, exact v8 inventory verification,
+bounded moved-root discovery, descriptors, locks, cleanup and source privacy.
+Both comparison sides use v8. Pair by kind/id and view axes, then resolve
+generated and authored resources under each side's own historical root.
+Resource membership and exact bytes are compared on every path; no mode flag
+can disable byte comparison.
 
-Remove this branch's pre-v8 content readers, legacy flat-layout reader/harvest,
-old-schema adapters and cross-layout HTML URL normalization. Do not retain a
-`generated-v6 | legacy` reader union or old-publication fallback. Keep the
-ordinary URL parser, encoding/confinement checks, CSS resource analysis and
-mainline equivalence rules; they are not cross-layout compatibility. Preserve
-every deletion already on `main`; this decision does not resurrect its removed
-formats, APIs, fixtures or tests.
-
-Acceptance must cover committed v2–v7 envelopes without a build, earlier output
-found after a real rebuild, existing older caches, complete/incomplete v8
-inventories, moved v8 roots, malformed/newer data, both blob algorithms and
-binary resources. Prove each command's earlier-baseline behavior, the once-per-
-base diagnostic and recovery after a v8 base arrives. A v7-to-v8 content
-comparison is no longer an accepted operation.
+Tests cover committed stale root-level v7 with a successful v8 rebuild,
+earlier root-level output produced by the base's own rebuild, partial cache
+rebuilds and atomic marker publication. Preserve invalid/newer manifest
+rejections, confinement, inventory validation and the command outcomes above.

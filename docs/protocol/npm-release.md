@@ -11,7 +11,7 @@ dependencies. Their transitive selector/value parser, `cssesc` and
 `util-deprecate` packages join the package license and audit scope. The
 selector and value parsers are also direct lazy runtime dependencies for
 post-scoping verification; the packed graph retains one copy of each.
-Lightning CSS remains a read-only rule and transformer-only inventory parser.
+Lightning CSS remains a read-only rule parser for Changes.
 Packed-consumer smoke exercises CSS Modules, binary `url()` assets and a
 consumer PostCSS plugin through the URL-loaded `postcss_worker.js`; package
 inspection requires that worker file in the archive. See

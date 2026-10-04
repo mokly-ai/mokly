@@ -31,8 +31,6 @@ interface InstanceBoundary {
 }
 interface FrameMount {
   url: URL;
-  route?: string; // Logical generated-relative document route.
-  generatedPathPrefix?: "mokly-generated"; // Defaults to the shared constant.
   usage: CatalogueUsage;
   signal?: AbortSignal;
   onEvent?: (event: FrameEvent) => void;
@@ -81,6 +79,8 @@ declare function postMessageAdapter(options: {
   frameOrigin: string;
 }): FrameAdapter;
 ```
+
+Current frames derive routes from `url` under `/static/mokly-generated/`; no prefix or route override exists.
 
 Mount validation follows [generated delivery](./mokly-generated-delivery.md#frames-and-reverse-mapping).
 Caller-approved query parameters are retained; no selectors or comparison paths

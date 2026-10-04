@@ -164,7 +164,7 @@ Inert, package-owned DOM markers bind generated ranges to their usage records.
 The collector is scoped to a render, not a process-global mutable registry.
 Markers support nesting, multiple roots, and text without introducing layout
 wrappers. Parsed validation rejects forged, duplicate, overlapping, unmatched,
-or moved records and verifies ownership again after compatibility transforms.
+or moved records and verifies ownership in final rendered documents.
 The existing flat `ReviewIgnore` marker language remains separate and strict.
 
 Comparison metadata, dependencies, and props contain no timestamps, absolute

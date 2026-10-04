@@ -39,7 +39,6 @@ the following contract:
   directory;
 - shared-impact globs for comparisons;
 - additional authored inputs and static assets for watched Serve;
-- an optional temporary document transformer for an existing consumer cutover.
 
 The resolved config has one repository root, one mockups root, one sorted
 resolved entry-module set, and normalized repo-relative POSIX paths. Config
@@ -47,8 +46,8 @@ validation rejects path traversal, output outside the repository (including
 through symlinks), entry modules inside internal or package-owned private roots,
 duplicate rules, and a watch path that cannot be classified safely. An entry
 module may be nested below `mockupsDir` as protected authored source, but not
-inside `mokly-generated/`, including through aliases. Configured entries, renderer,
-transformer, and package roots in that child fail `config-invalid` with the
+inside `mokly-generated/`, including through aliases. Configured entries, renderer
+and package roots in that child fail `config-invalid` with the
 setting and path; imported authoring sources fail with their path. See
 [generated output](./mokly-generated-output.md).
 
@@ -124,14 +123,11 @@ interface MoklyConfig {
       paths: readonly string[];
     }[];
   };
-  compatibility?: {
-    transformer?: string;
-  };
 }
 ```
 
 Filesystem fields (`repoRoot`, `entriesDir`, `mockupsDir`, `renderer`,
-compatibility transformer, module-resolution package
+module-resolution package
 roots, and Review `outDir`) are config-relative. `entries` globs are
 repository-relative, like `review.sharedImpact` and `watch.rules[].paths`;
 see [entry discovery](./mokly-configuration-discovery.md#entry-discovery). Stylesheet file paths are
@@ -211,6 +207,8 @@ extension because it would emit an undelivered sibling stylesheet. React and
 React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
+The removed `compatibility` key is rejected even when its value is `undefined`,
+with `compatibility was removed; author portable links directly`.
 The obsolete `legacy` config key is rejected, including `legacy: undefined`.
 Register every complete document explicitly with `definePage` or nested `page`;
 baseline compatibility never restores source discovery or old configuration.

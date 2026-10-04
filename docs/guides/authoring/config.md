@@ -47,7 +47,6 @@ Globs are relative to `repoRoot`.
 | `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources         |
 | `review`           | The Git base, the artifact directory and shared-impact globs                 |
 | `watch`            | Extra inputs the watched server reacts to                                    |
-| `compatibility`    | Temporary bridges while a repository moves to the current output             |
 
 ## Entries
 
@@ -165,13 +164,11 @@ Stylesheet hrefs are relative to each generated document inside `mokly-generated
 
 ## Exported types
 
-| Type                                                      | Use                                           |
-| --------------------------------------------------------- | --------------------------------------------- |
-| `MoklyConfig`                                             | The object `defineConfig` takes               |
-| `StylesheetRule`                                          | One entry of `stylesheets`                    |
-| `ReviewConfig`                                            | The `review` object                           |
-| `WatchConfig`, `WatchRule`, `WatchAction`                 | The `watch` object and its rules              |
-| `ModuleResolutionConfig`, `ModuleLoader`                  | The `moduleResolution` object and its loaders |
-| `CompatibilityConfig`                                     | The `compatibility` object                    |
-| `Renderer`, `RenderInput`, `RenderResult`                 | Your renderer, its context and its result     |
-| `CompatibilityTransformer`, `CompatibilityTransformInput` | A temporary document bridge                   |
+| Type                                      | Use                                           |
+| ----------------------------------------- | --------------------------------------------- |
+| `MoklyConfig`                             | The object `defineConfig` takes               |
+| `StylesheetRule`                          | One entry of `stylesheets`                    |
+| `ReviewConfig`                            | The `review` object                           |
+| `WatchConfig`, `WatchRule`, `WatchAction` | The `watch` object and its rules              |
+| `ModuleResolutionConfig`, `ModuleLoader`  | The `moduleResolution` object and its loaders |
+| `Renderer`, `RenderInput`, `RenderResult` | Your renderer, its context and its result     |

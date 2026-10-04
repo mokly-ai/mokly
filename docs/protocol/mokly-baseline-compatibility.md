@@ -23,11 +23,12 @@ the [artifact path contract](./mokly-artifact-paths.md).
 
 ## Incompatible Earlier Baseline
 
-A canonical manifest with an integer `schemaVersion` below `8` is incompatible
-earlier output. A base that has no canonical manifest but contains
-`mokabook-manifest.json` or `mockbook-manifest.json` is also incompatible;
-those names are sentinels for earlier output, not fallback inputs. Mokly does
-not parse their contents.
+At the selected generated location, a canonical manifest with an integer
+`schemaVersion` below `8` is incompatible earlier output. A committed
+root-level manifest does not decide selection: a missing generated manifest
+selects a rebuild. After that build, canonical root-level output below v8
+produces this same outcome without a flat-layout reader or cache entry.
+Only `mokly-manifest.json` is recognized.
 
 An incompatible base is an expected comparison-availability outcome, not a
 current-build failure:
@@ -77,10 +78,10 @@ installed output; they do not parse or convert an incompatible baseline.
 ## Verification
 
 Coverage must prove that a valid v8 base compares normally and that a lower
-version or incompatible sentinel produces the command outcomes and single line
+version in the selected generated location or rebuilt root-level output produces the command outcomes and single line
 above. A newer-version base must make Serve report Changes unavailable with its
 normal safe diagnostic and make explicit capture fail. Malformed v8, missing
 history, current-manifest failure, output cleanup, and rollback remain separate
 cases. The [v8 gate](./mokly-generated-manifest.md) defines committed-envelope
-rejection before rebuild, rejection after the base's own build, old-cache
-compatibility probes, and moved-root v8 inventory verification.
+selection from the generated subtree, rejection after the base's own build,
+partial-cache rebuilding, and moved-root v8 inventory verification.

@@ -13,7 +13,7 @@ paths, and synthetic tests.
 | esbuild discovery and one-graph loading               | Product component library                     | Renderer/module resolution               |
 | Static fragments and manifest schema                  | Theme/tokens/providers                        | Stylesheet rules                         |
 | Per-root CSS/asset bundling and PostCSS orchestration | Imported CSS/fonts/images and PostCSS plugins | `postcss` module and CSS `empty` opt-out |
-| Generated-file ownership and check                    | Product CSS/fonts/images                      | Document transformer                     |
+| Generated-file ownership and check                    | Product CSS/fonts/images                      | Consumer renderer                        |
 | Safe routes and catalogue navigation                  | Product route semantics                       | Additional watch inputs                  |
 | Git comparison and Review-ignore rules                | Comparison policy                             | Base, output, impact globs               |
 | Complete static catalogue export                      | Hosting, credentials, deployment              | Export output and Git base               |
@@ -97,8 +97,8 @@ the viewer before the CLI that depends on it.
 
 Consumers register complete HTML with `definePage` or nested `page`. A callback
 may reuse an existing render helper; consumer policy owns source allowlists and
-document-stage rules. A configured complete-document transformer remains an
-explicit deterministic boundary whose result receives normal validation.
+document-stage rules. The configured renderer supplies screen and component
+views before link validation; pages keep their own complete-document callbacks.
 Current and comparison-base manifests both require v8 under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
 

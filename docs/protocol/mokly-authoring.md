@@ -16,8 +16,8 @@ The root package export supplies typed, documented authoring helpers:
 - `ReviewIgnore`, `ReviewIgnoreScope`, and `reviewMaterialKey`.
 
 The root also exports the authoring input/definition types, including
-`PageInput`, `PageDefinition`, and `NestedPageInput`, plus configuration,
-renderer, and compatibility-transformer interfaces. `ColorScheme` is exactly
+`PageInput`, `PageDefinition`, and `NestedPageInput`, plus configuration
+and renderer interfaces. `ColorScheme` is exactly
 `"dark" | "light"`; `Viewport` is `"desktop" | "mobile"`.
 
 The [registered component contract](./mokly-components.md) owns the complete
@@ -142,8 +142,7 @@ defines fallback matching when a valid name is absent on either side.
 
 This is consumer metadata in the rendered document, not a TypeScript authoring
 field or Mokly-owned build marker. Mokly does not validate, rewrite, or remove
-it and imposes no special preservation rule on a consumer-supplied
-compatibility transformer. Viewer-owned shell elements also use the name
+it; the consumer renderer owns that metadata. Viewer-owned shell elements also use the name
 outside pane documents for history restoration; the separate DOM scopes keep
 those meanings independent.
 
@@ -183,8 +182,7 @@ target plus stable marker metadata on native HTML/SVG links so Browse can open
 the canonical catalogue page without changing standalone or Review behavior.
 Metadata-only references use `data-nav-href`, and resource elements must keep
 real resource URLs. A document with an activatable logical `href` must not
-contain `<base href>`; the builder rejects that combination before and after
-compatibility transformation while continuing to support `<base target>`. The
+contain `<base href>`; the builder rejects that combination while continuing to support `<base target>`. The
 complete behavior is defined by the
 [catalogue navigation contract](./mokly-navigation.md).
 `MockLink asChild` explicitly adapts one consumer-styled control into that

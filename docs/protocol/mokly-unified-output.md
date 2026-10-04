@@ -41,7 +41,7 @@ root order, and byte-identical asset deduplication from `main`.
 with a direct import. Do not retain a second constant or prepend the directory
 twice when moving `main`'s catalogue-relative style routes into this map.
 
-Keep authored entries, renderer, transformer, package roots and PostCSS modules
+Keep authored entries, renderer, package roots and PostCSS modules
 outside this tree through both lexical and physical aliases. Broad entry globs
 skip it; explicit inputs inside it fail the existing `config-invalid` setting
 diagnostic. Stylesheet rules stay catalogue-relative and cannot target this
@@ -198,8 +198,9 @@ the retained delivered-source map instead of rescanning a newer consumer graph.
 Compare resource membership on both v8 sides using each side's own descriptor.
 Use generated-relative stylesheet/asset keys and separate catalogue-relative
 authored closure keys, including when catalogue roots move. Do not normalize
-older layouts into v8. A pre-v8 manifest, whether committed, cached or found
-after its own build, produces the typed earlier-baseline unavailable outcome.
+older layouts into v8. A pre-v8 manifest selected inside the generated tree or found after the base's
+own build produces the typed earlier-baseline unavailable outcome. Committed
+root-level metadata cannot suppress a rebuild; invalid caches rebuild.
 Feed changed compiled CSS to rule-aware attribution; its private CSS source
 is dependency evidence, not a second public stylesheet. Preserve `main`'s
 delivered-source suppression, shared-impact fallbacks, removed-resource rules,

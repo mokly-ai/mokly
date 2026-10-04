@@ -71,7 +71,7 @@ baseline. Reject a snapshot containing `closedFolderKeys`,
 baseline without active filtering is invalid. The recovery parser remains
 strict for its other fields as defined by the [watch contract](./mokly-watch.md).
 
-Never read or migrate the v2 closed-list key `mokly:nav-disclosure:v2`; delete
-it on the first v3 write. Any change to the persisted disclosure key format or
+Read and write only the current v3 disclosure key. Do not inspect, migrate or
+remove keys from previous versions. Any change to the persisted disclosure key format or
 value shape requires a new storage version. Ignore older versions rather than
 partially interpreting them.

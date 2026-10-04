@@ -65,7 +65,7 @@ their versions.
 
 Inventory is the sorted, unique, repo-relative union of config/graph inputs,
 entry roots, CSS-pass inputs including nested imports and `url()` assets,
-transformer-only CSS closure, and PostCSS `dependency` messages and expanded
+and PostCSS `dependency` messages and expanded
 `dir-dependency` matches. Retain both logical and in-repository realpath
 aliases. Inventory-only `loadConsumerGraph(config, false)` **must run the same
 CSS collection/pass and dependency reporting** without evaluating renderer

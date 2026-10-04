@@ -18,13 +18,15 @@ and is not converted to a baseline history error.
 1. Resolve the merge base of `HEAD` and the configured base ref with Git. A
    missing ref, shallow history, or unrelated histories fail as
    `baseline-history-unavailable`.
-2. If the committed-manifest probe already found earlier output, return
-   `baseline-incompatible-earlier` without commands or cache adoption. Otherwise
-   acquire the entry lock, including on cache hits. Sweep safe crash leftovers
+2. Probe only the canonical manifest in the requested generated subtree.
+   Complete v8 output uses blobs. A version below v8 at that current location
+   returns `baseline-incompatible-earlier`. A committed root-level manifest
+   is ignored. A missing manifest or incomplete inventory needs the builder;
+   acquire its entry lock, including on cache hits. Sweep safe crash leftovers
    under that lock as a best-effort maintenance step.
-3. Reuse a valid v8 completion marker without commands. A matching completed
-   older cache returns the earlier-version outcome under the probe below.
-   On a cache miss,
+3. Reuse only complete valid v8 output with the matching commit, requested
+   catalogue and recipe. Every other entry is partial; remove its owned
+   contents under the lock, then
    extract the commit with Git's archive format into
    the entry's `source` directory. Entries that escape the directory, symlinks
    that resolve outside it, hard links, and special files fail
@@ -49,8 +51,9 @@ and is not converted to a baseline history error.
    cleanup and maintenance-error handling under the lock, then return
    `baseline-incompatible-earlier`. Do not harvest old documents, write a
    completion marker or upgrade the build's toolchain. The caller retains this
-   outcome for the pinned base and recipe; a later command invocation may
-   rebuild again when no committed manifest or completed cache proves it.
+   outcome for the pinned base and recipe in memory; no cache entry records it.
+   A later command invocation rebuilds again when current-location blobs cannot
+   establish the version.
 7. For valid, inventory-verified v8, move
    `<source>/<historical mockupsDir>/mokly-generated/` into
    `output/<historical mockupsDir>/mokly-generated/`, then copy exactly the
@@ -59,15 +62,16 @@ and is not converted to a baseline history error.
    protected sources fail `baseline-output-invalid`. Never harvest a flat
    legacy tree. Readers map repository-relative paths directly into this v8
    cache using the historical root. Delete the remaining extraction, including
-   installed dependencies, and write the completion marker. Successful
-   completion of that write is the commit point:
+   installed dependencies. Write `inputs.json`, then write the completion
+   marker to a unique `complete-<uuid>.tmp` beside `complete.json`. Rename that
+   temporary file atomically to `complete.json`. Successful rename is the commit point:
    the result is adopted immediately and cannot be removed by this build's
    failure path. Retention cleanup and lock release are separate best-effort
    post-steps; their failures are reported on stderr and do not fail the build.
 
 Before the marker commit point, cancellation terminates the running command's
 owned process tree, waits for exit and output closure, removes the partial entry, and reports
-`baseline-interrupted`. Cancellation after the marker write returns the completed
+`baseline-interrupted`. Cancellation after the marker rename returns the completed
 cached result, skips remaining retention cleanup and still attempts lock release.
 If partial-entry removal or lock release fails while a build is already failing,
 report that maintenance failure separately and retain the original typed build
@@ -104,29 +108,27 @@ The root identifies the harvest; it never replaces the requested path in
 v8 manifest and its verified inventory/closure. Keep the
 [reader mapping](./mokly-baseline-addressing.md#cache-identity-and-readers).
 
-For existing schema-1 completed entries with `manifestVersion` 2–7, keep
-only a bounded compatibility probe. Validate the envelope, commit, requested
-path and command list before inspecting its manifest. A `generated-v6` marker
-with a safe historical root probes `output/<root>/mokly-generated/mokly-manifest.json`.
-An older flat marker (`legacy` or no descriptor) probes canonical, former and
-legacy names directly under `output/`; absent descriptor fields do not create
-a resource reader. These are fixed manifest lookup locations only.
+A reusable entry requires regular bounded JSON files for `complete.json` and
+`inputs.json`, the exact schema-1 marker with `manifestVersion: 8` and
+`layout: "generated-v8"`, a safe historical root, matching commit, requested
+path and argv arrays, and complete valid v8 output. Verify generated membership,
+blob hashes and every authored closure file with the same confinement rules.
+Keep the completion-marker and manifest version checks; no earlier layout is
+parsed or adapted.
 
-A regular canonical envelope whose older version agrees with the marker, or
-a regular former-name sentinel for that older marker, proves
-`baseline-incompatible-earlier` without another build. Leave the completed
-entry intact for that result and normal retention; never serve, harvest,
-translate or relabel its contents as v8. The committed-tree gate has priority:
-a complete committed v8 baseline uses blobs regardless of an obsolete cache.
+Anything that fails this check is partial: missing files, invalid or empty JSON,
+truncation, unreadable data, earlier/newer marker versions, wrong identities,
+unsafe paths, invalid v8 data, stale bytes or incomplete closure. Return a miss,
+not a content reader or an earlier-version outcome. Cancellation still aborts
+instead of rebuilding. Under the held lock, remove only owned partial content
+without following symlinks; cleanup failure cannot permit reuse of bad bytes.
 
-Missing completion data or a missing manifest is a partial entry and follows
-existing locked cleanup/rebuild rules. A selected malformed/nonregular manifest,
-version disagreement, unknown newer marker or unsafe location is not earlier
-output: fail `baseline-output-invalid` and retain diagnostic evidence. A
-completed entry with different requested inputs or commands also fails intact
-with the existing remove-entry guidance, rather than bypassing the identity
-check because its format is old. No fresh pre-v8 completion marker is written.
-The commit-only cache still holds one catalogue/build configuration.
+The builder writes the temporary completion file only after adoption, source
+removal and input-record completion. Before the rename, failure or cancellation
+removes the partial entry and temporary marker. After the rename, the result is
+committed: cancellation and maintenance failure cannot remove it. A crash with
+only a temporary file leaves a partial entry for locked cleanup. Never expose
+partially written `complete.json`.
 
 Lock contents are published atomically using an exclusively linked temporary
 file. Its identity is captured before publication and returned with ownership;
@@ -142,8 +144,11 @@ the default two-minute lock timeout fails as `baseline-lock-timeout`.
 
 After a successful rebuild the builder removes complete entries beyond the
 retained count, newest markers first, defaulting to three. It never removes the
-entry it just built, an entry another process holds locked, or partial entries
-belonging to a live lock holder. Cleanup records each entry's stat, lock,
+entry it just built or an entry another process holds locked. Invalid and
+partial entries do not consume retention slots: acquire each candidate's own
+lock and remove it safely, regardless of the retained count. Validate completed
+v8 output before ranking it; never retain an invalid entry solely because its
+marker has a recent timestamp. Cleanup records each entry's stat, lock,
 rename, remove and release failures, continues with other eligible entries,
 and reports those failures on stderr. A concurrent entry removal is tolerated.
 Root listing failures skip cleanup. Failure or cancellation of these post-steps

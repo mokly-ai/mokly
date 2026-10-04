@@ -34,14 +34,13 @@ protections are exercised by
 [`output_safety.test.ts`](../../tests/output_safety.test.ts), and
 [`server_safety.test.ts`](../../tests/server_safety.test.ts).
 
-The canonical manifest and the obsolete-name sentinels listed by
-[baseline compatibility](./mokly-baseline-compatibility.md) are internal
-metadata. Deny those paths and realpath aliases at every public-resource
-boundary, even when absent or pending output. Internal build, freshness, and
-baseline compatibility checks may read them. They are not authoring inputs and
-must not enter `sourceFiles`. Ordinary public JSON remains supported. Browsers
-receive the catalogue data they need through the shell; no public manifest
-endpoint is provided.
+The canonical `mokly-manifest.json` and its realpath aliases are internal
+metadata at every public-resource boundary, even before output exists. Internal
+build, freshness and baseline checks may read it. It is not an authoring input
+and must not enter `sourceFiles`. Other JSON follows the ordinary closure and
+source rules; a filename from an older release grants no special access.
+Browsers receive public catalogue data, never the private source manifest.
+
 The implemented [public catalogue](./mokly-catalogue.md) adds
 `/mokly-viewer/catalogue.json` beside this private boundary; it is not a manifest
 endpoint. Serve/export allowlist its viewer fields and omit `sourceFiles`,
@@ -111,7 +110,7 @@ plain generated marker to grant asset access.
 ## Complete Source Inventory
 
 The complete inventory includes imported CSS, nested `@import`s, local `url()`
-assets, transformer-only CSS inputs, and PostCSS-reported file and directory
+assets and PostCSS-reported file and directory
 dependencies. Inventory-only freshness runs the same CSS/PostCSS pass. Ignore
 plugin paths outside `repoRoot` or physically below `node_modules` before
 normalization, honor directory globs, and never inventory generated output.
@@ -128,7 +127,7 @@ bundle and the consumer bundle, including inputs eliminated by tree shaking:
 
 - The config entry module and every repository-owned authoring import it loads.
 - Every resolved entry module and its transitive authoring imports.
-- The configured renderer, compatibility transformer, and their transitive
+- The configured renderer and its transitive
   authoring imports, including render helpers that no `entries` glob matches.
 - Repository-owned workspace package modules resolved through aliases or package
   imports; a bare package specifier alone does not imply an external dependency.
@@ -156,7 +155,7 @@ module paths. Source targets must remain regular files inside `repoRoot`.
 Reject a config or consumer graph containing an outside authoring input; never
 silently omit it from the inventory. Apply this after excluding runtime
 and installed-dependency inputs, so a consumer's transitive
-renderer, transformer, page, and template imports use the same boundary.
+renderer, page, and template imports use the same boundary.
 The error names the offending input. Consumers must move their authoring code
 inside `repoRoot` or explicitly configure a common root containing it.
 
@@ -191,12 +190,12 @@ Current-side resource reads always use the current validated policy.
 ## Acceptance
 
 Add tests before implementation for abandoned reserved files, removing their
-last import, config/renderer/transformer/helper imports that no `entries` glob
+last import, config/renderer/helper imports that no `entries` glob
 matches, entry modules co-located beside product components, tree-shaken
 inputs, local workspace packages, and arbitrary helper filenames.
 Test missing/stale inventories, logical and realpath aliases, symlink escapes,
 mixed source/asset roles, reserved output routes, and rejected protected links.
-Cover outside config, entry, renderer, transformer, page-helper, and raw-template
+Cover outside config, entry, renderer, page-helper, and raw-template
 imports, while proving installed dependencies outside the root still load.
 
 Exercise the same fixtures through GET/HEAD `/static`, resource validation,

@@ -80,7 +80,7 @@ CSS Modules mutation checklist:
   changes authored-source attribution or the manifest.
   `pending_generated.ts` holds HTML text, CSS text and opaque asset bytes before
   the transaction writes anything. Full and on-demand rendering validate links,
-  component resources and compatibility routes against this pending generation;
+  component resources and generated routes against this pending generation;
   generated CSS URLs resolve against pending assets, never stale files on disk.
   Each on-demand generation caches parsed CSS resources across view requests;
   HTML and temporary prop edits remain fresh. A new generation has new indexes.
@@ -129,7 +129,7 @@ escapes `repoRoot` through a symlink. Entries nested below `mockupsDir` remain
 protected inventoried source; public reads and generated route collisions use
 the same lexical and alias-aware source boundaries.
 `load_graph.ts` then bundles those modules, imported helpers,
-the renderer and any compatibility transformer together and refreshes the
+the renderer together and refreshes the
 resolved set on the config as `entryModules`. `styles/collect.ts` replaces
 esbuild's discarded sibling CSS output with class bindings and records graph
 imports. `styles/order.ts` walks metafile imports, while `metafile_paths.ts`
@@ -144,14 +144,10 @@ public stylesheet and asset aliases before they enter private inventory.
 `styles/outputs.ts` strips esbuild path comments
 and deduplicates shared assets by raw bytes.
 `load_graph.ts` retains the delivered CSS-pass inputs and URL asset paths
-separately from the full source inventory (which also includes transformer-only
-CSS and non-delivered plugin candidates). `Compilation.deliveredStyleSources`
-passes this repository-relative set to Changes; the retained runtime carries it
-through child and background worker transfer without adding manifest fields.
-`styles/transformer_inventory.ts` inventories CSS reachable only from the
-compatibility transformer, including nested imports and local URL assets,
-without bundling a stylesheet or evaluating consumer JavaScript. It skips
-already delivered CSS and package CSS and recovers legacy syntax. React
+separately from the full source inventory, which also includes non-delivered
+PostCSS candidates. `Compilation.deliveredStyleSources` passes this
+repository-relative set to Changes; the retained runtime carries it through
+child and background worker transfer without adding manifest fields.
 `styles/root_graph.ts` validates direct CSS imports before a virtual
 stylesheet pass, including extensionless imports, `require()` and dynamic
 imports. `config/package_code.ts` excludes physically installed package code
@@ -159,9 +155,8 @@ while retaining in-repository workspace CSS/asset aliases. React and React DOM
 resolve from consumer package roots, including when Mokly runs
 from an npx installation. The bundle stays in memory and retains the
 consumer's existing rendering/provider graph.
-`styles/lightning.ts` loads Lightning CSS's native CommonJS binding only for
-read-only transformer inventory; CSS Modules load their own PostCSS plugins
-only when a module is imported, not during CLI module import.
+Changes loads Lightning CSS for read-only rule analysis. CSS Modules load their
+own PostCSS plugins only when a module is imported, not during CLI module import.
 The preprocessor caches by local imports actually excluded in each file,
 allowing both graph and CSS passes to share unaffected transformations. The
 output cleaner drops esbuild's source-path comments and their separator lines
@@ -211,9 +206,9 @@ CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
 bundling errors. `src/registry/manifest_validation.ts` applies the strict v8
 baseline boundary before comparison. `mock_links.ts` rewrites id links while
 `mock_link_routes.ts` resolves the identity-derived target artifact and relative
-destination. Together they build the compatibility transform's logical-route
-index from the shared path helpers; a use case without a screen
-as its first step is an invalid registry invariant, not a navigation folder. Registry
+destination. `document_links.ts` adapts child controls and resolves portable
+links for full builds and on-demand documents. A use case without a screen
+as its first step is an invalid registry invariant. Registry
 validation accepts attributed sources only from resolved entries or the source
 inventory. The plain first-line marker is not an ownership proof. The v8
 manifest inventories every generated file and exact byte hash; only its
@@ -246,8 +241,7 @@ only after successful complete compilations.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
   or input-identity changes.
 - `mock_links.ts`, `mock_link_routes.ts`, `logical_records.ts`:
-  identity-derived link rewriting, target resolution, and compatibility
-  invariants.
+  identity-derived link rewriting, target resolution and final link validation.
 - `source_inventory.ts`: complete private authoring inventory, separate from
   individual invocation metadata.
 - `transaction.ts`, `check.ts`: safe output installation and verification.

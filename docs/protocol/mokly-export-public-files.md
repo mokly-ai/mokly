@@ -81,7 +81,7 @@ shares final artifact validation, delivery identity, and the output transaction.
 It retains optional Changes and existing snapshot/alias rules. Cloudflare
 routing/header files remain adapter concerns. A provider adapter may add metadata before installation;
 it must not mutate an already-installed site or relax core confinement.
-Test legacy preview ownership migration independently of a clean CI output.
+Exports adopt only an empty destination or one with a valid current ownership marker.
 
 The first version supports HTTP(S) deployment at the origin root. Subpath
 hosting, `file://` catalogue browsing, incremental/watch export, Git-free export,

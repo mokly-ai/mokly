@@ -99,9 +99,9 @@ collisions with the root marker. Inventory order is not significant.
 The marker describes generated files; it is not proof of origin or permission
 to delete, overwrite, extract, or serve them. Local export recovery can tolerate
 missing owned files but rejects unexpected files. The exporter accepts only
-schema 3 in an existing output directory: a directory holding a pre-v3 marker
-from an earlier release fails with `export-invalid` naming its unsupported
-version. The user must move added files before deleting the named directory. Upload
+schema 3 in an existing output directory. Any invalid marker, including an
+earlier version, fails with the same `export-invalid` invalid-ownership error.
+There is no version-specific local recovery path. The user must move added files before deleting the named directory. Upload
 acceptance requires the complete inventory with
 neither missing nor unexpected files and every stored blob matching its entry.
 

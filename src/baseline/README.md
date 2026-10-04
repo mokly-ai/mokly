@@ -71,7 +71,7 @@ moves only `mokly-generated/` and copies the manifest's authored asset closure t
 their repository-relative paths under `output/`. Only v8 content is adopted;
 readers append repository-relative paths beneath `output/`, using the pinned
 historical root. It deletes the remaining extraction and writes
-`complete.json`. Completion of the marker write commits the result immediately.
+`complete.json` through an atomic rename, which commits the result.
 Cancellation before that point removes partial output; cancellation afterward
 returns the completed result and skips remaining retention work. Cleanup and
 lock release cannot reject or erase a completed build. No cleanup failure may
@@ -86,12 +86,16 @@ extraction for exactly one valid manifest; details and reader path mapping
 are in [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
 `inputs.json` records the requested current repository-relative catalogue
 path; new completion markers record v8, `generated-v8`, the discovered root
-and the commands. Earlier completed entries support only a bounded compatibility
-probe; they never create a content reader. Request/recipe mismatches fail intact.
-Missing completion data is rebuilt under the lock. Malformed completed output
-fails with its evidence retained. Earlier committed envelopes reject before a
-build; earlier rebuilt output is removed before the typed incompatible outcome.
-`compatibility.ts` retains main's exact product copy and command behavior.
+and the commands. Only a complete valid v8 cache with matching inputs and
+recipe is reusable. Every invalid, missing, truncated or earlier-format entry
+is partial and is removed under its lock before rebuilding. Cleanup also removes
+unlocked invalid entries rather than ranking them for retention.
+The marker is written to `complete-<uuid>.tmp` and atomically renamed to
+`complete.json` after adoption and source removal. The rename commits the result.
+Committed selection probes only the generated subtree. A stale root-level
+manifest cannot decide availability. After rebuilding, root-level output below
+v8 still returns the typed unavailable outcome without caching it.
+`compatibility.ts` retains the exact product line and command behavior.
 
 Lock publication uses a fully written temporary file and an exclusive hard link.
 The filesystem captures the temporary file's identity before publication and

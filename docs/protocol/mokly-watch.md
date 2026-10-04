@@ -10,7 +10,7 @@ by generated output:
 
 - the config file and its transitive authoring imports reload configuration, generated
   output, watch targets, and the child;
-- resolved entry modules, page/renderer/transformer imports, and every other
+- resolved entry modules, page/renderer imports, and every other
   inventoried source rebuild generated output, including imported bytes handled
   by asset loaders;
 - a created, renamed, or deleted regular file whose repository-relative path

@@ -38,7 +38,7 @@ every replacement child; the child reports startup transfer, source-inventory
 validation, catalogue preparation, and listening separately.
 
 Build phases distinguish discovery, bundling, evaluation, registry validation,
-rendering, compatibility transformation, component metadata validation, logical
+rendering, component metadata validation, logical
 links, ignore rules, manifest construction/validation, resource validation,
 HTML links, output-path checks and runtime retention. Watcher attachment,
 resource discovery, transactional output, and Changes have separate spans;

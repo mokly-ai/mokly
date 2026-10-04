@@ -36,7 +36,7 @@ untracked Check do not inspect old output. No Git-ignore committability check
 remains; [tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
 apply equally to generated CSS, assets, HTML and the manifest.
 
-Reject explicit `entries` static prefixes, `entriesDir`, renderer, transformer,
+Reject explicit `entries` static prefixes, `entriesDir`, renderer,
 package roots, PostCSS inputs, local `stylesheets` and `review.outDir` that
 violate the generated-tree boundary, including physical aliases. Discovery
 skips this tree; broad entry globs remain valid. Entry modules below
@@ -48,14 +48,8 @@ through the validated [asset closure](./mokly-generated-output.md#closure-urls-a
 
 Delivery roots are **only** the configured `renderer` module (the built-in
 renderer has no stylesheet), followed by each resolved entry module sorted by
-repository-relative POSIX path. A compatibility transformer still participates
-in the JavaScript graph: CSS it imports is inventoried, including its local
-`@import` closure and local `url()` assets, but transformer-only CSS has no
-stylesheet route or link. Analyze transformer-only CSS imports and URLs without
-running a stylesheet bundle; when a stylesheet is already delivered by a root,
-do not parse it again for the transformer. For transformer-only syntax
-use parser recovery, and never parse or inventory package CSS under
-`node_modules` solely for the transformer. Metafile input and output keys
+repository-relative POSIX path. There are no other delivery or inventory-only
+consumer roots. Metafile input and output keys
 are relative to esbuild's real working directory even when the configured
 repository root is a symlink; map all keys back to the logical root before
 ordering roots or recording sources. When no renderer or entry reaches CSS, skip the
@@ -105,7 +99,7 @@ the same aliases, conditions, main fields, package roots, extension and
 symlink policy as the graph pass; it does not evaluate consumer JavaScript.
 The CLI does not eagerly load CSS Modules plugins or Lightning CSS. The
 former load only when a module is scoped; Lightning remains a read-only parser
-for Changes and transformer-only inventory.
+for Changes.
 For CSS `@import` resolution in both the prelude scan and the CSS pass,
 prepend `style` to the consumer's conditions and main fields (or esbuild's
 Node defaults `main,module` when unset): neither the `style` export condition

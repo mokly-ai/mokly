@@ -27,7 +27,7 @@ Worker failures retain their diagnostic as a server-only detail, logged to stder
 by the HTTP boundary. Responses keep the generic preview failure message and
 never include resource paths, exclusion globs, or other diagnostic details.
 
-`transient.ts` uses Build's stylesheet selection, renderer, compatibility/link
+`transient.ts` uses Build's stylesheet selection, renderer, link
 transformation, ownership, range, prop, per-view metadata and resource checks.
 It retains one `DocumentCompiler` per generation instead of cloning and validating
 the full catalogue for each keystroke. Existing

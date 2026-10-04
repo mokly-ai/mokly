@@ -35,7 +35,6 @@ type PublicPath = string;
 
 interface CatalogueReadModel {
   schemaVersion: 4;
-  generatedPathPrefix: "mokly-generated";
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -242,9 +241,10 @@ generation from `comparisonUrl` may supply `sourceKind: "generation"`. With
 neither real source, projection omits the field instead of deriving it from
 revisions, `deploymentId`, metadata, time, or randomness.
 
-Readers validate supplied snapshot ids and require uniqueness. When the field
-is absent but one immutable comparison generation is advertised, the reader
-derives a generation-backed identity. Id-only selection of a removed record
+Readers validate supplied snapshot ids and require uniqueness. They never
+derive missing ids. A removed record with an advertised comparison generation
+must supply `snapshotId`; absence is invalid. With no immutable identity,
+the field can remain absent. Id-only selection of a removed record
 normalizes to its safe identity when present. A baseline or generation change
 produces different ids, so an unknown, stale, or cross-catalogue selection
 fails closed rather than retargeting content.
@@ -259,8 +259,8 @@ Readers require `schemaVersion: 4` and reject older and unknown versions; writer
 remain allowlisted. The [path contract](./mokly-nav-paths.md#order-and-keys)
 owns the intentional change from v1's authored tree order. Version 3 removes
 every route and path field, makes component variants entries, and keys removal
-by id. Version 4 requires `generatedPathPrefix: "mokly-generated"`; no
-prefixless catalogue is readable. Optional fields are additive; removals, required additions, changed
+by id. Version 4 uses one fixed layout from `GENERATED_DIRECTORY` and stores
+no prefix field. Its unreleased version number remains 4. Optional fields are additive; removals, required additions, changed
 meaning, new union discriminants or incompatible paths require a new version.
 Ownership v3 and upload v2 gate the viewer namespace; the review result and delivery
 descriptor follow [Changes](./mokly-changes.md) and

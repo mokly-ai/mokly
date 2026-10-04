@@ -6,7 +6,7 @@
 mokly.config.ts
         |
         v
-resolve `entries` globs -> matched entry modules + renderer + optional compatibility modules
+resolve `entries` globs -> matched entry modules + renderer + optional consumer modules
         |
         v
 one esbuild graph, with React resolved from the consumer
@@ -21,7 +21,7 @@ validate definitions and cross-references in memory
 renderer({ node, entry, viewport, colorScheme, stylesheets })
         |
         v
-adapt explicit child controls -> resolve mock:id links -> compatibility bridge
+adapt explicit child controls -> resolve mock:id links
         |
         v
 validate markers/links/resources
@@ -85,9 +85,7 @@ at any depth of entry imports _before_ PostCSS can inline them. PostCSS runs
 per effective stylesheet input; lazy CSS Modules plugins rename local
 classes, IDs and keyframes using a repo-relative path hash without rewriting
 other authored CSS. A second esbuild pass produces one CSS file per
-configured renderer/entry root and path-mirrored local assets. The
-compatibility transformer is a graph source, not a CSS delivery root;
-its CSS tree is inventoried without publishing a stylesheet. The union of
+configured renderer/entry root and path-mirrored local assets. The union of
 both passes and plugin dependencies is used even by inventory-only freshness
 checks. Generated text and binary bytes share the same ownership, check,
 transaction and export boundaries without changing manifest v8.
@@ -96,7 +94,7 @@ manifest schema. Routes derive from entry kind and id, while navigation uses
 authored `navPath`.
 
 The resolved entry modules, the configured renderer, imported page
-helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and
+helpers are imported by a single virtual entry and
 bundled together. The internal bundle is CommonJS so Node-oriented consumer
 dependencies can retain dynamic built-in imports. Esbuild returns this bundle
 in memory; evaluation creates no temporary module file. A private compilation
@@ -104,7 +102,7 @@ association retains the exact bundle, configuration and accepted artifacts for
 local controls. Serve prepares a distinct validated live index and transfers that
 index and bundle over private IPC before readiness, without rendering the catalogue.
 Failed index candidates preserve the last-good graph. `DocumentCompiler` reuses
-Build's rendering, compatibility, links, ranges and resource validators
+Build's rendering, links, ranges and resource validators
 for a requested view. Foreground and Props workers retain only bounded
 generation-local documents/resources. Background compilation runs the ordinary
 exhaustive Build pipeline with cooperative checkpoints in the original render order,
@@ -209,24 +207,10 @@ fragment anchors across every target view, and binds expected marker presence,
 element namespace/native-link class, and each logical attribute to the exact
 portable value produced for that element.
 
-During a staged migration only, a configured consumer transformer receives the
-complete document, current route/viewport/color scheme, repository-relative
-output path, available static/output routes, and view-resolved logical routes. The
-transformed document must remain complete and then passes every normal
-Review-marker, link, resource, and path check. Route identity comes from the
-accepted in-memory manifest and compilation; the plain generated marker is
-never parsed for ownership.
-
-This boundary preserves complete catalogue-reference records rather than
-markers alone. A transformer cannot add, remove, or alter an expected marker,
-change a
-metadata-only reference into an activatable link, change the owning element's
-namespace or native-link class, change the set of navigation attributes that
-carried its logical destination, or alter those attributes' resolved portable
-values. Adding `<base href>` to a document that retains an activatable record
-also fails. After transforming the complete output set, the build
-re-indexes anchors from those final documents and repeats every logical fragment's
-cross-view check. This keeps Browse, standalone, and Review navigation aligned.
+After link rewriting, validate final HTML, component ranges, controls,
+resources and every logical fragment target. Configured renderers and page
+callbacks produce document content; there is no later consumer transformation.
+The plain generated marker is not ownership authority.
 
 React Native Web style collection is not a second conversion stage. If an app
 uses it, its renderer wraps the node in the app provider, registers or renders

@@ -32,18 +32,15 @@ views. The shell lives at `/view/<kind-derived entry route>`, while frames
 load real page/view files. Compiled resources use `styles/` and `assets/`;
 the private manifest has its own fixed name. They are not HTML entry routes.
 
-Public catalogue v4 requires `generatedPathPrefix: "mokly-generated"`, typed
-from `GENERATED_DIRECTORY` in
-`packages/viewer/src/catalogue/delivery_paths.ts` and exported through
-`@mokly/viewer/data`. Only v4 is readable by the merged viewer. Reject older
-and unknown versions before entry or URL interpretation. An absent prefix is
-invalid in v4, not a legacy-layout signal; neither disk existence nor a route
-string chooses a fallback. This contract does not add v1/v2/v3 publication
-readers. Older deployments keep their matching bundled viewer or are re-exported.
+Public catalogue v4 contains no layout-prefix field. The viewer always uses
+`GENERATED_DIRECTORY` from `@mokly/viewer/data` to derive current paths.
+Only v4 is readable. Reject older and unknown versions before reading entries
+or deriving URLs. Disk existence, host settings and payload metadata cannot
+select another layout. Current files always use `/static/mokly-generated/`.
 
 V4 records contain identity and view axes, not `route`, `documentPath` or
 `fragmentPath` fields. Derive each current file from that identity and the
-required prefix. Private v8/live-index stages derive the same addresses.
+shared directory constant. Private v8/live-index stages derive the same addresses.
 Complete public models and strictly scoped live models retain their separate
 usage validation. Source changes still invalidate stale frame work and events.
 
@@ -75,12 +72,12 @@ of the private live rendering, navigation, view-evidence or event endpoints.
 
 Keep existing origin, session, pathname, encoding, traversal and authentication
 checks. A current frame URL must match the exact file derived for the mounted
-entry/view under `/static/mokly-generated/`. Strip that delivery prefix once
+entry/view under `/static/mokly-generated/`. Strip that fixed delivery prefix once
 before resolving the logical route through the catalogue's kind/id helpers.
 Retain a valid fragment separately. Authored closure URLs are resources, not
 entry routes; temporary renders and historical generations use their existing
 separate adapters. Do not accept an old prefixless current URL by treating a
-missing field as permission for a legacy mount.
+missing field as permission for another layout.
 
 Provider-normalized extensionless URLs remain supported under `main`'s shared
 normalization helpers and must identify the same derived document. This work

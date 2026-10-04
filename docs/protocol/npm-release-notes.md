@@ -18,6 +18,29 @@ commit returned by
 - `6775282d feat!: use portable viewer namespace` — the portable namespace
   note below.
 
+## Removed Public Options And Types
+
+The current API has no document transformation bridge. Remove
+`MoklyConfig.compatibility` and `compatibility.transformer`. The
+`CompatibilityConfig`, `CompatibilityTransformer` and
+`CompatibilityTransformInput` exports are removed from `@mokly/mokly`.
+Render portable HTML and links directly in entries or the configured renderer.
+Supplying `compatibility`, including `undefined`, fails with
+`compatibility was removed; author portable links directly`.
+
+Catalogue v4 has one fixed layout and no `generatedPathPrefix`.
+Remove `CatalogueReadModel.generatedPathPrefix`, `GeneratedPathPrefix`,
+`FrameMount.generatedPathPrefix` and `FrameMount.route`. Call
+`currentDocumentPath(route)` and `currentDocumentRoute(pathname)` without
+prefix arguments. The viewer uses `GENERATED_DIRECTORY` directly; the
+unreleased catalogue version remains 4. No DOM prefix override is supported.
+
+Export directories require the current v3 ownership marker or must be empty.
+There is no preview-marker migration. Baseline caches accept only complete v8
+output and rebuild invalid entries. Only the current generated notice is
+nonmaterial; its LF and CRLF forms remain accepted. Format version rejection,
+removed-key errors and the service's 426 handling remain unchanged.
+
 ## Breaking Portable Namespace Release Note
 
 The viewer namespace is now `mokly-viewer/`, with comparison generations below

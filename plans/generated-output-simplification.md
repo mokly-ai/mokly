@@ -14,8 +14,8 @@ option (`"committed" | "derived"`) is removed. Everything it selected is
 derived from one fact, read per commit: whether the generated output is
 tracked in Git. Only v8 can be a readable baseline after the merge. Complete
 v8 output uses Git blobs; missing or incomplete v8 output uses
-`review.baselineBuild`. Recognized earlier output gives main's
-incompatible-earlier outcome. `check` always validates the sources,
+`review.baselineBuild`. The selected current-location version gate and the post-rebuild check retain
+main's incompatible-earlier outcome; other committed locations are ignored. `check` always validates the sources,
 and compares compiled bytes with the tracked files only when the output is
 tracked. Only `build`, `build --watch`, and `serve --build` write generated
 output; plain Serve, export, and publication never do. Watched writes follow each
@@ -56,22 +56,21 @@ Decisions:
 - The manifest records an inventory of every generated path with its Git
   blob hash, so the completeness of committed output can be judged at any
   commit from Git alone.
-- Historical baselines, correction 3 = **A**: preserve `main`'s
-  `baseline-incompatible-earlier` outcome for every pre-v8 base, including
-  this branch's v6. Only v8 has a content reader. A committed earlier manifest
-  at a known location returns that outcome without a rebuild; otherwise a
-  missing/incomplete baseline can rebuild with its own recipe and be rejected
-  if that recipe emits earlier output. Matching older completed caches provide
-  incompatibility evidence only, never content. Preserve the exact product
-  line and main's Serve/export/publication outcomes. Keep per-commit selection,
-  v8 inventory checks and moved-root discovery. Remove this branch's pre-v8
-  readers, legacy flat-layout reader/harvest and cross-layout URL normalization;
-  keep every mainline deletion. The manifest/storage contracts define lookup,
-  cache identity, cleanup and invalid-data precedence.
+- Current formats only: the approved twelve removals below supersede earlier
+  compatibility decisions. Select committed baselines only from the canonical
+  manifest in the generated subtree. Missing or incomplete v8 output rebuilds
+  with its own recipe; stale root-level metadata never decides availability.
+  Keep the v8 version gate, including the earlier-version outcome after a
+  rebuild writes root-level output below v8. Invalid caches are partial and
+  rebuild under their lock; completion markers publish by atomic rename.
+  Remove transformers, old ownership adaptation and notice handling, obsolete
+  reservation/key logic, inferred snapshot ids and serialized layout prefixes.
+  Keep current format gates, removed-key diagnostics, identity hash domains,
+  exact earlier-baseline product copy and the 426 service-version response.
 - Finding 32 = **B**, documentation only: generated HTML derives from kind/id
   and starts with `pages/`, `screens/` or `components/`. Its outer delivery
   prefix is separate; ids may contain the directory-name text. The merged
-  viewer reads catalogue v4 only, with the required generated prefix. Add no
+  viewer reads catalogue v4 only, with one fixed generated layout. Add no
   new route validator or substring rejection for this finding. The approved
   `styles`/`assets` reservation remains decision 28 work.
 - Finding 34 = **C**: new Milestone 14 prepares the unchanged example baseline
@@ -85,7 +84,7 @@ Decisions:
 - `check` on tracked output fails on missing, stale, or extra files with
   guidance to run `mokly build` and commit, or to untrack the directory.
   `check` on untracked output ignores local files entirely.
-- Serve, export, and publish never write under `mokly-generated/`. `build` writes
+- Plain Serve, export, and publish never write under `mokly-generated/`. `build` writes
   transactionally. `build --watch` reuses the consumer watcher and rewrites
   after each successful complete compilation. `serve --build` does the same
   inside watched Serve, writing at the point where committed mode used to
@@ -98,8 +97,8 @@ Decisions:
   beside `mokly-generated/`, so the cache stays self-contained. Both copies are
   internal to `.mokly-cache/`.
 - The manifest lists the referenced closure so the harvest and the readers
-  know exactly which files belong to the catalogue. After the merge only v8
-  content is readable; earlier envelopes and filenames identify incompatibility.
+  know exactly which files belong to the catalogue. Only v8
+  content is readable. Only the canonical manifest name has metadata status.
 - `mockupsDir` keeps its name. The generated child is the fixed name
   `mokly-generated`; unlike local-only `.mokly-cache`, deployable output has
   no leading dot because some static hosts and deploy tools skip dot-paths.
@@ -1893,6 +1892,37 @@ The instance-key hash domains in `packages/viewer/src/components/keys.ts`
 keep their names. They are identities, not compatibility code, and a rename
 changes every instance key.
 
+### Snapshot writer proof and contract choices
+
+The writer audit at `cc1e332e` confirms that `src/catalogue/projection.ts`
+publishes ids before serialization whenever `historicalSource` has a baseline
+commit or comparison generation. Serve's `LivePublicCatalogue`, export's
+`assembleExportSite` and `scripts/preview/catalogue.mjs` all use that projector.
+`serializeCatalogue` preserves fields; `projectScopedCatalogue` spreads each
+removed record. Hosted object, URL and loader sources go through
+`packages/viewer/src/viewer/source.ts` and only read the model. They are not
+another producer. External host data must obey this same current contract.
+
+The direct source probe at `.context/milestone-16/snapshot-proof.ts` checks
+baseline-only identity, generation-only identity and no identity, before and
+after serialization and scoped delivery. Both real identities produce a
+64-hex id; only the no-identity case omits it. Therefore remove `legacyGeneration`
+from the reader. A removed record with a comparison generation must supply its
+id; a missing id is invalid. No-identity records remain supported without
+invented ids. Keep the current writer's generation-based hash construction.
+
+Invalid cache data, including request/recipe disagreement, is partial rather
+than a fail-intact compatibility branch. Cancellation still aborts. Retention
+validates output and removes unlocked invalid entries regardless of the retained
+count. Atomic marker publication uses a unique sibling temporary and rename;
+rename is the commit point. Keep safe lock, confinement and process checks.
+
+Documentation removal shrinks reviewed oversized protocol pages. Their existing
+tests require exact cap values, so lower only the corresponding numeric cap data
+in `tests/protocol_doc_sizes.test.ts`. This is required documentation-validation
+metadata, not a test removal or relaxed limit; assertions and titles stay intact.
+No implementation code changes in the contract commit.
+
 ### Resolved by the decision without code
 
 Finding 3's upgrade guide and `main`'s ignore rule for
@@ -1907,21 +1937,28 @@ tests), 49–52 and 54–57, plus earlier findings 2, 5, 9, 10, 14, 16–18, 20 
 the double decode in 25. Do not fix them. If a removal forces a change in
 their area, make the smallest correct change and record it.
 
-- [ ] Update every affected protocol document, guide and README, including
+- [x] Update every affected protocol document, guide and README, including
       `packages/viewer/README.md`, so that each describes only the current
       formats. Remove the transformer section from `mokly-rendering.md` and
       every reference to a removed item. Write current contracts, not plan
       history, as `docs/protocol/README.md` requires.
-- [ ] Define exactly: base selection with one manifest location and a
+- [x] Define exactly: base selection with one manifest location and a
       generated-subtree listing; the earlier-version outcome after a rebuild;
       cache entry validity, partial-entry deletion, retention cleanup of
       invalid entries and the atomic marker write; an export destination with
       an invalid or earlier marker; the `compatibility` removed-key error; and
       the single-layout frame URL rule.
-- [ ] Record the removed public API in `docs/protocol/npm-release-notes.md`.
-- [ ] Update this plan's summary and decision text that describe removed paths.
-- [ ] Run `npm run format:check` and the documentation tests; review the diff;
+- [x] Record the removed public API in `docs/protocol/npm-release-notes.md`.
+- [x] Update this plan's summary and decision text that describe removed paths.
+- [x] Run `npm run format:check` and the documentation tests; review the diff;
       commit with Conventional Commits; push.
+
+Validation: Node 22.14.0; `npm run format:check` passes. The Markdown link,
+protocol size/index/history and guide structure/copy checks pass all 13 tests.
+The snapshot writer probe passes baseline, generation and no-identity cases.
+Only documentation and one lowered protocol-cap value changed. No main file
+or test title is removed in this contract commit. All removal scope maps to
+items 1–12 above; unrelated recovery/version wording remains for the search audit.
 
 ## Milestone 17: Remove the compatibility code
 

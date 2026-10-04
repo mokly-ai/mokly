@@ -184,7 +184,7 @@ The Mokly wrapper authors these exact inert React sentinels:
 ```
 
 `b-n` is allocated per collector boundary, starting at zero. Both attributes
-are package-reserved; consumers and transformers cannot author or forge them.
+are package-reserved; consumers cannot author or forge them.
 [`ranges.ts`](../../src/components/ranges.ts) authenticates each token against
 the collector, requires the exact empty template shape with one attribute,
 and serializes it as:
@@ -210,7 +210,7 @@ can have a slot record without a range.
 Reject unknown, forged, missing, duplicate, crossing, reordered, or mismatched
 markers and incorrect range parentage. No template sentinel survives final
 serialization. Review-ignore regions cannot enclose component or caller-slot
-boundaries. Compatibility transforms must preserve validated pairs; adapters
+boundaries. Generated documents must preserve validated pairs; adapters
 inspect current views using these comments without adding layout wrappers.
 Accepted baseline and current v8 documents use the same marker spelling and
 validation; historical marker translation is not supported.

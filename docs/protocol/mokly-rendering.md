@@ -63,8 +63,8 @@ and rewrites every complete
 function returns, including when one element has both attributes. The rewrite
 is element-aware and applies to complete page output: logical `href` is valid only on
 native HTML/SVG links, every other owner fails the build, documents with an
-activatable logical link reject `<base href>`, and final compatibility output
-is checked through that fail-closed contract. The
+activatable logical link reject `<base href>`. Final rendered documents
+receive the same link and resource validation. The
 package declares `react` and `react-dom` `>=19.0.0` as peers and does not ship a
 private runtime. The builder resolves both peers and their subpaths from
 consumer config, then bundles every React-bearing input in one internal graph.
@@ -83,37 +83,7 @@ Config dependencies are bundled from the config directory before the temporary
 module is evaluated, so bare workspace/package imports never resolve from the
 operating-system temporary directory or npx cache.
 
-### Temporary Document Compatibility
-
-A consumer with already-authored output may configure one synchronous
-`compatibility.transformer` module. It is bundled into the same consumer graph
-and default-exports this contract:
-
-```ts
-interface CompatibilityTransformInput {
-  availableRoutes: readonly string[];
-  colorScheme: "dark" | "light";
-  content: string;
-  logicalRoutes: Readonly<Record<string, string>>;
-  outputPath: string;
-  route: string;
-  viewport: "mobile" | "desktop";
-}
-
-type CompatibilityTransformer = (input: CompatibilityTransformInput) => string;
-```
-
-`availableRoutes` contains the complete pending generated output plus the
-validated referenced authored closure, not unrelated files on disk.
-`logicalRoutes` maps screen/use-case catalogue routes to concrete artifacts for
-the current viewport and color scheme. A dark document targets dark fragments
-when the destination supports them and otherwise falls back to the light
-fragment. `outputPath` is repository-relative; no absolute checkout path is
-exposed. Mokly applies the transformer after id links resolve and before
-Review-marker, link, and resource validation. It must return a complete,
-deterministic document and stay consumer-owned. The transformed route remains
-bound to the in-memory manifest, not to a parsed header. New catalogues should author portable links
-directly and leave this option unset.
+## Stylesheet Selection
 
 Stylesheet rules are ordered, declarative consumer configuration. Their globs
 match the entry's catalogue route (`<prefix>/<id>.html`) before viewport

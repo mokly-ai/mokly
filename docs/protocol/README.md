@@ -30,7 +30,8 @@ Public catalogues and delivery descriptors use version 4. Shell bootstraps use
 version 1, ownership markers use version 3, and upload metadata uses version 2.
 The [viewer namespace](./mokly-viewer-namespace.md) defines path and version
 gates, including older-host failures. Plan v1 and review v4 remain unchanged.
-Public catalogues have no older-version reader or optional-prefix fallback.
+Public catalogues have one fixed layout and no serialized prefix. Format
+version gates reject unsupported data before content or path interpretation.
 
 ## Contracts
 

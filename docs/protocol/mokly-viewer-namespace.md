@@ -80,10 +80,9 @@ moving static generated paths is incompatible with v3 readers. Its intermediate
 upload/ownership together. Strict version gates apply throughout; no v3 parser
 may interpret a v4 model.
 
-Catalogue v4 retains `main`'s identity-only entries and adds required
-`generatedPathPrefix: "mokly-generated"`, typed from the shared constant.
-It contains no per-entry routes, `documentPath` or `fragmentPath`. Derive current
-files from kind/id/viewport/scheme and that prefix. Public models remain
+Catalogue v4 retains identity-only entries. It contains no layout-prefix field,
+per-entry routes, `documentPath` or `fragmentPath`. Derive current files from
+kind/id/viewport/scheme and `GENERATED_DIRECTORY`. The unreleased version stays 4. Public models remain
 complete; `omitted` usage is permitted only in the strictly scoped live reader.
 Bootstrap v1 adds its version to `main`'s previously unversioned envelope and
 keeps its scopes; its external reference
@@ -113,8 +112,8 @@ The catalogue service does not support this Mokly version. Update the service an
 Do not retry, send Blobs, call Complete, downgrade, or expose a response body.
 An old-format artifact offered to the new receiver also fails 426. For local
 export replacement, an old marker fails `export-invalid` before mutation with
-the existing move-added-files/delete-directory remedy, now naming the
-unsupported version. The marker remains required for upload and local recovery.
+the same invalid-ownership move-added-files/delete-directory remedy used
+for any invalid marker. The marker remains required for upload and local recovery.
 
 An independently hosted older viewer given catalogue v4 must reject its
 unsupported version before deriving `/static/` URLs or reading entry fields.

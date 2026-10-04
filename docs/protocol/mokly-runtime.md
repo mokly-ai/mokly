@@ -63,7 +63,7 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 `mokly build` performs this transaction:
 
 1. Load and validate config.
-2. Discover and bundle all entry, renderer, transformer, and imported helper modules.
+2. Discover and bundle all entry, renderer, and imported helper modules.
 3. Validate registry metadata, relationships, derived routes, and output
    collisions.
 4. Render screen fragments and registered whole-document pages in deterministic order.

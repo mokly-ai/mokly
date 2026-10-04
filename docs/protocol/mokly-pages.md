@@ -104,7 +104,7 @@ their metadata and evidence role; an input edit alone does not add a page whose
 document, rendered resources, and reviewable metadata remain unchanged.
 
 The complete output passes the shared child-control adapter, logical-link and
-fragment validation, compatibility transformer, final metadata checks,
+fragment validation, final metadata checks,
 HTML/CSS/resource validation, and Review-ignore validation. The existing
 transaction replaces the entire `mokly-generated/` tree with rollback and
 symlink confinement. Authored files outside it remain untouched. Identity-derived
@@ -181,7 +181,7 @@ from every screen viewport and scheme. Use-case links still resolve through
 their first screen.
 
 Validate page anchors against the final single document, including after
-compatibility transforms. Preserve the existing fragment grammar, duplicate
+final rendering. Preserve the existing fragment grammar, duplicate
 query rejection, invalid-anchor behavior, safe URL handling, link-owner
 authentication, and closure-limited authored HTML. Served and published
 pages must handle direct URLs, in-frame navigation, Back/Forward, and fragment

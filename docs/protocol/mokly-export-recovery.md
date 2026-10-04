@@ -1,7 +1,7 @@
 # Export Recovery
 
 This supplements the [consumer export contract](./mokly-export.md). The same
-rules apply to consumer export and the repository's legacy preview migration.
+rules apply to consumer export and repository preview publication.
 No new CLI options or supported JavaScript API are introduced.
 
 ## Captured Ownership And Installation

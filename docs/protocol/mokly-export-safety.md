@@ -36,12 +36,7 @@ must have a regular `.mokly-export-artifact` ownership file using the
 [public schema 3](./mokly-export-ownership.md) and its generated-file inventory.
 Reject missing/malformed markers, unexpected files outside the inventory,
 unsafe inventory paths, symlink entries, and unsupported versions, including
-schema 1 markers written by earlier releases. That case uses this exact message,
-where `<output>` is the resolved destination:
-
-```text
-[mokly/export-invalid] This folder holds an export from an earlier Mokly release. Move any files you added, then delete <output> and export again.
-```
+older marker versions. Every invalid marker uses the same invalid-ownership error and recovery remedy.
 
 Treat the marker as public-safe metadata: no absolute checkout paths,
 credentials, or timestamps. Never use its strings as unchecked deletion
@@ -60,12 +55,8 @@ regular `.owner` containing `mokly-export-reservations-v1` plus a newline and
 remains after cleanup; never put authored files or export destinations inside it.
 Unowned namespaces and symlinked namespace/lock directories are rejected.
 The `.mokly-export-transaction` marker records `schemaVersion: 2` and the
-output basename; `stage/` and `backup/` remain inside that reservation. Old
-`.mokly-export-<20-hex>.lock` siblings block new exports until explicitly
-recovered. Confirm no writer is active, inspect any retained backup, and recover
-it before moving an abandoned reservation aside. Nothing is silently stolen.
-
-Do not accept the old `.mokly-preview-artifact` marker through the public
-command. The repository-only adapter may explicitly migrate a valid legacy
-preview at its known output path with the same backup/rollback guarantees;
-malformed markers and unrelated contents still fail.
+output basename; `stage/` and `backup/` remain inside that reservation.
+Only the current reservation namespace participates in writer admission.
+An unrelated sibling file cannot claim an export lock. For an abandoned current
+reservation, confirm no writer is active and inspect the retained backup before
+explicit recovery. Every adapter uses the same current ownership marker.

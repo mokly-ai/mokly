@@ -175,7 +175,7 @@ The current maintenance choices are:
   directly for its lazy rename-only verification. The lockfile deduplicates
   each with the plugins' existing runtime copies.
 - Lightning CSS is a production dependency only for read-only stylesheet rule
-  analysis and transformer-only dependency inventory. Its
+  analysis for Changes. Its
   MPL-2.0 native packages and Apache-2.0 `detect-libc` dependency participate in
   the workspace and packed-consumer audits. Retain every platform's optional
   lockfile entry when updating it; ordinary Ubuntu and native macOS/Windows jobs

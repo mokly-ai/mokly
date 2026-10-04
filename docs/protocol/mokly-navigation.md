@@ -59,7 +59,7 @@ A complete document that contains an activatable logical `href` must not
 contain an HTML `<base href>` element. The base URL would change the browser's
 effective portable destination without changing the link attribute bytes that
 Browse authenticates. The builder enforces this restriction both before and
-after compatibility transformation. A metadata-only `data-nav-href` does not
+after rendering and link rewriting. A metadata-only `data-nav-href` does not
 activate the restriction, and `<base target>` remains supported under the
 target rules below.
 
@@ -96,27 +96,16 @@ The builder must:
   conflicting logical destinations carried by two navigation attributes on
   one element.
 
-Before invoking a compatibility transformer, the builder records a multiset of
-complete logical-reference records: expected marker presence and value, the
-native-link class (`html-a`, `html-area`, `svg-a`, or metadata-only), which of
-`href` and `data-nav-href` carried the logical destination, and each such
-attribute's resolved portable value. It reparses the transformed document and
-requires the same multiset. Adding or removing a marker, preserving a marker
-while changing its portable destination, element kind, or namespace, changing
-a metadata-only reference into an activatable link, or moving logical identity
-between navigation attributes fails the build. Unrelated attributes remain
-consumer-owned. Duplicate reserved attributes are detected from the raw start
-tag rather than the parser-normalized attribute map, so a transformer cannot
-hide a second marker or target through HTML's first-attribute-wins parsing. A
-transformer that adds `<base href>` to a document retaining an activatable
-record also fails the build. After every document has been transformed, the
-builder indexes anchors from the final documents and repeats cross-view
-fragment validation for every retained logical-reference record. A transformer
-that removes or renames an anchor in any destination viewport or scheme
-therefore fails the build even when the source link record itself is unchanged.
-The builder validates every transformed screen fragment and page document
-against its in-memory manifest route and expected link records; it does not
-parse a source-path header. The plain generated marker has no security role.
+The builder records every logical reference after adapting controls and
+resolving ids. Records retain the source route, target identity, view axes and
+fragment. After rendering the complete output set, index its final anchors and
+validate each reference across the required destination views. An absent or
+renamed anchor fails with the referring route. No consumer transformation runs
+between link rewriting and final validation.
+Consumer-authored or duplicate reserved attributes still fail at the normal
+renderer boundary. Markers never grant permission to read a source or resource.
+The builder validates final documents against the accepted route set; it does
+not parse a source-path header. The plain generated marker has no security role.
 
 The marker is inert metadata, not a second resource URL. HTML escaping must be
 deterministic, and link/resource validation continues to inspect the portable
@@ -376,7 +365,7 @@ Coverage must prove:
 - helper-level id/fragment separation and id grammar, portable output, eligible
   native-link markers, metadata-only `data-nav-href`, rejection of logical
   `href` on resource/non-link elements, rejection of `<base href>` before and
-  after compatibility transformation, dual navigation attributes, hashes,
+  after rendering, dual navigation attributes, hashes,
   use-case ids, dark-to-light fallback, conflicts, and reserved-marker errors;
 - served and preview adaptation without mutating generated fragments, including
   LF/CRLF ownership-gated promotion, unowned reserved-metadata removal, secure

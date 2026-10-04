@@ -72,19 +72,16 @@ for debounce, one-shot and child/parent behavior.
 
 ### Selecting The Base Reader
 
-Resolve and pin the merge base once. Apply the
-[ordered version/inventory probe](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
-at the requested root. A committed pre-v8 canonical envelope or former-name
-sentinel returns `baseline-incompatible-earlier` without a build. A valid v8
-inventory selects Git blobs when complete and a rebuild when incomplete.
-Absent manifests select a rebuild, including when the historical root moved.
-Invalid/newer selected data is an error, never absence or earlier output.
+Resolve and pin the merge base once. List only the requested generated
+subtree and inspect its canonical `mokly-manifest.json`. Ignore committed
+root-level and noncanonical filenames. A complete v8 inventory selects Git
+blobs; missing or incomplete output selects the base's own recipe. Keep the
+version gate on a selected current-location manifest and normal I/O errors.
 
-A rebuild uses that commit's own recipe. Its selected output must pass the same
-v8 gate: earlier output returns incompatibility after commands finish, while
-v8 must pass inventory verification before adoption. Existing older completed
-caches are probed only for that unavailable outcome, without commands or any
-content reader, under the [storage rules](./mokly-baseline-storage.md#cache-layout).
+After the rebuild, a canonical root-level manifest below v8 returns
+`baseline-incompatible-earlier`. A current generated manifest takes precedence.
+Do not cache earlier output or its outcome. Invalid, missing or older cached
+entries are partial and are deleted under the cache lock before rebuilding.
 No head-index state participates in these decisions.
 
 Both readable implementations accept a commit and repository-relative path.
@@ -174,8 +171,9 @@ flag. Navigation targets and `preparing → pending` timing remain measurable.
   tracked missing/stale/extra output, and untracked local-output independence.
 - Test v8 absent/complete/missing/mismatched/extra inventory at **each** base
   commit, tracking transitions and moved v8 roots; test v2–v7 incompatibility
-  from committed output, rebuilt output and matching old caches without reading
-  old resources, plus once-per-base reporting and v8 recovery.
+  at the selected generated location and after a rebuild, plus once-per-base
+  reporting and v8 recovery. Prove stale committed root-level v7 and invalid
+  caches rebuild rather than deciding unavailability.
 - Test cache hits, interruption, bounded command errors, path/symlink
   confinement, child handoff, and in-memory head comparisons.
 - Test Serve's `preparing → pending → ready | unavailable` lifecycle, export

@@ -165,7 +165,7 @@ identity and timestamps as bounded path/prefix sets, revalidating with one
 metadata read per lookup. Retired schema 1 outputs are
 intentionally treated as unowned, so their events are not suppressed and their
 files never gain replacement authority. The repository-only preview
-adapter supplies validated host aliases and legacy ownership explicitly. It
+adapter supplies validated host aliases and uses current export ownership. It
 captures an in-memory compilation, retaining optional Changes and its
 source/resource fingerprint contract. Its capture server disables live Changes
 states: ordinary publications omit the tabs, while opt-in Changes publications
@@ -178,18 +178,10 @@ validator enforces that scope at preflight and before installation.
 
 `reservation.ts` uses filesystem-native per-output directory names under an
 owned `.mokly-export-reservations` namespace, retaining only its metadata
-after cleanup. Case and symlink aliases cannot bypass an active lock. Legacy
-hashed reservations require explicit recovery before another export.
-`resource_policy.ts` applies the same package/source boundary to current and
-historical copies. Export captures only compiled `mokly-generated/` documents and the manifest v8
-`assetClosure`; reference validation, Review and public content-change
-classification then use the same confined closure. Directory-based public
-scans and consumer exclusion globs no longer decide publication. Manifest/cache
-privacy is unconditional, and protected closure references fail with their
-referring route. Unreferenced HTTP paths return 404. Build and export share
-HTML anchor validation through `html_link_validation.ts`. After the migration,
-Watch ignores `mokly-generated/` by prefix while observing referenced authored
-assets in place.
+after cleanup. Case and symlink aliases cannot bypass an active lock. Only the current reservation namespace controls writer admission.
+`resource_policy.ts` admits
+only validated generated inventory paths, including CSS assets mirrored from
+`node_modules/@scope`; authored dependency trees and CSS sources stay private.
 
 `backup.ts` revalidates captured output and centralizes safe restoration and
 allowlisted, non-recursive cleanup. `operations.ts` is the injectable filesystem

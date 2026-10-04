@@ -81,7 +81,7 @@ opaque asset bytes, seeded with all style outputs before rendering. On-demand
 documents add HTML lazily to that same set; never decode asset bytes. Validate
 generated CSS `url()` references recursively as CSS resources, and binary
 assets by existence only. Pending generated routes satisfy stylesheet and
-component resource checks; compatibility `availableRoutes` includes them.
+component resource checks before any output is written.
 The internal manifest is not a public pending resource, even though it is a
 generated text output; links and component resources naming it retain the
 existing internal-metadata rejection before the manifest exists on disk.
@@ -133,6 +133,6 @@ including binary assets, and keep imported sources private. Generated linked
 stylesheets are public resources analyzed by
 [CSS change attribution](./mokly-css-attribution.md); their original private
 CSS inputs are dependency evidence, not independently analyzed public sheets.
-Both comparison sides use v8. An older committed, rebuilt or cached baseline
-returns [Changes unavailable](./mokly-baseline-compatibility.md), with no old
+Both comparison sides use v8. Earlier output at the selected generated location
+or after the base's own rebuild returns [Changes unavailable](./mokly-baseline-compatibility.md), with no old
 resource reader or one-time cross-layout stylesheet comparison.
