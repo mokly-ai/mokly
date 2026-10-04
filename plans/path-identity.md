@@ -3,8 +3,10 @@
 Status: Active until the pull request merges. Created 2026-10-02 with the
 user's consent. Milestones 1–7 and all lettered milestones through 7D are
 complete, including main integration, viewer integration and file-length
-compliance. Milestone 8 implementation and verification are complete. The
-orchestrator's fresh implementation review is the only remaining required TODO.
+compliance. Milestone 8 implementation, verification and the fresh
+implementation review are complete; the
+[review record](../docs/reviews/path-identity.md) lists eight findings for
+the user's decision.
 This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
@@ -1900,10 +1902,16 @@ required item is complete before PR merge except the final fresh review below.
 The six post-merge items remain optional and do not block plan completion.
 
 - [x] Commit and push.
-- [ ] After the push, the orchestrator assigns a fresh reviewer to use
+- [x] After the push, the orchestrator assigns a fresh reviewer to use
       `docs/implementation-review-prompt.md` against the complete diff from
       `origin/main` and report findings without changing the implementation.
-      The implementation agent must not run this review.
+      The implementation agent must not run this review. Two fresh reviewers
+      reviewed `74e7596b` against `origin/main` at `800fe9f8`: Codex for the
+      backend and documentation, and Claude for the viewer UI and mockups.
+      The orchestrator confirmed every finding. The
+      [review record](../docs/reviews/path-identity.md) lists eight findings
+      (one High, two Medium, five Low) for the user's decision. No finding
+      was fixed during the review.
 
 ## Post-merge follow-up (non-blocking)
 
