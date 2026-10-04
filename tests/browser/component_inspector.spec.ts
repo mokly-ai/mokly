@@ -64,7 +64,7 @@ test("the shared inspector opens and closes inside sandboxed Browse frames", asy
     await expect(frame.locator("script")).toHaveCount(1);
     await expect(frame.locator("script")).toHaveAttribute(
       "src",
-      "/__mokly/client/inspector.js",
+      "/mokly-viewer/client/inspector.js",
     );
   }
 });

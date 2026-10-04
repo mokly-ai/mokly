@@ -44,7 +44,7 @@ test("server validates before bind and supports safe no-watch routes on port zer
   assert.match(homeHtml, /data-mokly-shell/);
   assert.match(homeHtml, /aria-label="Catalogue"/);
   assert.match(homeHtml, /Browse the mockup catalogue/);
-  const shellCss = await fetch(`${server.url}/__mokly/shell.css`);
+  const shellCss = await fetch(`${server.url}/mokly-viewer/shell.css`);
   assert.equal(shellCss.status, 200);
   assert.match(await shellCss.text(), /--mokly-accent/);
   const removedAlias = await fetch(`${server.url}/id/home`, {
@@ -73,7 +73,7 @@ test("server validates before bind and supports safe no-watch routes on port zer
     (await fetch(`${server.url}/static/entries/fixture.mockup.tsx`)).status,
     404,
   );
-  const events = await fetch(`${server.url}/__mokly/events`);
+  const events = await fetch(`${server.url}/mokly-viewer/events`);
   const eventReader = events.body?.getReader();
   assert.ok(eventReader);
   assert.match(await readEvent(eventReader), /event: ready\ndata: 1/);
@@ -122,7 +122,11 @@ test("event-stream HEAD releases a keep-alive connection", async (context) => {
   const agent = new Agent({ keepAlive: true, maxSockets: 1 });
   context.after(() => agent.destroy());
 
-  const head = await nodeRequest(`${server.url}/__mokly/events`, "HEAD", agent);
+  const head = await nodeRequest(
+    `${server.url}/mokly-viewer/events`,
+    "HEAD",
+    agent,
+  );
   assert.equal(head.status, 200);
   assert.equal(head.body, "");
   const home = await nodeRequest(`${server.url}/`, "GET", agent);

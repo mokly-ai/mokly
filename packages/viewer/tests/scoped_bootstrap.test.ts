@@ -84,7 +84,7 @@ test("the live state reader leaves static external references unchanged", () => 
     catalogue: {
       identity: model.identity.id,
       kind: "external",
-      path: "/__mokly/catalogue.json",
+      path: "/mokly-viewer/catalogue.json",
       revision: model.revision,
     },
     context,
@@ -186,10 +186,10 @@ test("the canonical public v4 fixture bytes remain stable", () => {
       import.meta.url,
     ),
   );
-  assert.equal(bytes.byteLength, 9550);
+  assert.equal(bytes.byteLength, 9553);
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "f06336f07428f49ef1df526661252ce8c434efcd265615e14c4cf14272106e13",
+    "6d6ba6bf1f5faf53dff746e642c3c6028559ef730a2755d98668b5690f2e2740",
   );
   assert.doesNotThrow(() => readCatalogue(JSON.parse(bytes.toString("utf8"))));
 });

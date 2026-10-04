@@ -58,8 +58,8 @@ test("export refuses unowned, malformed, and mixed output", async (context) => {
   const marker = path.join(output, ".mokly-export-artifact");
   for (const content of [
     "{}",
-    '{"schemaVersion":3,"files":[]}',
-    '{"schemaVersion":2,"files":[{"path":"../keep.txt","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":10}]}',
+    '{"schemaVersion":4,"files":[]}',
+    '{"schemaVersion":3,"files":[{"path":"../keep.txt","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":10}]}',
   ]) {
     await fs.promises.writeFile(marker, content);
     await assert.rejects(assertExportOwnership(output), /export-invalid/);

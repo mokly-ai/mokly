@@ -83,7 +83,7 @@ for (const mode of ["committed", "derived"] as const) {
     );
     const address = server.address();
     assert.ok(address && typeof address !== "string");
-    const endpoint = `http://127.0.0.1:${address.port}/__mokly/components/renders/${rendered.renderId}/`;
+    const endpoint = `http://127.0.0.1:${address.port}/mokly-viewer/components/renders/${rendered.renderId}/`;
     for (const [name, expected, type] of [
       [
         `mokly-generated/${entryStyle}`,

@@ -27,7 +27,7 @@ export async function assertPublishedPagePreview(
   );
   assert.deepEqual(descriptor?.published, published);
   const catalogue = JSON.parse(
-    await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
+    await fs.readFile(path.join(output, "mokly-viewer/catalogue.json"), "utf8"),
   ) as { comparisonUrl: string };
   const generation = path.posix.dirname(catalogue.comparisonUrl);
   const previewPath = `${generation}/pages/removed-page.json`;

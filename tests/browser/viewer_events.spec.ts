@@ -203,7 +203,7 @@ test("comparison is lazy, confined, and reports safe failures", async ({
   page,
 }) => {
   const comparisons: string[] = [];
-  await page.route("**/__mokly/diffs/**", async (route) => {
+  await page.route("**/mokly-viewer/diffs/**", async (route) => {
     comparisons.push(route.request().url());
     await route.fulfill({
       status: 503,
@@ -216,7 +216,7 @@ test("comparison is lazy, confined, and reports safe failures", async ({
       host.props.catalogue,
     ) as CatalogueReadModel;
     catalogue.changesStatus = "ready";
-    catalogue.comparisonUrl = `__mokly/diffs/__generations/${"a".repeat(64)}/review.json`;
+    catalogue.comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`;
     for (const entry of [...catalogue.screens, ...catalogue.components])
       entry.changes = { status: "ready", kind: "changed", included: true };
     for (const view of catalogue.screens[0]!.views)

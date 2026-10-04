@@ -44,7 +44,9 @@ for (const adapter of ["same-origin", "cross"]) {
     ).toHaveText("Previous desktop screen");
     await expect(page.locator(`#viewer .mbk-diff-toolbar`)).toHaveCount(0);
     expect(
-      requests.filter((url) => /\/__mokly\/diffs\/review\.json\?/.test(url)),
+      requests.filter((url) =>
+        /\/mokly-viewer\/diffs\/review\.json\?/.test(url),
+      ),
     ).toEqual([]);
     expect(
       await page.evaluate(

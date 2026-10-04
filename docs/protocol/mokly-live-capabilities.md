@@ -18,13 +18,13 @@ resolution.
 
 The public catalogue is the shell's portable read model. A live page embeds its
 [route-scoped bootstrap projection](./mokly-shell-bootstrap.md), while the
-complete model remains available at `__mokly/catalogue.json`. Local Serve adds
+complete model remains available at `mokly-viewer/catalogue.json`. Local Serve adds
 a private descriptor in a separate `application/json` script with
 `data-mokly-host-capability-state`. Private workspace evidence and the
 temporary-render token never enter the public catalogue or shell bootstrap.
 
 The live document has `data-mokly-host-capabilities` and loads
-`/__mokly/client/react-host.js`. The live host imports the shared
+`/mokly-viewer/client/react-host.js`. The live host imports the shared
 `react-shell.js`, creates CLI-owned capabilities, and calls
 `hydrateMoklyShell(document, capabilities)`. That shared, type-checked entry
 accepts exact route scope for live pages and the compact external form for

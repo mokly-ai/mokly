@@ -81,7 +81,7 @@ test("postMessage mount validates origins, sandbox, nonce and history replacemen
   for (const url of [
     "https://app.test/static/mokly-generated/screen.html",
     "https://wrong.test/static/mokly-generated/screen.html",
-    "https://frames.test/__mokly/diffs/screen.html",
+    "https://frames.test/mokly-viewer/diffs/screen.html",
     "data:text/html,test",
     "https://frames.test/static/mokly-generated/screen.html#1bad",
   ])

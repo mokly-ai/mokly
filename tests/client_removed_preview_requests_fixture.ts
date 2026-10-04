@@ -5,7 +5,7 @@ import type { RemovedPreviewData } from "../packages/viewer/dist/shell/previews.
 
 export const GENERATION = "b".repeat(64);
 
-export const COMPARISON = `/__mokly/diffs/__generations/${GENERATION}/review.json`;
+export const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/review.json`;
 
 export const removedPage: RemovedPreviewData = {
   id: "removed-page",
@@ -19,7 +19,7 @@ export const removedScreen: RemovedPreviewData = {
   title: "Removed screen",
 };
 
-export const pagePath = `__mokly/diffs/__generations/${GENERATION}/pages/removed-page.json`;
+export const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/pages/removed-page.json`;
 
 export function review(
   views: ReviewResultV4["screens"][number]["views"],

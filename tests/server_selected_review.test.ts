@@ -72,7 +72,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   );
 
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?id=home`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
@@ -114,7 +114,9 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     ).text(),
     /Updated content/,
   );
-  const cached = await fetch(`${server.url}/__mokly/diffs/review.json?id=home`);
+  const cached = await fetch(
+    `${server.url}/mokly-viewer/diffs/review.json?id=home`,
+  );
   assert.equal(cached.url, response.url);
   assert.equal(reads.length, 4);
   const pane = new URL(
@@ -139,7 +141,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     checked.replace("Updated content", "Unchecked content"),
   );
   const unchanged = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home&refresh=1`,
+    `${server.url}/mokly-viewer/diffs/review.json?id=home&refresh=1`,
   );
   assert.equal(unchanged.status, 200);
   assert.deepEqual(
@@ -151,14 +153,14 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   assert.match(await (await fetch(pane)).text(), /Updated content/);
   server.publishUpdate({ changesStatus: "pending" });
   const pending = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?id=home`,
   );
   assert.equal(pending.status, 500);
   assert.match(await pending.text(), /not ready/);
   await fs.writeFile(edited, checked);
   server.publishUpdate({ componentChanges: changes });
   const refreshed = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?id=home`,
   );
   assert.equal(refreshed.status, 200);
   assert.notEqual(refreshed.url, response.url);
@@ -185,7 +187,7 @@ test("component comparison snapshots contain only the selected saved variant", a
   });
   fixture.beforeRemove(() => server.close());
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=action-disabled`,
+    `${server.url}/mokly-viewer/diffs/review.json?id=action-disabled`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
@@ -224,7 +226,8 @@ test("component comparison snapshots contain only the selected saved variant", a
     "route=default",
   ])
     assert.equal(
-      (await fetch(`${server.url}/__mokly/diffs/review.json?${query}`)).status,
+      (await fetch(`${server.url}/mokly-viewer/diffs/review.json?${query}`))
+        .status,
       404,
     );
 });

@@ -74,10 +74,7 @@ type PickEnd =
         | "evidence"
         | "error";
     };
-interface ViewerError {
-  code: "catalogue" | "selection" | "frame" | "comparison" | "markers";
-  message: string;
-}
+type ViewerError = import("@mokly/viewer").ViewerError;
 interface ViewerMarker {
   id: string;
   instance: InstanceRef;
@@ -141,6 +138,8 @@ or fetcher sources. Do not resolve artifact paths relative to the embedding app.
 Validate every source as [catalogue v4](./mokly-catalogue.md) before rendering.
 Fetchers are host-supplied source transports, not permission for viewer telemetry.
 Fetch failure renders an explicit error/retry state and emits `onError`.
+The [version contract](./mokly-viewer-namespace.md#compatibility-failure) owns
+unsupported-format errors, their callback shape and product message.
 Missing data is never replaced by examples or invented counts.
 
 Omitted `frameAdapter` uses `sameOriginAdapter()`. Cross-origin hosts explicitly

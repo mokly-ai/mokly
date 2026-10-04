@@ -43,12 +43,12 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   const index = await read(output, "index.html");
   assert.match(index, /<title>Mokly<\/title>/);
   assert.match(index, /data-mokly-filter/);
-  assert.match(index, /\/__mokly\/client\/react-shell\.js/);
-  assert.doesNotMatch(index, /\/__mokly\/client\/browser\.js/);
+  assert.match(index, /\/mokly-viewer\/client\/react-shell\.js/);
+  assert.doesNotMatch(index, /\/mokly-viewer\/client\/browser\.js/);
   assert.match(index, /href="\/view\/screens\/example-welcome"/);
   assert.doesNotMatch(index, /href="\/view\/screens\/example-welcome\.html"/);
   const catalogue = JSON.parse(
-    await read(output, "__mokly/catalogue.json"),
+    await read(output, "mokly-viewer/catalogue.json"),
   ) as PublishedCatalogue;
   const changedIds = [
     ...catalogue.components,
@@ -152,15 +152,15 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     await read(output, "view/screens/example-details.html"),
     /class="mbk-entry-status" data-status="Unmodified" data-workspace-status="">Unmodified<\/span>/u,
   );
-  assert.match(await read(output, "__mokly/shell.css"), /--mbk-/);
+  assert.match(await read(output, "mokly-viewer/shell.css"), /--mbk-/);
   assert.match(
-    await read(output, "__mokly/client/appearance-startup.js"),
+    await read(output, "mokly-viewer/client/appearance-startup.js"),
     /mokly:theme/,
   );
   assert.ok(
     (
       await fs.promises.stat(
-        path.join(output, "__mokly/fonts/InterVariable.woff2"),
+        path.join(output, "mokly-viewer/fonts/InterVariable.woff2"),
       )
     ).size > 0,
   );
@@ -192,7 +192,7 @@ test("preview build refuses to replace an unowned directory", async (context) =>
 });
 
 async function assertClientGraphIsComplete(output: string): Promise<void> {
-  const assetRoot = path.join(output, "__mokly");
+  const assetRoot = path.join(output, "mokly-viewer");
   const copied = await javascriptFiles(assetRoot);
   assert.ok(copied.length > 0);
   for (const module of copied) {

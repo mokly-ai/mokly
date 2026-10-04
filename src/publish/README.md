@@ -5,8 +5,9 @@ receivers use the installed npm executable and the
 [catalogue upload protocol](../../docs/protocol/mokly-upload.md) and
 [exchange contract](../../docs/protocol/mokly-upload-exchange.md), never deep
 imports. Both protocol documents are included in the npm package. Publishing
-uses the content-addressed Plan → Blobs → Complete exchange over a schema 2
-ownership marker.
+uses the content-addressed Plan → Blobs → Complete exchange over a schema 3
+ownership marker and upload v2 envelope. HTTP 426 reports the fixed viewer
+namespace compatibility message and stops without retry or downgrade.
 
 `run.ts` composes injected Git, export, HTTP and time boundaries. It pins the
 actual checkout HEAD, adds an owned manifest through the exporter, captures its

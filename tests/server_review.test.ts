@@ -15,7 +15,7 @@ import {
   type TestFixture,
 } from "./helpers/fixture.js";
 
-const endpoint = "/__mokly/diffs/review.json";
+const endpoint = "/mokly-viewer/diffs/review.json";
 
 function countingReview(
   outDir: string,
@@ -73,7 +73,7 @@ test("comparisons generate on demand and retain immutable snapshots after refres
   assert.equal((await fetch(`${server.url}/review`)).status, 404);
   const first = await fetch(`${server.url}${endpoint}`);
   assert.equal(first.status, 200);
-  assert.match(first.url, /\/__generations\/[a-f0-9-]+\/review\.json$/);
+  assert.match(first.url, /\/generations\/[a-f0-9-]+\/review\.json$/);
   assert.match(first.headers.get("content-type") ?? "", /application\/json/);
   assert.equal(first.headers.get("cache-control"), "no-store");
   assert.deepEqual(await first.json(), { generation: 1 });

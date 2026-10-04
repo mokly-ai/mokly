@@ -80,9 +80,9 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
     await page.screenshot({ path: info.outputPath(`${width}-Current.png`) });
   }
   expect(failures).toEqual([]);
-  expect(server.requests.some((url) => url.includes("/__mokly/events"))).toBe(
-    false,
-  );
+  expect(
+    server.requests.some((url) => url.includes("/mokly-viewer/events")),
+  ).toBe(false);
 });
 
 test("the exported example discloses a screen's variants without a server", async ({

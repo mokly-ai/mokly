@@ -31,7 +31,7 @@ const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
 const preview: ComponentRenderSuccess = {
   generation: capability.generation,
   renderId,
-  previewUrl: `/__mokly/components/renders/${renderId}/mokly-generated/components/action-default.desktop.html`,
+  previewUrl: `/mokly-viewer/components/renders/${renderId}/mokly-generated/components/action-default.desktop.html`,
   props: { label: ["string", "Purchase"] },
   view: {
     viewport: "desktop",
@@ -67,7 +67,7 @@ test("temporary preview transport accepts the generated layout and confines each
   assert.deepEqual(await send(), preview);
   for (const changed of [
     {
-      previewUrl: `/__mokly/components/renders/${renderId}/components/action-default.desktop.html`,
+      previewUrl: `/mokly-viewer/components/renders/${renderId}/components/action-default.desktop.html`,
     },
     { previewUrl: preview.previewUrl.replace("action-default", "other") },
     {

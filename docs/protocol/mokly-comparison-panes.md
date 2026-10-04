@@ -165,7 +165,7 @@ advertised generation's `snapshots/before/` and `snapshots/after/` directories
 once a comparison is selected, under the existing CORS, `credentials: "omit"`,
 `nosniff`, and `text/html` rules of the
 [export delivery contract](./mokly-export-delivery.md). The documented host
-CORS requirement already covers `__mokly/diffs/__generations/**`, so pane
+CORS requirement already covers `mokly-viewer/diffs/generations/**`, so pane
 documents need no new hosting rule. A `srcdoc` document inherits the embedding
 document's Content Security Policy; an embedded host must allow the artifact
 origin and generated inline styles for the resources a pane document needs.

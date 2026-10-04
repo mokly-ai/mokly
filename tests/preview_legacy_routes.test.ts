@@ -22,7 +22,7 @@ for (const directory of ["target", "node_modules"])
       : {};
     await buildPreview(fixture.config, output, options);
     await fs.rm(path.join(output, EXPORT_MARKER));
-    await fs.rm(path.join(output, "__mokly/catalogue.json"));
+    await fs.rm(path.join(output, "mokly-viewer/catalogue.json"));
     await buildPreview(fixture.config, output, options);
     for (const id of ["target", "node-modules"])
       assert.match(
@@ -45,7 +45,9 @@ for (const directory of ["target", "node_modules"])
       true,
     );
     assert.equal(
-      (await fs.stat(path.join(output, "__mokly/catalogue.json"))).isFile(),
+      (
+        await fs.stat(path.join(output, "mokly-viewer/catalogue.json"))
+      ).isFile(),
       true,
     );
   });

@@ -97,7 +97,7 @@ export function CataloguePage({ catalogueUrl }: CataloguePageProps) {
 ```
 
 `catalogueUrl` must be an absolute HTTP(S) URL such as
-`https://app.example.com/__mokly/catalogue.json`. When the catalogue artifacts
+`https://app.example.com/mokly-viewer/catalogue.json`. When the catalogue artifacts
 share the application's origin, the default frame adapter is all you need.
 
 The viewer fills its container and owns scrolling within the preview stage. It
@@ -143,11 +143,11 @@ configuration.
 
 `MoklyViewer` accepts one of three source forms:
 
-| Source                              | Use it when                                               |
-| ----------------------------------- | --------------------------------------------------------- |
-| Absolute `string` or `URL`          | The viewer should fetch `__mokly/catalogue.json` directly |
-| `CatalogueReadModel` plus `baseUrl` | The host already has the catalogue object                 |
-| `CatalogueFetcher`                  | The host needs custom request orchestration or caching    |
+| Source                              | Use it when                                                    |
+| ----------------------------------- | -------------------------------------------------------------- |
+| Absolute `string` or `URL`          | The viewer should fetch `mokly-viewer/catalogue.json` directly |
+| `CatalogueReadModel` plus `baseUrl` | The host already has the catalogue object                      |
+| `CatalogueFetcher`                  | The host needs custom request orchestration or caching         |
 
 A fetcher receives an `AbortSignal` and returns
 `{ catalogue: CatalogueReadModel, url: URL }`. The returned URL identifies the
@@ -506,6 +506,11 @@ cargo xtask check
 The root build compiles the viewer before the CLI. Package smoke tests pack both
 workspaces and exercise every public entry from clean ESM and NodeNext
 consumers.
+
+Version failures use `MoklyVersionError`. The embedded viewer reports
+`onError` with code `version`, product copy, and separate diagnostic details.
+Standalone pages retain their server render and ordinary links when hydration
+is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-namespace.md).
 
 ### Key Code
 

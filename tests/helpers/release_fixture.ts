@@ -24,7 +24,7 @@ export function packageReport(): PackageReport {
       { path: "docs/protocol/mokly-upload-exchange.md", size: 1 },
       { path: "docs/protocol/mokly-upload-validation.md", size: 1 },
       { path: "docs/protocol/mokly-export-ownership.md", size: 1 },
-      { path: "docs/protocol/fixtures/export-ownership-v2.json", size: 1 },
+      { path: "docs/protocol/fixtures/export-ownership-v3.json", size: 1 },
       { path: "docs/protocol/fixtures/upload-plan-v1.json", size: 1 },
       { path: "docs/protocol/mokly-catalogue.md", size: 1 },
       { path: "docs/protocol/fixtures/catalogue-v4.json", size: 1 },

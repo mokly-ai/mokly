@@ -7,7 +7,7 @@ import { followupFixture } from "./viewer_followup_fixture.js";
 
 import type {} from "./viewer_harness.js";
 
-const comparisonUrl = `__mokly/diffs/__generations/${"c".repeat(64)}/review.json`;
+const comparisonUrl = `mokly-viewer/diffs/generations/${"c".repeat(64)}/review.json`;
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 
 test.beforeAll(async () => {

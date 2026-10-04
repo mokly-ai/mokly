@@ -40,7 +40,7 @@ test(
     };
     const first = await capabilities();
     const render = async (capability: typeof first, label: string) =>
-      fetch(`${server.url}/__mokly/components/render`, {
+      fetch(`${server.url}/mokly-viewer/components/render`, {
         method: "POST",
         headers: {
           origin: server.url,

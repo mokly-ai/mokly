@@ -43,7 +43,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     releaseFirstEventRequest = resolve;
   });
   let blockFirstEventRequest = true;
-  await page.route(`${server.url}/__mokly/events`, async (route) => {
+  await page.route(`${server.url}/mokly-viewer/events`, async (route) => {
     if (blockFirstEventRequest) {
       blockFirstEventRequest = false;
       await firstEventRequestBlocked;

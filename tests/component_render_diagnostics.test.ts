@@ -39,7 +39,7 @@ test("preview-resource source denials reach stderr without exposing the cause in
     stderr.push(String(chunk));
     return true;
   });
-  const response = await fetch(`${server.url}/__mokly/components/render`, {
+  const response = await fetch(`${server.url}/mokly-viewer/components/render`, {
     method: "POST",
     headers: {
       origin: server.url,

@@ -80,9 +80,9 @@ export async function crossOriginFixture(
   files.set("static/unowned.html", unownedDocument);
   files.set("static/silent.html", "<!doctype html><p>No inspector</p>");
   for (const [name, bytes] of loadBrowserClientModules())
-    files.set(`__mokly/client/${name}`, bytes);
+    files.set(`mokly-viewer/client/${name}`, bytes);
   for (const [name, bytes] of loadBrowserNavigationModules())
-    files.set(`__mokly/navigation/${name}`, bytes);
+    files.set(`mokly-viewer/navigation/${name}`, bytes);
   for (const [name, bytes] of files) {
     await fs.mkdir(path.dirname(path.join(root, name)), { recursive: true });
     await fs.writeFile(path.join(root, name), bytes);
@@ -95,7 +95,7 @@ export async function crossOriginFixture(
   if (home?.kind !== "screen") throw new Error("No fixture screen");
   const mobileView = viewRoute("screen", home.id, "mobile", "light");
   const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
-  const temporaryPath = `/__mokly/components/renders/${renderId}/mokly-generated/${mobileView}`;
+  const temporaryPath = `/mokly-viewer/components/renders/${renderId}/mokly-generated/${mobileView}`;
   const temporaryFile = path.join(root, temporaryPath.slice(1));
   await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
   await fs.copyFile(
@@ -134,7 +134,7 @@ export async function mountCrossFrame(
       const usage = JSON.parse(usageJson) as ComponentViewRecord;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
-        `${location.origin}/__mokly/client/post_message_adapter.js`
+        `${location.origin}/mokly-viewer/client/post_message_adapter.js`
       )) as typeof PostAdapter;
       state.wire = [];
       state.frameEvents = [];

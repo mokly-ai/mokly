@@ -12,7 +12,7 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 ## Supported Formats
 
-The following table describes the current branch before the planned main merge.
+The following table describes the implemented formats.
 
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
@@ -26,17 +26,11 @@ read model and static delivery descriptor are v4. Current and baseline manifest
 readers accept only v8; earlier output follows
 [baseline compatibility](./mokly-baseline-compatibility.md).
 
-the implementation plan of Generated Output Simplification defines an approved merge target,
-not another implemented format: private manifest v8, public catalogue v4,
-delivery v4, a versioned shell bootstrap, ownership v3 and upload v2. The
-contracts below define the implementation sequence. Correction 3 option A
-allows only v8 baseline content: every earlier base gets `main`'s typed
-incompatible-earlier outcome. Public catalogue v4 has no older-version reader
-or optional-prefix legacy fallback. These targets supersede the pre-merge
-compatibility policy above when the implementation plan land.
-The current catalogue, adapter, export and upload implementation pages still
-describe pre-merge wire formats; [generated delivery](./mokly-generated-delivery.md)
-owns the merged prefix and viewer-version policy to apply during reconciliation.
+Public catalogues and delivery descriptors use version 4. Shell bootstraps use
+version 1, ownership markers use version 3, and upload metadata uses version 2.
+The [viewer namespace](./mokly-viewer-namespace.md) defines path and version
+gates, including older-host failures. Plan v1 and review v4 remain unchanged.
+Public catalogues have no older-version reader or optional-prefix fallback.
 
 ## Contracts
 
@@ -48,11 +42,11 @@ owns the merged prefix and viewer-version policy to apply during reconciliation.
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
 - [Repository verification ratchets](./verification-ratchets.md)
-- [Catalogue upload v1](./mokly-upload.md) — public CLI, repository identity,
+- [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.
 - [Catalogue upload exchange v1](./mokly-upload-exchange.md) — Plan, Blob and
   Complete requests, retries, expiry, and accounting.
-- [Catalogue upload validation v1](./mokly-upload-validation.md) — rejection
+- [Catalogue upload validation v2](./mokly-upload-validation.md) — rejection
   categories, limits, and independent receiver validation.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
@@ -184,7 +178,7 @@ owns the merged prefix and viewer-version policy to apply during reconciliation.
   modules and deployment identity.
 - [Export recovery](./mokly-export-recovery.md) — backup ownership,
   concurrent destination changes, bounded cleanup, and failure reporting.
-- [Export ownership v2](./mokly-export-ownership.md) — public per-file digest
+- [Export ownership v3](./mokly-export-ownership.md) — public per-file digest
   inventory and compatibility fixtures for independent upload receivers.
 - [Watched development](./mokly-watch.md)
   - [Watch runtime and recovery](./mokly-watch-runtime.md).

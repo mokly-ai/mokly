@@ -281,11 +281,12 @@ The guides are user-facing and ship with the npm package. The protocol documents
 are the detailed implementation contracts used to keep the CLI, viewer,
 generated output, and tests aligned.
 
-The active generated-output work has an approved
-[merged layout contract](./docs/protocol/mokly-unified-output.md) for imported
-styles and a [viewer path migration](./docs/protocol/mokly-viewer-namespace.md).
-These are implementation targets; the workflow above describes this branch's
-current behavior. Progress remains in the [plan index](./plans/README.md).
+Generated output uses the [unified layout](./docs/protocol/mokly-unified-output.md)
+for pages, imported styles and assets. The portable
+[viewer namespace](./docs/protocol/mokly-viewer-namespace.md) is `mokly-viewer/`.
+Older receivers reject the new upload format. Mokly Cloud needs the documented
+receiver and viewer update before publication. Progress remains in the
+[plan index](./plans/README.md).
 
 ## Develop Mokly
 

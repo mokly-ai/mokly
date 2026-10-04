@@ -75,7 +75,7 @@ test("static hydration adopts choices made after load while its catalogue is pen
   const released = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/__mokly/catalogue.json", async (route) => {
+  await page.route("**/mokly-viewer/catalogue.json", async (route) => {
     markRequested();
     await released;
     await route.continue();

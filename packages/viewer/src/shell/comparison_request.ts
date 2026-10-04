@@ -1,5 +1,6 @@
 /** Comparison metadata requests shared by the hydrated shell controller. */
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import { parseReviewResult } from "../review/result_validation.js";
 import type { ReviewResult } from "../review/types.js";
 
@@ -88,7 +89,7 @@ function comparisonEndpoint(
     throw new Error("Comparisons are unavailable in this catalogue.");
   const endpoint = new URL(
     delivery.kind === "live"
-      ? "/__mokly/diffs/review.json"
+      ? `/${VIEWER_DIRECTORY}/diffs/review.json`
       : `/${delivery.comparisonUrl}`.replace(/^\/\//, "/"),
     baseUrl,
   );
@@ -117,7 +118,7 @@ function validateResponse(
     )
       throw new Error("The comparison is unavailable.");
   } else if (
-    response.pathname !== "/__mokly/diffs/review.json" &&
+    response.pathname !== `/${VIEWER_DIRECTORY}/diffs/review.json` &&
     !isLiveGeneration(baseUrl, response)
   )
     throw new Error("The comparison is unavailable.");
@@ -137,9 +138,9 @@ function comparisonBaseUrl(value: string | URL): URL {
 function isLiveGeneration(baseUrl: URL, value: URL): boolean {
   return (
     sameOrigin(baseUrl, value) &&
-    /^\/__mokly\/diffs\/(?:__generations\/[^/]+\/)?review\.json$/.test(
-      value.pathname,
-    ) &&
+    new RegExp(
+      `^\\/${VIEWER_DIRECTORY}\\/diffs\\/(?:generations\\/[^/]+\\/)?review\\.json$`,
+    ).test(value.pathname) &&
     !value.username &&
     !value.password
   );

@@ -94,7 +94,7 @@ test(
       );
       const builds = builder.builds.length;
       const preview = await fetch(
-        `${running.url}/__mokly/diffs/review.json?page=removed`,
+        `${running.url}/mokly-viewer/diffs/review.json?page=removed`,
       );
       assert.equal(preview.status, 500);
       assert.equal(builder.builds.length, builds);
@@ -191,7 +191,7 @@ test(
       );
       const builds = builder.builds.length;
       const preview = await fetch(
-        `${running.url}/__mokly/diffs/review.json?page=removed`,
+        `${running.url}/mokly-viewer/diffs/review.json?page=removed`,
       );
       assert.equal(preview.status, 500);
       assert.equal(builder.builds.length, builds);

@@ -1,4 +1,5 @@
 import {
+  VIEWER_DIRECTORY,
   currentDocumentRoute,
   type GeneratedPathPrefix,
 } from "../catalogue/delivery_paths.js";
@@ -117,7 +118,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
               selecting = mode !== "off";
               if (mode === "off" || !record) return;
               stop = installLocalHighlight(
-                frame.closest<HTMLElement>(".mokly-viewer") ??
+                frame.closest<HTMLElement>(`.${VIEWER_DIRECTORY}`) ??
                   frame.ownerDocument.body,
                 [
                   {

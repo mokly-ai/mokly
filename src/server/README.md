@@ -58,7 +58,7 @@ lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
-GET/HEAD `/__mokly/catalogue.json` returns the public v4
+GET/HEAD `/mokly-viewer/catalogue.json` returns the public v4
 [read model](../catalogue/README.md) as complete JSON with
 `Cache-Control: no-store`; it never contains bootstrap-only omitted usage.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
@@ -124,7 +124,7 @@ an in-flight Git resolution from launching a replacement during the drain.
 `demand/generation.ts` passes each generation's cancellation signal to its
 output write, so a superseded generation or a closing Serve stops waiting for
 the [generated-output writer lock](../../docs/protocol/mokly-rendering-generated.md#concurrent-writers)
-that a concurrent Build or export holds.
+that a concurrent Build or Serve writer holds.
 
 Watched Serve sends the commit and selected reader (`blobs` or `rebuild`) on the
 versioned `update` IPC envelope. Omission retains the reader; null revokes it. The child

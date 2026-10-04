@@ -88,7 +88,7 @@ export async function smokeEsmConsumer(context) {
   await runBin(root, ["build"]);
   let review;
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
-    const response = await fetch(`${url}/__mokly/diffs/review.json`);
+    const response = await fetch(`${url}/mokly-viewer/diffs/review.json`);
     assert.equal(response.status, 200);
     review = await response.json();
   });

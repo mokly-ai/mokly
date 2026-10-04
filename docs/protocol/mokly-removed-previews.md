@@ -85,12 +85,12 @@ cancellation, invalidation, and shutdown follow the
 
 Pages have no comparison records, so a removed page adds a page selection to
 the same generation lifecycle. The stable request is
-`/__mokly/diffs/review.json?page=<page id>`, naming the removed page's id,
+`/mokly-viewer/diffs/review.json?page=<page id>`, naming the removed page's id,
 optionally with `refresh=1`. `page` is exclusive with `id`;
 combining them, repeating it, or naming a page that is not a selected removed
 page fails with the existing malformed-request or missing-selection responses.
 The response redirects to
-`/__mokly/diffs/__generations/selected-<uuid>/preview.json`, an immutable
+`/mokly-viewer/diffs/generations/selected-<uuid>/preview.json`, an immutable
 generation served with `no-store` and `nosniff`, GET/HEAD parity, and the
 existing file-map confinement:
 
@@ -126,9 +126,9 @@ Changes-enabled captures resolve removed pages through the pinned
 including moved v8 roots, then write them beside the comparison:
 
 ```text
-__mokly/diffs/__generations/<generation>/review.json
-__mokly/diffs/__generations/<generation>/pages/<id>.json
-__mokly/diffs/__generations/<generation>/snapshots/before/pages/<id>.html
+mokly-viewer/diffs/generations/<generation>/review.json
+mokly-viewer/diffs/generations/<generation>/pages/<id>.json
+mokly-viewer/diffs/generations/<generation>/snapshots/before/pages/<id>.html
 ```
 
 The file at `pagePreviewMetadataPath(id)` contains the same
@@ -180,7 +180,7 @@ while `comparisonUrl` is null.
 Preview validation is separate: readers validate `preview.kind`, tolerate
 `preview` being absent, and reject a preview on current entries or when
 `comparisonUrl` is null; the derived page metadata path stays confined to the
-advertised generation beneath `__mokly/diffs/__generations/**` by construction.
+advertised generation beneath `mokly-viewer/diffs/generations/**` by construction.
 The shipped [v4 fixture](./fixtures/catalogue-v4.json) exercises both variants.
 
 The embedded viewer first resolves the selected snapshot and historical entry,
@@ -189,14 +189,14 @@ then loads preview metadata only from the advertised generation:
 resolved against the source origin root for object and URL sources. Validated
 metadata may then name a historical document only on that source origin beneath
 the advertised generation's `snapshots/before/` directory. It never discovers
-`/__mokly/diffs/review.json`, runs Git, or fetches a removed entry's derived route
+`/mokly-viewer/diffs/review.json`, runs Git, or fetches a removed entry's derived route
 as current output. A catalogue without the field, or with `comparisonUrl: null`,
 shows the unavailable state without a request. Neither frame adapter mounts a
 preview frame. Previews are viewer-owned documents, so no adapter handshake or
 inspection, marker, or navigation message exists for them.
 
 Serve and static artifacts include the preview controller and comparison
-validator once in `__mokly/client/react-shell.js`. Application-owned
+validator once in `mokly-viewer/client/react-shell.js`. Application-owned
 `@mokly/viewer` roots use the same React components and request lifecycle.
 
 ## Frames And Lifecycle

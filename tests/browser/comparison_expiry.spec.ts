@@ -28,7 +28,7 @@ test.afterAll(async () => {
 async function expireSnapshots(page: Page, snapshot: string): Promise<void> {
   now += 120_001;
   const pruning = await page.request.get(
-    `${server.url}/__mokly/diffs/review.json?id=action-default`,
+    `${server.url}/mokly-viewer/diffs/review.json?id=action-default`,
   );
   expect(pruning.ok()).toBe(true);
   expect((await page.request.get(snapshot)).status()).toBe(404);
@@ -42,7 +42,8 @@ for (const change of ["theme", "viewport"] as const)
     const failedPanes: string[] = [];
     page.on("request", (request) => {
       const url = new URL(request.url());
-      if (url.pathname === "/__mokly/diffs/review.json") requests.push(url);
+      if (url.pathname === "/mokly-viewer/diffs/review.json")
+        requests.push(url);
     });
     page.on("response", (response) => {
       if (response.url().includes("/snapshots/") && !response.ok())
@@ -96,7 +97,7 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
   const requests: URL[] = [];
   page.on("request", (request) => {
     const url = new URL(request.url());
-    if (url.pathname === "/__mokly/diffs/review.json") requests.push(url);
+    if (url.pathname === "/mokly-viewer/diffs/review.json") requests.push(url);
   });
   await page.goto(`${server.url}/view/components/action-disabled.html`);
   await chooseViewport(page, "desktop");

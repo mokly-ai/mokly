@@ -35,7 +35,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
         await page.evaluate(async (json) => {
           const usage = JSON.parse(json) as ComponentViewRecord;
           const { sameOriginAdapter } = (await import(
-            `${location.origin}/__mokly/client/same_origin_adapter.js`
+            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
           )) as typeof LocalAdapter;
           const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
           frame.dataset["moklyGeneratedPrefix"] = "mokly-generated";
@@ -106,7 +106,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
         const local = await page.evaluate(
           async ({ usageJson, key }) => {
             const { localInspection } = (await import(
-              `${location.origin}/__mokly/client/same_origin_adapter.js`
+              `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
             )) as typeof LocalAdapter;
             return localInspection(
               document.querySelector<HTMLIFrameElement>("#frame")!,

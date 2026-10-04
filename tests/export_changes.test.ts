@@ -207,7 +207,7 @@ test("review export retains a removed variant route and parent context", async (
 
   const catalogue = JSON.parse(
     await fs.readFile(
-      path.join(fixture.output, "__mokly/catalogue.json"),
+      path.join(fixture.output, "mokly-viewer/catalogue.json"),
       "utf8",
     ),
   ) as {

@@ -91,7 +91,7 @@ test("external shell bootstrap retains only the shared catalogue identity", () =
   const external = externalShellBootstrap(bootstrap);
   assert.deepEqual(external.catalogue, {
     kind: "external",
-    path: "/__mokly/catalogue.json",
+    path: "/mokly-viewer/catalogue.json",
     identity: catalogue.identity.id,
     revision: catalogue.revision,
   });

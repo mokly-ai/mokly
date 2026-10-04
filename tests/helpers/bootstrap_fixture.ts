@@ -118,7 +118,7 @@ export async function bootstrapFixture(
       "# Upload validation protocol test fixture\n",
     "docs/protocol/mokly-export-ownership.md":
       "# Ownership protocol test fixture\n",
-    "docs/protocol/fixtures/export-ownership-v2.json":
+    "docs/protocol/fixtures/export-ownership-v3.json":
       '{"schemaVersion":1,"cases":[]}\n',
     "docs/protocol/fixtures/upload-plan-v1.json":
       '{"schemaVersion":1,"endpoint":"https://example.com","marker":[],"cases":[]}\n',

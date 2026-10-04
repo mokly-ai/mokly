@@ -72,7 +72,7 @@ In both publication options, strip the watched-server live-update entrypoint
 from every captured shell page and omit its watch-only assets. Keep the browser
 modules needed for ordinary navigation and optional comparison controls. Never
 start an EventSource, poll for development updates, or publish/redirect an
-`/__mokly/events` endpoint. On static hosting that URL has the ordinary
+`/mokly-viewer/events` endpoint. On static hosting that URL has the ordinary
 not-found response. This preserves the existing static-export invariant, also
 for home, missing-route, and removed-entry pages.
 

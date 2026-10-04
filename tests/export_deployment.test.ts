@@ -13,15 +13,15 @@ import {
 for (const name of [
   "index.html",
   "view/screens/home.html",
-  "__mokly/shell.css",
-  "__mokly/client/appearance-startup.js",
-  "__mokly/client/react-shell.js",
-  "__mokly/navigation/delivery.js",
-  "__mokly/fonts/InterVariable.woff2",
+  "mokly-viewer/shell.css",
+  "mokly-viewer/client/appearance-startup.js",
+  "mokly-viewer/client/react-shell.js",
+  "mokly-viewer/navigation/delivery.js",
+  "mokly-viewer/fonts/InterVariable.woff2",
   "static/extra.txt",
 ]) {
   const normalizedInvariant =
-    name === "__mokly/client/react-shell.js"
+    name === "mokly-viewer/client/react-shell.js"
       ? " and preserves normalized non-client content"
       : "";
   test(`deployment identity includes final ${name} bytes with unchanged comparisons${normalizedInvariant}`, async (context) => {
@@ -46,7 +46,7 @@ for (const name of [
     assert.equal(after.comparisonUrl, before.comparisonUrl);
     assert.notEqual(after.deploymentId, before.deploymentId);
     const files = await directoryFiles(fixture.output);
-    if (name === "__mokly/client/react-shell.js") {
+    if (name === "mokly-viewer/client/react-shell.js") {
       assert.notDeepEqual(
         beforeFiles.get(EXPORT_MARKER),
         files.get(EXPORT_MARKER),
@@ -72,7 +72,8 @@ function normalizedNonClientContentFiles(
   const normalized = Buffer.from("0".repeat(64));
   return [...files]
     .filter(
-      ([name]) => name !== EXPORT_MARKER && !name.startsWith("__mokly/client/"),
+      ([name]) =>
+        name !== EXPORT_MARKER && !name.startsWith("mokly-viewer/client/"),
     )
     .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
     .map(([name, bytes]) => {
@@ -144,7 +145,7 @@ test("publish manifest revisions leave identity, every shell and catalogue uncha
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
   const baseManifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     moklyVersion: "1.2.3",
     repository: { host: "example.com", owner: "team", name: "catalogue" },
     branch: "main",
@@ -177,7 +178,7 @@ test("publish manifest revisions leave identity, every shell and catalogue uncha
     (name) =>
       name === "index.html" ||
       name === "404.html" ||
-      name === "__mokly/catalogue.json" ||
+      name === "mokly-viewer/catalogue.json" ||
       name.startsWith("view/") ||
       (name.startsWith("id/") && name.endsWith("/index.html")),
   );
@@ -209,7 +210,7 @@ test("publication metadata declarations must name new root files", async (contex
       },
     },
     {
-      publicationMetadata: ["__mokly/catalogue.json"],
+      publicationMetadata: ["mokly-viewer/catalogue.json"],
       transform() {},
     },
     {

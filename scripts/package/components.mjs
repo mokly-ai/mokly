@@ -70,7 +70,7 @@ export async function smokeRegisteredComponents(
     assert.ok(state);
     const capability = JSON.parse(state[1]).renderCapability;
     assert.ok(capability);
-    const response = await fetch(`${url}/__mokly/components/render`, {
+    const response = await fetch(`${url}/mokly-viewer/components/render`, {
       method: "POST",
       headers: {
         origin: url,

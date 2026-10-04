@@ -126,7 +126,7 @@ as `{ path, sha256, size }`, and the marker covers the exact finalized bytes tha
 the exchange addresses. Export folders written by earlier releases are not
 recognized as owned: move any files you added, delete the old export folder,
 and export again. The public `export-ownership-v1.json` compatibility fixture is
-removed; receiver conformance uses `export-ownership-v2.json`.
+removed; receiver conformance uses `export-ownership-v3.json`.
 
 The new `--upload-concurrency <n>` publish option controls parallel Blob PUTs.
 It accepts integers from 1 through 32 and defaults to 8.

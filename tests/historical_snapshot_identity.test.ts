@@ -45,7 +45,7 @@ test("projection publishes stable per-record identity before comparison generati
   const live = project(BASELINE_A);
   const pinned = project(
     BASELINE_A,
-    `__mokly/diffs/__generations/${GENERATION}/review.json`,
+    `mokly-viewer/diffs/generations/${GENERATION}/review.json`,
     { content: 1, evidence: 9 },
   );
   const replaced = project(BASELINE_B);
@@ -82,7 +82,7 @@ test("projection rejects conflicting accepted baseline identities", () => {
 test("reader safely derives older generation-backed identities", () => {
   const legacy = projectCatalogue({
     ...projectionInput(undefined),
-    comparisonUrl: `__mokly/diffs/__generations/${GENERATION}/review.json`,
+    comparisonUrl: `mokly-viewer/diffs/generations/${GENERATION}/review.json`,
   });
   const value = JSON.parse(serializeCatalogue(legacy));
   delete value.removedEntries[0].snapshotId;

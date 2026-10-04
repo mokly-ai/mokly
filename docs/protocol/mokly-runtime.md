@@ -139,11 +139,11 @@ worker isolation and generation-local caches. Browse exposes:
 - `/static/<path>` for generated fragments, document pages, and consumer assets,
   always delivered with `Cache-Control: no-store` because watched rebuilds
   replace bytes at stable URLs;
-- `/__mokly/diffs/review.json` for explicitly requested comparisons, with
+- `/mokly-viewer/diffs/review.json` for explicitly requested comparisons, with
   redirects to immutable generations and snapshot files beneath the same prefix;
-- package-owned client and update endpoints under `/__mokly/`.
+- package-owned client and update endpoints under `/mokly-viewer/`.
 
-Serve also exposes [`/__mokly/catalogue.json`](./mokly-catalogue.md)
+Serve also exposes [`/mokly-viewer/catalogue.json`](./mokly-catalogue.md)
 as the public read model, refreshed atomically on watched content/evidence
 updates. It keeps the private manifest and on-demand readiness boundary intact.
 
@@ -201,7 +201,7 @@ inspector. Current and comparison views share the same navigation and saved
 width. The package build records every browser output in a generated manifest;
 Serve validates exact manifest/directory equality and export copies that same
 inventory. `navigation-resize.js` and `appearance-startup.js` are classic
-pre-hydration bundles under `/__mokly/client/`. They capture native disclosure
+pre-hydration bundles under `/mokly-viewer/client/`. They capture native disclosure
 and width choices and restore appearance before React hydrates; the React shell
 then adopts those values and owns ongoing navigation, selection and rendering.
 The appearance controller remains responsible for its stored preference and
@@ -210,7 +210,7 @@ drawer does not expose the separator.
 Consumer brand chrome does not appear in the shell. A small set of documented
 CSS custom properties may tune the shell accent without replacing its
 structural styles. The shell serves its packaged Inter variable font from
-`/__mokly/fonts/`. The All/Changes filter lives at the top of the navigation
+`/mokly-viewer/fonts/`. The All/Changes filter lives at the top of the navigation
 column, shows the changed count, and derives from Git changes between the
 current workspace and the merge base shared by `HEAD` and the serve base ref.
 Commits reachable only from the base ref are not branch changes. Staged,

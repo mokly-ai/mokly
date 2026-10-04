@@ -1272,21 +1272,129 @@ Milestones 12–14, finding 17 and other unapproved findings remain untouched.
 
 Backend.
 
-- [ ] Define the name once, import it everywhere, and extend the local lint
+- [x] Define the name once, import it everywhere, and extend the local lint
       rule to it.
-- [ ] Rename the Serve routes, export and publication paths, viewer URLs,
+- [x] Rename the Serve routes, export and publication paths, viewer URLs,
       and upload archive paths, and apply the Milestone 9 compatibility
       contract.
-- [ ] Extend the example-artifact export and upload regressions: no path
+- [x] Extend the example-artifact export and upload regressions: no path
       segment starts with `.`, `_`, `#`, or `~`, except the root
       `.mokly-export-artifact` marker. Add a unit test for the fixed deployed
       names Mokly chooses. Preserve existing validation of user-chosen names;
       do not turn the example assertion into a new consumer path rejection.
-- [ ] Smoke test Serve, an export served by a static file server, and a
+- [x] Smoke test Serve, an export served by a static file server, and a
       publication archive.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
+
+### Implementation decisions and preservation
+
+The source tip was `800fe9f88a0173429b25baa1bcf41ed9e59b2256` at the start
+and at the final refresh. No further main merge occurred in this milestone.
+
+- Decision 30 C replaces all public `__mokly/` paths and nested `__generations`
+  paths with `mokly-viewer/` and `generations/`. There are no deployed aliases.
+  Live capabilities, authentication, retained generations, immutable comparisons,
+  content-delta Plan v1, Blob accounting and Complete semantics remain intact.
+- Ownership v3 and upload v2 replace the earlier accepted versions, including
+  current-only artifacts. The former ownership-v2 fixture moves to
+  `docs/protocol/fixtures/export-ownership-v3.json`; all digest, size, collision
+  and classification cases remain, with an explicit unsupported-v2 case added.
+  Older local markers fail before mutation and identify the unsupported version.
+- The version contract authorizes the new exact HTTP-426 product message.
+  Standalone loaders preserve typed version errors, retain server-rendered content
+  and links, and show the compatibility alert. Embedded loaders emit
+  `onError({ code: "version", message, details })`; details retain the diagnostic.
+  The complete error type moves from the long viewer document into the focused
+  namespace contract, with a type reference retained in the viewer API example.
+- The strict literal guard also covers existing `mokly-viewer` CSS class strings.
+  These import the shared constant; rendered classes and identifiers keep their
+  existing values. `__moklySource` and other unrelated names remain unchanged.
+- Correction 2 adds no consumer path rejection. Authored names, ids and mirrored
+  repository paths keep their existing rules. Provider `_headers`, `_redirects`
+  and the repository adapter marker remain optional metadata, not visitor
+  dependencies. Fixed-name unit tests and example export/upload inventories
+  enforce the approved naming scope.
+- File-size checks require moving only helpers and complete tests:
+  `tests/publish_run.test.ts` shares setup through
+  `tests/helpers/publish_exchange_fixture.ts`; browser removed-preview observers
+  move to `tests/browser/removed_preview_observers.ts`; the existing renamed-screen
+  preview test moves to `tests/preview_comparison_routes.test.ts`. No test is removed.
+  Updating the upload fixture in the 582-line `tests/guides_ci.test.ts` also
+  requires splitting its existing checks into `tests/guides_ci_verification.test.ts`
+  and `tests/guides_upload_validation.test.ts`, with shared inputs in
+  `tests/helpers/guides_ci_context.ts`. All eleven original guide checks remain.
+  Two branch-only lint test title templates gain the directory name because both
+  constants now use the same probes. Milestone 13 folder expansion is untouched.
+- No additional main feature, test or document is removed. The five deletions
+  authorized in Milestone 11 remain unchanged. Main's audit runner, exception,
+  strict packed-consumer policy, output writer lock and frame usage fix remain.
+  The Cloud receiver/viewer rollout remains a non-blocking post-merge follow-up.
+
+### Smoke evidence
+
+All commands use Node `v22.14.0` first on `PATH`. Scratch evidence is under
+`.context/milestone-12/`. The focused real example uses committed v8 baseline
+output and includes a removed page, removed screen variant, imported CSS and PNG.
+
+- Serve: `http://127.0.0.1:41765/view/screens/example-welcome.html` is styled.
+  The new catalogue, shell CSS, authored CSS, compiled CSS and PNG return 200.
+  The old catalogue endpoint and private generated manifest return 404.
+- Export top-level names before removing the marker:
+  `.mokly-export-artifact`, `404.html`, `index.html`, `mokly-viewer`, `static`, `view`.
+  All 142 exported files have no segment beginning with `.`, `_`, `#` or `~`
+  except the permitted `.mokly-export-artifact` root marker.
+- After removing that marker, a plain static server loads
+  `http://127.0.0.1:35037/mokly-viewer/catalogue.json` and the styled screen.
+  Browser responses have no HTTP errors. No routing rewrite is required.
+- Publication: one Plan, 112 Blob requests and one Complete succeed.
+  All 143 reconstructed files equal the local publication bytes. Ownership is
+  v3 and upload metadata is v2. Its only prefixed segment is the optional marker.
+- All smoke servers and browsers stop in cleanup. No generated output is tracked.
+
+### Validation and completion
+
+Completed with Node `v22.14.0` first on `PATH` and `TMPDIR` under `.context/tmp`.
+The final full gate passed. These timings include command preparation:
+
+| Command                                                                  | Result                                            |  Seconds |
+| ------------------------------------------------------------------------ | ------------------------------------------------- | -------: |
+| `npm run format:check`                                                   | pass                                              |   24.067 |
+| `npm run lint`                                                           | pass                                              |   16.817 |
+| `npm run typecheck`                                                      | pass                                              |   35.824 |
+| `npm test`                                                               | 3,703 passed; no failures, skips or cancellations |  951.230 |
+| `npm run test:browser -- --output .context/milestone-12/browser-results` | 969 passed                                        | 1492.684 |
+| `npm run example:check`                                                  | 436 valid, untracked files                        |   10.654 |
+| `cargo xtask check`                                                      | pass                                              | 2753.591 |
+
+The complete cargo gate includes 15 Rust tests, six packed-consumer scenarios,
+another 3,703 unit tests, 746 browser tests and 223 hydration tests. The repository
+audit uses main's unchanged `GHSA-vfj7-8cjw-p6xm` dev-only exception, expiring
+`2026-11-03`. Strict packed-consumer audits retain no exception. Markdown links,
+protocol sizes and source-file limits also pass. Raw receipts, per-file notes,
+screenshots and smoke inventories are under `.context/milestone-12/`.
+
+The initial full unit run passed 3,699 of 3,703 tests and found four outdated
+expectations. Their exact failure messages were:
+
+```text
+9553 !== 9550
+3 !== 2
+[mokly/upload-unsupported-version] Use a receiver and Mokly version that support upload v2.
+The input did not match the regular expression /unavailable/. Input:
+'MoklyVersionError: Unsupported Mokly delivery version undefined; this viewer supports version 4.'
+```
+
+The canonical fixture byte/hash, ownership version, guide upload fixture and
+delivery error expectations now match the approved contract. Focused checks
+passed, followed by the complete passing gate above. Earlier failure tests proved
+the old namespace/version behavior and exposed the swallowed delivery-version
+error before its fix. File-size failures were resolved by the test splits above.
+
+The commit records the authorized namespace/version removals and fixture move.
+The branch check precedes commit and push. Milestones 13–15 remain open; the
+orchestrator owns the final review. No final implementation review ran here.
 
 ## Milestone 13: Lint coverage after the merge
 

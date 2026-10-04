@@ -44,11 +44,11 @@ config modules, npm packages, `.git`, local environment files, comparison
 diagnostic summaries, or comparison ownership markers. The export's own
 public-safe inventory is distinct from private comparison metadata.
 
-[`__mokly/catalogue.json`](./mokly-catalogue.md) is implemented in the same
+[`mokly-viewer/catalogue.json`](./mokly-catalogue.md) is implemented in the same
 collision-checked ownership/upload inventories, alongside the implemented
-`__mokly/client/inspector.js`. The read model v4 is a public allowlist
-projection of manifest v8; `mokly-manifest.json` remains excluded. Ownership v2
-and upload v1 keep their schema versions; the review result is v4 and the
+`mokly-viewer/client/inspector.js`. The read model v4 is a public allowlist
+projection of manifest v8; `mokly-manifest.json` remains excluded. Ownership v3
+and upload v2 gate the viewer namespace; the review result is v4 and the
 delivery descriptor v4. Deployment identity includes the catalogue under the
 [delivery hashing rule](./mokly-export-browser.md#deployment-identity) and
 includes the inspector and its inert maps.

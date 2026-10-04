@@ -47,7 +47,7 @@ test("hydrated Serve and export distinguish removed and replacement ids", async 
   context.after(() => server.close());
 
   const catalogue = (await (
-    await fetch(`${server.url}/__mokly/catalogue.json`)
+    await fetch(`${server.url}/mokly-viewer/catalogue.json`)
   ).json()) as {
     removedEntries: readonly {
       entry: { id: string };

@@ -75,7 +75,8 @@ for (const change of ["scheme", "viewport"] as const)
       const failed: string[] = [];
       page.on("request", (request) => {
         const url = new URL(request.url());
-        if (url.pathname === "/__mokly/diffs/review.json") selections.push(url);
+        if (url.pathname === "/mokly-viewer/diffs/review.json")
+          selections.push(url);
       });
       page.on("response", (response) => {
         if (response.url().includes("/snapshots/") && !response.ok())
@@ -92,7 +93,7 @@ for (const change of ["scheme", "viewport"] as const)
 
       now += 120_001;
       const pruning = await page.request.get(
-        `${host.url}/__mokly/diffs/review.json?page=removed-page`,
+        `${host.url}/mokly-viewer/diffs/review.json?page=removed-page`,
       );
       expect(pruning.ok()).toBe(true);
       expect((await page.request.get(expired!)).status()).toBe(404);

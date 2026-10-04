@@ -12,7 +12,7 @@ import {
 test("a generation that resolved elsewhere is not reused", async () => {
   const loaded = {
     content: { kind: "page", url: "https://catalogue.test/old.html" },
-    generation: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/`,
+    generation: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/`,
     url: `https://catalogue.test${COMPARISON}`,
   } as const;
   const same = respond(null, loaded.url);

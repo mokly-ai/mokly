@@ -57,7 +57,7 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
             await expect(frame).toHaveCSS("color-scheme", scheme);
             await expectPresentedPane(
               frame,
-              /\/diffs\/__generations\/[a-f0-9]{64}\/snapshots\//,
+              /\/diffs\/generations\/[a-f0-9]{64}\/snapshots\//,
             );
           }
         }
@@ -78,7 +78,9 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
   expect(renewals).toEqual([]);
   expect(new Set(json.map((url) => url.split("?")[0])).size).toBe(1);
   expect(json.some((url) => url.endsWith("?refresh=1"))).toBe(true);
-  expect(requests.some((url) => url.includes("/__mokly/events"))).toBe(false);
+  expect(requests.some((url) => url.includes("/mokly-viewer/events"))).toBe(
+    false,
+  );
   expect(failures).toEqual([]);
 });
 
@@ -96,7 +98,7 @@ test("added and removed screens stay current while light-only comparisons retain
   await page.goto(`${site.url}/view/screens/removed.html`);
   await chooseViewport(page, "mobile");
   const catalogue = readCatalogue(
-    JSON.parse(site.files.get("__mokly/catalogue.json")!.toString()),
+    JSON.parse(site.files.get("mokly-viewer/catalogue.json")!.toString()),
   );
   const removed = catalogue.removedEntries.find(
     ({ entry }) => entry.id === "removed",

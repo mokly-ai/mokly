@@ -46,7 +46,7 @@ test(
     const url = await listeningUrl(child);
     const initial = await waitForClassifiedCount(url, 0);
     assert.match(initial, /class="mbk-nav-filter-count">0</);
-    const events = await fetch(`${url}/__mokly/events`);
+    const events = await fetch(`${url}/mokly-viewer/events`);
     const reader = events.body?.getReader();
     assert.ok(reader);
     assert.match(await readEvent(reader), /event: ready/);
@@ -98,7 +98,7 @@ test(
         await waitForClassifiedCount(url, 0),
         /class="mbk-nav-filter-count">0</,
       );
-      const events = await fetch(`${url}/__mokly/events`);
+      const events = await fetch(`${url}/mokly-viewer/events`);
       const reader = events.body?.getReader();
       assert.ok(reader);
       try {

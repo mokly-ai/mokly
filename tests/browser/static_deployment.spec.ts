@@ -29,8 +29,8 @@ test.beforeAll(async () => {
     adapter: {
       transform: (files) => {
         files.set(
-          "__mokly/shell.css",
-          `${files.get("__mokly/shell.css")}\n/* New deployment */\n`,
+          "mokly-viewer/shell.css",
+          `${files.get("mokly-viewer/shell.css")}\n/* New deployment */\n`,
         );
       },
     },

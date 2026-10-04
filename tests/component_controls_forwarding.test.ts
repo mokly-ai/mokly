@@ -120,7 +120,7 @@ test("forwarded controls preserve POST authority and preview access rules", asyn
     pageId: "f".repeat(32),
     overrides: { label: { kind: "set", value: ["string", "Forwarded edit"] } },
   });
-  const endpoint = "/__mokly/components/render";
+  const endpoint = "/mokly-viewer/components/render";
   const headers = {
     host: new URL(server.url).host,
     origin: server.url,

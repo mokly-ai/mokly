@@ -5,7 +5,7 @@ with the standalone browser inventory and deployment identity algorithm.
 
 ## Browser Modules
 
-The standalone browser inventory under `__mokly/client/` is the hydrated shell:
+The standalone browser inventory under `mokly-viewer/client/` is the hydrated shell:
 the documented standalone hydration entry, which bundles React and React DOM
 with the shell tree, plus the transport, geometry and protocol modules it
 imports (frame adapters, message transport, geometry, catalogue revision
@@ -73,14 +73,14 @@ other non-shell files. Their bytes participate unchanged unless their exact
 path was declared as publication metadata, except for the explicitly owned
 catalogue field below.
 
-Finalization includes the exporter-owned `__mokly/catalogue.json`: canonicalize
+Finalization includes the exporter-owned `mokly-viewer/catalogue.json`: canonicalize
 its JSON with only its top-level `deploymentId` set to 64 zeroes for the file
 hash, then stamp the same resulting artifact identity there and in every owned
 shell descriptor. Its other bytes, the inspector script and inert per-document
 maps participate normally. Validate the catalogue's owned identity field before
 finalization and replace its staging placeholder before installation. This
-prevents self-reference without changing delivery descriptor v4, ownership v2,
-upload v1 or review result v4.
+prevents self-reference without changing delivery descriptor v4, ownership v3,
+upload v2 or review result v4.
 
 Stamp the resulting identity into those owned root descriptors and the owned
 catalogue field, changing no other non-marker bytes. Then compute the ownership

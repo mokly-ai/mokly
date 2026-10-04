@@ -15,7 +15,7 @@ and schema. Its [static delivery contract](./mokly-export-delivery.md)
 defines direct generation URLs without requiring a hosting-provider redirect;
 the server and repository adapter retain their stable redirect for compatibility.
 
-The development shell requests `/__mokly/diffs/review.json` for the selected
+The development shell requests `/mokly-viewer/diffs/review.json` for the selected
 entry on demand, following the
 [selected comparison contract](./mokly-selected-comparisons.md). The response
 redirects to an immutable generation; snapshot URLs resolve relative to that

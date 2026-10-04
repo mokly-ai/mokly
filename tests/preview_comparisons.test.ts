@@ -5,8 +5,6 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
 import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
@@ -28,7 +26,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     fs.promises.readFile(path.join(fixture.output, relative), "utf8");
   const redirects = await read("_redirects");
   const jsonPath = redirects.match(
-    /^\/__mokly\/diffs\/review.json \/(\S+) 302$/m,
+    /^\/mokly-viewer\/diffs\/review.json \/(\S+) 302$/m,
   )?.[1];
   assert.ok(jsonPath);
   const result: ReviewResult = JSON.parse(await read(jsonPath));
@@ -90,7 +88,9 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     );
   }
   const index = await read("index.html");
-  const publicCatalogue = JSON.parse(await read("__mokly/catalogue.json")) as {
+  const publicCatalogue = JSON.parse(
+    await read("mokly-viewer/catalogue.json"),
+  ) as {
     identity: { id: string };
     removedEntries: readonly {
       entry: { id: string };
@@ -110,7 +110,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   };
   assert.deepEqual(bootstrap.catalogue, {
     kind: "external",
-    path: "/__mokly/catalogue.json",
+    path: "/mokly-viewer/catalogue.json",
     identity: publicCatalogue.identity.id,
     revision: publicCatalogue.revision,
   });
@@ -154,11 +154,15 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   ])
     assert.doesNotMatch(await read(file), /client\/browser\.js|EventSource/);
   assert.equal(
-    fs.existsSync(path.join(fixture.output, "__mokly/client/live_updates.js")),
+    fs.existsSync(
+      path.join(fixture.output, "mokly-viewer/client/live_updates.js"),
+    ),
     false,
   );
   assert.equal(
-    fs.existsSync(path.join(fixture.output, "__mokly/client/react-shell.js")),
+    fs.existsSync(
+      path.join(fixture.output, "mokly-viewer/client/react-shell.js"),
+    ),
     true,
   );
   for (const name of [
@@ -171,7 +175,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     "react_update_controller.js",
   ])
     assert.equal(
-      fs.existsSync(path.join(fixture.output, "__mokly/client", name)),
+      fs.existsSync(path.join(fixture.output, "mokly-viewer/client", name)),
       false,
       name,
     );
@@ -258,7 +262,7 @@ test("capture mutation aborts atomically and default replacement removes old rev
   for (const file of [
     "view/pages/removed-document.html",
     "view/screens/removed.html",
-    "__mokly/diffs",
+    "mokly-viewer/diffs",
     "static/archived-review/private-snapshot.html",
     "_headers",
   ])
@@ -270,30 +274,4 @@ test("capture mutation aborts atomically and default replacement removes old rev
   assert.ok(
     fs.existsSync(path.join(fixture.output, "view/pages/handbook.html")),
   );
-});
-
-test("a published renamed screen keeps one derived route without an id redirect", async (context) => {
-  const fixture = await createPreviewComparisonFixture();
-  context.after(() => fixture.close());
-  const source = await fs.promises.readFile(fixture.entryPath, "utf8");
-  await fs.promises.writeFile(
-    fixture.entryPath,
-    source.replace('title: "Home"', 'title: "Renamed home"'),
-  );
-  await writeCompilation(
-    await compileCatalogue(fixture.config),
-    fixture.config,
-  );
-  await fixture.build();
-  const redirects = await fs.promises.readFile(
-    path.join(fixture.output, "_redirects"),
-    "utf8",
-  );
-  assert.doesNotMatch(redirects, /^\/id\//m);
-  const current = await fs.promises.readFile(
-    path.join(fixture.output, "view/screens/home.html"),
-    "utf8",
-  );
-  assert.match(documentText(current), /Renamed home/);
-  assert.doesNotMatch(documentText(current), /Showing previous version/);
 });

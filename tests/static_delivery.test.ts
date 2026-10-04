@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { MoklyVersionError } from "@mokly/viewer/data";
+
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import { parseStaticDelivery } from "../packages/viewer/dist/navigation/delivery.js";
 import {
@@ -13,7 +15,7 @@ const descriptor = {
   schemaVersion: 4,
   deploymentId: "a".repeat(64),
   canonicalPath: "/view/screens/home.html",
-  comparisonUrl: `/__mokly/diffs/__generations/${"a".repeat(64)}/review.json`,
+  comparisonUrl: `/mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
 };
 
 test("delivery v4 accepts only same-origin canonical and comparison paths", () => {
@@ -72,7 +74,17 @@ test("a static document with missing or malformed metadata never falls back to t
   for (const contents of [undefined, "{}", "{"]) {
     const attrs: Record<string, string> = { "data-mokly-static": "" };
     if (contents !== undefined) attrs["data-mokly-delivery"] = contents;
-    assert.throws(() => readShellDelivery(document(attrs)), /unavailable/);
+    if (contents === "{}")
+      assert.throws(
+        () => readShellDelivery(document(attrs)),
+        (error: unknown) => {
+          assert.ok(error instanceof MoklyVersionError);
+          assert.equal(error.boundary, "delivery");
+          assert.equal(error.version, undefined);
+          return true;
+        },
+      );
+    else assert.throws(() => readShellDelivery(document(attrs)), /unavailable/);
   }
   assert.deepEqual(
     readShellDelivery(
@@ -122,8 +134,8 @@ test("different deployment identities never validate the current route", async (
     true,
   );
   assert.deepEqual(checked, [
-    "https://example.test/__mokly/catalogue.json",
-    "https://example.test/__mokly/catalogue.json",
+    "https://example.test/mokly-viewer/catalogue.json",
+    "https://example.test/mokly-viewer/catalogue.json",
   ]);
 });
 

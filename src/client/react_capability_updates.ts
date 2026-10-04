@@ -1,5 +1,6 @@
 /** Live-update and recovery adapters for the React host capability boundary. */
 
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
 import {
   readViewerCapabilityDescriptor,
   readViewerRouteEvidenceRevision,
@@ -62,7 +63,7 @@ export function createReactUpdateCapability(
       if (signal.aborted) return;
       let source: ReactCapabilityEventSource | undefined;
       try {
-        source = environment.createEventSource("/__mokly/events");
+        source = environment.createEventSource(`/${VIEWER_DIRECTORY}/events`);
       } catch (error) {
         environment.reportError?.(error);
         return;

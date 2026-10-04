@@ -47,7 +47,7 @@ test("capture externalizes one exact scoped projection", () => {
   assert.deepEqual(parsed.catalogue, {
     identity: catalogue.identity.id,
     kind: "external",
-    path: "/__mokly/catalogue.json",
+    path: "/mokly-viewer/catalogue.json",
     revision: catalogue.revision,
   });
 });

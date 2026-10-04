@@ -179,7 +179,7 @@ the current effective appearance forward rather than a separate preview state.
 The asset is listed by the generated browser-output manifest, validated with
 the complete build directory, and copied into export inventories. Exported
 shell documents use the root-absolute URL
-`/__mokly/client/appearance-startup.js`: a root deployment works directly, while
+`/mokly-viewer/client/appearance-startup.js`: a root deployment works directly, while
 a deployment beneath a URL prefix needs a prefix-stripping hosting mount that
 also resolves the export's root-absolute asset routes. Export does not rewrite a
 deployment prefix; a `--base-path` option is separate work. The classic asset

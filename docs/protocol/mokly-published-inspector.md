@@ -10,7 +10,7 @@ Same-origin local frames keep their parent-owned inspection path.
 ## Publication Boundary
 
 The Browse document adapter injects the dependency-free inspector IIFE from
-`__mokly/client/inspector.js` into **current published HTML copies only**, after
+`mokly-viewer/client/inspector.js` into **current published HTML copies only**, after
 ownership and marker validation. It supplies an inert allowlisted map of
 instance keys to range ids/parents and validated logical-link identities from
 that document's accepted metadata, so `r-n` comments can be resolved without

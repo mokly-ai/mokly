@@ -1,4 +1,4 @@
-# Catalogue Upload v1
+# Catalogue Upload v2
 
 ## Delivery Status And Boundary
 
@@ -12,9 +12,10 @@ Receivers, hosted or self-hosted, need only the published `@mokly/mokly`
 package and its protocol documents and fixtures; Mokly Cloud has no private
 protocol. `mokly export` remains local-only. `mokly publish` exports, then runs
 the exchange so a receiver stores only content it lacks. The
-`mokly-upload.json` envelope keeps `schemaVersion: 1`; the ownership marker is
-[schema 2](./mokly-export-ownership.md), and the Plan response is independently
-versioned as v1.
+`mokly-upload.json` envelope uses `schemaVersion: 2`; the ownership marker is
+[schema 3](./mokly-export-ownership.md), and the Plan response is independently
+versioned as v1. Earlier receivers reject this format with 426 under the
+[namespace compatibility contract](./mokly-viewer-namespace.md#compatibility-failure).
 
 ## CLI
 
@@ -92,8 +93,8 @@ out the head explicitly as in the action guide.
 `mokly-upload.json` is UTF-8 JSON at the export root with exactly these fields:
 
 ```ts
-interface MoklyUploadV1 {
-  schemaVersion: 1;
+interface MoklyUploadV2 {
+  schemaVersion: 2;
   moklyVersion: string;
   repository: { host: string; owner: string; name: string };
   branch: string;
@@ -134,7 +135,7 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 - `exportedAt` is UTC ISO 8601, exactly `YYYY-MM-DDTHH:mm:ss.sssZ`, recorded
   while finalizing the export. It is client-reported time, not authorization.
 - `comparisonPath` is null or
-  `__mokly/diffs/__generations/<64 lowercase hex characters>/review.json`, the
+  `mokly-viewer/diffs/generations/<64 lowercase hex characters>/review.json`, the
   single pinned review file; never search for a newest file.
 
 The manifest is written before ownership finalization. Publish declares it as

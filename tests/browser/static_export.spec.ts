@@ -24,7 +24,7 @@ test("an isolated export contains a complete exact-file resource graph", async (
     404,
   );
   expect(
-    (await request.get(`${site.url}/__mokly/diffs/review.json`)).status(),
+    (await request.get(`${site.url}/mokly-viewer/diffs/review.json`)).status(),
   ).toBe(404);
 });
 

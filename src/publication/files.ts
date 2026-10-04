@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
+
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { locatePath, type FileLocation } from "../config/file_locations.js";
 import { isInside, projectRealPath } from "../config/paths.js";
@@ -132,7 +134,7 @@ function isComparisonPath(file: string, config: ResolvedConfig): boolean {
   const parts = path.relative(config.mockupsDir, file).split(path.sep);
   return (
     parts.includes(".comparisons") ||
-    (parts.includes("__mokly") && parts.includes("diffs"))
+    (parts.includes(`${VIEWER_DIRECTORY}`) && parts.includes("diffs"))
   );
 }
 

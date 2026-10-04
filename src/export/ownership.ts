@@ -25,7 +25,7 @@ export interface ExportOwnershipEntry {
 
 /** Versioned list of files the exporter is allowed to replace. */
 export interface ExportOwnership {
-  schemaVersion: 2;
+  schemaVersion: 3;
   files: readonly ExportOwnershipEntry[];
 }
 
@@ -36,11 +36,11 @@ export type ExportOwnershipRejection =
 /** Classified ownership parse result for local and receiver-facing validation. */
 export type ExportOwnershipParseResult =
   | { kind: "valid"; value: ExportOwnership }
-  | { kind: "unsupported-version" }
+  | { kind: "unsupported-version"; version: unknown }
   | { kind: "too-large" }
   | { kind: "invalid" };
 
-/** Build the schema 2 inventory from the exact bytes that will be written. */
+/** Build the schema 3 inventory from the exact bytes that will be written. */
 export function buildExportOwnership(
   files: ReadonlyMap<string, ReviewArtifactContent>,
 ): ExportOwnership {
@@ -60,7 +60,7 @@ export function buildExportOwnership(
       size: bytes.length,
     };
   });
-  return { schemaVersion: 2, files: entries };
+  return { schemaVersion: 3, files: entries };
 }
 
 /** Serialize a writer-owned marker and enforce its regular-file size ceiling. */
@@ -98,7 +98,8 @@ export function parseExportOwnership(
   }
   if (!isRecord(value) || !Object.hasOwn(value, "schemaVersion"))
     return { kind: "invalid" };
-  if (value.schemaVersion !== 2) return { kind: "unsupported-version" };
+  if (value.schemaVersion !== 3)
+    return { kind: "unsupported-version", version: value.schemaVersion };
   if (!Object.hasOwn(value, "files") || !Array.isArray(value.files))
     return { kind: "invalid" };
   const entries: ExportOwnershipEntry[] = [];
@@ -119,7 +120,7 @@ export function parseExportOwnership(
       parts.pop();
     }
   }
-  return { kind: "valid", value: { schemaVersion: 2, files: entries } };
+  return { kind: "valid", value: { schemaVersion: 3, files: entries } };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -240,7 +241,7 @@ export async function assertExportOwnership(
   );
   if (parsed.kind === "unsupported-version")
     throw exportError(
-      `This folder holds an export from an earlier Mokly release. Move any files you added, then delete ${output} and export again.`,
+      `This folder holds an unsupported export ownership version ${String(parsed.version)}. Move any files you added, then delete ${output} and export again.`,
     );
   if (parsed.kind === "invalid" || parsed.kind === "too-large")
     throw exportError("Invalid export ownership inventory.");

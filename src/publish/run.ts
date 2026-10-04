@@ -83,7 +83,7 @@ export async function publishCatalogue(
               "The export has missing comparison metadata or a reserved manifest path.",
             );
           const manifest = validateUploadManifest({
-            schemaVersion: 1,
+            schemaVersion: 2,
             moklyVersion: version,
             repository: identity.repository,
             branch: identity.branch,

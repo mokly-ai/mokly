@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-The `mokly-viewer/` rename is an approved pending target in
+The `mokly-viewer/` namespace and its version gates are implemented in
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
-Current delivery uses `__mokly/`, catalogue v4, delivery v4 and bootstrap v1;
-ownership v2 and upload v1 remain until the rename. The final contract below
-replaces their path and version clauses together, preserving content-delta uploads.
+Delivery uses catalogue v4, delivery v4, bootstrap v1, ownership v3 and upload v2.
+Content-delta uploads and Plan v1 remain unchanged. The current Cloud service
+requires the separate post-merge receiver and viewer update before publishing.
 
 ## Paths And Single Ownership
 
@@ -76,8 +76,7 @@ is:
 
 The unified layout already emits catalogue v4, delivery v4 and bootstrap v1:
 moving static generated paths is incompatible with v3 readers. Its intermediate
-`__mokly/` format is branch-only, must not become a supported package and has no
-compatibility reader. The namespace rename finalizes the paths below and bumps
+`__mokly/` format was branch-only and has no compatibility reader. The namespace rename finalizes the paths below and bumps
 upload/ownership together. Strict version gates apply throughout; no v3 parser
 may interpret a v4 model.
 
@@ -136,6 +135,23 @@ must not substitute a cached, independently versioned client. An older viewer's
 existing unsupported-version exception is the compatibility boundary; this
 repository cannot change the wording in an already installed older binary.
 
+The embedded viewer reports `onError` with `code: "version"`, the product
+message above and optional `details` containing the typed version diagnostic.
+Other error codes and messages stay unchanged. `ViewerError` is:
+
+```ts
+interface ViewerError {
+  code:
+    "catalogue" | "version" | "selection" | "frame" | "comparison" | "markers";
+  message: string;
+  details?: string;
+}
+```
+
+Standalone loading places the same product line in an alert within the existing
+page and logs the diagnostic separately. No React hydration starts after a
+rejected delivery, bootstrap or catalogue. Existing server markup and links remain.
+
 There is no automatic conversion of older public artifacts. They keep their
 original bundled viewer at their original deployment, or are re-exported.
 The separate private baseline boundary also reads only v8. Older manifest
@@ -167,10 +183,10 @@ recovery still require it. Other dot-prefixed fixed Mokly names identify
 local-only cache and transaction state. Provider metadata is optional host
 configuration and must not become a visitor dependency.
 
-Before implementation, add failure tests for an old receiver rejecting new
+Regression tests cover failure cases for an old receiver rejecting new
 current-only and Changes-enabled uploads, new readers rejecting old/unknown
 versions before path use, and an old strict catalogue reader rejecting v4.
-Keep the v2 ownership digest tests with their version updated, plus explicit
+The ownership-v3 fixtures retain v2 digest coverage and explicit
 unsupported-v2 cases; preserve Plan v1 retry, keep-first, delta and cancellation
 tests. Update installed-package fixtures for catalogue v4, ownership v3 and
 upload v2. No source or private manifest enters any artifact.

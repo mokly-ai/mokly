@@ -206,7 +206,7 @@ test("the switch stays while a comparison loads and after it fails", async ({
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/__mokly/diffs/review.json*", async (route) => {
+  await page.route("**/mokly-viewer/diffs/review.json*", async (route) => {
     await held;
     await route.fulfill({ status: 500, body: "unavailable" });
   });

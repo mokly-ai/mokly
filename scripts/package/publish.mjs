@@ -183,7 +183,7 @@ export async function smokeConsumerPublish(context, root) {
       assert.doesNotMatch(stdout + stderr, /package-smoke-token/);
       const manifest = plan.manifest;
       assert.equal(manifest.moklyVersion, context.packageVersion);
-      assert.equal(manifest.schemaVersion, 1);
+      assert.equal(manifest.schemaVersion, 2);
       assert.equal(manifest.configPath, "mokly.config.ts");
       assert.deepEqual(
         [...plan.files.keys()],
@@ -233,9 +233,9 @@ export async function smokeConsumerPublish(context, root) {
         "index.html",
         "404.html",
         "mokly-upload.json",
-        "__mokly/catalogue.json",
-        "__mokly/client/inspector.js",
-        "__mokly/client/react-shell.js",
+        "mokly-viewer/catalogue.json",
+        "mokly-viewer/client/inspector.js",
+        "mokly-viewer/client/react-shell.js",
       ])
         assert.ok(files.includes(file), `missing protocol artifact ${file}`);
       assert.equal(
@@ -247,7 +247,7 @@ export async function smokeConsumerPublish(context, root) {
         assert.equal(manifest.comparisonPath, null);
         assert.equal(manifest.baseSha, null);
         assert.equal(
-          files.some((file) => file.startsWith("__mokly/diffs/")),
+          files.some((file) => file.startsWith("mokly-viewer/diffs/")),
           false,
         );
       } else {

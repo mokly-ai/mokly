@@ -15,10 +15,12 @@
   user accepted the sole braces audit failure for the pre-merge code checkpoint.
   Main supplies the expiring audit exception; the merged full gate passes.
   Milestone 11 merges main at `800fe9f8`, unifies output and preserves its features.
-  Milestones 12–15 rename `__mokly/` to `mokly-viewer/`, finish
-  lint coverage, prepare the browser example baseline once in Milestone 14,
-  then verify and review in Milestone 15. Correction 3 A selects v8-only
-  baselines; findings 32 B and 34 C are documented. Milestone 11 is complete. Other findings await direction; Cloud rollout is a post-merge follow-up.
+  Milestone 12 renames `__mokly/` to `mokly-viewer/` and implements ownership-v3,
+  upload-v2 and viewer compatibility errors. Its full gate and smoke tests pass.
+  Milestones 13–15 finish lint coverage, prepare the shared browser baseline,
+  then verify and review. Correction 3 A selects v8-only baselines; findings
+  32 B and 34 C are documented. Other findings await direction; Cloud rollout
+  remains a post-merge follow-up.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete
   exchange, the schema 2 export ownership marker, v2 fixtures and guides for

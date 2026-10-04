@@ -186,6 +186,7 @@ export type {
 export { reviewMaterialKey } from "./data/material_key.js";
 export {
   GENERATED_DIRECTORY,
+  VIEWER_DIRECTORY,
   generatedResourcePath,
   generatedResourceRoute,
   currentDocumentPath,

@@ -10,7 +10,7 @@ When controls are active, every Serve request requires Host to be exactly
 and no leading zero. A non-loopback Host returns 403 for the whole catalogue,
 including ordinary pages and static assets. Forwarded local ports may differ
 from the listening socket port. The parent shell sends controlled overrides to
-`POST /__mokly/components/render`, which requires
+`POST /mokly-viewer/components/render`, which requires
 Origin to equal `http://` plus Host exactly, the shell token, current generation,
 saved variant and view. Preview GET/HEAD validates Host and its authenticated
 render id without requiring Origin or the POST token. `x-forwarded-*` headers

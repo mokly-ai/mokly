@@ -9,8 +9,8 @@ carry identity only and derive every route and view path from kind and id.
 
 ## Location And Types
 
-Export writes `__mokly/catalogue.json` at the artifact root. Serve exposes
-GET/HEAD `/__mokly/catalogue.json` with `application/json; charset=utf-8`.
+Export writes `mokly-viewer/catalogue.json` at the artifact root. Serve exposes
+GET/HEAD `/mokly-viewer/catalogue.json` with `application/json; charset=utf-8`.
 Component value types follow the [manifest](./mokly-component-manifest.md),
 [props](./mokly-component-props.md), [controls](./mokly-component-controls.md)
 and [instance](./mokly-instances.md) contracts. The viewer exports these types
@@ -206,9 +206,9 @@ components actually published in the model; it never publishes dangling
 references or weakens reader validation. Proven empty usage is ready with empty
 arrays, never inferred from a failed or incomplete render.
 
-`comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,
+`comparisonUrl` is null or `mokly-viewer/diffs/generations/<generation>/review.json`,
 pinned to this content's evidence. Resolve snapshots against that JSON response
-URL. Null forbids fallback requests to `/__mokly/diffs/review.json`.
+URL. Null forbids fallback requests to `/mokly-viewer/diffs/review.json`.
 Comparison files load only on selection.
 
 ## Serialization, Identity And Versions
@@ -262,7 +262,7 @@ every route and path field, makes component variants entries, and keys removal
 by id. Version 4 requires `generatedPathPrefix: "mokly-generated"`; no
 prefixless catalogue is readable. Optional fields are additive; removals, required additions, changed
 meaning, new union discriminants or incompatible paths require a new version.
-Ownership v2 and upload v1 remain unchanged; the review result and delivery
+Ownership v3 and upload v2 gate the viewer namespace; the review result and delivery
 descriptor follow [Changes](./mokly-changes.md) and
 [static delivery](./mokly-export-delivery.md).
 

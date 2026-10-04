@@ -41,7 +41,7 @@ test("Changes excludes ignored-only edits while comparisons retain their evidenc
   assert.match(page, /class="mbk-nav-filter-count">0</);
   await assert.rejects(fs.access(fixture.config.review.outDir));
   const result = (await (
-    await fetch(`${running.url}/__mokly/diffs/review.json`)
+    await fetch(`${running.url}/mokly-viewer/diffs/review.json`)
   ).json()) as ReviewResult;
   assert.equal(
     result.screens.find((s) => s.id === "home")?.state,
@@ -89,7 +89,7 @@ test("dependency-only edits retain evidence without generating a review list", a
   await waitForClassifiedCount(running.url, 0);
   await assert.rejects(fs.access(fixture.config.review.outDir));
   const result = (await (
-    await fetch(`${running.url}/__mokly/diffs/review.json`)
+    await fetch(`${running.url}/mokly-viewer/diffs/review.json`)
   ).json()) as ReviewResult;
   const home = result.screens.find((s) => s.id === "home");
   assert.equal(home?.state, "unchanged");
@@ -160,7 +160,7 @@ test("moving a source module preserves an unchanged review list", async (t) => {
   fixture.beforeRemove(() => running.close());
   await waitForClassifiedCount(running.url, 0);
   const result = (await (
-    await fetch(`${running.url}/__mokly/diffs/review.json`)
+    await fetch(`${running.url}/mokly-viewer/diffs/review.json`)
   ).json()) as ReviewResult;
   assert.ok(result.screens.every((screen) => screen.state === "unchanged"));
 });

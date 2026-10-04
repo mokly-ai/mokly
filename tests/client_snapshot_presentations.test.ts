@@ -8,7 +8,7 @@ import {
 } from "../packages/viewer/dist/previews/presentation.js";
 
 const GENERATION =
-  "https://catalogue.test/__mokly/diffs/__generations/comparison/";
+  "https://catalogue.test/mokly-viewer/diffs/generations/comparison/";
 const BEFORE = `${GENERATION}snapshots/before/mokly-generated/screens/home.html`;
 const AFTER = `${GENERATION}snapshots/after/mokly-generated/screens/home.html`;
 

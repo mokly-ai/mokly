@@ -7,8 +7,8 @@ The command, closure, unified layout and writer behavior follows
 [Unified output](./mokly-unified-output.md), [manifest v8](./mokly-generated-manifest.md),
 [configuration](./mokly-configuration.md), [baseline selection](./mokly-derived-baselines.md),
 [baseline storage](./mokly-baseline-storage.md) and [terminal output](./mokly-terminal-output.md)
-define the implemented contract. The [viewer namespace](./mokly-viewer-namespace.md)
-and remaining [lint work](./mokly-directory-lint.md) are approved follow-on targets.
+and [viewer namespace](./mokly-viewer-namespace.md) define the implemented contract.
+Remaining [lint work](./mokly-directory-lint.md) adds coverage and import checks.
 
 ## Roots And Paths
 
@@ -36,16 +36,16 @@ A host may drop the optional root
 `.mokly-export-artifact` marker; the viewer never needs it. Upload and local
 export recovery still require it. Apart from that optional marker, leading
 dots in fixed Mokly names are reserved for local state such as `.mokly-cache/` and transaction
-directories. The remaining `__mokly/` and `__generations/` violations are
-removed under the approved [namespace contract](./mokly-viewer-namespace.md).
-Production code defines `GENERATED_DIRECTORY` once in
+directories. `mokly-viewer/` and `generations/` follow the same
+[namespace contract](./mokly-viewer-namespace.md).
+Production code defines `GENERATED_DIRECTORY` and `VIEWER_DIRECTORY` once in
 `packages/viewer/src/catalogue/delivery_paths.ts`, exports it through
 `@mokly/viewer/data`, and the CLI imports that constant directly. ESLint's
 `mokly/no-directory-literals` rule rejects other production string, template
 and regular-expression literals under `src/`, `packages/viewer/src/`, and
 `scripts/preview/`, including escaped spellings. The
 [lint contract](./mokly-directory-lint.md) keeps this rule independent of
-`main`'s source-ordering check; viewer-name enforcement remains pending with the namespace rename.
+`main`'s source-ordering check and covers both directory names.
 The former dot-directory name was never released and is not a read alias.
 
 Resolved entries, the renderer, compatibility transformer, module-resolution

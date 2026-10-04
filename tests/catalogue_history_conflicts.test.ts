@@ -77,7 +77,7 @@ for (const delivery of ["Serve", "export"] as const) {
     const oldModel = readCatalogue(
       JSON.parse(
         await fs.readFile(
-          path.join(before.outDir, "__mokly/catalogue.json"),
+          path.join(before.outDir, "mokly-viewer/catalogue.json"),
           "utf8",
         ),
       ),
@@ -100,7 +100,9 @@ for (const delivery of ["Serve", "export"] as const) {
       });
       t.after(() => server.close());
       for (let attempt = 0; attempt < 100; attempt++) {
-        const response = await fetch(`${server.url}/__mokly/catalogue.json`);
+        const response = await fetch(
+          `${server.url}/mokly-viewer/catalogue.json`,
+        );
         assert.equal(response.status, 200);
         model = (await response.json()) as CatalogueReadModel;
         if (model.changesStatus === "ready") break;
@@ -114,7 +116,7 @@ for (const delivery of ["Serve", "export"] as const) {
       await exportCatalogue(fixture.config, { outDir: "site" });
       model = JSON.parse(
         await fs.readFile(
-          path.join(fixture.output, "__mokly/catalogue.json"),
+          path.join(fixture.output, "mokly-viewer/catalogue.json"),
           "utf8",
         ),
       ) as CatalogueReadModel;

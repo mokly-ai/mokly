@@ -18,7 +18,7 @@ inventories never enter it.
 - **Live Serve** embeds an entry-scoped projection of the accepted public read
   model together with the page view and shell context.
 - **Static export and repository preview** embed the existing compact external
-  reference: `kind: "external"`, the fixed `/__mokly/catalogue.json` path, and
+  reference: `kind: "external"`, the fixed `/mokly-viewer/catalogue.json` path, and
   its identity and revision. The browser resolves it against the one complete,
   finalized deployment catalogue before hydration.
 
@@ -205,10 +205,10 @@ scoped model directly with the complete published model, ignore extra retained
 usage, or accept missing entry-owned usage.
 
 For identical catalogue, consumer, and comparison inputs,
-`__mokly/catalogue.json`, canonical shell HTML, workspace JSON,
+`mokly-viewer/catalogue.json`, canonical shell HTML, workspace JSON,
 ownership inventory, and comparison files remain byte-identical to the
 pre-scope export after replacing each tree's deployment identity with 64
-zeroes. Files under `__mokly/client/` may change when checked, type-checked
+zeroes. Files under `mokly-viewer/client/` may change when checked, type-checked
 viewer source changes. Across the route-scoping switch, the final deployment
 identity may therefore change only because those client bytes changed; all
 other identity inputs must match after normalization. Static pages still

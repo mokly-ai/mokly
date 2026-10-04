@@ -37,7 +37,7 @@ test(
     context.after(() => server.close());
     const controller = new AbortController();
     context.after(() => controller.abort());
-    const stream = await fetch(`${server.url}/__mokly/events`, {
+    const stream = await fetch(`${server.url}/mokly-viewer/events`, {
       signal: controller.signal,
     });
     assert.equal(stream.status, 200);
@@ -101,7 +101,7 @@ test(
     const stylesheet = `${running.url}/static/mokly-generated/${entryStyle}`;
     let edited = false;
     for await (const event of watchedEvents(
-      await fetch(`${running.url}/__mokly/events`, {
+      await fetch(`${running.url}/mokly-viewer/events`, {
         signal: controller.signal,
       }),
     )) {

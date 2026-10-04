@@ -2,6 +2,10 @@ import { isSafeCatalogueRoute } from "../data/paths.js";
 
 /** Public output directory shared by the viewer and CLI. */
 export const GENERATED_DIRECTORY = "mokly-generated" as const;
+
+/** Public resource directory shared by the viewer and CLI. */
+export const VIEWER_DIRECTORY = "mokly-viewer" as const;
+
 export type GeneratedPathPrefix = typeof GENERATED_DIRECTORY;
 
 /** Map a logical document route to the selected publication's static path. */

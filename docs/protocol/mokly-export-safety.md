@@ -33,7 +33,7 @@ publication.
 
 Accept a missing destination or an empty real directory. A nonempty directory
 must have a regular `.mokly-export-artifact` ownership file using the
-[public schema 2](./mokly-export-ownership.md) and its generated-file inventory.
+[public schema 3](./mokly-export-ownership.md) and its generated-file inventory.
 Reject missing/malformed markers, unexpected files outside the inventory,
 unsafe inventory paths, symlink entries, and unsupported versions, including
 schema 1 markers written by earlier releases. That case uses this exact message,

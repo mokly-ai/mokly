@@ -46,7 +46,7 @@ test("removed screens and saved variants retain baseline context with null curre
     ),
     changesStatus: "ready",
     evidence,
-    comparisonUrl: `__mokly/diffs/__generations/${previewGeneration}/review.json`,
+    comparisonUrl: `mokly-viewer/diffs/generations/${previewGeneration}/review.json`,
     removedPreviews: new Map([["home", { kind: "screen" as const }]]),
     revision: { content: 0, evidence: 0 },
   });

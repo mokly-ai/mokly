@@ -43,7 +43,7 @@ test("a screen preview renders only its captured previous views", async () => {
   assert.equal(loaded.url, generation);
   assert.equal(
     loaded.generation,
-    `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/`,
+    `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/`,
   );
   assert.deepEqual(loaded.content, {
     kind: "screen",
@@ -51,12 +51,12 @@ test("a screen preview renders only its captured previous views", async () => {
       {
         colorScheme: "light",
         viewport: "mobile",
-        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/mokly-generated/screens/removed-screen.mobile.html`,
+        url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/screens/removed-screen.mobile.html`,
       },
       {
         colorScheme: "light",
         viewport: "desktop",
-        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/mokly-generated/screens/removed-screen.desktop.html`,
+        url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/screens/removed-screen.desktop.html`,
       },
     ],
   });
@@ -157,7 +157,7 @@ test("a generation-backed selection accepts only its immutable generation", asyn
     },
   ];
   const wrongGeneration = "d".repeat(64);
-  const endpoint = `https://catalogue.test/__mokly/diffs/__generations/${wrongGeneration}/review.json`;
+  const endpoint = `https://catalogue.test/mokly-viewer/diffs/generations/${wrongGeneration}/review.json`;
   const response = respond(review(views), endpoint);
 
   await assert.rejects(
@@ -235,7 +235,7 @@ test("a page preview must describe the entry that asked for it", async () => {
   );
   assert.deepEqual(loaded.content, {
     kind: "page",
-    url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/mokly-generated/pages/removed-page.html`,
+    url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/pages/removed-page.html`,
   });
   const other = respond(
     {

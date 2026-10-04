@@ -170,7 +170,7 @@ test("reconnecting to newer evidence keeps the page, while missed content change
     const ready = new Promise<void>((resolve) => {
       captured = resolve;
     });
-    await page.route("**/__mokly/events", async (route) => {
+    await page.route("**/mokly-viewer/events", async (route) => {
       captured();
       await held;
       await route.continue();

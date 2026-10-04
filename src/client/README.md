@@ -27,7 +27,9 @@ newer choices, then load completion persists them and removes the capture state.
 
 `react_transports.ts` keeps local temporary previews and on-demand usage loads
 private. `react_host.ts` hydrates even when the optional event stream or recovery
-storage is unavailable. Export supplies no capabilities. No private tokens
+storage is unavailable. Export supplies no capabilities. All live transports use the shared
+`VIEWER_DIRECTORY` prefix. Version rejection retains server-rendered content
+and presents the compatibility message before hydration. No private tokens
 enter catalogue JSON.
 Temporary preview responses must name the requested generated document below
 their authenticated render bundle. The transport uses the shared generated

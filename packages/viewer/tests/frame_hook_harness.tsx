@@ -196,7 +196,7 @@ function renderHost(host: HookHost): void {
           host.previewUsage
             ? generatedUsage({
                 colorScheme: "light",
-                path: "/__mokly/components/renders/preview.html",
+                path: "/mokly-viewer/components/renders/preview.html",
                 usage: host.previewUsage,
                 viewport: "desktop",
               })

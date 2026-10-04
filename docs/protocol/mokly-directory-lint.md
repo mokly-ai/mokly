@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-The independent generated-directory literal rule is implemented, including
+The independent generated- and viewer-directory literal rule is implemented, including
 escaped string, template and regular-expression spellings. The approved follow-on
-work adds the viewer namespace, merged folder-coverage probes and duplicate-import
+work adds merged folder-coverage probes and duplicate-import
 enforcement. [Generated Output Simplification](../../plans/generated-output-simplification.md)
 tracks implementation and verification.
 
@@ -22,8 +22,7 @@ packages/viewer/src/**/*.{ts,tsx}
 scripts/preview/**/*.mjs
 ```
 
-Reject any occurrence of `mokly-generated`, and, after the namespace rename,
-`mokly-viewer`, in a string literal, template literal segment, or
+Reject any occurrence of `mokly-generated` or `mokly-viewer` in a string literal, template literal segment, or
 regular-expression literal. Include names embedded in paths and diagnostics.
 Check cooked string/template values and raw spellings; regex checks must read
 the pattern rather than depend on a regex object's string value. A literal

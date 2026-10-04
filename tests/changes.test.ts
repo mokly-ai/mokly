@@ -161,7 +161,9 @@ test("Changes keeps screen comparisons lazy and has no separate Review route", a
     assert.equal(fs.existsSync(config.review.outDir), false);
     assert.equal((await fetch(`${running.url}/review`)).status, 404);
     assert.equal(fs.existsSync(config.review.outDir), false);
-    const response = await fetch(`${running.url}/__mokly/diffs/review.json`);
+    const response = await fetch(
+      `${running.url}/mokly-viewer/diffs/review.json`,
+    );
     assert.equal(response.status, 200);
     const comparison = (await response.json()) as ReviewResult;
     assert.equal(

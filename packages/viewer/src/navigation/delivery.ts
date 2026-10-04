@@ -1,3 +1,4 @@
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import { parseViewHref, viewHref } from "./routes.js";
@@ -56,9 +57,9 @@ export function parseStaticDelivery(
   if (
     value.comparisonUrl !== null &&
     (typeof value.comparisonUrl !== "string" ||
-      !/^\/__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(
-        value.comparisonUrl,
-      ))
+      !new RegExp(
+        `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[a-f0-9]{64}\\/review\\.json$`,
+      ).test(value.comparisonUrl))
   )
     return undefined;
   return {

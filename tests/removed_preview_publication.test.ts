@@ -37,7 +37,10 @@ test("repository publication packages previews and default replacement removes t
   });
   const withChanges = readCatalogue(
     JSON.parse(
-      await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
+      await fs.readFile(
+        path.join(output, "mokly-viewer/catalogue.json"),
+        "utf8",
+      ),
     ),
   );
   const page = withChanges.removedEntries.find(
@@ -45,7 +48,7 @@ test("repository publication packages previews and default replacement removes t
   );
   assert.ok(page?.preview?.kind === "page");
   await assertPublishedPagePreview(output, page.preview);
-  await fs.access(path.join(output, "__mokly/client/react-shell.js"));
+  await fs.access(path.join(output, "mokly-viewer/client/react-shell.js"));
   await fs.access(
     path.join(
       output,
@@ -66,7 +69,7 @@ test("repository publication packages previews and default replacement removes t
       return (
         method === "HEAD" ||
         request.searchParams.has("page") ||
-        request.pathname === "/__mokly/events"
+        request.pathname === "/mokly-viewer/events"
       );
     }),
     [],
@@ -75,7 +78,7 @@ test("repository publication packages previews and default replacement removes t
   await buildPreview(fixture.config, output);
   assert.ok(
     (await ownedEntries(output)).files.every(
-      (name) => !name.startsWith("__mokly/diffs/"),
+      (name) => !name.startsWith("mokly-viewer/diffs/"),
     ),
   );
 });

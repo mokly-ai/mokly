@@ -98,7 +98,7 @@ async function start(
     routes,
     request: (id: string, refresh = false) =>
       fetch(
-        `http://127.0.0.1:${address.port}/__mokly/diffs/review.json?id=${encodeURIComponent(id)}${refresh ? "&refresh=1" : ""}`,
+        `http://127.0.0.1:${address.port}/mokly-viewer/diffs/review.json?id=${encodeURIComponent(id)}${refresh ? "&refresh=1" : ""}`,
       ),
   };
 }

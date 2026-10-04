@@ -63,14 +63,16 @@ for (const baseline of [
     assert.equal(result.comparisonUrl, null);
     const catalogue = JSON.parse(
       await fs.readFile(
-        path.join(result.outDir, "__mokly/catalogue.json"),
+        path.join(result.outDir, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     );
     assert.equal(catalogue.changesStatus, "unavailable");
     assert.equal(catalogue.comparisonUrl, null);
     assert.equal(
-      (await fs.readdir(path.join(result.outDir, "__mokly"))).includes("diffs"),
+      (await fs.readdir(path.join(result.outDir, "mokly-viewer"))).includes(
+        "diffs",
+      ),
       false,
     );
     assert.deepEqual(messages, [EARLIER_BASELINE_LINE]);
@@ -211,7 +213,7 @@ test("a controlled v8 baseline still produces Changes", async (t) => {
   assert.ok(result.comparisonUrl);
   const catalogue = JSON.parse(
     await fs.readFile(
-      path.join(result.outDir, "__mokly/catalogue.json"),
+      path.join(result.outDir, "mokly-viewer/catalogue.json"),
       "utf8",
     ),
   );

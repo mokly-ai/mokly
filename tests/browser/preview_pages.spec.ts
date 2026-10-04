@@ -75,11 +75,11 @@ for (const width of [390, 1280]) {
     await expect(
       page.frameLocator(".mbk-stage-embed iframe").locator("#overview"),
     ).toBeVisible();
-    expect(requests.filter((url) => /\/__mokly\/events\//.test(url))).toEqual(
-      [],
-    );
     expect(
-      requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
+      requests.filter((url) => /\/mokly-viewer\/events\//.test(url)),
+    ).toEqual([]);
+    expect(
+      requests.filter((url) => /\/mokly-viewer\/diffs\/review\.json/.test(url)),
     ).toEqual([]);
     expect(
       requests.filter((url) => /\/pages\/removed-document\.json$/.test(url)),

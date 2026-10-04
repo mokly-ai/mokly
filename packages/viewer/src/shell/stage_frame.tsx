@@ -2,7 +2,10 @@
 
 import { useContext, useMemo } from "react";
 
-import { currentDocumentPath } from "../catalogue/delivery_paths.js";
+import {
+  VIEWER_DIRECTORY,
+  currentDocumentPath,
+} from "../catalogue/delivery_paths.js";
 import type {
   ShellCatalogueRoutedEntry,
   ShellCatalogueView,
@@ -77,7 +80,8 @@ export function StageFrame({
     ? generatedFrameSource(preview, fragment, stepIndex)
     : frameSource(entry, selected, fragment, stepIndex);
   const temporary =
-    preview?.path.startsWith("/__mokly/components/renders/") ?? false;
+    preview?.path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`) ??
+    false;
   const previewAdapter = useMemo(temporaryPreviewAdapter, []);
   const identity = useMemo<ShellFrameIdentity>(
     () => ({

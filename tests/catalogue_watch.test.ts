@@ -259,7 +259,7 @@ async function waitForCatalogue(
   const deadline = performance.now() + 20_000;
   while (performance.now() < deadline) {
     try {
-      const response = await fetch(`${origin}/__mokly/catalogue.json`);
+      const response = await fetch(`${origin}/mokly-viewer/catalogue.json`);
       assert.equal(response.status, 200);
       const model = readCatalogue(await response.json());
       if (accepted(model)) return model;

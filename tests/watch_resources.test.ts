@@ -52,7 +52,9 @@ test(
     try {
       let html = await waitForClassifiedCount(running.url, 0);
       assert.match(html, /class="mbk-nav-filter-count">0</);
-      let comparison = await fetch(`${running.url}/__mokly/diffs/review.json`);
+      let comparison = await fetch(
+        `${running.url}/mokly-viewer/diffs/review.json`,
+      );
       assert.equal(
         comparison.status,
         200,
@@ -68,7 +70,9 @@ test(
         await fs.writeFile(path.join(fixture.mockupsDir, file), content);
         html = await waitForChangedCount(running.url, previousVersion, 2);
         assert.match(html, /class="mbk-nav-filter-count">2</);
-        const fresh = await fetch(`${running.url}/__mokly/diffs/review.json`);
+        const fresh = await fetch(
+          `${running.url}/mokly-viewer/diffs/review.json`,
+        );
         assert.equal(
           fresh.status,
           200,

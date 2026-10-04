@@ -40,7 +40,7 @@ for (const watch of [false, true]) {
           throw new Error("HTTP must never rebuild a baseline");
         });
         const unselected = await fetch(
-          `${running.url}/__mokly/diffs/review.json`,
+          `${running.url}/mokly-viewer/diffs/review.json`,
         );
         assert.equal(unselected.status, 200, await unselected.clone().text());
         await assert.rejects(fs.stat(fixture.mockupsDir), { code: "ENOENT" });
@@ -62,7 +62,7 @@ for (const watch of [false, true]) {
           "wrong local bytes",
         );
         const response = await fetch(
-          `${running.url}/__mokly/diffs/review.json?id=home`,
+          `${running.url}/mokly-viewer/diffs/review.json?id=home`,
         );
         assert.equal(response.status, 200, await response.clone().text());
         const result = parseReviewResult(await response.json());
@@ -170,7 +170,7 @@ test(
         throw new Error("HTTP must never rebuild a baseline");
       });
       const response = await fetch(
-        `${running.url}/__mokly/diffs/review.json?page=removed-page`,
+        `${running.url}/mokly-viewer/diffs/review.json?page=removed-page`,
       );
       assert.equal(response.status, 200, await response.clone().text());
       const preview = parseRemovedPagePreview(await response.json());

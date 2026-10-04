@@ -7,7 +7,7 @@ import { entryRoute, viewRoute } from "@mokly/viewer/data";
 /** A packed consumer reads only public JSON and artifact files. */
 export async function inspectPublicCatalogue(root, comparisonPath) {
   const json = await fs.readFile(
-    path.join(root, "__mokly/catalogue.json"),
+    path.join(root, "mokly-viewer/catalogue.json"),
     "utf8",
   );
   const model = JSON.parse(json);

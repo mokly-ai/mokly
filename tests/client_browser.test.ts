@@ -36,7 +36,7 @@ test("React host updates connect recovery, reload, and shutdown", async () => {
     },
     subscription.signal,
   );
-  assert.equal(environment.requestedEventUrl, "/__mokly/events");
+  assert.equal(environment.requestedEventUrl, "/mokly-viewer/events");
   environment.source.emit("ready", "1");
   environment.source.emit("update", "2");
   await setImmediate();

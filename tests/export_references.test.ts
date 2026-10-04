@@ -43,7 +43,7 @@ test("comparison snapshot links retain their existing resource-only validation",
   validateExportReferences(
     new Map([
       [
-        "__mokly/diffs/__generations/test/snapshots/before/view.html",
+        "mokly-viewer/diffs/generations/test/snapshots/before/view.html",
         '<a href="unpublished.html#missing">Historical link</a>',
       ],
     ]),

@@ -44,7 +44,7 @@ async function fixtures(): Promise<OwnershipFixtures> {
     await fs.readFile(
       path.join(
         repositoryRoot,
-        "docs/protocol/fixtures/export-ownership-v2.json",
+        "docs/protocol/fixtures/export-ownership-v3.json",
       ),
       "utf8",
     ),
@@ -152,8 +152,8 @@ test("ownership parsing classifies limits and rejects prefix collisions", () => 
     size: 1,
   };
   for (const document of [
-    { schemaVersion: 2, files: [{ ...entry, size: 64 * 1024 * 1024 + 1 }] },
-    { schemaVersion: 2, files: [{ ...entry, path: "é".repeat(513) }] },
+    { schemaVersion: 3, files: [{ ...entry, size: 64 * 1024 * 1024 + 1 }] },
+    { schemaVersion: 3, files: [{ ...entry, path: "é".repeat(513) }] },
   ])
     assert.deepEqual(parseExportOwnership(JSON.stringify(document)), {
       kind: "too-large",
@@ -167,7 +167,7 @@ test("ownership parsing classifies limits and rejects prefix collisions", () => 
     assert.deepEqual(
       parseExportOwnership(
         JSON.stringify({
-          schemaVersion: 2,
+          schemaVersion: 3,
           files: paths.map((name) => ({ ...entry, path: name })),
         }),
       ),
@@ -176,9 +176,9 @@ test("ownership parsing classifies limits and rejects prefix collisions", () => 
     );
   assert.deepEqual(
     parseExportOwnership(
-      JSON.stringify({ schemaVersion: 3, files: [{ path: 1 }] }),
+      JSON.stringify({ schemaVersion: 4, files: [{ path: 1 }] }),
     ),
-    { kind: "unsupported-version" },
+    { kind: "unsupported-version", version: 4 },
   );
 });
 
@@ -191,7 +191,7 @@ test("the serialized marker enforces its 64 MiB ceiling", () => {
   assert.throws(
     () =>
       serializeExportOwnership({
-        schemaVersion: 2,
+        schemaVersion: 3,
         files: Array(510_000).fill(repeated),
       }),
     /larger than 64 MiB/u,

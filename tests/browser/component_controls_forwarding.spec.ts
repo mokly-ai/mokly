@@ -30,7 +30,7 @@ for (const hostname of ["127.0.0.1", "localhost"])
         method: string | undefined;
       }[] = [];
       const proxy = http.createServer((incoming, response) => {
-        if (incoming.url?.startsWith("/__mokly/components/"))
+        if (incoming.url?.startsWith("/mokly-viewer/components/"))
           forwarded.push({
             host: incoming.headers.host,
             method: incoming.method,
@@ -81,7 +81,7 @@ for (const hostname of ["127.0.0.1", "localhost"])
       await page.getByRole("tab", { name: "Props", exact: true }).click();
       const frame = page.frameLocator('[data-workspace-frame="desktop"]');
       const rendered = page.waitForResponse((response) =>
-        response.url().endsWith("/__mokly/components/render"),
+        response.url().endsWith("/mokly-viewer/components/render"),
       );
       await page
         .getByLabel("label", { exact: true })

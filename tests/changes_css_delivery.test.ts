@@ -56,7 +56,7 @@ for (const components of [false, true])
     });
     t.after(() => server.close());
     const response = await fetch(
-      `${server.url}/__mokly/diffs/review.json?id=home`,
+      `${server.url}/mokly-viewer/diffs/review.json?id=home`,
     );
     assert.equal(response.status, 200, await response.clone().text());
     const selected = parseReviewResult(await response.json());

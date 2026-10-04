@@ -79,7 +79,7 @@ outside that span; the caller's `export` span includes all phases.
 The [public ownership schema and fixtures](../../docs/protocol/mokly-export-ownership.md)
 define the emitted inventory and reader compatibility. Tests exercise them
 against this parser and an independent reader in the packed-consumer smoke.
-The shipped contract is schema 2 with a SHA-256 digest and byte size per entry.
+The shipped contract is schema 3 with a SHA-256 digest and byte size per entry.
 `stage.ts` builds it from exact finalized bytes and every local reader accepts
 only that version. `portable_path.ts` owns the path rule applied by the
 inventory, marker builder/parser and upload metadata validation.
@@ -102,7 +102,7 @@ no id-to-route map. Comparison generation URLs retain their separate content
 identity.
 
 `site.ts` also writes the [public catalogue projection](../catalogue/README.md)
-at `__mokly/catalogue.json`. Its per-entry Changes state uses the same accepted
+at `mokly-viewer/catalogue.json`. Its per-entry Changes state uses the same accepted
 attribution as the shell. It enters the normal collision-checked inventory,
 ownership marker and upload inventories without changing either schema.
 This model is complete and never contains the live-bootstrap-only `omitted`
@@ -125,7 +125,7 @@ missing route usage and rendered catalogue drift beyond the deployment id,
 revision counters, and finalized comparison path. For identical catalogue,
 consumer, and comparison inputs, catalogue, shell, workspace, ownership, and
 comparison bytes remain unchanged by live route scoping after deployment-id
-normalization. Viewer changes may alter `__mokly/client/**`; across this switch,
+normalization. Viewer changes may alter `mokly-viewer/client/**`; across this switch,
 only those changed client bytes may account for a new deployment identity.
 Its opt-in Changes build captures removed pages through the already prepared
 repository reader; the default build performs no Git or historical capture.
@@ -159,7 +159,7 @@ platform dependencies when installing the package.
 `inventory.ts` and `references.ts` use
 `path_index.ts` for one case-folded file/alias collision policy, including
 directory prefixes and the final ownership marker. Reference validation also
-proves local resource closure. `ignored.ts` keeps schema 2 owned outputs and
+proves local resource closure. `ignored.ts` keeps schema 3 owned outputs and
 transactions out of broad Watch rules. It caches parsed ownership by file
 identity and timestamps as bounded path/prefix sets, revalidating with one
 metadata read per lookup. Retired schema 1 outputs are

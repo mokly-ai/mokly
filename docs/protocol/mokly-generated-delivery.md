@@ -3,8 +3,8 @@
 ## Delivery Status
 
 This contract defines identity-derived HTML addresses for v8 output and the
-strict catalogue-v4 policy. The current viewer namespace is `__mokly/`;
-[the approved rename](./mokly-viewer-namespace.md) is a separate pending change.
+strict catalogue-v4 policy. The current viewer namespace is `mokly-viewer/`;
+[the namespace contract](./mokly-viewer-namespace.md) defines its version gates.
 Implementation and verification are tracked by
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
 
@@ -102,8 +102,7 @@ it supplies no legacy-layout snapshots or removed-entry previews. Snapshot
 publication uses its existing generation-local layout for accepted v8 content.
 
 Current delivery uses catalogue v4, static delivery v4 and bootstrap v1.
-Ownership v2 and upload v1 remain until the pending viewer-namespace rename,
-which adopts ownership v3 and upload v2 under the
+Ownership v3 and upload v2 finalize the renamed paths under the
 [namespace version gates](./mokly-viewer-namespace.md#version-matrix).
 Receivers validate their supported formats before paths; they never rewrite
 an old artifact into the current layout. The marker/transport gate and strict

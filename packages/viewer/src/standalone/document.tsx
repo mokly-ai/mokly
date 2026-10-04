@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type { ViewerHostCapabilities } from "../client/host_capabilities.js";
 import type { ViewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
 import { ViewerCapabilityBoundary } from "../shell/capability_context.js";
@@ -116,8 +117,8 @@ function StandaloneDocumentContents({
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <title>{viewTitle(catalogue, view)}</title>
         {hydrated ? <link href="data:," rel="icon" /> : null}
-        <script src="/__mokly/client/appearance-startup.js" />
-        <link href="/__mokly/shell.css" rel="stylesheet" />
+        <script src={`/${VIEWER_DIRECTORY}/client/appearance-startup.js`} />
+        <link href={`/${VIEWER_DIRECTORY}/shell.css`} rel="stylesheet" />
       </head>
       <body
         className={`mbk-fs${store.state.expandedFrame ? " frame-expanded" : ""}`}
@@ -163,10 +164,10 @@ function StandaloneDocumentContents({
             dangerouslySetInnerHTML={{ __html: capabilityDescriptorJson }}
           />
         ) : null}
-        <script src="/__mokly/client/navigation-resize.js" />
+        <script src={`/${VIEWER_DIRECTORY}/client/navigation-resize.js`} />
         {hydrated ? (
           <script
-            src={`/__mokly/client/${capabilityDescriptorJson ? REACT_HOST_BUNDLE : REACT_SHELL_BUNDLE}`}
+            src={`/${VIEWER_DIRECTORY}/client/${capabilityDescriptorJson ? REACT_HOST_BUNDLE : REACT_SHELL_BUNDLE}`}
             type="module"
           />
         ) : null}

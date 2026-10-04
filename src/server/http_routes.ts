@@ -1,5 +1,6 @@
 import type { ServerResponse } from "node:http";
 
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
 import type { RenderCapability } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 import { shellContext, SHELL_CSS } from "@mokly/viewer/server";
@@ -51,7 +52,10 @@ export async function handleCatalogueRequest(
   if (method !== "GET" && method !== "HEAD")
     return send(response, 405, "text/plain", "Method not allowed", method);
   const url = new URL(rawUrl, "http://mokly.invalid");
-  if (url.pathname === "/__mokly/catalogue.json" && publicCatalogue) {
+  if (
+    url.pathname === `/${VIEWER_DIRECTORY}/catalogue.json` &&
+    publicCatalogue
+  ) {
     response.setHeader("Cache-Control", "no-store");
     return send(
       response,
@@ -67,34 +71,34 @@ export async function handleCatalogueRequest(
   )
     return;
   const requestVersion = currentVersion();
-  if (reviewRoutes && url.pathname.startsWith("/__mokly/diffs/")) {
+  if (reviewRoutes && url.pathname.startsWith(`/${VIEWER_DIRECTORY}/diffs/`)) {
     void reviewRoutes.handle(url, response, method);
     return;
   }
-  if (url.pathname === "/__mokly/shell.css")
+  if (url.pathname === `/${VIEWER_DIRECTORY}/shell.css`)
     return send(response, 200, "text/css", SHELL_CSS, method);
-  if (url.pathname === "/__mokly/events")
+  if (url.pathname === `/${VIEWER_DIRECTORY}/events`)
     return openEventStream(response, streams, requestVersion, method);
-  if (url.pathname.startsWith("/__mokly/client/")) {
+  if (url.pathname.startsWith(`/${VIEWER_DIRECTORY}/client/`)) {
     return serveClientModule(
       response,
-      url.pathname.slice("/__mokly/client/".length),
+      url.pathname.slice(`/${VIEWER_DIRECTORY}/client/`.length),
       assets.clientModules,
       method,
     );
   }
-  if (url.pathname.startsWith("/__mokly/navigation/")) {
+  if (url.pathname.startsWith(`/${VIEWER_DIRECTORY}/navigation/`)) {
     return serveClientModule(
       response,
-      url.pathname.slice("/__mokly/navigation/".length),
+      url.pathname.slice(`/${VIEWER_DIRECTORY}/navigation/`.length),
       assets.navigationModules,
       method,
     );
   }
-  if (url.pathname.startsWith("/__mokly/fonts/")) {
+  if (url.pathname.startsWith(`/${VIEWER_DIRECTORY}/fonts/`)) {
     return serveFontAsset(
       response,
-      url.pathname.slice("/__mokly/fonts/".length),
+      url.pathname.slice(`/${VIEWER_DIRECTORY}/fonts/`.length),
       assets.fontAssets,
       method,
     );

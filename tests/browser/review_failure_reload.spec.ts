@@ -72,7 +72,7 @@ test("a watched update resets failed diffs to Current without generating", async
 }) => {
   const eventStream = page.waitForResponse(
     (response) =>
-      new URL(response.url()).pathname === "/__mokly/events" &&
+      new URL(response.url()).pathname === "/mokly-viewer/events" &&
       response.status() === 200,
   );
   await page.goto(`${server.url}/view/screens/home.html`);

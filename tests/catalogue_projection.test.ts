@@ -86,9 +86,9 @@ test("projection exposes real usage and attribution without private evidence", a
   assert.equal(
     projectCatalogue({
       ...input,
-      comparisonUrl: `__mokly/diffs/__generations/${"a".repeat(64)}/review.json`,
+      comparisonUrl: `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
     }).comparisonUrl,
-    `__mokly/diffs/__generations/${"a".repeat(64)}/review.json`,
+    `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
   );
 });
 
@@ -239,7 +239,7 @@ test("reader rejects unsafe paths, private extensions and broken known reference
       value.screens[0].views[0].colorScheme = "sepia";
     },
     (value: typeof fixture) => {
-      value.comparisonUrl = "__mokly/diffs/review.json";
+      value.comparisonUrl = "mokly-viewer/diffs/review.json";
     },
     (value: typeof fixture) => {
       value.sourceFiles = ["entries/source.tsx"];

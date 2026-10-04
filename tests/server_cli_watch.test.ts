@@ -43,7 +43,7 @@ test(
     const stderr = captureOutput(child.stderr);
     const url = await outputUrl(child.stdout);
     const firstPort = new URL(url).port;
-    const events = await fetch(`${url}/__mokly/events`);
+    const events = await fetch(`${url}/mokly-viewer/events`);
     const eventReader = events.body?.getReader();
     assert.ok(eventReader);
     assert.match(await readEvent(eventReader), /event: ready/);

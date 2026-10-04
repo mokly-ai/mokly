@@ -14,7 +14,7 @@ import {
 } from "../src/shell/comparison_selection.js";
 import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
 
-const GENERATION = "https://catalogue.test/__mokly/diffs/__generations/one/";
+const GENERATION = "https://catalogue.test/mokly-viewer/diffs/generations/one/";
 
 function view(
   viewport: "desktop" | "mobile",

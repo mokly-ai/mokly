@@ -42,7 +42,10 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
   );
   const model = readCatalogue(
     JSON.parse(
-      await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
+      await fs.readFile(
+        path.join(output, "mokly-viewer/catalogue.json"),
+        "utf8",
+      ),
     ),
   );
   const page = model.removedEntries.find(
@@ -113,12 +116,14 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
   const current = readCatalogue(
     JSON.parse(
       await fs.readFile(
-        path.join(currentOutput, "__mokly/catalogue.json"),
+        path.join(currentOutput, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     ),
   );
   assert.equal(current.comparisonUrl, null);
   assert.deepEqual(current.removedEntries, []);
-  await assert.rejects(fs.access(path.join(currentOutput, "__mokly/diffs")));
+  await assert.rejects(
+    fs.access(path.join(currentOutput, "mokly-viewer/diffs")),
+  );
 });

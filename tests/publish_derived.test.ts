@@ -95,7 +95,7 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
   assert.equal(receiver.plans.length, 2);
   assert.equal(
     [...receiver.plans[1]!.files.keys()].some((name) =>
-      name.startsWith("__mokly/diffs/"),
+      name.startsWith("mokly-viewer/diffs/"),
     ),
     false,
   );

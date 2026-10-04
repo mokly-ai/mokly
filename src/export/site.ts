@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
 import {
+  VIEWER_DIRECTORY,
   canonicalJson,
   entryRoute,
   GENERATED_DIRECTORY,
@@ -80,7 +81,7 @@ export function assembleExport(
       `${canonicalJson(comparison.result, 2)}\n`,
     );
   const generation = comparisonContentId(comparisonFiles);
-  const prefix = `__mokly/diffs/__generations/${generation}`;
+  const prefix = `${VIEWER_DIRECTORY}/diffs/generations/${generation}`;
   const removedPreviews = staticRemovedPreviews(
     removedSnapshots,
     comparison,
@@ -228,15 +229,15 @@ export function assembleExport(
       : bytes;
     inventory.add(`static/${name}`, adapted);
   }
-  inventory.add("__mokly/shell.css", SHELL_CSS);
+  inventory.add(`${VIEWER_DIRECTORY}/shell.css`, SHELL_CSS);
   for (const [name, bytes] of loadBrowserClientModules()) {
     if (!LIVE_HOST_BUNDLES.has(name))
-      inventory.add(`__mokly/client/${name}`, bytes);
+      inventory.add(`${VIEWER_DIRECTORY}/client/${name}`, bytes);
   }
   for (const [name, bytes] of loadBrowserNavigationModules())
-    inventory.add(`__mokly/navigation/${name}`, bytes);
+    inventory.add(`${VIEWER_DIRECTORY}/navigation/${name}`, bytes);
   for (const [name, bytes] of loadShellFontAssets())
-    inventory.add(`__mokly/fonts/${name}`, bytes);
+    inventory.add(`${VIEWER_DIRECTORY}/fonts/${name}`, bytes);
   return { inventory, delivery, shells };
 }
 

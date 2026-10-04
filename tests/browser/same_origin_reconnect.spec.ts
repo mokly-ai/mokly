@@ -51,7 +51,7 @@ for (const kind of ["current", "temporary"] as const) {
       const result = await page.evaluate(
         async ({ kind, path }) => {
           const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
-            `${location.origin}/__mokly/client/same_origin_adapter.js`
+            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
           )) as typeof LocalAdapter;
           const adapter =
             kind === "current"
@@ -105,7 +105,7 @@ for (const kind of ["current", "temporary"] as const) {
       async ({ kind, path, usageJson }) => {
         const usage = JSON.parse(usageJson) as ComponentViewRecord;
         const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
-          `${location.origin}/__mokly/client/same_origin_adapter.js`
+          `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
         )) as typeof LocalAdapter;
         const adapter =
           kind === "current" ? sameOriginAdapter() : temporaryPreviewAdapter();

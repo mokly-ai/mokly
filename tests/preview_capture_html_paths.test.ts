@@ -16,7 +16,7 @@ test("preview capture normalizes only canonical HTML paths", async (context) => 
     "/static/%2e%2e/x.html",
   ];
   const source = [
-    '<script src="/__mokly/client/react-host.js" type="module"></script>',
+    '<script src="/mokly-viewer/client/react-host.js" type="module"></script>',
     '<a href="/view/screens/home.html?fragment=hero">Home</a>',
     '<img src="/static/assets/logo.html#mark">',
     ...rejected.map((value) => `<a href="${value}">Rejected</a>`),
@@ -33,7 +33,7 @@ test("preview capture normalizes only canonical HTML paths", async (context) => 
   assert.ok(captured.includes('src="/static/assets/logo#mark"'));
   assert.ok(
     captured.includes(
-      '<script src="/__mokly/client/react-shell.js" type="module"></script>',
+      '<script src="/mokly-viewer/client/react-shell.js" type="module"></script>',
     ),
   );
   for (const value of rejected)

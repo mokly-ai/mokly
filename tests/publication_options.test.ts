@@ -75,21 +75,21 @@ test("ordinary publication needs no Git and omits review and watch artifacts", a
     assert.match(html, /client\/react-shell\.js/);
   }
   for (const file of [
-    "__mokly/diffs",
-    "__mokly/events",
-    "__mokly/client/browser.js",
-    "__mokly/client/live_updates.js",
-    "__mokly/client/host_capabilities.js",
-    "__mokly/client/host_capability_descriptor.js",
-    "__mokly/client/react-host.js",
-    "__mokly/client/react_capabilities.js",
-    "__mokly/client/react_capability_updates.js",
-    "__mokly/client/react_transports.js",
-    "__mokly/client/react_update_controller.js",
+    "mokly-viewer/diffs",
+    "mokly-viewer/events",
+    "mokly-viewer/client/browser.js",
+    "mokly-viewer/client/live_updates.js",
+    "mokly-viewer/client/host_capabilities.js",
+    "mokly-viewer/client/host_capability_descriptor.js",
+    "mokly-viewer/client/react-host.js",
+    "mokly-viewer/client/react_capabilities.js",
+    "mokly-viewer/client/react_capability_updates.js",
+    "mokly-viewer/client/react_transports.js",
+    "mokly-viewer/client/react_update_controller.js",
   ])
     assert.equal(fs.existsSync(path.join(output, file)), false, file);
   assert.equal(
-    fs.existsSync(path.join(output, "__mokly/client/react-shell.js")),
+    fs.existsSync(path.join(output, "mokly-viewer/client/react-shell.js")),
     true,
   );
   assert.doesNotMatch(

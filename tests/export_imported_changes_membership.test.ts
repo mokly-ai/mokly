@@ -20,7 +20,7 @@ async function readMembership(
   root: string,
 ): Promise<Map<string, PublishedEntry["changes"]>> {
   const catalogue = JSON.parse(
-    await fs.readFile(path.join(root, "__mokly/catalogue.json"), "utf8"),
+    await fs.readFile(path.join(root, "mokly-viewer/catalogue.json"), "utf8"),
   ) as {
     screens: PublishedEntry[];
   };

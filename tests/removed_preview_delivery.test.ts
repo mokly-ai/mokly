@@ -45,7 +45,7 @@ test("Changes export packages removed previews into every delivery boundary", as
   const model = readCatalogue(
     JSON.parse(
       await fs.readFile(
-        path.join(fixture.output, "__mokly/catalogue.json"),
+        path.join(fixture.output, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     ),
@@ -161,13 +161,13 @@ test("current-only export replaces Changes without Git or historical files", asy
   assert.equal(result.comparisonUrl, null);
   assert.ok(
     (await ownedEntries(fixture.output)).files.every(
-      (name) => !name.startsWith("__mokly/diffs/"),
+      (name) => !name.startsWith("mokly-viewer/diffs/"),
     ),
   );
   const model = readCatalogue(
     JSON.parse(
       await fs.readFile(
-        path.join(fixture.output, "__mokly/catalogue.json"),
+        path.join(fixture.output, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     ),

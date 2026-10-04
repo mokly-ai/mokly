@@ -58,7 +58,7 @@ test("exports contain only the hydrated shell inventory", async (context) => {
     ),
     false,
   );
-  assert.equal(files.has("__mokly/client/react-shell.js"), true);
+  assert.equal(files.has("mokly-viewer/client/react-shell.js"), true);
   assert.match(files.get("index.html")!.toString(), /client\/react-shell\.js/);
   assert.doesNotMatch(
     files.get("index.html")!.toString(),
@@ -73,21 +73,21 @@ test("exports contain only the hydrated shell inventory", async (context) => {
     "react_transports.js",
     "react_update_controller.js",
   ]) {
-    assert.equal(files.has(`__mokly/client/${name}`), false, name);
+    assert.equal(files.has(`mokly-viewer/client/${name}`), false, name);
   }
   assert.doesNotMatch(
     files.get("index.html")!.toString(),
     /data-mokly-host-capabilit|data-mokly-host-capability-state|react-host\.js/,
   );
   const publicCatalogue = JSON.parse(
-    files.get("__mokly/catalogue.json")!.toString(),
+    files.get("mokly-viewer/catalogue.json")!.toString(),
   ) as {
     identity: { id: string };
     revision: { content: number; evidence: number };
   };
   const reference = {
     kind: "external",
-    path: "/__mokly/catalogue.json",
+    path: "/mokly-viewer/catalogue.json",
     identity: publicCatalogue.identity.id,
     revision: publicCatalogue.revision,
   };
@@ -113,7 +113,7 @@ test("exports contain only the hydrated shell inventory", async (context) => {
   }
   assert.deepEqual(
     [...files.keys()].filter((name) => name.endsWith("catalogue.json")),
-    ["__mokly/catalogue.json"],
+    ["mokly-viewer/catalogue.json"],
   );
 });
 

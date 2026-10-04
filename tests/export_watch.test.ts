@@ -114,7 +114,7 @@ test("watch accepts ownership markers between 8 and 64 MiB", () => {
   const output = path.join(root, "site");
   const marker = path.join(output, EXPORT_MARKER);
   const content = JSON.stringify({
-    schemaVersion: 2,
+    schemaVersion: 3,
     files: [{ path: "index.html", sha256: "a".repeat(64), size: 1 }],
   });
   const matcher = new ExportIgnoredMatcher({

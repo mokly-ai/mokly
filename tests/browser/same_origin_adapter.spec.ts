@@ -22,7 +22,7 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
   await page.goto(fixture.host.url);
   await page.evaluate(async (json) => {
     const { sameOriginAdapter } = (await import(
-      `${location.origin}/__mokly/client/same_origin_adapter.js`
+      `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
     )) as typeof LocalAdapter;
     const state = window as unknown as FrameTestWindow;
     state.frameEvents = [];
@@ -105,7 +105,7 @@ test("valid local logical navigation works without instance usage", async ({
   await page.goto(fixture.host.url);
   await page.evaluate(async () => {
     const { sameOriginAdapter } = (await import(
-      `${location.origin}/__mokly/client/same_origin_adapter.js`
+      `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
     )) as typeof LocalAdapter;
     const state = window as unknown as FrameTestWindow;
     state.frameEvents = [];
@@ -162,7 +162,7 @@ test("temporary previews authenticate masks and preserve logical navigation", as
   await page.evaluate(
     async ({ path, usageJson }) => {
       const { temporaryPreviewAdapter } = (await import(
-        `${location.origin}/__mokly/client/same_origin_adapter.js`
+        `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
       )) as typeof LocalAdapter;
       const state = window as unknown as FrameTestWindow;
       const usage = JSON.parse(usageJson) as ComponentViewRecord;

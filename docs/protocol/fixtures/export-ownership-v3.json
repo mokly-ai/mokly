@@ -5,7 +5,7 @@
       "name": "complete-minimal-inventory",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "404.html",
@@ -29,7 +29,7 @@
       "name": "empty-marker-shape",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": []
       }
     },
@@ -37,7 +37,7 @@
       "name": "unsorted-inventory",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -56,7 +56,7 @@
       "name": "unknown-fields-are-ignored",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -74,10 +74,10 @@
       "name": "unicode-and-nested-paths",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
-            "path": "static/café.svg",
+            "path": "static/caf\u00e9.svg",
             "sha256": "d4dc56669143034f31aa309635d4113d9ad76a02b1739da22c965ed2049be9e6",
             "size": 6
           },
@@ -93,7 +93,7 @@
       "name": "id-derived-entry-routes",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "view/components/action-disabled.html",
@@ -122,10 +122,10 @@
       "name": "lowercase-without-extra-folding-or-normalization",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
-            "path": "ß.html",
+            "path": "\u00df.html",
             "sha256": "bbaa09f794643403f43654fad01fceae7733e0c861534f451306ca97637d5003",
             "size": 7
           },
@@ -135,12 +135,12 @@
             "size": 7
           },
           {
-            "path": "é.html",
+            "path": "\u00e9.html",
             "sha256": "9b03f6187fff4b3753f24206769a4781199ed3c981c8d1bed9cb6fa78ebb20fb",
             "size": 7
           },
           {
-            "path": "é.html",
+            "path": "e\u0301.html",
             "sha256": "4cae37533c6801bd4eda4c6cb2b4764c831f910d9bbfd8c0eef84c0fde8bc930",
             "size": 8
           }
@@ -151,7 +151,7 @@
       "name": "zero-byte-file",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/empty.txt",
@@ -165,7 +165,7 @@
       "name": "maximum-file-size",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/large.bin",
@@ -179,10 +179,10 @@
       "name": "format-character-u200d",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
-            "path": "static/a‍b.html",
+            "path": "static/a\u200db.html",
             "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "size": 1
           }
@@ -193,7 +193,7 @@
       "name": "maximum-path-byte-length",
       "valid": true,
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.html",
@@ -217,7 +217,7 @@
       "valid": false,
       "rejection": "unsupported-version",
       "document": {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "files": []
       }
     },
@@ -235,7 +235,7 @@
       "valid": false,
       "rejection": "unsupported-version",
       "document": {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "files": [
           {
             "path": 1,
@@ -275,7 +275,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2
+        "schemaVersion": 3
       }
     },
     {
@@ -283,7 +283,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": "index.html"
       }
     },
@@ -292,7 +292,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": ["index.html"]
       }
     },
@@ -301,7 +301,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [null]
       }
     },
@@ -310,7 +310,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
@@ -324,7 +324,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -338,7 +338,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -352,7 +352,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": 1,
@@ -367,7 +367,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -382,7 +382,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -397,7 +397,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -412,7 +412,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -427,7 +427,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -442,7 +442,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -457,7 +457,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -472,7 +472,7 @@
       "valid": false,
       "rejection": "too-large",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/large.bin",
@@ -487,7 +487,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "",
@@ -502,7 +502,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "/index.html",
@@ -517,7 +517,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/../secret",
@@ -532,7 +532,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "./index.html",
@@ -547,7 +547,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static//logo.svg",
@@ -562,7 +562,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static\\logo.svg",
@@ -577,7 +577,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "C:/index.html",
@@ -592,7 +592,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/\u0000logo.svg",
@@ -607,7 +607,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": ".mokly-export-artifact",
@@ -622,7 +622,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "index.html",
@@ -642,7 +642,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "Index.html",
@@ -662,15 +662,15 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
-            "path": "CAFÉ.html",
+            "path": "CAF\u00c9.html",
             "sha256": "68b1bc8835143f031e8b43b1dc27fe194d3574276025f802af04b91880aae6da",
             "size": 10
           },
           {
-            "path": "café.html",
+            "path": "caf\u00e9.html",
             "sha256": "11380eed1730767c3857f7895f2701d13fc60dba57428de9738f9c608c490ae8",
             "size": 10
           }
@@ -682,7 +682,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "a",
@@ -702,7 +702,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "A",
@@ -722,7 +722,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": ".mokly-export-artifact/child",
@@ -737,7 +737,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/\tlogo.svg",
@@ -752,7 +752,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/\u007flogo.svg",
@@ -767,7 +767,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/\u0085logo.svg",
@@ -782,7 +782,7 @@
       "valid": false,
       "rejection": "invalid",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "static/\ud800logo.svg",
@@ -797,10 +797,10 @@
       "valid": false,
       "rejection": "too-large",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
-            "path": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé.html",
+            "path": "\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9.html",
             "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
             "size": 16
           }
@@ -812,7 +812,7 @@
       "valid": false,
       "rejection": "too-large",
       "document": {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "files": [
           {
             "path": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -821,6 +821,15 @@
           }
         ]
       }
+    },
+    {
+      "name": "unsupported-v2-digest-inventory",
+      "document": {
+        "schemaVersion": 2,
+        "files": []
+      },
+      "valid": false,
+      "rejection": "unsupported-version"
     }
   ]
 }

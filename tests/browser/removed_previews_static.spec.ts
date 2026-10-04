@@ -37,7 +37,7 @@ for (const width of [390, 1280]) {
       page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
     ).toHaveText("Previous desktop screen");
     expect(
-      requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
+      requests.filter((url) => /\/mokly-viewer\/diffs\/review\.json/.test(url)),
     ).toEqual([]);
     expect(
       requests.filter((url) => /\/pages\/removed-page\.json$/.test(url)),
@@ -59,7 +59,7 @@ test("a catalogue that advertises nothing stays quiet", async ({ page }) => {
       await route.fulfill({ response, body });
     },
   );
-  await page.route(`${host.url}/__mokly/catalogue.json`, async (route) => {
+  await page.route(`${host.url}/mokly-viewer/catalogue.json`, async (route) => {
     const response = await route.fetch();
     const catalogue = (await response.json()) as {
       removedEntries: { entry: { id: string }; preview?: unknown }[];
@@ -93,7 +93,7 @@ interface CapturedViews {
 
 /** Deliver one screen's comparison as if only its desktop views were captured. */
 async function dropMobileViews(page: Page): Promise<void> {
-  await page.route("**/__generations/**/review.json", async (route) => {
+  await page.route("**/generations/**/review.json", async (route) => {
     const response = await route.fetch();
     const payload = (await response.json()) as CapturedViews;
     for (const screen of payload.screens)

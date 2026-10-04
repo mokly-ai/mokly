@@ -1,6 +1,10 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath, snapshotSidePath } from "@mokly/viewer/data";
+import {
+  VIEWER_DIRECTORY,
+  isSafeRepositoryPath,
+  snapshotSidePath,
+} from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import {
@@ -70,7 +74,7 @@ export function validateExportReferences(
           checkFragment: false,
         })),
       );
-    else if (extension === ".js" && name.startsWith("__mokly/")) {
+    else if (extension === ".js" && name.startsWith(`${VIEWER_DIRECTORY}/`)) {
       for (const match of content.matchAll(
         /\b(?:from|import)\s*["']([^"']+)["']/g,
       ))

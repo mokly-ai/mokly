@@ -306,7 +306,7 @@ response arrives, then rechecks cancellation and navigation before adoption.
 The package graph gate validates both static and dynamic import destinations.
 
 Serve/export combine package-owned assets from both distributions under the
-existing `__mokly/client`, `__mokly/navigation`, shell CSS and font paths. The
+existing `mokly-viewer/client`, `mokly-viewer/navigation`, shell CSS and font paths. The
 standalone stylesheet is unchanged; embedding CSS is a separate scoped artifact.
 Exported browsers receive the same hydration bundle as Serve, including React;
 no consumer runtime is ever bundled, and the in-frame inspector stays a

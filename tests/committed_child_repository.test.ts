@@ -50,7 +50,7 @@ test("committed child rejects a nested repoRoot on the unselected comparison rou
       undefined,
     );
     const response = await fetch(
-      `http://127.0.0.1:${port}/__mokly/diffs/review.json`,
+      `http://127.0.0.1:${port}/mokly-viewer/diffs/review.json`,
     );
     assert.equal(response.status, 500);
     const failure = (await response.json()) as { details: string };

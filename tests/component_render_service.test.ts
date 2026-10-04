@@ -106,7 +106,7 @@ test("render HTTP validates authority, body limits and methods; memory documents
     "content-type": "application/json",
     "x-mokly-render-token": capability.token,
   };
-  const endpoint = `${server.url}/__mokly/components/render`;
+  const endpoint = `${server.url}/mokly-viewer/components/render`;
   for (const [altered, status] of [
     [{ ...headers, origin: "https://foreign.example" }, 403],
     [{ ...headers, "x-mokly-render-token": "bad" }, 403],

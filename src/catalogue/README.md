@@ -1,7 +1,7 @@
 # Public catalogue data
 
 This module projects accepted catalogue and Changes evidence into the public
-`schemaVersion: 4` read model at `__mokly/catalogue.json`. Serve, consumer export,
+`schemaVersion: 4` read model at `mokly-viewer/catalogue.json`. Serve, consumer export,
 and repository preview use the same complete projection. Live shell pages derive
 a separate entry-scoped bootstrap from it, retaining the whole index but
 replacing out-of-scope usage with the viewer runtime's `omitted` state. The

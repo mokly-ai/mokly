@@ -43,7 +43,7 @@ must not enter `sourceFiles`. Ordinary public JSON remains supported. Browsers
 receive the catalogue data they need through the shell; no public manifest
 endpoint is provided.
 The implemented [public catalogue](./mokly-catalogue.md) adds
-`/__mokly/catalogue.json` beside this private boundary; it is not a manifest
+`/mokly-viewer/catalogue.json` beside this private boundary; it is not a manifest
 endpoint. Serve/export allowlist its viewer fields and omit `sourceFiles`,
 resolved dependency evidence, ownership/style offsets, private envelopes, and
 absolute paths. Authored display metadata and optional

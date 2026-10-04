@@ -24,7 +24,7 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
       return pageArtifact(source);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
+  const stable = `${server.origin}/mokly-viewer/diffs/review.json?page=${page.id}`;
   const [first, coalesced] = await Promise.all([fetch(stable), fetch(stable)]);
   assert.equal(first.status, 200);
   assert.equal(first.url, coalesced.url);
@@ -53,13 +53,16 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
     "page=../private",
   ])
     assert.equal(
-      (await fetch(`${server.origin}/__mokly/diffs/review.json?${query}`))
+      (await fetch(`${server.origin}/mokly-viewer/diffs/review.json?${query}`))
         .status,
       404,
     );
   assert.equal(
-    (await fetch(`${server.origin}/__mokly/diffs/review.json?page=missing`))
-      .status,
+    (
+      await fetch(
+        `${server.origin}/mokly-viewer/diffs/review.json?page=missing`,
+      )
+    ).status,
     500,
   );
 });
@@ -74,7 +77,7 @@ test("page generation expiry reacquires without reviving an old URL", async (t) 
       return pageArtifact(source, selection.id);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
+  const stable = `${server.origin}/mokly-viewer/diffs/review.json?page=${page.id}`;
   const first = await fetch(stable);
   assert.equal(first.status, 200);
   now += 60_001;
@@ -93,7 +96,7 @@ test("failed page refresh preserves the retained generation", async (t) => {
       return pageArtifact(source, selection.id);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
+  const stable = `${server.origin}/mokly-viewer/diffs/review.json?page=${page.id}`;
   const first = await fetch(stable);
   assert.equal(first.status, 200);
   assert.equal((await fetch(`${stable}&refresh=1`)).status, 500);
@@ -120,7 +123,7 @@ test("restore and redelete cycles cannot reuse a prior page selection", async (t
   const server = await start(t, provider, {
     page: { provider, source: () => source },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
+  const stable = `${server.origin}/mokly-viewer/diffs/review.json?page=${page.id}`;
   const removed = await fetch(stable);
   assert.equal(removed.status, 200);
   source = undefined;
@@ -166,7 +169,7 @@ test("page captures retry after failure and cannot publish across an epoch", asy
     page: { provider, source: () => source },
   });
   const request = () =>
-    fetch(`${server.origin}/__mokly/diffs/review.json?page=${page.id}`);
+    fetch(`${server.origin}/mokly-viewer/diffs/review.json?page=${page.id}`);
   assert.equal((await request()).status, 500);
   const stale = request();
   await started;

@@ -73,7 +73,7 @@ Users can browse, inspect, and compare the saved variants normally.
 
 ## Rendering Boundary
 
-Serve exposes private POST `/__mokly/components/render`. Its request carries a
+Serve exposes private POST `/mokly-viewer/components/render`. Its request carries a
 parent component id, global variant-entry id, view axes, catalogue generation,
 page id, and declared control overrides. It accepts no module path, source,
 callback, resource path, or renderer selection.
@@ -131,7 +131,7 @@ operation; the tagged null value remains an actual value, not an unset sentinel.
 A successful response returns a typed result with an opaque render id, the
 matching catalogue generation, a sandboxed preview URL, and validated usage
 records. Preview URLs are confined beneath
-`/__mokly/components/renders/<render-id>/`; render resources retain valid
+`/mokly-viewer/components/renders/<render-id>/`; render resources retain valid
 public relative resolution through the same adapter as normal Browse. Reject
 malformed or expired ids. This response never updates the generated manifest or
 publishes watched changes.

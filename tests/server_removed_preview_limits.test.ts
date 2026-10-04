@@ -74,7 +74,7 @@ async function start(
   const origin = `http://127.0.0.1:${address.port}`;
   return (selected: string) =>
     fetch(
-      `${origin}/__mokly/diffs/review.json?page=${encodeURIComponent(selected)}`,
+      `${origin}/mokly-viewer/diffs/review.json?page=${encodeURIComponent(selected)}`,
     );
 }
 

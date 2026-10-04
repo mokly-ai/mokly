@@ -139,7 +139,7 @@ test("a light-only catalogue hydrates a saved Dark appearance cleanly", async ({
 test("a missing appearance startup asset leaves its control hidden", async ({
   page,
 }) => {
-  await page.route("**/__mokly/client/appearance-startup.js", (route) =>
+  await page.route("**/mokly-viewer/client/appearance-startup.js", (route) =>
     route.abort(),
   );
   await installDevelopmentBundle(page, suiteState.developmentBundle);

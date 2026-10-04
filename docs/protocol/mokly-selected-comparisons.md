@@ -6,7 +6,7 @@ the catalogue, or snapshots other entries; exhaustive commands remain unchanged.
 
 ## Requests and evidence
 
-The live browser requests `/__mokly/diffs/review.json?id=<entry id>`, where
+The live browser requests `/mokly-viewer/diffs/review.json?id=<entry id>`, where
 the id names the selected screen or component variant entry, adding
 `refresh=1` for an explicit retry or refresh, or `page=<page id>` for a
 removed page's [preview](./mokly-removed-previews.md). Both values use the
@@ -68,7 +68,7 @@ validated and captured on demand. Panes present those documents without script
 permission under the [comparison pane contract](./mokly-comparison-panes.md).
 
 The stable request redirects to
-`/__mokly/diffs/__generations/selected-<uuid>/review.json`. JSON and snapshot
+`/mokly-viewer/diffs/generations/selected-<uuid>/review.json`. JSON and snapshot
 files belong to that immutable generation, are served with `no-store` and
 `nosniff`, and resolve only from its captured file map. These in-memory generations
 create no comparison output directories. HEAD returns the same headers without

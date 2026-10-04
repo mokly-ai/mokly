@@ -70,10 +70,10 @@ test("static export keeps component Changes, affected screens, saved variants an
   );
   for (const view of action.views)
     assert.ok(files.has(`static/mokly-generated/${view.path}`));
-  assert.ok(files.has("__mokly/client/component_geometry.js"));
-  assert.ok(!files.has("__mokly/client/browser.js"));
+  assert.ok(files.has("mokly-viewer/client/component_geometry.js"));
+  assert.ok(!files.has("mokly-viewer/client/browser.js"));
   assert.equal(
-    (await fs.readdir(path.join(fixture.output, "__mokly"))).includes(
+    (await fs.readdir(path.join(fixture.output, "mokly-viewer"))).includes(
       "components",
     ),
     false,

@@ -10,7 +10,7 @@ import { startEvidenceFixture } from "./helpers/evidence_fixture.js";
 test("catalogue GET/HEAD reads atomic live snapshots without rendering or Git", async (t) => {
   const fixture = await startEvidenceFixture();
   t.after(() => fixture.close());
-  const url = `${fixture.server.url}/__mokly/catalogue.json`;
+  const url = `${fixture.server.url}/mokly-viewer/catalogue.json`;
   const response = await fetch(url);
   assert.equal(response.status, 200);
   assert.equal(
@@ -81,10 +81,10 @@ test("catalogue GET/HEAD reads atomic live snapshots without rendering or Git", 
 test("actual view usage refreshes evidence while failed complete candidates retain the last snapshot", async (t) => {
   const fixture = await startEvidenceFixture(componentEntrySource());
   t.after(() => fixture.close());
-  const url = `${fixture.server.url}/__mokly/catalogue.json`;
+  const url = `${fixture.server.url}/mokly-viewer/catalogue.json`;
   const initial = await (await fetch(url)).json();
   const response = await fetch(
-    `${fixture.server.url}/__mokly/views/screens/home.mobile.html?generation=${fixture.runtime.generation}`,
+    `${fixture.server.url}/mokly-viewer/views/screens/home.mobile.html?generation=${fixture.runtime.generation}`,
   );
   assert.equal(response.status, 200);
   const rendered = await response.json();

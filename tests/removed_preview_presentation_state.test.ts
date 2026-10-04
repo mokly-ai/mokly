@@ -8,13 +8,14 @@ import type { LoadedPreview } from "../packages/viewer/dist/previews/request.js"
 import { ReadyPreview } from "../packages/viewer/dist/shell/previews.js";
 
 const SNAPSHOT =
-  "https://catalogue.test/__mokly/diffs/__generations/preview/snapshots/before/archive/removed.html";
+  "https://catalogue.test/mokly-viewer/diffs/generations/preview/snapshots/before/archive/removed.html";
 
 test("an incomplete ready state renders the retryable unavailable state", () => {
   const loaded: LoadedPreview = {
     content: { kind: "page", url: SNAPSHOT },
-    generation: "https://catalogue.test/__mokly/diffs/__generations/preview/",
-    url: "https://catalogue.test/__mokly/diffs/__generations/preview/review.json",
+    generation:
+      "https://catalogue.test/mokly-viewer/diffs/generations/preview/",
+    url: "https://catalogue.test/mokly-viewer/diffs/generations/preview/review.json",
   };
   let html = "";
   assert.doesNotThrow(() => {

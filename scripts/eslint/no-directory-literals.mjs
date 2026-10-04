@@ -1,5 +1,9 @@
 /** Require shared constants for Mokly-owned directory names in production code. */
-const directories = [{ name: "mokly-generated", messageId: "generated" }];
+
+const directories = [
+  { name: "mokly-generated", messageId: "generated" },
+  { name: "mokly-viewer", messageId: "viewer" },
+];
 
 /** Decode character escapes once, leaving regex operators and classes intact. */
 function regexLiteralCharacters(pattern) {
@@ -21,6 +25,8 @@ export default {
     },
     schema: [],
     messages: {
+      viewer:
+        "Import VIEWER_DIRECTORY instead of spelling the viewer directory.",
       generated:
         "Import GENERATED_DIRECTORY instead of spelling the output directory.",
     },

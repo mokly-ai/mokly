@@ -131,7 +131,7 @@ broad rules, without ignoring unrelated authored files with similar names.
    identity from every staged file except the ownership marker and any
    publication metadata path declared by the adapter. Stamp that identity into
    the owned catalogue and shell documents, then hash the exact final bytes of
-   every file, including publication metadata, and add the schema 2 marker
+   every file, including publication metadata, and add the schema 3 marker
    last. Verify internal references, ownership, all route and directory-prefix
    collisions including the marker path, and complete local dependency closure
    before writing the stage. A regular file over 64 MiB fails as

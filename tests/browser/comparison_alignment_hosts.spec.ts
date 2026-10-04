@@ -82,7 +82,7 @@ test("a static export aligns stacks, mirrors Side by side and stays read-only", 
   for (const side of ["before", "after"] as const)
     await expectPresentedPane(
       paneFrame(desktop, side),
-      /\/__mokly\/diffs\/__generations\/[a-f0-9]{64}\/snapshots\//,
+      /\/mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/snapshots\//,
     );
   await wheelOver(page, paneFrame(desktop, "after"), 400);
   await expectStackAt(desktop, 400);

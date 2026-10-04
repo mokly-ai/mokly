@@ -68,7 +68,7 @@ test("derived HTTP child rejects an unprepared unselected comparison without bui
   try {
     const port = await ready;
     const response = await fetch(
-      `http://127.0.0.1:${port}/__mokly/diffs/review.json`,
+      `http://127.0.0.1:${port}/mokly-viewer/diffs/review.json`,
     );
     assert.equal(response.status, 500);
     const failure = (await response.json()) as { details: string };
@@ -100,7 +100,7 @@ test("derived HTTP child rejects an unprepared unselected comparison without bui
       );
     const compare = async (commit: string, movedBaseline: boolean) => {
       const response = await fetch(
-        `http://127.0.0.1:${port}/__mokly/diffs/review.json`,
+        `http://127.0.0.1:${port}/mokly-viewer/diffs/review.json`,
       );
       assert.equal(response.status, 200, await response.clone().text());
       const result = parseReviewResult(await response.json());
@@ -133,7 +133,7 @@ test("derived HTTP child rejects an unprepared unselected comparison without bui
     await compare(fixture.commit, false);
     sendCommit(null, 3);
     const revoked = await fetch(
-      `http://127.0.0.1:${port}/__mokly/diffs/review.json`,
+      `http://127.0.0.1:${port}/mokly-viewer/diffs/review.json`,
     );
     assert.equal(revoked.status, 500);
     assert.match(await revoked.text(), /comparison is not prepared/i);

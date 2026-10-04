@@ -258,7 +258,7 @@ test("controls Serve sends synthetic generated asset bytes without decoding", as
   const address = server.address();
   assert.ok(address && typeof address !== "string");
   const response = await fetch(
-    `http://127.0.0.1:${address.port}/__mokly/components/renders/${rendered.renderId}/mokly-generated/${assetRoute}`,
+    `http://127.0.0.1:${address.port}/mokly-viewer/components/renders/${rendered.renderId}/mokly-generated/${assetRoute}`,
   );
   assert.equal(response.status, 200);
   assert.deepEqual(

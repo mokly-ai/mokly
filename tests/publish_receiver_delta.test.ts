@@ -122,7 +122,7 @@ test("publish uploads changed content and identity-stamped shells after an entry
   assert.equal(snapshots.length, 2);
   const identityStamped = [
     "404.html",
-    "__mokly/catalogue.json",
+    "mokly-viewer/catalogue.json",
     "index.html",
     "view/screens/details.html",
     "view/screens/home.html",
@@ -134,7 +134,7 @@ test("publish uploads changed content and identity-stamped shells after an entry
       (name) =>
         name === "index.html" ||
         name === "404.html" ||
-        name === "__mokly/catalogue.json" ||
+        name === "mokly-viewer/catalogue.json" ||
         name.startsWith("view/"),
     )
     .sort();

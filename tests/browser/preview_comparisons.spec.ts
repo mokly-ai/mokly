@@ -37,7 +37,9 @@ test("published Mokly exposes lazy comparisons in the actual shell", async ({
   ).toHaveAttribute("aria-pressed", "true");
   await page.locator('[data-filter="changed"]').click();
   await chooseViewport(page, "desktop");
-  expect(requests.filter((url) => url.includes("/__mokly/diffs/"))).toEqual([]);
+  expect(
+    requests.filter((url) => url.includes("/mokly-viewer/diffs/")),
+  ).toEqual([]);
 
   await modes.getByRole("button", { name: "Overlay", exact: true }).click();
   const frames = page.locator("[data-diff-stage] iframe");
@@ -65,7 +67,9 @@ test("published Mokly exposes lazy comparisons in the actual shell", async ({
   await modes.getByRole("button", { name: "Current", exact: true }).click();
   await expect(frames).toHaveCount(0);
   await expect(page.locator("[data-current-screen]")).toBeVisible();
-  expect(requests.some((url) => url.includes("/__mokly/events"))).toBe(false);
+  expect(requests.some((url) => url.includes("/mokly-viewer/events"))).toBe(
+    false,
+  );
   expect(failed).toEqual([]);
 });
 

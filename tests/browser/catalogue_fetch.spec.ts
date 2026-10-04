@@ -20,7 +20,7 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
       { name: "catalogue-test", value: "must-be-omitted", url: source.url },
     ]);
     const result = await page.evaluate(async (origin) => {
-      const response = await fetch(`${origin}/__mokly/catalogue.json`, {
+      const response = await fetch(`${origin}/mokly-viewer/catalogue.json`, {
         credentials: "omit",
       });
       const model = await response.json();
@@ -49,7 +49,7 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
       expect(headers.origin).toBe(host.url);
     }
     for (const route of [
-      "/__mokly/catalogue.json",
+      "/mokly-viewer/catalogue.json",
       "/static/mokly-generated/screens/home.mobile.html",
       "/static/missing.html",
     ]) {
@@ -84,15 +84,17 @@ test("static hydration reads one same-origin catalogue without CORS or wildcard"
     await page.goto(`${site.url}/view/screens/home.html`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     expect(
-      site.requests.filter((request) => request === "/__mokly/catalogue.json"),
-    ).toEqual(["/__mokly/catalogue.json"]);
+      site.requests.filter(
+        (request) => request === "/mokly-viewer/catalogue.json",
+      ),
+    ).toEqual(["/mokly-viewer/catalogue.json"]);
     const result = await page.evaluate(async (otherOrigin) => {
-      const same = await fetch("/__mokly/catalogue.json", {
+      const same = await fetch("/mokly-viewer/catalogue.json", {
         credentials: "omit",
       });
       let crossOrigin = "readable";
       try {
-        await fetch(`${otherOrigin}/__mokly/catalogue.json`, {
+        await fetch(`${otherOrigin}/mokly-viewer/catalogue.json`, {
           credentials: "omit",
         });
       } catch {
@@ -127,5 +129,5 @@ test("Serve hydrates from its inline catalogue without an initial read", async (
   );
   await page.goto("/view/screens/example-welcome.html");
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
-  expect(requests).not.toContain("/__mokly/catalogue.json");
+  expect(requests).not.toContain("/mokly-viewer/catalogue.json");
 });

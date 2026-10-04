@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
+  VIEWER_DIRECTORY,
   GENERATED_DIRECTORY,
   parseStaticDelivery,
   parseViewHref,
@@ -45,9 +46,9 @@ export const previewOwnership = (config) => ({
           resolveAliases: false,
         },
       )) ||
-    /^__mokly\/(?:shell\.css|client\/[^/]+\.js|navigation\/[^/]+\.js|fonts\/[^/]+|diffs\/__generations\/[A-Za-z0-9-]+\/.+)$/.test(
-      name,
-    ),
+    new RegExp(
+      `^${VIEWER_DIRECTORY}\\/(?:shell\\.css|client\\/[^/]+\\.js|navigation\\/[^/]+\\.js|fonts\\/[^/]+|diffs\\/generations\\/[A-Za-z0-9-]+\\/.+)$`,
+    ).test(name),
 });
 
 /** Share the exporter's alias checks, ownership inventory, and deployment identity. */
@@ -112,7 +113,10 @@ export async function stagePreviewArtifact(
     const normalized = providerNormalizedHtmlPath(pathname);
     if ((canonicalView || name.startsWith("static/")) && normalized)
       aliases.set(normalized.slice(1), name);
-    if (name.endsWith(".html") && !name.startsWith("__mokly/diffs/"))
+    if (
+      name.endsWith(".html") &&
+      !name.startsWith(`${VIEWER_DIRECTORY}/diffs/`)
+    )
       files.set(
         name,
         normalizeProviderHtmlAttributes(Buffer.from(bytes).toString("utf8")),
