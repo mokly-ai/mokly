@@ -10,6 +10,9 @@ Implemented as recorded in the
 and source capture. Key and boundary formats are unchanged; this document
 approves no new UI or visible local behavior.
 
+The rule for comments with the former spelling is planned for
+[M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
+
 ## Identity And Scope
 
 An instance is one logical invocation of a `defineComponent` wrapper. Its
@@ -220,6 +223,12 @@ boundaries. The root-only pair preserves existing ignore admission under the
 inspect current views using these comments without adding layout wrappers.
 Accepted baseline and current v8 documents use the same marker spelling and
 validation; historical marker translation is not supported.
+
+On both baseline and current sides, a comment with the former `mokabook-`
+spelling is ordinary page content. Mokly never reads it as a marker, never
+removes it and never fails on it. It creates no component range, Review-ignore
+region or material marker. The frozen instance and slot key domain strings
+are unchanged.
 
 ## Acceptance
 

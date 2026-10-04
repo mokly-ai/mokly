@@ -144,10 +144,10 @@ sources remain private. Imported CSS changes neither manifest v8 nor the
 identity-derived route rules.
 
 Resolve generated stylesheet links from the complete view path so screens,
-component variants and pages reach their public CSS and assets. Configured
-stylesheet links precede generated renderer and entry links; the built-in
-renderer adds none. Complete page callbacks receive no injected links and
-must link their generated entry stylesheet explicitly. Documents, stylesheets
-and assets share the binary-safe committed/derived transaction and Check rules.
+component variants and pages reach their public CSS and assets. The
+[renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
+owns the complete `RenderInput.stylesheets` list, its order and how pages link
+CSS. Documents, stylesheets and assets share the binary-safe committed/derived
+transaction and Check rules.
 The [imported stylesheet contract](./mokly-imported-styles.md) defines their
 bundle, source-inventory and error boundaries.

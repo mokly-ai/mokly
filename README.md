@@ -202,10 +202,11 @@ stylesheets, fonts, and full-document markup. Mokly resolves React from the
 consumer repository and bundles all authoring inputs into one build-time graph,
 so component trees use one React runtime.
 Use `stylesheets` for separately authored public CSS. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
-compiles CSS Modules, per-root stylesheets and assets; fragment renderers
-receive ordered links for the renderer and exporting entry CSS after any
-configured links. Pages link their own CSS explicitly. An optional consumer
-PostCSS module processes imported CSS; see the Styles guide for plugin setup.
+compiles CSS Modules, per-root stylesheets and assets. Fragment renderers
+receive links under the [renderer stylesheet contract](./docs/protocol/mokly-rendering.md#renderer-stylesheets),
+which owns the complete list and its order. Pages link their own CSS explicitly.
+An optional consumer PostCSS module processes imported CSS; see the Styles guide
+for plugin setup.
 The basic consumer example imports a CSS Module, a PNG-backed stylesheet, and
 preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 

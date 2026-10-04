@@ -95,10 +95,9 @@ configured and component-declared, Mokly keeps the configured link without
 adding another. Declarations control loading. Changed rules determine which
 components and pages appear in Changes.
 
-Imported CSS delivery appends the
-configured renderer stylesheet and then the entry stylesheet after those
-links, even if no rule matches. Complete page callbacks receive no automatic
-links. `<mockupsDir>/mokly-generated/` is reserved for CSS and asset
+For the complete renderer stylesheet list and its order, see the Mokly
+Rendering And Generated Output contract. Complete page callbacks receive no
+automatic links. `<mockupsDir>/mokly-generated/` is reserved for CSS and asset
 output; keep authored public stylesheets elsewhere.
 In authored public or imported CSS, write local `image-set()` sources as
 `url()` values (`image-set(url("./photo.png") 1x)`) so Mokly validates the

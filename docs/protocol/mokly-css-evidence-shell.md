@@ -8,7 +8,12 @@ depict the outside-component evidence and the per-file layout below; the shell
 implements them for screens and component saved views in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
 mockup depicts the whole-document page rule below; the shell implements it in
-[M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). This document owns visual rules for evidence defined by
+[M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
+Omitting the branch-point sentence when its name is unknown is planned for
+[M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
+The mockups show catalogues with a known name and need no change.
+
+This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the
 [presentation contract](./mokly-css-evidence-presentation.md) owns derivation
 and exact copy.
@@ -21,6 +26,14 @@ excluded resources in a secondary details section. Headline copy is product
 language, for example "This stylesheet changed, but none of the changed styles
 apply to this screen"; selector text appears only in the details list. Excluded
 resources never produce Changes rows.
+
+In Details for screens, component saved views and whole-document pages, show
+“Compared with the branch point on \<name\>.” only when the name is known.
+An embedded catalogue supplied through the `@mokly/viewer` public catalogue
+has no name, so omit that sentence. Keep the “Comparison details” heading
+and the rest of Details. A served catalogue with a known name retains the
+sentence. Use the same shared heading for all three entry kinds, as the
+[presentation contract](./mokly-css-evidence-presentation.md#details-copy) defines.
 
 The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the

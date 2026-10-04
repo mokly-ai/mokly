@@ -7,6 +7,9 @@ records. Root output ranges, non-CSS-only resource records and independent
 stylesheet provenance are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md), within v8.
 
+The rule for comments with the former spelling is planned for
+[M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
+
 This contract owns the per-view component instance, slot, range, style, and
 resource records stored by [manifest v8](./mokly-component-manifest.md).
 Stable instance-key behavior is defined separately by
@@ -116,6 +119,12 @@ Each has one matched boundary pair; `parentId` is its nearest enclosing
 registered range. Multi-root or text output has one enclosing range. A null
 component has an empty range. Repeated placements use separate range ids
 without creating extra logical instance keys.
+
+On both baseline and current sides, a comment with the former `mokabook-`
+spelling is ordinary page content. Mokly never reads it as a marker, never
+removes it and never fails on it. It creates no component range, Review-ignore
+region or material marker. Historical marker translation is not supported;
+the frozen instance and slot key domain strings above are unchanged.
 
 Range ids, physical parents, style offsets, and placement counts are inspection
 coordinates, not input identity. Moving or duplicating unchanged slot material

@@ -35,7 +35,6 @@ expansion. Broad globs are allowed, but Build rejects any generated stylesheet
 or asset matched by a consumer or default public exclusion. Authored public
 CSS belongs elsewhere below `mockupsDir`.
 
-Configured stylesheet links precede generated renderer and entry links in
-each rendered view. The renderer link precedes the entry link, even if no
-configured stylesheet rule matches. The built-in renderer adds no stylesheet;
-complete page callbacks must link their generated entry CSS explicitly.
+The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
+owns the complete `RenderInput.stylesheets` list and its order, including
+delivery without a configured rule and how pages link CSS.

@@ -128,16 +128,38 @@ recognized for migration. A transformer must retain the current encoded form
 and cannot weaken final validation. New catalogues should author portable links
 directly and leave this option unset.
 
+## Renderer Stylesheets
+
+This section owns the complete `RenderInput.stylesheets` list and its order.
 Stylesheet rules are ordered, declarative consumer configuration. Their globs
 match the entry's catalogue route (`<prefix>/<id>.html`) before viewport
 fragments are derived, so one exact screen-route rule applies to both viewports
-and every enabled scheme. Shared
-stylesheets come first, followed by the matching scheme-specific list.
-Generated fragment links are relative to the fragment route and URL-encoded by
-segment.
-`RenderInput.stylesheets` contains only configured hrefs, and component
-`RenderInput.entry` has no declaration list. Mokly inserts declared component
-stylesheets beside the renderer's configured links after rendering; see the
+and every enabled scheme.
+
+`RenderInput.stylesheets` contains these hrefs, in this order:
+
+1. The first matching rule's shared paths.
+2. That rule's scheme-specific paths.
+3. The configured renderer's generated stylesheet, if present.
+4. The entry's generated stylesheet, if present.
+
+Generated links exist even without a configured rule. Resolve local paths
+relative to each fragment route and URL-encode each segment. For example, from
+`screens/home.mobile.html` to `mokly-generated/styles/src/home.mockup.tsx.css`
+the href is `../mokly-generated/styles/src/home.mockup.tsx.css`. The same order
+applies to dark views, component variants and saved viewports. The
+[imported stylesheet contract](./mokly-imported-styles-assets.md) defines the
+exporting entry root and generated resources. The built-in renderer contributes
+no generated stylesheet. The consumer renderer decides whether to emit the
+supplied links; Mokly does not inject these link tags. Pages receive no render
+input or automatic link. They still cause an entry stylesheet to be generated
+and can link it themselves with a relative URL. Pending generated routes are
+valid link/resource targets before the transaction writes them.
+
+The `componentStylesheets` marker and component declarations add no hrefs to
+this list. Component `RenderInput.entry` has no declaration list. Mokly inserts
+declared component stylesheets beside the renderer's configured links after
+rendering; see the
 [component stylesheet contract](./mokly-component-stylesheets.md) for marker
 placement and nearest-present-link fallback, and the linked
 [ownership contract](./mokly-component-stylesheet-ownership.md) for transient comparison provenance,
@@ -148,12 +170,6 @@ ignored with a warning; document `styles` and non-CSS owners retain their meanin
 its transient provenance token, which Mokly removes before writing HTML.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
-
-With [imported CSS](./mokly-imported-styles.md), the configured renderer
-stylesheet follows configured links, then the entry stylesheet. The built-in
-renderer adds none; a custom renderer emits the supplied links. Complete page
-callbacks receive no injected links and must link their generated entry CSS
-explicitly.
 
 ## Generated Contract
 

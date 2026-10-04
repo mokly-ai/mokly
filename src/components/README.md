@@ -6,6 +6,10 @@ Root output ranges, CSS owner removal and uniform CSS attribution below are
 implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
+The rule for comments with the former spelling in the
+[instance contract](../../docs/protocol/mokly-instances.md#rendered-boundaries)
+is planned for Milestone 23 of that plan.
+
 Use `defineComponent` to give a shared React component its own catalogue page,
 variants, controls, and recorded usage in screens or other components.
 Callers render the returned `Component` and export its `entries` in `mockups`.
@@ -130,9 +134,10 @@ material. `build/renderer_resources.ts` discards CSS ownership assertions after 
 file checks and emits the stylesheet warning. `render.tsx` returns temporary
 link declarations separately from the private usage record. Build, Check, export, publish and Serve now report those warnings
 through the shared invocation sink.
-Historical Mokabook comparisons preserve the original document coordinates when
-applying recorded style ownership; internal marker renames alone do not create
-consumer changes or alter the retained snapshots.
+On both baseline and current sides, a comment with the former `mokabook-`
+spelling is ordinary page content. Mokly never reads it as a marker, never
+removes it and never fails on it. Historical marker translation is not
+supported. The frozen instance and slot key domain strings are unchanged.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component

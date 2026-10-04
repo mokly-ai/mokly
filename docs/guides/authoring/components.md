@@ -80,9 +80,8 @@ export const mockups = [...button.entries];
 Screens anywhere in the repository import `button` from the registration and
 render `button.Component`. A source edit that changes rendered output is
 attributed through the actual render; a source-only edit that leaves output
-unchanged is not evidence. If `button.css` changes and its rules can apply,
-the declared stylesheet belongs to the component, with using screens listed
-as affected.
+unchanged is not evidence. See the Changes guide for how stylesheet changes
+affect components and screens.
 
 ## Variants
 

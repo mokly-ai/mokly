@@ -67,17 +67,9 @@ npm package. Esbuild emits the literal `@` in relative CSS
 `%40` for links, Serve decodes it, and export resource discovery accepts and
 decodes both forms. The complete stylesheet route obeys the usual rule.
 
-`RenderInput.stylesheets` is: first matching rule's shared paths, then its
-scheme-specific paths, then configured renderer stylesheet if present, then
-entry stylesheet if present; generated links exist even without a configured
-rule. Resolve/encode local paths relative to each fragment route, e.g. from
-`screens/home.mobile.html` to `mokly-generated/styles/src/home.mockup.tsx.css`
-is `../mokly-generated/styles/src/home.mockup.tsx.css`. Same order for dark,
-component variants and saved viewports. The consumer renderer decides whether
-to emit links; Mokly does not inject link tags. Pages receive no render input
-or automatic link; they still cause an entry stylesheet to be generated and
-can link it themselves with a relative URL. Pending generated routes are
-valid link/resource targets before the transaction writes them.
+The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
+owns the complete `RenderInput.stylesheets` list, its order, href encoding
+and how pages link CSS.
 
 The owning entry root is the **resolved entry module whose `mockups` or
 default export yielded the definition** (including re-exports and flattened

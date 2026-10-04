@@ -1696,29 +1696,95 @@ Second-review findings 2 to 11 still await the user's decision.
 Docs only. Define the contract for Milestones 23 and 24, and fix the two stale
 docs (findings 3 and 4).
 
-- [ ] Remove every statement that describes translation of the former
+- [x] Remove every statement that describes translation of the former
       `mokabook-` marker spelling, including in `src/components/README.md`.
       State in the component usage and instance contracts that a comment with
       the former spelling is ordinary page content on both sides: Mokly never
       reads it as a marker, never removes it and never fails on it. Keep the
       rule that historical marker translation is not supported.
-- [ ] Define the branch-point sentence rule in the CSS evidence presentation
+- [x] Define the branch-point sentence rule in the CSS evidence presentation
       and shell contracts: show "Compared with the branch point on <name>."
       only when the name is known, for screens, saved views and pages. An
       embedded catalogue without a name shows no sentence and keeps the rest
       of its Details. No mockup change: the mockups show only catalogues with a
       known name.
-- [ ] Make `docs/protocol/mokly-rendering.md`, which defines `RenderInput`, the
+- [x] Make `docs/protocol/mokly-rendering.md`, which defines `RenderInput`, the
       single owner of the complete `RenderInput.stylesheets` list and its order:
       configured shared and scheme links, and the generated links for imported
       CSS. Move the definition from `mokly-imported-styles-assets.md` without
       a change in meaning. Replace the copies in
       `mokly-imported-styles-assets.md`, `mokly-component-stylesheets.md` and
       `src/build/README.md` with a reference. Keep each doc within its cap.
-- [ ] Remove the stylesheet-ownership sentence from
+- [x] Remove the stylesheet-ownership sentence from
       `docs/guides/authoring/components.md` and refer readers to the Changes
       guide by name. Guides contain no links.
-- [ ] Validate the changed Markdown and run the docs tests.
+- [x] Replace the other renderer-list summaries in the root README, the
+      generated-rendering and imported-configuration contracts, and the Config
+      and Styles guides with references to the rendering contract. Check the
+      complete list and its order against `src/build/render.ts`, main's
+      definition and a runtime probe.
+- [x] Validate the changed Markdown and run the docs tests.
+- [x] Use the protocol history guard's linked `M24` label for the planned
+      heading rule in both Delivery Status sections. Run that guard after the
+      first full unit run.
+- [x] Run `npm run build` and the exact complete unit command before the
+      local milestone commit. Apply the user's approved isolated retry if the
+      existing PostCSS timing test is the only full-suite failure. Record both
+      results. The reviewer owns the later push and review.
+
+Documentation and verification are complete. Delivery is one local commit;
+the reviewer owns the push. Milestones 23 and 24 have not started.
+
+Implementation notes:
+
+- The usage and instance contracts treat former-spelling comments as ordinary
+  content on both sides. Their Delivery Status sections mark the rule as
+  planned for M23. Frozen instance and slot key domain strings stay unchanged.
+- The evidence presentation and shell contracts share the known-name rule for
+  screens, saved views and document pages. An embedded public catalogue keeps
+  its Details without the branch-point sentence. Delivery Status marks M24;
+  the known-name mockups need no change.
+- The rendering contract now owns the complete renderer stylesheet list.
+  Main's order, optional generated links, missing configured rule, relative
+  href encoding and example, dark/component/saved views, renderer link emission,
+  page callbacks and pending resource targets retain their meaning. The other
+  contracts, READMEs and guides refer to that owner. Guides use names without
+  links. The component guide refers to the Changes guide for attribution.
+- The docs and README search found no other current translation or declared
+  stylesheet-ownership claim. This milestone changes only Markdown and adds
+  no file deletion. The four earlier approved deletions and the v3-to-v4
+  catalogue fixture rename against `origin/main` remain unchanged.
+
+Verification evidence:
+
+- `npm run build` passes before the tests. The six requested docs suites pass
+  all 26 tests. Changed-file Prettier passes. Each changed protocol stays below
+  250 lines; no size cap or fixture changed.
+- Before editing, `node .context/review/docs-probes.mjs` passes both supplied
+  reproductions. `node .context/m22/renderer-stylesheet-probe.mjs` passes 13
+  list/order cases: screens and saved component views, both viewports and
+  schemes, URL encoding, first-rule selection, no configured rule, each
+  optional generated link and no generated links.
+- No other test or Mokly server process was running before the final suite.
+  `npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"`
+  passes 3,924 of 3,925 tests. Its only failure is the 20,000-file PostCSS
+  timing case in `tests/postcss_dependency_review.test.ts`: 3,037.4 ms against
+  its 2,500 ms limit. All other tests pass, including the docs history guard.
+  No tests are skipped, cancelled or marked TODO.
+- After confirming that no test or Mokly server process remained,
+  `npx tsx --test tests/postcss_dependency_review.test.ts` passes all three
+  tests on the first isolated retry, with no skips, cancellations or TODOs.
+  The timed function takes 2,299.2 ms. The results are in
+  `.context/m22/logs/unit-final.log` and
+  `.context/m22/logs/performance-final-1.log`.
+- The PostCSS timing test is an existing flake on this machine; its runtime
+  code and test match `origin/main`. The user's follow-up permits this isolated
+  retry when it is the only full-suite failure. Its code and limit are unchanged.
+- `git diff --check` and `git diff --check origin/main` pass. The mainline
+  path and deletion audit introduces no new removal. Historical plans,
+  `docs/reviews/**` and changelogs remain unchanged.
+- Logs and the renderer probe are under `.context/m22/`. `cargo xtask check`
+  is not required for this docs-only milestone.
 
 ## Milestone 23: Remove the historical marker rename
 

@@ -131,10 +131,11 @@ path, even when later declarers use aliases of the same real file. The final
 provenance path follows the retained final link, including a transform's alias.
 Shared/scheme configured link ordering otherwise stays unchanged.
 
-`RenderInput.stylesheets` contains only configured hrefs in configured order;
-it does not receive the marker or component-declared paths. Its component
+The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
+owns the complete `RenderInput.stylesheets` list and its order. The marker and
+component declarations add no hrefs to this list. Its component
 `entry` omits `stylesheets` at runtime and in its public type. The renderer
-emits configured links as before. If it also emits a local stylesheet link to
+emits the supplied links. If it also emits a local stylesheet link to
 the same real file as a declaration, Mokly keeps that link at its authored
 position and does not insert another. Its decoded, `mockupsDir`-relative href
 path identifies the reused link even when an alias was declared first. A

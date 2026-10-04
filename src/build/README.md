@@ -78,10 +78,9 @@ CSS Modules mutation checklist:
   reported files inside denied-name directories remain private and watchable;
   directory scans still prune those trees. Physical paths reported by PostCSS or
   esbuild map back to a symlinked configured root before inventory and guards.
-  Fragment render input now lists the
-  matching authored stylesheet rule, then generated renderer CSS, then the
-  exporting entry's CSS, relative to the fragment route. Pages still render
-  without automatic links. `consumer_entry.ts` records the exporting entry
+  Fragment render input follows the complete list and order in the
+  [renderer stylesheet contract](../../docs/protocol/mokly-rendering.md#renderer-stylesheets).
+  Pages still render without automatic links. `consumer_entry.ts` records the exporting entry
   independently of the helper that defined a screen or component; it never
   changes authored-source attribution or the manifest.
   `pending_generated.ts` holds HTML text, CSS text and opaque asset bytes before
@@ -253,7 +252,8 @@ renderer-emitted configured links and records inserted-link provenance. Config
 bundles use the same namespaced `Symbol.for` marker as consumer bundles.
 The renderer-facing component entry omits `stylesheets`; the internal
 registration still supplies declarations for linking and provenance.
-`RenderInput.stylesheets` remains the configured href list. Watched Serve
+The [renderer stylesheet contract](../../docs/protocol/mokly-rendering.md#renderer-stylesheets)
+owns the complete `RenderInput.stylesheets` list and its order. Watched Serve
 attaches its inventory watcher before evaluation, then validates registration
 and extends the watch set with declared CSS before index preparation.
 Component stylesheet links use the nearest present configured link, or the end
