@@ -13,7 +13,8 @@
   and moved comparison wording mockups, the document presentation and
   index-entry Changes rows, and the Moved presentation with its review fixes
   are complete. Main and the final viewer branch are integrated through
-  Milestone 6I. The source file-length split and final verification remain.
+  Milestone 6I. Milestone 6J completes source file-length compliance with the
+  full gate passing. Milestone 8 close-out and review remain.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete

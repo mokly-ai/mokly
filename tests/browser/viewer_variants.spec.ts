@@ -1,22 +1,18 @@
-import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-import type {
-  CatalogueNode,
-  CatalogueReadModel,
-  InstanceRef,
-  ViewerSelection,
-} from "@mokly/viewer";
+import type { InstanceRef, ViewerSelection } from "@mokly/viewer";
 import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
-
 import type {} from "./viewer_harness.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
+
 test.beforeAll(async () => {
   fixture = await followupFixture();
 });
+
 test.afterAll(async () => fixture?.close());
 
 async function openViewer(page: Page, cross: boolean, controlled = false) {
@@ -37,174 +33,6 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
       .getByRole("link", { name: "Default", exact: true }),
   ).toHaveAttribute("aria-current", "page");
 }
-
-function appendScreenVariant(
-  node: CatalogueNode,
-  parentId: string,
-  variantPath: string,
-): CatalogueNode {
-  if (node.kind === "entry" && node.path === parentId)
-    return {
-      ...node,
-      children: [
-        ...(node.children ?? []),
-        { kind: "entry", path: variantPath },
-      ],
-    };
-  return node.children
-    ? {
-        ...node,
-        children: node.children.map((child) =>
-          appendScreenVariant(child, parentId, variantPath),
-        ),
-      }
-    : node;
-}
-
-function screenVariantCatalogue(): CatalogueReadModel {
-  const source = structuredClone(fixture.catalogue);
-  const unmodified = {
-    status: "ready" as const,
-    kind: "unmodified" as const,
-    included: false,
-  };
-  const model: CatalogueReadModel = {
-    ...source,
-    screens: source.screens.map((entry) => ({
-      ...entry,
-      changes: unmodified,
-    })),
-    pages: source.pages.map((entry) => ({
-      ...entry,
-      changes: unmodified,
-    })),
-    useCases: source.useCases.map((entry) => ({
-      ...entry,
-      changes: unmodified,
-    })),
-    components: source.components.map((entry) => ({
-      ...entry,
-      changes: unmodified,
-    })),
-  };
-  const parentIndex = model.screens.findIndex(({ path }) => path === "home");
-  const parent = model.screens[parentIndex];
-  if (!parent) throw new Error("Missing viewer screen fixture");
-  const variant = {
-    ...parent,
-    path: "home/error",
-    title: "Save failed",
-    variantOf: parent.path,
-    changes: {
-      status: "ready" as const,
-      kind: "changed" as const,
-      included: true,
-    },
-    views: parent.views.map((view) => ({
-      ...view,
-      comparison:
-        view.viewport === "mobile" && view.colorScheme === "dark"
-          ? {
-              status: "ready" as const,
-              kind: "changed" as const,
-              eligible: true,
-            }
-          : {
-              status: "ready" as const,
-              kind: "unmodified" as const,
-              eligible: false,
-            },
-    })),
-  };
-  return {
-    ...model,
-    changesStatus: "ready",
-    screens: [
-      ...model.screens.slice(0, parentIndex),
-      { ...parent, changes: unmodified },
-      variant,
-      ...model.screens.slice(parentIndex + 1),
-    ],
-    tree: model.tree.map((node) =>
-      appendScreenVariant(node, parent.path, variant.path),
-    ),
-  };
-}
-
-async function openScreenVariantViewer(page: Page, controlled: boolean) {
-  const catalogue = JSON.stringify(screenVariantCatalogue());
-  await page.goto(fixture.host.url);
-  await page.waitForFunction(() => Boolean(window.viewerHarness));
-  await page.evaluate(
-    ({ catalogue, controlled }) => {
-      window.viewerHarness.start("screen-variants", {
-        controlled,
-        source: JSON.parse(catalogue) as CatalogueReadModel,
-        defaultSelection: {
-          screenPath: "home",
-          view: "changes",
-          viewport: "both",
-          colorScheme: "light",
-        },
-      });
-    },
-    { catalogue, controlled },
-  );
-}
-
-test("Changes proposes a variant screen and its first changed view atomically", async ({
-  page,
-}) => {
-  const parent = 'a[data-nav-row][data-route="home/index.html"]';
-
-  await openScreenVariantViewer(page, false);
-  expect(
-    await page.evaluate(() =>
-      window.viewerHarness
-        .get("screen-variants")
-        .events.filter((event) => event.name === "error"),
-    ),
-  ).toEqual([]);
-  await page.locator(parent).click();
-  await expect(page.locator("#screen-variants h2")).toHaveText("Save failed");
-  const committed = await page.evaluate(() =>
-    window.viewerHarness
-      .get("screen-variants")
-      .events.find((event) => event.name === "selection"),
-  );
-  expect(committed?.value).toEqual(
-    expect.objectContaining({
-      screenPath: "home/error",
-      viewport: "mobile",
-      colorScheme: "dark",
-    }),
-  );
-
-  await page.reload();
-  await page.waitForFunction(() => Boolean(window.viewerHarness));
-  await openScreenVariantViewer(page, true);
-  await page.locator(parent).click();
-  await expect(page.locator("#screen-variants h2")).toHaveText("Home");
-  const proposal = await page.evaluate(
-    () =>
-      window.viewerHarness
-        .get("screen-variants")
-        .events.find((event) => event.name === "selection")?.value,
-  );
-  expect(proposal).toEqual(
-    expect.objectContaining({
-      screenPath: "home/error",
-      viewport: "mobile",
-      colorScheme: "dark",
-    }),
-  );
-  await page.evaluate((selection) => {
-    window.viewerHarness
-      .get("screen-variants")
-      .setSelection(selection as ViewerSelection);
-  }, proposal);
-  await expect(page.locator("#screen-variants h2")).toHaveText("Save failed");
-});
 
 for (const cross of [false, true]) {
   const adapter = cross ? "postMessage" : "same-origin";

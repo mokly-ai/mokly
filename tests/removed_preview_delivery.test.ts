@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import test from "node:test";
-import { gunzipSync } from "node:zlib";
-
-import { extract } from "tar-stream";
 
 import { readCatalogue } from "@mokly/viewer";
 import {
@@ -26,6 +21,10 @@ import { bundleUpload } from "../dist/publish/bundle.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import { assertPublishedPagePreview } from "./helpers/published_preview.js";
+import {
+  archiveNames,
+  readArtifact,
+} from "./helpers/removed_delivery_archive.js";
 import {
   createRemovedDeliveryFixture,
   REMOVED_BASELINE_IMAGE_BYTES,
@@ -285,29 +284,3 @@ test("repository publication packages previews and default replacement removes t
     ),
   );
 });
-
-async function archiveNames(compressed: Buffer): Promise<ReadonlySet<string>> {
-  const unpack = extract();
-  const names = new Set<string>();
-  unpack.on("entry", (header, stream, next) => {
-    names.add(header.name);
-    stream.on("end", next);
-    stream.resume();
-  });
-  await pipeline(Readable.from([gunzipSync(compressed)]), unpack);
-  return names;
-}
-
-async function readArtifact(
-  root: string,
-): Promise<ReadonlyMap<string, Buffer>> {
-  const entries = await ownedEntries(root);
-  return new Map(
-    await Promise.all(
-      entries.files.map(
-        async (name) =>
-          [name, await fs.readFile(path.join(root, name))] as const,
-      ),
-    ),
-  );
-}

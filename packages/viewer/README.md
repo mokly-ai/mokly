@@ -518,6 +518,10 @@ consumers.
 
 - [`src/viewer`](./src/viewer) — React lifecycle, selection, host integration
   and instance operations
+- [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
+  [`src/viewer/host_bridge_highlight.ts`](./src/viewer/host_bridge_highlight.ts) —
+  the stable public handle and its highlight request, geometry and cancellation
+  ownership
 - [`src/shell`](./src/shell) — shared catalogue shell and scoped styles
 - [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy.ts`](./src/registry/hierarchy.ts) — shared folder keys, labels, sibling order, the shared path tree, and each section's order
 - [`src/client`](./src/client) — frame adapters, transport and geometry
@@ -550,7 +554,9 @@ consumers.
   [`src/standalone/bootstrap_validation.ts`](./src/standalone/bootstrap_validation.ts)
   — standalone hydration projection, wire shape, and validation
 - [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime
-- [`tests`](./tests) — package-level conformance tests
+- [`tests`](./tests) — package-level conformance tests; the retained-evidence
+  harness keeps setup in `evidence_harness.tsx` and frame rendering in
+  `evidence_runtime.tsx`
 
 ### Related Docs
 

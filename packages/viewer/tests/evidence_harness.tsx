@@ -1,22 +1,16 @@
 /** Production bridge harness for retained evidence, markers, and inspection. */
 
-import { useRef, useState } from "react";
-import type { RefObject } from "react";
-import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 import type {
   CatalogueReadModel,
-  CatalogueScreen,
   CatalogueUsage,
   CatalogueView,
 } from "../src/catalogue/types.js";
 import { postMessageAdapter } from "../src/client/post_message_adapter.js";
 import { sameOriginAdapter } from "../src/client/same_origin_adapter.js";
-import { ShellFrameMarkerLayer } from "../src/shell/frame_marker_layer.js";
 import { ShellStoreProvider } from "../src/shell/store.js";
 import { viewerShellEnvironment } from "../src/viewer/environment.js";
-import { ViewerHostBridge } from "../src/viewer/host_bridge.js";
 import type { MarkerPlacement } from "../src/viewer/marker_store.js";
 import {
   viewerCatalogue,
@@ -27,16 +21,15 @@ import type { LoadedCatalogue } from "../src/viewer/source.js";
 import type {
   InstanceRef,
   MarkerState,
-  MoklyViewerHandle,
-  MoklyViewerProps,
   ViewerMarker,
   ViewerSelection,
 } from "../src/viewer/types.js";
 
 import { evidenceAdapter } from "./evidence_frame_adapter.js";
-import { RegistryHarnessFrame } from "./frame_registry_harness.js";
+import { EvidenceRuntime } from "./evidence_runtime.js";
 
 export type EvidenceStatus = "ready" | "empty" | "pending" | "unavailable";
+
 export type EvidenceViewport = "mobile" | "desktop";
 
 export interface EvidenceFrames {
@@ -67,7 +60,7 @@ export interface EvidenceProbe {
   update(viewport: EvidenceViewport, evidence?: EvidenceStatus): void;
 }
 
-interface EvidenceRuntimeProbe extends EvidenceProbe {
+export interface EvidenceRuntimeProbe extends EvidenceProbe {
   setMarkersState?: (markers: readonly ViewerMarker[]) => void;
   setUsage?: (viewport: EvidenceViewport, usage: CatalogueUsage) => void;
 }
@@ -183,110 +176,6 @@ export function startEvidenceHarness(
   return probe;
 }
 
-function EvidenceRuntime({
-  home,
-  initial,
-  loaded,
-  model,
-  probe,
-  views,
-}: {
-  home: CatalogueScreen;
-  initial: Record<EvidenceViewport, CatalogueUsage>;
-  loaded: LoadedCatalogue;
-  model: CatalogueReadModel;
-  probe: EvidenceRuntimeProbe;
-  views: readonly CatalogueView[];
-}) {
-  const root = useRef<HTMLDivElement>(null);
-  const handle = useRef<MoklyViewerHandle>(null);
-  const failureOwner = useRef({});
-  const navigationEnd = useRef<(() => void) | undefined>(undefined);
-  const [usages, setUsages] = useState(initial);
-  const [markers, setMarkers] = useState<readonly ViewerMarker[]>([]);
-  const callbacks = useRef<MoklyViewerProps>({
-    viewerId: "evidence",
-    baseUrl: loaded.url,
-    catalogue: model,
-    defaultSelection: {
-      colorScheme: "light",
-      screenPath: home.path,
-      viewport: "both",
-    },
-    onError: () => probe.events.push("error"),
-    onInstanceClick: ({ instance }) => {
-      if (instance) probe.events.push(`click:${instance.viewport}`);
-    },
-    onInstanceHover: ({ instance }) => {
-      if (instance) probe.events.push(`hover:${instance.viewport}`);
-    },
-    onPickEnd: ({ reason }) => probe.events.push(`end:${reason}`),
-    onPickStart: () => probe.events.push("start"),
-  });
-  probe.frames = {
-    cancelPick: () => handle.current?.cancelPick(),
-    highlight: (instance) => requiredHandle(handle).highlightInstance(instance),
-    highlightInstances: (instances) =>
-      requiredHandle(handle).highlightInstances(instances),
-    startPick: () => requiredHandle(handle).startPick(),
-  };
-  probe.setMarkersState = setMarkers;
-  probe.setUsage = (viewport, usage) =>
-    flushSync(() =>
-      setUsages((current) => ({ ...current, [viewport]: usage })),
-    );
-  const selected = views.filter((view) => view.colorScheme === "light");
-  return (
-    <div
-      className="mokly-viewer"
-      data-mokly-shell=""
-      ref={root}
-      style={{ height: 320, position: "relative", width: 800 }}
-      tabIndex={-1}
-    >
-      <style>
-        {
-          "[data-mokly-marker-layer]{position:absolute;inset:0;pointer-events:none}"
-        }
-      </style>
-      {selected.map((view) => (
-        <div
-          data-workspace-preview=""
-          key={view.viewport}
-          style={{ display: "inline-block", height: 300, width: 390 }}
-        >
-          <RegistryHarnessFrame
-            entry={home}
-            onEvent={() => undefined}
-            usage={usages[view.viewport]}
-            view={view}
-          />
-        </div>
-      ))}
-      <ShellFrameMarkerLayer
-        markers={markers}
-        onError={() => probe.markerErrors++}
-        onMarkerChange={(states) => {
-          probe.markerStates = states;
-          probe.markerPlacements = states.map(({ id, status }) => ({
-            id,
-            status,
-          }));
-        }}
-      />
-      <ViewerHostBridge
-        callbacks={callbacks}
-        failureOwner={failureOwner.current}
-        handleRef={handle}
-        loaded={loaded}
-        navigationEnd={navigationEnd}
-        replaced={sourceReplaced}
-        root={root}
-      />
-    </div>
-  );
-}
-
 function evidenceUsage(
   views: readonly CatalogueView[],
   viewport: EvidenceViewport,
@@ -307,14 +196,3 @@ const emptyFrames: EvidenceFrames = {
   highlightInstances: async () => undefined,
   startPick: async () => undefined,
 };
-
-function requiredHandle(
-  handle: RefObject<MoklyViewerHandle | null>,
-): MoklyViewerHandle {
-  if (!handle.current) throw new Error("Expected the production viewer handle");
-  return handle.current;
-}
-
-function sourceReplaced(): boolean {
-  return false;
-}

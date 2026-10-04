@@ -1425,18 +1425,106 @@ After viewer integration, split every file named by the source-length audit
 without changing behavior or removing tests. Keep each module cohesive and
 preserve public APIs. Record per-file test counts before and after each split.
 
-- [ ] Fetch `origin/main`, run the source-length audit after the viewer merge,
-      and add one TODO per reported file or related group with its test count.
-- [ ] Split each reported test file using the existing shared-helper patterns;
-      keep every test name and assertion and verify the before/after counts.
-- [ ] Split reported source modules with stable public APIs and caller imports;
-      update the READMEs that describe their modules.
-- [ ] Split any reported protocol document by responsibility and preserve its
-      rules and links without adding a size exemption.
-- [ ] Run the unmodified `cargo xtask check` after the splits. Require every
+Status: Complete, based on pushed merge `753fef99`. The unmodified full gate
+passes, including the dependency audit and both file-length audits. The audit lists 26 files:
+one production module, one browser harness and 24 test files. No protocol
+file is over its applicable cap. The merged reports supply the counts below;
+helper modules have zero direct tests and retain their existing consumers.
+
+- [x] Fetch `origin/main`, run the source-length audit after the pushed viewer
+      merge, and retain the complete per-file runtime reports before splitting.
+- [x] Split `tests/client_navigation_state.test.ts` by responsibility; preserve its 13 direct tests.
+- [x] Split `tests/client_removed_preview_requests.test.ts` by responsibility; preserve its 7 direct tests.
+- [x] Split `tests/design_screens.test.tsx` by responsibility; preserve its 11 direct tests.
+- [x] Split `tests/design_variants.test.ts` by responsibility; preserve its 16 direct tests.
+- [x] Split `tests/publish_run.test.ts` by responsibility; preserve its 9 direct tests.
+- [x] Split `tests/removed_preview_delivery.test.ts` by responsibility; preserve its 4 direct tests.
+- [x] Split `tests/server.test.ts` by responsibility; preserve its 7 direct tests.
+- [x] Split `tests/server_removed_preview_lifecycle.test.ts` by responsibility; preserve its 5 direct tests.
+- [x] Split `tests/variant_validation.test.ts` by responsibility; preserve its 13 direct tests.
+- [x] Split `tests/watch_glob_boundaries.test.ts` by responsibility; preserve its 10 direct tests.
+- [x] Split `packages/viewer/tests/server.test.tsx` by responsibility; preserve its 17 direct tests.
+- [x] Split `packages/viewer/tests/shell_state.test.ts` by responsibility; preserve its 14 direct tests.
+- [x] Split `tests/browser/viewer_lifecycle.spec.ts` by responsibility; preserve its 8 direct tests.
+- [x] Split `tests/browser/browse_navigation_security.spec.ts` by responsibility; preserve its 4 direct tests.
+- [x] Split `tests/browser/changed_views.spec.ts` by responsibility; preserve its 5 direct tests.
+- [x] Split `tests/browser/removed_previews.spec.ts` by responsibility; preserve its 11 direct tests.
+- [x] Split `tests/browser/viewer_variants.spec.ts` by responsibility; preserve its 9 direct tests.
+- [x] Split `tests/browser/standalone_appearance.spec.ts` by responsibility; preserve its 18 direct tests.
+- [x] Split `tests/design_component_variant_navigation.test.ts` by responsibility; preserve its 11 direct tests.
+- [x] Split `tests/browser/browse.spec.ts` by responsibility; preserve its 33 direct tests.
+- [x] Split `tests/shell.test.ts` by responsibility; preserve its 29 direct tests.
+- [x] Split `packages/viewer/tests/component_workspace.test.tsx` by responsibility; preserve its 3 direct tests.
+- [x] Split `tests/browser/component_explorer_runtime.spec.ts` by responsibility; preserve its 11 direct tests.
+- [x] Split `tests/browser/component_design.spec.ts` by responsibility; preserve its 12 direct tests.
+- [x] Split `packages/viewer/tests/evidence_harness.tsx` by responsibility; preserve its 0 direct tests.
+- [x] Split `packages/viewer/src/viewer/host_bridge.tsx` by responsibility; preserve its 0 direct tests.
+- [x] Verify unchanged test declarations and assertions against the captured
+      syntax trees, and verify each split group's runtime count against the
+      merged reports.
+- [x] Point the deployment source-inspection test at `browse_layout.spec.ts`,
+      where its JavaScript-disabled context moved. Keep its test name and every
+      assertion unchanged; confirm no other source-inspection path needs updating.
+- [x] Keep the source module and harness APIs stable; update the viewer README
+      for the extracted highlight hook and evidence runtime.
+- [x] Confirm that no protocol document needs splitting; add no size exemption.
+- [x] Run the unmodified `cargo xtask check` after the splits. Require every
       suite, dependency audit and source-length check to pass completely.
-- [ ] Inspect deletions and staged changes, commit the splits separately, then
+- [x] Inspect deletions and staged changes, commit the splits separately, then
       fast-forward push and report per-file counts and full verification results.
+
+The syntax comparison preserves all 3,357 test declarations and all 16,739
+original assertion expressions. The extracted highlight callback and its
+dependencies, and the extracted evidence runtime bodies, also match their
+pre-split syntax trees exactly. The largest formatted split file is 284 lines.
+No test name or assertion was removed, and no file is deleted. One
+source-inspection test changes only its moved source-file locator. Runtime
+counts and browser test titles match the retained integration reports exactly.
+
+The first unmodified full gate passes the repository and package suites, then
+reports 4,148 of 4,149 unit tests passing. Its only failure is the deployment
+test's old browse-spec locator. The new locator passes all three focused
+deployment tests. The complete gate then passes on the corrected tree: six
+consumer scenarios, 468 example files, 4,149 unit tests, 807 browser tests and
+260 hydration tests. There are no skips or cancellations. Audit, formatting,
+lint, all four ratchets, Rust fmt/Clippy and 15 Rust tests pass. Source length
+passes for 1,550 files; the additional Rust all-files audit passes for 9 files.
+No new exception or override is added.
+
+Per-file test counts (before → after; new files are summed by original file):
+
+| Original file                                        | Before | After |
+| ---------------------------------------------------- | -----: | ----: |
+| `packages/viewer/src/viewer/host_bridge.tsx`         |      0 |     0 |
+| `packages/viewer/tests/component_workspace.test.tsx` |      3 |     3 |
+| `packages/viewer/tests/evidence_harness.tsx`         |      0 |     0 |
+| `packages/viewer/tests/server.test.tsx`              |     17 |    17 |
+| `packages/viewer/tests/shell_state.test.ts`          |     14 |    14 |
+| `tests/browser/browse.spec.ts`                       |     33 |    33 |
+| `tests/browser/browse_navigation_security.spec.ts`   |      4 |     4 |
+| `tests/browser/changed_views.spec.ts`                |      5 |     5 |
+| `tests/browser/component_design.spec.ts`             |     12 |    12 |
+| `tests/browser/component_explorer_runtime.spec.ts`   |     11 |    11 |
+| `tests/browser/removed_previews.spec.ts`             |     11 |    11 |
+| `tests/browser/standalone_appearance.spec.ts`        |     18 |    18 |
+| `tests/browser/viewer_lifecycle.spec.ts`             |      8 |     8 |
+| `tests/browser/viewer_variants.spec.ts`              |      9 |     9 |
+| `tests/client_navigation_state.test.ts`              |     13 |    13 |
+| `tests/client_removed_preview_requests.test.ts`      |      7 |     7 |
+| `tests/design_component_variant_navigation.test.ts`  |     11 |    11 |
+| `tests/design_screens.test.tsx`                      |     11 |    11 |
+| `tests/design_variants.test.ts`                      |     16 |    16 |
+| `tests/publish_run.test.ts`                          |      9 |     9 |
+| `tests/removed_preview_delivery.test.ts`             |      4 |     4 |
+| `tests/server.test.ts`                               |      7 |     7 |
+| `tests/server_removed_preview_lifecycle.test.ts`     |      5 |     5 |
+| `tests/shell.test.ts`                                |     29 |    29 |
+| `tests/variant_validation.test.ts`                   |     13 |    13 |
+| `tests/watch_glob_boundaries.test.ts`                |     10 |    10 |
+
+The source module and harness have zero direct tests; existing unit, browser
+and hydration consumers cover them. All 280 direct tests in the split groups
+remain. The detailed file mapping is saved in `.context/m6j-counts-all.json`.
 
 The complete implementation review remains the final item in Milestone 8,
 after the completed work has been committed and pushed.

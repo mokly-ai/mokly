@@ -1,195 +1,20 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  COMPONENT_PAGES,
-  CONTROLS_PAGES,
-} from "../examples/basic/specs/design/components/parts/destinations.js";
 import { NAV_TREE } from "../examples/basic/specs/design/parts/nav_data.js";
 
 import {
   attribute,
-  byClass,
   designCatalogue,
   designDocument,
-  textContent,
 } from "./helpers/design_catalogue.js";
+import { componentSection } from "./helpers/design_component_navigation.js";
 import {
   headCrumbs,
-  headTitle,
   rowIcon,
   rowLabels,
   variantToggles,
 } from "./helpers/design_rows.js";
-
-function componentSection(
-  document: Awaited<ReturnType<typeof designDocument>>["document"],
-) {
-  const section = byClass(document, "mbk-nav-section").find(
-    (candidate) => attribute(candidate, "data-nav-section") === "components",
-  );
-  assert.ok(section, "Missing Components navigation section");
-  return section;
-}
-
-interface ComponentHeaderExpectation {
-  detailsTitle: string;
-  heading: string;
-  path: string;
-  parent?: string;
-  status: "Added" | "Changed" | "Removed" | "Unmodified";
-}
-
-function assertComponentHeader(
-  document: Awaited<ReturnType<typeof designDocument>>["document"],
-  expected: ComponentHeaderExpectation,
-  id: string,
-) {
-  assert.equal(headTitle(document), expected.heading, id);
-  assert.equal(
-    textContent(byClass(document, "mbk-pathchip")[0]!).trim(),
-    expected.path,
-    id,
-  );
-  assert.equal(
-    textContent(byClass(document, "ce-change-status")[0]!).trim(),
-    expected.status,
-    id,
-  );
-  const inspector = byClass(document, "ce-inspector")[0];
-  assert.ok(inspector, `${id}: missing inspector`);
-  const details = textContent(inspector);
-  assert.ok(details.includes(`About ${expected.detailsTitle}`), id);
-  assert.ok(details.includes(`Path ${expected.path}`), id);
-  if (expected.parent === undefined) assert.doesNotMatch(details, /Variant of/);
-  else assert.ok(details.includes(`Variant of${expected.parent}`), id);
-}
-
-/** Each page: design, heading, path below `example/components`, status, Details title, parent. */
-const componentPageHeaders = [
-  [COMPONENT_PAGES.default, "Action", "action", "Unmodified", "Action"],
-  [
-    COMPONENT_PAGES.disabled,
-    "Action",
-    "action/disabled",
-    "Unmodified",
-    "Disabled",
-    "Action",
-  ],
-  [
-    COMPONENT_PAGES.comparison,
-    "Action",
-    "action/default",
-    "Changed",
-    "Default",
-    "Action",
-  ],
-  [
-    COMPONENT_PAGES.overlay,
-    "Action",
-    "action/default",
-    "Changed",
-    "Default",
-    "Action",
-  ],
-  [
-    COMPONENT_PAGES.difference,
-    "Action",
-    "action/default",
-    "Changed",
-    "Default",
-    "Action",
-  ],
-  [
-    COMPONENT_PAGES["overlay-tall"],
-    "Checklist",
-    "checklist/default",
-    "Changed",
-    "Default",
-    "Checklist",
-  ],
-  [
-    COMPONENT_PAGES.affected,
-    "Action",
-    "action/default",
-    "Changed",
-    "Default",
-    "Action",
-  ],
-  [COMPONENT_PAGES.toolbar, "Toolbar", "toolbar", "Unmodified", "Toolbar"],
-  [COMPONENT_PAGES.hidden, "Help hint", "help-hint", "Unmodified", "Help hint"],
-  [COMPONENT_PAGES.unused, "Badge", "badge", "Unmodified", "Badge"],
-  [
-    COMPONENT_PAGES.added,
-    "Badge",
-    "badge/default",
-    "Added",
-    "Default",
-    "Badge",
-  ],
-  [
-    COMPONENT_PAGES.removed,
-    "Action",
-    "action/compact",
-    "Removed",
-    "Compact",
-    "Action",
-  ],
-  [
-    COMPONENT_PAGES["shared-impact"],
-    "Action",
-    "action",
-    "Unmodified",
-    "Action",
-  ],
-  [COMPONENT_PAGES.closed, "Action", "action", "Unmodified", "Action"],
-] as const;
-
-for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: component page headers and Details describe the shown entry`, async () => {
-    for (const [
-      id,
-      heading,
-      entryPath,
-      status,
-      detailsTitle,
-      parent,
-    ] of componentPageHeaders) {
-      const { document } = await designDocument(id, viewport);
-      assertComponentHeader(
-        document,
-        {
-          detailsTitle,
-          heading,
-          path: `example/components/${entryPath}`,
-          ...(parent === undefined ? {} : { parent }),
-          status,
-        },
-        id,
-      );
-    }
-  });
-
-  test(`${viewport}: controls pages identify their selected component variant`, async () => {
-    for (const [state, id] of Object.entries(CONTROLS_PAGES)) {
-      const disabled = state === "variant" || state === "readonly-variant";
-      const { document } = await designDocument(id, viewport);
-      assertComponentHeader(
-        document,
-        {
-          detailsTitle: disabled ? "Disabled" : "Default",
-          heading: "Action",
-          path: disabled
-            ? "example/components/action/disabled"
-            : "example/components/action/default",
-          parent: "Action",
-          status: state === "comparison" ? "Changed" : "Unmodified",
-        },
-        id,
-      );
-    }
-  });
-}
 
 test("shared navigation data follows the real component variant ids and authored order", async () => {
   const { manifest } = await designCatalogue;

@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
 import { encodeProps } from "../src/components/codec.js";
 import {
-  isManifestComponentVariant,
   type ManifestComponent,
   type ManifestComponentVariant,
 } from "../src/components/manifest_types.js";
@@ -15,39 +12,14 @@ import {
 } from "../src/shell/component_control_fields.js";
 import { controlsUnavailable } from "../src/shell/component_controls_state.js";
 import {
-  workspaceData,
   type WorkspaceData,
   type WorkspaceVariant,
 } from "../src/shell/workspace_data.js";
 import { usageHref } from "../src/shell/workspace_usage.js";
-import {
-  resolveWorkspaceView,
-  resolveWorkspaceViews,
-  visibleWorkspaceViews,
-} from "../src/shell/workspace_views.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 
-const model = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
-const catalogue = viewerCatalogue(model);
-const source = catalogue.byPath.get("components/action");
-if (source?.kind !== "component" || isManifestComponentVariant(source))
-  throw new Error("Missing component fixture");
-const sourceVariant = catalogue.hierarchy.variantsByPath.get(source.path)?.[0];
-if (
-  sourceVariant?.kind !== "component" ||
-  !isManifestComponentVariant(sourceVariant)
-)
-  throw new Error("Missing component variant fixture");
+import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
+
+const { source, sourceVariant } = componentWorkspaceFixture();
 
 test("control drafts preserve primitive edits and emit typed overrides", () => {
   const component: ManifestComponent = {
@@ -140,158 +112,6 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
     label: { kind: "set", value: ["string", "Purchase"] },
     hint: { kind: "unset" },
   });
-});
-
-test("workspace view selection uses exact contexts and light fallback", () => {
-  const data = {
-    ...workspaceData(catalogue, { base: "main", updateVersion: 0 }, source),
-    views: [
-      {
-        viewport: "mobile",
-        colorScheme: "light",
-        path: "mobile-light.html",
-        variantPath: "components/action/default",
-      },
-      {
-        viewport: "mobile",
-        colorScheme: "dark",
-        path: "mobile-dark.html",
-        variantPath: "components/action/default",
-      },
-      {
-        viewport: "desktop",
-        colorScheme: "light",
-        path: "desktop-light.html",
-        variantPath: "components/action/default",
-      },
-    ],
-  } satisfies WorkspaceData;
-  assert.deepEqual(
-    visibleWorkspaceViews(
-      data,
-      "components/action/default",
-      "both",
-      "dark",
-    ).map((view) => view.path),
-    ["mobile-dark.html", "desktop-light.html"],
-  );
-  assert.deepEqual(
-    visibleWorkspaceViews(
-      data,
-      "components/action/default",
-      "desktop",
-      "light",
-    ).map((view) => view.path),
-    ["desktop-light.html"],
-  );
-  assert.deepEqual(
-    resolveWorkspaceViews(data, "components/action/default", "both", "dark"),
-    {
-      colorScheme: "dark",
-      views: [data.views[1], data.views[2]],
-    },
-  );
-  const lightOnly = {
-    ...data,
-    views: data.views.filter(({ colorScheme }) => colorScheme === "light"),
-  } satisfies WorkspaceData;
-  assert.deepEqual(
-    resolveWorkspaceViews(
-      lightOnly,
-      "components/action/default",
-      "both",
-      "dark",
-    ),
-    {
-      colorScheme: "light",
-      views: lightOnly.views,
-    },
-  );
-  const variant = data.variants.find(
-    ({ value }) => value.path === "components/action/default",
-  );
-  assert.ok(variant);
-  const mixedEvidence = {
-    ...data,
-    status: "Changed" as const,
-    comparisonEligible: true,
-    views: data.views.filter(({ colorScheme }) => colorScheme === "light"),
-    viewStates: {
-      "components/action/default": [
-        {
-          viewport: "mobile" as const,
-          colorScheme: "light" as const,
-          state: "unchanged" as const,
-        },
-        {
-          viewport: "desktop" as const,
-          colorScheme: "light" as const,
-          state: "changed" as const,
-        },
-      ],
-    },
-  };
-  const resolved = resolveWorkspaceView(
-    mixedEvidence,
-    { variant, comparisonEligible: true },
-    "mobile",
-    "dark",
-  );
-  assert.deepEqual(
-    {
-      colorScheme: resolved.colorScheme,
-      comparisonEligible: resolved.comparisonEligible,
-      evidence: resolved.evidence,
-      paths: resolved.views.map(({ path }) => path),
-      status: resolved.status,
-    },
-    {
-      colorScheme: "light",
-      comparisonEligible: false,
-      evidence: "view",
-      paths: ["mobile-light.html"],
-      status: "Unmodified",
-    },
-  );
-
-  assert.deepEqual(
-    resolveWorkspaceView(
-      { ...mixedEvidence, viewStates: {} },
-      { variant, comparisonEligible: false },
-      "mobile",
-      "dark",
-    ),
-    {
-      colorScheme: "light",
-      comparisonEligible: false,
-      evidence: "selection",
-      status: "Unmodified",
-      views: [mixedEvidence.views[0]!],
-    },
-  );
-
-  assert.deepEqual(
-    resolveWorkspaceView(
-      {
-        ...mixedEvidence,
-        viewStates: {
-          "components/action/default": [
-            mixedEvidence.viewStates["components/action/default"][0]!,
-          ],
-        },
-      },
-      { variant, comparisonEligible: true },
-      "both",
-      "dark",
-    ),
-    {
-      colorScheme: "light",
-      comparisonEligible: true,
-      evidence: "selection",
-      status: "Unmodified",
-      views: mixedEvidence.views,
-    },
-  );
 });
 
 test("control availability and usage URLs explain the active product state", () => {

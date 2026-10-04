@@ -1,5 +1,6 @@
 /** Public viewer handle and event bridge over the shared shell frame registry. */
 
+import type { MutableRefObject, RefObject } from "react";
 import {
   useCallback,
   useImperativeHandle,
@@ -8,7 +9,6 @@ import {
   useRef,
   useState,
 } from "react";
-import type { MutableRefObject, RefObject } from "react";
 import { flushSync } from "react-dom";
 
 import {
@@ -20,11 +20,9 @@ import { useShellStore } from "../shell/store_context.js";
 
 import { viewerFailures } from "./failures.js";
 import { useHostBridgeEvents } from "./host_bridge_events.js";
-import {
-  useViewerEvidenceRestoration,
-  viewerInstanceSessions,
-} from "./host_bridge_evidence.js";
+import { useViewerEvidenceRestoration } from "./host_bridge_evidence.js";
 import { registerHostBridgeFailureBarrier } from "./host_bridge_failure.js";
+import { useHostBridgeHighlight } from "./host_bridge_highlight.js";
 import { useHostBridgeLifecycle } from "./host_bridge_lifecycle.js";
 import { activateViewerPick } from "./host_bridge_pick.js";
 import { ViewerInspectionGeometryOwnership } from "./inspection_geometry_ownership.js";
@@ -32,7 +30,6 @@ import {
   ViewerInspectionLayer,
   type ViewerInspectionPresentation,
 } from "./inspection_layer.js";
-import { ObsoleteInspection } from "./inspection_work.js";
 import { Picking } from "./picking.js";
 import type { LoadedCatalogue } from "./source.js";
 import type { MoklyViewerHandle, MoklyViewerProps, PickEnd } from "./types.js";
@@ -183,61 +180,17 @@ export function ViewerHostBridge({
     root,
   });
 
-  const highlightInstances = useCallback(
-    async (
-      instances: Parameters<MoklyViewerHandle["highlightInstances"]>[0],
-    ) => {
-      if (!inspection) throw new Error("The viewer is not ready.");
-      const request = ++operation.current;
-      pendingOperation.current = request;
-      const pending = new Set(viewerInstanceSessions(inspection, instances));
-      pendingSessions.current = pending;
-      const previousClaim = inspection.getSnapshot().active;
-      try {
-        const activation = await inspection.highlightInstances(instances);
-        if (operation.current !== request) throw new ObsoleteInspection();
-        if (activation) geometry.begin(activation.sessions);
-        else geometry.clear();
-        flushSync(() =>
-          publishPresentation(
-            instances.length
-              ? {
-                  kind: "instances",
-                  instances: instances.map((instance) => ({ ...instance })),
-                }
-              : undefined,
-          ),
-        );
-        if (activation)
-          await inspection.run(
-            activation.claim,
-            () =>
-              registry?.geometry.refresh(activation.sessions) ??
-              Promise.resolve(),
-          );
-        if (operation.current !== request) throw new ObsoleteInspection();
-      } catch (error) {
-        if (
-          operation.current === request &&
-          (!previousClaim || !inspection.current(previousClaim))
-        )
-          clearInspection();
-        throw report(error, "frame");
-      } finally {
-        if (pendingOperation.current === request) pendingOperation.current = 0;
-        if (pendingSessions.current === pending)
-          pendingSessions.current = undefined;
-      }
-    },
-    [
-      clearInspection,
-      geometry,
-      inspection,
-      publishPresentation,
-      registry,
-      report,
-    ],
-  );
+  const highlightInstances = useHostBridgeHighlight({
+    clearInspection,
+    geometry,
+    inspection,
+    operation,
+    pendingOperation,
+    pendingSessions,
+    publishPresentation,
+    registry,
+    report,
+  });
 
   useImperativeHandle(
     handleRef,
