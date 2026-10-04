@@ -1731,7 +1731,7 @@ configuration, script or test change and makes no new product decision.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits; push the
       branch.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       using `docs/implementation-review-prompt.md`; report numbered findings
       with severities and recommendations without changing the implementation.
 
@@ -1772,6 +1772,41 @@ The final review TODO remains for the orchestrator. Commit and push complete
 this milestone's first two TODOs only. Main remains
 `800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge occurred.
 Only the five authorized Milestone 11 files remain deleted relative to main.
+
+### Final review outcome
+
+Seven parallel reviewers checked the pushed tip `a6287ed6` against
+`origin/main` at `800fe9f8` with `docs/implementation-review-prompt.md`. They
+covered writers and Check; baselines and caches; the asset closure, Serve and
+export; comparisons; the viewer; documentation; and tests, lint and the merge.
+Each claim was reproduced with a scratch script or verified in the code before
+it was reported. The review reported 23 new findings, numbered 35 to 57,
+without changes: 1 high, 8 medium and 14 low.
+
+- High (35): watched Serve replaces the build's checked asset closure with the
+  file watcher's own list. Authored pages and files that mockups reach through
+  ordinary links return 404 for the whole session. Files that the privacy
+  rules reject can be served.
+- Medium: an earlier manifest that Git still tracks turns Changes off
+  permanently (36). The merge removed `main`'s package-root error (37) and
+  turned an unreadable baseline cache entry from a rebuild into a hard failure
+  (38), both without approval. Adding or removing an embedded generated
+  document makes every comparison fail (39). `build --watch` misses inputs that
+  Serve watches (40) and ignores Ctrl+C while it waits for the output lock (41).
+  The published viewer README promises support for earlier catalogues, and the
+  release notes omit the viewer API breaks (42). Compatibility transformers
+  receive inputs that contradict their contract (43).
+- Low (44–57): documentation drift, upgrade edge cases, missing acceptance
+  tests, leftovers of the removed output modes, and the Milestone 14 cost.
+  After the merge, the two export fixtures already read committed output, so
+  the shared preparation added about 1,800 lines of test code and new real
+  rebuild work instead of sharing existing work.
+
+Earlier findings 1, 4, 6, 7, 11, 12, 22, 23, 28–31, 33 and 34 are fixed, and
+26 no longer applies. Findings 2, 8, 13, 15, 18, 20, 21, 24, 27 and 32 are
+partly fixed; their remaining parts are listed with the new findings where
+they changed form. Findings 3, 5, 9, 10, 14, 16, 17, 19 and 25 remain open.
+Main had not moved. Every finding awaits the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
