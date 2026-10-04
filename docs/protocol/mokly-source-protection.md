@@ -1,10 +1,12 @@
 # Catalogue Source Protection
 
-## Delivery Status
-
 Build, Check, Serve, Review, export and publication share validated manifest-v8
-source inventories. Root matches, Markdown definitions and copied-resource
-inputs stay private; generated HTML and copied resource outputs are public.
+source inventories. Export admits exact generated files and traverses their
+ancestors under the [generated inventory rule](./mokly-export-public-files.md#generated-inventory);
+all other files keep their public-name and private-directory filters. Source,
+alias and metadata denials still win. The [current HTML ownership proof](./mokly-rendering-generated.md#ownership)
+grants replacement authority only; earlier headers grant none and never defeat
+source protection. Preview replacement also requires current export ownership.
 
 ## Protected Inputs
 
@@ -36,12 +38,10 @@ The canonical manifest and the obsolete-name sentinels listed by
 metadata. Deny those paths and realpath aliases at every public-resource
 boundary, even when absent or pending output. Internal build, freshness, and
 baseline compatibility checks may read them. They are not authoring inputs and
-must not enter `sourceFiles`. Ordinary public JSON remains supported. Browsers
-receive the catalogue data they need through the shell; no public manifest
-endpoint is provided.
-The implemented [public catalogue](./mokly-catalogue.md) adds
-`/__mokly/catalogue.json` beside this private boundary; it is not a manifest
-endpoint. Serve/export allowlist its viewer fields and omit `sourceFiles`,
+must not enter `sourceFiles`. Ordinary public JSON remains supported. The shell
+exposes viewer data without a public manifest endpoint.
+The [public catalogue](./mokly-catalogue.md) at `/__mokly/catalogue.json` is a
+viewer allowlist, not a manifest endpoint. Serve/export omit `sourceFiles`,
 resolved dependency evidence, ownership/style offsets, private envelopes, and
 absolute paths. Authored display metadata and optional
 [instance source locations](./mokly-instances.md#optional-invocation-source)

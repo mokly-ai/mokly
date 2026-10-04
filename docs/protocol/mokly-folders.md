@@ -103,12 +103,16 @@ breadcrumbs for variants and ordinary descendants. For all other folders:
 
 Titles are free text and may repeat across folders. Breadcrumbs, the tree,
 search, and details use the resolved title; nothing uses a title as a key.
-Search free text matches a row's path, title, and tags, and the resolved title
-of every folder at or above its path, so a folder whose title matches shows
-every row below it: its entries, their variants, its own page, and, for a
-screen or component that is its own page, that entry's variants. Tag terms
-still match only a row's own tags, and a hidden folder still hides its rows
-in All and search.
+This section owns search matching for every row kind. Split the query on
+whitespace. Nonempty `tag:<tag>` terms are case-insensitive exact matches to
+the entry's own tags; deduplicate them. Rejoin other terms with one space.
+That complete free-text phrase must be a case-insensitive substring of at least
+one field: the entry path, its authored title, an entry tag, or a resolved title
+of any folder at or above its path. Empty free text matches every row; every
+tag term and the phrase must match. Display labels such as `Overview` and
+`· Removed` never supply search text. A matching folder title therefore retains
+its entries, variants and own page. A hidden folder still hides its rows in
+All and search. Search composes with Changes without changing its membership.
 Removed entries carry the baseline titles of their folders as display text.
 
 ## Order

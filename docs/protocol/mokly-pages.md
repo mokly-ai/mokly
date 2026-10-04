@@ -142,7 +142,7 @@ named by the author through its slug.
 
 A page appears once at its path, using the existing page icon. The heading
 uses its title; breadcrumbs use the resolved titles of its folders; the path
-chip, search by path/title/tags, tag picker, details, and home counts include
+chip, the shared [search rule](./mokly-folders.md#titles), tag picker, details, and home counts include
 pages. Details show authored description, rationale, dependencies, and related
 docs.
 

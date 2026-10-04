@@ -88,9 +88,10 @@ The destination must retain its captured identity until installation; an unowned
 replacement is preserved, including one introduced during capture. Retain the
 writer reservation, OS-enforced non-replacing moves, and safe backup recovery
 defined by the [export recovery contract](./mokly-export-recovery.md).
-Only the repository adapter may migrate the prior preview ownership marker.
-Migration retains valid public routes beneath build-directory names such as
-`target` and `node_modules`, while private/source names remain disallowed.
+The repository adapter also rejects prior preview markers as replacement proof
+under the [current ownership rule](./mokly-export-safety.md).
+The [generated inventory rule](./mokly-export-public-files.md#generated-inventory)
+keeps exact generated routes public while private/source names stay denied.
 Its owned reservation namespace remains after cleanup, with no active locks.
 Each entry's shell is written once at `view/<path>/index.html`; current-only
 shell metadata explicitly sets `comparisonUrl: null` and never requests a

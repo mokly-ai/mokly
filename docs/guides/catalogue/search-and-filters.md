@@ -7,10 +7,9 @@ order: 2
 
 ## Search the tree
 
-The search field narrows the navigation tree as you type. It matches an
-entry's title, folder titles, the segments of its path and its tags, so `billing` finds
-everything under a `billing` folder as well as entries that mention it. A
-folder hidden by its folder record stays out of the results.
+Type in the search field to narrow the navigation tree. The
+[navigation reference](/docs/reference/navigation/) links to the shared search
+matching rule. A folder hidden by its folder record stays out of the results.
 
 ## Search by tag
 

@@ -43,7 +43,8 @@ destination's canonical page, carries its fragment and reveals it in the tree.
 A screen or registered component that declares variants shows a chevron on its
 row. Opening it lists each variant beneath the parent, and choosing one opens
 that variant as its own page with the parent's name in the breadcrumbs, which
-links back to it. Search finds a variant by its own title and keeps its parent
+links back to it. Search uses the [navigation reference](/docs/reference/navigation/)
+matching rule and keeps its parent
 in view. The details of a parent list its variants, and the details of a
 variant name the parent it belongs to. Whether a list is open is remembered as
 you move between entries and reload, and Collapse all closes it with everything

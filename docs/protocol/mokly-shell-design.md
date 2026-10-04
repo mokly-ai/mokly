@@ -9,30 +9,11 @@ this contract fixes the tokens, dimensions, and responsive behavior that
 implementation and tests must preserve. Runtime behavior stays in
 [mokly-runtime.md](./mokly-runtime.md).
 
-## Delivery Status
-
-This document describes the implemented shell design, including active-row
-ancestor disclosure, conditional filter clearing, nearest-row scrolling, the
-`tag:` search term, the details inspector's tag chips, the search field's tag
-control with its picker panel, the mark-only narrow brand, and the top bar's
-stacking above the navigation drawer scrim. Every state recorded here is
-implemented, including aligned comparison scrolling. The
-[React Browse shell plan](../../plans/react-browse-shell.md)
-changes how the shell is rendered and enhanced, not how it looks or behaves:
-this design, its tokens, dimensions, responsive rules and the design catalogue
-remain binding on the hydrated React implementation, and no mockup changes
-are part of that plan. The separate
-[component explorer designs](./mokly-component-design.md) are implemented
-mockups whose runtime-backed states are identified in their own contract.
-
-The path identity contract renames the Pages section to Specs, makes folder
-rows browse-only, and adds the `Overview` first-child row, the path chip,
-Markdown document pages, and `Moved` Changes rows. Those states are approved
-below and designed in `design/browse/views/folder-overview`,
-`design/browse/pages/document`, `design/changes/outcomes/moved`, and the updated Browse,
-page, and component designs. The shell implements the Specs rows, breadcrumbs,
-path chip, Markdown document pages, and one `Moved` row for each paired
-move.
+The shared [React shell](./mokly-viewer.md#shell-tree-and-state) preserves these
+tokens, dimensions and interactions in Serve, export and embedded hosts.
+The [component explorer designs](./mokly-component-design.md) own component
+states. Specs, browse-only folders, Overview rows, path chips, documents and
+Moved rows use the designs listed in the [inventory](./mokly-shell-design-inventory.md).
 
 Auto/Light/Dark interface appearance is designed in the
 `design/browse/appearance/**` mockups and specified by the
@@ -138,13 +119,9 @@ scrollable region scrolls internally:
   placeholder in both viewport sizes, covering screens, pages, and flows.
   The bar carries no preview mode switch; the delivered Auto/Light/Dark
   Appearance control is the one setting that belongs here.
-  A query splits into terms: every `tag:<tag>`
-  term matches only rows whose entry declares that tag, and the remaining words
-  rejoin into one phrase that must appear in a row's path segments, title, or
-  tags. A row stays visible only when it matches every tag
-  term and that phrase;
-  tag terms hide the groups they empty and open the groups they keep, and they
-  compose with the All/Changes filter.
+  Matching uses the single [search rule](./mokly-folders.md#titles).
+  Filtering hides empty groups and opens retained groups, and composes with
+  the All/Changes filter.
 - **Tag picker** — a tag-icon control at the trailing edge of the search
   field, muted like the leading search icon and filling to a soft rounded square
   on hover. It opens a panel anchored under the field and aligned to its width
@@ -212,8 +189,14 @@ scrollable region scrolls internally:
     [folder contract](./mokly-folders.md#rows-and-clicks) owns rows.
   - Folder groups are native
     `<details>` whose summary row shows a closed/open folder SVG pair (swapped
-    via the `[open]` state), a bold label, and a monospace child count. The
-    summary only expands or collapses the folder and never navigates. A folder
+    via the `[open]` state), a bold label, and a monospace child count.
+    The count is the number of immediate child rows that the active All,
+    Changes and search/tag filters retain in this section. Count a retained
+    child folder or variant parent once, not its descendants, and count a
+    retained Overview row once. Collapsing a group does not change its count.
+    Rows and counts must use the same visibility rule; do not count hidden,
+    removed or nonmatching rows when that active filter excludes them.
+    The summary only expands or collapses the folder and never navigates. A folder
     whose own page is a document, page, or flow lists that page as its first
     child row with that page's own icon, labelled with the page title or
     `Overview` when that equals the folder title; a folder whose own page is a
@@ -300,6 +283,12 @@ document's Details show its description, tags, and Markdown source file; a
 component's Details add the shown entry's path above its source.
 
 Shared home guidance asks visitors to choose an item from the navigation.
+Its summary counts current catalogue records of every entry kind, including
+screen and component variant records, independent of the active tree filters.
+Use an exhaustive type-checked kind-to-label map in this order: screens,
+components, user flows, catalogue pages, documents. Use singular for one,
+plural otherwise; omit zero-count kinds and join the rest with `" · "`. A
+zero-entry input omits the summary. Removed records do not enter these counts.
 Unknown routes use `Item not found` and offer another catalogue item or the
 catalogue home. Kind-specific wording is reserved for a known screen, page,
 document, or flow; shared controls and missing-route messages cover the whole

@@ -36,8 +36,8 @@ Markdown document to retain a generated ownership header that decodes to its
 expected source path. The versioned header encodes that identity with canonical
 base64 so no source filename can alter HTML comment parsing. Header parsing
 accepts LF and CRLF line endings. Final transformed output must retain the
-current encoded form; safe legacy raw-path headers remain recognizable only for
-migration, while a missing, malformed, downgraded, or changed source identity
+[current encoded form](./mokly-rendering-generated.md#ownership); earlier headers
+prove no ownership. A missing, malformed, downgraded or changed source identity
 fails before any output is written.
 
 ## Related Docs

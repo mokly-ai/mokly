@@ -62,8 +62,9 @@ absent change evidence never invents a status. Pages retain Changes membership
 but never offer visual comparisons. The
 [Changes contract](./mokly-changes.md) owns the shared interaction and snapshot
 rules. Artifact replacement uses the shared exclusive reservation, ownership
-inventory, and rollback transaction. Only this adapter can migrate a valid
-legacy `.mokly-preview-artifact` directory; consumer export cannot claim it.
+inventory, and rollback transaction. The adapter requires current schema-2
+export ownership; an earlier `.mokly-preview-artifact` cannot authorize replacing
+any file or adopting pre-derived `view/` paths. See [export safety](./mokly-export-safety.md).
 
 Closing a same-repository pull request marks its sticky comment inactive and
 attempts to delete all Cloudflare deployments carrying that PR branch alias.

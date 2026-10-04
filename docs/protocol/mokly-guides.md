@@ -75,7 +75,7 @@ code examples. Shell commands belong in language-labelled code fences.
 
 ## Guide Links
 
-The initial guide corpus contains no links. Future links use only these forms:
+Guide links use only these forms:
 
 - another guide: `/docs/<section>/<slug>/`;
 - one of the published protocol documents:

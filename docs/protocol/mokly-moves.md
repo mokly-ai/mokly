@@ -190,6 +190,10 @@ Complete and selected capture retain each side's actual spelling and source
 documents. A moved component variant groups beneath its current parent; a
 removed variant stays with its baseline parent. A removed parent can therefore
 have an empty historical variant group after all its variants pair elsewhere.
+The complete and scoped catalogue readers accept that removed parent with zero
+variants and retain its removal row; they must not restore the moved variants
+under it or omit the parent. Current component parents still require at least
+one current variant, and current variants still require a current parent.
 Affected-consumer evidence retains historical context and chain paths; its
 canonical consumer and changed-component identity use the accepted current path.
 
@@ -228,6 +232,8 @@ suppressed removed previews, and the `moved-link-target` text. Regressions cover
 unrelated short Markdown, edited moves, depth-changing resource URLs and imported
 CSS, linked screens/flows/component users moving together, permanent ambiguity,
 linear full-comparison counts for unique material, and Serve/export diagnostics.
+Run move fixtures through review, both catalogue readers, Serve and export;
+include deleting a component after its last variant moves to another parent.
 
 ## Related Docs
 

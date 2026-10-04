@@ -6,12 +6,9 @@ This contract expands the [package contract](./mokly-package.md) for the
 [source protection](./mokly-source-protection.md), including configured
 public exclusions.
 
-## Delivery Status
-
-The rendering boundary, the compatibility transformer, and the generated-output
-lifecycle are implemented with path-derived file names and manifest v8.
-Mokly-rendered Markdown documents remain an approved contract awaiting delivery
-through the [path identity plan](../../plans/path-identity.md).
+Rendering and the generated-output lifecycle use path-derived file names and
+manifest v8. Mokly renders discovered Markdown definitions under the
+[document contract](./mokly-documents.md); source Markdown stays private.
 
 ## Rendering Boundary
 
@@ -123,10 +120,9 @@ complete document, retain the exact generated source owner, remain
 deterministic, and stay consumer-owned. The shared ownership parser accepts LF
 or CRLF after the header and strictly decodes its versioned canonical-base64
 source field, but a missing or changed source identity fails before write. This
-keeps source filenames out of HTML comment syntax; former raw-path headers are
-accepted only when their source is comment-safe so existing files can be
-recognized for migration. A transformer must retain the current encoded form
-and cannot weaken final validation. New catalogues should author portable links
+keeps source filenames out of HTML comment syntax. Earlier headers prove no
+ownership under the [current header rule](./mokly-rendering-generated.md#ownership).
+A transformer cannot weaken final validation. New catalogues should author portable links
 directly and leave this option unset.
 
 Stylesheet rules are ordered, declarative consumer configuration. Their globs
