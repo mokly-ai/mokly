@@ -7,8 +7,9 @@ compliance. Milestone 8 implementation, verification and the fresh
 implementation review are complete. On 2026-10-04 the user approved the
 recommended option for each of the eight findings in the
 [review record](../docs/reviews/path-identity.md); Milestones 9–13 deliver
-those fixes and end with a new review. Milestones 9 and 11 are complete; the
-mockup/UI branch and Milestone 13 integration remain separate.
+those fixes and end with a new review. Milestones 9–12 are complete. Milestone
+13 integration, verification and smoke tests are complete; the orchestrator's
+fresh review is the only remaining required TODO.
 This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
@@ -1978,6 +1979,8 @@ sources and current-document band sentence are unchanged.
 
 Tags: mockup
 
+Status: Complete.
+
 Depict the band that names the light fallback above a current document's pane
 (finding 6, option A), before the UI milestone tests it.
 
@@ -2093,6 +2096,8 @@ Milestone 13 integration; this implementation agent does not run it.
 
 Tags: ui
 
+Status: Complete.
+
 Fix the UI findings (4, 5, and 6), each with a failing test first.
 
 - [x] Finding 4 (option A): compute each folder row's count from the same
@@ -2127,18 +2132,73 @@ Fix the UI findings (4, 5, and 6), each with a failing test first.
 ## Milestone 13: Review fix integration, verification, and review
 
 Bring the UI fixes into the feature branch, verify everything, and assign a
-fresh review.
+fresh review. The implementation agent does not run that review.
 
-- [ ] Merge the UI branch under the merge rules in `AGENTS.md`.
-- [ ] Run the full verification, including the unmodified `cargo xtask check`.
-- [ ] Smoke-test each fix: moving a component's last variant into another
+Status: Implementation complete. Merge, full verification and fresh smoke
+checks pass. The final independent review remains assigned to the orchestrator.
+
+- [x] Merge the UI branch under the merge rules in `AGENTS.md`.
+      Merge `594e78db` joins exactly two parents: `8a347d80` and `7aa89d9a`.
+      There are no conflicts. Both milestone lists and every completed TODO
+      remain. The remerge diff is empty, so there are no resolution paths to
+      inspect. Milestone 11 production files remain unchanged from the feature
+      parent. Main remains `800fe9f8`, with no unintegrated additions. The
+      deletion audit retains the same 18 authorized path replacements.
+      `npm run build` and 46 focused viewer, design, protocol, guide and link
+      tests pass before the full gate.
+- [x] Run the full verification, including the unmodified `cargo xtask check`.
+- [x] Smoke-test each fix: moving a component's last variant into another
       component, exporting an entry named `coverage`, rejecting an earlier
       ownership header, folder counts under Changes and search, the home
       summary with documents, and the current-document `Light only` band.
-- [ ] Record the outcome of each finding in
+- [x] Record the outcome of each finding in
       `docs/reviews/path-identity.md`, and update this plan's status and
       `plans/README.md`.
-- [ ] Commit and push.
+
+Verification and smoke evidence:
+
+- The unmodified `cargo xtask check` passes completely: six packed-consumer
+  scenarios; 472 example files; 4,170 unit tests; 814 browser tests; and 261
+  hydration tests. There are no skips, cancellations or retries. All three
+  known browser flakes pass first run. Audit, formatting, lint, four ratchets,
+  Rust fmt/Clippy and 15 Rust tests pass. Source length passes for 1,586 files,
+  and the Rust audit passes for 9 files. No exception or dependency is added;
+  main's existing reviewed Braces record remains active.
+- In a fresh scratch Git catalogue, move `old/primary` to `new/primary` with
+  `movedFrom` and delete `old`. The actual CLI `serve --base main --no-watch`
+  publishes the pair and removed parent; every current and removed route plus
+  home returns HTTP 200 (14 pages). `export --base main` succeeds, retains
+  `old` as a removed component and writes its shell, while the moved variant
+  carries `previousPath: "old/primary"` and has no removed record.
+- That same CLI export includes `coverage`, with both its shell and generated
+  view. The legacy-header check uses a separate scratch catalogue. Build
+  refuses `coverage/index.mobile.html` and reports
+  `has no valid generated ownership header`. Its exact bytes remain. After the author moves it aside,
+  a successful build leaves that earlier-format orphan unchanged.
+- At 1280px and 390px, every visible folder count matches its immediate retained
+  rows. Shop reads 5 in All and 2 in Changes (Overview and Cart). Searches for
+  `checkout`, `orders` and `tag:sale` each retain one Shop child; the nested
+  Archive count is also 1 for `orders`.
+- At both widths, home reads `6 screens · 3 components · 2 documents`, omitting
+  zero-count kinds. Payment terms has no dark render. Under Dark its
+  `Light only` band appears above the pane, which keeps the light document URL. The
+  band is hidden under Light. Both browser runs report no page errors.
+- `.context/m13/smoke-results.json`, `smoke.log`, `serve.log`, `export.log` and
+  `ownership.log` contain the assertions and CLI transcript. Inspected
+  screenshots are `counts-changes-1280.png`, `counts-search-1280.png`,
+  `light-only-1280.png` and their 390px counterparts. The full gate log is
+  `full-gate.log`. Scratch sources and artifacts stay outside the feature diff.
+
+The Approved Follow-up section of `docs/reviews/path-identity.md` now records
+all eight findings as fixed, with their implementation commits and covering
+tests. The plan stays Active until PR merge. No production edits follow the
+merge; the close-out commit updates only the plan, its index and the review
+record. The main-relative deletion inventory retains the same 18 authorized
+replacements. Both commit bodies explicitly record the approved removal of
+earlier ownership readers and preview-adoption plumbing. The final review
+below remains unticked and is not run by this implementation agent.
+
+- [x] Commit and push.
 - [ ] After the push, the orchestrator assigns fresh reviewers to use
       `docs/implementation-review-prompt.md` against the complete diff from
       `origin/main` and report findings without changing the implementation.

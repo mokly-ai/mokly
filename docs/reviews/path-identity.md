@@ -13,8 +13,8 @@ also ran the unmodified `cargo xtask check`, and it passed: 4,149 unit tests,
 807 browser tests, and 260 hydration tests. Native macOS and Windows behaviour
 was not tested.
 
-There are eight findings: one High, two Medium, and five Low. The user decides
-what to address next.
+The review reported eight findings: one High, two Medium, and five Low. The
+Approved Follow-up section records the accepted fixes and their verification.
 
 Background for readers new to the feature: each catalogue entry (a screen,
 page, Markdown document, user flow, or component) now has one path, derived
@@ -208,7 +208,8 @@ private build or dependency directory (coverage))`. The same catalogue
 Native macOS and Windows behaviour was not tested in this review. The new
 case-only move and pruning tests now run in native CI (Milestone 6H). Folder
 counts under Changes and search, and the current-document "Light only" band,
-have no browser tests. Index-entry Changes activation is covered by fixtures,
+had no browser tests at that review snapshot; their new coverage is recorded
+below. Index-entry Changes activation is covered by fixtures,
 not by a real Git baseline.
 
 ## Approved Follow-up
@@ -226,3 +227,36 @@ The [plan](../../plans/path-identity.md) delivers them in Milestones 9–13:
 | 6       | A: add the mockup state and a browser test                                                                 | 10, 12           |
 | 7       | B: one owner for the search rule, with links elsewhere                                                     | 9                |
 | 8       | B: current behaviour and links instead of status prose                                                     | 9                |
+
+### Outcomes
+
+All eight approved findings are fixed in the merged implementation at
+`594e78db`. The original findings above describe the `74e7596b` review snapshot.
+Milestone 13 verifies the combined code and repeats each requested smoke test;
+the next independent review remains assigned to fresh reviewers.
+
+| Finding | Outcome and implementation commit                                                                                                                                           | Covering tests                                                                                                                                                                                                                                                                                                            |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1       | Fixed in `8a347d80`: both readers accept an empty removed parent, while current parents still need a variant.                                                               | [`move_removed_parent_delivery.test.ts`](../../tests/move_removed_parent_delivery.test.ts); shared [`move_delivery.ts`](../../tests/helpers/move_delivery.ts) verifies review/reader/Serve/export agreement for compiled move fixtures.                                                                                   |
+| 2       | Fixed in `8a347d80`: exact generated inventories retain legal entry names without publishing private siblings.                                                              | [`export_named_entries.test.ts`](../../tests/export_named_entries.test.ts), [`export_generated_inventory.test.ts`](../../tests/export_generated_inventory.test.ts), and [`export_resource_policy.test.ts`](../../tests/export_resource_policy.test.ts).                                                                   |
+| 3       | Fixed in `8a347d80`: earlier Mokly/Mokabook headers and preview-marker adoption grant no ownership. Contracts and manual cleanup guidance are in `c2222348`.                | [`ownership_earlier_formats.test.ts`](../../tests/ownership_earlier_formats.test.ts), [`preview_earlier_ownership.test.ts`](../../tests/preview_earlier_ownership.test.ts), [`build_ownership.test.ts`](../../tests/build_ownership.test.ts), and [`export_migration.test.ts`](../../tests/export_migration.test.ts).     |
+| 4       | Fixed in `7aa89d9a`: folder counts and child rows use the same active-filter visibility rule.                                                                               | [`nav_folder_counts.test.ts`](../../packages/viewer/tests/nav_folder_counts.test.ts) and [`nav_folder_counts.spec.ts`](../../tests/browser/nav_folder_counts.spec.ts).                                                                                                                                                    |
+| 5       | Fixed in `7aa89d9a`: the home summary has an exhaustive kind map, counts documents and omits zero-count kinds.                                                              | [`home_summary.test.ts`](../../packages/viewer/tests/home_summary.test.ts), plus the Milestone 13 browser smoke at both widths.                                                                                                                                                                                           |
+| 6       | Fixed by design commit `19bd7e51` and browser coverage in `7aa89d9a`: the current-document Light only band has an indexed mobile/desktop mockup and positive Dark coverage. | [`design_light_only_document.test.ts`](../../tests/design_light_only_document.test.ts), [`design_document_styles.test.ts`](../../tests/design_document_styles.test.ts), and [`light_only_document_band.spec.ts`](../../tests/browser/light_only_document_band.spec.ts).                                                   |
+| 7       | Fixed in `c2222348`: `mokly-folders.md#titles` owns matching; other contracts and READMEs link to it.                                                                       | [`protocol_structure.test.ts`](../../tests/protocol_structure.test.ts), [`markdown_links.test.ts`](../../tests/markdown_links.test.ts), and [`guides_structure.test.ts`](../../tests/guides_structure.test.ts); existing [`row_search.test.ts`](../../packages/viewer/tests/row_search.test.ts) covers matching behavior. |
+| 8       | Fixed in `c2222348`: rendering and architecture documents describe delivered Markdown behavior and link to its contracts.                                                   | [`protocol_doc_history.test.ts`](../../tests/protocol_doc_history.test.ts), [`markdown_links.test.ts`](../../tests/markdown_links.test.ts), the guide tests, and the recorded documentation-wide status scan.                                                                                                             |
+
+The unmodified `cargo xtask check` passes on the merged implementation: 4,170
+unit tests, 814 browser tests and 261 hydration tests, with no skips or retries.
+Package checks pass all six consumer scenarios and validate 472 example files.
+Audit, formatting, lint, ratchets, Rust checks and both file-length audits pass.
+The existing reviewed Braces exception remains the only audit exception.
+
+Fresh CLI and browser smoke checks at 1280px and 390px confirm all requested
+outcomes: 14 Serve pages return HTTP 200 after the last variant moves; export
+retains the old parent as removed and includes `coverage`; an earlier header
+is refused without replacement and its file survives a later successful build;
+Shop counts 5 rows in All, 2 in Changes and 1 under each tested search; home
+shows `6 screens · 3 components · 2 documents`; and the current document shows
+`Light only` above its light pane under Dark. The smoke produces no browser
+page errors. Evidence is recorded in the plan and `.context/m13/`.
