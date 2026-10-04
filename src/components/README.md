@@ -99,7 +99,9 @@ string. Compatible v7 baselines retain their original bytes; historical
 readers discard retired ownership arrays without relaxing instance validation.
 
 Component-aware comparison shares one original page tree per used view side.
-Material strings remain unchanged, but resource discovery follows source
+Materials remain strings, with eligible unowned styles represented by the
+[fingerprint contract](../../docs/protocol/mokly-page-analysis.md#fingerprinted-materials).
+Resource discovery follows source
 provenance: caller copies can expose recorded inert-template references, never
 parser-discarded `select` tokens or newly exposed malformed-HTML siblings.
 The identical-text shortcut uses head analysis and conservative caller-copy

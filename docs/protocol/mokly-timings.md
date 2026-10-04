@@ -3,13 +3,11 @@
 ## Delivery Status
 
 Existing spans are implemented. Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
-[M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
-implements heap/document counts and complete sample outcomes;
+[M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence) implements heap/document counts and complete sample outcomes;
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
 implements segment counts; [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
 implements shared `pageAnalysis` parses; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-implements `stylePath`; M2 records the reference in the fixture README.
-M7 [measurements](../dev/shared-page-analysis-measurements.md) retain per-step work.
+implements `stylePath`; M9 adds [material-work counts](./mokly-material-work-counts.md).
 
 ## Opt-in timings
 
@@ -193,6 +191,8 @@ Component-free/live loops emit no new records; build parses do not count.
   resource steps count referenced HTML separately. `pageAnalysis` counts shared
   original view trees, never rewritten materials; the separate page path keeps
   legacy steps/caches even in component catalogues. Their sums equal the totals.
+  [Material-work counts](./mokly-material-work-counts.md) add UTF-8 consumer and
+  fingerprint input bytes; originals and material normalization remain separate.
 
 Document-work times sum exclusive local operation durations, rounded once to
 two decimals in milliseconds, with zero fields retained. Charge HTML tree

@@ -24,7 +24,7 @@ export async function assertPageMaterialEquivalence(fixture: FastPathFixture) {
       const base = await context.beforeReader.text(before.path);
       const head = await context.afterReader.text(after.path);
       const current = prepareComponentProjection(
-        context,
+        { ...context, useMaterialFingerprints: false },
         before,
         after,
         base,
@@ -32,6 +32,29 @@ export async function assertPageMaterialEquivalence(fixture: FastPathFixture) {
         root,
       );
       const old = delivered(oldContext, before, after, base, head, root);
+      const fingerprints = prepareComponentProjection(
+        context,
+        before,
+        after,
+        base,
+        head,
+        root,
+      );
+      assert.deepEqual(
+        fingerprints.references,
+        current.references,
+        `${after.path}: fingerprint seeds`,
+      );
+      assert.deepEqual(
+        fingerprints.ownedComponentIds,
+        current.ownedComponentIds,
+        `${after.path}: fingerprint owners`,
+      );
+      assert.deepEqual(
+        fingerprints.inlineEvidence,
+        current.inlineEvidence,
+        `${after.path}: fingerprint evidence`,
+      );
       assert.deepEqual(
         current.projected,
         old.projected,
@@ -89,5 +112,10 @@ export async function assertPageMaterialEquivalence(fixture: FastPathFixture) {
     publicResults(await comparePageViews(fixture)),
     publicResults(await comparePageViews(fixture, true)),
     "public comparison results equal M6",
+  );
+  assert.deepEqual(
+    await comparePageViews(fixture, false, false, true),
+    await comparePageViews(fixture, false, false, false),
+    "every complete view equals the M8 text-material oracle",
   );
 }

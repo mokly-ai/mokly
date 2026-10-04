@@ -316,9 +316,10 @@ Key code:
   produce identical records for valid builder output. Component-aware usage
   ranges are validated through the shared original analysis, including empty
   usage; optimization switches do not weaken document validation. The
-  internal `useFastPath` and `useStylePath` classification/`compareReview`
-  options exist only for differential tests and default to enabled. Disable
-  both for the complete-path oracle. The decision rule lives in the
+  internal `useFastPath`, `useStylePath` and `useMaterialFingerprints`
+  classification/`compareReview` options exist only for differential tests;
+  none is config/CLI input. Disable the first two for complete comparison and
+  the third for delivered M8 text materials. The decision rule lives in the
   [component change attribution contract](../../docs/protocol/mokly-component-review-fast-path.md).
   Identical source/path/topology shares head analysis and conservative original/
   caller-copy seeds, with no projection, inline analysis or hashing. Committed
@@ -333,7 +334,8 @@ Key code:
   composed normally. `stylePath` counts only settled views.
 - `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
   validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
-  The pair caches raw normalization and one stable projected exclusion policy.
+  The pair derives ignore pairing from validated region/material ids, lazily
+  caches raw normalization and retains one stable projected exclusion policy.
 - `page_parser.ts`, `page_source_locations.ts`, `page_subjects.ts`: the one
   default-tree parse captures adopted attribute/clone provenance from parse5's
   own tokens. Empty parser-created elements use their creating token's offset
@@ -346,6 +348,16 @@ Key code:
 - `page_projection.ts`, `page_reference_records.ts`: delivered string materials
   with auxiliary kept/copy/producer recipes, never a reparsed material tree.
   Copies expose recorded template references, not parser-discarded tokens.
+- `page_inline_material.ts`: complete-path SHA-256/base64url comments replace
+  canonical rule appendices or equal reference-free styles in place. Reserved
+  authored prefixes and existing M8 marker guards keep both sides on text;
+  parse failures stay verbatim. Producer references survive the representation
+  change, and the route keeps its canonical comparison without fingerprint work.
+- `page_fingerprint_guard.ts`, `material_normalization_recipe.ts` and
+  `fingerprint_seams.ts`: inspect delivered recipe joins, including marker/ignore
+  normalization and caller copies. Windows read at most 12 UTF-16 units on each
+  side across tiny pieces; guarded views retain text on both sides. Recipe
+  admission and rendering share `page_material_recipes.ts`.
 - `component_resource_attribution.ts`: actual-invocation declared/inferred
   resource ownership and entry evidence without invented variant entries.
 - `component_inline_resources.ts`: inferred owner-set traversal, including

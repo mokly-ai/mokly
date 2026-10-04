@@ -21,6 +21,8 @@ export interface CompareReviewOptions {
   useFastPath?: boolean;
   /** Disable the style-only route for differential tests. */
   useStylePath?: boolean;
+  /** Test-only: compare delivered text materials without fingerprinting. */
+  useMaterialFingerprints?: boolean;
 }
 
 /** Compare checked head output to its Git branch point and retain pane artifacts. */

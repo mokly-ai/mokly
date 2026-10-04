@@ -1,10 +1,13 @@
-import { documentWorkSync } from "../../diagnostics/timings.js";
-
+/** Frozen M8 text-material renderer, captured from 5e5111dc before fingerprinting. */
+import { documentWorkSync } from "../../dist/diagnostics/timings.js";
 /** Canonically render inline rules and material replacements for one source side. */
-import type { InlineAttributionResult } from "./inline_attribution.js";
-import type { AttributedInlineRule } from "./inline_rule_matching.js";
-import { cssRuleData, cssRuleIdentity } from "./rule_identity.js";
-import type { CssRule } from "./types.js";
+import type { InlineAttributionResult } from "../../dist/review/css/inline_attribution.js";
+import type { AttributedInlineRule } from "../../dist/review/css/inline_rule_matching.js";
+import {
+  cssRuleData,
+  cssRuleIdentity,
+} from "../../dist/review/css/rule_identity.js";
+import type { CssRule } from "../../dist/review/css/types.js";
 
 /** One original-coordinate edit consumed by the comparison replacement pass. */
 export interface InlineMaterialReplacement {
@@ -28,16 +31,6 @@ export function inlineMaterialReferences(
   projection: InlineMaterialProjection,
 ): readonly string[] {
   return producerReferences.get(projection) ?? [];
-}
-
-/** Change an appendix's representation without rediscovering its retained references. */
-export function withInlineAppendix(
-  projection: InlineMaterialProjection,
-  appendix: string,
-): InlineMaterialProjection {
-  const result = { ...projection, appendix };
-  producerReferences.set(result, inlineMaterialReferences(projection));
-  return result;
 }
 
 /** Actual and entry-projected material for one side of a paired view. */

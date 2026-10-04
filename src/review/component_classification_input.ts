@@ -21,4 +21,6 @@ export interface ComponentClassificationInput {
   useFastPath?: boolean;
   /** Test-only: disable the style-only route without changing validation. */
   useStylePath?: boolean;
+  /** Test-only: retain the delivered text-material oracle. */
+  useMaterialFingerprints?: boolean;
 }

@@ -2,7 +2,11 @@
 import type { GeneratedComponentView } from "@mokly/viewer/data";
 
 import type { PreparedInlineRules } from "./css/inline_preparation.js";
-import { normalizeReviewPair, type NormalizedReviewPair } from "./ignore.js";
+import {
+  normalizeReviewPair,
+  reviewIgnoreMetadata,
+  type NormalizedReviewPair,
+} from "./ignore.js";
 import { PageAnalysis } from "./page_analysis.js";
 
 export class PageAnalysisPair {
@@ -10,6 +14,7 @@ export class PageAnalysisPair {
   private base?: PageAnalysis;
   private head?: PageAnalysis;
   private normalized?: NormalizedReviewPair;
+  private paired?: readonly string[];
   private exclusion?: (path: string) => boolean;
   constructor(
     readonly before: GeneratedComponentView,
@@ -33,9 +38,24 @@ export class PageAnalysisPair {
     ));
   }
   get pairedIgnoreIds(): readonly string[] {
-    return this.baseText === this.headText
-      ? this.afterAnalysis.regions.map(({ id }) => id).sort()
-      : this.normalization.pairedIgnoreIds;
+    if (this.normalized) return this.normalized.pairedIgnoreIds;
+    if (this.paired) return this.paired;
+    if (this.baseText === this.headText)
+      return (this.paired = this.afterAnalysis.regions
+        .map(({ id }) => id)
+        .sort());
+    const before =
+      this.base ?? reviewIgnoreMetadata(this.baseText, this.after.path);
+    const after = this.afterAnalysis;
+    const headIds = new Set(after.regions.map(({ id }) => id));
+    return (this.paired = before.regions
+      .filter(
+        ({ id }) =>
+          headIds.has(id) &&
+          before.materialIds.has(id) === after.materialIds.has(id),
+      )
+      .map(({ id }) => id)
+      .sort());
   }
 
   get normalization(): NormalizedReviewPair {

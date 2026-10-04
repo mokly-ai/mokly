@@ -19,7 +19,7 @@ import { documentWorkSync } from "../diagnostics/timings.js";
 
 import { setDocumentSubjectFilter } from "./css/document_subjects.js";
 import { inlineStyleSpan, type InlineStyleSpan } from "./css/inline_styles.js";
-import { reviewIgnoreRegions, type ReviewIgnoreRegion } from "./ignore.js";
+import { reviewIgnoreMetadata, type ReviewIgnoreRegion } from "./ignore.js";
 import { parsePageDocument } from "./page_parser.js";
 import {
   deriveMaterialReferences,
@@ -30,6 +30,10 @@ import { pageSubjectFilter } from "./page_subjects.js";
 
 export class PageAnalysis {
   readonly regions: readonly ReviewIgnoreRegion[];
+  readonly materialIds: ReadonlySet<string>;
+  readonly materialSignals: readonly (SourceSpan & { id: string })[];
+  readonly componentMarkers: readonly SourceSpan[];
+  readonly headerEnd: number;
   readonly document: DefaultTreeAdapterMap["document"];
   readonly ranges: readonly RenderedRange[];
   readonly references: readonly PageReferenceRecord[];
@@ -41,7 +45,11 @@ export class PageAnalysis {
     readonly route: string,
     readonly usage?: ComponentViewRecord,
   ) {
-    this.regions = reviewIgnoreRegions(source, route);
+    const ignored = reviewIgnoreMetadata(source, route);
+    this.regions = ignored.regions;
+    this.materialIds = ignored.materialIds;
+    this.materialSignals = ignored.signals;
+    this.headerEnd = generatedSource(source) ? source.indexOf("\n") + 1 : 0;
     this.document = parsePageDocument("pageAnalysis", source);
     this.ranges = usage
       ? validateComponentRanges(source, usage.ranges, this.document)
@@ -82,17 +90,24 @@ export class PageAnalysis {
       },
     );
     this.styles = styles.sort((left, right) => left.start - right.start);
-    this.removedMarkers = [
+    const markers = [
       ...source.matchAll(
         /<!--mokly-component:(?:start|end):r-[0-9]+-->|<!--mokly-review-ignore:[\s\S]*?-->/g,
       ),
-    ].map((match) => ({
+    ];
+    this.removedMarkers = markers.map((match) => ({
       start: match.index,
       end: match.index + match[0].length,
     }));
-    if (generatedSource(source))
+    this.componentMarkers = markers
+      .filter((match) => match[0].startsWith("<!--mokly-component:"))
+      .map((match) => ({
+        start: match.index,
+        end: match.index + match[0].length,
+      }));
+    if (this.headerEnd)
       this.removedMarkers = [
-        { start: 0, end: source.indexOf("\n") + 1 },
+        { start: 0, end: this.headerEnd },
         ...this.removedMarkers,
       ];
   }

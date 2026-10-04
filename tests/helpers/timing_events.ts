@@ -162,10 +162,26 @@ function assertDocumentWorkCounts(
     "inlineRuleMs",
     "hashMs",
   ];
+  const materialFields = [
+    "materialBytes",
+    "materialNormalizationBytes",
+    "sourceNormalizationBytes",
+    "materialHashBytes",
+    "inlineFingerprintBytes",
+    "inlineFingerprintHashes",
+    "fingerprintedViews",
+    "fingerprintSeams",
+    "fingerprintSeamUnits",
+  ];
   for (const field of fields) assert.ok(Object.hasOwn(counts, field), field);
+  for (const field of materialFields) {
+    assert.ok(Object.hasOwn(counts, field), field);
+    assert.ok(Number.isSafeInteger(counts[field]), field);
+  }
+  assert.ok(counts.fingerprintSeamUnits! <= 24 * counts.fingerprintSeams!);
   for (const [name, value] of Object.entries(counts)) {
     assert.ok(Number.isFinite(value) && value >= 0, name);
-    if (!fields.includes(name))
+    if (!fields.includes(name) && !materialFields.includes(name))
       assert.ok(/^htmlParse(?:s|Bytes)(?:\.[A-Za-z]+)?$/.test(name), name);
   }
   for (const field of ["htmlParses", "htmlParseBytes"]) {

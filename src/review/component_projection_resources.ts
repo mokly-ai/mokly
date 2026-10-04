@@ -18,12 +18,9 @@ import {
   attributeInlineRules,
   type InlineAttributionResult,
 } from "./css/inline_attribution.js";
-import {
-  inlineMaterialReplacements,
-  type InlineMaterialReplacements,
-} from "./css/inline_rendering.js";
 import { sameInlineOuterSources } from "./css/inline_styles.js";
 import { normalizeReviewPair } from "./ignore.js";
+import { pageInlineMaterials } from "./page_inline_material.js";
 import { PageAnalysisPair } from "./page_pair.js";
 import {
   projectAnalyzedPair,
@@ -79,9 +76,10 @@ export function prepareComponentProjection(
     : after.usage
       ? validateComponentRanges(head, after.usage.ranges)
       : undefined;
-  const matching =
-    pages?.normalization ?? normalizeReviewPair(base, head, after.path);
-  const paired = pages?.pairedIgnoreIds ?? matching.pairedIgnoreIds;
+  const matching = pages
+    ? undefined
+    : normalizeReviewPair(base, head, after.path);
+  const paired = pages?.pairedIgnoreIds ?? matching!.pairedIgnoreIds;
   const analysis =
     options.analyzeInline !== false &&
     before.usage &&
@@ -115,27 +113,33 @@ export function prepareComponentProjection(
             before: {
               document:
                 pages?.beforeAnalysis.matching(paired) ??
-                parseHtml("inlineMatching", matching.base, {
+                parseHtml("inlineMatching", matching!.base, {
                   sourceCodeLocationInfo: true,
                 }),
               ranges:
                 pages?.beforeAnalysis.ranges ??
-                validateComponentRanges(matching.base, before.usage!.ranges),
+                validateComponentRanges(matching!.base, before.usage!.ranges),
             },
             after: {
               document:
                 pages?.afterAnalysis.matching(paired) ??
-                parseHtml("inlineMatching", matching.head, {
+                parseHtml("inlineMatching", matching!.head, {
                   sourceCodeLocationInfo: true,
                 }),
               ranges:
                 pages?.afterAnalysis.ranges ??
-                validateComponentRanges(matching.head, after.usage!.ranges),
+                validateComponentRanges(matching!.head, after.usage!.ranges),
             },
           }),
         })
       : undefined;
-  const inline = inlineMaterials(analysis);
+  const inline = pageInlineMaterials(
+    analysis,
+    base,
+    head,
+    Boolean(pages) && context.useMaterialFingerprints !== false,
+    pages,
+  );
   const analyzedProjection = pages
     ? projectAnalyzedPair(pages, inline)
     : undefined;
@@ -157,8 +161,8 @@ export function prepareComponentProjection(
     ...(headRanges ? { headRanges } : {}),
     projected,
     matching: {
-      before: pages?.beforeAnalysis.matching(paired) ?? matching.base,
-      after: pages?.afterAnalysis.matching(paired) ?? matching.head,
+      before: pages?.beforeAnalysis.matching(paired) ?? matching!.base,
+      after: pages?.afterAnalysis.matching(paired) ?? matching!.head,
     },
     ...(analyzedProjection
       ? { references: analyzedProjection.references }
@@ -173,22 +177,6 @@ export function prepareComponentProjection(
       ) ??
       projectedResourceExclusion(context, projected.pairedComponentIds, root),
   };
-}
-
-function inlineMaterials(analysis: InlineAttributionResult | undefined): {
-  before: InlineMaterialReplacements;
-  after: InlineMaterialReplacements;
-} {
-  const empty = {
-    actual: { replacements: [], appendix: "" },
-    projected: { replacements: [], appendix: "" },
-  } as const;
-  return analysis
-    ? {
-        before: inlineMaterialReplacements(analysis, "before"),
-        after: inlineMaterialReplacements(analysis, "after"),
-      }
-    : { before: empty, after: empty };
 }
 
 export function prepareInlineEvidence(

@@ -49,6 +49,8 @@ export interface ComponentViewContext {
   compareResourceBytes?: boolean;
   useFastPath?: boolean;
   useStylePath?: boolean;
+  /** Test-only: retain delivered text materials instead of fingerprints. */
+  useMaterialFingerprints?: boolean;
 }
 
 /** Compare material and declared inputs without altering the retained view documents. */

@@ -1,7 +1,11 @@
 /** Cache closure identities without retaining either page trees or material text. */
 import { createHash } from "node:crypto";
 
-import { documentWorkSync, timeAsync } from "../diagnostics/timings.js";
+import {
+  documentWorkSync,
+  timeAsync,
+  timingDocumentWork,
+} from "../diagnostics/timings.js";
 
 import { referenceRoutes, referencedRoutes } from "./asset_references.js";
 
@@ -88,9 +92,10 @@ export class ViewResourceCache {
       references === undefined ? undefined : referenceRoutes(route, references);
     const identity =
       seeds === undefined
-        ? documentWorkSync("hashMs", () =>
-            createHash("sha256").update(html).digest("base64url"),
-          )
+        ? documentWorkSync("hashMs", () => {
+            timingDocumentWork()?.materialHash(html);
+            return createHash("sha256").update(html).digest("base64url");
+          })
         : JSON.stringify(seeds);
     let cached = documents.get(identity);
     if (!cached) {

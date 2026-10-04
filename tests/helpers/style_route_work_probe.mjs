@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import { syncBuiltinESMExports } from "node:module";
 import { mock } from "node:test";
 
 const input = JSON.parse(await fs.readFile(process.argv[2], "utf8"));
@@ -68,6 +70,10 @@ const { compareComponentView } =
 const context = { ...pageContext(input), useFastPath: false };
 context.resources.compare = () =>
   assert.fail("style route compared full materials/resources");
+mock.method(crypto, "createHash", () =>
+  assert.fail("style route must not compute a fingerprint or material hash"),
+);
+syncBuiltinESMExports();
 const result = await compareComponentView(context, before, after);
 assert.equal(result.comparisonPath, "style");
 assert.equal(parses, 1);

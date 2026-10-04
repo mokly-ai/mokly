@@ -50,12 +50,22 @@ export class DocumentWork {
   private readonly counts: Record<string, number> = {
     htmlParses: 0,
     htmlParseBytes: 0,
+    materialBytes: 0,
+    materialNormalizationBytes: 0,
+    sourceNormalizationBytes: 0,
+    materialHashBytes: 0,
+    inlineFingerprintBytes: 0,
+    inlineFingerprintHashes: 0,
+    fingerprintedViews: 0,
+    fingerprintSeams: 0,
+    fingerprintSeamUnits: 0,
     ...Object.fromEntries(fields.map((field) => [field, 0])),
   };
   private readonly stack: { nested: number }[] = [];
   private heapPeak = 0;
   private readonly paths = new ComponentComparisonCounts();
   private resourceReference = false;
+  private materialScope = false;
 
   constructor(
     private readonly clock: () => number,
@@ -102,6 +112,46 @@ export class DocumentWork {
     } finally {
       this.resourceReference = previous;
     }
+  }
+
+  material<T>(operation: () => T): T {
+    const previous = this.materialScope;
+    this.materialScope = true;
+    try {
+      return operation();
+    } finally {
+      this.materialScope = previous;
+    }
+  }
+
+  materials(sources: readonly string[]): void {
+    for (const source of sources)
+      this.counts.materialBytes! += Buffer.byteLength(source, "utf8");
+  }
+
+  normalization(source: string): void {
+    const field = this.materialScope
+      ? "materialNormalizationBytes"
+      : "sourceNormalizationBytes";
+    this.counts[field]! += Buffer.byteLength(source, "utf8");
+  }
+
+  materialHash(source: string): void {
+    this.counts.materialHashBytes! += Buffer.byteLength(source, "utf8");
+  }
+
+  inlineFingerprint(source: string): void {
+    this.counts.inlineFingerprintBytes! += Buffer.byteLength(source, "utf8");
+    this.counts.inlineFingerprintHashes!++;
+  }
+
+  fingerprintedView(): void {
+    this.counts.fingerprintedViews!++;
+  }
+
+  fingerprintSeam(units: number): void {
+    this.counts.fingerprintSeams!++;
+    this.counts.fingerprintSeamUnits! += units;
   }
 
   comparedView(path: "fast" | "style" | "complete"): void {

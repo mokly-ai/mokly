@@ -1,5 +1,8 @@
 import { generatedSource } from "../build/ownership.js";
-import { documentWorkSync } from "../diagnostics/timings.js";
+import {
+  documentWorkSync,
+  timingDocumentWork,
+} from "../diagnostics/timings.js";
 
 const ID = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const KEY = "[a-f0-9]{64}";
@@ -46,6 +49,8 @@ export function normalizeReviewPair(
   route: string,
 ): NormalizedReviewPair {
   return documentWorkSync("normalizationMs", () => {
+    timingDocumentWork()?.normalization(baseHtml);
+    timingDocumentWork()?.normalization(headHtml);
     const base = parseDocument(baseHtml, route);
     const head = parseDocument(headHtml, route);
     const paired = new Set(
@@ -90,6 +95,7 @@ export function normalizeReviewPair(
 /** Validate and strip markers while retaining real child content. */
 export function normalizeSingleDocument(html: string, route: string): string {
   return documentWorkSync("normalizationMs", () => {
+    timingDocumentWork()?.normalization(html);
     return render(parseDocument(html, route), new Set());
   });
 }
@@ -167,11 +173,37 @@ export interface ReviewIgnoreRegion {
   end: number;
 }
 
+export interface ReviewIgnoreMetadata {
+  regions: readonly ReviewIgnoreRegion[];
+  materialIds: ReadonlySet<string>;
+  signals: readonly { id: string; start: number; end: number }[];
+}
+
+/** Validate original flat regions/signals without constructing normalized materials. */
+export function reviewIgnoreMetadata(
+  source: string,
+  route: string,
+): ReviewIgnoreMetadata {
+  const parsed = parseDocument(source, route);
+  const offset = generatedSource(source) ? source.indexOf("\n") + 1 : 0;
+  return {
+    regions: [...parsed.regions.values()],
+    materialIds: new Set(parsed.materials.keys()),
+    signals: parsed.materials.size
+      ? [...source.slice(offset).matchAll(MATERIAL_SCAN)].map((match) => ({
+          id: match[0].match(MATERIAL)![1]!,
+          start: offset + match.index,
+          end: offset + match.index + match[0].length,
+        }))
+      : [],
+  };
+}
+
 export function reviewIgnoreRegions(
   source: string,
   route: string,
 ): readonly ReviewIgnoreRegion[] {
-  return [...parseDocument(source, route).regions.values()];
+  return reviewIgnoreMetadata(source, route).regions;
 }
 
 /** Source spans of material signals, after the caller validates the marker syntax. */

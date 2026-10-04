@@ -2,13 +2,9 @@
 
 ## Delivery Status
 
-[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-implements analysis, derived references, original matching and the quick check;
-[M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
-delivers fingerprints. [Timings](./mokly-timings.md#component-analysis-counts)
-owns parse counters; [M7 measurements](../dev/shared-page-analysis-measurements.md)
-record delivered work. Provenance, ignore-subject and material clarifications
-close documentation gaps without changing their policies.
+[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis) implements
+original analysis, derived references, matching and quick checks;
+[M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials) implements fingerprints. [Timings](./mokly-timings.md#component-analysis-counts) owns work counters.
 
 ## Scope And Lifetime
 
@@ -71,9 +67,10 @@ sorted differing paired ids. View state and emitted `ignoredIds` follow the
 canonicalization can remove a region, which then contributes no emitted id.
 This does not give original ignore evidence precedence over actual materials.
 Selection uses the original spans/paired ids, never offsets in inserted tokens.
-Cache the original pair's normalization once for retained/matching material
-and paired ids. Boundary enclosure uses flat regions exclusively, even when
-one marker is a DOM comment and the other is inside raw text.
+Derive paired ids from validated regions and material-signal ids, without
+rendering normalized source. Cache original pair normalization lazily when the
+quick proof requests it. Boundary enclosure uses flat regions exclusively,
+even when one marker is a DOM comment and the other is inside raw text.
 
 These are flat source spans, not DOM comment-node spans. Markers inside raw
 text, including `<textarea>`, still delimit regions. The M7 expected case
@@ -206,13 +203,21 @@ missing files fail proof without replacing complete required-read diagnostics.
 
 ## Fingerprinted Materials
 
-Materials remain plain strings; equality is string equality and hashing uses
-the existing string input. Insert fingerprints only when **neither side's
-original text contains the reserved substring `mokly-inline-`**. If either
-contains it, use delivered text materials for that entire paired view on both
-sides, actual and projected: append the canonical `<style>` text after
-successful analysis, or retain unchanged style elements when analysis is
-skipped. No fingerprint is inserted in copies or either material on that view.
+Materials remain strings, compared and hashed as strings. Keep delivered text
+materials on **both sides, actual and projected**, if either original contains
+`mokly-inline-`, or any delivered material recipe could create it across a seam.
+A seam joins pieces not adjacent in the original: component/ignore boundary and
+material-signal removal, eligible-style removal, caller copies, placeholders,
+contract tokens and wrappers all participate. Check the last 12 UTF-16 code
+units before each seam and first 12 after it, walking across tiny pieces and
+inserted text; match `mokly-inline-` exactly. Work is proportional to seams,
+never sheet size. No sheet-sized string is built for this check. Include pair
+normalization and the actual materials' single-document state normalization.
+Unprovable derived marker structure retains delivered text validation/errors.
+The whole-view fallback appends canonical `<style>` text after successful
+analysis or retains unchanged elements when skipped; no fingerprints enter copies.
+Existing M8 style-source guards and `<!--mokly-` in composed canonical appendices
+also keep text materials: canonical marker text must reach normalization unchanged.
 
 Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
 
@@ -231,20 +236,15 @@ Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
   fingerprint. Ownership projection/ignore normalization otherwise retain
   their existing ordering and semantics; copied spans carry the same edits.
 
-Both comment forms pass unchanged through ignore normalization and component
-marker stripping: neither marker pattern matches them. The reserved-prefix
-guard ensures an authored lookalike cannot equal an inserted fingerprint;
-there is no token sequence, tagged material representation or consumer API change.
-Apart from the ordinary SHA-256 collision assumption, equal canonical inputs
-give equal rule comments, and unequal ones differ: replacing the old common
-appendix wrapper preserves material equality. In-place comments likewise keep
-each element's source identity **and position**, so moving an identical style
-past retained markup remains a material change. Do not append a single digest
-when analysis is skipped.
-Differential tests compare state, material flags, reasons, resources, owners and
-evidence against text-material oracles, not the deliberately changed bytes on
-fingerprinted views. Require string-material compatibility through normalization
-and hashing, unchanged stored references, and a moved identical style element.
-Test the reserved substring on only base, only head and both sides, including
-authored lookalikes and movement past one; those cases require verbatim material
-byte equality to the text oracle and no inserted fingerprints on either side.
+Both comment forms survive ignore normalization and component-marker stripping.
+The original/seam guard prevents authored lookalikes from equalling inserted
+fingerprints even after rewrites join kept pieces. There is no tagged material
+or consumer API change. Under the ordinary SHA-256 collision assumption, equal
+canonical inputs give equal comments and unequal ones differ; replacing the
+common style wrapper preserves equality. In-place comments retain source identity
+and position: moving an identical style past retained markup remains material.
+Differentials compare state, material flags, reasons, resources, owners, evidence
+and errors against text materials, excluding only intentional fingerprint bytes.
+Prove string normalization/hashing, stored references, moved styles and bounded
+seam work. Base-only, head-only and both-side guards, authored lookalikes and
+all removal/copy/insert seam variants require exact text-oracle material bytes.

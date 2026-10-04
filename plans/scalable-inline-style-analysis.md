@@ -1375,30 +1375,126 @@ and in checkpoint reports, outside the normative rule.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
       Push follows the supervisor's approval of `f28a6251` and the documented
       audit-blocker rule. Formal M8 review and later milestones remain pending.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+### Milestone 8 review findings
+
+Reported by the post-push review of commits `b76a2a90`, `563de1e5`,
+`38515667`, `f28a6251` and `5e5111dc`. Recorded for the user's decision.
+
+1. Medium. The quick checks' reserved-marker regex
+   `/<(?:[\t\n\f\r !-]|\/\*[\s\S]*?\*\/)*mokly-/i`
+   (`src/review/style_source_safety.ts:28-29`, prescribed verbatim in
+   `mokly-component-review-fast-path.md:113-115`) backtracks exponentially:
+   its comment branch can end at any later `*/`, so every split of a comment
+   run is tried. A sheet with a `<` (such as the legacy `<!--` wrapper)
+   followed later by a run of consecutive comments doubles the time per extra
+   comment: 33 ms at 20 comments, 435 ms at 24, an extrapolated 30 s per view
+   at 30 and hours at 40, on every identical view (and both sides of
+   ignore-only views), with no timeout; repeated unterminated `</*` is
+   quadratic, and escape decoding is repeated for every view sharing a sheet.
+   Recommended: match each comment exactly one way
+   (`\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\/`) or use a linear scanner, with a
+   time-bounded regression test and the contract updated; cache the guard
+   result by style text; and add a regex-safety lint (for example
+   `eslint-plugin-regexp`'s `no-super-linear-backtracking`) across `src/`.
+2. Low. A reserved marker that appears only after the full comparison removes
+   an eligible style element is invisible to the style route and both quick
+   checks: HTML treats `<<style>` as a literal `<` followed by a style
+   element, so `<` + `<style>…</style>` + `!--mokly-review-material:<id>:<64 hex>-->`
+   is valid input that becomes a real marker once the element is removed. In
+   both modes the route returns `style`/`changed` and the quick checks return
+   `fast`/`unchanged` or `ignored-only` where the full comparison throws
+   "material signal for clock has no region". It needs a raw `<` immediately
+   before `<style>`, which React produces only through raw HTML injection.
+   Recommended: one shared join guard (check the 9 code units before and after
+   each run of adjacent eligible styles for `<!--mokly-`) used by the route
+   and both quick checks in both modes and under all four switch settings,
+   both contracts amended, and the join rule stated in Milestone 9's
+   reserved-prefix guard.
+3. Low. In committed mode the route and the identical-text quick check still
+   throw a missing-file error the full comparison never raises: raw seeds
+   include `url()` inside selector arguments, which stored rule references skip,
+   and the head side of the proof still uses required reads (only the base side
+   became optional in Milestone 8). With `.x::foo(url(../missing.svg)){…}` and the
+   file absent, the route throws while the full comparison returns `changed`
+   (identical-text check: throws versus `unchanged`). Recommended: traverse the
+   head proof closure with optional reads too and fall back on any absence, and
+   adopt one shared rule and test that an optimization never raises a read
+   error (any read failure is a failed proof).
+4. Low. The measurement report's figures all match the raw evidence, but its
+   own table shows unattributed time ("Rest") on routed cumulative views rising
+   from 32.16 to 45.20 s cold and from 29.43 to 49.03 s warm while no-change
+   Rest moves about 1 s, and the text attributes the remaining cost only to
+   inline-rule work. A probe on real cumulative pages finds 2.7–3.0 ms per view
+   of untimed route work on about 159 KB pages (walking every head rule's stored
+   references through a generator about 1.3 ms, the prefix/suffix window scan
+   about 0.56 ms, flattening and scanning the composed rule blocks about
+   0.5–0.7 ms), roughly 10 s of the growth. Recommended: a report addendum and a
+   Milestone 9A TODO; a document-work timer for the route's own steps, cached
+   per-run reference lists or an equivalent cheaper proof, a native chunked
+   window comparison and a work-bound test; and a reporting rule that any Rest
+   change beyond same-code spread must be explained.
+
 ## Milestone 9: Fingerprinted Comparison Materials
 
 Summary: keep page style text out of comparison materials so the full
-comparison's text work no longer grows with the style sheet.
+comparison's text work no longer grows with the style sheet. See the
+[checkpoint report](../docs/dev/fingerprinted-materials-checkpoint.md).
 
-- [ ] Replace the appended canonical rule text with the rule fingerprint, and
+- [x] Discovered: resolve the [normalization-created fingerprint prefix gap](../docs/dev/fingerprinted-materials-guard-gap.md)
+      with the supervisor-approved bounded seam guard over delivered material
+      recipes. Preserve exact text on either-side original or joined prefixes,
+      including normalization, copies and inserts. The eight all-switch/mode
+      regressions now retain changed/material. Option B was rejected because
+      it does not protect rule fingerprints. M8 review findings stay unmodified.
+- [x] Discovered: fix expanded catalogue replay supplementary reads in the
+      test harness alone. Before/after coverage stays 7,844 fingerprinted views
+      across 382 catalogues and 764 mode pairs; the RNW cases retain 64/64.
+- [x] Discovered: preserve the delivered M8 text renderer and an internal
+      test-only material switch before changing construction. Compare complete
+      results/errors and retained references against that oracle in both modes.
+- [x] Discovered: keep every M8 marker fallback on delivered text materials;
+      prove literal, escaped and separator-joined cases, and that the style route
+      performs no fingerprint work. Preserve full validation and error identity.
+- [x] Discovered: prove bounded constructed material, material-normalization
+      and downstream hash inputs as cumulative sheets grow; record fingerprint
+      input work separately from the material consumers it replaces.
+
+- [x] Replace the appended canonical rule text with the rule fingerprint, and
       style elements of skipped analyses with in-place fingerprints; take the
       references of fingerprinted rules from their stored references. Apply
-      the reserved-prefix guard to both original texts and retain delivered
-      verbatim materials on guarded views; materials and consumers stay strings.
-- [ ] Add a differential test: state, `material`, reasons, resource evidence
+      the reserved-prefix guard to both originals and all rewrite seams; retain
+      verbatim text materials on guarded views; materials and consumers stay strings.
+- [x] Add a differential test: state, `material`, reasons, resource evidence
       and owned sets equal those of text materials for every inline, CSS and
       Changes test catalogue, with all movement, reserved-prefix fallback and
       string-normalization/hashing cases under the
       [fingerprint proof](../docs/protocol/mokly-page-analysis.md#fingerprinted-materials).
-- [ ] Record the no-change and component-style samples of both fixtures.
-- [ ] Update `src/review/README.md` and the contracts' Delivery Status for
-      delivered parts; run the suite and `cargo xtask check`.
+- [ ] After supervisor checkpoint approval, record all four scenarios
+      (no-changes, component-style, screen-markup, linked-stylesheet), cold/warm,
+      against M8 `5e5111dc` on the same host: default ABBA and one cumulative pair.
+      Retain every sample, path/document/material/normalization counts and heap;
+      use paired unprofiled uncapped runs for any incomplete cells per the brief.
+- [x] Update relevant READMEs and the contracts' Delivery Status for delivered
+      fingerprints, preserve the 250-line protocol caps, and record the approved
+      gap fix and M8 review findings.
+- [x] Discovered: extend the CLI timing envelope assertion with the nine new
+      integer counters and the bounded-seam invariant. The initial full run
+      caught its obsolete field allowlist in three tests; retain unknown-field
+      rejection and verify timing does not change exported bytes.
+- [x] Discovered: finish focused tests and mutation checks, package, full unit,
+      pinned-Chromium browser/hydration and non-audit static checks. Commit the
+      code checkpoint without pushing; report and stop before measurements. The
+      [checkpoint report](../docs/dev/fingerprinted-materials-checkpoint.md) records
+      1,540 focused, 4,631 unit, 725 browser and 219 hydration passes, all 13
+      caught mutations, the final 117-test rerun and passing static checks.
+- [ ] After approved measurements, run `cargo xtask check` with pinned Chromium
+      under the brief's audit-blocker rule.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

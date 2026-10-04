@@ -108,6 +108,9 @@ export async function classifyComponentsWithSources(
     ...(input.useStylePath === undefined
       ? {}
       : { useStylePath: input.useStylePath }),
+    ...(input.useMaterialFingerprints === undefined
+      ? {}
+      : { useMaterialFingerprints: input.useMaterialFingerprints }),
   };
   await prefetchClassificationViews(
     context,

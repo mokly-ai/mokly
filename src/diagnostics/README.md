@@ -41,6 +41,14 @@ their element/segment counts reuse preparation instead of repeating parsing.
 Usage-topology/signal checks still contribute `implementationMs` on shortcut
 paths; that field alone does not imply a markup implementation comparison.
 
+[Material counters](../../docs/protocol/mokly-material-work-counts.md) distinguish
+constructed string bytes and their normalization/hash inputs from original-source
+normalization and fingerprint SHA-256 input bytes. Complete-path work-bound tests
+grow cumulative sheets while checking bounded consumers; the route contributes
+zero material/fingerprint work. Material scope restores even when validation fails.
+Fingerprint view totals track admission, while seam totals/UTF-16 units prove the
+bounded window scan independently of sheet length and digest input bytes.
+
 Run `npm run build`, then:
 
 ```bash

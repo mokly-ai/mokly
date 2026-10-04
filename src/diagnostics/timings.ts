@@ -159,6 +159,11 @@ export function documentResourceReferences<T>(operation: () => T): T {
   return work ? work.resourceReferences(operation) : operation();
 }
 
+export function documentMaterialWork<T>(operation: () => T): T {
+  const work = timingDocumentWork();
+  return work ? work.material(operation) : operation();
+}
+
 export async function runWithDocumentWork<T>(
   operation: () => Promise<T>,
 ): Promise<T> {

@@ -6,7 +6,10 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { generateLargeFixture } from "../fixtures/large/generate.js";
 
-export async function styleRouteLargeFixture(context: TestContext) {
+export async function styleRouteLargeFixture(
+  context: TestContext,
+  inlineStyles = true,
+) {
   const root = await fs.mkdtemp(path.resolve(".context/m8-rnw-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));
   await generateLargeFixture(root, {
@@ -14,7 +17,7 @@ export async function styleRouteLargeFixture(context: TestContext) {
     screens: 2,
     rows: 1,
     stylesheets: 1,
-    inlineStyles: true,
+    inlineStyles,
   });
   const config = await loadConfig(root);
   const before = await compileCatalogue(config);

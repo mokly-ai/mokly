@@ -27,7 +27,7 @@ implements cancellation, matched-copy pairing and stored-text composition;
 implements original-page analysis/matching and removes fast-path inline work;
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
 implements the equivalent route; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
-delivers fingerprinted material. Only M9 rules below remain pending.
+implements fingerprinted material. These analysis/material rules are delivered.
 
 ## Purpose
 

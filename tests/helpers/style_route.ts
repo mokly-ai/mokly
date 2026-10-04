@@ -80,7 +80,11 @@ export async function assertStyleRoute(
   viewPath?: string,
 ) {
   const { before, after, root } = selectedStyleViews(fixture, id, viewPath);
-  const compare = async (useStylePath: boolean, useFastPath: boolean) => {
+  const compare = async (
+    useStylePath: boolean,
+    useFastPath: boolean,
+    useMaterialFingerprints = true,
+  ) => {
     const events: TimingEvent[] = [];
     const comparison = await runWithTimings(
       true,
@@ -88,7 +92,12 @@ export async function assertStyleRoute(
       () =>
         runWithDocumentWork(async () => {
           const result = await compareComponentView(
-            { ...pageContext(fixture), useStylePath, useFastPath },
+            {
+              ...pageContext(fixture),
+              useStylePath,
+              useFastPath,
+              useMaterialFingerprints,
+            },
             before,
             after,
             root,
@@ -101,6 +110,15 @@ export async function assertStyleRoute(
     return { comparison, events };
   };
   const enabled = await compare(true, useFastPath);
+  const text = await compare(false, false, false);
+  const { comparisonPath: _textPath, ...textResult } = text.comparison;
+  const { comparisonPath: _enabledMaterialPath, ...fingerprintResult } =
+    enabled.comparison;
+  assert.deepEqual(
+    fingerprintResult,
+    textResult,
+    "delivered M8 text-material oracle",
+  );
   assert.equal(enabled.comparison.comparisonPath, expected, after.path);
   for (const oracleFast of [useFastPath, false]) {
     const oracle = await compare(false, oracleFast);

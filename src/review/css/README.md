@@ -106,8 +106,11 @@ the original view/resource trees: `document_subjects.ts` suppresses final ignore
 subjects only, leaving combinators and structural predicates unchanged. Eligible
 style spans use the flat validated ignore regions and original UTF-16 offsets;
 no normalized page is parsed for matching. Component-free and separate page
-classification retain their delivered normalized-tree behavior. Fingerprints
-remain later-milestone work.
+classification retain their delivered normalized-tree behavior. Complete-path
+fingerprints replace canonical text or skipped style occurrences; stored rule
+references remain attached to the material recipe. The route still compares
+canonical text. Captured M8 rendering and the disabled fingerprint switch retain
+the text-material oracle for full result/error and resource differentials.
 
 See [parse reuse](../../../docs/protocol/mokly-css-parse-reuse.md),
 [inline ownership](../../../docs/protocol/mokly-inline-styles.md),

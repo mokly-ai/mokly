@@ -1,7 +1,10 @@
 import type { ComponentInputOwner, ComponentViewRecord } from "@mokly/viewer";
 import { canonicalJson } from "@mokly/viewer/data";
 
-import { documentWorkSync } from "../diagnostics/timings.js";
+import {
+  documentWorkSync,
+  timingDocumentWork,
+} from "../diagnostics/timings.js";
 import type { InlineMaterialProjection } from "../review/css/inline_rendering.js";
 
 import { instanceInputs, instanceStructure } from "./instance_structure.js";
@@ -10,6 +13,7 @@ import { validateComponentRanges, type RenderedRange } from "./ranges.js";
 /** Strip current component boundary comments without validating ownership ranges. */
 export function stripComponentMarkers(html: string): string {
   return documentWorkSync("normalizationMs", () => {
+    timingDocumentWork()?.normalization(html);
     return html.replace(/<!--mokly-component:(?:start|end):r-[0-9]+-->/g, "");
   });
 }
