@@ -9,6 +9,8 @@ import {
 } from "@mokly/viewer/runtime";
 
 const FALLBACK_DETAIL = "No additional details are available.";
+const ESC_STRING_MARKERS = new Set([0x50, 0x58, 0x5d, 0x5e, 0x5f]);
+const C1_STRING_INTRODUCERS = new Set([0x90, 0x98, 0x9d, 0x9e, 0x9f]);
 
 /** Convert one caught value into bounded, repository-safe plain text. */
 export function sanitizeRebuildFailure(
@@ -35,7 +37,7 @@ function stripEscapeSequences(value: string): string {
   let result = "";
   for (let index = 0; index < value.length;) {
     const code = value.charCodeAt(index);
-    if (code === 0x1b || code === 0x9b || code === 0x9d) {
+    if (code === 0x1b || code === 0x9b || C1_STRING_INTRODUCERS.has(code)) {
       const consumed = escapeSequenceLength(value, index, code);
       if (consumed > 0) {
         index += consumed;
@@ -55,9 +57,7 @@ function escapeSequenceLength(
 ): number {
   const marker = code === 0x1b ? value.charCodeAt(start + 1) : code;
   const offset = code === 0x1b ? 2 : 1;
-  if (marker === 0x5d || marker === 0x9d)
-    return stringEscapeLength(value, start, offset);
-  if (marker === 0x50 || marker === 0x58 || marker === 0x5e || marker === 0x5f)
+  if (ESC_STRING_MARKERS.has(marker) || C1_STRING_INTRODUCERS.has(marker))
     return stringEscapeLength(value, start, offset);
   if (marker === 0x5b || marker === 0x9b) {
     for (let index = start + offset; index < value.length; index++) {
@@ -84,11 +84,11 @@ function stringEscapeLength(
 ): number {
   for (let index = start + offset; index < value.length; index++) {
     const current = value.charCodeAt(index);
-    if (current === 0x07) return index - start + 1;
+    if (current === 0x07 || current === 0x9c) return index - start + 1;
     if (current === 0x1b && value.charCodeAt(index + 1) === 0x5c)
       return index - start + 2;
   }
-  return 0;
+  return value.length - start;
 }
 
 function normalizeText(value: string): string {

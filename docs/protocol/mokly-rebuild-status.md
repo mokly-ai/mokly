@@ -110,7 +110,14 @@ terminal snapshot retains `updating: true`.
 The raw input is the caught value's message (`Error.message`, otherwise its
 string coercion), never a stack. The parent applies these steps in order:
 
-1. Strip complete ANSI/ECMA-48 escape sequences, including CSI and OSC links.
+1. Strip complete ANSI/ECMA-48 escape sequences, including CSI. Recognize
+   seven-bit `ESC ]`, `ESC P`, `ESC X`, `ESC ^`, `ESC _` and eight-bit
+   U+009D, U+0090, U+0098, U+009E, U+009F as OSC, DCS, SOS, PM and APC
+   string introducers, respectively. Remove each string with its payload
+   through the first BEL, seven-bit `ESC \`, or eight-bit String Terminator
+   U+009C, including that terminator. For an unterminated string, remove the
+   introducer and every remaining character through the end of the message.
+   OSC hyperlinks keep only the visible text outside those strings.
 2. Normalize CRLF and CR to LF, replace each tab with two spaces, replace
    unpaired UTF-16 surrogates with U+FFFD, and remove every remaining C0/C1
    control plus DEL except LF.
@@ -187,7 +194,10 @@ Verification covers the complete action matrix, debounce/queue coalescing,
 continuous queued progress, retry-while-failed behavior, sanitizing and both
 bounds, strict envelopes, staged clears, child restart retention,
 descriptor/event validation, replay and stale ordering, and absence from every
-excluded boundary. Browser coverage uses real watched Serve for first paint,
+excluded boundary. Terminal-string tests combine every seven-bit and eight-bit
+OSC, DCS, SOS, PM and APC introducer with BEL and both String Terminators,
+including unterminated strings and file hyperlinks.
+Browser coverage uses real watched Serve for first paint,
 multiple tabs, reconnection, once-per-id announcements, the 1,000 ms threshold,
 Static/Live, and every route at both widths. Smoke coverage exercises source,
 configuration, and resource failure and recovery.

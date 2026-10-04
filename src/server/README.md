@@ -206,7 +206,10 @@ failures remain terminal-only. Adoption clears an existing failure before a
 live update, restart/recovery, or previous-watcher close can fail, including the
 rebuild path that discovers new watch targets and reconfigures. Failure detail
 is normalized, stripped of terminal escapes, made repository-relative and
-bounded before publication. The supervisor retains each complete snapshot
+bounded before publication. The scanner removes seven-bit and eight-bit
+OSC, DCS, SOS, PM and APC strings with their payload, including U+009C
+terminators. An unterminated string discards the rest of the message.
+The supervisor retains each complete snapshot
 independently of its child and sends the exact validated `rebuild-status`
 envelope during every startup transfer.
 `rebuild_status_state.ts` stages future-fenced snapshots in the child until the

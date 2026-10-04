@@ -413,15 +413,15 @@ U+0098, U+009E and U+009F). It then removes the control characters but keeps
 their payload, so an eight-bit terminal hyperlink can leak its text and an
 absolute `file://` path into the browser's failure detail.
 
-- [ ] Update the Sanitized Failure Detail section of
+- [x] Update the Sanitized Failure Detail section of
       `docs/protocol/mokly-rebuild-status.md`: seven-bit and eight-bit OSC,
       DCS, SOS, PM and APC strings end at their terminators, including
       U+009C, and are removed with their payload. Define how an unterminated
       string is handled; it must not leave its payload in the detail.
-- [ ] Add failing table-driven tests first for every seven-bit and eight-bit
+- [x] Add failing table-driven tests first for every seven-bit and eight-bit
       introducer and terminator, including the reviewer's eight-bit OSC
       hyperlink with a `file://` path; then fix the existing scanner.
-- [ ] Run `cargo xtask check`; commit and push.
+- [x] Run `cargo xtask check`; commit and push.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
       impact and lettered options, without changing the implementation.
