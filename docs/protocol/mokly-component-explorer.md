@@ -87,13 +87,13 @@ link to the parent resolves to its first variant entry's viewport/theme view; a
 link to a variant entry resolves to that entry's own view. Variant bar and Used
 by links are shell-owned `/view/<path>/` URLs; do not overload the existing
 logical fragment grammar with component prop JSON or variant suffixes.
-Affected-consumer links carry explicit comparison eligibility. A removed screen
+Affected-consumer destinations use the [branch-point lookup](./mokly-branch-point-lookup.md#reference-sides)
+and carry explicit comparison eligibility. A removed screen
 link opens its Removed state, showing its
 [previous version](./mokly-removed-previews.md) without a
 comparison query; an
 eligible removed component variant may request its retained baseline comparison.
-The destination validates the selected view again before activating any
-comparison query.
+The destination validates its view before activating a comparison query.
 
 The shared inspector has Details, Props/Controls, and Usage icons. Composed
 components also have Nested components, listing their rendered registered

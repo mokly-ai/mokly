@@ -212,7 +212,8 @@ invent a saved variant for a screen-supplied prop combination.
 
 Use input ownership, not physical slot placement, to determine these edges. A
 screen-supplied child in a container slot remains a direct screen dependency.
-For removed consumers the before-side address and usage supply the link target.
+The [branch-point lookup](./mokly-branch-point-lookup.md#reference-sides) resolves
+each evidence destination from its own side; stored evidence paths never change.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 

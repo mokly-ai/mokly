@@ -85,9 +85,10 @@ mark, only when its entry changed beyond the move, so a pure move shows no
 mark. The variant bar reads the same decision: a paired variant whose only
 edit is its metadata reads Changed, and a pure move reads Unmodified.
 
-A removed variant retains its baseline `variantOf`, parent title, and folder
-titles. When that path names a current non-variant parent of the same kind,
-directly or as the previous path of a parent the move contract paired, attach
+A removed variant retains its baseline `variantOf`, `parentTitle`, and folder
+titles. Resolve its parent with the
+[branch-point lookup](./mokly-branch-point-lookup.md#variant-parents).
+When the result is a current parent, attach
 the removed row after current variants; removed siblings retain baseline
 authored order, and their public records occupy the parent's ordering position.
 The parent's variant bar lists the removed variant in the same place, and the
@@ -96,7 +97,7 @@ paint in Serve, export, and the embedded viewer.
 A parent with no current variants still discloses the list. Removing both
 parent and variant yields one removed entry for each.
 
-If the former parent is absent, has another kind, or is now a variant, keep the
+If the lookup has no eligible parent, keep the
 removed variant as one flat fallback row. Its breadcrumbs still show baseline
 folder titles and the former parent's title; the former-parent crumb is plain
 text because it has no eligible destination. Hierarchy construction removes a

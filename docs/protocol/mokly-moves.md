@@ -167,9 +167,9 @@ visible, and the summary counts it under `moved` beside the existing counts
 without adding it to `output changes`. The paired baseline entry is not
 removed: no removed record, removed preview, or removed row is produced for it.
 A paired entry's comparison, previous version, and per-view evidence use the
-paired baseline entry's documents as the before side. Supplied-input details
-pair a moved variant's views, and the instances of a moved nested component,
-through their branch-point paths.
+paired baseline entry's documents as the before side. The
+[branch-point lookup](./mokly-branch-point-lookup.md) owns shell reference,
+counterpart and parent resolution, including supplied-input pairing.
 
 Review v5 continues to contain screen, component and use-case records only.
 Each moved record carries `previousPath`; a pure move has an explicit empty
@@ -194,7 +194,7 @@ The complete and scoped catalogue readers accept that removed parent with zero
 variants and retain its removal row; they must not restore the moved variants
 under it or omit the parent. Current component parents still require at least
 one current variant, and current variants still require a current parent.
-Affected-consumer evidence retains historical context and chain paths; its
+Affected-consumer evidence keeps each side's context and chain paths. Its
 canonical consumer and changed-component identity use the accepted current path.
 
 The viewer labels a paired entry `Moved` in Changes rows and details and shows

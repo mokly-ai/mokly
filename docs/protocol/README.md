@@ -64,6 +64,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [Markdown documents](./mokly-documents.md) — discovered Markdown entries.
 - [Document rendering safety](./mokly-document-safety.md) — final HTML allowlist and script policy.
 - [Moves](./mokly-moves.md) — baseline pairing and `previousPath`.
+- [Branch-point entry lookup](./mokly-branch-point-lookup.md) — shared current,
+  historical, counterpart and variant-parent resolution.
 - [Path-derived artifact paths](./mokly-artifact-paths.md)
 - [Rendering and generated output](./mokly-rendering.md)
   - [Generated rendering contract](./mokly-rendering-generated.md).

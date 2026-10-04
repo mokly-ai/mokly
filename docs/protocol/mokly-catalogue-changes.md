@@ -34,6 +34,7 @@ interface RemovedEntrySnapshot {
     | ManifestComponent
     | ManifestComponentVariant;
   folderTitles: readonly string[];
+  parentTitle?: string; // Required exactly on removed variants.
 }
 ```
 
@@ -52,12 +53,12 @@ and tags. A removed record carries no route: its URL and artifact names derive
 from its path. `folderTitles` holds the baseline titles of its folders from the
 top level down, resolved from the baseline manifest's folder records and index
 pages under the [title rule](./mokly-folders.md#titles), independent of a
-surviving current folder. A removed variant of either kind retains its baseline
-`variantOf` and carries its parent's folder titles, so the shell can place its
-Removed row under a surviving parent as the
-[variant navigation contract](./mokly-variant-navigation.md) specifies; when the parent is also
-removed, each is its own removed entry. `variantOf` is not a parallel snapshot
-field; retaining the complete baseline DTO preserves it.
+surviving current folder. A removed variant retains its baseline `variantOf`,
+its parent's folder titles, and the parent's baseline title in `parentTitle`.
+Capture that title before removal selection, even when another kind reuses
+the parent's path. Non-variants omit it. The
+[branch-point lookup](./mokly-branch-point-lookup.md#variant-parents) owns parent
+resolution; [variant navigation](./mokly-variant-navigation.md) owns placement.
 
 `changedEntries` is the sorted, unique union of affected current entry paths
 and the selected removed-entry paths. `movedEntries` lists, sorted by current
@@ -89,13 +90,14 @@ endpoint or comparison JSON schema change.
 
 ## Removal Selection And Precedence
 
-Removal is keyed by path for every kind: select a baseline screen, page,
+This section owns removal selection. Compare paths with case folding for
+every kind: select a baseline screen, page,
 document, component, or variant only when no current entry of any kind has its
 path and the [move contract](./mokly-moves.md) paired it with nothing. A kind
 change therefore yields one added current entry, never a simultaneous removed
 record, and a paired baseline entry yields one current entry carrying
 `previousPath`. The public reader rejects any model whose current entries and
-`removedEntries` share a path, and a current variant cannot carry a `removed`
+`removedEntries` share a case-folded path, and a current variant cannot carry a `removed`
 comparison state. Only records inside `removedEntries` are historical.
 
 Ordinary removed entries sort by kind then path. If a removed variant's parent

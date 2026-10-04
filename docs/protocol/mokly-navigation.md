@@ -28,9 +28,9 @@ folder row only expands or collapses and is never a destination; an entry row
 navigates; a folder's own page is its first child row, labelled with its title
 or `Overview`, or, for a screen or component index, the folder renders as that
 entry's row; and a breadcrumb folder segment opens the folder page when one
-exists and otherwise expands the folder. A folder exists only while an entry
-lies below it, so the example's former `design-browse-tags` row is absent.
-Every row uses the single [search rule](./mokly-folders.md#titles).
+exists and otherwise expands the folder. Empty folders have no row.
+Every row uses the single [search rule](./mokly-folders.md#titles). Changes
+activation uses the built tree under the [branch-point lookup](./mokly-branch-point-lookup.md#consumers).
 
 ## Component Navigation
 

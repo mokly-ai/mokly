@@ -135,6 +135,10 @@ example remains Unmodified. Status must never be inferred from usage counts.
 
 ## Comparison Details
 
+Variant parents, workspace keys and paired inputs follow the
+[branch-point lookup](./mokly-branch-point-lookup.md). Presentation stays the same
+when a parent or variant moves or changes letter case.
+
 Name the information icon Details. Keep comparison evidence, when present,
 inside this panel alongside description and secondary source metadata. Do not
 add a comparison disclosure below the canvas or a separate explanatory banner

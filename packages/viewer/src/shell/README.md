@@ -5,8 +5,9 @@ uses each side's original path for snapshot URLs, including moved variants.
 `catalogue.ts` keeps each paired current entry's branch-point path in
 `previousPaths`: Serve and export pass the accepted pairs to `createCatalogue`,
 and the public viewer reads `previousPath` from the read model.
-`catalogueMovedPath` maps a baseline path back to the moved entry, so a
-removed variant joins its moved parent and links to it. `nav_moves.ts`
+Reference and parent resolution follow the
+[branch-point lookup contract](../../../../docs/protocol/mokly-branch-point-lookup.md).
+`nav_moves.ts`
 records that path on each row; under Changes a moved row reads
 `<label> · Moved` in place of the changed mark, and under All it carries the
 mark only when `materialChangedEntries` lists it. Details add a `Moved from`
@@ -14,11 +15,8 @@ row after Source, and the comparison details name the previous path as the
 earlier side. A pure move is in Changes without changing, so workspace
 statuses count material changes only and keep it Unmodified: the public
 projection sets `materialEntries` from each entry's `changes.kind`, and server
-pages read `componentChanges.changedEntries`. `workspaceComponent` and
-`catalogueComponentVariants` reach a moved parent through its previous path,
-so a variant deleted during the move keeps its parent's workspace, and
-`workspace_input_changes.ts` pairs moved views and nested components through
-`previousPaths`.
+pages read `componentChanges.changedEntries`. The same lookup contract owns
+counterparts for workspace inputs, variants and nested component instances.
 
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document
@@ -80,9 +78,9 @@ server row and each React store update use the same presentation contract;
 `css_nav_changed.ts` draws the mark from `data-changed` and
 `data-changed-variants` alone. `nav_model.ts` applies search and Changes
 visibility to parents and their variant children. `changes_activation.ts`
-owns Changes-filter activation for both standalone and embedded shells: an
-unmodified container row selects the first visible changed entry it lists (its
-variants, then its members, descending into member folders), and a changed
+owns Changes-filter activation for both standalone and embedded shells under
+the [lookup's consumer rule](../../../../docs/protocol/mokly-branch-point-lookup.md#consumers): an
+unmodified container row selects its first visible changed tree entry, and a changed
 destination selects its first changed view only when the current selection is
 not already a changed entry. Later navigation within Changes keeps the sticky
 view axes; container redirection still applies. The shared typed query

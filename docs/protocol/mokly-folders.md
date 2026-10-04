@@ -189,7 +189,8 @@ A hidden folder without its own page has no row in All, so its segment is
 plain text, as are the baseline folder titles of a removed entry. The public
 read model emits these shapes directly under the
 [catalogue contract](./mokly-catalogue.md#tree) so the viewer applies no
-further rule.
+further rule. A variant's parent crumb uses the
+[branch-point lookup](./mokly-branch-point-lookup.md#variant-parents).
 
 ## Diagnostics
 

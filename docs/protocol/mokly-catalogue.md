@@ -43,6 +43,7 @@ interface CatalogueReadModel {
   removedEntries: readonly {
     entry: CatalogueRecord;
     folderTitles: readonly string[];
+    parentTitle?: string; // Required exactly on removed variants.
     snapshotId?: string;
     preview?: { kind: "screen" } | { kind: "page" } | { kind: "document" };
   }[];
@@ -188,9 +189,8 @@ spread a manifest, entry, or internal evidence object into public JSON.
   duplicate instance records.
 - Component parents retain schemas, read-only control descriptions, and
   declared slot names. Current parents require at least one current variant;
-  a removed parent may have zero removed variants, including when all its
-  variants move to other parents. Both complete and scoped readers accept that removed
-  parent, retain its removal record and never invent variants. Current variants
+  both readers retain a removed parent even when all its variants moved,
+  without inventing variants. Current variants
   require a current parent. Variants follow their parent in authored order;
   the first current variant is the default. Ready usage copies only
   instances/slots/ranges with validated props and supplied slot names.
@@ -218,20 +218,20 @@ visual comparisons. `included` is membership in Changes; affected consumers
 can have eligible comparisons while `included` is false, and a paired moved
 entry is included even when unmodified. Folder visibility aggregates
 descendants without extra counts. Unknown, preparing, pending and disabled
-states never imply unmodified or a zero count. Removal is keyed by path within
-a kind: a baseline entry is removed only when no current entry of its kind has
-its path and the move contract paired it with nothing. Readers reject a
-current and removed record sharing a case-folded path; only `removedEntries` may represent
-history. A removed record carries `folderTitles`, the baseline titles of its
+states never imply unmodified or a zero count. The
+[removal rule](./mokly-catalogue-changes.md#removal-selection-and-precedence)
+owns selection and path reuse. A removed record carries `folderTitles`, the baseline titles of its
 folders from the top level down, as display text for breadcrumbs. Each newly
 projected removed record carries an opaque `snapshotId` when real immutable
 identity is available, distinguishing baseline generations and catalogues. A
-removed variant of either kind is an ordinary removed entry carrying
-`variantOf`. The optional `preview` field is the additive descriptor defined by
+removed variant carries `variantOf` and requires `parentTitle`, its baseline
+parent's nonempty title. Complete and scoped readers reject missing, empty or
+non-string `parentTitle` on variants, and its presence on non-variants. Parent
+resolution follows the [branch-point lookup](./mokly-branch-point-lookup.md).
+The optional `preview` field is the additive descriptor defined by
 [removed previews](./mokly-removed-previews.md); readers tolerate its absence.
-Missing baseline usage is unavailable. The projection checks components
-actually published in the model; it never publishes dangling references or
-weakens reader validation. Proven empty usage is ready with empty arrays,
+Missing baseline usage is unavailable. Projection rejects dangling component
+references. Proven empty usage is ready with empty arrays,
 never inferred from a failed or incomplete render.
 
 `comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,

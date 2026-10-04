@@ -2223,11 +2223,11 @@ entry that a link, row, key, or crumb resolves to changes. The
 already defines the flat fallback row and the plain-text former-parent crumb.
 This work therefore needs no mockup milestone.
 
-Status: Not started.
+Status: Complete.
 
-- [ ] Add one protocol page, `docs/protocol/mokly-branch-point-lookup.md`,
+- [x] Add one protocol page, `docs/protocol/mokly-branch-point-lookup.md`,
       that owns these rules:
-  - [ ] A branch-point reference is a path from the baseline side: a baseline
+  - [x] A branch-point reference is a path from the baseline side: a baseline
         entry, a removed record's `variantOf`, or `before`-side review
         evidence. It resolves in this order: the current entry that an
         accepted move pair joins to that path; else the current entry of the
@@ -2236,47 +2236,53 @@ Status: Not started.
         nothing. A current-side reference, such as `after`-side evidence,
         names its current entry directly. It never resolves through a move
         pair.
-  - [ ] The counterpart of a current entry is the baseline entry that its
+  - [x] The counterpart of a current entry is the baseline entry that its
         move pair names; else the baseline entry of the same kind whose path
         is equal under case folding; else nothing, because the entry is new.
-  - [ ] A variant's parent is the resolution of its `variantOf`, limited to
+  - [x] A variant's parent is the resolution of its `variantOf`, limited to
         non-variant entries of the variant's kind. When no such entry exists,
         the variant has no parent. The shell then shows the record's stored
         former-parent title as plain text, as the variant navigation contract
         requires.
-  - [ ] "Same kind" compares the manifest `kind`. An entry of another kind at
+  - [x] "Same kind" compares the manifest `kind`. An entry of another kind at
         the same path never matches.
-  - [ ] A `before`-side usage evidence that resolves to nothing has no
+  - [x] A `before`-side usage evidence that resolves to nothing has no
         destination, so the shell omits its row. This happens only when an
         entry of another kind took the path. The catalogue treats that as a
         kind change, not a removal.
-  - [ ] Name every consumer: affected-consumer links, the variant bar, the
+  - [x] Name every consumer: affected-consumer links, the variant bar, the
         Before and Current props, supplied-input pairing, removed-variant rows
         in the tree, the workspace key, the Changes activation order (built
         from the navigation tree), and breadcrumbs.
-  - [ ] Verification: list the shared fixture cases from Milestone 15 and the
+  - [x] Verification: list the shared fixture cases from Milestone 15 and the
         three hosts (Serve, export, and the embedded viewer). Require
         assertions on the rendered UI, not only on HTTP status.
-- [ ] Add the former parent's title to the removed record. Every removed
+- [x] Add the former parent's title to the removed record. Every removed
       variant record carries `parentTitle`, the baseline title of its
       `variantOf` parent. A non-variant record has none. Update the read model
       contract in `mokly-catalogue.md`, the change snapshot in
       `mokly-catalogue-changes.md`, the reader validation (reject a removed
       variant without `parentTitle`, and a non-variant record with it), and
-      `docs/protocol/fixtures/catalogue-v4.json`. The read model stays v4,
+      the shape of `docs/protocol/fixtures/catalogue-v4.json`. The fixture and
+      reader implementation ship together in Milestone 15 so the fixture stays
+      readable at each commit. The read model stays v4,
       because v4 is unreleased and decision 14 forbids compatibility layers.
-- [ ] Make the removal rule consistent. `mokly-catalogue.md` says that a
+- [x] Make the removal rule consistent. `mokly-catalogue.md` says that a
       baseline entry is removed only when no current entry "of its kind" has
       its path. `mokly-catalogue-changes.md` and `src/registry/changes.ts`
       use any kind, which the reader's shared-path rejection requires. Keep
       the any-kind rule in one owner, and link to it from the other document.
-- [ ] Replace restated mapping rules with links to the new page: the Result
+- [x] Replace restated mapping rules with links to the new page: the Result
       section of `mokly-moves.md`, `mokly-variant-navigation.md`, the Changes
       activation rule in `mokly-navigation.md`, the breadcrumb rule in
       `mokly-folders.md`, the component workspace and usage contracts, and the
       shell README. Add the page to `docs/protocol/README.md`.
-- [ ] Validate the changed Markdown with Prettier and with the protocol,
+- [x] Validate the changed Markdown with Prettier and with the protocol,
       guide, and Markdown-link tests. Then commit and push.
+
+Verification: Prettier passed. The protocol, guide and Markdown-link run
+passed all 38 tests. The source file-length audit passed; the new owner is
+137 lines, and Moves remains 245 lines. No file was deleted in this milestone.
 
 ## Milestone 15: Former parent title, shared lookup, and fixture set
 
