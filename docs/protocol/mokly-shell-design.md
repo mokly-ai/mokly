@@ -25,7 +25,7 @@ shared shell. Whole documents use a plain bordered pane and omit
 device/comparison controls. Removed pages are flat Changes rows; baseline
 breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
-same navigation, search, tags, and variants.
+same navigation, search, tags, and variants. `design-review-style-page` depicts a changed page's stylesheet evidence in Details ([M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)); the shell display is planned for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
 The comparison designs implement the [pane](./mokly-comparison-panes.md),
 [scrolling](./mokly-comparison-scrolling.md), and
@@ -93,6 +93,7 @@ contract until their standalone screens are implemented.
 | `design-review-style-unresolved`      | Changes › Impact states › Stylesheet evidence              | A style change that can reach anything on the screen       |
 | `design-review-style-unnamed`         | Changes › Impact states › Stylesheet evidence              | The same reach with no style name to list                  |
 | `design-review-style-excluded`        | Changes › Impact states › Stylesheet evidence              | Changed stylesheet examined and excluded                   |
+| `design-review-style-page`            | Changes › Impact states › Stylesheet evidence              | Changed document page with its evidence in Details         |
 | `design-review-preparing`             | Changes › Comparison availability                          | Changes selected while the comparison is prepared          |
 | `design-review-unavailable`           | Changes › Comparison availability                          | Changes selected after the comparison could not be made    |
 | `design-page-view`                    | Browse shell › Document pages                              | Complete document in its folder                            |
@@ -128,13 +129,12 @@ Additional owning groups keep each new page at no more than five screens:
 
 - `design-page-view`, `design-page-details`, `design-page-navigation`, and
   `design-page-removed` specify full documents, metadata, the drawer, and
-  deleted-parent behavior.
+  deleted-parent behavior. The first three open `design-review-style-page` from Changes.
 - The `Previous document versions` and `Previous screen versions` folders hold
   the removed-preview child pages (loading, unavailable with retry,
   long-document scrolling, and, for screens, a viewport with no captured
   previous view) delivered by [removed previews](./mokly-removed-previews.md).
-  Each parent removed page renders its canonical preview and links to those
-  children.
+  Each parent removed page renders its canonical preview and links to those children.
   The depicted branch removes four documents and five screens, so each child is
   a sibling removed entry in the same flat Changes list and is selected the way
   a reader selects it. A parent's document pane or device frames hold its
@@ -158,15 +158,17 @@ Additional owning groups keep each new page at no more than five screens:
   shown. `design-browse-variant-selected` is the group's canonical screen.
   Their behavior contract is [variants](./mokly-variants.md).
 - `design-review-style-matched`, `design-review-style-unresolved`,
-  `design-review-style-unnamed`, and `design-review-style-excluded` specify
-  rule-aware stylesheet evidence beneath the impact states, so the impact group
-  itself keeps its two screens.
+  `design-review-style-unnamed`, `design-review-style-excluded`, and
+  `design-review-style-page` specify rule-aware stylesheet evidence beneath the
+  impact states, so the impact group itself keeps its two screens.
   Matched, unresolved, and unnamed stay in Changes and open the loaded
   side-by-side comparison with the "Styles this screen uses changed" stage
   heading; `design-review-style-unnamed` is the same reach with no style name, so its lead
   sentence ends with a full stop and no list. Excluded is viewed from All: one
   sheet is excluded while another keeps Welcome changed, so it shows Current
-  controls and no stage heading. Each card nests its outcomes under its file, per
+  controls and no stage heading. `design-review-style-page` shows the changed
+  Getting started document in Changes with no comparison controls or stage
+  heading; its Details give each file the page copy. Each card nests its outcomes under its file, per
   [CSS evidence in the shell](./mokly-css-evidence-shell.md).
 - `design-review-preparing` and `design-review-unavailable` specify the two
   Changes states that carry no comparison data yet, keeping the impact group
@@ -187,8 +189,7 @@ comparison family — `design-changes-current`, `design-changes-overlay`,
 schemes, so the outer Appearance control shows the selected Welcome, the
 light-only Details subject and every comparison mode under either appearance at
 their own entries. A comparison family publishes the same schemes for every
-member, so switching mode inside a dark catalogue never lands on a light
-document.
+member, so switching mode inside a dark catalogue never lands on a light document.
 
 Every artboard that draws a top bar draws exactly one scheme control in it, the
 depicted Appearance selector, because the standalone shell always offers that
@@ -196,8 +197,7 @@ setting. The selector names the scheme its file was rendered for, except on the
 Auto artboard, which names Auto in both renders.
 
 Every screen ships one mobile and one desktop variant. Mockup implementation
-notes live in entry descriptions, rationale, and related docs — never inside
-the rendered screen area.
+notes live in entry descriptions, rationale, and related docs — never inside the rendered screen area.
 
 The `design-component-*` entries extend this catalogue with
 component pages, comparisons, affected screens, inspection, controls, and edge

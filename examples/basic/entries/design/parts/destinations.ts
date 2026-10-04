@@ -62,6 +62,7 @@ export const DESTINATIONS = {
   styleUnresolved: "design-review-style-unresolved",
   styleUnnamed: "design-review-style-unnamed",
   styleExcluded: "design-review-style-excluded",
+  stylePage: "design-review-style-page",
   preparing: "design-review-preparing",
   unavailable: "design-review-unavailable",
 } as const;

@@ -17,11 +17,13 @@ outside-component evidence in the design mockups. Milestone 19 is implemented
 and verified. Milestone 19A is implemented and verified.
 It integrates main's output/frame race fixes (#129) and expiring audit exception
 (#130) through `800fe9f8`. The complete gate passes, including the audit.
-The two-parent merge and line-level preservation checks pass. Milestone 20 is
-implemented, verified and committed locally for screens and component saved
-views; the reviewer owns the push. It found that no approved design shows
-evidence in a whole-document page's Details, so Milestones 20A (mockup) and
-20B (ui) now hold that display.
+The two-parent merge and line-level preservation checks pass; the reviewer
+pushed it as `1bd54f7e`. Milestone 20 is implemented, verified and pushed as
+`d91e1443` for screens and component saved views. It found that no approved
+design shows evidence in a whole-document page's Details, so Milestones 20A
+(mockup) and 20B (ui) now hold that display. Milestone 20A is implemented,
+verified and committed locally; the reviewer owns the push. Milestone 20B has
+not started.
 The contract changes
 unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
 owners no longer route stylesheet changes; declared links and their provenance
@@ -1279,7 +1281,8 @@ builds on main's viewer fixes and the complete gate can pass again.
       and require 100%. Remove the audit workaround from Milestone 21.
 - [x] Inspect `git diff --name-status origin/main` and its deletions, record
       the result in this milestone, and commit the merge locally.
-- [ ] The reviewer pushes the branch after checking the local merge.
+- [x] The reviewer pushes the branch after checking the local merge. The
+      reviewer pushed `1bd54f7e`.
 
 Integration evidence:
 
@@ -1435,14 +1438,63 @@ The presentation contract defines whole-document page copy, but no approved
 design shows comparison evidence in a page's Details. Milestone 20 found this
 mockup gap, so the page display waits for this milestone.
 
-- [ ] Depict a whole-document page whose Details hold the per-file stylesheet
+- [x] Depict a whole-document page whose Details hold the per-file stylesheet
       evidence with the page copy: “Changed styles that apply to this page:”,
       the outside-component page sentence and the page unresolved paragraph.
       Show it at mobile and desktop widths, reachable from the page designs,
       without comparison controls.
-- [ ] Update the design inventory, link, count and reachability tests and the
+- [x] Update the design inventory, link, count and reachability tests and the
       design contracts. Run the example build and check and the design tests,
       and smoke-test the changed screens.
+- [x] Define the page files lead, both page excluded sentences and the page
+      terminal line in the presentation contract. The depiction needs the
+      lead, and M20B must render the others without guessing. State that a
+      page consumes no components, so its Details link none.
+- [x] Make the page designs' Changes filter open the new state, and give them
+      its count of five, so that both sides of the link agree.
+
+Implementation notes:
+
+- `design-review-style-page` (“Document page styles”) is the fifth screen of
+  Changes › Impact states › Stylesheet evidence, beside the screen evidence
+  designs. Its route links `design-review.css`, which holds the approved card
+  spacing, so the example configuration stays unchanged.
+- It shows Getting started from Changes: the plain document pane, a Changed
+  status, no comparison toolbar and no stage heading. Changes holds the page,
+  Action and Action's three saved variants. Action's row opens
+  `design-component-style-changed`; the variant rows stay depictions.
+- Details name `styles/actions.css` with the outside sentence and `.action`,
+  then `styles/handbook.css` with “Changed styles that apply to this page:”
+  and `article h2`, then the page unresolved paragraph and `:root`. The
+  `.action` rule also changes Action, so its page match reads as outside the
+  changed components. A page records no component output and consumes no
+  components, so Details have no “Changed component:” line.
+- The page designs share one document part (`parts/document_page.tsx`). The
+  Details panel now adds the comparison section after authored metadata as
+  well as after screen metadata; existing output is unchanged.
+- All three page designs open the new state from their Changes filter, and
+  its All filter returns to `design-page-view`. Their depicted Changes count
+  changes from one to five, so the two sides agree. The canonical page view
+  keeps no change marks, like the canonical Welcome.
+- This milestone deletes no files. The four earlier plan-approved deletions
+  and the v3-to-v4 fixture rename against `origin/main` remain unchanged.
+
+Verification: `npm run build`, `npm run example:build` (440 files) and
+`npm run example:check` pass. The six new unit tests failed first: the screen
+was missing and the page designs had no Changes link. The 196 design tests,
+the 26 tests of the six docs suites, typecheck, lint and changed-file Prettier
+pass. The stylesheet evidence and comparison eligibility specs pass 8 tests;
+the page, preview-link, comparison, scroll-together, design-link and
+portability specs pass 32. The exact complete unit command passes 3,914 tests.
+The complete `cargo xtask check` passes in 47 minutes: the audit with main's
+accepted exception, formatting, lint, file limits, repository ratchets, 15 Rust
+tests, typecheck, the example check, all six packed-consumer scenarios, 3,914
+unit tests, 764 browser tests and 225 hydration tests. No test failed, was
+skipped or was cancelled. The `npm run dev` smoke opened the four changed
+screens at 1440 px and 390 px without page errors. It followed the Changes
+filter to the new state at both widths, and its All filter back on desktop.
+Screenshots are under `.context/screenshots/m20a/`; logs are under
+`.context/m20a/`.
 
 ## Milestone 20B: Show whole-document page evidence
 

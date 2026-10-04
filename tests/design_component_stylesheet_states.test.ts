@@ -11,7 +11,7 @@ import {
   type Element,
 } from "./helpers/design_catalogue.js";
 import { stylesheetGroups } from "./helpers/design_evidence.js";
-import { rowLabel } from "./helpers/design_rows.js";
+import { navRows } from "./helpers/design_rows.js";
 import {
   comparison,
   hasClass,
@@ -32,20 +32,6 @@ const GALLERY = [
 const ACTION_VARIANTS = ["Default", "Disabled", "Secondary"];
 
 type Document = Awaited<ReturnType<typeof designDocument>>["document"];
-
-/** Desktop catalogue rows: label, changed mark, destination and current page. */
-function navRows(document: Document, section: string) {
-  const nav = byClass(document, "mbk-nav-section").find(
-    (node) => attribute(node, "data-nav-section") === section,
-  );
-  if (!nav) return [];
-  return byClass(nav, "mbk-nav-row").map((row) => [
-    rowLabel(row),
-    byClass(row, "mbk-nav-changed").length > 0,
-    attribute(row, "data-mokly-link"),
-    attribute(row, "aria-current"),
-  ]);
-}
 
 /** The Changes count a reader sees: the filter on desktop, the shortcut on mobile. */
 function changesShortcut(document: Document, viewport: string) {

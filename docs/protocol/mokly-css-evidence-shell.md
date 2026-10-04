@@ -5,7 +5,10 @@
 Existing compact evidence is implemented. The [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence)
 mockups of the [source-path removal plan](../../plans/remove-source-path-evidence.md)
 depict the outside-component evidence and the per-file layout below; the shell
-implements them for screens and component saved views in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). This document owns visual rules for evidence defined by
+implements them for screens and component saved views in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
+mockup depicts the whole-document page rule below; the shell display is planned
+for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the
 [presentation contract](./mokly-css-evidence-presentation.md) owns derivation
 and exact copy.
@@ -23,7 +26,8 @@ The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
 [shell design inventory](./mokly-shell-design.md#design-mockups) as
 `design-review-style-matched`, `design-review-style-unresolved`,
-`design-review-style-unnamed`, and `design-review-style-excluded`, and the
+`design-review-style-unnamed`, `design-review-style-excluded`, and
+`design-review-style-page`, and the
 component explorer's Stylesheet evidence gallery, recorded in the
 [component design inventory](./mokly-component-design.md#owning-catalogue) as
 `design-component-style-changed`, `design-component-style-outside`, and
@@ -65,6 +69,11 @@ component explorer's Stylesheet evidence gallery, recorded in the
   file's item. The mockup card must render that spacing as authored, whatever
   other inspector stylesheets the design page loads. The shell keeps its
   separator treatment rather than the mockup's bordered card.
+- A whole-document page in Changes keeps its plain document pane, with no
+  comparison toolbar and no stage heading. Its Details hold the same
+  comparison details and files list, led by "Changes to these files may affect
+  this page:", with the page sentences of the presentation contract under each
+  file. A page consumes no components, so its Details link no changed component.
 - No design screen without a comparison toolbar renders a comparison stage
   heading. A screen depicted in Current mode, whether unchanged, excluded-only,
   or ignored-only, shows the plain preview with no heading.

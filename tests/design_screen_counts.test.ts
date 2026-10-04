@@ -28,9 +28,18 @@ const UNITS = [
   "eighteen",
   "nineteen",
 ];
-const TENS = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy"];
+const TENS = [
+  "twenty",
+  "thirty",
+  "forty",
+  "fifty",
+  "sixty",
+  "seventy",
+  "eighty",
+  "ninety",
+];
 
-/** A count written in digits or as English words up to seventy-nine. */
+/** A count written in digits or as English words up to ninety-nine. */
 function count(written: string): number {
   if (/^\d+$/u.test(written)) return Number(written);
   const [tens, unit] = written.toLowerCase().split("-");

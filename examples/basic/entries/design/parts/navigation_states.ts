@@ -53,14 +53,17 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.page]: {
     inspector: D.pageDetails,
     drawer: { open: false, to: D.pageNavigation },
+    changes: D.stylePage,
   },
   [D.pageDetails]: {
     inspector: D.page,
     drawer: { open: false, to: D.pageNavigation },
+    changes: D.stylePage,
   },
   [D.pageNavigation]: {
     inspector: D.pageDetails,
     drawer: { open: true, to: D.page },
+    changes: D.stylePage,
   },
   [D.pageRemoved]: { all: D.home },
   [D.pageRemovedLong]: { all: D.home },
@@ -149,6 +152,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.styleUnresolved]: { all: D.welcome, changes: D.styleUnresolved },
   [D.styleUnnamed]: { all: D.welcome, changes: D.styleUnnamed },
   [D.styleExcluded]: { all: D.styleExcluded, changes: D.styleMatched },
+  [D.stylePage]: { all: D.page },
   [D.preparing]: { all: D.welcome },
   [D.unavailable]: { all: D.welcome },
 };

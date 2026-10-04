@@ -43,6 +43,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     }) => {
       for (const url of [
         shellDesignUrl("design-review-style-matched", viewport),
+        shellDesignUrl("design-review-style-page", viewport),
         componentDesignUrl("design-component-style-changed", viewport),
         componentDesignUrl("design-component-style-outside", viewport),
       ]) {
@@ -53,6 +54,48 @@ for (const viewport of ["desktop", "mobile"] as const) {
           sentence: "8px",
           styles: "8px",
         });
+      }
+    });
+
+    test("the page designs open the changed document, which has no comparison controls", async ({
+      page,
+    }) => {
+      await page.goto(
+        shellDesignUrl(
+          viewport === "desktop"
+            ? "design-page-view"
+            : "design-page-navigation",
+          viewport,
+        ),
+      );
+      const filter = page.getByRole("group", { name: "Catalogue filter" });
+      await expect(filter).toContainText("Changes5");
+      await filter.getByRole("link", { name: /Changes/ }).click();
+      await expect(page).toHaveURL(
+        shellDesignUrl("design-review-style-page", viewport),
+      );
+      await expect(page.locator(".mbk-cmp-toolbar")).toHaveCount(0);
+      await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
+      await expect(page.locator(".mbk-doc-pane")).toContainText("Next steps");
+      const evidence = page.locator(".mbk-comparison-details");
+      await expect(evidence).toContainText(
+        "Changes to these files may affect this page:",
+      );
+      await expect(evidence.locator(".mbk-evidence-files > li > p")).toHaveText(
+        [
+          "These changed styles also apply outside the changed components on this page:",
+          "Changed styles that apply to this page:",
+          "This change can apply anywhere on the page, so the page stays in Changes:",
+        ],
+      );
+      if (viewport === "desktop") {
+        await page
+          .getByRole("group", { name: "Catalogue filter" })
+          .getByRole("link", { name: "All" })
+          .click();
+        await expect(page).toHaveURL(
+          shellDesignUrl("design-page-view", viewport),
+        );
       }
     });
 

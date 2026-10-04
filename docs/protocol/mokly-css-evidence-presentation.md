@@ -7,8 +7,9 @@ is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-
 The per-file grouping and exact copy for screens and component saved views are
 implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence),
 as the [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence) mockups depict them.
-The whole-document page display is planned for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence),
-after its [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence) mockup.
+The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
+mockup, `design-review-style-page`, depicts the whole-document page display;
+the shell display is planned for [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact
@@ -62,6 +63,13 @@ For a component entry, the shared wording helper selects:
 | Several excluded stylesheets | “These stylesheets changed, but none of the changed styles apply to this variant.”    |
 
 Screen Details lists only sorted retained rendered-resource reasons beneath “Changes to these files may affect this screen:”. The removed entry `sharedImpact` field supplies no paths. Excluded stylesheet evidence remains available for unchanged entries in All.
+
+A whole-document page uses the screen sentences with “page” in place of
+“screen”. Its files list follows “Changes to these files may affect this
+page:”. One excluded stylesheet reads “This stylesheet changed, but none of the
+changed styles apply to this page.”, and several read “These stylesheets
+changed, but none of the changed styles apply to this page.”. The page
+sentences below complete its copy.
 
 ## Page Evidence Copy And Grouping
 
@@ -150,11 +158,13 @@ path alone. No outcome shows rule keys or changed component ids.
 
 ## Status Lines
 
-The terminal line, “No changes to this screen.” or “No changes to this saved
-view.”, appears only when the routed entry is unmodified. In a component
-workspace, the selected saved view must also be unmodified. Each changed
-component that the entry consumes is linked as “Changed component: Title”. The
-sentence “Shared component changes affect this preview. This page has no
-independent entry in Changes.” appears only when the entry has no Changes row
-of its own, consumes at least one changed component, and a selected view
-changed. A saved view with only wrapper or page reasons therefore never says it.
+The terminal line, “No changes to this screen.”, “No changes to this page.” or
+“No changes to this saved view.”, appears only when the routed entry is
+unmodified. In a component workspace, the selected saved view must also be
+unmodified. Each changed component that the entry consumes is linked as
+“Changed component: Title”. The sentence “Shared component changes affect this
+preview. This page has no independent entry in Changes.” appears only when the
+entry has no Changes row of its own, consumes at least one changed component,
+and a selected view changed. A saved view with only wrapper or page reasons
+therefore never says it. A whole-document page consumes no components, so its
+Details never link a changed component or say that sentence.

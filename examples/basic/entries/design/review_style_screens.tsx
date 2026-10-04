@@ -7,19 +7,26 @@ import { CompareGrid, Pane } from "./parts/compare.js";
 import { ComparePage, FramedShot } from "./parts/compare_page.js";
 import { DESTINATIONS, type DesignDestination } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
+import {
+  HandbookStage,
+  PAGE_STYLE_COUNT,
+  PAGE_STYLE_ROWS,
+  PageDetails,
+} from "./parts/document_page.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { NavTree } from "./parts/nav.js";
 import { EXCLUDED_STYLE_ROWS } from "./parts/nav_data.js";
 import {
   ExcludedStyleCard,
   MatchedStyleCard,
+  PageStyleCard,
   StyleReviewNav,
   UnnamedStyleCard,
   UnresolvedStyleCard,
   WelcomeShot,
 } from "./parts/review.js";
 import { WelcomeHead } from "./parts/screen_heads.js";
-import { Shell, type ArtboardViewport } from "./parts/shell.js";
+import { ScreenHead, Shell, type ArtboardViewport } from "./parts/shell.js";
 
 /** A screen kept in Changes by a stylesheet edit opens its loaded comparison. */
 function StyleComparison({
@@ -130,6 +137,37 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
+/**
+ * A changed document opened from Changes. A whole document has no comparison
+ * controls, so its Details carry the stylesheet evidence with the page copy.
+ */
+function PageStyles({ viewport }: { viewport: ArtboardViewport }) {
+  return (
+    <Shell
+      design={DESTINATIONS.stylePage}
+      viewport={viewport}
+      nav={
+        <NavTree
+          activeDestination={DESTINATIONS.stylePage}
+          changedCount={PAGE_STYLE_COUNT}
+          changedOnly
+          nodes={PAGE_STYLE_ROWS}
+        />
+      }
+    >
+      <ScreenHead
+        comparisons={false}
+        crumbs={["Example"]}
+        idChip="example-handbook"
+        status="changed"
+        title="Getting started"
+      />
+      <HandbookStage />
+      <PageDetails evidence={<PageStyleCard />} open />
+    </Shell>
+  );
+}
+
 /** Design screens for stylesheet evidence that keeps or releases a screen. */
 export const reviewStyleScreens = [
   screen({
@@ -169,5 +207,16 @@ export const reviewStyleScreens = [
     id: "design-review-style-excluded",
     mobile: <ExcludedStyles viewport="mobile" />,
     title: "Excluded styles",
+  }),
+  screen({
+    colorSchemes: ["light"],
+    description:
+      "A changed document opened from Changes, with no comparison controls. Details name each changed stylesheet once, with the styles that apply to the page, the styles that also apply outside the changed components, and a change that can apply anywhere on the page.",
+    desktop: <PageStyles viewport="desktop" />,
+    id: "design-review-style-page",
+    mobile: <PageStyles viewport="mobile" />,
+    rationale:
+      "A document is read whole and never compared, so Details are the only place to show why it is in Changes. Each file keeps its own outcomes, and the sentences say page, so the evidence reads the same way as a screen's without suggesting a comparison.",
+    title: "Document page styles",
   }),
 ];

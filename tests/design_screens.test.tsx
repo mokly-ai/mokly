@@ -144,6 +144,7 @@ test("review impact omits the path-only state and retains the rendered evidence 
     "design-review-ignored-only",
     "design-review-style-excluded",
     "design-review-style-matched",
+    "design-review-style-page",
     "design-review-style-unnamed",
     "design-review-style-unresolved",
   ]);

@@ -13,7 +13,7 @@ test("every owning artboard records its shared chrome and real component consume
   const screens = manifest.entries.flatMap((entry) =>
     entry.kind === "screen" && entry.id.startsWith("design-") ? [entry] : [],
   );
-  assert.equal(screens.length, 103);
+  assert.equal(screens.length, 104);
   for (const entry of screens) {
     assert.ok(entry.componentViews);
     for (const view of entry.componentViews) {

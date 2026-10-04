@@ -2,72 +2,16 @@ import { screen } from "@mokly/mokly";
 
 import { ExampleDocument } from "../document.js";
 
-import { useDesignNavigation } from "./parts/design_navigation.js";
 import { DESTINATIONS } from "./parts/destinations.js";
-import { DetailsPanel } from "./parts/details.js";
-import { MetaRow } from "./parts/metadata_row.js";
-import { NavDrawer, NavTree, type NavNode } from "./parts/nav.js";
+import {
+  HandbookStage,
+  PAGE_NODES,
+  PAGE_STYLE_COUNT,
+  PageDetails,
+} from "./parts/document_page.js";
+import { NavDrawer, NavTree } from "./parts/nav.js";
 import { REMOVED_DOCUMENTS, RemovedPageScreen } from "./parts/removed_page.js";
 import { ScreenHead, Shell, type ArtboardViewport } from "./parts/shell.js";
-import { DocumentPane, Stage } from "./parts/stage.js";
-
-const nodes: readonly NavNode[] = [
-  {
-    key: "example",
-    kind: "folder",
-    label: "Example",
-    count: 3,
-    depth: 0,
-    open: true,
-  },
-  {
-    key: "welcome",
-    kind: "screen",
-    label: "Welcome",
-    depth: 1,
-    to: DESTINATIONS.welcome,
-  },
-  {
-    key: "tour",
-    kind: "flow",
-    label: "Example tour",
-    depth: 1,
-    to: DESTINATIONS.tour,
-  },
-  {
-    key: "handbook",
-    kind: "page",
-    label: "Getting started",
-    depth: 1,
-    to: DESTINATIONS.page,
-  },
-];
-
-function PageDetails({ open = false }: { open?: boolean }) {
-  const navigation = useDesignNavigation();
-  return (
-    <DetailsPanel open={open} destination={navigation.inspector}>
-      <div className="mbk-details-body">
-        <div>
-          <p className="mbk-details-desc">
-            A handbook to accompany the example screens.
-          </p>
-        </div>
-        <div className="mbk-meta">
-          <MetaRow name="source" label="Source">
-            <code className="mbk-code">entries/catalogue.mockup.tsx</code>
-          </MetaRow>
-          <MetaRow name="tags" label="Tags">
-            documents
-          </MetaRow>
-          <MetaRow name="related-docs" label="Related docs">
-            Example notes
-          </MetaRow>
-        </div>
-      </div>
-    </DetailsPanel>
-  );
-}
 
 function PageView({
   viewport,
@@ -79,7 +23,11 @@ function PageView({
   drawer?: boolean;
 }) {
   const nav = (
-    <NavTree activeLabel="Getting started" changedCount={1} nodes={nodes} />
+    <NavTree
+      activeLabel="Getting started"
+      changedCount={PAGE_STYLE_COUNT}
+      nodes={PAGE_NODES}
+    />
   );
   return (
     <Shell
@@ -96,8 +44,8 @@ function PageView({
         viewport === "mobile" && drawer ? (
           <NavDrawer
             activeLabel="Getting started"
-            changedCount={1}
-            nodes={nodes}
+            changedCount={PAGE_STYLE_COUNT}
+            nodes={PAGE_NODES}
           />
         ) : null
       }
@@ -108,11 +56,7 @@ function PageView({
         idChip="example-handbook"
         title="Getting started"
       />
-      <Stage>
-        <DocumentPane>
-          <ExampleDocument welcomeId={DESTINATIONS.welcome} />
-        </DocumentPane>
-      </Stage>
+      <HandbookStage />
       <PageDetails open={details} />
     </Shell>
   );

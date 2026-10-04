@@ -4,6 +4,7 @@ import { NavDrawer, NavTree, type ChangesStatus, type NavNode } from "./nav.js";
 import { REMOVED_SCREEN_ROWS } from "./nav_data.js";
 import { BrowserFrame, PhoneFrame } from "./stage.js";
 import {
+  PAGE_STYLE_COPY,
   SCREEN_STYLE_COPY,
   StylesheetEvidenceList,
 } from "./stylesheet_evidence.js";
@@ -212,5 +213,32 @@ export function ExcludedStyleCard() {
       </ul>
       <p>Other changed styles keep Welcome in Changes.</p>
     </>
+  );
+}
+
+/**
+ * The changed handbook's stylesheets. The shared `.action` rule also changed
+ * Action, so its handbook match reads as outside the changed components; the
+ * handbook's own sheet changed no component and also has a change that can
+ * apply anywhere on the page.
+ */
+export function PageStyleCard() {
+  return (
+    <StylesheetEvidenceList
+      lead={PAGE_STYLE_COPY.files}
+      stylesheets={[
+        {
+          path: "styles/actions.css",
+          outcomes: [{ lead: PAGE_STYLE_COPY.outside, selectors: [".action"] }],
+        },
+        {
+          path: "styles/handbook.css",
+          outcomes: [
+            { lead: PAGE_STYLE_COPY.matched, selectors: ["article h2"] },
+            { lead: PAGE_STYLE_COPY.unresolved, selectors: [":root"] },
+          ],
+        },
+      ]}
+    />
   );
 }

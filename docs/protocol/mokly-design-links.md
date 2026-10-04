@@ -2,10 +2,9 @@
 
 ## Delivery Status
 
-Implemented in the 62 Browse/Changes design screens and two example screens with
-`MockLink`/`MockLink asChild`. Those 62 Browse/Changes designs retain canonical
-links; [components](./mokly-component-design.md) and
-[removed previews](./mokly-removed-previews.md) extend the contract.
+Implemented in the 63 Browse/Changes design screens and two example screens with
+`MockLink`/`MockLink asChild`. Those 63 Browse/Changes designs retain canonical
+links; [components](./mokly-component-design.md) and [removed previews](./mokly-removed-previews.md) extend the contract.
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
@@ -236,10 +235,9 @@ no live product destination; links inside a previous version do nothing.
 Unsupported dark-comparison modes remain non-link depictions.
 Ignored-only and empty Changes keep a Current preview without comparison
 modes; factual evidence lives in Details. Their existing routes and All escape
-remain available. A future interactive mode needs its own contract and owning
-screen first.
+remain available. A future interactive mode needs its own contract and owning screen first.
 
-Excluded styles shows All with one changed Welcome: one changed sheet matches and another is excluded. The title and row show Changed; comparison controls start in Current. Changes opens Matched styles, whose All filter returns to Excluded. Ignored only and No changes pair a separate zero-change catalogue. Unresolved and Unnamed styles open from the tree.
+Excluded styles shows All with one changed Welcome: one changed sheet matches and another is excluded. The title and row show Changed; comparison controls start in Current. Changes opens Matched styles, whose All filter returns to Excluded. Ignored only and No changes pair a separate zero-change catalogue. Unresolved and Unnamed styles open from the tree. Document page styles shows the page designs' Getting started document in Changes beside Action and Action's three saved variants. The page designs show the same five changes and open it from their Changes filter. It has no comparison controls; its Action row opens `design-component-style-changed`, and its variant rows stay depictions.
 
 | Control/context                   | Destination                                                  |
 | --------------------------------- | ------------------------------------------------------------ |
@@ -247,6 +245,8 @@ Excluded styles shows All with one changed Welcome: one changed sheet matches an
 | Ignored only: Changes filter      | Empty Changes, `design-review-empty`                         |
 | Matched evidence: All filter      | Excluded stylesheet evidence, `design-review-style-excluded` |
 | Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                |
+| Page designs: Changes filter      | Document page styles, `design-review-style-page`             |
+| Document page styles: All filter  | Document page, `design-page-view`                            |
 
 Matched and unresolved show only their changed screen in Changes. Mode destinations without an owning mockup remain depictions, and these states add no tag transitions. The component explorer's stylesheet stories keep their own Changes lists under the [component design contract](./mokly-component-design.md#component-pages): Styles outside a changed component links Action, from its row and from Details, to `design-component-style-changed`, whose Affected screens open the existing Welcome and Details inspection screens; their unlinked variant rows stay depictions.
 

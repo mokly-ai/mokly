@@ -24,6 +24,19 @@ export const COMPONENT_STYLE_COPY = {
   stylesChanged: "Styles this variant uses changed",
 } as const;
 
+/**
+ * The same evidence for a whole-document page. Mokly records no component
+ * output on a page, so every match on it is outside the changed components.
+ */
+export const PAGE_STYLE_COPY = {
+  files: "Changes to these files may affect this page:",
+  matched: "Changed styles that apply to this page:",
+  outside:
+    "These changed styles also apply outside the changed components on this page:",
+  unresolved:
+    "This change can apply anywhere on the page, so the page stays in Changes:",
+} as const;
+
 /** One outcome under a stylesheet: its lead sentence and the styles it names. */
 export interface StylesheetOutcome {
   lead: string;
