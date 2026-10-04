@@ -36,9 +36,10 @@ compilation so watched Serve observes created, renamed, or deleted files as
 defined by the [watch contract](./mokly-watch.md). The set is retained beside
 `sourceFiles` across build, check, watched Serve, publication, and the
 component runtime; later stages consume it and never repeat the walk within
-one compilation. Generated output is trusted for replacement when its recorded
-repository-relative owner is a resolved file, an inventoried source, or lies
-below a configured root and matches one of its `files` globs with dotfile
+one compilation. Generated HTML first needs the
+[current ownership header](./mokly-rendering-generated.md#ownership). Its
+repository-relative owner must be a resolved file, an inventoried source, or lie
+below a configured root and match one of its `files` globs with dotfile
 matching enabled. The match rule keeps output owned after a matched file is
 renamed, moved, or deleted, which the [move contract](./mokly-moves.md)
 depends on. An ownership header that satisfies none of the three branches is

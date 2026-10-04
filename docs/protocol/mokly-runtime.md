@@ -262,9 +262,8 @@ current-manifest screen fragments and generated document pages whose ownership
 header names that entry's manifest `sourcePath`. The versioned header stores
 that identity as canonical base64, keeping arbitrary repository filename bytes
 out of the HTML comment grammar. The adapter shares the strict build/cleanup
-decoder and accepts either LF or CRLF after that exact header. During migration
-it also recognizes the former raw-path header only when its source is valid
-comment content. Unowned HTML loses package-reserved metadata in the adapted
+decoder under the [current ownership rule](./mokly-rendering-generated.md#ownership);
+earlier headers prove no ownership. Unowned HTML loses reserved metadata in the adapted
 copy; a trusted route with missing/mismatched ownership, invalid markers, or a
 marker/portable-href mismatch fails closed. One strict typed target parser
 supplies inert metadata only to trusted parent enhancement. A trusted document
@@ -358,13 +357,9 @@ shell opens the active row's ancestor folders, conditionally clears a search or
 Changes filter that would hide it, and scrolls it into view. The complete target,
 portable-link, safe-degradation, sandbox, fragment, and active-tree behavior is
 defined by the [catalogue navigation contract](./mokly-navigation.md). Search,
-disclosure, filters, and catalogue scroll remain mounted. A search value splits
-into whitespace-separated terms: every `tag:<tag>` term (case-insensitive) keeps
-only rows whose entry declares that tag, and the remaining words rejoin into one
-phrase that must appear in a row's path, title, or tags. A row survives only when
-every tag term and that one phrase match, so tags compose with free text and with
-the All/Changes filter, and a term nothing matches hides those rows and the
-groups they empty. Selecting a tag chip enters `tag:<tag>` in the search field,
+disclosure, filters, and catalogue scroll remain mounted. Matching follows the
+single [search rule](./mokly-folders.md#titles); filters hide groups left empty.
+Selecting a tag chip enters `tag:<tag>` in the search field,
 replacing any tag term already entered; selecting the chip whose tag is entered
 clears that term. Chips are buttons that report the entered tag through
 `aria-pressed`, and they keep that mark through in-shell navigation and watched

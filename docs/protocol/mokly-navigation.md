@@ -30,8 +30,7 @@ or `Overview`, or, for a screen or component index, the folder renders as that
 entry's row; and a breadcrumb folder segment opens the folder page when one
 exists and otherwise expands the folder. A folder exists only while an entry
 lies below it, so the example's former `design-browse-tags` row is absent.
-Search also matches [folder titles](./mokly-folders.md#titles): a folder whose
-title matches shows every row below it.
+Every row uses the single [search rule](./mokly-folders.md#titles).
 
 ## Component Navigation
 

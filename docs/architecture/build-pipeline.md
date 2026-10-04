@@ -107,8 +107,9 @@ manifest schema. Routes and navigation both derive from each entry path.
 
 The resolved entry modules, the configured renderer, imported page
 helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and
-bundled together; matched Markdown files stay private watched inputs until document rendering is
-implemented under the [document contract](../protocol/mokly-documents.md).
+bundled together. Matched Markdown files are parsed and rendered under the
+[document contract](../protocol/mokly-documents.md); their source stays private
+and watched while generated documents and copied resources join the output.
 The internal bundle is CommonJS so Node-oriented consumer
 dependencies can retain dynamic built-in imports. Esbuild returns this bundle
 in memory; evaluation creates no temporary module file. A private compilation
@@ -236,8 +237,9 @@ Review-marker, link, resource, path, and ownership check.
 The final ownership header must still decode to the route's expected source.
 Its versioned canonical-base64 field keeps the source path comment-safe, and
 the shared parser accepts either an LF or CRLF line ending. Final transformed
-output must retain this current encoding; safe legacy raw-path headers remain
-readable only so existing files can be recognized and migrated.
+output must retain this current encoding. Earlier plain Mokly and all Mokabook
+headers prove no ownership; every consumer uses the
+[current ownership rule](../protocol/mokly-rendering-generated.md#ownership).
 
 This boundary preserves complete catalogue-reference records rather than
 markers alone. A transformer cannot add, remove, or alter an expected marker,

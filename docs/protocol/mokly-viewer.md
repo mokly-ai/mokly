@@ -219,10 +219,9 @@ and navigation events always use the resolved removed record. Removed screens
 expose only their read-only previous version, with no component picking,
 inspection, or comparison action.
 
-Free text and tags follow [Browse search](./mokly-runtime.md#browse-shell):
-parse case-insensitive `tag:` terms out of search into a deduplicated tag list,
-retain the remaining phrase as `search`, and require every tag plus that phrase.
-Normalization is deterministic; the visible input still displays those tags
+Free text and tags follow the single [search rule](./mokly-folders.md#titles).
+Public selection carries the normalized phrase as `search` and the deduplicated
+list as `tags`; the visible input still displays those tags
 as today's `tag:` terms. Navigation proposes any filter clearing needed to
 reveal its destination as one atomic selection update. Light-only views retain
 the existing fallback labels when Dark is selected; no fake dark view is made.

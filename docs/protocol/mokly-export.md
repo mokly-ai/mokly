@@ -10,6 +10,10 @@ authoritative. Exports use path identity and nested artifact directories.
 
 ## Scope
 
+Current files, comparisons and removed previews follow the exact
+[generated inventory rule](./mokly-export-public-files.md#generated-inventory),
+including entries named like build directories, in both output modes.
+
 For imported CSS, the public capture includes only generated stylesheet and
 asset routes owned by the accepted compilation. Committed mode captures checked
 disk bytes; derived mode captures the compiled CSS text and opaque asset bytes

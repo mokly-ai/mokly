@@ -220,8 +220,8 @@ Removed previews retain attachments linked from the original historical HTML.
 
 ## Navigation
 
-A document uses the document icon in both the tree and search. Search matches
-its title, path segments, and tags. The index document of a folder renders
+A document uses the document icon in both the tree and search, with the shared
+[search rule](./mokly-folders.md#titles). The index document of a folder renders
 under the [row rules](./mokly-folders.md#rows-and-clicks).
 
 ## Verification

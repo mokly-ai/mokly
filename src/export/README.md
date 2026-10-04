@@ -184,7 +184,8 @@ identity and timestamps as bounded path/prefix sets, revalidating with one
 metadata read per lookup. Retired schema 1 outputs are
 intentionally treated as unowned, so their events are not suppressed and their
 files never gain replacement authority. The repository-only preview
-adapter supplies validated host aliases and legacy ownership explicitly. It
+adapter supplies validated host aliases and uses current schema-2 ownership;
+an earlier preview marker grants no replacement authority. It
 captures already-built Browse output, retaining optional Changes and its
 source/resource fingerprint contract. Its capture server disables live Changes
 states: ordinary publications omit the tabs, while opt-in Changes publications

@@ -1,10 +1,5 @@
 # Public Catalogue Read Model
 
-## Delivery Status
-
-Serve, export and viewers use path-keyed v4 with rendered documents and
-[scoped bootstraps](./mokly-shell-bootstrap.md) and accepted move pairs.
-
 ## Location And Types
 
 Export writes `__mokly/catalogue.json` at the artifact root. Serve exposes
@@ -159,9 +154,9 @@ at `static/<view route>`, a current page or document at
 have no current files; their historical documents come only from their
 `preview` descriptor. `PublicPath` is an artifact-root-relative POSIX file path,
 without a leading slash, origin, query or hash; resolve it against the source's
-origin root, not the JSON directory or host app URL. A component parent has no
-views; its page shows its first variant entry, which follows it in the
-`components` array. `previousPath` is present exactly on entries the
+origin root, not the JSON directory or host app URL. A current component parent
+has no views; its page shows its first current variant. `previousPath` is
+present exactly on entries the
 [move contract](./mokly-moves.md) paired with a baseline entry.
 
 `identity.id` is lowercase SHA-256 of UTF-8 JSON, without LF, for
@@ -192,9 +187,13 @@ spread a manifest, entry, or internal evidence object into public JSON.
   standalone-screen steps by path; reused frames add no screen uses or
   duplicate instance records.
 - Component parents retain schemas, read-only control descriptions, and
-  declared slot names. Their variant entries follow them in authored order with
-  validated wire props and supplied slot names; the first is the default, and
-  ready usage copies only instances/slots/ranges.
+  declared slot names. Current parents require at least one current variant;
+  a removed parent may have zero removed variants, including when all its
+  variants move to other parents. Both complete and scoped readers accept that removed
+  parent, retain its removal record and never invent variants. Current variants
+  require a current parent. Variants follow their parent in authored order;
+  the first current variant is the default. Ready usage copies only
+  instances/slots/ranges with validated props and supplied slot names.
 - Details retain authored display metadata already exposed by the inspector.
   `details.dependencies` lists the entry's source path, declared paths, and
   for a document its resources as repository-relative display labels only.

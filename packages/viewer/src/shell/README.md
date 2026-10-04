@@ -50,10 +50,9 @@ Specs and Components keep independent section roots even when they reuse the
 same folder paths. `filterHierarchy` orders each section again by the rows it
 shows, applying the `order` each folder node carries, so a screen or component
 that is its folder's own page sorts as a folder row in the other section.
-Search compares a row's path, title, tags, and the titles of the folders at or
-above it (`registry/folder_titles.ts`), never a display label such as
-`Overview` or `· Removed`. `search_query.ts` owns that one search row, so row
-visibility, Changes activation, and route reveals match the same text.
+`search_query.ts` implements the single [search rule](../../../../docs/protocol/mokly-folders.md#titles),
+using resolved titles from `registry/folder_titles.ts`. Row visibility,
+Changes activation and route reveals all use that shared query and row.
 `crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
 links to it, a visible folder without one becomes a button that
 `nav_reveal.ts` resolves to the disclosures exposing that folder, and the
@@ -155,7 +154,7 @@ Primary, modified, middle, and named-target activations therefore share the
 same `/view/` destination. An unknown path installs the missing view only for
 standalone/uncontrolled shells and is recoverable by any later selection;
 controlled viewers emit an error and keep their display.
-Search matches paths, titles, and tags only. Details omits derived route
+Details omits derived route
 and generated-path rows because the address bar and path chip already identify
 the entry.
 

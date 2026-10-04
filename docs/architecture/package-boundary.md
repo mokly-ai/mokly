@@ -96,15 +96,16 @@ the viewer before the CLI that depends on it.
 ## Complete-Document Boundary
 
 Consumers register complete HTML with `definePage`; a Markdown file matched by a
-configured root remains a protected watched input until
-[document rendering](../protocol/mokly-documents.md) is implemented. A page callback may reuse an existing render helper; consumer
+configured root defines a [document](../protocol/mokly-documents.md), which
+Mokly renders while its source remains protected and watched. A page callback
+may reuse an existing render helper; consumer
 policy owns source allowlists and document-stage rules. A configured
 complete-document transformer remains an explicit deterministic boundary whose
 result receives normal validation. Current and comparison-base manifests both
 require v8 under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
-Path identity and roots are implemented; Markdown rendering and move detection
-remain in the [path identity plan](../../plans/path-identity.md).
+[Paths and roots](../protocol/mokly-paths.md) determine identity for every kind.
+[Move detection](../protocol/mokly-moves.md) pairs entries across accepted builds.
 
 ## Runtime Boundary
 
@@ -153,7 +154,7 @@ page's canonical `/view/<path>/` URL and immutable comparison URLs. The exporter
 owns file selection, input consistency, exclusive output reservation,
 replacement, and rollback; `scripts/preview` captures one already-built Browse
 snapshot with optional Changes and adds Pages URL/header metadata and
-old-preview migration. Both paths share artifact validation, deployment
+current schema-2 preview ownership. Both paths share artifact validation, deployment
 identity, and the output transaction, and reuse the same shell renderer and
 comparison engine. Watch ignores inventory-listed export files while traversing
 output directories for new authored files.

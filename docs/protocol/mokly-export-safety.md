@@ -65,7 +65,8 @@ output basename; `stage/` and `backup/` remain inside that reservation. Old
 recovered. Confirm no writer is active, inspect any retained backup, and recover
 it before moving an abandoned reservation aside. Nothing is silently stolen.
 
-Do not accept the old `.mokly-preview-artifact` marker through the public
-command. The repository-only adapter may explicitly migrate a valid legacy
-preview at its known output path with the same backup/rollback guarantees;
-malformed markers and unrelated contents still fail.
+Neither consumer export nor the repository preview adapter accepts an earlier
+`.mokly-preview-artifact` as replacement authority, including for pre-derived
+`view/` paths. A nonempty output needs the current schema-2 marker and exact
+inventory. An earlier marker alone fails without changing the output; preserve
+authored files, delete the earlier output, and run the command again.
