@@ -2,11 +2,10 @@
 
 ## Delivery Status
 
-The existing fixture lifecycle, cancellation and historical CI acceptance
-sections below describe implemented behavior. The shared example-baseline
-preparation section is an approved pending target in
+The shared example-baseline preparation, isolated copies, cold operations and
+verification ownership below are implemented.
 [Generated Output Simplification](../../plans/generated-output-simplification.md)
-(finding 34 option C). Global baseline preparation is not yet implemented.
+records the audited callers and comparable measurements for finding 34 option C.
 See [CI verification](./ci-verification.md) for suite boundaries and evidence.
 
 ## Shared Example Baseline Preparation
@@ -26,6 +25,14 @@ example baseline, including indirect helper callers. The current users are
 in the plan before implementing reuse; do not assume these remain the only two.
 Only identical baseline inputs share this preparation.
 
+The merged fixtures previously compiled and committed distinct focused outputs.
+The shared export baseline uses one common focused source profile: the basic
+catalogue/components and the design-library export entries. Both consumers use
+that same baseline unchanged before the design fixture applies its source edit.
+Its real recipe remains `npm ci`, `npm run build`, `npm run example:build`.
+The separate ordinary-preview profile has different inputs and no historical
+comparison work; it keeps its own worker-owned preparation.
+
 Global setup must:
 
 1. Create a unique owned root under repository `.context/`, using the existing
@@ -43,6 +50,17 @@ Global setup must:
    A missing, partial, mismatched or invalid template fails setup/the consuming
    fixture; never silently rebuild separately in each ordinary fixture.
 
+The descriptor is `example-baseline.json` beneath that verification owner's
+resource root. Workers receive its exact path through
+`MOKLY_BROWSER_BASELINE_DESCRIPTOR` and the existing owner environment keys.
+It contains `schemaVersion: 1`, `ownerId`, `repository`, `commit`, `configPath`,
+`cataloguePath`, `commands`, `recipeIdentity` and `templateHash`. Readers require
+that owner's directory, a regular bounded descriptor, exact fields and paths,
+the recorded commit and SHA-256 recipe/content identities. They reject aliases.
+Template hashing covers file names and bytes, including Git refs/index and cache
+contents; timestamps are not identity. The completed cache contains only its
+commit's `complete.json`, `inputs.json` and `output/`, with no source or lock debris.
+
 Every consuming fixture gets its own writable repository/source copy and local
 copy of the completed cache, preserving the same baseline commit, relative
 catalogue root and recipe. Do not share `.git` refs/index, cache locks/markers,
@@ -51,6 +69,9 @@ Use copies or independent clones without hard links for mutable data; no
 symlinked cache output. Do not copy live locks, partial source extractions or
 transaction leftovers. Existing marker and inventory validation must establish
 that the copied cache is a real warm hit; copying is not permission to skip it.
+Validate the template before and after copying and again at teardown. Exports
+must observe a real warm baseline span with no command span; an unexpected
+rebuild fails the fixture instead of being hidden by successful export output.
 
 The design-library fixture applies its source edit only after acquiring that
 independent copy. The static-example fixture retains its unchanged-HEAD checks.
@@ -68,6 +89,7 @@ and comparison result. It must not consume the warmed cache. Identify and
 retain that owning test after the merge, adding an explicit regression if cold
 work previously happened only incidentally in fixture setup. Keep every
 existing UI assertion in the ordinary fixtures that now reuse preparation.
+The owning case is `tests/browser/example_baseline_cold.spec.ts`.
 
 Also retain `tests/browser/preview_preparation.spec.ts` and its real cold
 `npm run preview:build`, absent-output proof, generated-byte stability and
@@ -77,7 +99,7 @@ reuse setup only when setup is not the operation they verify. This decision
 does not remove unit/integration baseline, lock, cancellation, invalidation,
 source-mutation or clean-install coverage, or change what the preview test builds.
 
-Keep `REAL_EXPORT_FIXTURE_TIMEOUT_MS = 600_000` (600 seconds) unchanged. Apply
+Keep `FULL_CATALOGUE_SETUP_TIMEOUT_MS = 600_000` (600 seconds) unchanged. Apply
 the same 600-second ceiling to the one global baseline preparation operation;
 do not move repeated unbounded work into global setup. Do not change assertion
 deadlines, worker count, retries, sharding, coverage requirements or the full gate.

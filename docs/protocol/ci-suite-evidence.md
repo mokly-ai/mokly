@@ -45,7 +45,7 @@ inputs because preparation is part of what those tests verify. Fixture phases
 emit `[mokly:fixture-timing]` JSON with the fixture, phase, duration, status,
 and whether the operation itself is under test.
 
-Full-catalogue browser preparations share a five-minute setup budget in
+Full-catalogue browser preparations share a ten-minute setup budget in
 `tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline
 exports, and ordinary publication fixtures use that budget independently of the
 default one-minute browser test timeout. Assertion deadlines, retries, and

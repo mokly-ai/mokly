@@ -1503,30 +1503,186 @@ Test infrastructure. Implement finding 34 C under the
 [fixture preparation contract](../docs/protocol/ci-fixture-preparation.md).
 The product and every existing UI assertion remain functional throughout.
 
-- [ ] After the merge, audit every browser fixture and indirect helper that
+- [x] After the merge, audit every browser fixture and indirect helper that
       rebuilds the same unchanged example baseline. Record all consumers, starting
       with today's static-example and design-library-export fixtures.
-- [ ] Record the merged branch's browser-suite time, full test inventory and
+- [x] Record the merged branch's browser-suite time, full test inventory and
       fixture phases before changing preparation, with runtime, worker/shard and
       cache conditions recorded for a comparable after measurement.
-- [ ] In Playwright global setup, create the example baseline repository and its
+- [x] In Playwright global setup, create the example baseline repository and its
       real rebuilt v8 cache once before tests start. Publish the validated run
       descriptor only after preparation succeeds; retain existing Serve readiness.
-- [ ] Give every equivalent fixture an isolated repository/source/cache copy.
+- [x] Give every equivalent fixture an isolated repository/source/cache copy.
       Preserve the baseline commit and recipe; prove warm hits, mutation isolation,
       immutable template contents and safe global/fixture teardown on failure or
       cancellation. No per-fixture fallback rebuild may mask failed preparation.
-- [ ] Retain exactly one browser test that exercises the real cold baseline
+- [x] Retain exactly one browser test that exercises the real cold baseline
       rebuild as its operation under test, and retain the real cold preview:build
       preparation test. Preserve all unit/integration baseline and UI coverage.
-- [ ] Keep the 600-second fixture limit unchanged; do not change assertion
+- [x] Keep the 600-second fixture limit unchanged; do not change assertion
       deadlines, retries, worker limits or sharding. Bound shared setup as specified.
-- [ ] Record after timings for the full browser suite, global preparation,
+- [x] Record after timings for the full browser suite, global preparation,
       per-fixture copy/cache/export and the retained cold operations. Compare with
       before results, including setup/teardown time and complete coverage evidence.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits and push.
+
+### Merged fixture audit before implementation
+
+Audited at `332f44decd603c2c8f7d1c50dc1cb28c2d871234`. The merged code differs
+from the original preparation assumption. No browser fixture currently rebuilds
+the same example baseline twice: `createCommittedExampleBaseline` compiles and
+force-adds focused v8 output to each temporary repository, so the two named
+export fixtures use blob readers. Their source/config profiles are different.
+`createExampleBaseline` retains a real source-only rebuild in unit tests.
+
+| Browser caller                                                     | Current preparation                                                                                                                                        | Planned ownership                                                                                                     |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `static_example.spec.ts`                                           | `createCommittedExampleBaseline(root, "static-example")`; unchanged-HEAD export                                                                            | Independent copy of the shared source-only example/cache; unchanged-HEAD assertions remain                            |
+| `design_library_export.spec.ts`                                    | Same helper with `"design-library"`; tag-chip edit, then export                                                                                            | Same immutable baseline inputs as static-example; apply its existing edit only in its copy                            |
+| `ordinary_preview_fixture.ts`                                      | Same helper with distinct `"ordinary-preview"` inputs; current-only publication; shared by `preview_navigation.spec.ts` and `preview_design_links.spec.ts` | Retain its separate worker-owned current-only preparation; it performs no historical rebuild and has different inputs |
+| `preview_fixture.ts`, called only by `preview_preparation.spec.ts` | Same helper with `"static-example"`, followed by direct `buildPreview`, despite the cold `preview:build` description                                       | Independent source-only fixture and real cold `npm run preview:build`; never use the shared cache                     |
+| Playwright's example Serve                                         | The working tree's separately pinned HEAD, prepared by Serve as needed                                                                                     | Keep readiness and report it separately; it is not the fixture baseline                                               |
+
+There is no existing browser cold-baseline operation-under-test case to retain.
+Add exactly one. Keep all unit/integration callers of `createExampleBaseline`,
+`createCommittedExampleBaseline` and other baseline helpers independent.
+`design_library_fixture.ts` is a unit-only in-memory comparison helper;
+`component_design_fixture.ts` only reads prepared current output. Neither is a
+browser historical rebuild consumer.
+
+The two ordinary export fixtures will use one common focused source profile:
+the existing basic catalogue/components plus the existing design-library fixture
+entries. Their inputs, config path and real three-command recipe will be identical.
+This preserves all UI assertions without pretending the old profiles were equal.
+Generated output is absent from that baseline commit. The ordinary-preview
+profile remains separate because its inputs differ and it has no historical work.
+
+For comparable timing, first establish the required real operations without
+sharing: both ordinary consumers prepare their own identical source-only baseline,
+the new cold-baseline test performs its own rebuild, and preview preparation runs
+the real CLI command. Measure a full run of that workload, then move only ordinary
+baseline preparation into global setup and repeat the same full inventory on the
+same machine/runtime with controlled cache conditions. Record the existing M13
+24.9-minute browser run separately as the as-found shortcut workload; it is not
+an equivalent before measurement for real rebuild sharing.
+
+- [x] Record the comparable independent-preparation run before introducing reuse.
+- [x] Retain the same common profile, recipe, cold cases and timing instrumentation
+      for the after run; report global setup, teardown and fixture phases explicitly.
+
+### Comparable before measurement
+
+The independent-preparation run passed all 970 browser tests in **1618.841 s**
+(command wall time, including package/example preparation). The Playwright report
+records 26.6 minutes. No test was skipped or retried. The new inventory adds only
+the explicit cold-baseline test to M13's 969 cases.
+
+Conditions: Node `22.14.0`, npm `11.11.0`, Chrome `153.0.8010.52`, Linux x64,
+8 Intel Xeon vCPUs at 2.90 GHz, 17,452,048,384 bytes RAM, one worker, no shard,
+zero retries. Every fixture repository/cache was fresh; npm's existing download
+cache was warm. The distinct workspace Serve baseline at HEAD `332f44de` was
+prepared before measurement. Profile and lockfile SHA-256 values, the complete
+inventory and raw phase records are retained in `.context/milestone-14/before.json`
+and `before-inventory.json`; `README-timing.txt` records the controls.
+
+Startup (server plus global setup) was 22.994 s; the existing Serve-readiness
+global setup was 19.954 s. Global teardown measured 0.02 ms. The last test to
+command exit interval was 0.332 s and includes outer teardown/reporting.
+
+| Fixture               | Source/Git (s) | Install (s) | Build (s) | Cold baseline (s) | Prepare total (s) | Warm baseline (s) | Export (s) |
+| --------------------- | -------------: | ----------: | --------: | ----------------: | ----------------: | ----------------: | ---------: |
+| design-library-export |          0.722 |       9.140 |    14.770 |            25.417 |            25.447 |             0.080 |     13.698 |
+| static-example        |          0.611 |       8.018 |    13.678 |            22.876 |            22.897 |             0.062 |     13.523 |
+| cold-example-baseline |          0.712 |       8.633 |    14.827 |            24.806 |            24.826 |             0.062 |     13.879 |
+
+The separate real cold `preview:build` took 21.761 s and its server startup
+1.429 s. Ordinary current-only preview export took 161.609 s and serving 1.433 s.
+Each warm export recorded absent install/build phases as `not-observed` with null
+duration. There were three real common-profile baseline rebuilds: two ordinary
+fixture preparations and the single cold operation test. Shared preparation was
+not active. The before code and inputs stayed fixed throughout the measurement.
+
+### Comparable after measurement
+
+The shared-preparation run passed the same **970 tests in 1676.363 s** (27.6
+minutes reported by Playwright), including global preparation and teardown.
+This is **57.522 s slower** than the independent-preparation run. Do not claim
+a full-suite speedup from these measurements.
+
+Both runs used the same Node/npm/Chrome versions, machine, worker/shard/retry
+settings, warm npm cache and separately warmed workspace Serve HEAD. The lockfile
+and common-profile SHA-256 values match, and the complete test inventories match.
+The recorded startup host load averages differ: before `[1.14, 1.18, 0.85]`, after
+`[3.93, 4.18, 3.05]`. These are observed conditions, not controlled CPU scheduling;
+they prevent attributing the full wall-time difference solely to cache sharing.
+All raw after records are in `.context/milestone-14/after.json` and `after.log`.
+
+Startup was 47.884 s, including global setup at 44.562 s. That setup includes
+19.296 s of existing Serve readiness and the following one-time preparation:
+
+| Global phase                                 | Seconds |
+| -------------------------------------------- | ------: |
+| Source/Git                                   |   0.749 |
+| Install                                      |   8.181 |
+| Build                                        |  14.276 |
+| Cold baseline                                |  23.937 |
+| Prepare total                                |  23.952 |
+| Immutable-template verification and disposal |   0.380 |
+
+| Fixture               | Template validation (s) | Copy (s) | Copied-cache validation (s) | Warm baseline (s) | Export (s) |
+| --------------------- | ----------------------: | -------: | --------------------------: | ----------------: | ---------: |
+| design-library-export |                   0.470 |    0.513 |                       0.351 |             0.064 |     13.913 |
+| static-example        |                   0.437 |    0.492 |                       0.380 |             0.065 |     14.424 |
+
+Both ordinary consumers report install/build as `not-observed` with null
+duration. Neither performs a historical rebuild or shares mutable Git/cache state.
+The template's bytes and refs remained unchanged through both consumers and
+global teardown. Global teardown measured 0.380 s; the outer last-test-to-exit
+interval was 0.810 s, including teardown/reporting.
+
+The one retained cold operation measured source/Git 0.840 s, install 9.211 s,
+build 15.925 s, baseline 26.675 s and prepare total 26.711 s. Its subsequent
+comparison export used the real warm cache (0.063 s baseline validation) and took
+14.484 s. The separate real cold `preview:build` took 27.374 s and its server
+startup 1.642 s. Ordinary current-only preview remained independent: export
+166.233 s and serving 1.434 s.
+
+Common-profile rebuilds therefore changed from three to exactly two: one global
+preparation and the cold regression. Existing unit/integration rebuild tests,
+the separate preview operation and workspace Serve preparation remain independent.
+The 600-second ceiling, assertion deadlines, worker count, retries and sharding
+are unchanged. Test listing produces no preparation or fixture timing records.
+
+Focused acceptance: all 29 lifecycle/command/timing checks and all six focused
+browser checks pass. The miniature real-build fixture initially missed its required
+desktop render; that test fixture was corrected. A cache-corruption assertion was
+updated to require the existing `baseline-output-invalid` category instead of a
+generic message. No product reader, cache validator or build recipe was weakened.
+
+### Full gate and completion
+
+The complete gate passed on Node `22.14.0`:
+
+| Command                                                                | Result                                  |  Seconds |
+| ---------------------------------------------------------------------- | --------------------------------------- | -------: |
+| `npm run format:check`                                                 | pass                                    |   27.158 |
+| `npm run lint`                                                         | pass                                    |   19.771 |
+| `npm run typecheck`                                                    | pass                                    |   36.801 |
+| `npm test`                                                             | 3,795 passed; no skips or cancellations |  981.598 |
+| `npm run test:browser -- --output .context/milestone-14/after-results` | 970 passed; comparable after run above  | 1676.363 |
+| `npm run example:check`                                                | 436 valid, untracked files              |   11.221 |
+| `cargo xtask check`                                                    | pass                                    | 3016.476 |
+
+The cargo gate passed the unchanged dependency audit policy, 15 Rust tests,
+six packed-consumer scenarios, another 3,795 unit tests, 747 browser tests and
+223 hydration tests. Each browser invocation prepared its own template and
+removed it through the verification owner after immutable-content checks.
+The source-size check passed for 921 files. No main test title or product feature
+was removed; the five authorized Milestone 11 deletions remain unchanged.
+The final refresh still names main `800fe9f88a0173429b25baa1bcf41ed9e59b2256`;
+no merge occurred. Commit and push precede the final document audit.
 
 ## Milestone 15: Verify and review the merged branch
 

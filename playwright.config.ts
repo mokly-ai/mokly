@@ -1,5 +1,9 @@
 import { defineConfig } from "@playwright/test";
 
+import { startBrowserSuiteTimer } from "./tests/helpers/browser_timing.js";
+
+startBrowserSuiteTimer();
+
 const configuredPort = process.env["MOKLY_PLAYWRIGHT_PORT"] ?? "4517";
 const port = Number(configuredPort);
 if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {

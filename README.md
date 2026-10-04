@@ -326,6 +326,10 @@ ESLint requires shared directory constants, locale-independent source ordering,
 and unique imports. Tests probe every covered source folder through the real
 flat config. See the [lint contract](./docs/protocol/mokly-directory-lint.md).
 
+Browser global setup prepares one real example baseline and cache. Ordinary
+export fixtures use isolated, validated copies; dedicated tests retain cold
+baseline and preview builds. See [fixture preparation](./docs/protocol/ci-fixture-preparation.md).
+
 `npm run dependencies:check` audits every workspace dependency category against
 the live registry. It fails on Low-or-higher advisories unless an active reviewed
 exception covers the exact dev-only path. Exceptions expire on an inclusive UTC

@@ -18,8 +18,10 @@
   Milestone 12 renames `__mokly/` to `mokly-viewer/` and implements ownership-v3,
   upload-v2 and viewer compatibility errors. Its full gate and smoke tests pass.
   Milestone 13 adds complete real-config lint probes and duplicate-import
-  enforcement; its full gate passes. Milestones 14–15 prepare the shared browser
-  baseline, then verify and review. Correction 3 A selects v8-only baselines; findings
+  enforcement; its full gate passes. Milestone 14 prepares the shared browser
+  baseline once, preserves real cold coverage and records both full measurements;
+  its full gate passes. Milestone 15 audits documents, verifies and reviews.
+  Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
