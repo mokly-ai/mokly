@@ -2445,6 +2445,12 @@ Status: Not started.
       feature branch has not moved; otherwise merge under the merge rules in
       `AGENTS.md`. If `origin/main` has new additions, merge them under the
       same rules.
+- [ ] Correct the projection sentence that Milestone 14 changed in
+      `mokly-catalogue.md`. It says that projection rejects dangling component
+      references. The code does not reject them: when a removed entry's
+      usage names a component that the model does not publish, projection
+      omits that usage, so the view's usage is unavailable. State that rule,
+      and add a projection test if none covers it.
 - [ ] Run the full verification, including the unmodified `cargo xtask check`.
 - [ ] Smoke-test each fixture case with the CLI, `serve --base main` and
       `export --base main`. In a browser at 1280px and 390px, follow every
