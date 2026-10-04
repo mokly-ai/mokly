@@ -22,7 +22,9 @@
   baseline once, preserves real cold coverage and records both full measurements;
   its full gate passes. Milestone 15's document audit, full gate and final
   review are complete. The review reported 23 new findings without changes
-  (35–57: 1 high, 8 medium, 14 low).
+  (35–57: 1 high, 8 medium, 14 low). Milestones 16–18 remove all
+  backward-compatibility code, including `main`'s, by the user's decision;
+  version checks that stop on older data stay.
   Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.

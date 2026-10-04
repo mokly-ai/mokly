@@ -1808,6 +1808,163 @@ partly fixed; their remaining parts are listed with the new findings where
 they changed form. Findings 3, 5, 9, 10, 14, 16, 17, 19 and 25 remain open.
 Main had not moved. Every finding awaits the user's decision.
 
+## Milestone 16: Define the compatibility-removal contracts
+
+Documentation only. On 2026-10-04 the user decided that Mokly removes all
+backward-compatibility code, because the project is not live. The decision
+includes compatibility code that exists on `main`; this section records that
+approval for each `main` removal listed below. Checks that detect older data
+and stop with a clear message stay. This milestone rewrites every affected
+contract, guide and README so that they describe only the current formats.
+Milestone 17 then removes the code.
+
+### Approved removals
+
+The orchestrator's inventory comes from the final review and a source search:
+
+1. **Base-selection shortcut** (findings 36 C and most of 19;
+   `src/review/prepare.ts:116-160`, `src/review/base_manifest.ts`). Base
+   selection reads only `<catalogueRoot>/mokly-generated/mokly-manifest.json`
+   in the base tree. A committed manifest at any other location never decides
+   the outcome. A missing manifest or an incomplete v8 inventory selects a
+   rebuild with the base's own recipe. Selection lists only the
+   `<catalogueRoot>/mokly-generated/` subtree, not the whole repository.
+2. **Earlier manifest names** (`main`; `src/registry/manifest.ts:30-33` and
+   every user). Mokly recognizes only `mokly-manifest.json`. The privacy
+   rules keep that name.
+3. **Earlier-format baseline cache entries** (findings 47, the rest of 8, and
+   38 A; `src/baseline/cache.ts`, `src/baseline/cache_layout.ts`). Remove the
+   `generated-v6` and `legacy` layouts, markers below manifest v8,
+   `olderCacheExists` and `assertCurrentCache`. An entry that is not a
+   complete, valid v8 entry is partial: Mokly deletes it under the cache lock
+   and rebuilds it, as on `main`. The completion marker is written
+   atomically, through a temporary file and a rename.
+4. **Compatibility transformer** (`main`; finding 43 and the rest of 15 and
+   21). Remove `compatibility.transformer`, `CompatibilityConfig`,
+   `CompatibilityTransformer`, `CompatibilityTransformInput`,
+   `src/compatibility/`, `validateCompatibilityRecords` and every build hook.
+   A config that contains `compatibility` fails with the removed-key error
+   `compatibility was removed; author portable links directly`.
+5. **Earlier export-marker message** (finding 44;
+   `src/export/ownership.ts:242-245`). A destination whose marker is not a
+   valid v3 marker fails with the existing invalid-ownership error.
+6. **Legacy export ownership** (`main`; `LegacyExportOwnership` and the
+   `legacyOwnership` adapter option in `src/export/`). Export adopts only an
+   empty folder or a folder with its own valid marker.
+7. **Former generated notices** (`main`; `FORMER_FIRST_LINE` in
+   `src/build/generated_marker.ts`). Mokly strips only the current marker,
+   with LF or CRLF.
+8. **Earlier export reservation check** (`main`;
+   `src/export/reservation.ts:47-54`).
+9. **Obsolete disclosure storage key** (`main`; the `mokly:nav-disclosure:v2`
+   cleanup in `packages/viewer/src/shell/disclosure_storage.ts`). The viewer
+   uses only the current key.
+10. **Snapshot-id fallback** (`main`; `legacyGeneration` in
+    `packages/viewer/src/catalogue/reader.ts`). Remove it if no current
+    writer, including publication, omits `snapshotId` while a comparison
+    identity exists. Otherwise keep it under a current name and record why.
+11. **Layout prefix** (finding 24 and part of 25). Remove `generatedPathPrefix`
+    from catalogue v4 and `CatalogueReadModel`, `GeneratedPathPrefix`, the
+    prefix parameters, `FrameMount.generatedPathPrefix`, `FrameMount.route`,
+    `data-mokly-generated-prefix`, and all layout derivation in the viewer.
+    The viewer uses `GENERATED_DIRECTORY` directly. Catalogue v4 keeps its
+    number, because it is not released.
+12. **Removed output-mode leftovers** (finding 53 A). Remove
+    `compareResourceBytes` and its `false` branches, the no-op mode loops and
+    the stale test titles. Replace the assertion that accepts either of two
+    messages with one exact message. Remove the two-mode text in
+    `src/review/README.md`. Restore `main`'s "consumer is in `changedPaths`"
+    assertion.
+
+### Kept checks
+
+These checks detect older data and stop with a clear message:
+
+- The format version checks: catalogue v4, delivery v4, bootstrap v1, export
+  ownership v3, upload v2 with the 426 response, review result v4, preview
+  v2, and the cache and process markers.
+- The earlier-version outcome for a base whose own rebuild writes a manifest
+  below v8 at `<catalogueRoot>/mokly-manifest.json`. Mokly does not cache
+  this outcome.
+- The removed-key errors for `generatedOutput`, `publicExclude` and `legacy`,
+  plus the new one for `compatibility`.
+
+The instance-key hash domains in `packages/viewer/src/components/keys.ts`
+keep their names. They are identities, not compatibility code, and a rename
+changes every instance key.
+
+### Resolved by the decision without code
+
+Finding 3's upgrade guide and `main`'s ignore rule for
+`examples/basic/generated/` are not added. Finding 13's legacy-catalogue test
+is covered by the version-gate tests. The Milestone 17 tests replace the
+earlier-version acceptance tests of finding 48.
+
+All other findings still await the user's decision: 35, 37, 39–41, 42 (except
+the viewer README sentence that this work corrects), 45, 46 (except text that
+goes with the removed code), 48 (the SHA-256, binary-asset and Serve-line
+tests), 49–52 and 54–57, plus earlier findings 2, 5, 9, 10, 14, 16–18, 20 and
+the double decode in 25. Do not fix them. If a removal forces a change in
+their area, make the smallest correct change and record it.
+
+- [ ] Update every affected protocol document, guide and README, including
+      `packages/viewer/README.md`, so that each describes only the current
+      formats. Remove the transformer section from `mokly-rendering.md` and
+      every reference to a removed item. Write current contracts, not plan
+      history, as `docs/protocol/README.md` requires.
+- [ ] Define exactly: base selection with one manifest location and a
+      generated-subtree listing; the earlier-version outcome after a rebuild;
+      cache entry validity, partial-entry deletion, retention cleanup of
+      invalid entries and the atomic marker write; an export destination with
+      an invalid or earlier marker; the `compatibility` removed-key error; and
+      the single-layout frame URL rule.
+- [ ] Record the removed public API in `docs/protocol/npm-release-notes.md`.
+- [ ] Update this plan's summary and decision text that describe removed paths.
+- [ ] Run `npm run format:check` and the documentation tests; review the diff;
+      commit with Conventional Commits; push.
+
+## Milestone 17: Remove the compatibility code
+
+Implement the Milestone 16 contracts. Remove each approved item with its
+tests, fixtures and references. Add tests for each new behaviour. The product
+works at the end of the milestone.
+
+- [ ] Base selection and baselines (items 1–3). Add tests: a base with a
+      committed root-level v7 manifest and no `mokly-generated/` selects a
+      rebuild; a base whose rebuild writes v7 gives the earlier-version
+      outcome through `prepareReviewRepository` and export; empty, truncated
+      and earlier-format cache markers lead to a rebuild; the marker write is
+      atomic.
+- [ ] Remove the compatibility transformer (item 4). Keep the other
+      assertions of tests that configured a transformer. Test the
+      `compatibility` removed-key error.
+- [ ] Remove the export items (items 5, 6 and 8) and update their tests.
+- [ ] Remove items 7, 9 and 10, with their tests.
+- [ ] Remove the layout prefix from the viewer (item 11). Update the public
+      types, the tests and the catalogue fixture.
+- [ ] Remove the output-mode leftovers (item 12).
+- [ ] Search the code again for compatibility paths (for example `legacy`,
+      `former`, `obsolete`, `earlier` and older version numbers). Record every
+      result in this milestone. Remove a result only if it matches the
+      approved scope, and report every other result.
+- [ ] Smoke-test build, check, Serve (a styled screen and Changes), an export
+      on a static server, and Changes against a base that also commits a
+      stale root-level v7 manifest.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; `git add -A`; commit with Conventional Commits and
+      a `BREAKING CHANGE` footer; push.
+
+## Milestone 18: Verify and review the compatibility removal
+
+- [ ] Re-read every document changed in Milestones 16 and 17 against the code,
+      and fix drift. Validate changed Markdown. If code changes, rerun the
+      full gate.
+- [ ] `git add -A`; commit with Conventional Commits; push.
+- [ ] After the push, review the complete local diff against `origin/main`
+      using `docs/implementation-review-prompt.md`; report numbered findings
+      with severities and recommendations without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Parked: replace archive extraction with Git worktrees in a cache outside
