@@ -8,6 +8,10 @@ import { compareReview } from "../dist/review/compare.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 
 import { componentGit } from "./helpers/component_review_fixture.js";
+import {
+  assertMoveDelivery,
+  commitMoveBaseline,
+} from "./helpers/move_delivery.js";
 import { pathFixture } from "./helpers/path_fixture.js";
 
 for (const components of [false, true])
@@ -28,6 +32,7 @@ for (const components of [false, true])
     await fs.mkdir(path.join(fixture.root, "mockups"));
     const config = await fixture.config();
     const before = await fixture.compile();
+    await commitMoveBaseline(await fixture.config(), before);
     await fs.rename(
       path.join(fixture.root, "specs/old.md"),
       path.join(fixture.root, "specs/new.md"),
@@ -38,6 +43,7 @@ for (const components of [false, true])
     );
     const after = await fixture.compile();
     await writeCompilation(after, config);
+    await assertMoveDelivery(config, after);
     const git = componentGit(before);
     const snapshot = await computeCatalogueChanges(
       config,

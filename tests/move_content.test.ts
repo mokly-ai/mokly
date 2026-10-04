@@ -8,7 +8,7 @@ import {
 
 import { contentMoveSignals } from "../src/review/moves/content.js";
 
-import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 
 function document(path: string): ManifestDocument {
   return {

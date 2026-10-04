@@ -89,8 +89,9 @@ export const history = defineScreen({
 
 Two slug-less screens in one module derive one path and fail the build with
 both locations. So do `invoice.mockup.tsx` and `invoice/index.mockup.tsx`
-when neither declares another path. A same-named directory containing ordinary
-child entries can coexist with the file.
+when neither declares another path. An ordinary entry cannot also name a folder
+that contains other entries. Use `invoice/index.mockup.tsx` for the folder page
+and put its members beside it.
 
 ## Keep scrolling panels paired
 

@@ -5,7 +5,7 @@ import { summaryMarkdown } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 
-import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 import { pageSource } from "./helpers/path_fixture.js";
 
 test("an unmatched movedFrom remains added and records the exact comparison diagnostic", async (t) => {

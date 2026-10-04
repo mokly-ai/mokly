@@ -7,6 +7,10 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { compareReview } from "../dist/review/compare.js";
 
 import { componentGit } from "./helpers/component_review_fixture.js";
+import {
+  assertMoveDelivery,
+  commitMoveBaseline,
+} from "./helpers/move_delivery.js";
 import { pathFixture } from "./helpers/path_fixture.js";
 
 test("moved entry roots keep imported CSS identity when definitions stay in a helper module", async (t) => {
@@ -23,6 +27,7 @@ test("moved entry roots keep imported CSS identity when definitions stay in a he
   t.after(() => fixture.remove());
   await fs.mkdir(path.join(fixture.root, "mockups"));
   const before = await fixture.compile();
+  await commitMoveBaseline(await fixture.config(), before);
   await fs.rename(
     path.join(fixture.root, "specs/old"),
     path.join(fixture.root, "specs/new"),
@@ -30,6 +35,7 @@ test("moved entry roots keep imported CSS identity when definitions stay in a he
   const after = await fixture.compile(),
     config = await fixture.config();
   await writeCompilation(after, config);
+  await assertMoveDelivery(config, after);
   assert.equal(
     before.manifest.entries[0]!.sourcePath,
     after.manifest.entries[0]!.sourcePath,
@@ -60,6 +66,7 @@ test("mapping a moved entry's shared stylesheet does not change a surviving cons
   t.after(() => fixture.remove());
   await fs.mkdir(path.join(fixture.root, "mockups"));
   const before = await fixture.compile();
+  await commitMoveBaseline(await fixture.config(), before);
   await fixture.write(
     "specs/old/collection.mockup.ts",
     "import '../styles.css'; export {home} from '../shared.js';",
@@ -71,6 +78,7 @@ test("mapping a moved entry's shared stylesheet does not change a surviving cons
   const after = await fixture.compile(),
     config = await fixture.config();
   await writeCompilation(after, config);
+  await assertMoveDelivery(config, after);
   const artifact = await compareReview(
     after,
     config,
@@ -98,6 +106,7 @@ test("a source directory move with an explicit stable path keeps imported CSS un
   t.after(() => fixture.remove());
   await fs.mkdir(path.join(fixture.root, "mockups"));
   const before = await fixture.compile();
+  await commitMoveBaseline(await fixture.config(), before);
   await fs.rename(
     path.join(fixture.root, "specs/old"),
     path.join(fixture.root, "specs/new"),
@@ -105,6 +114,7 @@ test("a source directory move with an explicit stable path keeps imported CSS un
   const after = await fixture.compile(),
     config = await fixture.config();
   await writeCompilation(after, config);
+  await assertMoveDelivery(config, after);
   const artifact = await compareReview(
     after,
     config,

@@ -55,10 +55,7 @@ export async function exportCatalogue(
   const outputRoot = options.adapter?.outputRoot;
   const output = resolveExportOutput(config, options.outDir, outputRoot);
   assertExportActive(options.signal);
-  const transaction = await ExportTransaction.open(
-    output,
-    options.adapter?.legacyOwnership,
-  );
+  const transaction = await ExportTransaction.open(output);
   return withExportCleanup(
     () => generateExport(config, options, output, transaction, outputRoot),
     () => transaction.close(),
@@ -110,12 +107,7 @@ async function generateExport(
       async (lock) => {
         await writeLockedCompilation(lock, compilation, config);
         return withPreInstallationCancellation(options.signal, () =>
-          capturePublicFiles(
-            config,
-            config.generatedOutput === "derived"
-              ? compilation.outputs
-              : undefined,
-          ),
+          capturePublicFiles(config, compilation.outputs),
         );
       },
     );

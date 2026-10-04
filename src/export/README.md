@@ -200,8 +200,13 @@ validator enforces that scope at preflight and before installation.
 owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Legacy
 hashed reservations require explicit recovery before another export.
-`resource_policy.ts` applies the same package/source boundary to current and
-historical copies. The
+`generated_inventory.ts` derives exact historical document/resource paths and
+current traversal directories. Both modes pass accepted compilation outputs to
+`public_files.ts`; committed capture reads disk bytes and derived capture uses
+compiled bytes. Traversal through a private directory reaches only inventory
+members, not siblings. Historical policy uses each side's own manifest and source
+inventory. `resource_policy.ts` keeps source, alias, metadata and configured
+exclusion denials even for generated files. Other files retain name filters. The
 [public-exclusion contract](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 extends that one policy with resolved `publicExclude` globs. Defaults exclude
 README and tsconfig files case-insensitively; consumer globs only add exclusions.

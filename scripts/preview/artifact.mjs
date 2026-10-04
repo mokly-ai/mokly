@@ -8,7 +8,6 @@ import {
 } from "@mokly/viewer/data";
 
 import { ownedEntries } from "../../dist/export/ownership.js";
-import { isExportPublicName } from "../../dist/export/resource_policy.js";
 import {
   markCapturedShell,
   STAGED_DEPLOYMENT_ID,
@@ -19,28 +18,11 @@ import { advertisePublicationShell } from "../../dist/publication/shell_previews
 import { comparisonMetadata } from "./comparisons.mjs";
 import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
 
-/** Only this repository adapter can adopt the previous preview marker. */
+/** Adapter metadata; replacement authority comes only from export schema 2. */
 const previewMarker = {
   marker: ".mokly-preview-artifact",
   contents: "schemaVersion=1\n",
 };
-
-/** Validate existing preview output names using the active config and historical path policy. */
-export const previewOwnership = (config) => ({
-  ...previewMarker,
-  accepts: (name) =>
-    ["index.html", "404.html", "_headers", "_redirects"].includes(name) ||
-    // Legacy markers may own pre-derived view paths at this migration boundary.
-    (name.startsWith("view/") && name.endsWith(".html")) ||
-    (name.startsWith("static/") &&
-      isExportPublicName(name.slice(7), config, {
-        allowBuildDirectories: true,
-        resolveAliases: false,
-      })) ||
-    /^__mokly\/(?:shell\.css|client\/[^/]+\.js|navigation\/[^/]+\.js|fonts\/[^/]+|diffs\/__generations\/[A-Za-z0-9-]+\/.+)$/.test(
-      name,
-    ),
-});
 
 /** Share the exporter's alias checks, ownership inventory, and deployment identity. */
 export async function stagePreviewArtifact(

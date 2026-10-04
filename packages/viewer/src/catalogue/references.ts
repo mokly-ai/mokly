@@ -150,13 +150,13 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
         validateComponentVariant(entry, components, current, removed);
       } else {
         unique(entry.slots);
-        const cohort = removed ? historical : current;
-        require(cohort.some(
-          (candidate) =>
-            candidate.kind === "component" &&
-            "variantOf" in candidate &&
-            candidate.variantOf === entry.path,
-        ), "component needs variants");
+        if (!removed)
+          require(current.some(
+            (candidate) =>
+              candidate.kind === "component" &&
+              "variantOf" in candidate &&
+              candidate.variantOf === entry.path,
+          ), "component needs variants");
       }
     }
   }

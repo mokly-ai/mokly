@@ -3,7 +3,6 @@ import { pageSource } from "./path_fixture.js";
 export interface MoveCatalogueOptions {
   edited?: boolean;
   resource?: boolean;
-  history?: boolean;
   resourceChanged?: boolean;
   sharedResource?: boolean;
   destination?: string;

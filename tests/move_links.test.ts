@@ -9,7 +9,7 @@ import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { compareReview } from "../dist/review/compare.js";
 import { ComponentRenderService } from "../dist/server/controls/service.js";
 
-import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 
 for (const hint of [false, true])

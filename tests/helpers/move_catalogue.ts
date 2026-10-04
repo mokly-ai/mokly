@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -11,6 +10,7 @@ import {
   onboardingMarkdown,
   type MoveCatalogueOptions,
 } from "./move_catalogue_sources.js";
+import { assertMoveDelivery, commitMoveBaseline } from "./move_delivery.js";
 import { pathFixture } from "./path_fixture.js";
 
 /** A real compiled directory move with a folder README, document, page and screen variant. */
@@ -31,15 +31,7 @@ export async function movedCatalogueFixture(
   await fs.mkdir(path.join(fixture.root, "mockups"), { recursive: true });
   const before = await fixture.compile();
   await writeCompilation(before, await fixture.config());
-  if (options.history) {
-    const git = (...args: string[]) =>
-      execFileSync("git", args, { cwd: fixture.root, stdio: "pipe" });
-    git("init", "-q", "-b", "main");
-    git("config", "user.name", "Mokly Test");
-    git("config", "user.email", "mokly@example.invalid");
-    git("add", "-A");
-    git("commit", "-qm", "test: move baseline");
-  }
+  await commitMoveBaseline(await fixture.config(), before);
   const destination = options.destination ?? "new";
   await fs.mkdir(path.dirname(path.join(fixture.root, "specs", destination)), {
     recursive: true,
@@ -88,6 +80,7 @@ export async function movedCatalogueFixture(
   const config = await fixture.config();
   const after = await fixture.compile();
   await writeCompilation(after, config);
+  await assertMoveDelivery(config, after);
   const routes = [
     ...new Set([...before.outputs.keys(), ...after.outputs.keys()]),
   ];

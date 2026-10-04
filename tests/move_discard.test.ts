@@ -5,7 +5,7 @@ import { compareReview } from "../dist/review/compare.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
-import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 
 test("an unpaired baseline screen is discarded when a current page reuses its path", async (t) => {
   const source = componentEntrySource();

@@ -5,7 +5,7 @@ import { parseReviewResult } from "@mokly/viewer/data";
 
 import { compareReview } from "../dist/review/compare.js";
 
-import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 
 const header = "import {defineComponent} from '@mokly/mokly';";
 function component(

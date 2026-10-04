@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
 
-import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 
 const source = `import {defineScreen,defineUseCase} from '@mokly/mokly';
   const common={description:'A journey',dependencies:[],relatedDocs:[]};

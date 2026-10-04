@@ -20,7 +20,7 @@ test("late unlisted files during deletion stop backup cleanup without being dele
   await fs.promises.writeFile(path.join(output, "nested/owned.txt"), "Owned");
   await writeOwnershipMarker(output);
   let recursiveBackupRemovals = 0;
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     unlink: async (candidate) => {
       if (candidate.endsWith("/nested/owned.txt"))
@@ -61,7 +61,7 @@ test("rollback leaves even an empty concurrently recreated destination untouched
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
   let replacementInode: number | undefined;
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from.endsWith("/stage")) {
@@ -92,7 +92,7 @@ test("transaction setup preserves its original failure when partial-stage cleanu
     },
   );
   await assert.rejects(
-    ExportTransaction.open(path.join(fixture.root, "site"), undefined, {
+    ExportTransaction.open(path.join(fixture.root, "site"), {
       ...fileExportOperations,
       remove: async () => {
         throw new Error("Injected close failure");
@@ -115,7 +115,7 @@ test("a destination populated after the recovery check is not overwritten by ren
   context.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from.endsWith("/stage")) throw new Error("Injected install failure");
@@ -141,7 +141,7 @@ test("a symlink captured instead of a directory is retained for manual recovery"
   const output = path.join(fixture.root, "site");
   const missing = path.join(fixture.root, "missing");
   await fs.promises.mkdir(output);
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from === output) {

@@ -6,7 +6,9 @@ preview share its explicit allowlist. Entries are keyed by path, and one tree
 carries resolved folder titles, order, hidden flags, indexes and variants.
 The shell labels its non-component section Specs. Documents share
 the page frame and publish their effective schemes and resource dependencies.
-Matched related-doc paths become validated `mock:<path>` references; other paths
+A removed component parent remains a valid record when all its variants move
+elsewhere. Current parents still require a current variant; the public and scoped
+readers share that rule. Matched related-doc paths become validated `mock:<path>` references; other paths
 remain source labels. Accepted comparison pairs supply `previousPath` on current
 entries. Pure moves remain unmodified and included; paired baseline records
 produce no removals. Plain builds do not infer or publish previous paths.

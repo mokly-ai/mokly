@@ -73,11 +73,7 @@ export async function assertInputsUnchanged(
   const publicNow = await withOutputLock(
     freshConfig.repoRoot,
     signal ? { signal } : {},
-    () =>
-      capturePublicFiles(
-        freshConfig,
-        freshConfig.generatedOutput === "derived" ? fresh.outputs : undefined,
-      ),
+    () => capturePublicFiles(freshConfig, fresh.outputs),
   );
   const changedNow =
     prepared && compareEvidence

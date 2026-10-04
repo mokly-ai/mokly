@@ -9,6 +9,10 @@ import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
 
 import { componentGit } from "./helpers/component_review_fixture.js";
+import {
+  assertMoveDelivery,
+  commitMoveBaseline,
+} from "./helpers/move_delivery.js";
 import { pathFixture } from "./helpers/path_fixture.js";
 
 for (const edited of [false, true])
@@ -25,6 +29,7 @@ for (const edited of [false, true])
     t.after(() => fixture.remove());
     await fs.mkdir(path.join(fixture.root, "mockups"));
     const before = await fixture.compile();
+    await commitMoveBaseline(await fixture.config(), before);
     await fs.rename(
       path.join(fixture.root, "specs/old"),
       path.join(fixture.root, "specs/new"),
@@ -45,6 +50,7 @@ for (const edited of [false, true])
     const config = await loadConfig(fixture.root),
       after = await compileCatalogue(config);
     await writeCompilation(after, config);
+    await assertMoveDelivery(config, after);
     const changed = [
       ...Object.keys(sources),
       ...Object.keys(sources).map((file) => file.replace("/old/", "/new/")),

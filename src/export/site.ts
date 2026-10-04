@@ -25,6 +25,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { staticRemovedPreviews } from "../publication/removed_previews.js";
 import { changedManifestPaths } from "../registry/changed_paths.js";
 import { removedManifestEntries } from "../registry/changes.js";
+import { baselineResourceConfig } from "../review/base_manifest.js";
 import {
   loadBrowserClientModules,
   loadBrowserNavigationModules,
@@ -34,6 +35,7 @@ import { homePage, notFoundPage, viewPage } from "../server/pages.js";
 
 import { comparisonContentId } from "./content_id.js";
 import { exportError } from "./error.js";
+import { historicalGeneratedPaths } from "./generated_inventory.js";
 import { ExportInventory } from "./inventory.js";
 import { exportResourceDenial } from "./resource_policy.js";
 import { STAGED_DEPLOYMENT_ID } from "./shell_metadata.js";
@@ -107,10 +109,27 @@ export function assembleExport(
     inventory.add(name, html);
     shells.set(name, descriptor);
   };
-  const resourceDenial = exportResourceDenial(config, false);
+  const beforeDenial = exportResourceDenial(
+    baselineResourceConfig(config, baseline),
+    false,
+    historicalGeneratedPaths(
+      baseline,
+      comparisonFiles.keys(),
+      snapshotSidePath("before"),
+    ),
+  );
+  const afterDenial = exportResourceDenial(
+    config,
+    false,
+    new Set(compilation.outputs.keys()),
+  );
   for (const [name, bytes] of comparisonFiles) {
     const resource = snapshotResourceRoute(name);
-    const denial = resource ? resourceDenial(resource) : undefined;
+    const denial = resource
+      ? (name.startsWith(snapshotSidePath("before"))
+          ? beforeDenial
+          : afterDenial)(resource)
+      : undefined;
     if (denial)
       throw exportError(
         `Comparison contains a private export resource: ${name} (${denial})`,

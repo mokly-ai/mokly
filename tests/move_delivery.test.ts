@@ -16,7 +16,7 @@ import { removedPagePreviewSource } from "../dist/server/review_sources.js";
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 
 test("Serve and export retain all moves without old routes or removed document previews", async (t) => {
-  const fixture = await movedCatalogueFixture(t, { history: true });
+  const fixture = await movedCatalogueFixture(t);
   const changes = await computeCatalogueChanges(
     fixture.config,
     "main",

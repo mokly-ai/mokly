@@ -18,8 +18,10 @@
   tests are complete. The fresh implementation review is complete. The user
   approved a fix for each of its
   [eight findings](../docs/reviews/path-identity.md); Milestones 9–13 deliver
-  them and end with a new review. The plan stays Active until its pull
-  request merges.
+  them and end with a new review. Milestone 9 contracts and Milestone 11 backend
+  fixes are complete, with the unmodified full gate passing. The mockup/UI
+  branch and Milestone 13 integration remain separate. The plan stays Active
+  until its pull request merges.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete

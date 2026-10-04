@@ -19,7 +19,7 @@ const expected = [
 async function diagnosticFixture(
   t: Parameters<typeof movedCatalogueFixture>[0],
 ) {
-  const fixture = await movedCatalogueFixture(t, { history: true });
+  const fixture = await movedCatalogueFixture(t);
   await fixture.write(
     "specs/new/guide.md",
     "---\nmovedFrom: vanished\n---\n# Guide\n\n## Start\n\nRead the guide.",

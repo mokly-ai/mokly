@@ -7,7 +7,8 @@ compliance. Milestone 8 implementation, verification and the fresh
 implementation review are complete. On 2026-10-04 the user approved the
 recommended option for each of the eight findings in the
 [review record](../docs/reviews/path-identity.md); Milestones 9–13 deliver
-those fixes and end with a new review.
+those fixes and end with a new review. Milestones 9 and 11 are complete; the
+mockup/UI branch and Milestone 13 integration remain separate.
 This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
@@ -1994,28 +1995,81 @@ Depict the band that names the light fallback above a current document's pane
 
 Fix the backend findings (1, 2, and 3), each with a failing test first.
 
-- [ ] Finding 1 (option A): accept a removed component parent with no
+Status: Complete. The unmodified `cargo xtask check` passes every suite:
+4,161 unit tests, 807 browser tests and 260 hydration tests. No skips,
+cancellations or retries. The contracts were pushed first in `c2222348`.
+
+- [x] Finding 1 (option A): accept a removed component parent with no
       remaining variants wherever records are validated. Keep the rule for
       current parents. Add a regression test that moves a component's last
       variant into another component and deletes the old component, and run
       it through the review result, the catalogue reader, Serve (every page
       returns HTTP 200), and export.
-- [ ] Run every existing move fixture through the catalogue reader, Serve,
+- [x] Run every existing move fixture through the catalogue reader, Serve,
       and export as well as the review result, so a disagreement between these
       boundaries fails a test.
-- [ ] Finding 2 (option A): make export capture generated files from the
+- [x] Finding 2 (option A): make export capture generated files from the
       accepted compilation's exact inventory, including parent directories,
       and keep the filters for every other file. Add tests that carry entries
       named `coverage`, `dist`, `node_modules`, and `README` through Build,
       Check, Serve, and export in committed and derived output modes, and a
       test that a real build directory that is not generated output stays
       private.
-- [ ] Finding 3 (option A): remove the legacy plain and Mokabook header
+- [x] Finding 3 (option A): remove the legacy plain and Mokabook header
       readers and the preview adapter's adoption of earlier `view/` paths. Add
       rejection tests with real earlier-format samples for every ownership
       consumer: replacement, orphan deletion, Check, export ownership, and
       preview adoption.
-- [ ] Run the unmodified `cargo xtask check`, then commit and push.
+- [x] Correct the discovered screen-guide claim about an ordinary entry beside
+      a same-named directory: only an index entry can have ordinary descendants.
+- [x] Keep private generated metadata outside the export allowance, even when
+      named in a supplied output set. A new failing policy test covers this
+      boundary; historical CSS/assets use the exact captured side closure.
+- [x] Run the unmodified `cargo xtask check`, then commit and push.
+
+The new removed-parent regression first reproduced the reader error, Serve HTTP
+500 and export failure. Both readers now accept an empty removed parent and
+still reject an empty current parent. The regression exercises all current and
+removed shell routes. Shared move-fixture validation records real Git baselines
+and runs accepted fixtures through review, complete/scoped readers, every Serve
+page and export; it also exposed the private-name rejection for `new/target`.
+The source-only signal tests remain pure and do not fabricate HTML fixtures.
+
+Export now passes the accepted output map through capture and rechecks in both
+modes. Exact parent traversal never admits siblings. Historical snapshots use
+their side's manifest routes and captured CSS/asset closure. Source, metadata,
+configuration exclusions and alias boundaries remain mandatory. The new matrix
+covers `coverage`, `dist`, `node_modules` and `README`, real private siblings,
+current views, both comparison sides, removed screen/page previews and assets,
+through Build, Check, Serve and export in committed and derived modes. A further
+red/green policy test prevents even an explicit set from admitting private
+generated metadata or bypassing source/exclusion rules.
+
+Real plain Mokly, plain Mokabook and encoded Mokabook samples first demonstrated
+the old ownership grants. They now prove no authority at parsing, replacement,
+orphan cleanup, committed/derived Check, frame adaptation, watch classification,
+material-header normalization and export ownership. Earlier preview markers,
+with either pre-derived or current-shaped `view/` paths, fail without changing
+output. The internal legacy ownership adapter and transaction parameters are
+removed; current marker validation, reservations and rollback remain exercised.
+The index-guide correction follows the existing path collision rule; the
+index-screen/member example compiles in `.context/m11/guide-layout.log`.
+
+Focused verification passes 288 tests, followed by 24 tests after the final
+inventory guards. Type checking passes. All logs and red/green evidence are
+under `.context/m11/`. The M11 changes add no dependency or audit exception.
+
+The complete gate passes dependency audit (with only main's reviewed Braces
+record), formatting, lint, all four repository ratchets, Rust fmt/Clippy and
+15 Rust tests. Both packed packages pass all six consumer scenarios, and the
+example builds and checks all 468 files. Source length passes for 1,579 files;
+the all-files Rust audit passes for 9 files. All three known browser flakes pass
+on the first run. Final fixture corrections also pass a 12-test ownership run;
+seven move tests verify exact pair agreement across review and catalogue data.
+The main-relative deletion list remains the same 18 authorized replacements,
+recorded again in the commit body; this milestone deletes no file. No shell
+presentation module changed. The orchestrator owns the fresh review after the
+Milestone 13 integration; this implementation agent does not run it.
 
 ## Milestone 12: Navigation counts, home summary, and light-only band
 

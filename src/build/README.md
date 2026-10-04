@@ -281,6 +281,11 @@ See [paths](../../docs/protocol/mokly-paths.md),
 [artifact paths](../../docs/protocol/mokly-artifact-paths.md), and the
 [build pipeline](../../docs/architecture/build-pipeline.md).
 
+`ownership.ts` accepts only the current canonical-base64 Mokly header with LF
+or CRLF. Plain Mokly and all Mokabook headers grant no ownership to replacement,
+orphan cleanup, Check, frame adaptation or indexed-output checks. Earlier output
+must be removed manually; ordinary authored HTML is not claimed by its comment.
+
 Helper-backed moves retain ownership only for exact artifact paths in a validated
 previous v8 manifest whose source inventory includes this configuration. The
 current encoded header must match that entry's source. This permits replacement
