@@ -1,4 +1,4 @@
-/** Capture-only resolution for repository modules in a Live browser graph. */
+/** Capture-only resolution for accepted sources and stylesheets in a Live graph. */
 
 import path from "node:path";
 
@@ -31,6 +31,7 @@ import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import { InteractiveBundleError, InteractiveBundleReason } from "./errors.js";
+import { RecordedInstalledImporters } from "./installed_importers.js";
 
 /** Namespace whose modules are loaded only from an accepted source capture. */
 export const CAPTURED_SOURCE_NAMESPACE = "mokly-captured-source";
@@ -41,7 +42,7 @@ export interface InteractiveSourceResolver {
   plugin: Plugin;
 }
 
-/** Resolve repository files from immutable accepted bytes and packages normally. */
+/** Resolve accepted source and stylesheet requests before package resolution. */
 export function interactiveSourceResolver(
   config: ResolvedConfig,
   capture: InteractiveSourceCapture,
@@ -51,6 +52,7 @@ export function interactiveSourceResolver(
 }
 
 class CapturedSourceResolver {
+  private readonly installedImporters: RecordedInstalledImporters;
   readonly byPath = new Map<string, InteractiveSourceFile>();
   readonly byResolution = new Map<string, InteractiveSourceResolution>();
   failure: InteractiveBundleError | undefined;
@@ -59,6 +61,10 @@ class CapturedSourceResolver {
     private readonly config: ResolvedConfig,
     capture: InteractiveSourceCapture,
   ) {
+    this.installedImporters = new RecordedInstalledImporters(
+      config.repoRoot,
+      capture.resolutions,
+    );
     for (const file of capture.files)
       for (const sourcePath of file.paths) this.byPath.set(sourcePath, file);
     for (const resolution of capture.resolutions)
@@ -108,7 +114,9 @@ class CapturedSourceResolver {
         ? repositoryInteractiveSourceImporter(
             this.relative(arguments_.importer),
           )
-        : undefined);
+        : arguments_.namespace === "file"
+          ? this.installedImporters.get(arguments_.importer)
+          : undefined);
     if (!importer) return;
     return this.byResolution.get(
       interactiveSourceResolutionKey(

@@ -1,4 +1,4 @@
-/** Immutable repository inputs captured by an accepted Live consumer graph. */
+/** Repository inputs and stylesheet modules saved by an accepted Live graph. */
 
 import fs from "node:fs";
 import path from "node:path";
@@ -8,7 +8,6 @@ import type {
   OnResolveArgs,
   OnResolveResult,
   Plugin,
-  PluginBuild,
 } from "esbuild";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
@@ -21,12 +20,14 @@ import { interactiveSourceLoader } from "./interactive_source_loaders.js";
 import {
   capturedSourceKey,
   capturedSourcePaths,
+  installedSourceImporter,
   resolutionAlias,
 } from "./interactive_source_paths.js";
 import {
   interactiveSourceResolutionKey,
   interactiveSourceResolutionRequest,
   repositoryInteractiveSourceImporter,
+  resolveInteractiveSourceRequest,
   type InteractiveSourceResolution,
   type InteractiveSourceResolutionRequest,
   validInteractiveSourceResolutionRequest,
@@ -76,6 +77,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
   private readonly aliases = new Map<string, string>();
   private readonly files = new Map<string, MutableSourceFile>();
   private readonly resolutions = new Map<string, InteractiveSourceResolution>();
+  private readonly stylesheetPaths = new Set<string>();
   private sealed: InteractiveSourceCapture | undefined;
 
   constructor(private readonly config: ResolvedConfig) {}
@@ -92,7 +94,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
             (!arguments_.importer && !arguments_.resolveDir)
           )
             return;
-          const result = await resolveThroughEsbuild(
+          const result = await resolveInteractiveSourceRequest(
             pluginBuild,
             arguments_,
             skipResolution,
@@ -110,6 +112,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
   recordStylesheet(candidate: string, contents: string): void {
     const location = locatePath(candidate, this.config.repoRoot);
     if (!location) return;
+    this.stylesheetPaths.add(location.relativePath);
     const key = capturedSourceKey(location);
     const file = {
       bytes: Buffer.from(contents),
@@ -131,6 +134,11 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
       )
       .sort((left, right) => compareText(left.paths[0]!, right.paths[0]!));
     const resolutions = [...this.resolutions.entries()]
+      .filter(
+        ([, resolution]) =>
+          resolution.importer.type !== "installed" ||
+          this.stylesheetPaths.has(resolution.target),
+      )
       .sort(([left], [right]) => compareText(left, right))
       .map(([, resolution]) => resolution);
     if (!validInteractiveSourceResolutionSet(resolutions))
@@ -145,6 +153,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
     this.aliases.clear();
     this.files.clear();
     this.resolutions.clear();
+    this.stylesheetPaths.clear();
     return this.sealed;
   }
 
@@ -184,8 +193,15 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
         ? locatePath(result.path, this.config.repoRoot)
         : undefined);
     if (!target) return;
-    const request = this.resolutionRequest(arguments_);
+    const request = this.resolutionRequest(
+      arguments_,
+      result.path.endsWith(".css"),
+    );
     if (!request) return;
+    if (request.importer.type === "installed") {
+      this.addResolution(request, target.relativePath);
+      return;
+    }
     const alias = resolutionAlias(arguments_, this.config.repoRoot);
     const key = capturedSourceKey(target);
     let file = this.files.get(key);
@@ -206,6 +222,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
 
   private resolutionRequest(
     arguments_: OnResolveArgs,
+    stylesheet: boolean,
   ): InteractiveSourceResolutionRequest | undefined {
     const location = arguments_.importer
       ? graphSourceLocation(arguments_.importer, this.config.repoRoot)
@@ -214,7 +231,9 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
       virtualInteractiveSourceImporter(arguments_) ??
       (location
         ? repositoryInteractiveSourceImporter(location.relativePath)
-        : undefined);
+        : stylesheet && arguments_.namespace === "file"
+          ? installedSourceImporter(arguments_.importer, this.config.repoRoot)
+          : undefined);
     if (!importer) return;
     const request = interactiveSourceResolutionRequest(arguments_, importer);
     if (!validInteractiveSourceResolutionRequest(request))
@@ -259,21 +278,6 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
     this.aliases.set(candidate, physicalPath);
     file.paths.add(candidate);
   }
-}
-
-async function resolveThroughEsbuild(
-  pluginBuild: PluginBuild,
-  arguments_: OnResolveArgs,
-  skipResolution: object,
-): Promise<OnResolveResult> {
-  return pluginBuild.resolve(arguments_.path, {
-    importer: arguments_.importer,
-    kind: arguments_.kind,
-    namespace: arguments_.namespace,
-    pluginData: skipResolution,
-    resolveDir: arguments_.resolveDir,
-    with: arguments_.with,
-  });
 }
 
 function compareText(left: string, right: string): number {

@@ -1,6 +1,11 @@
-/** Canonical request identities for accepted repository resolutions. */
+/** Canonical request identities for accepted source and stylesheet resolutions. */
 
-import type { ImportKind, OnResolveArgs } from "esbuild";
+import type {
+  ImportKind,
+  OnResolveArgs,
+  OnResolveResult,
+  PluginBuild,
+} from "esbuild";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
@@ -9,7 +14,7 @@ import {
   INTERACTIVE_CONSUMER_NAMESPACE,
 } from "./consumer_entry.js";
 
-/** Maximum recorded repository resolutions in one accepted generation. */
+/** Maximum recorded resolutions in one accepted generation. */
 export const INTERACTIVE_SOURCE_RESOLUTION_LIMIT = 16_384;
 /** Maximum UTF-8 bytes in one recorded import specifier. */
 const INTERACTIVE_SOURCE_SPECIFIER_LIMIT = 2_048;
@@ -39,7 +44,8 @@ const INTERACTIVE_SOURCE_RESOLUTION_KINDS = [
 /** Stable identity for the Node and browser projections of one importer. */
 export type InteractiveSourceImporter =
   | { readonly type: "entry" }
-  | { readonly path: string; readonly type: "repository" };
+  | { readonly path: string; readonly type: "repository" }
+  | { readonly path: string; readonly type: "installed" };
 
 /** One sorted import attribute that can participate in resolution. */
 export interface InteractiveSourceImportAttribute {
@@ -47,7 +53,7 @@ export interface InteractiveSourceImportAttribute {
   readonly value: string;
 }
 
-/** Accepted request identity and its captured repository target. */
+/** Accepted request identity and its captured target. */
 export interface InteractiveSourceResolution {
   readonly attributes: readonly InteractiveSourceImportAttribute[];
   readonly importer: InteractiveSourceImporter;
@@ -82,6 +88,30 @@ export function repositoryInteractiveSourceImporter(
   return Object.freeze({ path, type: "repository" });
 }
 
+/** Validate the confined logical identity of an installed stylesheet importer. */
+export function installedInteractiveSourceImporter(
+  path: string,
+): InteractiveSourceImporter | undefined {
+  if (!isSafeRepositoryPath(path)) return;
+  return Object.freeze({ path, type: "installed" });
+}
+
+/** Resolve through the remaining graph plugins without recursing into capture. */
+export async function resolveInteractiveSourceRequest(
+  pluginBuild: PluginBuild,
+  arguments_: OnResolveArgs,
+  skipResolution: object,
+): Promise<OnResolveResult> {
+  return pluginBuild.resolve(arguments_.path, {
+    importer: arguments_.importer,
+    kind: arguments_.kind,
+    namespace: arguments_.namespace,
+    pluginData: skipResolution,
+    resolveDir: arguments_.resolveDir,
+    with: arguments_.with,
+  });
+}
+
 /** Capture esbuild's exact request identity with sorted attributes. */
 export function interactiveSourceResolutionRequest(
   arguments_: OnResolveArgs,
@@ -106,7 +136,7 @@ export function interactiveSourceResolutionKey(
   return JSON.stringify([
     request.importer.type === "entry"
       ? ["entry"]
-      : ["repository", request.importer.path],
+      : [request.importer.type, request.importer.path],
     request.specifier,
     request.kind,
     request.attributes.map(({ key, value }) => [key, value]),
@@ -122,7 +152,7 @@ function interactiveSourceResolutionBytes(
     utf8Bytes(resolution.target) +
     utf8Bytes(resolution.kind) +
     utf8Bytes(resolution.importer.type) +
-    (resolution.importer.type === "repository"
+    (resolution.importer.type !== "entry"
       ? utf8Bytes(resolution.importer.path)
       : 0) +
     resolution.attributes.reduce(

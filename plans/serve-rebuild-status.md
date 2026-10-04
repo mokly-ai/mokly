@@ -53,7 +53,8 @@ Decisions:
   generation's Static build. The sources are captured while the generation's
   consumer graph builds, only when `interactive` is `serve`, retained for the
   current and previous generations, and sent to the watched child with the
-  runtime. Installed packages resolve normally. A repository-owned module the
+  runtime. Installed JavaScript resolves normally. Saved stylesheet requests
+  also replay their accepted targets. A repository-owned module the
   capture lacks fails that generation's Live bundle with a typed diagnostic
   naming it; Static is unaffected.
 - Naming: code and docs say "rebuild status"; product copy never does.
@@ -304,7 +305,7 @@ Module by package name, still resolves through the file system. Deleting that
 stylesheet after acceptance therefore fails the accepted generation's Live
 bundle.
 
-- [ ] Update `docs/protocol/mokly-interactive-source-pinning.md`: the accepted
+- [x] Update `docs/protocol/mokly-interactive-source-pinning.md`: the accepted
       graph also records each stylesheet request from installed-package
       JavaScript whose target is a captured stylesheet module, and Live
       answers it from the record before any file-system resolution, for
@@ -316,22 +317,30 @@ bundle.
       unpinned. Requests from installed importers to linked repository
       workspace packages keep their current behavior, because the Milestone 8
       review finding awaits a decision.
-- [ ] Add failing tests first: after generation G is accepted, delete, edit and
+- [x] Add failing tests first: after generation G is accepted, delete, edit and
       syntactically break a CSS Module and a plain stylesheet that a
       physically installed package imports by relative path and by its own
       package name, and require G's Live bundle to compile with G's accepted
       modules. Also cover a repository module that imports installed CSS by
       package name.
-- [ ] Record these resolutions during the accepted graph build, carry them
+- [x] Record these resolutions during the accepted graph build, carry them
       through the runtime IPC with strict validation, and replay them in the
       browser resolver before any file-system resolution.
-- [ ] Tests: a later accepted generation sees the change; an unrecorded
+- [x] Cache installed importer identities, including negative results, for
+      each Live resolver instance. Measure the example Live bundle time before
+      and after this change. Keep extensionless stylesheet exports eligible.
+- [x] Skip installed lookup with no installed records. Check logical relative
+      paths against recorded importers before full validation. Fall back to
+      full normalization outside the logical root. Test these paths against
+      full lookup and measure the example against pre-milestone `58cc55df`.
+- [x] Tests: a later accepted generation sees the change; an unrecorded
       stylesheet load keeps the typed `source-not-captured` failure; the
       documented behavior when the browser build selects a different installed
       module; strict IPC validation of the new importer identity; the record
       stays absent while `interactive` is off and outside exports and
       publication; the example catalogue's Live bundle is unchanged.
-- [ ] Update `src/interactive/README.md` and `src/build/README.md`; run
+- [x] Keep installed-style fixture helpers private when no other test uses them.
+- [x] Update `src/interactive/README.md` and `src/build/README.md`; run
       `cargo xtask check`; commit and push.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,

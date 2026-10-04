@@ -236,8 +236,12 @@ Serve-mode live-index preparation captures repository-owned bytes inside this
 Node graph's load callbacks, records each repository resolution under a stable
 request identity, and seals both only after the index is accepted. Stylesheet
 load callbacks record their accepted JavaScript instead of raw CSS: exact CSS
-Module exports or an empty plain module. CSS symlinks retain separate logical
-identities for their path-derived class names. The Live
+Module exports or an empty plain module. Installed-package importers also
+record requests to saved stylesheet modules, with an `installed` identity and
+a safe logical repository-relative path. Both graph builds preserve symlinks
+and share the same confined path normalization, including pnpm aliases.
+Installed records never capture or target JavaScript. CSS symlinks retain
+separate logical identities for their path-derived class names. The Live
 browser compiler in `../interactive/bundle.ts` replays that record before
 filesystem resolution, uses the captured bytes and accepted `entryModules`,
 and does not rediscover entries or reread a repository module. It reuses the
@@ -249,6 +253,17 @@ Node-based JSX source location, and reads only an optional renderer
 `interactive-bundle`; the ordinary Node build graph remains unchanged. Build,
 Check, Export, Publish, and off-mode Serve do not install the source-capture
 hook or call the browser compiler.
+
+Browser-only installed importers and importers outside `repoRoot` have no
+recorded requests. Their existing fallback can load a saved stylesheet blob
+after normal resolution; an absent blob fails with `source-not-captured`.
+Unrecorded package-name requests can fail resolution after target deletion.
+Imported-style processing rejects stylesheets outside the root. An `empty`
+opt-out can accept an extensionless outside stylesheet, but Live still lacks
+its blob and fails. Installed JavaScript and
+its requests to linked workspace JavaScript keep their current behavior. See
+the [source-pinning contract](../../docs/protocol/mokly-interactive-source-pinning.md)
+for the exact importer, IPC and unrecorded-request boundaries.
 
 The retained `ComponentRuntime` records resolved per-entry Live eligibility
 separately from the publishable manifest. Runtime compaction and watched-child
@@ -285,7 +300,9 @@ manifest rejection are tested with isolated consumers.
   individual invocation metadata.
 - `interactive_source_capture.ts`: accepted Serve-generation repository bytes
   and their logical/physical paths.
-- `interactive_source_resolution.ts`: normalized, bounded repository request
+- `interactive_source_paths.ts`: shared logical stylesheet and installed-importer
+  identities for Node capture and browser replay.
+- `interactive_source_resolution.ts`: normalized, bounded source request
   identities shared by capture, browser replay, and watched IPC.
 - `transaction.ts`, `check.ts`: safe output installation and verification.
 - `output_lock.ts`, `output_lock_file.ts`: the repository writer lock that

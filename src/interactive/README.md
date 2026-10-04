@@ -52,6 +52,21 @@ validates the bounded, sorted resolution record and converts file bytes to
 canonical padded base64 only while sending them. Off-mode Serve and exhaustive
 Build, Check, export, and publication do not create or retain this data.
 
+Installed stylesheet importers use a separate `installed` identity with the
+same safe logical repository-relative path. Both builds preserve symlinks and
+share `build/interactive_source_paths.ts` to map physical root paths back to
+logical paths, including pnpm package aliases. The importer must be physically
+installed inside the root and outside Mokly's runtime. Only requests to
+stylesheet modules actually saved by the Node loader enter these records.
+Each Live resolver caches importer identities, including negative results,
+for one bundle build. `installed_importers.ts` skips this lookup with no
+installed records. Otherwise it checks logical relative paths against the
+recorded importer set before full validation. An outside logical path needs
+full normalization because a symlinked root can report physical paths.
+Extensionless exports remain eligible for replay.
+IPC validates this importer shape and its `.css` target under the existing
+path, attribute, record-count and aggregate string bounds.
+
 `source_resolution.ts` is the browser graph's repository resolver. It replays
 recorded relative, absolute, bare, configured-alias, and repository-package
 requests before any filesystem resolution. A recorded workspace linked through
@@ -61,7 +76,7 @@ captured namespace load never reads a repository source from disk, and a
 missing or unrecorded repository request becomes `InteractiveBundleError` with
 reason `source-not-captured`. This lets a generation's first Live request
 succeed after an accepted target is edited, deleted, renamed, or made invalid.
-Bare installed packages, Mokly's runtime, and consumer React peers still use
+Installed JavaScript packages, Mokly's runtime, and consumer React peers still use
 esbuild's normal filesystem resolution and intentionally remain unpinned.
 
 For recorded repository requests, Live deliberately keeps the Node graph's
@@ -160,11 +175,25 @@ adapter](../../docs/protocol/mokly-frame-adapter.md).
 The accepted Node graph passes each stylesheet loader's JavaScript result to
 its source capture. CSS Modules retain the exact default map and named exports
 used by Static, including consumer PostCSS transforms and installed-package
-CSS. Package JavaScript remains unpinned. Plain CSS retains empty
+CSS. Installed relative and package-name stylesheet requests, including
+self-references through `exports`, replay their recorded targets before
+filesystem resolution. Package JavaScript remains unpinned. Plain CSS retains empty
 JavaScript. CSS symlinks keep separate logical-path blobs because main's scoped
 names depend on that path; ordinary raw-source aliases still share bytes.
 Live replays those blobs with the JavaScript loader and runs no CSS
 pipeline. Its preserved Static head supplies the stylesheet links once.
+
+An installed browser condition or field can choose an unevaluated importer.
+Its requests remain unrecorded. Existing captured-path fallback can satisfy a
+relative request; a package-name request must still resolve before the load
+hook finds the saved blob. An existing uncaptured stylesheet fails with
+`source-not-captured`; a deleted unrecorded bare target can fail resolution.
+Live never reads stylesheet source from disk. Imported-style processing rejects
+stylesheets outside `repoRoot`. An `empty` opt-out can accept an extensionless
+outside stylesheet, but Live still lacks its blob and fails. Outside-root
+importers of confined CSS also stay unrecorded. These
+limits and the still-open installed-to-workspace JavaScript boundary are in
+the [source-pinning contract](../../docs/protocol/mokly-interactive-source-pinning.md).
 
 `server_static.ts` serves accepted generated stylesheet and asset routes from
 `DocumentService.styles`, with no reserved disk fallback in either output mode.

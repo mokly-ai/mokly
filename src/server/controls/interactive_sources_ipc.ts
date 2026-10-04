@@ -1,4 +1,4 @@
-/** Strict wire projection for generation-pinned Live repository sources. */
+/** Strict wire projection for generation-pinned Live sources and stylesheets. */
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
@@ -11,6 +11,7 @@ import {
   INTERACTIVE_SOURCE_ATTRIBUTE_LIMIT,
   INTERACTIVE_SOURCE_ATTRIBUTE_VALUE_LIMIT,
   INTERACTIVE_SOURCE_RESOLUTION_LIMIT,
+  installedInteractiveSourceImporter,
   interactiveSourceResolutionKey,
   isInteractiveSourceResolutionKind,
   repositoryInteractiveSourceImporter,
@@ -179,6 +180,8 @@ function readResolution(
   const importer = readImporter(value["importer"]);
   const attributes = readAttributes(value["attributes"]);
   if (!importer || !attributes) return;
+  if (importer.type === "installed" && !value["target"].endsWith(".css"))
+    return;
   const resolution = Object.freeze({
     attributes: Object.freeze(attributes),
     importer,
@@ -192,16 +195,18 @@ function readResolution(
 }
 
 function readImporter(value: unknown): InteractiveSourceImporter | undefined {
+  if (recordWithKeys(value, ["type"]) && value["type"] === "entry")
+    return Object.freeze({ type: "entry" });
   if (
-    !recordWithKeys(value, ["type"]) &&
-    !recordWithKeys(value, ["path", "type"])
+    !recordWithKeys(value, ["path", "type"]) ||
+    typeof value["path"] !== "string"
   )
     return;
-  if (value["type"] === "entry" && !Object.hasOwn(value, "path"))
-    return Object.freeze({ type: "entry" });
-  if (value["type"] !== "repository" || typeof value["path"] !== "string")
-    return;
-  return repositoryInteractiveSourceImporter(value["path"]);
+  if (value["type"] === "repository")
+    return repositoryInteractiveSourceImporter(value["path"]);
+  if (value["type"] === "installed")
+    return installedInteractiveSourceImporter(value["path"]);
+  return;
 }
 
 function readAttributes(
