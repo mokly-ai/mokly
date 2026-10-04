@@ -195,6 +195,14 @@ The current maintenance choices are:
   for ten existing records; the affected versions, paths and advisory are unchanged.
   The live audit remains mandatory. Marked adds no advisory; the only exception
   is the reviewed Braces record above.
+- [`es-module-lexer`](https://github.com/guybedford/es-module-lexer) 3.0.2 is
+  the production parser for export's package-owned JavaScript import references.
+  Its MIT-licensed minimal ESM build decodes static and literal dynamic specifiers
+  without executing the scanned code. It has no runtime dependencies. Its inline
+  WebAssembly initializes synchronously on first use in Node, so export validation
+  keeps its synchronous API. The smaller JavaScript-only grammar avoids unneeded
+  TypeScript analysis. Workspace and packed-consumer checks exercise it; it adds
+  no advisory or exception to the reviewed Braces record above.
 
 ## Required Evidence
 

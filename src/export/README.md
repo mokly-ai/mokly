@@ -173,7 +173,12 @@ platform dependencies when installing the package.
 `inventory.ts` and `references.ts` use
 `path_index.ts` for one case-folded file/alias collision policy, including
 directory prefixes and the final ownership marker. Reference validation also
-proves local resource closure. `ignored.ts` keeps schema 2 owned outputs and
+proves local resource closure. It uses `es-module-lexer/minimal` for package-owned
+JavaScript static imports, re-exports and literal dynamic imports. The lexer
+decodes string escapes and ignores prose, comments and `import.meta`; computed
+expressions are not evaluated. Every returned specifier uses the existing URL
+and inventory checks, and a lexer failure names the script and aborts export.
+`ignored.ts` keeps schema 2 owned outputs and
 transactions out of broad Watch rules. It caches parsed ownership by file
 identity and timestamps as bounded path/prefix sets, revalidating with one
 metadata read per lookup. Retired schema 1 outputs are

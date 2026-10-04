@@ -15,6 +15,8 @@ const packageJson = JSON.parse(
 );
 if (!packageJson.dependencies.marked)
   throw new Error("Markdown parser must be a runtime dependency");
+if (!packageJson.dependencies["es-module-lexer"])
+  throw new Error("Export module lexer must be a runtime dependency");
 await fs.promises.access(
   path.join(repositoryRoot, "dist/documents/markdown.js"),
 );

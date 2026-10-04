@@ -74,6 +74,7 @@
     "chokidar": "^5.0.0",
     "css-select": "^7.0.0",
     "css-what": "^8.0.0",
+    "es-module-lexer": "^3.0.2",
     "esbuild": "^0.28.1",
     "icss-utils": "^5.1.0",
     "koffi": "^3.2.1",

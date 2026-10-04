@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { parse } from "es-module-lexer/minimal";
+
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
@@ -68,12 +70,8 @@ export function validateExportReferences(
           checkFragment: false,
         })),
       );
-    else if (extension === ".js" && name.startsWith("__mokly/")) {
-      for (const match of content.matchAll(
-        /\b(?:from|import)\s*["']([^"']+)["']/g,
-      ))
-        references.push({ value: match[1] ?? "", checkFragment: false });
-    }
+    else if (extension === ".js" && name.startsWith("__mokly/"))
+      references.push(...moduleReferences(name, content));
     for (const reference of references) {
       const target = referenceTarget(name, reference.value);
       if (target === undefined) continue;
@@ -93,6 +91,23 @@ export function validateExportReferences(
       if (violation)
         throw exportError(`Export link is invalid: ${name} -> ${violation}`);
     }
+  }
+}
+
+function moduleReferences(
+  source: string,
+  content: string,
+): ResourceReference[] {
+  try {
+    const [imports] = parse(content, source);
+    return imports.flatMap(({ n }) =>
+      n === undefined ? [] : [{ value: n, checkFragment: false }],
+    );
+  } catch (error) {
+    throw exportError(
+      `Could not read export module references: ${source}`,
+      error,
+    );
   }
 }
 

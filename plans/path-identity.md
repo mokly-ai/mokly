@@ -1286,6 +1286,77 @@ Only the same 26 source-length files retain their approved disposition.
 The orchestrator owns the next viewer merge. The complete implementation review
 remains the final item in Milestone 8.
 
+## Milestone 6I: Integrate the viewer branch
+
+Use a module lexer for export references, review the viewer branch's backend
+changes, then integrate its navigation and Changes presentation when the
+orchestrator confirms the branch is final. Preserve every accepted feature and
+the output/frame race fixes. Keep the scanner fix in its own commit.
+
+Status: In progress. The orchestrator confirmed viewer tip `af4f0f15` as final.
+The scanner prerequisite passes verification under the existing 26-file length
+disposition. Review and integration follow its separate commit and push.
+
+- [x] Replace the export import regular expression with a real module lexer;
+      add failing regressions for quoted prose, the minified Moved from label,
+      and missing relative specifiers containing `+` or `:`. Record the dependency
+      and verify the packed consumers, audit and remaining gate before committing
+      and fast-forward pushing this fix separately.
+- [ ] Review the Milestone 7A backend commit `3996b061` read-only against the
+      moves, catalogue, export and reference contracts. Record findings and
+      recommended fixes without changing that code before the merge.
+- [ ] Wait for the orchestrator's explicit final-branch signal, then fetch and
+      merge `origin/conductor/path-identity-m6-viewer` into the feature branch.
+- [ ] Resolve conflicts path by path. Preserve every milestone and tick, real
+      Markdown navigation, race fixes, and both branches' data/contract intent.
+      Keep the lexer instead of 7A's regex tweak and keep its regression test.
+- [ ] Fix confirmed 7A backend findings after the merge, with failing tests first;
+      update affected contracts and READMEs and report the review scope.
+- [ ] Run the unmodified gate after integration. Run all remaining suites and
+      repository checks if the known source-length violations stop it; add no
+      audit exception and rerun known browser failures in isolation.
+- [ ] Inspect deletions and staged changes, then commit the two-parent merge.
+      Immediately confirm exactly two parents and inspect every remerge-diff
+      path, recording each resolution and authorized deletion here.
+- [ ] Fast-forward push the merge and report its verification and review results.
+
+Scanner verification: `es-module-lexer` 3.0.2 adds one MIT-licensed package with
+no runtime dependencies and no new audit advisory. Seven focused regressions
+fail before the fix; all 32 focused export tests pass after it. Package checks
+pass both packages and all six consumer scenarios, including Serve/export smoke
+and the production-only audit. Build/Check validate 452 example files. Unit,
+browser and hydration pass 4,071, 746 and 229 tests, respectively, with no skips
+or cancellations. All three known browser flakes pass first run. The unmodified
+aggregate gate passes audit, format and lint, then stops only at the exact same
+26-file length list as 6H. Remaining ratchets, Rust fmt/Clippy, 15 Rust tests and
+the 9-file Rust length audit pass. This fix deletes no file and changes no shell
+module. The final viewer merge is authorized but has not yet started.
+
+The orchestrator reviews this integration; the complete implementation review
+remains the final item in Milestone 8.
+
+## Milestone 6J: Source file-length compliance
+
+After viewer integration, split every file named by the source-length audit
+without changing behavior or removing tests. Keep each module cohesive and
+preserve public APIs. Record per-file test counts before and after each split.
+
+- [ ] Fetch `origin/main`, run the source-length audit after the viewer merge,
+      and add one TODO per reported file or related group with its test count.
+- [ ] Split each reported test file using the existing shared-helper patterns;
+      keep every test name and assertion and verify the before/after counts.
+- [ ] Split reported source modules with stable public APIs and caller imports;
+      update the READMEs that describe their modules.
+- [ ] Split any reported protocol document by responsibility and preserve its
+      rules and links without adding a size exemption.
+- [ ] Run the unmodified `cargo xtask check` after the splits. Require every
+      suite, dependency audit and source-length check to pass completely.
+- [ ] Inspect deletions and staged changes, commit the splits separately, then
+      fast-forward push and report per-file counts and full verification results.
+
+The complete implementation review remains the final item in Milestone 8,
+after the completed work has been committed and pushed.
+
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui
