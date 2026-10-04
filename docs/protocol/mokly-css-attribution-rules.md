@@ -4,7 +4,7 @@ Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
 
 ## Delivery Status
 
-Removal of baseline compatibility is planned for
+Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md):

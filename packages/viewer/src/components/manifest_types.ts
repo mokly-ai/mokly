@@ -61,6 +61,7 @@ export interface ComponentViewRecord {
   ranges: readonly ComponentRangeRecord[];
   styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
+  /** Required in persisted v8 usage; absent from public inspection and unfinished renders. */
   insertedStylesheets?: readonly InsertedComponentStylesheet[];
 }
 
@@ -88,7 +89,7 @@ export interface ManifestComponentVariant extends Omit<
   componentViews: readonly ComponentViewRecord[];
 }
 
-/** Whether one current or normalized historical component is a variant entry. */
+/** Whether one current or baseline-v8 component is a variant entry. */
 export function isManifestComponentVariant(
   entry: ManifestComponent | ManifestComponentVariant,
 ): entry is ManifestComponentVariant {

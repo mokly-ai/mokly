@@ -62,12 +62,13 @@ test("manifest v8 carries identity and configuration but no derived paths", () =
   }
 });
 
-test("historical parsing rejects unsupported v2 and derives supported view paths", () => {
-  assert.throws(
-    () => parseHistoricalManifest({ schemaVersion: 2 }),
-    (error: unknown) =>
-      (error as { code?: string }).code === "baseline-incompatible-earlier",
-  );
+test("baseline parsing rejects lower versions and derives current view paths", () => {
+  for (const schemaVersion of [2, 3, 4, 5, 6, 7])
+    assert.throws(
+      () => parseHistoricalManifest({ schemaVersion }),
+      (error: unknown) =>
+        (error as { code?: string }).code === "baseline-incompatible-earlier",
+    );
   const current = parseHistoricalManifest(currentManifest());
   const [entry] = current.entries;
   assert.ok(entry?.kind === "screen");

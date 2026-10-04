@@ -2,24 +2,21 @@ import assert from "node:assert/strict";
 import { spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import test, { type TestContext } from "node:test";
+import test from "node:test";
 
 import { fixtureWithSheets } from "./helpers/component_stylesheet_fixture.js";
 import {
   createFixture,
   removeFixture,
   repositoryRoot,
+  type TestFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
 
 const cli = path.join(repositoryRoot, "dist/cli/bin.js");
 
-async function startServe(
-  context: TestContext,
-  root: string,
-  configPath: string,
-  watch: boolean,
-) {
+async function startServe(fixture: TestFixture, watch: boolean) {
+  const { root, configPath } = fixture;
   const child = spawn(
     process.execPath,
     [
@@ -45,7 +42,7 @@ async function startServe(
   child.stderr.on("data", (chunk: Buffer) => {
     stderr += chunk.toString();
   });
-  context.after(async () => {
+  fixture.beforeRemove(async () => {
     if (child.exitCode === null && child.signalCode === null) {
       child.kill("SIGTERM");
       await new Promise((resolve) => child.once("exit", resolve));
@@ -92,12 +89,7 @@ test(
         'review: { outDir: ".review", sharedImpact: undefined }',
       ),
     );
-    const running = await startServe(
-      context,
-      fixture.root,
-      fixture.configPath,
-      false,
-    );
+    const running = await startServe(fixture, false);
     assert.match(running.stdout(), /Mokly listening at .*\n$/);
     assert.equal(
       running.stderr(),
@@ -122,12 +114,7 @@ test(
       `import { renderToStaticMarkup } from "react-dom/server";
 export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.id === "home" ? { html, resources: [{path: "action.css", componentIds: ["action"]}] } : { html }; };`,
     );
-    const running = await startServe(
-      context,
-      fixture.root,
-      fixture.configPath,
-      true,
-    );
+    const running = await startServe(fixture, true);
     const warning =
       '[mokly/warning] Stylesheet ownership for "action.css" on "screens/home.mobile.html" is ignored. Changes follow the elements that each changed rule matches.';
     for (let attempt = 0; attempt < 2; attempt += 1)
@@ -157,12 +144,7 @@ test(
       'review: { outDir: ".review", sharedImpact: undefined }',
     );
     await fs.writeFile(fixture.configPath, configured);
-    const running = await startServe(
-      context,
-      fixture.root,
-      fixture.configPath,
-      true,
-    );
+    const running = await startServe(fixture, true);
     const warning =
       "[mokly/warning] review.sharedImpact has been removed; ignoring it. Delete the field.";
     assert.equal(running.stderr().split(warning).length - 1, 1);

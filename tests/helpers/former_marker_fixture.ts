@@ -52,5 +52,6 @@ export function emptyUsage(): ComponentViewRecord {
     ranges: [],
     styles: [],
     resources: [],
+    insertedStylesheets: [],
   };
 }

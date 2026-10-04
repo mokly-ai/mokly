@@ -134,6 +134,10 @@ material. `build/renderer_resources.ts` discards CSS ownership assertions after 
 file checks and emits the stylesheet warning. `render.tsx` returns temporary
 link declarations separately from the private usage record. Build, Check, export, publish and Serve now report those warnings
 through the shared invocation sink.
+Current and baseline v8 manifests require complete usage records, including
+root ranges on component saved views and an `insertedStylesheets` array even
+when it is empty. Public inspection omits that private provenance. Missing
+baseline fields are invalid; comparison never fills them in.
 On both baseline and current sides, a comment with the former `mokabook-`
 spelling is ordinary page content. Mokly never reads it as a marker or removes
 it as one. The comment alone is not a validation error. Required baseline

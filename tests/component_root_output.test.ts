@@ -131,7 +131,15 @@ test("current root validation requires one unparented root only on saved compone
       ),
     /root/,
   );
-  assert.doesNotThrow(() =>
-    validateComponentViewRecord(empty, new Map(), "historical", "action", true),
+  assert.throws(
+    () =>
+      validateComponentViewRecord(
+        empty,
+        new Map(),
+        "historical",
+        "action",
+        true,
+      ),
+    /root/,
   );
 });

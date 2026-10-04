@@ -12,54 +12,6 @@ import {
   baselineManifest,
 } from "./helpers/baseline_fixture.js";
 
-test("older nested layouts are adopted once and retain their original cache version", async () => {
-  const fixture = baselineFixture();
-  const run = fixture.runner.run;
-  fixture.runner.run = async (command) => {
-    const result = await run(command);
-    if (command.argv[0] !== "git") {
-      await fixture.fs.remove(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
-      );
-      await fixture.fs.write(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
-        Buffer.from(
-          JSON.stringify({
-            schemaVersion: 6,
-            generatedBy: "mokly",
-            sourceFiles: ["entries/home.mockup.tsx"],
-            entries: [
-              {
-                id: "home",
-                kind: "screen",
-                title: "Home",
-                description: "Home screen",
-                sourcePath: "entries/home.mockup.tsx",
-                navPath: [],
-                relatedDocs: [],
-                useCaseIds: [],
-                route: "legacy/nested/home.html",
-                fragments: {
-                  mobile: "legacy/nested/home.mobile.html",
-                  desktop: "legacy/nested/home.desktop.html",
-                },
-              },
-            ],
-          }),
-        ),
-      );
-    }
-    return result;
-  };
-  const first = await fixture.builder.build(fixture.request);
-  assert.equal(first.marker.manifestVersion, 6);
-  const count = fixture.calls.length;
-  const reused = await fixture.builder.build(fixture.request);
-  assert.equal(reused.cacheHit, true);
-  assert.equal(reused.marker.manifestVersion, 6);
-  assert.equal(fixture.calls.length, count);
-});
-
 test("an earlier manifest sentinel is retained for the compatibility gate", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
@@ -72,18 +24,14 @@ test("an earlier manifest sentinel is retained for the compatibility gate", asyn
       await fixture.fs.write(
         path.join(command.cwd, "mockups/mokabook-manifest.json"),
         Buffer.from(
-          JSON.stringify({
-            ...baselineManifest,
-            schemaVersion: 7,
-            generatedBy: "mokabook",
-          }),
+          JSON.stringify({ ...baselineManifest, generatedBy: "mokabook" }),
         ),
       );
     }
     return result;
   };
   const result = await fixture.builder.build(fixture.request);
-  assert.equal(result.marker.manifestVersion, 7);
+  assert.equal(result.marker.manifestVersion, 6);
 });
 
 test("current v8 baselines remain reusable after marker validation", async () => {
@@ -132,7 +80,7 @@ test("the oldest manifest sentinel is cached without parsing its contents", asyn
     return result;
   };
   const result = await fixture.builder.build(fixture.request);
-  assert.equal(result.marker.manifestVersion, 2);
+  assert.equal(result.marker.manifestVersion, 6);
   assert.equal((await fixture.builder.build(fixture.request)).cacheHit, true);
 });
 

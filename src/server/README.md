@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Removal of baseline compatibility below is planned for
+Removal of baseline compatibility below is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Serve publishes a validated catalogue, renders requested documents and exposes

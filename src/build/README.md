@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Removal of baseline compatibility below is planned for
+Removal of baseline compatibility below is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Root output boundaries, independent stylesheet provenance and warnings for all

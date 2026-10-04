@@ -8,13 +8,10 @@ import {
 import { validateVariantAgainstParent } from "./manifest_entry_validation.js";
 
 /** Validate every v8 per-view record against the complete component set. */
-export function validateManifestComponentUsage(
-  manifest: {
-    entries: readonly Record<string, unknown>[];
-    schemaVersion: number;
-  },
-  historical = false,
-): void {
+export function validateManifestComponentUsage(manifest: {
+  entries: readonly Record<string, unknown>[];
+  schemaVersion: number;
+}): void {
   exactKeys(
     manifest,
     ["schemaVersion", "generatedBy", "entries", "sourceFiles"],
@@ -35,8 +32,6 @@ export function validateManifestComponentUsage(
           (entry.colorSchemes as string[]).includes("dark"),
           components,
           String(entry.id),
-          undefined,
-          historical,
         );
       else if (entry.componentViews !== undefined)
         invalidData(
@@ -56,7 +51,6 @@ export function validateManifestComponentUsage(
       components,
       String(entry.id),
       parent.id,
-      historical,
     );
   }
 }

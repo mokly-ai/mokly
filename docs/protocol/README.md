@@ -12,7 +12,7 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 ## Delivery Status
 
-Removal of baseline compatibility is planned for
+Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Uniform CSS attribution, root boundaries, evidence fields and stylesheet-owner

@@ -8,14 +8,13 @@ import { parseHistoricalManifest } from "../../dist/registry/manifest.js";
 
 import { componentEntrySource } from "./component_fixture.js";
 import { createExportFixture } from "./export_fixture.js";
-import { historicalPaths } from "./historical_layout_fixture.js";
 
-/** Commit valid v5 metadata whose expected ranges use unsupported comment spelling. */
+/** Commit valid current v8 metadata whose ranges use unsupported comment spelling. */
 export async function formerMarkerBaselineFixture(context: TestContext) {
   const fixture = await createExportFixture(componentEntrySource());
   context.after(() => fixture.close());
   const compilation = await compileCatalogue(fixture.config);
-  const manifest = historicalPaths(compilation.manifest, 5);
+  const manifest = compilation.manifest;
   parseHistoricalManifest(manifest);
   await fs.writeFile(
     path.join(fixture.mockupsDir, "mokly-manifest.json"),

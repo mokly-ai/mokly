@@ -7,7 +7,6 @@ import {
 } from "../registry/manifest.js";
 import { MAX_BATCH_OUTPUT_BYTES } from "../review/git_batch.js";
 
-import { isIncompatibleEarlierBaseline } from "./compatibility.js";
 import { confinedBaselineStat } from "./confinement.js";
 import type { BaselineFileSystem } from "./types.js";
 
@@ -19,21 +18,15 @@ export async function baselineManifestVersion(
   signal?: AbortSignal,
 ): Promise<number> {
   const prefix = path.relative(root, directory).split(path.sep).join("/");
-  let relative = join(prefix, MANIFEST_NAME);
-  let canonical = await confinedBaselineStat(fs, root, relative, signal);
+  const relative = join(prefix, MANIFEST_NAME);
+  const canonical = await confinedBaselineStat(fs, root, relative, signal);
   if (canonical === undefined) {
     for (const name of EARLIER_MANIFEST_NAMES) {
-      const earlier = await confinedBaselineStat(
-        fs,
-        root,
-        join(prefix, name),
-        signal,
-      );
-      if (earlier !== undefined) {
-        relative = join(prefix, name);
-        canonical = earlier;
-        break;
-      }
+      if (
+        (await confinedBaselineStat(fs, root, join(prefix, name), signal)) !==
+        undefined
+      )
+        return 6;
     }
   }
   if (canonical?.kind !== "regular")
@@ -47,14 +40,10 @@ export async function baselineManifestVersion(
     value && typeof value === "object" && "schemaVersion" in value
       ? (value as { schemaVersion?: unknown }).schemaVersion
       : undefined;
-  if (Number.isInteger(version) && (version as number) < 3)
+  if (Number.isInteger(version) && (version as number) < 8)
     return version as number;
-  try {
-    parseHistoricalManifest(value);
-  } catch (error) {
-    if (!isIncompatibleEarlierBaseline(error)) throw error;
-  }
-  return version as number;
+  parseHistoricalManifest(value);
+  return 8;
 }
 
 function join(prefix: string, name: string): string {

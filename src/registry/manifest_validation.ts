@@ -5,25 +5,21 @@ import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { validateManifestComponentUsage } from "../components/manifest_validation.js";
 import { MoklyError } from "../errors.js";
 
-import { assertHistoricalLayout } from "./historical_layout.js";
-import { normalizeHistoricalManifest } from "./historical_manifest.js";
 import { validateManifestEntry } from "./manifest_entries.js";
 import { validateManifestRelationships } from "./manifest_relationships.js";
 import { record, stringArray, validateRepoPath } from "./manifest_values.js";
 
-/** Validate current JSON against the v8 schema. */
+/** Validate current or historical JSON against the one supported v8 schema. */
 export function validateManifest(
   value: unknown,
   historical = false,
   componentUsage = true,
 ): ManifestV8 {
-  const original = value;
-  if (historical) value = normalizeHistoricalManifest(value);
   if (
     historical &&
     record(value) &&
     Number.isInteger(value.schemaVersion) &&
-    (value.schemaVersion as number) < 3
+    (value.schemaVersion as number) < 8
   )
     throw incompatibleEarlierBaseline();
   if (!record(value) || !Array.isArray(value.entries))
@@ -86,10 +82,7 @@ export function validateManifest(
           );
   }
   validateManifestRelationships(entries, byId);
-  if (historical)
-    assertHistoricalLayout(original, value as unknown as ManifestV8);
-  if (componentUsage)
-    validateManifestComponentUsage(value as never, historical);
+  if (componentUsage) validateManifestComponentUsage(value as never);
   return value as unknown as ManifestV8;
 }
 

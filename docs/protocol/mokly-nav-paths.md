@@ -9,7 +9,7 @@ helper inputs, derived routes, and authoring-time errors; the
 
 ## Delivery Status
 
-Removal of baseline compatibility is planned for
+Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 ## Sections And Path Derivation

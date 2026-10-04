@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Removal of baseline compatibility is planned for
+Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 The remaining command outcomes are implemented.
 

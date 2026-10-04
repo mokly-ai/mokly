@@ -144,7 +144,7 @@ export function classifyComponentVariants(
   return { parentReasons, reviews };
 }
 
-/** Index current or historical-v7 flattened variants by global id. */
+/** Index current or baseline-v8 flattened variants by global id. */
 export function componentVariantEntries(
   entries: readonly (ManifestEntry | HistoricalManifestEntry)[],
 ): ReadonlyMap<string, ReviewComponentVariant> {

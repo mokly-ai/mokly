@@ -1,6 +1,7 @@
 import { parse } from "parse5";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
+import { invalidData } from "@mokly/viewer/data";
 
 import { validateComponentRanges } from "../../components/ranges.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "../ignore.js";
@@ -37,6 +38,19 @@ export function componentCssDocuments(
     after && afterUsage
       ? validateComponentRanges(after, afterUsage.ranges)
       : [];
+  for (const [html, ranges] of [
+    [before, beforeRanges],
+    [after, afterRanges],
+  ] as const)
+    if (
+      root &&
+      html !== undefined &&
+      ranges.filter((range) => range.record.target.kind === "root").length !== 1
+    )
+      invalidData(
+        route,
+        "component saved views require exactly one root output range",
+      );
   const normalized =
     before !== undefined && after !== undefined
       ? normalizeReviewPair(before, after, route)

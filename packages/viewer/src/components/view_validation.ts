@@ -25,7 +25,6 @@ export function validateComponentViews(
   >,
   at: string,
   rootId?: string,
-  historical = false,
 ): asserts value is readonly ComponentViewRecord[] {
   const axes = ["mobile", "desktop"].flatMap((viewport) =>
     (dark ? ["light", "dark"] : ["light"]).map(
@@ -51,7 +50,14 @@ export function validateComponentViews(
     );
     if (`${String(view.viewport)}/${String(view.colorScheme)}` !== axes[i])
       invalidData(at, "view axes must be unique and ordered");
-    for (const field of ["instances", "slots", "ranges", "styles", "resources"])
+    for (const field of [
+      "instances",
+      "slots",
+      "ranges",
+      "styles",
+      "resources",
+      "insertedStylesheets",
+    ])
       if (!Array.isArray(view[field]))
         invalidData(at, `missing ${field} array`);
     validateComponentViewRecord(
@@ -59,7 +65,6 @@ export function validateComponentViews(
       components,
       `${at} / ${axes[i]}`,
       rootId,
-      historical,
     );
   });
 }
@@ -154,10 +159,7 @@ export function validateComponentViewRecord(
   validateOrders(view.instances, at);
   validateViewReferences(view, components, instances, slots, at, historical);
   const roots = view.ranges.filter((range) => range.target.kind === "root");
-  if (
-    roots.length > (rootId ? 1 : 0) ||
-    (rootId && !historical && roots.length !== 1)
-  )
+  if (roots.length > (rootId ? 1 : 0) || (rootId && roots.length !== 1))
     invalidData(
       at,
       "saved component views require exactly one root range; screens have none",

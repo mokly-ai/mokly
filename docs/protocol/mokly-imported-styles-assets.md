@@ -4,7 +4,7 @@ Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 
 ## Delivery Status
 
-Removal of baseline compatibility is planned for
+Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Imported delivery is implemented. Uniform rule identity and Changes attribution

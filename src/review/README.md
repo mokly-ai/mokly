@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Removal of baseline compatibility below is planned for
+Removal of baseline compatibility below is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Uniform CSS classification and evidence fields below are implemented in Milestone 19;

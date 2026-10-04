@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Removal of baseline compatibility is planned for
+Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Implemented for manifest v8. Root output ranges, non-CSS-only resource records and independent

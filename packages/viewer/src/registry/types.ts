@@ -60,7 +60,7 @@ export interface ManifestV8 {
   sourceFiles: readonly string[];
 }
 
-/** Historical inputs are normalized to the current v8 shape at the Git boundary. */
+/** A baseline accepted by the historical boundary is exactly manifest v8. */
 export type HistoricalManifest = ManifestV8;
 
 /** Historical names express caller intent without introducing a second shape. */
@@ -69,5 +69,5 @@ export type HistoricalManifestScreen = ManifestScreen;
 export type HistoricalManifestPage = ManifestPage;
 export type HistoricalManifestUseCase = ManifestUseCase;
 
-/** Current and normalized historical comparison inputs share the v8 contract. */
+/** Current and historical comparison inputs share the exact v8 contract. */
 export type Manifest = ManifestV8;

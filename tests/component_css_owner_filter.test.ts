@@ -34,7 +34,7 @@ test("declared links retain provenance without CSS resource owners", async (t) =
   }
 });
 
-test("historical v8 drops CSS owners and accepts missing roots; current v8 rejects them", async (t) => {
+test("baseline and current v8 both reject CSS owners and missing roots", async (t) => {
   const fixture = await fixtureWithSheets();
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
@@ -48,10 +48,7 @@ test("historical v8 drops CSS owners and accepts missing roots; current v8 rejec
       if (entry.id === "action-default")
         Object.assign(view.usage, { ranges: [] });
     }
-  const normalized = parseHistoricalManifest(old);
-  for (const entry of normalized.entries)
-    for (const view of generatedViews(entry))
-      assert.deepEqual(view.usage?.resources, []);
+  assert.throws(() => parseHistoricalManifest(old), /stylesheet|root|owner/);
   assert.throws(() => parseManifest(old), /stylesheet|root|owner/);
 });
 

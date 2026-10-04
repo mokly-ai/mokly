@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type { HistoricalManifest } from "@mokly/viewer/data";
 
+import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -29,13 +30,11 @@ async function readMeasured(
   config: ResolvedConfig,
 ): Promise<HistoricalManifest> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  let canonicalPath = joinGit(prefix, MANIFEST_NAME);
+  const canonicalPath = joinGit(prefix, MANIFEST_NAME);
   if (!(await git.fileExists(commit, canonicalPath))) {
     for (const name of EARLIER_MANIFEST_NAMES)
-      if (await git.fileExists(commit, joinGit(prefix, name))) {
-        canonicalPath = joinGit(prefix, name);
-        break;
-      }
+      if (await git.fileExists(commit, joinGit(prefix, name)))
+        throw incompatibleEarlierBaseline();
   }
   return parseHistoricalManifest(
     JSON.parse(await git.readFile(commit, canonicalPath)),

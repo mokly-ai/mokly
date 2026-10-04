@@ -10,7 +10,13 @@ export function comparisonStylesheetMaterial(
   usage: ComponentViewRecord | undefined,
   rootComponentId?: string,
 ): { html: string; usage: ComponentViewRecord | undefined } {
-  const spans = usage?.insertedStylesheets ?? [];
+  if (!usage) return { html, usage };
+  const spans = usage.insertedStylesheets;
+  if (!Array.isArray(spans))
+    throw new MoklyError(
+      "review-invalid",
+      "component usage is missing inserted stylesheet provenance",
+    );
   if (!spans.length) return { html, usage };
   let previousEnd = 0;
   for (const span of spans) {
@@ -35,11 +41,9 @@ export function comparisonStylesheetMaterial(
       material.slice(0, span.startOffset) + material.slice(span.endOffset);
   return {
     html: material,
-    usage: usage
-      ? {
-          ...usage,
-          styles: rebaseStyleOwnership(html, material, usage.styles),
-        }
-      : undefined,
+    usage: {
+      ...usage,
+      styles: rebaseStyleOwnership(html, material, usage.styles),
+    },
   };
 }

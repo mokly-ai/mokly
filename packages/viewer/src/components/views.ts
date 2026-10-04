@@ -17,7 +17,7 @@ export interface GeneratedComponentView {
   usage?: ComponentViewRecord;
 }
 
-/** Derive current and historical-v7 artifacts from identity and view axes. */
+/** Derive current and baseline-v8 artifacts from identity and view axes. */
 export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
   if (entry.kind === "component")
     return isManifestComponentVariant(entry)

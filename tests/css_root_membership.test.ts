@@ -79,7 +79,7 @@ test("kept matches select only matching variants across all viewports and scheme
   );
 });
 
-test("missing historical roots leave before matches as page evidence without guessing containment", async (t) => {
+test("missing baseline roots fail instead of becoming page evidence", async (t) => {
   const { input } = await cssMembershipFixture(t, {
     before: ".action{color:red}",
     after: ".action{color:blue}",
@@ -97,16 +97,9 @@ test("missing historical roots leave before matches as page evidence without gue
       ),
     );
   }
-  const result = await assertFastPathEquivalent({
-    ...input,
-    before,
-    beforeFiles: files,
-  });
-  const action = result.components.find((entry) => entry.id === "action")!;
-  assert.equal(action.variants[0]!.views[0]!.material, undefined);
-  assert.deepEqual(
-    action.variants[0]!.views[0]!.reasons![0]!.analysis!.pageEvidence,
-    { selectors: [".action"] },
+  await assert.rejects(
+    assertFastPathEquivalent({ ...input, before, beforeFiles: files }),
+    /root/,
   );
 });
 

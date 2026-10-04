@@ -213,7 +213,7 @@ preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 
 ## Delivery Status
 
-Removal of baseline compatibility below is planned for
+Removal of baseline compatibility below is implemented in
 [M23B](./plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Uniform CSS attribution is implemented in Milestone 19 of the

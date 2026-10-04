@@ -26,7 +26,7 @@ import { validateManifest } from "./manifest_validation.js";
 /** Canonical generated manifest filename. */
 export const MANIFEST_NAME = "mokly-manifest.json";
 
-/** Earlier filenames retained for historical reads and stale-output cleanup. */
+/** Earlier names retained only as incompatibility sentinels and stale output. */
 export const EARLIER_MANIFEST_NAMES = [
   "mokabook-manifest.json",
   "mockbook-manifest.json",
@@ -94,7 +94,7 @@ export function parseManifest(value: unknown): ManifestV8 {
   return validateManifest(value);
 }
 
-/** Normalize supported historical v3-v7 manifests before comparison. */
+/** Apply the earlier/newer version gate, then fully validate baseline v8. */
 export function parseHistoricalManifest(value: unknown): HistoricalManifest {
   return validateManifest(value, true);
 }
