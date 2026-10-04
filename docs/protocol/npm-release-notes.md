@@ -12,9 +12,27 @@ commit returned by
 - `40ab4324 feat!: drop comparisons against older baselines` — the comparison
   baseline note;
 - `c16926ba feat!: close out id-derived routes review fixes` — the baseline and
-  viewer host notes; and
+  viewer host notes;
 - `52ca8548 feat(publish)!: upload catalogue content deltas` — the delta
-  publishing note.
+  publishing note; and
+- `6775282d feat!: use portable viewer namespace` — the portable namespace
+  note below.
+
+## Breaking Portable Namespace Release Note
+
+The viewer namespace is now `mokly-viewer/`, with comparison generations below
+`mokly-viewer/diffs/generations/`. There is no `/__mokly/` alias. Generated HTML,
+CSS, assets and the private manifest share `<mockupsDir>/mokly-generated/`.
+Exported current resources live under `static/mokly-generated/`, with authored
+closure files beside that child under `static/`.
+
+Readers accept source manifest v8, public catalogue v4, delivery v4 and
+bootstrap v1 only. The namespace change advances ownership to v3 and upload to
+v2 while retaining Plan v1 and content deltas. These supersede the intermediate
+format numbers in the earlier upgrade notes below. An older receiver returns
+426 with the documented service-version message; an incompatible viewer fails
+before reading paths. Mokly Cloud requires the separate receiver/viewer update.
+See [namespace compatibility](./mokly-viewer-namespace.md#compatibility-failure).
 
 ## Breaking Navigation Path Upgrade Release Note
 

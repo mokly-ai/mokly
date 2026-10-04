@@ -112,7 +112,7 @@ fails for:
 
 The tracked failure report groups missing, stale, and extra paths. Run
 `mokly build` and commit the whole tree, or untrack and ignore `mokly-generated/`.
-`check` never rewrites output; Serve, export, and publication never write it.
+`check` never rewrites output; plain Serve, export, and publication never write it.
 Only `build`, `build --watch`, and `serve --build` write after a complete
 successful compilation, as specified in [generated output](./mokly-generated-output.md).
 

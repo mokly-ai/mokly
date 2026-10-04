@@ -107,7 +107,7 @@ stylesheets outside that boundary retain file-level evidence under
 [CSS attribution](../../docs/protocol/mokly-css-attribution.md) and the
 [v4 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 `imported_changes.ts` compares accepted generated CSS and binary asset bytes
-against the pinned branch-point reader, even when Git ignores derived output.
+against the pinned branch-point reader, even when Git ignores generated output.
 It merges those route changes with Git's authored paths and removes file-level
 shared impact for **every** delivered CSS source whenever any generated
 stylesheet's bytes change, or for an

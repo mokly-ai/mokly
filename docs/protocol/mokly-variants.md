@@ -140,8 +140,8 @@ the defining module.
 
 Build renders a variant exactly as it renders any entry of its kind: one
 document per effective viewport and color scheme through the consumer
-renderer, with the same ownership header, link rewriting, fragment validation,
-resource validation, compatibility transformation, collision and orphan
+renderer, with the same plain generated marker, link rewriting, fragment validation,
+resource validation, compatibility transformation, collision and generated-inventory
 checks, and transactional writes. A component parent has no views; its page
 shows its first variant entry.
 

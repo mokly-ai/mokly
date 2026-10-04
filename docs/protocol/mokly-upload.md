@@ -60,9 +60,9 @@ including removed entries and comparison assets and controls. It rejects an
 explicit `--base`. Both modes build and validate the catalogue.
 
 Publish requires a Git checkout with a commit even without comparisons, to
-identify the uploaded revision. Derived catalogues rebuild the pinned baseline
-only when comparisons are enabled; `--no-changes` requires neither that
-history nor a historical install or build. Uncommitted authoring changes are
+identify the uploaded revision. With comparisons enabled, the pinned base uses
+verified v8 blobs or its own rebuild recipe. `--no-changes` requires neither
+that history nor a historical install or build. Uncommitted authoring changes are
 permitted: `headSha` identifies checkout context, not a claim that every
 exported byte exists at that commit. A receiver keeps the first publication it
 completes for a `headSha` and `configPath`; publishing a dirty tree is not a

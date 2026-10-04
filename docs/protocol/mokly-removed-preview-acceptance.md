@@ -4,7 +4,7 @@ This document owns the acceptance coverage for
 [Removed Content Previews](./mokly-removed-previews.md).
 
 Regressions cover removed screens through selected and complete comparison
-paths in both output modes, removed pages with deleted assets and changed
+paths with Git-blob and rebuilt baselines, removed pages with deleted assets and changed
 baseline CSS, path traversal and symlinks, current same-path files, malformed
 and mixed selections, incompatible baselines, coalescing, refresh,
 invalidation, cancellation, shutdown, idle recovery, both frame adapters,

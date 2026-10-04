@@ -164,8 +164,8 @@ inside `repoRoot` or explicitly configure a common root containing it.
 
 Build/check derive the inventory from the same resolved graphs used for that
 compilation. Before serving or publishing a current v8 catalogue, independently
-resolve the config and consumer input graphs and require the persisted inventory
-to match. This scan may bundle modules but must not run page render callbacks,
+resolve the config and consumer input graphs and require the accepted in-memory
+inventory to match. This scan may bundle modules but must not run page render callbacks,
 rewrite generated output, or read Git history. A missing, malformed, or stale
 inventory rejects the candidate and directs the author to rebuild.
 Freshness compares input-path membership, not content hashes; normal edits to

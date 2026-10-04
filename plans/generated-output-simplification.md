@@ -1686,15 +1686,92 @@ no merge occurred. Commit and push precede the final document audit.
 
 ## Milestone 15: Verify and review the merged branch
 
-- [ ] Re-read every document changed in Milestones 9 to 14 against the
+The document audit covers the union of Markdown paths changed by the first-parent
+Milestone 9–14 commits, from `a9c8a9f7^` through `1ab8f5aa`: 206 paths, including
+165 existing live documents and 41 history/index/deleted paths. The inventory
+and per-file boundary notes are retained under `.context/milestone-15/`.
+Historical review receipts, release notes and completed milestone narratives
+retain their original version claims. The two documents already deleted on
+main stay deleted; this milestone restores no legacy documentation or reader.
+
+Corrections align the live documents with the implemented contracts:
+
+- Imported CSS uses generated-root-relative routes inside the unified tree.
+  Only Check reads index tracking. Writers replace the whole tree; in-memory
+  consumers do not inspect stale generated output. Removed output modes,
+  committability and `publicExclude` rules no longer appear as live behavior.
+- Serve and publication retain accepted in-memory CSS/assets with no disk
+  fallback. Both comparison sides use v8; older output yields unavailability.
+  Watch documentation now distinguishes reload-triggered Build compilation
+  from Serve resource reloads and makes the Serve write option explicit.
+- Hosting uses `mokly-viewer/` and `static/`, the ownership fixture rejects
+  non-v3 markers, and package/shell references name the actual v8/v4 readers.
+  The component envelope no longer repeats fields or names the v7 entry type.
+  Fixed-name policy and the authored-name host caveat are unchanged. Release
+  notes cover `6775282d` and the format migration; user guides describe the
+  approved Cloud version error and the earlier-baseline unavailable outcome.
+- The unified PostCSS paragraph now uses the implemented diagnostic from
+  `dependency_inventory.ts` and the existing error catalogue: exclude
+  `mockupsDir`, with the stylesheet-relative Tailwind example. The earlier
+  draft instead named the generated root. This is a documentation correction;
+  the generated-output rejection and scan exclusions remain unchanged.
+- Lint and browser preparation are documented as implemented. The current
+  consumers use `shared_example.ts`; the one cold-baseline test and real cold
+  preview command remain explicit. The 600-second limit is unchanged.
+
+Finding 17 remains open. Its source-root equality claim in the older
+configuration text is not changed; `validateSourceRoots` still rejects equal
+roots, as the unified contract says. Other unapproved findings and the Cloud
+receiver/viewer rollout also remain deferred. This audit adds no source,
+configuration, script or test change and makes no new product decision.
+
+- [x] Re-read every document changed in Milestones 9 to 14 against the
       shipped behaviour and fix drift.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits; push the
       branch.
 - [ ] After the push, review the complete local diff against `origin/main`
       using `docs/implementation-review-prompt.md`; report numbered findings
       with severities and recommendations without changing the implementation.
+
+### Validation of the documentation audit
+
+The final full gate passed on Node 22.14.0, with scratch reports under
+`.context/milestone-15/`:
+
+| Command                                                                  | Result                               |  Seconds |
+| ------------------------------------------------------------------------ | ------------------------------------ | -------: |
+| `npm run format:check`                                                   | pass                                 |   23.851 |
+| `npm run lint`                                                           | pass                                 |   18.496 |
+| `npm run typecheck`                                                      | pass                                 |   36.980 |
+| `npm test`                                                               | 3,795 pass; zero skips/cancellations | 1014.552 |
+| `npm run test:browser -- --output .context/milestone-15/browser-results` | 970 pass                             | 1710.050 |
+| `npm run example:check`                                                  | 436 valid, untracked files           |   11.105 |
+| `cargo xtask check`                                                      | pass                                 | 3052.107 |
+
+Cargo also passed the unchanged live audit policy, 15 Rust tests, all six
+packed-consumer scenarios and their strict audits, 3,795 unit tests,
+747 browser tests and 223 hydration tests. Source length passed for 928 files.
+All 28 focused guide checks and five Markdown/link/size checks pass.
+The three documented v8 envelope field sets match the exported interface.
+
+The first unit run passed 3,794 cases and failed one guide check:
+
+```text
+✖ the initial corpus has no links and future destinations are bounded
+Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
+```
+
+The Styles guide had gained a relative Markdown link, which the guide corpus
+does not allow. The guide now uses self-contained prose; the rule and test remain.
+All guide checks then passed. The complete gate restarted from formatting
+and passed. No tests were skipped, disabled or weakened.
+
+The final review TODO remains for the orchestrator. Commit and push complete
+this milestone's first two TODOs only. Main remains
+`800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge occurred.
+Only the five authorized Milestone 11 files remain deleted relative to main.
 
 ## Post-merge follow-up (non-blocking)
 

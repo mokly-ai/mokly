@@ -150,7 +150,7 @@ One complete static document is generated for every component variant entry,
 viewport, and effective color scheme. The parent has no views; its page shows
 its first variant. Exact names follow the
 [artifact path contract](./mokly-artifact-paths.md). Output collision,
-ownership, resource, orphan, and transactional-write checks apply.
+source protection, resource validation, generated-tree inventory and transactional-write checks apply.
 
 Every current catalogue emits manifest schema v8, including typed component
 parent and variant entries and per-view usage records for screens and component

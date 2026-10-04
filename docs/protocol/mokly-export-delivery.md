@@ -10,9 +10,9 @@ and bootstrap v1 share one shell per entry; provider normalization is an adapter
 Deploy the export directory's contents as the HTTP(S) origin's document root.
 The host must serve ordinary files with their correct MIME types, index.html
 directory indexes, query-insensitive file lookup, and normal missing-file
-responses. It must serve the double-underscore package asset directories.
-No SPA fallback, extension-removal rule, redirect interpreter, worker, API,
-or server-side rendering is required for catalogue functionality.
+responses. Serve `mokly-viewer/` and `static/` under the
+[portable-name rules](./mokly-viewer-namespace.md#names-and-acceptance).
+No SPA fallback, URL rewriting, worker, API or server-side rendering is required.
 
 The artifact includes a `404.html` catalogue page. Hosts may configure it as
 their error document; producing the HTTP 404 status for arbitrary unknown URLs
@@ -27,7 +27,7 @@ not depend on a generic static server interpreting `_headers` or `_redirects`.
 
 For cross-origin catalogue and viewer consumers, public fetch paths are
 `mokly-viewer/catalogue.json`, `static/mokly-generated/<route>`,
-`static/<referenced closure path>` (legacy publications use `static/<route>`),
+`static/<referenced closure path>`,
 `mokly-viewer/client/**`, `mokly-viewer/shell.css`,
 `mokly-viewer/fonts/**` and `mokly-viewer/diffs/generations/**`. Send correct MIME types,
 `Access-Control-Allow-Origin: <exact app origin>` and

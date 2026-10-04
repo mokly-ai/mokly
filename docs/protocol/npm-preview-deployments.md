@@ -25,13 +25,13 @@ stable `pr-<number>` branch alias and receive one updated sticky comment with
 the deployment result, URL, commit, and workflow run. Fork pull requests never
 receive Cloudflare credentials or write-capable execution.
 
-`npm run preview:build` first rebuilds Mokly and its derived basic consumer.
+`npm run preview:build` first rebuilds Mokly and its basic consumer output.
 The repository-only preview builder starts the real Browse server on an
 ephemeral loopback port and snapshots the home, not-found, current catalogue
 routes, plus removed-entry routes only when Changes is included. It copies the
 shell stylesheet, browser and shared navigation modules, fonts, and every
 validated public consumer asset into `.context/mokly-preview`. HTML copies pass
-through the same manifest/header-aware logical-link adapter as served Browse;
+through the same validated logical-link adapter as served Browse;
 unowned reserved metadata is removed and invalid trusted output fails the
 build. Preview shell links use Cloudflare Pages' canonical extensionless HTML
 routes, and static shell HTML omits the watched server's live-update entrypoint.
@@ -45,8 +45,9 @@ one merge-base commit for impact and screen and component variant comparisons
 and rejects any input mutation during capture. It packages comparison JSON and
 isolated resources under an immutable generation path; visitors fetch them only
 after selecting a diff. Refresh loads that same published result. Unavailable
-requested baselines or invalid comparisons abort the build without replacing
-previous output.
+history or invalid comparisons abort the build without replacing previous output.
+A recognized earlier baseline instead publishes current content with Changes
+unavailable under [baseline compatibility](./mokly-baseline-compatibility.md).
 
 Both options omit the live-update entrypoint, watch-only modules, event routes,
 and stale comparison directories. Full history remains available in both jobs.

@@ -231,7 +231,7 @@ page comparisons. Local development retains its Git-aware Changes behavior.
 
 Authoring, schema, build, links, server, browser, watcher,
 comparison-regression, and packed-consumer tests cover normal pages,
-obsolete-config rejection, and ownership-safe orphan cleanup.
+obsolete-config rejection, and transactional replacement of the generated tree.
 Use a shared folder containing a screen, page, and use case; a top-level
 page; and matching folder paths across sections. Verify output determinism
 and every existing screen safety boundary.

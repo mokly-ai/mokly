@@ -142,8 +142,8 @@ Public catalogues have no older-version reader or optional-prefix fallback.
   pages show their pinned baseline version.
 - [Removed preview acceptance](./mokly-removed-preview-acceptance.md) —
   regression and presentation coverage.
-- [Derived baselines](./mokly-derived-baselines.md) — default uncommitted
-  generated output with per-commit rebuilt baselines.
+- [Per-commit baselines](./mokly-derived-baselines.md) — verified v8 Git blobs
+  or rebuilt output, independent of head tracking.
   - [Baseline storage and execution](./mokly-baseline-storage.md) — archive
     limits, command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)

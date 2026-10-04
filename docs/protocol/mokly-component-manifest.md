@@ -14,10 +14,10 @@ and `Viewport` retain the [package contract](./mokly-package.md) and the named
 
 The optional instance `source` field is defined by the
 [usage-record contract](./mokly-component-usage-records.md). Readers accept
-instances with or without it. The current manifest version is 7, defined by the
-[id-derived routes plan](../../plans/id-derived-routes.md). Version 8 carries
-identity only: no entry stores a route, view path, or other value derivable
-from its kind, id, and configuration.
+instances with or without it. The current manifest version is 8, defined by
+[the generated manifest contract](./mokly-generated-manifest.md). It retains
+the identity-only entries from the id-derived route model: no entry stores a
+route, view path or other value derivable from its kind, id and configuration.
 
 ## Entries And Variants
 
@@ -25,17 +25,14 @@ from its kind, id, and configuration.
 interface ManifestV8 {
   schemaVersion: 8;
   generatedBy: "mokly";
-  entries: readonly ManifestEntryV7[];
+  entries: readonly ManifestEntry[];
   sourceFiles: readonly string[];
-  assetClosure: readonly string[];
-  generatedFiles: readonly { path: string; blobHash: string }[];
-  blobHashAlgorithm: "sha1" | "sha256";
   assetClosure: readonly string[];
   generatedFiles: readonly { path: string; blobHash: string }[];
   blobHashAlgorithm: "sha1" | "sha256";
 }
 
-type ManifestEntryV7 =
+type ManifestEntry =
   | ManifestUseCase
   | ManifestPage
   | ManifestScreen

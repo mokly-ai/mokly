@@ -279,7 +279,7 @@ HTML attributes or URL query/fragment boundaries.
 `build` stages the whole `mokly-generated/` tree on the same filesystem, moves
 the previous tree aside, installs the staged tree by rename, and restores
 the previous tree on failure. It never replaces the catalogue's authored
-asset/source paths. Serve, export and publication capture in-memory generated
+asset/source paths. Plain Serve, export and publication capture in-memory generated
 output and never write the catalogue.
 
 ## Package Browser Assets

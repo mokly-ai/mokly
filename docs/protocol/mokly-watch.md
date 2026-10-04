@@ -90,10 +90,11 @@ uses repository tooling rather than a hidden consumer-specific self-reload path.
 
 All files under `mokly-generated/` are generated output and ignored by watch,
 including removed and newly added paths. `build --watch` reuses these
-classification and debounce rules; it rewrites the entire generated tree only
-after a successful, fully validated compilation, never after a reload-only
-resource event or a failed candidate. `serve --build` uses the same rule in
-the parent after resource watches are ready; plain Serve never writes output.
+classification and debounce rules. A reload, rebuild or config action compiles
+a complete candidate and writes only after validation succeeds; evidence-only
+events do not write. Failed candidates retain the previous tree. `serve --build`
+writes accepted full compilations in the parent after resource watches are ready;
+plain Serve never writes output.
 
 Resource discovery follows the same portable HTML/CSS URL rules as Changes,
 including transitive imports and nested documents, with shared edges read once
@@ -172,8 +173,8 @@ On a config-file change, the parent first loads and validates the candidate,
 starts a replacement watcher, waits for readiness and validates a new index and
 rendering graph. It then adopts the config, closes the old watcher and restarts
 the child. Load, watcher-readiness or index-validation failure retains the previous
-config, watcher, output and child. Full rendering and transactional output writing
-follow in the background. Their failure preserves old disk output and withholds
+config, watcher, output and child. Full rendering follows in the background,
+with transactional output writing only when `--build` is set. Their failure preserves old disk output and withholds
 complete usage/Changes; valid current previews remain available. An explicit CLI
 `--base` remains pinned; without one, the restarted child uses the newly loaded
 config's comparison base.

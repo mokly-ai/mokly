@@ -107,7 +107,7 @@ Static route parsing accepts a provider-normalized extensionless path only when
 the shared parser derives a kind and id that `byId` contains. Historical
 resolution binds that route to its published snapshot; an explicit query must
 match, while an inferred identity is canonicalized into the URL. Static
-delivery v3 carries only the page's canonical path, comparison URL, and
+delivery v4 carries only the page's canonical path, comparison URL, and
 deployment identity; entry destinations come from the shared route helpers.
 
 Authenticated frame navigation stays logical until `frame_event_router.tsx`

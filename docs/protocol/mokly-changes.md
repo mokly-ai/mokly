@@ -46,7 +46,8 @@ with changed content remain eligible. Both viewports and every available color
 scheme participate. Metadata includes address, titles, descriptions,
 rationale, tags, related-doc links, flow steps and memberships, view structure,
 and `navPath`; it excludes source locations and dependencies.
-Valid generated ownership headers are excluded from document comparison, so a
+Plain generated markers and recognized historical first lines are excluded from
+comparison, so a
 source move alone stays unchanged. Stored snapshots retain the original headers.
 
 Changes to local resources referenced by a fragment also keep that screen in

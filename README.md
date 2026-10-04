@@ -348,10 +348,10 @@ review rules, and the temporary Braces exception.
 - [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
   identity-derived logical-link targets and portable artifact URLs.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
-  — manifest-v7 component-entry validation.
+  — manifest-v8 component-entry validation.
 - [`src/registry/changed_ids.ts`](./src/registry/changed_ids.ts) and
   [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
-  identity-keyed change membership and the strict baseline-v7 boundary.
+  identity-keyed change membership and the strict baseline-v8 boundary.
 - [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
   [`src/server/classification_result.ts`](./src/server/classification_result.ts)
   — the typed earlier-baseline outcome from admission through Serve.

@@ -17,13 +17,13 @@ no writable checkout or cache is shared between invocations, runtimes or jobs.
 Keep the existing global setup's ready-Serve work as well.
 Listing/discovery does not trigger this preparation; it runs before execution.
 
-After the main merge, audit every browser fixture that reconstructs this same
-example baseline, including indirect helper callers. The current users are
-`static-example` in `tests/browser/static_example.spec.ts` and
-`design-library-export` in `tests/browser/design_library_export.spec.ts`, through
-`tests/helpers/example_baseline.ts`. Record the complete merged call-site list
-in the plan before implementing reuse; do not assume these remain the only two.
-Only identical baseline inputs share this preparation.
+The audited consumers are `static-example` in
+`tests/browser/static_example.spec.ts` and `design-library-export` in
+`tests/browser/design_library_export.spec.ts`. Both acquire independent copies
+through `tests/helpers/shared_example.ts`; source creation remains in
+`tests/helpers/example_baseline.ts`. The plan records all direct and indirect
+callers, including independent fixtures. Only identical baseline inputs share
+this preparation; audit new callers before adding them.
 
 The merged fixtures previously compiled and committed distinct focused outputs.
 The shared export baseline uses one common focused source profile: the basic
@@ -85,11 +85,9 @@ unconfirmed termination fails verification and retains diagnostic files.
 Keep exactly one browser test whose operation under test is a real cold
 example-baseline rebuild. It uses an independent empty cache, observes the
 actual install/build commands, and verifies the resulting v8 cache/inventory
-and comparison result. It must not consume the warmed cache. Identify and
-retain that owning test after the merge, adding an explicit regression if cold
-work previously happened only incidentally in fixture setup. Keep every
-existing UI assertion in the ordinary fixtures that now reuse preparation.
-The owning case is `tests/browser/example_baseline_cold.spec.ts`.
+and comparison result. It must not consume the warmed cache. The owning case
+is `tests/browser/example_baseline_cold.spec.ts`. Keep every existing UI
+assertion in the ordinary fixtures that reuse preparation.
 
 Also retain `tests/browser/preview_preparation.spec.ts` and its real cold
 `npm run preview:build`, absent-output proof, generated-byte stability and

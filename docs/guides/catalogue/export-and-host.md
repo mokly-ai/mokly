@@ -19,8 +19,10 @@ absolute path must stay inside the repository root.
 `--base` overrides the configured base ref for that run. The branch point must
 be present in the checkout, with the authored assets and either the committed
 generated output or the tooling your derived baseline recipe needs, so a CI
-job should check out the full history. Export never fetches history for you
-and never silently omits comparisons.
+job should check out the full history. Export never fetches history for you.
+A base built by an earlier Mokly version makes Changes unavailable; export
+prints the reason and still packages the current catalogue. Other invalid
+comparison inputs fail the export.
 
 ## Deploy it
 

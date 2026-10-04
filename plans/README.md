@@ -20,7 +20,9 @@
   Milestone 13 adds complete real-config lint probes and duplicate-import
   enforcement; its full gate passes. Milestone 14 prepares the shared browser
   baseline once, preserves real cold coverage and records both full measurements;
-  its full gate passes. Milestone 15 audits documents, verifies and reviews.
+  its full gate passes. Milestone 15's document audit and full gate pass;
+  its commit/push completes the first two TODOs. The orchestrator owns the
+  remaining final review.
   Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.

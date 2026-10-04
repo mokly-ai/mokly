@@ -25,15 +25,15 @@ JavaScript-imported asset fails Build. A consumer `css` loader on any extension
 is rejected at config validation because it emits an undelivered sibling
 stylesheet; rename the input to `.css` or use a JavaScript-safe loader.
 
-`<mockupsDir>/mokly-generated/` is reserved for generated stylesheets and
-binary assets. An `entries` glob cannot have a static prefix inside it;
+`<mockupsDir>/mokly-generated/` is reserved for generated HTML, the private
+manifest, compiled stylesheets and copied binary assets. An `entries` glob cannot have a static prefix inside it;
 `entriesDir` and `review.outDir` cannot equal or be inside it, and broad
 entry discovery skips it. Local configured stylesheet paths and authored
-inputs cannot live there, including through symlink aliases. Consumer
-`publicExclude` globs cannot start with literal `mokly-generated` after brace
-expansion. Broad globs are allowed, but Build rejects any generated stylesheet
-or asset matched by a consumer or default public exclusion. Authored public
-CSS belongs elsewhere below `mockupsDir`.
+inputs cannot live there, including through symlink aliases. `publicExclude`
+is removed; supplying it fails configuration validation. Authored public CSS
+belongs elsewhere below `mockupsDir` and enters the referenced asset closure.
+The [unified output contract](./mokly-unified-output.md) defines route reservation,
+source boundaries and output-independent command behavior.
 
 Configured stylesheet links precede generated renderer and entry links in
 each rendered view. The renderer link precedes the entry link, even if no

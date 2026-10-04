@@ -165,9 +165,11 @@ Apply one output policy regardless of Git tracking:
 
 - Explicit `dependency.file` inside the generated tree, including a physical
   alias, fails `build-invalid` before public-file and regular-file checks.
-  Its exact body is `PostCSS plugin <plugin> scanned Mokly-generated output in <stylesheet>: <file>; exclude <generated-root> from the plugin's sources`.
-  All paths are repository-relative POSIX paths; `<file>` keeps the reported
-  logical spelling and `<generated-root>` names `<mockupsDir>/mokly-generated`.
+  Its exact body is `PostCSS plugin <plugin> scanned Mokly-generated output in <stylesheet>: <file>; exclude mockupsDir from the plugin's sources (Tailwind: @source not "<relative-mockups-dir>")`.
+  `<stylesheet>` and `<file>` are repository-relative POSIX paths; `<file>`
+  keeps the reported logical spelling. `<relative-mockups-dir>` is relative
+  to the stylesheet, with `./` when neither `.` nor `..` starts it. See
+  [the error catalogue](./mokly-imported-styles-errors.md).
 - Every `dir-dependency` expansion skips the entire generated tree and its
   aliases before reading descendants, matching globs or adding watch roots.
   A report rooted inside it contributes no files or watches. Do this even

@@ -8,7 +8,8 @@ The command, closure, unified layout and writer behavior follows
 [configuration](./mokly-configuration.md), [baseline selection](./mokly-derived-baselines.md),
 [baseline storage](./mokly-baseline-storage.md) and [terminal output](./mokly-terminal-output.md)
 and [viewer namespace](./mokly-viewer-namespace.md) define the implemented contract.
-Remaining [lint work](./mokly-directory-lint.md) adds coverage and import checks.
+The [lint contract](./mokly-directory-lint.md) defines implemented folder coverage
+and duplicate-import checks.
 
 ## Roots And Paths
 
@@ -39,8 +40,8 @@ dots in fixed Mokly names are reserved for local state such as `.mokly-cache/` a
 directories. `mokly-viewer/` and `generations/` follow the same
 [namespace contract](./mokly-viewer-namespace.md).
 Production code defines `GENERATED_DIRECTORY` and `VIEWER_DIRECTORY` once in
-`packages/viewer/src/catalogue/delivery_paths.ts`, exports it through
-`@mokly/viewer/data`, and the CLI imports that constant directly. ESLint's
+`packages/viewer/src/catalogue/delivery_paths.ts`, exports both through
+`@mokly/viewer/data`, and the CLI imports those constants directly. ESLint's
 `mokly/no-directory-literals` rule rejects other production string, template
 and regular-expression literals under `src/`, `packages/viewer/src/`, and
 `scripts/preview/`, including escaped spellings. The

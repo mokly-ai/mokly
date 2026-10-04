@@ -47,7 +47,7 @@ version dependency. Root build, clean, formatting, lint, typecheck and package
 gates cover both packages. Pack the viewer first; local smoke and release
 fixtures install both tarballs explicitly so an unpublished viewer is never
 resolved from the registry. Consumer fixtures exercise every public viewer
-entry, SSR of the [public v3 fixture](./fixtures/catalogue-v4.json) in
+entry, SSR of the [public v4 fixture](./fixtures/catalogue-v4.json) in
 `scripts/package/viewer.mjs` (`smokeViewer`), browser bundle boundaries and
 NodeNext declarations. Both manifests, packed metadata, export targets,
 allowlists, licenses, React peers and the exact viewer dependency are checked.
@@ -83,8 +83,8 @@ npm, Node and Rust commands from the workspace root and includes:
 - TypeScript typechecking with no unexplained source exclusions;
 - unit and integration tests with a 100% pass rate;
 - production build and declaration generation;
-- an example `check` that validates the derived compilation and rejects tracked
-  generated output;
+- an example `check` that validates compilation, compares disk only when the
+  whole generated tree is tracked, and rejects partly tracked output;
 - package-file inspection with `npm pack --dry-run --json`;
 - packed-tarball installs in clean ESM, NodeNext, themed, and alternate-layout
   consumers;

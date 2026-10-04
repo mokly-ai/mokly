@@ -113,7 +113,7 @@ watched catalogue then reports existing lifecycle boundaries:
 
 Catalogue counts come from accepted manifest entries. Zero-valued kinds are
 omitted. A baseline cache hit says `Baseline ready · reused <short-sha>`; a
-committed catalogue omits baseline preparation. Unavailable Changes says
+complete committed v8 baseline omits rebuild progress. Unavailable Changes says
 `! Changes unavailable` and preserves All browsing. Counted nouns use singular
 only for one, including `1 changed screen` and `2 changed screens`.
 

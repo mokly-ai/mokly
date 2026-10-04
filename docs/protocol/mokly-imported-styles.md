@@ -15,36 +15,34 @@ are normative.
 
 ## Routes And Ownership
 
-`<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Generated routes are
-`mokly-generated/styles/<repository-relative root module path>.css` and
-`mokly-generated/assets/<repository-relative asset path>`. Identical asset routes
-from multiple roots must carry identical bytes; disagreeing bytes fail Build.
-Preserve the module
-extension before `.css`: `src/home.mockup.tsx` becomes
-`mokly-generated/styles/src/home.mockup.tsx.css`. Shared assets have one route
-and identical bytes. Sources stay private. Every file in the reserved tree is
-owned output, including unknown orphans, for Check and public classification.
-Graph loading checks the tree before inventory (including the graph load that
-precedes derived Check); committed Check checks again before output comparison:
-the root must be a real directory, descendants real directories/files; reject the first
-sorted repo-relative symlink (even dangling), FIFO, socket or device without
-following it. Derived Check uses Git tracking for output ownership after its
-graph load. Successful Build prunes empty
-directories beneath the root (including it), never during rollback. Catalogue
-routes cannot begin with `mokly-generated/`; only portable `styles/**.css` and
-supported `assets/**` can be generated inside it, never HTML.
+`<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Its output map uses
+`styles/<repository-relative root module path>.css` and
+`assets/<repository-relative asset path>`, relative to that generated root.
+Pages, screen/component views and the private v8 manifest share the same tree.
+Preserve the module extension before `.css`: `src/home.mockup.tsx` becomes
+`styles/src/home.mockup.tsx.css`. Identical asset routes from multiple roots
+must carry identical bytes; disagreeing bytes fail Build. Sources stay private.
+The [unified layout](./mokly-unified-output.md#one-owned-tree) reserves `styles`
+and `assets` as the first segment of generated HTML routes. Kind/id-derived
+HTML routes start with `pages/`, `screens/` or `components/`; the generated
+root prefix is not part of those routes.
 
-Reject `entries` static prefixes, `entriesDir` and `review.outDir` at or inside
-the reserved tree, and local `stylesheets` (shared/light/dark) paths inside it.
-Resolve existing symlink aliases for these configured path boundaries as well.
-Discovery skips it like Review output; broad co-located `entries` globs remain
-valid. The existing `entriesDir === mockupsDir` ban remains: otherwise every
-public file becomes authored source. Reject a consumer `publicExclude` only if
-a brace-expanded alternative's first segment is literally `mokly-generated`.
-Build rejects generated stylesheet/asset routes matching **any** exclusion,
-defaults included, naming the route and glob. Reject authored inputs through
-logical/physical reserved aliases and generated routes colliding with sources;
-public files elsewhere under `mockupsDir` remain consumer-owned.
+Only a writer or tracked Check inspects the existing generated tree. Its root
+must be a real directory and descendants must be real directories or regular
+files. Reject the first sorted repo-relative symlink, FIFO, socket or device
+without following it. A successful Build replaces the whole tree and removes
+stale files and empty directories. Plain Serve, export, publication and
+untracked Check do not inspect old output. No Git-ignore committability check
+remains; [tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
+apply equally to generated CSS, assets, HTML and the manifest.
+
+Reject explicit `entries` static prefixes, `entriesDir`, renderer, transformer,
+package roots, PostCSS inputs, local `stylesheets` and `review.outDir` that
+violate the generated-tree boundary, including physical aliases. Discovery
+skips this tree; broad entry globs remain valid. Entry modules below
+`mockupsDir` remain protected sources, but `entriesDir === mockupsDir` is
+invalid. `publicExclude` is removed. Other authored files become public only
+through the validated [asset closure](./mokly-generated-output.md#closure-urls-and-publication).
 
 ## Roots, Collection And Deduplication
 

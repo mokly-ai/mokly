@@ -23,8 +23,9 @@ npx mokly export --out .context/mokly-site
 ## What it produces
 
 Export compiles without writing generated files to your catalogue, then
-packages every screen and page under `mokly-generated/`, the referenced authored
-assets at their catalogue-relative paths, one shell per entry and Git comparisons.
+packages generated views, CSS and assets under `static/mokly-generated/`,
+referenced authored assets under `static/`, one shell per entry under `view/`,
+and available Git comparisons under `mokly-viewer/`.
 It does not copy unrelated files or upload anything.
 
 Deploy the directory's contents at the root of an HTTP(S) origin. Hosting
@@ -55,4 +56,6 @@ deleting that folder and exporting again.
 `--base` overrides `review.base`, which defaults to `origin/main`. The branch
 point must exist in the checkout with enough history to read its complete
 generated tree or rebuild it using that commit's own dependencies and tooling.
-In CI, check out the full history and use a trusted base for rebuilds.
+In CI, check out the full history and use a trusted base for rebuilds. A base
+built by an earlier Mokly version makes Changes unavailable; export prints the
+reason and still packages current content. Other invalid baseline inputs fail.

@@ -15,7 +15,10 @@ Publish runs the export, then hands it to the endpoint you name in three
 steps: it sends the export's file list with a digest for every file, the
 service answers with the digests it does not hold, publish uploads only those
 files, and the service commits the publication. It works with Mokly Cloud or
-with any service that implements the upload contract.
+with any service that implements the current upload contract. Mokly Cloud
+requires a receiver and viewer update for this format. Until then, publishing
+fails with: "The catalogue service does not support this Mokly version. Update
+the service and try again." It does not retry or downgrade the artifact.
 
 ## Options
 
@@ -48,6 +51,8 @@ Comparisons are included unless you pass `--no-changes`, which needs no
 history and cannot be combined with `--base`. Publishing without Changes skips
 the historical rebuild regardless of head tracking. Either way, publish needs a Git checkout
 with a commit, because the upload identifies the revision it came from.
+If the base was built by an earlier Mokly version, publish prints the reason
+and uploads the current catalogue with Changes unavailable.
 
 ## Repository identity
 

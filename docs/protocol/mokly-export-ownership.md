@@ -135,7 +135,7 @@ inventory is a valid marker shape but cannot be a valid upload: `index.html`,
 - `valid`: whether the parsed `document` has the ownership marker shape above.
 - `document`: the JSON value to validate; serialize it when testing a text parser.
 - `rejection`: present only when `valid` is false; `"unsupported-version"` for
-  a present version other than number 2 (426), `"too-large"` for an over-limit
+  a present version other than number 3 (426), `"too-large"` for an over-limit
   integer size or path byte length (413), and `"invalid"` for every other
   rejection (400/422).
 
