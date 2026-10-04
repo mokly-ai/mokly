@@ -1524,11 +1524,27 @@ comparison's text work no longer grows with the style sheet. See the
       no authored changes during verification. Nine mutations are caught. RNW,
       design and replay coverage is unchanged; interleaving improves from 0/16
       to 16/16 fingerprinted views.
-- [ ] After supervisor checkpoint approval, record all four scenarios
+- [x] After supervisor checkpoint approval, record all four scenarios
       (no-changes, component-style, screen-markup, linked-stylesheet), cold/warm,
       against M8 `5e5111dc` on the same host: default ABBA and one cumulative pair.
       Retain every sample, path/document/material/normalization counts and heap;
       use paired unprofiled uncapped runs for any incomplete cells per the brief.
+      The [M9 measurements](../docs/dev/fingerprinted-materials-measurements.md)
+      retain all 48 successful classifications with exact membership, unchanged
+      shared counts and restored fixture bytes. No cell is incomplete. Startup
+      exceeds five seconds in 22 samples; cumulative style still fails both
+      contextual Decision 13 ratios. End-to-end classification does not improve.
+- [x] Discovered: investigate the measured regressions with eight worker-only
+      cold CPU profiles, M8 then M9 for default no-change/linked and cumulative
+      style/linked. The [cost report](../docs/dev/fingerprinted-materials-profiles.md)
+      separates self/inclusive per-view costs, existing validation/composition,
+      sheet-proportional work and shortcut overhead. It preserves reversed/nearly
+      equal profiled ratios rather than replacing unprofiled samples.
+- [ ] Discovered: obtain the supervisor's scope decision on the profiling
+      proposals and complete any approved work before the final gate and push.
+      No fix or recorded review finding is approved by the measurement report.
+      The supervisor's profiling addendum explicitly holds the gate and push;
+      only documentation is committed at this stop.
 - [x] Update relevant READMEs and the contracts' Delivery Status for delivered
       fingerprints, preserve the 250-line protocol caps, and record the approved
       gap fix and M8 review findings.

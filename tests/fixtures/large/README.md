@@ -302,6 +302,13 @@ retain all 24 same-host M7/M8 samples, path/work counts and delivery headroom.
 All cumulative style views route; classification improves 19.5% cold / 10.3%
 warm, while the contextual Decision 13 style thresholds remain unmet.
 
+The [M9 fingerprint measurements](../../../docs/dev/fingerprinted-materials-measurements.md)
+retain all 48 same-host M8/M9 samples, work counts and delivery headroom.
+Classification regresses despite bounded material bytes. The accompanying
+[eight worker profiles and proposed scope](../../../docs/dev/fingerprinted-materials-profiles.md)
+separate added work from existing costs and timing variation. The gate and push
+are held for the supervisor's scope decision; no proposed fix is implemented.
+
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),
 [scenario state and restoration](./benchmark-contract.md#scenario-matrix-and-restoration),
