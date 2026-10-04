@@ -66,29 +66,35 @@ The malformed-marker error and a plain created prefix have separate tests.
 Every mutation was restored byte-for-byte. Counts include parent tests where
 Node reports them. Logs are in `.context/delegation/scalable/m9-supervisor/`.
 
-| Mutation                                  | Failing tests |
-| ----------------------------------------- | ------------: |
-| Skip raw-reference fallback               |             9 |
-| Skip crossing reserved-prefix detection   |             2 |
-| Ignore open-marker state                  |             6 |
-| Ignore partial opener-name completion     |             2 |
-| Treat a whole nearby marker as crossing   |             1 |
-| Ignore openers in inserted text           |             2 |
-| Remove skipped style-source guard         |             8 |
-| Remove actual single-document check       |             2 |
-| Remove projected recipe check             |             2 |
-| Count only actual material strings        |             6 |
-| Disable digest reuse                      |             6 |
-| Remove original base-prefix guard         |            14 |
-| Remove original head-prefix guard         |            14 |
-| Remove parse-failure fallback             |             4 |
-| Remove original replay outcome comparison |             1 |
-| Remove protocol index link                |             1 |
-| Eagerly build marker indexes on the route |             2 |
-| Rebuild the index on every access         |             1 |
+| Mutation                                                          | Failing tests |
+| ----------------------------------------------------------------- | ------------: |
+| Skip raw-reference fallback                                       |             9 |
+| Treat navigation anchors as resource references                   |             1 |
+| Skip crossing reserved-prefix detection                           |             2 |
+| Ignore open-marker state                                          |             6 |
+| Ignore partial opener-name completion                             |             2 |
+| Treat a whole nearby marker as crossing                           |             1 |
+| Ignore openers in inserted text (test-only; see correction below) |             2 |
+| Remove skipped style-source guard                                 |             8 |
+| Remove actual single-document check                               |             2 |
+| Remove projected recipe check                                     |             2 |
+| Count only actual material strings                                |             6 |
+| Disable digest reuse                                              |             6 |
+| Remove original base-prefix guard                                 |            14 |
+| Remove original head-prefix guard                                 |            14 |
+| Remove parse-failure fallback                                     |             4 |
+| Remove original replay outcome comparison                         |             1 |
+| Remove protocol index link                                        |             1 |
+| Eagerly build marker indexes on the route                         |             2 |
+| Rebuild the index on every access                                 |             1 |
 
 `mutations.json`, `extra-mutations.json` and `anchor-mutation.json` record all
-19 final mutations and their results.
+19 final mutation attempts and their results. **Second-round correction:** the
+insert-opener mutation above exercised only direct unit-test states; production
+passes inserts closed by construction. It did not protect reachable behavior.
+The second follow-up removes that unreachable path and its partial-insert tests.
+See the [second follow-up report](./fingerprinted-materials-second-follow-up.md)
+for reachable source-marker mutation evidence and the skipped-copy correction.
 Earlier isolated checks are retained in `guard-mutations-before.json` (source
 8, single 2, projected 2 failures), `counter-mutations.json` (6 failures each)
 `original-guard-collisions.log` (8 failures) and

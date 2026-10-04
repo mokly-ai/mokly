@@ -212,11 +212,11 @@ participate. Check the last 12 UTF-16 units before and first 12 after each seam,
 walking across tiny pieces. Reject `mokly-inline-` or `<!--mokly-` crossing it.
 Also reject a seam inside an unclosed `<!--mokly-review-` or
 `<!--mokly-component:` opener, including an opener name completed by a join.
-Use per-side opener/close offsets and inserted text; complete kept comments and
-placeholders do not cross seams. Index originals once per used side, lazily so
-quick/style routes do no indexing. Indexed seam work never scans a sheet-sized
-piece or constructs the material. Include actual single-document and both
-actual/projected pair normalization. Unprovable structure keeps text/errors.
+Use per-side opener/close offsets. Inserts are closed by construction: appendix
+comments, placeholders, contract tokens and wrappers are complete markers/tags.
+Index originals once per used side, lazily; quick/style routes do no indexing.
+Seam work never scans sheet-sized pieces or constructs materials. Include actual
+single-document and actual/projected pair normalization; unprovable structure keeps text/errors.
 Existing M8 source guards and `<!--mokly-` in canonical appendices keep text too;
 canonical markers must reach normalization unchanged. Those checked appendices
 need no additional index scan. No fingerprint appears on a guarded view.
@@ -232,17 +232,19 @@ Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
   stored rule references, with the same ownership and exclusions.
 - When analysis skips for equal ordered sources, keep text for the whole view
   if any eligible outer span contains a source resource record on either side.
-  Anchor/navigation records do not seed resources and do not block fingerprints.
-  Otherwise replace **each** eligible unowned element in place with
-  `<!--mokly-inline-style:<digest>-->`; input is its complete original outer
-  source, including attributes and tags. These comments supply no references.
+  Anchor/navigation records do not block fingerprints. On **each** original side,
+  every exact outer-source occurrence of each skipped element must be an eligible
+  span (use `indexOf`, including overlaps). Otherwise keep text for the whole view.
+  Also reject [seams that could assemble a style copy](./mokly-material-work-counts.md#skipped-style-equality).
+  Replace each eligible element in place with `<!--mokly-inline-style:<digest>-->`;
+  hash its complete outer source, including tags/attributes; supply no references.
 - A parse failure retains original style text verbatim, not a successful-rule
   fingerprint. Ownership projection/ignore normalization otherwise retain
   their existing ordering and semantics; copied spans carry the same edits.
 
 Both forms survive ignore normalization and component stripping. Under the
 ordinary SHA-256 collision assumption, equal inputs give equal comments and
-unequal inputs differ; the guard prevents authored lookalikes even after joins.
-In-place comments retain position: moving a style past retained markup stays
+unequal inputs differ; guards exclude authored lookalikes and interchangeable
+non-replaced copies, including joins. Moving a style past retained markup stays
 material. The [required proofs](./mokly-material-work-counts.md#required-proof)
 cover results/errors, retained references, exact bytes on fallback and work.

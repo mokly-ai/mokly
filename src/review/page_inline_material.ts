@@ -15,6 +15,7 @@ import {
 import { hasFingerprintSeam } from "./page_fingerprint_guard.js";
 import type { PageAnalysisPair } from "./page_pair.js";
 import { isPageResourceReference } from "./page_reference_records.js";
+import { allSkippedOccurrencesEligible } from "./skipped_style_occurrences.js";
 import { styleNeedsFullValidation } from "./style_source_safety.js";
 
 export function pageInlineMaterials(
@@ -60,12 +61,15 @@ function prepareMaterials(
       styleNeedsFullValidation,
     ) ||
     skippedSourceReferences(analysis, pages) ||
+    (analysis.status === "skipped" &&
+      (!allSkippedOccurrencesEligible(base, analysis.beforeSpans) ||
+        !allSkippedOccurrencesEligible(head, analysis.afterSpans))) ||
     [text.before, text.after].some((side) =>
       [side.actual, side.projected].some(({ appendix }) =>
         appendix.includes("<!--mokly-"),
       ),
     ) ||
-    hasFingerprintSeam(pages, text)
+    hasFingerprintSeam(pages, text, analysis.status === "skipped")
   )
     return text;
 

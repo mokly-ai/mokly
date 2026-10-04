@@ -16,9 +16,9 @@ test("offset queries use only kept openers and complete closes", () => {
   const source = "<!--mokly-review-other-->kept<!--mokly-component:";
   const index = new MaterialMarkerOffsets(source);
   const close = source.indexOf("-->");
-  assert.equal(index.openAfter(0, close + 2, false), true);
-  assert.equal(index.openAfter(0, close + 3, false), false);
-  assert.equal(index.openAfter(close + 3, source.length, false), true);
-  assert.equal(index.openAfter(close + 3, close + 7, true), true);
-  assert.equal(index.openAfter(close + 1, close + 3, true), true);
+  assert.equal(index.openAfter(0, close + 2), true);
+  assert.equal(index.openAfter(0, close + 3), false);
+  assert.equal(index.openAfter(close + 3, source.length), true);
+  assert.equal(index.openAfter(close + 3, close + 7), false);
+  assert.equal(index.openAfter(close + 1, close + 3), false);
 });

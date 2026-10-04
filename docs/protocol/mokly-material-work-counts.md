@@ -59,3 +59,34 @@ owned fixtures, including digest reuse. Guard/counter mutations must fail tests.
 Catalogue replay must agree with the original same-mode outcome, not just with
 another replay, and pin coverage. Name any independently confirmed pre-existing
 path divergence excluded from that replay; an exclusion is not a passed pair.
+
+## Skipped Style Equality
+
+In-place fingerprints must not distinguish an eligible style from identical text
+left in an instance, caller slot, ignored region or any other context. Search each
+side's original text with `indexOf` for each distinct skipped outer source; every
+occurrence, including overlaps, must start at an eligible span of that same source.
+Otherwise keep text for the whole view. These source scans do not build materials.
+
+Original occurrences alone do not suffice. Removing literal component markers
+inside an owned style can assemble a new identical outer source. On skipped
+analyses, conservatively reject any delivered recipe seam between a kept `<style`
+prefix and a later kept ending of a skipped outer source, or crossing that prefix
+or ending. Match `<style` ASCII case-insensitively; match the last 12 UTF-16 units
+of each distinct skipped source exactly. This covers seams anywhere in closing
+tags, including attributes. Use per-side original offsets for whole prefixes and
+endings, and existing windows for splits, across the same raw/single/pair recipes
+as the marker guard. Skipped inserts have no style appendix. Their complete
+producer comments and caller-slot wrappers contain no `<style`; their only `>`
+is the closing one, so an inserted ending needs only a bounded `endsWith` check.
+Indexes are reused; each piece/seam queries offsets and bounded text, independently
+of sheet length (ending comparisons scale with the number of distinct styles).
+
+A new exact style copy must cross a seam inside its outer source. Either its
+opening prefix/ending crosses a seam (the window guard catches it), or both are
+kept whole, with a seam between them (the index guard catches it). This deliberately
+accepts false positives between separate styles rather than assuming HTML context
+for literal bytes. Whole sources in contiguous original pieces create no seam.
+Eligible-only copies keep fingerprints. Test real compiled instance, renamed-key,
+slot, paired-region and joined-copy cases under all switches/modes, exact text
+bytes on fallback, seeded variants and unchanged RNW/design coverage.

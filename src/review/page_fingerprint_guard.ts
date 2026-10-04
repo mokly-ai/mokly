@@ -12,25 +12,41 @@ import {
 import type { PageAnalysis } from "./page_analysis.js";
 import { pageMaterialRecipes } from "./page_material_recipes.js";
 import type { PageAnalysisPair } from "./page_pair.js";
+import { StyleSeamOffsets } from "./style_seam_offsets.js";
 
 export function hasFingerprintSeam(
   pages: PageAnalysisPair,
   inline: ComponentInlineMaterial,
+  skipped = false,
 ): boolean {
   return documentWorkSync("normalizationMs", () =>
-    inspectRecipes(pages, inline),
+    inspectRecipes(pages, inline, skipped),
   );
 }
 
 function inspectRecipes(
   pages: PageAnalysisPair,
   inline: ComponentInlineMaterial,
+  skipped: boolean,
 ): boolean {
   const recipes = pageMaterialRecipes(pages, inline);
-  // Appendices passed the marker guard; other producers emit complete tokens or wrappers.
+  const styleOffsets = new Map<PageAnalysis, StyleSeamOffsets>();
+  // Inserts are complete tokens/wrappers; skipped materials have no style appendix.
   const inspect = (page: PageAnalysis, recipe: MaterialRecipe) => {
-    const closed = new Set(recipe.filter((piece) => piece.kind === "insert"));
-    return fingerprintAtSeam(page.source, recipe, page.markerOffsets, closed);
+    if (skipped && !styleOffsets.has(page))
+      styleOffsets.set(
+        page,
+        new StyleSeamOffsets(
+          page.source,
+          page.inlineStyles(pages.pairedIgnoreIds).map(({ source }) => source),
+        ),
+      );
+    return fingerprintAtSeam(
+      page.source,
+      recipe,
+      page.markerOffsets,
+      styleOffsets.get(page),
+    );
   };
   for (const kind of ["actual", "projected"] as const) {
     const base = normalizationPieces(

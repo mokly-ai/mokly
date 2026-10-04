@@ -5,7 +5,8 @@ import type {
 } from "../components/material_recipe.js";
 import { timingDocumentWork } from "../diagnostics/timings.js";
 
-import { MaterialMarkerOffsets } from "./material_marker_offsets.js";
+import type { MaterialMarkerOffsets } from "./material_marker_offsets.js";
+import type { StyleSeamOffsets } from "./style_seam_offsets.js";
 
 const prefix = "mokly-inline-";
 const radius = prefix.length - 1;
@@ -13,10 +14,23 @@ const radius = prefix.length - 1;
 export function fingerprintAtSeam(
   source: string,
   recipe: MaterialRecipe,
-  offsets = new MaterialMarkerOffsets(source),
-  closedInserts: ReadonlySet<MaterialPiece> = new Set(),
+  offsets: MaterialMarkerOffsets,
+  styles?: StyleSeamOffsets,
 ): boolean {
   const pieces = coalesced(recipe);
+  const styleEnds = styles
+    ? pieces.map((piece) =>
+        (
+          piece.kind === "source"
+            ? styles.hasEnd(piece.start, piece.end)
+            : styles.endings.some((ending) => piece.text.endsWith(ending))
+        )
+          ? 1
+          : 0,
+      )
+    : [];
+  let ends = styleEnds.reduce<number>((sum, count) => sum + count, 0);
+  let styleBefore = false;
   let open = false;
   for (let index = 0; index < pieces.length; index++) {
     if (index) {
@@ -29,18 +43,19 @@ export function fingerprintAtSeam(
         crosses(before, after, "<!--mokly-")
       )
         return true;
+      if (
+        styles &&
+        ((styleBefore && ends > 0) ||
+          crosses(before.toLowerCase(), after.toLowerCase(), "<style") ||
+          styles.endings.some((ending) => crosses(before, after, ending)))
+      )
+        return true;
     }
     const piece = pieces[index]!;
-    open =
-      piece.kind === "source"
-        ? offsets.openAfter(piece.start, piece.end, open)
-        : closedInserts.has(piece)
-          ? false
-          : new MaterialMarkerOffsets(piece.text).openAfter(
-              0,
-              piece.text.length,
-              open,
-            );
+    open = piece.kind === "source" && offsets.openAfter(piece.start, piece.end);
+    if (piece.kind === "source" && styles?.hasStart(piece.start, piece.end))
+      styleBefore = true;
+    ends -= styleEnds[index] ?? 0;
   }
   return false;
 }

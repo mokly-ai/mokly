@@ -34,7 +34,7 @@ export class MaterialMarkerOffsets {
   }
 
   /** Apply only complete closes and kept openers; no source text is rescanned. */
-  openAfter(start: number, end: number, incoming: boolean): boolean {
+  openAfter(start: number, end: number): boolean {
     const opener = this.openers[precedingIndex(this.openers, end)];
     const close = this.closes[precedingIndex(this.closes, end + 1)];
     const partial = precedingIndex(this.partialStarts, end);
@@ -51,9 +51,7 @@ export class MaterialMarkerOffsets {
     );
     const lastClose =
       close !== undefined && close - 3 >= start ? close - 3 : -1;
-    return (
-      lastOpen > lastClose || (lastOpen === -1 && lastClose === -1 && incoming)
-    );
+    return lastOpen > lastClose;
   }
 }
 

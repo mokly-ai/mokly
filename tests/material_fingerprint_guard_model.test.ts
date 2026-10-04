@@ -84,7 +84,7 @@ test("seeded guard admission matches full recipe rendering and the real normaliz
       count.invalid++;
       continue;
     }
-    if (hasFingerprintSeam(pages, inline)) count.guarded++;
+    if (hasFingerprintSeam(pages, inline, source.skipped)) count.guarded++;
     else {
       count.admitted++;
       try {

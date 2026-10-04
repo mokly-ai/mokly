@@ -19,7 +19,7 @@ test("seeded compiled catalogues preserve text results/errors under every switch
   const seen = new Set<string>();
   let comparisons = 0;
   context.diagnostic(`seed=0x${seed.toString(16)}`);
-  for (let trial = 0; trial < 56; trial++) {
+  for (let trial = 0; trial < catalogueKinds.length * 4; trial++) {
     const sample = fingerprintSeededCase(trial, random);
     seen.add(sample.kind);
     const label = `seed=0x${seed.toString(16)} trial=${trial} kind=${sample.kind}`;
@@ -75,5 +75,5 @@ test("seeded compiled catalogues preserve text results/errors under every switch
     });
   }
   assert.deepEqual([...seen].sort(), [...catalogueKinds].sort());
-  assert.equal(comparisons, 448);
+  assert.equal(comparisons, 640);
 });

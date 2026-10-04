@@ -1488,8 +1488,26 @@ comparison's text work no longer grows with the style sheet. See the
       hydration suites plus static checks; record all mutation results, commit
       new checkpoint commits without pushing, and stop before measuring. All
       1,646 targeted, 4,736 unit, 725 pinned-browser and 219 hydration tests pass;
-      all 19 final mutations are caught, with earlier evidence retained. Package
+      all 19 mutation attempts failed tests (the second round identifies the
+      insert-opener attempt as test-only); earlier evidence is retained. Package
       and static checks pass with no authored changes during the frozen run.
+- [x] Discovered: second supervisor follow-up: prove every skipped style's
+      exact outer-source occurrence is eligible on each original side; otherwise
+      keep text. Add compiled instance/slot/ignore regressions and seeded cases,
+      investigate seam-created copies, and retain RNW/design fingerprint coverage.
+- [x] Discovered: marker stripping inside an owned style admits a new identical
+      copy. Extend the skipped proof with indexed style prefixes/endings and bounded seam
+      windows; record the compiled failure and the conservative fallback rule.
+- [x] Discovered: remove unreachable seam incoming/insert-index branches,
+      document closed producer inserts, and correct the earlier mutation claim.
+      The [second follow-up report](../docs/dev/fingerprinted-materials-second-follow-up.md)
+      records the regression, mutation and unchanged fixture-coverage evidence.
+- [x] Discovered: finish second-round targeted/full unit, pinned-browser and
+      hydration suites and static checks; commit locally and stop before measuring.
+      All 1,698 targeted, 4,788 unit, 725 pinned-browser and 219 hydration tests
+      pass, plus package/static checks. All eight mutations are caught; RNW
+      64/64, design 428/428 and replay 7,844 fingerprinted-view counts are unchanged.
+      The frozen verification recorded no authored-file changes.
 - [ ] After supervisor checkpoint approval, record all four scenarios
       (no-changes, component-style, screen-markup, linked-stylesheet), cold/warm,
       against M8 `5e5111dc` on the same host: default ABBA and one cumulative pair.

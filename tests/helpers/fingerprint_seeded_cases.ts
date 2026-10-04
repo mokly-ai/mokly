@@ -1,4 +1,8 @@
 import { componentEntrySource } from "./component_fixture.js";
+import {
+  fingerprintOccurrenceCase,
+  occurrenceKinds,
+} from "./fingerprint_occurrence_cases.js";
 
 export const catalogueKinds = [
   "move",
@@ -15,6 +19,9 @@ export const catalogueKinds = [
   "caller-copy",
   "ordinary",
   "parse-failure",
+  ...occurrenceKinds,
+  "owned-marker-seam",
+  "closing-marker-seam",
 ] as const;
 interface Case {
   kind: string;
@@ -43,6 +50,30 @@ export function fingerprintSeededCase(
   const region = (text: string) => start + text + end;
   const sample: Case = { kind, before: style, after: changed, guarded: false };
   switch (kind) {
+    case "closing-marker-seam": {
+      const removed =
+        "<!--mokly-component:start:r-100--><!--mokly-component:end:r-100-->";
+      const copy = `<textarea>${style.replace("</style>", `</style${removed}>`)}</textarea>`;
+      sample.before = style + copy + "before";
+      sample.after = style + copy + "after";
+      sample.guarded = true;
+      break;
+    }
+    case "owned-marker-seam":
+      Object.assign(
+        sample,
+        fingerprintOccurrenceCase("paired-instance", css, true),
+        { guarded: true },
+      );
+      break;
+    case "paired-instance":
+    case "renamed-instance":
+    case "slot":
+    case "paired-region":
+      Object.assign(sample, fingerprintOccurrenceCase(kind, css), {
+        guarded: true,
+      });
+      break;
     case "move":
       sample.before = style + '<meta name="kept">';
       sample.after = '<meta name="kept">' + style;

@@ -350,7 +350,7 @@ Key code:
   Copies expose recorded template references, not parser-discarded tokens.
 - `page_inline_material.ts`: complete-path SHA-256/base64url comments replace
   canonical rule appendices or equal reference-free styles in place. Reserved
-  authored prefixes, skipped source references and M8 marker guards keep text;
+  authored prefixes, skipped source references/copies and M8 marker guards keep text;
   parse failures stay verbatim. Producer references survive the representation
   change, and the route keeps its canonical comparison without fingerprint work.
 - `page_fingerprint_guard.ts`, `material_normalization_recipe.ts` and
@@ -360,6 +360,11 @@ Key code:
   lazily. Created/completed reserved markers keep text on both sides, including
   opener names joined from fragments. Recipe admission/rendering share
   `page_material_recipes.ts`; shortcut paths build no fingerprint index.
+- `skipped_style_occurrences.ts` checks every exact skipped-source occurrence
+  against eligible starts. `style_seam_offsets.ts` also rejects potential copies
+  assembled by rewrites, using indexed style prefixes/endings and bounded windows.
+  Both proofs are context independent; non-replaced copies keep the whole view on
+  text. Inserted pieces are closed complete markers/tags and need no marker index.
 - `component_resource_attribution.ts`: actual-invocation declared/inferred
   resource ownership and entry evidence without invented variant entries.
 - `component_inline_resources.ts`: inferred owner-set traversal, including
