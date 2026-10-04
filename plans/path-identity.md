@@ -2041,17 +2041,34 @@ Tags: ui
 
 Fix the UI findings (4, 5, and 6), each with a failing test first.
 
-- [ ] Finding 4 (option A): compute each folder row's count from the same
+- [x] Finding 4 (option A): compute each folder row's count from the same
       visibility rule as its rows, under All, Changes, and search. Add unit
       and browser tests for each filter, and check parity with the Changes and
-      search mockups.
-- [ ] Finding 5 (option A): build the home summary from a type-checked map of
+      search mockups. `nav_rows.tsx` counts the immediate children that
+      `navNodeVisible` keeps under the live selection, which an unstored render
+      reads as All (`UNFILTERED_SELECTION`). `nav_folder_counts.test.ts` and
+      `nav_folder_counts.spec.ts` cover All, Changes, free text, and a tag;
+      before the fix both failed, with Shop counting 4 above one row. Counts
+      match the shown rows in `design/changes/outcomes/moved` and
+      `design/browse/views/screen/tag-forms` at both widths (`.context/m12/`).
+- [x] Finding 5 (option A): build the home summary from a type-checked map of
       every entry kind, documents included, and omit kinds with a zero count,
-      so a new kind cannot be left out.
-- [ ] Finding 6 (option A): add a browser test that shows the current-document
+      so a new kind cannot be left out. `home_summary.ts` checks its labels
+      with `satisfies Record<ManifestEntry["kind"], …>`, so a new kind fails
+      to compile until it has one (`home_summary.test.ts`, which failed
+      before the fix on the missing document and on zero counts).
+- [x] Finding 6 (option A): add a browser test that shows the current-document
       `Light only` band under Dark, and check parity with the Milestone 10
-      state.
-- [ ] Run the unmodified `cargo xtask check`, then commit and push.
+      state. `light_only_document_band.spec.ts` builds a catalogue whose
+      config dropped Dark while a removed screen keeps a dark render, and
+      checks the band's text, place above the pane, and style in Serve and
+      export at both widths. Hiding the band under Dark fails all four cases.
+      Parity with `design/browse/appearance/states/light-only-current` holds
+      at both widths. `branch_hosts.ts` now builds and hosts these Git-backed
+      catalogues, including the moved fixture.
+- [x] Run the unmodified `cargo xtask check`, then commit and push. It passes
+      completely: the repository suite with both file-length audits, and the
+      package, unit (4158), browser (814), and hydration (261) suites.
 
 ## Milestone 13: Review fix integration, verification, and review
 

@@ -5,11 +5,15 @@ import { folderDisclosureKey } from "./disclosure_keys.js";
 import { FolderIcon, FolderOpenIcon } from "./icons.js";
 import { navRowStyle } from "./nav_guides.js";
 import { LeafRow } from "./nav_leaf_rows.js";
-import { navNodeVisible } from "./nav_model.js";
+import { navNodeVisible, UNFILTERED_SELECTION } from "./nav_model.js";
 import type { NavGroupNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
 
-/** One authored folder projected into a section as a native disclosure. */
+/**
+ * One authored folder projected into a section as a native disclosure. Its
+ * count is the child rows the active filter keeps, decided by the same rule
+ * as the rows themselves.
+ */
 function GroupRow(props: {
   context: ShellContext;
   depth: number;
@@ -20,21 +24,12 @@ function GroupRow(props: {
   const node = props.node;
   const key = folderDisclosureKey(props.sectionId, node.key);
   const open = store?.state.disclosures[key] ?? props.depth === 0;
-  const hidden = !navNodeVisible(
-    node,
-    store?.state.selection ?? { view: "all", search: "", tags: [] },
-    store?.context ?? props.context,
+  const selection = store?.state.selection ?? UNFILTERED_SELECTION;
+  const context = store?.context ?? props.context;
+  const hidden = !navNodeVisible(node, selection, context);
+  const countedChildren = node.children.filter((child) =>
+    navNodeVisible(child, selection, context),
   );
-  const countedChildren =
-    store?.state.selection.view === "changes"
-      ? node.children
-      : node.children.filter((child) =>
-          navNodeVisible(
-            child,
-            { view: "all", search: "", tags: [] },
-            store?.context ?? props.context,
-          ),
-        );
   return (
     <details
       className="mbk-nav-group"

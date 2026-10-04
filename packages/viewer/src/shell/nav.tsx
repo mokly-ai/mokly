@@ -7,7 +7,11 @@ import type { ShellContext } from "./context.js";
 import { ChevronIcon } from "./icons.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { NavFilter, NavStatus } from "./nav_filter.js";
-import { catalogueNavSections, navNodeVisible } from "./nav_model.js";
+import {
+  catalogueNavSections,
+  navNodeVisible,
+  UNFILTERED_SELECTION,
+} from "./nav_model.js";
 import { NavigationResizeHandle } from "./nav_resize.js";
 import { NavRows } from "./nav_rows.js";
 import { useNavigationScroll } from "./nav_scroll.js";
@@ -26,7 +30,7 @@ function SectionRows({
   const visible = section.children.some((node) =>
     navNodeVisible(
       node,
-      store?.state.selection ?? { view: "all", search: "", tags: [] },
+      store?.state.selection ?? UNFILTERED_SELECTION,
       store?.context ?? context,
     ),
   );
