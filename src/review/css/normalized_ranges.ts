@@ -33,7 +33,7 @@ export function normalizedOutputRanges(
   const ignored = (offset: number, start: boolean) => {
     let open: { id: string; start: number } | undefined;
     for (const marker of original.matchAll(
-      /<!--(?:mokly|mokabook)-review-ignore:(start|end):([a-z0-9-]+)-->/g,
+      /<!--mokly-review-ignore:(start|end):([a-z0-9-]+)-->/g,
     )) {
       if (marker[1] === "start")
         open = { id: marker[2]!, start: marker.index! };

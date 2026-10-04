@@ -18,6 +18,12 @@ Stylesheet changes use kept own-page matches and outside/unresolved page evidenc
 no CSS owner record routes them.
 Historical manifest v3–v7 inputs normalize to v8 before comparison. Every
 catalogue uses the same public comparison v5 format.
+Baseline and current documents use the same marker grammar. Former-spelling
+comments and script text stay ordinary content; comparison never renames them.
+Milestone 23 of the source-path removal plan implements this rule. Missing
+recorded ranges fail normal validation: Serve keeps Browse usable with Changes
+unavailable, while explicit export and publish captures fail safely under the
+[invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
 Component-aware page comparison excludes only proven Mokly-inserted declared
 stylesheet links, except a component page's root-owned links. It uses private
 final-document spans on both complete and unchanged-view fast paths; actual
@@ -348,7 +354,7 @@ Key code:
   views that can differ. Entry-owned props may differ on the fast path and
   invocation source metadata is ignored; every nested input or
   ownership-topology difference falls through. One-sided views
-  validate current or historical ranges before normalization. Both paths
+  validate the same current-spelling ranges on either side before normalization. Both paths
   produce identical records for valid builder output. Identical handcrafted
   malformed ownership markers are outside that equivalence guarantee because
   views without ownership text edits do not repeat range validation. Views with

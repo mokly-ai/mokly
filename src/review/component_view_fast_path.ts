@@ -4,7 +4,6 @@ import {
   componentUsageSignals,
   componentUsageTopologyEqual,
   stripComponentMarkers,
-  stripHistoricalMarkers,
 } from "../components/comparison_material.js";
 import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
 
@@ -17,11 +16,7 @@ import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view.js";
-import {
-  normalizeHistoricalDocument,
-  normalizeReviewPair,
-  normalizeSingleDocument,
-} from "./ignore.js";
+import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 
 export interface UnchangedComponentAttempt {
   comparison?: ComparedComponentView;
@@ -42,14 +37,14 @@ export async function compareUnchangedComponentView(
   const baseMaterial = comparisonStylesheetMaterial(base, before.usage, root);
   const headMaterial = comparisonStylesheetMaterial(head, after.usage, root);
   const retained = normalizeReviewPair(
-    normalizeHistoricalDocument(baseMaterial.html),
+    baseMaterial.html,
     headMaterial.html,
     after.path,
   );
   if (retained.base !== retained.head) return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
 
-  const strippedBase = stripHistoricalMarkers(baseMaterial.html);
+  const strippedBase = stripComponentMarkers(baseMaterial.html);
   const strippedHead = stripComponentMarkers(headMaterial.html);
   const actual = normalizeReviewPair(strippedBase, strippedHead, after.path);
   if (actual.base !== actual.head) return {};
@@ -72,7 +67,7 @@ export async function compareUnchangedComponentView(
   if (projected && projected.before !== projected.after) return fallback();
 
   const actualResource = normalizeReviewPair(
-    stripHistoricalMarkers(base),
+    stripComponentMarkers(base),
     stripComponentMarkers(head),
     after.path,
   );

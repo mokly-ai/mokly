@@ -7,7 +7,7 @@ records. Root output ranges, non-CSS-only resource records and independent
 stylesheet provenance are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md), within v8.
 
-The rule for comments with the former spelling is planned for
+The rule for comments with the former spelling is implemented in
 [M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
 
 This contract owns the per-view component instance, slot, range, style, and
@@ -121,10 +121,13 @@ component has an empty range. Repeated placements use separate range ids
 without creating extra logical instance keys.
 
 On both baseline and current sides, a comment with the former `mokabook-`
-spelling is ordinary page content. Mokly never reads it as a marker, never
-removes it and never fails on it. It creates no component range, Review-ignore
-region or material marker. Historical marker translation is not supported;
-the frozen instance and slot key domain strings above are unchanged.
+spelling is ordinary page content. Mokly never reads it as a marker or removes
+it as one. The comment alone is not a validation error. It creates no component
+range, Review-ignore region or material marker. Required baseline ranges that
+its document cannot prove follow
+[Invalid Or Missing Data](./mokly-baseline-compatibility.md#invalid-or-missing-data).
+Historical marker translation is not supported. The frozen instance and slot
+key domain strings above are unchanged.
 
 Range ids, physical parents, style offsets, and placement counts are inspection
 coordinates, not input identity. Moving or duplicating unchanged slot material

@@ -3,11 +3,7 @@ import { parse } from "parse5";
 import type { ComponentViewRecord } from "@mokly/viewer";
 
 import { validateComponentRanges } from "../../components/ranges.js";
-import {
-  normalizeHistoricalDocument,
-  normalizeReviewPair,
-  normalizeSingleDocument,
-} from "../ignore.js";
+import { normalizeReviewPair, normalizeSingleDocument } from "../ignore.js";
 
 import type { CssDocument, CssDocumentPair } from "./document.js";
 import { normalizedOutputRanges } from "./normalized_ranges.js";
@@ -35,22 +31,20 @@ export function componentCssDocuments(
 ): CssMatchingPair {
   const beforeRanges =
     before && beforeUsage
-      ? validateComponentRanges(before, beforeUsage.ranges, "historical")
+      ? validateComponentRanges(before, beforeUsage.ranges)
       : [];
   const afterRanges =
     after && afterUsage
       ? validateComponentRanges(after, afterUsage.ranges)
       : [];
-  const historical =
-    before === undefined ? undefined : normalizeHistoricalDocument(before);
   const normalized =
-    historical !== undefined && after !== undefined
-      ? normalizeReviewPair(historical, after, route)
+    before !== undefined && after !== undefined
+      ? normalizeReviewPair(before, after, route)
       : {
           base:
-            historical === undefined
+            before === undefined
               ? undefined
-              : normalizeSingleDocument(historical, route),
+              : normalizeSingleDocument(before, route),
           head:
             after === undefined
               ? undefined

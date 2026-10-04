@@ -1788,19 +1788,95 @@ Verification evidence:
 
 ## Milestone 23: Remove the historical marker rename
 
-- [ ] Failure-first: an unchanged page whose script contains each former
+- [x] Cover a former-spelling baseline whose recorded component ranges are
+      missing. Follow the existing Invalid Or Missing Data contract: keep
+      current builds and Browse usable, report Changes unavailable in Serve,
+      and retain safe transactional failures for explicit export and publish
+      captures. Clarify that the comment alone is not a validation error.
+- [x] Failure-first: an unchanged page whose script contains each former
       marker spelling stays unchanged, and classification succeeds, in the
       complete comparison, the fast path and CSS containment. A real comment
       with the former spelling is ordinary content and creates no range.
-- [ ] Remove `FORMER_MARKERS` and `normalizeHistoricalDocument` from
+- [x] Remove `FORMER_MARKERS` and `normalizeHistoricalDocument` from
       `src/review/ignore.ts`, `stripHistoricalMarkers`, the comment rename in
       `src/components/ranges.ts`, the former spelling in
       `src/review/css/normalized_ranges.ts`, and every call site. Remove the
       `historical` range dialect if nothing else needs it.
-- [ ] Remove or rewrite the tests that only cover the translation. Keep
+- [x] Remove or rewrite the tests that only cover the translation. Keep
       `main`'s tests.
-- [ ] Update the READMEs near the changed code. Run the focused tests and the
-      complete unit suite at 100%.
+- [x] Update the READMEs near the changed code. Run the focused tests and the
+      complete unit suite with the approved timing-flake retry.
+- [x] Run build, typecheck, lint, changed-file Prettier, the six docs suites,
+      the exact complete unit command, then the complete `cargo xtask check`.
+      Apply the approved isolated retry only for the existing PostCSS timing
+      flake. Inspect the diff and deletions against `origin/main` and record
+      the results and each new deletion. Make one local milestone commit;
+      the reviewer owns the push.
+
+Implementation notes:
+
+- Both comparison sides now use the current marker functions. Range validation
+  has no dialect argument, and CSS containment never renames document text or
+  reads the former Review-ignore spelling.
+- The 23 new regression tests cover each former spelling in script text on
+  complete, fast and CSS paths; unchanged real catalogues and flows; ordinary
+  comments without ranges, ignore regions or material markers; and invalid
+  baseline range records. Before removal, 22 tests failed and one preservation
+  test passed. All 23 pass after removal.
+- A valid v5 metadata fixture with former-spelling component comments now
+  follows the existing invalid-data path. Current Build succeeds. Watched and
+  unwatched Serve keep Browse usable and show Changes unavailable. Export
+  rejects the capture safely and retains the previous site. Publish rejects it
+  before an upload. The existing handlers already do this, so no new fallback
+  or command error path was added.
+- The instance and usage contracts distinguish an ordinary comment from a
+  missing required range. Their Delivery Status and the component README mark
+  M23 implemented. The review README describes the shared grammar and command
+  behavior.
+- The audit found no active test that only covers translation. The test named
+  "historical component markers remain unchanged" already compares unchanged
+  current-spelling fixtures on main. Every existing test file stays unchanged;
+  the new cases live in three test files and two helpers.
+- The frozen key domains, generated-header recognition, legacy manifest names
+  and historical manifest normalization stay unchanged. This milestone adds
+  no file deletion. The four earlier approved deletions and the v3-to-v4
+  catalogue fixture rename against `origin/main` remain unchanged.
+
+Verification:
+
+- `npm run build`, `npm run typecheck`, `npm run lint`, changed-file Prettier,
+  all 26 requested docs tests and all 137 focused tests pass. Changed source
+  and protocol files stay within their caps. The reviewer probe now reports
+  unchanged results and no Changes rows.
+- The exact complete unit command
+  `npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"`
+  passes 3,947 of 3,948 tests. Only the existing PostCSS timing case fails, at
+  3,114.8 ms against its unchanged 2,500 ms limit. The first isolated
+  `npx tsx --test tests/postcss_dependency_review.test.ts` retry passes all
+  three tests, with the timed function at 2,276.6 ms.
+- `cargo xtask check` passes the audit with main's existing exception,
+  formatting, lint, file limits, repository checks, 15 Rust tests, typecheck,
+  the 440-file example check and all six packaged-consumer scenarios. Its unit
+  step runs all 3,948 tests: 3,947 pass, with the same timing case as its only
+  failure at 3,217.0 ms. The command exits 1 at that step. Four isolated file
+  retries exceed the limit at 2,661.7, 2,521.3, 2,650.6 and 2,654.5 ms; the fifth
+  passes all three tests at 2,451.7 ms. No other test or server process runs
+  beside these retries.
+- The remaining gate steps run separately after that approved retry:
+  `cargo xtask check --suite browser` passes all 772 tests, and
+  `cargo xtask check --suite hydration` passes all 225 tests. No test is
+  skipped, cancelled or marked TODO in these runs or either complete unit run.
+- The PostCSS timing test is the existing machine-dependent flake; its code,
+  test and limit match main and remain unchanged. The approved isolated retry
+  is the only verification exception. Dependencies and audit rules are unchanged.
+- The diff and deletion checks against fetched `origin/main` retain only the
+  four earlier approved deletions and the catalogue fixture rename. This
+  milestone deletes no files. Every existing test file is unchanged by M23.
+  Logs, reports and exact commands are under `.context/m23/`.
+
+Milestone 23 is implemented and verified under the approved timing-flake retry
+rule. Delivery is one local commit; the reviewer owns the push. Milestone 24
+has not started.
 
 ## Milestone 24: Hide the branch-point sentence when the name is unknown
 

@@ -8,7 +8,7 @@ implemented in Milestone 19 of the
 
 The rule for comments with the former spelling in the
 [instance contract](../../docs/protocol/mokly-instances.md#rendered-boundaries)
-is planned for Milestone 23 of that plan.
+is implemented in Milestone 23 of that plan.
 
 Use `defineComponent` to give a shared React component its own catalogue page,
 variants, controls, and recorded usage in screens or other components.
@@ -135,9 +135,12 @@ file checks and emits the stylesheet warning. `render.tsx` returns temporary
 link declarations separately from the private usage record. Build, Check, export, publish and Serve now report those warnings
 through the shared invocation sink.
 On both baseline and current sides, a comment with the former `mokabook-`
-spelling is ordinary page content. Mokly never reads it as a marker, never
-removes it and never fails on it. Historical marker translation is not
-supported. The frozen instance and slot key domain strings are unchanged.
+spelling is ordinary page content. Mokly never reads it as a marker or removes
+it as one. The comment alone is not a validation error. Required baseline
+ranges that its document cannot prove follow the
+[invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
+Historical marker translation is not supported. The frozen instance and slot
+key domain strings are unchanged.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component

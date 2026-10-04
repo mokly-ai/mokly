@@ -10,7 +10,7 @@ Implemented as recorded in the
 and source capture. Key and boundary formats are unchanged; this document
 approves no new UI or visible local behavior.
 
-The rule for comments with the former spelling is planned for
+The rule for comments with the former spelling is implemented in
 [M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
 
 ## Identity And Scope
@@ -225,10 +225,12 @@ Accepted baseline and current v8 documents use the same marker spelling and
 validation; historical marker translation is not supported.
 
 On both baseline and current sides, a comment with the former `mokabook-`
-spelling is ordinary page content. Mokly never reads it as a marker, never
-removes it and never fails on it. It creates no component range, Review-ignore
-region or material marker. The frozen instance and slot key domain strings
-are unchanged.
+spelling is ordinary page content. Mokly never reads it as a marker or removes
+it as one. The comment alone is not a validation error. It creates no component
+range, Review-ignore region or material marker. If baseline records require
+ranges that its document cannot prove, follow
+[Invalid Or Missing Data](./mokly-baseline-compatibility.md#invalid-or-missing-data).
+The frozen instance and slot key domain strings are unchanged.
 
 ## Acceptance
 

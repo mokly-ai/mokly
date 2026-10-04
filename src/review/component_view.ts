@@ -6,10 +6,7 @@ import type {
 } from "@mokly/viewer/data";
 import { canonicalJson, isStylesheetPath } from "@mokly/viewer/data";
 
-import {
-  stripHistoricalMarkers,
-  stripMarkers,
-} from "../components/comparison_material.js";
+import { stripMarkers } from "../components/comparison_material.js";
 import { changedComponentImplementations } from "../components/comparison_projection.js";
 import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
 import { validateComponentRanges } from "../components/ranges.js";
@@ -73,8 +70,8 @@ export async function compareComponentView(
   if (base === undefined || head === undefined) {
     const normalized =
       base !== undefined
-        ? normalizeOneSidedView(base, before!, "historical", root)
-        : normalizeOneSidedView(head!, after!, "current", root);
+        ? normalizeOneSidedView(base, before!, root)
+        : normalizeOneSidedView(head!, after!, root);
     const evidence = await context.resources.compare(
       before ? { path: before.path, html: normalized.resource } : undefined,
       after ? { path: after.path, html: normalized.resource } : undefined,
@@ -148,14 +145,18 @@ export async function compareComponentView(
   if (projected.inputs) reasons.push({ kind: "inputs" });
   if (projected.structure) reasons.push({ kind: "structure" });
   const actualResource = normalizeReviewPair(
-    stripHistoricalMarkers(base),
+    stripMarkers(base, before?.usage, baseRanges),
     stripMarkers(head, after?.usage, headRanges),
     selected.path,
   );
   const baseMaterial = comparisonStylesheetMaterial(base, before!.usage, root);
   const headMaterial = comparisonStylesheetMaterial(head, after!.usage, root);
   const actual = normalizeReviewPair(
-    stripHistoricalMarkers(baseMaterial.html),
+    stripMarkers(
+      baseMaterial.html,
+      baseMaterial.usage,
+      baseMaterial.html === base ? baseRanges : undefined,
+    ),
     stripMarkers(
       headMaterial.html,
       headMaterial.usage,
@@ -263,21 +264,14 @@ export async function compareComponentView(
 function normalizeOneSidedView(
   html: string,
   view: GeneratedComponentView,
-  dialect: "current" | "historical",
   root?: string,
 ): { page: string; resource: string } {
   const ranges = view.usage
-    ? validateComponentRanges(html, view.usage.ranges, dialect)
+    ? validateComponentRanges(html, view.usage.ranges)
     : undefined;
   const compared = comparisonStylesheetMaterial(html, view.usage, root);
-  const material =
-    dialect === "historical"
-      ? stripHistoricalMarkers(compared.html)
-      : stripMarkers(compared.html, compared.usage);
-  const original =
-    dialect === "historical"
-      ? stripHistoricalMarkers(html)
-      : stripMarkers(html, view.usage, ranges);
+  const material = stripMarkers(compared.html, compared.usage);
+  const original = stripMarkers(html, view.usage, ranges);
   return {
     page: normalizeSingleDocument(material, view.path),
     resource: normalizeSingleDocument(original, view.path),

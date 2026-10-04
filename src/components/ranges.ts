@@ -91,7 +91,6 @@ export function serializeComponentSentinels(
 export function validateComponentRanges(
   html: string,
   records: readonly ComponentRangeRecord[],
-  dialect: "current" | "historical" = "current",
 ): RenderedRange[] {
   const expected = new Map(records.map((record) => [record.id, record]));
   const result: RenderedRange[] = [];
@@ -111,10 +110,7 @@ export function validateComponentRanges(
     )
       invalidData("$document", "reserved component attributes remain");
     if (node.nodeName !== "#comment" || !("data" in node)) return;
-    const data =
-      dialect === "historical"
-        ? node.data.replace(/^mokabook-(component|review-ignore):/, "mokly-$1:")
-        : node.data;
+    const data = node.data;
     if (data.startsWith("mokly-review-ignore:start:")) ignored = true;
     if (data.startsWith("mokly-review-ignore:end:")) ignored = false;
     if (!data.startsWith(prefix)) return;

@@ -78,6 +78,10 @@ version, or admitted metadata that fails validation follows the same path.
 Absence of every recognized manifest is missing history. None of these cases
 falls back or becomes a successful empty comparison.
 
+This includes a baseline document that cannot prove its recorded component
+ranges. Comments with the former marker spelling are ordinary content, so they
+cannot prove those ranges. This is invalid data, not an earlier-layout outcome.
+
 Serve reports invalid or missing history as Changes unavailable and logs its
 normal safe diagnostic. A command that explicitly captures Changes fails under
 its existing transactional rules unless the failure is the incompatible case
