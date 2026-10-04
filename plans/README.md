@@ -103,12 +103,16 @@
   outside-component evidence in the design mockups. Milestones 19 and 20
   classify CSS by where its rules match and show that evidence for screens and
   saved views. Milestone 20A depicts whole-document page evidence, and
-  Milestone 20B shows it. Milestone 21 verification passes the complete gate,
-  the separate unit suite, all 16 CSS smoke cases at both widths and all three
-  removed-field checks. Part 1 records the evidence in a local commit only;
-  the reviewer owns the push and the later review. The plan stays Active until
-  its pull request merges. Earlier work was reviewed twice; unselected review
-  findings remain open.
+  Milestone 20B shows it. Milestone 21 is verified, pushed and reviewed.
+  Milestones 22 to 24, with 23A and 23B, are verified and pushed. They fix the
+  third-review findings and require current v8 baselines. Milestone 25
+  verification passes with the approved PostCSS timing retry: the complete
+  gate, the separate unit suite, all 12 CSS smoke cases at both widths, the
+  unchanged former-marker script, unavailable Changes with a v7 base, and
+  embedded Details without a branch-point sentence. Part 1 records the evidence
+  in a local documentation commit. The reviewer owns the push and the later
+  review. The plan stays Active until its pull request merges. Earlier work was
+  reviewed three times; second-review findings 2 to 11 remain open.
 - [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
   pages embed the catalogue index plus only their own entry's component usage
   and serialise that state once. The public `catalogue.json` stays complete;

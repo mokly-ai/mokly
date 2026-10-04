@@ -2,16 +2,19 @@
 
 ## Status And Outcome
 
-Status: Milestones 1 to 20B, including 19A, are implemented, verified and
-pushed. The branch
-was reviewed twice after the earlier deliveries. Milestones 9 to 11 fixed the review findings that the user
+Status: Milestones 1 to 24, including 19A, 20A, 20B, 23A and 23B, are
+implemented, verified and pushed. The branch was reviewed three times after
+the earlier deliveries. Milestones 9 to 11 fixed the review findings that the user
 chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
 decisions. Milestones 16 to 21 merge main 0.13.0 and apply the 2026-10-03 CSS
 change rule, which replaces the finding 1 rule; findings 2 to 11 await the
 user's decision. Milestones 22 to 25, with 23A and 23B, apply the user's 2026-10-04
 decisions on the third review and on baseline compatibility.
-Milestones 23A, 23B and 24 are implemented and verified with the approved
-PostCSS timing retry. Their delivery is local. Milestone 25 remains pending.
+Milestones 22 to 24, with 23A and 23B, are pushed through `de139ccb`.
+Milestone 25 verification is complete under the approved PostCSS timing retry.
+All required smoke cases pass at both widths. Part 1 records the evidence in
+one local documentation commit. The reviewer owns the push and the review
+after the push; both remain open.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -29,9 +32,8 @@ design shows evidence in a whole-document page's Details, so Milestones 20A
 verified and pushed as `0f43cf0a`. Milestone 20B is implemented, verified and
 pushed as `710e2d5d`. Milestone 21 verification is complete. The complete gate,
 the separate required unit command and the browser smoke checks pass at 100%.
-Part 1 records this evidence in a local commit only. The reviewer owns the
-push and the review after the push. Both remain open, and the plan stays active
-until the pull request merges.
+Milestone 21 was pushed and reviewed. Its third-review decisions are implemented
+in Milestones 22 to 24. The plan stays active until the pull request merges.
 The contract changes
 unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
 owners no longer route stylesheet changes; declared links and their provenance
@@ -2237,10 +2239,117 @@ rule. Delivery is one local commit; the reviewer owns the push and the review.
 
 ## Milestone 25: Verify, deliver and review
 
-- [ ] Run `cargo xtask check` at 100%, inspect the diff and deletions against
+- [x] Run `cargo xtask check` at 100%, inspect the diff and deletions against
       `origin/main`, and record the evidence.
-- [ ] Run `git add -A`, commit with a Conventional Commit, and push the branch.
+- [x] Run `git add -A`, commit with a Conventional Commit, and push the branch.
 - [ ] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
       changing the implementation.
+
+Verification evidence (2026-10-04, part 1):
+
+- `git fetch origin main` succeeds. Main remains
+  `800fe9f88a0173429b25baa1bcf41ed9e59b2256`; the verified source and pushed
+  branch tip are `de139ccbf9e296fe7c872069929f0eed839a3da5`.
+  `git log --oneline HEAD..origin/main` is empty, and
+  `git merge-base --is-ancestor origin/main HEAD` exits 0. No merge was needed.
+- The complete `cargo xtask check` passes the audit with main's existing
+  exception, formatting, lint, file limits, repository ratchets, Rust format
+  and clippy, all 15 Rust tests, build, type checks, the 440-file example check
+  and all six packed-consumer scenarios. Its unit step covers all 699 files
+  and 3,970 tests. It passes 3,969 tests and exits 1 only for the existing
+  PostCSS timing case: 2,564.5 ms against the unchanged 2,500 ms limit.
+- With no other test, server or browser process active,
+  `npx tsx --test tests/postcss_dependency_review.test.ts` passes all three
+  tests on the first isolated retry. The timed function takes 2,221.7 ms.
+  The remaining gate sections then run separately:
+  `cargo xtask check --suite browser` passes all 776 tests, and
+  `cargo xtask check --suite hydration` passes all 225 tests. Both exit 0.
+  Neither suite skips or cancels a test.
+- After all smoke work stops and all temporary edits are restored, the exact
+  separate unit command runs:
+
+  ```sh
+  npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"
+  ```
+
+  It passes 3,969 of 3,970 tests and exits 1 only for the same timing case,
+  at 2,564.6 ms. With no other test, server or browser process active,
+  `npx tsx --test tests/postcss_dependency_review.test.ts` passes all three
+  tests on the first isolated retry, at 2,222.6 ms. Neither complete unit run
+  skips, cancels or marks a test TODO. The timing test and its code match
+  `origin/main`. The approved isolated retry is the only verification exception.
+
+- CSS smoke uses a temporary copy of the full example. Its four delivery
+  links exist before a committed v8 baseline, so link setup adds no unrelated
+  Changes rows. `npm run example:build -- --config .context/m25/example/examples/basic/mokly.config.ts`
+  and the matching `npm run example:check -- --config .context/m25/example/examples/basic/mokly.config.ts`
+  pass with 442 outputs. The root command
+  `npm run dev -- --config .context/m25/example/examples/basic/mokly.config.ts --base HEAD --port 0`
+  serves the fixture. The smoke scripts record the absolute config paths in
+  `.context/m25/commands.jsonl`.
+- `node --import tsx .context/m25/smoke.mjs` passes all 12 CSS cases at
+  390 × 844 and 1440 × 1000. Configured CSS, declared `stylesheets`, CSS
+  imported by a declared stylesheet and CSS imported from JavaScript each
+  pass these three cases:
+  - `.example-action { opacity: 0.97; }` lists Action and its three saved
+    variants in Changes. Welcome, Welcome empty, Details and Toolbar Default
+    appear under Affected screens and components.
+  - `.example-head h1 { letter-spacing: 0.75px; }` lists Welcome, Welcome
+    empty, Details and Example tour. Action stays unchanged and has no
+    affected consumers.
+  - `.example-screen .example-action { opacity: 0.96; }` gives the same
+    screen and flow rows. The rule styles Action on screens but has no
+    own-page match, so Action stays unchanged.
+- The browser checks Changes membership, Affected screens, computed styles
+  and exact Details text at both widths. Current and loaded Side by side
+  keep the same files and selectors once. The selected API agrees with the
+  catalogue. Configured, declared and imported CSS name their actual files;
+  JavaScript delivery names the emitted bundle and never its private CSS
+  source. No browser page error occurs.
+- `node --import tsx .context/m25/marker.mjs` passes at both widths. The
+  handbook script contains the former component, Review-ignore and material
+  marker spellings. Its generated page bytes remain equal to the baseline,
+  the script text stays intact, Changes stays empty, and Details show
+  “No changes to this page.”
+- `npm run dev -- --base origin/main --port 0` and
+  `node --import tsx .context/m25/v7.mjs` pass at both widths. The cached
+  `800fe9f8` base has manifest v7. Serve prints the exact earlier-version
+  message once. The catalogue sets Changes unavailable, advertises no
+  comparison or removed entries, and keeps all 107 current screens usable.
+  The All filter lets the user open Details from Welcome. The first mobile capture ran
+  before the selected frame painted. A second passing run waits for that
+  frame's ready state and visible heading; the final screenshots show its
+  loaded preview.
+- `node --import tsx .context/m25/embedded.mjs` passes for Welcome, Action
+  Default and Getting started, served and embedded, at both widths. The
+  public `@mokly/viewer` renders the real exported fixture catalogue. Its
+  Details omit the branch-point sentence and keep the same files and selectors
+  as the served catalogue. Served Details keep the HEAD sentence. The first
+  setup used an export folder outside the fixture root and was rejected.
+  The corrected setup uses the fixture's `.context/site` and passes all
+  12 served/embedded checks. This changes only the temporary smoke harness.
+- Every temporary edit is restored. The fixture is rebuilt, checked and
+  confirmed clean with Git, then removed with its export. The normal example
+  has no tracked edits. The final `npm run example:check` passes with 440
+  valid, untracked outputs. No smoke server or browser remains before the
+  separate unit run.
+- `git diff --name-status origin/main` contains 713 inspected paths.
+  `git diff --diff-filter=D --name-status origin/main` contains only the four
+  approved earlier removals:
+  `examples/basic/entries/design/library/style_context.tsx`,
+  `src/components/dependency_validation.ts`,
+  `src/registry/dependency_paths.ts`, and
+  `tests/design_library_style_collector.test.tsx`. The approved v3-to-v4
+  catalogue fixture rename remains. This task adds no deletion and changes
+  only this plan and its entry in `plans/README.md`.
+- Exact commands, logs, gate reports, smoke results and the verification report
+  are under `.context/m25/`. The 114 screenshots are under
+  `.context/screenshots/m25/`. The Braces audit exception remains valid through
+  2026-11-03 UTC. Dependencies, overrides and audit rules are unchanged.
+  Earlier unselected review findings remain open.
+
+Part 1 completes verification and records one local documentation commit.
+The combined commit-and-push TODO remains open until the reviewer pushes.
+The review TODO has not run. The plan remains active until the pull request merges.
