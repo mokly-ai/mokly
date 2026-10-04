@@ -8,9 +8,10 @@ implementation review are complete. On 2026-10-04 the user approved the
 recommended option for each of the eight findings in the
 [review record](../docs/reviews/path-identity.md); Milestones 9–13 deliver
 those fixes and end with a new review. Milestones 9–12 are complete. Milestone
-13 is complete, including a second fresh review whose fifteen findings
-await the user's decision in the
-[review record](../docs/reviews/path-identity.md#second-review).
+13 is complete, including a second fresh review with fifteen findings in the
+[review record](../docs/reviews/path-identity.md#second-review). On 2026-10-04
+the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. The other ten
+findings await the user's decision.
 This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
@@ -2208,6 +2209,199 @@ below remains unticked and is not run by this implementation agent.
       [second review](../docs/reviews/path-identity.md#second-review) lists
       fifteen new findings (one High, four Medium, ten Low) for the user's
       decision. No finding was fixed during the review.
+
+## Milestone 14: Branch-point lookup contracts
+
+Define one owner for the rule that maps a branch-point path to the entry it
+names now, before any code changes. On 2026-10-04 the user approved one shared
+lookup for second-review findings 1 (option A), 6 (option B), 8 (option A),
+9 (option B), and 11 (option A), with one shared fixture set. The lookup
+handles moves, case-only renames, a path that another kind reuses, and the
+former parent's title. Each fixed surface keeps its current design; only the
+entry that a link, row, key, or crumb resolves to changes. The
+[variant navigation contract](../docs/protocol/mokly-variant-navigation.md)
+already defines the flat fallback row and the plain-text former-parent crumb.
+This work therefore needs no mockup milestone.
+
+Status: Not started.
+
+- [ ] Add one protocol page, `docs/protocol/mokly-branch-point-lookup.md`,
+      that owns these rules:
+  - [ ] A branch-point reference is a path from the baseline side: a baseline
+        entry, a removed record's `variantOf`, or `before`-side review
+        evidence. It resolves in this order: the current entry that an
+        accepted move pair joins to that path; else the current entry of the
+        same kind whose path is equal under case folding; else the removed
+        record of the same kind whose path is equal under case folding; else
+        nothing. A current-side reference, such as `after`-side evidence,
+        names its current entry directly. It never resolves through a move
+        pair.
+  - [ ] The counterpart of a current entry is the baseline entry that its
+        move pair names; else the baseline entry of the same kind whose path
+        is equal under case folding; else nothing, because the entry is new.
+  - [ ] A variant's parent is the resolution of its `variantOf`, limited to
+        non-variant entries of the variant's kind. When no such entry exists,
+        the variant has no parent. The shell then shows the record's stored
+        former-parent title as plain text, as the variant navigation contract
+        requires.
+  - [ ] "Same kind" compares the manifest `kind`. An entry of another kind at
+        the same path never matches.
+  - [ ] A `before`-side usage evidence that resolves to nothing has no
+        destination, so the shell omits its row. This happens only when an
+        entry of another kind took the path. The catalogue treats that as a
+        kind change, not a removal.
+  - [ ] Name every consumer: affected-consumer links, the variant bar, the
+        Before and Current props, supplied-input pairing, removed-variant rows
+        in the tree, the workspace key, the Changes activation order (built
+        from the navigation tree), and breadcrumbs.
+  - [ ] Verification: list the shared fixture cases from Milestone 15 and the
+        three hosts (Serve, export, and the embedded viewer). Require
+        assertions on the rendered UI, not only on HTTP status.
+- [ ] Add the former parent's title to the removed record. Every removed
+      variant record carries `parentTitle`, the baseline title of its
+      `variantOf` parent. A non-variant record has none. Update the read model
+      contract in `mokly-catalogue.md`, the change snapshot in
+      `mokly-catalogue-changes.md`, the reader validation (reject a removed
+      variant without `parentTitle`, and a non-variant record with it), and
+      `docs/protocol/fixtures/catalogue-v4.json`. The read model stays v4,
+      because v4 is unreleased and decision 14 forbids compatibility layers.
+- [ ] Make the removal rule consistent. `mokly-catalogue.md` says that a
+      baseline entry is removed only when no current entry "of its kind" has
+      its path. `mokly-catalogue-changes.md` and `src/registry/changes.ts`
+      use any kind, which the reader's shared-path rejection requires. Keep
+      the any-kind rule in one owner, and link to it from the other document.
+- [ ] Replace restated mapping rules with links to the new page: the Result
+      section of `mokly-moves.md`, `mokly-variant-navigation.md`, the Changes
+      activation rule in `mokly-navigation.md`, the breadcrumb rule in
+      `mokly-folders.md`, the component workspace and usage contracts, and the
+      shell README. Add the page to `docs/protocol/README.md`.
+- [ ] Validate the changed Markdown with Prettier and with the protocol,
+      guide, and Markdown-link tests. Then commit and push.
+
+## Milestone 15: Former parent title, shared lookup, and fixture set
+
+Store the former parent's title, add the pure lookup, and build the shared
+fixture set. The shell consumers move to the lookup in Milestone 16.
+
+Status: Not started.
+
+- [ ] Write failing tests first. The change snapshot and the read model must
+      carry `parentTitle` on every removed variant, also when another kind
+      reuses the parent's path. Both readers must reject a removed variant
+      without `parentTitle`, and a non-variant record with it.
+- [ ] Carry `parentTitle` through `src/registry/changes.ts`, the catalogue
+      projection, the complete and scoped readers, the viewer
+      `RemovedEntrySnapshot` type, and the v4 fixture.
+- [ ] Add the pure lookup to the viewer catalogue data layer, next to
+      `createCatalogue`. Give it these operations:
+  - [ ] resolve a branch-point reference (path and kind) to a current entry,
+        a removed record, or nothing;
+  - [ ] give the counterpart identity of a current entry, for matching
+        baseline variants, views, and instances;
+  - [ ] resolve a variant's parent to a current parent, a removed parent, or
+        the stored former-parent title;
+  - [ ] give the previous path of a paired current entry, for `Moved` rows.
+- [ ] Unit-test each rule: a move pair, a case-only rename, a path that
+      another kind reuses, a removed record, an unresolved path, a
+      current-side reference, and a variant parent with and without a
+      same-kind parent. Do not change shell consumers in this milestone.
+- [ ] Build the shared fixture set as real Git baselines in `tests/helpers/`.
+      Reuse `commitMoveBaseline` and the move catalogue sources, so that node
+      tests and the browser hosts in `tests/browser/branch_hosts.ts` can both
+      use it. Each case is one catalogue:
+  - [ ] Case 1 (finding 1): a screen that renders a component moves with
+        `movedFrom`, and the component changes. A component consumer of the
+        same component also moves.
+  - [ ] Case 2 (findings 6, 8, and 9): a component parent moves with
+        `movedFrom`. One of its variants is removed, and one changes props.
+  - [ ] Case 3 (finding 6): a variant moves to another parent with
+        `movedFrom` and changes props.
+  - [ ] Case 4 (findings 6, 8, and 9): case-only renames of a screen, of a
+        component parent with a removed variant, and of a variant. Keep
+        stylesheet edits out of this case while second-review finding 2
+        awaits a decision.
+  - [ ] Case 5 (finding 11): a document takes a removed component's path,
+        and the component's variants are removed.
+  - [ ] Keep every case clear of the other open second-review findings (2, 3,
+        4, 5, 7, and 10).
+- [ ] For each case, assert the data: the review pairs, the `previousPath`
+      fields, the removed records with `parentTitle`, and agreement between
+      both readers. Do not assert Serve, export, or embedded-viewer behaviour
+      in this milestone; Milestone 16 adds it after the shell uses the
+      lookup.
+- [ ] Run the unmodified `cargo xtask check`. Then commit and push.
+
+## Milestone 16: Shell branch-point consumers
+
+Tags: ui
+
+Move every shell consumer to the shared lookup, with a failing test first for
+each finding. Then assert the rendered UI of the shared fixture set in every
+host.
+
+Status: Not started.
+
+- [ ] Finding 1 (option A): build affected-consumer links from the lookup. A
+      `before`-side evidence links to the current entry that its path resolves
+      to, or to the removed record. Omit a row that resolves to nothing.
+- [ ] Finding 6 (option B): build the variant bar, the Before and Current
+      props, the supplied-input pairing, and the removed-variant rows in the
+      tree from the lookup. A variant that moved between parents, and a
+      case-only rename, must keep their details. A removed sibling must attach
+      to its parent.
+- [ ] Finding 8 (option A): key the component workspace by the resolved
+      parent. Opening a removed variant of a moved or case-renamed parent must
+      keep the comparison mode.
+- [ ] Finding 9 (option B): build the Changes activation order from the built
+      navigation tree. A container row must reach a moved member's removed
+      variant.
+- [ ] Finding 11 (option A): build the parent crumb from the lookup. When the
+      variant has no same-kind parent, show the record's `parentTitle` as
+      plain text.
+- [ ] Remove the superseded mappings: `catalogueMovedPath`, the parent
+      fallback chain in `catalogueVariantParentEntry`, and the direct
+      `previousPaths`, `variantOf`, and case-folded path comparisons in shell
+      modules. Add a guard test that fails when a shell module outside the
+      lookup reads `previousPaths` or compares a `variantOf` with a path. The
+      guard stops new code from repeating these five findings. This milestone
+      may refine the lookup's interface; its rules stay as Milestone 14
+      defines them.
+- [ ] Run the shared fixture set through Serve, export, and the embedded
+      viewer with `tests/browser/branch_hosts.ts`, at desktop and mobile
+      widths. Assert the rendered UI, not only HTTP status:
+  - [ ] each usage link's target and destination title, and export success
+        for case 1;
+  - [ ] the Before and Current props of moved and case-renamed variants;
+  - [ ] the removed-variant rows under their parents;
+  - [ ] the comparison mode after a removed variant opens;
+  - [ ] the Changes activation order;
+  - [ ] each crumb's text, and its link when it has one.
+- [ ] Update the shell README and the viewer README.
+- [ ] Run the unmodified `cargo xtask check`. Then commit and push.
+
+## Milestone 17: Branch-point verification and review
+
+Verify the combined work, smoke-test each case, and assign a fresh review. The
+implementation agent does not run that review.
+
+Status: Not started.
+
+- [ ] Bring Milestone 16 into the feature branch. Fast-forward when the
+      feature branch has not moved; otherwise merge under the merge rules in
+      `AGENTS.md`. If `origin/main` has new additions, merge them under the
+      same rules.
+- [ ] Run the full verification, including the unmodified `cargo xtask check`.
+- [ ] Smoke-test each fixture case with the CLI, `serve --base main` and
+      `export --base main`. In a browser at 1280px and 390px, follow every
+      usage link, open each removed variant, and check the crumbs, the props,
+      and the Changes order.
+- [ ] Record the outcome of findings 1, 6, 8, 9, and 11 in
+      `docs/reviews/path-identity.md`. Update this plan's status and
+      `plans/README.md`.
+- [ ] Commit and push.
+- [ ] After the push, the orchestrator assigns fresh reviewers to use
+      `docs/implementation-review-prompt.md` against the complete diff from
+      `origin/main` and report findings without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 

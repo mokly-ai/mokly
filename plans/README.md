@@ -21,9 +21,11 @@
   them and end with a new review. Milestones 9–12 are complete and integrated
   through Milestone 13. The unmodified full gate and fresh smoke checks pass;
   all eight findings have recorded fixes and covering tests. A second fresh
-  review found [fifteen new findings](../docs/reviews/path-identity.md#second-review)
-  that await the user's decision. The plan stays Active until its pull request
-  merges.
+  review found [fifteen new findings](../docs/reviews/path-identity.md#second-review).
+  The user approved one shared branch-point lookup for five of them;
+  Milestones 14–17 deliver it and end with a new review. The other ten
+  findings await the user's decision. The plan stays Active until its pull
+  request merges.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete

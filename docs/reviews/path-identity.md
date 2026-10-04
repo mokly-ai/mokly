@@ -432,3 +432,20 @@ asserts the rendered UI, not only the HTTP status.
 The UI reviewer did not run the full browser suites, because their hosts bind
 ports outside its allowed range. The Codex reviewer ran them, and they passed.
 No test covers findings 1 to 11.
+
+### Approved Second Follow-up
+
+On 2026-10-04 the user approved the shared lookup for findings 1, 6, 8, 9,
+and 11, with the shared fixture set. The lookup handles moves, case-only
+renames, a path that another kind reuses, and the former parent's title. The
+[plan](../../plans/path-identity.md) delivers it in Milestones 14–17:
+
+| Finding | Approved option                                                      | Milestone             |
+| ------- | -------------------------------------------------------------------- | --------------------- |
+| 1       | A: map each branch-point path to its current entry before the lookup | 14 (contract), 15, 16 |
+| 6       | B: route the three comparisons through the shared lookup             | 14 (contract), 15, 16 |
+| 8       | A: key the workspace by the resolved parent                          | 14 (contract), 16     |
+| 9       | B: build the activation order from the built tree                    | 14 (contract), 16     |
+| 11      | A: store the former parent's title in the removed record             | 14 (contract), 15, 16 |
+
+Findings 2, 3, 4, 5, 7, 10, 12, 13, 14, and 15 await the user's decision.
