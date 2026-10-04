@@ -13,7 +13,9 @@ export type ScreenSubject =
   | "timeline"
   | "welcomeError"
   | "welcomeErrorReparented"
-  | "invoice";
+  | "invoice"
+  | "profile"
+  | "profileSecurity";
 
 interface SubjectMetadata {
   description: string;
@@ -110,6 +112,27 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     relatedDocs: false,
     schemes: "light",
     source: "specs/account/billing/invoice.mockup.tsx",
+    tags: [],
+    tour: false,
+  },
+  profile: {
+    description:
+      "The account holder's name, email address, and photo, with the settings kept beside them.",
+    rationale:
+      "The profile is the Profile folder's own page, so it leads the folder: its row opens the profile and lists the security and notification settings after its own variant.",
+    relatedDocs: false,
+    schemes: "light",
+    source: "specs/account/profile/index.mockup.tsx",
+    tags: [],
+    tour: false,
+  },
+  profileSecurity: {
+    description: "The password, two-step sign-in, and signed-in devices.",
+    rationale:
+      "Security settings live in the Profile folder, so the profile's row lists them and their breadcrumbs end in the profile it belongs to.",
+    relatedDocs: false,
+    schemes: "light",
+    source: "specs/account/profile/security.mockup.tsx",
     tags: [],
     tour: false,
   },

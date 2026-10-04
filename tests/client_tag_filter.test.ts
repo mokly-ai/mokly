@@ -97,6 +97,7 @@ function leaf(
     kind: "leaf",
     label,
     tags,
+    title: label,
   };
 }
 

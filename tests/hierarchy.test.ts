@@ -32,9 +32,9 @@ test("one path tree splits mixed folders by kind and retains authored variants",
     hierarchy.variantParentByPath.get("design/browse/a/first"),
     entries[0],
   );
-  for (const section of [hierarchy.roots.pages, hierarchy.roots.components])
+  for (const section of [hierarchy.roots.specs, hierarchy.roots.components])
     assert.equal(section[0]?.key, "design");
-  const design = hierarchy.roots.pages[0];
+  const design = hierarchy.roots.specs[0];
   assert.equal(design?.kind, "folder");
   if (design?.kind !== "folder") return;
   assert.deepEqual(

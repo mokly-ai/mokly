@@ -7,8 +7,8 @@ and multi-instance markers are implemented. One server-rendered/hydrated tree
 runs in Serve, export, and application-owned hosts; every selection names an
 entry path. [Appearance](./mokly-viewer-appearance.md) and
 [removed previews](./mokly-removed-previews.md) retain their host-specific
-controls and shared presentation. Markdown documents and `Moved` rows await the
-[path identity plan](../../plans/path-identity.md).
+controls and shared presentation. Markdown documents and `Moved` rows are
+implemented.
 Live Serve uses the strict [entry-scoped bootstrap](./mokly-shell-bootstrap.md).
 
 ## Package And Props

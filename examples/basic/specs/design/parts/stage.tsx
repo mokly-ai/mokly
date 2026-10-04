@@ -7,9 +7,25 @@ export function Stage({ children }: { children: ReactNode }) {
   return <div className="mbk-stage">{children}</div>;
 }
 
-/** The bordered pane a whole document occupies on the dotted stage. */
-export function DocumentPane({ children }: { children: ReactNode }) {
-  return <div className="mbk-doc-pane">{children}</div>;
+/**
+ * The bordered pane a whole document occupies on the dotted stage. A
+ * light-only document keeps the light palette while the catalogue is Dark.
+ */
+export function DocumentPane({
+  children,
+  lightOnly,
+}: {
+  children: ReactNode;
+  lightOnly?: boolean | undefined;
+}) {
+  return (
+    <div
+      className="mbk-doc-pane"
+      data-mbk-light-only={lightOnly ? "" : undefined}
+    >
+      {children}
+    </div>
+  );
 }
 
 interface PhoneFrameProps {

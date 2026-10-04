@@ -78,6 +78,7 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
   const catalogueIdentity = hash(identity.id);
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const generation = comparisonGeneration(comparisonUrl);
+  const treeOrder = readOrder(input.treeOrder);
   const entries = <Kind extends Entry["kind"]>(field: string, kind: Kind) =>
     array(input[field]).map((raw) => {
       const entry = readRoutedEntry(raw);
@@ -96,6 +97,7 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
     changesStatus: choice(input.changesStatus, CHANGE_STATUSES),
     comparisonUrl,
     tree: array(input.tree).map(readNode),
+    ...(treeOrder ? { treeOrder } : {}),
     documents: entries("documents", "document"),
     screens: entries("screens", "screen"),
     pages: entries("pages", "page"),
@@ -141,11 +143,14 @@ function readNode(value: unknown): CatalogueNode {
   if (input.hidden !== undefined && input.hidden !== true)
     invalidData("$catalogue", "hidden must be true when present");
   const hidden = input.hidden ? { hidden: true as const } : {};
+  const order = readOrder(input.order);
+  const ordered = order ? { order } : {};
   return kind === "entry"
     ? {
         kind,
         ...hidden,
         path: entryPath(input.path),
+        ...ordered,
         ...(input.children !== undefined
           ? { children: array(input.children).map(readNode) }
           : {}),
@@ -156,6 +161,19 @@ function readNode(value: unknown): CatalogueNode {
         path: entryPath(input.path),
         title: text(input.title),
         ...(input.index === undefined ? {} : { index: entryPath(input.index) }),
+        ...ordered,
         children: array(input.children).map(readNode),
       };
+}
+
+/** Read an optional folder `order` of distinct child slugs and `...`. */
+function readOrder(value: unknown): readonly string[] | undefined {
+  if (value === undefined) return undefined;
+  const order = array(value).map(text);
+  if (
+    new Set(order).size !== order.length ||
+    order.some((name) => name.includes("/"))
+  )
+    invalidData("$catalogue", "order must name distinct child slugs");
+  return order;
 }

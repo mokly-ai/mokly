@@ -5,6 +5,7 @@ import { parseBrowseRecoveryState } from "../packages/viewer/dist/runtime.js";
 import { isDisclosureKey } from "../packages/viewer/dist/shell/disclosure_keys.js";
 import {
   decodeDisclosureMap,
+  disclosureStorageKey,
   encodeDisclosureMap,
   parseDisclosureMap,
   reconcileDisclosures,
@@ -16,19 +17,21 @@ import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
 test("stored disclosures accept valid folder paths, including uppercase and underscores, but not empty segments", () => {
   for (const key of [
-    "section:pages",
+    "section:specs",
     "section:components",
     "variants:my-screen",
-    "folder:pages:Design_System/Browse",
+    "folder:specs:Design_System/Browse",
     "folder:components:Design_System/Browse",
   ])
     assert.equal(isDisclosureKey(key), true, key);
   for (const key of [
-    "folder:pages:",
-    "folder:pages:Design/",
-    "folder:pages:/Design",
-    "folder:pages:Design//Browse",
+    "folder:specs:",
+    "folder:specs:Design/",
+    "folder:specs:/Design",
+    "folder:specs:Design//Browse",
     "folder:other:Design",
+    "section:pages",
+    "folder:pages:Design",
     "collection:Design",
     "collection:pages:Design",
     "legacy:Design",
@@ -101,14 +104,14 @@ test("a current recovery snapshot filters invalid disclosure entries", () => {
   const state = {
     ...browseState(),
     disclosures: {
-      "collection:pages:Product": true,
-      "folder:pages:fixture": false,
-      "section:pages": "closed",
+      "folder:pages:fixture": true,
+      "folder:specs:fixture": false,
+      "section:specs": "closed",
     },
   };
   assert.deepEqual(parseBrowseRecoveryState(state), {
     ...browseState(),
-    disclosures: { "folder:pages:fixture": false },
+    disclosures: { "folder:specs:fixture": false },
   });
   assert.equal(
     parseBrowseRecoveryState({ ...browseState(), disclosures: [] }),
@@ -117,7 +120,7 @@ test("a current recovery snapshot filters invalid disclosure entries", () => {
   assert.equal(
     parseBrowseRecoveryState({
       ...browseState(),
-      disclosures: ["section:pages"],
+      disclosures: ["section:specs"],
     }),
     undefined,
   );
@@ -130,21 +133,22 @@ test("a current recovery snapshot filters invalid disclosure entries", () => {
   );
 });
 
-test("disclosure v3 codec round-trips explicit values and rejects malformed storage", () => {
+test("disclosure v4 codec round-trips explicit values and rejects malformed storage", () => {
+  assert.equal(disclosureStorageKey, "mokly:nav-disclosure:v4");
   const values = {
-    "section:pages": false,
-    "folder:pages:Design_System/Browse": true,
+    "section:specs": false,
+    "folder:specs:Design_System/Browse": true,
     "variants:my-screen": false,
   };
   assert.deepEqual(parseDisclosureMap(encodeDisclosureMap(values)), values);
-  for (const value of [null, false, 42, [], ["section:pages"]])
+  for (const value of [null, false, 42, [], ["section:specs"]])
     assert.deepEqual(decodeDisclosureMap(value), {});
   assert.deepEqual(parseDisclosureMap("not json"), {});
   assert.deepEqual(
     parseDisclosureMap(
       JSON.stringify([
-        "collection:pages:Product",
-        "section:pages",
+        "folder:specs:product",
+        "section:specs",
         "variants:product/browse/home",
       ]),
     ),
@@ -154,8 +158,9 @@ test("disclosure v3 codec round-trips explicit values and rejects malformed stor
     parseDisclosureMap(
       JSON.stringify({
         ...values,
-        "folder:pages:Bad//Path": true,
-        "collection:pages:Design": false,
+        "folder:specs:Bad//Path": true,
+        "folder:pages:Design_System/Browse": false,
+        "section:pages": false,
         "section:components": "closed",
       }),
     ),
@@ -163,44 +168,45 @@ test("disclosure v3 codec round-trips explicit values and rejects malformed stor
   );
 });
 
-test("a renamed folder and descendants use defaults while unrelated keys retain stored values", () => {
+test("a moved folder and descendants use defaults while unrelated keys retain stored values", () => {
   const defaults = {
-    "folder:pages:Renamed": true,
-    "folder:pages:Renamed/Child": false,
-    "folder:pages:Unrelated": true,
+    "folder:specs:Renamed": true,
+    "folder:specs:Renamed/Child": false,
+    "folder:specs:Unrelated": true,
   };
   assert.deepEqual(
     reconcileDisclosures(
       defaults,
       {
-        "folder:pages:Old": false,
-        "folder:pages:Old/Child": true,
-        "folder:pages:Unrelated": false,
+        "folder:specs:Old": false,
+        "folder:specs:Old/Child": true,
+        "folder:specs:Unrelated": false,
       },
       "default",
     ),
-    { ...defaults, "folder:pages:Unrelated": false },
+    { ...defaults, "folder:specs:Unrelated": false },
   );
   assert.deepEqual(
     reconcileDisclosures(
       defaults,
       {
-        "folder:pages:Old": false,
-        "folder:pages:Old/Child": true,
-        "folder:pages:Unrelated": false,
+        "folder:specs:Old": false,
+        "folder:specs:Old/Child": true,
+        "folder:specs:Unrelated": false,
       },
       "open",
     ),
     {
-      "folder:pages:Renamed": true,
-      "folder:pages:Renamed/Child": true,
-      "folder:pages:Unrelated": false,
+      "folder:specs:Renamed": true,
+      "folder:specs:Renamed/Child": true,
+      "folder:specs:Unrelated": false,
     },
   );
 });
 
 test("recovery and its baseline reconcile listed, missing, obsolete, and invalid keys", () => {
-  const folder = "folder:pages:product/browse";
+  const folder = "folder:specs:product/browse";
+  const obsolete = "folder:pages:product/browse";
   const unrelated = "folder:components:components";
   const modes = [
     { name: "unfiltered", query: "", view: "all", filtered: false },
@@ -216,7 +222,7 @@ test("recovery and its baseline reconcile listed, missing, obsolete, and invalid
     { name: "unlisted", stored: {}, listed: false },
     {
       name: "obsolete",
-      stored: { "collection:pages:Product/Browse": true },
+      stored: { [obsolete]: true },
       listed: false,
     },
     { name: "invalid", stored: { [folder]: "open" }, listed: false },
@@ -267,7 +273,7 @@ test("recovery and its baseline reconcile listed, missing, obsolete, and invalid
       );
       assert.deepEqual(Object.keys(baseline), [folder, unrelated]);
       assert.equal(
-        Object.hasOwn(state.disclosures, "collection:pages:Product/Browse"),
+        Object.hasOwn(state.disclosures, obsolete),
         false,
         `${label}: obsolete key`,
       );

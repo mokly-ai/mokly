@@ -66,7 +66,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ["Welcome", "design/browse/views/screen"],
     ]);
     assert.equal(
-      textContent(byClass(document, "mbk-idchip")[0]!).trim(),
+      textContent(byClass(document, "mbk-pathchip")[0]!).trim(),
       "example/screens/welcome/empty",
     );
     const shot = byClass(document, "mbk-shot")[0];

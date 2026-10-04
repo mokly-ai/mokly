@@ -9,6 +9,7 @@ import {
   ChangedViewsRow,
   MetaRow,
   PathChips,
+  RelatedDocChips,
   TagChips,
   UsedByChips,
   VariantChips,
@@ -30,6 +31,12 @@ export function EntryDetailsBody(props: {
   entry: CatalogueManifestEntry;
 }) {
   const entry = props.entry;
+  const removed = props.catalogue.removedEntries.find(
+    (record) => record.entry.path === entry.path,
+  );
+  const movedFrom = removed
+    ? undefined
+    : props.catalogue.previousPaths.get(entry.path);
   return (
     <div className="mbk-details-body">
       <div>
@@ -44,30 +51,38 @@ export function EntryDetailsBody(props: {
         ) : null}
       </div>
       <div className="mbk-meta">
+        {entry.kind === "component" ? (
+          <MetaRow label="Path">
+            <code className="mbk-code">{entry.path}</code>
+          </MetaRow>
+        ) : null}
         <MetaRow label="Source">
           <code className="mbk-code">{entry.sourcePath}</code>
         </MetaRow>
+        {movedFrom ? (
+          <MetaRow label="Moved from">
+            <code className="mbk-code">{movedFrom}</code>
+          </MetaRow>
+        ) : null}
         {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
           <MetaRow label="Schemes">{schemeNames(entry)}</MetaRow>
         ) : null}
         {entry.kind === "screen" || entry.kind === "component" ? (
           <ChangedViewsRow views={props.changedViews ?? []} />
         ) : null}
-        {props.catalogue.removedEntries.find(
-          (removed) => removed.entry.path === entry.path,
-        ) ? (
-          <MetaRow label="Location">
-            {props.catalogue.removedEntries
-              .find((removed) => removed.entry.path === entry.path)
-              ?.folderTitles.join(" › ")}
-          </MetaRow>
+        {removed ? (
+          <MetaRow label="Location">{removed.folderTitles.join(" › ")}</MetaRow>
         ) : null}
         <VariantOfChip catalogue={props.catalogue} entry={entry} />
         <VariantChips catalogue={props.catalogue} entry={entry} />
         <TagChips values={entry.tags ?? []} />
         {entry.relatedDocs.length > 0 ? (
           <MetaRow label="Related docs">
-            <PathChips values={entry.relatedDocs} />
+            <RelatedDocChips
+              catalogue={props.catalogue}
+              removed={removed !== undefined}
+              values={entry.relatedDocs}
+            />
           </MetaRow>
         ) : null}
         {entryDependencies(entry).length > 0 ? (
@@ -86,8 +101,15 @@ export function EntryDetailsBody(props: {
   );
 }
 
+/** The source, declared paths, and a document's resources, as projection lists them. */
 function entryDependencies(entry: CatalogueManifestEntry): readonly string[] {
-  return [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort();
+  return [
+    ...new Set([
+      entry.sourcePath,
+      ...entry.declaredDependencies,
+      ...(entry.kind === "document" ? entry.resources : []),
+    ]),
+  ].sort();
 }
 
 /** The collapsed-by-default details panel for the selected route. */

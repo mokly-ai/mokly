@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–5 and the Milestone 4A/5A review fixes are complete. This plan supersedes
+discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 5A, 6–6G, and 7–7D are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -840,41 +840,67 @@ Tags: ui
 
 Bring the shell to the Milestone 2 mockups.
 
-- [ ] Rename the Pages section to Specs across `packages/viewer/src/shell`
+Status: Complete. After merging Milestone 3B, package (six consumer
+scenarios), unit (3,738), browser (751), hydration (226), and the repository
+commands that were run pass. The approved full-gate exception remains
+pre-existing GHSA-vfj7-8cjw-p6xm in development dependencies; no dependency
+change or audit exemption was added. That run omitted the source file-length
+audit, which also fails on files earlier milestones changed; Milestone 6 added
+`tests/nav_tree.test.ts` to that list, and Milestone 6A split it.
+
+- [x] Rename the Pages section to Specs across `packages/viewer/src/shell`
       (`nav.tsx`, `nav_model.ts`, `nav_tree.ts`, `entry_wording.ts`) and
       build the Components section from entries of kind `component` and the
       Specs section from every other kind.
-- [ ] Make folder rows browse-only, add the Overview first-child row with the
+- [x] Make folder rows browse-only, add the Overview first-child row with the
       title fallback, and keep the entry-with-variants row
       (`nav_rows.tsx`, `nav_leaf_rows.tsx`, `css_nav_rows.ts`,
       `css_nav_variants.ts`).
-- [ ] Make a breadcrumb folder segment open the folder page when it exists and
+- [x] Make a breadcrumb folder segment open the folder page when it exists and
       otherwise expand the folder.
-- [ ] Remove obsolete storage-key cleanup while moving to v4; earlier keys
+- [x] Remove obsolete storage-key cleanup while moving to v4; earlier keys
       must remain unread, untranslated and untouched.
-- [ ] Move disclosure keys to `folder:<path>`, `variants:<path>`, and the
-      `specs` and `components` section keys, with reconciliation and Collapse
-      all (`disclosure_keys.ts`, `disclosure_storage.ts`).
-- [ ] Match search against path segments and titles
+- [x] Move disclosure keys to `folder:<section>:<path>`, `variants:<path>`,
+      and the `specs` and `components` section keys, with reconciliation and
+      Collapse all (`disclosure_keys.ts`, `disclosure_storage.ts`).
+- [x] Match search against path segments and titles
       (`nav_filter.tsx`, `search_query.ts`).
-- [ ] Route `/view/<path>` through the store and history
+- [x] Route `/view/<path>` through the store and history
       (`store_browser_routes.ts`, `store_browser_urls.ts`) and keep the
       missing view for unknown paths.
-- [ ] Add the document icon; an Overview row uses its index page's own icon,
+- [x] Add the document icon; an Overview row uses its index page's own icon,
       with no dedicated folder-page icon. Show the component path in component
       details.
-- [ ] Update and add browser tests under `tests/browser` for browsing,
+- [x] Replace the `#`-prefixed ID chip with the path chip, which shows the
+      path as written and announces `Copied path <path>`.
+- [x] Render a breadcrumb folder without its own page as a button that opens
+      its section, ancestors, enclosing entry lists, and the folder, clears
+      only a hiding filter, opens the drawer below the breakpoint, and
+      focuses the folder row; keep hidden folders and removed entries' crumbs
+      as text.
+- [x] Name an entry row's toggle `contents` instead of `variants` when its
+      list also holds folder members, before and after hydration.
+- [x] Retitle the watched folder test at
+      `tests/browser/watch_folders.spec.ts` as a title change and add a case
+      that changes the folder's path and proves the old keys leave saved
+      storage.
+- [x] Rewrite the obsolete-key tests in `nav_sections.test.ts`,
+      `client_disclosures.test.ts`, `client_browse_navigation.test.ts`,
+      `client_browse.test.ts`, and `tests/browser/browse_disclosures.spec.ts`
+      with current folder paths and v3 storage, so they prove earlier keys
+      are never read, translated, or removed.
+- [x] Show the path chip before the change status, as the screen header
+      design does.
+- [x] Start stacked frames at the top of a narrow stage so the first frame
+      and its label stay reachable, a defect found by the parity check
+      (`css_views_responsive.ts`, `tests/browser/stage_stacking.spec.ts`).
+- [x] Update and add browser tests under `tests/browser` for browsing,
       disclosures, variants, and navigation, and the viewer unit tests under
       `packages/viewer/tests`; verify parity with the Milestone 2 screens.
-- [ ] Re-apply the drafted `docs/guides/catalogue/browse.md`,
+- [x] Re-apply the drafted `docs/guides/catalogue/browse.md`,
       `search-and-filters.md`, and `details.md` from commit `d65417d` and
       reconcile them with the implemented shell.
-- [ ] Run `cargo xtask check`, then commit and push.
-
-The following Milestones 6A–6F record completed work on
-`conductor/path-identity-m6-viewer` at `3996b061`. Their implementation is not
-integrated into this feature branch yet. Milestone 6G copies only these plan
-records; the orchestrator will schedule the viewer branch merge separately.
+- [x] Run `cargo xtask check`, then commit and push.
 
 ## Milestone 6A: Index entry mockups
 
@@ -1293,32 +1319,36 @@ changes, then integrate its navigation and Changes presentation when the
 orchestrator confirms the branch is final. Preserve every accepted feature and
 the output/frame race fixes. Keep the scanner fix in its own commit.
 
-Status: In progress. The orchestrator confirmed viewer tip `af4f0f15` as final.
-The scanner prerequisite passes verification under the existing 26-file length
-disposition. Review and integration follow its separate commit and push.
+Status: Complete. The orchestrator confirmed viewer tip `af4f0f15` as final.
+Scanner commit `e5aca6fa` is pushed. The read-only 7A review, integration
+verification and two-parent remerge-diff review are complete. Milestone 6J
+follows the integration push.
 
 - [x] Replace the export import regular expression with a real module lexer;
       add failing regressions for quoted prose, the minified Moved from label,
       and missing relative specifiers containing `+` or `:`. Record the dependency
       and verify the packed consumers, audit and remaining gate before committing
       and fast-forward pushing this fix separately.
-- [ ] Review the Milestone 7A backend commit `3996b061` read-only against the
+- [x] Review the Milestone 7A backend commit `3996b061` read-only against the
       moves, catalogue, export and reference contracts. Record findings and
       recommended fixes without changing that code before the merge.
-- [ ] Wait for the orchestrator's explicit final-branch signal, then fetch and
+- [x] Wait for the orchestrator's explicit final-branch signal, then fetch and
       merge `origin/conductor/path-identity-m6-viewer` into the feature branch.
-- [ ] Resolve conflicts path by path. Preserve every milestone and tick, real
+- [x] Resolve conflicts path by path. Preserve every milestone and tick, real
       Markdown navigation, race fixes, and both branches' data/contract intent.
       Keep the lexer instead of 7A's regex tweak and keep its regression test.
-- [ ] Fix confirmed 7A backend findings after the merge, with failing tests first;
+- [x] Fix confirmed 7A backend findings after the merge, with failing tests first;
       update affected contracts and READMEs and report the review scope.
-- [ ] Run the unmodified gate after integration. Run all remaining suites and
+- [x] Reproduce the design-library temporary-props status failure in isolation.
+      Keep its exact saved-variant status through reset and variant selection,
+      including when the uncommitted integration makes that variant Changed.
+- [x] Run the unmodified gate after integration. Run all remaining suites and
       repository checks if the known source-length violations stop it; add no
       audit exception and rerun known browser failures in isolation.
-- [ ] Inspect deletions and staged changes, then commit the two-parent merge.
+- [x] Inspect deletions and staged changes, then commit the two-parent merge.
       Immediately confirm exactly two parents and inspect every remerge-diff
       path, recording each resolution and authorized deletion here.
-- [ ] Fast-forward push the merge and report its verification and review results.
+- [x] Fast-forward push the merge and report its verification and review results.
 
 Scanner verification: `es-module-lexer` 3.0.2 adds one MIT-licensed package with
 no runtime dependencies and no new audit advisory. Seven focused regressions
@@ -1330,7 +1360,61 @@ or cancellations. All three known browser flakes pass first run. The unmodified
 aggregate gate passes audit, format and lint, then stops only at the exact same
 26-file length list as 6H. Remaining ratchets, Rust fmt/Clippy, 15 Rust tests and
 the 9-file Rust length audit pass. This fix deletes no file and changes no shell
-module. The final viewer merge is authorized but has not yet started.
+module.
+
+7A review and integration record:
+
+- Reviewed `git show 3996b061` and its Serve/update, export, public projection,
+  and validation call chains against the moves, catalogue and export contracts.
+  The only confirmed finding is the known regex scanner: quoted `Draft` becomes
+  an import, while relative specifiers with `+` or `:` disappear. The separately
+  authorized scanner commit fixes it with regressions first. No further backend
+  fix is required. The focused review is saved in `.context/m6i-7a-review.md`.
+- Source tip `e5aca6fa`, viewer tip `af4f0f15`, common ancestor `943fd190`.
+  Saved main and viewer additions audits before merging. Main has no additions
+  after the integrated `800fe9f8` tip.
+- `src/export/references.ts`: keep the module lexer and remove 7A's regex.
+  Keep its exact minified Moved-from-label regression in
+  `tests/export_references.test.ts`.
+- `docs/protocol/mokly-export-browser.md` and `src/export/README.md`: replace
+  the character-list rule with the lexer rule. Keep all other delivery,
+  snapshot-lock and inventory documentation unchanged.
+- `plans/path-identity.md` merges without a conflict. Preserve both parents'
+  completed TODOs, all milestones, and the new 6I/6J work. Viewer navigation,
+  real Markdown Overview rows/icons, documents, move presentation and 7D's
+  moved-component fixes enter together. No shell edit is made during resolution.
+- `plans/README.md`: record completed main/viewer integration and keep the
+  source-length split and final verification pending. The plan remains Active.
+- `tests/browser/design_library_runtime.spec.ts`: the first merged browser run
+  passes 805 of 807 tests. Both desktop and mobile fail the final hard-coded
+  Unmodified assertion; both fail again in isolation. The accepted catalogue
+  correctly marks Search Changed against the pre-merge HEAD. Require a valid
+  saved status, then retain that exact status after both Reset and reselecting
+  Search. All rendered-prop, style and unchanged-file assertions remain. Both
+  isolated cases pass after the fix. This is a fixture expectation fix, not a
+  flaky-test exemption or a product behavior change.
+- The merge deletes no file from the feature parent. Against main, retain the
+  17 authorized deletions listed under 6G. One former rename now appears as a
+  deletion: `examples/basic/entries/design/browse/appearance/states/screens.tsx`
+  moved to `examples/basic/specs/design/browse/appearance/states/screens.tsx`
+  in the approved layout migration; the viewer branch's added light-only
+  document design reduces Git's rename similarity. Its original states remain.
+
+Integration verification: both packages pass all six consumer scenarios and
+Build/Check validate 468 example files. Unit, final browser and hydration suites
+pass 4,149, 807 and 260 tests, respectively, with no skips or cancellations.
+The final browser run passes the corrected design-props cases and all three
+known flaky cases. Audit, formatting, lint, four repository ratchets, Rust
+fmt/Clippy, 15 Rust tests and the 9-file Rust length audit pass. Both unmodified
+aggregate runs stop only at the same 26 overlong files, with no new exemption.
+
+Merge review confirms exactly two parents: `e5aca6fa` and `af4f0f15`.
+Every remerge-diff path was inspected: `mokly-export-browser.md`, the plan index, this plan,
+`src/export/README.md`, `src/export/references.ts`, and the design-library props
+test. The differences match the resolution and test records above; no feature
+loss was found. The deletion audit matches all 18 authorized paths in the
+merge body. The final amendment records this review and the plan index status;
+repeat the parent and six-path remerge checks before the fast-forward push.
 
 The orchestrator reviews this integration; the complete implementation review
 remains the final item in Milestone 8.
@@ -1361,29 +1445,254 @@ after the completed work has been committed and pushed.
 
 Tags: ui
 
-- [ ] Attach a removed variant to its moved parent through the current parent's
-      `previousPath`; the removed record retains its baseline `variantOf`.
+The first part implements what does not depend on move data. The second part
+follows the merge of Milestone 5.
 
-- [ ] Treat removed document rows like removed page rows when filtering All and
+- [x] Treat removed document rows like removed page rows when filtering All and
       Changes; keep the document icon and final navigation behavior with the UI work.
-- [ ] Show the existing Light-only fallback note when a current or removed document
-      has no dark scheme but the reader selects Dark.
+      A removed document is now a flat row that only Changes shows, with the
+      document icon (`nav_model.ts`; `removed_document_rows.test.ts`,
+      `document_changes.spec.ts`).
+- [x] Show the existing Light-only fallback note when a current or removed document
+      has no dark scheme but the reader selects Dark; match the Milestone 6E
+      screen. `scheme_fallback.tsx` decides the fallback. A current document
+      gets a band above its pane, and a removed one a suffix on
+      `Showing previous version`; the stylesheet shows the note only under
+      Dark. A Git fixture with a light-only baseline proves that the retained
+      document keeps its light render under Dark
+      (`document_light_only.test.tsx`, `document_light_only.spec.ts`).
+- [x] Present documents in the page view with the document title, breadcrumbs,
+      the path chip, and Details showing the description, tags, and Markdown
+      source file; link `relatedDocs` matches to their document entries
+      (`details.relatedDocs` now emits validated `mock:<path>` references for
+      discovered current documents). Serve and export read the manifest, which
+      keeps repository paths, so the row also links a path that names a
+      current document's source; a removed entry keeps labels. The served
+      Dependencies row now lists a document's resources, as projection does
+      (`document_details.test.tsx`, `document_pages.spec.ts`,
+      `document_changes.spec.ts`).
+- [x] In Changes, keep an unchanged screen or component index whose only
+      changed rows are folder members as a container row with no change dot,
+      and make activating that row open its first visible changed member, as
+      an unchanged variant parent opens its first changed variant
+      (`changes_activation.ts`); match the Milestone 6A screens. The
+      activation walks the section's own rows in list order
+      (`index_container_activation.test.ts`, `document_changes.spec.ts`). The
+      rows, dots, selection, crumbs, statuses, and comparison band match. The
+      redirect lands on the member's first changed view, as `mokly-changes.md`
+      requires, but `member-changes` shows Both; the difference is reported
+      for a decision.
+- [x] Add browser tests for document pages in Light and Dark at both widths,
+      the index-entry container rule, and the removed-document filters; verify
+      parity with `design/browse/pages/document`,
+      `design/browse/views/folder-overview`, and the four
+      `design/browse/index-entries/*` screens. The screenshots are under
+      `.context/m7/`. Besides the known `Catalogue home` crumb and Details bar
+      (Milestone 6C), the runtime also shows status chips and changed dots in
+      All, which the designs show only under Changes; `origin/main` already
+      behaves this way.
+- [x] Re-apply the drafted `docs/guides/catalogue/export-and-host.md` from
+      commit `d65417d` and reconcile it with the implemented export. The
+      draft matches the export layout and the URL forms unchanged; a new
+      `static_example.spec.ts` test opens an exported document from each URL
+      form.
+- [x] Run the full gate for the first part, then commit and push. The gate
+      passed on the final code: format, lint, file length (only the 28 known
+      files), ratchets, Rust fmt, Clippy, tests, and file length, and the
+      package, unit (3,853 tests), browser (771), and hydration (238) suites.
+      The dependency audit fails only on the known GHSA-vfj7-8cjw-p6xm. The
+      first unit run failed one CSS assertion in `tests/shell.test.ts`; the
+      document note now has its own rule, and a viewer test guards it.
 
-- [ ] Label paired entries "Moved" in Changes rows and details, show the
+Second part, after Milestone 5 merges:
+
+- [x] Merge `origin/calummoore/file-paths-vs-navpath` at `52753e26`
+      (Milestone 5) into this branch at `99032ff2`; the merge base is
+      `1b0eb703`. Milestone 5 adds 38 files and changes 95, and deletes none;
+      the merge deletes none. Merge decisions:
+  - `docs/protocol/mokly-removed-previews.md`: state that document previews,
+    their `Light only` note, and suppression for paired moves are
+    implemented.
+  - `docs/protocol/mokly-shell-design.md`: keep this branch's implemented
+    Specs rows, breadcrumbs, path chip, and Markdown document pages, and
+    Milestone 5's single entry for a paired move; the `Moved` label remains.
+  - `plans/path-identity.md`: list both sides' complete milestones in the
+    header, keep Milestone 5's ticked section unchanged, keep this branch's
+    two-part Milestone 7, and move Milestone 5's new removed-variant TODO
+    into the second part, because it depends on move data.
+- [x] Merge `origin/calummoore/file-paths-vs-navpath` at `f817a1c4`
+      (Milestone 4A) into this branch at `74b15a13`; the merge base is
+      `52753e26`. Milestone 4A adds 10 files and changes 18, and deletes none;
+      the merge deletes none. Merge decisions:
+  - `plans/path-identity.md`: list both sides' complete milestones in the
+    header.
+  - `src/documents/README.md`: take Milestone 4A's hardened rendering
+    description and keep this branch's typography sentence.
+- [x] Move the remaining TODOs to Milestones 7A and 7B. Serve and export did
+      not give the shell catalogue the accepted pairs, and export's script
+      reference check read a minified `Moved from` label as an import, so that
+      backend work comes first.
+
+## Milestone 7A: Move data in the shell catalogue
+
+The shell needs each paired entry's previous path in Serve, export, and the
+public viewer, and export must accept a `Moved from` label in its scripts.
+
+- [x] Give `createCatalogue` the accepted move pairs and keep each paired
+      current entry's branch-point path in `previousPaths`. Serve's change
+      snapshots and updates, and export, pass the pairs; the public viewer
+      reads `previousPath` from the read model
+      (`packages/viewer/tests/moved_catalogue.test.ts`).
+- [x] Accept only module-specifier characters after `from` or `import` when
+      export checks `__mokly/` scripts, so text that ends in either word is
+      never read as an import (`tests/export_references.test.ts`); record the
+      rule in the export browser contract.
+- [x] Run the full gate, then commit and push. The gate passed: format,
+      lint, file length (only the 28 known files), ratchets, Rust fmt,
+      Clippy, tests, and file length, and the package, unit (3,977 tests),
+      browser (773), and hydration (238) suites. The dependency audit fails
+      only on the known GHSA-vfj7-8cjw-p6xm.
+
+## Milestone 7B: Moved presentation
+
+Tags: ui
+
+Present paired entries as the Milestone 2 mockups and the shell contract
+define.
+
+- [x] Attach a removed variant to its moved parent through the current parent's
+      `previousPath`; the removed record retains its baseline `variantOf`.
+      `catalogueMovedPath` maps the baseline path back, so the row joins the
+      moved parent, and its crumb and `Variant of` chip link there.
+- [x] Label paired entries "Moved" in Changes rows and details, show the
       previous path in details, and drive the baseline side of comparisons
       from `previousPath` (`nav_changed.ts`, `details_rows.tsx`,
       `view_status.ts`, `comparison_request.ts`,
-      `packages/viewer/src/catalogue/snapshot_identity.ts`).
-- [ ] Present documents in the page view with the document title, breadcrumbs,
-      and the source path in details; link `relatedDocs` matches to their
-      document entries (`details.relatedDocs` now emits validated `mock:<path>`
-      references for discovered current documents).
-- [ ] Add browser tests for moved rows, moved comparisons, and document pages;
-      verify parity with the Milestone 2 screens.
-- [ ] Re-apply the drafted `docs/guides/catalogue/changes.md` and
-      `export-and-host.md` from commit `d65417d` and reconcile them with the
-      implemented Changes view.
-- [ ] Run `cargo xtask check`, then commit and push.
+      `packages/viewer/src/catalogue/snapshot_identity.ts`). Milestone 5
+      already takes the comparison's before side and per-view evidence from
+      the paired baseline entry, and a paired entry has no removed record, so
+      those five files need no change. `nav_moves.ts` puts the previous path on
+      each row; under Changes a moved row reads `<label> · Moved` without the
+      changed mark. Details add `Moved from` after Source, and the comparison
+      details name the previous path. The server render now finds a moved
+      entry's baseline through that path and counts material changes only,
+      so a pure move stays Unmodified before and after hydration, and a moved
+      component keeps its baseline and removed variants
+      (`moved_rows.test.tsx`, `client_moved_evidence.test.ts`).
+- [x] Add browser tests for moved rows and moved comparisons; verify parity
+      with the Milestone 2 screens. `moved_changes.spec.ts` covers the rows at
+      both widths, Details, a pure move, and the removed variant;
+      `moved_comparisons.spec.ts` covers every comparison mode; and
+      `moved_export.spec.ts` covers the static export. The fixture pairs
+      through `movedFrom` and identical content only. Parity with
+      `design/changes/outcomes/moved` holds at both widths for the rows,
+      crumbs, path chip, comparison band, frame label, `Moved from` row, and
+      the sentence that names the previous path (`.context/m7b/`).
+- [x] Re-apply the drafted `docs/guides/catalogue/changes.md` from commit
+      `d65417d` and reconcile it with the implemented Changes view. The draft
+      matches the implemented behavior; a sentence adds the variant deleted
+      during a move. Every delivery status that still called documents, the
+      runtime Specs section, or moves planned now states them as implemented.
+- [x] Run `cargo xtask check`, then commit and push. The gate
+      passed: format, lint, file length (only the 28 known files), ratchets,
+      Rust fmt, Clippy, tests, and file length, and the package, unit (3,982
+      tests), browser (780), and hydration (238) suites. The dependency audit
+      fails only on the known GHSA-vfj7-8cjw-p6xm.
+
+## Milestone 7C: Moved comparison wording mockup
+
+Tags: mockup
+
+The runtime's comparison details name a moved entry's previous path in words
+that fit every entry. The `design/changes/outcomes/moved` mockup said "the
+invoice at" instead, so the mockup takes the runtime wording.
+
+- [x] Change the moved screen's comparison details to "The previous version is
+      at `billing/invoice`, where it was before the move." and pin the
+      wording at both artboards (`tests/design_moved_evidence.test.ts`). No
+      contract text pins the old wording.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      and the design tests. The design unit tests (169) and design browser
+      tests (92) pass.
+- [x] Commit and push (`a34a883e`).
+
+## Milestone 7D: Moved presentation review fixes
+
+Tags: ui
+
+An independent review of Milestone 7 (`9d827811`) found gaps on moved
+component paths, which the browser tests never moved, and a changed mark that
+All shows for a pure move. Each fix starts with a failing test.
+
+Before the fixes, this branch merged `origin/calummoore/file-paths-vs-navpath`
+at `943fd190` (Milestones 5A and 6G) into `a34a883e`; the merge base is
+`f817a1c4`. The feature branch adds 47 files and changes 98, and deletes none;
+the merge deletes none of its files. Merge decisions:
+
+- `plans/path-identity.md`: list both sides' complete milestones in the
+  header. The feature branch carried copies of Milestones 6A–6F and a note
+  that their implementation was not integrated there; this branch owns that
+  implementation, so the merged plan keeps one copy and drops the note.
+- `plans/README.md`: combine both sides' status for this plan, and take
+  main's move of Imported CSS Delivery to Completed.
+- `docs/guides/catalogue/changes.md`: match the pairing paragraph to the
+  merged move contract from Milestone 5A.
+
+The merge (`91900381`) has exactly two parents, and its remerge diff changes
+only these three paths. It passes the unmodified `cargo xtask check` except
+the source file-length audit, which lists the 26 known files. The package,
+unit (4122), browser (781), and hydration (238) suites pass.
+
+- [x] A moved component variant with only a metadata edit reads Changed:
+      decide pure moves from the material change set, not the visual review
+      state. `workspace_variants.ts` drops the visual-state shortcut and reads
+      `materialChangedEntries`, so a pure move stays Unmodified. The public
+      workspace reads a variant's `changes.kind` when its compared views show
+      no change.
+- [x] A variant deleted during a component move opens with its parent's
+      workspace: resolve the parent through the move map, and match removed
+      variants through the parent's `previousPath` in Serve, export, and the
+      embedded viewer, from the first paint. `workspaceComponent` resolves
+      the parent through `catalogueVariantParent`, and
+      `catalogueComponentParent` and `catalogueComponentVariants` reach a
+      moved parent through its previous path, so the public workspace and
+      the scoped usage list the removed variant too. A held route-evidence
+      fetch proves the first paint after a client navigation.
+- [x] Moved component variants keep their nested-input details: map each
+      current view's `variantPath` and nested `componentId` through the move
+      map before pairing views (`workspace_input_changes.ts`). The embedded
+      viewer shows no input changes, moved or not, because the read model
+      carries no baseline usage, so that case runs in Serve and export.
+- [x] In All, a pure move carries no changed mark: mark a moved row only when
+      the entry is in the material change set, and keep the Changes
+      presentation. `navRowPresentation` reads the context: under All, a
+      moved row, and a moved variant's share of its parent's aggregate mark,
+      need the entry in `materialChangedEntries`. The public projection sets
+      `materialEntries` from each entry's `changes.kind`; server pages read
+      `componentChanges.changedEntries`.
+- [x] Cover the fixes: a moved component in the browser fixture, with a
+      deleted variant, a metadata-only variant edit, and a nested-input
+      change; real reasons in the evidence unit test; and the moved specs
+      through an embedded viewer host as well as Serve and export.
+      `moved_changes_sources.ts` adds a `components` library that becomes
+      `ui`: Action loses Secondary, Ghost changes only its description, and
+      Iconic's ring holds a glyph whose name changes, while Icon moves
+      unchanged. Both parent kinds now keep a removed variant at their new
+      place. `client_moved_evidence.test.ts` reads real review reasons
+      (`moved_component_evidence.ts`), and `moved_public_workspace.test.ts`
+      covers the public path. The row, component, and comparison cases run
+      in Serve (`moved_changes.spec.ts`), export (`moved_export.spec.ts`),
+      and the embedded viewer (`moved_viewer.spec.ts`), and
+      `moved_hydration.spec.ts` hydrates every moved route cleanly in Serve
+      and export. Before the fixes, 8 new unit tests and 13 browser cases
+      failed, each for its own item; parity with `design/changes/outcomes/moved`
+      holds at both widths for the Changes rows and Details (`.context/m7d/`).
+- [x] Run the full gate, then commit and push. The unmodified
+      `cargo xtask check` stops only at the source file-length audit, which
+      lists the same 26 known files. The dependency audit, format, lint,
+      ratchets, `cargo fmt`, clippy, `cargo test`, and the Rust file-length
+      lint pass, and the package, unit (4129), browser (807), and hydration
+      (260) suites pass.
 
 ## Milestone 8: Guides, verification, close-out, and review
 

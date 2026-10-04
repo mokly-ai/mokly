@@ -8,9 +8,9 @@ screen/flow link and breadcrumb rules. The hydrated shell and
 [frame adapters](./mokly-frame-adapter.md) apply every marker, sandbox, target,
 and outer-navigation rule in Serve, export, and embedded hosts, and controlled
 and uncontrolled unknown-destination handling is implemented. Path-addressed
-links and `/view/<path>/` URLs are implemented. The current shell keeps its Pages
-label and existing presentation; the final folder-row and breadcrumb interactions
-remain planned in the [path identity plan](../../plans/path-identity.md).
+links and `/view/<path>/` URLs are implemented, as are the Specs and Components
+sections, browse-only folder rows, `Overview` rows, and the breadcrumb folder
+links and reveals of the [folder contract](./mokly-folders.md#rows-and-clicks).
 
 ## Scope
 
@@ -30,6 +30,8 @@ or `Overview`, or, for a screen or component index, the folder renders as that
 entry's row; and a breadcrumb folder segment opens the folder page when one
 exists and otherwise expands the folder. A folder exists only while an entry
 lies below it, so the example's former `design-browse-tags` row is absent.
+Search also matches [folder titles](./mokly-folders.md#titles): a folder whose
+title matches shows every row below it.
 
 ## Component Navigation
 
@@ -337,25 +339,8 @@ Enhanced navigation preserves the selected viewport, color scheme, and details
 disclosure. It collapses an expanded frame before installing the destination.
 Filters and search remain unchanged when the destination is already visible.
 
-Shell destinations may explicitly request `viewport=mobile|desktop|both` and
-`scheme=light|dark`. The parser treats the axes independently and recognizes an
-axis only when exactly one supported value is present. A valid value applies in
-the same atomic route or controlled-selection update while an omitted, invalid,
-or repeated axis retains its sticky selection. This also applies when only an
-axis changes on the current destination. In Changes, at least one valid
-explicit axis suppresses first-changed-view landing; invalid or repeated values
-do not. Embedded and standalone shells use this one parser, so controlled hosts
-receive the complete proposal and commit nothing until they supply it back.
-
-A removed-entry destination also carries its public `snapshot` identity. Route
-parsing accepts exactly one lowercase 64-hex value and requires it to match that
-removed entry's path. The query survives same-entry axis and filter changes,
-Back/Forward and hydration. Unknown, stale, repeated, or mismatched snapshots
-are unavailable through the Viewer error state rather than retargeted.
-Snapshot queries are supported only on the removed entry's canonical
-`/view/<path>/` URL or the other accepted forms of the
-[path contract](./mokly-paths.md#urls). Without the query, a path-only removed
-selection normalizes to its published identity when present.
+Destination queries for the view axes and removed-entry snapshots follow the
+[shell destination contract](./mokly-shell-destinations.md).
 
 ## Verification Contract
 
@@ -391,6 +376,7 @@ Coverage must prove:
 - [Package and authoring contract](./mokly-package.md)
 - [Paths, roots, and identity](./mokly-paths.md)
 - [Folders](./mokly-folders.md)
+- [Shell destination queries](./mokly-shell-destinations.md)
 - [Logical link transformer validation](./mokly-link-transform-validation.md)
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Shell design contract](./mokly-shell-design.md)

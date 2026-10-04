@@ -181,6 +181,9 @@ export function projectCatalogue(
     changesStatus: input.changesStatus,
     comparisonUrl,
     tree: projectTree(catalogue.hierarchy),
+    ...(catalogue.hierarchy.order
+      ? { treeOrder: [...catalogue.hierarchy.order] }
+      : {}),
     screens: entries.filter((entry) => entry.kind === "screen"),
     documents: entries.filter((entry) => entry.kind === "document"),
     pages: entries.filter((entry) => entry.kind === "page"),

@@ -43,9 +43,9 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 105 design screens now use 16 registered shared components, including
+Mokly's 110 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
-Inspector and Preview galleries with 67 component variants, real mobile/desktop
+Inspector and Preview galleries with 69 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./specs/design/library/README.md),
@@ -60,24 +60,28 @@ slugs supply complete paths; `_folder.json` records supply readable folder title
 Helpers remain ordinary TypeScript modules. The exporting entry module determines
 identity while the defining helper remains the source attribution.
 
-The design screens depict the planned final navigation and move presentation.
-The outer runtime keeps its Pages label; move detection remains planned.
+The design screens depict the final navigation and move presentation. The
+outer runtime renders the same Specs tree, and Changes labels a moved entry
+`Moved`.
 `specs/example/README.md` is the Example folder page. Its workspace guide links
 to that README, headings and screens and copies `workspace.svg` as a resource.
 Both documents follow the selected Light or Dark appearance. The shared library
 README is also a discovered document. Their source files remain private.
-Their shell shows the Specs and Components sections of one tree, browse-only
-folder rows, the Example folder's README as its first `Overview` row, path
-chips such as `example/screens/welcome`, and an Account › Billing & Payments
-area. `design/browse/views/folder-overview` opens that README,
+The design screens' shell shows the Specs and Components sections of one
+tree, browse-only folder rows, the Example folder's README as its first
+`Overview` row, path chips such as `example/screens/welcome`, and an Account
+area holding Billing & Payments and the Profile screen, its folder's own page.
+`design/browse/views/folder-overview` opens that README,
 `design/browse/pages/document` shows the Payment terms Markdown document in the
 shell's own typography, and `design/changes/outcomes/moved` shows `billing` moved under
 `account`: one Changes row per entry labelled `Moved`, the previous path in
-Details, and the Overlay comparison. The
-[depicted catalogue](../../docs/protocol/mokly-shell-design-inventory.md#depicted-catalogue)
+Details, and the Overlay comparison. The `design/browse/index-entries/**`
+states list Profile's variant and members under its row, keep the unmodified
+row as an undotted Changes container, and open its first changed member. The
+[depicted catalogue](../../docs/protocol/mokly-shell-design-catalogue.md)
 lists its folders, paths, and transitions.
 
-The tree is shared by the Pages and Components sections, each pruned by kind.
+The tree is shared by the Specs and Components sections, each pruned by kind.
 Folder labels may change without changing entry identity. Shell URLs are
 `/view/<path>/`; generated documents use `<path>/index.html` and viewport
 files use `<path>/index.<viewport>[.dark].html`.
@@ -148,10 +152,11 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its sixty-six Browse, page, publication, appearance and Changes
+Browse and Changes views. Its seventy-one Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 scrolling, stylesheet evidence, the preparing and unavailable comparison states,
-and the previous-version states of removed documents and screens. Thirty-nine
+and the previous-version states of removed documents and screens, including a
+light-only document under Dark. Thirty-nine
 component explorer screens add component pages, saved variants, stacked
 comparisons, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
@@ -211,9 +216,9 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Eighty-one design screens use `colorSchemes: ["light"]` and draw only the light
-Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
-settings: thirteen Appearance screens, seven Changes designs, two product
+Eighty-five design screens use `colorSchemes: ["light"]` and draw only the light
+Mokly shell. Twenty-five screens instead inherit the catalogue's light/dark
+settings: fourteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
 Light and a Dark file for each viewport, and the outer Appearance control moves
 between them.
@@ -232,7 +237,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 105 design screens and standalone
+The shared inspector/workspace sheets cover all 110 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 39
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback

@@ -29,6 +29,11 @@ export interface Catalogue {
   removedEntries: readonly RemovedEntrySnapshot[];
   /** Removed component parents retained as schemas for historical variants. */
   removedComponents: readonly CatalogueManifestEntry[];
+  /**
+   * The branch-point path of each current entry the move contract paired with
+   * a baseline entry, keyed by the current path. Empty until Changes is ready.
+   */
+  previousPaths: ReadonlyMap<string, string>;
 }
 
 /** Current and historical-v7 entries share identity and display metadata. */
@@ -88,8 +93,23 @@ export function catalogueVariantParentEntry(
     catalogue.removedEntries.find(
       ({ entry: historical }) => historical.path === entry.variantOf,
     )?.entry ??
-    catalogue.byPath.get(entry.variantOf)
+    catalogue.byPath.get(
+      catalogueMovedPath(catalogue, entry.variantOf) ?? entry.variantOf,
+    )
   );
+}
+
+/**
+ * The current path of the entry a move paired with a branch-point path, so a
+ * baseline reference to the old path reaches the entry at its new place.
+ */
+export function catalogueMovedPath(
+  catalogue: Catalogue,
+  previousPath: string,
+): string | undefined {
+  for (const [path, previous] of catalogue.previousPaths)
+    if (previous === previousPath) return path;
+  return undefined;
 }
 
 /** The union of the tags declared across every entry that can carry them. */
@@ -101,10 +121,14 @@ function collectTags(entries: readonly ManifestEntry[]): readonly string[] {
   return [...new Set(declared)].sort();
 }
 
-/** Build a deterministic id index from a validated manifest. */
+/**
+ * Build a deterministic id index from a validated manifest, its retained
+ * removed entries, and the current entries the move contract paired.
+ */
 export function createCatalogue(
   manifest: CatalogueMetadata,
   removedEntries: readonly RemovedEntrySnapshot[] = [],
+  moves: readonly { path: string; previousPath: string }[] = [],
 ): Catalogue {
   const removedScreens = removedEntries.flatMap(({ entry }) =>
     entry.kind === "screen" ? [entry] : [],
@@ -133,6 +157,12 @@ export function createCatalogue(
     manifest.folders,
   ).hierarchy;
   const tags = collectTags(manifest.entries);
+  const current = new Set(manifest.entries.map((entry) => entry.path));
+  const previousPaths = new Map(
+    moves.flatMap(({ path, previousPath }) =>
+      current.has(path) ? [[path, previousPath] as const] : [],
+    ),
+  );
   return {
     byPath,
     hasDarkFragments,
@@ -142,5 +172,6 @@ export function createCatalogue(
     removedScreens,
     removedComponents,
     removedEntries,
+    previousPaths,
   };
 }

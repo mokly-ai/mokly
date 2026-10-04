@@ -21,8 +21,8 @@ switch of the
 [Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
 The path-derived files, the Specs section, and the component paths in Details
 below are the approved contract. These designs depict the kind-filtered
-sections and component paths, and the catalogue uses paths. The runtime Specs
-section awaits the [path identity plan](../../plans/path-identity.md).
+sections and component paths, and the catalogue uses paths. The runtime renders
+the same Specs section.
 The Loading and recovery child gallery depicts entry-scoped Usage loading,
 inspection waiting, and retryable delivery failure.
 

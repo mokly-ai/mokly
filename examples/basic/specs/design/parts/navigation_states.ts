@@ -81,6 +81,10 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.variantRemoved]: { all: D.welcome },
   [D.variantReparented]: { all: D.home },
   [D.changedViews]: { all: D.welcome },
+  [D.indexEntry]: { changes: D.indexEntryChanges },
+  [D.indexMember]: { changes: D.indexMemberChanges },
+  [D.indexEntryChanges]: { all: D.indexEntry },
+  [D.indexMemberChanges]: { all: D.indexMember },
   [D.tour]: {},
   [D.welcome]: { ...welcomeBrowse },
   [D.welcomeAppearanceVariant]: { ...welcomeBrowse },
@@ -93,6 +97,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   },
   [D.appearanceLightOnly]: { ...appearanceFilters },
   [D.appearanceAuto]: { ...appearanceFilters },
+  [D.appearanceLightOnlyDocument]: { all: D.appearance },
   [D.appearanceProps]: { ...appearanceFilters },
   [D.appearanceInstance]: { ...appearanceFilters },
   [D.appearanceDrawer]: {

@@ -72,7 +72,7 @@ test("early native disclosures survive delayed hydration and recovery", async ({
         version: 1,
         browse: {
           changedOnly: false,
-          disclosures: { "folder:pages:fixture/archive": false },
+          disclosures: { "folder:specs:fixture/archive": false },
           colorScheme: "light",
           detailsOpen: false,
           drawerOpen: false,
@@ -104,8 +104,8 @@ test("early native disclosures survive delayed hydration and recovery", async ({
     await expect
       .poll(() => readDisclosureStorage(page))
       .toMatchObject({
-        "folder:pages:fixture/screens": false,
-        "folder:pages:fixture/archive": true,
+        "folder:specs:fixture/screens": false,
+        "folder:specs:fixture/archive": true,
       });
     await archive.locator("summary").click();
     await expect(archive).not.toHaveAttribute("open", "");

@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Implemented in the 66 Browse/Changes design screens and two example screens with
-`MockLink`/`MockLink asChild`. Those 66 Browse/Changes designs retain canonical
+Implemented in the 71 Browse/Changes design screens and two example screens with
+`MockLink`/`MockLink asChild`. Those 71 Browse/Changes designs retain canonical
 links; [components](./mokly-component-design.md) and
 [removed previews](./mokly-removed-previews.md) extend the contract. Links use complete paths under the [path contract](./mokly-paths.md).
 
@@ -67,8 +67,8 @@ preference, rather than per-screen dark renders, keeps a whole session dark.
 
 Existing destinations and their stable names are listed in the
 [canonical design inventory](./mokly-shell-design-inventory.md) with the
-[depicted catalogue's](./mokly-shell-design-inventory.md#depicted-catalogue)
-folder-page, document, and Moved transitions. They keep those names; file names
+[depicted catalogue's](./mokly-shell-design-catalogue.md#transitions) folder-page,
+document, Moved, and index entry transitions. They keep those names; file names
 derive from paths ([artifact paths](./mokly-artifact-paths.md)).
 
 The five additions below render in both viewport variants and belong to the

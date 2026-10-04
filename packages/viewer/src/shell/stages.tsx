@@ -17,6 +17,7 @@ import type { Catalogue } from "./catalogue.js";
 import { ComponentStage } from "./component_stage.js";
 import { FramesStage, UseCaseFlowStage } from "./manifest_stages.js";
 import { PublicStage } from "./public_stage.js";
+import { documentLightOnly, LightOnlyBand } from "./scheme_fallback.js";
 import type { RouteTarget } from "./target.js";
 
 function fragmentSrc(route: string, fragment?: string): string {
@@ -92,28 +93,33 @@ export function TargetStage(props: {
   }
   if (entry.kind === "page" || entry.kind === "document")
     return (
-      <EmbedStage
-        route={
-          entry.kind === "page"
-            ? entryRoute(entry.path)
-            : documentRoute(
-                entry.path,
-                entry.colorSchemes.includes(selection.colorScheme)
-                  ? selection.colorScheme
-                  : "light",
-              )
-        }
-        title={entry.title}
-        {...(entry.kind === "document"
-          ? {
-              lightRoute: documentRoute(entry.path, "light"),
-              ...(entry.colorSchemes.includes("dark")
-                ? { darkRoute: documentRoute(entry.path, "dark") }
-                : {}),
-            }
-          : {})}
-        {...(props.fragment ? { fragment: props.fragment } : {})}
-      />
+      <>
+        {documentLightOnly(entry, props.catalogue.hasDarkFragments) ? (
+          <LightOnlyBand />
+        ) : null}
+        <EmbedStage
+          route={
+            entry.kind === "page"
+              ? entryRoute(entry.path)
+              : documentRoute(
+                  entry.path,
+                  entry.colorSchemes.includes(selection.colorScheme)
+                    ? selection.colorScheme
+                    : "light",
+                )
+          }
+          title={entry.title}
+          {...(entry.kind === "document"
+            ? {
+                lightRoute: documentRoute(entry.path, "light"),
+                ...(entry.colorSchemes.includes("dark")
+                  ? { darkRoute: documentRoute(entry.path, "dark") }
+                  : {}),
+              }
+            : {})}
+          {...(props.fragment ? { fragment: props.fragment } : {})}
+        />
+      </>
     );
   if (entry.kind === "component") {
     const parent = isManifestComponentVariant(entry)

@@ -107,31 +107,31 @@ test("durable links load complete server-rendered views", async ({ page }) => {
   );
 });
 
-test("catalogue separates pages and components into collapsible sections", async ({
+test("catalogue separates specs and components into collapsible sections", async ({
   page,
 }) => {
   await page.goto("/");
-  const pages = page.locator('[data-nav-section="pages"]');
+  const specs = page.locator('[data-nav-section="specs"]');
   const components = page.locator('[data-nav-section="components"]');
-  await expect(pages.locator(":scope > summary")).toHaveText("Pages");
+  await expect(specs.locator(":scope > summary")).toHaveText("Specs");
   await expect(components.locator(":scope > summary")).toHaveText("Components");
-  await expect(pages).toHaveAttribute("open", "");
+  await expect(specs).toHaveAttribute("open", "");
   await expect(components).toHaveAttribute("open", "");
-  await expect(pages.locator('[data-entry-kind="component"]')).toHaveCount(0);
+  await expect(specs.locator('[data-entry-kind="component"]')).toHaveCount(0);
   await expect(
     components.locator(':not([data-entry-kind="component"])[data-nav-row]'),
   ).toHaveCount(0);
-  expect(await pages.locator("[data-nav-row]").count()).toBeGreaterThan(0);
+  expect(await specs.locator("[data-nav-row]").count()).toBeGreaterThan(0);
   expect(await components.locator("[data-nav-row]").count()).toBeGreaterThan(0);
 
   await components.locator(":scope > summary").click();
   await expect(components).not.toHaveAttribute("open", "");
   await page.reload();
-  await expect(pages).toHaveAttribute("open", "");
+  await expect(specs).toHaveAttribute("open", "");
   await expect(components).not.toHaveAttribute("open", "");
 
   await page.getByRole("button", { name: "Collapse all" }).click();
-  await expect(pages).not.toHaveAttribute("open", "");
+  await expect(specs).not.toHaveAttribute("open", "");
   await expect(components).not.toHaveAttribute("open", "");
 });
 
@@ -169,7 +169,7 @@ test("breadcrumbs track hierarchy through progressive history", async ({
   await page.goto("/view/example/screens/welcome/");
   const crumbs = page.getByLabel("Catalogue location");
   await expect(crumbs).toHaveText("Example›Screens");
-  await expect(crumbs.locator("a")).toHaveCount(0);
+  await expect(crumbs.locator("a")).toHaveAttribute("href", "/view/example/");
 
   await page.click(tourRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Example tour");
@@ -622,13 +622,13 @@ test("the catalogue home carries Appearance when narrow", async ({ page }) => {
   await expect(page.locator("[data-mokly-schemeswitch]")).toHaveCount(0);
 });
 
-test("ID chips copy their ID without navigating", async ({ page }) => {
+test("path chips copy their path without navigating", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
         writeText(text: string) {
-          (window as Window & { __copiedId?: string }).__copiedId = text;
+          (window as Window & { __copiedPath?: string }).__copiedPath = text;
           return Promise.resolve();
         },
       },
@@ -636,15 +636,15 @@ test("ID chips copy their ID without navigating", async ({ page }) => {
   });
   await page.goto("/view/example/screens/welcome/");
   const url = page.url();
-  const idChip = page.locator("[data-copy-id]");
+  const pathChip = page.locator("[data-copy-path]");
 
-  await expect(idChip).toHaveText("#example/screens/welcome");
-  await idChip.hover();
+  await expect(pathChip).toHaveText("example/screens/welcome");
+  await pathChip.hover();
   expect(
-    await idChip.evaluate((element) => getComputedStyle(element).cursor),
+    await pathChip.evaluate((element) => getComputedStyle(element).cursor),
   ).toBe("pointer");
   await page.mouse.down();
-  const pressed = await idChip.evaluate((element) => {
+  const pressed = await pathChip.evaluate((element) => {
     const style = getComputedStyle(element);
     return { boxShadow: style.boxShadow, transform: style.transform };
   });
@@ -655,13 +655,13 @@ test("ID chips copy their ID without navigating", async ({ page }) => {
   await expect
     .poll(() =>
       page.evaluate(
-        () => (window as Window & { __copiedId?: string }).__copiedId,
+        () => (window as Window & { __copiedPath?: string }).__copiedPath,
       ),
     )
     .toBe("example/screens/welcome");
   await expect(page).toHaveURL(url);
   await expect(page.locator("#mb-status")).toHaveText(
-    "Copied ID example/screens/welcome",
+    "Copied path example/screens/welcome",
   );
 });
 

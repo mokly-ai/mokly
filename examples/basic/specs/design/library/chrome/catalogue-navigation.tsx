@@ -1,7 +1,12 @@
 import { defineComponent, type ComponentProps } from "@mokly/mokly";
 
+import { PROFILE_CHANGES_ROWS } from "../../parts/account_nav_data.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
-import { NAV_TREE, NAV_TREE_VARIANTS_OPEN } from "../../parts/nav_data.js";
+import {
+  NAV_TREE,
+  NAV_TREE_PROFILE_OPEN,
+  NAV_TREE_VARIANTS_OPEN,
+} from "../../parts/nav_data.js";
 import { CHANGED_VARIANT_ROWS } from "../../parts/variant_nav_data.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, flag, optionalText, text } from "../schemas.js";
@@ -45,6 +50,7 @@ const propSchema = {
               schema: { kind: "enum", values: ["open", "closed"] },
               optional: true,
             },
+            contents: { ...flag, optional: true },
             variantParentKind: {
               schema: { kind: "enum", values: ["screen", "component"] },
               optional: true,
@@ -173,6 +179,32 @@ export const catalogueNavigation = defineComponent({
         changesDestination: DESTINATIONS.variantChanges,
         presentation: "responsive",
         rows: CHANGED_VARIANT_ROWS,
+      },
+    },
+    {
+      slug: "folder-screen",
+      title: "Folder screen",
+      props: {
+        activeDestination: DESTINATIONS.indexEntry,
+        allDestination: DESTINATIONS.indexEntry,
+        changedCount: 1,
+        changedOnly: false,
+        changesDestination: DESTINATIONS.indexEntryChanges,
+        presentation: "responsive",
+        rows: NAV_TREE_PROFILE_OPEN,
+      },
+    },
+    {
+      slug: "changed-member",
+      title: "Changed folder member",
+      props: {
+        activeKey: "profile-security",
+        allDestination: DESTINATIONS.indexMember,
+        changedCount: 1,
+        changedOnly: true,
+        changesDestination: DESTINATIONS.indexMemberChanges,
+        presentation: "responsive",
+        rows: PROFILE_CHANGES_ROWS,
       },
     },
   ],

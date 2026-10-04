@@ -13,7 +13,9 @@ The file is the definition. Consumers need no React component or authoring helpe
 as well as HTML tokens. It decodes CommonMark references once, skips empty title
 headings, omits empty ids, retains code languages and delegates destinations.
 Parsing and rendering never read files. `template.ts` owns the script-free
-light/dark document. After compatibility transforms, `safety.ts` parses the final
+light/dark document; its stylesheet follows the `design/browse/pages/document`
+design, which `tests/browser/document_typography.spec.ts` compares property by
+property. After compatibility transforms, `safety.ts` parses the final
 HTML and enforces the element, attribute and URL allowlist independently. Serve's
 owned inspector still needs scripts, so the template adds no blanket CSP meta.
 

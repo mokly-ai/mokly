@@ -9,12 +9,19 @@ import { DocumentPane, Stage } from "./stage.js";
  * so a written spec reads in the shell's own typography and palette inside the
  * same bordered pane as a page, with no device or comparison controls. The
  * body element keeps the reading measure, so no style needs a universal
- * selector that would tie every view linking the sheet to its edits.
+ * selector that would tie every view linking the sheet to its edits. A
+ * document without a dark render keeps its light pane under Dark.
  */
-export function MarkdownStage({ children }: { children: ReactNode }) {
+export function MarkdownStage({
+  children,
+  lightOnly,
+}: {
+  children: ReactNode;
+  lightOnly?: boolean | undefined;
+}) {
   return (
     <Stage>
-      <DocumentPane>
+      <DocumentPane lightOnly={lightOnly}>
         <div className="mbk-markdown">
           <article className="mbk-markdown-body">{children}</article>
         </div>

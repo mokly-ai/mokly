@@ -17,6 +17,8 @@ export const ENTRY_PATHS = {
   invoice: "account/billing/invoice",
   invoiceOverdue: "account/billing/invoice/overdue",
   paymentTerms: "account/billing/payment-terms",
+  profile: "account/profile",
+  profileSecurity: "account/profile/security",
 } as const;
 
 /** The paths the moved billing entries had at the branch point. */

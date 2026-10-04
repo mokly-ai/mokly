@@ -7,6 +7,7 @@ import {
   parseSearchQuery,
   queryConstrains,
   rowMatchesQuery,
+  searchRow,
   setTagTerm,
 } from "../packages/viewer/dist/shell/search_query.js";
 import {
@@ -16,26 +17,18 @@ import {
 
 import { catalogueModel } from "./helpers/viewer_catalogue.js";
 
-const welcome = {
-  id: "welcome",
-  tags: ["forms", "onboarding"],
-  text: "Welcome",
-};
-const details = {
-  id: "product/browse/details",
-  tags: ["forms"],
-  text: "Details",
-};
-const glossary = {
-  id: "glossary",
-  tags: [],
-  text: "Glossary",
-};
-const transferReady = {
-  id: "transactions-list-transfer-ready",
-  tags: ["operations"],
-  text: "Ready to transfer",
-};
+const noTitles = (): readonly string[] => [];
+/** A search row outside every folder. */
+const row = (path: string, title: string, tags: readonly string[]) =>
+  searchRow({ path, tags, title }, []);
+const welcome = row("welcome", "Welcome", ["forms", "onboarding"]);
+const details = row("product/browse/details", "Details", ["forms"]);
+const glossary = row("glossary", "Glossary", []);
+const transferReady = row(
+  "transactions-list-transfer-ready",
+  "Ready to transfer",
+  ["operations"],
+);
 
 function selectionModel(detailsChanged: boolean): CatalogueReadModel {
   const model = catalogueModel();
@@ -53,14 +46,14 @@ function selectionModel(detailsChanged: boolean): CatalogueReadModel {
         changes: changes(false),
         path: "welcome",
         tags: welcome.tags,
-        title: welcome.text,
+        title: welcome.title,
       },
       {
         ...template,
         changes: changes(detailsChanged),
         path: "product/browse/details",
         tags: details.tags,
-        title: details.text,
+        title: details.title,
       },
     ],
   };
@@ -69,7 +62,7 @@ function selectionModel(detailsChanged: boolean): CatalogueReadModel {
 test("active-row selection clears only constraints that hide it", () => {
   const unchanged = selectionModel(false);
   assert.deepEqual(
-    revealSelection(unchanged, {
+    revealSelection(unchanged, noTitles, {
       ...defaultSelection,
       screenPath: "product/browse/details",
       search: "welcome",
@@ -89,13 +82,13 @@ test("active-row selection clears only constraints that hide it", () => {
     search: "details",
     view: "changes" as const,
   };
-  assert.deepEqual(revealSelection(changed, matching), matching);
+  assert.deepEqual(revealSelection(changed, noTitles, matching), matching);
   const derivedRouteOnly = {
     ...defaultSelection,
     screenPath: "product/browse/details",
     search: "screens/details",
   };
-  assert.deepEqual(revealSelection(unchanged, derivedRouteOnly), {
+  assert.deepEqual(revealSelection(unchanged, noTitles, derivedRouteOnly), {
     ...derivedRouteOnly,
     search: "",
   });
@@ -108,7 +101,7 @@ test("a tag term clears the query only for a row that lacks the tag", () => {
     search: string,
     tags: readonly string[],
   ) =>
-    revealSelection(model, {
+    revealSelection(model, noTitles, {
       ...defaultSelection,
       screenPath,
       search,
@@ -206,11 +199,10 @@ test("rows match only when every tag term is declared on the row", () => {
 
 test("row tags lowercase defensively though authoring can never emit them", () => {
   assert.equal(
-    rowMatchesQuery(parseSearchQuery("TAG:Forms"), {
-      id: "legacy",
-      tags: ["Forms"],
-      text: "Legacy",
-    }),
+    rowMatchesQuery(
+      parseSearchQuery("TAG:Forms"),
+      row("legacy", "Legacy", ["Forms"]),
+    ),
     true,
   );
 });
@@ -226,7 +218,7 @@ test("an unmatched tag term hides a row free text alone would match", () => {
   );
 });
 
-test("free text matches row id, title, or tags regardless of term order", () => {
+test("free text matches row path, title, or tags regardless of term order", () => {
   assert.equal(rowMatchesQuery(parseSearchQuery("WELCOME"), welcome), true);
   assert.equal(
     rowMatchesQuery(parseSearchQuery("screens/welcome"), welcome),
@@ -262,7 +254,7 @@ test("free text matches a structured page id", () => {
   assert.equal(
     rowMatchesQuery(parseSearchQuery("TRANSACTIONS-LIST-TRANSFER-READY"), {
       ...transferReady,
-      text: "Unrelated title",
+      title: "Unrelated title",
     }),
     true,
   );

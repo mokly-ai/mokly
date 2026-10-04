@@ -57,6 +57,13 @@ export interface ShellState {
   navigationWidth: number;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
+  /**
+   * The folder disclosure a breadcrumb last revealed, with the selection when
+   * it was requested. Each request stores a fresh object so the tree focuses
+   * that folder even when it repeats. The tree waits for the folder row to
+   * show; a selection commit that leaves it hidden ends the wait.
+   */
+  revealedFolder: { key: string; selection: ViewerSelection } | undefined;
   route: ShellRoute;
   selection: ViewerSelection;
   tagPickerIndex: number;

@@ -52,7 +52,7 @@ for (const mobile of [false, true]) {
       await page
         .locator('[data-nav-folder="folder:fixture/screens"] > summary')
         .click();
-      await page.locator('[data-nav-section="pages"] > summary').click();
+      await page.locator('[data-nav-section="specs"] > summary').click();
       await page.locator("[data-mokly-nav-scroll]").evaluate((tree) => {
         tree.scrollTop = 120;
       });

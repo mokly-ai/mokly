@@ -3,8 +3,7 @@
 ## Delivery Status
 
 Build, Check, Serve, export, and the viewer use file-derived paths.
-Move pairing is implemented; remaining viewer presentation follows the
-[path identity plan](../../plans/path-identity.md).
+Move pairing and its viewer presentation are implemented.
 
 This is the single contract for an entry's path: how it derives from the
 discovered file that exports the entry, which strings are valid segments, how `index`

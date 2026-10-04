@@ -34,7 +34,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await page.goto("/view/design/library/chrome/top-bar/search/");
     await chooseViewport(page, viewport);
     const status = page.locator("[data-workspace-status]");
-    const parentStatus = await status.innerText();
+    await expect(status).toHaveText(/^(Changed|Unmodified)$/);
+    const savedStatus = await status.innerText();
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
@@ -54,10 +55,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await expect(status).toHaveText(parentStatus);
+    await expect(status).toHaveText(savedStatus);
     await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(status).toHaveText("Unmodified");
+    await expect(status).toHaveText(savedStatus);
     expect(await contents()).toEqual(before);
   });
 

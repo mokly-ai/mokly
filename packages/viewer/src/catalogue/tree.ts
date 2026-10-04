@@ -18,12 +18,14 @@ export function projectTree<T extends HierarchyEntry>(
           path: node.path,
           title: node.label,
           ...(node.index ? { index: node.index.path } : {}),
+          ...(node.order ? { order: [...node.order] } : {}),
           children: node.children.map(project),
         }
       : {
           kind: "entry",
           ...(node.hidden ? { hidden: true } : {}),
           path: node.entry.path,
+          ...(node.order ? { order: [...node.order] } : {}),
           ...(node.children?.length
             ? { children: node.children.map(project) }
             : {}),

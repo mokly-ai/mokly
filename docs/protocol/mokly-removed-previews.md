@@ -7,7 +7,8 @@ delivered typed capture, the Serve generation lifecycle, consumer export,
 repository preview, upload packaging, and the shared shell and viewer. The
 [viewer-owned historical previews plan](../../plans/viewer-owned-historical-previews.md)
 defines the host-independent presentation. Preview names derive from paths.
-Document previews and suppression for paired moves are implemented. Nothing here changes ordinary
+Document previews, their `Light only` note, and suppression for paired moves
+are implemented. Nothing here changes ordinary
 browsing, Added entries, changed-screen comparisons, or removed component
 variants.
 
@@ -27,7 +28,10 @@ editing, current inspector bindings, or current usage/comment markers appear.
 
 A removed page or document renders its historical document in the plain
 document pane; a document's Light and Dark choices follow the historical
-schemes that exist, and a page is light only. A removed screen renders its
+schemes that exist, and a page is light only. A removed document without a
+historical dark version keeps its light version under Dark, and its label
+reads `Showing previous version — Light only` when the catalogue has a dark
+axis. A removed screen renders its
 historical mobile and desktop frames; Light and Dark choices follow the
 historical views that exist. A saved scheme without a historical view falls
 back to Light with the existing light-only note. Removed screens stay outside

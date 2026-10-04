@@ -11,7 +11,9 @@ interface NavigationBranch {
 /**
  * Build the depicted tree. Folders nest by depth; a variant row belongs to
  * the leaf it follows rather than to that leaf's folder, so a parent keeps
- * its variants and a folder never counts them as children.
+ * its variants and a folder never counts them as children. A folder's own
+ * screen with `contents` also holds the deeper rows after its variants: the
+ * folder's other members, which its list discloses after the variants.
  */
 function navigationForest(rows: readonly NavigationRow[]): NavigationBranch[] {
   const roots: NavigationBranch[] = [];
@@ -26,12 +28,9 @@ function navigationForest(rows: readonly NavigationRow[]): NavigationBranch[] {
     while ((parents.at(-1)?.depth ?? -1) >= row.depth) parents.pop();
     const parent = parents.at(-1)?.branch;
     (parent?.children ?? roots).push(branch);
-    if (row.kind === "folder") {
+    if (row.kind === "folder" || row.contents)
       parents.push({ branch, depth: row.depth });
-      leaf = undefined;
-    } else {
-      leaf = branch;
-    }
+    leaf = row.kind === "folder" ? undefined : branch;
   }
   return roots;
 }
@@ -43,9 +42,16 @@ function projectBranch(
   if (branch.row.kind !== "folder") {
     const component = branch.row.kind === "component";
     if (component !== (section === "components")) return undefined;
-    return branch.row.variants === "open"
-      ? branch
-      : { children: [], row: branch.row };
+    if (branch.row.variants !== "open")
+      return { children: [], row: branch.row };
+    return {
+      row: branch.row,
+      children: branch.children.flatMap((child) => {
+        if (child.row.kind === "variant") return [child];
+        const projected = projectBranch(child, section);
+        return projected ? [projected] : [];
+      }),
+    };
   }
   const children = branch.children.flatMap((child) => {
     const projected = projectBranch(child, section);

@@ -229,7 +229,10 @@ test("SSR selects a component variant entry in navigation, chrome, and preview",
     defaultSelection: { screenPath: "components/action/second" },
   });
   assert.match(html, /<h2>Action<\/h2>/);
-  assert.match(html, /#<!-- -->components\/action\/second<\/button>/);
+  assert.match(
+    html,
+    /data-copy-path="components\/action\/second"[^>]*>components\/action\/second<\/button>/,
+  );
   assert.match(
     html,
     /aria-label="Catalogue location"[^]*href="\/view\/components\/action\/"[^]*Action/,

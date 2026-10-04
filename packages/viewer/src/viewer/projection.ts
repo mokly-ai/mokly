@@ -93,23 +93,22 @@ export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
 }
 
 export function viewerCatalogue(model: ShellCatalogueReadModel) {
+  const current = [
+    ...model.screens,
+    ...model.pages,
+    ...model.documents,
+    ...model.useCases,
+    ...model.components,
+  ];
   const manifest: ManifestV8 = {
     schemaVersion: 8,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: [],
-    entries: [
-      ...[
-        ...model.screens,
-        ...model.pages,
-        ...model.documents,
-        ...model.useCases,
-        ...model.components,
-      ].map((entry) => ({
-        ...displayEntry(entry),
-        declaredDependencies: entry.details.dependencies,
-      })),
-    ],
+    entries: current.map((entry) => ({
+      ...displayEntry(entry),
+      declaredDependencies: entry.details.dependencies,
+    })),
   };
   const catalogue = createCatalogue(
     manifest,
@@ -118,10 +117,17 @@ export function viewerCatalogue(model: ShellCatalogueReadModel) {
       entry: displayEntry(entry),
       ...(snapshotId ? { snapshotId } : {}),
     })),
+    current.flatMap(({ path, previousPath }) =>
+      previousPath === undefined ? [] : [{ path, previousPath }],
+    ),
   );
   return {
     ...catalogue,
-    hierarchy: adoptCatalogueTree(catalogue.hierarchy, model.tree),
+    hierarchy: adoptCatalogueTree(
+      catalogue.hierarchy,
+      model.tree,
+      model.treeOrder,
+    ),
     publicModel: model,
   };
 }
@@ -139,6 +145,16 @@ export function viewerContext(
         )
       : undefined;
   const selected = resolved?.entry;
+  const ready = [
+    ...model.screens,
+    ...model.pages,
+    ...model.documents,
+    ...model.useCases,
+    ...model.components,
+    ...model.removedEntries.map(({ entry }) => entry),
+  ].flatMap(({ path, changes }) =>
+    changes.status === "ready" ? [{ path, ...changes }] : [],
+  );
   return {
     base: "",
     embedded: true,
@@ -151,19 +167,12 @@ export function viewerContext(
     ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     ...(model.changesStatus === "ready"
       ? {
-          changedEntries: [
-            ...model.screens,
-            ...model.pages,
-            ...model.documents,
-            ...model.useCases,
-            ...model.components,
-            ...model.removedEntries.map(({ entry }) => entry),
-          ]
-            .filter(
-              (entry) =>
-                entry.changes.status === "ready" && entry.changes.included,
-            )
-            .map((entry) => entry.path),
+          changedEntries: ready
+            .filter(({ included }) => included)
+            .map(({ path }) => path),
+          materialEntries: ready
+            .filter(({ kind }) => kind !== "unmodified")
+            .map(({ path }) => path),
         }
       : {}),
   };

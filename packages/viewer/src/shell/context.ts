@@ -32,8 +32,17 @@ export interface ShellContext {
    * shows the one Appearance control.
    */
   embedded?: boolean;
-  /** Entry ids changed since the base-ref branch point; absent when unknown. */
+  /**
+   * Entries Changes lists: each one added, changed, or removed since the
+   * base-ref branch point, and each one a move paired. Absent when unknown.
+   */
   changedEntries?: readonly string[];
+  /**
+   * The entries in `changedEntries` that changed beyond a move, set by the
+   * public projection. Server pages read the same list from
+   * `componentChanges`.
+   */
+  materialEntries?: readonly string[];
   /** Whether on-demand comparison serving is available. */
   comparisons?: boolean;
   /** Validated lightweight component evidence, independent of snapshots. */
@@ -44,6 +53,20 @@ export interface ShellContext {
   snapshotId?: string;
   /** Update-stream version captured when this page request began. */
   updateVersion: number;
+}
+
+/**
+ * The entries that changed since the branch point beyond a move: Changes
+ * membership without its pure moves.
+ */
+export function materialChangedEntries(
+  context: ShellContext,
+): readonly string[] | undefined {
+  return (
+    context.materialEntries ??
+    context.componentChanges?.changedEntries ??
+    context.changedEntries
+  );
 }
 
 /** Create one page context from the current mutable server snapshot. */

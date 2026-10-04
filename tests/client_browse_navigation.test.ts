@@ -26,6 +26,7 @@ import {
   fixtureShellState,
 } from "./helpers/viewer_catalogue.js";
 
+const noTitles = (): readonly string[] => [];
 const welcome = leaf("welcome", "welcome/index.html", "Welcome", [
   "forms",
   "onboarding",
@@ -40,35 +41,38 @@ const glossary = leaf("glossary", "docs/glossary.html", "Glossary");
 
 test("stable folder keys preserve independent disclosure values", () => {
   const disclosures = {
-    "folder:pages:alpha": false,
-    "folder:pages:beta": true,
+    "folder:specs:alpha": false,
+    "folder:specs:beta": true,
   };
-  assert.deepEqual(openDisclosures(disclosures, ["folder:pages:alpha"]), {
-    "folder:pages:alpha": true,
-    "folder:pages:beta": true,
+  assert.deepEqual(openDisclosures(disclosures, ["folder:specs:alpha"]), {
+    "folder:specs:alpha": true,
+    "folder:specs:beta": true,
   });
 });
 
-test("legacy label paths cannot match current disclosure keys", () => {
+test("label paths and earlier section ids naming a current folder are ignored", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery({ "/Example/Screens": false }) },
+    initial: {
+      recovery: recovery({ "/product": false, "folder:pages:product": false }),
+    },
   });
-  assert.equal(state.disclosures["folder:pages:product"], true);
+  assert.equal(state.disclosures["folder:specs:product"], true);
 });
 
-test("obsolete keys do not discard a current folder preference", () => {
+test("earlier keys do not discard a current folder preference", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        "legacy:example": false,
-        "collection:Product": false,
-        "folder:pages:product": false,
+        "legacy:product": true,
+        "collection:product": true,
+        "folder:pages:product": true,
+        "folder:specs:product": false,
       }),
     },
   });
-  assert.equal(state.disclosures["folder:pages:product"], false);
+  assert.equal(state.disclosures["folder:specs:product"], false);
   assert.equal(state.disclosures["folder:components:components"], true);
 });
 
@@ -169,9 +173,9 @@ test("an active variant opens its persisted list and ancestry", () => {
   );
   const section: NavSectionNode = {
     children: [{ ...welcome, variants: [failure] }],
-    id: "pages",
-    key: "section:pages",
-    label: "Pages",
+    id: "specs",
+    key: "section:specs",
+    label: "Specs",
   };
   const sections = [section];
 
@@ -180,7 +184,7 @@ test("an active variant opens its persisted list and ancestry", () => {
     true,
   );
   assert.deepEqual(disclosurePath(sections, failure.entryId), [
-    "section:pages",
+    "section:specs",
     "variants:welcome",
   ]);
 });
@@ -192,9 +196,12 @@ test("navigation clears only a query that hides its destination", () => {
     screenPath: "welcome",
     tags: ["onboarding"],
   };
-  assert.deepEqual(revealSelection(model, welcomeSelection), welcomeSelection);
   assert.deepEqual(
-    revealSelection(model, {
+    revealSelection(model, noTitles, welcomeSelection),
+    welcomeSelection,
+  );
+  assert.deepEqual(
+    revealSelection(model, noTitles, {
       ...welcomeSelection,
       screenPath: "product/browse/details",
     }),
@@ -233,6 +240,7 @@ function leaf(
     kind: "leaf",
     label,
     tags,
+    title: label,
   };
 }
 

@@ -51,9 +51,9 @@ test("development React hydrates navigation and filters as live state", async ({
   await installDevelopmentBundle(page);
   await page.goto("/");
   await expectCleanHydration(page, errors);
-  const pages = page.locator('[data-nav-section="pages"]');
-  await pages.locator(":scope > summary").click();
-  await expect(pages).not.toHaveAttribute("open", "");
+  const specs = page.locator('[data-nav-section="specs"]');
+  await specs.locator(":scope > summary").click();
+  await expect(specs).not.toHaveAttribute("open", "");
   await page.locator('[data-filter="changed"]').click();
   await expect(page.locator('[data-filter="changed"]')).toHaveAttribute(
     "aria-pressed",
@@ -184,7 +184,7 @@ test("an early native disclosure wins hydration before reload promotes active an
   const navigation = page.goto("/view/example/screens/welcome/");
   await gate.requested;
   const disclosure = page.locator(
-    'details[data-nav-disclosure="section:pages"]',
+    'details[data-nav-disclosure="section:specs"]',
   );
   await expect(disclosure).toHaveAttribute("open", "");
   await disclosure.locator(":scope > summary").click();
@@ -195,7 +195,7 @@ test("an early native disclosure wins hydration before reload promotes active an
   await expect(disclosure).not.toHaveAttribute("open", "");
   await expect
     .poll(() => readDisclosureStorage(page))
-    .toMatchObject({ "section:pages": false });
+    .toMatchObject({ "section:specs": false });
   await page.reload();
   await expectCleanHydration(page, errors);
   await expect(disclosure).toHaveAttribute("open", "");

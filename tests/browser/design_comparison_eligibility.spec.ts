@@ -18,6 +18,7 @@ const manifest = JSON.parse(
 ) as ManifestV8;
 const changedDesigns = new Set([
   "design/browse/variants/variant-changes",
+  "design/browse/index-entries/member-changes",
   "design/changes/diff-controls/current",
   "design/changes/outcomes/moved",
   "design/changes/diff-controls/overlay",

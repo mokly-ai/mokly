@@ -1,12 +1,26 @@
+import { useDarkPreview } from "./appearance.js";
 import type { DesignDestination } from "./destinations.js";
 import { EmptyState } from "./stage_content.js";
 
 /**
  * The quiet label that sits between the head band and a stage holding content
- * from before the entry was removed.
+ * from before the entry was removed. Under Dark, a previous version with no
+ * dark render names its light fallback with the existing note.
  */
-export function PreviousVersionLabel() {
-  return <p className="mbk-previous">Showing previous version</p>;
+export function PreviousVersionLabel({
+  lightOnly,
+}: {
+  lightOnly?: boolean | undefined;
+}) {
+  const dark = useDarkPreview();
+  return (
+    <p className="mbk-previous">
+      Showing previous version
+      {lightOnly && dark ? (
+        <span className="mbk-frame-scheme-note">{" — Light only"}</span>
+      ) : null}
+    </p>
+  );
 }
 
 /** The stage while the previous version is still being retrieved. */

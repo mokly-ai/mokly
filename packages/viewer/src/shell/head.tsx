@@ -1,5 +1,5 @@
-// The heading for a catalogue view uses the title, stable ID, and text-only
-// folder ancestors from the shared hierarchy or removed entry baseline.
+// The heading for a catalogue view uses the title, path, and folder
+// ancestors from the shared hierarchy or removed entry baseline.
 
 import type { ReactNode } from "react";
 
@@ -10,10 +10,32 @@ import {
   catalogueVariantParentEntry,
   type Catalogue,
 } from "./catalogue.js";
-import { structuredCrumbTrail } from "./nav_tree.js";
-import type { CatalogueCrumb } from "./nav_tree.js";
+import { structuredCrumbTrail, type CatalogueCrumb } from "./crumbs.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
+
+/** One crumb: a link to a folder's page, a folder reveal, or plain text. */
+function Crumb(props: { item: CatalogueCrumb }) {
+  const store = useOptionalShellStore();
+  const { folder, href, label } = props.item;
+  if (href !== undefined)
+    return (
+      <a className="mbk-crumb-link" href={href}>
+        {label}
+      </a>
+    );
+  if (folder === undefined) return label;
+  return (
+    <button
+      className="mbk-crumb-link"
+      data-crumb-folder={folder.path}
+      onClick={() => store?.revealFolder(folder.section, folder.path)}
+      type="button"
+    >
+      {label}
+    </button>
+  );
+}
 
 function Crumbs(props: { items: readonly CatalogueCrumb[] }) {
   return (
@@ -21,13 +43,7 @@ function Crumbs(props: { items: readonly CatalogueCrumb[] }) {
       {props.items.map((item, index) => (
         <span key={`${item.label}-${index}`}>
           {index > 0 ? <span className="sep">›</span> : null}
-          {item.href === undefined ? (
-            item.label
-          ) : (
-            <a className="mbk-crumb-link" href={item.href}>
-              {item.label}
-            </a>
-          )}
+          <Crumb item={item} />
         </span>
       ))}
     </p>
@@ -107,7 +123,7 @@ export function ScreenHead(props: {
   status?: ReactNode;
   crumbs: readonly CatalogueCrumb[];
   heading: string;
-  id?: string | undefined;
+  path?: string | undefined;
 }) {
   const store = useOptionalShellStore();
   return (
@@ -116,20 +132,20 @@ export function ScreenHead(props: {
         <Crumbs items={props.crumbs} />
         <div className="mbk-title-row">
           <h2>{props.heading}</h2>
-          {props.status}
-          {props.id ? (
+          {props.path ? (
             <button
-              aria-label={`Copy ID ${props.id}`}
-              className="mbk-idchip"
-              data-copy-id={props.id}
+              aria-label={`Copy path ${props.path}`}
+              className="mbk-pathchip"
+              data-copy-path={props.path}
               onClick={() =>
-                store?.copy(props.id ?? "", `Copied ID ${props.id}`)
+                store?.copy(props.path ?? "", `Copied path ${props.path}`)
               }
               type="button"
             >
-              #{props.id}
+              {props.path}
             </button>
           ) : null}
+          {props.status}
         </div>
       </div>
       {props.action}
@@ -137,11 +153,11 @@ export function ScreenHead(props: {
   );
 }
 
-/** The breadcrumb trail, id, and title for one resolved route target. */
+/** The breadcrumb trail, path, and title for one resolved route target. */
 export function targetHead(
   catalogue: Catalogue,
   target: RouteTarget,
-): { crumbs: CatalogueCrumb[]; id?: string; title: string } {
+): { crumbs: CatalogueCrumb[]; path: string; title: string } {
   const ancestors =
     catalogue.removedEntries
       .find(({ entry }) => entry.path === target.entry.path)
@@ -170,7 +186,7 @@ export function targetHead(
               label: parentEntry.title,
             },
           ],
-    id: target.entry.path,
+    path: target.entry.path,
     title:
       target.entry.kind === "component" &&
       "variantOf" in target.entry &&

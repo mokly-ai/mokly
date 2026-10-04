@@ -23,7 +23,13 @@ export interface WorkspaceVariantSet {
   rows: readonly WorkspaceVariant[];
 }
 
-/** Adapt sibling variant entries to one routed component workspace. */
+/**
+ * Adapt sibling variant entries to one routed component workspace. Baseline
+ * and removed variants name their parent's branch-point path, which differs
+ * from the current path when a move paired the parent. `materialChanges`
+ * holds the entries that changed beyond a move, so a pure move stays
+ * Unmodified and a metadata-only edit reads Changed.
+ */
 export function workspaceVariants(
   catalogue: Catalogue,
   entry: ManifestComponent,
@@ -32,7 +38,7 @@ export function workspaceVariants(
   known: boolean,
   parentRemoved: boolean,
   parentStatus: EntryStatus | undefined,
-  changedEntries?: readonly string[],
+  materialChanges?: readonly string[],
 ): WorkspaceVariantSet {
   const current = (
     catalogue.hierarchy.variantsByPath.get(entry.path) ?? []
@@ -40,19 +46,20 @@ export function workspaceVariants(
     (candidate): candidate is ManifestComponentVariant =>
       candidate.kind === "component" && isManifestComponentVariant(candidate),
   );
+  const parentPath = catalogue.previousPaths.get(entry.path) ?? entry.path;
   const baseline: ManifestComponentVariant[] = [
     ...(snapshot?.baseline.entries.filter(
       (candidate): candidate is ManifestComponentVariant =>
         candidate.kind === "component" &&
         isManifestComponentVariant(candidate) &&
-        candidate.variantOf === entry.path,
+        candidate.variantOf === parentPath,
     ) ?? []),
   ];
   const removed = catalogue.removedEntries.flatMap(
     ({ entry: candidate, snapshotId }) =>
       candidate.kind === "component" &&
       isManifestComponentVariant(candidate) &&
-      candidate.variantOf === entry.path
+      candidate.variantOf === parentPath
         ? [{ value: candidate, snapshotId }]
         : [],
   );
@@ -73,7 +80,7 @@ export function workspaceVariants(
         : review?.state === "added"
           ? "Added"
           : review?.state === "changed" ||
-              changedEntries?.includes(value.path) ||
+              materialChanges?.includes(value.path) ||
               (review?.before &&
                 review.after &&
                 JSON.stringify(review.before.props) !==

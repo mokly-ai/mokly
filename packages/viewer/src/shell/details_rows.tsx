@@ -5,6 +5,7 @@
 
 import type { ReactNode } from "react";
 
+import { parseLogicalTarget } from "../navigation/logical.js";
 import { viewHref } from "../navigation/routes.js";
 import type { ManifestUseCase } from "../registry/types.js";
 
@@ -47,6 +48,61 @@ export function ChangedViewsRow(props: { views: readonly ChangedView[] }) {
       </span>
     </div>
   );
+}
+
+/**
+ * The docs an entry names. A `mock:<path>` reference to a current document
+ * links to that document, labelled with its title; any other value is the
+ * repository label the catalogue published.
+ */
+export function RelatedDocChips(props: {
+  catalogue: Catalogue;
+  removed: boolean;
+  values: readonly string[];
+}) {
+  return (
+    <span className="mbk-chips">
+      {props.values.map((value) => {
+        const document = props.removed
+          ? undefined
+          : relatedDocument(props.catalogue, value);
+        return document ? (
+          <a
+            className="mbk-meta-link"
+            href={viewHref(document.path)}
+            key={value}
+          >
+            {document.title}
+          </a>
+        ) : (
+          <code className="mbk-code" key={value}>
+            {value}
+          </code>
+        );
+      })}
+    </span>
+  );
+}
+
+/**
+ * The current document a related-doc value names, if it names one: a public
+ * `mock:<path>` reference, or the repository source path the served manifest
+ * keeps.
+ */
+function relatedDocument(
+  catalogue: Catalogue,
+  value: string,
+): CatalogueManifestEntry | undefined {
+  const target = parseLogicalTarget(value);
+  const current = (entry: CatalogueManifestEntry | undefined) =>
+    entry?.kind === "document" &&
+    !catalogue.removedEntries.some(({ entry: removed }) => removed === entry)
+      ? entry
+      : undefined;
+  if (target) return current(catalogue.byPath.get(target.path));
+  for (const entry of catalogue.byPath.values())
+    if (entry.sourcePath === value && current(entry)) return entry;
+  return undefined;
 }
 
 /** Source or dependency paths rendered as monospace chips. */

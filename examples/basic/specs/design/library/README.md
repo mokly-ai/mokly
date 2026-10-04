@@ -88,8 +88,10 @@ header view controls own the viewport. Use ordinary `MockLink` anchors for inspe
 links and tag chips so they can live inside native `details` panels.
 `../parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
 saved All example and in-screen artboards, so those two views stay aligned;
-`../parts/account_nav_data.ts` adds its Account area and moved Changes rows, and
-`../parts/variant_nav_data.ts` holds Welcome's Changes-filtered variant rows.
+`../parts/account_nav_data.ts` adds its Account area, the Profile folder's own
+screen with its `contents` list of variant and members, the moved Changes rows,
+and Profile's Changes rows, and `../parts/variant_nav_data.ts` holds Welcome's
+Changes-filtered variant rows.
 `../parts/entry_paths.ts` owns the depicted paths that path chips show.
 `../parts/component_nav_data.ts` owns component parent and variant identities;
 the shared fixture and component-explorer scenarios compose its rows instead of

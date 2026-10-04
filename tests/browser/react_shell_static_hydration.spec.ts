@@ -89,7 +89,7 @@ test("static hydration adopts choices made after load while its catalogue is pen
     .poll(() => page.evaluate(() => document.readyState))
     .toBe("complete");
   const disclosure = page.locator(
-    'details[data-nav-disclosure="section:pages"]',
+    'details[data-nav-disclosure="section:specs"]',
   );
   await expect(disclosure).toHaveAttribute("open", "");
   await expect(page.locator("[data-mokly-nav-resize]")).toHaveAttribute(

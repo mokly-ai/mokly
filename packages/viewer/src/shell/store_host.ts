@@ -5,6 +5,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
+import { folderTitleLookup } from "../registry/folder_titles.js";
 import {
   mergeSelection,
   sameSelection,
@@ -125,7 +126,12 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const environment = environmentRef.current;
       if (!environment) return;
       const current = stateRef.current.selection;
-      const next = mergeSelection(environment.model, current, partial);
+      const next = mergeSelection(
+        environment.model,
+        folderTitleLookup(input.catalogue.hierarchy),
+        current,
+        partial,
+      );
       if (sameSelection(current, next)) {
         if (
           !environment.controlled &&
@@ -170,6 +176,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         route.view.kind === "target" ? route.view.target.entry.path : null;
       const next = mergeSelection(
         environment.model,
+        folderTitleLookup(input.catalogue.hierarchy),
         stateRef.current.selection,
         {
           screenPath,

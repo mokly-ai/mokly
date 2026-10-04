@@ -3,10 +3,17 @@
 ## Active
 
 - [Path Identity, Spec Tree, And Markdown Documents](./path-identity.md) —
-  replace `id` and `navPath` with one file-derived path per entry, add Markdown
-  documents and move detection, and update the viewer navigation. Milestones
-  1–5 and the 4A/5A review fixes are complete. Milestone 6G integrates main;
-  the viewer branch merge, file-length split and final verification remain.
+  replace `id` and `navPath` with one file-derived path per entry, add
+  Markdown documents, detect moves, rename Pages to Specs, and make folder
+  rows browse-only; manifest v8, read model v4, review result v5. Created
+  2026-10-02; contracts, shell mockups, identity core, main integration,
+  review fixes, Markdown documents and move detection with their review
+  fixes, viewer navigation and its review fixes, index entry mockups,
+  document typography parity, the light-only document, member landing view
+  and moved comparison wording mockups, the document presentation and
+  index-entry Changes rows, and the Moved presentation with its review fixes
+  are complete. Main and the final viewer branch are integrated through
+  Milestone 6I. The source file-length split and final verification remain.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete

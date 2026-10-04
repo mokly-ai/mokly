@@ -1,5 +1,6 @@
 /** Atomic filtering and active-route disclosure transitions. */
 
+import { folderTitleLookup } from "../registry/folder_titles.js";
 import { revealSelection, selectionQuery } from "../viewer/selection.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
@@ -33,7 +34,11 @@ export function withRoute(
   else delete selection.snapshotId;
   if (route.viewport) selection.viewport = route.viewport;
   if (catalogue.publicModel)
-    selection = revealSelection(catalogue.publicModel, selection);
+    selection = revealSelection(
+      catalogue.publicModel,
+      folderTitleLookup(catalogue.hierarchy),
+      selection,
+    );
   let next = withSelection(state, selection, false);
   if (route.view.kind === "target") {
     const path = disclosurePath(sections, route.view.target.entry.path);

@@ -84,25 +84,26 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
     },
   ];
   const { hierarchy } = analyzeHierarchy(entries);
-  const [pages] = buildNavSections(hierarchy, [
+  const [specs] = buildNavSections(hierarchy, [
     {
       entryId: "welcome-error",
       entryKind: "screen",
       key: "removed:welcome-error",
       kind: "leaf",
       label: "Save failed · Removed",
+      title: "Save failed",
       variantOf: "welcome",
     },
   ]);
-  assert.ok(pages);
-  assert.equal(pages.id, "pages");
+  assert.ok(specs);
+  assert.equal(specs.id, "specs");
   const context: ShellContext = {
     base: "",
     changedEntries: ["welcome-error"],
     changesStatus: "ready",
     updateVersion: 0,
   };
-  const expected = visibleRows(pages.children, context);
+  const expected = visibleRows(specs.children, context);
   assert.deepEqual(expected, ["Save failed · Removed"]);
 
   const { document } = await designDocument(

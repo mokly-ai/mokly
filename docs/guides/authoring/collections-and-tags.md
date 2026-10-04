@@ -13,11 +13,12 @@ A folder is every path segment before an entry's last one. The file
 folder with no entry below it does not exist. The same directory can hold
 screens, pages, flows and components.
 
-In the catalogue, a folder appears in the Pages section when it holds
-screens, pages or flows, and in the Components section when it
-holds components, with each section showing only its own kind of children. A
+In the catalogue, a folder appears in the Specs section when it holds
+screens, pages or flows, and in the Components section when it holds
+components, with each section showing only its own kind of children. A
 folder row only expands or collapses; it never opens anything. Breadcrumbs
-use folder titles in order.
+use folder titles in order: a folder with its own page opens that page, and
+any other folder opens in the navigation tree.
 
 ## Give a folder a title and an order
 
@@ -67,8 +68,10 @@ catalogue and may only carry `order` and `exclude`.
 
 A folder can have a page of its own: an entry module named
 `index.mockup.tsx`, or an entry that declares `slug: "index"`. That entry takes
-the folder's path. A page or flow appears as its first child row with its title;
-a screen or component uses its own entry row.
+the folder's path. A page or flow appears as its first child row, labelled
+Overview when its title is also the folder's title; a screen or component
+uses its own entry row, which lists its variants and then the folder's other
+members.
 For example, `specs/account/index.mockup.tsx` opens at `/view/account/`.
 A screen or component index always supplies its folder's title, including
 breadcrumbs for descendants. A folder record cannot set `title` there; set the

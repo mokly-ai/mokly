@@ -139,6 +139,7 @@ export function shellContextWithViewerEvidence(
   const stable = { ...context };
   delete stable.activeId;
   delete stable.changedEntries;
+  delete stable.materialEntries;
   delete stable.changesStatus;
   delete stable.comparisons;
   delete stable.componentChanges;

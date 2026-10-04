@@ -14,7 +14,7 @@ import {
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseViewport, expectFrameSource } from "./workspace_actions.js";
 
 let output: string;
 let root: string;
@@ -113,7 +113,31 @@ test("the exported example discloses a screen's variants without a server", asyn
     "Welcome, empty workspace",
   );
   await expect(variantRow).toHaveAttribute("aria-current", "page");
-  await expect(page.getByLabel("Catalogue location").locator("a")).toHaveText(
+  await expect(page.getByLabel("Catalogue location").locator("a")).toHaveText([
+    "Example",
     "Welcome",
+  ]);
+});
+
+test("the exported example opens a Markdown document from each URL form", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const frame = page.locator(".mbk-stage-embed iframe");
+  for (const form of ["/", "", "/index.html"]) {
+    await page.goto(`${server.url}/view/example/workspace-guide${form}`);
+    await expect(page).toHaveURL(`${server.url}/view/example/workspace-guide/`);
+    await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
+    await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
+    await expect(
+      page
+        .frameLocator(".mbk-stage-embed iframe")
+        .getByRole("heading", { name: "Workspace guide", exact: true }),
+    ).toBeVisible();
+  }
+  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+  await expectFrameSource(
+    frame,
+    `${server.url}/static/example/workspace-guide/index.dark.html`,
   );
 });

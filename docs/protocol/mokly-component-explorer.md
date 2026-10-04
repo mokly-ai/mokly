@@ -5,9 +5,9 @@
 The shared component and screen workspace is implemented in Serve and static
 exports: saved variants, usage, comparison evidence, highlighting, and a resizable
 icon inspector. Local Serve additionally provides editable controls. The
-path-based identity, `/view/<path>/` links, and kind-filtered sections are
-implemented. The shell retains Pages and its existing chip presentation while
-the [path identity plan](../../plans/path-identity.md) delivers the remaining UI. See the
+path-based identity, `/view/<path>/` links, the Specs and Components sections,
+and path chips are implemented, with Markdown documents and `Moved` Changes
+rows. See the
 [component contract](./mokly-components.md), [attribution contract](./mokly-component-changes.md),
 and [component design catalogue](./mokly-component-design.md). Removed
 consumers open their historical screen through the behavior implemented by the

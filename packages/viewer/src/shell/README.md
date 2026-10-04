@@ -2,7 +2,23 @@
 
 `metadata.ts` carries accepted move evidence privately. `comparison_selection.ts`
 uses each side's original path for snapshot URLs, including moved variants.
-These data rules do not depend on a visible move label.
+`catalogue.ts` keeps each paired current entry's branch-point path in
+`previousPaths`: Serve and export pass the accepted pairs to `createCatalogue`,
+and the public viewer reads `previousPath` from the read model.
+`catalogueMovedPath` maps a baseline path back to the moved entry, so a
+removed variant joins its moved parent and links to it. `nav_moves.ts`
+records that path on each row; under Changes a moved row reads
+`<label> · Moved` in place of the changed mark, and under All it carries the
+mark only when `materialChangedEntries` lists it. Details add a `Moved from`
+row after Source, and the comparison details name the previous path as the
+earlier side. A pure move is in Changes without changing, so workspace
+statuses count material changes only and keep it Unmodified: the public
+projection sets `materialEntries` from each entry's `changes.kind`, and server
+pages read `componentChanges.changedEntries`. `workspaceComponent` and
+`catalogueComponentVariants` reach a moved parent through its previous path,
+so a variant deleted during the move keeps its parent's workspace, and
+`workspace_input_changes.ts` pairs moved views and nested components through
+`previousPaths`.
 
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document
@@ -14,25 +30,44 @@ defines the tree and its state model; the
 Serve, export and the public viewer converged on this tree.
 
 `nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
-native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their
-entry-kind glyph, and a screen or component's variants as a container the row's chevron
-button discloses, because a row cannot be both a link and a `<summary>`. A
-deleted variant whose non-variant parent survives joins that container as a
-Removed row. `nav_tree.ts` records actual attachment before removing the row
-from flat fallback, so a former parent that is now a variant cannot make its
-historical child disappear and every removed entry remains represented once.
-Current section nodes use the shared folder-first comparator; flat removed
-rows use the combined ordering in the
+native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
+carrying their entry-kind glyph, and a screen or component's variants as a
+container the row's chevron button discloses, because a row cannot be both a
+link and a `<summary>`. `nav_tree.ts` lists a folder's own document, page, or
+use case as the folder's first child row, labelled `Overview` when its title
+is the folder's title, and renders a folder whose own page is a screen or
+component as that entry's row, whose container holds the variants and then
+the folder's other members. A deleted variant whose non-variant parent
+survives joins that container as a Removed row. `nav_tree.ts` records actual
+attachment before removing the row from flat fallback, so a former parent that
+is now a variant cannot make its historical child disappear and every removed
+entry remains represented once. A removed page or document is a flat row
+that only Changes shows; All and search hide it. Current section nodes use the
+shared folder-first comparator; flat removed rows use the combined ordering in
+the
 [variant navigation contract](../../../../docs/protocol/mokly-variant-navigation.md).
-Components and Pages keep independent
-section roots even when they reuse the same folder labels.
+Specs and Components keep independent section roots even when they reuse the
+same folder paths. `filterHierarchy` orders each section again by the rows it
+shows, applying the `order` each folder node carries, so a screen or component
+that is its folder's own page sorts as a folder row in the other section.
+Search compares a row's path, title, tags, and the titles of the folders at or
+above it (`registry/folder_titles.ts`), never a display label such as
+`Overview` or `· Removed`. `search_query.ts` owns that one search row, so row
+visibility, Changes activation, and route reveals match the same text.
+`crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
+links to it, a visible folder without one becomes a button that
+`nav_reveal.ts` resolves to the disclosures exposing that folder, and the
+store's `revealFolder` opens them, clears only a hiding filter, opens the
+drawer at narrow widths, and asks `nav_scroll.ts` to focus the folder row.
+An embedded reveal proposes the cleared query as a whole; `nav_scroll.ts`
+keeps the reveal pending until the host commits a selection that shows the
+row, and gives up when a commit leaves it hidden.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
-fixed prefixes and complete paths; display labels never enter a key. It rejects empty path
-segments and ignores obsolete collection and legacy keys on restore.
-`disclosure_storage.ts` owns the v3 map codec and both storage key names;
-early capture, hydration, the shell store, and watched-reload recovery share
-its validation so renamed keys never override current server defaults. The
-first v3 write removes the obsolete v2 closed list.
+fixed prefixes and complete paths; display labels never enter a key. It rejects
+empty path segments and every earlier key form on restore.
+`disclosure_storage.ts` owns the v4 map codec and its storage key; early
+capture, hydration, the shell store, and watched-reload recovery share its
+validation. Earlier storage versions are never read, translated, or removed.
 `routes.ts` resolves URL paths to current or retained manifest entries;
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
@@ -43,15 +78,18 @@ server row and each React store update use the same presentation contract;
 `data-changed-variants` alone. `nav_model.ts` applies search and Changes
 visibility to parents and their variant children. `changes_activation.ts`
 owns Changes-filter activation for both standalone and embedded shells: an
-aggregate-only parent selects its first visible changed variant, and a changed
+unmodified container row selects the first visible changed entry it lists (its
+variants, then its members, descending into member folders), and a changed
 destination selects its first changed view only when the current selection is
 not already a changed entry. Later navigation within Changes keeps the sticky
-view axes; aggregate-parent redirection still applies. The shared typed query
+view axes; container redirection still applies. The shared typed query
 parser applies each valid viewport or scheme independently and ignores invalid
 or repeated values; the embedded host and standalone router consume the same
 route result. `details_rows.tsx` owns the inspector's
-metadata rows, including links between a screen and its variants and the
-`Changed views` row.
+metadata rows, including links between a screen and its variants, the
+`Changed views` row, and Related docs links. A related doc links to its
+document when it is a public `mock:<path>` reference or, in Serve and export,
+the source path of a current document; a removed entry keeps plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
 axes that name a view, their canonical order and reader label, and the rule
@@ -241,6 +279,11 @@ through navigation and browser history. Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues. Startup
 updates this frame value before changing a fragment source.
+`scheme_fallback.tsx` decides when a document keeps its light file under Dark
+in a catalogue with a dark axis. A current document then gets a band above its
+pane, and a removed one a suffix on `Showing previous version`; both carry the
+`Light only` note, which the stylesheet shows only under Dark, so server and
+hydrated markup agree.
 `css_preview_scheme.ts` owns every preview surface background and iframe
 color scheme. Transparent content therefore keeps its selected Light or Dark
 base in screen, page, component, historical and comparison frames, independently

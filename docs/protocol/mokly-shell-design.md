@@ -30,9 +30,9 @@ rows browse-only, and adds the `Overview` first-child row, the path chip,
 Markdown document pages, and `Moved` Changes rows. Those states are approved
 below and designed in `design/browse/views/folder-overview`,
 `design/browse/pages/document`, `design/changes/outcomes/moved`, and the updated Browse,
-page, and component designs. The shell uses paths while retaining the Pages
-section; paired moves retain one entry, while their labels await the
-[path identity plan](../../plans/path-identity.md) delivers the remaining behavior.
+page, and component designs. The shell implements the Specs rows, breadcrumbs,
+path chip, Markdown document pages, and one `Moved` row for each paired
+move.
 
 Auto/Light/Dark interface appearance is designed in the
 `design/browse/appearance/**` mockups and specified by the
@@ -231,17 +231,17 @@ scrollable region scrolls internally:
     outline of the parent's kind over a second, partially drawn outline, muted
     like the screen icon so only the flow icon takes the accent. The row and its button
     share one hover/selected pill, and the button rotates its chevron while
-    open. The Changes filter shows only changed variant rows and marks the
-    parent when any variant changed. The changed mark is a
+    open. The Changes filter shows only changed rows and marks the parent only
+    when a variant changed, never for a changed folder member. The mark is a
     6px accent dot at the row's trailing edge, drawn in the contrast color on
     the active row; no edge, rail, or border marks a row. Beside the dot the
     row carries the visually hidden word `Changed`, which assistive technology
     reads and the search box ignores. A Removed or Moved row takes neither,
     because its label already ends in `· Removed` or `· Moved`; a moved entry,
     edited or not, keeps that one row at its new place. The
-    [variant contract](./mokly-variants.md) owns the behavior, and
-    `design/browse/variants/variant-selected`, `design/browse/variants/variant-changes`, and
-    `design/browse/variants/variant-removed` own its mockups.
+    [variant contract](./mokly-variants.md) owns the behavior; the
+    `design/browse/variants/**` and `design/browse/index-entries/**` states own
+    its mockups, the latter for a folder screen listing its members.
   - Catalogue-link navigation opens the active section and every folder on the active
     row's path and scrolls that row into view. Search and Changes filtering may
     stay selected only while the active row remains visible. Reapplying an
@@ -269,8 +269,8 @@ scrollable region scrolls internally:
   a visually hidden `Other theme changed` or `Other viewport changed` through
   `aria-describedby`; the dot stays distinct from selection and draws no rail.
 - **Stage** — dotted-grid background (22px radial dots), centred frames with
-  40px gap, internal `overflow: auto`, `MOBILE` / `DESKTOP` uppercase frame
-  labels, and no separate toolbar above the grid.
+  40px gap that stack from the top below 760px, internal `overflow: auto`,
+  `MOBILE` / `DESKTOP` uppercase frame labels, and no toolbar above the grid.
 - **Details inspector** — the shared icon footer opens the chosen tab in place;
   closing it leaves no icon selected. Desktop uses a centered grip on the divider
   and mobile uses a full-workspace-width rounded bottom sheet with an iOS-style

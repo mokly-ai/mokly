@@ -73,13 +73,22 @@ function iconClassName(kind: NavigationRow["kind"]): string {
 /**
  * The disclosure beside a screen that owns variants. It is a depiction: the
  * served shell toggles the list, so the mockup carries the state and the
- * accessible name without a destination.
+ * accessible name without a destination. A folder's own screen lists the
+ * folder's members after its variants, so its toggle names the contents.
  */
-function VariantsToggle({ label, open }: { label: string; open: boolean }) {
+function VariantsToggle({
+  contents,
+  label,
+  open,
+}: {
+  contents: boolean;
+  label: string;
+  open: boolean;
+}) {
   return (
     <button
       aria-expanded={open}
-      aria-label={`${open ? "Hide" : "Show"} variants of ${label}`}
+      aria-label={`${open ? "Hide" : "Show"} ${contents ? "contents" : "variants"} of ${label}`}
       className="mbk-nav-variants-toggle"
       type="button"
     >
@@ -159,7 +168,11 @@ export function NavRow({
   return (
     <div className="mbk-nav-leaf">
       {row}
-      <VariantsToggle label={node.label} open={node.variants === "open"} />
+      <VariantsToggle
+        contents={node.contents ?? false}
+        label={node.label}
+        open={node.variants === "open"}
+      />
     </div>
   );
 }

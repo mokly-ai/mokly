@@ -1,6 +1,7 @@
 /** Workspace values derived only from the validated public catalogue. */
 
 import {
+  catalogueComponentParent,
   catalogueComponentVariants,
   resolveCatalogueSelection,
 } from "../catalogue/entry_selection.js";
@@ -45,6 +46,21 @@ function status(entry: ShellCatalogueRoutedEntry): EntryStatus | undefined {
   return entry.changes.status === "ready"
     ? statuses[entry.changes.kind]
     : undefined;
+}
+
+/**
+ * A variant's status from its compared views, unless they show no change:
+ * then its entry's change decides, so a metadata-only edit reads Changed and
+ * a pure move Unmodified.
+ */
+function variantStatus(entry: ShellCatalogueVariant): EntryStatus | undefined {
+  const compared =
+    entry.comparison.status === "ready"
+      ? statuses[entry.comparison.kind]
+      : undefined;
+  return compared === undefined || compared === "Unmodified"
+    ? (status(entry) ?? compared)
+    : compared;
 }
 
 /** Published per-view comparisons name the same changed views the shell derives. */
@@ -131,19 +147,7 @@ export function publicWorkspace(
   const publicComponent: ShellCatalogueComponent | undefined =
     original.kind === "component"
       ? "variantOf" in original
-        ? (model.components.find(
-            (candidate): candidate is ShellCatalogueComponent =>
-              candidate.path === original.variantOf &&
-              !("variantOf" in candidate),
-          ) ??
-          model.removedEntries
-            .map(({ entry }) => entry)
-            .find(
-              (candidate): candidate is ShellCatalogueComponent =>
-                candidate.kind === "component" &&
-                candidate.path === original.variantOf &&
-                !("variantOf" in candidate),
-            ))
+        ? catalogueComponentParent(model, original.variantOf)
         : original
       : undefined;
   const projectedComponent = publicComponent
@@ -203,6 +207,7 @@ export function publicWorkspace(
     component || orphanVariant
       ? sourceVariants.map((source) => {
           const value = displayEntry(source);
+          const shown = variantStatus(source);
           const sourceSnapshotId = model.removedEntries.find(
             ({ entry: candidate }) => candidate === source,
           )?.snapshotId;
@@ -219,11 +224,7 @@ export function publicWorkspace(
               source.comparison.status === "ready" &&
               source.comparison.eligible,
             ...(sourceSnapshotId ? { snapshotId: sourceSnapshotId } : {}),
-            ...(source.comparison.status === "ready"
-              ? { status: statuses[source.comparison.kind] }
-              : source.changes.status === "ready"
-                ? { status: statuses[source.changes.kind] }
-                : {}),
+            ...(shown ? { status: shown } : {}),
           };
         })
       : [];
@@ -285,14 +286,6 @@ function publicEntryTitle(
   entry: Extract<ShellCatalogueRoutedEntry, { kind: "component" | "screen" }>,
 ): string {
   if (entry.kind !== "component" || !("variantOf" in entry)) return entry.title;
-  const parent = [
-    ...model.components,
-    ...model.removedEntries.map(({ entry: candidate }) => candidate),
-  ].find(
-    (candidate) =>
-      candidate.kind === "component" &&
-      !("variantOf" in candidate) &&
-      candidate.path === entry.variantOf,
-  );
+  const parent = catalogueComponentParent(model, entry.variantOf);
   return parent ? `${parent.title} · ${entry.title}` : entry.title;
 }

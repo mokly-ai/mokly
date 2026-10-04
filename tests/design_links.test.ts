@@ -103,6 +103,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ["Example tour", "design/browse/views/use-case"],
         ["Getting started", "design/browse/pages/view"],
         ["Payment terms", "design/browse/pages/document"],
+        ["Profile", "design/browse/index-entries/screen"],
         ["Action", "design/components/overview"],
         ["Default", "design/components/overview"],
         ["Disabled", "design/components/pages/variants"],
@@ -140,7 +141,7 @@ test("every design link resolves to a real same-viewport design artifact without
     entry.path.startsWith("design/components/"),
   );
   assert.equal(componentDesigns.length, 39);
-  assert.equal(designs.length - componentDesigns.length, 66);
+  assert.equal(designs.length - componentDesigns.length, 71);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.path, viewport);

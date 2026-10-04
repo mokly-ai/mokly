@@ -20,11 +20,38 @@ export function parseSearchQuery(raw: string): SearchQuery {
   return { freeText: freeTerms.join(" "), tags: [...new Set(tags)] };
 }
 
-/** Require every tag and the complete free-text phrase to match one row. */
-export function rowMatchesQuery(
-  query: SearchQuery,
-  row: { id: string; tags: readonly string[]; text: string },
-): boolean {
+/** The fields search compares for one catalogue row. */
+export interface SearchRow {
+  path: string;
+  /** The entry's own title, never a label such as `Overview` or `· Removed`. */
+  title: string;
+  tags: readonly string[];
+  /** Titles of the folders at or above the path, outermost first. */
+  folderTitles: readonly string[];
+}
+
+/**
+ * The one search row for an entry, wherever a view lists it: navigation rows,
+ * Changes activation, and route reveals all compare these same fields.
+ */
+export function searchRow(
+  entry: { path: string; title: string; tags?: readonly string[] },
+  folderTitles: readonly string[],
+): SearchRow {
+  return {
+    path: entry.path,
+    title: entry.title,
+    tags: entry.tags ?? [],
+    folderTitles,
+  };
+}
+
+/**
+ * Require every tag on the row itself, and the complete free-text phrase in
+ * its path, title, or tags, or in the title of a folder at or above it. A
+ * folder whose title matches therefore shows every row below it.
+ */
+export function rowMatchesQuery(query: SearchQuery, row: SearchRow): boolean {
   if (
     !query.tags.every((tag) =>
       row.tags.some((rowTag) => rowTag.toLowerCase() === tag),
@@ -34,9 +61,9 @@ export function rowMatchesQuery(
   const freeText = query.freeText.toLowerCase();
   return (
     freeText === "" ||
-    row.id.toLowerCase().includes(freeText) ||
-    row.text.toLowerCase().includes(freeText) ||
-    row.tags.some((tag) => tag.toLowerCase().includes(freeText))
+    [row.path, row.title, ...row.tags, ...row.folderTitles].some((text) =>
+      text.toLowerCase().includes(freeText),
+    )
   );
 }
 

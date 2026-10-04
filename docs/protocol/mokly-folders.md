@@ -2,10 +2,9 @@
 
 ## Delivery Status
 
-Folder records, title resolution, order, exclusions and path trees are implemented.
-The current shell keeps its existing Pages presentation; the final row and
-breadcrumb interactions below remain planned in the
-[path identity plan](../../plans/path-identity.md).
+Folder records, title resolution, order, exclusions, path trees, the Specs
+and Components rows, the `Overview` row, entry rows for a folder's own screen
+or component, and breadcrumb links and folder reveals are implemented.
 
 A folder is a path with entries below it. It has no definition of its own, no
 status, and no Changes row. This contract owns the optional folder record that
@@ -104,6 +103,12 @@ breadcrumbs for variants and ordinary descendants. For all other folders:
 
 Titles are free text and may repeat across folders. Breadcrumbs, the tree,
 search, and details use the resolved title; nothing uses a title as a key.
+Search free text matches a row's path, title, and tags, and the resolved title
+of every folder at or above its path, so a folder whose title matches shows
+every row below it: its entries, their variants, its own page, and, for a
+screen or component that is its own page, that entry's variants. Tag terms
+still match only a row's own tags, and a hidden folder still hides its rows
+in All and search.
 Removed entries carry the baseline titles of their folders as display text.
 
 ## Order
@@ -120,7 +125,11 @@ the unnamed children in default order. The item `...` marks where the unnamed
 children go; when it is omitted they follow the named ones. A list never hides
 a child. Each name is a child's slug, listed at most once, with at most one
 `...`. The top-level `_folder.json` orders the top-level folders and entries in
-the same way; each section applies the order to the children it shows.
+the same way; each section applies the order to the children it shows. A
+screen or component that is its folder's own page renders as an entry row in
+its own section and as a folder row in the other, so each section sorts it by
+the row it shows there; the [catalogue tree](./mokly-catalogue-tree.md#order)
+carries every `order` so the viewer can.
 
 ## Hidden Folders
 
@@ -155,10 +164,28 @@ A folder's own page renders by the kind of its index:
   with variants and `invoice/index.mockup.tsx` with the same variants produce
   identical rows.
 
-A breadcrumb segment for a folder opens the folder's own page when one exists
-and otherwise expands that folder in the tree. The public read model emits
-these shapes directly under the [catalogue contract](./mokly-catalogue.md#tree)
-so the viewer applies no further rule.
+A breadcrumb segment for a folder opens the folder's own page when one exists;
+for a screen or component index that page is the entry, so the segment shows
+and links to it. Otherwise the segment is a button that reveals the folder in
+the viewed entry's section without changing the content area. The reveal opens
+the section, every ancestor folder, any entry list the folder is listed in,
+and the folder itself, then moves focus to the folder row and scrolls it into
+the nearest visible part of the tree. It clears a search query, free text and
+tag terms together, that would hide the folder and switches Changes to All
+when no changed row lies inside; filters that leave the folder visible stay.
+When the query and Changes hide the folder only together, it clears the query
+and keeps Changes, then switches to All only if the folder is still hidden. An
+application-owned viewer proposes those filters to its host and moves focus
+once a committed selection shows the folder row; a commit that leaves the row
+hidden ends the reveal without moving focus. Below the responsive breakpoint
+it also opens the navigation drawer. Without active filtering the opened disclosures
+are saved like a user toggle under the
+[persistence contract](./mokly-disclosure-persistence.md#storage-and-defaults).
+A hidden folder without its own page has no row in All, so its segment is
+plain text, as are the baseline folder titles of a removed entry. The public
+read model emits these shapes directly under the
+[catalogue contract](./mokly-catalogue.md#tree) so the viewer applies no
+further rule.
 
 ## Diagnostics
 
@@ -183,10 +210,11 @@ screen or component; set the entry's title`.
 ## Verification
 
 Coverage must prove both carriers produce one record, every title rule, the
-default comparator and `order` with and without `...`, hidden folders in tree
-and search but not in URLs or Changes, `exclude` before derivation, each row
-rule including the `Overview` label and the identical rows for the two variant
-layouts, breadcrumb behaviour, and the exact text of every diagnostic.
+default comparator and `order` with and without `...` in each section, search
+through folder titles, hidden folders in tree and search but not in URLs or
+Changes, `exclude` before derivation, each row rule including the `Overview`
+label and the identical rows for the two variant layouts, breadcrumb
+behaviour, and the exact text of every diagnostic.
 
 ## Related Docs
 

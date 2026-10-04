@@ -99,7 +99,16 @@ export function NavRows(props: {
             key={node.key}
             node={node}
             sectionId={props.sectionId}
-          />
+          >
+            {node.members ? (
+              <NavRows
+                context={props.context}
+                depth={props.depth + 1}
+                nodes={node.members}
+                sectionId={props.sectionId}
+              />
+            ) : null}
+          </LeafRow>
         );
       })}
     </>

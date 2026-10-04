@@ -200,7 +200,7 @@ test("review export retains a removed variant route and parent context", async (
   assert.doesNotMatch(documentText(removed), /This screen was removed/);
   assert.match(
     removed,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:fixture\/home"[^>]*id="mb-nav-variants-pages-fixture\/home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
+    /<div class="mbk-nav-variants" data-nav-disclosure="variants:fixture\/home"[^>]*id="mb-nav-variants-specs-fixture\/home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
   );
   assert.match(removed, /Home empty · Removed/);
   await assert.rejects(fs.access(path.join(fixture.output, "id")));
