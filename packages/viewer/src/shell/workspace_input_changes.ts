@@ -12,6 +12,7 @@ import { generatedViews } from "../components/views.js";
 import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { branchPoints, type EntryIdentity } from "./catalogue_branch_point.js";
 
 /** One instance whose supplied props differ from the baseline render. */
 export interface InputChange {
@@ -26,12 +27,13 @@ export interface InputChange {
 
 /** Compare matching views instance by instance; an unmatched view has nothing
  * to compare, and an unmatched instance is a structural change, not an input.
- * A moved variant's view and a moved nested component pair with their
- * branch-point paths. */
+ * A variant's view and a nested component pair with their counterparts in the
+ * baseline `inventory`, so a move or a case-only rename keeps its inputs. */
 export function inputChanges(
   catalogue: Catalogue,
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   baseline: ManifestEntry | undefined,
+  inventory: readonly EntryIdentity[],
   currentVariants: readonly ManifestComponentVariant[] = [],
   baselineVariants: readonly ManifestComponentVariant[] = [],
 ): InputChange[] {
@@ -45,10 +47,15 @@ export function inputChanges(
     baseline.kind === "component"
       ? baselineVariants.flatMap((variant) => generatedViews(variant))
       : generatedViews(baseline);
-  const previous = (path: string) => catalogue.previousPaths.get(path) ?? path;
+  const lookup = branchPoints(catalogue);
+  const counterpart = (path: string) =>
+    lookup.counterpart({ kind: "component", path }, inventory)?.path;
   for (const after of afterViews) {
     const variantPath =
-      after.variantPath === undefined ? undefined : previous(after.variantPath);
+      after.variantPath === undefined
+        ? undefined
+        : counterpart(after.variantPath);
+    if (after.variantPath !== undefined && variantPath === undefined) continue;
     const before = beforeViews.find(
       (view) =>
         view.viewport === after.viewport &&
@@ -57,10 +64,14 @@ export function inputChanges(
     );
     for (const current of after.usage?.instances ?? []) {
       if (current.owner.kind !== "entry") continue;
-      const componentId = previous(current.componentId);
-      const paired = before?.usage?.instances.find(
-        (item) => item.key === current.key && item.componentId === componentId,
-      );
+      const componentId = counterpart(current.componentId);
+      const paired =
+        componentId === undefined
+          ? undefined
+          : before?.usage?.instances.find(
+              (item) =>
+                item.key === current.key && item.componentId === componentId,
+            );
       if (
         !paired ||
         JSON.stringify(paired.props) === JSON.stringify(current.props)

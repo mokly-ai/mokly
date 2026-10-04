@@ -37,7 +37,7 @@ test("a partial fallback derives no cross-route Usage or false empty state", () 
   const catalogue = viewerCatalogue(scoped);
   const entry = catalogue.byPath.get(component.path);
   assert.ok(entry?.kind === "component");
-  const data = publicWorkspace(scoped, entry);
+  const data = publicWorkspace(catalogue, scoped, entry);
   assert.deepEqual(data.usedBy, []);
   assert.deepEqual(data.affected, []);
 
@@ -73,7 +73,7 @@ test("an out-of-scope workspace shows the mockup's inspection waiting copy", () 
   const catalogue = viewerCatalogue(scoped);
   const entry = catalogue.byPath.get("product/browse/home");
   assert.ok(entry?.kind === "screen");
-  const data = publicWorkspace(scoped, entry);
+  const data = publicWorkspace(catalogue, scoped, entry);
   assert.equal(data.viewUsagePending, true);
   const views = data.views.filter(({ colorScheme }) => colorScheme === "light");
 

@@ -32,6 +32,7 @@ export interface Catalogue {
   /**
    * The branch-point path of each current entry the move contract paired with
    * a baseline entry, keyed by the current path. Empty until Changes is ready.
+   * Shell consumers read pairs only through `branchPoints`.
    */
   previousPaths: ReadonlyMap<string, string>;
 }
@@ -63,53 +64,6 @@ export function catalogueSelectionEntry(
         record.entry.path === entryId && record.snapshotId === snapshotId,
     )?.entry;
   return catalogue.byPath.get(entryId);
-}
-
-/** Resolve a current or retained variant's eligible same-kind parent. */
-export function catalogueVariantParent(
-  catalogue: Catalogue,
-  entry: CatalogueManifestEntry,
-): CatalogueManifestEntry | undefined {
-  const candidate = catalogueVariantParentEntry(catalogue, entry);
-  return candidate?.kind === entry.kind &&
-    (!("variantOf" in candidate) || candidate.variantOf === undefined)
-    ? candidate
-    : undefined;
-}
-
-/** Resolve the entry named as a variant's parent, even when it is ineligible. */
-export function catalogueVariantParentEntry(
-  catalogue: Catalogue,
-  entry: CatalogueManifestEntry,
-): CatalogueManifestEntry | undefined {
-  if (
-    (entry.kind !== "screen" && entry.kind !== "component") ||
-    !("variantOf" in entry) ||
-    entry.variantOf === undefined
-  )
-    return;
-  return (
-    catalogue.hierarchy.variantParentByPath.get(entry.path) ??
-    catalogue.removedEntries.find(
-      ({ entry: historical }) => historical.path === entry.variantOf,
-    )?.entry ??
-    catalogue.byPath.get(
-      catalogueMovedPath(catalogue, entry.variantOf) ?? entry.variantOf,
-    )
-  );
-}
-
-/**
- * The current path of the entry a move paired with a branch-point path, so a
- * baseline reference to the old path reaches the entry at its new place.
- */
-export function catalogueMovedPath(
-  catalogue: Catalogue,
-  previousPath: string,
-): string | undefined {
-  for (const [path, previous] of catalogue.previousPaths)
-    if (previous === previousPath) return path;
-  return undefined;
 }
 
 /** The union of the tags declared across every entry that can carry them. */

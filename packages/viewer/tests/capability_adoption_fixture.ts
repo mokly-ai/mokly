@@ -72,7 +72,7 @@ export function viewerRevision(
     (entry.kind === "screen" ||
       (entry.kind === "component" && !("variantOf" in entry)))
       ? {
-          ...publicWorkspace(value, entry),
+          ...publicWorkspace(next, value, entry),
           base: current.base,
         }
       : undefined;

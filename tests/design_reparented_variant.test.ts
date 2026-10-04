@@ -92,7 +92,7 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
       kind: "leaf",
       label: "Save failed · Removed",
       title: "Save failed",
-      variantOf: "welcome",
+      parentId: "welcome",
     },
   ]);
   assert.ok(specs);

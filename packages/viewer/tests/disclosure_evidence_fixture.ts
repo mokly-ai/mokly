@@ -104,7 +104,7 @@ export function revision(
     entry &&
     (entry.kind === "screen" ||
       (entry.kind === "component" && !("variantOf" in entry)))
-      ? { ...publicWorkspace(model, entry), base: previous.base }
+      ? { ...publicWorkspace(catalogue, model, entry), base: previous.base }
       : undefined;
   return {
     catalogue: model,

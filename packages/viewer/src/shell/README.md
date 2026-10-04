@@ -4,9 +4,11 @@
 uses each side's original path for snapshot URLs, including moved variants.
 `catalogue.ts` keeps each paired current entry's branch-point path in
 `previousPaths`: Serve and export pass the accepted pairs to `createCatalogue`,
-and the public viewer reads `previousPath` from the read model.
-Reference and parent resolution follow the
-[branch-point lookup contract](../../../../docs/protocol/mokly-branch-point-lookup.md).
+and the public viewer reads `previousPath` from the read model. No shell module
+reads those pairs, follows a `variantOf`, or case-folds a path itself:
+reference and parent resolution follow the
+[branch-point lookup contract](../../../../docs/protocol/mokly-branch-point-lookup.md)
+through one lookup.
 `nav_moves.ts`
 records that path on each row; under Changes a moved row reads
 `<label> · Moved` in place of the changed mark, and under All it carries the
@@ -19,13 +21,24 @@ pages read `componentChanges.changedEntries`. The same lookup contract owns
 counterparts for workspace inputs, variants and nested component instances.
 
 `catalogue_branch_point.ts` implements that pure lookup beside `createCatalogue`.
-`createBranchPointLookup(catalogue, baselineEntries)` indexes one generation.
-`resolve` requires an explicit before/after side and kind. `counterpart` gives
-the original baseline identity, `parent` gives an eligible parent or a stored
-title without a link, and `previousPath` gives only accepted move pairs.
-Results retain current entries or complete removed records. The optional
-baseline inventory supplies same-path and case-only counterparts; pairs alone
-prove moved counterparts. The shared Git cases in
+`branchPoints(catalogue)` is its one construction point: it indexes a catalogue
+generation on first use and returns the same lookup for that catalogue object
+afterwards. `resolve` requires an explicit before/after side and kind.
+`counterpart(current, baseline?)` gives the original baseline identity, and
+`baselineEntry(current, baseline)` the inventory entry at that identity.
+`parent` gives an eligible parent of a resolved variant or a stored title
+without a link, and `parentOf` locates a current entry or removed record first.
+`removedVariants(parent)` lists the removed variants whose parent resolves to
+that entry, in record order. `previousPath` gives only accepted move pairs.
+Results retain current entries or complete removed records. The baseline
+inventory is supplied per call from `componentChanges.baseline`; it adds
+same-path and case-only counterparts, while pairs alone prove moved
+counterparts, so the embedded viewer never needs one. Usage links, the variant
+bar, supplied-input pairing, removed tree rows, workspace keys, breadcrumbs,
+details and the public workspace all use it.
+[`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
+fails when a shell or viewer module outside the lookup reads `previousPaths`,
+follows a `variantOf`, or case-folds a path. The shared Git cases in
 [`branch_point_fixture.ts`](../../../../tests/helpers/branch_point_fixture.ts)
 are also accepted by the browser branch hosts.
 
@@ -46,10 +59,11 @@ link and a `<summary>`. `nav_tree.ts` lists a folder's own document, page, or
 use case as the folder's first child row, labelled `Overview` when its title
 is the folder's title, and renders a folder whose own page is a screen or
 component as that entry's row, whose container holds the variants and then
-the folder's other members. A deleted variant whose non-variant parent
-survives joins that container as a Removed row. `nav_tree.ts` records actual
-attachment before removing the row from flat fallback, so a former parent that
-is now a variant cannot make its historical child disappear and every removed
+the folder's other members. A deleted variant joins the container of the
+current parent the lookup resolves, including a moved or case-renamed parent,
+as a Removed row. `nav_removed_variants.ts` records actual attachment before
+removing the row from flat fallback, so a former parent that is now a variant
+or another kind cannot make its historical child disappear and every removed
 entry remains represented once. A removed page or document is a flat row
 that only Changes shows; All and search hide it. Current section nodes use the
 shared folder-first comparator; flat removed rows use the combined ordering in
@@ -91,7 +105,9 @@ server row and each React store update use the same presentation contract;
 visibility to parents and their variant children. `changes_activation.ts`
 owns Changes-filter activation for both standalone and embedded shells under
 the [lookup's consumer rule](../../../../docs/protocol/mokly-branch-point-lookup.md#consumers): an
-unmodified container row selects its first visible changed tree entry, and a changed
+unmodified container row selects its first visible changed tree entry, walking
+the rows `catalogueNavSections` built in the order its list shows them, so a
+removed variant attached under a moved member is reachable, and a changed
 destination selects its first changed view only when the current selection is
 not already a changed entry. Later navigation within Changes keeps the sticky
 view axes; container redirection still applies. The shared typed query
@@ -130,6 +146,12 @@ change and passes the effective scheme to controls and comparison presentation.
 `use_comparison.ts` is the single owner of comparison mode: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
+`views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
+resolves, so a removed variant of a moved or case-renamed parent opens in its
+siblings' workspace and keeps their mode. The mode owner also includes the
+evidence revision. Serve currently republishes evidence for each on-demand
+comparison document, so the first navigation after a new comparison resets the
+mode for any sibling.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and

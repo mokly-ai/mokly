@@ -264,6 +264,12 @@ therefore shows no Before and Current input changes, whether an entry moved or
 stayed at the same path. Serve and export shells carry that data and show those
 input changes.
 
+Every shell resolves branch-point references through one lookup per catalogue
+generation. A removed variant joins its moved or case-renamed parent in the
+tree, the variant bar and Changes activation, and opens in that parent's
+workspace. When its former parent's path now names another kind, its
+breadcrumb shows the stored `parentTitle` as plain text.
+
 ### Host integration
 
 The viewer owns catalogue presentation, navigation, comparison and inspection.
@@ -564,9 +570,14 @@ consumers.
   view, snapshot, preview, shell-URL, and browser-path derivation
 - [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
   ordering shared by review producers and readers
+- [`src/shell/catalogue_branch_point.ts`](./src/shell/catalogue_branch_point.ts) —
+  the one branch-point lookup per catalogue generation, reached through
+  `branchPoints`
 - [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
   [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
-  routed workspace identity and sibling component-variant entries
+  routed workspace identity and key, and sibling component-variant entries
+- [`src/viewer/public_variants.ts`](./src/viewer/public_variants.ts) — the
+  public parent and variant records the lookup resolves for a workspace
 - [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
   [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts), and
   [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the single comparison-mode

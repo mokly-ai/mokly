@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { canonicalJson } from "../components/data.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { ControlledDiffScreen } from "./diffs.js";
@@ -47,7 +48,9 @@ export function ComponentWorkspace({
     workspace;
   const variant = selection.variant;
   const variantPath = variant?.value.path;
-  const previousPath = catalogue.previousPaths.get(variantPath ?? entry.path);
+  const previousPath = branchPoints(catalogue).previousPath(
+    variant?.value ?? entry,
+  );
   const changedViews = selectedChangedViews(
     workspaceEvidenceEntry(data),
     data.changedViews,

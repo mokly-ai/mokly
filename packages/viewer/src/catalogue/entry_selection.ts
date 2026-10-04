@@ -51,7 +51,7 @@ export function currentCatalogueEntries<Entry extends CatalogueIdentity>(
  * The component parent a path names: a current or removed parent at that path,
  * or else the current parent a move paired with that previous path.
  */
-export function catalogueComponentParent<
+function catalogueComponentParent<
   Entry extends CatalogueIdentity = CatalogueRecord,
 >(
   model: CatalogueIndex<Entry>,

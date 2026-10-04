@@ -10,6 +10,11 @@ import type {
 } from "../registry/hierarchy.js";
 import type { ManifestEntry } from "../registry/types.js";
 
+import {
+  adoptedVariants,
+  attachRemovedVariants,
+} from "./nav_removed_variants.js";
+
 /** A leaf navigation row linking to one viewable route. */
 export interface NavLeafNode {
   hidden?: true;
@@ -30,10 +35,10 @@ export interface NavLeafNode {
    */
   removedVariant?: boolean;
   /**
-   * Parent entry path a retained baseline variant attaches to: the path it
-   * still names, or that parent's current path when a move paired it.
+   * Entry id of the current parent a retained baseline variant attaches to,
+   * as the branch-point lookup resolved it from the variant's baseline parent.
    */
-  variantOf?: string;
+  parentId?: string;
   /** The branch-point path of an entry a move paired; Changes labels it Moved. */
   movedFrom?: string;
   entryKind: "component" | "document" | "screen" | "use-case" | "page";
@@ -90,6 +95,13 @@ interface NavFolderContext {
   title: string;
 }
 
+/** Shared lookups for projecting one hierarchy into rows. */
+interface NavProjection {
+  /** Each current variant's current parent, keyed by the variant's path. */
+  parents: ReadonlyMap<string, ManifestEntry>;
+  titles: FolderTitleLookup;
+}
+
 /** Project the one path tree into the Specs and Components sections. */
 export function buildNavSections(
   hierarchy: CatalogueHierarchy<ManifestEntry>,
@@ -97,15 +109,20 @@ export function buildNavSections(
 ): NavSectionNode[] {
   const adopted = adoptedVariants(hierarchy, additionalLeaves);
   const attached = new Set<NavLeafNode>();
-  const titles = folderTitleLookup(hierarchy);
+  const projection: NavProjection = {
+    parents: hierarchy.variantParentByPath,
+    titles: folderTitleLookup(hierarchy),
+  };
   const tree = {
     specs: attachRemovedVariants(
-      hierarchy.roots.specs.map((node) => structuredNode(node, titles)),
+      hierarchy.roots.specs.map((node) => structuredNode(node, projection)),
       adopted,
       attached,
     ),
     components: attachRemovedVariants(
-      hierarchy.roots.components.map((node) => structuredNode(node, titles)),
+      hierarchy.roots.components.map((node) =>
+        structuredNode(node, projection),
+      ),
       adopted,
       attached,
     ),
@@ -146,64 +163,6 @@ export function buildNavSections(
   });
 }
 
-/**
- * Retained baseline variants grouped by the surviving same-kind parent that
- * still claims them. An ineligible variant keeps its flat removed row.
- */
-function adoptedVariants(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
-  leaves: readonly NavLeafNode[],
-): Map<string, NavLeafNode[]> {
-  const byParent = new Map<string, NavLeafNode[]>();
-  for (const leaf of leaves) {
-    const parentId = leaf.variantOf;
-    if (parentId === undefined) continue;
-    const parent = hierarchy.byPath.get(parentId);
-    if (
-      parent?.kind !== leaf.entryKind ||
-      ("variantOf" in parent && parent.variantOf !== undefined)
-    )
-      continue;
-    byParent.set(parentId, [...(byParent.get(parentId) ?? []), leaf]);
-  }
-  return byParent;
-}
-
-/**
- * Append each adopted variant to its parent's list, after the current ones.
- * Adoption is what makes the row a Changes row, so the flag is written here
- * rather than guessed again by whoever supplied the leaf.
- */
-function attachRemovedVariants(
-  nodes: readonly NavNode[],
-  byParent: ReadonlyMap<string, readonly NavLeafNode[]>,
-  attached: Set<NavLeafNode>,
-): NavNode[] {
-  if (byParent.size === 0) return [...nodes];
-  return nodes.map((node) => {
-    if (node.kind === "group")
-      return {
-        ...node,
-        children: attachRemovedVariants(node.children, byParent, attached),
-      };
-    const removed = byParent.get(node.entryId);
-    for (const leaf of removed ?? []) attached.add(leaf);
-    const members = node.members
-      ? { members: attachRemovedVariants(node.members, byParent, attached) }
-      : {};
-    return removed
-      ? {
-          ...node,
-          ...members,
-          variants: [
-            ...(node.variants ?? []),
-            ...removed.map((leaf) => ({ ...leaf, removedVariant: true })),
-          ],
-        }
-      : { ...node, ...members };
-  });
-}
-
 /** One entry row, with the variants and folder members it discloses. */
 function leafNode(
   entry: ManifestEntry,
@@ -229,11 +188,11 @@ function leafNode(
 function isVariantOf(
   node: HierarchyNode<ManifestEntry>,
   path: string,
+  projection: NavProjection,
 ): boolean {
   return (
     node.kind === "entry" &&
-    "variantOf" in node.entry &&
-    node.entry.variantOf === path
+    projection.parents.get(node.entry.path)?.path === path
   );
 }
 
@@ -246,7 +205,7 @@ function isVariantOf(
  */
 function structuredNode(
   node: HierarchyNode<ManifestEntry>,
-  titles: FolderTitleLookup,
+  projection: NavProjection,
   inheritedHidden = false,
   folder?: NavFolderContext,
 ): NavNode {
@@ -256,14 +215,14 @@ function structuredNode(
     const entry = node.entry;
     const children = node.children ?? [];
     const variants = children.flatMap((child) =>
-      child.kind === "entry" && isVariantOf(child, entry.path)
-        ? [{ ...leafNode(child.entry, titles), ...visibility }]
+      child.kind === "entry" && isVariantOf(child, entry.path, projection)
+        ? [{ ...leafNode(child.entry, projection.titles), ...visibility }]
         : [],
     );
     const members = children
-      .filter((child) => !isVariantOf(child, entry.path))
-      .map((child) => structuredNode(child, titles, hidden));
-    const leaf = leafNode(entry, titles, variants, members);
+      .filter((child) => !isVariantOf(child, entry.path, projection))
+      .map((child) => structuredNode(child, projection, hidden));
+    const leaf = leafNode(entry, projection.titles, variants, members);
     if (folder?.path !== entry.path) return { ...leaf, ...visibility };
     return {
       ...leaf,
@@ -275,7 +234,7 @@ function structuredNode(
   return {
     ...visibility,
     children: node.children.map((child) =>
-      structuredNode(child, titles, hidden, {
+      structuredNode(child, projection, hidden, {
         path: node.path,
         title: node.label,
       }),

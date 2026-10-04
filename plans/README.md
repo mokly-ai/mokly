@@ -25,8 +25,9 @@
   The user approved one shared branch-point lookup for five of them;
   Milestones 14–17 deliver it and end with a new review. Milestones 14 and 15
   are complete: the contracts, required former-parent title, shared lookup and
-  five Git fixtures are delivered. The unmodified full gate passes. Shell
-  adoption and host assertions remain in Milestone 16. The other ten
+  five Git fixtures are delivered. Milestone 16 moves every shell consumer to
+  the lookup and asserts the five cases in Serve, export and the embedded
+  viewer. Integration and the new review remain in Milestone 17. The other ten
   findings await the user's decision. The plan stays Active until its pull
   request merges.
 

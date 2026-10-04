@@ -3,7 +3,8 @@
 import { folderTitlesAt } from "../registry/folder_titles.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
-import { catalogueMovedPath, type Catalogue } from "./catalogue.js";
+import type { Catalogue } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import type { ShellContext } from "./context.js";
 import { folderDisclosureKey } from "./disclosure_keys.js";
 import { withMovedRows } from "./nav_moves.js";
@@ -13,45 +14,36 @@ import { queryConstrains, rowMatchesQuery, searchRow } from "./search_query.js";
 
 /**
  * Build the complete current-and-removed tree displayed in the rail. A removed
- * variant whose parent moved attaches through that parent's previous path,
- * while its record keeps the baseline `variantOf`.
+ * variant attaches to the current parent the branch-point lookup resolves for
+ * it, so a moved or case-renamed parent keeps its removed siblings, while its
+ * record keeps the baseline `variantOf`.
  */
 export function catalogueNavSections(
   catalogue: Catalogue,
 ): readonly NavSectionNode[] {
-  const removed: NavLeafNode[] = catalogue.removedEntries.flatMap(
+  const lookup = branchPoints(catalogue);
+  const removed: NavLeafNode[] = catalogue.removedEntries.map(
     ({ entry, snapshotId }) => {
-      const baselineParent =
-        (entry.kind === "screen" || entry.kind === "component") &&
-        "variantOf" in entry
-          ? entry.variantOf
-          : undefined;
-      const variantOf =
-        baselineParent === undefined
-          ? undefined
-          : (catalogueMovedPath(catalogue, baselineParent) ?? baselineParent);
+      const parent = lookup.parentOf(entry);
       const folderTitles = folderTitlesAt(catalogue.hierarchy, entry.path);
-      return [
-        {
-          kind: "leaf",
-          key: `removed:${entry.path}`,
-          entryId: entry.path,
-          entryKind: entry.kind,
-          label: `${entry.title} · Removed`,
-          title: entry.title,
-          tags: entry.tags ?? [],
-          ...(folderTitles.length > 0 ? { folderTitles } : {}),
-          removedPage: entry.kind === "page" || entry.kind === "document",
-          ...(snapshotId ? { snapshotId } : {}),
-          ...(variantOf === undefined ? {} : { variantOf }),
-        },
-      ];
+      return {
+        kind: "leaf",
+        key: `removed:${entry.path}`,
+        entryId: entry.path,
+        entryKind: entry.kind,
+        label: `${entry.title} · Removed`,
+        title: entry.title,
+        tags: entry.tags ?? [],
+        ...(folderTitles.length > 0 ? { folderTitles } : {}),
+        removedPage: entry.kind === "page" || entry.kind === "document",
+        ...(snapshotId ? { snapshotId } : {}),
+        ...(parent?.source === "current"
+          ? { parentId: parent.entry.path }
+          : {}),
+      };
     },
   );
-  return withMovedRows(
-    buildNavSections(catalogue.hierarchy, removed),
-    catalogue.previousPaths,
-  );
+  return withMovedRows(buildNavSections(catalogue.hierarchy, removed), lookup);
 }
 
 /** Initial disclosure values rendered on the server for one active route. */

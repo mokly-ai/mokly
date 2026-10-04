@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createBranchPointLookup } from "../packages/viewer/src/shell/catalogue_branch_point.js";
+import { branchPoints } from "../packages/viewer/src/shell/catalogue_branch_point.js";
 import { pairMoves } from "../src/review/moves/pair.js";
 
 import {
@@ -14,7 +14,7 @@ import { moveEntry, moveSignals } from "./helpers/move_entries.js";
 test("branch-point lookup follows accepted pairs by kind and preserves current spelling", () => {
   const current = lookupScreen("shop/archive/Receipt");
   const replacement = lookupComponent("shop/receipt");
-  const lookup = createBranchPointLookup(
+  const lookup = branchPoints(
     lookupCatalogue(
       [current, replacement],
       [],
@@ -44,7 +44,7 @@ test("branch-point lookup follows accepted pairs by kind and preserves current s
 test("case-only identities use the same kind and preserve both sides without a move", () => {
   const current = lookupScreen("shop/receipt");
   const before = lookupScreen("shop/Receipt");
-  const lookup = createBranchPointLookup(lookupCatalogue([current]), [before]);
+  const lookup = branchPoints(lookupCatalogue([current]));
   assert.deepEqual(lookup.resolve({ side: "before", ...before }), {
     source: "current",
     entry: current,
@@ -53,19 +53,18 @@ test("case-only identities use the same kind and preserve both sides without a m
     lookup.resolve({ side: "after", kind: "screen", path: "SHOP/RECEIPT" }),
     { source: "current", entry: current },
   );
-  assert.deepEqual(lookup.counterpart(current), {
+  assert.deepEqual(lookup.counterpart(current, [before]), {
     kind: "screen",
     path: before.path,
   });
+  assert.equal(lookup.baselineEntry(current, [before]), before);
   assert.equal(lookup.previousPath(current), undefined);
   assert.equal(
     lookup.resolve({ side: "before", kind: "document", path: before.path }),
     undefined,
   );
-  assert.equal(
-    createBranchPointLookup(lookupCatalogue([current])).counterpart(current),
-    undefined,
-  );
+  assert.equal(lookup.counterpart(current), undefined);
+  assert.equal(lookup.baselineEntry(current, []), undefined);
 });
 
 test("branch-point lookup retains removed records and never substitutes a different kind", () => {
@@ -75,9 +74,8 @@ test("branch-point lookup retains removed records and never substitutes a differ
     snapshotId: "c".repeat(64),
   };
   const current = lookupComponent("receipt");
-  const lookup = createBranchPointLookup(lookupCatalogue([current], [record]), [
-    lookupScreen("receipt"),
-  ]);
+  const lookup = branchPoints(lookupCatalogue([current], [record]));
+  const baseline = [lookupScreen("receipt")];
   assert.deepEqual(
     lookup.resolve({ side: "before", kind: "screen", path: "old" }),
     { source: "removed", entry: record.entry, record },
@@ -90,8 +88,8 @@ test("branch-point lookup retains removed records and never substitutes a differ
     lookup.resolve({ side: "before", kind: "screen", path: current.path }),
     undefined,
   );
-  assert.equal(lookup.counterpart(current), undefined);
-  assert.equal(lookup.counterpart(record.entry), undefined);
+  assert.equal(lookup.counterpart(current, baseline), undefined);
+  assert.equal(lookup.counterpart(record.entry, baseline), undefined);
   assert.equal(
     lookup.resolve({ side: "before", kind: "screen", path: "missing" }),
     undefined,
@@ -101,20 +99,25 @@ test("branch-point lookup retains removed records and never substitutes a differ
 test("a variant moving between parents uses its own counterpart", () => {
   const before = lookupScreen("donor/primary", "donor");
   const current = lookupScreen("receiver/primary", "receiver");
-  const lookup = createBranchPointLookup(
+  const lookup = branchPoints(
     lookupCatalogue(
       [lookupScreen("donor"), lookupScreen("receiver"), current],
       [],
       [{ path: current.path, previousPath: before.path }],
     ),
-    [lookupScreen("receiver"), before],
   );
+  const baseline = [lookupScreen("receiver"), before];
+  assert.deepEqual(lookup.counterpart(current, baseline), {
+    kind: "screen",
+    path: before.path,
+  });
   assert.deepEqual(lookup.counterpart(current), {
     kind: "screen",
     path: before.path,
   });
+  assert.equal(lookup.baselineEntry(current, baseline), before);
   assert.equal(
-    lookup.counterpart({ kind: "component", path: current.path }),
+    lookup.counterpart({ kind: "component", path: current.path }, baseline),
     undefined,
   );
 });
@@ -127,8 +130,10 @@ test("the lookup never changes inputs or leaks identities across generations", (
     [{ path: "new", previousPath: "old" }],
   );
   const before = structuredClone(catalogue);
-  const moved = createBranchPointLookup(catalogue);
-  const plain = createBranchPointLookup(lookupCatalogue([current]));
+  const moved = branchPoints(catalogue);
+  const plain = branchPoints(lookupCatalogue([current]));
+  assert.equal(branchPoints(catalogue), moved, "one lookup per generation");
+  assert.notEqual(plain, moved);
   assert.equal(
     moved.resolve({ side: "before", kind: "screen", path: "old" })?.entry,
     current,

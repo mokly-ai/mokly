@@ -145,7 +145,7 @@ test("historical workspace resolution owns the old identity and Removed status",
     assert.fail("Expected a historical screen");
   const displayed = displayEntry(historical.entry);
   if (displayed.kind !== "screen") assert.fail("Expected a displayed screen");
-  const workspace = publicWorkspace(model, displayed);
+  const workspace = publicWorkspace(catalogue, model, displayed);
 
   const selected = catalogue.byPath.get(currentScreen.path);
   assert.ok(selected);

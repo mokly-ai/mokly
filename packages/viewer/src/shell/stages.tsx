@@ -123,7 +123,7 @@ export function TargetStage(props: {
     );
   if (entry.kind === "component") {
     const parent = isManifestComponentVariant(entry)
-      ? props.catalogue.byPath.get(entry.variantOf)
+      ? props.catalogue.hierarchy.variantParentByPath.get(entry.path)
       : entry;
     if (parent?.kind !== "component" || isManifestComponentVariant(parent))
       return <EmptyStage heading="Component unavailable">{null}</EmptyStage>;

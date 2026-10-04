@@ -5,11 +5,11 @@ import type { ReactNode } from "react";
 
 import { viewHref } from "../navigation/routes.js";
 
+import type { Catalogue } from "./catalogue.js";
 import {
-  catalogueVariantParent,
-  catalogueVariantParentEntry,
-  type Catalogue,
-} from "./catalogue.js";
+  branchPoints,
+  type VariantParentResolution,
+} from "./catalogue_branch_point.js";
 import { structuredCrumbTrail, type CatalogueCrumb } from "./crumbs.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
@@ -153,6 +153,22 @@ export function ScreenHead(props: {
   );
 }
 
+/**
+ * The crumb for a variant's parent: an eligible current parent links to its
+ * page, a removed parent to its retained snapshot, and a stored title is text.
+ */
+function parentCrumb(parent: VariantParentResolution): CatalogueCrumb {
+  if (parent.source === "title") return { label: parent.title };
+  const snapshot =
+    parent.source === "removed" ? parent.record.snapshotId : undefined;
+  return {
+    href: `${viewHref(parent.entry.path)}${
+      snapshot ? `?snapshot=${snapshot}` : ""
+    }`,
+    label: parent.entry.title,
+  };
+}
+
 /** The breadcrumb trail, path, and title for one resolved route target. */
 export function targetHead(
   catalogue: Catalogue,
@@ -163,36 +179,13 @@ export function targetHead(
       .find(({ entry }) => entry.path === target.entry.path)
       ?.folderTitles.map((label) => ({ label })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.path);
-  const parent = catalogueVariantParent(catalogue, target.entry);
-  const parentEntry = catalogueVariantParentEntry(catalogue, target.entry);
-  const parentSnapshot = parent
-    ? catalogue.removedEntries.find(({ entry }) => entry.path === parent.path)
-        ?.snapshotId
-    : undefined;
+  const parent = branchPoints(catalogue).parentOf(target.entry);
   return {
-    crumbs:
-      parentEntry === undefined
-        ? ancestors
-        : [
-            ...ancestors,
-            {
-              ...(parent
-                ? {
-                    href: `${viewHref(parent.path)}${
-                      parentSnapshot ? `?snapshot=${parentSnapshot}` : ""
-                    }`,
-                  }
-                : {}),
-              label: parentEntry.title,
-            },
-          ],
+    crumbs: parent ? [...ancestors, parentCrumb(parent)] : ancestors,
     path: target.entry.path,
     title:
-      target.entry.kind === "component" &&
-      "variantOf" in target.entry &&
-      target.entry.variantOf !== undefined &&
-      parentEntry?.kind === "component"
-        ? parentEntry.title
+      target.entry.kind === "component" && parent && parent.source !== "title"
+        ? parent.entry.title
         : target.entry.title,
   };
 }

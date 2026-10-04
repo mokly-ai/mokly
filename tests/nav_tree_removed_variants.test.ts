@@ -24,7 +24,7 @@ const removed = {
   label: "Save failed · Removed",
   removedPage: true,
   title: "Save failed",
-  variantOf: "welcome",
+  parentId: "welcome",
 };
 
 test("removed variants remain represented exactly once across parent transitions", () => {
@@ -77,7 +77,7 @@ test("a removed variant attaches to a parent listed among a folder's own screen 
     ...removed,
     entryId: "billing/welcome/error",
     key: "removed:billing/welcome/error",
-    variantOf: "billing/welcome",
+    parentId: "billing/welcome",
   };
   const sections = buildNavSections(
     createCatalogue(

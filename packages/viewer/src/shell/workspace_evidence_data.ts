@@ -1,6 +1,5 @@
 /** Merge route classification with evidence loaded for one comparison. */
 
-import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type {
   ComponentReview,
   EntryChangeReason,
@@ -13,6 +12,7 @@ import type {
 } from "../review/types.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
+import { componentReview } from "./workspace_entry.js";
 
 /** Complete evidence projected into one Details panel. */
 export interface WorkspaceComparisonEvidence {
@@ -29,14 +29,10 @@ export function workspaceComparisonEvidence(
   variantPath?: string,
   loaded?: ReviewResult,
 ): WorkspaceComparisonEvidence {
-  const componentId =
-    data.component?.path ??
-    (data.entry.kind === "component" && isManifestComponentVariant(data.entry)
-      ? data.entry.variantOf
-      : undefined);
-  const selected = componentId
-    ? loaded?.components.find((item) => item.path === componentId)
-    : loaded?.screens.find((item) => item.path === data.entry.path);
+  const selected =
+    data.entry.kind === "component"
+      ? componentReview(loaded?.components, data.component, data.entry)
+      : loaded?.screens.find((item) => item.path === data.entry.path);
   const change = loaded?.changes.find(
     (item) =>
       item.kind === data.entry.kind &&

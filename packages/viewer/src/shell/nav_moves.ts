@@ -6,19 +6,19 @@
  * its entry changed beyond the move.
  */
 
+import type { BranchPointLookup } from "./catalogue_branch_point.js";
 import { materialChangedEntries, type ShellContext } from "./context.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 
 /** Copy the sections with each paired entry's branch-point path on its row. */
 export function withMovedRows(
   sections: readonly NavSectionNode[],
-  previousPaths: ReadonlyMap<string, string>,
+  lookup: Pick<BranchPointLookup, "previousPath">,
 ): NavSectionNode[] {
-  if (previousPaths.size === 0) return [...sections];
   const leaf = (node: NavLeafNode): NavLeafNode => {
     const movedFrom = node.key.startsWith("removed:")
       ? undefined
-      : previousPaths.get(node.entryId);
+      : lookup.previousPath({ kind: node.entryKind, path: node.entryId });
     return {
       ...node,
       ...(movedFrom === undefined ? {} : { movedFrom }),

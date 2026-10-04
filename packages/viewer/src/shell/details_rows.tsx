@@ -9,11 +9,8 @@ import { parseLogicalTarget } from "../navigation/logical.js";
 import { viewHref } from "../navigation/routes.js";
 import type { ManifestUseCase } from "../registry/types.js";
 
-import {
-  catalogueVariantParent,
-  type Catalogue,
-  type CatalogueManifestEntry,
-} from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
 import { TagChip } from "./tags.js";
 import { changedViewsLabel, type ChangedView } from "./view_marks.js";
@@ -182,13 +179,9 @@ export function VariantChips(props: {
     ({ entry }) => entry.path === props.entry.path,
   );
   const variants = historical
-    ? props.catalogue.removedEntries.flatMap(({ entry }) =>
-        (entry.kind === "screen" || entry.kind === "component") &&
-        "variantOf" in entry &&
-        entry.variantOf === props.entry.path
-          ? [entry]
-          : [],
-      )
+    ? branchPoints(props.catalogue)
+        .removedVariants(props.entry)
+        .map(({ entry }) => entry)
     : (props.catalogue.hierarchy.variantsByPath.get(props.entry.path) ?? []);
   if (variants.length === 0) {
     return null;
@@ -216,15 +209,8 @@ export function VariantOfChip(props: {
   catalogue: Catalogue;
   entry: CatalogueManifestEntry;
 }) {
-  if (
-    (props.entry.kind !== "screen" && props.entry.kind !== "component") ||
-    !("variantOf" in props.entry) ||
-    props.entry.variantOf === undefined
-  ) {
-    return null;
-  }
-  const parent = catalogueVariantParent(props.catalogue, props.entry);
-  if (parent === undefined) {
+  const parent = branchPoints(props.catalogue).parentOf(props.entry);
+  if (parent === undefined || parent.source === "title") {
     return null;
   }
   return (
@@ -232,14 +218,14 @@ export function VariantOfChip(props: {
       <span className="mbk-chips">
         <a
           className="mbk-chip screen"
-          href={entryHref(props.catalogue, parent)}
+          href={entryHref(props.catalogue, parent.entry)}
         >
-          {parent.kind === "component" ? (
+          {parent.entry.kind === "component" ? (
             <WorkspaceIcon name="components" size={11} />
           ) : (
             <ScreenIcon size={11} />
           )}
-          {parent.title}
+          {parent.entry.title}
         </a>
       </span>
     </MetaRow>

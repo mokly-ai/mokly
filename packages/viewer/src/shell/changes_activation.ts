@@ -1,8 +1,5 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
-import { folderTitlesAt } from "../registry/folder_titles.js";
-import type { HierarchyLeaf, HierarchyNode } from "../registry/hierarchy.js";
-import type { ManifestEntry } from "../registry/types.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import {
@@ -11,8 +8,9 @@ import {
   type CatalogueManifestEntry,
 } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { catalogueNavSections, navLeafVisible } from "./nav_model.js";
+import type { NavLeafNode, NavNode } from "./nav_tree.js";
 import type { ShellRoute } from "./routes.js";
-import { rowMatchesQuery, searchRow } from "./search_query.js";
 import { workspaceData } from "./workspace_data.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
@@ -41,7 +39,7 @@ export function changesActivation(
         entry: requested,
         ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
       }
-    : firstVisibleChangedEntry(catalogue, context, selection, requested.path);
+    : firstVisibleChangedEntry(catalogue, context, selection, requested);
   if (!destination) return route;
   const redirected = destination.entry.path !== requested.path;
   const next: ShellRoute = redirected
@@ -95,100 +93,61 @@ function selectionHasChangedRoute(
 }
 
 /**
- * The first visible changed entry an unmodified container row lists, in list
- * order: its variants, retained removed variants after them, then its folder
- * members, descending into member folders and member lists.
+ * The first visible changed row an unmodified container row lists, in the
+ * built tree's row order: its variants, then the removed variants attached
+ * after them, then its folder members, descending into member folders and
+ * member lists. Only a current screen or component row lists entries.
  */
 function firstVisibleChangedEntry(
   catalogue: Catalogue,
   context: ShellContext,
   selection: ViewerSelection,
-  parentId: string,
+  container: CatalogueManifestEntry,
 ): ChangedDestination | undefined {
-  const parent = catalogue.hierarchy.byPath.get(parentId);
-  if (
-    (parent?.kind !== "screen" && parent?.kind !== "component") ||
-    ("variantOf" in parent && parent.variantOf !== undefined) ||
-    !catalogue.manifest.entries.some((entry) => entry.path === parent.path)
-  )
-    return;
-  const roots =
-    parent.kind === "component"
-      ? catalogue.hierarchy.roots.components
-      : catalogue.hierarchy.roots.specs;
-  const node = entryNode(roots, parentId);
-  const listed = node
-    ? entryList(catalogue, node)
-    : [
-        ...(catalogue.hierarchy.variantsByPath.get(parentId) ?? []).map(
-          (entry) => ({ entry }),
-        ),
-        ...removedVariants(catalogue, parent),
-      ];
-  return listed.find(
-    ({ entry }) =>
-      context.changedEntries?.includes(entry.path) &&
-      rowMatchesQuery(
-        { freeText: selection.search, tags: selection.tags },
-        searchRow(entry, folderTitlesAt(catalogue.hierarchy, entry.path)),
-      ),
+  const row = containerRow(
+    catalogueNavSections(catalogue).flatMap(({ children }) => children),
+    `entry:${container.path}`,
   );
+  for (const listed of row ? listedRows(row) : []) {
+    if (!navLeafVisible(listed, selection, context)) continue;
+    const entry = catalogueSelectionEntry(
+      catalogue,
+      listed.entryId,
+      listed.snapshotId,
+    );
+    if (entry)
+      return {
+        entry,
+        ...(listed.snapshotId ? { snapshotId: listed.snapshotId } : {}),
+      };
+  }
+  return undefined;
 }
 
-/** One section's row for an entry path, wherever it is listed. */
-function entryNode(
-  nodes: readonly HierarchyNode<ManifestEntry>[],
-  path: string,
-): HierarchyLeaf<ManifestEntry> | undefined {
+/** The row for one current entry, wherever a folder or member list holds it. */
+function containerRow(
+  nodes: readonly NavNode[],
+  key: string,
+): NavLeafNode | undefined {
   for (const node of nodes) {
-    if (node.kind === "entry" && node.key === path) return node;
-    const found = entryNode(node.children ?? [], path);
+    if (node.kind === "leaf" && node.key === key) return node;
+    const found = containerRow(
+      node.kind === "group" ? node.children : (node.members ?? []),
+      key,
+    );
     if (found) return found;
   }
   return undefined;
 }
 
-/** The entries an entry row's list holds, in the order the list shows them. */
-function entryList(
-  catalogue: Catalogue,
-  node: HierarchyLeaf<ManifestEntry>,
-): ChangedDestination[] {
-  const children = node.children ?? [];
-  const variant = (child: HierarchyNode<ManifestEntry>) =>
-    child.kind === "entry" &&
-    "variantOf" in child.entry &&
-    child.entry.variantOf === node.entry.path;
-  return [
-    ...children.flatMap((child) =>
-      child.kind === "entry" && variant(child) ? [{ entry: child.entry }] : [],
-    ),
-    ...removedVariants(catalogue, node.entry),
-    ...children
-      .filter((child) => !variant(child))
-      .flatMap((child) => listedRows(catalogue, child)),
-  ];
+/** The rows a list discloses, in the order the list shows them. */
+function listedRows(row: NavLeafNode): NavLeafNode[] {
+  return [...(row.variants ?? []), ...(row.members ?? []).flatMap(memberRows)];
 }
 
 /** A member row followed by everything its folder or list holds. */
-function listedRows(
-  catalogue: Catalogue,
-  node: HierarchyNode<ManifestEntry>,
-): ChangedDestination[] {
-  return node.kind === "folder"
-    ? node.children.flatMap((child) => listedRows(catalogue, child))
-    : [{ entry: node.entry }, ...entryList(catalogue, node)];
-}
-
-/** Retained baseline variants that a surviving entry still lists. */
-function removedVariants(
-  catalogue: Catalogue,
-  parent: CatalogueManifestEntry,
-): ChangedDestination[] {
-  return catalogue.removedEntries.flatMap(({ entry, snapshotId }) =>
-    entry.kind === parent.kind &&
-    "variantOf" in entry &&
-    entry.variantOf === parent.path
-      ? [{ entry, ...(snapshotId ? { snapshotId } : {}) }]
-      : [],
-  );
+function memberRows(node: NavNode): NavLeafNode[] {
+  return node.kind === "group"
+    ? node.children.flatMap(memberRows)
+    : [node, ...listedRows(node)];
 }

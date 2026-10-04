@@ -7,7 +7,7 @@ import { currentCatalogueEntries } from "../packages/viewer/src/catalogue/entry_
 import { readShellCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectScopedCatalogue } from "../packages/viewer/src/catalogue/scoped_projection.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
-import { createBranchPointLookup } from "../packages/viewer/src/shell/catalogue_branch_point.js";
+import { branchPoints } from "../packages/viewer/src/shell/catalogue_branch_point.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
 import { compareReview } from "../src/review/compare.js";
 import { computeCatalogueChanges } from "../src/server/changed.js";
@@ -80,7 +80,8 @@ for (const expected of cases) {
       changes.removedEntries,
       changes.movedEntries,
     );
-    const lookup = createBranchPointLookup(catalogue, before.manifest.entries);
+    const lookup = branchPoints(catalogue);
+    const baseline = before.manifest.entries;
     const model = projectCatalogue({
       catalogue,
       configPath: "mokly.config.ts",
@@ -128,7 +129,7 @@ for (const expected of cases) {
         false,
         "a paired previous path cannot be a current same-kind path",
       );
-      assert.deepEqual(lookup.counterpart(move), {
+      assert.deepEqual(lookup.counterpart(move, baseline), {
         kind: move.kind,
         path: move.previousPath,
       });
@@ -170,7 +171,7 @@ for (const expected of cases) {
         ["component", "library/action", "library/Action"],
         ["component", "library/action/primary", "library/Action/Primary"],
       ] as const) {
-        assert.deepEqual(lookup.counterpart({ kind, path }), {
+        assert.deepEqual(lookup.counterpart({ kind, path }, baseline), {
           kind,
           path: previous,
         });

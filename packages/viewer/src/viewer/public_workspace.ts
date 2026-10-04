@@ -1,10 +1,6 @@
 /** Workspace values derived only from the validated public catalogue. */
 
-import {
-  catalogueComponentParent,
-  catalogueComponentVariants,
-  resolveCatalogueSelection,
-} from "../catalogue/entry_selection.js";
+import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
   ShellCatalogueComponent,
   ShellCatalogueReadModel,
@@ -17,6 +13,7 @@ import { catalogueHasOmittedUsage } from "../catalogue/usage_scope.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { generatedViews } from "../components/views.js";
 import type { ReviewState } from "../review/types.js";
+import type { Catalogue } from "../shell/catalogue.js";
 import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
 import type { ViewState, ViewStatesBySelection } from "../shell/view_status.js";
 import type {
@@ -27,6 +24,7 @@ import type {
 import type { ChangedViewsBySelection } from "../shell/workspace_views_data.js";
 
 import { displayEntry } from "./projection.js";
+import { publicParent, publicVariants } from "./public_variants.js";
 import { routedEntries } from "./selection.js";
 
 const statuses = {
@@ -130,6 +128,7 @@ function publishedViewStatesBySelection(
 }
 
 export function publicWorkspace(
+  catalogue: Catalogue,
   model: ShellCatalogueReadModel,
   entry: WorkspaceData["entry"],
   comparisons = model.comparisonUrl !== null,
@@ -147,7 +146,7 @@ export function publicWorkspace(
   const publicComponent: ShellCatalogueComponent | undefined =
     original.kind === "component"
       ? "variantOf" in original
-        ? catalogueComponentParent(model, original.variantOf)
+        ? publicParent(catalogue, model, original)
         : original
       : undefined;
   const projectedComponent = publicComponent
@@ -164,13 +163,11 @@ export function publicWorkspace(
     original.kind === "component" &&
     "variantOf" in original &&
     publicComponent === undefined;
-  const componentId =
-    component?.path ?? (orphanVariant ? original.variantOf : undefined);
   const parentRemoved = publicComponent
     ? model.removedEntries.some(({ entry }) => entry === publicComponent)
     : false;
   const sourceVariants: readonly ShellCatalogueVariant[] = publicComponent
-    ? catalogueComponentVariants(model, publicComponent.path)
+    ? publicVariants(catalogue, model, publicComponent, parentRemoved)
     : orphanVariant
       ? [original]
       : [];
@@ -187,11 +184,11 @@ export function publicWorkspace(
       if (owner.kind !== "screen" && owner.kind !== "component") continue;
       for (const view of generatedViews(displayEntry(owner)))
         for (const instance of view.usage?.instances ?? [])
-          if (instance.componentId === (componentId ?? entry.path))
+          if (instance.componentId === (component?.path ?? entry.path))
             usedBy.push({
               entryId: owner.path,
               entryKind: owner.kind,
-              title: publicEntryTitle(model, owner),
+              title: publicEntryTitle(catalogue, model, owner),
               viewport: view.viewport,
               colorScheme: view.colorScheme,
               instanceKey: instance.key,
@@ -282,10 +279,11 @@ export function publicWorkspace(
 }
 
 function publicEntryTitle(
+  catalogue: Catalogue,
   model: ShellCatalogueReadModel,
   entry: Extract<ShellCatalogueRoutedEntry, { kind: "component" | "screen" }>,
 ): string {
   if (entry.kind !== "component" || !("variantOf" in entry)) return entry.title;
-  const parent = catalogueComponentParent(model, entry.variantOf);
+  const parent = publicParent(catalogue, model, entry);
   return parent ? `${parent.title} · ${entry.title}` : entry.title;
 }

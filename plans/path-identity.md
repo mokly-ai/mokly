@@ -10,8 +10,8 @@ recommended option for each of the eight findings in the
 those fixes and end with a new review. Milestones 9–12 are complete. Milestone
 13 is complete, including a second fresh review with fifteen findings in the
 [review record](../docs/reviews/path-identity.md#second-review). On 2026-10-04
-the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. Milestones 14 and 15
-are complete; shell adoption and host assertions remain in Milestone 16. The other ten
+the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. Milestones 14, 15
+and 16 are complete; integration and the new review remain in Milestone 17. The other ten
 findings await the user's decision.
 This plan supersedes
 the navigation-path contract delivered by
@@ -2394,45 +2394,90 @@ Move every shell consumer to the shared lookup, with a failing test first for
 each finding. Then assert the rendered UI of the shared fixture set in every
 host.
 
-Status: Not started.
+Status: Implementation complete. The full gate is blocked on the Milestone 16
+machine; see the last TODO.
 
-- [ ] Finding 1 (option A): build affected-consumer links from the lookup. A
+- [x] Finding 1 (option A): build affected-consumer links from the lookup. A
       `before`-side evidence links to the current entry that its path resolves
       to, or to the removed record. Omit a row that resolves to nothing.
-- [ ] Finding 6 (option B): build the variant bar, the Before and Current
+      `affectedUsageLinks` resolves each evidence on its own side. Covered by
+      `tests/branch_point_workspace.test.ts` (moved consumers, both shells),
+      `tests/branch_point_inputs.test.ts` (reused path, case fold, after side)
+      and the `moved-consumers` browser checks.
+- [x] Finding 6 (option B): build the variant bar, the Before and Current
       props, the supplied-input pairing, and the removed-variant rows in the
       tree from the lookup. A variant that moved between parents, and a
       case-only rename, must keep their details. A removed sibling must attach
-      to its parent.
-- [ ] Finding 8 (option A): key the component workspace by the resolved
+      to its parent. The bar pairs each current variant with its own
+      `baselineEntry` and lists `removedVariants`; inputs pair through
+      `counterpart` with the baseline inventory; `catalogueNavSections` attaches
+      rows through `parentOf`; the public workspace maps the same results to
+      its records in `public_variants.ts`. Covered by
+      `tests/branch_point_workspace.test.ts`,
+      `tests/branch_point_inputs.test.ts` (moved and case-renamed supplied
+      inputs), `tests/branch_point_navigation.test.ts` and the
+      `moved-parent`, `moved-variant` and `case-renames` browser checks.
+- [x] Finding 8 (option A): key the component workspace by the resolved
       parent. Opening a removed variant of a moved or case-renamed parent must
-      keep the comparison mode.
-- [ ] Finding 9 (option B): build the Changes activation order from the built
+      keep the comparison mode. `views.tsx` keys the workspace with
+      `workspaceKey`. Covered by `tests/branch_point_workspace_key.test.ts` and
+      the browser checks, which open the removed sibling from the bar in Side
+      by side. Serve resets the mode on the first navigation after any new
+      comparison, siblings included, because each on-demand document
+      republishes evidence; the Serve suite renders those comparisons first.
+      That reset predates this milestone and is reported for a decision.
+- [x] Finding 9 (option B): build the Changes activation order from the built
       navigation tree. A container row must reach a moved member's removed
-      variant.
-- [ ] Finding 11 (option A): build the parent crumb from the lookup. When the
+      variant. `changes_activation.ts` walks `catalogueNavSections` rows with
+      `navLeafVisible`. Covered by `tests/branch_point_navigation.test.ts` and
+      the browser checks, which search for the removed sibling and activate
+      the container row.
+- [x] Finding 11 (option A): build the parent crumb from the lookup. When the
       variant has no same-kind parent, show the record's `parentTitle` as
-      plain text.
-- [ ] Remove the superseded mappings: `catalogueMovedPath`, the parent
+      plain text. `targetHead` builds the crumb from `parentOf`; `VariantOfChip`
+      shows only an eligible parent. Covered by
+      `tests/branch_point_navigation.test.ts`,
+      `tests/nav_tree_removed_variants.test.ts` and every browser case's crumb
+      checks.
+- [x] Remove the superseded mappings: `catalogueMovedPath`, the parent
       fallback chain in `catalogueVariantParentEntry`, and the direct
       `previousPaths`, `variantOf`, and case-folded path comparisons in shell
       modules. Add a guard test that fails when a shell module outside the
       lookup reads `previousPaths` or compares a `variantOf` with a path. The
       guard stops new code from repeating these five findings. This milestone
       may refine the lookup's interface; its rules stay as Milestone 14
-      defines them.
-- [ ] Run the shared fixture set through Serve, export, and the embedded
+      defines them. `catalogueVariantParent`, `catalogueVariantParentEntry`,
+      `catalogueMovedPath` and `catalogueComponentParent` are removed;
+      `branchPoints` is the one memoized construction point, `counterpart`
+      takes the baseline inventory per call, and `baselineEntry`, `parentOf`
+      and `removedVariants` were added. `tests/branch_point_guard.test.ts`
+      parses every shell and viewer module and fails on `previousPaths`, a
+      followed or compared `variantOf`, or a case-folded path.
+- [x] Run the shared fixture set through Serve, export, and the embedded
       viewer with `tests/browser/branch_hosts.ts`, at desktop and mobile
-      widths. Assert the rendered UI, not only HTTP status:
-  - [ ] each usage link's target and destination title, and export success
-        for case 1;
-  - [ ] the Before and Current props of moved and case-renamed variants;
-  - [ ] the removed-variant rows under their parents;
-  - [ ] the comparison mode after a removed variant opens;
-  - [ ] the Changes activation order;
-  - [ ] each crumb's text, and its link when it has one.
-- [ ] Update the shell README and the viewer README.
-- [ ] Run the unmodified `cargo xtask check`. Then commit and push.
+      widths. Assert the rendered UI, not only HTTP status. The cases run from
+      `tests/browser/branch_point_{serve,export,viewer}.spec.ts` through
+      `branch_point_suite.ts`, and every check fails on a server error:
+  - [x] each usage link's target and destination title, and export success
+        for case 1; the embedded viewer has no affected-consumer evidence, so
+        it asserts that no affected section appears;
+  - [x] the Before and Current props of moved and case-renamed variants;
+  - [x] the removed-variant rows under their parents;
+  - [x] the comparison mode after a removed variant opens;
+  - [x] the Changes activation order;
+  - [x] each crumb's text, and its link when it has one.
+- [x] Update the shell README and the viewer README.
+- [ ] Run the unmodified `cargo xtask check`. Then commit and push. The
+      branch is committed and pushed, but the unmodified gate did not pass on
+      the Milestone 16 machine, which ran about twice as slowly as on
+      2026-10-04 morning. Every stage passed except three checks that also
+      fail on the unchanged base build there: the 2,500 ms budget in
+      `postcss_dependency_review.test.ts` (2,861 and 3,341 ms in the gate,
+      2,261–2,739 ms alone; its code is untouched), the 300 s
+      `ordinaryPreview` fixture setup in `preview_design_links.spec.ts` and
+      `preview_navigation.spec.ts`, and the `moved_hydration.spec.ts` export
+      case for `billing/invoice/paid` (base fails two of four runs). Run the
+      unmodified gate on a healthy machine before integration.
 
 ## Milestone 17: Branch-point verification and review
 

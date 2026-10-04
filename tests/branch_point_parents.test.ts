@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createBranchPointLookup } from "../packages/viewer/src/shell/catalogue_branch_point.js";
+import { branchPoints } from "../packages/viewer/src/shell/catalogue_branch_point.js";
 
 import {
   lookupCatalogue,
@@ -20,7 +20,7 @@ for (const mode of ["move", "case"] as const) {
     };
     const moves =
       mode === "move" ? [{ path: parent.path, previousPath: "old" }] : [];
-    const lookup = createBranchPointLookup(
+    const lookup = branchPoints(
       lookupCatalogue([parent, child], [record], moves),
     );
     assert.deepEqual(
@@ -57,9 +57,7 @@ test("a variant can resolve a same-kind removed parent", () => {
     folderTitles: [],
     parentTitle: "Former title",
   };
-  const lookup = createBranchPointLookup(
-    lookupCatalogue([], [parent, variant]),
-  );
+  const lookup = branchPoints(lookupCatalogue([], [parent, variant]));
   assert.deepEqual(
     lookup.parent({ source: "removed", entry: variant.entry, record: variant }),
     { source: "removed", entry: parent.entry, record: parent },
@@ -88,10 +86,53 @@ for (const mode of [
       mode === "removed-variant"
         ? [child, { entry: other, parentTitle: "Container", folderTitles: [] }]
         : [child];
-    const lookup = createBranchPointLookup(lookupCatalogue(entries, removed));
+    const lookup = branchPoints(lookupCatalogue(entries, removed));
     assert.deepEqual(
       lookup.parent({ source: "removed", entry: child.entry, record: child }),
       { source: "title", title: "Former screen title" },
     );
   });
 }
+
+test("removed variants attach to the parent the lookup resolves, in record order", () => {
+  for (const mode of ["move", "case"] as const) {
+    const parent = lookupScreen(mode === "move" ? "new" : "OLD");
+    const records = ["old/first", "old/second"].map((path) => ({
+      entry: lookupScreen(path, "old"),
+      folderTitles: [],
+      parentTitle: "Former title",
+    }));
+    const moves =
+      mode === "move" ? [{ path: parent.path, previousPath: "old" }] : [];
+    const lookup = branchPoints(lookupCatalogue([parent], records, moves));
+    assert.deepEqual(lookup.removedVariants(parent), records, mode);
+    assert.deepEqual(
+      lookup.removedVariants({ kind: "component", path: parent.path }),
+      [],
+      `${mode}: another kind adopts nothing`,
+    );
+    for (const record of records)
+      assert.deepEqual(
+        lookup.parentOf(record.entry),
+        { source: "current", entry: parent },
+        mode,
+      );
+    assert.equal(lookup.parentOf(parent), undefined, `${mode}: a parent`);
+  }
+});
+
+test("a variant without an eligible parent is adopted by nothing", () => {
+  const child = {
+    entry: lookupScreen("old/gone", "old"),
+    folderTitles: [],
+    parentTitle: "Former screen title",
+  };
+  const replacement = lookupComponent("old");
+  const lookup = branchPoints(lookupCatalogue([replacement], [child]));
+  assert.deepEqual(lookup.parentOf(child.entry), {
+    source: "title",
+    title: "Former screen title",
+  });
+  assert.deepEqual(lookup.removedVariants(replacement), []);
+  assert.deepEqual(lookup.removedVariants({ kind: "screen", path: "old" }), []);
+});

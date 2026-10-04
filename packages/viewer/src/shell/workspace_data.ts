@@ -15,13 +15,18 @@ import type { ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import { materialChangedEntries, type ShellContext } from "./context.js";
 import {
   shownComparisonEligible,
   type EntryStatus,
   type ViewStatesBySelection,
 } from "./view_status.js";
-import { workspaceComponent, type WorkspaceEntry } from "./workspace_entry.js";
+import {
+  componentReview,
+  workspaceComponent,
+  type WorkspaceEntry,
+} from "./workspace_entry.js";
 import {
   inputChanges as entryInputChanges,
   type InputChange,
@@ -90,6 +95,7 @@ export function workspaceData(
 ): WorkspaceData {
   if (catalogue.publicModel)
     return publicWorkspace(
+      catalogue,
       catalogue.publicModel,
       entry,
       context.comparisons ?? catalogue.publicModel.comparisonUrl !== null,
@@ -102,19 +108,21 @@ export function workspaceData(
     entry.kind === "component" &&
     isManifestComponentVariant(entry) &&
     component === undefined;
-  const componentId =
-    component?.path ?? (orphanVariant ? entry.variantOf : undefined);
+  const componentComparison =
+    entry.kind === "component"
+      ? componentReview(result?.components, component, entry)
+      : undefined;
+  const componentId = component?.path ?? componentComparison?.path;
   const evidenceEntry = component ?? entry;
   const resourceEvidence = snapshot?.screenEvidence?.find(
     (screen) => screen.path === entry.path,
   )?.views;
-  const baselinePath =
-    catalogue.previousPaths.get(evidenceEntry.path) ?? evidenceEntry.path;
-  const baseline = snapshot?.baseline.entries.find(
-    (item) =>
-      item.kind === evidenceEntry.kind &&
-      item.path.toLowerCase() === baselinePath.toLowerCase(),
-  );
+  const baseline =
+    snapshot &&
+    branchPoints(catalogue).baselineEntry(
+      evidenceEntry,
+      snapshot.baseline.entries,
+    );
   const removed = !catalogue.manifest.entries.some(
     (candidate) => candidate.path === entry.path,
   );
@@ -125,9 +133,10 @@ export function workspaceData(
   const materialChanges = materialChangedEntries(context);
   const pureMove =
     change?.previousPath !== undefined && change.reasons.length === 0;
-  const comparison = componentId
-    ? result?.components.find((item) => item.path === componentId)
-    : result?.screens.find((item) => item.path === entry.path);
+  const comparison =
+    entry.kind === "component"
+      ? componentComparison
+      : result?.screens.find((item) => item.path === entry.path);
   const known = snapshot !== undefined || context.changedEntries !== undefined;
   const entryStatus: EntryStatus | undefined = !known
     ? undefined
@@ -140,8 +149,6 @@ export function workspaceData(
             (!pureMove && materialChanges?.includes(entry.path))
           ? "Changed"
           : "Unmodified";
-  const componentComparison =
-    comparison && "variants" in comparison ? comparison : undefined;
   const variantSet = component
     ? workspaceVariants(
         catalogue,
@@ -178,6 +185,7 @@ export function workspaceData(
     catalogue,
     evidenceEntry,
     baseline,
+    snapshot?.baseline.entries ?? [],
     currentVariants,
     baselineVariants,
   );

@@ -4,10 +4,10 @@ import test from "node:test";
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
-import {
-  buildNavSections,
-  type NavLeafNode,
-  type NavNode,
+import { catalogueNavSections } from "../packages/viewer/dist/shell/nav_model.js";
+import type {
+  NavLeafNode,
+  NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
@@ -58,20 +58,7 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
     parent.path,
   );
 
-  const removedLeaves = catalogue.removedEntries.map(
-    ({ entry }): NavLeafNode => ({
-      entryId: entry.path,
-      entryKind: entry.kind,
-      key: `removed:${entry.path}`,
-      kind: "leaf",
-      label: `${entry.title} · Removed`,
-      title: entry.title,
-      ...(entry.kind === "screen" && entry.variantOf !== undefined
-        ? { variantOf: entry.variantOf }
-        : {}),
-    }),
-  );
-  const specs = buildNavSections(catalogue.hierarchy, removedLeaves).find(
+  const specs = catalogueNavSections(catalogue).find(
     ({ id }) => id === "specs",
   );
   assert.ok(specs);

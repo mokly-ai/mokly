@@ -21,7 +21,21 @@ test("affected usage keeps complete serialized identity and evidence order with 
     "main",
   );
   if (result.schemaVersion !== 5) assert.fail("Expected component result");
-  const catalogue = createCatalogue(fixture.after.manifest);
+  const retained = (path: string) => {
+    const current = fixture.after.manifest.entries.find(
+      (candidate) => candidate.path === path,
+    );
+    if (!current) assert.fail(`Expected ${path}`);
+    return { ...current, path: "removed" };
+  };
+  const catalogue = createCatalogue(fixture.after.manifest, [
+    {
+      entry: retained("pane/default"),
+      folderTitles: [],
+      parentTitle: "Pane",
+    },
+    { entry: retained("home"), folderTitles: [] },
+  ]);
   const entry = catalogue.byPath.get("action");
   if (entry?.kind !== "component" || "variantOf" in entry)
     assert.fail("Expected component");
@@ -62,11 +76,12 @@ test("affected usage keeps complete serialized identity and evidence order with 
     removed: true,
     comparisonEligible: false,
   });
+  /** A removed destination is a retained record only before-side evidence reaches. */
   const evidence = (
     link: UsageLink,
     id = link.entryId,
   ): AffectedUsageEvidence => ({
-    side: "after",
+    side: link.removed ? "before" : "after",
     context: {
       ...(link.entryKind === "component"
         ? { kind: "component", variantPath: link.entryId }

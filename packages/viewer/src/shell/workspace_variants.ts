@@ -6,6 +6,7 @@ import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { ComponentReview } from "../review/component_types.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import type { ShellContext } from "./context.js";
 import { shownComparisonEligible, type EntryStatus } from "./view_status.js";
 
@@ -24,11 +25,12 @@ export interface WorkspaceVariantSet {
 }
 
 /**
- * Adapt sibling variant entries to one routed component workspace. Baseline
- * and removed variants name their parent's branch-point path, which differs
- * from the current path when a move paired the parent. `materialChanges`
- * holds the entries that changed beyond a move, so a pure move stays
- * Unmodified and a metadata-only edit reads Changed.
+ * Adapt sibling variant entries to one routed component workspace. Each
+ * current variant pairs with its own baseline counterpart, even when it moved
+ * between parents, and removed variants join the parent the branch-point
+ * lookup resolves for them. `materialChanges` holds the entries that changed
+ * beyond a move, so a pure move stays Unmodified and a metadata-only edit
+ * reads Changed.
  */
 export function workspaceVariants(
   catalogue: Catalogue,
@@ -40,29 +42,28 @@ export function workspaceVariants(
   parentStatus: EntryStatus | undefined,
   materialChanges?: readonly string[],
 ): WorkspaceVariantSet {
+  const lookup = branchPoints(catalogue);
   const current = (
     catalogue.hierarchy.variantsByPath.get(entry.path) ?? []
   ).filter(
     (candidate): candidate is ManifestComponentVariant =>
       candidate.kind === "component" && isManifestComponentVariant(candidate),
   );
-  const parentPath = catalogue.previousPaths.get(entry.path) ?? entry.path;
-  const baseline: ManifestComponentVariant[] = [
-    ...(snapshot?.baseline.entries.filter(
-      (candidate): candidate is ManifestComponentVariant =>
-        candidate.kind === "component" &&
-        isManifestComponentVariant(candidate) &&
-        candidate.variantOf === parentPath,
-    ) ?? []),
-  ];
-  const removed = catalogue.removedEntries.flatMap(
-    ({ entry: candidate, snapshotId }) =>
-      candidate.kind === "component" &&
-      isManifestComponentVariant(candidate) &&
-      candidate.variantOf === parentPath
+  const baseline = current.flatMap((variant) => {
+    const counterpart =
+      snapshot && lookup.baselineEntry(variant, snapshot.baseline.entries);
+    return counterpart?.kind === "component" &&
+      isManifestComponentVariant(counterpart)
+      ? [counterpart]
+      : [];
+  });
+  const removed = lookup
+    .removedVariants(entry)
+    .flatMap(({ entry: candidate, snapshotId }) =>
+      candidate.kind === "component" && isManifestComponentVariant(candidate)
         ? [{ value: candidate, snapshotId }]
         : [],
-  );
+    );
   const values = [
     ...current.map((value) => ({ value, snapshotId: undefined })),
     ...removed,

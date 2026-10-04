@@ -6,12 +6,10 @@ import {
   type ManifestComponentVariant,
 } from "../components/manifest_types.js";
 import type { ManifestScreen } from "../registry/types.js";
+import type { ComponentReview } from "../review/component_types.js";
 
-import {
-  catalogueVariantParent,
-  type Catalogue,
-  type CatalogueManifestEntry,
-} from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** A routed entry that renders through the shared workspace. */
@@ -22,9 +20,19 @@ export type WorkspaceEntry = Extract<
 export type WorkspaceEvidenceEntry =
   ManifestComponent | ManifestComponentVariant | ManifestScreen;
 
+/** A variant's eligible current or removed parent entry, if the lookup has one. */
+function parentEntry(
+  catalogue: Catalogue,
+  entry: CatalogueManifestEntry,
+): CatalogueManifestEntry | undefined {
+  const parent = branchPoints(catalogue).parentOf(entry);
+  return parent && parent.source !== "title" ? parent.entry : undefined;
+}
+
 /**
  * Resolve the schema-owning component for a parent or variant route. A
- * variant removed during its parent's move reaches the parent at its new path.
+ * variant reaches its parent through the branch-point lookup, so a moved or
+ * case-renamed parent still owns its removed variants.
  */
 export function workspaceComponent(
   catalogue: Catalogue,
@@ -32,11 +40,44 @@ export function workspaceComponent(
 ): ManifestComponent | undefined {
   if (entry.kind !== "component") return;
   const candidate = isManifestComponentVariant(entry)
-    ? catalogueVariantParent(catalogue, entry)
+    ? parentEntry(catalogue, entry)
     : entry;
   return candidate?.kind === "component" &&
     !isManifestComponentVariant(candidate)
     ? candidate
+    : undefined;
+}
+
+/**
+ * The identity a routed workspace mounts under. A component variant shares
+ * its resolved parent's workspace, so moving between siblings keeps the
+ * workspace state; any other entry, and a variant without an eligible parent,
+ * mounts under its own path.
+ */
+export function workspaceKey(
+  catalogue: Catalogue,
+  entry: CatalogueManifestEntry,
+): string {
+  if (entry.kind !== "component" || !isManifestComponentVariant(entry))
+    return entry.path;
+  return parentEntry(catalogue, entry)?.path ?? entry.path;
+}
+
+/**
+ * The component review a workspace reads: its resolved parent's group, or for
+ * a variant without an eligible parent, the group that lists the variant.
+ */
+export function componentReview(
+  components: readonly ComponentReview[] | undefined,
+  component: ManifestComponent | undefined,
+  entry: WorkspaceEntry,
+): ComponentReview | undefined {
+  if (component)
+    return components?.find((item) => item.path === component.path);
+  return entry.kind === "component" && isManifestComponentVariant(entry)
+    ? components?.find((item) =>
+        item.variants.some(({ path }) => path === entry.path),
+      )
     : undefined;
 }
 
@@ -47,7 +88,7 @@ export function workspaceEntryTitle(
 ): string {
   if (entry.kind !== "component" || !isManifestComponentVariant(entry))
     return entry.title;
-  const parent = catalogueVariantParent(catalogue, entry);
+  const parent = parentEntry(catalogue, entry);
   return parent ? `${parent.title} · ${entry.title}` : entry.title;
 }
 

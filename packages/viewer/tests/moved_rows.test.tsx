@@ -4,11 +4,8 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { ManifestEntry, ManifestV8 } from "../src/registry/types.js";
-import {
-  catalogueMovedPath,
-  catalogueVariantParent,
-  createCatalogue,
-} from "../src/shell/catalogue.js";
+import { createCatalogue } from "../src/shell/catalogue.js";
+import { branchPoints } from "../src/shell/catalogue_branch_point.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
@@ -110,15 +107,21 @@ test("a removed variant joins its moved parent and keeps its baseline variantOf"
   const removed = catalogue.removedEntries[0]?.entry;
   assert.ok(removed && "variantOf" in removed);
   assert.equal(removed.variantOf, "billing/invoice");
+  const lookup = branchPoints(catalogue);
+  const parent = lookup.parentOf(removed);
   assert.equal(
-    catalogueVariantParent(catalogue, removed)?.path,
+    parent && parent.source !== "title" ? parent.entry.path : undefined,
     "account/billing/invoice",
   );
   assert.equal(
-    catalogueMovedPath(catalogue, "billing/invoice"),
+    lookup.resolve({ side: "before", kind: "screen", path: "billing/invoice" })
+      ?.entry.path,
     "account/billing/invoice",
   );
-  assert.equal(catalogueMovedPath(catalogue, "old/gone"), undefined);
+  assert.equal(
+    lookup.resolve({ side: "before", kind: "screen", path: "old/gone" }),
+    undefined,
+  );
 });
 
 /** Changes lists every move; only Invoice changed beyond its move. */

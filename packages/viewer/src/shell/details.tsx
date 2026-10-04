@@ -5,6 +5,7 @@
 import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import {
   ChangedViewsRow,
   MetaRow,
@@ -36,7 +37,7 @@ export function EntryDetailsBody(props: {
   );
   const movedFrom = removed
     ? undefined
-    : props.catalogue.previousPaths.get(entry.path);
+    : branchPoints(props.catalogue).previousPath(entry);
   return (
     <div className="mbk-details-body">
       <div>

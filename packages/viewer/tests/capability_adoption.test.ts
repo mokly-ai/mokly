@@ -195,14 +195,14 @@ test("route adoption replaces scoped usage and private workspace atomically", ()
       source,
       workspace: {
         request: componentRequest,
-        value: publicWorkspace(model, componentEntry),
+        value: publicWorkspace(complete, model, componentEntry),
       },
     },
     state,
     {
       catalogue: screenScope,
       source,
-      workspace: publicWorkspace(model, screenEntry),
+      workspace: publicWorkspace(complete, model, screenEntry),
     },
   );
   assert.ok(commit);

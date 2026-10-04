@@ -3,7 +3,6 @@
 // active-route helpers the document scaffold and progressive navigation use.
 
 import { canonicalJson } from "../components/data.js";
-import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { sha256 } from "../data/sha256.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -21,6 +20,7 @@ import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { EmptyStage, TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
+import { workspaceKey } from "./workspace_entry.js";
 
 /** One renderable Mokly shell state. */
 export type ShellView =
@@ -194,12 +194,7 @@ export function ShellMain(props: {
             catalogue={props.catalogue}
             context={props.context}
             entry={props.view.target.entry}
-            key={
-              props.view.target.entry.kind === "component" &&
-              isManifestComponentVariant(props.view.target.entry)
-                ? props.view.target.entry.variantOf
-                : props.view.target.entry.path
-            }
+            key={workspaceKey(props.catalogue, props.view.target.entry)}
           />
         ) : (
           <TargetView
