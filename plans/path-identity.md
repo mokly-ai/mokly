@@ -1981,15 +1981,33 @@ Tags: mockup
 Depict the band that names the light fallback above a current document's pane
 (finding 6, option A), before the UI milestone tests it.
 
-- [ ] Add a design state for a current document shown under Dark without a
+- [x] Add a design state for a current document shown under Dark without a
       dark render, with the quiet `Light only` band above its pane, in mobile
       and desktop variants. Keep it reachable from the appearance designs and
       within five screens per page.
-- [ ] Record the state in `mokly-shell-design-inventory.md`, and make
+      `design/browse/appearance/states/light-only-current` is the fourth of
+      the five allowed screens on the Appearance states page. Its Dark
+      artboards show the band and keep the Light palette and document
+      typography in the pane; its Light artboards show the document alone, as
+      the runtime stylesheet does. The appearance designs' `Payment terms`
+      row opens it from the navigation and the drawer, so a Dark artboard
+      stays Dark (`tests/design_light_only_document.test.ts`). The example's
+      document stylesheet rule now covers both light-only document states,
+      and `tests/design_document_styles.test.ts` fails any design that
+      renders a document without that stylesheet.
+- [x] Record the state in `mokly-shell-design-inventory.md`, and make
       `mokly-documents.md` name it as the design for the current-document band.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      The appearance folder table in `mokly-viewer-appearance.md`, the
+      transitions in `mokly-shell-design-catalogue.md`, and the design-screen
+      counts in the example README, `mokly-design-links.md`, and two design
+      tests include it.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       and the design tests; smoke-test the state through `npm run dev`; then
-      commit and push.
+      commit and push. The example builds and checks 472 files. The design unit
+      tests (190), the design browser tests (115), and the protocol, guide, and
+      link tests (36) pass. Through `npm run dev`, the Dark artboards show the
+      band and the Light ones do not, and the Dark overview's `Payment terms`
+      row opens the Dark state (`.context/m10/`).
 
 ## Milestone 11: Catalogue, export, and ownership review fixes
 
@@ -2077,17 +2095,34 @@ Tags: ui
 
 Fix the UI findings (4, 5, and 6), each with a failing test first.
 
-- [ ] Finding 4 (option A): compute each folder row's count from the same
+- [x] Finding 4 (option A): compute each folder row's count from the same
       visibility rule as its rows, under All, Changes, and search. Add unit
       and browser tests for each filter, and check parity with the Changes and
-      search mockups.
-- [ ] Finding 5 (option A): build the home summary from a type-checked map of
+      search mockups. `nav_rows.tsx` counts the immediate children that
+      `navNodeVisible` keeps under the live selection, which an unstored render
+      reads as All (`UNFILTERED_SELECTION`). `nav_folder_counts.test.ts` and
+      `nav_folder_counts.spec.ts` cover All, Changes, free text, and a tag;
+      before the fix both failed, with Shop counting 4 above one row. Counts
+      match the shown rows in `design/changes/outcomes/moved` and
+      `design/browse/views/screen/tag-forms` at both widths (`.context/m12/`).
+- [x] Finding 5 (option A): build the home summary from a type-checked map of
       every entry kind, documents included, and omit kinds with a zero count,
-      so a new kind cannot be left out.
-- [ ] Finding 6 (option A): add a browser test that shows the current-document
+      so a new kind cannot be left out. `home_summary.ts` checks its labels
+      with `satisfies Record<ManifestEntry["kind"], …>`, so a new kind fails
+      to compile until it has one (`home_summary.test.ts`, which failed
+      before the fix on the missing document and on zero counts).
+- [x] Finding 6 (option A): add a browser test that shows the current-document
       `Light only` band under Dark, and check parity with the Milestone 10
-      state.
-- [ ] Run the unmodified `cargo xtask check`, then commit and push.
+      state. `light_only_document_band.spec.ts` builds a catalogue whose
+      config dropped Dark while a removed screen keeps a dark render, and
+      checks the band's text, place above the pane, and style in Serve and
+      export at both widths. Hiding the band under Dark fails all four cases.
+      Parity with `design/browse/appearance/states/light-only-current` holds
+      at both widths. `branch_hosts.ts` now builds and hosts these Git-backed
+      catalogues, including the moved fixture.
+- [x] Run the unmodified `cargo xtask check`, then commit and push. It passes
+      completely: the repository suite with both file-length audits, and the
+      package, unit (4158), browser (814), and hydration (261) suites.
 
 ## Milestone 13: Review fix integration, verification, and review
 

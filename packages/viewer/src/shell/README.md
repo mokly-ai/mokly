@@ -52,7 +52,11 @@ shows, applying the `order` each folder node carries, so a screen or component
 that is its folder's own page sorts as a folder row in the other section.
 `search_query.ts` implements the single [search rule](../../../../docs/protocol/mokly-folders.md#titles),
 using resolved titles from `registry/folder_titles.ts`. Row visibility,
-Changes activation and route reveals all use that shared query and row.
+Changes activation and route reveals all use that shared query and row, and
+`nav_rows.tsx` counts each folder's child rows with the same visibility.
+`home_summary.ts` builds the home summary from a type-checked label for every
+entry kind. The [shell layout contract](../../../../docs/protocol/mokly-shell-design.md#layout)
+owns both rules.
 `crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
 links to it, a visible folder without one becomes a button that
 `nav_reveal.ts` resolves to the disclosures exposing that folder, and the

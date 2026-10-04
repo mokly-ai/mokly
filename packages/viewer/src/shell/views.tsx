@@ -15,6 +15,7 @@ import {
   targetHead,
   ViewportSwitch,
 } from "./head.js";
+import { homeSummary } from "./home_summary.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { EmptyStage, TargetStage } from "./stages.js";
@@ -108,28 +109,14 @@ function TargetView(props: {
 }
 
 function HomeView(props: { catalogue: Catalogue }) {
-  const entries = props.catalogue.manifest.entries;
-  const screens = entries.filter((entry) => entry.kind === "screen").length;
-  const components = entries.filter(
-    (entry) => entry.kind === "component",
-  ).length;
-  const useCases = entries.filter((entry) => entry.kind === "use-case").length;
-  const pages = entries.filter((entry) => entry.kind === "page").length;
+  const summary = homeSummary(props.catalogue.manifest.entries);
   return (
     <EmptyStage heading="Mokly">
       <p>
         Browse the mockup catalogue: expand folders and choose an item from the
         navigation.
       </p>
-      <p className="mbk-empty-note">
-        {screens} screen{screens === 1 ? "" : "s"}
-        {components
-          ? ` · ${components} component${components === 1 ? "" : "s"}`
-          : ""}{" "}
-        · {useCases} user flow{useCases === 1 ? "" : "s"} · {pages} catalogue
-        page
-        {pages === 1 ? "" : "s"}
-      </p>
+      {summary ? <p className="mbk-empty-note">{summary}</p> : null}
     </EmptyStage>
   );
 }

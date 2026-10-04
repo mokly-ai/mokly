@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { useDarkPreview } from "./appearance.js";
 import { DesignLink } from "./design_navigation.js";
 import type { DesignDestination } from "./destinations.js";
 import { DocumentPane, Stage } from "./stage.js";
@@ -28,6 +29,19 @@ export function MarkdownStage({
       </DocumentPane>
     </Stage>
   );
+}
+
+/**
+ * The quiet band above a current document with no dark render. A document has
+ * no frame label, so the band names the light fallback, and only under Dark,
+ * as the runtime stylesheet shows it.
+ */
+export function LightOnlyBand() {
+  return useDarkPreview() ? (
+    <p className="mbk-previous mbk-scheme-fallback">
+      <span className="mbk-frame-scheme-note">Light only</span>
+    </p>
+  ) : null;
 }
 
 /**

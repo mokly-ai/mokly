@@ -87,6 +87,7 @@ their standalone screens are implemented.
 | `design/browse/appearance/overview`                    | Browse shell › Appearance                                  | Canonical catalogue appearance around a selected screen       |
 | `design/browse/appearance/states/auto`                 | Browse shell › Appearance › Appearance states              | Appearance left on Auto                                       |
 | `design/browse/appearance/states/light-only`           | Browse shell › Appearance › Appearance states              | A screen with no dark render keeping its light frames         |
+| `design/browse/appearance/states/light-only-current`   | Browse shell › Appearance › Appearance states              | A current document's light page below a Light only band       |
 | `design/browse/appearance/states/light-only-document`  | Browse shell › Appearance › Appearance states              | A removed document with no dark render keeping its light page |
 | `design/browse/appearance/workspaces/props`            | Browse shell › Appearance › Panels and comparisons         | Props panel with a rejected value                             |
 | `design/browse/appearance/workspaces/instance`         | Browse shell › Appearance › Panels and comparisons         | Selected component instance panel                             |

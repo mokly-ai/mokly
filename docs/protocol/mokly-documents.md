@@ -86,7 +86,8 @@ The light document is `static/<path>/index.html`; when the catalogue
 enables dark, `static/<path>/index.dark.html` applies the dark palette. A
 document without a dark document keeps its light one under Dark. When the
 catalogue has a dark axis, the shell names that fallback with the existing
-`Light only` note: in a quiet band above a current document's pane, and after
+`Light only` note: in a quiet band above a current document's pane, as the
+`design/browse/appearance/states/light-only-current` design shows, and after
 `Showing previous version` for a removed one, as the
 `design/browse/appearance/states/light-only-document` design shows. The
 shell opens the document for the current appearance exactly as it selects a

@@ -79,6 +79,12 @@ export function disclosurePath(
   return [];
 }
 
+/** The selection a render without a shell store shows: All, unsearched. */
+export const UNFILTERED_SELECTION: Pick<
+  ViewerSelection,
+  "view" | "search" | "tags"
+> = { view: "all", search: "", tags: [] };
+
 /** Whether one leaf survives the current search and Changes constraints. */
 export function navLeafVisible(
   leaf: NavLeafNode,
