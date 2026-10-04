@@ -210,3 +210,19 @@ case-only move and pruning tests now run in native CI (Milestone 6H). Folder
 counts under Changes and search, and the current-document "Light only" band,
 have no browser tests. Index-entry Changes activation is covered by fixtures,
 not by a real Git baseline.
+
+## Approved Follow-up
+
+On 2026-10-04 the user approved the recommended option for every finding.
+The [plan](../../plans/path-identity.md) delivers them in Milestones 9–13:
+
+| Finding | Approved option                                                                                            | Milestone        |
+| ------- | ---------------------------------------------------------------------------------------------------------- | ---------------- |
+| 1       | A: allow a removed component parent with no variants, and test moves through the reader, Serve, and export | 9 (contract), 11 |
+| 2       | A: export trusts the build's exact generated-file inventory                                                | 9 (contract), 11 |
+| 3       | A: remove the earlier ownership headers and preview adoption, with rejection tests                         | 9 (contract), 11 |
+| 4       | A: count only the rows the active filter shows                                                             | 9 (contract), 12 |
+| 5       | A: count every entry kind from a type-checked map                                                          | 9 (contract), 12 |
+| 6       | A: add the mockup state and a browser test                                                                 | 10, 12           |
+| 7       | B: one owner for the search rule, with links elsewhere                                                     | 9                |
+| 8       | B: current behaviour and links instead of status prose                                                     | 9                |

@@ -15,9 +15,11 @@
   are complete. Main and the final viewer branch are integrated through
   Milestone 6I. Milestone 6J completes source file-length compliance with the
   full gate passing. Milestone 8 guides, verification and Serve/static smoke
-  tests are complete. The fresh implementation review is complete; its
-  [eight findings](../docs/reviews/path-identity.md) await the user's
-  decision, and the plan stays Active until its pull request merges.
+  tests are complete. The fresh implementation review is complete. The user
+  approved a fix for each of its
+  [eight findings](../docs/reviews/path-identity.md); Milestones 9–13 deliver
+  them and end with a new review. The plan stays Active until its pull
+  request merges.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete
