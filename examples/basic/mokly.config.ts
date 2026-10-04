@@ -73,7 +73,8 @@ export default defineConfig({
       stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
     },
     {
-      match: "design/browse/appearance/states/light-only-document/index*.html",
+      match:
+        "design/browse/appearance/states/light-only-{current,document}/index*.html",
       stylesheets: withLibraryStyles(
         [
           "design.css",

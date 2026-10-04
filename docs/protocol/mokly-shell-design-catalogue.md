@@ -72,6 +72,11 @@ These transitions follow the [design links contract](./mokly-design-links.md):
   `design/browse/views/use-case`, and `design/browse/pages/view`.
 - In Changes, `Invoice · Moved` opens `design/changes/outcomes/moved`, whose
   Related docs row opens `design/browse/pages/document`.
+- In the Appearance designs, `Payment terms` opens
+  `design/browse/appearance/states/light-only-current` instead, so a Dark
+  artboard stays Dark. That state keeps the document's light page under a
+  quiet `Light only` band, and its All filter opens
+  `design/browse/appearance/overview`.
 
 The index entry states form one family:
 

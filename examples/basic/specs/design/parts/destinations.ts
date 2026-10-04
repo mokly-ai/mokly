@@ -41,6 +41,8 @@ export const DESTINATIONS = {
   appearanceAuto: "design/browse/appearance/states/auto",
   appearanceLightOnlyDocument:
     "design/browse/appearance/states/light-only-document",
+  appearanceLightOnlyCurrent:
+    "design/browse/appearance/states/light-only-current",
   appearanceProps: "design/browse/appearance/workspaces/props",
   appearanceInstance: "design/browse/appearance/workspaces/instance",
   appearanceDrawer: "design/browse/appearance/workspaces/drawer",

@@ -4,13 +4,14 @@ import { appearanceDesignMetadata } from "../../../metadata.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { DetailsPanel } from "../../../parts/details.js";
 import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
-import { MarkdownStage } from "../../../parts/markdown.js";
+import { LightOnlyBand, MarkdownStage } from "../../../parts/markdown.js";
 import { MetaRow } from "../../../parts/metadata_row.js";
 import { NavTree, type NavNode } from "../../../parts/nav.js";
 import { PreviousVersionLabel } from "../../../parts/removed_preview.js";
 import { ScreenHead, type ArtboardViewport } from "../../../parts/shell.js";
 import { PaymentTerms } from "../../../parts/spec_documents.js";
 import {
+  APPEARANCE_NAV_TREE,
   AppearanceHead,
   AppearanceShell,
   AppearanceWorkspace,
@@ -47,6 +48,57 @@ function AutoAppearance({ viewport }: { viewport: ArtboardViewport }) {
         viewport={viewport}
       />
       <AppearanceWorkspace subject="welcome" viewport={viewport} />
+    </AppearanceShell>
+  );
+}
+
+/**
+ * The current Payment terms document while the catalogue is Dark. It has no
+ * dark render, so its pane keeps the light page, and a quiet band above the
+ * pane names that fallback. Details stay closed.
+ */
+function LightOnlyCurrentDocument({
+  viewport,
+}: {
+  viewport: ArtboardViewport;
+}) {
+  return (
+    <AppearanceShell
+      design={DESTINATIONS.appearanceLightOnlyCurrent}
+      nav={
+        <NavTree
+          activeDestination={DESTINATIONS.appearanceLightOnlyCurrent}
+          nodes={APPEARANCE_NAV_TREE}
+        />
+      }
+      viewport={viewport}
+    >
+      <ScreenHead
+        comparisons={false}
+        crumbs={["Account", "Billing & Payments"]}
+        path={ENTRY_PATHS.paymentTerms}
+        title="Payment terms"
+      />
+      <LightOnlyBand />
+      <MarkdownStage lightOnly>
+        <PaymentTerms />
+      </MarkdownStage>
+      <DetailsPanel>
+        <div className="mbk-details-body">
+          <div>
+            <p className="mbk-details-desc">
+              When an invoice is due, and what happens once it is late.
+            </p>
+          </div>
+          <div className="mbk-meta">
+            <MetaRow name="source" label="Source">
+              <code className="mbk-code">
+                specs/account/billing/payment-terms.md
+              </code>
+            </MetaRow>
+          </div>
+        </div>
+      </DetailsPanel>
     </AppearanceShell>
   );
 }
@@ -112,8 +164,8 @@ function LightOnlyDocument({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 /**
- * The Auto setting, and a screen and a document the catalogue cannot show in
- * both schemes.
+ * The Auto setting, and a screen, a current document, and a removed document
+ * the catalogue cannot show in both schemes.
  */
 export const appearanceStateScreens = [
   defineScreen({
@@ -137,6 +189,17 @@ export const appearanceStateScreens = [
     rationale:
       "One setting changes the catalogue and the screens it shows together, but a screen that renders in light only cannot follow. It keeps its real light frames and names that fallback in its caption, which is a fact about the screen rather than a second setting.",
     title: "Light-only screen",
+  }),
+  defineScreen({
+    ...appearanceDesignMetadata,
+    description:
+      "A current document with no dark render, keeping its light page under Dark below a Light only band.",
+    desktop: <LightOnlyCurrentDocument viewport="desktop" />,
+    slug: "light-only-current",
+    mobile: <LightOnlyCurrentDocument viewport="mobile" />,
+    rationale:
+      "A document renders in every scheme the catalogue sets, so it lacks a dark page only while the catalogue offers Dark for something else, such as a removed screen it still shows. Its pane keeps the light page, and because a document has no frame label, a quiet band above the pane names the fallback.",
+    title: "Light-only current document",
   }),
   defineScreen({
     ...appearanceDesignMetadata,

@@ -1963,15 +1963,33 @@ Tags: mockup
 Depict the band that names the light fallback above a current document's pane
 (finding 6, option A), before the UI milestone tests it.
 
-- [ ] Add a design state for a current document shown under Dark without a
+- [x] Add a design state for a current document shown under Dark without a
       dark render, with the quiet `Light only` band above its pane, in mobile
       and desktop variants. Keep it reachable from the appearance designs and
       within five screens per page.
-- [ ] Record the state in `mokly-shell-design-inventory.md`, and make
+      `design/browse/appearance/states/light-only-current` is the fourth of
+      the five allowed screens on the Appearance states page. Its Dark
+      artboards show the band and keep the Light palette and document
+      typography in the pane; its Light artboards show the document alone, as
+      the runtime stylesheet does. The appearance designs' `Payment terms`
+      row opens it from the navigation and the drawer, so a Dark artboard
+      stays Dark (`tests/design_light_only_document.test.ts`). The example's
+      document stylesheet rule now covers both light-only document states,
+      and `tests/design_document_styles.test.ts` fails any design that
+      renders a document without that stylesheet.
+- [x] Record the state in `mokly-shell-design-inventory.md`, and make
       `mokly-documents.md` name it as the design for the current-document band.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      The appearance folder table in `mokly-viewer-appearance.md`, the
+      transitions in `mokly-shell-design-catalogue.md`, and the design-screen
+      counts in the example README, `mokly-design-links.md`, and two design
+      tests include it.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       and the design tests; smoke-test the state through `npm run dev`; then
-      commit and push.
+      commit and push. The example builds and checks 472 files. The design unit
+      tests (190), the design browser tests (115), and the protocol, guide, and
+      link tests (36) pass. Through `npm run dev`, the Dark artboards show the
+      band and the Light ones do not, and the Dark overview's `Payment terms`
+      row opens the Dark state (`.context/m10/`).
 
 ## Milestone 11: Catalogue, export, and ownership review fixes
 

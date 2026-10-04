@@ -20,7 +20,7 @@ import { NavDrawer } from "../../../parts/nav.js";
 import { ReviewNav } from "../../../parts/review.js";
 import { EmptyState } from "../../../parts/stage_content.js";
 import { TopBar } from "../../../parts/top_bar.js";
-import { AppearanceShell } from "../parts/scaffold.js";
+import { APPEARANCE_NAV_TREE, AppearanceShell } from "../parts/scaffold.js";
 
 import { appearanceInspectorScreens } from "./inspectors.js";
 
@@ -49,7 +49,7 @@ function NavigationDrawerDesktop() {
           <main className="mbk-main">
             <DrawerBody />
           </main>
-          <NavDrawer activeLabel="Welcome" />
+          <NavDrawer activeLabel="Welcome" nodes={APPEARANCE_NAV_TREE} />
         </div>
       </DesignAppearanceScope>
     </DesignNavigation>
@@ -59,7 +59,7 @@ function NavigationDrawerDesktop() {
 function NavigationDrawerMobile() {
   return (
     <AppearanceShell
-      aside={<NavDrawer activeLabel="Welcome" />}
+      aside={<NavDrawer activeLabel="Welcome" nodes={APPEARANCE_NAV_TREE} />}
       design={DESTINATIONS.appearanceDrawer}
       viewport="mobile"
     >

@@ -98,6 +98,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.appearanceLightOnly]: { ...appearanceFilters },
   [D.appearanceAuto]: { ...appearanceFilters },
   [D.appearanceLightOnlyDocument]: { all: D.appearance },
+  [D.appearanceLightOnlyCurrent]: { ...appearanceFilters },
   [D.appearanceProps]: { ...appearanceFilters },
   [D.appearanceInstance]: { ...appearanceFilters },
   [D.appearanceDrawer]: {

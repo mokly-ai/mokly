@@ -325,7 +325,7 @@ under `Design › Browse shell`.
 | Folder                              | Owning screens                                                                                               |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Appearance                          | `design/browse/appearance/overview`: the canonical interface around a selected screen, all light or all dark |
-| Appearance › Appearance states      | Auto selector, light-only screen fallback                                                                    |
+| Appearance › Appearance states      | Auto selector, light-only screen, current document, and removed document fallbacks                           |
 | Appearance › Panels and comparisons | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference                   |
 | Appearance › Status and recovery    | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow                               |
 
