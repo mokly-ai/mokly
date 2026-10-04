@@ -1587,10 +1587,21 @@ test failed, was skipped or was cancelled. Logs are under `.context/m20b/logs/`.
       diff and deletions against `origin/main`, record the evidence and update
       the active plan index.
 - [x] Run `git add -A`, commit with a Conventional Commit, and push the branch.
-- [ ] After the push, review the complete diff against `origin/main` using
+- [x] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report numbered findings with
       severity, impact, lettered options and a recommendation, without
       changing the implementation.
+
+Third review outcome (2026-10-04, `72c915bf` against `origin/main` at
+`800fe9f8`): 4 verified findings, reported to the user and not fixed. Medium:
+the historical marker rename in `src/review/ignore.ts` rewrites the old prefix
+everywhere in a document, including script and text, so valid content can
+give false Changes rows or stop classification. Low: embedded page Details
+print an empty branch-point name; three docs say renderer input holds only
+configured stylesheet links; the component authoring guide still says a
+declared stylesheet belongs to its component. Probes are in
+`.context/review/`. Second-review findings 2 to 11 still await the user's
+decision.
 
 Verification evidence (2026-10-04):
 
