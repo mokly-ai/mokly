@@ -8,8 +8,9 @@ implementation review are complete. On 2026-10-04 the user approved the
 recommended option for each of the eight findings in the
 [review record](../docs/reviews/path-identity.md); Milestones 9–13 deliver
 those fixes and end with a new review. Milestones 9–12 are complete. Milestone
-13 integration, verification and smoke tests are complete; the orchestrator's
-fresh review is the only remaining required TODO.
+13 is complete, including a second fresh review whose fifteen findings
+await the user's decision in the
+[review record](../docs/reviews/path-identity.md#second-review).
 This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
@@ -2199,9 +2200,14 @@ earlier ownership readers and preview-adoption plumbing. The final review
 below remains unticked and is not run by this implementation agent.
 
 - [x] Commit and push.
-- [ ] After the push, the orchestrator assigns fresh reviewers to use
+- [x] After the push, the orchestrator assigns fresh reviewers to use
       `docs/implementation-review-prompt.md` against the complete diff from
       `origin/main` and report findings without changing the implementation.
+      Fresh Codex and Claude reviewers reviewed `013b8add` against
+      `origin/main` at `800fe9f8`. The first-round fixes hold. The
+      [second review](../docs/reviews/path-identity.md#second-review) lists
+      fifteen new findings (one High, four Medium, ten Low) for the user's
+      decision. No finding was fixed during the review.
 
 ## Post-merge follow-up (non-blocking)
 
