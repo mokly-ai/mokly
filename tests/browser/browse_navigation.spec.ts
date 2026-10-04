@@ -4,8 +4,11 @@ import {
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
-import { expectFrameSource } from "./workspace_actions.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  expectFrameSource,
+  chooseScheme,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
 

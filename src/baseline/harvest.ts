@@ -1,7 +1,6 @@
 import path from "node:path";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { MAX_BATCH_OUTPUT_BYTES } from "../review/git_batch.js";
 

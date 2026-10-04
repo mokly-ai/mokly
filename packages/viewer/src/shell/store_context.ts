@@ -9,8 +9,7 @@ import type { ViewerSelection } from "../viewer/types.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
-import type { ShellState } from "./store_state.js";
-import type { ShellRecoverySnapshot } from "./store_state.js";
+import type { ShellState, ShellRecoverySnapshot } from "./store_state.js";
 
 /** State and actions consumed by shell-owned interactive components. */
 export interface ShellStore {

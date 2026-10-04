@@ -12,8 +12,10 @@ import { CatalogueNav } from "../shell/nav.js";
 import { useNavigationBounds } from "../shell/nav_resize.js";
 import { ShellStoreProvider } from "../shell/store.js";
 import { useShellStore } from "../shell/store_context.js";
-import type { ShellInitialState } from "../shell/store_state.js";
-import type { ShellRecoverySnapshot } from "../shell/store_state.js";
+import type {
+  ShellInitialState,
+  ShellRecoverySnapshot,
+} from "../shell/store_state.js";
 import { TopBar } from "../shell/top_bar.js";
 import { ShellMain, viewTitle } from "../shell/views.js";
 import type { ShellView } from "../shell/views.js";

@@ -4,8 +4,8 @@ import { minimatch } from "minimatch";
 
 import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import {
+  GENERATED_DIRECTORY,
   entryRoute,
   effectiveColorSchemes,
   viewRoute,

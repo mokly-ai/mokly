@@ -7,8 +7,9 @@ import {
   generatedResourcePath,
   generatedResourceRoute,
   entryRoute,
+  ComponentRenderError,
+  generatedViews,
 } from "@mokly/viewer/data";
-import { ComponentRenderError, generatedViews } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";

@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-The independent generated- and viewer-directory literal rule is implemented, including
-escaped string, template and regular-expression spellings. The approved follow-on
-work adds merged folder-coverage probes and duplicate-import
-enforcement. [Generated Output Simplification](../../plans/generated-output-simplification.md)
-tracks implementation and verification.
+The independent directory literal rule, complete folder-coverage probes and
+duplicate-import enforcement are implemented. Tests load the repository's real
+flat config and include escaped strings, templates and regular expressions.
+[Generated Output Simplification](../../plans/generated-output-simplification.md)
+records implementation and verification.
 
 ## Directory Name Rule
 
@@ -79,6 +79,12 @@ automatic fix to the merged code, including newly arrived files, then rerun
 import ordering, type checking and tests. Do not suppress duplicates or replace
 imports with forwarding modules. Preserve type-only import behavior, side
 effects and the existing package ownership boundary.
+
+The installed fixer's mixed inline/statement type-import case can produce an
+invalid `import type` containing runtime values. Normalize those source imports
+into explicit type-only and value statements before reapplying its default fix.
+Do not retain the invalid result or change the rule's options to hide it. The
+type check and emitted-value regression must verify that runtime imports survive.
 
 ## Coverage Contract
 

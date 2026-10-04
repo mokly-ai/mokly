@@ -5,8 +5,11 @@ import { expect, test, type Locator } from "@playwright/test";
 import { reparentedEntrySource } from "../helpers/fixture.js";
 
 import { startWatchedServe, type WatchedServe } from "./watched_serve.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseViewport,
+  expectFrameSource,
+} from "./workspace_actions.js";
 
 let server: WatchedServe;
 

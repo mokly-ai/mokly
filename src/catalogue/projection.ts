@@ -5,8 +5,8 @@ import type {
   RemovedEntryPreview,
 } from "@mokly/viewer";
 import type { ManifestEntry } from "@mokly/viewer/data";
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import {
+  GENERATED_DIRECTORY,
   invalidData,
   isManifestComponentVariant,
   readControls,

@@ -1400,14 +1400,102 @@ orchestrator owns the final review. No final implementation review ran here.
 
 Backend.
 
-- [ ] Add tests that probe every folder covered by the directory-name rule
+- [x] Add tests that probe every folder covered by the directory-name rule
       and by `main`'s `localeCompare` rule, so that neither rule can stop
       applying without a test failure.
-- [ ] Enable `import/no-duplicates` and apply its automatic fix to the
+- [x] Enable `import/no-duplicates` and apply its automatic fix to the
       merged code.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Preserve mixed-import runtime semantics, split the newly touched oversized
+      browser test without losing titles, and update its source-location check.
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
+
+### Implementation and preservation
+
+The tests enumerate tracked and non-ignored new source files independently of
+ESLint's configured globs. They derive 48 directory probes across all covered
+folders and extensions, including both TypeScript roots and a nested preview
+script. Seven source-order probes cover both recursive folders, all three exact
+build files and two synthetic nested folders. Each probe uses `lintText` with
+the repository's real flat config; no synthetic source file is written to disk.
+Configuration and ignore checks reject missing rules and ignored-file results.
+
+Every directory probe checks both constants through ordinary, embedded, template,
+regex and escaped spellings, plus valid imports. Source-order probes require
+both rule IDs on the same input and permit `compareCodeUnits`. Presentation
+collation remains outside that ban. Separate tests retain the owner-module
+exemption and Git-ignore/generated-output exclusions.
+
+`import/no-duplicates` uses the installed plugin's default options at the global
+import-rule scope. `npx eslint . --fix` applied the fix to the whole merged tree.
+Fixer tests cover each production root and tests, including type-only imports
+with a retained side-effect import. No suppression, forwarding module, package
+ownership change or main feature/test removal was required.
+
+Before enabling the rule, all seven duplicate-import tests failed with the
+expected diagnostic, including:
+
+```text
+src/lint-coverage-probe.ts: missing import/no-duplicates
+```
+
+After enabling it and applying the automatic fix, all 66 new coverage/fixer
+checks passed. Receipts and the complete probe inventory are under
+`.context/milestone-13/`. Full-gate and commit results follow below.
+
+The first type check caught the installed fixer's mixed type/value bug:
+
+```text
+src/shell/catalogue.ts(16,3): error TS2206: The 'type' modifier cannot be used on a named import when 'import type' is used on its import statement.
+```
+
+The affected imports in viewer `shell/catalogue.ts`, CLI `export/site.ts`,
+`registry/changed_ids.ts` and `server/component_changes.ts` were normalized from
+their original semantics into explicit type-only/value statements, then the
+default fixer ran again. Type-only emission and runtime bindings have separate
+regressions. No plugin option or suppression was added.
+
+The import fix also exposed the existing 896-line `tests/browser/browse.spec.ts`
+to the changed-file cap. Its 33 test bodies and assertions remain unchanged,
+split between that file and `browse_search_details.spec.ts`,
+`browse_view_controls.spec.ts`, `browse_toolbar_actions.spec.ts` and
+`browse_layout.spec.ts`, with shared helpers in `browse_assertions.ts`.
+Worker count, retry policy, test deadlines and fixture setup remain unchanged.
+
+### Validation and completion
+
+The final gate passed on Node `v22.14.0`. A direct comparison also proves that
+all 17 production modules changed by the fixer retain their bodies and emitted
+runtime imports. The test-title audit found no missing title. All 69 new lint
+coverage/fixer checks pass, and the source-size gate passes for 903 files.
+
+| Command                                                                  | Result                                  |  Seconds |
+| ------------------------------------------------------------------------ | --------------------------------------- | -------: |
+| `npm run format:check`                                                   | pass                                    |   24.485 |
+| `npm run lint`                                                           | pass                                    |   19.386 |
+| `npm run typecheck`                                                      | pass                                    |   36.096 |
+| `npm test`                                                               | 3,772 passed; no skips or cancellations |  947.311 |
+| `npm run test:browser -- --output .context/milestone-13/browser-results` | 969 passed                              | 1513.997 |
+| `npm run example:check`                                                  | 436 valid, untracked files              |   10.530 |
+| `cargo xtask check`                                                      | pass                                    | 2880.691 |
+
+The cargo gate also passes 15 Rust tests, six packed-consumer scenarios, another
+3,772 unit tests, 746 browser tests and 223 hydration tests. The dependency audit
+and strict packed-consumer audits retain main's existing policy unchanged.
+
+The first full unit run found one source-location assertion after the browser
+split. It reported:
+
+```text
+The input did not match the regular expression /browser\.newContext\(\{\s+baseURL,/. Input:
+```
+
+`tests/deployment.test.ts` now reads `browse_layout.spec.ts`, which owns the
+unchanged no-JavaScript test. Its three focused checks pass, followed by the
+complete passing gate above. No test or main feature was removed.
+The final main refresh remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`;
+no merge occurred. Commit and push precede all Milestone 14 implementation.
 
 ## Milestone 14: Prepare shared browser baselines once
 

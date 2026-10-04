@@ -7,8 +7,11 @@ import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { viewRoute } from "../navigation/routes.js";
 
-import { framePath } from "./stage_sources.js";
-import { generatedFrameSource, generatedView } from "./stage_sources.js";
+import {
+  framePath,
+  generatedFrameSource,
+  generatedView,
+} from "./stage_sources.js";
 
 export function ComponentStage({
   variant,

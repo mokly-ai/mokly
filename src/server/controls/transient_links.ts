@@ -3,8 +3,8 @@ import path from "node:path";
 
 import { parse } from "parse5";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import {
+  GENERATED_DIRECTORY,
   currentDocumentPath,
   encodeUrlPath,
   isSafeRepositoryPath,

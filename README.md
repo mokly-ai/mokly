@@ -322,6 +322,10 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+ESLint requires shared directory constants, locale-independent source ordering,
+and unique imports. Tests probe every covered source folder through the real
+flat config. See the [lint contract](./docs/protocol/mokly-directory-lint.md).
+
 `npm run dependencies:check` audits every workspace dependency category against
 the live registry. It fails on Low-or-higher advisories unless an active reviewed
 exception covers the exact dev-only path. Exceptions expire on an inclusive UTC

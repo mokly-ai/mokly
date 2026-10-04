@@ -3,8 +3,8 @@
 import {
   VIEWER_DIRECTORY,
   GENERATED_DIRECTORY,
+  currentDocumentRoute,
 } from "../catalogue/delivery_paths.js";
-import { currentDocumentRoute } from "../catalogue/delivery_paths.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { clipNode } from "../inspector/clipping.js";
 

@@ -1,7 +1,6 @@
 import path from "node:path";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
-import { generatedViews } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifest,
   ManifestV8,

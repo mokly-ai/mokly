@@ -7,9 +7,9 @@ import {
   entryRoute,
   generatedViews,
   isManifestComponentVariant,
-  type CatalogueHierarchy,
 } from "@mokly/viewer/data";
 import type {
+  CatalogueHierarchy,
   HistoricalManifest,
   HistoricalManifestEntry,
   ManifestEntry,

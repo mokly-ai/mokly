@@ -15,8 +15,10 @@ import {
   serializeManifest,
 } from "../dist/registry/manifest.js";
 
-import { fixtureManifest } from "./helpers/current_manifest.js";
-import { currentManifest } from "./helpers/current_manifest.js";
+import {
+  fixtureManifest,
+  currentManifest,
+} from "./helpers/current_manifest.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 test("current filesystem reads reject an earlier-name manifest sentinel", async (context) => {
   const fixture = await createFixture();

@@ -1,13 +1,16 @@
 import path from "node:path";
 
-import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
+import type {
+  HistoricalManifest,
+  ReviewArtifact,
+  StaticDelivery,
+} from "@mokly/viewer/data";
 import {
   VIEWER_DIRECTORY,
   canonicalJson,
   entryRoute,
   GENERATED_DIRECTORY,
   parseStaticDelivery,
-  type StaticDelivery,
   parseReviewResult,
   snapshotSidePath,
   viewHref,

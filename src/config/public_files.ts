@@ -8,8 +8,7 @@ import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
 import { locatePath, type FileLocation } from "./file_locations.js";
-import { projectRealPath } from "./paths.js";
-import { isInside } from "./paths.js";
+import { projectRealPath, isInside } from "./paths.js";
 import type { ResolvedConfig } from "./types.js";
 
 /** Catalogue manifests are internal even when requested through another path. */

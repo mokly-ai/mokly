@@ -27,23 +27,24 @@ import type { ChangeEvidence } from "../review/change_evidence.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { classifyComponents } from "../review/component_classification.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
-import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
+import type { GitCommandRunner } from "../review/git.js";
+import { CommittedRepository } from "../review/git.js";
 import { compiledHeadOutputs } from "../review/head_assets.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
 import {
   baselineReaderForCommit,
   comparisonNotPrepared,
-  type BaselineSelection,
 } from "../review/repository.js";
-import type { ReadOnlyReviewRepository } from "../review/repository.js";
+import type {
+  BaselineSelection,
+  ReadOnlyReviewRepository,
+} from "../review/repository.js";
 import type { ReviewEvidence } from "../review/selection_types.js";
 
 import { classifyChangedContent } from "./changed_content.js";
 import type { CatalogueChangeClassification } from "./classification_result.js";
-import {
-  screenViewChanges,
-  type ScreenViewChanges,
-} from "./screen_view_changes.js";
+import type { ScreenViewChanges } from "./screen_view_changes.js";
+import { screenViewChanges } from "./screen_view_changes.js";
 
 export interface ComponentChangeSnapshot {
   baseline: HistoricalManifest;
