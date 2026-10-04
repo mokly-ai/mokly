@@ -1353,12 +1353,28 @@ and in checkpoint reports, outside the normative rule.
       browser run's ArrowDown timeout and the same failure on clean prepared M7;
       no UI, timeout or authored-source change was made during verification.
 
-- [ ] Record the no-change and component-style samples of both fixtures.
-- [ ] Update `src/review/README.md` and the contracts' Delivery Status for
+- [x] Record the no-change and component-style samples of both fixtures.
+      The [M8 measurement report](../docs/dev/style-only-route-measurements.md)
+      retains all 24 samples against clean M7 `96ddc06c` on the same 2.90GHz host:
+      default ABBA and one cumulative pair, both scenarios cold/warm. Every
+      classification completes with exact membership; no uncapped supplement
+      is triggered. M8 routes all 5,520 cumulative style views, reducing time
+      19.5% cold / 10.3% warm. Default results show no consistent speedup and
+      both contextual Decision 13 style thresholds remain unmet. CPU/steal,
+      heap, full document/inline counts, delivery headroom and restoration
+      hashes are retained; no Decision, contract or implementation changes.
+- [x] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
-      README/status updates and all individual suites are complete; the
-      unqualified combined gate follows approved measurements per the brief.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+      The October 3–4 post-measurement gate runs with Node 24.19.0 and pinned
+      Chromium. The combined command stops at the documented unpatched braces
+      audit; under the brief's exception, package, 4,527 unit, 725 browser
+      (full rerun), 219 hydration and all non-audit repository checks pass.
+      Preserve the first browser run's ArrowDown timeout and the exact matching
+      failure on clean prepared M7 (1/30); no source, UI or timeout changes.
+      The measurement report retains all verification commands and evidence.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+      Push follows the supervisor's approval of `f28a6251` and the documented
+      audit-blocker rule. Formal M8 review and later milestones remain pending.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

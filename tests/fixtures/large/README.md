@@ -297,6 +297,11 @@ retain same-host M6/M7 matrices, uncapped pairs for incomplete control cells,
 CPU/steal observations, delivery margins and original-text/per-step reductions.
 They are not cross-host Decision 13 acceptance.
 
+The [M8 style-only route measurements](../../../docs/dev/style-only-route-measurements.md)
+retain all 24 same-host M7/M8 samples, path/work counts and delivery headroom.
+All cumulative style views route; classification improves 19.5% cold / 10.3%
+warm, while the contextual Decision 13 style thresholds remain unmet.
+
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),
 [scenario state and restoration](./benchmark-contract.md#scenario-matrix-and-restoration),
