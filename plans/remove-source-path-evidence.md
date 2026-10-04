@@ -10,8 +10,8 @@ decisions. Milestones 16 to 21 merge main 0.13.0 and apply the 2026-10-03 CSS
 change rule, which replaces the finding 1 rule; findings 2 to 11 await the
 user's decision. Milestones 22 to 25, with 23A and 23B, apply the user's 2026-10-04
 decisions on the third review and on baseline compatibility.
-Milestones 23A and 23B are implemented and verified with the approved PostCSS
-timing retry. Their delivery is local. Milestone 24 remains pending.
+Milestones 23A, 23B and 24 are implemented and verified with the approved
+PostCSS timing retry. Their delivery is local. Milestone 25 remains pending.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -2135,14 +2135,105 @@ No push or implementation review is performed. Milestone 24 has not started.
 
 Tags: ui
 
-- [ ] Failure-first viewer tests with a real embedded catalogue (the
+- [x] Failure-first viewer tests with a real embedded catalogue (the
       `@mokly/viewer` public catalogue with no branch name) for a screen, a
       saved component view and a document page: Details show no branch-point
       sentence and keep the rest of the evidence. A served catalogue with a
       name still shows the sentence.
-- [ ] Make the change once, in the shared comparison heading.
-- [ ] Run the viewer and browser tests. Smoke-test an embedded and a served
+- [x] Make the change once, in the shared comparison heading.
+- [x] Run the viewer and browser tests. Smoke-test an embedded and a served
       catalogue at mobile and desktop widths.
+- [x] Add a failure-first browser check through the existing embedded viewer
+      harness for a screen and a saved view at both widths. Pin the served
+      sentence for a screen and a saved view in the served outside-evidence
+      spec; the served page spec already pins it.
+- [x] Mark M24 implemented in both Delivery Status notes, and state in the
+      presentation contract that an empty or blank name is unknown. Update
+      the shell README, the viewer package README and the Details guide.
+- [x] Run build, typecheck, lint, changed-file Prettier, the six docs suites,
+      the exact complete unit command and the complete `cargo xtask check`.
+      Inspect the diff and deletions against `origin/main`. Make one local
+      milestone commit; the reviewer owns the push.
+
+Implementation notes:
+
+- `ComparisonHeading` in `packages/viewer/src/shell/evidence_details.tsx`
+  renders “Compared with the branch point on \<name\>.” only for a name that
+  is not empty or blank. Screens, saved views and document pages share it, so
+  the rule is in one place. No placeholder text is shown.
+- The embedded viewer gets an empty name from `viewerContext` and
+  `publicWorkspace`. Its Details keep the “Comparison details” heading and the
+  files, selectors, exclusions and status lines.
+- The viewer search found no other text that prints the base name. The
+  standalone document's `data-mokly-base` attribute is not displayed text, and
+  only served and exported documents carry it. The `ShellContext.base` doc
+  comment now says that an empty name means unknown.
+- Serve and export render the routed screen and saved view from a private
+  workspace with the shell's name, so they keep the sentence. A workspace that
+  a served or exported shell builds from public data has no name. In a
+  standalone export, client navigation shows that public fallback until the
+  destination's inert workspace loads. A probe held that load for four
+  seconds: the fallback showed no branch-point sentence and no “Changed
+  component” line, then the loaded workspace showed both. Before this change
+  the fallback showed “Compared with the branch point on .”; `main` has the
+  same fallback. This milestone leaves the fallback unchanged and reports it.
+- No mockup shows an embedded catalogue's Details, so no mockup changes.
+- This milestone deletes no files. The four earlier approved deletions and the
+  v3-to-v4 catalogue fixture rename against `origin/main` remain unchanged.
+
+Verification:
+
+- The 8 new viewer tests in `packages/viewer/tests/comparison_heading.test.tsx`
+  render the published fixture through `renderViewer` for the embedded case
+  and through `renderHydratedShellPage` with a private catalogue for the served
+  case. Before the change, 5 failed (the embedded screen, saved view, page and
+  changed page, and the heading test), each on “Compared with the branch point
+  on .”; the 3 served preservation tests passed. All 8 pass after the change.
+- The 4 new browser tests in `tests/browser/viewer_details.spec.ts` mount
+  `@mokly/viewer` through the existing embedded harness with ready Changes.
+  Against the old viewer build all 4 failed, only on the empty sentence; all 4
+  pass with the change. The related evidence, page, outside-evidence, viewer
+  lifecycle and layout specs pass 80 tests; the changed specs pass 23 again
+  after the final edits.
+- `npm run build`, `npm run typecheck` and `npm run lint` pass. Changed-file
+  Prettier, the six requested docs suites (26 tests) and the protocol history
+  guard pass. The focused viewer and Details run passes 331 tests.
+- The smoke exported the example with `--base HEAD` and served it with
+  `npm run dev -- --base HEAD`, with two temporary rules
+  (`.example-head h1` and `.example-action`). At 390 × 844 and 1440 × 1000,
+  served Details for Welcome, Action › Default and Getting started start with
+  “Compared with the branch point on HEAD.”. The same entries embedded through
+  `@mokly/viewer` over the export show no such sentence and the same files and
+  selectors. No page error occurred. Both rules were restored and the example
+  Git status is clean. Screenshots are under `.context/screenshots/m24/`;
+  results and logs are under `.context/m24/`.
+- The exact complete unit command passes 3,969 of 3,970 tests. Its only
+  failure is the existing PostCSS timing case, at 2,698.6 ms against its
+  unchanged 2,500 ms limit. The first isolated
+  `npx tsx --test tests/postcss_dependency_review.test.ts` retry passes all
+  three tests. No test is skipped, cancelled or marked TODO.
+- `cargo xtask check` passes the audit with main's accepted Braces exception,
+  formatting, lint, file limits, repository checks, Rust formatting and
+  clippy, 15 Rust tests, typecheck, the 440-file example check and all six
+  packaged-consumer scenarios. Its unit step runs all 699 test files and all
+  3,970 tests: 3,969 pass, and only the existing PostCSS timing case fails,
+  at 3,094.4 ms. The command exits 1 at that step. The first isolated retry
+  passes all three tests. Then `cargo xtask check --suite browser` passes all
+  776 tests and `cargo xtask check --suite hydration` passes all 225. Both
+  exit 0, with no skipped or cancelled tests.
+- The PostCSS timing test is the existing machine-dependent flake; its code,
+  test and limit match main and remain unchanged. The approved isolated retry
+  is the only verification exception. Dependencies and audit rules are
+  unchanged.
+- After `git fetch origin main`, main is still `800fe9f8` and
+  `git log HEAD..origin/main` is empty. The deletion list against
+  `origin/main` holds only the four earlier approved deletions, and the
+  catalogue fixture rename remains. This milestone changes nine files, adds
+  two test files and deletes none. `git diff --check` passes. Logs and gate
+  reports are under `.context/m24/logs/`.
+
+Milestone 24 is implemented and verified under the approved timing retry
+rule. Delivery is one local commit; the reviewer owns the push and the review.
 
 ## Milestone 25: Verify, deliver and review
 

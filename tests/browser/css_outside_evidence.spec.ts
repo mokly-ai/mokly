@@ -18,6 +18,8 @@ import {
 import { cssOutsideFixture } from "./css_outside_fixture.js";
 
 const RULES = "mockups/rule.css";
+/** The branch-point sentence of a catalogue that Serve compares with `main`. */
+const SERVED_BASE = "Compared with the branch point on main.";
 /** The public bundle that carries CSS imported by the entry module. */
 const BUNDLE = "mockups/mokly-generated/styles/entries/fixture.mockup.tsx.css";
 
@@ -53,6 +55,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         "Changed",
       );
       const evidence = await openEvidence(page);
+      await expect(evidence.locator("p").first()).toHaveText(SERVED_BASE);
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
@@ -84,6 +87,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     }) => {
       await page.goto(`${outside.url}/view/components/action-default.html`);
       const evidence = await openEvidence(page);
+      await expect(evidence.locator("p").first()).toHaveText(SERVED_BASE);
       await expect(
         evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
       ).toBeVisible();

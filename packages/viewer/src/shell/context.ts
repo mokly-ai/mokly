@@ -22,7 +22,10 @@ export interface ShellContext {
   delivery?: StaticDelivery;
   /** Id of the currently selected catalogue entry, when one is active. */
   activeId?: string;
-  /** Review comparison base ref for the serve session. */
+  /**
+   * Review comparison base ref for the serve session; empty when the shell
+   * does not know it, as for an embedded public catalogue.
+   */
   base: string;
   /** Interface appearance the document starts from; omission means `auto`. */
   theme?: ViewerTheme;

@@ -9,7 +9,7 @@ implements them for screens and component saved views in [M20](../../plans/remov
 The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
 mockup depicts the whole-document page rule below; the shell implements it in
 [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-Omitting the branch-point sentence when its name is unknown is planned for
+Omitting the branch-point sentence when its name is unknown is implemented in
 [M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
 The mockups show catalogues with a known name and need no change.
 

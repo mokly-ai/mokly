@@ -143,7 +143,13 @@ sentences and selector lists nested in its item, like the approved card.
 `evidence_details.tsx` holds the shared comparison heading and the files and
 exclusions block, so `workspace_evidence.tsx` and a page's Details render the
 same markup; `workspace_evidence.tsx` keeps ignored content and the status
-lines separate. A workspace built from the published catalogue projects the
+lines separate. The heading names the branch point only when its name is
+known; an empty or blank name leaves the heading alone. An embedded catalogue
+has no name, because `viewerContext` and `publicWorkspace` supply an empty
+one, so its Details keep the rest of the evidence without that sentence. A
+workspace that a served or exported shell builds from public data, before its
+private or inert workspace arrives, has no name either.
+A workspace built from the published catalogue projects the
 selected views' catalogue `resourceEvidence` through
 `../viewer/public_workspace_views.ts`. A whole-document page has no workspace:
 `page_evidence_data.ts` reads its status and one evidence record from the

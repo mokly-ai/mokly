@@ -40,7 +40,9 @@ screen's or saved view's evidence in Current, before a comparison loads: each
 changed stylesheet once, with its sentences and selectors under it, as the
 [CSS evidence presentation](../../docs/protocol/mokly-css-evidence-presentation.md)
 contract defines. A whole-document page's Details show its own evidence the
-same way, with page wording and its status beside its title.
+same way, with page wording and its status beside its title. A public
+catalogue has no branch name, so embedded Details leave out the “Compared with
+the branch point” sentence and keep the rest of the evidence.
 
 > Need to create a catalogue? Use
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly). The viewer is a

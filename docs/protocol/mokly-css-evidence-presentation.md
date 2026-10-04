@@ -11,7 +11,7 @@ The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole
 mockup, `design-review-style-page`, depicts the whole-document page display;
 the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
-Omitting the branch-point sentence when its name is unknown is planned for
+Omitting the branch-point sentence when its name is unknown is implemented in
 [M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
 The mockups show catalogues with a known name and need no change.
 
@@ -65,8 +65,9 @@ font/image reason, or reason without analysis keeps the ordinary changed label.
 
 Screens, component saved views and whole-document pages use one shared
 comparison heading in Details. Show “Compared with the branch point on
-\<name\>.” only when the name is known. An embedded catalogue supplied through
-the `@mokly/viewer` public catalogue has no name, so it shows no sentence.
+\<name\>.” only when the name is known. An empty or blank name is unknown. An
+embedded catalogue supplied through the `@mokly/viewer` public catalogue has no
+name, so it shows no sentence.
 Keep the “Comparison details” heading and the rest of Details, including its
 metadata, evidence, exclusions and status lines. A served catalogue with a
 known name still shows the sentence.

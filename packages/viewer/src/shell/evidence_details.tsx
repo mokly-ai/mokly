@@ -17,12 +17,16 @@ import {
 } from "./workspace_stylesheet_evidence.js";
 import { StylesheetEvidenceList } from "./workspace_stylesheet_list.js";
 
-/** The heading and the branch point that every comparison in Details names. */
+/**
+ * The heading of every comparison in Details, then its branch point when the
+ * name is known. An embedded catalogue has no name, so an empty or blank name
+ * leaves only the heading.
+ */
 export function ComparisonHeading({ base }: { base: string }) {
   return (
     <>
       <h3>Comparison details</h3>
-      <p>Compared with the branch point on {base}.</p>
+      {base.trim() ? <p>Compared with the branch point on {base}.</p> : null}
     </>
   );
 }
