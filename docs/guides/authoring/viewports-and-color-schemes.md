@@ -19,6 +19,8 @@ Dark is off until you ask for it. Enable it once in the config, then select
 your own theme from the color scheme in your renderer.
 
 ```ts
+import { defineConfig } from "@mokly/mokly";
+
 export default defineConfig({
   colorSchemes: ["light", "dark"],
   mockupsDir: "specs/generated",
@@ -27,9 +29,24 @@ export default defineConfig({
 ```
 
 ```tsx
+import type { RenderInput } from "@mokly/mokly";
+import { renderToStaticMarkup } from "react-dom/server";
+
 export default function render(input: RenderInput): string {
-  const theme = themes[input.colorScheme];
-  return document(theme, input.node);
+  return (
+    "<!doctype html>" +
+    renderToStaticMarkup(
+      <html lang="en">
+        <head>
+          <title>{input.entry.title}</title>
+          {input.stylesheets.map((href) => (
+            <link key={href} rel="stylesheet" href={href} />
+          ))}
+        </head>
+        <body data-theme={input.colorScheme}>{input.node}</body>
+      </html>,
+    )
+  );
 }
 ```
 
@@ -37,8 +54,10 @@ Mokly re-renders the same mobile and desktop nodes for dark output, so a
 screen is never written twice, and the dark views sit beside the light ones as
 `index.mobile.dark.html` and `index.desktop.dark.html`. Markdown documents also have `index.dark.html`, rendered with Mokly's
 dark palette. Pages from `definePage` have one complete light document.
-The catalogue shows a Light and Dark switch once the catalogue has dark
-documents.
+Serve and export offer one Auto/Light/Dark Appearance selector for the interface
+and previews. An embedded viewer has a separate Light/Dark preview control;
+its host chooses the interface theme. Select your product palette from
+`input.colorScheme`, for example with CSS selectors on `data-theme` above.
 
 ## One screen that stays light
 
@@ -47,9 +66,16 @@ A screen that is deliberately light-only says so. The list must contain
 own set.
 
 ```tsx
-defineScreen({
+import { defineScreen } from "@mokly/mokly";
+
+export default defineScreen({
+  title: "Printed receipt",
+  description: "A receipt that keeps its paper appearance.",
+  mobile: <main>Receipt</main>,
+  desktop: <main>Receipt</main>,
+  dependencies: [],
+  relatedDocs: [],
   colorSchemes: ["light"],
-  // The rest of the screen is unchanged.
 });
 ```
 

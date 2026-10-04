@@ -11,10 +11,10 @@ A folder is every path segment before an entry's last one. The file
 `specs/account/billing/invoice.mockup.tsx` creates the folders `account` and
 `account/billing` by being inside them; nothing declares a folder, and a
 folder with no entry below it does not exist. The same directory can hold
-screens, pages, flows and components.
+screens, pages, Markdown documents, flows and components.
 
 In the catalogue, a folder appears in the Specs section when it holds
-screens, pages or flows, and in the Components section when it holds
+screens, pages, documents or flows, and in the Components section when it holds
 components, with each section showing only its own kind of children. A
 folder row only expands or collapses; it never opens anything. Breadcrumbs
 use folder titles in order: a folder with its own page opens that page, and
@@ -66,9 +66,10 @@ catalogue and may only carry `order` and `exclude`.
 
 ## A folder's own page
 
-A folder can have a page of its own: an entry module named
-`index.mockup.tsx`, or an entry that declares `slug: "index"`. That entry takes
-the folder's path. A page or flow appears as its first child row, labelled
+A folder can have a page of its own: a Markdown `README.md` or `index.md`, an
+entry module named `index.mockup.tsx`, or an entry that declares
+`slug: "index"`. That entry takes the folder's path. A page, document or flow
+appears as its first child row, labelled
 Overview when its title is also the folder's title; a screen or component
 uses its own entry row, which lists its variants and then the folder's other
 members.
@@ -81,13 +82,20 @@ keep their entry row and variant disclosure control.
 
 ## Classify with tags
 
-Screens, pages, flows and components may carry `tags`, a list of
+Screens, pages, documents, flows and components may carry `tags`, a list of
 lowercase kebab-case values in the order you wrote them.
 
 ```tsx
-defineScreen({
+import { defineScreen } from "@mokly/mokly";
+
+export default defineScreen({
+  title: "Empty activity",
+  description: "An account with no activity yet.",
+  mobile: <main>No activity yet</main>,
+  desktop: <main>No activity yet</main>,
+  dependencies: [],
+  relatedDocs: [],
   tags: ["forms", "empty-state"],
-  // The rest of the screen is unchanged.
 });
 ```
 

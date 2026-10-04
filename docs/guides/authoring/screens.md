@@ -17,8 +17,8 @@ import { defineScreen } from "@mokly/mokly";
 export default defineScreen({
   title: "Invoice",
   description: "One paid invoice.",
-  mobile: <main>Invoice</main>,
-  desktop: <main>Invoice</main>,
+  mobile: <main id="summary">Invoice</main>,
+  desktop: <main id="summary">Invoice</main>,
   dependencies: ["src/account/billing/invoice.tsx"],
   relatedDocs: ["docs/billing.md"],
 });
@@ -65,20 +65,32 @@ screen takes the folder's path while the others declare slugs:
 
 ```tsx
 // specs/account/billing/index.mockup.tsx
+import { defineScreen } from "@mokly/mokly";
+
 export const billing = defineScreen({
   title: "Billing",
-  // ...this screen is account/billing, the folder's own page
+  description: "Billing overview.",
+  mobile: <main>Billing</main>,
+  desktop: <main>Billing</main>,
+  dependencies: [],
+  relatedDocs: [],
 });
 
 export const history = defineScreen({
   slug: "history",
   title: "Payment history",
-  // ...this screen is account/billing/history
+  description: "Payments made on this account.",
+  mobile: <main>Payment history</main>,
+  desktop: <main>Payment history</main>,
+  dependencies: [],
+  relatedDocs: [],
 });
 ```
 
-Two slug-less screens in one module, or a file beside a directory of the same
-name, derive one path and fail the build with both locations.
+Two slug-less screens in one module derive one path and fail the build with
+both locations. So do `invoice.mockup.tsx` and `invoice/index.mockup.tsx`
+when neither declares another path. A same-named directory containing ordinary
+child entries can coexist with the file.
 
 ## Keep scrolling panels paired
 
@@ -89,9 +101,11 @@ If adding a product `id` would be inappropriate, name the comparison pair
 directly with `data-mokly-scroll` instead:
 
 ```tsx
+import { Activity } from "./activity.js";
+
 <main data-mokly-scroll="account-activity" className="activity-panel">
   <Activity />
-</main>
+</main>;
 ```
 
 The name is lowercase kebab-case and must be unique among scrolling regions in
@@ -107,11 +121,13 @@ state or an error. Declare it inside the screen it varies, and it becomes a
 full screen of its own, grouped under the parent in the catalogue.
 
 ```tsx
+import { defineScreen } from "@mokly/mokly";
+
 export default defineScreen({
   title: "Invoice",
   description: "One paid invoice.",
-  mobile: <main>Invoice</main>,
-  desktop: <main>Invoice</main>,
+  mobile: <main id="summary">Invoice</main>,
+  desktop: <main id="summary">Invoice</main>,
   dependencies: ["src/account/billing/invoice.tsx"],
   relatedDocs: ["docs/billing.md"],
   variants: [

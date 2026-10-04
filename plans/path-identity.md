@@ -1,7 +1,11 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
-Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 5A, 6–6G, and 7–7D are complete. This plan supersedes
+Status: Active until the pull request merges. Created 2026-10-02 with the
+user's consent. Milestones 1–7 and all lettered milestones through 7D are
+complete, including main integration, viewer integration and file-length
+compliance. Milestone 8 implementation and verification are complete. The
+orchestrator's fresh implementation review is the only remaining required TODO.
+This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -164,6 +168,8 @@ follow the same shape.
 
 ## Milestone 1: Contract documentation
 
+Status: Complete.
+
 Define the complete contract before any code changes. Protocol documents state
 rules only and never record milestone numbers, which
 `tests/protocol_doc_history.test.ts` enforces. The size test
@@ -240,6 +246,8 @@ contracts rather than growing one.
 ## Milestone 2: Shell design mockups
 
 Tags: mockup
+
+Status: Complete.
 
 Mokly's shell mockups are the design screens under
 `examples/basic/entries/design`. Update them to the new navigation and Changes
@@ -1105,6 +1113,8 @@ Status: Complete, verified by the Milestone 6C full gate.
 
 Tags: mockup
 
+Status: Complete.
+
 Milestone 7 shows the existing Light-only fallback note on documents. A
 document's stage has no frame label, and no design showed where the note goes,
 so mock it up first.
@@ -1128,6 +1138,8 @@ so mock it up first.
 ## Milestone 6F: Index member landing view mockup
 
 Tags: mockup
+
+Status: Complete.
 
 Activating the unmodified Profile row in Changes opens Security on its first
 changed view, because `mokly-changes.md` lands a reader on the first changed
@@ -1533,6 +1545,8 @@ after the completed work has been committed and pushed.
 
 Tags: ui
 
+Status: Complete.
+
 The first part implements what does not depend on move data. The second part
 follows the merge of Milestone 5.
 
@@ -1623,6 +1637,8 @@ Second part, after Milestone 5 merges:
 
 ## Milestone 7A: Move data in the shell catalogue
 
+Status: Complete.
+
 The shell needs each paired entry's previous path in Serve, export, and the
 public viewer, and export must accept a `Moved from` label in its scripts.
 
@@ -1644,6 +1660,8 @@ public viewer, and export must accept a `Moved from` label in its scripts.
 ## Milestone 7B: Moved presentation
 
 Tags: ui
+
+Status: Complete.
 
 Present paired entries as the Milestone 2 mockups and the shell contract
 define.
@@ -1691,6 +1709,8 @@ define.
 
 Tags: mockup
 
+Status: Complete.
+
 The runtime's comparison details name a moved entry's previous path in words
 that fit every entry. The `design/changes/outcomes/moved` mockup said "the
 invoice at" instead, so the mockup takes the runtime wording.
@@ -1707,6 +1727,8 @@ invoice at" instead, so the mockup takes the runtime wording.
 ## Milestone 7D: Moved presentation review fixes
 
 Tags: ui
+
+Status: Complete.
 
 An independent review of Milestone 7 (`9d827811`) found gaps on moved
 component paths, which the browser tests never moved, and a changed mark that
@@ -1784,22 +1806,104 @@ unit (4122), browser (781), and hydration (238) suites pass.
 
 ## Milestone 8: Guides, verification, close-out, and review
 
-- [ ] Finalise the guides and READMEs for the recommended `specs/` layout and
+Finish the current documentation and runnable examples, verify the complete
+implementation, and smoke-test Serve and ordinary static hosting. The
+orchestrator assigns the final implementation review to a fresh reviewer after
+this push; the implementation agent leaves that final TODO unticked.
+
+Status: Implementation and verification complete. The final review remains
+assigned to the orchestrator's fresh reviewer after this push. Main remains at
+`800fe9f8`; no further merge is needed.
+
+- [x] Finalise the guides and READMEs for the recommended `specs/` layout and
       the co-located alternative, the root `README.md` quick start, and the
       release notes for the breaking change.
-- [ ] Run the full verification: `npm run build`, unit and browser tests,
+  - [x] Read every guide and the root, package, viewer and example READMEs;
+        remove stale delivery claims and complete invalid example fragments.
+  - [x] Validate documented roots, index documents, links, registrations and
+        renderer examples against the real public API in scratch consumers.
+  - [x] Clarify the embedded viewer's lack of branch-point input-change data.
+  - [x] State every removed field, new wire/storage version and the clean break
+        in the release note; keep migration guidance documentation-only.
+
+Documentation validation: all 31 guides and the root, viewer and example
+READMEs were checked against the final API. All 41 TypeScript fences compile
+with strict checking; the folder JSON example parses. Seven documented configs
+build and check in a scratch Git consumer. It includes index screens, a README,
+a document, a page, reciprocal flow membership, registered components, variants,
+relative and definition-reference links, fragments, and review-ignore controls.
+Both folder-record forms and both complete renderers pass. Imported CSS,
+CSS Modules with an asset, Tailwind, autoprefixer, and the transparent co-located
+root also build and check. The 34 focused guide/protocol tests pass. Scratch
+scripts and logs are under `.context/m8/`; no fixture output is tracked.
+The viewer contract states the embedded input-change limitation and removes
+redundant delivery-status prose; its reviewed size cap falls from 456 to 454.
+The release note covers `43404882`, all removed fields and wire/storage versions,
+and the manual migration. Earlier release notes remain clearly historical.
+
+- [x] Run the full verification: `npm run build`, unit and browser tests,
       `npm run example:build`, `npm run example:check`, the package check, and
       `cargo xtask check`.
-- [ ] Smoke-test the published shape: serve the example, browse folders
+- [x] Smoke-test the published shape: serve the example, browse folders
       without content changes, open an Overview row, open a document, follow
       relative and typed links, move a directory and confirm "Moved", and
       export and open the static output.
-- [ ] Update this plan's status and `plans/README.md`; the plan stays Active
+- [x] Update this plan's status and `plans/README.md`; the plan stays Active
       until its pull request merges.
-- [ ] Commit and push.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
-      complete local diff against `origin/main` and report the findings without
-      changing the implementation.
+
+Verification on the close-out tree:
+
+- `npm run build`, `npm run example:build`, `npm run example:check` and
+  `npm run package:check` pass; the example contains 468 generated files.
+- The unmodified `cargo xtask check` passes every suite. Package checks pass
+  all six packed-consumer scenarios. Unit tests pass 4,149/4,149; browser tests
+  pass 807/807; hydration tests pass 260/260. No skips, cancellations or reruns
+  are needed. All three known browser flakes pass on the first run.
+- Dependency audit, formatting, lint, four repository ratchets, Rust fmt,
+  Clippy and all 15 Rust tests pass. Source length passes for 1,551 files with
+  no violations. The additional all-files Rust length audit passes for 9 files.
+  The existing reviewed Braces exception remains the sole audit exception;
+  this milestone adds no package, override or exception.
+
+Fresh published-shape smoke results:
+
+- Serve the real example with `--base HEAD --no-watch`. Collapse and reopen
+  Example; the URL, heading and mounted frame remain unchanged. The Overview
+  row opens the real README. Its relative document link opens Workspace guide
+  at `your-first-visit`. The document renders in Dark, and its relative logical
+  link opens Welcome. No browser page error occurs.
+- Copy the real example into `.context/m8/example-move`, register a definition
+  reference for the Welcome-to-Details link, and commit only the scratch
+  baseline. Move `specs/example` to `specs/relocated` and update its authored
+  references. All seven moved entries (README, document, page, screens, variant
+  and flow) pair as Unmodified, carry their old paths and produce no removals.
+  Changes shows Moved, Details shows Moved from, and the definition-reference
+  link opens the new Details path and fragment.
+- Edit Welcome's heading without committing the move. It becomes Changed;
+  Side by side loads Before from `example/screens/welcome` and Current from
+  `relocated/screens/welcome`. The frame bodies show the old and new headings.
+  The scratch repository still has exactly one baseline commit.
+- Export that scratch catalogue and open it with `python3 -m http.server`.
+  Overview, Workspace guide and Welcome each open from `/view/<path>/`,
+  `/view/<path>` and `/view/<path>/index.html`, normalizing to the canonical
+  URL. Frames load, and the exported document renders in Dark.
+
+Commands, assertions, logs and inspected screenshots are in `.context/m8/`:
+`verification.log`, `smoke-serve.log`, `smoke-moves.log`, `smoke-export.log`,
+`document-dark.png`, `moved-comparison.png` and `static-document.png`.
+The scratch move and generated artifacts are not part of the branch.
+
+The main-relative name-status and deletion checks match the 18 authorized
+replacements listed under Milestones 6G and 6I. The close-out commit repeats
+each path and its replacement in its body. It adds no file deletion. Every
+required item is complete before PR merge except the final fresh review below.
+The six post-merge items remain optional and do not block plan completion.
+
+- [x] Commit and push.
+- [ ] After the push, the orchestrator assigns a fresh reviewer to use
+      `docs/implementation-review-prompt.md` against the complete diff from
+      `origin/main` and report findings without changing the implementation.
+      The implementation agent must not run this review.
 
 ## Post-merge follow-up (non-blocking)
 

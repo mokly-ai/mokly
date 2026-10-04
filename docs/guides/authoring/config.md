@@ -39,7 +39,7 @@ the `files` globs of a root are relative to that root.
 | `roots`            | The directories Mokly scans; defaults to one `specs` root                         |
 | `mockupsDir`       | Where the generated catalogue is written                                          |
 | `generatedOutput`  | `"derived"` (default) requires untracked output; `"committed"` verifies Git bytes |
-| `colorSchemes`     | Schemes rendered for screens and components; defaults to `["light"]`              |
+| `colorSchemes`     | Schemes rendered for screens, components and documents; defaults to `["light"]`   |
 | `repoRoot`         | The root every path is confined to; defaults to the config directory              |
 | `renderer`         | Your module that wraps a screen in your theme and returns a document              |
 | `stylesheets`      | Ordered route-to-stylesheet rules                                                 |
@@ -48,7 +48,7 @@ the `files` globs of a root are relative to that root.
 | `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources              |
 | `review`           | The Git base, the artifact directory and shared-impact globs                      |
 | `watch`            | Extra inputs the watched server reacts to                                         |
-| `compatibility`    | Temporary bridges while a repository moves to the current output                  |
+| `compatibility`    | A consumer-owned transformer for complete generated documents                     |
 
 Every configured root defines its own file selection and path derivation.
 
@@ -63,8 +63,8 @@ A root is a directory Mokly reads, with up to three refinements:
 | `path`        | A prefix placed before every path derived from this root                  |
 | `transparent` | Directory names removed from derived paths                                |
 
-Matched `.md` files stay protected and watched but do not render yet. Every
-other matched file is an entry module whose exported definitions join the catalogue. The glob alone
+Matched `.md` files render as documents and stay protected and watched as source.
+Other matched files are entry modules whose exported definitions join the catalogue. The glob alone
 decides the shape: `files: ["**/*.ts"]` reads every TypeScript file below the
 root as a module. A file's path is the root's `path`, then the directories
 between the root and the file with transparent names removed, then the file
@@ -110,14 +110,19 @@ HTTP(S), protocol-relative and `data:` sources remain
 external and unchanged.
 
 ```ts
-stylesheets: [
-  {
-    match: "account/**/index.html",
-    stylesheets: ["app.css"],
-    darkStylesheets: ["dark.css"],
-  },
-  { match: "**/index.html", stylesheets: ["base.css"] },
-];
+import { defineConfig } from "@mokly/mokly";
+
+export default defineConfig({
+  mockupsDir: "specs/generated",
+  stylesheets: [
+    {
+      match: "account/**/index.html",
+      stylesheets: ["app.css"],
+      darkStylesheets: ["dark.css"],
+    },
+    { match: "**/index.html", stylesheets: ["base.css"] },
+  ],
+});
 ```
 
 ## Review
@@ -155,15 +160,27 @@ import type { RenderInput } from "@mokly/mokly";
 import { renderToStaticMarkup } from "react-dom/server";
 
 export default function render(input: RenderInput): string {
-  const body = renderToStaticMarkup(
-    <ThemeProvider scheme={input.colorScheme}>{input.node}</ThemeProvider>,
+  return (
+    "<!doctype html>" +
+    renderToStaticMarkup(
+      <html lang="en">
+        <head>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>{input.entry.title}</title>
+          {input.stylesheets.map((href) => (
+            <link key={href} rel="stylesheet" href={href} />
+          ))}
+        </head>
+        <body data-theme={input.colorScheme}>{input.node}</body>
+      </html>,
+    )
   );
-  const links = input.stylesheets
-    .map((href) => `<link rel="stylesheet" href="${href}">`)
-    .join("");
-  return `<!doctype html><html lang="en"><head>${links}</head><body>${body}</body></html>`;
 }
 ```
+
+Wrap `input.node` in your product's providers when it needs them. React escapes
+the stylesheet URLs and title in this complete-document example.
 
 React and React DOM resolve from the config's own location, so the screens use
 one React runtime even when the executable came from an npx cache.

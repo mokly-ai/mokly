@@ -1,15 +1,8 @@
 # Embeddable Mokly Viewer
 
-## Delivery Status
-
-The [viewer library](../../plans/mokly-viewer-library.md), React shell, hosts,
-and multi-instance markers are implemented. One server-rendered/hydrated tree
-runs in Serve, export, and application-owned hosts; every selection names an
-entry path. [Appearance](./mokly-viewer-appearance.md) and
-[removed previews](./mokly-removed-previews.md) retain their host-specific
-controls and shared presentation. Markdown documents and `Moved` rows are
-implemented.
-Live Serve uses the strict [entry-scoped bootstrap](./mokly-shell-bootstrap.md).
+The [viewer library](../../plans/mokly-viewer-library.md) renders one React shell
+in Serve, export and embedded hosts. Serve uses the strict
+[entry-scoped bootstrap](./mokly-shell-bootstrap.md).
 
 ## Package And Props
 
@@ -318,6 +311,11 @@ complete-document frame, one document per scheme and no viewport axis
 previous path in details ([moves](./mokly-moves.md)). Removed entries load their
 [previous version](./mokly-removed-previews.md) only from advertised catalogue
 paths.
+
+The embedded viewer's public catalogue has no branch-point usage data. Its
+Details show no input changes (Before and Current props), whether an entry
+moved or stayed at the same path. Serve and export shells include that data
+and show input changes.
 
 Slots are optional React-owned content containers. `topBarStart`/`topBarEnd`
 adjoin the existing top bar; `railStart`/`railEnd` adjoin the navigation rail.

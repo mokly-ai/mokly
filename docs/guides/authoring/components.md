@@ -106,14 +106,16 @@ the props from it. The kinds are `string`, `number`, `boolean`, `null`,
 `enum`, `array`, `object` and `union`, each with the bounds it supports.
 
 ```ts
-propSchema: {
+import type { ObjectPropSchema } from "@mokly/mokly";
+
+export const propSchema = {
   kind: "object",
   properties: {
     label: { schema: { kind: "string", maxLength: 80 } },
     tone: { schema: { kind: "enum", values: ["neutral", "danger"] } },
     count: { schema: { kind: "number", integer: true }, optional: true },
   },
-}
+} satisfies ObjectPropSchema;
 ```
 
 ## Ownership
@@ -132,7 +134,12 @@ that has the same key in another version of the same view.
 import { resolveInstance } from "@mokly/mokly";
 import type { ComponentInstanceRecord, InstanceResolution } from "@mokly/mokly";
 
-const result: InstanceResolution = resolveInstance(previous, current);
+export function resolveSavedInstance(
+  previous: ComponentInstanceRecord,
+  current: ComponentInstanceRecord | undefined,
+): InstanceResolution {
+  return resolveInstance(previous, current);
+}
 ```
 
 The result is `present` when the saved inputs and order still match, `moved`

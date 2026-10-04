@@ -88,9 +88,10 @@ beside the config by default: every `.mockup.ts` or `.mockup.tsx` file in it
 is an entry module and every `.md` file is a document. A file's location
 in that tree is its place in the catalogue. List `roots` to read other
 directories, such as a component library with
-`{ dir: "packages/ui/src", path: "components" }`, or to keep mockups beside
-product code with a transparent directory name; every root must match at
-least one file.
+`{ dir: "packages/ui/src", path: "components" }`. The co-located alternative
+uses `{ dir: "src/features", transparent: ["__mockups__"] }`, so
+`src/features/checkout/__mockups__/summary.mockup.tsx` becomes
+`checkout/summary`. Every root must match at least one file.
 
 The default renderer is deliberately neutral; point `renderer` at your own
 module when screens need product theme providers, custom document markup, or
@@ -136,9 +137,23 @@ specs/generated/mokly-manifest.json
 specs/generated/mokly-generated/
 ```
 
+Add `specs/account/README.md` to give Account its own Overview row:
+
+```markdown
+# Account
+
+Manage account details and billing.
+
+[Open account home](mock:./account-home)
+```
+
+Folder rows expand without changing the content area. The Overview row opens
+the document at `/view/account/`. Specs contains screens, pages, documents and
+flows; Components contains registered components.
+
 Current output uses manifest v8, and comparison-base output must do the same.
-Paths derive from exporting files and root configuration. The
-[implementation plans](./plans/README.md) track the remaining work.
+For an existing catalogue, follow the
+[path identity migration note](./docs/protocol/npm-release-notes.md#breaking-path-identity-release-note).
 
 ### 4. Open the catalogue
 
@@ -238,7 +253,7 @@ npx --no-install mokly export --out .context/mokly-site
 ```
 
 The export contains the catalogue, its assets, navigation, available Git
-comparisons, and previous versions for removed screens and pages. Serve the
+comparisons, and previous versions for removed screens, pages and documents. Serve the
 directory at the root of an HTTP(S) origin. The
 [export and hosting guide](./docs/guides/catalogue/export-and-host.md) covers
 the required headers and deployment model.

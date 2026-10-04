@@ -24,8 +24,9 @@ or inside a declared dependency folder can appear in Details without adding
 the screen to Changes. The entry's source file alone does not add it either;
 it appears in Details when it also matches one of those file groups. A
 registered component's own file or a dependency named by its exact path can
-still add its entry. Moving source files around does not fill Changes, and
-giving a folder a new title changes no entry.
+still add its entry. A source move that leaves the entry's path fixed adds no
+output change; an entry whose path changes appears as Moved. Giving a folder
+a new title changes no entry.
 Regions marked with Review-ignore are classified as ignored, and a stylesheet
 edit marks a screen only when a changed rule could apply to it or cannot be
 resolved; rules that reach nothing on the screen are recorded as examined and
@@ -43,7 +44,7 @@ version at the old path.
 
 Mokly pairs a moved entry when exactly one baseline entry of the same kind
 matches it: first by a `movedFrom` you declared, then by identical content,
-then by the same source module and title, and, for pages and Markdown
+then, for entries defined in modules, by the same source module and title, and, for pages and Markdown
 documents only, by content that is at least half alike. The identical-content
 pass repeats after each round of new pairs, so entries that link to each other
 and move together still compare equal. A resource compares by the route it
@@ -56,9 +57,17 @@ print the ambiguity in the terminal, suggesting `movedFrom`. Declare it on the
 entry, or in a document's front matter, with the complete previous path:
 
 ```tsx
-defineScreen({
+// specs/account/home.mockup.tsx
+import { defineScreen } from "@mokly/mokly";
+
+export default defineScreen({
+  title: "Account home",
+  description: "The account landing screen.",
+  mobile: <main>Account</main>,
+  desktop: <main>Account</main>,
+  dependencies: [],
+  relatedDocs: [],
   movedFrom: "account/overview",
-  // The rest of the screen is unchanged.
 });
 ```
 

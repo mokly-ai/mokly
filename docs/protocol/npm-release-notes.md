@@ -6,28 +6,29 @@ Before a close-out commit, `npm-release-notes.md` must name every `feat!`
 commit returned by
 `git log --oneline origin/main..HEAD | grep 'feat!'`. The current coverage is:
 
-- `7aba5ec2 feat!: replace collections with navigation paths` — the navigation
-  path note below;
-- `d227702e feat!: close out id-derived routes plan` — the identity note;
-- `40ab4324 feat!: drop comparisons against older baselines` — the comparison
-  baseline note;
-- `c16926ba feat!: close out id-derived routes review fixes` — the baseline and
-  viewer host notes; and
-- `52ca8548 feat(publish)!: upload catalogue content deltas` — the delta
-  publishing note.
+- `43404882 feat!: derive entry identity from paths` — the path identity note
+  below.
+
+The historical notes retain coverage for earlier releases: `7aba5ec2`
+(navigation paths), `d227702e` (identity), `40ab4324` (comparison baseline),
+`c16926ba` (baseline and viewer host), and `52ca8548` (delta publishing).
+They describe earlier upgrades, not the current API. The path identity note
+supersedes their identity, navigation and format guidance.
 
 ## Breaking Path Identity Release Note
 
-The path identity upgrade replaces authored `id` and `navPath` with one path
-per entry derived from the file that defines it, adds Markdown documents,
-detects moves, renames the Pages section to Specs, and changes the generated
-layout to one directory per entry. Consumers adopt manifest v8, catalogue read
-model v4, review result v5, and the `/view/<path>/` URL. There is no
-compatibility layer: earlier manifests, read models, review results, and
-stored navigation state are neither read nor translated, former
-`/view/<kind>/<id>.html` URLs are not redirected, former ids are not mapped to
-paths, and former configuration keys fail as unknown fields. An earlier
-comparison base makes Changes unavailable until it includes this version.
+The path identity upgrade removes `id`, `navPath`, `entries`, and `entriesDir`.
+Each entry has one path derived from its defining file. It adds Markdown
+documents and move detection, renames Pages to Specs, and gives each entry a
+generated directory. Consumers must adopt manifest v8, catalogue read model
+v4, review result v5, disclosure storage v4, and `/view/<path>/` URLs.
+
+Earlier formats, URLs, ids, disclosure keys, and configuration are not read or
+translated. There is no compatibility reader, URL redirect, id mapping,
+storage-key conversion, configuration fallback, or migration tool. Former
+configuration fields fail as unknown fields. An earlier comparison base makes
+Changes unavailable until it includes this version. Migration is manual;
+regenerate the catalogue after changing authoring and update saved entry links.
 
 Migrate authoring as follows:
 
@@ -71,7 +72,13 @@ carry `folderTitles`, and paired entries carry `previousPath`. Viewer hosts
 replace `ViewerSelection.screenId` and `ScreenNavigateEvent.screenId` with
 `screenPath`.
 
-## Breaking Navigation Path Upgrade Release Note
+The path identity change also removes the obsolete nested input types
+`NestedFolderMarker`, `NestedPageInput`, and `NestedScreenInput` from the authoring
+package, and `ViewHrefIdentity`, `navConflictKey`, `navPathKey`, and `validNavLabel`
+from the viewer data package. The public replacement is the path model described
+in [paths](./mokly-paths.md) and [entry modules](./mokly-entry-modules.md).
+
+## Historical Navigation Path Upgrade Release Note
 
 The navigation-path upgrade removes `defineCollection`, `collection`, and their
 exported types; adds per-entry `navPath` and nested `folder()` authoring; and
@@ -95,7 +102,7 @@ Migrate the released `@mokly/mokly` exports as follows:
   `navPath` only when the entry belongs below folder labels. Kind and id derive
   the document path.
 
-## Breaking Identity Upgrade Release Note
+## Historical Identity Upgrade Release Note
 
 The identity upgrade derives paths from kind and id, removes authored `route`,
 `slug`, `segment`, and root `path`, and makes component variants global entries.
@@ -155,13 +162,13 @@ unrecognized query can remain in the initially loaded address, but Mokly's next
 generated navigation does not carry it. Link a variant as its own entry with
 `viewHref(kind, variantId)`.
 
-## Breaking Comparison Baseline Release Note
+## Historical Comparison Baseline Release Note
 
 Comparisons require a base built by this Mokly version. An earlier base makes
 Changes unavailable until the base includes this version, while export and
 publish still complete without Changes.
 
-## Breaking Delta Publishing Release Note
+## Historical Delta Publishing Release Note
 
 `mokly publish` now uses the content-addressed Plan, Blob, and Complete exchange
 instead of sending one archive containing the complete exported catalogue.
@@ -180,7 +187,7 @@ removed; receiver conformance uses `export-ownership-v2.json`.
 The new `--upload-concurrency <n>` publish option controls parallel Blob PUTs.
 It accepts integers from 1 through 32 and defaults to 8.
 
-## Breaking Viewer Host API Release Note
+## Historical Viewer Host API Release Note
 
 Viewer hosts must remove `ViewerSelection.variantId` and
 `InstanceRef.variantId`; `ScreenNavigateEvent` removes `route` and `variantId`
@@ -190,9 +197,3 @@ opaque identity.
 
 Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
 the applicable upgrades above; the release PR owns versions and changelogs.
-
-The path identity change also removes the obsolete nested input types
-`NestedFolderMarker`, `NestedPageInput`, and `NestedScreenInput` from the authoring
-package, and `ViewHrefIdentity`, `navConflictKey`, `navPathKey`, and `validNavLabel`
-from the viewer data package. The public replacement is the path model described
-in [paths](./mokly-paths.md) and [entry modules](./mokly-entry-modules.md).

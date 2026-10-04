@@ -54,9 +54,11 @@ To use a styled control as a link, opt into `asChild` with exactly one
 element:
 
 ```tsx
+import { MockLink } from "@mokly/mokly";
+
 <MockLink asChild to="./invoice">
   <button className="primary-action">View invoice</button>
-</MockLink>
+</MockLink>;
 ```
 
 Mokly turns that one control into a native link during the build, keeping its

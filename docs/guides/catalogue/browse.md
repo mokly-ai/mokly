@@ -10,7 +10,7 @@ order: 1
 `mokly serve` opens the catalogue: a navigation column on the left, the entry
 in the middle and its details beside it. The navigation column is resizable,
 and Specs and Components are separate collapsible sections with icons for
-folders and for each kind of entry. Specs holds your screens, pages and flows;
+folders and for each kind of entry. Specs holds screens, pages, Markdown documents and flows;
 Components holds your registered components. A folder that contains both
 kinds appears in both sections, each showing only its own children.
 
@@ -24,7 +24,8 @@ what you are reading.
 Every entry has the address `/view/<path>/`, so the tree is the directory
 tree of your specs. A folder row only expands or collapses; it never changes
 what you are looking at. An entry row opens the entry. When a folder has a
-page of its own, an entry named `index`, that page is the folder's first row,
+page of its own, from a Markdown `README.md` or `index.md` or a module's index
+entry, that page is the folder's first row,
 labelled Overview when its title is the folder's title, and the folder's
 address `/view/<folder>/` opens it. A screen or component that is a folder's
 page takes the folder's place in the tree, with the folder's other members
@@ -50,14 +51,16 @@ else.
 
 ## Look at a screen
 
-The header carries the viewport controls, and a Light and Dark switch once the
-catalogue has dark documents. A screen is framed in realistic browser chrome
+The header carries the viewport controls. The top bar's Appearance selector
+chooses Auto, Light or Dark for both the interface and previews. An embedded
+viewer keeps a separate Light/Dark preview control under its host's theme.
+A screen is framed in realistic browser chrome
 that expands to an overlay, and the mobile view is framed as a phone whose
 screen reserves the usual status band above your document.
 
 Use-case flows read the same way, one step after another. A page fills the
-stage as one document, following the Light and Dark switch where a dark
-rendering exists.
+stage as one document. Markdown documents follow the selected scheme; pages
+without a dark rendering keep their light document.
 
 ## Details
 

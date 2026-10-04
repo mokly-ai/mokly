@@ -41,11 +41,23 @@ names a screen that lists the flow, and every listed flow steps through the
 screen.
 
 ```tsx
-defineScreen({
+// specs/account/account-home.mockup.tsx
+import { defineScreen } from "@mokly/mokly";
+
+export default defineScreen({
+  title: "Account home",
+  description: "The start of the account tour.",
+  mobile: <main>Account</main>,
+  desktop: <main>Account</main>,
+  dependencies: [],
+  relatedDocs: [],
   useCasePaths: ["./account-tour"],
-  // The rest of the screen is unchanged.
 });
 ```
+
+The invoice screen also lists this flow. In its existing definition at
+`specs/account/billing/invoice.mockup.tsx`, set
+`useCasePaths: ["../account-tour"]` so both steps have reciprocal membership.
 
 A variant never inherits its parent's flows; list a flow on the variant when
 a step names the variant.

@@ -17,7 +17,7 @@ const oversizedCaps: Readonly<Record<string, number>> = {
   "mokly-runtime.md": 442,
   "mokly-shell-design.md": 362,
   "mokly-viewer-appearance.md": 382,
-  "mokly-viewer.md": 456,
+  "mokly-viewer.md": 454,
 };
 
 function sizeIssue(name: string, lines: number, cap: number | undefined) {

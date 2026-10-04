@@ -4,7 +4,7 @@ This module projects validated manifest v8 and accepted Changes evidence into
 public read model v4 at `__mokly/catalogue.json`. Serve, export and repository
 preview share its explicit allowlist. Entries are keyed by path, and one tree
 carries resolved folder titles, order, hidden flags, indexes and variants.
-The current shell still labels its non-component section Pages. Documents share
+The shell labels its non-component section Specs. Documents share
 the page frame and publish their effective schemes and resource dependencies.
 Matched related-doc paths become validated `mock:<path>` references; other paths
 remain source labels. Accepted comparison pairs supply `previousPath` on current

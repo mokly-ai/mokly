@@ -14,6 +14,7 @@ it.
 ## What it holds
 
 - The entry's description; for a component, also the shown entry's path.
+- Moved from, with the previous path when Changes paired a moved entry.
 - The tags it carries, as chips you can search from.
 - The dependencies it declares, the related documents it names and the source
   file it comes from.
@@ -47,3 +48,7 @@ declared controls. While serving locally you can edit text, boolean, number and
 preset controls and see the result immediately; Reset restores the current
 variant's declared props. A published catalogue keeps the variants and the
 inspection with the controls read only.
+
+Serve and exported shells can also show changed saved inputs as Before and
+Current props. Embedded viewers show current props only: their public catalogue
+has no branch-point usage data from which to show input changes, moved or not.

@@ -13,6 +13,7 @@ region with paired inert boundaries and no layout wrapper of its own.
 
 ```tsx
 import { ReviewIgnore } from "@mokly/mokly";
+import { AppHeader } from "./app-header.js";
 
 <ReviewIgnore id="app-shell">
   <AppHeader />
@@ -36,6 +37,7 @@ still reviewed.
 
 ```tsx
 import { ReviewIgnore, reviewMaterialKey } from "@mokly/mokly";
+import { AppHeader } from "./app-header.js";
 
 <ReviewIgnore id="app-shell" materialKey={reviewMaterialKey({ unread: 3 })}>
   <AppHeader unread={3} />
@@ -53,6 +55,7 @@ which is how a screen that is about the shell itself compares it in full.
 
 ```tsx
 import { ReviewIgnoreScope } from "@mokly/mokly";
+import { AppHeader } from "./app-header.js";
 
 <ReviewIgnoreScope enabled={false}>
   <AppHeader />

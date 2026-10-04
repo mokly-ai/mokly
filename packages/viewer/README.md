@@ -33,7 +33,7 @@ collaboration UI.
 
 ## Why Mokly Viewer
 
-- **A complete catalogue experience.** Render pages, screens, component
+- **A complete catalogue experience.** Render Markdown documents, pages, screens, component
   variants and user flows with search, tags, responsive previews, color
   schemes, Changes filtering, inspection, and Overlay, Difference and Side by
   side comparisons whose pages and paired scrolling panels move together by
@@ -178,32 +178,52 @@ the selected variant entry. The shell URL of every entry is `/view/<path>/`.
 Use `defaultSelection` for an uncontrolled viewer:
 
 ```tsx
-<MoklyViewer
-  viewerId="product-catalogue"
-  catalogue={catalogueUrl}
-  defaultSelection={{ screenPath: "checkout/overview", viewport: "desktop" }}
-/>
+import { MoklyViewer } from "@mokly/viewer";
+
+export function Catalogue({ catalogueUrl }: { catalogueUrl: string }) {
+  return (
+    <MoklyViewer
+      viewerId="product-catalogue"
+      catalogue={catalogueUrl}
+      defaultSelection={{
+        screenPath: "checkout/overview",
+        viewport: "desktop",
+      }}
+    />
+  );
+}
 ```
 
 Use `selection` with `onSelectionChange` when application state owns the active
 screen and filters:
 
 ```tsx
-const [selection, setSelection] = useState<ViewerSelection>({
-  screenPath: null,
-  view: "all",
-  viewport: "both",
-  colorScheme: "light",
-  search: "",
-  tags: [],
-});
+import { useState } from "react";
+import { MoklyViewer, type ViewerSelection } from "@mokly/viewer";
 
-<MoklyViewer
-  viewerId="product-catalogue"
-  catalogue={catalogueUrl}
-  selection={selection}
-  onSelectionChange={setSelection}
-/>;
+export function ControlledCatalogue({
+  catalogueUrl,
+}: {
+  catalogueUrl: string;
+}) {
+  const [selection, setSelection] = useState<ViewerSelection>({
+    screenPath: null,
+    view: "all",
+    viewport: "both",
+    colorScheme: "light",
+    search: "",
+    tags: [],
+  });
+
+  return (
+    <MoklyViewer
+      viewerId="product-catalogue"
+      catalogue={catalogueUrl}
+      selection={selection}
+      onSelectionChange={setSelection}
+    />
+  );
+}
 ```
 
 Controlled changes are proposals until the host passes the new selection back.
@@ -230,6 +250,11 @@ Dark selection and Light-only label, while status, change marks, and
 comparisons use the effective Light view. If ready evidence does not cover
 every shown view, the Viewer preserves the selected entry's published status
 and comparison eligibility independently.
+
+The embedded viewer's public catalogue has no branch-point usage data. Details
+therefore shows no Before and Current input changes, whether an entry moved or
+stayed at the same path. Serve and export shells carry that data and show those
+input changes.
 
 ### Host integration
 
@@ -330,8 +355,9 @@ automatically hydrates a matching standalone Mokly document.
 `@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
 `viewRoute`, `documentRoute`, `viewHref`, `parseViewHref`,
 `snapshotViewPath`, `snapshotDocumentPath`, `snapshotSidePath`,
-`snapshotResourcePath`, and `previewMetadataPath`. Each takes an entry path:
-`viewHref` returns the canonical `/view/<path>/` URL and `parseViewHref` reads
+`snapshotResourcePath`, and `previewMetadataPath`. Entry helpers take a path;
+`snapshotSidePath` takes a side, and `snapshotResourcePath` takes a side and
+resource path. `viewHref` returns the canonical `/view/<path>/` URL and `parseViewHref` reads
 the canonical, extensionless, and `index.html` forms of that URL back into a
 path, while `providerNormalizedHtmlPath` owns the forms a static host serves.
 The complete naming contract is

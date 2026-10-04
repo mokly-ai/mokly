@@ -8,7 +8,7 @@ order: 2
 ## Search the tree
 
 The search field narrows the navigation tree as you type. It matches an
-entry's title, the segments of its path and its tags, so `billing` finds
+entry's title, folder titles, the segments of its path and its tags, so `billing` finds
 everything under a `billing` folder as well as entries that mention it. A
 folder hidden by its folder record stays out of the results.
 
@@ -26,7 +26,7 @@ and the tags listed in an entry's details are chips that do the same.
 ## All and Changes
 
 Two filters sit above the tree. All is the whole catalogue. Changes is the
-entries that differ from the branch point your configuration names.
+entries that changed or moved since the branch point your configuration names.
 
 Changes is calculated in the background. Until it is ready, the filter shows a
 spinner rather than a count, and selecting it shows a loading tree without

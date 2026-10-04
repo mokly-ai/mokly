@@ -204,9 +204,9 @@ and linked component changes. These rows do not generate descriptions of visual
 changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
-Open `screens/design/components/overview.html` in Browse, or open
-[`generated/screens/design/components/overview.desktop.html`](./generated/design/components/overview/index.desktop.html)
-and [`design/components/overview.mobile.html`](./generated/design/components/overview/index.mobile.html)
+Open `/view/design/components/overview/` in Browse, or open
+[`generated/design/components/overview/index.desktop.html`](./generated/design/components/overview/index.desktop.html)
+and [`generated/design/components/overview/index.mobile.html`](./generated/design/components/overview/index.mobile.html)
 directly from disk after `npm run build && npm run example:build`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
@@ -340,14 +340,14 @@ in the parent shell. PR previews explicitly include Changes and immutable screen
 comparisons with `--include-changes --base origin/main`. Publishing then prepares
 isolated before/after resources and removed-entry states. Changed-screen
 snapshots load only after a comparison option is selected; selecting a removed
-page or screen loads its packaged previous version. Links inside the design
+page, document or screen loads its packaged previous version. Links inside the design
 frames navigate between authored artboards; their pictured comparison controls
 do not request actual comparison snapshots. There is no separate Review section
 or comparison CLI command.
 
 The Browse shell › Appearance folder records the delivered Auto/Light/Dark
 interface appearance for standalone Browse. `design/browse/appearance/overview` is its
-canonical screen; Appearance states owns two more, and Panels and comparisons
+canonical screen; Appearance states owns three more, and Panels and comparisons
 and Status and recovery own five each. Every one of them is an ordinary
 dual-scheme entry, so `mokly build` writes a Light and a
 Dark file per viewport and Browse's Appearance control switches the mockup you
