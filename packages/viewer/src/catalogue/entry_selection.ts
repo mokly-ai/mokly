@@ -5,6 +5,8 @@ import type { CatalogueRecord } from "./types.js";
 interface CatalogueIdentity {
   path: string;
   kind: CatalogueRecord["kind"];
+  /** The branch-point path of a current entry the move contract paired. */
+  previousPath?: string;
 }
 
 interface CatalogueIndex<Entry extends CatalogueIdentity> {
@@ -19,6 +21,10 @@ interface CatalogueIndex<Entry extends CatalogueIdentity> {
 type ComponentVariant<Entry extends CatalogueIdentity> = Extract<
   Entry,
   { kind: "component"; variantOf: string }
+>;
+type ComponentParent<Entry extends CatalogueIdentity> = Exclude<
+  Extract<Entry, { kind: "component" }>,
+  { variantOf: string }
 >;
 
 export interface ResolvedCatalogueEntry<
@@ -41,13 +47,42 @@ export function currentCatalogueEntries<Entry extends CatalogueIdentity>(
   ];
 }
 
-/** Component variants in current order followed by retained removed variants. */
+/**
+ * The component parent a path names: a current or removed parent at that path,
+ * or else the current parent a move paired with that previous path.
+ */
+export function catalogueComponentParent<
+  Entry extends CatalogueIdentity = CatalogueRecord,
+>(
+  model: CatalogueIndex<Entry>,
+  componentId: string,
+): ComponentParent<Entry> | undefined {
+  const parents = [
+    ...model.components,
+    ...model.removedEntries.map(({ entry }) => entry),
+  ].filter(
+    (entry): entry is ComponentParent<Entry> =>
+      entry.kind === "component" && !("variantOf" in entry),
+  );
+  return (
+    parents.find((entry) => entry.path === componentId) ??
+    parents.find((entry) => entry.previousPath === componentId)
+  );
+}
+
+/**
+ * Component variants in current order followed by retained removed variants.
+ * A moved parent also keeps the variants removed at its previous path, under
+ * either of its paths.
+ */
 export function catalogueComponentVariants<
   Entry extends CatalogueIdentity = CatalogueRecord,
 >(
   model: CatalogueIndex<Entry>,
   componentId: string,
 ): readonly ComponentVariant<Entry>[] {
+  const parent = catalogueComponentParent(model, componentId);
+  const paths = new Set([componentId, parent?.path, parent?.previousPath]);
   return [
     ...model.components,
     ...model.removedEntries.map(({ entry }) => entry),
@@ -55,7 +90,8 @@ export function catalogueComponentVariants<
     (entry): entry is ComponentVariant<Entry> =>
       entry.kind === "component" &&
       "variantOf" in entry &&
-      entry.variantOf === componentId,
+      typeof entry.variantOf === "string" &&
+      paths.has(entry.variantOf),
   );
 }
 

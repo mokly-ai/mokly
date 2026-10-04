@@ -9,6 +9,7 @@ import {
   catalogueVariantParent,
   createCatalogue,
 } from "../src/shell/catalogue.js";
+import type { ShellContext } from "../src/shell/context.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { navRowPresentation } from "../src/shell/nav_moves.js";
@@ -120,36 +121,72 @@ test("a removed variant joins its moved parent and keeps its baseline variantOf"
   assert.equal(catalogueMovedPath(catalogue, "old/gone"), undefined);
 });
 
-test("Changes labels a moved row Moved in place of its changed mark", () => {
-  const changed = [
+/** Changes lists every move; only Invoice changed beyond its move. */
+const context = {
+  base: "main",
+  changedEntries: [
     "account/billing/invoice",
     "account/billing/invoice/overdue",
     "account/billing/receipt",
     "account/billing/payment-terms",
     "billing/invoice/paid",
-  ];
+  ],
+  materialEntries: ["account/billing/invoice", "billing/invoice/paid"],
+  updateVersion: 0,
+} satisfies ShellContext;
+
+test("Changes labels a moved row Moved in place of its changed mark", () => {
   const invoice = row("account/billing/invoice");
-  assert.deepEqual(navRowPresentation(invoice, true, changed), {
+  assert.deepEqual(navRowPresentation(invoice, true, context), {
     changed: false,
     changedVariants: false,
     label: "Invoice · Moved",
   });
-  assert.deepEqual(navRowPresentation(invoice, false, changed), {
+  assert.deepEqual(navRowPresentation(invoice, false, context), {
     changed: true,
     changedVariants: true,
     label: "Invoice",
   });
   assert.equal(
-    navRowPresentation(row("account/billing/payment-terms"), true, changed)
+    navRowPresentation(row("account/billing/payment-terms"), true, context)
       .label,
     "Payment terms · Moved",
   );
-  assert.deepEqual(navRowPresentation(row("home"), true, changed), {
+  assert.deepEqual(navRowPresentation(row("home"), true, context), {
     changed: false,
     changedVariants: false,
     label: "Home",
   });
   assert.equal(row("billing/invoice/paid").label, "Paid · Removed");
+});
+
+test("All marks a moved row only when its entry changed beyond the move", () => {
+  for (const path of [
+    "account/billing/invoice/overdue",
+    "account/billing/receipt",
+    "account/billing/payment-terms",
+  ])
+    assert.deepEqual(navRowPresentation(row(path), false, context), {
+      changed: false,
+      changedVariants: false,
+      label: row(path).label,
+    });
+  const server = {
+    ...context,
+    materialEntries: undefined,
+    componentChanges: {
+      baseline: { entries: [] },
+      changedEntries: ["account/billing/invoice"],
+    },
+  } as unknown as ShellContext;
+  assert.equal(
+    navRowPresentation(row("account/billing/receipt"), false, server).changed,
+    false,
+  );
+  assert.equal(
+    navRowPresentation(row("account/billing/invoice"), false, server).changed,
+    true,
+  );
 });
 
 test("Details name the path a moved entry came from, after its source", () => {

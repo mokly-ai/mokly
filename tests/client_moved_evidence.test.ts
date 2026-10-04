@@ -4,17 +4,16 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type {
-  ManifestComponent,
-  ManifestComponentVariant,
-} from "../packages/viewer/dist/components/manifest_types.js";
-import type { ManifestEntry } from "../packages/viewer/dist/registry/types.js";
-import type { ComponentReview } from "../packages/viewer/dist/review/component_types.js";
-import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
-import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
-import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
+import {
+  workspaceData,
+  type WorkspaceData,
+} from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
-import { workspaceVariants } from "../packages/viewer/dist/shell/workspace_variants.js";
+
+import {
+  movedComponentEvidence,
+  routed,
+} from "./helpers/moved_component_evidence.js";
 
 const unmodified = {
   base: "main",
@@ -49,90 +48,52 @@ test("a moved entry's comparison details name the path its earlier side comes fr
   assert.doesNotMatch(stayed, /before the move/u);
 });
 
-const component = (path: string, variantOf?: string) =>
-  ({
-    colorSchemes: ["light"],
-    controls: [],
-    declaredDependencies: [],
-    description: path,
-    kind: "component",
-    ownedDependencies: [],
-    path,
-    propSchema: { properties: {}, type: "object" },
-    props: {},
-    relatedDocs: [],
-    slots: [],
-    sourcePath: `src/${path}.mokly.tsx`,
-    suppliedSlots: [],
-    tags: [],
-    title: path,
-    views: [],
-    ...(variantOf ? { variantOf } : {}),
-  }) as unknown as ManifestEntry;
-
-test("a moved component keeps its removed and baseline variants and a pure-moved variant stays unmodified", () => {
-  const parent = component("ui/action");
-  const primary = component("ui/action/primary", "ui/action");
-  const disabled = component("action/disabled", "action");
-  const catalogue = createCatalogue(
-    {
-      entries: [parent, primary],
-      folders: [],
-      generatedBy: "mokly",
-      schemaVersion: 8,
-      sourceFiles: [],
-    },
-    [{ entry: disabled, folderTitles: [] }],
-    [
-      { path: "ui/action", previousPath: "action" },
-      { path: "ui/action/primary", previousPath: "action/primary" },
-    ],
-  );
-  const baselinePrimary = component("action/primary", "action");
-  const snapshot = {
-    baseline: { entries: [component("action"), baselinePrimary, disabled] },
-  } as unknown as NonNullable<ShellContext["componentChanges"]>;
-  const review = (state: "changed" | "unchanged") =>
-    ({
-      variants: [
-        {
-          path: "ui/action/primary",
-          previousPath: "action/primary",
-          state,
-          title: "Primary",
-          views: [],
-        },
-      ],
-    }) as unknown as ComponentReview;
-  const changed = ["ui/action", "ui/action/primary", "action/disabled"];
-  const statuses = (state: "changed" | "unchanged") => {
-    const set = workspaceVariants(
-      catalogue,
-      parent as ManifestComponent,
-      snapshot,
-      review(state),
-      true,
-      false,
-      undefined,
-      changed,
-    );
-    return {
-      baseline: set.baseline.map(
-        (variant: ManifestComponentVariant) => variant.path,
-      ),
-      rows: set.rows.map((row) => [row.value.path, row.status, row.removed]),
-    };
-  };
-  assert.deepEqual(statuses("unchanged"), {
-    baseline: ["action/primary", "action/disabled"],
-    rows: [
-      ["ui/action/primary", "Unmodified", false],
-      ["action/disabled", "Removed", true],
-    ],
-  });
-  assert.deepEqual(statuses("changed").rows[0], [
-    "ui/action/primary",
-    "Changed",
-    false,
+const { catalogue, context } = movedComponentEvidence();
+const open = (path: string) =>
+  workspaceData(catalogue, context, routed(catalogue, path));
+const rows = (data: WorkspaceData) =>
+  data.variants.map(({ value, status, removed }) => [
+    value.path,
+    status,
+    removed,
   ]);
+const ACTION_ROWS = [
+  ["ui/action/primary", "Unmodified", false],
+  ["ui/action/ghost", "Changed", false],
+  ["ui/action/iconic", "Changed", false],
+  ["components/action/secondary", "Removed", true],
+];
+
+test("a moved component's variants read their own changes, never the move", () => {
+  assert.deepEqual(rows(open("ui/action/ghost")), ACTION_ROWS);
+  assert.equal(open("ui/action/ghost").status, "Changed");
+  assert.equal(open("ui/action/primary").status, "Unmodified");
+});
+
+test("a variant deleted during its parent's move opens with that parent's workspace", () => {
+  const data = open("components/action/secondary");
+  assert.equal(data.component?.path, "ui/action");
+  assert.equal(data.status, "Removed");
+  assert.deepEqual(rows(data), ACTION_ROWS);
+});
+
+test("a moved variant pairs its views and nested instances through the move", () => {
+  assert.deepEqual(
+    open("ui/action/iconic").inputChanges.map((change) => [
+      change.title,
+      change.instanceId,
+      change.viewport,
+      change.variantPath,
+      change.before,
+      change.after,
+    ]),
+    (["mobile", "desktop"] as const).map((viewport) => [
+      "Icon",
+      "glyph",
+      viewport,
+      "ui/action/iconic",
+      { name: ["string", "arrow"] },
+      { name: ["string", "chevron"] },
+    ]),
+  );
 });

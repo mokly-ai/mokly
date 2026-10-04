@@ -2,9 +2,11 @@
  * Moved rows: the branch-point path each paired entry's row records, and how a
  * row reads under each filter. Changes labels a moved row `· Moved` in place of
  * the changed mark, edited or not, so the move reads as one entry at its new
- * place rather than a removal and an addition.
+ * place rather than a removal and an addition. All marks a moved row only when
+ * its entry changed beyond the move.
  */
 
+import { materialChangedEntries, type ShellContext } from "./context.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 
 /** Copy the sections with each paired entry's branch-point path on its row. */
@@ -38,16 +40,18 @@ export function withMovedRows(
 export function navRowPresentation(
   node: NavLeafNode,
   changesFilter: boolean,
-  changedEntries: readonly string[] | undefined,
+  context: ShellContext,
 ): { changed: boolean; changedVariants: boolean; label: string } {
   const moved = changesFilter && node.movedFrom !== undefined;
+  const material = changesFilter ? undefined : materialChangedEntries(context);
+  const marked = (row: NavLeafNode) =>
+    context.changedEntries?.includes(row.entryId) === true &&
+    (material === undefined ||
+      row.movedFrom === undefined ||
+      material.includes(row.entryId));
   return {
-    changed: !moved && changedEntries?.includes(node.entryId) === true,
-    changedVariants:
-      !moved &&
-      (node.variants ?? []).some(
-        (variant) => changedEntries?.includes(variant.entryId) === true,
-      ),
+    changed: !moved && marked(node),
+    changedVariants: !moved && (node.variants ?? []).some(marked),
     label: moved ? `${node.label} · Moved` : node.label,
   };
 }

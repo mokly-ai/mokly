@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
+import type { Page } from "@playwright/test";
+
 import { readCatalogue } from "@mokly/viewer";
 
 import { writeCompilation } from "../../dist/build/transaction.js";
@@ -11,38 +13,18 @@ import { serve } from "../../dist/server/serve.js";
 import { pathFixture } from "../helpers/path_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
-/** A served catalogue whose branch moved `billing` under `account`. */
+import { BASELINE, MOVED_EDITS } from "./moved_changes_sources.js";
+import { hostExportedViewer } from "./viewer_host.js";
+
+/** Where the moved catalogue runs: Serve, a static export, or an embedded viewer over that export. */
+export type MovedHostKind = "serve" | "export" | "viewer";
+
+/** A running moved catalogue and how a test opens one of its entries. */
 export interface MovedChangesHost {
   url: string;
+  open(page: Page, entry: string): Promise<void>;
   close(): Promise<void>;
 }
-
-function invoice(due: string, variants: string, moved = ""): string {
-  return `import {defineScreen} from '@mokly/mokly';
-const shot = (body: string) => <main style={{font: "16px system-ui", padding: 24}}><h1>Invoice INV-1042</h1><p id="due">{body}</p></main>;
-export default defineScreen({title:'Invoice',description:'An invoice and its amount due',dependencies:[],relatedDocs:[],${moved}
-  mobile: shot(${JSON.stringify(due)}), desktop: shot(${JSON.stringify(due)}),
-  variants:[${variants}]});`;
-}
-
-const variant = (slug: string, title: string) =>
-  `{slug:'${slug}',title:'${title}',description:'${title}',mobile:<main><h1>${title}</h1></main>,desktop:<main><h1>${title}</h1></main>}`;
-const OVERDUE = variant("overdue", "Overdue");
-const PAID = variant("paid", "Paid");
-
-const RECEIPT = `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'Receipt',description:'A receipt for a paid invoice',dependencies:[],relatedDocs:[],mobile:<main><h1>Receipt</h1></main>,desktop:<main><h1>Receipt</h1></main>});`;
-
-const HOME = `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'Home',description:'Home',dependencies:[],relatedDocs:[],mobile:<main><h1>Home</h1></main>,desktop:<main><h1>Home</h1></main>});`;
-
-const TERMS = `---
-description: When an invoice is due.
----
-# Payment terms
-
-Every invoice is due 30 days after it is issued.
-`;
 
 async function waitForChanges(url: string): Promise<void> {
   for (let attempt = 0; attempt < 600; attempt++) {
@@ -56,24 +38,13 @@ async function waitForChanges(url: string): Promise<void> {
 }
 
 /**
- * Commit a baseline with `billing/invoice` (variants Overdue and Paid),
- * `billing/receipt`, and `billing/payment-terms`, then move the folder under
- * `account`. Invoice declares `movedFrom` and changes its due date, Paid is
- * deleted, and the other entries move unchanged, so pairing never relies on
- * similarity.
+ * Commit the baseline from `moved_changes_sources.ts`, then move `billing`
+ * under `account` and rename `components` to `ui`, and apply the branch's
+ * edits there.
  */
 async function movedCatalogue() {
   const fixture = await pathFixture(
-    {
-      "specs/billing/_folder.json": '{"title":"Billing & Payments"}',
-      "specs/billing/invoice.mockup.tsx": invoice(
-        "Due in 14 days",
-        `${OVERDUE},${PAID}`,
-      ),
-      "specs/billing/receipt.mockup.tsx": RECEIPT,
-      "specs/billing/payment-terms.md": TERMS,
-      "specs/home.mockup.tsx": HOME,
-    },
+    BASELINE,
     '{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed",colorSchemes:["light"]}',
   );
   try {
@@ -89,15 +60,15 @@ async function movedCatalogue() {
     git("add", "-A");
     git("commit", "-qm", "test: move baseline");
     git("update-ref", "refs/remotes/origin/main", git("rev-parse", "HEAD"));
-    await fs.mkdir(path.join(fixture.root, "specs/account"));
+    const specs = path.join(fixture.root, "specs");
+    await fs.mkdir(path.join(specs, "account"));
     await fs.rename(
-      path.join(fixture.root, "specs/billing"),
-      path.join(fixture.root, "specs/account/billing"),
+      path.join(specs, "billing"),
+      path.join(specs, "account/billing"),
     );
-    await fixture.write(
-      "specs/account/billing/invoice.mockup.tsx",
-      invoice("Due on 14 March", OVERDUE, "movedFrom:'billing/invoice',"),
-    );
+    await fs.rename(path.join(specs, "components"), path.join(specs, "ui"));
+    for (const [file, source] of Object.entries(MOVED_EDITS))
+      await fixture.write(file, source);
     const config = await fixture.config();
     await writeCompilation(await fixture.compile(), config);
     return { config, fixture };
@@ -107,8 +78,19 @@ async function movedCatalogue() {
   }
 }
 
+/** A host whose entries open at their shell URLs. */
+function shellHost(url: string, close: () => Promise<void>): MovedChangesHost {
+  return {
+    url,
+    open: async (page, entry) => {
+      await page.goto(`${url}/view/${entry}/`);
+    },
+    close,
+  };
+}
+
 /** Serve the moved catalogue in development. */
-export async function startMovedChanges(): Promise<MovedChangesHost> {
+async function serveMoved(): Promise<MovedChangesHost> {
   const { config, fixture } = await movedCatalogue();
   try {
     const running = await serve(config, {
@@ -122,10 +104,40 @@ export async function startMovedChanges(): Promise<MovedChangesHost> {
       await running.close();
       throw error;
     }
+    return shellHost(running.url, async () => {
+      await running.close();
+      await fixture.remove();
+    });
+  } catch (error) {
+    await fixture.remove();
+    throw error;
+  }
+}
+
+/**
+ * Export the moved catalogue, then serve it as ordinary files, or mount the
+ * embedded viewer over its catalogue with entries opened by query.
+ */
+async function exportMoved(viewer: boolean): Promise<MovedChangesHost> {
+  const { config, fixture } = await movedCatalogue();
+  try {
+    await exportCatalogue(config, { base: "origin/main", outDir: "site" });
+    const site = path.join(fixture.root, "site");
+    if (!viewer) {
+      const server = await serveStaticFiles(site);
+      return shellHost(server.url, async () => {
+        await server.close();
+        await fixture.remove();
+      });
+    }
+    const hosted = await hostExportedViewer(site);
     return {
-      url: running.url,
+      url: hosted.url,
+      open: async (page, entry) => {
+        await page.goto(`${hosted.url}/viewer.html?view=all&entry=${entry}`);
+      },
       close: async () => {
-        await running.close();
+        await hosted.close();
         await fixture.remove();
       },
     };
@@ -135,21 +147,7 @@ export async function startMovedChanges(): Promise<MovedChangesHost> {
   }
 }
 
-/** Export the moved catalogue and serve it as ordinary files. */
-export async function exportMovedChanges(): Promise<MovedChangesHost> {
-  const { config, fixture } = await movedCatalogue();
-  try {
-    await exportCatalogue(config, { base: "origin/main", outDir: "site" });
-    const server = await serveStaticFiles(path.join(fixture.root, "site"));
-    return {
-      url: server.url,
-      close: async () => {
-        await server.close();
-        await fixture.remove();
-      },
-    };
-  } catch (error) {
-    await fixture.remove();
-    throw error;
-  }
+/** Start the moved catalogue on one kind of host. */
+export function startMovedHost(kind: MovedHostKind): Promise<MovedChangesHost> {
+  return kind === "serve" ? serveMoved() : exportMoved(kind === "viewer");
 }

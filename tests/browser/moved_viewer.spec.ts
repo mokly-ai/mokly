@@ -12,13 +12,13 @@ let host: MovedChangesHost;
 
 test.beforeAll(async () => {
   test.setTimeout(180_000);
-  host = await startMovedHost("serve");
+  host = await startMovedHost("viewer");
 });
 
 test.afterAll(async () => {
   if (host) await host.close();
 });
 
-movedRowCases("serve", () => host);
-movedComponentCases("serve", () => host);
-movedComparisonCases("serve", () => host);
+movedRowCases("viewer", () => host);
+movedComponentCases("viewer", () => host);
+movedComparisonCases("viewer", () => host);

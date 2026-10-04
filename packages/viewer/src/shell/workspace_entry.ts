@@ -22,14 +22,17 @@ export type WorkspaceEntry = Extract<
 export type WorkspaceEvidenceEntry =
   ManifestComponent | ManifestComponentVariant | ManifestScreen;
 
-/** Resolve the schema-owning component for a parent or variant route. */
+/**
+ * Resolve the schema-owning component for a parent or variant route. A
+ * variant removed during its parent's move reaches the parent at its new path.
+ */
 export function workspaceComponent(
   catalogue: Catalogue,
   entry: WorkspaceEntry,
 ): ManifestComponent | undefined {
   if (entry.kind !== "component") return;
   const candidate = isManifestComponentVariant(entry)
-    ? catalogue.byPath.get(entry.variantOf)
+    ? catalogueVariantParent(catalogue, entry)
     : entry;
   return candidate?.kind === "component" &&
     !isManifestComponentVariant(candidate)

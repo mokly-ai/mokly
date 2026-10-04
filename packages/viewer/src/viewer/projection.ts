@@ -145,6 +145,16 @@ export function viewerContext(
         )
       : undefined;
   const selected = resolved?.entry;
+  const ready = [
+    ...model.screens,
+    ...model.pages,
+    ...model.documents,
+    ...model.useCases,
+    ...model.components,
+    ...model.removedEntries.map(({ entry }) => entry),
+  ].flatMap(({ path, changes }) =>
+    changes.status === "ready" ? [{ path, ...changes }] : [],
+  );
   return {
     base: "",
     embedded: true,
@@ -157,19 +167,12 @@ export function viewerContext(
     ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     ...(model.changesStatus === "ready"
       ? {
-          changedEntries: [
-            ...model.screens,
-            ...model.pages,
-            ...model.documents,
-            ...model.useCases,
-            ...model.components,
-            ...model.removedEntries.map(({ entry }) => entry),
-          ]
-            .filter(
-              (entry) =>
-                entry.changes.status === "ready" && entry.changes.included,
-            )
-            .map((entry) => entry.path),
+          changedEntries: ready
+            .filter(({ included }) => included)
+            .map(({ path }) => path),
+          materialEntries: ready
+            .filter(({ kind }) => kind !== "unmodified")
+            .map(({ path }) => path),
         }
       : {}),
   };

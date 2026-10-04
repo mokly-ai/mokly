@@ -167,7 +167,9 @@ visible, and the summary counts it under `moved` beside the existing counts
 without adding it to `output changes`. The paired baseline entry is not
 removed: no removed record, removed preview, or removed row is produced for it.
 A paired entry's comparison, previous version, and per-view evidence use the
-paired baseline entry's documents as the before side.
+paired baseline entry's documents as the before side. Supplied-input details
+pair a moved variant's views, and the instances of a moved nested component,
+through their branch-point paths.
 
 Review v5 continues to contain screen, component and use-case records only.
 Each moved record carries `previousPath`; a pure move has an explicit empty

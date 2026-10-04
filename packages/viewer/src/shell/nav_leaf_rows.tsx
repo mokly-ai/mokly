@@ -84,7 +84,7 @@ function NavRowLink(props: {
   const { changed, changedVariants, label } = navRowPresentation(
     props.node,
     store?.state.selection.view === "changes",
-    context.changedEntries,
+    context,
   );
   const tags = props.node.tags ?? [];
   return (

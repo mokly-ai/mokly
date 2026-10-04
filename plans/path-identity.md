@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 5A, 6–6G, 7, 7A, and 7B are complete. This plan supersedes
+discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 5A, 6–6G, and 7–7D are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -1441,7 +1441,7 @@ invoice at" instead, so the mockup takes the runtime wording.
 - [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       and the design tests. The design unit tests (169) and design browser
       tests (92) pass.
-- [ ] Commit and push.
+- [x] Commit and push (`a34a883e`).
 
 ## Milestone 7D: Moved presentation review fixes
 
@@ -1465,24 +1465,61 @@ the merge deletes none of its files. Merge decisions:
 - `docs/guides/catalogue/changes.md`: match the pairing paragraph to the
   merged move contract from Milestone 5A.
 
-- [ ] A moved component variant with only a metadata edit reads Changed:
+The merge (`91900381`) has exactly two parents, and its remerge diff changes
+only these three paths. It passes the unmodified `cargo xtask check` except
+the source file-length audit, which lists the 26 known files. The package,
+unit (4122), browser (781), and hydration (238) suites pass.
+
+- [x] A moved component variant with only a metadata edit reads Changed:
       decide pure moves from the material change set, not the visual review
-      state.
-- [ ] A variant deleted during a component move opens with its parent's
+      state. `workspace_variants.ts` drops the visual-state shortcut and reads
+      `materialChangedEntries`, so a pure move stays Unmodified. The public
+      workspace reads a variant's `changes.kind` when its compared views show
+      no change.
+- [x] A variant deleted during a component move opens with its parent's
       workspace: resolve the parent through the move map, and match removed
       variants through the parent's `previousPath` in Serve, export, and the
-      embedded viewer, from the first paint.
-- [ ] Moved component variants keep their nested-input details: map each
+      embedded viewer, from the first paint. `workspaceComponent` resolves
+      the parent through `catalogueVariantParent`, and
+      `catalogueComponentParent` and `catalogueComponentVariants` reach a
+      moved parent through its previous path, so the public workspace and
+      the scoped usage list the removed variant too. A held route-evidence
+      fetch proves the first paint after a client navigation.
+- [x] Moved component variants keep their nested-input details: map each
       current view's `variantPath` and nested `componentId` through the move
-      map before pairing views.
-- [ ] In All, a pure move carries no changed mark: mark a moved row only when
+      map before pairing views (`workspace_input_changes.ts`). The embedded
+      viewer shows no input changes, moved or not, because the read model
+      carries no baseline usage, so that case runs in Serve and export.
+- [x] In All, a pure move carries no changed mark: mark a moved row only when
       the entry is in the material change set, and keep the Changes
-      presentation.
-- [ ] Cover the fixes: a moved component in the browser fixture, with a
+      presentation. `navRowPresentation` reads the context: under All, a
+      moved row, and a moved variant's share of its parent's aggregate mark,
+      need the entry in `materialChangedEntries`. The public projection sets
+      `materialEntries` from each entry's `changes.kind`; server pages read
+      `componentChanges.changedEntries`.
+- [x] Cover the fixes: a moved component in the browser fixture, with a
       deleted variant, a metadata-only variant edit, and a nested-input
       change; real reasons in the evidence unit test; and the moved specs
       through an embedded viewer host as well as Serve and export.
-- [ ] Run the full gate, then commit and push.
+      `moved_changes_sources.ts` adds a `components` library that becomes
+      `ui`: Action loses Secondary, Ghost changes only its description, and
+      Iconic's ring holds a glyph whose name changes, while Icon moves
+      unchanged. Both parent kinds now keep a removed variant at their new
+      place. `client_moved_evidence.test.ts` reads real review reasons
+      (`moved_component_evidence.ts`), and `moved_public_workspace.test.ts`
+      covers the public path. The row, component, and comparison cases run
+      in Serve (`moved_changes.spec.ts`), export (`moved_export.spec.ts`),
+      and the embedded viewer (`moved_viewer.spec.ts`), and
+      `moved_hydration.spec.ts` hydrates every moved route cleanly in Serve
+      and export. Before the fixes, 8 new unit tests and 13 browser cases
+      failed, each for its own item; parity with `design/changes/outcomes/moved`
+      holds at both widths for the Changes rows and Details (`.context/m7d/`).
+- [x] Run the full gate, then commit and push. The unmodified
+      `cargo xtask check` stops only at the source file-length audit, which
+      lists the same 26 known files. The dependency audit, format, lint,
+      ratchets, `cargo fmt`, clippy, `cargo test`, and the Rust file-length
+      lint pass, and the package, unit (4129), browser (807), and hydration
+      (260) suites pass.
 
 ## Milestone 8: Guides, verification, close-out, and review
 

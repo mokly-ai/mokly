@@ -7,11 +7,18 @@ uses each side's original path for snapshot URLs, including moved variants.
 and the public viewer reads `previousPath` from the read model.
 `catalogueMovedPath` maps a baseline path back to the moved entry, so a
 removed variant joins its moved parent and links to it. `nav_moves.ts`
-records that path on each row, and under Changes a moved row reads
-`<label> · Moved` in place of the changed mark. Details add a `Moved from` row
-after Source, and the comparison details name the previous path as the earlier
-side. A pure move is in Changes without changing, so workspace statuses count
-material changes only and keep it Unmodified.
+records that path on each row; under Changes a moved row reads
+`<label> · Moved` in place of the changed mark, and under All it carries the
+mark only when `materialChangedEntries` lists it. Details add a `Moved from`
+row after Source, and the comparison details name the previous path as the
+earlier side. A pure move is in Changes without changing, so workspace
+statuses count material changes only and keep it Unmodified: the public
+projection sets `materialEntries` from each entry's `changes.kind`, and server
+pages read `componentChanges.changedEntries`. `workspaceComponent` and
+`catalogueComponentVariants` reach a moved parent through its previous path,
+so a variant deleted during the move keeps its parent's workspace, and
+`workspace_input_changes.ts` pairs moved views and nested components through
+`previousPaths`.
 
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document

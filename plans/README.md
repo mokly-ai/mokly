@@ -11,10 +11,9 @@
   fixes, viewer navigation and its review fixes, index entry mockups,
   document typography parity, the light-only document, member landing view
   and moved comparison wording mockups, the document presentation and
-  index-entry Changes rows, and the Moved presentation are complete.
-  Milestone 6G integrates main. The Moved presentation review fixes, the
-  viewer branch merge, the file-length split and the final verification
-  remain.
+  index-entry Changes rows, and the Moved presentation with its review fixes
+  are complete. Milestone 6G integrates main. The viewer branch merge, the
+  file-length split and the final verification remain.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete

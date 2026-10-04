@@ -26,7 +26,9 @@ export interface WorkspaceVariantSet {
 /**
  * Adapt sibling variant entries to one routed component workspace. Baseline
  * and removed variants name their parent's branch-point path, which differs
- * from the current path when a move paired the parent.
+ * from the current path when a move paired the parent. `materialChanges`
+ * holds the entries that changed beyond a move, so a pure move stays
+ * Unmodified and a metadata-only edit reads Changed.
  */
 export function workspaceVariants(
   catalogue: Catalogue,
@@ -36,7 +38,7 @@ export function workspaceVariants(
   known: boolean,
   parentRemoved: boolean,
   parentStatus: EntryStatus | undefined,
-  changedEntries?: readonly string[],
+  materialChanges?: readonly string[],
 ): WorkspaceVariantSet {
   const current = (
     catalogue.hierarchy.variantsByPath.get(entry.path) ?? []
@@ -69,8 +71,6 @@ export function workspaceVariants(
     const review = comparison?.variants.find(
       (item) => item.path === value.path,
     );
-    const pureMove =
-      review?.previousPath !== undefined && review.state !== "changed";
     const isRemoved =
       parentRemoved || !current.some((item) => item.path === value.path);
     const status = !known
@@ -80,7 +80,7 @@ export function workspaceVariants(
         : review?.state === "added"
           ? "Added"
           : review?.state === "changed" ||
-              (!pureMove && changedEntries?.includes(value.path)) ||
+              materialChanges?.includes(value.path) ||
               (review?.before &&
                 review.after &&
                 JSON.stringify(review.before.props) !==

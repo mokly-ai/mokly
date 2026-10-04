@@ -39,7 +39,7 @@ document.body.append(element);
 
 const selection: ViewerSelection = {
   screenPath: query.get("entry") ?? "removed-page",
-  view: "changes",
+  view: query.get("view") === "all" ? "all" : "changes",
   viewport: "both",
   colorScheme: "light",
   search: "",

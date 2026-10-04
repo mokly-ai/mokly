@@ -80,13 +80,20 @@ Changes.
 A variant the [move contract](./mokly-moves.md) pairs with a baseline variant,
 directly or through its moved parent, is labelled `Moved` in its Changes row
 and shows its previous path in details, like every paired entry; a pure move
-keeps the row even though the variant is unmodified.
+keeps the row even though the variant is unmodified. Under All, a paired row
+of any kind carries the changed mark, and counts toward its parent's aggregate
+mark, only when its entry changed beyond the move, so a pure move shows no
+mark. The variant bar reads the same decision: a paired variant whose only
+edit is its metadata reads Changed, and a pure move reads Unmodified.
 
 A removed variant retains its baseline `variantOf`, parent title, and folder
 titles. When that path names a current non-variant parent of the same kind,
 directly or as the previous path of a parent the move contract paired, attach
 the removed row after current variants; removed siblings retain baseline
 authored order, and their public records occupy the parent's ordering position.
+The parent's variant bar lists the removed variant in the same place, and the
+removed variant's own page opens with that parent's workspace from the first
+paint in Serve, export, and the embedded viewer.
 A parent with no current variants still discloses the list. Removing both
 parent and variant yields one removed entry for each.
 

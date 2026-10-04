@@ -15,7 +15,7 @@ import type { ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
-import type { ShellContext } from "./context.js";
+import { materialChangedEntries, type ShellContext } from "./context.js";
 import {
   shownComparisonEligible,
   type EntryStatus,
@@ -122,7 +122,7 @@ export function workspaceData(
     (item) => (item.after ?? item.before)?.path === entry.path,
   );
   /** A pure move is in Changes without changing, so it is not material. */
-  const materialChanges = snapshot?.changedEntries ?? context.changedEntries;
+  const materialChanges = materialChangedEntries(context);
   const pureMove =
     change?.previousPath !== undefined && change.reasons.length === 0;
   const comparison = componentId
@@ -153,7 +153,7 @@ export function workspaceData(
           (candidate) => candidate.path === component.path,
         ),
         entry.path === component.path ? entryStatus : undefined,
-        context.changedEntries,
+        materialChanges,
       )
     : orphanVariant
       ? standaloneWorkspaceVariant(

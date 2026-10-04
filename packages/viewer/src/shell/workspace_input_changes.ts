@@ -25,7 +25,9 @@ export interface InputChange {
 }
 
 /** Compare matching views instance by instance; an unmatched view has nothing
- * to compare, and an unmatched instance is a structural change, not an input. */
+ * to compare, and an unmatched instance is a structural change, not an input.
+ * A moved variant's view and a moved nested component pair with their
+ * branch-point paths. */
 export function inputChanges(
   catalogue: Catalogue,
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
@@ -43,22 +45,25 @@ export function inputChanges(
     baseline.kind === "component"
       ? baselineVariants.flatMap((variant) => generatedViews(variant))
       : generatedViews(baseline);
+  const previous = (path: string) => catalogue.previousPaths.get(path) ?? path;
   for (const after of afterViews) {
+    const variantPath =
+      after.variantPath === undefined ? undefined : previous(after.variantPath);
     const before = beforeViews.find(
       (view) =>
         view.viewport === after.viewport &&
         view.colorScheme === after.colorScheme &&
-        view.variantPath === after.variantPath,
+        view.variantPath === variantPath,
     );
     for (const current of after.usage?.instances ?? []) {
       if (current.owner.kind !== "entry") continue;
-      const previous = before?.usage?.instances.find(
-        (item) =>
-          item.key === current.key && item.componentId === current.componentId,
+      const componentId = previous(current.componentId);
+      const paired = before?.usage?.instances.find(
+        (item) => item.key === current.key && item.componentId === componentId,
       );
       if (
-        !previous ||
-        JSON.stringify(previous.props) === JSON.stringify(current.props)
+        !paired ||
+        JSON.stringify(paired.props) === JSON.stringify(current.props)
       )
         continue;
       changes.push({
@@ -69,7 +74,7 @@ export function inputChanges(
         viewport: after.viewport,
         colorScheme: after.colorScheme,
         ...(after.variantPath ? { variantPath: after.variantPath } : {}),
-        before: previous.props,
+        before: paired.props,
         after: current.props,
       });
     }
