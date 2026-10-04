@@ -112,11 +112,14 @@ export function viewerCatalogue(model: ShellCatalogueReadModel) {
   };
   const catalogue = createCatalogue(
     manifest,
-    model.removedEntries.map(({ entry, snapshotId, folderTitles }) => ({
-      folderTitles,
-      entry: displayEntry(entry),
-      ...(snapshotId ? { snapshotId } : {}),
-    })),
+    model.removedEntries.map(
+      ({ entry, snapshotId, folderTitles, parentTitle }) => ({
+        folderTitles,
+        entry: displayEntry(entry),
+        ...(snapshotId ? { snapshotId } : {}),
+        ...(parentTitle !== undefined ? { parentTitle } : {}),
+      }),
+    ),
     current.flatMap(({ path, previousPath }) =>
       previousPath === undefined ? [] : [{ path, previousPath }],
     ),

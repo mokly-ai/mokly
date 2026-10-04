@@ -25,7 +25,10 @@ v8 or live-index metadata, the shared folder tree, and accepted comparison/usage
 evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
 Changes membership comes from entry and component attribution, independently
-of per-view comparison eligibility. Removed entries retain baseline labels, an
+of per-view comparison eligibility. Removed variants require their baseline
+`parentTitle`, including when another kind reuses the parent's path. Both readers
+reject missing variant titles and titles on removed non-variants. The field
+survives scoped and viewer projections. Removed entries retain baseline labels, an
 opaque per-record `snapshotId` when real immutable identity is available, plus
 the optional additive `preview` descriptor from the
 [removed previews contract](../../docs/protocol/mokly-removed-previews.md);

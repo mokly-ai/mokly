@@ -115,6 +115,7 @@ test("an ineligible former parent remains a plain-text breadcrumb", () => {
       {
         folderTitles: ["Example", "Screens"],
         entry: removedVariant,
+        parentTitle: "Welcome",
         snapshotId: "d".repeat(64),
       },
     ],

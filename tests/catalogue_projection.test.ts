@@ -160,6 +160,7 @@ test("removed variants keep baseline authored order at a surviving parent's posi
   assert.ok(current);
   const removedScreen = (id: string, variantOf?: string) => ({
     folderTitles: [],
+    ...(variantOf === undefined ? {} : { parentTitle: current.title }),
     entry: {
       ...structuredClone(current),
       path: id,

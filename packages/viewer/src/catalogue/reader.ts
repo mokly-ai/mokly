@@ -60,6 +60,7 @@ type ParsedCatalogue<Entry extends ParsedRoutedEntry> = Omit<
   removedEntries: readonly {
     entry: Entry;
     folderTitles: readonly string[];
+    parentTitle?: string;
     snapshotId?: string;
     preview?: RemovedEntryPreview;
   }[];
@@ -121,6 +122,7 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
       return {
         entry,
         folderTitles: array(removed.folderTitles).map(text),
+        ...readParentTitle(removed, entry),
         ...(snapshotId ? { snapshotId } : {}),
         ...(removed.preview === undefined
           ? {}
@@ -128,6 +130,23 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
       };
     }),
   };
+}
+
+function readParentTitle(
+  removed: Record<string, unknown>,
+  entry: ParsedRoutedEntry,
+): { parentTitle?: string } {
+  if ("variantOf" in entry && entry.variantOf !== undefined) {
+    if (typeof removed.parentTitle !== "string" || !removed.parentTitle.trim())
+      invalidData(
+        "$catalogue",
+        "removed variant requires nonempty parentTitle",
+      );
+    return { parentTitle: removed.parentTitle };
+  }
+  if (Object.hasOwn(removed, "parentTitle"))
+    invalidData("$catalogue", "parentTitle is only valid on a removed variant");
+  return {};
 }
 
 function readPreview(value: unknown): RemovedEntryPreview {

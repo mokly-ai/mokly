@@ -22,6 +22,8 @@ export type CatalogueMetadata =
 export interface RemovedEntrySnapshot {
   entry: HistoricalManifestEntry | ManifestV8["entries"][number];
   folderTitles: readonly string[];
+  /** Baseline parent title, present exactly for a removed variant. */
+  parentTitle?: string;
   snapshotId?: string;
 }
 /**

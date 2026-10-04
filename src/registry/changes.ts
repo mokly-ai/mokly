@@ -13,6 +13,8 @@ import { orderEntriesWithVariants } from "./entry_order.js";
 /** Baseline context retained independently of current folder placement. */
 export interface RemovedEntrySnapshot {
   folderTitles: readonly string[];
+  /** Baseline parent title, present exactly for a removed variant. */
+  parentTitle?: string;
   /** Complete baseline DTO, including `variantOf` when the screen was a variant. */
   entry: Exclude<
     HistoricalManifestEntry | ManifestV8["entries"][number],
@@ -56,6 +58,12 @@ export function removedManifestEntries(
             {
               entry,
               folderTitles: hierarchy.ancestorsByPath.get(entry.path) ?? [],
+              ...(hierarchy.variantParentByPath.has(entry.path)
+                ? {
+                    parentTitle: hierarchy.variantParentByPath.get(entry.path)!
+                      .title,
+                  }
+                : {}),
             },
           ]
         : [],

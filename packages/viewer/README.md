@@ -234,6 +234,10 @@ A removed component parent may have no remaining variants when they all moved
 to another parent. It keeps its removal record; current parents still require
 at least one current variant.
 
+Every removed variant carries `parentTitle`, its parent's title at the branch
+point. Public and scoped readers require this field and reject it on removed
+non-variants. The unreleased read model remains v4.
+
 Current paired entries carry `previousPath`; comparisons select the original
 before-side path. Removed entries advertise an optional opaque `snapshotId`. Supply it with the
 removed entry's `screenPath` to select that exact historical record. The viewer

@@ -64,6 +64,9 @@ export function withRemovedVariant(
     removedEntries: [
       {
         folderTitles: ["Product", "Browse"],
+        parentTitle: fixture.screens.find(
+          (entry) => entry.path === variant.variantOf,
+        )!.title,
         entry: {
           ...variant,
           changes: { status: "ready", kind: "removed", included: true },

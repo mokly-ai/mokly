@@ -155,16 +155,19 @@ export function projectCatalogue(
   ).map((entry) => record(entry, false));
   const removedSnapshots =
     input.changesStatus === "ready"
-      ? orderEntriesWithVariants(
+      ? orderEntriesWithVariants<{
+          entry: ManifestEntry;
+          snapshot?: CatalogueProjectionInput["catalogue"]["removedEntries"][number];
+        }>(
           [
             ...catalogue.manifest.entries.map((entry) => ({ entry })),
             ...catalogue.removedEntries.map((snapshot) => ({
-              ...snapshot,
-              removed: true as const,
+              entry: snapshot.entry,
+              snapshot,
             })),
           ],
           ({ entry }) => entry,
-        ).flatMap((item) => ("removed" in item ? [item] : []))
+        ).flatMap(({ snapshot }) => (snapshot ? [snapshot] : []))
       : [];
   const removedPaths = new Set(removedSnapshots.map(({ entry }) => entry.path));
   for (const id of input.removedPreviews?.keys() ?? [])
@@ -190,12 +193,11 @@ export function projectCatalogue(
     useCases: entries.filter((entry) => entry.kind === "use-case"),
     components: entries.filter((entry) => entry.kind === "component"),
     removedEntries: removedSnapshots.map((snapshot) => ({
-      folderTitles: [
-        ...catalogue.removedEntries.find(
-          (record) => record.entry.path === snapshot.entry.path,
-        )!.folderTitles,
-      ],
+      folderTitles: [...snapshot.folderTitles],
       entry: record(snapshot.entry, true),
+      ...(snapshot.parentTitle !== undefined
+        ? { parentTitle: snapshot.parentTitle }
+        : {}),
       ...(snapshotSource
         ? {
             snapshotId: historicalSnapshotId(

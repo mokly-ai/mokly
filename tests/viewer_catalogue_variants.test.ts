@@ -32,7 +32,7 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
   };
   const model = projectCatalogue({
     catalogue: createCatalogue(manifest, [
-      { folderTitles: [], entry: removed },
+      { folderTitles: [], entry: removed, parentTitle: parent.title },
     ]),
     changesStatus: "ready",
     changedEntries: [current.path],

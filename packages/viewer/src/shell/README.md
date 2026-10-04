@@ -18,6 +18,17 @@ projection sets `materialEntries` from each entry's `changes.kind`, and server
 pages read `componentChanges.changedEntries`. The same lookup contract owns
 counterparts for workspace inputs, variants and nested component instances.
 
+`catalogue_branch_point.ts` implements that pure lookup beside `createCatalogue`.
+`createBranchPointLookup(catalogue, baselineEntries)` indexes one generation.
+`resolve` requires an explicit before/after side and kind. `counterpart` gives
+the original baseline identity, `parent` gives an eligible parent or a stored
+title without a link, and `previousPath` gives only accepted move pairs.
+Results retain current entries or complete removed records. The optional
+baseline inventory supplies same-path and case-only counterparts; pairs alone
+prove moved counterparts. The shared Git cases in
+[`branch_point_fixture.ts`](../../../../tests/helpers/branch_point_fixture.ts)
+are also accepted by the browser branch hosts.
+
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document
 envelope used through `@mokly/viewer/server`, and the same tree is hydrated in

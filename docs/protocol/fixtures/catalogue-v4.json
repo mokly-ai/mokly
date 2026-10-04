@@ -200,17 +200,18 @@
         ],
         "details": {
           "dependencies": [
-            "specs/product/removed-screen.mockup.tsx"
+            "specs/product/browse/home.mockup.tsx"
           ],
           "description": "A screen that no longer exists.",
           "relatedDocs": [],
-          "sourcePath": "specs/product/removed-screen.mockup.tsx"
+          "sourcePath": "specs/product/browse/home.mockup.tsx"
         },
         "kind": "screen",
-        "path": "product/removed-screen",
+        "path": "product/browse/home/retired",
         "tags": [],
         "title": "Removed screen",
         "useCasePaths": [],
+        "variantOf": "product/browse/home",
         "views": [
           {
             "colorScheme": "light",
@@ -245,12 +246,14 @@
         ]
       },
       "folderTitles": [
-        "Product overview"
+        "Product overview",
+        "Browse"
       ],
+      "parentTitle": "Home",
       "preview": {
         "kind": "screen"
       },
-      "snapshotId": "0db7db71cd6f82ff3ec1dfd949c09032585520da8361bbf8d3aa718cf7442312"
+      "snapshotId": "9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e"
     }
   ],
   "revision": {

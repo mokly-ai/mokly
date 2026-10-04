@@ -51,6 +51,9 @@ function addRemovedVariant(value: MutableCatalogue): void {
   value.removedEntries.push({
     folderTitles: [],
     entry: variant,
+    parentTitle: value.components.find(
+      (entry) => entry.path === variant.variantOf,
+    )!.title,
     snapshotId: "c".repeat(64),
   });
 }
@@ -80,7 +83,12 @@ function addRemovedComponent(value: MutableCatalogue): void {
   };
   value.removedEntries.push(
     { folderTitles: [], entry: parent, snapshotId: "d".repeat(64) },
-    { folderTitles: [], entry: variant, snapshotId: "f".repeat(64) },
+    {
+      folderTitles: [],
+      entry: variant,
+      parentTitle: parent.title,
+      snapshotId: "f".repeat(64),
+    },
   );
 }
 

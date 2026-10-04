@@ -26,6 +26,7 @@ export interface NavigationFixture {
  */
 const REMOVED_HOME_VARIANT = {
   folderTitles: ["Fixture", "Nested"],
+  parentTitle: "Home",
   entry: {
     declaredDependencies: [],
     description: "Home after the workspace was deleted",

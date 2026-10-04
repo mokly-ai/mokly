@@ -56,6 +56,8 @@ export interface ShellCatalogueReadModel extends Omit<
   removedEntries: readonly {
     entry: ShellCatalogueRoutedEntry;
     folderTitles: readonly string[];
+    /** Required exactly when the removed entry is a variant. */
+    parentTitle?: string;
     snapshotId?: string;
     preview?: CatalogueReadModel["removedEntries"][number]["preview"];
   }[];

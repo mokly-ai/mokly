@@ -36,6 +36,8 @@ export interface CatalogueReadModel {
   removedEntries: readonly {
     entry: CatalogueRecord;
     folderTitles: readonly string[];
+    /** Required exactly when the removed entry is a variant. */
+    parentTitle?: string;
     snapshotId?: string;
     preview?: RemovedEntryPreview;
   }[];

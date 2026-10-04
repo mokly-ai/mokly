@@ -26,6 +26,8 @@ produce misleading child relationship errors. `move_hints.ts` checks current
 `changed_paths.ts` consumes accepted review pairs for metadata membership.
 It compares flow, variant-parent and discovered-document references through
 the same identities. `changes.ts` suppresses paired removals in every producer.
+It captures each removed variant's baseline `parentTitle` before path reuse
+can discard the former parent. Non-variants carry no parent title.
 
 `manifest.ts` emits schema v8 with paths, authored move hints, folder records and
 source inventory. `manifest_validation.ts` is the shared strict current/baseline

@@ -62,7 +62,12 @@ test("removed component variants keep catalogue-wide Dark available", () => {
     tree: withoutTreeEntries(model.tree, [variant.path]),
     removedEntries: [
       ...model.removedEntries,
-      { entry: historical, folderTitles: [], snapshotId: "e".repeat(64) },
+      {
+        entry: historical,
+        folderTitles: [],
+        parentTitle: "Action",
+        snapshotId: "e".repeat(64),
+      },
     ],
   };
 

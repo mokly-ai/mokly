@@ -161,7 +161,13 @@ test("Changes activation searches a removed variant as its row does", () => {
       schemaVersion: 8,
       sourceFiles: [],
     },
-    [{ entry: removed, folderTitles: ["Launchpad"] }],
+    [
+      {
+        entry: removed,
+        folderTitles: ["Launchpad"],
+        parentTitle: parent.title,
+      },
+    ],
   );
   const changed = { ...context, changedEntries: [removed.path] };
   const row = rows(catalogueNavSections(catalogue)).get(removed.path);

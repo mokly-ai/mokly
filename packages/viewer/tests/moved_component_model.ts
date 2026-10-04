@@ -54,6 +54,7 @@ export function movedComponentModel(): CatalogueReadModel {
       })),
     },
     folderTitles: ["Components"],
+    parentTitle: parent.title,
   });
   model.tree[0] = {
     children: [

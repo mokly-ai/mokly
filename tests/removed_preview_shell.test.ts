@@ -89,6 +89,9 @@ function removedShell(
     ...related.map((candidate) => ({
       folderTitles: [],
       entry: { ...candidate },
+      ...("variantOf" in candidate && candidate.variantOf !== undefined
+        ? { parentTitle: component.title }
+        : {}),
     })),
   ];
   const catalogue = createCatalogue(manifest, removed);

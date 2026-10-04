@@ -59,7 +59,7 @@ export function moveCatalogueSources(
       : {}),
     ...(options.component
       ? {
-          "specs/old/action.mockup.tsx": `import {defineComponent} from '@mokly/mokly'; export const action=defineComponent({title:'Action',description:'A shared action',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}}},render:(props)=><button>{props.label}</button>,variants:[{slug:'default',title:'Default',props:{label:'Saved action'}}]});`,
+          "specs/old/action.mockup.tsx": moveComponentSource(),
         }
       : {}),
     ...(options.styles === "imported"
@@ -77,4 +77,27 @@ export function moveCatalogueSources(
       ? { "specs/steady.md": "# Steady\n\n![Diagram](old/diagram.svg)" }
       : {}),
   };
+}
+
+/** A registered component source shared by real-Git move fixtures. */
+export function moveComponentSource({
+  name = "action",
+  title = "Action",
+  render = "<button>{props.label}</button>",
+  imports = "",
+  variants = "{slug:'default',title:'Default',props:{label:'Saved action'}}",
+  movedFrom,
+}: {
+  name?: string;
+  title?: string;
+  render?: string;
+  imports?: string;
+  variants?: string;
+  movedFrom?: string;
+} = {}): string {
+  return `import {defineComponent} from '@mokly/mokly'; ${imports}
+    export const ${name}=defineComponent({title:${JSON.stringify(title)},description:'A shared action',dependencies:[],relatedDocs:[],
+    ${movedFrom === undefined ? "" : `movedFrom:${JSON.stringify(movedFrom)},`}
+    propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}}},
+    render:(props)=>${render},variants:[${variants}]});`;
 }

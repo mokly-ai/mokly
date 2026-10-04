@@ -57,7 +57,7 @@ const manifest: ManifestV8 = {
 const paid = entry("screen", "billing/invoice/paid", "Paid", "billing/invoice");
 const catalogue = createCatalogue(
   manifest,
-  [{ entry: paid, folderTitles: ["Billing"] }],
+  [{ entry: paid, folderTitles: ["Billing"], parentTitle: "Invoice" }],
   [
     { path: "account/billing/invoice", previousPath: "billing/invoice" },
     {

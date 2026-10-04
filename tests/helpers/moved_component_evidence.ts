@@ -188,7 +188,7 @@ export function movedComponentEvidence(): {
       schemaVersion: 8,
       sourceFiles: [],
     },
-    [{ entry: secondary, folderTitles: ["Components"] }],
+    [{ entry: secondary, folderTitles: ["Components"], parentTitle: "Action" }],
     MOVED.map((path) => ({
       path: `ui/${path}`,
       previousPath: `components/${path}`,

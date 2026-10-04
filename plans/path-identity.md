@@ -10,7 +10,8 @@ recommended option for each of the eight findings in the
 those fixes and end with a new review. Milestones 9–12 are complete. Milestone
 13 is complete, including a second fresh review with fifteen findings in the
 [review record](../docs/reviews/path-identity.md#second-review). On 2026-10-04
-the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. The other ten
+the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. Milestones 14 and 15
+are complete; shell adoption and host assertions remain in Milestone 16. The other ten
 findings await the user's decision.
 This plan supersedes
 the navigation-path contract delivered by
@@ -2289,53 +2290,101 @@ passed all 38 tests. The source file-length audit passed; the new owner is
 Store the former parent's title, add the pure lookup, and build the shared
 fixture set. The shell consumers move to the lookup in Milestone 16.
 
-Status: Not started.
+Status: Complete.
 
-- [ ] Write failing tests first. The change snapshot and the read model must
+- [x] Write failing tests first. The change snapshot and the read model must
       carry `parentTitle` on every removed variant, also when another kind
       reuses the parent's path. Both readers must reject a removed variant
       without `parentTitle`, and a non-variant record with it.
-- [ ] Carry `parentTitle` through `src/registry/changes.ts`, the catalogue
+- [x] Carry `parentTitle` through `src/registry/changes.ts`, the catalogue
       projection, the complete and scoped readers, the viewer
       `RemovedEntrySnapshot` type, and the v4 fixture.
-- [ ] Add the pure lookup to the viewer catalogue data layer, next to
+- [x] Update hand-built removed-variant fixtures for the required title, and
+      update the canonical v4 byte/hash pin without changing its assertions.
+- [x] Add the pure lookup to the viewer catalogue data layer, next to
       `createCatalogue`. Give it these operations:
-  - [ ] resolve a branch-point reference (path and kind) to a current entry,
+  - [x] resolve a branch-point reference (path and kind) to a current entry,
         a removed record, or nothing;
-  - [ ] give the counterpart identity of a current entry, for matching
+  - [x] give the counterpart identity of a current entry, for matching
         baseline variants, views, and instances;
-  - [ ] resolve a variant's parent to a current parent, a removed parent, or
+  - [x] resolve a variant's parent to a current parent, a removed parent, or
         the stored former-parent title;
-  - [ ] give the previous path of a paired current entry, for `Moved` rows.
-- [ ] Unit-test each rule: a move pair, a case-only rename, a path that
+  - [x] give the previous path of a paired current entry, for `Moved` rows.
+- [x] Unit-test each rule: a move pair, a case-only rename, a path that
       another kind reuses, a removed record, an unresolved path, a
       current-side reference, and a variant parent with and without a
       same-kind parent. Do not change shell consumers in this milestone.
-- [ ] Build the shared fixture set as real Git baselines in `tests/helpers/`.
+- [x] Build the shared fixture set as real Git baselines in `tests/helpers/`.
       Reuse `commitMoveBaseline` and the move catalogue sources, so that node
       tests and the browser hosts in `tests/browser/branch_hosts.ts` can both
       use it. Each case is one catalogue:
-  - [ ] Case 1 (finding 1): a screen that renders a component moves with
+  - [x] Case 1 (finding 1): a screen that renders a component moves with
         `movedFrom`, and the component changes. A component consumer of the
         same component also moves.
-  - [ ] Case 2 (findings 6, 8, and 9): a component parent moves with
+  - [x] Case 2 (findings 6, 8, and 9): a component parent moves with
         `movedFrom`. One of its variants is removed, and one changes props.
-  - [ ] Case 3 (finding 6): a variant moves to another parent with
+  - [x] Case 3 (finding 6): a variant moves to another parent with
         `movedFrom` and changes props.
-  - [ ] Case 4 (findings 6, 8, and 9): case-only renames of a screen, of a
+  - [x] Case 4 (findings 6, 8, and 9): case-only renames of a screen, of a
         component parent with a removed variant, and of a variant. Keep
         stylesheet edits out of this case while second-review finding 2
         awaits a decision.
-  - [ ] Case 5 (finding 11): a document takes a removed component's path,
+  - [x] Case 5 (finding 11): a document takes a removed component's path,
         and the component's variants are removed.
-  - [ ] Keep every case clear of the other open second-review findings (2, 3,
+  - [x] Keep every case clear of the other open second-review findings (2, 3,
         4, 5, 7, and 10).
-- [ ] For each case, assert the data: the review pairs, the `previousPath`
+- [x] For each case, assert the data: the review pairs, the `previousPath`
       fields, the removed records with `parentTitle`, and agreement between
       both readers. Do not assert Serve, export, or embedded-viewer behaviour
       in this milestone; Milestone 16 adds it after the shell uses the
       lookup.
-- [ ] Run the unmodified `cargo xtask check`. Then commit and push.
+- [x] Run the unmodified `cargo xtask check`. Then commit and push.
+
+The strict reader exposed older hand-built fixtures without parent titles.
+Those fixtures now supply their real baseline titles; all 52 targeted tests
+pass. The canonical v4 pin now checks 12,418 bytes and the new exact digest.
+No assertion was removed or weakened.
+
+Test-first evidence: `.context/m15-parent-title-red.log` records all six
+parent-title tests failing because snapshots and readers dropped the field.
+The lookup and fixture suites first failed on their missing modules in
+`.context/m15-lookup-red.log` and `.context/m15-fixtures-red.log`. The title
+suite now passes for both variant kinds and both readers.
+
+The lookup lives beside `createCatalogue` in `catalogue_branch_point.ts`.
+It accepts the current catalogue and an optional baseline identity inventory.
+`resolve` takes an explicit before/after side; `counterpart`, `parent`, and
+`previousPath` supply the other shared operations. No shell consumer was
+migrated. The shell snapshot type and public viewer projection carry the new
+field. The public v4 fixture now includes a removed screen variant.
+
+`branchPointFixture` returns the `config` and `fixture` shape accepted by
+`startBranchHost`, plus real before/after compilations and a Git reader. It
+commits main and origin/main with `commitMoveBaseline` and uses the shared
+move component source. The five node cases assert review pairs, prior paths,
+removed titles and both reader forms. Case 1 retains the exact old receipt
+path in before evidence. Case 4 changes no stylesheet.
+
+Verification: the unmodified `cargo xtask check` passed with 4,194 unit,
+814 browser and 261 hydration tests. All six packed-consumer scenarios, the
+472-file example build/check, type checks, formatting, lint, repository
+ratchets, 15 Rust tests, Clippy, Rust formatting and both file-length audits
+passed. The source audit covered 1,595 files and the Rust audit covered 9.
+The dependency audit passed with only main's reviewed Braces exception.
+
+Focused runs passed 24 new tests, 175 catalogue/move tests and 52 updated
+fixture tests. An initial gate attempt found an import-group spacing error;
+that was corrected. Another found the old fixtures without parent titles.
+After those fixes, one full run passed every check except the Serve
+`billing/invoice/paid` case in `moved_hydration.spec.ts`: Chromium reported
+blocked script execution in `about:srcdoc`. That unchanged test passed in
+isolation. The subsequent complete, unmodified gate passed with no skips or
+retries. No console filter or test assertion was weakened. Logs are retained
+in `.context/m15-gate-final.log` and `.context/m15-hydration-isolated.log`.
+
+No file was deleted in this milestone. All 18 deletions against main match
+the previously approved replacements recorded in the integration milestones.
+No shell consumer or unapproved second-review finding was changed.
 
 ## Milestone 16: Shell branch-point consumers
 

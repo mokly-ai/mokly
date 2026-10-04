@@ -23,7 +23,10 @@
   all eight findings have recorded fixes and covering tests. A second fresh
   review found [fifteen new findings](../docs/reviews/path-identity.md#second-review).
   The user approved one shared branch-point lookup for five of them;
-  Milestones 14–17 deliver it and end with a new review. The other ten
+  Milestones 14–17 deliver it and end with a new review. Milestones 14 and 15
+  are complete: the contracts, required former-parent title, shared lookup and
+  five Git fixtures are delivered. The unmodified full gate passes. Shell
+  adoption and host assertions remain in Milestone 16. The other ten
   findings await the user's decision. The plan stays Active until its pull
   request merges.
 
