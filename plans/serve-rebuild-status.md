@@ -421,6 +421,9 @@ absolute `file://` path into the browser's failure detail.
 - [x] Add failing table-driven tests first for every seven-bit and eight-bit
       introducer and terminator, including the reviewer's eight-bit OSC
       hyperlink with a `file://` path; then fix the existing scanner.
+- [x] Verification follow-up: give the hand-built browser peer-diagnostic
+      capture its accepted entry resolution. The stricter source rule must
+      still let that fixture reach and test the consumer React peer failure.
 - [x] Run `cargo xtask check`; commit and push.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
