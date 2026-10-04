@@ -24,7 +24,8 @@ succeed. A capture failure rejects that candidate generation.
 
 The build records requests from entry and repository importers whose target is
 one of those files. It also records requests from installed importers when the
-target is a stylesheet module saved by the accepted graph. A
+target is a saved stylesheet module or a captured repository-owned file,
+including a linked workspace package reached through `node_modules`. A
 request key is its normalized importer, exact resolver specifier, esbuild
 resolution kind, and sorted import attributes. A repository importer uses its
 safe repository-relative logical path. Node and browser virtual entries share
@@ -35,57 +36,19 @@ physical paths under a symlinked root map back to that root's logical path;
 both logical and physical paths must stay inside the root; physical package
 code must lie under `node_modules` and outside Mokly's runtime. This preserves
 package aliases and pnpm layouts without merging distinct logical importers.
-Installed records cannot target JavaScript or a stylesheet absent from the
-capture. Configured aliases key the original
+Installed records cannot target physically installed JavaScript or a target
+that the capture loader did not save. Configured aliases key the original
 specifier and store the resolved target. Conflicting targets for one key reject
 the candidate.
 
-`ComponentRuntime.interactiveSources` carries the decoded capture. Runtime IPC
-uses this exact projection:
-
-```ts
-interface InteractiveSourceCaptureMessage {
-  files: readonly {
-    bytes: string; // canonical padded RFC 4648 base64
-    paths: readonly string[];
-  }[];
-  resolutions: readonly {
-    attributes: readonly { key: string; value: string }[];
-    importer:
-      | { type: "entry" }
-      | { type: "repository"; path: string }
-      | { type: "installed"; path: string };
-    kind:
-      | "entry-point"
-      | "import-statement"
-      | "require-call"
-      | "dynamic-import"
-      | "require-resolve"
-      | "import-rule"
-      | "composes-from"
-      | "url-token";
-    specifier: string;
-    target: string;
-  }[];
-}
-```
-
-Every path is safe repository-relative POSIX. Paths within a blob and blobs by
-their first path are strictly sorted and nonempty; no path occurs twice. The
-resolution list is strictly sorted by complete request key with no duplicate.
-It has at most 16,384 records and 8 MiB of UTF-8 string data. A nonempty
-specifier is at most 2,048 UTF-8 bytes. Each record has at most 16 uniquely
-named, sorted attributes; each nonempty key is at most 256 bytes, each value at
-most 2,048, and one record's keys and values total at most 4,096. Strings
-contain no NUL. Repository and installed importer paths have the same safety
-rules and count toward the same aggregate byte bound. Each target is a safe
-captured path. Installed records require a `.css` target. Only the listed
-kinds and exact importer shapes are valid.
-
-The child validates shape, canonical base64, ordering, limits, and referential
-integrity before exposing the runtime. The field is required when interactive
-Serve is enabled and absent when off. Build, Check, export, publication, and an
-off Serve neither install the capture hook nor retain or transfer source data.
+`ComponentRuntime.interactiveSources` carries the decoded capture. The
+[accepted capture IPC contract](./mokly-interactive-source-capture-ipc.md)
+defines the exact projection, canonical base64, ordering, shapes and bounds.
+Installed targets must be saved `.css` modules or repository-source blobs
+with a physical alias outside `node_modules`; logical linked-package aliases
+of those blobs are valid targets. The existing request limits and retention
+are unchanged. The field is required in interactive Serve and absent while
+off. Build, Check, export and publication do not capture or transfer it.
 
 ## Browser Resolution Replay
 
@@ -95,8 +58,9 @@ to its captured target. This covers relative, absolute, bare, configured-alias,
 and repository-package requests, including extension and index selection. A
 recorded Node identity remains authoritative even when browser conditions or a
 repository package's `browser` field would otherwise select another file.
-Unrecorded relative and absolute repository requests remain capture-only and
-never probe source files.
+Unrecorded relative and absolute repository-source requests fail as not
+captured, including requests for already saved blobs. Stylesheet modules keep
+the captured-path fallback below.
 
 Live skips installed importer lookup when the record has no installed requests.
 Otherwise it indexes their importer paths. An importer inside the logical root
@@ -114,9 +78,29 @@ has the same bytes. A linked `node_modules` package is repository-owned when
 its physical target lies inside the repository and outside Mokly's runtime; a
 physically installed package is not. Installed JavaScript, package-local
 non-stylesheet files, Mokly runtime, and consumer React peers remain unpinned.
-Requests from installed JavaScript to linked repository workspace JavaScript
-keep their current filesystem behavior; pinning that boundary remains a
-separate open finding.
+
+Every unrecorded repository file load is checked before esbuild can read source bytes.
+The Go-side filter includes logical and physical repository roots, captured
+aliases and every symlink prefix under the root's `node_modules`. It scans
+ordinary installed directories recursively without following links. A module
+under that installed root can be repository-owned only through a symlink;
+the filter includes the entire subtree at its first link. This also covers
+file links, nested dependencies, pnpm aliases and outside links back into the
+repository. A failed scan includes the affected subtree. Other repository
+paths stay eligible, including nested `node_modules` outside the scanned root.
+The filter is rebuilt for each bundle. Windows uses a broad filter and the
+full ownership check to preserve its path case rules.
+Directory entries, ownership and symlink projections are cached for one bundle; ordinary
+installed modules need no per-module realpath. File and directory symlinks
+still follow the same physical ownership rule. A missing entry or metadata
+error falls back to full classification. Only a refused repository load
+uses an extra resolution pass to identify its incoming importer. A module that
+only browser conditions or an installed `browser` field selects has no accepted
+requests. Its linked-repository imports fail with `source-not-captured`, even
+when the target's blob was saved through a different importer. Outside-root
+installed importers also lack a confined identity and fail this way when their
+unrecorded request resolves to repository source. Outside-root non-CSS source
+is outside repository pinning; installed JavaScript remains unpinned.
 
 Recorded requests do not reread resolution metadata. `tsconfig.json` settings
 and repository-package imports, exports, conditions, or browser fields can
@@ -165,7 +149,12 @@ package aliases, unpinned JavaScript, browser-only installed modules, outside
 root boundaries, empty-loader modules, importer lookup fast paths, strict
 installed-importer IPC bounds, and exclusion from
 generated output, static evidence, public JSON, export and publication. The
-example Live bundle must retain its previous bytes.
+installed-to-linked-source tests cover edits, deletion, syntax errors, later
+generations, export metadata, all unrecorded source requests, browser-only
+importers, symlinked roots, pnpm paths, unpinned installed code, IPC repository
+alias validation, cached ownership parity, and Go-filter coverage of every
+repository path, including unreadable directories and new file links. The example Live bundle must
+retain its previous bytes; first and repeat timings measure the extra checks.
 
 ## Related Docs
 
@@ -187,8 +176,9 @@ through `exports`. A stylesheet symlink retains
 its own logical-path module blob: Static hashes that logical path, so merging
 it with the physical stylesheet's blob would change one accepted class map.
 Ordinary raw-source aliases still share their physical byte blob. Installed
-package JavaScript remains filesystem-resolved; only its accepted stylesheet
-modules are replayed. This does not add package paths to public source inventory.
+package JavaScript remains filesystem-resolved; its accepted stylesheet and
+repository-source requests are replayed. Stylesheet capture does not add
+installed package paths to public source inventory.
 
 Live loads these blobs as JavaScript. It does not read stylesheet sources, run
 PostCSS, scope names, emit CSS, or inject styles. The accepted Static document's

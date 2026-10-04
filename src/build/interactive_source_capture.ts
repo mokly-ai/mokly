@@ -77,6 +77,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
   private readonly aliases = new Map<string, string>();
   private readonly files = new Map<string, MutableSourceFile>();
   private readonly resolutions = new Map<string, InteractiveSourceResolution>();
+  private readonly repositoryPaths = new Set<string>();
   private readonly stylesheetPaths = new Set<string>();
   private sealed: InteractiveSourceCapture | undefined;
 
@@ -137,7 +138,8 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
       .filter(
         ([, resolution]) =>
           resolution.importer.type !== "installed" ||
-          this.stylesheetPaths.has(resolution.target),
+          this.stylesheetPaths.has(resolution.target) ||
+          this.repositoryPaths.has(resolution.target),
       )
       .sort(([left], [right]) => compareText(left, right))
       .map(([, resolution]) => resolution);
@@ -153,6 +155,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
     this.aliases.clear();
     this.files.clear();
     this.resolutions.clear();
+    this.repositoryPaths.clear();
     this.stylesheetPaths.clear();
     return this.sealed;
   }
@@ -174,6 +177,8 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
     }
     this.addPath(file, key, location.relativePath);
     this.addPath(file, key, location.physicalRelativePath);
+    this.repositoryPaths.add(location.relativePath);
+    this.repositoryPaths.add(location.physicalRelativePath);
     return {
       contents: file.bytes,
       loader,
@@ -193,10 +198,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
         ? locatePath(result.path, this.config.repoRoot)
         : undefined);
     if (!target) return;
-    const request = this.resolutionRequest(
-      arguments_,
-      result.path.endsWith(".css"),
-    );
+    const request = this.resolutionRequest(arguments_);
     if (!request) return;
     if (request.importer.type === "installed") {
       this.addResolution(request, target.relativePath);
@@ -222,7 +224,6 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
 
   private resolutionRequest(
     arguments_: OnResolveArgs,
-    stylesheet: boolean,
   ): InteractiveSourceResolutionRequest | undefined {
     const location = arguments_.importer
       ? graphSourceLocation(arguments_.importer, this.config.repoRoot)
@@ -231,7 +232,7 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
       virtualInteractiveSourceImporter(arguments_) ??
       (location
         ? repositoryInteractiveSourceImporter(location.relativePath)
-        : stylesheet && arguments_.namespace === "file"
+        : arguments_.namespace === "file"
           ? installedSourceImporter(arguments_.importer, this.config.repoRoot)
           : undefined);
     if (!importer) return;

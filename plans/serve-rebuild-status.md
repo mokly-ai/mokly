@@ -353,7 +353,7 @@ bundle.
       for symlinked roots and pnpm layouts, and unrelated aliases could not
       replay a saved record.
 
-## Milestone 10: Pin installed imports of linked repository packages
+## Milestone 10: Pin installed imports of linked repository packages — completed
 
 Backend. Closes the Milestone 8 review's Medium finding (option A, chosen by
 the user). The accepted graph records a request from installed-package
@@ -363,7 +363,7 @@ package, Live therefore resolves and reads that repository file from disk.
 After acceptance, editing the file changes the accepted Live bundle, and
 deleting it fails with a generic build error instead of `source-not-captured`.
 
-- [ ] Update `docs/protocol/mokly-interactive-source-pinning.md`: installed
+- [x] Update `docs/protocol/mokly-interactive-source-pinning.md`: installed
       importer records also cover requests whose target is a captured
       repository-owned file, including a linked package reached through
       `node_modules`, and Live replays them before any file-system resolution.
@@ -373,21 +373,34 @@ deleting it fails with a generic build error instead of `source-not-captured`.
       and state the effect on installed modules that only the browser build
       selects. Physically installed JavaScript stays file-system-resolved and
       unpinned.
-- [ ] Add failing tests first: after generation G is accepted, edit, delete
+- [x] Add failing tests first: after generation G is accepted, edit, delete
       and syntactically break a linked repository package that a physically
       installed package imports by package name, and require G's Live bundle
       to equal its accepted sources.
-- [ ] Record these resolutions, extend the runtime IPC validation, replay them
+- [x] Record these resolutions, extend the runtime IPC validation, replay them
       in the browser resolver, and reject unrecorded loads of repository
       files. Keep the Milestone 9 fast path, and measure the example's Live
       bundle time against `e0fc961f`.
-- [ ] Tests: a later accepted generation sees the change; an unrecorded request
+- [x] Tests: a later accepted generation sees the change; an unrecorded request
       fails with the typed diagnostic; strict IPC validation of installed
       records with repository targets; symlinked roots and pnpm layouts;
       physically installed JavaScript stays unpinned; an installed module that
       only the browser build selects; the example catalogue's Live bundle is
       unchanged.
-- [ ] Update `src/interactive/README.md` and `src/build/README.md`; run the
+- [x] Keep ordinary installed files out of the JavaScript load callback with
+      a Go-side filter. Test the filter against full ownership, including file
+      links, pnpm, symlinked roots and failed scans. Measure 10 alternating
+      fresh-process pairs against `e0fc961f`, with one repeat per process.
+      First medians: 531.5 ms baseline, 562 ms final; ranges: 457–633 ms and
+      521–672 ms. Repeat medians: 519 ms and 526 ms; ranges: 476–629 ms and
+      498–629 ms. All 296 remaining callbacks are Mokly runtime files (19 main,
+      277 viewer); the same example in a physical consumer install has zero.
+      The bundles are byte-identical after substituting the temporary root.
+- [x] Measure setup alone on a temporary large installed tree, then remove it.
+      For 20,200 directories, 200,212 entries and 12 links, the first scan took
+      166 ms; five repeats had a 147 ms median and 142–150 ms range. Document
+      the once-per-Live-compile scan and its growth with the installed tree.
+- [x] Update `src/interactive/README.md` and `src/build/README.md`; run the
       focused checks; commit.
 
 ## Milestone 11: Strip eight-bit terminal string sequences

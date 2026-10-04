@@ -117,7 +117,7 @@ for (const [label, changes] of [
     "unknown importer type",
     { importer: { type: "package", path: "node_modules/pkg/index.js" } },
   ],
-  ["non-stylesheet target", { target: "entries/source.ts" }],
+  ["uncaptured source target", { target: "entries/missing.ts" }],
   ["uncaptured stylesheet target", { target: "node_modules/pkg/missing.css" }],
   ["unsafe stylesheet target", { target: "../card.module.css" }],
   ["unknown kind", { kind: "unknown" }],

@@ -23,15 +23,15 @@ import {
   type InteractiveSourceResolution,
   virtualInteractiveSourceImporter,
 } from "../build/interactive_source_resolution.js";
-import {
-  graphSourceLocation,
-  isGraphRuntimePath,
-} from "../build/source_inventory.js";
+import { isGraphRuntimePath } from "../build/source_inventory.js";
+import { logicalRepositoryPath } from "../config/file_locations.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import { InteractiveBundleError, InteractiveBundleReason } from "./errors.js";
 import { RecordedInstalledImporters } from "./installed_importers.js";
+import { repositoryLoadFilter } from "./source_load_filter.js";
+import { UnrecordedSourceGuard } from "./unrecorded_sources.js";
 
 /** Namespace whose modules are loaded only from an accepted source capture. */
 export const CAPTURED_SOURCE_NAMESPACE = "mokly-captured-source";
@@ -53,6 +53,7 @@ export function interactiveSourceResolver(
 
 class CapturedSourceResolver {
   private readonly installedImporters: RecordedInstalledImporters;
+  private readonly unrecorded: UnrecordedSourceGuard;
   readonly byPath = new Map<string, InteractiveSourceFile>();
   readonly byResolution = new Map<string, InteractiveSourceResolution>();
   failure: InteractiveBundleError | undefined;
@@ -61,6 +62,7 @@ class CapturedSourceResolver {
     private readonly config: ResolvedConfig,
     capture: InteractiveSourceCapture,
   ) {
+    this.unrecorded = new UnrecordedSourceGuard(config.repoRoot);
     this.installedImporters = new RecordedInstalledImporters(
       config.repoRoot,
       capture.resolutions,
@@ -83,8 +85,12 @@ class CapturedSourceResolver {
           if (arguments_.pluginData === skipResolution) return;
           const recorded = this.recordedResolution(arguments_);
           if (recorded) return this.resolveRecorded(recorded, arguments_);
+          this.unrecorded.record(arguments_);
           const direct = this.repositoryRequest(arguments_);
-          if (direct) return this.resolveCapturedPath(direct, arguments_);
+          if (direct)
+            return direct.endsWith(".css")
+              ? this.resolveCapturedPath(direct, arguments_)
+              : this.missing(direct, arguments_.importer);
           if (arguments_.namespace !== CAPTURED_SOURCE_NAMESPACE) return;
           return this.classifyUnrecorded(
             pluginBuild,
@@ -99,6 +105,25 @@ class CapturedSourceResolver {
         pluginBuild.onLoad(
           { filter: /\.css$/, namespace: "file" },
           (arguments_) => this.load(arguments_.path),
+        );
+        pluginBuild.onLoad(
+          {
+            filter: repositoryLoadFilter(
+              this.config.repoRoot,
+              this.byPath.keys(),
+            ),
+            namespace: "file",
+          },
+          async (arguments_) => {
+            const location = this.unrecorded.locations.get(arguments_.path);
+            if (!location) return;
+            const importer = await this.unrecorded.importer(
+              arguments_.path,
+              pluginBuild,
+              skipResolution,
+            );
+            return this.missing(location.relativePath, importer);
+          },
         );
       },
     };
@@ -126,6 +151,8 @@ class CapturedSourceResolver {
   }
 
   private repositoryRequest(arguments_: OnResolveArgs): string | undefined {
+    if (arguments_.namespace === "file" && !arguments_.path.endsWith(".css"))
+      return;
     const candidate = absoluteRequest(arguments_);
     if (
       !candidate ||
@@ -184,7 +211,7 @@ class CapturedSourceResolver {
     });
     if (!resolved.path || resolved.external || resolved.errors.length > 0)
       return resolved;
-    const location = graphSourceLocation(resolved.path, this.config.repoRoot);
+    const location = this.unrecorded.locations.get(resolved.path);
     if (!location) return resolved;
     return this.missing(location.relativePath, arguments_.importer);
   }
@@ -222,7 +249,12 @@ class CapturedSourceResolver {
   }
 
   private relative(candidate: string): string {
-    return toPosixPath(path.relative(this.config.repoRoot, candidate));
+    return toPosixPath(
+      path.relative(
+        this.config.repoRoot,
+        logicalRepositoryPath(candidate, this.config.repoRoot),
+      ),
+    );
   }
 }
 

@@ -237,10 +237,13 @@ Node graph's load callbacks, records each repository resolution under a stable
 request identity, and seals both only after the index is accepted. Stylesheet
 load callbacks record their accepted JavaScript instead of raw CSS: exact CSS
 Module exports or an empty plain module. Installed-package importers also
-record requests to saved stylesheet modules, with an `installed` identity and
+record requests to saved stylesheet modules and captured repository-owned
+files, with an `installed` identity and
 a safe logical repository-relative path. Both graph builds preserve symlinks
 and share the same confined path normalization, including pnpm aliases.
-Installed records never capture or target JavaScript. CSS symlinks retain
+Installed JavaScript stays unpinned. Linked workspace targets and repository
+file symlinks follow the same physical source-inventory rule. Installed records
+are sealed only for modules the capture loader saved. CSS symlinks retain
 separate logical identities for their path-derived class names. The Live
 browser compiler in `../interactive/bundle.ts` replays that record before
 filesystem resolution, uses the captured bytes and accepted `entryModules`,
@@ -261,7 +264,15 @@ Unrecorded package-name requests can fail resolution after target deletion.
 Imported-style processing rejects stylesheets outside the root. An `empty`
 opt-out can accept an extensionless outside stylesheet, but Live still lacks
 its blob and fails. Installed JavaScript and
-its requests to linked workspace JavaScript keep their current behavior. See
+metadata remain unpinned. Unrecorded requests that resolve to repository source
+fail with the typed diagnostic, even when a blob exists through another
+importer. This includes installed modules only the browser build selects and
+outside-root importers. Live caches directory entries and symlink projections
+for these ownership checks; it needs no per-module installed-file realpath.
+`../interactive/source_load_filter.ts` supplies the Go filter that excludes
+ordinary installed modules but admits every captured alias and symlink subtree.
+Its per-build link scan covers nested file links and unknown browser-only inputs.
+Windows and metadata failures use conservative checks. See
 the [source-pinning contract](../../docs/protocol/mokly-interactive-source-pinning.md)
 for the exact importer, IPC and unrecorded-request boundaries.
 

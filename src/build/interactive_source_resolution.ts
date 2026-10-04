@@ -88,7 +88,7 @@ export function repositoryInteractiveSourceImporter(
   return Object.freeze({ path, type: "repository" });
 }
 
-/** Validate the confined logical identity of an installed stylesheet importer. */
+/** Validate the confined logical identity of an installed source importer. */
 export function installedInteractiveSourceImporter(
   path: string,
 ): InteractiveSourceImporter | undefined {

@@ -163,6 +163,8 @@ readers accept only v7; earlier output follows
     origin, browser bundle, diagnostics, and readiness.
   - [Generation-pinned Live sources](./mokly-interactive-source-pinning.md) —
     accepted bytes, resolution replay, bounds, retention, and failures.
+  - [Accepted source capture IPC](./mokly-interactive-source-capture-ipc.md) —
+    private source projection, importer identities, target rules and limits.
   - [Shell contract](./mokly-interactive-views-shell.md) — control,
     eligibility, navigation, and Static-only inspection.
   - [Design catalogue](./mokly-interactive-views-design.md) — approved

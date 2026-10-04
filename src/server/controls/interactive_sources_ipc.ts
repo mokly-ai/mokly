@@ -62,6 +62,7 @@ export function readInteractiveSourceCapture(
     return;
   if (value["files"].length === 0) return;
   const seen = new Set<string>();
+  const repositoryPaths = new Set<string>();
   const files: InteractiveSourceFile[] = [];
   let previousFirst: string | undefined;
   for (const candidate of value["files"]) {
@@ -92,8 +93,14 @@ export function readInteractiveSourceCapture(
     const bytes = Buffer.from(candidate["bytes"], "base64");
     if (bytes.toString("base64") !== candidate["bytes"]) return;
     files.push(Object.freeze({ bytes, paths: Object.freeze(paths) }));
+    if (paths.some((path) => !path.split("/").includes("node_modules")))
+      for (const path of paths) repositoryPaths.add(path);
   }
-  const resolutions = readResolutions(value["resolutions"], seen);
+  const resolutions = readResolutions(
+    value["resolutions"],
+    seen,
+    repositoryPaths,
+  );
   if (!resolutions) return;
   if (retained && sameCapture(retained, files, resolutions)) return retained;
   return Object.freeze({
@@ -138,12 +145,13 @@ function sameCapture(
 function readResolutions(
   values: readonly unknown[],
   capturedPaths: ReadonlySet<string>,
+  repositoryPaths: ReadonlySet<string>,
 ): InteractiveSourceResolution[] | undefined {
   if (values.length > INTERACTIVE_SOURCE_RESOLUTION_LIMIT) return;
   const resolutions: InteractiveSourceResolution[] = [];
   let previousKey: string | undefined;
   for (const value of values) {
-    const resolution = readResolution(value, capturedPaths);
+    const resolution = readResolution(value, capturedPaths, repositoryPaths);
     if (!resolution) return;
     const key = interactiveSourceResolutionKey(resolution);
     if (previousKey !== undefined && key <= previousKey) return;
@@ -158,6 +166,7 @@ function readResolutions(
 function readResolution(
   value: unknown,
   capturedPaths: ReadonlySet<string>,
+  repositoryPaths: ReadonlySet<string>,
 ): InteractiveSourceResolution | undefined {
   if (
     !recordWithKeys(value, [
@@ -180,7 +189,11 @@ function readResolution(
   const importer = readImporter(value["importer"]);
   const attributes = readAttributes(value["attributes"]);
   if (!importer || !attributes) return;
-  if (importer.type === "installed" && !value["target"].endsWith(".css"))
+  if (
+    importer.type === "installed" &&
+    !value["target"].endsWith(".css") &&
+    !repositoryPaths.has(value["target"])
+  )
     return;
   const resolution = Object.freeze({
     attributes: Object.freeze(attributes),
