@@ -350,14 +350,16 @@ Key code:
   Copies expose recorded template references, not parser-discarded tokens.
 - `page_inline_material.ts`: complete-path SHA-256/base64url comments replace
   canonical rule appendices or equal reference-free styles in place. Reserved
-  authored prefixes and existing M8 marker guards keep both sides on text;
+  authored prefixes, skipped source references and M8 marker guards keep text;
   parse failures stay verbatim. Producer references survive the representation
   change, and the route keeps its canonical comparison without fingerprint work.
 - `page_fingerprint_guard.ts`, `material_normalization_recipe.ts` and
   `fingerprint_seams.ts`: inspect delivered recipe joins, including marker/ignore
   normalization and caller copies. Windows read at most 12 UTF-16 units on each
-  side across tiny pieces; guarded views retain text on both sides. Recipe
-  admission and rendering share `page_material_recipes.ts`.
+  side; `material_marker_offsets.ts` indexes openers/closes once per used side,
+  lazily. Created/completed reserved markers keep text on both sides, including
+  opener names joined from fragments. Recipe admission/rendering share
+  `page_material_recipes.ts`; shortcut paths build no fingerprint index.
 - `component_resource_attribution.ts`: actual-invocation declared/inferred
   resource ownership and entry evidence without invented variant entries.
 - `component_inline_resources.ts`: inferred owner-set traversal, including

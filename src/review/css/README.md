@@ -108,7 +108,9 @@ style spans use the flat validated ignore regions and original UTF-16 offsets;
 no normalized page is parsed for matching. Component-free and separate page
 classification retain their delivered normalized-tree behavior. Complete-path
 fingerprints replace canonical text or skipped style occurrences; stored rule
-references remain attached to the material recipe. The route still compares
+references remain attached to the material recipe. Parsing may still skip equal
+reference-free rule data after a raw reference hint; source records independently
+prevent skipped-style fingerprints from discarding namespace or selector URLs. The route still compares
 canonical text. Captured M8 rendering and the disabled fingerprint switch retain
 the text-material oracle for full result/error and resource differentials.
 

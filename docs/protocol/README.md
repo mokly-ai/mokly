@@ -82,6 +82,7 @@ readers accept only v7; earlier output follows
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)
 - [Startup diagnostics and scale fixtures](./mokly-timings.md)
+- [Comparison material work counts](./mokly-material-work-counts.md)
 - [Pages in the catalogue](./mokly-pages.md)
 - [Variants](./mokly-variants.md) — screen and component variants as entries
   with their own global ids, derived routes, and `variantOf`, grouped under

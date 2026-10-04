@@ -1475,6 +1475,21 @@ comparison's text work no longer grows with the style sheet. See the
       Changes test catalogue, with all movement, reserved-prefix fallback and
       string-normalization/hashing cases under the
       [fingerprint proof](../docs/protocol/mokly-page-analysis.md#fingerprinted-materials).
+- [x] Discovered: address the supervisor's M9 checkpoint findings test-first:
+      retain skipped styles with raw source references; reject reserved markers
+      created/completed by material seams; add seeded guard-model/catalogue
+      differentials, isolated guard mutations and exact counter integration tests.
+- [x] Discovered: compare catalogue replays with their original same-mode
+      outcome, explicitly exclude the named pre-existing alias divergences,
+      pin coverage, update delivery/index docs, and remove redundant conditions.
+      The [follow-up report](../docs/dev/fingerprinted-materials-follow-up.md)
+      records the fixes, seeded proofs, mutation evidence and named alias issue.
+- [x] Discovered: finish the follow-up targeted/full unit, pinned browser and
+      hydration suites plus static checks; record all mutation results, commit
+      new checkpoint commits without pushing, and stop before measuring. All
+      1,646 targeted, 4,736 unit, 725 pinned-browser and 219 hydration tests pass;
+      all 19 final mutations are caught, with earlier evidence retained. Package
+      and static checks pass with no authored changes during the frozen run.
 - [ ] After supervisor checkpoint approval, record all four scenarios
       (no-changes, component-style, screen-markup, linked-stylesheet), cold/warm,
       against M8 `5e5111dc` on the same host: default ABBA and one cumulative pair.

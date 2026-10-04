@@ -1,5 +1,6 @@
 /** Preserve text materials when any delivered recipe can create the reserved prefix. */
 import type { ComponentInlineMaterial } from "../components/comparison_projection.js";
+import type { MaterialRecipe } from "../components/material_recipe.js";
 import { documentWorkSync } from "../diagnostics/timings.js";
 
 import { fingerprintAtSeam } from "./fingerprint_seams.js";
@@ -8,6 +9,7 @@ import {
   normalizationPieces,
   normalizedRecipe,
 } from "./material_normalization_recipe.js";
+import type { PageAnalysis } from "./page_analysis.js";
 import { pageMaterialRecipes } from "./page_material_recipes.js";
 import type { PageAnalysisPair } from "./page_pair.js";
 
@@ -25,6 +27,11 @@ function inspectRecipes(
   inline: ComponentInlineMaterial,
 ): boolean {
   const recipes = pageMaterialRecipes(pages, inline);
+  // Appendices passed the marker guard; other producers emit complete tokens or wrappers.
+  const inspect = (page: PageAnalysis, recipe: MaterialRecipe) => {
+    const closed = new Set(recipe.filter((piece) => piece.kind === "insert"));
+    return fingerprintAtSeam(page.source, recipe, page.markerOffsets, closed);
+  };
   for (const kind of ["actual", "projected"] as const) {
     const base = normalizationPieces(
       pages.beforeAnalysis,
@@ -32,15 +39,12 @@ function inspectRecipes(
     );
     const head = normalizationPieces(pages.afterAnalysis, recipes.after[kind]);
     if (!base || !head) return true;
-    for (const [source, pieces] of [
-      [pages.baseText, base],
-      [pages.headText, head],
+    for (const [page, pieces] of [
+      [pages.beforeAnalysis, base],
+      [pages.afterAnalysis, head],
     ] as const) {
-      if (fingerprintAtSeam(source, pieces)) return true;
-      if (
-        kind === "actual" &&
-        fingerprintAtSeam(source, normalizedRecipe(pieces))
-      )
+      if (inspect(page, pieces)) return true;
+      if (kind === "actual" && inspect(page, normalizedRecipe(pieces)))
         return true;
     }
     const before = normalizationIdentity(base);
@@ -65,8 +69,8 @@ function inspectRecipes(
       .filter((id) => !before.regions.has(id))
       .sort();
     if (
-      fingerprintAtSeam(
-        pages.baseText,
+      inspect(
+        pages.beforeAnalysis,
         normalizedRecipe(
           base,
           paired,
@@ -74,8 +78,8 @@ function inspectRecipes(
           headOnly.length ? baseOnly : [],
         ),
       ) ||
-      fingerprintAtSeam(
-        pages.headText,
+      inspect(
+        pages.afterAnalysis,
         normalizedRecipe(
           head,
           paired,

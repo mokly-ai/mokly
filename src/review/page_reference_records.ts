@@ -129,7 +129,9 @@ export function originalPageReferences(
     hrefs: visible
       .filter(({ kind }) => kind === "navigation")
       .map(({ value }) => value),
-    resources: visible.filter(isResource).map(({ value }) => value),
+    resources: visible
+      .filter(isPageResourceReference)
+      .map(({ value }) => value),
   };
 }
 
@@ -156,7 +158,7 @@ export function deriveMaterialReferences(
       return records
         .filter(
           (record) =>
-            isResource(record) &&
+            isPageResourceReference(record) &&
             contains(piece, record) &&
             !removed.some((span) => intersects(span, record)) &&
             (piece.copy
@@ -176,7 +178,8 @@ export function deriveMaterialReferences(
   });
 }
 
-function isResource(record: HtmlReferenceValue): boolean {
+/** Resource seeds exclude anchor inventory and navigation metadata. */
+export function isPageResourceReference(record: HtmlReferenceValue): boolean {
   return record.kind !== "anchor" && record.kind !== "navigation";
 }
 function contains(outer: SourceSpan, inner: SourceSpan): boolean {

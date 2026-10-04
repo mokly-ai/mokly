@@ -56,16 +56,44 @@ test("existing inline, CSS and Changes catalogues equal M8 text materials in bot
           fingerprintHashes: number;
           fingerprintedViews: number;
           failures: number;
+          excludedCatalogues: number;
+          excludedPairs: number;
         },
     );
-  assert.ok(records.reduce((sum, row) => sum + row.catalogues, 0) > 100);
-  assert.ok(records.reduce((sum, row) => sum + row.fingerprintHashes, 0) > 100);
+  const total = (
+    field:
+      | "catalogues"
+      | "pairs"
+      | "fingerprintedViews"
+      | "excludedCatalogues"
+      | "excludedPairs",
+  ) => records.reduce((sum, row) => sum + row[field], 0);
+  assert.deepEqual(
+    {
+      catalogues: total("catalogues"),
+      pairs: total("pairs"),
+      fingerprintedViews: total("fingerprintedViews"),
+      excludedCatalogues: total("excludedCatalogues"),
+      excludedPairs: total("excludedPairs"),
+    },
+    {
+      catalogues: 382,
+      pairs: 760,
+      fingerprintedViews: 7844,
+      excludedCatalogues: 2,
+      excludedPairs: 4,
+    },
+  );
   for (const record of records) {
     assert.equal(record.failures, 0, record.file ?? "runner");
-    assert.equal(record.pairs, 2 * record.catalogues, record.file ?? "runner");
+    assert.equal(
+      record.pairs,
+      2 * (record.catalogues - record.excludedCatalogues),
+      record.file ?? "runner",
+    );
   }
   context.diagnostic(
-    `${files.length} files, ${records.reduce((sum, row) => sum + row.catalogues, 0)} catalogues, ${records.reduce((sum, row) => sum + row.pairs, 0)} committed/derived pairs, ${records.reduce((sum, row) => sum + row.fingerprintedViews, 0)} fingerprinted views, ${records.reduce((sum, row) => sum + row.fingerprintHashes, 0)} fingerprint hashes`,
+    `${files.length} files, ${records.reduce((sum, row) => sum + row.catalogues, 0)} catalogues, ${records.reduce((sum, row) => sum + row.pairs, 0)} committed/derived pairs, ${records.reduce((sum, row) => sum + row.fingerprintedViews, 0)} fingerprinted views, ${records.reduce((sum, row) => sum + row.fingerprintHashes, 0)} fingerprint hashes; ${total("excludedCatalogues")} named exclusions (${total("excludedPairs")} pairs)`,
   );
   if (process.env.MOKLY_FINGERPRINT_EVIDENCE) {
     await fs.writeFile(

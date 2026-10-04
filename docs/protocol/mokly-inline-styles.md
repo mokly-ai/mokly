@@ -78,15 +78,14 @@ place. A one-sided region remains ordinary analyzed material. The renderer
 supplies only the document string; the manifest supplies no head-style or
 public-resource assertions.
 
-When the ordered sequence of unowned outer sources is identical on both sides
-and neither side can contain a reference, the analysis is skipped; the
-[fingerprint rule](./mokly-page-analysis.md#fingerprinted-materials) preserves
-each element's source and position. A possible reference prevents that
-skip: the cached parser confirms it and owner attribution decides projected
-resource discovery. An attribute-only difference runs the analysis even when
-the content text is equal. Two sequences that split the same rules across
-different elements also run it and render equal fragments when their rule
-multisets are equal.
+When the ordered unowned outer sources are identical, analysis skips before
+parsing if neither side can contain a reference. It also skips after successful
+parsing when there are no deltas, including no unchanged reference-bearing rules. Raw source resource
+records can still exist, including namespace and selector URLs; the
+[fingerprint rule](./mokly-page-analysis.md#fingerprinted-materials) keeps text
+materials for such skipped views. Otherwise skipped elements keep source and
+position through in-place fingerprints. Attribute-only changes run analysis,
+as do different element splits; equal retained multisets render equal fragments.
 
 ## Analysis
 

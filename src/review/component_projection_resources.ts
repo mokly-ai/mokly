@@ -137,7 +137,7 @@ export function prepareComponentProjection(
     analysis,
     base,
     head,
-    Boolean(pages) && context.useMaterialFingerprints !== false,
+    context.useMaterialFingerprints !== false,
     pages,
   );
   const analyzedProjection = pages

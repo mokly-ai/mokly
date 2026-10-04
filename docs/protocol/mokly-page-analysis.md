@@ -204,20 +204,22 @@ missing files fail proof without replacing complete required-read diagnostics.
 ## Fingerprinted Materials
 
 Materials remain strings, compared and hashed as strings. Keep delivered text
-materials on **both sides, actual and projected**, if either original contains
-`mokly-inline-`, or any delivered material recipe could create it across a seam.
-A seam joins pieces not adjacent in the original: component/ignore boundary and
-material-signal removal, eligible-style removal, caller copies, placeholders,
-contract tokens and wrappers all participate. Check the last 12 UTF-16 code
-units before each seam and first 12 after it, walking across tiny pieces and
-inserted text; match `mokly-inline-` exactly. Work is proportional to seams,
-never sheet size. No sheet-sized string is built for this check. Include pair
-normalization and the actual materials' single-document state normalization.
-Unprovable derived marker structure retains delivered text validation/errors.
-The whole-view fallback appends canonical `<style>` text after successful
-analysis or retains unchanged elements when skipped; no fingerprints enter copies.
-Existing M8 style-source guards and `<!--mokly-` in composed canonical appendices
-also keep text materials: canonical marker text must reach normalization unchanged.
+on **both sides, actual and projected**, if either original contains
+`mokly-inline-`, or a delivered rewrite could create it or create/complete a
+reserved marker. A seam joins pieces not adjacent in the original: component
+and ignore boundaries, signals, styles, caller copies and inserted text all
+participate. Check the last 12 UTF-16 units before and first 12 after each seam,
+walking across tiny pieces. Reject `mokly-inline-` or `<!--mokly-` crossing it.
+Also reject a seam inside an unclosed `<!--mokly-review-` or
+`<!--mokly-component:` opener, including an opener name completed by a join.
+Use per-side opener/close offsets and inserted text; complete kept comments and
+placeholders do not cross seams. Index originals once per used side, lazily so
+quick/style routes do no indexing. Indexed seam work never scans a sheet-sized
+piece or constructs the material. Include actual single-document and both
+actual/projected pair normalization. Unprovable structure keeps text/errors.
+Existing M8 source guards and `<!--mokly-` in canonical appendices keep text too;
+canonical markers must reach normalization unchanged. Those checked appendices
+need no additional index scan. No fingerprint appears on a guarded view.
 
 Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
 
@@ -228,23 +230,19 @@ Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
   not the `<style>` wrapper or original element source; even an empty
   retained list gets the digest of empty text. References come from retained
   stored rule references, with the same ownership and exclusions.
-- When analysis is skipped for equal ordered reference-free outer sources,
-  replace **each** eligible unowned element in place with
+- When analysis skips for equal ordered sources, keep text for the whole view
+  if any eligible outer span contains a source resource record on either side.
+  Anchor/navigation records do not seed resources and do not block fingerprints.
+  Otherwise replace **each** eligible unowned element in place with
   `<!--mokly-inline-style:<digest>-->`; input is its complete original outer
   source, including attributes and tags. These comments supply no references.
 - A parse failure retains original style text verbatim, not a successful-rule
   fingerprint. Ownership projection/ignore normalization otherwise retain
   their existing ordering and semantics; copied spans carry the same edits.
 
-Both comment forms survive ignore normalization and component-marker stripping.
-The original/seam guard prevents authored lookalikes from equalling inserted
-fingerprints even after rewrites join kept pieces. There is no tagged material
-or consumer API change. Under the ordinary SHA-256 collision assumption, equal
-canonical inputs give equal comments and unequal ones differ; replacing the
-common style wrapper preserves equality. In-place comments retain source identity
-and position: moving an identical style past retained markup remains material.
-Differentials compare state, material flags, reasons, resources, owners, evidence
-and errors against text materials, excluding only intentional fingerprint bytes.
-Prove string normalization/hashing, stored references, moved styles and bounded
-seam work. Base-only, head-only and both-side guards, authored lookalikes and
-all removal/copy/insert seam variants require exact text-oracle material bytes.
+Both forms survive ignore normalization and component stripping. Under the
+ordinary SHA-256 collision assumption, equal inputs give equal comments and
+unequal inputs differ; the guard prevents authored lookalikes even after joins.
+In-place comments retain position: moving a style past retained markup stays
+material. The [required proofs](./mokly-material-work-counts.md#required-proof)
+cover results/errors, retained references, exact bytes on fallback and work.

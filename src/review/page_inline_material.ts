@@ -14,6 +14,7 @@ import {
 } from "./css/inline_rendering.js";
 import { hasFingerprintSeam } from "./page_fingerprint_guard.js";
 import type { PageAnalysisPair } from "./page_pair.js";
+import { isPageResourceReference } from "./page_reference_records.js";
 import { styleNeedsFullValidation } from "./style_source_safety.js";
 
 export function pageInlineMaterials(
@@ -58,6 +59,7 @@ function prepareMaterials(
     [...analysis.beforeSpans, ...analysis.afterSpans].some(
       styleNeedsFullValidation,
     ) ||
+    skippedSourceReferences(analysis, pages) ||
     [text.before, text.after].some((side) =>
       [side.actual, side.projected].some(({ appendix }) =>
         appendix.includes("<!--mokly-"),
@@ -106,11 +108,26 @@ function prepareMaterials(
     };
   };
   const result = { before: side("before"), after: side("after") };
-  if (
-    analysis.status === "resolved" ||
-    analysis.beforeSpans.length ||
-    analysis.afterSpans.length
-  )
-    timingDocumentWork()?.fingerprintedView();
+  timingDocumentWork()?.fingerprintedView();
   return result;
+}
+
+function skippedSourceReferences(
+  analysis: InlineAttributionResult,
+  pages: PageAnalysisPair,
+): boolean {
+  if (analysis.status !== "skipped") return false;
+  return (["before", "after"] as const).some((side) => {
+    const page = side === "before" ? pages.beforeAnalysis : pages.afterAnalysis;
+    const spans =
+      side === "before" ? analysis.beforeSpans : analysis.afterSpans;
+    return spans.some((span) =>
+      page.references.some(
+        (record) =>
+          isPageResourceReference(record) &&
+          span.start <= record.start &&
+          record.end <= span.end,
+      ),
+    );
+  });
 }

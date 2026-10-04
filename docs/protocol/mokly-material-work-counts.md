@@ -22,7 +22,7 @@ Material-normalization scope nests synchronously and restores on failure.
 These counts describe actual work, including attempted work before an error.
 They neither select a comparison path nor alter cache, resource or validation
 policy. Construction and digest times retain their existing exclusive fields;
-fingerprint hashing belongs to `hashMs`, recipe seam proof to `normalizationMs`,
+fingerprint hashing belongs to `hashMs`, recipe seam proof and its lazy source-offset indexing to `normalizationMs`,
 and the remaining inline material preparation to `inlineRuleMs`.
 
 For growing eligible cumulative sheets, completed fingerprint material lengths,
@@ -34,6 +34,28 @@ attempt may still normalize originals; that is separately counted source work.
 The style-only route constructs no page material and computes no fingerprints.
 
 This is a work-bound proof, not a constant-time claim about source validation,
-HTML parsing, CSS preparation, matching or the fingerprint's own digest input.
+HTML parsing, marker indexing, CSS preparation, matching or digest input.
 All materials and consumers remain strings under the
 [fingerprint contract](./mokly-page-analysis.md#fingerprinted-materials).
+
+## Required Proof
+
+Fingerprint/text differentials compare state, material flags, reasons, resource
+and ownership evidence, inline evidence, errors and validation; only fingerprint
+bytes may differ. Cover every inline/CSS/Changes catalogue and the small scale
+renderers in both modes. Check all four fast/style switches for guarded cases.
+
+Require exact text material bytes for base-only, head-only and two-sided source
+or seam guards, authored lookalikes, movement, copied slots, inserted tokens and
+all removal/normalization joins. Check skipped raw references independently of
+stored rule references, including namespaces and selector URLs. Compare a seeded
+admission model with the real normalizer on derived fragments, then compare
+seeded compiled catalogues with the text oracle; print seeds on failure.
+
+Prove normalization/string-hash compatibility, retained references and bounded
+seam windows and material consumers. Pin exact material/normalization bytes,
+fingerprint bytes/hash counts and fingerprinted views for resolved, skipped and
+owned fixtures, including digest reuse. Guard/counter mutations must fail tests.
+Catalogue replay must agree with the original same-mode outcome, not just with
+another replay, and pin coverage. Name any independently confirmed pre-existing
+path divergence excluded from that replay; an exclusion is not a passed pair.

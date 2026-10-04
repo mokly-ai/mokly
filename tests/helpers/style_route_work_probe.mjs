@@ -15,6 +15,15 @@ const before = generatedViews(
 const after = generatedViews(
   input.after.entries.find(({ id }) => id === "home"),
 )[0];
+mock.module("../../dist/review/material_marker_offsets.js", {
+  namedExports: {
+    MaterialMarkerOffsets: class {
+      constructor() {
+        assert.fail("style route must not build fingerprint marker offsets");
+      }
+    },
+  },
+});
 const real = await import("parse5");
 let parses = 0;
 function observe(source, options) {

@@ -20,6 +20,7 @@ import { documentWorkSync } from "../diagnostics/timings.js";
 import { setDocumentSubjectFilter } from "./css/document_subjects.js";
 import { inlineStyleSpan, type InlineStyleSpan } from "./css/inline_styles.js";
 import { reviewIgnoreMetadata, type ReviewIgnoreRegion } from "./ignore.js";
+import { MaterialMarkerOffsets } from "./material_marker_offsets.js";
 import { parsePageDocument } from "./page_parser.js";
 import {
   deriveMaterialReferences,
@@ -33,6 +34,7 @@ export class PageAnalysis {
   readonly materialIds: ReadonlySet<string>;
   readonly materialSignals: readonly (SourceSpan & { id: string })[];
   readonly componentMarkers: readonly SourceSpan[];
+  private fingerprintMarkers?: MaterialMarkerOffsets;
   readonly headerEnd: number;
   readonly document: DefaultTreeAdapterMap["document"];
   readonly ranges: readonly RenderedRange[];
@@ -110,6 +112,14 @@ export class PageAnalysis {
         { start: 0, end: this.headerEnd },
         ...this.removedMarkers,
       ];
+  }
+
+  /** Fingerprint-only metadata is lazy, shared, and never built by shortcut paths. */
+  get markerOffsets(): MaterialMarkerOffsets {
+    return (this.fingerprintMarkers ??= documentWorkSync(
+      "normalizationMs",
+      () => new MaterialMarkerOffsets(this.source),
+    ));
   }
 
   ignored(paired: readonly string[]): readonly ReviewIgnoreRegion[] {

@@ -4,6 +4,9 @@ This implementation checkpoint builds on M8 `5e5111dc`. It is a local commit,
 not a measurement or push. The supervisor runs the checkpoint review before
 approving the all-scenario M8/M9 measurements.
 
+The [supervisor follow-up](./fingerprinted-materials-follow-up.md) records the
+subsequent correctness fixes and stronger proofs against this checkpoint.
+
 ## Delivered Behavior
 
 Complete component-aware views retain plain-string materials, using SHA-256
