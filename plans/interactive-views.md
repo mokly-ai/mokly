@@ -823,7 +823,7 @@ On 2026-10-04 the user approved the plan index change in Merge 3: Route-Scoped
 Shell Bootstrap stays in Completed in `plans/README.md`, because PR #120 has
 merged.
 
-## Milestone 11: Forwarded catalogue origin
+## Milestone 11: Forwarded catalogue origin — completed
 
 Backend. Closes final review finding 3 (option A, chosen by the user). The
 catalogue listener admits only loopback Host values, and the Live preparation
@@ -867,9 +867,15 @@ has the same Origin rule, so prop edits fail there too.
       default preview failure before pushing and remove the temporary worktree.
 - [x] Update `src/server/README.md` and `src/interactive/README.md`; run
       `cargo xtask check`; commit and push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+- [x] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
       impact and lettered options, without changing the implementation.
+      Reviewed at `3eedd03b`: one Medium finding, confirmed against the code
+      and reported to the user for a decision: the shared validator accepts a
+      bracketed IPv6 `--app-origin`, but a Content Security Policy source
+      cannot express an IPv6 literal, so Chrome ignores that
+      `frame-ancestors` entry and blocks both Live frames. Both reverse-proxy
+      browser tests and 347 focused tests passed.
 
 ## Post-merge follow-up (non-blocking)
 

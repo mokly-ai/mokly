@@ -403,7 +403,7 @@ deleting it fails with a generic build error instead of `source-not-captured`.
 - [x] Update `src/interactive/README.md` and `src/build/README.md`; run the
       focused checks; commit.
 
-## Milestone 11: Strip eight-bit terminal string sequences
+## Milestone 11: Strip eight-bit terminal string sequences — completed
 
 Backend. Closes the Milestone 6 review's Low finding (option A, chosen by the
 user). The failure-detail sanitizer ends terminal string sequences only at BEL
@@ -425,9 +425,19 @@ absolute `file://` path into the browser's failure detail.
       capture its accepted entry resolution. The stricter source rule must
       still let that fixture reach and test the consumer React peer failure.
 - [x] Run `cargo xtask check`; commit and push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+- [x] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
       impact and lettered options, without changing the implementation.
+      Reviewed at `3eedd03b`, together with Interactive Views Milestone 11:
+      no findings in this milestone, and one Medium finding in Milestone 10,
+      confirmed against the code and reported to the user for a decision: the
+      consumer React plugin resolves `react` before the capture plugin can
+      record the request, so when `react` links to a package inside the
+      repository, the Milestone 10 load guard rejects it and Live cannot
+      compile. The same capture compiles with the resolver from `6ce10475`.
+      The delegate also reported a Low finding for a decision: path redaction
+      keeps absolute paths that follow a field name, such as
+      `path=/private/...` and `path=file:///private/...`.
 
 ## Post-merge follow-up (non-blocking)
 

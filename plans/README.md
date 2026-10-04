@@ -7,8 +7,9 @@
   regression coverage. The final review reported three Medium findings:
   finding 1 (Live compiling current files instead of the accepted
   generation's sources) is closed by Serve Rebuild Status Milestone 4;
-  Milestone 11 fixes finding 3 (forwarded catalogue origins, option A);
-  finding 2 awaits a decision. Move this plan to Completed when its
+  Milestone 11 fixed finding 3 (forwarded catalogue origins, option A).
+  Awaiting a decision: finding 2 and the Milestone 11 review's Medium finding
+  (IPv6 catalogue origins cannot frame Live). Move this plan to Completed when its
   implementation PR merges.
 - [Serve Rebuild Status](./serve-rebuild-status.md) — tell the Browse shell
   when watched Serve could not load the latest changes and while an update is
@@ -20,7 +21,10 @@
   Milestone 10 pins installed imports of linked repository packages (the
   Milestone 8 review's Medium finding) and Milestone 11 strips eight-bit
   terminal string sequences (the Milestone 6 review's Low finding), both with
-  option A. Move this plan to Completed when its implementation PR merges.
+  option A. Awaiting a decision: the Milestone 11 review's Medium finding
+  (repository-linked React blocks Live) and a Low finding (path redaction
+  misses paths after field names). Move this plan to Completed when its
+  implementation PR merges.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete
   exchange, the schema 2 export ownership marker, v2 fixtures and guides for
