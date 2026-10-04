@@ -353,6 +353,66 @@ bundle.
       for symlinked roots and pnpm layouts, and unrelated aliases could not
       replay a saved record.
 
+## Milestone 10: Pin installed imports of linked repository packages
+
+Backend. Closes the Milestone 8 review's Medium finding (option A, chosen by
+the user). The accepted graph records a request from installed-package
+JavaScript only when its target is a saved stylesheet module (Milestone 9).
+When a physically installed package imports a linked repository workspace
+package, Live therefore resolves and reads that repository file from disk.
+After acceptance, editing the file changes the accepted Live bundle, and
+deleting it fails with a generic build error instead of `source-not-captured`.
+
+- [ ] Update `docs/protocol/mokly-interactive-source-pinning.md`: installed
+      importer records also cover requests whose target is a captured
+      repository-owned file, including a linked package reached through
+      `node_modules`, and Live replays them before any file-system resolution.
+      Live never reads a repository-owned file from disk: an unrecorded
+      request that lands on one fails with `source-not-captured`, as for
+      repository importers. Define the IPC target rule for installed records
+      and state the effect on installed modules that only the browser build
+      selects. Physically installed JavaScript stays file-system-resolved and
+      unpinned.
+- [ ] Add failing tests first: after generation G is accepted, edit, delete
+      and syntactically break a linked repository package that a physically
+      installed package imports by package name, and require G's Live bundle
+      to equal its accepted sources.
+- [ ] Record these resolutions, extend the runtime IPC validation, replay them
+      in the browser resolver, and reject unrecorded loads of repository
+      files. Keep the Milestone 9 fast path, and measure the example's Live
+      bundle time against `e0fc961f`.
+- [ ] Tests: a later accepted generation sees the change; an unrecorded request
+      fails with the typed diagnostic; strict IPC validation of installed
+      records with repository targets; symlinked roots and pnpm layouts;
+      physically installed JavaScript stays unpinned; an installed module that
+      only the browser build selects; the example catalogue's Live bundle is
+      unchanged.
+- [ ] Update `src/interactive/README.md` and `src/build/README.md`; run the
+      focused checks; commit.
+
+## Milestone 11: Strip eight-bit terminal string sequences
+
+Backend. Closes the Milestone 6 review's Low finding (option A, chosen by the
+user). The failure-detail sanitizer ends terminal string sequences only at BEL
+or the seven-bit `ESC \`, not at the eight-bit String Terminator U+009C, and
+it does not recognize the eight-bit DCS, SOS, PM and APC introducers (U+0090,
+U+0098, U+009E and U+009F). It then removes the control characters but keeps
+their payload, so an eight-bit terminal hyperlink can leak its text and an
+absolute `file://` path into the browser's failure detail.
+
+- [ ] Update the Sanitized Failure Detail section of
+      `docs/protocol/mokly-rebuild-status.md`: seven-bit and eight-bit OSC,
+      DCS, SOS, PM and APC strings end at their terminators, including
+      U+009C, and are removed with their payload. Define how an unterminated
+      string is handled; it must not leave its payload in the detail.
+- [ ] Add failing table-driven tests first for every seven-bit and eight-bit
+      introducer and terminator, including the reviewer's eight-bit OSC
+      hyperlink with a `file://` path; then fix the existing scanner.
+- [ ] Run `cargo xtask check`; commit and push.
+- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+      against `origin/main` and report numbered findings with severity,
+      impact and lettered options, without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Consider presenting background Changes failures the same way if the existing

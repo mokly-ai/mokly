@@ -443,7 +443,7 @@ was right-aligned, which no artboard shows.
 - [x] Update `packages/viewer/src/shell/README.md` and the shell contract if
       the wording changes; run `cargo xtask check`; commit and push.
 
-## Milestone 10: Example adoption, smoke test and review
+## Milestone 10: Example adoption, smoke test and review — completed
 
 - [x] Enable `interactive: "serve"` in `examples/basic/mokly.config.ts`, add
       the `interactive` export to `examples/basic/renderer.tsx` mirroring its
@@ -818,6 +818,47 @@ file system, so deleting such a stylesheet after acceptance fails that
 generation's Live bundle. The user chose option A.
 [Serve Rebuild Status Milestone 9](./serve-rebuild-status.md#milestone-9-pin-installed-stylesheet-requests--completed)
 owns the fix.
+
+On 2026-10-04 the user approved the plan index change in Merge 3: Route-Scoped
+Shell Bootstrap stays in Completed in `plans/README.md`, because PR #120 has
+merged.
+
+## Milestone 11: Forwarded catalogue origin
+
+Backend. Closes final review finding 3 (option A, chosen by the user). The
+catalogue listener admits only loopback Host values, and the Live preparation
+POST requires `Origin` to equal `http://<that loopback Host>`. Behind a reverse
+proxy that presents a public catalogue address, the browser sends the public
+`Origin`, so preparation returns 403 and Live never starts, although
+`--interactive-origin` documents forwarded setups. The component render request
+has the same Origin rule, so prop edits fail there too.
+
+- [ ] Update `docs/protocol/mokly-interactive-host-integration.md`,
+      `docs/protocol/mokly-interactive-views-serve.md`, the controls contract
+      and `docs/guides/cli/serve.md`: add an explicit canonical public
+      catalogue origin option (for example `--app-origin <origin>`), validated
+      like `--interactive-origin`. Serve admits exactly its authority as an
+      additional catalogue Host. Live preparation and component render
+      requests accept exactly that `Origin` in addition to the loopback rule.
+      In forwarded mode the Live listener accepts only that `mokly-host`, and
+      Live documents name exactly that origin in `frame-ancestors`, replacing
+      the broad `http: https:` policy. Define the combinations with
+      `--interactive-origin` and the behavior without the option. Forwarded
+      headers still grant nothing.
+- [ ] Add failing tests first: through a real local reverse proxy with a
+      different browser-facing host name, open the catalogue, edit a
+      component prop, select Live and see the Live preview.
+- [ ] Implement the option in the CLI, the watched supervisor and child, the
+      catalogue listener, the Live listener and its policy.
+- [ ] Tests: strict option validation; exact Origin, Host, `mokly-host` and
+      `frame-ancestors` behavior with and without the option; other origins
+      and hosts stay refused; watched restarts keep the option; no CORS
+      headers; exports and publication are unchanged.
+- [ ] Update `src/server/README.md` and `src/interactive/README.md`; run
+      `cargo xtask check`; commit and push.
+- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+      against `origin/main` and report numbered findings with severity,
+      impact and lettered options, without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
