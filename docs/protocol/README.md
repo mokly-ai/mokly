@@ -12,6 +12,9 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Uniform CSS attribution, root boundaries, evidence fields and stylesheet-owner
 warnings are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 Comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence);
@@ -42,7 +45,7 @@ fields; other validation contracts are unchanged.
 
 Manifest v8 carries pages, navigation paths, the source inventory, flattened component variants and per-view usage, without author-maintained path evidence or derivable paths. Every catalogue emits comparison v5. The public catalogue read model is v4; the static delivery descriptor remains v3.
 
-Current manifest readers require v8. Historical readers accept v3 to v7, drop collection records and strip removed fields before validation and comparison. Public readers reject catalogue v1 to v3 and comparison v4 and earlier; regenerate those exports.
+Current and baseline manifest readers require canonical, valid v8 output. Lower integer versions and former-name sentinels make Changes unavailable under the [baseline contract](./mokly-baseline-compatibility.md). No reader converts earlier metadata. Public readers reject catalogue v1 to v3 and comparison v4 and earlier; regenerate those exports.
 
 ## Contracts
 

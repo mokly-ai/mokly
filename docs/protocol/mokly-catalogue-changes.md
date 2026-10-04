@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Uniform CSS page membership and catalogue evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
 of the [source-path removal plan](../../plans/remove-source-path-evidence.md); the screen and saved-view details display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
@@ -14,7 +17,7 @@ owns baseline documents and delivery descriptors.
 
 One package-internal catalogue-change module owns this typed snapshot and its
 pure selection rules. The Git-backed loader supplies validated current and
-normalized baseline v8 manifests plus one resolved branch-point commit. Server, watcher,
+baseline v8 manifests plus one resolved branch-point commit. Server, watcher,
 preview capture, and publication consume the same
 snapshot for a catalogue generation:
 

@@ -1,5 +1,10 @@
 # Rebuilt historical baselines
 
+## Delivery Status
+
+Removal of baseline compatibility below is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 This internal module reproduces generated output using the merge-base commit's
 own code and dependencies. Rebuilding executes trusted mainline code. It is not
 a sandbox and must run outside HTTP requests. Public consumers configure the CLI;
@@ -68,9 +73,9 @@ to `source`, runs commands, inspects manifest compatibility and validates the
 output tree,
 moves the generated directory to `output`, deletes the extraction, and writes
 `complete.json`. Completion of the marker write commits the result immediately.
-The marker retains the original on-disk version. Supported historical v3–v7
-metadata normalizes before v8 validation, including on cache reuse. Recognized
-unsupported earlier output stays cached for the comparison-availability gate.
+Current output passes strict v8 validation, including on cache reuse. Recognized
+earlier output stays cached only for the comparison-availability gate; caching
+does not make it compatible or convert its metadata.
 Cancellation before that point removes partial output; cancellation afterward
 returns the completed result and skips remaining retention work. Cleanup and
 lock release cannot reject or erase a completed build. No cleanup failure may
@@ -84,12 +89,13 @@ throw; the stderr implementation tolerates a closed diagnostic stream.
 the marker records the commands. A complete entry for different settings fails
 explicitly and remains intact. Remove that commit's cache entry before changing
 its catalogue/build settings. Partial entries are rebuilt under the entry lock.
-`manifest.ts` validates current v8 and normalized historical v3–v7 metadata
-during adoption. It reads canonical and supported earlier filenames, and retains
-a version below 3 or a recognized older path layout as completed incompatible
-output so the historical gate can report availability without rerunning trusted
-baseline commands. `compatibility.ts` owns that typed outcome and its
-single user-facing line. Newer or malformed output is not adopted.
+`manifest.ts` validates canonical v8 output during adoption. It recognizes lower
+integer versions and former filenames as incompatible output; former filenames
+are sentinels and their contents are never read. The comparison gate reports
+unavailability without rerunning trusted baseline commands for a cached result.
+`compatibility.ts` owns that typed outcome and its single user-facing line.
+Newer or malformed output is not adopted. No older schema or stored layout is
+converted or admitted.
 
 Lock publication uses a fully written temporary file and an exclusive hard link.
 The filesystem captures the temporary file's identity before publication and
@@ -138,7 +144,7 @@ repository-relative paths and the pinned commit; it strips the output prefix
 internally. It rejects symlinks at every ancestor and non-regular files. Bulk
 reads use the Git reader's 4,096-object / 48 MiB batch limits, with at most 32
 filesystem reads in flight. The review asset reader additionally applies the
-normalized v8 baseline's source inventory and reserved-name policy. Earlier output
+validated v8 baseline's source inventory and reserved-name policy. Earlier output
 follows the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 

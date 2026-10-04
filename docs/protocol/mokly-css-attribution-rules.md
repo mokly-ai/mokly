@@ -4,6 +4,9 @@ Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md):
 element matching, rule identity, component membership and page reasons. The
 comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). These rules replace stylesheet
@@ -51,8 +54,8 @@ caller ownership of props or slot edits is unchanged. Empty or text-only
 output has no elements to match. Renderer wrappers outside the root output on
 a component page are page elements. Never treat the whole document as the root
 component. The [usage contract](./mokly-component-usage-records.md#root-output-boundary)
-defines its explicit root boundary. Missing historical bounds cannot prove
-component containment; use page evidence for unproven matches.
+defines its explicit root boundary. Every available component saved view must
+prove that boundary. A missing required root is invalid data, not page evidence.
 
 An unresolved outcome supplies no proven element set. Do not guess component
 matches from a selector string or owner list. Keep the existing closed list of

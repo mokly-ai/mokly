@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Root output ranges and removal of CSS resource owners are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Manifest v8 changes in place.
 
 manifest-v8 generation, validation, Serve, and static export use the public
@@ -87,9 +90,8 @@ field. A reader derives every path from the
 Common entry metadata keeps its meaning, including source attribution and
 authored `navPath` (following the [path contract](./mokly-nav-paths.md)).
 The removed fields `dependencies`, `declaredDependencies` and `ownedDependencies` are never written. Source locations provide attribution and protection, not comparison evidence. Ownership comes from document `styles` and non-CSS `resources` records. Declared stylesheet provenance remains in `insertedStylesheets`; no CSS resource owners are derived.
-Historical v5 to v7 inputs retain their required `sourceFiles` inventory.
-For v3 and v4, infer entry and legacy-page sources before dropping collection
-records, so a module that only defined collections stays protected.
+Current and accepted baseline manifests require the complete `sourceFiles`
+inventory. Readers never infer it from older entry or page records.
 `colorSchemes` is the effective, sorted,
 light-first set: a component variant inherits its parent's set, while a screen
 variant may replace its parent's set under the variant contract. Variant props
@@ -125,7 +127,8 @@ Ids, source paths, `navPath`/use-case/variant relationships,
 tags, resource confinement, and global output collisions retain existing rules.
 A current reader rejects any stored `route`, `fragments`, `darkFragments`,
 `viewports`, `dependencies`, or component `variants` field as an unknown
-field. The removed `declaredDependencies` and `ownedDependencies` fields are also rejected by current readers. Historical normalization strips all three before comparison.
+field. The removed `declaredDependencies` and `ownedDependencies` fields are
+also rejected by current and baseline v8 readers. No reader strips them.
 
 Entries sort by kind name in UTF-16 order (`component`, `page`, `screen`,
 `use-case`) and then id; lexical manifest ordering uses UTF-16 code units
@@ -144,8 +147,8 @@ final LF.
 
 Emit v8 for every catalogue, including one without components. Its sorted
 private `sourceFiles` inventory, explicit page entries, component records, and
-usage proof are required. Current readers validate v8; historical v3 to v7 metadata
-normalizes before that same validator runs. The
+usage proof are required. Current and baseline readers validate the same v8
+shape without normalization of earlier output. The
 [baseline compatibility contract](./mokly-baseline-compatibility.md) owns the
 clean unavailable outcome for earlier output. Registered pages retain material
 Changes and baseline context without visual comparisons or controls. Contract

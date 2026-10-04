@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility below is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Uniform CSS classification and evidence fields below are implemented in Milestone 19;
 comparison details are planned for Milestone 20 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
@@ -16,7 +19,7 @@ unrendered source edits do not change catalogue membership or evidence.
 Rendered `styles` and non-CSS `resources` records retain ownership attribution.
 Stylesheet changes use kept own-page matches and outside/unresolved page evidence;
 no CSS owner record routes them.
-Historical manifest v3–v7 inputs normalize to v8 before comparison. Every
+Only canonical, valid manifest v8 input reaches comparison. Every
 catalogue uses the same public comparison v5 format.
 Baseline and current documents use the same marker grammar. Former-spelling
 comments and script text stay ordinary content; comparison never renames them.
@@ -65,14 +68,14 @@ the same confinement, source exclusions, regular-file checks, transitive
 resource traversal and 64 MiB bound as screen panes. It returns typed
 `RemovedPagePreview` metadata plus the baseline files; the artifact renderer adds
 strictly validated `preview.json` without creating page records in `review.json`.
-Current manifests require v8. Historical v3–v7 metadata normalizes before
-comparison under the
+Current and baseline manifests require the same v8 shape under the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 
-`registry/historical_layout.ts` checks stored v3–v6 routes before component
-usage admission or document reads. Safe older layouts use the existing typed
-unavailable outcome. Panes keep identity-derived paths and unchanged HTML;
-there is no historical-origin or URL-rewriting fallback.
+Lower integer manifest versions and former-name sentinels give the existing
+typed unavailable outcome. Former files are never read. Invalid v8 data stays
+invalid, including earlier branch output with missing roots or provenance or
+stored CSS owners. Panes keep identity-derived paths and unchanged HTML; there
+is no schema, stored-layout or URL-rewriting fallback.
 
 Server classification and export use the same interfaces. Export pins only
 repository evidence and retains the same baseline reader, including its optional

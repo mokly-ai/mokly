@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Document and non-CSS attribution are implemented. Uniform CSS classification
 is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 Its comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
@@ -206,9 +209,8 @@ trees; never strip styles or whole documents to suppress consumer rows.
 
 Baseline and current documents come from validated manifest-v8 output and
 retain their original bytes. Style offsets and component ranges share each
-document's UTF-16 coordinate space. Historical v3–v7 metadata is normalized
-before attribution. An older stored route layout never reaches attribution;
-it follows the [baseline compatibility contract](./mokly-baseline-compatibility.md).
+document's UTF-16 coordinate space. Only a canonical, valid v8 baseline reaches
+attribution, under the [baseline compatibility contract](./mokly-baseline-compatibility.md).
 
 Use the existing merge base with `origin/main` or the configured base; staged,
 unstaged, and untracked current edits still participate. Cross-kind id reuse

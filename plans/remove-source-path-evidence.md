@@ -172,9 +172,11 @@ milestone.
   [warning contract](../docs/protocol/mokly-build-warnings.md).
 - Versions after the 0.13.0 integration: manifest v8 is main's v7 without
   `dependencies`, `declaredDependencies` or `ownedDependencies`, and retains
-  declared-stylesheet provenance. Historical readers accept manifest v3 to v7,
-  drop collection records, flatten earlier component variants, and strip the
-  removed fields before v8 validation and comparison. Catalogue read model v4
+  declared-stylesheet provenance. Baselines require canonical, valid v8 output
+  with the same validation as current output. Lower integer versions and former
+  manifest names without the canonical file are incompatible earlier output;
+  former names are sentinels only and their contents are never read. No schema,
+  removed-field, variant or stored-layout conversion remains. Catalogue read model v4
   is main's v3 without `details.dependencies`. Unified comparison result v5 is
   main's v4 without result `sharedImpact` or entry `dependencies` and
   `sharedImpact`. All catalogues use that one classifier and format. Public
@@ -183,10 +185,13 @@ milestone.
   The unreleased versions change in place for CSS: v8 adds an explicit root
   output range and stops writing CSS resource owners; v5 adds rule identity,
   changed component ids and page evidence; v4 carries the same public evidence
-  on views and whole-document pages. Historical CSS owner records are ignored.
-  Keep main's fixed pane paths and unchanged snapshot bytes. Historical v3–v6
-  metadata with an older entry or view layout makes Changes unavailable, with
-  the existing earlier-baseline message; do not add historical-origin handling.
+  on views and whole-document pages. Every accepted component saved view has its
+  root range. Every persisted usage record has an `insertedStylesheets` array,
+  including an empty array. V8 records with CSS owners, missing roots or missing
+  provenance are invalid, including earlier output from this branch. Keep main's
+  fixed pane paths and unchanged snapshot bytes. Incompatible earlier output
+  makes Changes unavailable with the existing message while Build, Serve, export
+  and publish succeed. Invalid v8 follows the existing invalid-baseline path.
 - Rendered-resource reasons keep the wire kind `dependency`, because they name
   resources a view depends on. Renaming them is out of scope.
 - The Shared impact design screen is deleted because the state no longer
@@ -1899,17 +1904,42 @@ has not started.
 
 Docs only.
 
-- [ ] Restore `main`'s compatible, incompatible and invalid baseline rules in
+- [x] Restore `main`'s compatible, incompatible and invalid baseline rules in
       `docs/protocol/mokly-baseline-compatibility.md`, with manifest v8 in
       place of v7. Remove the historical normalization and older-layout guard.
-- [ ] Remove every statement about historical v3 to v7 metadata, former
+- [x] Remove every statement about historical v3 to v7 metadata, former
       manifest file names as inputs, older stored layouts, and compatibility
       rules for earlier v8 output (for example missing root output ranges,
       historical CSS owner records, old provenance) from the protocols,
       guides, READMEs and this plan's Decisions And Scope. Data that does not
       match the current v8 shape follows the invalid-baseline path.
-- [ ] Mark the code work as planned for Milestone 23B. Validate the changed
+- [x] Mark the code work as planned for Milestone 23B. Validate the changed
       Markdown and run the docs tests.
+
+Contract notes:
+
+- Only canonical, valid v8 data is compatible. Lower integer versions and
+  former-name sentinels retain main's graceful unavailable outcome. Invalid
+  v8 data has no compatibility repair or fallback.
+- Every persisted v8 usage record requires an `insertedStylesheets` array,
+  including an empty array. Current writers already emit it. Public inspection
+  continues to omit this private field. Every available component saved view
+  requires its root range; added/removed views and paired Review-ignore keep
+  their existing rules.
+- Keep normal historical comparison of valid v8 snapshots, including baseline
+  props and slots checked against the baseline's own definitions. Main's public
+  inspection rules for a past snapshot against newer definitions are not schema
+  compatibility and remain intact.
+- Main's cache can retain recognized incompatible output to avoid rebuilding
+  it for every request. Remove the branch's normalization-aware version
+  retention and old-layout admission. Cache reuse never makes old data compatible.
+
+Verification: changed-file Prettier and all 26 requested docs tests pass. Every
+changed protocol stays within its cap; no split or fixture change is needed.
+The baseline contract restores main's outcome table and message with v8 as the
+current version. This milestone changes only Markdown and deletes no files.
+The audit found no guide that claimed support for older baseline schemas.
+The code work remains planned for M23B. Logs are under `.context/m23ab/logs/`.
 
 ## Milestone 23B: Remove baseline compatibility
 
@@ -1929,6 +1959,13 @@ Docs only.
       Restore `main`'s baseline compatibility tests with v8 in place of v7.
 - [ ] Update the READMEs near the changed code. Run the focused tests and the
       complete unit suite at 100%.
+- [ ] Require complete private v8 provenance and root proof at admission.
+      Preserve public inspection's privacy boundary and main's handling of
+      valid past v8 definitions. List each removed compatibility path below.
+- [ ] Run the requested build, type, lint, formatting, docs, unit and full
+      repository checks. Smoke-test `npm run dev -- --base origin/main` with
+      main's v7 output. Inspect the diff and deletions, record every removal,
+      and make one local code commit. Do not push.
 
 ## Milestone 24: Hide the branch-point sentence when the name is unknown
 

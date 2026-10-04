@@ -2,8 +2,10 @@
 
 ## Delivery Status
 
-Implemented for manifest v8, including strict admission of normalized baseline usage
-records. Root output ranges, non-CSS-only resource records and independent
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Implemented for manifest v8. Root output ranges, non-CSS-only resource records and independent
 stylesheet provenance are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md), within v8.
 
@@ -77,7 +79,7 @@ interface ComponentViewRecord {
   ranges: readonly ComponentRangeRecord[];
   styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
-  insertedStylesheets?: readonly InsertedComponentStylesheet[];
+  insertedStylesheets: readonly InsertedComponentStylesheet[];
 }
 
 interface InsertedComponentStylesheet {
@@ -137,7 +139,7 @@ changes remain material under the
 
 ## Root Output Boundary
 
-Every new component saved-view document has exactly one range whose target is
+Every accepted component saved-view document has exactly one range whose target is
 `{ kind: "root" }`. It uses the existing layout-neutral component start/end
 comment grammar and `r-N` allocation. It has no `parentId`; its component id is
 the variant entry's `variantOf`. The paired markers wrap only the root render
@@ -158,12 +160,11 @@ Review-ignore regions are allowed. A previously valid region around root output
 with no instance or caller-slot boundaries stays valid. Normalized-away elements
 supply no CSS matches, including when that region removes all root output.
 
-Screens have no root range. New current component views require one; duplicates,
+Screens have no root range. Current and baseline component views require one; duplicates,
 unpaired markers or a root on a screen fail normal component-range validation.
-Historical component views may lack it. They retain ordinary material
-comparison, but give no proof of root containment on that side. Current-only
-proof can still establish a changed component. Unproven matches remain page
-evidence. No migration may guess a root around the entire old document.
+Missing required root bounds are invalid data. They do not become page evidence
+or trigger a guessed root around the document. An absent view on one side of an
+added or removed entry is still valid and supplies no document or matches.
 
 Catalogue v4 usage ranges carry this new target in place. Readers and inspection
 accept it as a boundary without presenting it as a nested component or adding
@@ -181,13 +182,16 @@ one record per path. Every owner list is nonempty, sorted, duplicate-free, and
 names components that actually render in the view, including the component root
 when applicable. These records own only non-stylesheet files. Renderer CSS
 records are ignored with a warning; Mokly derives no CSS resource records.
-Historical CSS owner records are dropped before comparison. Renderer `styles`
+Current and baseline v8 records reject CSS owners. Renderer `styles`
 remain exact document ranges. CSS rule membership uses element containment,
 not these assertions.
 
 `insertedStylesheets` records final-document full-link UTF-16 spans, decoded
 public paths and rendered declaring ids. It is private provenance, not file
-ownership. It needs no corresponding `resources` record. The
+ownership. Each persisted v8 usage record must contain this array, even when
+empty. A missing array is invalid data; readers never guess provenance or
+normalize its absence to an empty array. Public inspection still omits this
+private field. It needs no corresponding `resources` record. The
 [stylesheet provenance contract](./mokly-component-stylesheet-ownership.md)
 defines final-link validation and the root-link comparison exception.
 

@@ -4,6 +4,9 @@ Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Imported delivery is implemented. Uniform rule identity and Changes attribution
 are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
@@ -141,6 +144,6 @@ before/after rule tuples join copies across generated entry roots. Components
 change only from own-page matches kept after nested filtering; outside matches and unresolved
 rules give a page its own row. Screen-only CSS inside a consumer invocation
 never changes that component. Original private CSS inputs are rebuild inputs,
-not dependency evidence or independently analyzed public sheets. The first derived baseline using the older toolchain
-lacks these links, so affected views show a one-time Changes jump; later
-baselines settle on the new output.
+not dependency evidence or independently analyzed public sheets. A derived
+baseline must pass the [current v8 gate](./mokly-baseline-compatibility.md)
+before its linked stylesheets can supply comparison evidence.

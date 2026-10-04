@@ -135,8 +135,9 @@ docs/mockups/generated/mokly-manifest.json
 docs/mockups/generated/mokly-generated/
 ```
 
-Current output requires manifest v8. Historical comparison readers accept manifest v3 to v7 and normalize removed fields before comparison. Regenerate older public exports for catalogue v4 and comparison v5.
-An older stored route layout leaves Changes unavailable; see
+Current output requires manifest v8. Comparison bases also require canonical,
+valid v8 output. Lower integer versions or a former-name sentinel leave Changes
+unavailable. Regenerate older public exports for catalogue v4 and comparison v5. See
 [baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
 
 ### 4. Open the catalogue
@@ -211,6 +212,9 @@ The basic consumer example imports a CSS Module, a PNG-backed stylesheet, and
 preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 
 ## Delivery Status
+
+Removal of baseline compatibility below is planned for
+[M23B](./plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Uniform CSS attribution is implemented in Milestone 19 of the
 [source-path removal plan](./plans/remove-source-path-evidence.md); comparison
@@ -342,7 +346,7 @@ review rules, and the temporary Braces exception.
   — manifest-v8 component-entry validation.
 - [`src/registry/changed_ids.ts`](./src/registry/changed_ids.ts) and
   [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
-  identity-keyed change membership and the normalized baseline-v8 boundary.
+  identity-keyed change membership and the strict baseline-v8 boundary.
 - [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
   [`src/server/classification_result.ts`](./src/server/classification_result.ts)
   — the typed earlier-baseline outcome from admission through Serve.

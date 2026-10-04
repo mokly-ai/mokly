@@ -4,6 +4,9 @@ Continuation of [Changes And Screen Comparisons](./mokly-changes.md).
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 The expanded v5 per-rule and page evidence is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md); its comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
@@ -86,7 +89,7 @@ batching does not weaken symlink or non-regular-file rejection.
 Before pairing, discard a baseline entry whose id belongs to a current entry of
 another kind; the current entry is then added, and no removed record with that
 id is emitted. Remaining entries pair by kind and id. Views pair by id,
-viewport, and color scheme from the union of normalized baseline and current v8 entries.
+viewport, and color scheme from the union of validated baseline and current v8 entries.
 Each side's view set is its
 entry's effective `colorSchemes`: a dark view present only in head is `added`,
 and one present only in base is `removed`. Mobile and desktop still classify

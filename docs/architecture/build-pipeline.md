@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility below is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 CSS rule attribution and ignored stylesheet owner records are planned for
 [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
 Other behavior below remains implemented.
@@ -196,8 +199,8 @@ slots, and layout-neutral ranges. The variant's root render is not its own
 instance. All catalogues emit manifest v8 with the complete source inventory.
 Registered components add variant entries and complete per-view
 invocation/ownership records; explicit page callbacks still emit exactly one
-complete document. Current readers validate v8; historical v3–v7 metadata
-normalizes before that validation. Unsupported earlier output
+complete document. Current and baseline readers require canonical, valid v8
+output. Lower integer versions and former-name sentinels
 makes Changes unavailable under
 [baseline compatibility](../protocol/mokly-baseline-compatibility.md).
 

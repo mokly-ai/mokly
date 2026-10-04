@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Uniform CSS eligibility, root-boundary handling and catalogue-wide rule proof
 are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
@@ -34,7 +37,7 @@ Apply these steps in order:
 2. Compare usage records canonically. Neither side having usage is eligible;
    exactly one side having it takes the complete path. When both exist, every
    field must match except `props` and `propsKey` on entry-owned instances.
-   Drop historical CSS owner records before this test.
+   Both records must pass current v8 validation, including rejection of CSS owners.
    View axes, instance identity/ownership/order, instance-owned props, and every
    slot, range, style, and resource record must match. Optional invocation
    `source` is excluded, as it is from every Changes projection.

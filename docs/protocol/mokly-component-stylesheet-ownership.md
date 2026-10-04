@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Link provenance and comparison exclusion are implemented. Removing derived
 CSS owners and ignoring all renderer CSS owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 The page evidence display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
@@ -28,10 +31,10 @@ rendered declaring component ids in the private v8 view's
 rendered page is unchanged. Offsets refer to final HTML including its generated
 header. Validate spans against those bytes and rebase range/style offsets
 through attribute removal. Remove the attribute and its leading space without
-reserializing the link. A removed link produces no span. Old v6 baselines
-without this optional record conservatively retain all links as page content;
-never guess provenance. The first comparison to such a baseline may show a
-link-only migration change.
+reserializing the link. A removed link produces no span. Every persisted v8
+usage record contains the array, including an empty array when no link survives.
+A baseline without it is invalid data. Never guess provenance or convert a
+missing array into an empty one.
 
 For page comparison material, remove recorded full-link spans from both
 documents **before** component projection and paired or single Review-ignore
@@ -67,15 +70,13 @@ The audit of existing uses requires these changes:
 | `component_projection_resources.ts` suppresses owned CSS in consumers.                        | Never suppress a stylesheet through resource ownership. Match rules against actual normalized documents.                                |
 | `component_view.ts` treats root resource-owner changes as material.                           | Retain that check only for non-CSS owners. An added/removed declaration with no link, byte or other rendered change gives no reason.    |
 | `component_resource_attribution.ts` promotes invocation CSS to component reasons.             | Keep invocation attribution only for non-CSS resources. CSS requires own-page rule matches.                                             |
-| Fast-path usage equality, source validation and affected-consumer assembly use those records. | Ignore historical CSS owners, validate frozen per-rule proof and preserve complete/fast equivalence.                                    |
+| Fast-path usage equality, source validation and affected-consumer assembly use those records. | Require valid v8 records without CSS owners, validate frozen per-rule proof and preserve complete/fast equivalence.                     |
 | Public catalogue/inspection projection strips resource ownership.                             | Keep it private; expose rule evidence instead. No export, watch or publication file list depends on derived owners.                     |
 
-Older stored CSS resource records have no effect, including records in earlier
-unreleased v8 output. Historical normalization drops them before ownership
-validation, root-owner comparison or suppression. It never reconstructs them
-from declarations. New v8 usage records reject CSS resource entries after the
-renderer filter; normalization is a historical boundary, not permission for a
-current producer to keep emitting them.
+Current and baseline v8 usage records reject CSS resource entries. Earlier
+branch output that claims v8 and retains them is invalid data. Readers never
+drop those records or reconstruct them from declarations. The renderer filter
+below acts on authoring output before manifest validation.
 
 Ignore a renderer `resources` record naming any stylesheet, whether configured,
 declared, imported by CSS, generated from JavaScript, or not linked on that

@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 ## Purpose And Boundary
@@ -141,7 +144,7 @@ the complete config/consumer authoring graph, validated against current inputs.
 Reserved source basenames stay protected even when unimported. Serving, resource
 validation, Review, and publication share that policy.
 
-Current readers accept v8 and historical metadata normalizes to that shape under the
+Current and baseline readers accept only canonical, valid v8 output under the
 [compatibility contract](./mokly-baseline-compatibility.md). Catalogue lookup,
 hierarchy, navigation, breadcrumbs, details, search, route targets, and static
 publication consume one validated entry model. Page leaves

@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility below is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Root output boundaries, independent stylesheet provenance and warnings for all
 CSS resource-owner records below are implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
@@ -227,8 +230,9 @@ must survive the boundary. `MoklyError` carries a `Symbol.for` brand and
 `isMoklyError` checks that brand, a known code, and the unprefixed detail. The
 facade adds the source module; `load_graph.ts` reconstructs branded errors as
 CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
-bundling errors. `src/registry/historical_manifest.ts` normalizes supported v3–v7
-metadata before the strict v8 validator reads it. `mock_links.ts` rewrites id links while
+bundling errors. `src/registry/manifest_validation.ts` validates current and
+baseline data against one strict v8 shape. Lower versions and former-name
+sentinels use the unavailable outcome without conversion. `mock_links.ts` rewrites id links while
 `mock_link_routes.ts` resolves the identity-derived target artifact and relative
 destination. Together they build the compatibility transform's logical-route
 index from the shared path helpers; a use case without a screen

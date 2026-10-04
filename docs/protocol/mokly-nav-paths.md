@@ -7,6 +7,11 @@ helper inputs, derived routes, and authoring-time errors; the
 [public catalogue](./mokly-catalogue.md) define their wire shapes. The
 [disclosure persistence contract](./mokly-disclosure-persistence.md) owns storage and restoration.
 
+## Delivery Status
+
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 ## Sections And Path Derivation
 
 Every routed screen, page, use case, and component has a `navPath` string array:
@@ -90,7 +95,7 @@ follow the parent's path followed by the parent title; variants are not
 independent folder members. The complete variant rules live in the
 [variant contract](./mokly-variants.md).
 
-Current and normalized baseline manifests use v8 and apply the complete label,
+Current and accepted baseline manifests use v8 and apply the complete label,
 conflict, relationship, and ordering rules above to their own independent
 trees. Baseline paths supply removed-entry labels and
 [Changes classification](./mokly-changes.md#changes-membership); they never

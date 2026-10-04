@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Uniform CSS attribution and warnings for all stylesheet owner records are
 implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
@@ -166,7 +169,7 @@ parent and variant entries and per-view usage records for screens and component
 variants; no entry stores a route or view path. The
 [manifest schema](./mokly-component-manifest.md) defines every record,
 reference, ordering rule, and validation boundary. Baseline readers accept the
-same v8 validation after historical normalization, with availability defined by
+same current v8 shape without conversion, with availability defined by
 [baseline compatibility](./mokly-baseline-compatibility.md).
 
 Inert, package-owned DOM markers bind generated ranges to their usage records.

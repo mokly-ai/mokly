@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 The completed [derived baselines plan](../../plans/derived-baselines.md) shipped
 separate readers, caching, command preparation, `preparing`, watched lifecycle,
 timings, and the scale fixture.
@@ -144,8 +147,8 @@ and 48 MiB per-batch budgets as committed reads, including metadata overhead.
 Source protection applies the accepted baseline's own manifest inventory,
 entry sources, and reserved basenames. After a rebuild succeeds, the
 [baseline compatibility gate](./mokly-baseline-compatibility.md) accepts only
-valid v8 output or historical v3–v7 metadata normalized to v8. Versions below
-3 retain the existing unavailable outcome.
+canonical, valid v8 output. Lower integer versions and former-name sentinels
+give the existing unavailable outcome without schema or layout conversion.
 
 ## Serve And Watch
 

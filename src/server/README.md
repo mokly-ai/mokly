@@ -1,5 +1,10 @@
 # Serving catalogues
 
+## Delivery Status
+
+Removal of baseline compatibility below is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and
@@ -150,15 +155,15 @@ unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
 
-Current readers require manifest v8; historical v3–v7 metadata normalizes before
-comparison. Recognized unsupported earlier output follows the
+Current and baseline readers require canonical, valid manifest v8. Lower
+integer versions and former-name sentinels follow the
 successful unavailable behavior and single terminal line in the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 `classification_result.ts` carries that expected typed outcome across the
 background worker without converting it into a generic classifier failure;
 unsupported newer or malformed v8 data keeps the normal safe diagnostic path.
-Safe older v3–v6 route layouts also use that expected unavailable outcome,
-before snapshots or removed-entry previews can be retained. All stays usable.
+No earlier schema or stored layout is converted. V8 data with removed fields,
+missing required roots or provenance, or CSS owners is invalid. All stays usable.
 
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison

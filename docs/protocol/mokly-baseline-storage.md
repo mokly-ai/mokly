@@ -5,6 +5,9 @@ Historical commands execute trusted repository code; preparation is never an HTT
 
 ## Delivery Status
 
+Removal of baseline compatibility is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 ## Rebuild Procedure
@@ -37,7 +40,7 @@ and is not converted to a baseline history error.
    zero-based command index, argv, exit code or signal, and the last 40 output
    lines.
 5. Locate `<source>/<mockupsDir>` using the current config's repository-relative
-   `mockupsDir`. Apply the same historical normalization and v8 validation as
+   `mockupsDir`. Apply the same current v8 validation and earlier-output gate as
    committed baselines.
    Missing or malformed output fails as `baseline-output-invalid`; recognized
    earlier output is cached as a completed but incompatible base so commands do

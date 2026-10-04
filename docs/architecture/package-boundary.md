@@ -2,6 +2,9 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility below is planned for
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 CSS rule attribution and ignored stylesheet owner records are planned for
 [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
 Other behavior below remains implemented.
@@ -111,7 +114,7 @@ Consumers register complete HTML with `definePage` or nested `page`. A callback
 may reuse an existing render helper; consumer policy owns source allowlists and
 document-stage rules. A configured complete-document transformer remains an
 explicit deterministic boundary whose result receives normal validation.
-Current manifests require v8; historical v3–v7 metadata normalizes before validation under the
+Current and baseline manifests require canonical, valid v8 output under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
 
 ## Runtime Boundary
