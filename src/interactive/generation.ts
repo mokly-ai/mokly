@@ -34,9 +34,9 @@ export interface InteractiveGeneration {
 
 /** Origins that may participate in one Live frame-adapter handshake. */
 export interface InteractiveViewQueryOrigins {
+  appOrigin?: string;
   appPort: number;
   frameOrigin: string;
-  forwarded: boolean;
 }
 
 /** Pair one accepted runtime with its catalogue and on-demand compiler. */
@@ -129,7 +129,7 @@ function validHostOrigin(
   }
   if (value === origins.frameOrigin) return false;
   return (
-    origins.forwarded ||
+    value === origins.appOrigin ||
     value === new URL(`http://localhost:${String(origins.appPort)}`).origin ||
     value === new URL(`http://127.0.0.1:${String(origins.appPort)}`).origin
   );

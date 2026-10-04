@@ -168,8 +168,14 @@ first time you choose it, while comparisons, inspection, prop editing and
 exports stay static. The Live port
 defaults to the resolved Serve port plus one (or an OS-selected port when
 Serve uses 65535); `--interactive-port`, `--interactive-origin`, and
-`--strict-port` cover explicit ports and forwarding. Forwarded host names or
-port numbers require an explicit interactive origin. See the
+`--strict-port` cover explicit ports and forwarding. Set `--app-origin` for the
+canonical browser-facing catalogue address, and `--interactive-origin` for the
+separate Live address when forwarding changes its host name or port. Both
+options require an exact HTTP(S) origin with no credentials, wildcards, path, query, or
+fragment and keep the listeners bound to loopback. `--app-origin` also supports
+prop editing with Live off. Each listener admits only its own extra Host;
+Live trusts the two local app origins plus exactly `--app-origin`. Forwarded
+headers grant nothing. Both values survive watched restarts. See the
 [interactive views overview](./docs/protocol/mokly-interactive-views.md),
 [browser runtime contract](./docs/protocol/mokly-interactive-views-runtime.md),
 and [Serve delivery contract](./docs/protocol/mokly-interactive-views-serve.md).

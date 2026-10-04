@@ -58,7 +58,7 @@ test("explicit forwarded authority is admitted without trusting headers", async 
   assert.equal(admitted.status, 503);
   assert.equal(
     admitted.headers["content-security-policy"],
-    "frame-ancestors http: https:",
+    `frame-ancestors http://localhost:${live.server.port} http://127.0.0.1:${live.server.port}`,
   );
   const refused = await requestWithHost(url, "attacker.example", {
     "x-forwarded-host": "live.example.test:8443",
@@ -72,7 +72,7 @@ test("explicit forwarded authority is admitted without trusting headers", async 
         "live.example.test:8443",
       )
     ).status,
-    503,
+    400,
   );
 });
 

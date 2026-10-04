@@ -64,6 +64,12 @@ Live port OS-selected because no adjacent port exists. The CLI announces the
 browser-facing Live origin after both listeners are ready; Build, Check,
 Export, and Publish remain unchanged.
 
+`--app-origin` follows the same canonical HTTP(S) parsing, but works when Live is
+off because catalogue controls need it too. It adds only its exact authority
+and Origin to catalogue admission. Serve passes it to the Live listener for
+the exact frame-host and CSP allowlists, and the watched supervisor sends it to
+each child. Neither origin option changes a loopback bind or adds CORS headers.
+
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
 to the parent so only one reporter owns the terminal.

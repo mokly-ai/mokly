@@ -3,7 +3,8 @@ export const HELP = `Mokly — app-independent React mockup catalogues
 
 Usage:
   mokly [serve] [--config <path>] [--port <port>] [--interactive-port <port>]
-                [--interactive-origin <origin>] [--strict-port] [--base <ref>]
+                [--interactive-origin <origin>] [--app-origin <origin>]
+                [--strict-port] [--base <ref>]
                 [--no-watch] [--open]
   mokly build [--config <path>]
   mokly check [--config <path>]
@@ -23,6 +24,7 @@ Options:
   --config <path>  Use an explicit mokly.config file
   --debug-timings  Report phase timings and catalogue counts to stderr
   --port <port>    Starting port; advances if occupied, 0 selects any free port
+  --app-origin <origin>  Canonical browser-facing catalogue origin for forwarding
   --interactive-port <port>  Starting Live-preview port; 0 selects any free port
   --interactive-origin <origin>  Live origin for different browser-facing hosts or ports
   --strict-port    Fail instead of advancing either requested Serve port

@@ -35,6 +35,7 @@ export function createWatchedSupervisor(
     ],
     options.port,
     {
+      ...(options.appOrigin ? { appOrigin: options.appOrigin } : {}),
       ...(options.interactiveOrigin
         ? { interactiveOrigin: options.interactiveOrigin }
         : {}),

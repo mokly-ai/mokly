@@ -225,11 +225,12 @@ transport failure as a browser warning and leaves only the affected update or
 recovery feature unavailable. A malformed descriptor remains a hard error
 because the marked document cannot be safely paired with a different source.
 
-Temporary previews validate the request source, generation, response view and
-render identity before returning. Expiry checks cover only known authenticated
-preview URLs. On-demand Usage validates the request route and preview
-generation, shares the existing loader, and stops on abort. Neither facility
-exists when its server capability is absent.
+Temporary rendering requires an admitted catalogue Host, the render token, and
+either the matching loopback Origin or exact `--app-origin`. Responses fence
+source, generation, view and render identity. Expiry checks cover only known
+authenticated preview URLs. On-demand Usage validates route and generation,
+shares the loader, and stops on abort. Neither exists without its server
+capability. The [Host contract](./mokly-component-controls.md#request-and-lifecycle-rules) defines exact admission.
 
 ## Delivery Checks
 

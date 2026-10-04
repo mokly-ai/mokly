@@ -48,6 +48,7 @@ export async function startCatalogueServer(
   config: ResolvedConfig,
   options: ServerOptions,
 ): Promise<RunningServer> {
+  options = { ...options };
   validateInteractiveSources(config, options.componentRuntime);
   const snapshot = await loadInitialCatalogueSnapshot(config, options);
   const changes = snapshot.changes;

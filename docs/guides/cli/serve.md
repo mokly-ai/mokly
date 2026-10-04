@@ -21,6 +21,7 @@ that URL in your default browser as soon as the server is ready.
 | ------------------------------- | -------------------------------------------------------------- |
 | `--config <path>`               | Use an explicit `mokly.config` file                            |
 | `--port <port>`                 | Starting port; advances if occupied, `0` selects any free port |
+| `--app-origin <origin>`         | Canonical browser-facing catalogue origin for forwarding       |
 | `--interactive-port <port>`     | Live preview port, or `0` to select any free port              |
 | `--interactive-origin <origin>` | Live origin for different browser-facing host names or ports   |
 | `--strict-port`                 | Fail instead of advancing either requested Serve port          |
@@ -52,13 +53,44 @@ HTTP(S) origin because a forwarding layer changes browser-facing host names or
 port numbers. The derived local Live origin, Host checks and frame policy use
 Serve's actual socket ports, so an override is required even when forwarding
 changes only a port number.
-It cannot contain credentials, a path, query, or fragment, does not change the
-loopback bind, and must route to that listener. Mokly accepts exactly its Host
+Both origin options require an exact canonical HTTP(S) origin. They cannot
+contain credentials, a path (including `/`), query, fragment, noncanonical case,
+or an explicit default port. The host must be an ASCII letter-digit-hyphen DNS
+name, IPv4 address, or bracketed IPv6 literal, with an optional canonical port.
+DNS labels must contain 1 to 63 characters and cannot start or end with a hyphen.
+The full name has at most 253 characters and no trailing dot. Internationalized
+names use their canonical IDNA `xn--` form. All other host characters, including
+punctuation and wildcards, are refused. Both options keep the loopback bind.
+`--interactive-origin` must route to the Live listener. Mokly accepts exactly its Host
 authority in addition to local loopback Hosts; forwarded headers alone grant
-nothing. Because the forwarded app origin is not known, this explicit mode
-allows HTTP(S) frame ancestors while the frame handshake still pins the exact
-app origin. Both interactive options are rejected while interactive views are
-off.
+nothing. Both interactive options are rejected while interactive views are off.
+
+Set `--app-origin` when the catalogue has a different browser-facing origin.
+It follows the same canonical HTTP(S) validation and keeps the loopback bind.
+It adds only its exact authority to the catalogue Host allowlist and its exact
+origin to preparation and prop-edit requests. It also adds that origin to the
+Live frame host and ancestor allowlists. This option works with Live off.
+Live always trusts the two local app origins plus this one explicit address;
+`--interactive-origin` alone adds no catalogue trust. Forwarded headers and
+other web origins grant nothing. These exact checks preserve protection against
+CSRF and DNS rebinding. No CORS headers are sent.
+
+For two forwarded browser-facing host names, route each address to its own
+loopback listener and set both values, for example:
+
+```shell
+npx mokly serve --port 4173 --interactive-port 4174 --strict-port \
+  --app-origin https://catalogue.example \
+  --interactive-origin https://live.example
+```
+
+Without either option, the existing loopback rules apply. With only
+`--interactive-origin`, the catalogue stays local. With only `--app-origin`,
+the catalogue can be forwarded but Live keeps its local address and Host rules;
+also set `--interactive-origin` if the derived Live address does not reach it.
+With both, each listener admits only its own extra authority. The watched server
+keeps both values across restarts. The app and Live origins must stay distinct.
+Exports, publication and public catalogue JSON do not include these settings.
 
 ## What it serves
 
@@ -106,14 +138,14 @@ or the progress.
 ## Access
 
 While the local controls are active, every request must address
-`localhost:<port>` or `127.0.0.1:<port>`. Forwarding through another local
-port is supported; a request that arrives with another host is refused for the
-whole catalogue. Rendering requests additionally require the exact matching
-origin and the render token.
+`localhost:<port>` or `127.0.0.1:<port>`, or the exact authority set by
+`--app-origin`. Forwarding through another local port is supported. Every other
+non-loopback Host is refused for the whole catalogue. Rendering requests also
+require the matching loopback origin or exact app origin, and the render token.
 
 The Live listener applies the same loopback Host rule and serves only Live
 documents, confined public assets, generation bundles, diagnostics, and the
 inspector. It does not serve the shell, catalogue JSON, controls, review,
 comparisons, or uploads. Local Live documents allow the app opened as either
-`localhost` or `127.0.0.1`; an explicit `--interactive-origin` admits only that
-additional Live authority.
+`localhost` or `127.0.0.1`, plus exactly `--app-origin` when set. An explicit
+`--interactive-origin` admits only that additional Live authority.

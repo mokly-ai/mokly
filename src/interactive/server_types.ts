@@ -8,6 +8,7 @@ import type { DocumentService } from "../server/demand/service.js";
 
 /** Inputs captured only after the app listener has resolved its port. */
 export interface InteractiveServerOptions {
+  appOrigin?: string;
   appPort: number;
   catalogue: Catalogue;
   documents: DocumentService;

@@ -17,6 +17,7 @@ import {
   NodeCatalogueServerFactory,
   type CatalogueServerFactory,
 } from "./factory.js";
+import { validateServeOrigins } from "./origin_options.js";
 import { PlainServeReporter, type ServeReporter } from "./reporter.js";
 import { ServedReviewRepository } from "./review_repository.js";
 import { serveWatched } from "./serve_watched.js";
@@ -29,6 +30,7 @@ import {
 
 /** Public Serve options after CLI validation. */
 export interface ServeOptions {
+  appOrigin?: string;
   base?: string;
   interactiveOrigin?: string;
   interactivePort?: number;
@@ -78,6 +80,8 @@ export async function serve(
   options: ServeOptions,
   provided: Partial<ServeDependencies> = {},
 ): Promise<RunningServe> {
+  options = { ...options };
+  validateServeOrigins(options);
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...provided };
   const reporter = dependencies.reporter ?? DEFAULT_DEPENDENCIES.reporter!;
   if (!options.watch) {
@@ -142,6 +146,7 @@ export async function serve(
       },
     );
     const server = await dependencies.serverFactory.start(config, {
+      ...(options.appOrigin ? { appOrigin: options.appOrigin } : {}),
       base,
       changesStatus: "pending",
       onForeground: (active) => background.foreground(active),

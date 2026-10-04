@@ -45,20 +45,19 @@ duplicate parameters, malformed axes, and a noncanonical or same-frame
 `mokly-host` are 400; valid axes that identify another view are 404. Public
 files accept no query. A local `mokly-host`, when supplied, must be the
 canonical `http://localhost:<app-port>` or `http://127.0.0.1:<app-port>`
-origin. The adapter always supplies it; omission exists for direct diagnostics
+origin, or exactly `--app-origin` when supplied. The adapter always supplies it;
+omission exists for direct diagnostics
 and manual requests, in which case the inspector remains inert.
 
 Every request requires Host to be `localhost:<port>` or
 `127.0.0.1:<port>` under the controls rule. If `--interactive-origin` is set,
 exactly that configured authority is also accepted. This explicit authority is
-the only forwarded-host grant; `x-forwarded-*` headers grant nothing. Without
-an override, document `frame-ancestors` names both app spellings at the
-resolved app port, so a shell opened under either name can frame Live. With an
-override, Serve cannot know the forwarded shell authority, so it accepts any
-canonical HTTP(S) `mokly-host` distinct from the frame and uses
-`frame-ancestors http: https:`. This broader policy is enabled only by explicit
-configuration; the frame adapter still pins its nonce handshake to that exact
-`mokly-host`.
+the only forwarded-host grant; `x-forwarded-*` headers grant nothing. Document
+`frame-ancestors` always names both app spellings at the resolved app port plus
+exactly `--app-origin`, when supplied. No wildcard or scheme-wide ancestor grant
+exists. `mokly-host` admits the same origin set and still rejects the frame's own
+origin. Setting `--interactive-origin` alone never expands app trust. The frame
+adapter pins its nonce handshake to the accepted `mokly-host`.
 
 When a forwarding layer changes either browser-facing host names or port
 numbers, callers must set `--interactive-origin`; the derived local origin,
@@ -68,7 +67,12 @@ socket ports. Every response carries `Cache-Control: no-store` and
 `Content-Security-Policy`. No CORS headers are sent. The shell derives a local
 frame origin from its own scheme and host name plus the descriptor port, while
 an explicit descriptor origin replaces that derivation. Serve prints the
-browser-facing Live origin beside its app URL.
+browser-facing Live origin beside its app URL. A forwarded catalogue also needs
+`--app-origin`: its exact authority is the only additional catalogue Host and
+its exact origin is the only additional preparation/render POST Origin. This
+option is valid with Live off, keeps both binds local, and survives watched
+restarts. The [host integration contract](./mokly-interactive-host-integration.md#configuration-and-listener-lifecycle)
+defines all four option combinations and their security boundary.
 
 ## Diagnostics
 
@@ -121,7 +125,9 @@ origin: for the current generation it starts or awaits the coalesced build and
 returns the same consumer-text-free shape as 200 `ready`, 503 `failed` for an
 `interactive-bundle` failure, or 500 `failed` for an internal fault; stale
 generations are 404. Like component-control POSTs, it requires `Origin` to
-equal `http://` plus the accepted loopback Host exactly and otherwise returns 403.
+equal `http://` plus the accepted loopback Host exactly or the exact configured
+`--app-origin`, and otherwise returns 403. Host must also pass the catalogue
+allowlist; a configured non-loopback Host cannot use an unconfigured Origin.
 
 The app event stream emits private `interactive` events with the complete
 descriptor on `building`, `ready`, and `failed` transitions, and includes the

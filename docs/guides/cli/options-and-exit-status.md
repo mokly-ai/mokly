@@ -25,6 +25,7 @@ takes no value. There are no silent positional arguments.
 | `--config <path>`                    | every command                | Use an explicit `mokly.config` file                            |
 | `--debug-timings`                    | every command                | Report phase timings and catalogue counts on standard error    |
 | `--port <port>`                      | `serve`                      | Starting port; advances if occupied, `0` selects any free port |
+| `--app-origin <origin>`              | `serve`                      | Canonical browser-facing catalogue origin for forwarding       |
 | `--interactive-port <port>`          | `serve`                      | Live preview port; `0` selects any free port                   |
 | `--interactive-origin <origin>`      | `serve`                      | Live origin when browser-facing host names or ports differ     |
 | `--strict-port`                      | `serve`                      | Fail instead of advancing either requested Serve port          |
@@ -46,7 +47,10 @@ An option given to a command that does not take it is refused by name rather
 than ignored. `--out` is required by `export`, and `--no-changes` cannot be
 combined with `--base`. Interactive port/origin options require
 `interactive: "serve"`; the Live port otherwise starts one above the resolved
-app port. `--strict-port` applies to both listeners.
+app port. `--strict-port` applies to both listeners. `--app-origin` works with
+Live off. Both origin options require a canonical HTTP(S) origin with no
+credentials, wildcards, path, query or fragment. They never change the loopback binds.
+The `serve` guide defines their combinations and access rules.
 
 ## Exit status
 

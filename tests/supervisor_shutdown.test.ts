@@ -69,6 +69,7 @@ test("supervisor retains the resolved Live port across child restarts", async ()
     0,
     undefined,
     {
+      appOrigin: "https://catalogue.example.test",
       interactiveOrigin: "https://live.example.test",
       interactivePort: 0,
       strictPort: true,
@@ -77,6 +78,8 @@ test("supervisor retains the resolved Live port across child restarts", async ()
   const starting = supervisor.start();
   assert.deepEqual(factory.arguments_[0], [
     "__serve-child",
+    "--app-origin",
+    "https://catalogue.example.test",
     "--port",
     "0",
     "--strict-port",
@@ -95,6 +98,8 @@ test("supervisor retains the resolved Live port across child restarts", async ()
   await new Promise((resolve) => setImmediate(resolve));
   assert.ok(factory.arguments_[1]!.includes("48124"));
   assert.ok(factory.arguments_[1]!.includes("--strict-port"));
+  assert.ok(factory.arguments_[1]!.includes("--app-origin"));
+  assert.ok(factory.arguments_[1]!.includes("https://catalogue.example.test"));
   factory.children[1]!.ready(48123, 48124);
   await restarting;
   await supervisor.close();

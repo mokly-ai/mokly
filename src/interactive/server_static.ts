@@ -26,12 +26,12 @@ import {
 import { sendInteractive, sendInteractiveState } from "./responses.js";
 
 interface InteractiveStaticRequest {
+  appOrigin?: string;
   appPort: number;
   bundles: InteractiveBundleService;
   context: InteractiveGeneration;
   frameAncestors: string;
   frameOrigin: string;
-  forwarded: boolean;
   method: string;
   response: ServerResponse;
   url: URL;
@@ -78,9 +78,9 @@ export async function serveInteractiveStatic(
     return publicFile(response, method, route, url.searchParams, context);
   }
   const query = validateInteractiveViewQuery(url.searchParams, target, {
+    ...(input.appOrigin ? { appOrigin: input.appOrigin } : {}),
     appPort: input.appPort,
     frameOrigin: input.frameOrigin,
-    forwarded: input.forwarded,
   });
   if (query === "invalid")
     return sendInteractive(

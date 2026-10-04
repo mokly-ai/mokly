@@ -833,7 +833,7 @@ proxy that presents a public catalogue address, the browser sends the public
 `--interactive-origin` documents forwarded setups. The component render request
 has the same Origin rule, so prop edits fail there too.
 
-- [ ] Update `docs/protocol/mokly-interactive-host-integration.md`,
+- [x] Update `docs/protocol/mokly-interactive-host-integration.md`,
       `docs/protocol/mokly-interactive-views-serve.md`, the controls contract
       and `docs/guides/cli/serve.md`: add an explicit canonical public
       catalogue origin option (for example `--app-origin <origin>`), validated
@@ -845,16 +845,27 @@ has the same Origin rule, so prop edits fail there too.
       the broad `http: https:` policy. Define the combinations with
       `--interactive-origin` and the behavior without the option. Forwarded
       headers still grant nothing.
-- [ ] Add failing tests first: through a real local reverse proxy with a
+- [x] Add failing tests first: through a real local reverse proxy with a
       different browser-facing host name, open the catalogue, edit a
       component prop, select Live and see the Live preview.
-- [ ] Implement the option in the CLI, the watched supervisor and child, the
+- [x] Implement the option in the CLI, the watched supervisor and child, the
       catalogue listener, the Live listener and its policy.
-- [ ] Tests: strict option validation; exact Origin, Host, `mokly-host` and
+- [x] Tests: strict option validation; exact Origin, Host, `mokly-host` and
       `frame-ancestors` behavior with and without the option; other origins
       and hosts stay refused; watched restarts keep the option; no CORS
       headers; exports and publication are unchanged.
-- [ ] Update `src/server/README.md` and `src/interactive/README.md`; run
+- [x] Security: use one hostname/IP allowlist for both origin options; record
+      failing punctuation table tests, check all header/policy/descriptor sinks,
+      and validate programmatic listeners before they produce responses.
+- [x] Smoke: run the example through `npm run dev` with both forwarded origins;
+      edit a prop and switch Plan your visit to Live in Chrome. Save screenshots
+      under `.context/iv-m11-smoke/`.
+- [x] Diagnose the second prop-edit timeout from the browser trace and network
+      log. Keep both successful render POSTs in the reverse-proxy test.
+- [x] Record exact ordinary-preview phase times and run three alternating build
+      samples per version against `51f0aa7b` in a temporary worktree. Explain the
+      default preview failure before pushing and remove the temporary worktree.
+- [x] Update `src/server/README.md` and `src/interactive/README.md`; run
       `cargo xtask check`; commit and push.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,

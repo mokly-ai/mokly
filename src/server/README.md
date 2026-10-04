@@ -238,7 +238,7 @@ The Live listener never owns shell routes. The app listener puts
 `{ generation, port, origin?, state }` only in its private capability descriptor
 and interactive SSE events, and exposes the private current-generation prepare
 POST. That POST requires Origin to equal `http://` plus its accepted loopback
-Host exactly. Public catalogue JSON and exports receive none of this state. The Live
+Host exactly, or exactly `--app-origin` when set. Public catalogue JSON and exports receive none of this state. The Live
 listener itself serves the exact document, public-file, bundle, diagnostic, and
 inspector allowlist described by the
 [interactive Serve delivery contract](../../docs/protocol/mokly-interactive-views-serve.md).
@@ -268,14 +268,27 @@ so committed and derived runs agree without weakening these path checks.
 
 When controls are active, every Serve request uses the
 [Host contract](../../docs/protocol/mokly-component-controls.md#request-and-lifecycle-rules):
-accept only `localhost:<port>` or `127.0.0.1:<port>` with an explicit decimal
-port from 1 to 65535, without a leading zero. A non-loopback Host returns 403
-for the whole catalogue, including ordinary pages and static assets. A forwarded
-local port may differ from the listening socket port. Render POST Origin must
-equal `http://` plus Host exactly and the render token is still required.
+accept `localhost:<port>` or `127.0.0.1:<port>` with an explicit decimal
+port from 1 to 65535, without a leading zero, plus the exact authority in
+`--app-origin`. Every other non-loopback Host returns 403 for the whole
+catalogue. A forwarded local port may differ from the socket port. Render POST
+Origin must equal `http://` plus the accepted loopback Host or exact
+`--app-origin`; the render token and generation checks remain required.
 Preview GET/HEAD uses Host and its authenticated render id; it does
-not require the POST token or Origin. Non-loopback hosts and `x-forwarded-*`
-headers grant no access; invalid required authorization returns 403.
+not require the POST token or Origin. `x-forwarded-*` headers grant no access;
+invalid required authorization returns 403. `request_authority.ts` owns the
+shared exact admission rules. The app option works with Live off and never
+changes the loopback bind. The supervisor retains it across child restarts.
+Live frame hosts and CSP allow only the local app origins plus that value;
+`--interactive-origin` adds only a Live Host and advertised address. No CORS
+headers are sent. These allowlists keep unrelated Hosts from reading the token
+and unrelated Origins from starting consumer work.
+
+`http_origin.ts` shares one canonical DNS/IP host allowlist between both CLI
+origin options. Serve and listener startup validate programmatic options too.
+Each boundary copies the options before use. An unsafe host cannot reach CSP,
+the Live address, or the private descriptor, and caller mutation cannot replace
+an admitted value. See the host integration contract for the exact syntax.
 
 `packages/viewer/src/shell/usage_links.ts` deduplicates the shared
 served/published Affected list

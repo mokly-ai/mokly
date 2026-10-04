@@ -34,6 +34,52 @@ requires the explicit origin; local derivation and policy always use Serve's
 socket ports. The private descriptor carries the resolved Live port and the
 explicit origin only when supplied.
 
+`--app-origin` names the canonical browser-facing catalogue origin. The name
+matches the app listener and distinguishes it from the Live origin. It is a
+Serve-only option and works with `interactive: "off"` because component controls
+also use it.
+
+Both origin options share one rule. Require an exact canonical HTTP(S) origin,
+with no credentials, path (including `/`), query, fragment, noncanonical case,
+or explicit default port. The parsed host must be an ASCII letter-digit-hyphen
+DNS name, IPv4 address, or bracketed IPv6 literal, with an optional canonical
+port. DNS labels are nonempty, at most 63 characters, and cannot start or end
+with a hyphen; the full name is at most 253 characters with no trailing dot.
+Internationalized names use canonical IDNA `xn--` labels. All other host
+characters are refused, including CSP separators, quotes and wildcards.
+The CLI and programmatic listener boundaries apply this same allowlist before
+any header, policy or descriptor is produced. They copy origin options so later
+caller mutation cannot change the admitted values.
+
+Neither option changes the loopback bind. The supervisor sends both values to
+every child, including recovery and configuration restarts.
+
+| `--app-origin` | `--interactive-origin` | Admission and framing                                                                                                                                            |
+| -------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Absent         | Absent                 | Existing loopback Host, POST Origin, `mokly-host`, and CSP rules.                                                                                                |
+| Absent         | Set                    | Only Live gains the configured authority and advertised origin. The app stays loopback; Live trusts only the loopback app origins.                               |
+| Set            | Absent                 | Catalogue Host and POST Origin gain the app value. Live trusts and permits framing by that app origin, but its Host admission and advertised address stay local. |
+| Set            | Set                    | Each listener gains only its own configured authority. Live trusts the loopback app origins plus the configured app origin.                                      |
+
+Forward the catalogue to its app socket and Live to its separate Live socket.
+When forwarding changes both browser-facing addresses, supply both options.
+`--app-origin` does not alter local Live URL derivation; use
+`--interactive-origin` whenever the derived Live address is not the forwarded
+listener's browser-facing address. The two browser-facing origins must stay
+distinct. The options never enter public catalogue JSON, export, or publication.
+
+The catalogue admits the app origin's exact URL authority as one additional
+Host, with its canonical port (omitted for a default port). Every other
+non-loopback Host remains 403 for the whole catalogue. The current loopback
+Host rule still permits forwarded local ports. Neither listener uses
+`x-forwarded-*` headers as authority.
+
+An explicit allowlist preserves CSRF and DNS-rebinding protection: an unrelated
+web origin cannot start preparation or render consumer code, and an unrelated
+Host cannot read the catalogue or its private render token. No request header
+can expand this allowlist. Render tokens and generation checks remain required.
+No CORS headers are sent.
+
 The app origin owns the generation-scoped preparation POST. The second
 loopback listener owns only Live documents, public resources, browser bundles,
 diagnostics, and the inspector. It never serves the shell, public catalogue,
@@ -49,10 +95,11 @@ and subscribe only to navigation. The frame registry keeps one
 `postMessageAdapter` per Live origin.
 
 The local interactive listener treats `mokly-host` as an authentication axis,
-not a view-selection axis. Without an explicit forwarded origin, it must equal
-either canonical loopback spelling at the resolved app port. Forwarded mode
-accepts one canonical HTTP(S) app origin distinct from the frame and uses the
-broader frame-ancestor policy defined by Serve delivery. Unknown or duplicate
+not a view-selection axis. It must equal either canonical loopback spelling at
+the resolved app port or exactly `--app-origin`, when set. It must still be
+distinct from the frame. Live document `frame-ancestors` always names both
+loopback app origins plus exactly the configured app origin, if present.
+`--interactive-origin` grants no app trust. Unknown or duplicate
 query parameters remain invalid. A manual document request may omit
 `mokly-host`, but its inspector then has no authenticated host and stays inert.
 
@@ -89,8 +136,10 @@ joins its one lazy build. Its exact terminal JSON is
 `{ "generation": <32-lowercase-hex>, "state": "ready" | "failed" }`.
 Status is 200 for ready, 503 for a typed browser-bundle failure, 500 for an
 internal failure, and 404 for an absent capability or stale generation.
-Origin must equal `http://` plus the accepted loopback Host exactly; other
-origins receive 403. The browser validates body, generation, state, and status,
+Origin must equal `http://` plus an accepted loopback Host exactly, or exactly
+`--app-origin` when set. A configured non-loopback Host requires the configured
+Origin; its HTTP spelling alone grants nothing. Other origins receive 403.
+The same admission rule applies to component render POSTs. The browser validates body, generation, state, and status,
 and no consumer diagnostic text crosses this boundary.
 
 `/__mokly/events` emits a private `interactive` event with the complete

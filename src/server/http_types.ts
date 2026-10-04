@@ -16,6 +16,8 @@ import type { CatalogueUpdate, ChangesStatus } from "./update_messages.js";
 
 /** Options for one deterministic server child. */
 export interface ServerOptions {
+  /** Canonical catalogue origin admitted in addition to the loopback rules. */
+  appOrigin?: string;
   changesStatus?: ChangesStatus;
   /** Include live Changes states by default; static captures opt out. */
   liveChanges?: boolean;

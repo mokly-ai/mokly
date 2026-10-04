@@ -175,6 +175,7 @@ async function execute(
       runtimeStartup?.manifest,
       arguments_.interactivePort,
       arguments_.interactiveOrigin,
+      arguments_.appOrigin,
     );
     return 0;
   }
@@ -182,6 +183,7 @@ async function execute(
     serve(
       config,
       {
+        ...(arguments_.appOrigin ? { appOrigin: arguments_.appOrigin } : {}),
         ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
         ...(arguments_.interactiveOrigin
           ? { interactiveOrigin: arguments_.interactiveOrigin }

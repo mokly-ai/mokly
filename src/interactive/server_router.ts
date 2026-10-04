@@ -7,6 +7,7 @@ import type { Catalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { DocumentService } from "../server/demand/service.js";
+import { validateServeOrigins } from "../server/origin_options.js";
 
 import type { InteractiveBundleService } from "./bundle_state.js";
 import type { InteractiveBundlePreparation } from "./bundle_state.js";
@@ -34,7 +35,10 @@ export class InteractiveRequestRouter {
     private readonly bundles: InteractiveBundleService,
     private readonly port: number,
     private readonly options: InteractiveServerOptions,
-  ) {}
+  ) {
+    this.options = { ...options };
+    validateServeOrigins(this.options);
+  }
 
   descriptor(): ViewerInteractiveDescriptor {
     const generation = this.requireCurrent().generation;
@@ -125,12 +129,14 @@ export class InteractiveRequestRouter {
         if (url.pathname.endsWith(".html"))
           response.setHeader("content-security-policy", this.frameAncestors());
         return await serveInteractiveStatic({
+          ...(this.options.appOrigin
+            ? { appOrigin: this.options.appOrigin }
+            : {}),
           appPort: this.options.appPort,
           bundles: this.bundles,
           context: this.requireCurrent(),
           frameAncestors: this.frameAncestors(),
           frameOrigin: this.frameOrigin(authority),
-          forwarded: this.options.interactiveOrigin !== undefined,
           method,
           response,
           url,
@@ -217,9 +223,12 @@ export class InteractiveRequestRouter {
   }
 
   private frameAncestors(): string {
-    return this.options.interactiveOrigin
-      ? "frame-ancestors http: https:"
-      : `frame-ancestors http://localhost:${String(this.options.appPort)} http://127.0.0.1:${String(this.options.appPort)}`;
+    const origins = new Set([
+      `http://localhost:${String(this.options.appPort)}`,
+      `http://127.0.0.1:${String(this.options.appPort)}`,
+      ...(this.options.appOrigin ? [this.options.appOrigin] : []),
+    ]);
+    return `frame-ancestors ${[...origins].join(" ")}`;
   }
 
   private frameOrigin(authority: string): string {

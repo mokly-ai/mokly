@@ -66,6 +66,9 @@ export async function startInteractiveHttp(
       input.options.interactiveServerFactory ??
       new NodeInteractiveServerFactory()
     ).start({
+      ...(input.options.appOrigin
+        ? { appOrigin: input.options.appOrigin }
+        : {}),
       appPort: input.appPort,
       catalogue: input.catalogue,
       documents: input.documents,

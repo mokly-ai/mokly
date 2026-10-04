@@ -1,5 +1,6 @@
 import type { InteractiveMode } from "../config/types.js";
 import { MoklyError } from "../errors.js";
+import { isCanonicalHttpOrigin } from "../http_origin.js";
 
 /** Supported user-visible and hidden process commands. */
 export type CliCommand =
@@ -7,6 +8,7 @@ export type CliCommand =
 
 /** Fully validated CLI arguments. */
 export interface CliArguments {
+  appOrigin?: string;
   base?: string;
   command: CliCommand;
   config?: string;
@@ -88,11 +90,11 @@ export function parseArguments(argv: readonly string[]): CliArguments {
         option,
         takeValue(option, values, assigned),
       );
-    else if (option === "--interactive-origin")
-      parsed.interactiveOrigin = parseOrigin(
-        takeValue(option, values, assigned),
-      );
-    else if (option === "--update-version")
+    else if (option === "--app-origin" || option === "--interactive-origin") {
+      const origin = parseOrigin(option, takeValue(option, values, assigned));
+      if (option === "--app-origin") parsed.appOrigin = origin;
+      else parsed.interactiveOrigin = origin;
+    } else if (option === "--update-version")
       parsed.updateVersion = parseUpdateVersion(
         takeValue(option, values, assigned),
       );
@@ -148,20 +150,11 @@ function parsePort(
   return port;
 }
 
-function parseOrigin(value: string): string {
-  try {
-    const origin = new URL(value);
-    if (
-      (origin.protocol === "http:" || origin.protocol === "https:") &&
-      origin.origin === value
-    )
-      return value;
-  } catch {
-    // The typed diagnostic below owns every invalid URL shape.
-  }
+function parseOrigin(option: string, value: string): string {
+  if (isCanonicalHttpOrigin(value)) return value;
   throw new MoklyError(
     "cli-invalid",
-    "--interactive-origin must be a canonical HTTP(S) origin",
+    `${option} must be a canonical HTTP(S) origin`,
   );
 }
 
@@ -205,6 +198,8 @@ function validateCommandOptions(arguments_: CliArguments): void {
     throw new MoklyError("cli-invalid", "--out is required for export");
   const serve =
     arguments_.command === "serve" || arguments_.command === "__serve-child";
+  if (!serve && arguments_.appOrigin !== undefined)
+    throw new MoklyError("cli-invalid", "--app-origin belongs to serve");
   if (
     !serve &&
     (arguments_.port !== undefined || arguments_.watch !== undefined)

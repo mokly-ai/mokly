@@ -54,6 +54,7 @@ export async function handleCatalogueRequest(
   currentRebuildStatus?: () => RebuildStatus | undefined,
   acceptedGenerated?: ReadonlyMap<string, GeneratedFile>,
   unavailableComparisons = false,
+  appOrigin?: string,
 ): Promise<void> {
   const url = new URL(rawUrl, "http://mokly.invalid");
   if (
@@ -63,6 +64,7 @@ export async function handleCatalogueRequest(
       response,
       requestHeaders,
       interactive,
+      appOrigin,
     )
   )
     return;

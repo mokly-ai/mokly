@@ -9,6 +9,7 @@ import type { ComponentRuntime } from "../build/component_runtime.js";
 import { bindTimings } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import type { DocumentService } from "../server/demand/service.js";
+import { validateServeOrigins } from "../server/origin_options.js";
 import { listenOnAvailablePort } from "../server/ports.js";
 
 import {
@@ -51,6 +52,8 @@ export class NodeInteractiveServerFactory implements InteractiveServerFactory {
   constructor(private readonly bundler?: InteractiveBundler) {}
 
   async start(options: InteractiveServerOptions): Promise<InteractiveServer> {
+    options = { ...options };
+    validateServeOrigins(options);
     const lifecycle: { running?: NodeInteractiveServer } = {};
     const bundler =
       this.bundler ??

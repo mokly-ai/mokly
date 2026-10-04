@@ -7,14 +7,17 @@ The public authoring API and ordinary renderer remain the integration boundary.
 
 When controls are active, every Serve request requires Host to be exactly
 `localhost:<port>` or `127.0.0.1:<port>`, with a decimal port from 1 to 65535
-and no leading zero. A non-loopback Host returns 403 for the whole catalogue,
+and no leading zero, or exactly the authority configured by `--app-origin`.
+Every other non-loopback Host returns 403 for the whole catalogue,
 including ordinary pages and static assets. Forwarded local ports may differ
 from the listening socket port. The parent shell sends controlled overrides to
 `POST /__mokly/components/render`, which requires
-Origin to equal `http://` plus Host exactly, the shell token, current generation,
+Origin to equal `http://` plus an accepted loopback Host or exact
+`--app-origin`, the shell token, current generation,
 saved variant and view. Preview GET/HEAD validates Host and its authenticated
 render id without requiring Origin or the POST token. `x-forwarded-*` headers
-never grant authority. The body
+never grant authority. The app option works with Live off, keeps the bind local,
+and grants no other Origin. No CORS headers are sent. The body
 is strict JSON capped at 64 KiB. Shared schema/codec validation checks every
 merged prop, including fields that cannot be edited.
 

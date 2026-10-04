@@ -146,13 +146,20 @@ confined public files, retained generation bundles and diagnostics, and the
 inspector. All responses are uncached and `nosniff`; documents also restrict
 frame ancestors. No route sends CORS headers.
 
-Local Hosts use the controls listener's exact loopback rule. An explicit
-browser-facing origin adds only its exact authority. Forwarded headers grant
-nothing. Default CSP names both loopback app spellings; explicit forwarding
-uses the documented HTTP(S) ancestor policy because the forwarded shell origin
-is unknown. Forwarded host names or port numbers therefore require an explicit
-origin. The frame adapter's optional request parameter is separately validated
-as a canonical origin distinct from the frame.
+Local Hosts use the controls listener's exact loopback rule. `--interactive-origin`
+adds only its exact Live authority and advertised address. `--app-origin`
+adds only its exact catalogue authority and POST Origin, including with Live off.
+Both options require canonical HTTP(S) origins and keep the loopback binds.
+Forwarded headers grant nothing. Live CSP and the frame adapter's `mokly-host`
+allowlist always name both loopback app origins plus exactly `--app-origin`,
+when set. The request parameter must still be canonical and distinct from the
+frame. No scheme-wide or wildcard app trust exists. Supply both options when
+forwarding changes both browser-facing addresses; either value survives watched
+restarts. The [host integration contract](../../docs/protocol/mokly-interactive-host-integration.md#configuration-and-listener-lifecycle)
+defines all four combinations and the CSRF and DNS-rebinding protection.
+The shared `http_origin.ts` validator admits only canonical DNS/IP authorities.
+The Live factory and request router validate and copy their origin options before
+they can reach CSP, frame admission, or the private descriptor.
 
 `bundle_state.ts` tracks `idle`, `building`, `ready`, or `failed`, coalesces one
 timed build, and retains exactly the current generation and one predecessor
@@ -164,7 +171,8 @@ failures become consumer-text-free 503 responses; internal faults remain 500.
 The app origin owns the current-generation preparation POST and private
 descriptor/SSE transport, so the shell can wait for readiness without reading
 a cross-origin response. That POST follows the component-control rule: its
-Origin must be exactly `http://` plus the accepted loopback Host.
+Origin must be exactly `http://` plus the accepted loopback Host, or exact
+`--app-origin` when supplied. Unrelated origins remain forbidden.
 
 ## Navigation
 

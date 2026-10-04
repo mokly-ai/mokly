@@ -52,6 +52,7 @@ export interface ProcessSupervisorFactory {
 
 /** Listener options retained across watched child restarts. */
 export interface ProcessSupervisorOptions {
+  appOrigin?: string;
   interactiveOrigin?: string;
   interactivePort?: number;
   strictPort?: boolean;

@@ -83,6 +83,9 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     const runtime = this.#runtime;
     const handle = this.factory.spawn([
       ...this.baseArguments,
+      ...(this.options.appOrigin
+        ? ["--app-origin", this.options.appOrigin]
+        : []),
       ...(runtime ? ["--retained-runtime"] : []),
       "--port",
       String(resolvedPort ?? this.requestedPort),

@@ -9,7 +9,7 @@ import {
 } from "../interactive/responses.js";
 import type { InteractiveServer } from "../interactive/server.js";
 
-import { localHost } from "./controls/http.js";
+import { requestOrigin } from "./request_authority.js";
 
 const PREPARE_PATH = /^\/__mokly\/interactive\/([a-f0-9]{32})\/prepare$/;
 
@@ -20,6 +20,7 @@ export async function handleInteractivePreparation(
   response: ServerResponse,
   headers: IncomingHttpHeaders,
   server?: InteractiveServer,
+  appOrigin?: string,
 ): Promise<boolean> {
   const match = PREPARE_PATH.exec(url.pathname);
   if (!match) return false;
@@ -32,8 +33,7 @@ export async function handleInteractivePreparation(
     finish(response, method, 405, "Method not allowed.");
     return true;
   }
-  const host = localHost({ headers });
-  if (!host || headers.origin !== `http://${host}`) {
+  if (!requestOrigin(headers, appOrigin)) {
     finish(response, method, 403, "This request is not allowed.");
     return true;
   }

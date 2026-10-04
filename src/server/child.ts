@@ -29,6 +29,7 @@ export async function runServerChild(
   manifest?: ComponentRuntime["manifest"],
   interactivePort?: number,
   interactiveOrigin?: string,
+  appOrigin?: string,
 ): Promise<void> {
   const retained =
     retainedRuntime && manifest?.schemaVersion === "live-index-1"
@@ -38,6 +39,7 @@ export async function runServerChild(
   if (initial?.version) updateVersion = initial.version;
   const repository = new ServedReviewRepository(config, updateVersion);
   const server = await startCatalogueServer(config, {
+    ...(appOrigin ? { appOrigin } : {}),
     base,
     changesStatus: "pending",
     onForeground: (active) => process.send?.({ type: "foreground", active }),

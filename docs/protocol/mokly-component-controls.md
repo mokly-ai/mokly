@@ -155,27 +155,27 @@ Worker failures carry their caught message as server-only detail, written to
 stderr at the HTTP boundary; the response retains the generic preview failure
 message without resource paths, exclusion causes, or other internal details.
 
-When controls are active, every Serve request requires Host to be exactly
-`localhost:<port>` or `127.0.0.1:<port>`, where `<port>` contains only decimal
-digits, has no leading zero, and is between 1 and 65535 inclusive. Require an
-explicit port; reject other hostnames, IP spellings, IPv6, whitespace, suffixes,
-and userinfo. A non-loopback Host returns 403 for the whole catalogue, including
-ordinary pages and static assets. The Host port need not equal the listening
-socket port: forwarded local ports are supported. Serve binds only to
-`127.0.0.1`, so `[::1]` cannot reach the socket directly and accepting it would
-widen the Host surface without a working path; IPv6 support is out of scope.
-Forwarded headers (`x-forwarded-*`) grant nothing; never use those headers to
-repair Host, Origin, or authorization.
+When controls are active or `--app-origin` is set, every Serve request requires
+Host to be exactly `localhost:<port>` or `127.0.0.1:<port>`, or the configured
+app origin's exact URL authority. Loopback ports use decimal digits, no leading
+zero, and range from 1 to 65535; they may differ from the listening socket port.
+Default loopback admission rejects alternate IP spellings and IPv6. Other
+non-loopback Hosts return 403 for the whole catalogue, including static assets.
+Serve still binds only to `127.0.0.1`; IPv6 support is out of scope.
+`--app-origin` is Serve-only, canonical HTTP(S), and valid with Live off. It has
+no credentials, wildcards, path, query or fragment. Its default port is omitted. The
+[host integration contract](./mokly-interactive-host-integration.md#configuration-and-listener-lifecycle)
+defines all option combinations. Forwarded headers (`x-forwarded-*`) grant
+nothing; never use them to repair Host, Origin, or authorization.
 
-On render POST, Origin must equal `http://` plus the accepted Host exactly,
-including its explicit port, and `X-Mokly-Render-Token` must match the shell-issued
-unpredictable token. No case folding, default-port removal, trailing slash, or
-scheme substitution is allowed for this comparison. Preview GET/HEAD requires
-Host validation and the authenticated render id, without requiring Origin or the
-POST token. The token is scoped to the server instance and unavailable to consumer
-frames. There is no permissive CORS; missing or invalid required authorization
-returns 403. Loading a foreign web page must not cause consumer render code to
-execute through this endpoint.
+Render POST Origin must equal `http://` plus the accepted loopback Host exactly,
+or exactly `--app-origin`. A configured non-loopback Host requires that explicit
+Origin. `X-Mokly-Render-Token` must still match the shell-issued unpredictable
+token. Do not normalize Origin case, port, slash, or scheme. Preview GET/HEAD
+requires Host validation and its authenticated render id, without Origin or the
+POST token. The token remains server-scoped and unavailable to consumer frames.
+No CORS headers are sent. Missing or invalid required authorization returns 403. Exact Host and Origin allowlists keep foreign sites from reading the token
+or executing consumer code through CSRF or DNS rebinding.
 
 Text/number edits are debounced by 150 ms; boolean/select edits submit
 immediately. Each edit-owner context has one active request and at most one

@@ -18,13 +18,21 @@ export interface WatchedServe {
 /** Start a real watched consumer and wait until its listening URL is available. */
 export async function startWatchedServe(
   entrySource: string,
-  options?: { extraConfig?: string },
+  options?: { extraConfig?: string; argv?: readonly string[] },
 ): Promise<WatchedServe> {
   const fixture = await createFixture(entrySource, options);
   const cli = path.join(repositoryRoot, "dist/cli/bin.js");
   const child = spawn(
     "node",
-    [cli, "serve", "--config", fixture.configPath, "--port", "0"],
+    [
+      cli,
+      "serve",
+      "--config",
+      fixture.configPath,
+      "--port",
+      "0",
+      ...(options?.argv ?? []),
+    ],
     { stdio: ["ignore", "pipe", "pipe"] },
   );
   let stderr = "";

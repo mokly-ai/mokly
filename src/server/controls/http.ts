@@ -4,35 +4,23 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { ComponentRenderError, renderStatus } from "@mokly/viewer/data";
 
 import { PlainServeReporter } from "../reporter.js";
+import { requestHost, requestOrigin } from "../request_authority.js";
 import { safeDecodePath } from "../respond.js";
 
 import type { ComponentRenderService } from "./service.js";
 
-/**
- * Accept exact loopback Host names with any canonical valid port, including
- * forwarded ports. The regex is fully anchored; without multiline mode,
- * JavaScript's $ admits no trailing newline.
- */
-export function localHost(
-  request: Pick<IncomingMessage, "headers">,
-): string | undefined {
-  const host = request.headers.host;
-  const match = /^(?:localhost|127\.0\.0\.1):([1-9][0-9]{0,4})$/.exec(
-    host ?? "",
-  );
-  return match && Number(match[1]) <= 65_535 ? host : undefined;
-}
 export async function handleControls(
   request: IncomingMessage,
   response: ServerResponse,
   service: ComponentRenderService,
   diagnostic: (message: string) => void = (message) =>
     new PlainServeReporter().runtimeDiagnostic(message),
+  appOrigin?: string,
 ): Promise<void> {
   response.setHeader("cache-control", "no-store");
   response.setHeader("x-content-type-options", "nosniff");
   try {
-    const host = localHost(request);
+    const host = requestHost(request, appOrigin);
     if (!host)
       throw new ComponentRenderError(
         "forbidden",
@@ -68,7 +56,7 @@ export async function handleControls(
     if (request.method !== "POST")
       throw new ComponentRenderError("method", "Use POST to update props.");
     if (
-      request.headers.origin !== `http://${host}` ||
+      !requestOrigin(request.headers, appOrigin) ||
       request.headers["x-mokly-render-token"] !== service.token
     )
       throw new ComponentRenderError(

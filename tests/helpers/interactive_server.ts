@@ -68,6 +68,7 @@ export class ControlledInteractiveBundler implements InteractiveBundler {
 /** Real app and Live listeners backed by an on-demand fixture runtime. */
 export async function interactiveServerFixture(
   options: {
+    appOrigin?: string;
     interactiveOrigin?: string;
     interactivePort?: number;
     mode?: "off" | "serve";
@@ -91,6 +92,7 @@ export async function interactiveServerFixture(
   let server: Awaited<ReturnType<typeof startCatalogueServer>>;
   try {
     server = await startCatalogueServer(runtime.config, {
+      ...(options.appOrigin ? { appOrigin: options.appOrigin } : {}),
       base: "main",
       changesStatus: "unavailable",
       componentRuntime: runtime,

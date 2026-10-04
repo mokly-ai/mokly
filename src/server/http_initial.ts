@@ -9,12 +9,14 @@ import {
   type CatalogueSnapshot,
 } from "./catalogue_snapshot.js";
 import type { ServerOptions } from "./http_types.js";
+import { validateServeOrigins } from "./origin_options.js";
 
 /** Reuse supplied state or load the one startup snapshot implied by Serve options. */
 export async function loadInitialCatalogueSnapshot(
   config: ResolvedConfig,
   options: ServerOptions,
 ): Promise<CatalogueSnapshot> {
+  validateServeOrigins(options);
   if (options.snapshot)
     return catalogueSnapshotForConfig(options.snapshot, config);
   if (options.manifest?.schemaVersion === "live-index-1")

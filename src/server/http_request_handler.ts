@@ -3,12 +3,13 @@ import type { RequestListener } from "node:http";
 import type { ResolvedConfig } from "../config/types.js";
 import type { InteractiveServer } from "../interactive/server.js";
 
-import { handleControls, localHost } from "./controls/http.js";
+import { handleControls } from "./controls/http.js";
 import type { ComponentRenderService } from "./controls/service.js";
 import type { ForegroundActivity } from "./demand/activity.js";
 import type { DocumentService } from "./demand/service.js";
 import { handleCatalogueRequest } from "./http_routes.js";
 import type { ServerOptions } from "./http_types.js";
+import { requestHost } from "./request_authority.js";
 import { send } from "./respond.js";
 import type { ChangesStatus } from "./update_messages.js";
 import type { WorkspaceEligibilitySource } from "./workspace_eligibility.js";
@@ -43,7 +44,10 @@ export function catalogueRequestHandler(
 ): RequestListener {
   return (request, response) => {
     const controls = input.controls();
-    if (controls && !localHost(request))
+    if (
+      (controls || input.options.appOrigin !== undefined) &&
+      !requestHost(request, input.options.appOrigin)
+    )
       return send(
         response,
         403,
@@ -59,6 +63,7 @@ export function catalogueRequestHandler(
         response,
         controls,
         input.options.onDiagnostic,
+        input.options.appOrigin,
       ).finally(() => busy(false));
       return;
     }
@@ -92,6 +97,7 @@ export function catalogueRequestHandler(
       input.acceptedGenerated(),
       input.options.liveChanges === false &&
         input.options.changesStatus === "unavailable",
+      input.options.appOrigin,
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(
