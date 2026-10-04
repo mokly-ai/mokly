@@ -38,16 +38,11 @@ test("every seam inside a skipped outer source is unsafe, including closing-tag 
     }
 });
 
-test("style seam offsets query kept source pieces without scanning their contents", () => {
+test("indexed style positions distinguish interior joins from whole original styles", () => {
   for (const size of [32, 1024 * 1024]) {
     const source = `<style>${"x".repeat(size)}|${"y".repeat(size)}</style>`;
     const cut = source.indexOf("|");
     const style = source.replace("|", "");
-    const offsets = new StyleSeamOffsets(source, [style]);
-    assert.equal(offsets.hasStart(0, 5), false);
-    assert.equal(offsets.hasStart(0, 6), true);
-    assert.equal(offsets.hasEnd(cut + 1, source.length), true);
-    assert.equal(offsets.hasEnd(cut + 1, source.length - 1), false);
     assert.equal(
       inspect(
         source,

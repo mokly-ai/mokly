@@ -3,6 +3,10 @@ import {
   fingerprintOccurrenceCase,
   occurrenceKinds,
 } from "./fingerprint_occurrence_cases.js";
+import {
+  fingerprintTagRewriteCase,
+  tagRewriteKinds,
+} from "./fingerprint_tag_rewrite.js";
 
 export const catalogueKinds = [
   "move",
@@ -22,6 +26,7 @@ export const catalogueKinds = [
   ...occurrenceKinds,
   "owned-marker-seam",
   "closing-marker-seam",
+  "tag-rewrite",
 ] as const;
 interface Case {
   kind: string;
@@ -31,6 +36,7 @@ interface Case {
   resourceChange?: boolean;
   source?: string;
   afterSource?: string;
+  renderer?: { before: string; after: string };
 }
 
 export function fingerprintSeededCase(
@@ -50,6 +56,16 @@ export function fingerprintSeededCase(
   const region = (text: string) => start + text + end;
   const sample: Case = { kind, before: style, after: changed, guarded: false };
   switch (kind) {
+    case "tag-rewrite":
+      Object.assign(
+        sample,
+        fingerprintTagRewriteCase(
+          tagRewriteKinds[random() % tagRewriteKinds.length]!,
+          css,
+        ),
+        { guarded: true },
+      );
+      break;
     case "closing-marker-seam": {
       const removed =
         "<!--mokly-component:start:r-100--><!--mokly-component:end:r-100-->";

@@ -230,13 +230,13 @@ Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
   not the `<style>` wrapper or original element source; even an empty
   retained list gets the digest of empty text. References come from retained
   stored rule references, with the same ownership and exclusions.
-- When analysis skips for equal ordered sources, keep text for the whole view
-  if any eligible outer span contains a source resource record on either side.
-  Anchor/navigation records do not block fingerprints. On **each** original side,
-  every exact outer-source occurrence of each skipped element must be an eligible
-  span (use `indexOf`, including overlaps). Otherwise keep text for the whole view.
-  Also reject [seams that could assemble a style copy](./mokly-material-work-counts.md#skipped-style-equality).
-  Replace each eligible element in place with `<!--mokly-inline-style:<digest>-->`;
+- When analysis skips for equal ordered sources, require delivered text to equal
+  each eligible outer source on both sides. Any intersecting marker/signal/header
+  removal or replacement, or source resource record, keeps the whole view on text.
+  Anchor/navigation records allow fingerprints. Every exact original occurrence must
+  be eligible (`indexOf`, including overlaps). Reject [position-exact style-copy
+  seams](./mokly-material-work-counts.md#skipped-style-equality) too; otherwise
+  replace each eligible element in place with `<!--mokly-inline-style:<digest>-->`;
   hash its complete outer source, including tags/attributes; supply no references.
 - A parse failure retains original style text verbatim, not a successful-rule
   fingerprint. Ownership projection/ignore normalization otherwise retain

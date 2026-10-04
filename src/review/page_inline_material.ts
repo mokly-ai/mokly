@@ -62,7 +62,9 @@ function prepareMaterials(
     ) ||
     skippedSourceReferences(analysis, pages) ||
     (analysis.status === "skipped" &&
-      (!allSkippedOccurrencesEligible(base, analysis.beforeSpans) ||
+      (pages.beforeAnalysis.sourceEditsIntersect(analysis.beforeSpans) ||
+        pages.afterAnalysis.sourceEditsIntersect(analysis.afterSpans) ||
+        !allSkippedOccurrencesEligible(base, analysis.beforeSpans) ||
         !allSkippedOccurrencesEligible(head, analysis.afterSpans))) ||
     [text.before, text.after].some((side) =>
       [side.actual, side.projected].some(({ appendix }) =>

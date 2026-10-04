@@ -18,19 +18,7 @@ export function fingerprintAtSeam(
   styles?: StyleSeamOffsets,
 ): boolean {
   const pieces = coalesced(recipe);
-  const styleEnds = styles
-    ? pieces.map((piece) =>
-        (
-          piece.kind === "source"
-            ? styles.hasEnd(piece.start, piece.end)
-            : styles.endings.some((ending) => piece.text.endsWith(ending))
-        )
-          ? 1
-          : 0,
-      )
-    : [];
-  let ends = styleEnds.reduce<number>((sum, count) => sum + count, 0);
-  let styleBefore = false;
+  const crossingStyle = styles?.crossingPiece(pieces);
   let open = false;
   for (let index = 0; index < pieces.length; index++) {
     if (index) {
@@ -45,7 +33,7 @@ export function fingerprintAtSeam(
         return true;
       if (
         styles &&
-        ((styleBefore && ends > 0) ||
+        (index === crossingStyle ||
           crosses(before.toLowerCase(), after.toLowerCase(), "<style") ||
           styles.endings.some((ending) => crosses(before, after, ending)))
       )
@@ -53,9 +41,6 @@ export function fingerprintAtSeam(
     }
     const piece = pieces[index]!;
     open = piece.kind === "source" && offsets.openAfter(piece.start, piece.end);
-    if (piece.kind === "source" && styles?.hasStart(piece.start, piece.end))
-      styleBefore = true;
-    ends -= styleEnds[index] ?? 0;
   }
   return false;
 }

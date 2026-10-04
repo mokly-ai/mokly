@@ -68,25 +68,36 @@ side's original text with `indexOf` for each distinct skipped outer source; ever
 occurrence, including overlaps, must start at an eligible span of that same source.
 Otherwise keep text for the whole view. These source scans do not build materials.
 
+Each eligible element's delivered text must also equal its original outer source.
+Keep the whole view on text if any original piece removed or replaced by the
+recipe intersects an eligible outer span, on either side: component markers
+(including tag-attribute text removed by `stripComponentMarkers`), review/ignore
+markers, material signals and the generated header. Use the existing original
+span inventory, without rewriting the sheet to test identity.
+
 Original occurrences alone do not suffice. Removing literal component markers
 inside an owned style can assemble a new identical outer source. On skipped
-analyses, conservatively reject any delivered recipe seam between a kept `<style`
-prefix and a later kept ending of a skipped outer source, or crossing that prefix
-or ending. Match `<style` ASCII case-insensitively; match the last 12 UTF-16 units
-of each distinct skipped source exactly. This covers seams anywhere in closing
-tags, including attributes. Use per-side original offsets for whole prefixes and
-endings, and existing windows for splits, across the same raw/single/pair recipes
-as the marker guard. Skipped inserts have no style appendix. Their complete
+analyses, reject a kept `<style` at material position `p` and a kept ending of
+the **same** skipped source `S` at `p + |S| - 12` in different pieces. Match the
+prefix ASCII case-insensitively and the last 12 UTF-16 units of `S` exactly.
+Use cumulative piece lengths and indexed original positions, without a text scan.
+Coalesce adjacent original spans first; whole sources in one piece are safe.
+Keep both bounded window checks for prefixes/endings that cross a seam, including
+closing-tag attributes, across the same raw/single/pair recipes as the marker
+guard. Skipped inserts have no style appendix. Their complete
 producer comments and caller-slot wrappers contain no `<style`; their only `>`
-is the closing one, so an inserted ending needs only a bounded `endsWith` check.
-Indexes are reused; each piece/seam queries offsets and bounded text, independently
-of sheet length (ending comparisons scale with the number of distinct styles).
+is the closing one, so an inserted ending needs a bounded `endsWith` check and
+the same exact material-position equality. Indexes are reused; queries inspect
+numeric offsets and bounded text, never a sheet-sized piece's contents. Signature
+comparisons scale with the distinct source lengths/endings and indexed prefixes.
 
 A new exact style copy must cross a seam inside its outer source. Either its
-opening prefix/ending crosses a seam (the window guard catches it), or both are
-kept whole, with a seam between them (the index guard catches it). This deliberately
-accepts false positives between separate styles rather than assuming HTML context
-for literal bytes. Whole sources in contiguous original pieces create no seam.
-Eligible-only copies keep fingerprints. Test real compiled instance, renamed-key,
-slot, paired-region and joined-copy cases under all switches/modes, exact text
-bytes on fallback, seeded variants and unchanged RNW/design coverage.
+opening prefix/ending crosses a seam, or both stay whole at exactly `|S| - 12`
+apart in different pieces. The two window checks and index check cover these cases.
+Eligible-only copies across instances and interleaved CSS-in-JS sheets keep their
+fingerprints. Test compiled instance, renamed-key, slot, paired-region, tag-rewrite
+and joined-copy cases in both modes/all switches; guarded materials stay verbatim.
+Compare seeded recipes against brute-force material occurrence/seam scans. After
+indexing, spy on string search/slice and regexp operations over 1 MiB pieces;
+out-of-window reads must fail, including mutations that rescan queried pieces.
+Record RNW, design, replay and interleaving coverage before/after changes.

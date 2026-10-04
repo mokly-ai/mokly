@@ -149,6 +149,13 @@ export class PageAnalysis {
     ]);
   }
 
+  /** In-place identities must survive every delivered marker/header rewrite. */
+  sourceEditsIntersect(spans: readonly SourceSpan[]): boolean {
+    return [...this.removedMarkers, ...this.materialSignals].some((edit) =>
+      spans.some((span) => edit.start < span.end && span.start < edit.end),
+    );
+  }
+
   /** Canonical rules can restore a reference lost by raw source-span removal. */
   hasDroppedStyleReferences(paired: readonly string[]): boolean {
     const styles = this.inlineStyles(paired);

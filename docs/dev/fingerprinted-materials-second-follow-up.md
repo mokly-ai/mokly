@@ -6,6 +6,10 @@ unreachable branches from the seam proof. This is a local checkpoint: no M9
 scale measurements or push. Evidence is under
 `.context/delegation/scalable/m9-round2/`.
 
+The [third follow-up](./fingerprinted-materials-third-follow-up.md) supersedes
+this checkpoint's broad style-copy seam rule with a position-exact check and
+requires skipped source identity after marker/header rewrites.
+
 ## Skipped Copies And Equality
 
 `skipped_style_occurrences.ts` groups skipped elements by complete original

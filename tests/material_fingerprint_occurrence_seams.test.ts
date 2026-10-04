@@ -2,13 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
-import { fingerprintMaterials } from "./helpers/fingerprint_comparison.js";
+import {
+  fingerprintComparison,
+  fingerprintMaterials,
+} from "./helpers/fingerprint_comparison.js";
 import { fingerprintRenderer } from "./helpers/fingerprint_fixture.js";
 import { assertGuardedMaterials } from "./helpers/fingerprint_guard_assertions.js";
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 import { pageFixtureInput } from "./helpers/page_fixture_inputs.js";
 
-test("a real caller-slot wrapper can supply the guarded ending of a skipped style", async (context) => {
+test("a distant caller-slot wrapper ending preserves skipped style fingerprints", async (context) => {
   const style = '<style>.entry{color:red}</style data-rendered="true">';
   const fixture = await inlineChangesFixture(context, style, style, {
     colorSchemes: false,
@@ -20,11 +23,15 @@ test("a real caller-slot wrapper can supply the guarded ending of a skipped styl
   for (const mode of ["committed", "derived"] as const)
     await context.test(mode, async () => {
       const input = await pageFixtureInput(fixture, mode);
-      assert.equal(
-        fingerprintMaterials(input, false).inlineAnalysis?.status,
-        "skipped",
+      const prepared = fingerprintMaterials(input);
+      assert.equal(prepared.inlineAnalysis?.status, "skipped");
+      assert.ok(
+        prepared.projected.actual.base.includes("<!--mokly-inline-style:"),
       );
-      await assertGuardedMaterials(input, mode);
+      assert.deepEqual(
+        await fingerprintComparison(input, true),
+        await fingerprintComparison(input, false),
+      );
     });
 });
 

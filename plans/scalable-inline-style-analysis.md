@@ -1508,6 +1508,22 @@ comparison's text work no longer grows with the style sheet. See the
       pass, plus package/static checks. All eight mutations are caught; RNW
       64/64, design 428/428 and replay 7,844 fingerprinted-view counts are unchanged.
       The frozen verification recorded no authored-file changes.
+- [x] Discovered: third supervisor round: require original/delivered identity
+      for skipped styles; reject marker/header rewrites touching their outer spans.
+      Add compiled tag-marker regressions and a seeded kind.
+- [x] Discovered: make style-copy seam checks position-exact for the same source
+      length and ending, restore interleaved-style fingerprints, and compare a seeded
+      guard model with brute-force crossing occurrences. Prove bounded reads with
+      search/slice/regexp spies and mutations; report before/after coverage.
+      The [third follow-up report](../docs/dev/fingerprinted-materials-third-follow-up.md)
+      records failing regressions, the seeded proof and nine caught mutations.
+- [x] Discovered: finish third-round targeted, package, full unit, pinned browser,
+      hydration and static verification; commit a new local checkpoint and stop
+      before measurements or pushing. All 1,732 targeted, 4,822 unit, 725 pinned
+      browser and 219 hydration tests pass; package and static checks pass with
+      no authored changes during verification. Nine mutations are caught. RNW,
+      design and replay coverage is unchanged; interleaving improves from 0/16
+      to 16/16 fingerprinted views.
 - [ ] After supervisor checkpoint approval, record all four scenarios
       (no-changes, component-style, screen-markup, linked-stylesheet), cold/warm,
       against M8 `5e5111dc` on the same host: default ABBA and one cumulative pair.

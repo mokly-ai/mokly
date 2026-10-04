@@ -28,7 +28,7 @@ test("seeded compiled catalogues preserve text results/errors under every switch
         colorSchemes: false,
         ...(sample.source ? { source: sample.source } : {}),
         ...(sample.afterSource ? { afterSource: sample.afterSource } : {}),
-        renderer: {
+        renderer: sample.renderer ?? {
           before: fingerprintRenderer(sample.before),
           after: fingerprintRenderer(sample.after),
         },
@@ -75,5 +75,5 @@ test("seeded compiled catalogues preserve text results/errors under every switch
     });
   }
   assert.deepEqual([...seen].sort(), [...catalogueKinds].sort());
-  assert.equal(comparisons, 640);
+  assert.equal(comparisons, 672);
 });
