@@ -40,8 +40,11 @@
   documentation findings, and records the TypeScript member ratchet decision.
   Its format and 13 documentation checks pass. Milestone 20 implements the
   shared checked closure and export boundary fixes; its full gate passes with
-  3,786 unit tests and 970 browser cases. Main moved to `c4138a0b` and remains
-  unmerged under the user's instruction.
+  3,786 unit tests and 970 browser cases. Main at `c4138a0b` is approved for
+  integration through Milestones 21–23. Decision B replaces disk snapshot
+  locks with immutable in-memory route sets and keeps output locks writer-only.
+  Milestone 21's audit and combined contracts are complete; format and all
+  13 documentation checks pass before the code merge.
   Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.

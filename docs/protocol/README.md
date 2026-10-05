@@ -35,6 +35,13 @@ version gates reject unsupported data before content or path interpretation.
 
 ## Contracts
 
+- [Path identity in one generated tree](./mokly-path-output-integration.md) —
+  approved combined layout, Markdown resource closure and baseline behavior.
+- [Combined format versions](./mokly-format-versions.md) — the complete public
+  and private version inventory, including manifest v9, catalogue v5 and review v6.
+- [Accepted generation routes](./mokly-generation-routes.md) — immutable
+  in-memory route snapshots, strict IPC and writer-only output locking.
+
 - [Public file policy and closure](./mokly-public-closure.md) — approved shared
   classification, traversal, safe Serve reads and acceptance.
 - [Shared Watch and output writers](./mokly-watch-writers.md) — approved input

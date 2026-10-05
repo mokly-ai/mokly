@@ -117,3 +117,9 @@ The approved [comparison inventory rules](./mokly-comparison-inventory.md)
 refine moved-root selection: one valid v8 candidate wins over stale earlier
 candidates. Multiple v8 candidates remain an error. With no v8 result, retain
 the existing earlier-envelope/ambiguity outcomes and never cache incompatibility.
+
+The approved [path/output integration](./mokly-path-output-integration.md)
+supersedes the current kind/id layout at integration. Its
+[format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
+review v6 and all other boundaries. Only v9 baseline content is readable after
+that integration; the earlier-version product outcome remains unchanged.

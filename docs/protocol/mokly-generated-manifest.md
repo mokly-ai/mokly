@@ -145,3 +145,9 @@ Tests cover committed stale root-level v7 with a successful v8 rebuild,
 earlier root-level output produced by the base's own rebuild, partial cache
 rebuilds and atomic marker publication. Preserve invalid/newer manifest
 rejections, confinement, inventory validation and the command outcomes above.
+
+The approved [path/output integration](./mokly-path-output-integration.md)
+supersedes the current kind/id layout at integration. Its
+[format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
+review v6 and all other boundaries. Only v9 baseline content is readable after
+that integration; the earlier-version product outcome remains unchanged.

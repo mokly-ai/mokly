@@ -273,3 +273,9 @@ keep a confined path observable but cannot grant HTTP access. The resource
 watcher retains the previous checked closure on failure. Static and transient
 reads use `PublicFilePolicy.read`, which rechecks components and the open file
 without following symbolic links.
+
+The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
+Markdown documents and moves inside one generated tree. It introduces manifest
+v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+Accepted workers use immutable in-memory route sets; only writing commands
+acquire the output lock. The integration plan records verification and scope.

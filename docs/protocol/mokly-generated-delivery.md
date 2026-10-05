@@ -104,3 +104,9 @@ Ownership v3 and upload v2 finalize the renamed paths under the
 Receivers validate their supported formats before paths; they never rewrite
 an old artifact into the current layout. The marker/transport gate and strict
 viewer version gate protect current-only artifacts as well as comparisons.
+
+The approved [path/output integration](./mokly-path-output-integration.md)
+supersedes the current kind/id layout at integration. Its
+[format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
+review v6 and all other boundaries. Only v9 baseline content is readable after
+that integration; the earlier-version product outcome remains unchanged.

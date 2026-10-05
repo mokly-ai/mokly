@@ -566,3 +566,9 @@ is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-
 ## License
 
 Mokly Viewer is available under the [MIT License](./LICENSE).
+
+The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
+Markdown documents and moves inside one generated tree. It introduces manifest
+v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+Accepted workers use immutable in-memory route sets; only writing commands
+acquire the output lock. The integration plan records verification and scope.

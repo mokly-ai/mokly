@@ -213,3 +213,9 @@ raw binary inventory hashes, no stale-disk fallback, all three styled delivery
 surfaces, watcher success/failure, output-independent PostCSS scans, and v8
 comparisons across moved catalogue roots. Test the exact unavailable outcome
 for every pre-v8 base instead of accepting a v7-to-v8 content comparison.
+
+The approved [path/output integration](./mokly-path-output-integration.md)
+supersedes the current kind/id layout at integration. Its
+[format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
+review v6 and all other boundaries. Only v9 baseline content is readable after
+that integration; the earlier-version product outcome remains unchanged.

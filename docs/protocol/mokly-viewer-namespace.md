@@ -200,3 +200,9 @@ not a validator for arbitrary consumer names. Add a unit test that enumerates
 the fixed deployed names Mokly chooses and checks the same rule. Include
 Changes-enabled example artifacts so `generations/`, removed previews and
 binary CSS resources are covered. Stop every server after testing.
+
+The approved [path/output integration](./mokly-path-output-integration.md)
+supersedes the current kind/id layout at integration. Its
+[format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
+review v6 and all other boundaries. Only v9 baseline content is readable after
+that integration; the earlier-version product outcome remains unchanged.
