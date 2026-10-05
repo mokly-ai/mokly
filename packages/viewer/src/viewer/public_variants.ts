@@ -1,5 +1,7 @@
 /** Public component records a workspace reaches through the branch-point lookup. */
 
+import { branchPoints } from "../catalogue/branch_point.js";
+import type { EntryResolution } from "../catalogue/branch_point_types.js";
 import { currentCatalogueEntries } from "../catalogue/entry_selection.js";
 import type {
   ShellCatalogueComponent,
@@ -8,10 +10,6 @@ import type {
   ShellCatalogueVariant,
 } from "../catalogue/scoped_types.js";
 import type { Catalogue } from "../shell/catalogue.js";
-import {
-  branchPoints,
-  type EntryResolution,
-} from "../shell/catalogue_branch_point.js";
 
 /**
  * The public record a lookup result names: the current record at the same

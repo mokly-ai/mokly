@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { branchPoints } from "../packages/viewer/src/shell/catalogue_branch_point.js";
+import { branchPoints } from "../packages/viewer/src/catalogue/branch_point.js";
 
 import {
   lookupCatalogue,

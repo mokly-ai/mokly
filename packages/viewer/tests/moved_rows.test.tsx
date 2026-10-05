@@ -3,9 +3,9 @@ import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { branchPoints } from "../src/catalogue/branch_point.js";
 import type { ManifestEntry, ManifestV8 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
-import { branchPoints } from "../src/shell/catalogue_branch_point.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";

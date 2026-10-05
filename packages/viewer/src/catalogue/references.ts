@@ -6,6 +6,8 @@ import { validateComponentViewRecord } from "../components/view_validation.js";
 import { firstPathCaseCollision } from "../navigation/logical.js";
 import { VIEWPORTS } from "../registry/views.js";
 
+import { branchPoints } from "./branch_point.js";
+import type { BranchPointLookup } from "./branch_point_types.js";
 import type {
   ShellCatalogueComponent,
   ShellCatalogueReadModel,
@@ -75,6 +77,11 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
     require(!removedPaths.has(
       previous,
     ), "paired previous path cannot be removed");
+    require(!current.some(
+      (candidate) =>
+        candidate.kind === entry.kind &&
+        candidate.path.toLowerCase() === previous,
+    ), "previousPath cannot name a current entry of the same kind");
     previousPaths.add(previous);
   }
   unique(model.removedEntries.map(({ entry }) => entry.path.toLowerCase()));
@@ -83,6 +90,10 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
       snapshotId ? [snapshotId] : [],
     ),
   );
+  const lookup = branchPoints<
+    ValidatedRoutedEntry,
+    ValidatedCatalogue["removedEntries"][number]
+  >(model);
   const components = new Map(
     [...historical, ...current]
       .filter(
@@ -143,11 +154,11 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
               .find((flow) => flow.path === id)
               ?.steps.some((step) => step.screenPath === entry.path),
           ), "invalid screen membership");
-      validateViews(entry, entry.views, components, removed);
+      validateViews(entry, entry.views, lookup, removed);
     }
     if (entry.kind === "component") {
       if ("variantOf" in entry) {
-        validateComponentVariant(entry, components, current, removed);
+        validateComponentVariant(entry, components, current, removed, lookup);
       } else {
         unique(entry.slots);
         if (!removed)
@@ -181,7 +192,7 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
 function validateViews(
   entry: CatalogueScreen | ShellCatalogueScreen | ValidatedVariant,
   views: readonly ValidatedView[],
-  components: ReadonlyMap<string, ValidatedComponent>,
+  lookup: Pick<BranchPointLookup<ValidatedRoutedEntry>, "usageComponent">,
   historical: boolean,
 ): void {
   require(['["light"]', '["light","dark"]'].includes(
@@ -202,7 +213,18 @@ function validateViews(
           (entry.kind === "component" &&
             view.comparison.kind ===
               "removed")), "invalid comparison eligibility");
-    if (view.usage.status === "ready")
+    if (view.usage.status === "ready") {
+      const components = new Map(
+        view.usage.instances.flatMap((instance) => {
+          const component = lookup.usageComponent(
+            instance.componentId,
+            historical ? "before" : "after",
+          )?.entry;
+          return component?.kind === "component" && !("variantOf" in component)
+            ? [[instance.componentId, component] as const]
+            : [];
+        }),
+      );
       validateComponentViewRecord(
         {
           viewport: view.viewport,
@@ -218,6 +240,7 @@ function validateViews(
         entry.kind === "component" ? entry.variantOf : undefined,
         historical,
       );
+    }
   }
 }
 
@@ -226,6 +249,7 @@ function validateComponentVariant(
   components: ReadonlyMap<string, ValidatedComponent>,
   current: readonly ValidatedRoutedEntry[],
   removed: boolean,
+  lookup: Pick<BranchPointLookup<ValidatedRoutedEntry>, "usageComponent">,
 ): void {
   if (entry.comparison.status === "ready")
     require(entry.comparison.eligible ===
@@ -257,7 +281,7 @@ function validateComponentVariant(
       entry.path,
     );
   }
-  validateViews(entry, entry.views, components, removed);
+  validateViews(entry, entry.views, lookup, removed);
 }
 
 function require(condition: boolean, message: string): void {

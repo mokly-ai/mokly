@@ -70,8 +70,7 @@ export function resolveCatalogueUsageScope(
   );
   if (entry.kind === "screen") addViews(scope, entry.views);
   if (entry.kind === "component") {
-    const parentPath = "variantOf" in entry ? entry.variantOf : entry.path;
-    for (const variant of catalogueComponentVariants(model, parentPath))
+    for (const variant of catalogueComponentVariants(model, entry.path))
       addViews(scope, variant.views);
   }
   if (entry.kind === "use-case" && !historical) {

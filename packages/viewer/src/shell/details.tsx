@@ -2,10 +2,10 @@
 // two-column body with prose on the left and metadata rows on the right —
 // populated from the manifest entry for the selected route.
 
+import { branchPoints } from "../catalogue/branch_point.js";
 import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import {
   ChangedViewsRow,
   MetaRow,

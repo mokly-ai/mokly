@@ -16,6 +16,7 @@ interface EntryOrderFields {
 export function orderEntriesWithVariants<T>(
   values: readonly T[],
   entryOf: (value: T) => EntryOrderFields,
+  resolvedParent?: (value: T) => EntryOrderFields | undefined,
 ): T[] {
   const byPath = new Map<string, T[]>();
   for (const value of values) {
@@ -33,7 +34,12 @@ export function orderEntriesWithVariants<T>(
     ) {
       continue;
     }
-    const candidates = byPath.get(entry.variantOf) ?? [];
+    const parentIdentity = resolvedParent
+      ? resolvedParent(value)
+      : { path: entry.variantOf };
+    const candidates = parentIdentity
+      ? (byPath.get(parentIdentity.path) ?? [])
+      : [];
     const parent = candidates.length === 1 ? candidates[0] : undefined;
     if (parent === undefined || parent === value) continue;
     const parentEntry = entryOf(parent);

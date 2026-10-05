@@ -3,6 +3,8 @@
 // was recorded in, and both serialized prop sets, so the inspector can show
 // what an author changed without re-rendering either side.
 
+import { branchPoints } from "../catalogue/branch_point.js";
+import type { EntryIdentity } from "../catalogue/branch_point_types.js";
 import type {
   ManifestComponent,
   ManifestComponentVariant,
@@ -12,7 +14,6 @@ import { generatedViews } from "../components/views.js";
 import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints, type EntryIdentity } from "./catalogue_branch_point.js";
 
 /** One instance whose supplied props differ from the baseline render. */
 export interface InputChange {

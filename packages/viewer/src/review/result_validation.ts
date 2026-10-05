@@ -127,8 +127,8 @@ function validateResult(value: unknown): ReviewResult {
     ),
   );
   validateIgnoredImpact(result.ignoredImpact, screens);
-  validateResultReferences(value as ReviewResultV5);
   validateResultMoves(value as ReviewResultV5);
+  validateResultReferences(value as ReviewResultV5);
   return value as ReviewResult;
 }
 

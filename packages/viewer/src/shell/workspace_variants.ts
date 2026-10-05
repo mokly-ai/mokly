@@ -1,3 +1,4 @@
+import { branchPoints } from "../catalogue/branch_point.js";
 import type {
   ManifestComponent,
   ManifestComponentVariant,
@@ -6,7 +7,6 @@ import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { ComponentReview } from "../review/component_types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import type { ShellContext } from "./context.js";
 import { shownComparisonEligible, type EntryStatus } from "./view_status.js";
 

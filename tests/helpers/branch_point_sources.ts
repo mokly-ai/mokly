@@ -1,3 +1,8 @@
+import {
+  newParentVariantSources,
+  removedScreenUsageSources,
+  removedVariantOrderSources,
+} from "./branch_point_follow_up_sources.js";
 import { moveComponentSource } from "./move_catalogue_sources.js";
 
 export type BranchPointCase =
@@ -5,7 +10,10 @@ export type BranchPointCase =
   | "moved-parent"
   | "moved-variant"
   | "case-renames"
-  | "reused-parent";
+  | "reused-parent"
+  | "removed-screen-usage"
+  | "removed-variant-order"
+  | "new-parent-variant";
 
 interface BranchPointSources {
   before: Readonly<Record<string, string>>;
@@ -144,9 +152,15 @@ function caseRenames(): BranchPointSources {
   };
 }
 
-/** Each case stays clear of the ten unapproved second-review findings. */
+/** Shared real-Git cases from the branch-point lookup contract. */
 export function branchPointSources(name: BranchPointCase): BranchPointSources {
   switch (name) {
+    case "removed-screen-usage":
+      return removedScreenUsageSources();
+    case "removed-variant-order":
+      return removedVariantOrderSources();
+    case "new-parent-variant":
+      return newParentVariantSources();
     case "moved-consumers":
       return consumers();
     case "moved-parent":

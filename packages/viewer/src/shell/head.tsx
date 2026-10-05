@@ -3,13 +3,11 @@
 
 import type { ReactNode } from "react";
 
+import { branchPoints } from "../catalogue/branch_point.js";
+import type { VariantParentResolution } from "../catalogue/branch_point_types.js";
 import { viewHref } from "../navigation/routes.js";
 
 import type { Catalogue } from "./catalogue.js";
-import {
-  branchPoints,
-  type VariantParentResolution,
-} from "./catalogue_branch_point.js";
 import { structuredCrumbTrail, type CatalogueCrumb } from "./crumbs.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";

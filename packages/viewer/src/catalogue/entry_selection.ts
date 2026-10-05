@@ -1,5 +1,6 @@
 /** Exact current or historical entry resolution for public selection. */
 
+import { branchPoints } from "./branch_point.js";
 import type { CatalogueRecord } from "./types.js";
 
 interface CatalogueIdentity {
@@ -21,10 +22,6 @@ interface CatalogueIndex<Entry extends CatalogueIdentity> {
 type ComponentVariant<Entry extends CatalogueIdentity> = Extract<
   Entry,
   { kind: "component"; variantOf: string }
->;
-type ComponentParent<Entry extends CatalogueIdentity> = Exclude<
-  Extract<Entry, { kind: "component" }>,
-  { variantOf: string }
 >;
 
 export interface ResolvedCatalogueEntry<
@@ -48,32 +45,8 @@ export function currentCatalogueEntries<Entry extends CatalogueIdentity>(
 }
 
 /**
- * The component parent a path names: a current or removed parent at that path,
- * or else the current parent a move paired with that previous path.
- */
-function catalogueComponentParent<
-  Entry extends CatalogueIdentity = CatalogueRecord,
->(
-  model: CatalogueIndex<Entry>,
-  componentId: string,
-): ComponentParent<Entry> | undefined {
-  const parents = [
-    ...model.components,
-    ...model.removedEntries.map(({ entry }) => entry),
-  ].filter(
-    (entry): entry is ComponentParent<Entry> =>
-      entry.kind === "component" && !("variantOf" in entry),
-  );
-  return (
-    parents.find((entry) => entry.path === componentId) ??
-    parents.find((entry) => entry.previousPath === componentId)
-  );
-}
-
-/**
  * Component variants in current order followed by retained removed variants.
- * A moved parent also keeps the variants removed at its previous path, under
- * either of its paths.
+ * A variant resolves its parent on its own side, or collects only itself.
  */
 export function catalogueComponentVariants<
   Entry extends CatalogueIdentity = CatalogueRecord,
@@ -81,17 +54,38 @@ export function catalogueComponentVariants<
   model: CatalogueIndex<Entry>,
   componentId: string,
 ): readonly ComponentVariant<Entry>[] {
-  const parent = catalogueComponentParent(model, componentId);
-  const paths = new Set([componentId, parent?.path, parent?.previousPath]);
+  const lookup = branchPoints(model);
+  const selected = lookup.resolve({
+    kind: "component",
+    path: componentId,
+    side: "before",
+  });
+  if (!selected) return [];
+  const owner = lookup.parent(selected) ?? selected;
+  if (owner.source === "title")
+    return isVariant(selected.entry) ? [selected.entry] : [];
+  if (isVariant(owner.entry)) return [owner.entry];
+  const current =
+    owner.source === "current"
+      ? model.components.filter((entry) => {
+          if (!isVariant(entry)) return false;
+          const parent = lookup.parent({ source: "current", entry });
+          return parent?.source === "current" && parent.entry === owner.entry;
+        })
+      : [];
   return [
-    ...model.components,
-    ...model.removedEntries.map(({ entry }) => entry),
-  ].filter(
-    (entry): entry is ComponentVariant<Entry> =>
-      entry.kind === "component" &&
-      "variantOf" in entry &&
-      typeof entry.variantOf === "string" &&
-      paths.has(entry.variantOf),
+    ...current,
+    ...lookup.removedVariants(owner.entry).map(({ entry }) => entry),
+  ].filter(isVariant);
+}
+
+function isVariant<Entry extends CatalogueIdentity>(
+  entry: Entry,
+): entry is ComponentVariant<Entry> {
+  return (
+    entry.kind === "component" &&
+    "variantOf" in entry &&
+    typeof entry.variantOf === "string"
   );
 }
 

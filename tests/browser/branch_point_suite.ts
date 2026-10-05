@@ -16,13 +16,13 @@ import {
 } from "./branch_point_checks.js";
 import { BRANCH_POINT_WIDTHS, serverErrors } from "./branch_point_ui.js";
 
-const CASES: readonly BranchPointCase[] = [
+const CASES = [
   "moved-consumers",
   "moved-parent",
   "moved-variant",
   "case-renames",
   "reused-parent",
-];
+] as const satisfies readonly BranchPointCase[];
 
 /**
  * Serve renders comparison documents on demand, and each accepted document

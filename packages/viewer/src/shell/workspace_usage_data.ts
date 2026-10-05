@@ -1,8 +1,8 @@
+import { branchPoints } from "../catalogue/branch_point.js";
 import { generatedViews, orderedInstances } from "../components/views.js";
 import type { ReviewResultV5 } from "../review/component_types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import { dedupeUsageLinks } from "./usage_links.js";
 import { shownComparisonEligible } from "./view_status.js";
 import {

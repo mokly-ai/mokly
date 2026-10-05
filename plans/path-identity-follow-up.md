@@ -90,36 +90,36 @@ visible row has no button.
 ## Milestone 3: Shared branch-point lookup in the data layer
 
 Move the lookup out of the shell and use it in every data layer (item 1,
-step 1). Reject invalid move records at the reader (item 11).
+step 1). Reject invalid move records at the reader (item 11). Complete.
 
-- [ ] Move the lookup to a shared catalogue module that the server
+- [x] Move the lookup to a shared catalogue module that the server
       projection imports from `@mokly/viewer/data`, and that both catalogue
       readers, the review-result reader, the data helpers and the shell use.
       Keep its public behaviour.
-- [ ] Add one operation that resolves a usage component name on a given
+- [x] Add one operation that resolves a usage component name on a given
       side.
-- [ ] Projection: order removed variants at their resolved parent, in
+- [x] Projection: order removed variants at their resolved parent, in
       baseline authored order (item 1b).
-- [ ] Projection and readers: keep removed-screen usage whose component
+- [x] Projection and readers: keep removed-screen usage whose component
       resolves through a move or a case-only rename; validate instance
       component names through the lookup; never rewrite a stored name (item
       1a, data).
-- [ ] `catalogueComponentVariants` and the usage scope use the lookup
+- [x] `catalogueComponentVariants` and the usage scope use the lookup
       (item 1c), and the scoped bootstrap follows `mokly-shell-bootstrap.md`.
-- [ ] Replace the counterpart copy in `src/catalogue/changes.ts` with the
+- [x] Replace the counterpart copy in `src/catalogue/changes.ts` with the
       lookup.
-- [ ] Both catalogue readers and the review-result reader reject a previous
+- [x] Both catalogue readers and the review-result reader reject a previous
       path that a current entry of the same kind uses, with case folding.
       Reuse by another kind stays valid. The review-result reader validates
       move records before it resolves references. Add negative and positive
       tests.
-- [ ] Add shared Git fixture cases 6 to 8 and their node tests.
-- [ ] Extend the guard test to the catalogue data layer and the server
+- [x] Add shared Git fixture cases 6 to 8 and their node tests.
+- [x] Extend the guard test to the catalogue data layer and the server
       projection, add usage component name rules, and fix the Windows path
       comparison with a test for both separators.
-- [ ] Update `src/catalogue/README.md`, `packages/viewer/README.md` and the
+- [x] Update `src/catalogue/README.md`, `packages/viewer/README.md` and the
       guard comment.
-- [ ] Run the related unit tests, type checks and lint.
+- [x] Run the related unit tests, type checks and lint.
 
 ## Milestone 4: Shell consumers of the shared lookup
 

@@ -1,3 +1,4 @@
+import { branchPoints } from "../catalogue/branch_point.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { RenderCapability } from "../components/render_types.js";
@@ -15,7 +16,6 @@ import type { ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import { materialChangedEntries, type ShellContext } from "./context.js";
 import {
   shownComparisonEligible,

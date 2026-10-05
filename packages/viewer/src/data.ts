@@ -37,6 +37,17 @@ export {
   readRange,
 } from "./catalogue/component_values.js";
 export { projectTree } from "./catalogue/tree.js";
+export { branchPoints } from "./catalogue/branch_point.js";
+export type {
+  BranchPointEntry,
+  BranchPointInputs,
+  BranchPointLookup,
+  BranchPointRemovedEntry,
+  EntryIdentity,
+  EntryReference,
+  EntryResolution,
+  VariantParentResolution,
+} from "./catalogue/branch_point_types.js";
 export {
   catalogueComponentVariants,
   currentCatalogueEntries,

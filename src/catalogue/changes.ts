@@ -1,6 +1,7 @@
 import type { CatalogueChanges, ComparisonSelection } from "@mokly/viewer";
 import type { ManifestEntry, ReviewState } from "@mokly/viewer/data";
 
+import { projectionBranchPoints } from "./branch_points.js";
 import type { CatalogueProjectionInput } from "./projection_input.js";
 
 export function entryPreviousPath(
@@ -8,9 +9,7 @@ export function entryPreviousPath(
   input: CatalogueProjectionInput,
 ): string | undefined {
   if (input.changesStatus !== "ready") return;
-  return input.evidence?.pairing?.moves.find(
-    (move) => move.kind === entry.kind && move.path === entry.path,
-  )?.previousPath;
+  return projectionBranchPoints(input).previousPath(entry);
 }
 
 export function entryChanges(
@@ -31,12 +30,12 @@ export function entryChanges(
     (input.changedEntries ?? input.evidence?.changedEntries ?? []).includes(
       entry.path,
     );
-  const before = input.evidence?.baseline.entries.find(
-    (candidate) =>
-      candidate.kind === entry.kind &&
-      candidate.path.toLowerCase() ===
-        (previousPath ?? entry.path).toLowerCase(),
-  );
+  const before =
+    input.evidence &&
+    projectionBranchPoints(input).baselineEntry(
+      entry,
+      input.evidence.baseline.entries,
+    );
   return {
     status: "ready",
     included,

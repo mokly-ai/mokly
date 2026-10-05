@@ -26,6 +26,7 @@ export interface BranchPointFixture {
 
 /**
  * Commit one real baseline as main and origin/main, then apply its head edits.
+ * Cases 1 to 8 share these real Git inputs with node and browser tests.
  * The caller owns cleanup; no browser or test-runner API is required here.
  */
 export async function branchPointFixture(

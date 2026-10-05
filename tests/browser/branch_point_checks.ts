@@ -22,6 +22,11 @@ import {
   variantBar,
 } from "./branch_point_ui.js";
 
+type BrowserBranchPointCase = Exclude<
+  BranchPointCase,
+  "removed-screen-usage" | "removed-variant-order" | "new-parent-variant"
+>;
+
 type Check = (
   page: Page,
   host: BranchHost,
@@ -220,7 +225,7 @@ const reusedParent: Check = async (page, host) => {
 
 /** The workspaces whose comparison mode a case carries between siblings. */
 export const BRANCH_POINT_COMPARED: Readonly<
-  Record<BranchPointCase, readonly string[]>
+  Record<BrowserBranchPointCase, readonly string[]>
 > = {
   "moved-consumers": [],
   "moved-parent": [
@@ -233,7 +238,9 @@ export const BRANCH_POINT_COMPARED: Readonly<
 };
 
 /** Every case's checks, keyed by the shared fixture name. */
-export const BRANCH_POINT_CHECKS: Readonly<Record<BranchPointCase, Check>> = {
+export const BRANCH_POINT_CHECKS: Readonly<
+  Record<BrowserBranchPointCase, Check>
+> = {
   "moved-consumers": movedConsumers,
   "moved-parent": movedParent,
   "moved-variant": movedVariant,
