@@ -1,5 +1,8 @@
 # Complete Local Verification Performance
 
+The [October main integration record](./local-verification-main-integration.md)
+contains verification for merge `40135a9e` and its larger test inventory.
+
 ## Repeatable Measurement
 
 On the same eight-CPU development machine, record `git rev-parse HEAD`,

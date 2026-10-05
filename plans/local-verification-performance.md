@@ -1,6 +1,6 @@
 # Local Verification Performance
 
-Status: original implementation delivered and reviewed; main integration in progress.
+Status: main integration verified; delivery and final review pending.
 Active until PR merge. Created
 2026-09-23 at the user's request. This plan improves the local complete gate;
 the existing [CI Performance](./ci-performance.md) plan owns the
@@ -191,7 +191,7 @@ preserving mainline features and the complete verification gate.
 - [x] Verify the normal two-file runner under contention: 32 benchmark/recovery
       cases and 16 cases alongside real preview and design-library builds pass.
       Remove the temporary serialization controls; retain native shard assignment.
-- [ ] Run the complete `cargo xtask check` on the final merged source tree, plus
+- [x] Run the complete `cargo xtask check` on the final merged source tree, plus
       relevant formatting, lint, type checks, builds, and smoke tests.
 - [ ] Inspect main-relative deletions, run `git add -A`, create a Conventional
       Commit merge, immediately verify its two parents, inspect every remerge-diff
@@ -248,10 +248,11 @@ is opened. No mainline files, public behavior, assertions, or deadlines are remo
 
 ### Verification Context
 
-The final gate runs in a temporary checkout with the exact resolved merge tree
+The final gate ran in a temporary checkout with the exact resolved merge tree
 and both intended parents. Main's example server compares with `HEAD`; the old
-pre-merge HEAD has an incompatible catalogue schema. The real merge commit must
-retain the exact tested tree. The current branch stays in place during validation.
+pre-merge HEAD has an incompatible catalogue schema. Merge `40135a9e` retained the exact tested tree and both intended parents.
+The [integration verification record](../docs/reviews/local-verification-main-integration.md)
+records the complete result and its limits.
 
 Four-job runs exceeded main's existing watcher and browser setup budgets, so
 local fan-out reserves CPU capacity. Additional unit serialization did not fix
