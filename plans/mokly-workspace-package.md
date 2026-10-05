@@ -162,7 +162,7 @@ modules exactly as `scripts/copy-assets.mjs` does today.
   `packages/mokly` as the repository directory and that the mokly-cloud guide
   renderer still finds `docs/guides` in the tarball.
 
-## Milestone 1: Define the workspace layout contract
+## Milestone 1: Define the workspace layout contract (complete)
 
 Update the documentation and protocol documents so they define the complete
 target before any file moves. Prose changes only; no link may point at a path
@@ -194,7 +194,7 @@ that does not exist yet.
 - [x] Validate the changed Markdown with `npx prettier --check` and run
       `npm run example:build` before
       `node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_sizes.test.ts`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 
 ## Milestone 2: Add layout seams with the current layout
 
