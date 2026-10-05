@@ -195,17 +195,20 @@ Tags: ui
 
 Keep the selected comparison mode until a listed reset event (item 6).
 
-- [ ] Remove the evidence revision from the mode owner. Adopting a newer
+- [x] Remove the evidence revision from the mode owner. Adopting a newer
       evidence revision renews only a loaded live comparison.
-- [ ] A view or sibling without changes shows Current, keeps the selected
+- [x] A view or sibling without changes shows Current, keeps the selected
       mode, and the next eligible view or sibling applies it. A live update
       resets to Current.
 - [ ] Use `reviewSnapshotViewPath` in the shell comparison selection.
-- [ ] Add a Serve test that opens a newly rendered entry without a warm-up
+      The orchestrator completes this item after the milestone branches merge.
+- [x] Wait for the resolved requested view before adopting the initial mode.
+      Test a Dark URL whose hydration presentation first describes Light.
+- [x] Add a Serve test that opens a newly rendered entry without a warm-up
       step. Remove the warm-up step or correct its comment.
-- [ ] Remove the evidence-revision sentences from
+- [x] Remove the evidence-revision sentences from
       `packages/viewer/src/shell/README.md`.
-- [ ] Run the related unit and browser tests, and smoke-test Serve.
+- [x] Run the related unit and browser tests, and smoke-test Serve.
 
 ## Milestone 8: Test-suite rules
 

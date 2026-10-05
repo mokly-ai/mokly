@@ -153,13 +153,20 @@ shared resolution on every viewport, scheme, component variant, or evidence
 change and passes the effective scheme to controls and comparison presentation.
 `use_comparison.ts` is the single owner of comparison mode: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
-so Props and highlighting remain read-only until Current is selected.
+so Props stay read-only and highlighting stays unavailable while it shows a
+comparison. An ineligible view uses the effective Current mode.
 `views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
 resolves, so a removed variant of a moved or case-renamed parent opens in its
-siblings' workspace and keeps their mode. The mode owner also includes the
-evidence revision. Serve currently republishes evidence for each on-demand
-comparison document, so the first navigation after a new comparison resets the
-mode for any sibling.
+siblings' workspace and keeps their mode. The mode state records the update
+version separately from the workspace identity. `comparison_mode.ts`
+defines the reset events: a fresh load, a new mode owner, an explicit reader
+choice, or a newer live update. `use_comparison_mode.ts` adopts those events
+without resetting on eligibility changes. An unchanged view or sibling shows
+Current while retaining the selected mode for the next eligible view.
+Serve and export honor `comparison=side` for an eligible initial view.
+Initial adoption waits until the workspace replaces hydration metadata with
+the resolved requested view, so an appearance pin uses its own eligibility.
+New evidence revisions keep the mode and renew only a loaded live comparison.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and

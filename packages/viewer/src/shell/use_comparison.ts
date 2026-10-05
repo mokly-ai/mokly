@@ -16,6 +16,8 @@ import {
   type LoadedComparison,
 } from "./comparison_request.js";
 import { useOptionalShellStore } from "./store_context.js";
+import { useComparisonMode } from "./use_comparison_mode.js";
+import { useActiveWorkspace } from "./workspace_context.js";
 
 export type {
   ComparisonMode,
@@ -63,19 +65,19 @@ export function useComparison({
 }): ComparisonController {
   const store = useOptionalShellStore();
   const environment = useComparisonEnvironment();
+  const workspace = useActiveWorkspace();
   const selection = store?.state.selection;
-  const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
+  const evidenceRevision = store?.catalogue.publicModel?.revision.evidence ?? 0;
   const scope = useMemo<ComparisonScope>(() => ({ id: entryId }), [entryId]);
   const scopeKey = useMemo(() => JSON.stringify([entryId]), [entryId]);
-  const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;
-  const [modeState, setModeState] = useReducer(
-    (
-      _current: { mode: ComparisonMode; ownerKey: string },
-      next: { mode: ComparisonMode; ownerKey: string },
-    ) => next,
-    { mode: "current", ownerKey },
-  );
-  const mode = modeState.ownerKey === ownerKey ? modeState.mode : "current";
+  const { mode, selectMode } = useComparisonMode({
+    available:
+      environment !== undefined && (workspace?.initialModeReady ?? true),
+    eligible,
+    initialMode: environment?.initialMode?.(),
+    ownerKey: owner ?? entryId,
+    updateVersion: store?.context.updateVersion ?? 0,
+  });
   const [loadedState, setLoadedState] = useReducer(
     (_current: LoadedState | undefined, next: LoadedState | undefined) => next,
     undefined,
@@ -101,10 +103,7 @@ export function useComparison({
   const pendingRef = useRef<PendingOperation | undefined>(undefined);
   const completedRef = useRef<string | undefined>(undefined);
   const latestDemand = useRef<ComparisonDemand | undefined>(undefined);
-  const currentOwner = useRef(ownerKey);
-  const currentEligibility = useRef(eligible);
-  currentOwner.current = ownerKey;
-  currentEligibility.current = eligible;
+  const acceptedEvidence = useRef(evidenceRevision);
   const demand =
     eligible && mode !== "current"
       ? comparisonDemand(
@@ -197,20 +196,6 @@ export function useComparison({
   );
 
   useEffect(() => {
-    setModeState({
-      ownerKey: currentOwner.current,
-      mode:
-        currentEligibility.current && environment?.initialMode?.() === "side"
-          ? "side"
-          : "current",
-    });
-  }, [eligible, environment, ownerKey]);
-
-  useEffect(() => {
-    if (!eligible) setModeState({ ownerKey, mode: "current" });
-  }, [eligible, ownerKey]);
-
-  useEffect(() => {
     if (!demand || !environment) {
       pendingRef.current?.controller.abort();
       pendingRef.current = undefined;
@@ -234,6 +219,19 @@ export function useComparison({
     const loaded = loadedRef.current;
     begin(loaded?.scopeKey === demand.scopeKey ? "renew" : "load");
   }, [begin, demand?.key, demand?.scopeKey]);
+
+  useEffect(() => {
+    if (acceptedEvidence.current === evidenceRevision) return;
+    acceptedEvidence.current = evidenceRevision;
+    const requested = latestDemand.current;
+    if (
+      requested &&
+      loadedRef.current?.scopeKey === requested.scopeKey &&
+      !pendingRef.current &&
+      environment?.delivery().kind === "live"
+    )
+      begin("renew");
+  }, [begin, environment, evidenceRevision]);
 
   useEffect(
     () => () => {
@@ -259,6 +257,6 @@ export function useComparison({
       : {}),
     refresh: () => begin("load", true),
     retry: () => begin("load", true),
-    selectMode: (next) => setModeState({ mode: next, ownerKey }),
+    selectMode,
   };
 }
