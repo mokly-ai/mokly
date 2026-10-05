@@ -51,7 +51,7 @@ recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./specs/design/library/README.md),
 [adoption contract](../../docs/protocol/mokly-design-components.md),
 [library inventory](../../docs/protocol/mokly-design-component-library.md)
-and [plans index](../../plans/README.md).
+and [implementation plans](../../plans/).
 
 The example uses the recommended dedicated spec tree: discovered modules under
 `specs/example`, `specs/design/browse`, `specs/design/changes`,

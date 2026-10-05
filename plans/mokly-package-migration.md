@@ -1,5 +1,8 @@
 # Mokly Package Migration
 
+Status: Completed. [PR #66](https://github.com/mokly-ai/mokly/pull/66)
+merged on 2026-09-14.
+
 Migrate the repository's public distribution identity from `mokabook` to the
 unscoped `mokly` npm package and executable. There are no supported external
 Mokabook consumers, so the cutover is intentionally breaking and does not ship

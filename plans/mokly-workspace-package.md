@@ -1,5 +1,9 @@
 # Move `@mokly/mokly` Into `packages/mokly`
 
+Status: Active. Milestone 1 is complete. Milestone 2 is in progress. Milestone 3
+starts after the coordinating reviewer approves Milestone 2. The reviewer owns
+Milestone 4.
+
 Make the CLI package a real npm workspace member at `packages/mokly`, beside
 `packages/viewer`. The repository root becomes a private workspace root that
 owns the shared toolchain, the repository-wide scripts, the tests, the docs,
@@ -95,7 +99,7 @@ protocol documents. Created 2026-10-05.
    supported Node range and the `.node-version` link, Key code, Plans, and
    License. Tests that assert README sentences follow the sentence.
 10. **Historical records stay.** Path mentions inside `plans/*.md` other than
-    this plan, `plans/README.md`, and `docs/reviews/*.md` are dated records and
+    this plan, and inside `docs/reviews/*.md`, are dated records and
     stay unchanged. Current docs, READMEs, and protocol documents change.
 11. **Ratchet roots.** The source roots become `packages/mokly/src`,
     `packages/mokly/scripts`, `packages/viewer/src`, `packages/viewer/scripts`,
@@ -183,6 +187,7 @@ that does not exist yet.
       copy. Update inbound links or tests that name the old headings.
 - [x] `plans/README.md`: verify this plan is under Active and keep its status
       current. The plan commit already added the entry.
+
 - [x] Fix other prose-only layout conflicts in `docs/protocol/npm-release-management.md`,
       `docs/protocol/mokly-guides.md`, and `docs/protocol/mokly-package.md`.
       Name the package root exports explicitly in `docs/protocol/mokly-authoring.md`,
@@ -196,10 +201,22 @@ that does not exist yet.
       `node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_sizes.test.ts`.
 - [x] Commit with Conventional Commits and push the branch.
 
+The approved `main` change later removed the index. The checked index item is
+history. The plan's `Status:` paragraph now records its progress.
+
 ## Milestone 2: Add layout seams with the current layout
 
 Introduce the names that the move will redefine, while `src/` and `dist/` stay
 at the root. The gate stays green.
+
+### Mainline integration notes
+
+- Integrate the approved `60d4837` change by merge, with source tip `8b79af5`.
+- Accept main's deletion of `plans/README.md`; do not recreate an index.
+- Preserve main's agent rules and historical plan status updates unchanged.
+- Preserve main's `plans/` links in the root README, example README, viewer
+  client README, and CLI export and publish READMEs.
+- This plan uses its own `Status:` paragraph. Milestone 1 stays closed.
 
 - [ ] `tests/helpers/fixture.ts`: export `packageRoot` (equal to
       `repositoryRoot` for now) and `cliBinPath`
