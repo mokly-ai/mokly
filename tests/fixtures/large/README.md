@@ -114,6 +114,32 @@ on the same prepared fixture, run
 The output must stay inside the fixture; review timing rows are inclusive, and
 overlapping traversals must not be added to their parent duration.
 
+## Recorded measurements
+
+Measured on 2026-10-05 with the default fixture in committed mode (1,590
+entries, 5,550 views, 142 MB of HTML, a 24 MB manifest) on 8 vCPUs and 16 GB
+with Node 24.21.0. Build is the second run with output on disk; Serve is the
+background exhaustive compile; Export is the complete artifact path.
+
+| Phase                                           | Build  | Serve background | Export            |
+| ----------------------------------------------- | ------ | ---------------- | ----------------- |
+| React rendering (`render`)                      | 59.0 s | 75.3 s           | 62.3 s            |
+| HTML passes (links, resources, compat, logical) | 20.7 s | 28.6 s           | 31.6 s            |
+| Component metadata validation                   | 4.4 s  | 6.0 s            | 7.4 s             |
+| esbuild bundle and evaluate                     | 0.6 s  | 0.5 s            | 0.7 s             |
+| Output write and path checks                    | 8.5 s  | 13.9 s           | 13.6 s            |
+| Comparison (`review.*`)                         | none   | worker died      | 139 s, then crash |
+
+Serve listened after 11 to 13 s, served the first on-demand preview in 2.9 s
+and later previews in 0.2 to 0.3 s, and spent 29 to 33 s in watcher resource
+discovery. The Changes worker reached its 1 GB heap cap after about 90 s of
+classification in both runs, so Changes became unavailable. Export reached
+139 s in `review.compare-screens`, with 15,512 `review.resource-graph`
+occurrences for 5,520 views, then aborted at the default 4.3 GB heap limit.
+The [native engine plan](../../../plans/native-rust-engine.md) owns the
+follow-up; the [diagnostic contract](../../../docs/protocol/mokly-timings.md)
+records the engine's memory budget once it is measured.
+
 This is representative structure and volume, not private consumer data or an
 exact prediction of production timing. OS, hardware, cache state, markup complexity
 and instance counts matter. Benchmark while other heavy checks are idle. There

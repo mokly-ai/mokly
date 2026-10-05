@@ -16,7 +16,10 @@ audit-first repository suite. The [baseline audit contract](./dependency-audit-b
 sets `DEPENDENCY_AUDIT` to `baseline` for ordinary pull requests and every push.
 It sets `strict` for same-repository dependency update and Release Please pull
 requests. The suite receives `--dependency-audit "$DEPENDENCY_AUDIT"`.
-Fork branch names and labels cannot select strict mode.
+Fork branch names and labels cannot select strict mode. The native
+engine's build steps, Cargo cache, and release build matrix are the
+approved target of the [native engine contract](./mokly-native-engine.md); its
+Delivery Status records their delivery.
 
 The baseline audit for a push to `main` compares the pushed commit with itself.
 It fails only on audit errors (report, input, or registry). The daily strict
@@ -103,7 +106,8 @@ Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
 `npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI
-caches only npm downloads. Every cached CI job keys npm's download cache from
+caches only npm downloads until the native engine adds its Cargo cache
+keyed from `Cargo.lock`. Every cached CI job keys npm's download cache from
 the checked-out `package-lock.json`. Only the repository audit reads a
 comparison-commit lockfile, for baseline evaluation rather than a cache key. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)

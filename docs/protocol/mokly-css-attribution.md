@@ -13,6 +13,9 @@ publication. The inspector receives retained and excluded stylesheet evidence
 for both catalogue kinds, including before a comparison is loaded. Screen-only
 delivery reuses accepted classification without a second resource analysis.
 See [CSS Change Attribution](../../plans/css-change-attribution.md).
+The [native engine contract](./mokly-native-engine.md) is the approved target for
+running rule analysis in the Rust engine; the rules, outcomes, and result
+are unchanged.
 
 Discovery of inserted links inside Review-ignore is implemented in
 [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).

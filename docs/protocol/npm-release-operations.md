@@ -66,10 +66,11 @@ blockers.
 
 ## Release Evidence
 
-Each pair records one checked commit, both immutable tags and versions, the
-CLI's exact viewer dependency, both uploaded tarballs and pack reports, both
-registry verification results, GitHub releases, npm URLs, provenance/signature
-results and every clean-consumer smoke result. The preserved verification
+Each release records one checked commit, both immutable tags and versions, the
+CLI's exact viewer and platform-package dependencies, every uploaded tarball
+and pack report (platform packages, viewer, and CLI), every registry
+verification result, GitHub releases, npm URLs, provenance/signature results
+and every clean-consumer smoke result. The preserved verification
 record identifies whether the workflow ran the complete gate or reused CI, and
 in evidence mode names the selected CI run, evidence commit, matching tree and
 report count. Retain the workflow run and protection read-backs. The first

@@ -41,13 +41,15 @@ one operation; `lstat` followed by Node's replacing rename is not equivalent.
 Do not emulate this by copying entries into a visible directory, by a shell
 `mv`, or by retrying a failed exclusive rename with ordinary rename.
 
-The package uses a lazily loaded Koffi native bridge: Linux
-`renameat2(RENAME_NOREPLACE)`, macOS `renamex_np(RENAME_EXCL)`, and Windows
-`MoveFileExW` without replacement/copy flags. Paths must be absolute and NUL-free;
-Windows paths use the wide-character, namespaced form. Capture uses the same
-primitive so an unsupported platform, filesystem, or unavailable bridge fails
-before existing output is moved. Keep optional platform binaries installed;
-ordinary build/check/serve and help do not load the export bridge. There is no
+The rename primitive comes from the native rename boundary of the
+[native engine contract](./mokly-native-engine.md), whose Delivery Status names the
+current provider: Linux `renameat2(RENAME_NOREPLACE)`, macOS
+`renamex_np(RENAME_EXCL)`, and Windows `MoveFileExW` without replacement/copy
+flags. Paths must be absolute and NUL-free; Windows paths use the
+wide-character, namespaced form. Capture uses the same primitive so an
+unsupported platform, filesystem, or unavailable engine fails before existing
+output is moved. Keep the optional platform packages installed; ordinary
+build/check/serve and help never load the rename boundary. There is no
 cross-filesystem copy fallback and no new consumer toolchain requirement on
 platforms with packaged binaries.
 
@@ -58,7 +60,7 @@ filesystem compare-and-swap of source identity: validate source identity before
 capture and again on the captured backup, restoring substitutions when safe.
 
 Primary references: [Node rename](https://nodejs.org/api/fs.html#fspromisesrenameoldpath-newpath),
-[Koffi calls and libraries](https://koffi.dev/load),
+[Node-API](https://nodejs.org/api/n-api.html),
 [Linux rename semantics](https://www.kernel.org/doc/html/latest/filesystems/vfs.html),
 [Apple rename flags](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/stdio.h),
 and [Windows MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw).

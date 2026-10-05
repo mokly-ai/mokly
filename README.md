@@ -314,6 +314,12 @@ appearance with any preview scheme. See the
 [viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md) and
 [semantic palette](./docs/protocol/mokly-viewer-palette.md).
 
+A planned native engine adds optional `@mokly/engine-<platform>` packages that
+`@mokly/mokly` installs for the exclusive export rename, the Windows baseline
+job, and catalogue comparison. The
+[native engine contract](./docs/protocol/mokly-native-engine.md) defines the
+platforms, the loader, and every operation.
+
 ## Documentation
 
 - [Getting started](./docs/guides/start/install.md)
@@ -325,6 +331,7 @@ appearance with any preview scheme. See the
 - [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
+- [Native engine contract](./docs/protocol/mokly-native-engine.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures
 - [Changelog](./CHANGELOG.md)
@@ -352,6 +359,9 @@ version. A global npm install applies only to the active Node.js version.
 rustup reads the toolchain file and installs the pinned Rust the first time
 `cargo` runs in the repository. Use the pinned npm version for dependency
 changes.
+The [native engine plan](./plans/native-rust-engine.md) adds Rust crates
+under `crates/` that `npm run build` compiles for the host; until it lands,
+Rust is used only by `cargo xtask`.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
