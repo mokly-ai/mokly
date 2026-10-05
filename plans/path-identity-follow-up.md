@@ -5,9 +5,10 @@ the open review items of [Path Identity](./path-identity.md), which merged in
 PR #131 (`c4138a0`). The work uses the existing workspace branch
 `calummoore/filenav-review-items` and one new pull request. Milestone 1 is
 complete. On 2026-10-05 the user asked to delegate the fixes to Codex
-(`gpt-6.1-sol`, effort `max`). Four Codex workspaces implement Milestones 2
-and 6–7, 3–4, 5, and 8 from this branch. The orchestrator checks each branch
-independently and merges it here; Milestones 9–11 follow after the merges.
+(`gpt-6.1-sol`, effort `max`). Four Codex workspaces implemented Milestones 2
+and 6–7, 3–4, 5, and 8 from this branch. The orchestrator reviewed each
+branch, ran its key tests independently, and merged it here. Milestones 1–8
+are complete. Milestones 9–11 remain.
 
 ## Scope And Decisions
 
@@ -124,6 +125,12 @@ step 1). Reject invalid move records at the reader (item 11). Complete.
       guard comment.
 - [x] Run the related unit tests, type checks and lint.
 
+Approved deletion: `packages/viewer/src/shell/catalogue_branch_point.ts` is
+removed from `origin/main` because the lookup moved to
+`packages/viewer/src/catalogue/branch_point.ts`. The user approved this move
+with option C for item 1 on 2026-10-05. It is the only deletion against
+`origin/main`.
+
 ## Milestone 4: Shell consumers of the shared lookup
 
 Tags: ui
@@ -144,6 +151,10 @@ input values for a variant that moved to a new component (items 1 and 10). Compl
       browser checks at desktop and mobile widths.
 - [x] Run the related unit and browser tests, and smoke-test Serve and export
       on a scratch Git repository.
+
+Open finding from the Codex self-review (Low, not fixed): the review-result
+reader accepts before-side usage evidence that names a component which exists
+only on the current side. It is reported for the user's decision.
 
 ## Milestone 5: Recorded locations in the comparison engine
 
