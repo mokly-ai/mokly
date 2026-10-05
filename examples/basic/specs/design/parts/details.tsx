@@ -47,6 +47,11 @@ function DetailsBody({
             {changedViews}
           </MetaRow>
         ) : null}
+        {metadata.location && metadata.location.length > 0 ? (
+          <MetaRow name="location" label="Location">
+            {metadata.location.join(" › ")}
+          </MetaRow>
+        ) : null}
         {metadata.tags.length > 0 ? (
           <MetaRow name="tags" label="Tags">
             <TagChips activeTag={activeTag} tags={metadata.tags} />

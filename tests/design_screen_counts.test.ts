@@ -125,12 +125,15 @@ test("documented design-screen counts match the compiled catalogue", async () =>
     ],
     [
       "docs/protocol/mokly-component-design.md",
-      /All ([a-z]+-[a-z]+) component screens opt into light documents/gu,
+      new RegExp(
+        `All ${word} component screens opt into light documents`,
+        "gu",
+      ),
       [components.length],
     ],
     [
       "docs/protocol/mokly-component-design.md",
-      /only from the ([a-z]+-[a-z]+) component design routes/gu,
+      new RegExp(`only from the ${word} component design routes`, "gu"),
       [components.length],
     ],
     [

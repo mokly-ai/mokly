@@ -66,11 +66,13 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
       <div className="mbk-details-body">
         <div>
           <p className="mbk-details-desc">{entry.description}</p>
-          <p>Location: Example › Handbook</p>
         </div>
         <div className="mbk-meta">
           <MetaRow name="source" label="Source">
             Previous version
+          </MetaRow>
+          <MetaRow name="location" label="Location">
+            Example › Handbook
           </MetaRow>
           <MetaRow name="tags" label="Tags">
             documents

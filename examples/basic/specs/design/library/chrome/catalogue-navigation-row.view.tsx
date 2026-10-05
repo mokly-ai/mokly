@@ -16,7 +16,7 @@ import {
   VariantIcon,
 } from "../../parts/icons.js";
 
-import type { NavigationRow } from "./catalogue-navigation-sections.js";
+import type { DrawnNavigationRow } from "./catalogue-navigation-sections.js";
 
 /** Left padding applied to a top-level (depth 0) row, in pixels. */
 const ROOT_INSET = 8;
@@ -49,7 +49,7 @@ function navRowStyle(depth: number): CSSProperties {
   return style as CSSProperties;
 }
 
-function RowIcon({ node }: { node: NavigationRow }) {
+function RowIcon({ node }: { node: DrawnNavigationRow }) {
   if (node.kind === "component") return <ComponentIcon />;
   if (node.kind === "page") return <PageIcon />;
   if (node.kind === "document") return <DocumentIcon />;
@@ -64,7 +64,7 @@ function RowIcon({ node }: { node: NavigationRow }) {
 }
 
 /** The icon wrapper's modifier, which styles and tests target by row kind. */
-function iconClassName(kind: NavigationRow["kind"]): string {
+function iconClassName(kind: DrawnNavigationRow["kind"]): string {
   if (kind === "flow") return "mbk-nav-ico flow";
   if (kind === "variant") return "mbk-nav-ico variant";
   return "mbk-nav-ico";
@@ -112,7 +112,7 @@ export function NavRow({
   activeDestination?: DesignDestination | undefined;
   activeKey?: string | undefined;
   activeLabel?: string | undefined;
-  node: NavigationRow;
+  node: DrawnNavigationRow;
 }) {
   const isActive =
     node.kind !== "folder" &&

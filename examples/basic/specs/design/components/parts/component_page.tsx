@@ -12,6 +12,7 @@ import { ComponentLayout } from "./component_layout.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
 import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
+import { MovedVariantsStage } from "./moved_variants_stage.js";
 import type { ChangeScenario } from "./navigation_tree.js";
 import {
   ActionExample,
@@ -34,6 +35,7 @@ const COMPARISON_MODES: Partial<
 /** The Changes scenario whose navigation each state's artboard depicts. */
 function changeScenario(state: ComponentPageState): ChangeScenario {
   if (state === "removed" || state === "added") return state;
+  if (state === "removed-parent") return "moved-variants";
   if (COMPONENT_ENTRY_BY_STATE[state].component === "checklist")
     return "checklist";
   return state === "disabled" || componentComparison(state)
@@ -41,7 +43,11 @@ function changeScenario(state: ComponentPageState): ChangeScenario {
     : "all";
 }
 
-/** Shared component-page composition; each owning screen exports both artboards. */
+/**
+ * Shared component-page composition; each owning screen exports both
+ * artboards. A removed parent whose variants all moved has no variant bar or
+ * comparison band, and its stage says where the variants went.
+ */
 export function ComponentPage({
   state,
   viewport,
@@ -49,6 +55,21 @@ export function ComponentPage({
   state: ComponentPageState;
   viewport: ArtboardViewport;
 }) {
+  if (state === "removed-parent")
+    return (
+      <ComponentLayout
+        comparisons={false}
+        design={COMPONENT_PAGES[state]}
+        entry={COMPONENT_ENTRY_BY_STATE[state]}
+        inspector={<ComponentDetails state={state} />}
+        scenario={changeScenario(state)}
+        status="removed"
+        variants={null}
+        viewport={viewport}
+      >
+        <MovedVariantsStage />
+      </ComponentLayout>
+    );
   const mode = COMPARISON_MODES[state];
   const entry = COMPONENT_ENTRY_BY_STATE[state];
   const navigationKey =

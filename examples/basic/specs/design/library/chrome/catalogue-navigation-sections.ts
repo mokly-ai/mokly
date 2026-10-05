@@ -1,11 +1,21 @@
 import type { CatalogueNavigationProps } from "./catalogue-navigation.js";
 
+/** One written row. It has no count: a folder's count derives from its rows. */
 export type NavigationRow = CatalogueNavigationProps["rows"][number];
+
+/** One drawn row; a folder row carries the count of its rows in the section. */
+export type DrawnNavigationRow = NavigationRow & { readonly count?: number };
+
 type NavigationSectionId = "components" | "specs";
 
 interface NavigationBranch {
   children: NavigationBranch[];
   row: NavigationRow;
+}
+
+interface DrawnBranch {
+  children: DrawnBranch[];
+  row: DrawnNavigationRow;
 }
 
 /**
@@ -35,10 +45,15 @@ function navigationForest(rows: readonly NavigationRow[]): NavigationBranch[] {
   return roots;
 }
 
+/**
+ * Keep the branch's rows that belong to `section`. A folder counts its
+ * immediate child rows in the section, as the shell does, and keeps that
+ * count while it is closed; a folder without such rows is not drawn there.
+ */
 function projectBranch(
   branch: NavigationBranch,
   section: NavigationSectionId,
-): NavigationBranch | undefined {
+): DrawnBranch | undefined {
   if (branch.row.kind !== "folder") {
     const component = branch.row.kind === "component";
     if (component !== (section === "components")) return undefined;
@@ -57,21 +72,19 @@ function projectBranch(
     const projected = projectBranch(child, section);
     return projected ? [projected] : [];
   });
-  const emptySpecsFolder = section === "specs" && branch.children.length === 0;
-  if (children.length === 0 && !emptySpecsFolder) return undefined;
-  const { count: _count, ...row } = branch.row;
-  return {
-    children,
-    row: children.length > 0 ? { ...row, count: children.length } : row,
-  };
+  if (children.length === 0) return undefined;
+  return { children, row: { ...branch.row, count: children.length } };
 }
 
+/** The rows a reader sees: a closed folder hides the rows it counts. */
 function flattenBranches(
-  branches: readonly NavigationBranch[],
-): NavigationRow[] {
+  branches: readonly DrawnBranch[],
+): DrawnNavigationRow[] {
   return branches.flatMap((branch) => [
     branch.row,
-    ...flattenBranches(branch.children),
+    ...(branch.row.kind === "folder" && !branch.row.open
+      ? []
+      : flattenBranches(branch.children)),
   ]);
 }
 

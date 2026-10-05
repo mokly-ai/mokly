@@ -30,6 +30,7 @@ export type ComponentPageState =
   | "unused"
   | "added"
   | "removed"
+  | "removed-parent"
   | "usage-loading"
   | "usage-failed"
   | "shared-impact"
@@ -69,6 +70,15 @@ const SUPPLIED_PROPS: Partial<
 function ComponentProps({ state }: { state: ComponentPageState }) {
   const entry = COMPONENT_ENTRY_BY_STATE[state];
   const supplied = SUPPLIED_PROPS[state];
+  if (state === "removed-parent")
+    return (
+      <section>
+        <h3>Supplied props</h3>
+        <p className="ce-empty-copy">
+          This component has no saved variants to edit.
+        </p>
+      </section>
+    );
   return (
     <section>
       <h3>Supplied props</h3>

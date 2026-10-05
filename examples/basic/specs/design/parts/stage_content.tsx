@@ -1,10 +1,16 @@
 import type { ReactNode } from "react";
 
 import { optional, useDesignInstance } from "../library/composition.js";
-import { emptyState } from "../library/preview/empty-state.js";
+import {
+  emptyState,
+  type EmptyStateProps,
+} from "../library/preview/empty-state.js";
 import { flowStep } from "../library/preview/flow-step.js";
 
 import type { DesignDestination } from "./destinations.js";
+
+/** A catalogue destination an empty state's action or entry link may open. */
+type EmptyStateDestination = NonNullable<EmptyStateProps["destination"]>;
 
 export function FlowStep({
   children,
@@ -38,23 +44,33 @@ export function EmptyState({
   body,
   code,
   linkLabel,
+  links,
   title,
   to,
 }: {
   body: string;
   code?: string;
   linkLabel?: string;
+  /** Entry links listed below the body; one without a destination is a depiction. */
+  links?: readonly { label: string; to?: EmptyStateDestination }[];
   title: string;
-  to: DesignDestination;
+  to?: EmptyStateDestination;
 }) {
   return (
     <emptyState.Component
       moklyInstance={useDesignInstance("empty")}
       body={body}
       title={title}
-      destination={to}
+      {...optional("destination", to)}
       {...optional("actionLabel", linkLabel)}
       {...optional("code", code)}
+      {...optional(
+        "links",
+        links?.map(({ label, to: destination }) => ({
+          label,
+          ...optional("destination", destination),
+        })),
+      )}
     />
   );
 }

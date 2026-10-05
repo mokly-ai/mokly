@@ -26,8 +26,12 @@ export function UsageDeliveryState({ state }: { state: "loading" | "failed" }) {
 }
 
 export function UsedBy({ state }: { state: ComponentPageState }) {
+  const removed = state === "removed-parent";
   const unused =
-    state === "unused" || state === "added" || state === "overlay-tall";
+    removed ||
+    state === "unused" ||
+    state === "added" ||
+    state === "overlay-tall";
   const uses =
     state === "toolbar" || state === "hidden"
       ? componentUses.slice(0, 1)
@@ -46,7 +50,7 @@ export function UsedBy({ state }: { state: ComponentPageState }) {
       </h3>
       {unused ? (
         <p className="ce-empty-copy">
-          {`No screens or components use ${COMPONENTS[COMPONENT_ENTRY_BY_STATE[state].component].title} yet.`}
+          {`No screens or components use ${COMPONENTS[COMPONENT_ENTRY_BY_STATE[state].component].title}${removed ? "" : " yet"}.`}
         </p>
       ) : (
         <ul className="ce-usage-list">

@@ -31,7 +31,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
     ];
-    assert.equal(new Set(destinations).size, 39);
+    assert.equal(new Set(destinations).size, 40);
     const family = new Map<string, keyof typeof MODE_LABELS>(
       Object.entries(actionModes).map(([mode, id]) => [
         id,
@@ -54,6 +54,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         COMPONENT_PAGES.difference,
         COMPONENT_PAGES["overlay-tall"],
         COMPONENT_PAGES.removed,
+        COMPONENT_PAGES["removed-parent"],
         CONTROLS_PAGES.comparison,
         INSPECTION_PAGES["direct-change"],
         INSPECTION_PAGES["removed-consumer"],
@@ -61,6 +62,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       const comparable =
         changed &&
         id !== COMPONENT_PAGES.added &&
+        id !== COMPONENT_PAGES["removed-parent"] &&
         id !== INSPECTION_PAGES["removed-consumer"];
       assert.equal(
         byClass(document, "ce-unmodified").length,

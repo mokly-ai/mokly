@@ -12,9 +12,16 @@ import {
   type ComponentDesignDestination,
 } from "./destinations.js";
 import type { CatalogueIdentity } from "./metadata.js";
+import { movedVariantNodes } from "./moved_variants.js";
 
 export type ChangeScenario =
-  "all" | "component" | "screen" | "removed" | "added" | "checklist";
+  | "all"
+  | "component"
+  | "screen"
+  | "removed"
+  | "added"
+  | "checklist"
+  | "moved-variants";
 
 /** Scenarios whose Changes hold one component outside Action's story. */
 export const SOLE_CHANGES = {
@@ -38,6 +45,7 @@ export function explorerNodes(
   design: ComponentDesignDestination,
   activeKey?: string,
 ): NavNode[] {
+  if (scenario === "moved-variants") return movedVariantNodes(design);
   return [
     {
       key: "example",
@@ -111,7 +119,6 @@ function exampleMembers(
         depth: 0,
         kind: "folder",
         label: "Components",
-        count: 1,
         open: true,
       },
       ...componentBranch(identity, to, variants, to),
@@ -131,12 +138,6 @@ function exampleMembers(
             depth: 0,
             kind: "folder",
             label: "Screens",
-            count:
-              scenario === "screen" || scenario === "removed"
-                ? 1
-                : reading
-                  ? 3
-                  : 2,
             open: true,
           },
           {
@@ -183,7 +184,6 @@ function exampleMembers(
       depth: 0,
       kind: "folder",
       label: "Components",
-      count: scenario === "all" ? 4 : 1,
       open: true,
     },
     ...componentBranch(

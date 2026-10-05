@@ -107,39 +107,57 @@ Tags: mockup
 Depict both removed-entry states and fix the folder counts in every
 artboard.
 
-Status: Not started.
+Status: Complete.
 
-- [ ] Write the design tests first and see them fail:
-  - [ ] `tests/design_folder_counts.test.ts`: every folder row in every
-        generated design document has a positive count.
-  - [ ] `tests/design_navigation_sections.test.ts`: the helper counts the
+- [x] Write the design tests first and see them fail:
+  - [x] `tests/design_folder_counts.test.ts`: every folder row in every
+        generated design document has a positive count. It failed on the
+        documented 120 rows before the fix and checks 801 folder rows.
+  - [x] `tests/design_navigation_sections.test.ts`: the helper counts the
         written rows of a closed folder without drawing them, draws an open
         folder's rows, never counts a variant row, counts a child folder
         once, omits a folder with no rows in a section, and counts each
-        section separately.
-- [ ] Change the helper in `catalogue-navigation-sections.ts`, remove `count`
+        section separately. Four of its seven tests failed before the fix.
+- [x] Change the helper in `catalogue-navigation-sections.ts`, remove `count`
       from the row schema, and give the row view the drawn row type.
-- [ ] Write the rows of the depicted `Browse shell` and `Changes` folders,
+- [x] Write the rows of the depicted `Browse shell` and `Changes` folders,
       replace `NAV_TREE.slice(0, 3)` in the library's `changes` example with
-      a complete Changes list, and delete every typed `count`.
-- [ ] Extend the library empty state with an optional list of entry links
+      a complete Changes list, and delete every typed `count`, including the
+      tag-filter rows that the runtime prop check rejected.
+- [x] Extend the library empty state with an optional list of entry links
       and a `moved-variants` saved example, with its styles.
-- [ ] Add the `Moved variants` child gallery and its `removed-parent` screen:
+- [x] Add the `Moved variants` child gallery and its `removed-parent` screen:
       Changes lists `Link button · Removed`, `Quiet · Moved` under Action and
       `Inline · Moved` under Toolbar. The page has no variant bar and no
       comparison band. Its stage lists `Action › Quiet` and
       `Toolbar › Inline`. Details are open and show no `Location`.
-- [ ] Add a `Location` row to the existing removed depictions inside a
+- [x] Add a `Location` row to the existing removed depictions inside a
       folder: the removed screens and variants (`Example › Screens`), the
       removed documents (`Example › Handbook`), the light-only removed
       document (`Account › Billing & Payments`), the removed Compact variant
       (`Example › Components`) and the removed Farewell consumer.
-- [ ] Update the screen counts in `examples/basic/README.md` and the design
-      docs. Add design tests for the new artboard and the `Location` rows.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+- [x] Contract gap found while depicting the Props tab: the product tells a
+      page without variants to choose an available saved variant. Define
+      `This component has no saved variants to edit.` in
+      `mokly-component-workspace-design.md`, and depict it.
+- [x] Update the screen counts in `examples/basic/README.md` and the design
+      docs. Add `tests/design_removed_entry_states.test.ts` for the new
+      artboard and the `Location` rows.
+- [x] Update the counts that design tests pin: 40 component design screens,
+      70 component variants and 112 design screens. Let the documented
+      count test read a one-word count such as `forty`.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       the design unit tests and the component and design browser specs.
-- [ ] Smoke-test the changed pages through `npm run dev` at mobile and
+- [x] Smoke-test the changed pages through `npm run dev` at mobile and
       desktop widths.
+
+Verification: `npm run example:check` reports 476 valid files. All design and
+component-design unit tests pass, including the attribution run with the new
+40-screen and 70-variant scopes. Before and after the helper change, the only
+changed navigation rows in the 61 affected artboards are the two closed-folder
+counts and the library's `changes` example. 49 component and design browser
+tests pass. In Serve, the new artboard and the home artboard render at 1440 and
+390 pixels with no page error.
 
 ## Milestone 3: Moved-variant lookup
 
@@ -152,9 +170,6 @@ Status: Not started.
       surviving donor, and no result for case-only renames or unpaired
       variants.
 - [ ] Add `movedVariants` to `catalogue_branch_point.ts`.
-- [ ] Add shared case `departed-variants` to the branch-point fixture set,
-      with its pairs, its removed record and its lookup result in
-      `tests/branch_point_fixture_data.test.ts`.
 - [ ] Update the shell README.
 
 ## Milestone 4: Removed-entry presentation
@@ -165,6 +180,10 @@ Implement the designed states in the shared shell.
 
 Status: Not started.
 
+- [ ] Add shared case `departed-variants` to the branch-point fixture set,
+      with its pairs, its removed record and its lookup result in
+      `tests/branch_point_fixture_data.test.ts`. It moved here from
+      Milestone 3 because its browser checks need the new presentation.
 - [ ] Write failing shell tests first: a removed parent with moved variants
       renders no variant bar, the new copy and the links in the served and
       public shells; a removed parent with a removed variant keeps its bar
@@ -174,6 +193,8 @@ Status: Not started.
 - [ ] Render the moved-variant stage, and add its styles.
 - [ ] Show `Location` in `details.tsx` only when the folder titles are not
       empty.
+- [ ] Show `This component has no saved variants to edit.` in Props when a
+      page has no variant row.
 - [ ] Add the `departed-variants` browser checks for Serve, export and the
       embedded viewer at desktop and mobile widths, and extend
       `move_removed_parent_delivery.test.ts` to read the rendered page.

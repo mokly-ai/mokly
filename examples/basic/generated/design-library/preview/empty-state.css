@@ -38,3 +38,17 @@ color: var(--mbk-sage);
   font-weight: 600;
   margin-top: 8px;
 }
+
+.mbk-empty-links {
+align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.mbk-empty-links .mbk-empty-link {
+margin-top: 0;
+}

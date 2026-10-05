@@ -150,11 +150,13 @@ function LightOnlyDocument({ viewport }: { viewport: ArtboardViewport }) {
             <p className="mbk-details-desc">
               When an invoice is due, and what happens once it is late.
             </p>
-            <p>Location: Account › Billing &amp; Payments</p>
           </div>
           <div className="mbk-meta">
             <MetaRow name="source" label="Source">
               Previous version
+            </MetaRow>
+            <MetaRow name="location" label="Location">
+              Account › Billing &amp; Payments
             </MetaRow>
           </div>
         </div>

@@ -7,7 +7,10 @@ import {
   NAV_TREE_PROFILE_OPEN,
   NAV_TREE_VARIANTS_OPEN,
 } from "../../parts/nav_data.js";
-import { CHANGED_VARIANT_ROWS } from "../../parts/variant_nav_data.js";
+import {
+  CHANGED_VARIANT_ROWS,
+  CHANGED_VIEW_ROWS,
+} from "../../parts/variant_nav_data.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, flag, optionalText, text } from "../schemas.js";
 
@@ -39,10 +42,6 @@ const propSchema = {
               },
             },
             depth: { schema: { kind: "number", minimum: 0, integer: true } },
-            count: {
-              schema: { kind: "number", minimum: 0, integer: true },
-              optional: true,
-            },
             changed: { ...flag, optional: true },
             moved: { ...flag, optional: true },
             open: { ...flag, optional: true },
@@ -132,7 +131,7 @@ export const catalogueNavigation = defineComponent({
     {
       slug: "changes",
       title: "Changes",
-      props: { ...sample, changedOnly: true, rows: NAV_TREE.slice(0, 3) },
+      props: { ...sample, changedOnly: true, rows: CHANGED_VIEW_ROWS },
     },
     {
       slug: "empty",

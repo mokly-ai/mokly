@@ -42,6 +42,7 @@ export const COMPONENT_NAVIGATION_STATES = {
   [COMPONENT_PAGES.unused]: {},
   [COMPONENT_PAGES.added]: {},
   [COMPONENT_PAGES.removed]: {},
+  [COMPONENT_PAGES["removed-parent"]]: {},
   [COMPONENT_PAGES["usage-loading"]]: {},
   [COMPONENT_PAGES["usage-failed"]]: {},
   [COMPONENT_PAGES["shared-impact"]]: {},

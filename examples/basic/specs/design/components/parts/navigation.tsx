@@ -34,9 +34,11 @@ export function ExplorerShell({
     changedCount:
       scenario === "all"
         ? 0
-        : scenario === "screen" || scenario === "removed"
-          ? 2
-          : 1,
+        : scenario === "moved-variants"
+          ? 3
+          : scenario === "screen" || scenario === "removed"
+            ? 2
+            : 1,
     changedOnly: scenario !== "all",
     nodes: explorerNodes(scenario, active, design, activeKey),
     ...(activeKey === undefined ? {} : { activeKey }),
@@ -66,9 +68,11 @@ export function ExplorerShell({
                   ? SOLE_CHANGES[scenario].to
                   : scenario === "removed"
                     ? "design/components/states/removed"
-                    : scenario === "screen"
-                      ? "design/components/inspection/inspection-direct-change"
-                      : "design/components/pages/affected"
+                    : scenario === "moved-variants"
+                      ? "design/components/states/moved-variants/removed-parent"
+                      : scenario === "screen"
+                        ? "design/components/inspection/inspection-direct-change"
+                        : "design/components/pages/affected"
               }
             >
               Changes{" "}

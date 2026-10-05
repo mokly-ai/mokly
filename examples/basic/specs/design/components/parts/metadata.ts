@@ -46,6 +46,13 @@ export const COMPONENTS = {
     source: "components/Checklist.tsx",
     dependencies: ["components/Checklist.tsx"],
   },
+  "link-button": {
+    id: "link-button",
+    title: "Link button",
+    description: "A quiet text action beside the main action.",
+    source: "components/LinkButton.tsx",
+    dependencies: ["components/LinkButton.tsx"],
+  },
 } as const satisfies Record<string, ComponentMetadata>;
 
 export type ComponentId = keyof typeof COMPONENTS;
@@ -57,6 +64,11 @@ export interface ComponentEntryMetadata {
   path: string;
   title: string;
   variantOf?: ComponentId;
+  /**
+   * A removed entry's folder titles at the branch point, outermost first;
+   * empty when it was outside every folder. Current entries omit it.
+   */
+  location?: readonly string[];
 }
 
 /** Parent and variant identities used across component-page design states. */
@@ -83,6 +95,7 @@ export const COMPONENT_ENTRIES = {
     path: "example/components/action/compact",
     title: "Compact",
     variantOf: "action",
+    location: ["Example", "Components"],
   },
   toolbar: {
     component: "toolbar",
@@ -116,6 +129,13 @@ export const COMPONENT_ENTRIES = {
     title: "Default",
     variantOf: "checklist",
   },
+  /** A top-level component that this branch removed after its variants moved. */
+  linkButton: {
+    component: "link-button",
+    path: "link-button",
+    title: "Link button",
+    location: [],
+  },
 } as const satisfies Record<string, ComponentEntryMetadata>;
 
 export const COMPONENT_ENTRY_BY_STATE = {
@@ -131,6 +151,7 @@ export const COMPONENT_ENTRY_BY_STATE = {
   unused: COMPONENT_ENTRIES.badge,
   added: COMPONENT_ENTRIES.badgeDefault,
   removed: COMPONENT_ENTRIES.actionCompact,
+  "removed-parent": COMPONENT_ENTRIES.linkButton,
   "usage-loading": COMPONENT_ENTRIES.action,
   "usage-failed": COMPONENT_ENTRIES.action,
   "shared-impact": COMPONENT_ENTRIES.action,

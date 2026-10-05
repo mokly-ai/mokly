@@ -19,6 +19,11 @@ export type ScreenSubject =
 
 interface SubjectMetadata {
   description: string;
+  /**
+   * A removed entry's folder titles at the branch point, outermost first.
+   * Current entries omit it, and so does a removed entry outside every folder.
+   */
+  location?: readonly string[];
   /** The path a moved entry had at the branch point. */
   previousPath?: string;
   rationale: string;
@@ -33,6 +38,7 @@ interface SubjectMetadata {
 }
 
 const removed = {
+  location: ["Example", "Screens"],
   relatedDocs: false,
   schemes: "light",
   source: "Previous version",
@@ -94,6 +100,7 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   },
   welcomeError: {
     description: "Welcome after saving failed was removed from the catalogue.",
+    location: ["Example", "Screens"],
     rationale:
       "A deleted state keeps its recorded details under the screen it belonged to, so the group stays readable after the removal.",
     relatedDocs: false,
@@ -138,6 +145,7 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   },
   welcomeErrorReparented: {
     description: "Welcome after saving failed was removed from the catalogue.",
+    location: ["Example", "Screens"],
     rationale:
       "Welcome is now another screen's variant, so this removed state stays as one flat Changes row instead of nesting a second variant level.",
     relatedDocs: false,

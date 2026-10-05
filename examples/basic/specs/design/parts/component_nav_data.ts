@@ -6,7 +6,7 @@ type NavigationRows = CatalogueNavigationProps["rows"];
 
 /** Components depicted in the example catalogue and component explorer. */
 export type ComponentNavigationIdentity =
-  "action" | "toolbar" | "help-hint" | "badge" | "checklist";
+  "action" | "toolbar" | "help-hint" | "badge" | "checklist" | "link-button";
 
 interface ComponentVariantNavigationDefinition {
   id: string;
@@ -23,7 +23,8 @@ interface ComponentNavigationDefinition {
 /**
  * Action and Toolbar mirror the real example registrations. Help hint and Badge
  * are synthetic component-explorer fixtures with the saved Default state their
- * mockups depict.
+ * mockups depict. Link button is a removed top-level fixture whose variants
+ * moved to other components, so it has no variant rows.
  */
 export const COMPONENT_NAVIGATION = {
   action: {
@@ -79,6 +80,7 @@ export const COMPONENT_NAVIGATION = {
       },
     ],
   },
+  "link-button": { id: "link-button", title: "Link button", variants: [] },
 } as const satisfies Record<
   ComponentNavigationIdentity,
   ComponentNavigationDefinition

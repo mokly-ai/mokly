@@ -49,6 +49,10 @@ export const designLibrary = [
     "comparison-pane",
     ["before", "current", "missing-before", "missing-current"],
   ],
-  ["preview", "empty-state", ["home", "missing-route", "no-changes"]],
+  [
+    "preview",
+    "empty-state",
+    ["home", "missing-route", "no-changes", "moved-variants"],
+  ],
   ["preview", "flow-step", ["first", "second"]],
 ] as const;

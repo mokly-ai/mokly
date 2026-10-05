@@ -95,7 +95,8 @@ const WELCOME_VARIANTS: NavigationRows = [
  * both kinds, so it appears in Specs and in Components with that section's
  * children. Its README is the folder's own page and its first row, labelled
  * Overview because its title is the folder's title. Top-level folders follow
- * the catalogue's order record, which names Example first.
+ * the catalogue's order record, which names Example first. Design's two
+ * folders stay closed, so only their counts show.
  */
 function catalogueTree(
   variants: "closed" | "open",
@@ -186,13 +187,35 @@ function catalogueTree(
       label: "Design",
       open: true,
     },
-    {
-      key: "browse-shell",
-      depth: 1,
-      kind: "folder",
-      label: "Browse shell",
-    },
-    { key: "changes", depth: 1, kind: "folder", label: "Changes" },
+    ...closedFolder("browse-shell", "Browse shell", [
+      "Home",
+      "Selected screen",
+      "Selected use case",
+    ]),
+    ...closedFolder("changes", "Changes", [
+      "Current screen in Changes",
+      "On-demand overlay",
+    ]),
+  ];
+}
+
+/**
+ * A closed Design folder and its screens. The rows are written so the folder
+ * shows their count, as the shell does, although no artboard draws them.
+ */
+function closedFolder(
+  key: string,
+  label: string,
+  screens: readonly string[],
+): NavigationRows {
+  return [
+    { key, depth: 1, kind: "folder", label },
+    ...screens.map((title) => ({
+      key: `${key}/${title}`,
+      depth: 2,
+      kind: "screen" as const,
+      label: title,
+    })),
   ];
 }
 

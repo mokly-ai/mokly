@@ -4,7 +4,8 @@ import { COMPONENTS, type ComponentEntryMetadata } from "./metadata.js";
 
 /**
  * The shown entry's Details: its description, then its path and source as
- * secondary lines, with references behind a native disclosure.
+ * secondary lines, with references behind a native disclosure. A removed entry
+ * adds its location only when it was inside a folder.
  */
 export function ComponentInfo({ entry }: { entry: ComponentEntryMetadata }) {
   const component = COMPONENTS[entry.component];
@@ -18,6 +19,9 @@ export function ComponentInfo({ entry }: { entry: ComponentEntryMetadata }) {
       <p className="ce-muted">
         Source <code>{component.source}</code>
       </p>
+      {entry.location && entry.location.length > 0 ? (
+        <p className="ce-muted">Location {entry.location.join(" › ")}</p>
+      ) : null}
       <details className="ce-slot-details">
         <summary>Source and references</summary>
         <dl className="ce-props">

@@ -126,6 +126,12 @@ Parent status and variant status are distinct. Removing Compact from Action
 makes Compact its own Removed component variant entry, comparable with an
 explicit missing current side, while Action's status describes the parent
 only; Farewell is a Removed screen with no comparison controls.
+The `design/components/pages/variants` mockup depicts the inverse boundary: the
+selected Disabled variant entry is Unmodified and ineligible, so no comparison
+band appears, even though a sibling variant changed.
+The Added Badge example lives in States → Additions and shows its current saved
+preview without comparison controls, plus one Changes entry. The existing unused Badge
+example remains Unmodified. Status must never be inferred from usage counts.
 
 A removed component parent keeps its variant bar while it has a removed
 variant. That variant's comparison band stays, and the stage reads
@@ -140,15 +146,10 @@ Each link reads `<parent title> › <variant title>` with current titles, in
 the lookup's order, and opens that variant at its new place, where its own
 history stays. So the stage never says that no previous version exists. If
 other entries took the paths of all its former variants, only the heading
-remains.
+remains. With no variant to select, its Props panel reads
+`This component has no saved variants to edit.`
 The `design/components/states/moved-variants/removed-parent` artboard depicts
 a top-level Link button whose two variants moved to Action and Toolbar.
-The `design/components/pages/variants` mockup depicts the inverse boundary: the
-selected Disabled variant entry is Unmodified and ineligible, so no comparison
-band appears, even though a sibling variant changed.
-The Added Badge example lives in States → Additions and shows its current saved
-preview without comparison controls, plus one Changes entry. The existing unused Badge
-example remains Unmodified. Status must never be inferred from usage counts.
 
 ## Comparison Details
 

@@ -106,6 +106,9 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
                 <p className="ce-muted">
                   Source <code>{screen.source}</code>
                 </p>
+                {removed ? (
+                  <p className="ce-muted">Location Example › Screens</p>
+                ) : null}
               </section>
               <ComparisonDetails comparison={screenComparison(state)} />
             </>

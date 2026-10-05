@@ -14,6 +14,16 @@ const propSchema = {
     code: optionalText,
     actionLabel: optionalText,
     destination,
+    links: {
+      schema: {
+        kind: "array",
+        items: {
+          kind: "object",
+          properties: { label: text, destination },
+        },
+      },
+      optional: true,
+    },
   },
 } as const;
 export type EmptyStateProps = ComponentProps<typeof propSchema, []>;
@@ -61,6 +71,15 @@ export const emptyState = defineComponent({
         body: "Your screens match the comparison baseline.",
         actionLabel: "Browse all screens →",
         destination: DESTINATIONS.welcome,
+      },
+    },
+    {
+      slug: "moved-variants",
+      title: "Moved variants",
+      props: {
+        title: "This component was removed",
+        body: "Its variants moved to new places.",
+        links: [{ label: "Action › Quiet" }, { label: "Toolbar › Inline" }],
       },
     },
   ],

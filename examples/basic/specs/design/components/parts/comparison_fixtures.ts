@@ -62,6 +62,7 @@ const componentComparisons: Partial<
   affected: actionComparison,
   added: { status: "added", reason: "added", variant: "Default" },
   removed: { status: "changed", reason: "variant-removed", variant: "Compact" },
+  "removed-parent": { status: "removed", reason: "removed" },
   "shared-impact": {
     status: "unmodified",
     sharedImpact: [

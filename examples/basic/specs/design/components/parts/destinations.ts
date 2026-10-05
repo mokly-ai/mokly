@@ -18,6 +18,7 @@ export const COMPONENT_PAGES = {
   unused: "design/components/states/unused",
   added: "design/components/states/additions/added",
   removed: "design/components/states/removed",
+  "removed-parent": "design/components/states/moved-variants/removed-parent",
   "usage-loading": "design/components/states/loading/usage-loading",
   "usage-failed": "design/components/states/loading/usage-failed",
   "shared-impact": "design/components/states/shared-impact/shared-impact",

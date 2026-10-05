@@ -7,11 +7,9 @@ import { Shell, type ArtboardViewport } from "./shell.js";
 import type { CatalogueTag } from "./tags.js";
 
 function taggedTree(tag: CatalogueTag): readonly NavNode[] {
-  const count = tag === "forms" ? 2 : 1;
   return [
     {
       key: "example",
-      count,
       depth: 0,
       kind: "folder",
       label: "Example",
@@ -19,7 +17,6 @@ function taggedTree(tag: CatalogueTag): readonly NavNode[] {
     },
     {
       key: "screens",
-      count,
       depth: 1,
       kind: "folder",
       label: "Screens",

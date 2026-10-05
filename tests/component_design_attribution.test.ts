@@ -9,15 +9,15 @@ import { textOutput } from "./helpers/generated_text.js";
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [stylesheet, screens, components] of [
-    ["design-components.css", 39, 69],
-    ["design-component-inspection.css", 39, 69],
-    ["design-component-details.css", 39, 69],
-    ["design-component-inspector.css", "all-design", 69],
-    ["design-component-workspace.css", "all-design", 69],
-    ["design-component-view.css", 39, 69],
-    ["design-component-controls.css", 11, 69],
-    ["design.css", "all-design", 69],
-    ["design-library.css", 0, 69],
+    ["design-components.css", 40, 70],
+    ["design-component-inspection.css", 40, 70],
+    ["design-component-details.css", 40, 70],
+    ["design-component-inspector.css", "all-design", 70],
+    ["design-component-workspace.css", "all-design", 70],
+    ["design-component-view.css", 40, 70],
+    ["design-component-controls.css", 11, 70],
+    ["design.css", "all-design", 70],
+    ["design-library.css", 0, 70],
   ] as const)
     await t.test(stylesheet, async () => {
       await fixture.reset();
