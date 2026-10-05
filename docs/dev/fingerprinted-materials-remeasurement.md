@@ -1,5 +1,10 @@
 # Fingerprinted Materials: Narrow Remeasurement
 
+The follow-up [full-worker ablation](./fingerprinted-materials-worker-ablation.md)
+recovers most of the measured style gap by reverting M9 diagnostics. This report
+preserves all narrow samples; the gate/push remain blocked pending the supervisor's
+decision on removing that instrumentation tax from benchmark timings.
+
 Fixed M9 `14447151` still regresses on the cumulative style route: 211.85 s cold
 and 217.75 s warm versus M8's 193.95 s and 197.22 s, +9.2% and +10.4%.
 The supervisor therefore stopped the gate and push and requested the separate

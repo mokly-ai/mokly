@@ -1574,11 +1574,27 @@ comparison's text work no longer grows with the style sheet. See the
       records per-view result/count checks, function costs, worker/heap/reader
       controls and allocation samples. Warmed timings overlap; added diagnostic
       byte counting is too small to explain the full-worker gap. No fix is made.
-- [ ] Discovered: obtain the supervisor's next scope decision on the remaining
+- [x] Discovered: obtain the supervisor's next scope decision on the remaining
       production style-route regression. GC and existing composition/parsing
-      explain the slower retained-input profile's locations, but no causal M9
-      change or credible recovery estimate is established. Keep the gate and
-      push blocked; do not implement another optimization without approval.
+      located the slower retained-input profile's costs without causal attribution.
+      The supervisor approved full-worker GC diagnostics and sequential ablations
+      of diagnostics, page bookkeeping and remaining M9 modules, stopping at the
+      first group that recovers most of the gap. The gate and push stay blocked.
+- [x] Discovered: run the natural-GC M8/M9 pair, then the conditional forced-GC
+      checkpoints at entry and every 500 views. The [GC report](../docs/dev/fingerprinted-materials-gc.md)
+      records 86/371 major collections at nearly equal allocation volume, every
+      post-major old-space size, and the small constant fixed-view live-heap gap.
+- [x] Discovered: run two alternating full-worker diagnostics ablation pairs
+      with the same loader on controls, unchanged results/counts and restored
+      fixture bytes. The [ablation report](../docs/dev/fingerprinted-materials-worker-ablation.md)
+      records 15.09 s / 2.73 ms per-view mean recovery, spread 2.49–2.97 ms/view,
+      with non-overlapping ranges. Stop at diagnostics group A as instructed;
+      groups B/C are not run. All eight diagnostic/ablation samples complete.
+- [ ] Discovered: obtain the supervisor's fix-scope decision for the identified
+      diagnostic instrumentation tax. The report proposes separating benchmark
+      timing from detailed counter collection, or further isolating/optimizing
+      the full collector. No implementation or contract change is approved yet;
+      the gate and push remain blocked pending that decision.
 - [x] Update relevant READMEs and the contracts' Delivery Status for delivered
       fingerprints, preserve the 250-line protocol caps, and record the approved
       gap fix and M8 review findings.

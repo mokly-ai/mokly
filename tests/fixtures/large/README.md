@@ -311,8 +311,12 @@ separate added work from existing costs and timing variation. The approved
 is followed by [24 narrow remeasurement samples](../../../docs/dev/fingerprinted-materials-remeasurement.md):
 linked improves, while cumulative style remains 9.2–10.4% slower. The
 [200-view cost investigation](../../../docs/dev/fingerprinted-materials-route-investigation.md)
-retains enabled/disabled comparisons and profiles. Their warmed ranges overlap;
-the production regression remains unexplained, so the gate and push are stopped.
+retains enabled/disabled comparisons and profiles. Their warmed ranges overlap.
+The subsequent [full-worker ablation](../../../docs/dev/fingerprinted-materials-worker-ablation.md)
+recovers 15.09 s / 2.73 ms per view by reverting M9 diagnostics, with non-overlapping
+ranges. Its [GC and fixed-view heap records](../../../docs/dev/fingerprinted-materials-gc.md)
+show greater major-GC frequency with little added live heap. The gate and push
+remain stopped for the supervisor's decision on the measurement method.
 
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),

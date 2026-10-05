@@ -4,8 +4,9 @@ The [fixed-code remeasurement](./fingerprinted-materials-remeasurement.md)
 preserves 24 further samples of `14447151` against same-session M8 controls.
 Linked improves; cumulative style remains 9.2–10.4% slower. The supervisor has
 stopped the gate/push. The [200-view investigation](./fingerprinted-materials-route-investigation.md)
-records overlapping warmed probes, per-function costs and unresolved production
-attribution. The original `b11e51d0` measurements below remain unchanged.
+records overlapping warmed probes and the initially unresolved attribution. The
+later [full-worker ablation](./fingerprinted-materials-worker-ablation.md) isolates
+M9 diagnostic overhead. The original `b11e51d0` measurements below remain unchanged.
 
 M9 has not improved end-to-end classification in this measurement set. The
 48 unprofiled classifications all return `ok` with exact expected membership,

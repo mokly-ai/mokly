@@ -1,5 +1,11 @@
 # M9 Style-Route Cost Investigation
 
+The subsequent [full-worker ablation](./fingerprinted-materials-worker-ablation.md)
+isolates the diagnostics group: reverting it recovers 2.73 ms/view across two
+non-overlapping alternating pairs. The report below preserves the earlier warmed
+investigation and its uncertainty at that point. The gate/push await the
+supervisor's decision on the diagnostic collection method.
+
 The requested warmed differential **does not reproduce the production regression**.
 M9 is 0.982× M8 with collection enabled and 0.997× with it disabled; ranges
 overlap. The only identified added route work is opt-in source-normalization
