@@ -411,7 +411,11 @@ later frame navigation. The copy and Retry contract comes from
 [`previews/copy.ts`](../previews/copy.ts).
 `views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
 both drop the comparison band there, while removed component variants keep
-theirs.
+theirs. A removed component parent whose variants all moved has no variant
+row, so `workspace_variant_bar.tsx` draws no bar and
+`workspace_moved_variants.tsx` links each moved variant at its new place.
+`details.tsx` shows a removed entry's `Location` only when it was inside a
+folder.
 `css_previews.ts` styles the stage, including the `mbk-preview-note` and
 `mbk-preview-switch` classes the design catalogue's stage stylesheet owns. The
 Both-only rule reads the normalized `data-viewport` value on the live stage.
