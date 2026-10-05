@@ -5,6 +5,7 @@ import { repositoryPath } from "./values.js";
 const PRIVATE_KEYS = new Set([
   "dependencies",
   "sourceFiles",
+  "movedFrom",
   "declaredDependencies",
   "ownedDependencies",
   "startOffset",

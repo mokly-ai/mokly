@@ -5,6 +5,8 @@
 Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 The remaining command outcomes are implemented.
+Current and historical readers accept manifest v8. Earlier baselines use the
+established Changes-unavailable outcome without conversion.
 
 This contract owns the version gate between a current catalogue and the Git
 comparison base used by Serve, export, and publication. Baseline storage and
@@ -19,8 +21,9 @@ inventory validation as the current manifest reader. It reads baseline bytes
 but never executes baseline source through the current Mokly package.
 
 The boundary does not translate earlier schemas. Every accepted entry and
-artifact already has the identity-derived layout in
-the [artifact path contract](./mokly-artifact-paths.md).
+artifact already has the path-derived layout in the
+[artifact path contract](./mokly-artifact-paths.md), and the
+[move contract](./mokly-moves.md) pairs its entries with the current ones.
 
 ## Incompatible Earlier Baseline
 

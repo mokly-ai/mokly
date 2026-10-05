@@ -50,13 +50,13 @@ catalogue still omits it.
 The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
 [shell design inventory](./mokly-shell-design.md#design-mockups) as
-`design-review-style-page`, `design-review-style-matched`,
-`design-review-style-excluded`, `design-review-style-excluded-only`,
-`design-review-style-unresolved` and `design-review-style-unnamed`, and the
+`design/changes/impact/styles/page`, `design/changes/impact/styles/matched-excluded/matched`,
+`design/changes/impact/styles/matched-excluded/excluded`, `design/changes/impact/styles/matched-excluded/excluded-only`,
+`design/changes/impact/styles/unresolved-unnamed/unresolved` and `design/changes/impact/styles/unresolved-unnamed/unnamed`, and the
 component explorer's Stylesheet evidence gallery, recorded in the
 [component design inventory](./mokly-component-design.md#owning-catalogue) as
-`design-component-style-changed`, `design-component-style-outside`, and
-`design-component-shared-impact`. These screens follow these presentation
+`design/components/states/shared-impact/style-changed`, `design/components/states/shared-impact/style-outside`, and
+`design/components/states/shared-impact/shared-impact`. These screens follow these presentation
 rules:
 
 - The files lead names each retained file once, as one list item. That item
@@ -92,11 +92,11 @@ rules:
 - Linked Excluded and Matched screens show the same changed Welcome in All
   and Changes. They use one shared Details card with the retained file, its
   matched selectors and the excluded file. They add no explanatory sentence
-  that the viewer does not show. `design-review-style-excluded-only` depicts
+  that the viewer does not show. `design/changes/impact/styles/matched-excluded/excluded-only` depicts
   the excluded-only state for Details in the same branch: it opens from All,
   including from the Excluded screen's Details row. The gallery is split into
   linked child pages of at most five screens, each with mobile and desktop
-  components; its parent shows the canonical `design-review-style-page`.
+  components; its parent shows the canonical `design/changes/impact/styles/page`.
 - The evidence container and the approved mockup card both render eight
   pixels above each paragraph or list and fourteen pixels between a list and
   the paragraph that follows it, including the sentences and lists nested in a

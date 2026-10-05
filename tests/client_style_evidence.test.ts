@@ -67,7 +67,7 @@ test("analysed reasons keep one list per file, so no list mixes two stylesheets"
 
 test("retained paths keep every changed dependency once, in order", () => {
   const reasons: readonly EntryChangeReason[] = [
-    { kind: "screen", id: "home" },
+    { kind: "screen", screenPath: "home" },
     { kind: "dependency", path: SHARED },
     { kind: "dependency", path: "mockups/logo.svg" },
     { kind: "dependency", path: SHARED },
@@ -247,13 +247,13 @@ function renderEvidence({
     status: "Changed",
     change: {
       kind: "screen",
-      after: { id: "home", route: "screens/home.html", title: "Home" },
+      after: { id: "home", route: "home/index.html", title: "Home" },
       reasons,
     },
     components: [],
     comparisonEligible: true,
     comparisons: true,
-    entry: { id: "home", kind: "screen", route: "screens/home.html" },
+    entry: { id: "home", kind: "screen", route: "home/index.html" },
     inputChanges: [],
     relatedComponents: [],
     resourceEvidence: excluded.length

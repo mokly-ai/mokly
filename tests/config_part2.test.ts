@@ -12,7 +12,7 @@ test("stylesheet rules reject paths linked twice in one fragment", async (contex
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const input = {
-    entriesDir: "entries",
+    roots: [{ dir: "entries" }],
     mockupsDir: "mockups",
     repoRoot: ".",
   };
@@ -103,12 +103,12 @@ test("config rejects traversal and overlapping roots", async (context) => {
   context.after(() => removeFixture(fixture));
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: "../outside", mockupsDir: "mockups", repoRoot: "." };\n`,
+    `export default { roots: [{ dir: "../outside" }], mockupsDir: "mockups", repoRoot: "." };\n`,
   );
   await assert.rejects(() => loadConfig(fixture.root), /outside repoRoot/);
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: "mockups", mockupsDir: "mockups", repoRoot: "." };\n`,
+    `export default { roots: [{ dir: "mockups" }], mockupsDir: "mockups", repoRoot: "." };\n`,
   );
   await assert.rejects(
     () => loadConfig(fixture.root),
@@ -144,7 +144,7 @@ test("config rejects Review output through an external symlink", async (context)
   await fs.promises.symlink(outside, path.join(fixture.root, "review-link"));
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", review: { outDir: "review-link/artifact" } };\n',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", review: { outDir: "review-link/artifact" } };\n',
   );
 
   await assert.rejects(

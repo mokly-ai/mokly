@@ -7,18 +7,6 @@ import { loadConsumerGraph } from "../build/load_graph.js";
 import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
 import type { ResolvedConfig } from "../config/types.js";
 
-/** Resolve the accepted reserved routes before binding a committed server. */
-export async function expectedGeneratedRoutes(
-  config: ResolvedConfig,
-  runtime?: ComponentRuntime,
-): Promise<ReadonlySet<string>> {
-  return !runtime &&
-    config.generatedOutput === "committed" &&
-    fs.existsSync(path.join(config.mockupsDir, GENERATED_DIRECTORY))
-    ? new Set((await loadConsumerGraph(config, false)).styleOutputs.keys())
-    : new Set<string>();
-}
-
 /** Snapshot accepted reserved files once, never resolving a request through disk. */
 export function acceptedGeneratedStatic(
   config: ResolvedConfig,
@@ -39,4 +27,18 @@ export function acceptedGeneratedStatic(
     }
   }
   return files;
+}
+
+/** Resolve the accepted stylesheet inventory once when starting a server. */
+export async function initialGeneratedStatic(
+  config: ResolvedConfig,
+  runtime?: ComponentRuntime,
+): Promise<ReadonlyMap<string, GeneratedFile>> {
+  const expected =
+    !runtime &&
+    config.generatedOutput === "committed" &&
+    fs.existsSync(path.join(config.mockupsDir, GENERATED_DIRECTORY))
+      ? new Set((await loadConsumerGraph(config, false)).styleOutputs.keys())
+      : new Set<string>();
+  return acceptedGeneratedStatic(config, runtime, expected);
 }

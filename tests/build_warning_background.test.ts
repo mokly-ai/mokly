@@ -19,7 +19,7 @@ test(
   async (context) => {
     const source = `${declared()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken", route: "broken.html", relatedDocs: [], render: () => { throw new Error("broken page after warned render"); } }));`;
+mockups.push(definePage({ path: "broken", title: "Broken", description: "Broken", relatedDocs: [], render: () => { throw new Error("broken page after warned render"); } }));`;
     const fixture = await fixtureWithSheets(
       source,
       'renderer: "renderer.tsx", stylesheets: [],',
@@ -28,7 +28,7 @@ mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken", 
     await fs.writeFile(
       path.join(fixture.root, "renderer.tsx"),
       `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.id === "home" ? { html, resources: [{ path: "action.css", componentIds: ["action"] }] } : { html }; };`,
+export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.path === "home" ? { html, resources: [{ path: "action.css", componentIds: ["action"] }] } : { html }; };`,
     );
     const events: string[] = [];
     const running = await serve(

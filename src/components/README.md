@@ -21,8 +21,10 @@ their spans inside Review-ignore regions. The
 
 Use `defineComponent` to give a shared React component its own catalogue page,
 variants, controls, and recorded usage in screens or other components.
-Callers render the returned `Component` and export its `entries` in `mockups`.
-Mokly renders that wrapper in the consumer's existing React/provider graph.
+Callers render the returned `Component` and export the registration or its
+`entries` from a discovered module. The exporting file supplies the path while
+the registration retains its defining module as source attribution. Mokly renders
+the wrapper in the consumer's existing React/provider graph.
 
 Current output uses manifest v8. Mokly groups declarations by real file, merges
 all rendered declarers, and reuses renderer-authored links without exposing declarations through
@@ -33,7 +35,7 @@ public path; a renderer-authored link keeps its own path and position.
 import { defineComponent } from "@mokly/mokly";
 
 export const action = defineComponent({
-  id: "action",
+  slug: "action",
   title: "Action",
   description: "A shared action.",
   stylesheets: ["components/action.css"],
@@ -45,18 +47,16 @@ export const action = defineComponent({
   controls: { label: { kind: "text", label: "Label", maxLength: 80 } },
   render: (props) => <button>{props.label}</button>,
   variants: [
-    { id: "action-default", title: "Default", props: { label: "Continue" } },
+    { slug: "default", title: "Default", props: { label: "Continue" } },
   ],
 });
 export const mockups = [...action.entries];
 ```
 
-A registration may live in any repository module, typically beside the
-component it adapts, and the entry module that exports its `entries` may be
-discovered through any configured `entries` glob. The registration file is
-recorded as the component's source. The glob itself defines the entry shape;
-`.mockup.ts` and `.mockup.tsx` are the recommended convention selected by the
-`entriesDir` shorthand, not a separate filename rule.
+A registration may live beside the component it adapts. A root discovers its
+exporting module through `files`; the default matches `.mockup.ts` and
+`.mockup.tsx`. Prefix a component-library root with `path: "components"` when
+that is the desired catalogue hierarchy. Path rules never depend on kind.
 
 Render `<action.Component label="Save" />` in a screen. Give repeated siblings
 distinct `moklyInstance` values; stable ids preserve their identity across
@@ -80,6 +80,10 @@ values from the same view. It returns `missing` for an absent or different key,
 `present` for equal props keys, order and slot, and `moved` otherwise. It does not
 classify visual or material Changes.
 
+Comparison projection receives canonical catalogue links for equality and keeps
+real href values for resource traversal and CSS selector matching. Move pairing
+aligns component identities without changing captured bytes or instance offsets.
+
 Compiled JSX invocations record optional `source: { path, line, column }` in
 manifest v8. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
@@ -91,11 +95,11 @@ including empty output.
 
 Variants are explicit named examples, never inferred from screenshots or every
 combination of controls. Each variant is its own `kind: "component"` entry with
-a global kebab-case id and `variantOf`, grouped beneath its component in
-navigation with its own route `components/<variant id>.html`, its own Changes
+a slug and derived parent relationship, grouped beneath its component in
+navigation with its own route `<parent path>/<slug>/index.html`, its own Changes
 row, and its own comparison. Both viewports and every configured scheme are
 built for each variant. `MockLink to="action"` opens the component page, which
-shows its first variant; `MockLink to="action-disabled"` opens that variant
+shows its first variant; `MockLink to="action/disabled"` opens that variant
 directly.
 
 Local Serve edits declared text, boolean, number, and primitive preset controls.
@@ -124,7 +128,7 @@ wrapper; that wrapper reason has no affected consumers. Unrendered source
 edits do not create Changes or evidence.
 Components declare public `mockupsDir`-relative CSS with `stylesheets`. Rendered
 instances (including null output and saved component roots) receive links in
-first-render order; the same pass retains declaring ids for inserted-link
+first-render order; the same pass retains declaring paths for inserted-link
 provenance, without creating CSS resource ownership records. A configured link to the same real file is reused, while renderer owner
 records for every stylesheet are ignored with a warning. Duplicate declarations
 are linked once with a warning. The comparison omits Mokly-inserted links from
@@ -157,6 +161,8 @@ ranges that its document cannot prove follow the
 [invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
 Historical marker translation is not supported. The frozen instance and slot
 key domain strings are unchanged.
+Compatible v8 baselines preserve each document’s UTF-16 coordinates when
+applying recorded style ownership.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component

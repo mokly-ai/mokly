@@ -7,6 +7,7 @@ import type { ReviewResultV5 } from "../review/component_types.js";
 import type {
   ScreenResourceEvidence,
   PageResourceEvidence,
+  ReviewArtifact,
   ViewReview,
 } from "../review/types.js";
 
@@ -15,11 +16,15 @@ export type CatalogueMetadata =
   | {
       schemaVersion: "live-index-1";
       entries: ManifestV8["entries"];
+      folders: ManifestV8["folders"];
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };
 export interface RemovedEntrySnapshot {
   entry: HistoricalManifestEntry | ManifestV8["entries"][number];
+  folderTitles: readonly string[];
+  /** Baseline parent title, present exactly for a removed variant. */
+  parentTitle?: string;
   snapshotId?: string;
 }
 /**
@@ -28,11 +33,14 @@ export interface RemovedEntrySnapshot {
  * it without depending on the build.
  */
 export interface ScreenViewChanges {
-  id: string;
+  path: string;
   views: readonly Pick<ViewReview, "colorScheme" | "state" | "viewport">[];
 }
 export interface ShellEvidence {
   baseline: HistoricalManifest;
+  /** Actual material/metadata changes, independent of pure-move membership. */
+  changedEntries?: readonly string[];
+  pairing?: NonNullable<ReviewArtifact["pairing"]>;
   result?: ReviewResultV5;
   screenEvidence?: readonly ScreenResourceEvidence[];
   pageEvidence?: readonly PageResourceEvidence[];

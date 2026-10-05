@@ -112,11 +112,11 @@ export async function serve(
       (snapshot) => {
         const duration = Date.now() - changesStartedAt;
         if (snapshot)
-          reporter.changesReady(snapshot.changedIds?.length ?? 0, duration);
+          reporter.changesReady(snapshot.changedEntries?.length ?? 0, duration);
         else reporter.changesUnavailable(duration);
         server.publishUpdate({
           kind: "evidence",
-          changedIds: snapshot?.changedIds ?? null,
+          changedEntries: snapshot?.changedEntries ?? null,
           componentChanges: snapshot ?? null,
           changesStatus: snapshot ? "ready" : "unavailable",
         });

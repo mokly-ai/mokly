@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { componentChangeCases } from "./helpers/component_change_cases.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -19,20 +19,13 @@ for (const [name, change, routes] of componentChangeCases)
     );
     assert.equal(artifact.result.schemaVersion, 5);
     assert.ok("changes" in artifact.result);
-    const result = artifact.result as unknown as {
-      changes: { after?: { id: string }; before?: { id: string } }[];
-      affectedConsumers: {
-        changedComponentId: string;
-        consumer: { kind: string; id: string };
-        evidence: unknown[];
-      }[];
-    };
+    const result = artifact.result;
     assert.deepEqual(
-      result.changes.map((entry) => (entry.after ?? entry.before)!.id),
+      result.changes.map((entry) => (entry.after ?? entry.before)!.path),
       routes,
     );
     assert.deepEqual(
-      await computeChangedIds(fixture.config, "main", fixture.git),
+      await computeChangedPaths(fixture.config, "main", fixture.git),
       routes,
     );
     if (
@@ -43,20 +36,20 @@ for (const [name, change, routes] of componentChangeCases)
         result.affectedConsumers.some(
           (item) =>
             item.changedComponentId === "action" &&
-            item.consumer.id === "home" &&
+            item.consumer.path === "home" &&
             item.evidence.length > 0,
         ),
       );
     }
     if (name === "component-only implementation") {
       const current = artifact.files.get(
-        "snapshots/after/screens/home.mobile.html",
+        "snapshots/after/home/index.mobile.html",
       );
       assert.ok(
         typeof current === "string" && current.includes('class="new-action"'),
       );
       assert.ok(
-        result.affectedConsumers.some((item) => item.consumer.id === "pane"),
+        result.affectedConsumers.some((item) => item.consumer.path === "pane"),
       );
     }
   });
@@ -77,8 +70,8 @@ test("component title changes mark its variants without inventing affected consu
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion !== 5) return;
   assert.deepEqual(
-    result.changes.map((entry) => (entry.after ?? entry.before)!.id).sort(),
-    ["action", "action-default", "action-disabled"].sort(),
+    result.changes.map((entry) => (entry.after ?? entry.before)!.path).sort(),
+    ["action", "action/default", "action/disabled"].sort(),
   );
   assert.equal(result.affectedConsumers.length, 0);
 });
@@ -99,7 +92,7 @@ test("an implementation edit visible only at real consumer props still identifie
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion !== 5) return;
   assert.deepEqual(
-    result.changes.map((entry) => entry.after!.id),
+    result.changes.map((entry) => entry.after!.path),
     ["action"],
   );
   assert.ok(
@@ -135,7 +128,7 @@ for (const adopted of [false, true])
     assert.equal(result.schemaVersion, 5);
     if (result.schemaVersion !== 5) return;
     assert.deepEqual(
-      result.changes.map((entry) => entry.after!.id),
+      result.changes.map((entry) => entry.after!.path),
       adopted ? ["action"] : [],
     );
   });
@@ -156,7 +149,7 @@ test("affected-only views retain their real comparison state without entering Ch
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion !== 5) return;
   assert.deepEqual(
-    result.changes.map((entry) => entry.after!.id),
+    result.changes.map((entry) => entry.after!.path),
     ["action"],
   );
   assert.ok(
@@ -165,7 +158,7 @@ test("affected-only views retain their real comparison state without entering Ch
     ),
   );
   assert.equal(
-    result.components.find((entry) => entry.id === "pane")!.state,
+    result.components.find((entry) => entry.path === "pane")!.state,
     "changed",
   );
 });

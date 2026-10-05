@@ -13,7 +13,8 @@ export function comparisonStylesheetMaterial(
   const spans = insertedStylesheetSpans(html, usage);
   if (!spans.length) return { html, usage };
   const removed = spans.filter(
-    (span) => !rootComponentId || !span.componentIds.includes(rootComponentId),
+    (span) =>
+      !rootComponentId || !span.componentPaths.includes(rootComponentId),
   );
   if (!removed.length) return { html, usage };
   let material = html;

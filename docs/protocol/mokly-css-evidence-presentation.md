@@ -8,7 +8,7 @@ The per-file grouping and exact copy for screens and component saved views are
 implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence),
 as the [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence) mockups depict them.
 The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
-mockup, `design-review-style-page`, depicts the whole-document page display;
+mockup, `design/changes/impact/styles/page`, depicts the whole-document page display;
 the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
 Omitting the branch-point sentence when its name is unknown is implemented in
@@ -19,6 +19,8 @@ Retaining the export's known branch name during navigation is planned for
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
 The excluded-only screen mockup and the shared Excluded/Matched Details card
 are implemented in [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
+Implemented; this split records the existing shell projection and corrected
+field names without changing behavior. Evidence is keyed by kind and path.
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact
@@ -123,7 +125,7 @@ Use these exact sentences when the page selector list is nonempty:
 | Component saved view | “These changed styles also apply outside the changed components in this saved view:” | “Changed styles that apply to this saved view:” |
 | Whole-document page  | “These changed styles also apply outside the changed components on this page:”       | “Changed styles that apply to this page:”       |
 
-Choose the column using the union of changed component ids for rules that
+Choose the column using the union of changed component paths for rules that
 supply the displayed page selectors. The technical details stay in this
 secondary list. Keep the existing comparison-stage heading and catalogue row
 labels; do not expose rule keys, owner records, schema fields or internal status
@@ -133,7 +135,7 @@ When `pageEvidence.unresolved` is true, show a separate paragraph under that
 same path. Use the existing unresolved screen/component sentences, with
 “saved view” in place of “component” for a component page reason, and “page” in
 place of “screen” for a whole-document page. A component page reason is an
-unresolved rule whose changed component ids omit the workspace's component;
+unresolved rule whose changed component paths omit the workspace's component;
 one that names it keeps the component sentence. The exact base sentences are:
 
 - With selectors: “This change can apply anywhere on the screen, so the screen stays in Changes:”
@@ -175,7 +177,7 @@ empty selector list uses the full-stop form and no list.
 
 1. Own component rules, only in a component workspace. The workspace's
    component is the parent of the routed component or variant. Matched rules
-   whose changed component ids include it read “Changed styles that apply to
+   whose changed component paths include it read “Changed styles that apply to
    this component:”. Unresolved rules that include it read the component
    unresolved sentence.
 2. Page selectors from every rule, in the column chosen above.
@@ -187,7 +189,7 @@ empty selector list uses the full-stop form and no list.
 So an affected-only screen or a consuming component keeps its styles, while a
 file with page or unresolved outcomes never lists the selectors of its other
 component-only rules. A file without analysis, such as a font or image, is its
-path alone. No outcome shows rule keys or changed component ids.
+path alone. No outcome shows rule keys or changed component paths.
 
 ## Status Lines
 

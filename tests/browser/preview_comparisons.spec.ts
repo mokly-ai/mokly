@@ -29,7 +29,7 @@ test("published Mokly exposes lazy comparisons in the actual shell", async ({
   page.on("response", (response) => {
     if (response.status() >= 400) failed.push(response.url());
   });
-  await page.goto(`${preview.url}/view/screens/home`);
+  await page.goto(`${preview.url}/view/home/`);
   const modes = page.getByRole("group", { name: "Comparison mode" });
   await expect(modes).toBeVisible();
   await expect(
@@ -77,7 +77,7 @@ test("published comparisons retain mobile, dark, and current-only added and remo
     if (response.status() >= 400) failures.push(response.url());
   });
   await page.setViewportSize({ height: 844, width: 390 });
-  await page.goto(`${preview.url}/view/screens/removed`);
+  await page.goto(`${preview.url}/view/removed/`);
   await expect(page.locator(".mbk-previous")).toHaveText(
     "Showing previous version",
   );
@@ -92,16 +92,14 @@ test("published comparisons retain mobile, dark, and current-only added and remo
   await expect(page.locator("[data-diff-stage]")).toHaveCount(0);
   await page.getByRole("button", { name: "Open catalogue navigation" }).click();
   await page.locator('[data-filter="changed"]').click();
-  await expect(
-    page.locator('[data-route="screens/removed.html"]'),
-  ).toBeVisible();
-  await page.locator('[data-route="screens/added.html"]').click();
+  await expect(page.locator('[data-route="removed/index.html"]')).toBeVisible();
+  await page.locator('[data-route="added/index.html"]').click();
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(
     page.frameLocator('[data-workspace-frame="mobile"]').locator("main"),
   ).toHaveText("added");
-  await page.goto(`${preview.url}/view/screens/home`);
+  await page.goto(`${preview.url}/view/home/`);
   await chooseViewport(page, "mobile");
   await chooseScheme(page, "dark");
   await page.getByRole("button", { name: "Difference", exact: true }).click();

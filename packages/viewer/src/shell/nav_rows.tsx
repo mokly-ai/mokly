@@ -5,11 +5,15 @@ import { folderDisclosureKey } from "./disclosure_keys.js";
 import { FolderIcon, FolderOpenIcon } from "./icons.js";
 import { navRowStyle } from "./nav_guides.js";
 import { LeafRow } from "./nav_leaf_rows.js";
-import { navNodeVisible, navigationFiltering } from "./nav_model.js";
+import { navNodeVisible, UNFILTERED_SELECTION } from "./nav_model.js";
 import type { NavGroupNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
 
-/** One authored folder projected into a section as a native disclosure. */
+/**
+ * One authored folder projected into a section as a native disclosure. Its
+ * count is the child rows the active filter keeps, decided by the same rule
+ * as the rows themselves.
+ */
 function GroupRow(props: {
   context: ShellContext;
   depth: number;
@@ -20,10 +24,12 @@ function GroupRow(props: {
   const node = props.node;
   const key = folderDisclosureKey(props.sectionId, node.key);
   const open = store?.state.disclosures[key] ?? props.depth === 0;
-  const filtered = store ? navigationFiltering(store.state.selection) : false;
-  const hidden = store
-    ? !navNodeVisible(node, store.state.selection, store.context)
-    : false;
+  const selection = store?.state.selection ?? UNFILTERED_SELECTION;
+  const context = store?.context ?? props.context;
+  const hidden = !navNodeVisible(node, selection, context);
+  const countedChildren = node.children.filter((child) =>
+    navNodeVisible(child, selection, context),
+  );
   return (
     <details
       className="mbk-nav-group"
@@ -36,7 +42,7 @@ function GroupRow(props: {
       }
       data-nav-folder={node.key}
       data-nav-disclosure={key}
-      hidden={filtered && hidden}
+      hidden={hidden}
       onToggle={(event) => {
         if (store?.interactive && event.currentTarget.open !== open)
           store.setDisclosure(key, event.currentTarget.open);
@@ -49,8 +55,8 @@ function GroupRow(props: {
           <FolderOpenIcon />
         </span>
         <span className="mbk-nav-label">{node.label}</span>
-        {node.children.length > 0 ? (
-          <span className="mbk-nav-count">{node.children.length}</span>
+        {countedChildren.length > 0 ? (
+          <span className="mbk-nav-count">{countedChildren.length}</span>
         ) : null}
       </summary>
       <NavRows
@@ -88,7 +94,16 @@ export function NavRows(props: {
             key={node.key}
             node={node}
             sectionId={props.sectionId}
-          />
+          >
+            {node.members ? (
+              <NavRows
+                context={props.context}
+                depth={props.depth + 1}
+                nodes={node.members}
+                sectionId={props.sectionId}
+              />
+            ) : null}
+          </LeafRow>
         );
       })}
     </>

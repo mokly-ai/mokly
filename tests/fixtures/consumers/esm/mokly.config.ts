@@ -1,7 +1,7 @@
 import { componentStylesheets, defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
-  entries: ["entries/**/*.mockup.{ts,tsx}", "src/**/*.mockup.{ts,tsx}"],
+  roots: [{ dir: "entries" }, { dir: "src", files: ["**/*.mockup.{ts,tsx}"] }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: {
@@ -10,9 +10,8 @@ export default defineConfig({
   },
   stylesheets: [
     {
-      match: "screens/**/*.html",
+      match: "**/index.html",
       stylesheets: ["fixture.css", componentStylesheets],
     },
-    { match: "components/**", stylesheets: [componentStylesheets] },
   ],
 });

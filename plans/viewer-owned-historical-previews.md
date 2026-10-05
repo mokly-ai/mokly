@@ -1,5 +1,8 @@
 # Viewer-Owned Historical Previews
 
+Status: Completed. [PR #104](https://github.com/mokly-ai/mokly/pull/104)
+merged on 2026-09-22.
+
 Close the High finding recorded by the final review of the
 [removed content previews plan](./removed-content-previews.md): in a
 cross-origin embedded viewer, links inside a historical preview can still
@@ -191,7 +194,7 @@ complete contract, and register the plan.
       viewer-owned path.
 - [x] In [`removed-content-previews.md`](./removed-content-previews.md)
       "Remaining risks", state that the High finding is tracked by this plan;
-      add this plan to the active list in [`plans/README.md`](./README.md)
+      add this plan to the active list in `plans/README.md`
       and point the completed removed-previews entry at it.
 - [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.

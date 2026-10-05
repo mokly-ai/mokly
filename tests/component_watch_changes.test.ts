@@ -21,8 +21,8 @@ test(
   { timeout: 60_000 },
   async (t) => {
     const source = componentEntrySource().replace(
-      'id: "action",',
-      'id: "action", stylesheets: ["action.css"],',
+      'path: "action",',
+      'path: "action", stylesheets: ["action.css"],',
     );
     const fixture = await changedFixture(
       t,
@@ -59,9 +59,9 @@ test(
     );
     await fs.writeFile(fixture.entryPath, edited);
     html = await waitForChangedCount(server.url, version(html), 1);
-    assert.equal((await workspace("screens/home.html")).change, undefined);
+    assert.equal((await workspace("home/index.html")).change, undefined);
     assert.ok(
-      (await workspace("components/action.html")).affected.some(
+      (await workspace("action/index.html")).affected.some(
         (item) => item.entryId === "home",
       ),
     );
@@ -70,14 +70,14 @@ test(
       "button{color:green}",
     );
     html = await waitForChangedCount(server.url, version(html), 3);
-    assert.equal((await workspace("screens/home.html")).change, undefined);
+    assert.equal((await workspace("home/index.html")).change, undefined);
     await fs.writeFile(
       fixture.entryPath,
       edited.replaceAll('label="Finish"', 'label="Purchase"'),
     );
     await waitForChangedCount(server.url, version(html), 4);
     assert.equal(
-      (await workspace("screens/home.html")).change?.after?.id,
+      (await workspace("home/index.html")).change?.after?.path,
       "home",
     );
     await assert.rejects(fs.stat(path.join(fixture.root, ".review")), {
@@ -89,9 +89,9 @@ test(
     assert.equal(review.schemaVersion, 5);
     assert.deepEqual(
       review.changes
-        .map((entry: { after: { id: string } }) => entry.after.id)
+        .map((entry: { after: { path: string } }) => entry.after.path)
         .sort(),
-      ["action", "action-default", "action-disabled", "home"],
+      ["action", "action/default", "action/disabled", "home"],
     );
     assert.equal(changedCount(await catalogue(server.url)), 4);
   },

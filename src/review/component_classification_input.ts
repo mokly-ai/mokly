@@ -5,6 +5,10 @@ import type { ResolvedConfig } from "../config/types.js";
 import type { ReviewAssetReader } from "./assets.js";
 import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import type { CssRuleParser } from "./css/types.js";
+import type { BaselineReader } from "./git.js";
+import type { MarkdownMoveSources } from "./moves/markdown_sources.js";
+import type { MoveResources } from "./moves/resources.js";
+import type { MovePairing } from "./moves/types.js";
 
 export interface ComponentClassificationInput {
   before: Manifest;
@@ -19,4 +23,9 @@ export interface ComponentClassificationInput {
   cssAnalysis?: CssResourceAnalysis;
   /** Test-only: disable the unchanged-view decision so both paths can be compared. */
   useFastPath?: boolean;
+  /** Reuse the generation's pairing instead of computing another candidate pass. */
+  pairing?: MovePairing;
+  markdown?: MarkdownMoveSources;
+  resources?: MoveResources;
+  sourceReader?: BaselineReader;
 }

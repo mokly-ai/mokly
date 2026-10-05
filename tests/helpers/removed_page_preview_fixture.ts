@@ -17,7 +17,7 @@ import type {
 import { createFixture, removeFixture } from "./fixture.js";
 
 export const PAGE_COMMIT = "b".repeat(40);
-export const PAGE_ROUTE = "pages/guide.html";
+export const PAGE_ROUTE = "guide/index.html";
 
 interface BaselineFile {
   bytes?: Uint8Array;
@@ -30,9 +30,9 @@ export async function removedPagePreviewFixture(t: TestContext) {
   const config = await loadConfig(fixture.root);
   const page: HistoricalManifestPage = {
     description: "Historical guide",
-    id: "guide",
+    path: "guide",
     kind: "page",
-    navPath: ["Archive"],
+
     relatedDocs: ["docs/guide.md"],
     sourcePath: "entries/guide.mockup.tsx",
     tags: ["guide"],
@@ -41,7 +41,8 @@ export async function removedPagePreviewFixture(t: TestContext) {
   const baseline = {
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: ["entries/guide.mockup.tsx"],
   } as HistoricalManifest;
   const files = new Map<string, BaselineFile>();
@@ -75,12 +76,13 @@ export async function removedPagePreviewFixture(t: TestContext) {
   const batches: string[][] = [];
   const reader = baselineReader(files, batches);
   const source = {
+    movedEntries: [],
     baseline,
     baseCommit: PAGE_COMMIT,
     baseRef: "main",
-    changedIds: [page.id],
-    removedEntries: [{ entry: page }],
-    schemaVersion: 1 as const,
+    changedEntries: [page.path],
+    removedEntries: [{ entry: page, folderTitles: [] }],
+    schemaVersion: 2 as const,
   };
   return { ...fixture, batches, baseline, config, files, page, reader, source };
 }

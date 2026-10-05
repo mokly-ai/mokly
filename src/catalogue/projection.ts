@@ -19,9 +19,14 @@ import {
   repositoryPath,
 } from "@mokly/viewer/data";
 
+import { relatedDocumentReferences } from "../documents/references.js";
 import { orderEntriesWithVariants } from "../registry/entry_order.js";
 
-import { entryChanges, comparisonSelection } from "./changes.js";
+import {
+  entryChanges,
+  entryPreviousPath,
+  comparisonSelection,
+} from "./changes.js";
 import type { CatalogueProjectionInput } from "./projection_input.js";
 import { catalogueIdentity, ZERO_DEPLOYMENT_ID } from "./serialization.js";
 import { projectViews } from "./views.js";
@@ -45,7 +50,7 @@ export function projectCatalogue(
         (entry) =>
           entry.kind === "component" && !isManifestComponentVariant(entry),
       )
-      .map((entry) => entry.id),
+      .map((entry) => entry.path),
   );
   if (
     catalogue.manifest.schemaVersion !== 8 &&
@@ -55,15 +60,22 @@ export function projectCatalogue(
       "$catalogue",
       "current projection requires manifest v8 or live metadata",
     );
+  const documentReference = relatedDocumentReferences(
+    catalogue.manifest.entries,
+  );
   const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
-    id: entry.id,
+    path: entry.path,
+    ...(!removed && entryPreviousPath(entry, input)
+      ? { previousPath: entryPreviousPath(entry, input)! }
+      : {}),
     title: entry.title,
     tags: [...(entry.tags ?? [])],
-    navPath: [...entry.navPath],
     details: {
       description: entry.description,
       sourcePath: repositoryPath(entry.sourcePath),
-      relatedDocs: entry.relatedDocs.map(relatedDoc),
+      relatedDocs: entry.relatedDocs.map((source) => {
+        return relatedDoc(removed ? source : documentReference(source));
+      }),
       ...(entry.rationale !== undefined ? { rationale: entry.rationale } : {}),
     },
     changes: entryChanges(entry, input, removed),
@@ -72,7 +84,7 @@ export function projectCatalogue(
     const base = common(entry, removed);
     const pageEvidence =
       input.changesStatus === "ready"
-        ? input.evidence?.pageEvidence?.find((item) => item.id === entry.id)
+        ? input.evidence?.pageEvidence?.find((item) => item.path === entry.path)
         : undefined;
     if (entry.kind === "page")
       return {
@@ -91,12 +103,18 @@ export function projectCatalogue(
             }
           : {}),
       };
+    if (entry.kind === "document")
+      return {
+        ...base,
+        kind: "document",
+        colorSchemes: [...entry.colorSchemes],
+      };
     if (entry.kind === "use-case")
       return {
         ...base,
         kind: "use-case",
         steps: entry.steps.map((step) => ({
-          screenId: step.screenId,
+          screenPath: step.screenPath,
           ...(step.title !== undefined ? { title: step.title } : {}),
           ...(step.description !== undefined
             ? { description: step.description }
@@ -109,7 +127,7 @@ export function projectCatalogue(
         kind: "screen",
         colorSchemes: [...entry.colorSchemes],
         views: projectViews(input, retainedComponents, entry, removed),
-        useCaseIds: [...entry.useCaseIds],
+        useCasePaths: [...entry.useCasePaths],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
@@ -117,8 +135,8 @@ export function projectCatalogue(
       };
     if (isManifestComponentVariant(entry)) {
       const review = (input.comparison ?? input.evidence?.result)?.components
-        .find((item) => item.id === entry.variantOf)
-        ?.variants.find((item) => item.id === entry.id);
+        .find((item) => item.path === entry.variantOf)
+        ?.variants.find((item) => item.path === entry.path);
       return {
         ...base,
         kind: "component",
@@ -152,21 +170,24 @@ export function projectCatalogue(
   ).map((entry) => record(entry, false));
   const removedSnapshots =
     input.changesStatus === "ready"
-      ? orderEntriesWithVariants(
+      ? orderEntriesWithVariants<{
+          entry: ManifestEntry;
+          snapshot?: CatalogueProjectionInput["catalogue"]["removedEntries"][number];
+        }>(
           [
             ...catalogue.manifest.entries.map((entry) => ({ entry })),
             ...catalogue.removedEntries.map((snapshot) => ({
-              ...snapshot,
-              removed: true as const,
+              entry: snapshot.entry,
+              snapshot,
             })),
           ],
           ({ entry }) => entry,
-        ).flatMap((item) => ("removed" in item ? [item] : []))
+        ).flatMap(({ snapshot }) => (snapshot ? [snapshot] : []))
       : [];
-  const removedIds = new Set(removedSnapshots.map(({ entry }) => entry.id));
+  const removedPaths = new Set(removedSnapshots.map(({ entry }) => entry.path));
   for (const id of input.removedPreviews?.keys() ?? [])
-    if (!removedIds.has(id))
-      invalidData("$catalogue", "preview id is not a removed entry");
+    if (!removedPaths.has(id))
+      invalidData("$catalogue", "preview path is not a removed entry");
   return {
     schemaVersion: 4,
     identity,
@@ -178,24 +199,32 @@ export function projectCatalogue(
     changesStatus: input.changesStatus,
     comparisonUrl,
     tree: projectTree(catalogue.hierarchy),
+    ...(catalogue.hierarchy.order
+      ? { treeOrder: [...catalogue.hierarchy.order] }
+      : {}),
     screens: entries.filter((entry) => entry.kind === "screen"),
+    documents: entries.filter((entry) => entry.kind === "document"),
     pages: entries.filter((entry) => entry.kind === "page"),
     useCases: entries.filter((entry) => entry.kind === "use-case"),
     components: entries.filter((entry) => entry.kind === "component"),
-    removedEntries: removedSnapshots.map(({ entry }) => ({
-      entry: record(entry, true),
+    removedEntries: removedSnapshots.map((snapshot) => ({
+      folderTitles: [...snapshot.folderTitles],
+      entry: record(snapshot.entry, true),
+      ...(snapshot.parentTitle !== undefined
+        ? { parentTitle: snapshot.parentTitle }
+        : {}),
       ...(snapshotSource
         ? {
             snapshotId: historicalSnapshotId(
               identity.id,
               snapshotSource,
-              entry,
+              snapshot.entry,
             ),
           }
         : {}),
       ...projectPreview(
-        entry,
-        input.removedPreviews?.get(entry.id),
+        snapshot.entry,
+        input.removedPreviews?.get(snapshot.entry.path),
         comparisonUrl,
       ),
     })),
@@ -236,7 +265,9 @@ function projectPreview(
       invalidData("$catalogue", "screen preview requires a removed screen");
     return { preview: { kind: "screen" } };
   }
-  if (entry.kind !== "page")
+  if (entry.kind === "document" && preview.kind === "document")
+    return { preview: { kind: "document" } };
+  if (entry.kind !== "page" || preview.kind !== "page")
     invalidData("$catalogue", "page preview requires a removed page");
   return { preview: { kind: "page" } };
 }

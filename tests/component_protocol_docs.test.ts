@@ -12,7 +12,7 @@ import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
 const read = (file: string) =>
   fs.readFile(path.join(repositoryRoot, file), "utf8");
 
-test("manifest v8 and unified comparison v5 ship together", async (t) => {
+test("manifest v8 and review v5 share path identity", async (t) => {
   const index = await read("docs/protocol/README.md");
   const plain = validEntrySource();
   const components = componentEntrySource();
@@ -71,5 +71,5 @@ test("delivered component contracts do not retain superseded status or version i
       /Keep `ReviewResult\.schemaVersion` at 2/,
       file,
     );
-  assert.match(await read("README.md"), /Current output requires manifest v8/);
+  assert.match(await read("README.md"), /Current output uses manifest v8/);
 });

@@ -15,7 +15,7 @@ import {
 import { removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-const route = "screens/home.html";
+const route = "home/index.html";
 const link = (href: string) => `<link rel="stylesheet" href="${href}">`;
 const head = (content: string) =>
   `<html><head>${content}</head><body>Content</body></html>`;
@@ -125,14 +125,13 @@ for (const [name, shared, expected] of [
     );
     await fs.writeFile(path.join(fixture.mockupsDir, "extra.css"), "body{}");
     const result = await compileCatalogue(await loadConfig(fixture.root));
-    const screen = result.manifest.entries.find((entry) => entry.id === "home");
+    const screen = result.manifest.entries.find(
+      (entry) => entry.path === "home",
+    );
     assert.ok(screen?.kind === "screen");
     assert.deepEqual(
       hrefs(
-        textOutput(
-          result.outputs,
-          viewRoute(screen.kind, screen.id, "mobile", "light"),
-        )!,
+        textOutput(result.outputs, viewRoute(screen.path, "mobile", "light"))!,
       ),
       expected,
     );
@@ -149,17 +148,19 @@ for (const duplicate of ["action.css", "alias.css"])
     if (duplicate === "alias.css")
       await fs.symlink("action.css", path.join(fixture.mockupsDir, duplicate));
     const result = await compileCatalogue(await loadConfig(fixture.root));
-    const screen = result.manifest.entries.find((entry) => entry.id === "home");
+    const screen = result.manifest.entries.find(
+      (entry) => entry.path === "home",
+    );
     assert.ok(screen?.kind === "screen");
     const html = textOutput(
       result.outputs,
-      viewRoute(screen.kind, screen.id, "mobile", "light"),
+      viewRoute(screen.path, "mobile", "light"),
     )!;
     assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
     assert.deepEqual(
       screen.componentViews![0]!.insertedStylesheets!.find(
         (item) => item.path === "action.css",
-      )?.componentIds,
+      )?.componentPaths,
       ["action"],
     );
   });
@@ -171,17 +172,17 @@ test("configured and declared real file keeps the configured link without owners
   );
   context.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  const screen = result.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   const html = textOutput(
     result.outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
+    viewRoute(screen.path, "mobile", "light"),
   )!;
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
   assert.deepEqual(
     screen.componentViews![0]!.insertedStylesheets!.find(
       (item) => item.path === "action.css",
-    )?.componentIds,
+    )?.componentPaths,
     undefined,
   );
 });

@@ -12,31 +12,16 @@ import {
 } from "./helpers/html.js";
 import {
   assertAttributes,
-  context,
   flatCss,
+  requiredElement,
+} from "./helpers/shell_assertions.js";
+import {
+  context,
   homePage,
   manifest,
-  notFoundPage,
-  requiredElement,
-  taggedFlowManifest,
   untaggedManifest,
   viewPage,
-} from "./shell_fixture.js";
-
-test("the catalogue names every declared tag once, in sorted order", () => {
-  assert.deepEqual(createCatalogue(manifest).tags, [
-    "billing",
-    "forms",
-    "onboarding",
-  ]);
-  assert.deepEqual(createCatalogue(taggedFlowManifest).tags, [
-    "billing",
-    "forms",
-    "onboarding",
-    "walkthrough",
-  ]);
-  assert.deepEqual(createCatalogue(untaggedManifest).tags, []);
-});
+} from "./helpers/shell_fixture.js";
 
 test("the search field carries a tag control over a closed picker", () => {
   const html = homePage(createCatalogue(manifest), context);
@@ -164,11 +149,11 @@ test("the search field leads with a legible search icon, not a glyph", () => {
 
 test("the browser bar draws copy and expand icons, not tiny glyphs", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byId.get("welcome");
+  const entry = catalogue.byPath.get("example/screens/welcome");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeId: "welcome",
+    activeId: "example/screens/welcome",
   });
   for (const glyph of ["⧉", "⤢", "⤡"]) {
     assert.equal(html.includes(glyph), false);
@@ -196,32 +181,4 @@ test("the browser bar draws copy and expand icons, not tiny glyphs", () => {
     SHELL_CSS,
     /\.browser-frame\.is-expanded \.browser-expand \.i-collapse \{\s*display: inline-flex;/,
   );
-});
-
-test("missing routes keep the catalogue shell", () => {
-  const catalogue = createCatalogue(manifest);
-  const missing = notFoundPage("view/unknown.html", catalogue, context);
-  assert.match(missing, /Item not found/);
-  assert.match(missing, /choose another item from the navigation/);
-  assert.match(missing, /If this item was just added/);
-  assert.match(missing, /aria-label="Catalogue"/);
-});
-
-test("filter renders in the nav only when changed routes are known", () => {
-  const catalogue = createCatalogue(manifest);
-  const withFilter = homePage(catalogue, {
-    ...context,
-    changedIds: ["welcome"],
-  });
-  assert.match(withFilter, /data-mokly-filter/);
-  assert.match(withFilter, /class="mbk-nav-filter-count">1</);
-  const withNoChanges = homePage(catalogue, {
-    ...context,
-    changedIds: [],
-  });
-  assert.match(withNoChanges, /data-mokly-filter/);
-  assert.match(withNoChanges, /class="mbk-nav-filter-count">0</);
-  const withoutFilter = homePage(catalogue, context);
-  assert.equal(withoutFilter.includes("data-mokly-filter"), false);
-  assert.match(withoutFilter, /data-mokly-search/);
 });

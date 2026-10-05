@@ -13,24 +13,28 @@ import { scopedCatalogueFixture } from "./scoped_catalogue_fixture.js";
 const model = scopedCatalogueFixture();
 
 test("screen entries retain only the selected screen's views", () => {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   assertScope(target(screen), screen.views);
 });
 
 test("screen variants retain only the selected variant screen", () => {
-  const variant = model.screens.find(({ id }) => id === "home-empty")!;
-  assert.equal(variant.variantOf, "home");
+  const variant = model.screens.find(
+    ({ path: id }) => id === "product/browse/home/empty",
+  )!;
+  assert.equal(variant.variantOf, "product/browse/home");
   assertScope(target(variant), variant.views);
 });
 
 test("component entries retain current and removed saved variants", () => {
   const component = model.components.find(
-    (entry) => entry.id === "action" && !("variantOf" in entry),
+    (entry) => entry.path === "components/action" && !("variantOf" in entry),
   )!;
-  const variants = catalogueComponentVariants(model, component.id);
+  const variants = catalogueComponentVariants(model, component.path);
   assert.deepEqual(
-    variants.map(({ id }) => id),
-    ["action-default", "action-retired"],
+    variants.map(({ path: id }) => id),
+    ["components/action/default", "components/action/retired"],
   );
   assertScope(
     target(component),
@@ -43,10 +47,15 @@ test("component entries retain current and removed saved variants", () => {
 });
 
 test("use cases deduplicate repeated step-screen usage", () => {
-  const useCase = model.useCases.find(({ id }) => id === "tour")!;
-  const screen = model.screens.find(({ id }) => id === "home")!;
-  assert.equal(useCase.steps.length, 2);
-  assertScope(target(useCase), screen.views);
+  const useCase = model.useCases.find(({ path: id }) => id === "tour")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
+  assert.equal(useCase.steps.length, 3);
+  const details = model.screens.find(
+    (entry) => entry.path === "product/browse/details",
+  )!;
+  assertScope(target(useCase), [...screen.views, ...details.views]);
 });
 
 test("snapshot-selected removed screens retain their exact historical views", () => {
@@ -63,11 +72,11 @@ test("snapshot-selected removed screens retain their exact historical views", ()
 
 test("snapshot-selected removed components retain their historical variants", () => {
   const record = model.removedEntries.find(
-    ({ entry }) => entry.id === "removed-action",
+    ({ entry }) => entry.path === "removed-action",
   )!;
   assert.ok(record.snapshotId);
   assert.equal(record.entry.kind, "component");
-  const variants = catalogueComponentVariants(model, record.entry.id);
+  const variants = catalogueComponentVariants(model, record.entry.path);
   assertScope(
     { ...target(record.entry), snapshotId: record.snapshotId },
     variants.flatMap(({ views }) => views),
@@ -109,8 +118,12 @@ test("target entries cannot select another snapshot", () => {
   );
 });
 
-function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
-  return { kind: "target" as const, entryId: entry.id, entryKind: entry.kind };
+function target(entry: Pick<CatalogueRecord, "path" | "kind">) {
+  return {
+    kind: "target" as const,
+    entryPath: entry.path,
+    entryKind: entry.kind,
+  };
 }
 
 function assertScope(

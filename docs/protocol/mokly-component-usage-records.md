@@ -11,6 +11,8 @@ stylesheet provenance are implemented in [M19](../../plans/remove-source-path-ev
 
 The rule for comments with the former spelling is implemented in
 [M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
+Implemented for manifest v8, including strict admission of baseline usage
+records. `componentId` names a component parent by its path.
 
 This contract owns the per-view component instance, slot, range, style, and
 resource records stored by [manifest v8](./mokly-component-manifest.md).
@@ -86,12 +88,12 @@ interface InsertedComponentStylesheet {
   startOffset: number;
   endOffset: number;
   path: string;
-  componentIds: readonly string[];
+  componentPaths: readonly string[];
 }
 ```
 
 References are local to one view except `componentId`, which names a registered
-component parent. An entry owner is the containing screen or component variant.
+component parent by its path. An entry owner is the containing screen or component variant.
 The component root rendered for its own variant is the entry owner and is not a
 used instance.
 
@@ -100,8 +102,8 @@ without a final LF. Their preimages are
 `["mokabook-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`
 and `["mokabook-slot-v1", instanceKey, name]`. Those domain strings are frozen
 protocol identifiers. Readers recompute keys and reject mismatches or
-conflicting duplicates. Keys are not paths, selectors, catalogue ids, or
-routes.
+conflicting duplicates. Keys are not entry paths, selectors, or file
+names.
 
 ## Ownership And Ordering
 
@@ -187,7 +189,7 @@ remain exact document ranges. CSS rule membership uses element containment,
 not these assertions.
 
 `insertedStylesheets` records final-document full-link UTF-16 spans, decoded
-public paths and rendered declaring ids. It is private provenance, not file
+public paths and rendered declaring paths. It is private provenance, not file
 ownership. Each persisted v8 usage record must contain this array, even when
 empty. A missing array is invalid data; readers never guess provenance or
 normalize its absence to an empty array. Public inspection still omits this

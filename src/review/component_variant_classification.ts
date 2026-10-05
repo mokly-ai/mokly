@@ -16,7 +16,9 @@ import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
 import { address, metadata, uniqueReasons } from "./component_metadata.js";
 import { variantAddress } from "./component_pairing.js";
 import type { ComponentReasonSources } from "./component_reason_sources.js";
-import type { ComparedComponentView } from "./component_view.js";
+import type { ComponentVariantPair } from "./component_variant_pairs.js";
+import type { ComparedComponentView } from "./component_view_types.js";
+import { previousPathFields } from "./moves/types.js";
 import { aggregateState } from "./screen_views.js";
 
 type ComponentParent = ManifestComponent;
@@ -31,8 +33,10 @@ interface VariantClassificationInput {
     before: GeneratedComponentView | undefined;
     after: GeneratedComponentView | undefined;
   }[];
-  beforeEntries: ReadonlyMap<string, ReviewComponentVariant>;
-  afterEntries: ReadonlyMap<string, ReviewComponentVariant>;
+  pairs: readonly ComponentVariantPair[];
+  mapBefore: (path: string) => string;
+  beforeDocuments: (source: string) => string;
+  afterDocuments: (source: string) => string;
   reasonSources: ComponentReasonSources;
   changes: ChangedEntry[];
 }
@@ -42,37 +46,33 @@ interface VariantClassification {
   reviews: readonly ComponentVariantReview[];
 }
 
-/** Classify variant entries while retaining Review v4's grouped component result. */
+/** Classify variant entries while retaining Review v5's grouped component result. */
 export function classifyComponentVariants(
   input: VariantClassificationInput,
 ): VariantClassification {
-  const bases = variants(input.before, input.beforeEntries);
-  const heads = variants(input.after, input.afterEntries);
   const reviews: ComponentVariantReview[] = [];
   const parentReasons: EntryChangeReason[] = [];
-  for (const id of [
-    ...new Set([
-      ...heads.map((variant) => variant.id),
-      ...bases.map((variant) => variant.id),
-    ]),
-  ]) {
-    const base = bases.find((variant) => variant.id === id);
-    const head = heads.find((variant) => variant.id === id);
+  for (const { before: base, after: head } of input.pairs) {
     const selected = (head ?? base)!;
+    const id = selected.path;
+    const key = id.toLowerCase();
     const comparisons = input.compared.filter(
       (_result, index) =>
-        (input.pairedViews[index]!.after ?? input.pairedViews[index]!.before)
-          ?.variantId === id,
+        (
+          input.pairedViews[index]!.after ?? input.pairedViews[index]!.before
+        )?.variantPath?.toLowerCase() === key,
     );
     const views = comparisons.map((result) => result.view);
-    const beforeEntry = input.beforeEntries.get(id);
-    const afterEntry = input.afterEntries.get(id);
+    const beforeEntry = base;
+    const afterEntry = head;
+    const moved = previousPathFields(base, head);
     const reasons: EntryChangeReason[] = [];
     if (!base) reasons.push({ kind: "added" });
     if (!head) reasons.push({ kind: "removed" });
     const metadataChanged =
       Boolean(beforeEntry && afterEntry) &&
-      (metadata(beforeEntry!) !== metadata(afterEntry!) ||
+      (metadata(beforeEntry!, input.mapBefore, input.beforeDocuments) !==
+        metadata(afterEntry!, undefined, input.afterDocuments) ||
         input.before?.title !== input.after?.title);
     if (metadataChanged) reasons.push({ kind: "metadata" });
     const comparedReasons = comparisons.flatMap(
@@ -84,7 +84,7 @@ export function classifyComponentVariants(
         comparisons.some((comparison) =>
           comparison.ownedResources.some(
             (owned) =>
-              owned.componentId === input.entry.id &&
+              owned.componentId === input.entry.path &&
               owned.reason.path === reason.path,
           ),
         ),
@@ -108,7 +108,7 @@ export function classifyComponentVariants(
           !comparisons.some((comparison) =>
             comparison.ownedResources.some(
               (owned) =>
-                owned.componentId === input.entry.id &&
+                owned.componentId === input.entry.path &&
                 owned.reason.path === reason.path,
             ),
           ),
@@ -122,7 +122,8 @@ export function classifyComponentVariants(
     reasons.push(...rootCss);
     parentReasons.push(...rootCss);
     reviews.push({
-      id,
+      path: id,
+      ...moved,
       title: selected.title,
       ...(base ? { before: variantAddress(base) } : {}),
       ...(head ? { after: variantAddress(head) } : {}),
@@ -130,10 +131,11 @@ export function classifyComponentVariants(
       views,
     });
     const selectedEntry = afterEntry ?? beforeEntry;
-    if (reasons.length > 0 && selectedEntry) {
+    if ((reasons.length > 0 || moved.previousPath) && selectedEntry) {
       const unique = uniqueReasons(reasons);
       input.changes.push({
         kind: "component",
+        ...moved,
         ...(beforeEntry ? { before: address(beforeEntry) } : {}),
         ...(afterEntry ? { after: address(afterEntry) } : {}),
         reasons: unique,
@@ -144,26 +146,17 @@ export function classifyComponentVariants(
   return { parentReasons, reviews };
 }
 
-/** Index current or baseline-v8 flattened variants by global id. */
+/** Index current or historical-v8 flattened variants by case-folded path. */
 export function componentVariantEntries(
   entries: readonly (ManifestEntry | HistoricalManifestEntry)[],
 ): ReadonlyMap<string, ReviewComponentVariant> {
   return new Map(
     entries.flatMap((entry) =>
       entry.kind === "component" && isManifestComponentVariant(entry)
-        ? [[entry.id, entry] as const]
+        ? [[entry.path.toLowerCase(), entry] as const]
         : [],
     ),
   );
-}
-
-function variants(
-  parent: ComponentParent | undefined,
-  entries: ReadonlyMap<string, ReviewComponentVariant>,
-): readonly ReviewComponentVariant[] {
-  return parent
-    ? [...entries.values()].filter((entry) => entry.variantOf === parent.id)
-    : [];
 }
 
 function slotScopedInputsChanged(

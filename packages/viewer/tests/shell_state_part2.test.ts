@@ -22,6 +22,7 @@ import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 import type { ScreenNavigateEvent } from "../src/viewer/types.js";
 
+import { withoutTreeEntries } from "./catalogue_fixture.js";
 import { catalogue, context, model } from "./shell_state_fixture.js";
 
 test("bare removed routes announce only published snapshot identity", () => {
@@ -33,10 +34,7 @@ test("bare removed routes announce only published snapshot identity", () => {
     const candidateCatalogue = viewerCatalogue(candidate);
     const route = routeFromUrl(
       candidateCatalogue,
-      new URL(
-        viewHref(historical.entry.kind, historical.entry.id),
-        "https://example.test",
-      ),
+      new URL(viewHref(historical.entry.path), "https://example.test"),
     );
     const initial = createInitialShellState(
       candidateCatalogue,
@@ -69,31 +67,36 @@ test("bare removed routes announce only published snapshot identity", () => {
   const historical = model.removedEntries[0]!;
   assert.ok(historical.snapshotId);
   assert.deepEqual(announceBareRoute(identityless), [
-    { screenId: historical.entry.id },
+    { screenPath: historical.entry.path },
   ]);
   assert.deepEqual(announceBareRoute(model), [
     {
-      screenId: historical.entry.id,
+      screenPath: historical.entry.path,
       snapshotId: historical.snapshotId,
     },
   ]);
 });
 
-test("component variant heads keep the parent heading and shown entry id", () => {
-  const parent = catalogue.byId.get("action");
+test("component variant heads keep the parent heading and shown entry path", () => {
+  const parent = catalogue.byPath.get("components/action");
   assert.ok(parent?.kind === "component" && !("variantOf" in parent));
   assert.deepEqual(targetHead(catalogue, { kind: "entry", entry: parent }), {
-    crumbs: [{ label: "Product" }],
-    id: "action",
+    crumbs: [
+      {
+        folder: { path: "components", section: "components" },
+        label: "Components",
+      },
+    ],
+    path: "components/action",
     title: "Action",
   });
-  const variant = catalogue.byId.get("action-default");
+  const variant = catalogue.byPath.get("components/action/default");
   assert.ok(variant?.kind === "component" && "variantOf" in variant);
   const head = targetHead(catalogue, { kind: "entry", entry: variant });
   assert.equal(head.title, "Action");
-  assert.equal(head.id, "action-default");
+  assert.equal(head.path, "components/action/default");
   assert.deepEqual(head.crumbs.at(-1), {
-    href: "/view/components/action.html",
+    href: "/view/components/action/",
     label: "Action",
   });
 });
@@ -102,7 +105,7 @@ test("unknown frame routes mutate only uncontrolled host display state", () => {
   const sections = catalogueNavSections(catalogue);
   const home = routeFromUrl(
     catalogue,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const missing = routeFromUrl(
     catalogue,
@@ -144,10 +147,16 @@ test("removed component variants keep catalogue-wide Dark available", () => {
   };
   const removedModel = {
     ...model,
-    components: model.components.filter((entry) => entry.id !== variant.id),
+    components: model.components.filter((entry) => entry.path !== variant.path),
+    tree: withoutTreeEntries(model.tree, [variant.path]),
     removedEntries: [
       ...model.removedEntries,
-      { entry: historical, snapshotId: "e".repeat(64) },
+      {
+        entry: historical,
+        folderTitles: [],
+        parentTitle: "Action",
+        snapshotId: "e".repeat(64),
+      },
     ],
   };
 
@@ -157,7 +166,7 @@ test("removed component variants keep catalogue-wide Dark available", () => {
 test("filter transitions restore their disclosure baseline and route activation reveals its row", () => {
   const route = routeFromUrl(
     catalogue,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/guide/"),
   );
   let state = createInitialShellState(
     catalogue,
@@ -184,7 +193,7 @@ test("filter transitions restore their disclosure baseline and route activation 
   assert.equal(state.selection.view, "all");
   assert.equal(state.drawerOpen, false);
   assert.equal(state.expandedFrame, undefined);
-  assert.match(state.announcement, /^Loaded Home/);
+  assert.match(state.announcement, /^Loaded Guide/);
 
   state = withFilterSelection(state, {
     ...state.selection,

@@ -29,7 +29,7 @@ test("every served document loads the hydrated live host", async (context) => {
   });
   fixture.beforeRemove(() => server.close());
 
-  for (const route of ["/", "/review", "/view/screens/home.html", "/absent"]) {
+  for (const route of ["/", "/review", "/view/home/", "/absent"]) {
     const document = await (await fetch(`${server.url}${route}`)).text();
     assert.match(
       document,
@@ -37,9 +37,7 @@ test("every served document loads the hydrated live host", async (context) => {
       route,
     );
   }
-  const reactDocument = await (
-    await fetch(`${server.url}/view/screens/home.html`)
-  ).text();
+  const reactDocument = await (await fetch(`${server.url}/view/home/`)).text();
   assert.match(reactDocument, /data-mokly-host-capabilities=""/);
   const capabilityState = reactDocument.match(
     /data-mokly-host-capability-state="" type="application\/json">([^<]+)<\/script>/,

@@ -137,7 +137,7 @@ export function finalizeComponentStylesheets(
         startOffset: adjusted(link.location.startOffset),
         endOffset: adjusted(link.location.endOffset),
         path: link.publicPath,
-        componentIds: declarer.componentIds,
+        componentPaths: declarer.componentPaths,
       };
     })
     .sort((left, right) => left.startOffset - right.startOffset);

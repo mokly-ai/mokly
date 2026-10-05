@@ -40,7 +40,7 @@ test("source policy identifies entries, reserved names, listed inputs and matche
     sourceFiles: ["mockups/helper.html"],
   };
   for (const [name, reason] of [
-    ["source-alias/page.html", { kind: "entries" }],
+    ["source-alias/fixture.mockup.tsx", { kind: "entries" }],
     ["page.source.html", { kind: "reserved" }],
     ["helper.html", { kind: "listed" }],
     ["internal/page.html", { kind: "exclusion", glob: "internal/**" }],
@@ -69,28 +69,44 @@ test("source policy identifies entries, reserved names, listed inputs and matche
   );
 });
 
-test("generated-route denials distinguish source roots, reserved names, listed inputs and internal metadata", async (t) => {
+test("generated-route denials retain source causes through canonical output aliases", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  await fs.writeFile(path.join(fixture.mockupsDir, "helper.html"), "Source");
-  await fs.symlink("../entries", path.join(fixture.mockupsDir, "source-alias"));
+  for (const directory of ["entry-alias", "reserved", "listed", "metadata"])
+    await fs.mkdir(path.join(fixture.mockupsDir, directory));
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "private.source.html"),
+    "Source",
+  );
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "listed/index.html"),
+    "Source",
+  );
   await fs.writeFile(
     path.join(fixture.mockupsDir, "mokly-manifest.json"),
     "{}",
   );
   await fs.symlink(
-    "mokly-manifest.json",
-    path.join(fixture.mockupsDir, "metadata.html"),
+    "../../entries/fixture.mockup.tsx",
+    path.join(fixture.mockupsDir, "entry-alias/index.html"),
+  );
+  await fs.symlink(
+    "../private.source.html",
+    path.join(fixture.mockupsDir, "reserved/index.html"),
+  );
+  await fs.symlink(
+    "../mokly-manifest.json",
+    path.join(fixture.mockupsDir, "metadata/index.html"),
   );
   const config = {
     ...(await loadConfig(fixture.root)),
-    sourceFiles: ["mockups/helper.html"],
+    sourceFiles: ["mockups/listed/index.html"],
   };
   for (const [route, cause] of [
-    ["source-alias/page.html", /resolved entry module.*entries/],
-    ["page.source.html", /reserved source basename/],
-    ["helper.html", /authoring input.*sourceFiles/],
-    ["metadata.html", /internal catalogue metadata/],
+    ["entry-alias/index.html", /source file matched by roots/],
+    ["reserved/index.html", /reserved source basename/],
+    ["listed/index.html", /authoring input.*sourceFiles/],
+    ["metadata/index.html", /internal catalogue metadata/],
   ] as const) {
     assert.throws(
       () => validateGeneratedOutputPaths([route], config),
@@ -100,7 +116,7 @@ test("generated-route denials distinguish source roots, reserved names, listed i
         return true;
       },
     );
-    if (route !== "metadata.html")
+    if (route !== "metadata/index.html")
       assert.match(
         generatedOwnershipDenial(path.join(config.mockupsDir, route), config)!,
         cause,

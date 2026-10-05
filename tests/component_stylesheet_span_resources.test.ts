@@ -5,13 +5,13 @@ import { insertedStylesheetResources } from "../dist/review/component_stylesheet
 
 const link =
   '<link rel="alternate stylesheet" href="../action%20theme.css?v=1&amp;x=2#theme">';
-const route = "screens/checkout.mobile.html";
+const route = "checkout/index.mobile.html";
 const html = `<html><head><title>😀</title><!--mokly-review-ignore:start:assets-->${link}<!--mokly-review-ignore:end:assets--></head><body></body></html>`;
 const span = (document: string) => ({
   startOffset: document.indexOf(link),
   endOffset: document.indexOf(link) + link.length,
   path: "action theme.css",
-  componentIds: ["action"],
+  componentPaths: ["action"],
 });
 
 test("recorded spans identify decoded resources before ignoring author content", () => {

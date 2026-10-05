@@ -3,7 +3,6 @@ import test from "node:test";
 
 import { publishCatalogue } from "../dist/publish/run.js";
 
-import { extractUploadArchive } from "./helpers/upload_archive.js";
 import {
   base,
   comparisonPath,
@@ -11,7 +10,8 @@ import {
   dependencies,
   head,
   options,
-} from "./publish_run_fixture.js";
+} from "./helpers/publish_run_fixture.js";
+import { extractUploadArchive } from "./helpers/upload_archive.js";
 
 test("publish exchanges the pinned export and returns counts", async () => {
   const fixture = dependencies();

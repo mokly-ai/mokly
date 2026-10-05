@@ -2,6 +2,7 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   entryRoute,
+  documentRoute,
   isManifestComponentVariant,
   validateComponentViewRecord,
   generatedViews,
@@ -18,12 +19,9 @@ import { validateComponentRanges } from "../components/ranges.js";
 import type { LinkedComponentStylesheet } from "../components/render.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
-import type { ResolvedConfig } from "../config/types.js";
+import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../html_references.js";
+import { extractHtmlReferences } from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
@@ -38,26 +36,27 @@ import type { GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
-import { validateGeneratedOutputPaths } from "./output_paths.js";
 import {
-  pendingGeneratedOrphanRoutes,
-  validateGeneratedOwnershipHeaders,
-} from "./ownership.js";
+  moveTargetsForGeneration,
+  type AcceptedMoveTargets,
+} from "./move_targets.js";
+import {
+  assertSnapshotRoutes,
+  type OutputSnapshot,
+} from "./output_snapshot.js";
+import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import type { BuildWarning } from "./warnings.js";
 
 /** Pure/countable boundaries used once per accepted document generation. */
 export interface DocumentValidationSeams {
-  readonly orphanRoutes: (
-    config: ResolvedConfig,
-    expected: Iterable<string>,
-  ) => readonly string[];
+  readonly orphanRoutes: (snapshot: OutputSnapshot) => readonly string[];
   readonly parseCss: (text: string) => readonly string[];
 }
 
 const defaultValidationSeams: DocumentValidationSeams = {
-  orphanRoutes: pendingGeneratedOrphanRoutes,
+  orphanRoutes: (snapshot) => snapshot.orphanRoutes,
   parseCss: extractCssReferences,
 };
 
@@ -82,26 +81,37 @@ export class DocumentCompiler {
     private readonly graph: LoadedGraph,
     seams: DocumentValidationSeams = defaultValidationSeams,
   ) {
-    const registry = prepareRegistry(graph.definitions, runtime.config);
+    const registry = prepareRegistry(
+      graph.definitions,
+      runtime.config,
+      graph.documents,
+    );
     this.entries = registry.entries;
-    this.compatibility = { byId: registry.byId, routeIndexes: new Map() };
+    this.compatibility = { byPath: registry.byPath, routeIndexes: new Map() };
     this.components = new Map(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "component" && !isManifestComponentVariant(entry)
-          ? [[entry.id, entry] as const]
+          ? [[entry.path, entry] as const]
           : [],
       ),
     );
     for (const entry of runtime.manifest.entries) {
+      if (entry.kind === "document")
+        for (const colorScheme of entry.colorSchemes)
+          this.routes.set(documentRoute(entry.path, colorScheme), {
+            entryId: entry.path,
+            viewport: "desktop",
+            colorScheme,
+          });
       if (entry.kind === "page")
-        this.routes.set(entryRoute("page", entry.id), {
-          entryId: entry.id,
+        this.routes.set(entryRoute(entry.path), {
+          entryId: entry.path,
           viewport: "desktop",
           colorScheme: "light",
         });
       for (const view of generatedViews(entry))
         this.routes.set(view.path, {
-          entryId: entry.id,
+          entryId: entry.path,
           viewport: view.viewport,
           colorScheme: view.colorScheme,
         });
@@ -112,11 +122,10 @@ export class DocumentCompiler {
       (route) => (this.activeRead?.(route) ?? this.prepare(route)).html,
       seams.parseCss,
     );
+    assertSnapshotRoutes(runtime.outputSnapshot, this.pending.routes());
     this.links = {
       pending: this.pending,
-      pendingOrphans: new Set(
-        seams.orphanRoutes(runtime.config, this.pending.routes()),
-      ),
+      pendingOrphans: new Set(seams.orphanRoutes(runtime.outputSnapshot)),
       parsed: new Map(),
       onDemand: true,
     };
@@ -126,7 +135,12 @@ export class DocumentCompiler {
   render(
     route: string,
     componentProps?: Readonly<Record<string, unknown>>,
+    moveTargets?: AcceptedMoveTargets,
   ): CompiledDocument {
+    this.compatibility.moves = moveTargetsForGeneration(
+      moveTargets,
+      this.runtime.generation,
+    );
     const document = componentProps
       ? this.prepare(route, componentProps)
       : this.prepare(route);
@@ -185,7 +199,6 @@ export class DocumentCompiler {
         `unknown generated document: ${route}`,
       );
     const config = this.runtime.config;
-    validateGeneratedOutputPaths([route], config);
     const views = new Map<string, ArtifactView>();
     const componentViews = new Map<string, ComponentViewRecord>();
     const warnings: BuildWarning[] = [];
@@ -223,7 +236,7 @@ export class DocumentCompiler {
       this.pending,
     );
     let html = outputs.get(route)!;
-    const entry = this.compatibility.byId.get(target.entryId)!;
+    const entry = this.compatibility.byPath.get(target.entryId)!;
     validateGeneratedOwnershipHeaders(
       outputs,
       new Map([[route, entry.sourceRelativePath]]),

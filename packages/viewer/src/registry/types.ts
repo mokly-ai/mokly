@@ -8,9 +8,9 @@ import type { ColorScheme } from "../data/axes.js";
 /** Serializable common metadata for a current manifest entry. */
 export interface ManifestEntryBase {
   description: string;
-  id: string;
-  kind: "screen" | "page" | "use-case" | "component";
-  navPath: readonly string[];
+  path: string;
+  kind: "screen" | "page" | "document" | "use-case" | "component";
+  movedFrom?: string;
   rationale?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
@@ -25,8 +25,8 @@ export interface ManifestScreen extends ManifestEntryBase {
   kind: "screen";
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
-  useCaseIds: readonly string[];
-  /** Parent screen id, present only when this screen is a variant. */
+  useCasePaths: readonly string[];
+  /** Parent screen path, present only when this screen is a variant. */
   variantOf?: string;
 }
 
@@ -39,7 +39,11 @@ export interface ManifestPage extends ManifestEntryBase {
 /** Serializable use-case manifest entry. */
 export interface ManifestUseCase extends ManifestEntryBase {
   kind: "use-case";
-  steps: readonly { description?: string; screenId: string; title?: string }[];
+  steps: readonly {
+    description?: string;
+    screenPath: string;
+    title?: string;
+  }[];
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
 }
@@ -47,6 +51,7 @@ export interface ManifestUseCase extends ManifestEntryBase {
 /** Any entry emitted by the current manifest writer. */
 export type ManifestEntry =
   | ManifestScreen
+  | ManifestDocument
   | ManifestPage
   | ManifestUseCase
   | ManifestComponent
@@ -57,6 +62,7 @@ export interface ManifestV8 {
   entries: readonly ManifestEntry[];
   generatedBy: "mokly";
   schemaVersion: 8;
+  folders: readonly ManifestFolder[];
   sourceFiles: readonly string[];
 }
 
@@ -71,3 +77,20 @@ export type HistoricalManifestUseCase = ManifestUseCase;
 
 /** Current and historical comparison inputs share the exact v8 contract. */
 export type Manifest = ManifestV8;
+
+/** Whole-document entry rendered from Markdown. */
+export interface ManifestDocument extends ManifestEntryBase {
+  kind: "document";
+  colorSchemes: readonly ColorScheme[];
+  resources: readonly string[];
+  tags?: readonly string[];
+}
+/** Authored folder metadata; resolved titles remain derived. */
+export interface ManifestFolder {
+  path: string;
+  title?: string;
+  order?: readonly string[];
+  hidden?: boolean;
+  exclude?: readonly string[];
+  sourcePath: string;
+}

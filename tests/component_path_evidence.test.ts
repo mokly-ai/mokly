@@ -54,7 +54,7 @@ test("exact removed component and screen declarations add no reasons", async (t)
     sharedGlobs: ["src/tokens/**"],
   });
 
-  assert.deepEqual(changedIds(result), []);
+  assert.deepEqual(changedEntries(result), []);
   assert.deepEqual(dependencyPaths(result, "action"), []);
   assert.deepEqual(dependencyPaths(result, "home"), []);
   assert.deepEqual(dependencyPaths(result, "journey"), []);
@@ -78,11 +78,11 @@ for (const [name, ownerRoot, changed] of [
       sharedGlobs: ["src/tokens/**"],
     });
 
-    assert.deepEqual(changedIds(result), []);
+    assert.deepEqual(changedEntries(result), []);
     assert.deepEqual(dependencyPaths(result, "action"), []);
     assert.equal(
       Object.hasOwn(
-        result.screens.find((entry) => entry.id === "home")!,
+        result.screens.find((entry) => entry.path === "home")!,
         "sharedImpact",
       ),
       false,
@@ -102,7 +102,7 @@ test("an exact removed screen declaration grants no independent evidence", async
     sharedGlobs: ["src/tokens/**"],
   });
 
-  assert.deepEqual(changedIds(result), []);
+  assert.deepEqual(changedEntries(result), []);
   assert.deepEqual(dependencyPaths(result, "home"), []);
 });
 
@@ -120,10 +120,10 @@ test("an unowned registration module under a broad component glob lists nothing"
     assert.equal(Object.hasOwn(entry, "sharedImpact"), false);
 });
 
-function changedIds(
+function changedEntries(
   result: Awaited<ReturnType<typeof pathEvidenceFixture>>["result"],
 ): string[] {
-  return result.changes.map((entry) => (entry.after ?? entry.before)!.id);
+  return result.changes.map((entry) => (entry.after ?? entry.before)!.path);
 }
 
 function dependencyPaths(
@@ -132,7 +132,7 @@ function dependencyPaths(
 ): string[] {
   return (
     result.changes
-      .find((entry) => (entry.after ?? entry.before)?.id === id)
+      .find((entry) => (entry.after ?? entry.before)?.path === id)
       ?.reasons.flatMap((reason) =>
         reason.kind === "dependency" ? [reason.path] : [],
       ) ?? []

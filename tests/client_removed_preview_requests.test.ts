@@ -13,7 +13,7 @@ import {
   respond,
   review,
   snapshotId,
-} from "./client_removed_preview_requests_fixture.js";
+} from "./helpers/removed_preview_requests.js";
 
 test("a screen preview renders only its captured previous views", async () => {
   const generation = `https://catalogue.test${COMPARISON}`;
@@ -51,12 +51,12 @@ test("a screen preview renders only its captured previous views", async () => {
       {
         colorScheme: "light",
         viewport: "mobile",
-        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/screens/removed-screen.mobile.html`,
+        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/removed-screen/index.mobile.html`,
       },
       {
         colorScheme: "light",
         viewport: "desktop",
-        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/screens/removed-screen.desktop.html`,
+        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/removed-screen/index.desktop.html`,
       },
     ],
   });
@@ -97,7 +97,7 @@ test("a reused or stale generation is treated as unavailable", async () => {
   );
   await assert.rejects(
     requestPreview(
-      { ...removedScreen, id: "other" },
+      { ...removedScreen, path: "other" },
       { endpoint: new URL(generation) },
       missing.win,
       AbortSignal.timeout(5_000),
@@ -178,10 +178,10 @@ test("a page response cannot replace its selected baseline or generation", async
     snapshotId: snapshotId("baseline", "a".repeat(40), removedPage),
   };
   const payload = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     baseRef: "origin/main",
     baseCommit: "d".repeat(40),
-    id: removedPage.id,
+    path: removedPage.path,
   };
   const endpoint = new URL(`https://catalogue.test/${pagePath}`);
   const generation = new URL(`https://catalogue.test${COMPARISON}`);

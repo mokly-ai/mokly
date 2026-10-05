@@ -5,22 +5,20 @@ import { loadConfig } from "../dist/config/load.js";
 import {
   defineComponent,
   definePage,
-  defineRoot,
   defineScreen,
   defineUseCase,
-  page,
-  screen,
 } from "../dist/index.js";
-import { prepareRegistry } from "../dist/registry/prepare.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { prepareWarningRegistry } from "./helpers/removed_field_registry.js";
 
 const common = {
-  id: "example",
+  path: "example",
   title: "Example",
   description: "Example entry",
   relatedDocs: [],
 };
+const { path: _path, ...variantCommon } = common;
 const views = { mobile: "Mobile", desktop: "Desktop" };
 const removed = { dependencies: undefined } as Record<string, unknown>;
 
@@ -31,7 +29,7 @@ function component(extra: Record<string, unknown> = {}) {
 
     propSchema: { kind: "object", properties: {} },
     render: () => "Component",
-    variants: [{ id: "default", title: "Default", props: {} }],
+    variants: [{ slug: "default", title: "Default", props: {} }],
   }).entries;
 }
 
@@ -58,42 +56,21 @@ test("each removed authoring field emits one entry-scoped warning and no registr
         ...common,
         ...removed,
 
-        steps: [{ screenId: "other" }],
+        steps: [{ screenPath: "other" }],
       }),
       defineScreen({
         ...common,
         ...views,
-        id: "other",
+        path: "other",
 
-        useCaseIds: ["example"],
+        useCasePaths: ["example"],
       }),
     ],
 
     () => component(removed),
-    () =>
-      defineRoot({
-        children: [screen({ ...common, ...views, ...removed })],
-      }),
-    () =>
-      defineRoot({
-        children: [
-          page({
-            ...common,
-            ...removed,
-
-            render: () => "<html></html>",
-          }),
-        ],
-      }),
   ];
   for (const create of cases) {
-    const prepared = prepareRegistry(
-      [create()].flat().map((entry) => ({
-        ...entry,
-        definedIn: "entries/fixture.mockup.tsx",
-      })),
-      config,
-    );
+    const prepared = prepareWarningRegistry([create()].flat(), config);
     assert.deepEqual(prepared.warnings, [
       {
         code: "removed-dependencies",
@@ -112,11 +89,8 @@ test("component ownedDependencies warns without granting ownership", async (cont
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  const prepared = prepareRegistry(
-    component({ ownedDependencies: undefined }).map((entry) => ({
-      ...entry,
-      definedIn: "entries/fixture.mockup.tsx",
-    })),
+  const prepared = prepareWarningRegistry(
+    component({ ownedDependencies: undefined }),
     config,
   );
   assert.deepEqual(prepared.warnings, [
@@ -144,16 +118,10 @@ test("variant parent warnings do not inherit into their children", async (contex
       ...views,
       ...removed,
 
-      variants: [{ ...common, ...views, id: "child" }],
+      variants: [{ ...variantCommon, ...views, slug: "child" }],
     }),
   ]) {
-    const prepared = prepareRegistry(
-      [definitions].flat().map((entry) => ({
-        ...entry,
-        definedIn: "entries/fixture.mockup.tsx",
-      })),
-      config,
-    );
+    const prepared = prepareWarningRegistry([definitions].flat(), config);
     assert.deepEqual(
       prepared.warnings.map((warning) => warning.context),
       [["example"]],
@@ -164,7 +132,7 @@ test("variant parent warnings do not inherit into their children", async (contex
   }
 });
 
-test("a screen variant's own removed field warns under its own id", async (context) => {
+test("a screen variant's own removed field warns under its own path", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -172,16 +140,11 @@ test("a screen variant's own removed field warns under its own id", async (conte
     ...common,
     ...views,
 
-    variants: [{ ...common, ...views, ...removed, id: "child" }],
+    variants: [{ ...variantCommon, ...views, ...removed, slug: "child" }],
   });
-  const prepared = prepareRegistry(
-    [definitions]
-      .flat()
-      .map((entry) => ({ ...entry, definedIn: "entries/fixture.mockup.tsx" })),
-    config,
-  );
+  const prepared = prepareWarningRegistry([definitions].flat(), config);
   assert.deepEqual(
     prepared.warnings.map((warning) => warning.context),
-    [["child"]],
+    [["example/child"]],
   );
 });

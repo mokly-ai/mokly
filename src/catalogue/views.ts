@@ -23,19 +23,20 @@ export function projectViews(
   const result = input.comparison ?? input.evidence?.result;
   const reviewViews =
     entry.kind === "screen"
-      ? (result?.screens.find((item) => item.id === entry.id)?.views ??
-        input.evidence?.screenViews?.find((item) => item.id === entry.id)
+      ? (result?.screens.find((item) => item.path === entry.path)?.views ??
+        input.evidence?.screenViews?.find((item) => item.path === entry.path)
           ?.views)
       : result && isManifestComponentVariant(entry)
         ? result.components
-            .find((item) => item.id === entry.variantOf)
-            ?.variants.find((item) => item.id === entry.id)?.views
+            .find((item) => item.path === entry.variantOf)
+            ?.variants.find((item) => item.path === entry.path)?.views
         : undefined;
   const resourceViews =
     entry.kind === "screen"
-      ? (input.evidence?.screenEvidence?.find((item) => item.id === entry.id)
-          ?.views ??
-        result?.screens.find((item) => item.id === entry.id)?.views)
+      ? (input.evidence?.screenEvidence?.find(
+          (item) => item.path === entry.path,
+        )?.views ??
+        result?.screens.find((item) => item.path === entry.path)?.views)
       : reviewViews;
   return generatedViews(entry).map((view) => {
     const recordedUsage =

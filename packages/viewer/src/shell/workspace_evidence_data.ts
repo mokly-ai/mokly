@@ -1,6 +1,5 @@
 /** Merge route classification with evidence loaded for one comparison. */
 
-import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type {
   ComponentReview,
   EntryChangeReason,
@@ -14,6 +13,7 @@ import type {
 } from "../review/types.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
+import { componentReview } from "./workspace_entry.js";
 
 /** Complete evidence projected into one Details panel. */
 export interface WorkspaceComparisonEvidence {
@@ -31,31 +31,27 @@ export interface WorkspaceComparisonEvidence {
  */
 export function workspaceComparisonEvidence(
   data: WorkspaceData,
-  variantId?: string,
+  variantPath?: string,
   loaded?: ReviewResult,
 ): WorkspaceComparisonEvidence {
-  const componentId =
-    data.component?.id ??
-    (data.entry.kind === "component" && isManifestComponentVariant(data.entry)
-      ? data.entry.variantOf
-      : undefined);
-  const selected = componentId
-    ? loaded?.components.find((item) => item.id === componentId)
-    : loaded?.screens.find((item) => item.id === data.entry.id);
+  const selected =
+    data.entry.kind === "component"
+      ? componentReview(loaded?.components, data.component, data.entry)
+      : loaded?.screens.find((item) => item.path === data.entry.path);
   const change = loaded?.changes.find(
     (item) =>
       item.kind === data.entry.kind &&
-      (item.after ?? item.before)?.id === data.entry.id,
+      (item.after ?? item.before)?.path === data.entry.path,
   );
   const views = [
-    ...comparisonViews(data.comparison, variantId),
-    ...comparisonViews(selected, variantId),
+    ...comparisonViews(data.comparison, variantPath),
+    ...comparisonViews(selected, variantPath),
   ];
   const resources = data.resourceEvidence ?? [];
   const comparison = data.comparison ?? selected;
   return {
     comparison,
-    componentId,
+    componentId: data.component?.path,
     views,
     resourceViews: [...resources, ...views],
     reasons: mergeReasons([
@@ -69,10 +65,11 @@ export function workspaceComparisonEvidence(
 
 function comparisonViews(
   comparison: ComponentReview | ScreenReview | undefined,
-  variantId?: string,
+  variantPath?: string,
 ): readonly ViewReview[] {
   return comparison && "variants" in comparison
-    ? (comparison.variants.find((item) => item.id === variantId)?.views ?? [])
+    ? (comparison.variants.find((item) => item.path === variantPath)?.views ??
+        [])
     : (comparison?.views ?? []);
 }
 
@@ -85,7 +82,7 @@ function mergeReasons(
       reason.kind === "dependency"
         ? reason.path
         : reason.kind === "screen"
-          ? reason.id
+          ? reason.screenPath
           : ""
     }`;
     const previous = merged.get(key);

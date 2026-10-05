@@ -9,6 +9,7 @@ Uniform CSS eligibility, root-boundary handling and catalogue-wide rule proof
 are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The fast path and its strict-v8 baseline boundary are implemented.
+The fast path is implemented over the strict path-keyed manifest-v8 baseline boundary.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by

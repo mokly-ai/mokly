@@ -34,19 +34,19 @@ test("realpath aliases share one first-declaration link and both rendered declar
   await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
   const config = await loadConfig(fixture.root);
   const before = await compileCatalogue(config);
-  const screen = before.manifest.entries.find((entry) => entry.id === "home");
+  const screen = before.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   const html = textOutput(
     before.outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
+    viewRoute(screen.path, "mobile", "light"),
   )!;
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /href="\.\.\/alias\.css"/);
   assert.deepEqual(
     screen.componentViews![0]!.insertedStylesheets!.map(
-      ({ path, componentIds }) => ({ path, componentIds }),
+      ({ path, componentPaths }) => ({ path, componentPaths }),
     ),
-    [{ path: "action.css", componentIds: ["action", "pane"] }],
+    [{ path: "action.css", componentPaths: ["action", "pane"] }],
   );
 
   const baseline = {
@@ -71,10 +71,10 @@ test("realpath aliases share one first-declaration link and both rendered declar
   );
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion !== 5) return;
-  assert.deepEqual(result.changes.map((entry) => entry.after?.id).sort(), [
+  assert.deepEqual(result.changes.map((entry) => entry.after?.path).sort(), [
     "action",
-    "action-default",
-    "action-disabled",
+    "action/default",
+    "action/disabled",
   ]);
   assert.ok(
     result.affectedConsumers.some(
@@ -98,14 +98,14 @@ test("renderer-authored aliases stay in place without inserted provenance or CSS
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const prefix = "../"; return '<html><head><meta name="first"><link rel="alternate stylesheet" href="' + prefix + 'alias.css"><link rel="stylesheet" href="' + prefix + 'action.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; };`,
+export default (input) => { const prefix = "../".repeat(input.entry.path.split("/").length); return '<html><head><meta name="first"><link rel="alternate stylesheet" href="' + prefix + 'alias.css"><link rel="stylesheet" href="' + prefix + 'action.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; };`,
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  const screen = result.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   const html = textOutput(
     result.outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
+    viewRoute(screen.path, "mobile", "light"),
   )!;
   assert.equal((html.match(/href="\.\.\/alias\.css"/g) ?? []).length, 1);
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
@@ -123,7 +123,7 @@ test("dot-prefixed alias filenames inside the public root remain reusable", asyn
   assert.equal(
     rendererStylesheetPaths(
       '<html><head><link rel="stylesheet" href="../..alias.css"></head><body></body></html>',
-      "screens/home.html",
+      "home/index.html",
       fixture.mockupsDir,
       new Set([physical]),
     ).get(physical),
@@ -140,7 +140,7 @@ test("renderer link query and fragment still identify the same public file", asy
   assert.equal(
     rendererStylesheetPaths(
       '<html><head><link rel="stylesheet" href="../action.css?v=1#theme"></head><body></body></html>',
-      "screens/home.html",
+      "home/index.html",
       fixture.mockupsDir,
       new Set([physical]),
     ).get(physical),
@@ -172,7 +172,7 @@ test("configured alternate stylesheet tokens anchor declared links", () => {
   const html =
     '<html><head><link rel="alternate Stylesheet" href="../base.css"></head><body>Content</body></html>';
   assert.equal(
-    insertComponentStylesheets(html, "screens/home.html", ["../base.css"], 1, [
+    insertComponentStylesheets(html, "home/index.html", ["../base.css"], 1, [
       "action.css",
     ]),
     '<html><head><link rel="alternate Stylesheet" href="../base.css"><link rel="stylesheet" href="../action.css"></head><body>Content</body></html>',
@@ -183,7 +183,7 @@ test("configured links anchor insertion without an explicit head end tag", () =>
   const html =
     '<html><head><link rel="alternate stylesheet" href="../base.css"><body>Content</body></html>';
   assert.match(
-    insertComponentStylesheets(html, "screens/home.html", ["../base.css"], 1, [
+    insertComponentStylesheets(html, "home/index.html", ["../base.css"], 1, [
       "action.css",
     ]),
     /base\.css"><link rel="stylesheet" href="\.\.\/action\.css"><body>/,
@@ -209,7 +209,7 @@ for (const [name, html, expected] of [
 ] as const)
   test(`links before body when ${name} has no closing head tag`, () => {
     assert.match(
-      insertComponentStylesheets(html, "screens/home.html", [], 0, [
+      insertComponentStylesheets(html, "home/index.html", [], 0, [
         "action.css",
       ]),
       new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),

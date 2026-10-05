@@ -91,8 +91,7 @@ export async function inspectConsumerExport(
       for (const side of sides) {
         const snapshot = snapshotViewPath(
           side,
-          entry.kind,
-          entry.id,
+          entry.path,
           view.viewport,
           view.colorScheme,
         );

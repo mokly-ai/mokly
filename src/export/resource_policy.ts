@@ -4,36 +4,22 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
-import { isPublicGeneratedRoute } from "../build/styles/routes.js";
+import {
+  isGeneratedRoute,
+  isPublicGeneratedRoute,
+} from "../build/styles/routes.js";
 import { entryModuleRoots } from "../config/entry_membership.js";
 import { isInside, projectRealPath } from "../config/paths.js";
+import { publicFileNameDenial } from "../config/public_names.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 
 import { exportError } from "./error.js";
 
-const PRIVATE_DIRECTORIES = new Set([
-  "node_modules",
-  "target",
-  "dist",
-  "coverage",
-  "test-results",
-  "playwright-report",
-]);
-
-/** Public names cannot identify private modules, hidden paths, or cache trees. */
-export function isExportPublicName(
-  name: string,
-  config: ResolvedConfig,
-  options: { allowBuildDirectories?: boolean; resolveAliases?: boolean } = {},
-): boolean {
-  return exportPublicNameDenial(name, config, options) === undefined;
-}
-
 function exportPublicNameDenial(
   name: string,
   config: ResolvedConfig,
-  options: { allowBuildDirectories?: boolean; resolveAliases?: boolean },
+  options: { resolveAliases?: boolean; generated?: ReadonlySet<string> },
 ): string | undefined {
   if (!isSafeRepositoryPath(name))
     return "is not a safe repository-relative path";
@@ -45,22 +31,21 @@ function exportPublicNameDenial(
   if (denial) return sourceDenialMessage(denial);
   if ([MANIFEST_NAME, ...EARLIER_MANIFEST_NAMES].includes(name as never))
     return "targets internal catalogue metadata";
-  if (isPublicGeneratedRoute(name)) return;
-  for (const part of name.split("/")) {
-    if (part.startsWith(".")) return "contains a hidden path segment";
-    if (!options.allowBuildDirectories && PRIVATE_DIRECTORIES.has(part))
-      return `is inside a private build or dependency directory (${part})`;
-  }
-  if (/\.(?:[cm]?[jt]sx?|map)$/i.test(name))
-    return "uses a private module or source-map extension";
+  if (isGeneratedRoute(name))
+    return isPublicGeneratedRoute(name, options.generated)
+      ? undefined
+      : "targets private or uncaptured generated output";
+  if (options.generated?.has(name)) return;
+  return publicFileNameDenial(name);
 }
 
 /** Snapshot names use lexical policy; current capture additionally resolves aliases. */
 export function exportResourcePolicy(
   config: ResolvedConfig,
   resolveAliases = true,
+  generated?: ReadonlySet<string>,
 ): (name: string) => boolean {
-  const denial = exportResourceDenial(config, resolveAliases);
+  const denial = exportResourceDenial(config, resolveAliases, generated);
   return (name) => denial(name) === undefined;
 }
 
@@ -68,6 +53,7 @@ export function exportResourcePolicy(
 export function exportResourceDenial(
   config: ResolvedConfig,
   resolveAliases = true,
+  generated?: ReadonlySet<string>,
 ): (name: string) => string | undefined {
   const mockups = projectRealPath(config.mockupsDir);
   const packages = config.moduleResolution.packageRoots.map(projectRealPath);
@@ -114,7 +100,10 @@ export function exportResourceDenial(
       : [],
   );
   return (name) => {
-    const denial = exportPublicNameDenial(name, config, { resolveAliases });
+    const denial = exportPublicNameDenial(name, config, {
+      resolveAliases,
+      ...(generated ? { generated } : {}),
+    });
     if (denial) return denial;
     const candidates = [
       path.resolve(config.mockupsDir, name),

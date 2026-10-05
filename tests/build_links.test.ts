@@ -6,7 +6,6 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import {
   createFixture,
@@ -26,11 +25,11 @@ test("id-link rewriting changes only complete href attributes", async (context) 
 
   const compilation = await compileCatalogue(config);
   const mobile =
-    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
   assert.match(mobile, /Literal mock:missing-screen and mock:details/);
   assert.match(mobile, /data-route="mock:details"/);
-  assert.match(mobile, /href="\.\/details\.mobile\.html"/);
+  assert.match(mobile, /href="\.\.\/details\/index\.mobile\.html"/);
 });
 
 test("id-link rewriting uses parsed encoded href values", async (context) => {
@@ -45,16 +44,16 @@ test("id-link rewriting uses parsed encoded href values", async (context) => {
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: "entries", mockupsDir: "mockups", renderer: "renderer.ts", repoRoot: "." };
+    `export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", renderer: "renderer.ts", repoRoot: "." };
 `,
   );
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
   const mobile =
-    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
-  assert.match(mobile, /href="\.\/details\.mobile\.html"/);
+  assert.match(mobile, /href="\.\.\/details\/index\.mobile\.html"/);
   assert.doesNotMatch(mobile, /mock&#58;details/);
 });
 
@@ -71,7 +70,7 @@ test("renderer output cannot duplicate reserved Browse metadata", async () => {
       );
       await fs.promises.writeFile(
         fixture.configPath,
-        'export default { entriesDir: "entries", mockupsDir: "mockups", renderer: "renderer.ts", repoRoot: "." };\n',
+        'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", renderer: "renderer.ts", repoRoot: "." };\n',
       );
       const config = await loadConfig(fixture.root);
 
@@ -100,18 +99,18 @@ test("id-link rewriting resolves both navigation attributes", async (context) =>
 
     const compilation = await compileCatalogue(config);
     const mobile =
-      textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+      textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
     assert.doesNotMatch(mobile, /mock:details/);
-    assert.match(mobile, /href="\.\/details\.mobile\.html"/);
-    assert.match(mobile, /data-nav-href="\.\/details\.mobile\.html"/);
+    assert.match(mobile, /href="\.\.\/details\/index\.mobile\.html"/);
+    assert.match(mobile, /data-nav-href="\.\.\/details\/index\.mobile\.html"/);
   }
 });
 
 test("link validation fails closed for non-portable targets", async (context) => {
   const fixture = await createFixture(
     validEntrySource({
-      body: `<a href="details.mobile.html#absent">Broken anchor</a>`,
+      body: `<a href="../details/index.mobile.html#absent">Broken anchor</a>`,
     }),
   );
   context.after(() => removeFixture(fixture));
@@ -137,7 +136,7 @@ test("link validation fails closed for non-portable targets", async (context) =>
   await fs.promises.writeFile(
     fixture.entryPath,
     validEntrySource({
-      body: `<a href="/screens/details.mobile.html">Root absolute</a>`,
+      body: `<a href="/details/index.mobile.html">Root absolute</a>`,
     }),
   );
   await assert.rejects(() => compileCatalogue(config), /root-absolute link/);
@@ -153,10 +152,10 @@ test("link validation rejects generated targets pending orphan removal", async (
   await assert.rejects(() => compileCatalogue(config), /missing target/);
 });
 
-test("legacy authored routes cannot change derived documents", async () => {
+test("unknown authored fields fail regardless of their values", async () => {
   for (const route of [
-    'screens/details.mobile.html" onclick="alert.html',
-    "screens/CON.html",
+    'details/index.mobile.html" onclick="alert.html',
+    "CON/index.html",
     "screens/details#alternate.html",
     "screens/details?alternate.html",
     "screens/details space.html",
@@ -164,17 +163,7 @@ test("legacy authored routes cannot change derived documents", async () => {
     const fixture = await createFixture(routeSource(route));
     try {
       const config = await loadConfig(fixture.root);
-      const compilation = await compileCatalogue(config);
-      assert.ok(compilation.outputs.has("screens/unsafe-target.mobile.html"));
-      const entry = compilation.manifest.entries.find(
-        ({ id }) => id === "unsafe-target",
-      );
-      assert.ok(entry);
-      assert.equal(
-        entryRoute(entry.kind, entry.id),
-        "screens/unsafe-target.html",
-      );
-      assert.equal("route" in entry, false);
+      await assert.rejects(compileCatalogue(config), /unknown field route/);
     } finally {
       await removeFixture(fixture);
     }
@@ -191,7 +180,7 @@ test("framework-emitted stylesheet URLs encode path segments", async (context) =
   await fs.promises.writeFile(
     fixture.configPath,
     `export default {
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
   stylesheets: [{ match: "**/*.html", stylesheets: ["theme #1.css"] }]
@@ -202,7 +191,7 @@ test("framework-emitted stylesheet URLs encode path segments", async (context) =
 
   const compilation = await compileCatalogue(config);
   const mobile =
-    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
   assert.match(mobile, /href="\.\.\/theme%20%231\.css"/);
 });
@@ -217,10 +206,10 @@ test("stylesheet rules match catalogue routes for every viewport", async (contex
   await fs.promises.writeFile(
     fixture.configPath,
     `export default {
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
-  stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }]
+  stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }]
 };
 `,
   );
@@ -230,9 +219,9 @@ test("stylesheet rules match catalogue routes for every viewport", async (contex
 
   for (const viewport of ["mobile", "desktop"]) {
     const home =
-      textOutput(compilation.outputs, `screens/home.${viewport}.html`) ?? "";
+      textOutput(compilation.outputs, `home/index.${viewport}.html`) ?? "";
     const details =
-      textOutput(compilation.outputs, `screens/details.${viewport}.html`) ?? "";
+      textOutput(compilation.outputs, `details/index.${viewport}.html`) ?? "";
     assert.match(home, /href="\.\.\/home\.css"/);
     assert.doesNotMatch(details, /home\.css/);
   }
@@ -246,33 +235,33 @@ test("dark fragments link within dark and fall back to light-only", async (conte
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const mobileDark =
-    textOutput(compilation.outputs, "screens/a.mobile.dark.html") ?? "";
+    textOutput(compilation.outputs, "a/index.mobile.dark.html") ?? "";
 
-  assert.match(mobileDark, /href="\.\/b\.mobile\.dark\.html"/);
-  assert.match(mobileDark, /href="\.\/c\.mobile\.html"/);
+  assert.match(mobileDark, /href="\.\.\/b\/index\.mobile\.dark\.html"/);
+  assert.match(mobileDark, /href="\.\.\/c\/index\.mobile\.html"/);
 });
 
 function routeSource(route: string): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { relatedDocs: ["notes.md"], useCaseIds: [] };
+const metadata = { relatedDocs: ["notes.md"], useCasePaths: [] };
 export const mockups = [
-  defineScreen({ ...metadata, description: "Home", desktop: <a href="mock:unsafe-target">Target</a>, id: "home", mobile: <a href="mock:unsafe-target">Target</a>, route: "screens/home.html", title: "Home" }),
-  defineScreen({ ...metadata, description: "Ordinary target", desktop: <main>Ordinary</main>, id: "ordinary-target", mobile: <main>Ordinary</main>, route: "screens/details.html", title: "Ordinary" }),
-  defineScreen({ ...metadata, description: "Unsafe target", desktop: <main>Unsafe</main>, id: "unsafe-target", mobile: <main>Unsafe</main>, route: ${JSON.stringify(route)}, title: "Unsafe" })
+  defineScreen({ ...metadata, description: "Home", desktop: <a href="mock:unsafe-target">Target</a>, path: "home", mobile: <a href="mock:unsafe-target">Target</a>, route: "home/index.html", title: "Home" }),
+  defineScreen({ ...metadata, description: "Ordinary target", desktop: <main>Ordinary</main>, path: "ordinary-target", mobile: <main>Ordinary</main>, route: "details/index.html", title: "Ordinary" }),
+  defineScreen({ ...metadata, description: "Unsafe target", desktop: <main>Unsafe</main>, path: "unsafe-target", mobile: <main>Unsafe</main>, route: ${JSON.stringify(route)}, title: "Unsafe" })
 ];
 `;
 }
 
 function orphanLinkSource(includeTarget: boolean): string {
   const target = includeTarget
-    ? `defineScreen({ ...metadata, description: "Details", desktop: <main>Details</main>, id: "details", mobile: <main>Details</main>, route: "screens/details.html", title: "Details" })`
+    ? `defineScreen({ ...metadata, description: "Details", desktop: <main>Details</main>, path: "details", mobile: <main>Details</main>, title: "Details" })`
     : "";
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
 const metadata = { relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, description: "Home", desktop: <a href="./details.desktop.html">Details</a>, id: "home", mobile: <a href="./details.mobile.html">Details</a>, route: "screens/home.html", title: "Home" }),
+  defineScreen({ ...metadata, description: "Home", desktop: <a href="../details/index.desktop.html">Details</a>, path: "home", mobile: <a href="../details/index.mobile.html">Details</a>, title: "Home" }),
   ${target}
 ].filter(Boolean);
 `;
@@ -281,11 +270,11 @@ export const mockups = [
 function darkLinkSource(): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { relatedDocs: [], useCaseIds: [] };
+const metadata = { relatedDocs: [], useCasePaths: [] };
 export const mockups = [
-  defineScreen({ ...metadata, description: "A", desktop: <main><a href="mock:b">B</a><a href="mock:c">C</a></main>, id: "a", mobile: <main><a href="mock:b">B</a><a href="mock:c">C</a></main>, route: "screens/a.html", title: "A" }),
-  defineScreen({ ...metadata, description: "B", desktop: <main>B</main>, id: "b", mobile: <main>B</main>, route: "screens/b.html", title: "B" }),
-  defineScreen({ ...metadata, colorSchemes: ["light"], description: "C", desktop: <main>C</main>, id: "c", mobile: <main>C</main>, route: "screens/c.html", title: "C" })
+  defineScreen({ ...metadata, description: "A", desktop: <main><a href="mock:b">B</a><a href="mock:c">C</a></main>, path: "a", mobile: <main><a href="mock:b">B</a><a href="mock:c">C</a></main>, title: "A" }),
+  defineScreen({ ...metadata, description: "B", desktop: <main>B</main>, path: "b", mobile: <main>B</main>, title: "B" }),
+  defineScreen({ ...metadata, colorSchemes: ["light"], description: "C", desktop: <main>C</main>, path: "c", mobile: <main>C</main>, title: "C" })
 ];
 `;
 }

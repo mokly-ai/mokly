@@ -20,7 +20,7 @@ for (const watch of [false, true]) {
       validEntrySource() +
         `
       import { definePage } from "@mokly/mokly";
-      mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
+      mockups.push(definePage({ path: "broken", title: "Broken", description: "Broken page",
         relatedDocs: [],
         render: () => { throw new Error("unrequested page rendered"); } }));
     `,
@@ -33,12 +33,12 @@ for (const watch of [false, true]) {
     assert.match(home, /data-entry-id="broken"/);
     assert.match(home, /Search catalogue/);
     const preview = await fetch(
-      `${running.url}/static/screens/home.desktop.html`,
+      `${running.url}/static/home/index.desktop.html`,
     );
     assert.equal(preview.status, 200);
     assert.match(await preview.text(), /id="home"/);
     assert.equal(
-      (await fetch(`${running.url}/static/pages/broken.html`)).status,
+      (await fetch(`${running.url}/static/broken/index.html`)).status,
       500,
     );
     assert.equal((await fetch(running.url)).status, 200);
@@ -62,14 +62,11 @@ test("demand rendering validates logical anchors without rendering navigation-on
     port: 0,
   });
   fixture.beforeRemove(() => running.close());
-  const response = await fetch(
-    `${running.url}/static/screens/home.desktop.html`,
-  );
+  const response = await fetch(`${running.url}/static/home/index.desktop.html`);
   assert.equal(response.status, 500);
   assert.match(await response.text(), /missing/);
   assert.equal(
-    (await fetch(`${running.url}/view/screens/details.html?fragment=missing`))
-      .status,
+    (await fetch(`${running.url}/view/details/?fragment=missing`)).status,
     400,
   );
   await assert.rejects(
@@ -85,7 +82,7 @@ test(
       validEntrySource({ body: '<img src="../image.svg" alt="Example" />' }) +
         `
     import { definePage } from "@mokly/mokly";
-    mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
+    mockups.push(definePage({ path: "broken", title: "Broken", description: "Broken page",
       relatedDocs: [],
       render: () => { throw new Error("background cannot complete"); } }));
   `,
@@ -99,7 +96,7 @@ test(
     });
     fixture.beforeRemove(() => running.close());
     assert.equal(
-      (await fetch(`${running.url}/static/screens/home.desktop.html`)).status,
+      (await fetch(`${running.url}/static/home/index.desktop.html`)).status,
       200,
     );
     const before = version(await (await fetch(running.url)).text());
@@ -107,7 +104,7 @@ test(
     await fs.writeFile(asset, '<svg width="20"/>');
     await waitForUpdate(running.url, before);
     assert.equal(
-      (await fetch(`${running.url}/static/screens/home.desktop.html`)).status,
+      (await fetch(`${running.url}/static/home/index.desktop.html`)).status,
       200,
     );
     await assert.rejects(

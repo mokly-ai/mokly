@@ -15,10 +15,12 @@ import {
 } from "./consumer_bundle.js";
 import type { GeneratedFile } from "./generated_file.js";
 import type { LoadedGraph } from "./load_graph.js";
+import type { OutputSnapshot } from "./output_snapshot.js";
 import type { BuildWarning } from "./warnings.js";
 
 export interface ComponentRuntime {
   warnings?: readonly BuildWarning[];
+  outputSnapshot: OutputSnapshot;
   bundle: ConsumerBundle;
   config: ResolvedConfig;
   generation: string;
@@ -33,9 +35,11 @@ export function rememberRuntime(
   compilation: Compilation,
   graph: LoadedGraph,
   config: ResolvedConfig,
+  outputSnapshot: OutputSnapshot,
 ): void {
   runtimes.set(compilation, {
     ...(compilation.warnings ? { warnings: compilation.warnings } : {}),
+    outputSnapshot,
     bundle: consumerBundle(graph),
     config,
     generation: randomBytes(16).toString("hex"),
@@ -54,6 +58,7 @@ export function runtimeGraph(runtime: ComponentRuntime): LoadedGraph {
   return {
     ...evaluateBundle(runtime.bundle),
     entrySources: runtime.bundle.entrySources,
+    documents: runtime.bundle.documents ?? [],
     sourceFiles: runtime.config.sourceFiles ?? [],
     stylesheetRoutes: new Map(runtime.stylesheetRoutes),
     styleOutputs: new Map(runtime.styleOutputs),

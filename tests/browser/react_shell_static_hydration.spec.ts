@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import type { CDPSession } from "@playwright/test";
 
+import { readCatalogue } from "@mokly/viewer";
+
 import {
   buildDevelopmentBundle,
   captureBrowserErrors,
@@ -32,7 +34,7 @@ test("development React hydrates a finalized export cleanly", async ({
 }) => {
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page, developmentBundle);
-  await page.goto(`${exported.url}/view/screens/home.html`);
+  await page.goto(`${exported.url}/view/home/`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
   await expectCleanHydration(page, errors);
 });
@@ -50,7 +52,7 @@ test("static hydration validates its shared catalogue exactly once", async ({
     detailed: true,
   });
   try {
-    await page.goto(`${exported.url}/view/screens/home.html`);
+    await page.goto(`${exported.url}/view/home/`);
     await expectCleanHydration(page, errors);
     expect(await functionCalls(session, "readCatalogue")).toBe(1);
   } finally {
@@ -81,13 +83,13 @@ test("static hydration adopts choices made after load while its catalogue is pen
     await route.continue();
   });
 
-  const navigation = page.goto(`${exported.url}/view/screens/home.html`);
+  const navigation = page.goto(`${exported.url}/view/home/`);
   await requested;
   await expect
     .poll(() => page.evaluate(() => document.readyState))
     .toBe("complete");
   const disclosure = page.locator(
-    'details[data-nav-disclosure="section:pages"]',
+    'details[data-nav-disclosure="section:specs"]',
   );
   await expect(disclosure).toHaveAttribute("open", "");
   await expect(page.locator("[data-mokly-nav-resize]")).toHaveAttribute(
@@ -111,27 +113,43 @@ test("static hydration adopts choices made after load while its catalogue is pen
   );
 });
 
-test("development React hydrates removed and replaced finalized routes", async ({
+test("development React hydrates removed and moved finalized routes", async ({
   page,
 }) => {
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page, developmentBundle);
-  for (const route of ["pages/removed.html", "pages/renamed-old.html"]) {
-    const response = await page.goto(
-      `${historical.url}/view/${encodeRoute(route)}`,
-    );
-    expect(response?.status(), route).toBe(200);
-    await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
-    await expect(page.locator(".mbk-previous")).toHaveText(
-      "Showing previous version",
-    );
-    await expectCleanHydration(page, errors, route);
-  }
-});
+  const removed = await page.goto(`${historical.url}/view/removed/`);
+  expect(removed?.status()).toBe(200);
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
+  await expect(page.locator(".mbk-previous")).toHaveText(
+    "Showing previous version",
+  );
+  await expectCleanHydration(page, errors, "removed/index.html");
 
-function encodeRoute(route: string): string {
-  return route.split("/").map(encodeURIComponent).join("/");
-}
+  const current = await page.goto(`${historical.url}/view/renamed/`);
+  expect(current?.status()).toBe(200);
+  await expect(page.locator("html")).toHaveAttribute("data-mokly-static", "");
+  await expect(page.locator(".mbk-previous")).toHaveCount(0);
+  await expectCleanHydration(page, errors, "renamed/index.html");
+  const catalogue = readCatalogue(
+    await (
+      await page.request.get(`${historical.url}/__mokly/catalogue.json`)
+    ).json(),
+  );
+  const moved = catalogue.pages.find((entry) => entry.path === "renamed")!;
+  expect(moved.previousPath).toBe("renamed-old");
+  expect(moved.changes).toEqual({
+    status: "ready",
+    kind: "unmodified",
+    included: true,
+  });
+  expect(catalogue.removedEntries.map(({ entry }) => entry.path)).toEqual([
+    "removed",
+  ]);
+  expect(
+    (await page.request.get(`${historical.url}/view/renamed-old/`)).status(),
+  ).toBe(404);
+});
 
 async function functionCalls(session: CDPSession, name: string) {
   const coverage = (await session.send("Profiler.takePreciseCoverage")) as {

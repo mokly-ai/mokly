@@ -16,8 +16,8 @@ for (const [name, literal] of formerMarkers)
       body: `<script dangerouslySetInnerHTML={{__html:${JSON.stringify(script)}}} /><action.Component label="Use" />`,
       extra: 'import { defineUseCase } from "@mokly/mokly";',
       exports:
-        'action.entries, pane.entries, defineUseCase({id:"flow",title:"Flow",description:"Flow",relatedDocs:[],steps:[{screenId:"home"}]}),',
-    }).replace('id: "home",', 'id: "home", useCaseIds: ["flow"],');
+        '...action.entries, ...pane.entries, defineUseCase({path:"flow",title:"Flow",description:"Flow",relatedDocs:[],steps:[{screenPath:"home"}]}),',
+    }).replace('path: "home",', 'path: "home", useCasePaths: ["flow"],');
     const fixture = await componentReviewFixture(
       context,
       (input) => input,
@@ -51,7 +51,7 @@ for (const [name, literal] of formerMarkers)
       ),
     );
     assert.ok(
-      fixture.after.manifest.entries.some((entry) => entry.id === "flow"),
+      fixture.after.manifest.entries.some((entry) => entry.path === "flow"),
     );
     const browse = await readCatalogueChanges(
       fixture.config,
@@ -61,6 +61,6 @@ for (const [name, literal] of formerMarkers)
       "a".repeat(40),
       acceptedGenerationFromCompilation(fixture.after),
     );
-    assert.deepEqual(browse.changedIds, []);
+    assert.deepEqual(browse.changedEntries, []);
     assert.deepEqual(browse.result, complete.result);
   });

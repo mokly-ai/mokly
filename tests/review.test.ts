@@ -41,7 +41,7 @@ test("dark views compare and classify against a pre-dark base", async (context) 
     "HEAD",
   );
 
-  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  const home = artifact.result.screens.find((screen) => screen.path === "home");
   assert.ok(home);
   assert.deepEqual(
     home.views.map(({ colorScheme, state, viewport }) => ({
@@ -60,7 +60,7 @@ test("dark views compare and classify against a pre-dark base", async (context) 
     renderReviewArtifact(artifact).get("review.json") as string,
   ) as ReviewResult;
   assert.equal(reviewJson.schemaVersion, 5);
-  const jsonHome = reviewJson.screens.find((screen) => screen.id === "home");
+  const jsonHome = reviewJson.screens.find((screen) => screen.path === "home");
   assert.ok(jsonHome);
   assert.deepEqual(
     jsonHome.views.map(({ colorScheme, ignoredIds, state, viewport }) => ({
@@ -123,7 +123,7 @@ test("removing dark classifies dark views removed", async (context) => {
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: { outDir: ".review" }
@@ -140,7 +140,7 @@ export default defineConfig({
     "HEAD",
   );
 
-  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  const home = artifact.result.screens.find((screen) => screen.path === "home");
   assert.ok(home);
   assert.deepEqual(
     home.views.map(({ colorScheme, state, viewport }) => ({
@@ -260,7 +260,7 @@ function withHomeIgnoredRegions(
   ids: readonly string[] = ["nav"],
 ): Compilation {
   const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   if (home?.kind !== "screen") throw new Error("missing home screen");
   const outputs = new Map(compilation.outputs);

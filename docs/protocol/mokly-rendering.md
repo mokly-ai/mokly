@@ -1,7 +1,7 @@
 # Mokly Rendering And Generated Output Contract
 
-This implemented contract expands the [package contract](./mokly-package.md)
-for the [authoring API](./mokly-authoring.md) and
+This contract expands the [package contract](./mokly-package.md) for the
+[authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md), including configured
 public exclusions.
@@ -12,6 +12,9 @@ Removing derived CSS owners, filtering renderer CSS owners and recording root
 output boundaries are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The remaining contract is implemented.
+Rendering and the generated-output lifecycle use path-derived file names and
+manifest v8. Mokly renders discovered Markdown definitions under the
+[document contract](./mokly-documents.md); source Markdown stays private.
 
 ## Rendering Boundary
 
@@ -66,8 +69,9 @@ material stays conservative. The [component contract](./mokly-components.md)
 and [attribution contract](./mokly-component-changes.md) define validation. Mokly
 serializes Review-ignore markers, adapts opt-in `MockLink asChild` controls,
 and rewrites every complete
-`mock:<id>[#fragment]` value found in `href` or `data-nav-href` after this
-function returns, including when one element has both attributes. The rewrite
+`mock:<path>[#fragment]` value, complete or relative, found in `href` or
+`data-nav-href` after this function returns, including when one element has
+both attributes. The rewrite
 is element-aware and applies to complete page output: logical `href` is valid only on
 native HTML/SVG links, every other owner fails the build, documents with an
 activatable logical link reject `<base href>`, and final compatibility output
@@ -112,27 +116,26 @@ type CompatibilityTransformer = (input: CompatibilityTransformInput) => string;
 
 `availableRoutes` contains the complete pending output plus retained existing
 public static files; generated files scheduled for orphan removal are excluded.
-`logicalRoutes` maps screen/use-case catalogue routes, derived from kind and
-id, to concrete artifacts for the current viewport and color scheme. A dark document targets dark fragments
+`logicalRoutes` maps complete entry paths (`<path>`)
+to concrete artifacts for the current viewport and color scheme. A dark document targets dark fragments
 when the destination supports them and otherwise falls back to the light
 fragment. `outputPath` is repository-relative; no absolute checkout path is
-exposed. Mokly applies the transformer after id links resolve and before
+exposed. Mokly applies the transformer after `mock:` links resolve and before
 Review-marker, link, resource, and ownership validation. It must return a
 complete document, retain the exact generated source owner, remain
 deterministic, and stay consumer-owned. The shared ownership parser accepts LF
 or CRLF after the header and strictly decodes its versioned canonical-base64
 source field, but a missing or changed source identity fails before write. This
-keeps source filenames out of HTML comment syntax; former raw-path headers are
-accepted only when their source is comment-safe so existing files can be
-recognized for migration. A transformer must retain the current encoded form
-and cannot weaken final validation. New catalogues should author portable links
+keeps source filenames out of HTML comment syntax. Earlier headers prove no
+ownership under the [current header rule](./mokly-rendering-generated.md#ownership).
+A transformer cannot weaken final validation. New catalogues should author portable links
 directly and leave this option unset.
 
 ## Renderer Stylesheets
 
 This section owns the complete `RenderInput.stylesheets` list and its order.
 Stylesheet rules are ordered, declarative consumer configuration. Their globs
-match the entry's catalogue route (`<prefix>/<id>.html`) before viewport
+match the entry's catalogue route (`<path>/index.html`) before viewport
 fragments are derived, so one exact screen-route rule applies to both viewports
 and every enabled scheme.
 
@@ -145,7 +148,7 @@ and every enabled scheme.
 
 Generated links exist even without a configured rule. Resolve local paths
 relative to each fragment route and URL-encode each segment. For example, from
-`screens/home.mobile.html` to `mokly-generated/styles/src/home.mockup.tsx.css`
+`home/index.mobile.html` to `mokly-generated/styles/src/home.mockup.tsx.css`
 the href is `../mokly-generated/styles/src/home.mockup.tsx.css`. The same order
 applies to dark views, component variants and saved viewports. The
 [imported stylesheet contract](./mokly-imported-styles-assets.md) defines the

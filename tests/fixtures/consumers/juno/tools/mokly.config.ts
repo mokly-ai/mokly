@@ -1,13 +1,13 @@
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
-  entriesDir: "../spec/catalogue",
+  roots: [{ dir: "../spec/catalogue" }],
   mockupsDir: "../site/mockups",
   repoRoot: "..",
   review: {
     outDir: "../.context/review",
   },
   stylesheets: [
-    { match: "screens/workspace-overview.html", stylesheets: ["juno.css"] },
+    { match: "workspace-overview/index.html", stylesheets: ["juno.css"] },
   ],
 });

@@ -20,38 +20,38 @@ function source(reuse = false): string {
   return `import React from "react";
 import { defineComponent, definePage, defineScreen } from "@mokly/mokly";
 const metadata = { relatedDocs: [], description: "Fixture" };
-const action = defineComponent({ ...metadata, id: "action", title: "Action",
+const action = defineComponent({ ...metadata, path: "action", title: "Action",
   propSchema: { kind: "object", properties: {} },
   render: () => <button>Continue</button>,
-  variants: [{ id: "action-default", title: "Default", props: {} }] });
-const holder = defineComponent({ ...metadata, id: "holder", title: "Holder",
+  variants: [{ slug:"default",  title: "Default", props: {} }] });
+const holder = defineComponent({ ...metadata, path: "holder", title: "Holder",
   propSchema: { kind: "object", properties: {} }, slots: ["children"],
   render: (props) => <section>{props.children}</section>,
-  variants: [{ id: "holder-default", title: "Default", props: { children: <span>Saved</span> } }
-    ${reuse ? "" : ', { id: "holder-previous", title: "Previous", props: { children: <action.Component /> } }'}] });
-export const mockups = [holder.entries, ${
+  variants: [{ slug:"default",  title: "Default", props: { children: <span>Saved</span> } }
+    ${reuse ? "" : ', { slug:"previous", title: "Previous", props: { children: <action.Component /> } }'}] });
+export const mockups = [...holder.entries, ${
     reuse
-      ? `definePage({ ...metadata, id: "action", title: "Replacement",
+      ? `definePage({ ...metadata, path: "action", title: "Replacement",
           render: () => "<!doctype html><html><head><title>Replacement</title></head><body>Replacement</body></html>" })`
-      : `action.entries,
-         defineScreen({ ...metadata, id: "home", title: "Home",
+      : `...action.entries,
+         defineScreen({ ...metadata, path: "home", title: "Home",
            mobile: <action.Component />, desktop: <action.Component /> }),
-         defineScreen({ ...metadata, id: "empty", title: "Empty",
+         defineScreen({ ...metadata, path: "empty", title: "Empty",
            mobile: <p>Empty</p>, desktop: <p>Empty</p> })`
   }];`;
 }
 
 function verify(model: CatalogueReadModel): void {
-  assert.ok(!model.removedEntries.some(({ entry }) => entry.id === "action"));
+  assert.ok(!model.removedEntries.some(({ entry }) => entry.path === "action"));
   const home = model.removedEntries.find(
-    ({ entry }) => entry.id === "home",
+    ({ entry }) => entry.path === "home",
   )!.entry;
   assert.equal(home.kind, "screen");
   if (home.kind !== "screen") throw new Error("Expected screen");
   for (const view of home.views)
     assert.deepEqual(view.usage, { status: "unavailable" });
   const previous = model.removedEntries.find(
-    ({ entry }) => entry.id === "holder-previous",
+    ({ entry }) => entry.path === "holder/previous",
   )!.entry;
   assert.ok(previous.kind === "component" && "variantOf" in previous);
   if (previous.kind !== "component" || !("variantOf" in previous))
@@ -59,7 +59,7 @@ function verify(model: CatalogueReadModel): void {
   for (const view of previous.views)
     assert.deepEqual(view.usage, { status: "unavailable" });
   const empty = model.removedEntries.find(
-    ({ entry }) => entry.id === "empty",
+    ({ entry }) => entry.path === "empty",
   )!.entry;
   assert.ok(
     empty.kind === "screen" &&
@@ -85,7 +85,7 @@ for (const delivery of ["Serve", "export"] as const) {
       ),
     );
     const oldUsage: CatalogueUsage = oldModel.screens.find(
-      (entry) => entry.id === "home",
+      (entry) => entry.path === "home",
     )!.views[0]!.usage;
     await fs.writeFile(fixture.entryPath, source(true));
     let model: CatalogueReadModel;
@@ -109,7 +109,7 @@ for (const delivery of ["Serve", "export"] as const) {
       const response = await fetch(`${server.url}/__mokly/catalogue.json`);
       assert.equal(response.status, 200);
       model = (await response.json()) as CatalogueReadModel;
-      const holder = await fetch(`${server.url}/view/components/holder.html`);
+      const holder = await fetch(`${server.url}/view/holder/`);
       assert.equal(holder.status, 200);
       holderHtml = await holder.text();
     } else {
@@ -121,7 +121,7 @@ for (const delivery of ["Serve", "export"] as const) {
         ),
       ) as CatalogueReadModel;
       holderHtml = await fs.readFile(
-        path.join(fixture.output, "view/components/holder.html"),
+        path.join(fixture.output, "view/holder/index.html"),
         "utf8",
       );
     }
@@ -129,7 +129,7 @@ for (const delivery of ["Serve", "export"] as const) {
     assert.doesNotMatch(holderHtml, /Changed component:/);
     const broken = structuredClone(model);
     const home = broken.removedEntries.find(
-      ({ entry }) => entry.id === "home",
+      ({ entry }) => entry.path === "home",
     )!.entry;
     if (home.kind !== "screen") throw new Error("Expected screen");
     home.views[0]!.usage = oldUsage;

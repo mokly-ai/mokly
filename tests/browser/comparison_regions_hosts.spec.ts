@@ -59,7 +59,7 @@ test("a static export mirrors panels and remembers Scroll together", async ({
 }) => {
   await openComparison(
     page,
-    `${site.url}/view/screens/shell.html`,
+    `${site.url}/view/shell/`,
     "desktop",
     "Overlay",
     "static",
@@ -109,7 +109,7 @@ for (const adapter of ["same-origin", "cross"] as const)
     await expect(scrollTogether(page)).not.toBeChecked();
     await expectApart(page, desktop, ".rg-main");
 
-    await page.locator('#viewer a[data-route="screens/solo.html"]').click();
+    await page.locator('#viewer a[data-route="solo/index.html"]').click();
     await page.getByRole("button", { name: "Overlay", exact: true }).click();
     await expect(scrollTogether(page)).not.toBeChecked();
     await expectApart(page, desktop, "#rg-solo");

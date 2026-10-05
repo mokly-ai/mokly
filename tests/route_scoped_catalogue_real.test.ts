@@ -29,7 +29,9 @@ const context = {
 };
 
 test("real example scoped bytes ignore another entry's usage", () => {
-  const screen = model.screens.find(({ id }) => id === "example-welcome")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "example/screens/welcome",
+  )!;
   const view = target(screen);
   const changed = structuredClone(model);
   const changedVariant = changed.components.find(
@@ -59,7 +61,7 @@ test("the largest real example scoped bootstrap passes the strict reader", () =>
   assert.equal(serializeShellBootstrap(parsed), largest.bytes);
   assert.equal(parsed.view.kind, largest.view.kind);
   if (parsed.view.kind === "target" && largest.view.kind === "target")
-    assert.equal(parsed.view.entryId, largest.view.entryId);
+    assert.equal(parsed.view.entryPath, largest.view.entryPath);
 });
 
 function allViews(): readonly ShellBootstrapView[] {
@@ -83,10 +85,10 @@ function scopedBytes(
   });
 }
 
-function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
+function target(entry: Pick<CatalogueRecord, "path" | "kind">) {
   return {
     kind: "target" as const,
-    entryId: entry.id,
+    entryPath: entry.path,
     entryKind: entry.kind,
   };
 }

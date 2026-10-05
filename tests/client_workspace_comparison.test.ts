@@ -105,7 +105,7 @@ test("loaded view reasons remain visible without classification, not legacy shar
 test("loaded comparisons for another screen cannot add evidence to the selected workspace", () => {
   const data = workspace();
   const loaded = comparison();
-  loaded.screens = [{ ...loaded.screens[0]!, id: "other" }];
+  loaded.screens = [{ ...loaded.screens[0]!, path: "other" }];
   assert.doesNotMatch(renderEvidence(data, loaded), /mockups\/logo.svg/);
 });
 
@@ -164,9 +164,9 @@ function componentComparison(
   reasonPath?: string,
   excludedCss?: string,
 ): ReviewResultV5 {
-  const address = { id: "home", title: "Home" };
+  const address = { path: "home", title: "Home" };
   return {
-    schemaVersion: 5,
+    schemaVersion: 5 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -213,7 +213,7 @@ function componentComparison(
 
 function comparison(): ReviewResultV5 {
   return {
-    schemaVersion: 5,
+    schemaVersion: 5 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -224,9 +224,9 @@ function comparison(): ReviewResultV5 {
     ignoredImpact: [],
     screens: [
       {
-        before: { id: "home", title: "Home" },
-        after: { id: "home", title: "Home" },
-        id: "home",
+        before: { path: "home", title: "Home" },
+        after: { path: "home", title: "Home" },
+        path: "home",
         title: "Home",
         state: "changed",
         views: [
@@ -255,15 +255,14 @@ function workspace(): WorkspaceData {
     comparisonEligible: true,
     entry: {
       colorSchemes: ["light"],
-
-      id: "home",
+      path: "home",
       kind: "screen",
       title: "Home",
       description: "Home",
       relatedDocs: [],
-      navPath: [],
+
       sourcePath: "entries/home.mockup.tsx",
-      useCaseIds: [],
+      useCasePaths: [],
     },
     components: [],
     views: [],

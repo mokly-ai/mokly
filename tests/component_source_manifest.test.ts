@@ -54,13 +54,13 @@ test("v8 source metadata round-trips deterministically and accepts its absence",
 
 test("authored data schemas, slots and forged manifest components reserve __moklySource", async (t) => {
   const input = {
-    id: "action",
+    path: "action",
     title: "Action",
     description: "Action",
     relatedDocs: [],
     propSchema: { kind: "object" as const, properties: {} },
     render: () => null,
-    variants: [{ id: "action-default", title: "Default", props: {} }],
+    variants: [{ slug: "default", title: "Default", props: {} }],
   };
   assert.throws(
     () => defineComponent({ ...input, slots: ["__moklySource"] }),

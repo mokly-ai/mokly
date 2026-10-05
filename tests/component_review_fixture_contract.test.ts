@@ -14,6 +14,7 @@ test("component Git fixtures reject missing text and binary documents", async ()
       schemaVersion: 8,
       generatedBy: "mokly",
       entries: [],
+      folders: [],
       sourceFiles: [],
     },
     outputs,

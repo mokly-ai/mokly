@@ -7,11 +7,7 @@ import { isInside } from "../config/paths.js";
 import { BaselineError, assertBaselineActive } from "./errors.js";
 import type { BaselineFileSystem, BaselineStat } from "./types.js";
 
-/**
- * Create each missing directory only after checking all existing ancestors.
- * Releasing the generated-output writer lock removes an empty `.mokly-cache/`,
- * so a walk whose parent disappears restarts from the root.
- */
+/** Create each missing directory only after checking all existing ancestors. */
 export async function ensureBaselineDirectory(
   fs: BaselineFileSystem,
   root: string,
@@ -20,22 +16,6 @@ export async function ensureBaselineDirectory(
 ): Promise<void> {
   if (!isInside(root, directory) || (await fs.stat(root))?.kind !== "directory")
     throw new Error(`Unsafe baseline directory: ${directory}`);
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      return await createMissingDirectories(fs, root, directory, signal);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT" || attempt >= 5)
-        throw error;
-    }
-  }
-}
-
-async function createMissingDirectories(
-  fs: BaselineFileSystem,
-  root: string,
-  directory: string,
-  signal?: AbortSignal,
-): Promise<void> {
   let current = root;
   for (const part of path
     .relative(root, directory)

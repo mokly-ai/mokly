@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -17,7 +17,7 @@ for (const kind of ["screen", "page"]) {
         kind === "screen"
           ? validEntrySource({ body: `<img src="../${route}" alt="Logo" />` })
           : validEntrySource() +
-            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", relatedDocs: [], render: () => '<html><body><img src="../${route}" alt="Logo"/></body></html>' }));`;
+            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ path: "handbook", title: "Handbook", description: "Document", relatedDocs: [], render: () => '<html><body><img src="../${route}" alt="Logo"/></body></html>' }));`;
       const fixture = await changedFixture(
         context,
         source,
@@ -39,7 +39,7 @@ for (const kind of ["screen", "page"]) {
         '<svg width="96"/>',
       );
       assert.deepEqual(
-        await computeChangedIds(
+        await computeChangedPaths(
           fixture.config,
           "HEAD",
           committedReviewRepository(fixture.config),
@@ -68,7 +68,7 @@ test("ignored alias resources remain outside Changes after target edits", async 
     '<svg width="96"/>',
   );
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

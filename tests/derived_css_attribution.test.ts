@@ -24,16 +24,18 @@ for (const components of [false, true]) {
       : validEntrySource({ body: markup });
     const fixture = await derivedFixture(t, source, {
       "shared.css": ".auth { color: black; } .guide { color: black; }",
-      "components/shared.css":
-        ".auth { color: black; } .guide { color: black; }",
+      "action/shared.css": ".auth { color: black; } .guide { color: black; }",
+      "pane/shared.css": ".auth { color: black; } .guide { color: black; }",
     });
     const repository = await prepareReviewRepository(fixture.config, "HEAD");
-    const cssPaths = ["shared.css", "components/shared.css"].map((route) =>
-      path.join(fixture.mockupsDir, route),
+    const cssPaths = ["shared.css", "action/shared.css", "pane/shared.css"].map(
+      (route) => path.join(fixture.mockupsDir, route),
     );
-    const evidencePath = "mockups/shared.css";
+    const evidencePath = components
+      ? "mockups/action/shared.css"
+      : "mockups/shared.css";
     const current = await compileCatalogue(fixture.config);
-    const id = components ? "action-default" : "home";
+    const id = components ? "action/default" : "home";
     for (const [rule, expectedState] of [
       [".guide { padding: 2px; }", "unchanged"],
       [".auth { padding: 3px; }", "changed"],
@@ -44,7 +46,10 @@ for (const components of [false, true]) {
         "HEAD",
         repository,
       );
-      assert.equal(live.changedIds?.includes(id), expectedState === "changed");
+      assert.equal(
+        live.changedEntries?.includes(id),
+        expectedState === "changed",
+      );
       const complete = await compareReview(
         current,
         fixture.config,
@@ -63,14 +68,14 @@ for (const components of [false, true]) {
           after: current.manifest,
           result: snapshot.result!,
         },
-        { id },
+        { path: id },
         new AbortController().signal,
       );
       const result = parseReviewResult(selected.result);
       const views =
         components && result.schemaVersion === 5
           ? result.components[0]!.variants[0]!.views
-          : result.screens.find((screen) => screen.id === id)!.views;
+          : result.screens.find((screen) => screen.path === id)!.views;
       assert.ok(views.length > 0);
       for (const view of views) {
         assert.equal(view.state, expectedState);

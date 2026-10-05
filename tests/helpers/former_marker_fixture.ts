@@ -2,7 +2,7 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import type { GeneratedComponentView } from "@mokly/viewer/data";
 
 import { ComponentMaterialReader } from "../../dist/review/component_resources.js";
-import type { ComponentViewContext } from "../../dist/review/component_view.js";
+import type { ComponentViewContext } from "../../dist/review/component_view_types.js";
 import { ResourceComparison } from "../../dist/review/resource_comparison.js";
 
 export const formerMarkers = [
@@ -17,7 +17,7 @@ export function markerView(
   usage?: ComponentViewRecord,
 ): { context: ComponentViewContext; view: GeneratedComponentView } {
   const view: GeneratedComponentView = {
-    path: "screens/plain.mobile.html",
+    path: "plain/index.mobile.html",
     viewport: "mobile",
     colorScheme: "light",
     ...(usage ? { usage } : {}),

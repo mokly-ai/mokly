@@ -41,7 +41,7 @@ export async function createFixture(
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   generatedOutput: "committed",
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
 ${options?.extraConfig ? `  ${options.extraConfig}\n` : ""}  review: { outDir: ".review" }
@@ -106,7 +106,7 @@ export async function registerFixturePage(
     .join("/");
   await fs.promises.appendFile(
     fixture.entryPath,
-    `\nimport { definePage as definePage_${suffix} } from "@mokly/mokly";\nimport { ${exportName} as render_${suffix} } from ${JSON.stringify(imported.startsWith(".") ? imported : `./${imported}`)};\nmockups.push(definePage_${suffix}({ id: ${JSON.stringify(id)}, title: ${JSON.stringify(id)}, description: "Complete fixture document", relatedDocs: [], render: render_${suffix} }));\n`,
+    `\nimport { definePage as definePage_${suffix} } from "@mokly/mokly";\nimport { ${exportName} as render_${suffix} } from ${JSON.stringify(imported.startsWith(".") ? imported : `./${imported}`)};\nmockups.push(definePage_${suffix}({ path: ${JSON.stringify(id)}, title: ${JSON.stringify(id)}, description: "Complete fixture document", relatedDocs: [], render: render_${suffix} }));\n`,
   );
 }
 
@@ -115,12 +115,13 @@ export function validEntrySource(
   options: { body?: string; firstTitle?: string } = {},
 ): string {
   return fixtureEntrySource(
-    { home: ["Fixture"], details: ["Fixture"], tour: ["Fixture"] },
+    { home: "home", details: "details", tour: "tour" },
+    [],
     options,
   );
 }
 
-/** Valid watched fixture whose Home screen can move between two folders. */
+/** A watched path tree with explicit folder titles and movable screen files. */
 export function reparentedEntrySource(
   homeParent: "archive" | "screens",
   options: {
@@ -128,50 +129,51 @@ export function reparentedEntrySource(
     body?: string;
     firstTitle?: string;
     screensTitle?: string;
+    /** Slug of the screens folder; changing it moves that folder's path. */
+    screensSlug?: string;
     sharedChildTitle?: string;
   } = {},
 ): string {
+  const child = options.sharedChildTitle ? "/states" : "";
+  const screens = `fixture/${options.screensSlug ?? "screens"}`;
+  const folders = [
+    { path: "fixture", title: "Fixture" },
+    { path: "fixture/archive", title: options.archiveTitle ?? "Archive" },
+    { path: screens, title: options.screensTitle ?? "Screens" },
+    ...(options.sharedChildTitle
+      ? [
+          { path: "fixture/archive/states", title: options.sharedChildTitle },
+          { path: `${screens}/states`, title: options.sharedChildTitle },
+        ]
+      : []),
+  ];
   return fixtureEntrySource(
     {
-      home: [
-        "Fixture",
-        homeParent === "screens"
-          ? (options.screensTitle ?? "Screens")
-          : (options.archiveTitle ?? "Archive"),
-        ...(options.sharedChildTitle ? [options.sharedChildTitle] : []),
-      ],
-      details: [
-        "Fixture",
-        options.screensTitle ?? "Screens",
-        ...(options.sharedChildTitle ? [options.sharedChildTitle] : []),
-      ],
-      tour: [
-        "Fixture",
-        options.archiveTitle ?? "Archive",
-        ...(options.sharedChildTitle ? [options.sharedChildTitle] : []),
-      ],
+      home: `${homeParent === "screens" ? screens : "fixture/archive"}${child}/home`,
+      details: `${screens}${child}/details`,
+      tour: `fixture/archive${child}/tour`,
     },
+    folders,
     options,
   );
 }
 
 function fixtureEntrySource(
-  navPaths: {
-    home: readonly string[];
-    details: readonly string[];
-    tour: readonly string[];
-  },
+  addresses: { home: string; details: string; tour: string },
+  folders: readonly { path: string; title: string }[],
   options: { body?: string; firstTitle?: string },
 ): string {
-  const body = options.body ?? `<a href="mock:details">Details</a>`;
+  const body =
+    options.body ?? `<a href="mock:${addresses.details}">Details</a>`;
   const firstTitle = options.firstTitle ?? "Home";
-  return `import { defineScreen, defineUseCase } from "@mokly/mokly";
+  return `import { defineScreen, defineUseCase${folders.length ? ", defineFolder" : ""} } from "@mokly/mokly";
 import React from "react";
 const metadata = { relatedDocs: ["notes.md"] };
 export const mockups = [
-  defineScreen({ ...metadata, navPath: ${JSON.stringify(navPaths.home)}, description: "Home screen", desktop: <main id="home">${body}</main>, id: "home", mobile: <main id="home-mobile">${body}</main>, title: ${JSON.stringify(firstTitle)}, useCaseIds: ["tour"] }),
-  defineScreen({ ...metadata, navPath: ${JSON.stringify(navPaths.details)}, description: "Detail screen", desktop: <main id="details">Detail</main>, id: "details", mobile: <main id="details-mobile">Detail</main>, title: "Details", useCaseIds: ["tour"] }),
-  defineUseCase({ ...metadata, navPath: ${JSON.stringify(navPaths.tour)}, description: "Fixture journey", id: "tour", steps: [{ screenId: "home" }, { screenId: "details" }], title: "Tour" })
+  defineScreen({ ...metadata, description: "Home screen", desktop: <main id="home">${body}</main>, path: "${addresses.home}", mobile: <main id="home-mobile">${body}</main>, title: ${JSON.stringify(firstTitle)}, useCasePaths: ["${addresses.tour}"] }),
+  defineScreen({ ...metadata, description: "Detail screen", desktop: <main id="details">Detail</main>, path: "${addresses.details}", mobile: <main id="details-mobile">Detail</main>, title: "Details", useCasePaths: ["${addresses.tour}"] }),
+  defineUseCase({ ...metadata, description: "Fixture journey", path: "${addresses.tour}", steps: [{ screenPath: "${addresses.home}" }, { screenPath: "${addresses.details}" }], title: "Tour" }),
+  ${folders.length ? `...${JSON.stringify(folders)}.map((record) => defineFolder(record)),` : ""}
 ];
 `;
 }

@@ -1,243 +1,282 @@
-import { FolderUses, folderLocation } from "./hierarchy_conflicts.js";
-import {
-  compareNavigationNodes,
-  navPathKey,
-  validNavLabel,
-} from "./nav_paths.js";
+import { compareNavigationNodes } from "./nav_paths.js";
+import type { ManifestFolder } from "./types.js";
 
-/** Entry fields needed to analyze navigation paths. */
+/** Entry metadata used by the shared path tree. */
 export interface HierarchyEntry {
-  id: string;
+  path: string;
   kind: string;
-  navPath?: unknown;
-  sourceRelativePath?: string;
   title: string;
   variantOf?: unknown;
 }
-
-/** A routed entry at the end of its authored navigation path. */
+/** A navigable entry, optionally containing variants and folder members. */
 export interface HierarchyLeaf<T extends HierarchyEntry> {
   entry: T;
   key: string;
   kind: "entry";
   label: string;
+  children?: HierarchyNode<T>[];
+  hidden?: true;
+  /** The `order` record of the folder whose own page this entry is. */
+  order?: readonly string[];
 }
-
-/** A merged path prefix with at least one routed descendant. */
+/** A folder derived from descendants, with optional own page. */
 export interface HierarchyFolder<T extends HierarchyEntry> {
   children: HierarchyNode<T>[];
+  index?: T;
   key: string;
   kind: "folder";
   label: string;
-  path: readonly string[];
+  path: string;
+  hidden?: true;
+  /** The folder record's `order`, applied again in each section. */
+  order?: readonly string[];
 }
-
-/** A folder or routed entry in a section's current navigation tree. */
 export type HierarchyNode<T extends HierarchyEntry> =
   HierarchyFolder<T> | HierarchyLeaf<T>;
-
-/** A source-attributed violation of a current navigation path. */
-export interface HierarchyIssue<T extends HierarchyEntry> {
-  code: "invalid-nav-path" | "nav-path-conflict";
-  entry: T;
-  message: string;
-}
-
-/** Independent current trees and lookup tables for navigation and variants. */
+/** One tree with its projections for the Specs and Components sections. */
 export interface CatalogueHierarchy<T extends HierarchyEntry> {
-  ancestorsById: ReadonlyMap<string, readonly string[]>;
-  byId: ReadonlyMap<string, T>;
+  ancestorsByPath: ReadonlyMap<string, readonly string[]>;
+  byPath: ReadonlyMap<string, T>;
+  /** The top-level `order` record, applied again in each section. */
+  order?: readonly string[];
+  tree: readonly HierarchyNode<T>[];
   roots: {
-    pages: readonly HierarchyNode<T>[];
+    specs: readonly HierarchyNode<T>[];
     components: readonly HierarchyNode<T>[];
   };
-  variantsById: ReadonlyMap<string, readonly T[]>;
-  variantParentById: ReadonlyMap<string, T>;
+  variantsByPath: ReadonlyMap<string, readonly T[]>;
+  variantParentByPath: ReadonlyMap<string, T>;
 }
-
-/** Hierarchy data plus any current-path violations. */
+/** Tree construction consumes validated identities; validation owns diagnostics. */
 export interface HierarchyAnalysis<T extends HierarchyEntry> {
   hierarchy: CatalogueHierarchy<T>;
-  issues: readonly HierarchyIssue<T>[];
 }
 
-interface Siblings<T extends HierarchyEntry> {
-  children: HierarchyNode<T>[];
-  folders: Map<string, HierarchyFolder<T>>;
+/** Resolve a folder's title without using display labels as identity. */
+function folderTitle(
+  path: string,
+  record?: Pick<ManifestFolder, "title">,
+  index?: Pick<HierarchyEntry, "title" | "kind">,
+): string {
+  if (index?.kind === "screen" || index?.kind === "component")
+    return index.title;
+  if (record?.title !== undefined) return record.title;
+  if (index) return index.title;
+  const slug = path.split("/").at(-1) ?? "";
+  const title = slug.replace(/[-_]/g, " ");
+  if (!title.trim()) return slug;
+  return title.charAt(0).toUpperCase() + title.slice(1);
 }
 
-function siblings<T extends HierarchyEntry>(): Siblings<T> {
-  return { children: [], folders: new Map() };
-}
-
-/** Build one folder tree per section, validating labels and sibling conflicts. */
+/** Build one ordered path tree, then prune it by entry kind for each section. */
 export function analyzeHierarchy<T extends HierarchyEntry>(
   entries: readonly T[],
+  records: readonly ManifestFolder[] = [],
 ): HierarchyAnalysis<T> {
-  const issues: HierarchyIssue<T>[] = [];
-  const pages = siblings<T>();
-  const components = siblings<T>();
-  const foldersByPath = {
-    pages: new Map<string, Siblings<T>>(),
-    components: new Map<string, Siblings<T>>(),
-  };
-  const byId = new Map<string, T>();
-  const ancestorsById = new Map<string, readonly string[]>();
-  const variantsById = new Map<string, T[]>();
-  const variantParentById = new Map<string, T>();
-  const uses = new FolderUses<T>();
-  const pendingLeaves: {
-    entry: T;
-    siblings: Siblings<T>;
-    section: "pages" | "components";
-    parent: readonly string[];
-  }[] = [];
-
-  for (const entry of entries)
-    if (!byId.has(entry.id)) byId.set(entry.id, entry);
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  const folders = new Map<string, HierarchyFolder<T>>();
+  const metadata = new Map(records.map((record) => [record.path, record]));
+  const variantsByPath = new Map<string, T[]>();
+  const variantParentByPath = new Map<string, T>();
+  const roots: HierarchyNode<T>[] = [];
   for (const entry of entries) {
-    if (byId.get(entry.id) !== entry) continue;
-    const path = entry.navPath === undefined ? [] : entry.navPath;
-    const parent =
-      typeof entry.variantOf === "string"
-        ? byId.get(entry.variantOf)
-        : undefined;
-    const parentPath = parent?.navPath;
-    if (
-      parent &&
-      (path === parentPath ||
-        (Array.isArray(path) &&
-          Array.isArray(parentPath) &&
-          path.length === parentPath.length &&
-          path.every((label, index) => label === parentPath[index]))) &&
-      (!Array.isArray(path) || path.some((label) => !validNavLabel(label)))
-    )
-      continue;
-    if (!Array.isArray(path)) {
-      issues.push({
-        code: "invalid-nav-path",
-        entry,
-        message: `entry ${entry.id} navPath index -1 has invalid label ${String(path)}`,
-      });
-      continue;
-    }
-    const invalid = path.flatMap((label: unknown, index: number) =>
-      validNavLabel(label)
-        ? []
-        : [
-            {
-              code: "invalid-nav-path" as const,
-              entry,
-              message: `entry ${entry.id} navPath index ${index} has invalid label ${JSON.stringify(label) ?? String(label)}`,
-            },
-          ],
-    );
-    issues.push(...invalid);
-    if (invalid.length) continue;
-    const labels = path as string[];
-    ancestorsById.set(entry.id, [...labels]);
     if (typeof entry.variantOf === "string") {
-      const parent = byId.get(entry.variantOf);
+      const parent = byPath.get(entry.variantOf);
       if (parent) {
-        variantParentById.set(entry.id, parent);
-        variantsById.set(parent.id, [
-          ...(variantsById.get(parent.id) ?? []),
+        variantsByPath.set(parent.path, [
+          ...(variantsByPath.get(parent.path) ?? []),
           entry,
         ]);
+        variantParentByPath.set(entry.path, parent);
       }
       continue;
     }
-    const section = entry.kind === "component" ? "components" : "pages";
-    const root = section === "components" ? components : pages;
-    const indexed = foldersByPath[section];
-    let current = root;
-    const prefix: string[] = [];
-    for (const label of labels) {
-      uses.record(section, prefix, label, entry);
-      prefix.push(label);
-      const pathKey = navPathKey(prefix);
-      let folder = current.folders.get(label);
+    const segments = entry.path.split("/").slice(0, -1);
+    let children = roots;
+    for (let count = 1; count <= segments.length; count++) {
+      const prefix = segments.slice(0, count).join("/");
+      let folder = folders.get(prefix);
       if (!folder) {
+        const index = byPath.get(prefix);
         folder = {
           kind: "folder",
-          label,
-          key: pathKey,
-          path: [...prefix],
+          key: prefix,
+          path: prefix,
+          label: folderTitle(prefix, metadata.get(prefix), index),
           children: [],
+          ...(index ? { index } : {}),
         };
-        current.folders.set(label, folder);
-        current.children.push(folder);
-        indexed.set(pathKey, siblings<T>());
+        folders.set(prefix, folder);
+        children.push(folder);
       }
-      current = indexed.get(pathKey)!;
+      children = folder.children;
     }
-    pendingLeaves.push({
-      entry,
-      siblings: current,
-      section,
-      parent: labels,
+  }
+  const leaf = (entry: T): HierarchyLeaf<T> => ({
+    kind: "entry",
+    key: entry.path,
+    label: entry.title,
+    entry,
+  });
+  for (const entry of entries) {
+    if (typeof entry.variantOf === "string") continue;
+    const folder = folders.get(entry.path);
+    if (folder) continue;
+    const parent = entry.path.split("/").slice(0, -1).join("/");
+    (folders.get(parent)?.children ?? roots).push(leaf(entry));
+  }
+  const build = (
+    nodes: readonly HierarchyNode<T>[],
+    parent: string,
+  ): HierarchyNode<T>[] => {
+    const built = nodes.map((original): HierarchyNode<T> => {
+      const record = metadata.get(original.key);
+      const node = {
+        ...original,
+        ...(record?.hidden ? { hidden: true as const } : {}),
+      };
+      if (node.kind === "entry") {
+        const variants = (variantsByPath.get(node.entry.path) ?? []).map(leaf);
+        return { ...node, ...(variants.length ? { children: variants } : {}) };
+      }
+      const members = build(node.children, node.path);
+      const index = node.index;
+      const order = record?.order ? { order: record.order } : {};
+      if (index?.kind === "screen" || index?.kind === "component") {
+        return {
+          ...leaf(index),
+          ...(node.hidden ? { hidden: true } : {}),
+          ...order,
+          children: [
+            ...(variantsByPath.get(index.path) ?? []).map(leaf),
+            ...members,
+          ],
+        };
+      }
+      return {
+        ...node,
+        ...order,
+        children: [...(index ? [leaf(index)] : []), ...members],
+      };
     });
+    return orderChildren(built, metadata.get(parent)?.order);
+  };
+  const tree = build(roots, "");
+  const ancestorsByPath = new Map<string, readonly string[]>();
+  for (const entry of entries) {
+    const owningPath = variantParentByPath.get(entry.path)?.path ?? entry.path;
+    const segments = owningPath.split("/").slice(0, -1);
+    ancestorsByPath.set(
+      entry.path,
+      segments.map((_, index) => {
+        const prefix = segments.slice(0, index + 1).join("/");
+        return folderTitle(prefix, metadata.get(prefix), byPath.get(prefix));
+      }),
+    );
   }
-
-  issues.push(...uses.issues());
-  pendingLeaves.sort(({ entry: left }, { entry: right }) =>
-    left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
-  );
-  for (const { entry, siblings: current, section, parent } of pendingLeaves) {
-    if (typeof entry.title !== "string") continue;
-    const folder = uses.matchingFolder(section, parent, entry.title);
-    if (folder !== undefined) {
-      issues.push({
-        code: "nav-path-conflict",
-        entry,
-        message: `leaf ${entry.id} label ${JSON.stringify(entry.title)} conflicts with folder label ${JSON.stringify(folder)} ${folderLocation(section, parent)}; append the folder label ${JSON.stringify(folder)} to the leaf's navPath`,
-      });
-      continue;
-    }
-    current.children.push({
-      kind: "entry",
-      entry,
-      key: entry.id,
-      label: entry.title,
-    });
-  }
-
-  for (const [pathKey, children] of foldersByPath.pages) {
-    const folder = findFolder(pages, foldersByPath.pages, pathKey);
-    if (folder) folder.children = sortNodes(children.children);
-  }
-  for (const [pathKey, children] of foldersByPath.components) {
-    const folder = findFolder(components, foldersByPath.components, pathKey);
-    if (folder) folder.children = sortNodes(children.children);
-  }
+  const order = metadata.get("")?.order;
   return {
     hierarchy: {
-      ancestorsById,
-      byId,
+      byPath,
+      ancestorsByPath,
+      variantsByPath,
+      variantParentByPath,
+      tree,
+      ...(order ? { order } : {}),
       roots: {
-        pages: sortNodes(pages.children),
-        components: sortNodes(components.children),
+        specs: filterHierarchy(tree, false, order),
+        components: filterHierarchy(tree, true, order),
       },
-      variantsById,
-      variantParentById,
     },
-    issues,
   };
 }
 
-function findFolder<T extends HierarchyEntry>(
-  root: Siblings<T>,
-  indexed: ReadonlyMap<string, Siblings<T>>,
-  key: string,
-): HierarchyFolder<T> | undefined {
-  const labels = key.split("/");
-  const parent =
-    labels.length === 1 ? root : indexed.get(navPathKey(labels.slice(0, -1)));
-  return parent?.folders.get(labels.at(-1) ?? "");
+/** Apply explicit slug order around the default unnamed remainder. */
+function orderChildren<T extends HierarchyEntry>(
+  nodes: readonly HierarchyNode<T>[],
+  order?: readonly string[],
+): HierarchyNode<T>[] {
+  const sorted = [...nodes].sort(compareNavigationNodes);
+  if (!order) return sorted;
+  const named = new Set(order);
+  const rest = sorted.filter((node) => !named.has(node.key.split("/").at(-1)!));
+  const result = order.flatMap((slug) =>
+    slug === "..."
+      ? rest
+      : sorted.filter((node) => node.key.split("/").at(-1) === slug),
+  );
+  return order.includes("...") ? result : [...result, ...rest];
 }
 
-function sortNodes<T extends HierarchyEntry>(
+/**
+ * Prune one shared tree by kind while retaining mixed-folder ancestry. Each
+ * section orders the children it shows again, by the rows they render as
+ * there: a screen or component that is its folder's own page renders as a
+ * folder row in the other section. A folder's own page stays its first row,
+ * and variants keep their authored order.
+ */
+export function filterHierarchy<T extends HierarchyEntry>(
   nodes: readonly HierarchyNode<T>[],
+  components: boolean,
+  order?: readonly string[],
 ): HierarchyNode<T>[] {
-  return [...nodes].sort(compareNavigationNodes);
+  const shown = nodes.flatMap((node): HierarchyNode<T>[] => {
+    if (node.kind === "folder") {
+      const own = (child: HierarchyNode<T>) => child.key === node.key;
+      const children = [
+        ...filterHierarchy(node.children.filter(own), components),
+        ...filterHierarchy(
+          node.children.filter((child) => !own(child)),
+          components,
+          node.order,
+        ),
+      ];
+      if (!children.length) return [];
+      const { index, ...folder } = node;
+      return [
+        {
+          ...folder,
+          children,
+          ...(index && (index.kind === "component") === components
+            ? { index }
+            : {}),
+        },
+      ];
+    }
+    const own = node.children ?? [];
+    const members = filterHierarchy(
+      own.filter((child) => !variantOf(child, node.entry.path)),
+      components,
+      node.order,
+    );
+    if ((node.entry.kind === "component") === components) {
+      const { children: _children, ...entry } = node;
+      const children = [
+        ...own.filter((child) => variantOf(child, node.entry.path)),
+        ...members,
+      ];
+      return [{ ...entry, ...(children.length ? { children } : {}) }];
+    }
+    return members.length
+      ? [
+          {
+            kind: "folder",
+            path: node.key,
+            key: node.key,
+            label: node.label,
+            ...(node.hidden ? { hidden: true } : {}),
+            ...(node.order ? { order: node.order } : {}),
+            children: members,
+          },
+        ]
+      : [];
+  });
+  return orderChildren(shown, order);
+}
+
+function variantOf<T extends HierarchyEntry>(
+  node: HierarchyNode<T>,
+  path: string,
+): boolean {
+  return node.kind === "entry" && node.entry.variantOf === path;
 }

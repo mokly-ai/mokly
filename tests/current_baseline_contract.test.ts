@@ -18,6 +18,7 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const current = () => ({
   schemaVersion: 8,
+  folders: [],
   generatedBy: "mokly",
   sourceFiles: [],
   entries: [],

@@ -31,14 +31,14 @@ for (const location of ["head", "body", "template", "noscript"] as const)
     await prepareLinkFixture(
       fixture,
       linkRenderer(
-        location === "body" ? "''" : JSON.stringify(authored),
-        location === "body" ? JSON.stringify(authored) : "''",
+        location === "body" ? "''" : relativeAuthored(authored),
+        location === "body" ? relativeAuthored(authored) : "''",
       ),
     );
     const result = await compileCatalogue(await loadConfig(fixture.root));
-    const html = result.outputs.get("screens/checkout.mobile.html") as string;
+    const html = result.outputs.get("checkout/index.mobile.html") as string;
     const screen = result.manifest.entries.find(
-      (entry) => entry.id === "checkout",
+      (entry) => entry.path === "checkout",
     )!;
     assert.ok(screen.kind === "screen");
     const active = location === "head" || location === "body";
@@ -61,7 +61,7 @@ for (const location of ["head", "body", "template", "noscript"] as const)
         location === "head"
           ? `<html><head>${authored}</head><body></body></html>`
           : `<html><head></head><body>${authored}</body></html>`,
-        "screens/checkout.mobile.html",
+        "checkout/index.mobile.html",
         fixture.mockupsDir,
         new Set([physical]),
       ).has(physical),
@@ -85,9 +85,9 @@ for (const move of ["template", "body", "remove"] as const)
       `export default (input) => { let links = ""; const html = input.content.replace(/<link\\b[^>]*data-mokly-component-stylesheet[^>]*>/g, (link) => {links += link; return "";}); return ${move === "remove" ? "html" : `html.replace("</body>", ${move === "template" ? "'<template>' + links + '</template>'" : "links"} + "</body>")`}; };`,
     );
     const result = await compileCatalogue(await loadConfig(fixture.root));
-    const html = result.outputs.get("screens/checkout.mobile.html") as string;
+    const html = result.outputs.get("checkout/index.mobile.html") as string;
     const screen = result.manifest.entries.find(
-      (entry) => entry.id === "checkout",
+      (entry) => entry.path === "checkout",
     )!;
     assert.ok(screen.kind === "screen");
     assert.doesNotMatch(html, /data-mokly-component-stylesheet/);
@@ -110,14 +110,14 @@ test("body aliases keep all authored links and prefer configured order", async (
     fixture,
     linkRenderer(
       "''",
-      JSON.stringify(
+      relativeAuthored(
         '<link rel="stylesheet" href="../alias.css"><link rel="stylesheet" href="../action.css">',
       ),
     ),
   );
   await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const html = result.outputs.get("screens/checkout.mobile.html") as string;
+  const html = result.outputs.get("checkout/index.mobile.html") as string;
   assert.deepEqual(extractHtmlReferences(html).resources, [
     "../alias.css",
     "../action.css",
@@ -128,7 +128,7 @@ test("body aliases keep all authored links and prefer configured order", async (
   const scan = (configured: string[]) =>
     rendererStylesheetPaths(
       html,
-      "screens/checkout.mobile.html",
+      "checkout/index.mobile.html",
       fixture.mockupsDir,
       new Set([physical]),
       configured,
@@ -136,8 +136,13 @@ test("body aliases keep all authored links and prefer configured order", async (
   assert.equal(scan([]), "alias.css");
   assert.equal(scan(["../action.css", "../alias.css"]), "action.css");
   const screen = result.manifest.entries.find(
-    (entry) => entry.id === "checkout",
+    (entry) => entry.path === "checkout",
   )!;
   assert.ok(screen.kind === "screen");
   assert.deepEqual(screen.componentViews![0]!.insertedStylesheets, []);
 });
+
+/** Rebase the same authored local links for the screen and deeper saved-view paths. */
+function relativeAuthored(html: string): string {
+  return `${JSON.stringify(html)}.replaceAll('href="../', 'href="' + '../'.repeat(input.entry.path.split('/').length))`;
+}

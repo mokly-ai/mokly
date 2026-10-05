@@ -17,15 +17,15 @@ import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
 
+import { adoptCatalogueTree } from "./catalogue_tree.js";
 import type { ViewerSelection } from "./types.js";
 
 function metadata(entry: CatalogueEntry) {
   return {
-    id: entry.id,
+    path: entry.path,
     title: entry.title,
     tags: entry.tags,
     ...entry.details,
-    navPath: entry.navPath,
   };
 }
 
@@ -45,6 +45,13 @@ function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
 export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
   const base = { ...metadata(entry) };
   switch (entry.kind) {
+    case "document":
+      return {
+        ...base,
+        kind: "document",
+        colorSchemes: entry.colorSchemes,
+        resources: [],
+      };
     case "page":
       return { ...base, kind: "page" };
     case "use-case":
@@ -55,7 +62,7 @@ export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
         colorSchemes: entry.colorSchemes,
         kind: "screen",
         componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
-        useCaseIds: entry.useCaseIds,
+        useCasePaths: entry.useCasePaths,
         ...(entry.address ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
@@ -84,26 +91,40 @@ export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
 }
 
 export function viewerCatalogue(model: ShellCatalogueReadModel) {
+  const current = [
+    ...model.screens,
+    ...model.pages,
+    ...model.documents,
+    ...model.useCases,
+    ...model.components,
+  ];
   const manifest: ManifestV8 = {
     schemaVersion: 8,
     generatedBy: "mokly",
+    folders: [],
     sourceFiles: [],
-    entries: [
-      ...[
-        ...model.screens,
-        ...model.pages,
-        ...model.useCases,
-        ...model.components,
-      ].map((entry) => displayEntry(entry)),
-    ],
+    entries: current.map((entry) => displayEntry(entry)),
   };
-  return {
-    ...createCatalogue(
-      manifest,
-      model.removedEntries.map(({ entry, snapshotId }) => ({
+  const catalogue = createCatalogue(
+    manifest,
+    model.removedEntries.map(
+      ({ entry, snapshotId, folderTitles, parentTitle }) => ({
+        folderTitles,
         entry: displayEntry(entry),
         ...(snapshotId ? { snapshotId } : {}),
-      })),
+        ...(parentTitle !== undefined ? { parentTitle } : {}),
+      }),
+    ),
+    current.flatMap(({ path, previousPath }) =>
+      previousPath === undefined ? [] : [{ path, previousPath }],
+    ),
+  );
+  return {
+    ...catalogue,
+    hierarchy: adoptCatalogueTree(
+      catalogue.hierarchy,
+      model.tree,
+      model.treeOrder,
     ),
     publicModel: model,
   };
@@ -114,14 +135,24 @@ export function viewerContext(
   selection: ViewerSelection,
 ): ShellContext {
   const resolved =
-    typeof selection.screenId === "string"
+    typeof selection.screenPath === "string"
       ? resolveCatalogueSelection(
           model,
-          selection.screenId,
+          selection.screenPath,
           selection.snapshotId,
         )
       : undefined;
   const selected = resolved?.entry;
+  const ready = [
+    ...model.screens,
+    ...model.pages,
+    ...model.documents,
+    ...model.useCases,
+    ...model.components,
+    ...model.removedEntries.map(({ entry }) => entry),
+  ].flatMap(({ path, changes }) =>
+    changes.status === "ready" ? [{ path, ...changes }] : [],
+  );
   return {
     base: "",
     embedded: true,
@@ -130,22 +161,16 @@ export function viewerContext(
     ...(model.changesStatus === "disabled"
       ? {}
       : { changesStatus: model.changesStatus }),
-    ...(selected ? { activeId: selected.id } : {}),
+    ...(selected ? { activeId: selected.path } : {}),
     ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     ...(model.changesStatus === "ready"
       ? {
-          changedIds: [
-            ...model.screens,
-            ...model.pages,
-            ...model.useCases,
-            ...model.components,
-            ...model.removedEntries.map(({ entry }) => entry),
-          ]
-            .filter(
-              (entry) =>
-                entry.changes.status === "ready" && entry.changes.included,
-            )
-            .map((entry) => entry.id),
+          changedEntries: ready
+            .filter(({ included }) => included)
+            .map(({ path }) => path),
+          materialEntries: ready
+            .filter(({ kind }) => kind !== "unmodified")
+            .map(({ path }) => path),
         }
       : {}),
   };
@@ -155,23 +180,23 @@ export function viewerView(
   catalogue: ReturnType<typeof viewerCatalogue>,
   selection: ViewerSelection,
 ): ShellView {
-  if (selection.screenId === null) return { kind: "home" };
+  if (selection.screenPath === null) return { kind: "home" };
   const selected = catalogue.publicModel
     ? resolveCatalogueSelection(
         catalogue.publicModel,
-        selection.screenId,
+        selection.screenPath,
         selection.snapshotId,
       )
     : undefined;
   const entry = catalogue.publicModel
     ? selected
-      ? catalogueRouteEntry(catalogue, selected.entry.id, selected.entry.kind)
+      ? catalogueRouteEntry(catalogue, selected.entry.path, selected.entry.kind)
       : undefined
     : selection.snapshotId === undefined
-      ? catalogue.byId.get(selection.screenId)
+      ? catalogue.byPath.get(selection.screenPath)
       : undefined;
   const target = entry && toRouteTarget(entry);
   return target
     ? { kind: "target", target }
-    : { kind: "missing", requested: selection.screenId };
+    : { kind: "missing", requested: selection.screenPath };
 }

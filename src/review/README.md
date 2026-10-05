@@ -19,7 +19,11 @@ Milestone 29 will remove the unused one-sided `page` material used by
 
 This internal module compares current validated output with a historical
 baseline. The supported consumer interface remains the catalogue and CLI;
-these modules are not public package exports.
+these modules are not public package exports. `moves/prepare.ts` retains one
+accepted pairing and cached readers for classification and capture. The pure
+policy uses declared hints, identical material, source/title and document/page
+similarity in order. Review v5 emits `previousPath` on paired records; pure
+moves retain empty reasons and do not inflate material output counts.
 
 Unrendered source edits do not change catalogue membership or evidence.
 Rendered `styles` and non-CSS `resources` records retain ownership attribution.
@@ -44,6 +48,7 @@ CSS imports and referenced assets follow the usual graph.
 selected captures to publication validation. It adds no public output field. Matching still uses
 the normalized document, so ignored author markup, links and inline styles stay
 ignored. Renderer links reused for declarations remain page content.
+`component_view_types.ts` owns the shared comparison context and result types.
 `component_projection_resources.ts` prepares paired and one-sided
 comparison-only copies,
 while `component_view.ts` and `component_view_fast_path.ts` preserve the full
@@ -73,9 +78,9 @@ mockups root. Historical reads reject non-regular files and do not resolve alias
 through the current filesystem.
 `compare.ts` builds complete comparisons; `selected.ts` retains only a requested
 view's checked snapshot closure. Neither reader executes historical code.
-`page_preview.ts` captures one page selected from an accepted removed-entry
+`page_preview.ts` captures a page or every scheme of a document from an accepted removed-entry
 snapshot. Its caller supplies the pinned `BaselineReader`; the provider verifies
-the page against that snapshot's baseline manifest, then reuses
+the entry against that snapshot's baseline manifest, then reuses
 `GitReviewAssetReader`, `SelectedAssetReader` and `copySnapshotDependencies` for
 the same confinement, source exclusions, regular-file checks, transitive
 resource traversal and 64 MiB bound as screen panes. It returns typed
@@ -83,6 +88,18 @@ resource traversal and 64 MiB bound as screen panes. It returns typed
 strictly validated `preview.json` without creating page records in `review.json`.
 Current and baseline manifests require the same v8 shape under the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
+Review result v5 first pairs by kind and case-folded path, then by the
+[move contract](../../docs/protocol/mokly-moves.md). `ReviewArtifact.pairing`
+retains all-kind moves and diagnostics beside the visual result, so pages and
+documents contribute move counts without synthetic visual review records.
+Candidate matching repeats with accepted references and uses hashed material
+before full comparison. Similarity reads private authored Markdown or visible
+page body lines. Generated resource routes resolve through accepted source moves;
+equal mapped bytes produce no dependency/shared-impact reasons.
+Snapshots keep original before/after paths and bytes; logical reference
+normalization affects equality only. Resource traversal and CSS matching keep
+real URLs. Moved variants group under their current component parent, while
+affected-consumer evidence retains historical context and usage paths.
 
 Lower integer manifest versions and former-name sentinels give the existing
 typed unavailable outcome. Former files are never read. Invalid v8 data stays
@@ -122,7 +139,7 @@ aliases are excluded before rendered-resource classification.
 The classifier records retained view resources, per-rule unfiltered and kept
 own-page CSS proof, page selectors and non-CSS actual-invocation owner reasons by entry pair. Source validation accepts dependency reasons only from
 that record; it never trusts result view records as sources or re-evaluates a
-source-path policy. The record uses kind and id, including flattened variants.
+source-path policy. The record uses kind and path, including flattened variants.
 
 ```bash
 npm run build
@@ -313,8 +330,8 @@ component's own pages; consumer-only matches cannot grant a component reason. Un
 independent evidence, even for CSS.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
-`ViewResourceEvidence` records without requesting snapshots or component
-classification. Export projects the same slice from its v5 result;
+`ViewResourceEvidence` records without requesting snapshots. Export projects
+the same slice from its unified v5 result;
 both producers omit empty views and screens left without evidence. The inspector
 merges it with loaded comparison details. The public result schema is v5; every catalogue uses the same
 rendered-resource policy.
@@ -412,3 +429,11 @@ Key code:
 See the [Changes contract](../../docs/protocol/mokly-changes.md),
 [component attribution contract](../../docs/protocol/mokly-component-changes.md),
 and [component result schema](../../docs/protocol/mokly-component-review.md).
+
+Entry pairing uses kind and case-folded path, including component parents and
+variants at the same identity. Grouped comparison records retain their owning
+component views; Changes merges their reasons into one entry record. Documents
+use page-style material comparison for each scheme, resources and metadata.
+
+Document previews seed capture with declared attachments still linked from their
+historical HTML, including PDFs. Pages keep their existing rendered-resource rule.

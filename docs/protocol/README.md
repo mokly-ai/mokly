@@ -1,8 +1,9 @@
 # Protocol
 
-These documents define Mokly's pre-release contract. Delivery Status sections
-distinguish implemented behavior from approved work that remains to be done.
-Paths derive from kind and id, and variants are entries.
+These documents define Mokly's implemented pre-release contract unless a
+Delivery Status names an approved active-plan target. The [path contract](./mokly-paths.md) defines the
+path-based formats: every entry is identified by a path derived from its file,
+Markdown files are documents, and moves are paired with their baseline.
 
 ## Delivery Status
 
@@ -26,52 +27,20 @@ stronger regression tests with recorded failing-rule runs, the docs guard and
 removed-field types in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types),
 and exported navigation and viewer alignment in
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
-M30 replaces the docs guard; the existing history test still rejects numeric
-milestone prose in protocols, so status links use labels such as `M28`.
 
 ## Current Documentation Rule
 
-Former version names, removed field names and implementation plan or milestone
-references belong only in `Delivery Status` sections or on a short reviewed
-allow list. A status section ends at the next heading of equal or higher level.
-Guides have no status notes; keep their delivery notes in the owning protocol.
-Keep the root README link to `plans/README.md` in its Delivery Status section.
-
-The guard scans Markdown in `docs/**`, the root README, module/package/example
-READMEs, `xtask/README.md` and authored `notes.md` files. Historical plans,
-`docs/reviews/**` and `CHANGELOG.md` stay unchanged. The guard fails closed and
-reads complete statements across line breaks, including fenced examples. A
-word such as "removed", "older" or "never" is not a general exemption.
-
-Each allow-list entry names an exact file, bounded statement or section, and
-reason. It may hold only:
-
-- Removed-input type/warning contracts, exact diagnostics, rejection/privacy
-  rules and consumer migration instructions that must name the removed input.
-- Version-admission/rejection and release migration contracts that must name
-  an earlier format; current independent protocols are not former formats.
-- Frozen wire/hash identifiers, versioned compatibility fixtures and explicitly
-  dated design snapshots retained as history, never as current behavior.
-- The documentation policy and review-workflow instructions that discuss how
-  to manage delivery references. Upload Plan operations and SVG path commands
-  are domain terms, not implementation references.
-
-No whole-directory exemption or broad keyword allowance is permitted. Match
-each reviewed exception exactly and fail when it no longer matches its source.
+Use the [documentation policy](./documentation-policy.md) for status sections and
+reviewed exceptions. There is no plan index. Link to `plans/`. Each plan starts
+with `Status: Active` or `Status: Completed` directly below its title.
 
 ## Graceful Handling
 
-Mokly stops a build only when it cannot make correct, safe output, or when an
-input has two possible meanings. When an input is not necessary, or disagrees
-with a more specific input, Mokly uses the more specific input and continues.
-When Mokly ignores an input that the author wrote, it shows a warning. The
-[build warning contract](./mokly-build-warnings.md) defines collection,
-deduplication and terminal presentation for the affected cases. This rule does
-not waive public-file confinement, source protection or validation of the
-inputs Mokly actually uses. This rule applies to duplicate component
-CSS declarations, configured-link placement, configured/declared overlap,
-renderer ownership for every stylesheet, and the removed authoring/configuration
-fields; other validation contracts are unchanged.
+The [graceful-handling rule](./mokly-build-warnings.md#graceful-handling) applies
+to safe stylesheet conflicts and the three removed inputs. Removed
+Removed `dependencies`, `ownedDependencies` and `review.sharedImpact` warn and have no
+effect. Other unknown fields, including former configuration fields, fail
+under their owning contract.
 
 ## Supported Formats
 
@@ -80,7 +49,16 @@ fields; other validation contracts are unchanged.
 | Without registered components | 8                  | 5                 |
 | With registered components    | 8                  | 5                 |
 
-Manifest v8 carries pages, navigation paths, the source inventory, flattened component variants and per-view usage, without author-maintained path evidence or derivable paths. Every catalogue emits comparison v5. The public catalogue read model is v4; the static delivery descriptor remains v3.
+Current output uses manifest v8, review result v5, and public read model v4,
+keyed by kind and path. The private catalogue-change snapshot is v2 and removed
+page preview metadata is v3. Delivery descriptors remain v3. The manifest stores
+folder records, component variants and per-view usage, root output ranges
+and inserted-stylesheet provenance,
+with no derivable file names. Markdown documents and their resource copies are
+implemented. Accepted move pairs carry `previousPath` in review records and
+the public read model; the manifest retains authored hints only.
+Current and baseline manifest readers accept only one version; earlier output
+follows [baseline compatibility](./mokly-baseline-compatibility.md).
 
 Current and baseline manifest readers require canonical, valid v8 output. Lower integer versions and former-name sentinels make Changes unavailable under the [baseline contract](./mokly-baseline-compatibility.md). No reader converts earlier metadata. Public readers reject catalogue v1 to v3 and comparison v4 and earlier; regenerate those exports.
 
@@ -100,6 +78,7 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
   Complete requests, retries, expiry, and accounting.
 - [Catalogue upload validation v1](./mokly-upload-validation.md) — rejection
   categories, limits, and independent receiver validation.
+- [Root discovery and ownership](./mokly-root-discovery.md)
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, watched events, and shortcuts.
@@ -108,12 +87,21 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
 - [Build warnings](./mokly-build-warnings.md) — ignored-input diagnostics and invocation deduplication.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
-- [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
+- [Configuration contract](./mokly-configuration.md), with [public exclusions](./mokly-public-exclusions.md) for validation, defaults and the public-file matching base.
   - [Entry discovery and public exclusions](./mokly-configuration-discovery.md).
   - [Imported CSS configuration](./mokly-configuration-imported-styles.md).
 - [Public authoring API](./mokly-authoring.md)
-- [Nested authoring trees](./mokly-nested-authoring.md)
-- [Identity-derived artifact paths](./mokly-artifact-paths.md)
+- [Paths, roots, and identity](./mokly-paths.md) — path derivation, segment
+  grammar, index pages, URLs, and collision diagnostics.
+- [Folders](./mokly-folders.md) — folder records, titles, order, hidden
+  folders, and browse-only folder rows.
+- [Entry modules](./mokly-entry-modules.md) — export collection and slugs.
+- [Markdown documents](./mokly-documents.md) — discovered Markdown entries.
+- [Document rendering safety](./mokly-document-safety.md) — final HTML allowlist and script policy.
+- [Moves](./mokly-moves.md) — baseline pairing and `previousPath`.
+- [Branch-point entry lookup](./mokly-branch-point-lookup.md) — shared current,
+  historical, counterpart and variant-parent resolution.
+- [Path-derived artifact paths](./mokly-artifact-paths.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Component-declared stylesheets](./mokly-component-stylesheets.md) —
   link placement, validation, provenance, watching and delivery.
@@ -129,16 +117,16 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
   storage, defaults, watched recovery, and in-place reconciliation.
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
-- [Public catalogue read model v4](./mokly-catalogue.md) — identity-only public
-  inventory beside the private manifest.
-  - [Catalogue projection and delivery](./mokly-catalogue-delivery.md) — privacy,
-    canonical bytes, version admission and atomic live revisions.
-- [Navigation paths and folders](./mokly-nav-paths.md) — section trees, path
-  diagnostics, sibling order, and folder keys.
+- [Public catalogue read model](./mokly-catalogue.md) — path-keyed public
+  inventory beside the private manifest, with its
+  [fetch rules](./mokly-catalogue-fetch.md) and
+  [tree and section order](./mokly-catalogue-tree.md) and
+  [serialization](./mokly-catalogue-serialization.md).
+  - [Catalogue projection and delivery](./mokly-catalogue-delivery.md) — public evidence and privacy.
 - [Standalone shell bootstrap](./mokly-shell-bootstrap.md) — entry-scoped Serve
   hydration, strict reading, evidence adoption, and static capture.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
-  shared hydrated shell.
+  shared hydrated shell, with [SSR, hydration, and host independence](./mokly-viewer-ssr.md).
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
   evidence, updates, recovery, previews and on-demand rendering for React.
 - [Viewer appearance](./mokly-viewer-appearance.md) — implemented
@@ -160,10 +148,10 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
 - [Startup diagnostics and scale fixtures](./mokly-timings.md)
 - [Pages in the catalogue](./mokly-pages.md)
 - [Variants](./mokly-variants.md) — screen and component variants as entries
-  with their own global ids, derived routes, and `variantOf`, grouped under
-  their parent.
+  whose path is the parent's path plus a slug, grouped under their parent.
 - [Variant navigation and Changes](./mokly-variant-navigation.md)
-- [Source protection](./mokly-source-protection.md)
+- [Source protection](./mokly-source-protection.md), with
+  [acceptance checks](./mokly-source-protection-acceptance.md).
 - [Imported stylesheets](./mokly-imported-styles.md) — implemented:
   renderer/entry CSS, CSS Modules, assets, PostCSS, inventory, and
   [exact diagnostics](./mokly-imported-styles-errors.md).
@@ -174,18 +162,23 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
 - [Baseline compatibility](./mokly-baseline-compatibility.md)
 - [Optional changes in publication](./mokly-publication.md)
   - [Published Changes and acceptance](./mokly-publication-changes.md).
-- [Changes and screen comparisons](./mokly-changes.md)
-  - [Changes serving and comparison](./mokly-changes-serving.md).
+- [Changes and screen comparisons](./mokly-changes.md), with
+  [comparison serving](./mokly-comparison-serving.md) for generation and
+  serving rules.
+  - [Changes serving and comparison](./mokly-changes-serving.md), with
+    [screen controls](./mokly-changes-controls.md).
 - [Comparison pane presentation](./mokly-comparison-panes.md) — viewer-owned,
-  device-sized Overlay, Difference and Side by side panes.
+  device-sized Overlay, Difference and Side by side panes, with their
+  [design references](./mokly-comparison-pane-designs.md).
 - [Comparison scrolling](./mokly-comparison-scrolling.md) — page alignment,
   inner-region mirroring, keys, and anchors.
 - [Comparison region pairing](./mokly-comparison-region-pairing.md) — how an
   inner scroll region finds its counterpart in another version.
 - [Comparison Scroll together](./mokly-comparison-scroll-together.md) — the
   reader control, its preference, and realignment.
-- [Removed content previews](./mokly-removed-previews.md) — removed screens and
-  pages show their pinned baseline version.
+- [Removed content previews](./mokly-removed-previews.md) — removed screens,
+  pages, and documents show their pinned baseline version, with
+  [preview frames](./mokly-removed-preview-frames.md) for the frame lifecycle.
 - [Removed preview acceptance](./mokly-removed-preview-acceptance.md) —
   regression and presentation coverage.
 - [Derived baselines](./mokly-derived-baselines.md) — default uncommitted
@@ -194,9 +187,9 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
     limits, command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)
 - [Component runtime prop schema](./mokly-component-props.md)
-- [Current manifest v8 schema](./mokly-component-manifest.md)
+- [Manifest schema](./mokly-component-manifest.md)
 - [Component usage records](./mokly-component-usage-records.md)
-- [Component comparison v5 schema](./mokly-component-review.md)
+- [Component comparison schema](./mokly-component-review.md)
 - [Component review validation and canonical output](./mokly-component-review-validation.md)
 - [Design component attribution](./mokly-design-component-attribution.md) — CSS delivery and caller-input acceptance.
 - [Component change attribution](./mokly-component-changes.md)
@@ -209,7 +202,8 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
   comparison-stage presentation of stylesheet evidence.
 - [CSS evidence presentation](./mokly-css-evidence-presentation.md)
 - [Component pages and screen inspection](./mokly-component-explorer.md)
-- [Component explorer design catalogue](./mokly-component-design.md)
+- [Component explorer design catalogue](./mokly-component-design.md), with its
+  [screen inventory](./mokly-component-design-inventory.md).
 - [Component icon inspector design](./mokly-component-inspector-design.md)
 - [Component controls design catalogue](./mokly-component-controls-design.md)
 - [Component workspace design](./mokly-component-workspace-design.md) (view
@@ -230,9 +224,14 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
   inventory and compatibility fixtures for independent upload receivers.
 - [Watched development](./mokly-watch.md)
   - [Watch runtime and recovery](./mokly-watch-runtime.md).
-- [Catalogue navigation contract](./mokly-navigation.md)
+- [Catalogue navigation contract](./mokly-navigation.md), with
+  [logical link transformer validation](./mokly-link-transform-validation.md)
+  and [shell destination queries](./mokly-shell-destinations.md).
 - [Styled catalogue link controls](./mokly-link-controls.md)
-- [Shell design contract](./mokly-shell-design.md)
+- [Shell design contract](./mokly-shell-design.md), with
+  [device chrome and preview scheme](./mokly-shell-device-chrome.md), the
+  [design screen inventory](./mokly-shell-design-inventory.md), and the
+  [depicted design catalogue](./mokly-shell-design-catalogue.md).
 - [Design mockup links](./mokly-design-links.md)
 - [Registered components in Mokly's design catalogue](./mokly-design-components.md)
   — implemented shared design components and ownership rules, with the

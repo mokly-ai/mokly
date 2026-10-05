@@ -1,8 +1,18 @@
 # Public catalogue data
 
-This module projects accepted catalogue and Changes evidence into the public
-`schemaVersion: 4` read model at `__mokly/catalogue.json`. Serve, consumer export,
-and repository preview use the same complete projection. Live shell pages derive
+This module projects validated manifest v8 and accepted Changes evidence into
+public read model v4 at `__mokly/catalogue.json`. Serve, export and repository
+preview share its explicit allowlist. Entries are keyed by path, and one tree
+carries resolved folder titles, order, hidden flags, indexes and variants.
+The shell labels its non-component section Specs. Documents share
+the page frame and publish their effective schemes and resource evidence.
+A removed component parent remains a valid record when all its variants move
+elsewhere. Current parents still require a current variant; the public and scoped
+readers share that rule. Matched related-doc paths become validated `mock:<path>` references; other paths
+remain source labels. Accepted comparison pairs supply `previousPath` on current
+entries. Pure moves remain unmodified and included; paired baseline records
+produce no removals. Plain builds do not infer or publish previous paths.
+Live shell pages derive
 a separate entry-scoped bootstrap from it, retaining the whole index but
 replacing out-of-scope usage with the viewer runtime's `omitted` state. The
 endpoint, exported file, fixture, upload and ownership inventories never contain
@@ -11,24 +21,27 @@ updates replace the validated scoped public snapshot and optional matching
 private workspace together.
 
 `projection_input.ts` is the typed input boundary. It accepts validated manifest
-v8 or live-index metadata, the section-scoped folder trees, and accepted comparison/usage
+v8 or live-index metadata, the shared folder tree, and accepted comparison/usage
 evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
 Changes membership comes from entry and component attribution, independently
-of per-view comparison eligibility. Removed entries retain baseline labels, an
+of per-view comparison eligibility. Removed variants require their baseline
+`parentTitle`, including when another kind reuses the parent's path. Both readers
+reject missing variant titles and titles on removed non-variants. The field
+survives scoped and viewer projections. Removed entries retain baseline labels, an
 opaque per-record `snapshotId` when real immutable identity is available, plus
 the optional additive `preview` descriptor from the
 [removed previews contract](../../docs/protocol/mokly-removed-previews.md);
 uncomputed usage stays pending or unavailable.
 Snapshot ids derive through the viewer-owned shared helper from the catalogue
-identity, exact entry kind and id, and either the accepted baseline commit or,
+identity, exact entry kind and path, and either the accepted baseline commit or,
 only when no commit exists, an immutable comparison generation. Conflicting
 baseline identities fail projection; revisions and live deployment hashes are
 never substituted. Generation-backed catalogues normalize safely. Readers
-reject any current and removed records that share an id.
+reject any current and removed records that share a path.
 `CatalogueProjectionInput.removedPreviews` is caller-supplied generation data;
 projection never derives it from Git or the filesystem. The map is keyed by
-removed entry id; `pagePreviewMetadataPath(id)` names page metadata, while
+removed entry path; `previewMetadataPath(path)` names page metadata, while
 screen descriptors reuse the same generation's comparison. Readers reject descriptors
 on current entries, mismatched entry kinds, or missing comparison URLs while
 accepting v4 catalogues that omit the optional preview field.
@@ -38,8 +51,9 @@ descriptors remain absent. Changes-enabled consumer export and repository
 publication supply both screen descriptors and removed-page paths after their
 historical closures are packaged. Evidence replacement publishes the pointer,
 descriptors and removed-entry snapshot atomically. Current-only delivery supplies
-none of them. Projection checks the retained component set once for screens and
-removed variants; readers remain strict.
+none of them. When a removed screen or variant uses a component absent from the
+published model, projection omits that usage and marks it unavailable. Readers
+still reject dangling references in supplied usage.
 
 `@mokly/viewer` owns the public types and `readCatalogue`; its value/reference
 validators reject unsupported versions, malformed known fields, private evidence,
@@ -55,13 +69,13 @@ metadata never grants permission to serve source files.
 
 Ready Changes includes optional `resourceEvidence` on each screen or saved
 component view and on each whole-document page. It carries the same retained
-rule keys, changed component ids, page selectors and exclusions as comparison
+rule keys, changed component paths, page selectors and exclusions as comparison
 v5. Pending, unavailable and disabled snapshots omit it. Pages still have no
 visual comparison records. The shared reader validates rule summaries and
 rejects private coordinates. Entry-scoped bootstraps retain this evidence.
 
 `serialization.ts` writes recursively sorted object keys, two-space indentation,
-and a final newline. Entry arrays sort by kind name and then id, with a
+and a final newline. Entry arrays sort by kind name and then path, with a
 parent's variants following it in authored order; usage records have canonical
 ordering; steps and tags retain their order; tree siblings use the shared
 folder-first English-locale comparator. Catalogue identity
@@ -85,6 +99,9 @@ npx playwright test tests/browser/catalogue_fetch.spec.ts
 See the [catalogue contract](../../docs/protocol/mokly-catalogue.md),
 [bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md),
 [export boundary](../export/README.md), and [Serve lifecycle](../server/README.md).
+
+Hidden folders remain explicit tree nodes. The viewer filters All/search while
+Changes keeps hidden ancestry; every current entry remains present in the wire tree.
 
 ## Delivery Status
 

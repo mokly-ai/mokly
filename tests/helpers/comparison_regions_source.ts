@@ -175,16 +175,16 @@ function soloScreen(changed: boolean): string {
 /** Authored entries for the region catalogue before and after the change. */
 export function comparisonRegionsSource(changed: boolean): string {
   const screen = (id: string, title: string, body: string) =>
-    `defineScreen({ ...metadata, id: "${id}", title: "${title}", description: "${title} screen", useCaseIds: [], mobile: ${body}, desktop: ${body} })`;
+    `defineScreen({ ...metadata, path: "${id}", title: "${title}", description: "${title} screen", useCasePaths: [], mobile: ${body}, desktop: ${body} })`;
   return `import { defineComponent, defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { navPath: ["Regions"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 const rows = Array.from({ length: 20 }, (_, index) => index);
 const tasks = defineComponent({ ...metadata,
-  id: "tasks", title: "Tasks", description: "A list that scrolls inside its box",
+  path: "tasks", title: "Tasks", description: "A list that scrolls inside its box",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <ul aria-label="Tasks" className="rg-tasks">{rows.map((row) => <li className="rg-task" key={row}>{row === 3 ? props.label : "Task " + (row + 10)}</li>)}</ul>,
-  variants: [{ id: "tasks-list", title: "List", props: { label: "${changed ? "Current" : "Previous"} task" } }]
+  variants: [{ slug: "list", title: "List", props: { label: "${changed ? "Current" : "Previous"} task" } }]
 });
 export const mockups = [
   ${screen("shell", "Shell", shellScreen(changed))},

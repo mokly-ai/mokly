@@ -16,7 +16,15 @@ with the shell tree, plus the transport, geometry and protocol modules it
 imports (frame adapters, message transport, geometry, catalogue revision
 adoption). Export delivers the viewer-owned inventory from the generated manifest
 of the completed package build outputs; Serve also delivers the CLI-owned live
-host modules. Each manifest must match its directory files exactly. Static mode
+host modules. Each manifest must match its directory files exactly. Export
+reference validation lexes package-owned `.js` files under `__mokly/` as modules.
+It checks every decoded static import, re-export and literal dynamic import
+against the existing URL and inventory rules, including relative specifiers
+containing `+` or `:`. Quoted prose, comments, regular expressions and
+`import.meta` are not module requests. Computed dynamic expressions are not
+evaluated or treated as literal paths. Lexer failures abort with
+`Could not read export module references: <script path>`.
+Static mode
 never activates live host capabilities or starts update requests. Its separate
 static evidence reader can issue only the same-origin destination-shell read
 defined by the delivery contract and receives no host token or behavior.

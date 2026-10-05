@@ -20,9 +20,9 @@ import { stylesheetGroups } from "./helpers/design_evidence.js";
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: component inspector has no declared dependency row`, async () => {
     for (const id of [
-      "design-component-overview",
-      "design-component-toolbar",
-      "design-component-unused",
+      "design/components/overview",
+      "design/components/pages/toolbar",
+      "design/components/states/unused",
     ]) {
       const { document } = await designDocument(id, viewport);
       const details = byClass(document, "ce-slot-details")[0];
@@ -36,7 +36,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: stylesheet evidence states keep selectors out of headings`, async () => {
     for (const [id, route, copy] of stylesheetEvidence) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entryRoute("screen", entry.id), route);
+      assert.equal(entryRoute(entry.path), route);
       assert.deepEqual(entry.colorSchemes, ["light"]);
       const evidence = byClass(document, "mbk-comparison-details")[0];
       assert.ok(evidence, id);
@@ -72,7 +72,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
       );
       assert.equal(
         byClass(document, "mbk-cmp-toolbar").length,
-        compared || id === "design-review-style-excluded" ? 1 : 0,
+        compared ||
+          id === "design/changes/impact/styles/matched-excluded/excluded"
+          ? 1
+          : 0,
         id,
       );
       if (!compared)
@@ -112,11 +115,31 @@ for (const viewport of ["mobile", "desktop"] as const)
 
 test("stylesheet evidence states are entered and left through the filter", async () => {
   for (const [source, filter, target] of [
-    ["design-review-ignored-only", "Changes0", "design-review-empty"],
-    ["design-review-style-excluded", "Changes1", "design-review-style-matched"],
-    ["design-review-style-matched", "All", "design-review-style-excluded"],
-    ["design-review-style-unresolved", "All", "design-browse-screen"],
-    ["design-review-style-unnamed", "All", "design-browse-screen"],
+    [
+      "design/changes/impact/ignored-only",
+      "Changes0",
+      "design/changes/impact/empty",
+    ],
+    [
+      "design/changes/impact/styles/matched-excluded/excluded",
+      "Changes1",
+      "design/changes/impact/styles/matched-excluded/matched",
+    ],
+    [
+      "design/changes/impact/styles/matched-excluded/matched",
+      "All",
+      "design/changes/impact/styles/matched-excluded/excluded",
+    ],
+    [
+      "design/changes/impact/styles/unresolved-unnamed/unresolved",
+      "All",
+      "design/browse/views/screen",
+    ],
+    [
+      "design/changes/impact/styles/unresolved-unnamed/unnamed",
+      "All",
+      "design/browse/views/screen",
+    ],
   ] as const) {
     const { document } = await designDocument(source, "desktop");
     assert.deepEqual(

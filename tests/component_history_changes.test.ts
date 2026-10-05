@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
@@ -30,8 +30,8 @@ test("registering unrelated components does not add unchanged screens to Changes
 test("dependency declarations alone do not invent screen or component changes", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(
-      'id: "action",',
-      'id: "action", dependencies: ["notes.md"],',
+      'path: "action",',
+      'path: "action", dependencies: ["notes.md"],',
     ),
   );
   const { result } = await compareReview(
@@ -107,15 +107,15 @@ test("removed components retain variants, missing sides, and baseline consuming 
     ),
   );
   assert.deepEqual(
-    await computeChangedIds(fixture.config, "main", fixture.git),
-    result.changes.map((entry) => (entry.after ?? entry.before)!.id).sort(),
+    await computeChangedPaths(fixture.config, "main", fixture.git),
+    result.changes.map((entry) => (entry.after ?? entry.before)!.path).sort(),
   );
 });
 
 test("variant removal retains authored current order followed by explicit removed variants", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(
-      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );
@@ -127,17 +127,17 @@ test("variant removal retains authored current order followed by explicit remove
   );
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion !== 5) return;
-  const action = result.components.find((entry) => entry.id === "action")!;
+  const action = result.components.find((entry) => entry.path === "action")!;
   assert.deepEqual(
-    action.variants.map((variant) => variant.id),
-    ["action-default", "action-disabled"],
+    action.variants.map((variant) => variant.path),
+    ["action/default", "action/disabled"],
   );
   assert.equal(action.variants[1]!.state, "removed");
-  assert.equal(action.after?.id, "action");
+  assert.equal(action.after?.path, "action");
   assert.equal(result.changes.length, 1);
   assert.equal(
-    (result.changes[0]!.after ?? result.changes[0]!.before)?.id,
-    "action-disabled",
+    (result.changes[0]!.after ?? result.changes[0]!.before)?.path,
+    "action/disabled",
   );
 });
 
@@ -158,13 +158,13 @@ test("removed consumers retain their previous usage when a component changes", a
   );
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion !== 5) return;
-  const removed = result.screens.find((screen) => screen.id === "home")!;
+  const removed = result.screens.find((screen) => screen.path === "home")!;
   assert.equal(removed.state, "removed");
   assert.ok(
     result.affectedConsumers.some(
       (entry) =>
         entry.consumer.kind === "screen" &&
-        entry.consumer.id === removed.id &&
+        entry.consumer.path === removed.path &&
         entry.evidence.every((evidence) => evidence.side === "before"),
     ),
   );
@@ -174,10 +174,10 @@ for (const edit of ["component", "screen"] as const)
   test(`only direct screen edits propagate to use cases: ${edit}`, async (t) => {
     const source = componentEntrySource()
       .replace("defineComponent,", "defineComponent, defineUseCase,")
-      .replace('id: "home",', 'id: "home", useCaseIds: ["flow"],')
+      .replace('path: "home",', 'path: "home", useCasePaths: ["flow"],')
       .replace(
         "\n];",
-        ',\n defineUseCase({ ...metadata, id: "flow", title: "Flow", description: "A screen sequence", route: "user-flows/home.html", steps: [{ screenId: "home" }] })\n];',
+        ',\n defineUseCase({ ...metadata, path: "flow", title: "Flow", description: "A screen sequence", steps: [{ screenPath: "home" }] })\n];',
       );
     const fixture = await componentReviewFixture(
       t,
@@ -203,9 +203,10 @@ for (const edit of ["component", "screen"] as const)
     if (result.schemaVersion !== 5) return;
     const flow = result.changes.find((entry) => entry.kind === "use-case");
     if (edit === "component") assert.equal(flow, undefined);
-    else assert.deepEqual(flow?.reasons, [{ kind: "screen", id: "home" }]);
+    else
+      assert.deepEqual(flow?.reasons, [{ kind: "screen", screenPath: "home" }]);
     assert.deepEqual(
-      await computeChangedIds(fixture.config, "main", fixture.git),
-      result.changes.map((entry) => (entry.after ?? entry.before)!.id).sort(),
+      await computeChangedPaths(fixture.config, "main", fixture.git),
+      result.changes.map((entry) => (entry.after ?? entry.before)!.path).sort(),
     );
   });

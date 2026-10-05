@@ -12,15 +12,15 @@ import { waitForClassifiedCount } from "../helpers/watched_catalogue.js";
 /** Checkout's own heading sits outside Toolbar, which renders Action. */
 const SOURCE = `import React from "react";
 import { defineComponent, defineScreen } from "@mokly/mokly";
-const metadata = { relatedDocs: [], navPath: ["Fixture"] };
-const action = defineComponent({ ...metadata, id: "action", title: "Action", description: "Action",
+const metadata = { relatedDocs: [] };
+const action = defineComponent({ ...metadata, path: "action", title: "Action", description: "Action",
   propSchema: { kind: "object", properties: {} }, render: () => <button className="action">Continue</button>,
-  variants: [{ id: "action-default", title: "Default", props: {} }] });
-const toolbar = defineComponent({ ...metadata, id: "toolbar", title: "Toolbar", description: "Toolbar",
+  variants: [{ slug: "default", title: "Default", props: {} }] });
+const toolbar = defineComponent({ ...metadata, path: "toolbar", title: "Toolbar", description: "Toolbar",
   propSchema: { kind: "object", properties: {} }, render: () => <div className="toolbar"><action.Component /></div>,
-  variants: [{ id: "toolbar-default", title: "Default", props: {} }] });
-export const mockups = [action.entries, toolbar.entries,
-  defineScreen({ ...metadata, id: "checkout", title: "Checkout", description: "Checkout",
+  variants: [{ slug: "default", title: "Default", props: {} }] });
+export const mockups = [...action.entries, ...toolbar.entries,
+  defineScreen({ ...metadata, path: "checkout", title: "Checkout", description: "Checkout",
     mobile: <main className="checkout"><h1 className="heading">Checkout</h1><toolbar.Component /></main>,
     desktop: <main className="checkout"><h1 className="heading">Checkout</h1><toolbar.Component /></main> })];
 `;

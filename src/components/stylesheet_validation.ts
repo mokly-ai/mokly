@@ -30,13 +30,17 @@ export function validateDeclaredStylesheets(
       if (!location) {
         throw new MoklyError(
           "build-invalid",
-          `component ${entry.id}: stylesheet ${file} is not a public file (${publicFileFailureReason(candidate, config) ?? "missing, non-regular, or outside mockupsDir"})`,
+          `component ${entry.path}: stylesheet ${file} is not a public file (${publicFileFailureReason(candidate, config) ?? "missing, non-regular, or outside mockupsDir"})`,
         );
       }
       const first = firstPaths.get(location.physicalPath);
       if (first !== undefined) {
         onWarning?.(
-          duplicateComponentStylesheet(entry.id, location.physicalPath, first),
+          duplicateComponentStylesheet(
+            entry.path,
+            location.physicalPath,
+            first,
+          ),
         );
         continue;
       }

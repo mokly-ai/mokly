@@ -7,7 +7,9 @@ Removal of baseline compatibility is implemented in
 
 The completed [derived baselines plan](../../plans/derived-baselines.md) shipped
 separate readers, caching, command preparation, `preparing`, watched lifecycle,
-timings, and the scale fixture.
+timings, and the scale fixture. The manifest version the baseline gate accepts
+follows [baseline compatibility](./mokly-baseline-compatibility.md), whose v8
+target the [path identity plan](../../plans/path-identity.md) delivers.
 
 ## Purpose
 
@@ -96,7 +98,7 @@ and the error includes `git rm --cached` plus one directory-level ignore
 rule. Committed Check instead compares generated text/binary bytes and
 reports unexpected reserved-directory files as orphans.
 Retired output is recognized only by an exact ownership header on the first
-line naming a source below this catalogue's entries root. Header-like text
+line naming a source below one of this catalogue's roots. Header-like text
 inside authored documents does not establish ownership. Git grep scans the
 index without requiring working-tree files; only its no-match exit status is
 accepted as empty evidence. Other Git failures remain `build-invalid`.

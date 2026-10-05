@@ -31,8 +31,7 @@ test("custom renderer casing cannot bypass child adaptation", async (context) =>
 export default input => '<html><body>' + renderToStaticMarkup(input.node).replaceAll('data-mokly-link-child-', 'DATA-MOKLY-LINK-CHILD-') + '</body></html>';`,
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const html =
-    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+  const html = textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
   assert.match(html, /<a id="continue"/);
   assert.match(html, /data-mokly-link-control="button"/);
   assert.doesNotMatch(html, /data-mokly-link-child-/i);
@@ -97,8 +96,7 @@ test("compatibility preserves generated metadata while allowing harmless edits a
       .replace('</body>', '<p data-note="data-mokly-link-child-end">Literal metadata</p></body>');`,
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const html =
-    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+  const html = textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
   assert.match(html, /DATA-MOKLY-LINK-CONTROL="button"/);
   assert.match(html, />Next<\/a>/);
   assert.match(html, /data-note="data-mokly-link-child-end"/);

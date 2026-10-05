@@ -51,7 +51,7 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   rows come from the static navigation fixture in `parts/nav_data.ts`, which the
   shared catalogue-navigation samples reuse, so the saved samples and the
   in-screen trees stay aligned. The example Welcome screen now authors the
-  `Empty workspace` state as `example-welcome-empty`; `Save failed` remains a
+  `Empty workspace` state as `example/screens/welcome/empty`; `Save failed` remains a
   design-only comparison scenario until its Changes milestone lands.
 - A variant's inspector shows the metadata it inherits from its parent, because
   a variant inherits the parent's address, schemes, tags, and

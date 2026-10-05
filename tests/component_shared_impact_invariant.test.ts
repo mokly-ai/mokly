@@ -38,18 +38,18 @@ test("removed path inputs do not create evidence on current or removed records",
       "declaredDependencies",
       "ownedDependencies",
     ])
-      assert.equal(Object.hasOwn(entry, field), false, entry.id);
+      assert.equal(Object.hasOwn(entry, field), false, entry.path);
   for (const side of ["removed", "added"] as const)
     for (const kind of ["screen", "component"] as const) {
       const entries = kind === "screen" ? result.screens : result.components;
-      const entry = entries.find((item) => item.id === `${side}-${kind}`);
+      const entry = entries.find((item) => item.path === `${side}-${kind}`);
       assert.ok(entry);
       assert.equal(entry.before === undefined, side === "added");
       assert.equal(entry.after === undefined, side === "removed");
     }
   for (const entry of [...result.screens, ...result.components]) {
-    assert.equal(Object.hasOwn(entry, "sharedImpact"), false, entry.id);
-    assert.equal(Object.hasOwn(entry, "dependencies"), false, entry.id);
+    assert.equal(Object.hasOwn(entry, "sharedImpact"), false, entry.path);
+    assert.equal(Object.hasOwn(entry, "dependencies"), false, entry.path);
     const views =
       "views" in entry
         ? entry.views
@@ -93,29 +93,27 @@ function mixedSource(directory: string): string {
 
 function singleSideSource(source: string, side: "removed" | "added"): string {
   const componentId = `${side}-component`;
-  const screenId = `${side}-screen`;
+  const screenPath = `${side}-screen`;
   return source
     .replace(
       "export const mockups = [",
       `const oneSide = defineComponent({
-  ...metadata, id: "${componentId}", title: "One-sided component",
+  ...metadata, path: "${componentId}", title: "${side} component",
   description: "Only this side declares its shared folder",
-  navPath: ["Fixture"],
   dependencies: ["src/one-side/${componentId}"],
   propSchema: { kind: "object", properties: {} },
-  render: () => <span>One side</span>,
-  variants: [{ id: "${componentId}-default", title: "Default", props: {} }]
+  render: () => <span>${side} content</span>,
+  variants: [{ slug:"default",  title: "${side} default", props: {} }]
 });
-export const mockups = [oneSide.entries,`,
+export const mockups = [...oneSide.entries,`,
     )
     .replace(
       "\n];",
       `,\n  defineScreen({
-  ...metadata, id: "${screenId}", title: "One-sided screen",
+  ...metadata, path: "${screenPath}", title: "${side} screen",
   description: "Only this side declares its shared folder",
-  navPath: ["Fixture"],
-  dependencies: ["src/one-side/${screenId}"],
-  mobile: <main>One side</main>, desktop: <main>One side</main>
+  dependencies: ["src/one-side/${screenPath}"],
+  mobile: <main>${side} content</main>, desktop: <main>${side} content</main>
 })\n];`,
     );
 }

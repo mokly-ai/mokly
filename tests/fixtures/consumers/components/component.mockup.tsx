@@ -8,7 +8,7 @@ function Body({ children }: { children: ReactNode }) {
 }
 const action = defineComponent({
   ...metadata,
-  id: "packed-action",
+  path: "packed-action",
   title: "Packed action",
   description: "A registered consumer component.",
   propSchema: {
@@ -28,12 +28,14 @@ const action = defineComponent({
   ),
   variants: [
     {
-      id: "packed-action-default",
+      slug: "default",
+
       title: "Default",
       props: { label: "Continue" },
     },
     {
-      id: "packed-action-disabled",
+      slug: "disabled",
+
       title: "Disabled",
       props: { label: "Continue", disabled: true },
     },
@@ -41,7 +43,7 @@ const action = defineComponent({
 });
 const panel = defineComponent({
   ...metadata,
-  id: "packed-panel",
+  path: "packed-panel",
   title: "Packed panel",
   description: "Nested components and a caller-owned slot.",
   propSchema: { kind: "object", properties: {} },
@@ -54,18 +56,20 @@ const panel = defineComponent({
   ),
   variants: [
     {
-      id: "packed-panel-default",
+      slug: "default",
+
       title: "Default",
       props: { children: <p>Saved slot</p> },
     },
   ],
 });
 export const mockups = [
-  action.entries,
-  panel.entries,
+  ...action.entries,
+  ...panel.entries,
   defineScreen({
+    slug: "packed-components",
     ...metadata,
-    id: "packed-components",
+    path: "packed-components",
     title: "Component consumer",
     description: "Repeated and nested component use.",
     mobile: (

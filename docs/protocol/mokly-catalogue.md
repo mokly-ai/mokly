@@ -6,11 +6,6 @@ Optional per-view/page `resourceEvidence` and root usage ranges are implemented 
 Read model v4 changes in place. `ResourceEvidence` follows the
 [CSS evidence schema](./mokly-css-attribution-membership.md).
 
-Serve, export, repository preview, and the viewer share complete read model v4;
-live pages separately embed an entry-scoped shell projection. The private
-manifest rejects current/removed id collisions. [Removed previews](./mokly-removed-previews.md)
-carry identity only and derive every route and view path from kind and id.
-
 ## Location And Types
 
 Export writes `__mokly/catalogue.json` at the artifact root. Serve exposes
@@ -44,29 +39,45 @@ interface CatalogueReadModel {
   revision: { content: number; evidence: number };
   changesStatus: ChangesStatus;
   comparisonUrl: PublicPath | null;
-  tree: {
-    pages: readonly CatalogueNode[];
-    components: readonly CatalogueNode[];
-  };
+  tree: readonly CatalogueNode[];
+  treeOrder?: readonly string[];
   screens: readonly CatalogueScreen[];
   pages: readonly CataloguePage[];
+  documents: readonly CatalogueDocument[];
   useCases: readonly CatalogueUseCase[];
   components: readonly (CatalogueComponent | CatalogueComponentVariant)[];
   removedEntries: readonly {
     entry: CatalogueRecord;
+    folderTitles: readonly string[];
+    parentTitle?: string; // Required exactly on removed variants.
     snapshotId?: string;
-    preview?: { kind: "screen" } | { kind: "page" };
+    preview?: { kind: "screen" } | { kind: "page" } | { kind: "document" };
   }[];
 }
 type CatalogueRecord =
   | CatalogueScreen
   | CataloguePage
+  | CatalogueDocument
   | CatalogueUseCase
   | CatalogueComponent
   | CatalogueComponentVariant;
 type CatalogueNode =
-  | { kind: "folder"; label: string; children: readonly CatalogueNode[] }
-  | { kind: "entry"; id: string; children?: readonly CatalogueNode[] };
+  | {
+      kind: "folder";
+      path: string;
+      title: string;
+      index?: string;
+      hidden?: true;
+      order?: readonly string[];
+      children: readonly CatalogueNode[];
+    }
+  | {
+      kind: "entry";
+      path: string;
+      hidden?: true;
+      order?: readonly string[];
+      children?: readonly CatalogueNode[];
+    };
 type CatalogueChanges =
   | { status: "ready"; kind: ChangeKind; included: boolean }
   | { status: Exclude<ChangesStatus, "ready"> };
@@ -80,10 +91,10 @@ interface CatalogueDetails {
   sourcePath: string;
 }
 interface CatalogueEntry {
-  id: string;
+  path: string;
+  previousPath?: string;
   title: string;
   tags: readonly string[];
-  navPath: readonly string[];
   details: CatalogueDetails;
   changes: CatalogueChanges;
 }
@@ -105,18 +116,26 @@ interface CatalogueView {
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
   address?: string;
-  variantOf?: string; // Present exactly on variant screens.
+  variantOf?: string; // Present exactly on variant screens; the parent path.
   colorSchemes: readonly ColorScheme[];
   views: readonly CatalogueView[];
-  useCaseIds: readonly string[];
+  useCasePaths: readonly string[];
 }
 interface CataloguePage extends CatalogueEntry {
   kind: "page";
   resourceEvidence?: ResourceEvidence;
 }
+interface CatalogueDocument extends CatalogueEntry {
+  kind: "document";
+  colorSchemes: readonly ColorScheme[];
+}
 interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";
-  steps: readonly { screenId: string; title?: string; description?: string }[];
+  steps: readonly {
+    screenPath: string;
+    title?: string;
+    description?: string;
+  }[];
 }
 interface CatalogueComponent extends CatalogueEntry {
   kind: "component";
@@ -127,7 +146,7 @@ interface CatalogueComponent extends CatalogueEntry {
 }
 interface CatalogueComponentVariant extends CatalogueEntry {
   kind: "component";
-  variantOf: string; // Present exactly on variant entries.
+  variantOf: string; // Present exactly on variant entries; the parent path.
   colorSchemes: readonly ColorScheme[];
   props: ComponentWireProps;
   suppliedSlots: readonly string[];
@@ -136,17 +155,18 @@ interface CatalogueComponentVariant extends CatalogueEntry {
 }
 ```
 
-Entry and view identities carry no route or file path; resource evidence names
+No entry record carries a derived route or file name. Resource evidence names
 only rendered-resource paths. A reader uses the
-[artifact path contract](./mokly-artifact-paths.md): a current screen or
-component variant view is served at `static/<view route>`, a current page at
-`static/<route>`, and the shell at `/view/<route>`. Removed entries have
-no current files; their historical documents come only from their `preview`
-descriptor. `PublicPath` is an artifact-root-relative POSIX file path, without
-a leading slash, origin, query or hash; resolve it against the source's origin
-root, not the JSON directory or host app URL. Encode validated path segments
-once for a request. A component parent has no views; its page shows its first
-variant entry, which follows it in the `components` array.
+[artifact path contract](./mokly-artifact-paths.md): a current view is served
+at `static/<view route>`, a current page or document at
+`static/<document route>`, and the shell at `/view/<path>/`. Removed entries
+have no current files; their historical documents come only from their
+`preview` descriptor. `PublicPath` is an artifact-root-relative POSIX file path,
+without a leading slash, origin, query or hash; resolve it against the source's
+origin root, not the JSON directory or host app URL. A current component parent
+has no views; its page shows its first current variant. `previousPath` is
+present exactly on entries the
+[move contract](./mokly-moves.md) paired with a baseline entry.
 
 `identity.id` is lowercase SHA-256 of UTF-8 JSON, without LF, for
 `["mokly-catalogue-v1", repoRelativeConfigPath]`, scoped to the source origin.
@@ -154,17 +174,24 @@ variant entry, which follows it in the `components` array.
 model `schemaVersion`; changing it would change published catalogue ids.
 `identity.title` is `Mokly`; host slots own branding. No account data is inferred.
 
+## Tree
+
+The [catalogue tree contract](./mokly-catalogue-tree.md) defines `tree`, its
+folder and entry nodes, hidden folders, and how `order` and `treeOrder` order
+the children each section shows.
+
 ## Projection And Privacy
 
-The [projection and privacy rules](./mokly-catalogue-delivery.md#projection-and-privacy)
-define the allowlist, repository-relative metadata and private fields.
+The [projection contract](./mokly-catalogue-delivery.md#projection-and-privacy)
+owns the allowlist, evidence, source metadata and removed-entry rules.
 
 ## Serialization, Identity And Versions
 
-The [serialization contract](./mokly-catalogue-delivery.md#serialization-identity-and-versions)
-defines canonical bytes, identity, version admission and the public fixture.
+The [serialization contract](./mokly-catalogue-serialization.md) defines canonical
+bytes, historical snapshot identities, deployment identity and reader versions.
 
-## Serve And Fetch Rules
+## Serving The Read Model
 
-The [delivery contract](./mokly-catalogue-delivery.md#serve-and-fetch-rules)
-defines atomic live revisions and validated reader behavior.
+Serve headers, revisions, comparison pointers, public paths, and the fetch
+rules for cross-origin artifact hosts live in the
+[catalogue fetch contract](./mokly-catalogue-fetch.md).

@@ -44,7 +44,7 @@ export function earlierV8Manifest(
     entries: manifest.entries.map((entry) =>
       entry.kind === "component" &&
       "variantOf" in entry &&
-      entry.id === "action-default"
+      entry.path === "action/default"
         ? { ...entry, componentViews: entry.componentViews.map(alter) }
         : entry,
     ),
@@ -77,7 +77,7 @@ export async function currentBaselineFixture(
     await fs.writeFile(canonical, JSON.stringify(manifest));
     if ("shape" in baseline && baseline.shape === "missing root") {
       const entry = compilation.manifest.entries.find(
-        (entry) => entry.id === "action-default",
+        (entry) => entry.path === "action/default",
       )!;
       for (const view of generatedViews(entry)) {
         const content = compilation.outputs.get(view.path);

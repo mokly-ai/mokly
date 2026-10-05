@@ -13,14 +13,14 @@ import { createFixture, removeFixture } from "./fixture.js";
 
 export const membershipSource = `import React from "react";
 import { defineComponent, defineScreen } from "@mokly/mokly";
-const action = defineComponent({ id: "action", title: "Action", description: "Action", relatedDocs: [],
+const action = defineComponent({ path: "action", title: "Action", description: "Action", relatedDocs: [],
   propSchema: { kind: "object", properties: {} }, render: () => <button className="action">Continue</button>,
-  variants: [{ id: "action-default", title: "Default", props: {} }] });
-const toolbar = defineComponent({ id: "toolbar", title: "Toolbar", description: "Toolbar", relatedDocs: [],
+  variants: [{ slug: "default", title: "Default", props: {} }] });
+const toolbar = defineComponent({ path: "toolbar", title: "Toolbar", description: "Toolbar", relatedDocs: [],
   propSchema: { kind: "object", properties: {} }, render: () => <div className="toolbar"><action.Component /></div>,
-  variants: [{ id: "toolbar-default", title: "Default", props: {} }] });
-export const mockups = [action.entries, toolbar.entries,
-  defineScreen({ id: "checkout", title: "Checkout", description: "Checkout", relatedDocs: [],
+  variants: [{ slug: "default", title: "Default", props: {} }] });
+export const mockups = [...action.entries, ...toolbar.entries,
+  defineScreen({ path: "checkout", title: "Checkout", description: "Checkout", relatedDocs: [],
     mobile: <main className="checkout"><h1 className="heading">Checkout</h1><toolbar.Component /></main>,
     desktop: <main className="checkout"><h1 className="heading">Checkout</h1><toolbar.Component /></main> })];`;
 
@@ -45,11 +45,11 @@ export async function cssMembershipFixture(
       source = source
         .replace(
           "export const mockups",
-          `const skin = defineComponent({id:"skin",title:"Skin",description:"Skin",relatedDocs:[],stylesheets:["entry.css"],propSchema:{kind:"object",properties:{}},render:()=>null,variants:[{id:"skin-default",title:"Default",props:{}}]});\nexport const mockups`,
+          `const skin = defineComponent({path:"skin",title:"Skin",description:"Skin",relatedDocs:[],stylesheets:["entry.css"],propSchema:{kind:"object",properties:{}},render:()=>null,variants:[{slug:"default",title:"Default",props:{}}]});\nexport const mockups`,
         )
         .replace(
-          "[action.entries, toolbar.entries,",
-          "[action.entries, toolbar.entries, skin.entries,",
+          "[...action.entries, ...toolbar.entries,",
+          "[...action.entries, ...toolbar.entries, ...skin.entries,",
         )
         .replaceAll(
           '<main className="checkout">',
@@ -57,8 +57,8 @@ export async function cssMembershipFixture(
         );
     else
       source = source.replace(
-        'id: "action",',
-        'id: "action", stylesheets: ["entry.css"],',
+        'path: "action",',
+        'path: "action", stylesheets: ["entry.css"],',
       );
   }
   if (delivery === "javascript") source = 'import "./rule.css";\n' + source;
@@ -67,7 +67,7 @@ export async function cssMembershipFixture(
       (options.extraConfig ?? "") +
       (options.renderer ? 'renderer: "renderer.tsx",' : "") +
       (delivery === "configured"
-        ? `stylesheets: [{ match: "${options.screenStylesOnly ? "screens/**" : "**"}", stylesheets: ["rule.css"] }],`
+        ? `stylesheets: [{ match: "${options.screenStylesOnly ? "checkout/**" : "**"}", stylesheets: ["rule.css"] }],`
         : "stylesheets: [],"),
   });
   t.after(() => removeFixture(fixture));
@@ -82,7 +82,7 @@ export async function cssMembershipFixture(
     await fs.writeFile(path.join(fixture.entriesDir, "shared.tsx"), shared);
     await fs.writeFile(
       path.join(fixture.entriesDir, "components.mockup.tsx"),
-      'import { action, toolbar } from "./shared.js"; export const mockups = [action.entries, toolbar.entries];',
+      'import { action, toolbar } from "./shared.js"; export const mockups = [...action.entries, ...toolbar.entries];',
     );
     await fs.writeFile(
       fixture.entryPath,
@@ -90,7 +90,7 @@ export async function cssMembershipFixture(
         'import React from "react"; import {defineScreen} from "@mokly/mokly"; import { toolbar } from "./shared.js";\n' +
         source
           .slice(boundary)
-          .replace("[action.entries, toolbar.entries,", "["),
+          .replace("[...action.entries, ...toolbar.entries,", "["),
     );
   }
   if (options.renderer)
@@ -143,10 +143,10 @@ export async function cssMembershipFixture(
   return { fixture, config, before, after, input, result };
 }
 
-export function changedIds(
+export function changedEntries(
   result: Awaited<ReturnType<typeof cssMembershipFixture>>["result"],
 ) {
   return result.changes
-    .map((entry) => (entry.after ?? entry.before)!.id)
+    .map((entry) => (entry.after ?? entry.before)!.path)
     .sort();
 }

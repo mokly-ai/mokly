@@ -18,7 +18,7 @@ test("whole-document page evidence shares component facts across live and export
     membershipSource +
     `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({id:"guide", title:"Guide", description:"Guide", relatedDocs:[], render: () => '<html><head><link rel="stylesheet" href="../rule.css"></head><body><b class="action">Guide action</b></body></html>'}));`;
+mockups.push(definePage({path:"guide", title:"Guide", description:"Guide", relatedDocs:[], render: () => '<html><head><link rel="stylesheet" href="../rule.css"></head><body><b class="action">Guide action</b></body></html>'}));`;
   const fixture = await changedFixture(
     t,
     source,
@@ -47,16 +47,20 @@ mockups.push(definePage({id:"guide", title:"Guide", description:"Guide", related
     git,
     commit,
   );
-  assert.deepEqual(evidence.changedIds, ["action", "action-default", "guide"]);
-  const page = evidence.pageEvidence?.find((entry) => entry.id === "guide");
+  assert.deepEqual(evidence.changedEntries, [
+    "action",
+    "action/default",
+    "guide",
+  ]);
+  const page = evidence.pageEvidence?.find((entry) => entry.path === "guide");
   assert.ok(page?.reasons?.length);
-  assert.deepEqual(page.reasons[0]!.analysis!.rules[0]!.changedComponentIds, [
+  assert.deepEqual(page.reasons[0]!.analysis!.rules[0]!.changedComponentPaths, [
     "action",
   ]);
   assert.deepEqual(page.reasons[0]!.analysis!.pageEvidence, {
     selectors: [".action"],
   });
-  assert.ok(!evidence.result!.screens.some((entry) => entry.id === "guide"));
+  assert.ok(!evidence.result!.screens.some((entry) => entry.path === "guide"));
   const output = path.join(fixture.root, "site");
   await exportCatalogue(fixture.config, { outDir: output, base: "HEAD" });
   const catalogue = readCatalogue(

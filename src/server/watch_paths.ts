@@ -8,11 +8,11 @@ import {
   packageOwnedPath,
 } from "../build/package_owned_paths.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
-import { globStablePrefix } from "../config/entry_globs.js";
 import { logicalRepositoryPath } from "../config/file_locations.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import { isDeniedSourceSegment } from "../config/private_directories.js";
-import type { ResolvedConfig } from "../config/types.js";
+import { isFolderExcluded } from "../config/root_membership.js";
+import type { ResolvedConfig, ResolvedRoot } from "../config/types.js";
 import { isExportIgnoredPath } from "../export/ignored.js";
 
 import type { WatchDirectoryStatus } from "./watch_events.js";
@@ -21,17 +21,11 @@ import { RequiredWatchIndex } from "./watch_index.js";
 const requiredIndexes = new WeakMap<ResolvedConfig, RequiredWatchIndex>();
 const globRootIndexes = new WeakMap<ResolvedConfig, readonly string[]>();
 
-/** Stable prefixes of every entry glob, watched so new entry modules are found. */
+/** Configured roots, watched so new entry modules and folder records are found. */
 function entryGlobRoots(config: ResolvedConfig): string[] {
   const existing = globRootIndexes.get(config);
   if (existing) return [...existing];
-  const roots = [
-    ...new Set(
-      config.entryGlobs.map((glob) =>
-        path.resolve(config.repoRoot, globStablePrefix(glob)),
-      ),
-    ),
-  ];
+  const roots = [...new Set(config.roots.map((root) => root.dir))];
   globRootIndexes.set(config, roots);
   return roots;
 }
@@ -41,11 +35,19 @@ export function isEntryGlobCandidate(
   absolute: string,
   config: ResolvedConfig,
   directory: WatchDirectoryStatus = "unknown",
+  options: { includeExcluded?: boolean } = {},
 ): boolean {
   if (!isInside(config.repoRoot, absolute)) return false;
-  const relative = toPosixPath(path.relative(config.repoRoot, absolute));
-  const matchingGlobs = config.entryGlobs.filter((glob) =>
-    minimatch(relative, glob, { dot: true }),
+  const matchingGlobs = config.roots.filter(
+    (root) =>
+      isInside(root.dir, absolute) &&
+      (path.basename(absolute) === "_folder.json" ||
+        root.files.some((glob) =>
+          minimatch(toPosixPath(path.relative(root.dir, absolute)), glob, {
+            dot: true,
+          }),
+        )) &&
+      (options.includeExcluded || !isFolderExcluded(absolute, root, config)),
   );
   if (
     matchingGlobs.length === 0 ||
@@ -55,9 +57,7 @@ export function isEntryGlobCandidate(
   const relativeRoot =
     deepestContainingRoot(
       absolute,
-      matchingGlobs.map((glob) =>
-        path.resolve(config.repoRoot, globStablePrefix(glob)),
-      ),
+      matchingGlobs.map((root) => root.dir),
     ) ?? config.repoRoot;
   const owned = packageOwnedPath(
     absolute,
@@ -225,7 +225,7 @@ function deepestContainingRoot(
  */
 function isDiscoveryDeniedEntryPath(
   candidate: string,
-  matchingGlobs: readonly string[],
+  matchingGlobs: readonly ResolvedRoot[],
   config: ResolvedConfig,
   directory: WatchDirectoryStatus,
 ): boolean {
@@ -233,9 +233,7 @@ function isDiscoveryDeniedEntryPath(
   if (isInside(config.review.outDir, candidate)) return true;
   const globRoot = deepestContainingRoot(
     candidate,
-    matchingGlobs.map((glob) =>
-      path.resolve(config.repoRoot, globStablePrefix(glob)),
-    ),
+    matchingGlobs.map((root) => root.dir),
   );
   const relativeRoot = globRoot ?? config.repoRoot;
   const lexicalSegments = denialSegments(relativeRoot, candidate);

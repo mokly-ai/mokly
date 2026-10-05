@@ -28,9 +28,8 @@ test.beforeAll(async () => {
 import { defineScreen } from "@mokly/mokly";
 import classes from "./theme.module.css";
 export const mockups = [defineScreen({
-  id: "home", title: "Home", description: "Imported CSS comparison",
-  relatedDocs: [], navPath: ["Fixture"],
-  mobile: <main><button className={classes.auth}>Sign in</button></main>,
+  path: "home", title: "Home", description: "Imported CSS comparison",
+  relatedDocs: [], mobile: <main><button className={classes.auth}>Sign in</button></main>,
   desktop: <main><button className={classes.auth}>Sign in</button></main>
 })];`);
   const source = path.join(fixture.entriesDir, "theme.module.css");
@@ -95,8 +94,8 @@ async function expectStyledPanes(page: Page): Promise<void> {
 }
 
 for (const [host, address] of [
-  ["Serve", () => `${live.url}/view/screens/home.html`],
-  ["static export", () => `${staticSite.url}/view/screens/home.html`],
+  ["Serve", () => `${live.url}/view/home/`],
+  ["static export", () => `${staticSite.url}/view/home/`],
 ] as const)
   test(`${host} comparison panes retain CSS Modules and url assets`, async ({
     page,

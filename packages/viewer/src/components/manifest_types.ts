@@ -51,7 +51,7 @@ export interface InsertedComponentStylesheet {
   startOffset: number;
   endOffset: number;
   path: string;
-  componentIds: readonly string[];
+  componentPaths: readonly string[];
 }
 export interface ComponentViewRecord {
   viewport: "mobile" | "desktop";

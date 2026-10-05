@@ -15,11 +15,9 @@ import {
   visibleWorkspaceViews,
 } from "../src/shell/workspace_views.js";
 
-import {
-  catalogue,
-  source,
-  sourceVariant,
-} from "./component_workspace_fixture.js";
+import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
+
+const { catalogue, source, sourceVariant } = componentWorkspaceFixture();
 
 test("workspace view selection uses exact contexts and light fallback", () => {
   const data = {
@@ -29,36 +27,42 @@ test("workspace view selection uses exact contexts and light fallback", () => {
         viewport: "mobile",
         colorScheme: "light",
         path: "mobile-light.html",
-        variantId: "action-default",
+        variantPath: "components/action/default",
       },
       {
         viewport: "mobile",
         colorScheme: "dark",
         path: "mobile-dark.html",
-        variantId: "action-default",
+        variantPath: "components/action/default",
       },
       {
         viewport: "desktop",
         colorScheme: "light",
         path: "desktop-light.html",
-        variantId: "action-default",
+        variantPath: "components/action/default",
       },
     ],
   } satisfies WorkspaceData;
   assert.deepEqual(
-    visibleWorkspaceViews(data, "action-default", "both", "dark").map(
-      (view) => view.path,
-    ),
+    visibleWorkspaceViews(
+      data,
+      "components/action/default",
+      "both",
+      "dark",
+    ).map((view) => view.path),
     ["mobile-dark.html", "desktop-light.html"],
   );
   assert.deepEqual(
-    visibleWorkspaceViews(data, "action-default", "desktop", "light").map(
-      (view) => view.path,
-    ),
+    visibleWorkspaceViews(
+      data,
+      "components/action/default",
+      "desktop",
+      "light",
+    ).map((view) => view.path),
     ["desktop-light.html"],
   );
   assert.deepEqual(
-    resolveWorkspaceViews(data, "action-default", "both", "dark"),
+    resolveWorkspaceViews(data, "components/action/default", "both", "dark"),
     {
       colorScheme: "dark",
       views: [data.views[1], data.views[2]],
@@ -69,14 +73,19 @@ test("workspace view selection uses exact contexts and light fallback", () => {
     views: data.views.filter(({ colorScheme }) => colorScheme === "light"),
   } satisfies WorkspaceData;
   assert.deepEqual(
-    resolveWorkspaceViews(lightOnly, "action-default", "both", "dark"),
+    resolveWorkspaceViews(
+      lightOnly,
+      "components/action/default",
+      "both",
+      "dark",
+    ),
     {
       colorScheme: "light",
       views: lightOnly.views,
     },
   );
   const variant = data.variants.find(
-    ({ value }) => value.id === "action-default",
+    ({ value }) => value.path === "components/action/default",
   );
   assert.ok(variant);
   const mixedEvidence = {
@@ -85,7 +94,7 @@ test("workspace view selection uses exact contexts and light fallback", () => {
     comparisonEligible: true,
     views: data.views.filter(({ colorScheme }) => colorScheme === "light"),
     viewStates: {
-      "action-default": [
+      "components/action/default": [
         {
           viewport: "mobile" as const,
           colorScheme: "light" as const,
@@ -143,7 +152,9 @@ test("workspace view selection uses exact contexts and light fallback", () => {
       {
         ...mixedEvidence,
         viewStates: {
-          "action-default": [mixedEvidence.viewStates["action-default"][0]!],
+          "components/action/default": [
+            mixedEvidence.viewStates["components/action/default"][0]!,
+          ],
         },
       },
       { variant, comparisonEligible: true },
@@ -190,6 +201,6 @@ test("control availability and usage URLs explain the active product state", () 
       removed: true,
       comparisonEligible: true,
     }),
-    `/view/screens/home.html?viewport=mobile&scheme=dark&instance=${"a".repeat(64)}&comparison=side`,
+    `/view/home/?viewport=mobile&scheme=dark&instance=${"a".repeat(64)}&comparison=side`,
   );
 });

@@ -51,7 +51,7 @@ export default (input) => '<html><head></head><body><main class="frame">' + rend
           !view.usage!.instances.some(
             (instance) =>
               instance.componentId === "action" &&
-              entry.id.startsWith("action-"),
+              entry.path.startsWith("action/"),
           ),
         );
         for (const range of ranges.filter(
@@ -65,7 +65,7 @@ export default (input) => '<html><head></head><body><main class="frame">' + rend
 test("root-only Review-ignore remains valid and does not create an instance", async (t) => {
   const fixture = await createFixture(
     componentEntrySource({
-      exports: "action.entries,",
+      exports: "...action.entries,",
       body: '<action.Component label="Go" />',
     }),
     {
@@ -80,7 +80,7 @@ export default (input) => '<html><head></head><body>' + (input.entry.kind === 'c
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   const view = generatedViews(
-    result.manifest.entries.find((entry) => entry.id === "action-default")!,
+    result.manifest.entries.find((entry) => entry.path === "action/default")!,
   )[0]!;
   assert.deepEqual(
     view.usage!.ranges.map((range) => range.target),

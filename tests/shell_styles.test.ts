@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 
-import { flatCss } from "./shell_fixture.js";
+import { flatCss } from "./helpers/shell_assertions.js";
 
 test("shell stylesheet stays aligned with the design contract", () => {
   assert.match(SHELL_CSS, /--_mokly-private-accent-default: #4f7864/);
@@ -43,10 +43,10 @@ test("shell stylesheet stays aligned with the design contract", () => {
 
   assert.match(SHELL_CSS, /prefers-reduced-motion/);
   assert.match(SHELL_CSS, /InterVariable\.woff2/);
-  assert.match(SHELL_CSS, /\.mbk-idchip \{[\s\S]*cursor: pointer;/);
+  assert.match(SHELL_CSS, /\.mbk-pathchip \{[\s\S]*cursor: pointer;/);
   assert.match(
     SHELL_CSS,
-    /\.mbk-idchip:active \{[\s\S]*transform: translateY\(1px\);/,
+    /\.mbk-pathchip:active \{[\s\S]*transform: translateY\(1px\);/,
   );
 });
 

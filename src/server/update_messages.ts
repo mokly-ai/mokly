@@ -1,4 +1,4 @@
-import { isEntryId } from "@mokly/viewer/data";
+import { isEntryPath } from "@mokly/viewer/data";
 import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { isBuildWarning, type BuildWarning } from "../build/warnings.js";
@@ -26,7 +26,7 @@ export interface CatalogueUpdate {
   /** Omit to retain status unless the update replaces change evidence. */
   changesStatus?: ChangesStatus;
   /** Omit to retain state, use `null` when changed-id detection is unavailable. */
-  changedIds?: readonly string[] | null;
+  changedEntries?: readonly string[] | null;
   /** Omit to retain evidence, use `null` while fresh classification is unavailable. */
   componentChanges?: ComponentChangeSnapshot | null;
   /** Omit to allocate the next monotonically increasing update version. */
@@ -39,7 +39,7 @@ export interface ChildUpdateMessage {
   baselineCommit?: string | null;
   kind?: CatalogueUpdateKind;
   changesStatus?: ChangesStatus;
-  changedIds: readonly string[] | null;
+  changedEntries: readonly string[] | null;
   componentChanges: ComponentChangeSnapshot | null;
   type: "update";
   version: number;
@@ -132,7 +132,7 @@ export type ChildCommand =
 /** Create an immutable IPC update payload from the latest identity computation. */
 export function childUpdateMessage(
   version: number,
-  changedIds: readonly string[] | undefined,
+  changedEntries: readonly string[] | undefined,
   componentChanges?: ComponentChangeSnapshot,
   changesStatus?: ChangesStatus,
   kind?: CatalogueUpdateKind,
@@ -142,7 +142,7 @@ export function childUpdateMessage(
     ...(baselineCommit !== undefined ? { baselineCommit } : {}),
     ...(kind ? { kind } : {}),
     ...(changesStatus ? { changesStatus } : {}),
-    changedIds: changedIds ? [...changedIds] : null,
+    changedEntries: changedEntries ? [...changedEntries] : null,
     componentChanges: componentChanges ?? null,
     type: "update",
     version,
@@ -164,7 +164,7 @@ export function parseChildUpdateMessage(
     baselineCommit?: unknown;
     kind?: unknown;
     changesStatus?: unknown;
-    changedIds?: unknown;
+    changedEntries?: unknown;
     componentChanges?: unknown;
     version?: unknown;
   };
@@ -175,7 +175,7 @@ export function parseChildUpdateMessage(
         !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(candidate.baselineCommit))) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||
-    !isChangedIds(candidate.changedIds) ||
+    !isChangedPaths(candidate.changedEntries) ||
     !isComponentChanges(candidate.componentChanges) ||
     (candidate.kind !== undefined &&
       candidate.kind !== "content" &&
@@ -193,7 +193,7 @@ export function parseChildUpdateMessage(
     ...(candidate.changesStatus
       ? { changesStatus: candidate.changesStatus }
       : {}),
-    changedIds: candidate.changedIds,
+    changedEntries: candidate.changedEntries,
     componentChanges: candidate.componentChanges,
     type: "update",
     version: candidate.version as number,
@@ -217,23 +217,24 @@ function isComponentChanges(
     return false;
   const snapshot = value as {
     baseline?: unknown;
-    changedIds?: unknown;
+    changedEntries?: unknown;
     result?: unknown;
   };
   return (
     typeof snapshot.baseline === "object" &&
     snapshot.baseline !== null &&
-    (snapshot.changedIds === undefined ||
-      (isChangedIds(snapshot.changedIds) && snapshot.changedIds !== null)) &&
+    (snapshot.changedEntries === undefined ||
+      (isChangedPaths(snapshot.changedEntries) &&
+        snapshot.changedEntries !== null)) &&
     (snapshot.result === undefined ||
       (typeof snapshot.result === "object" && snapshot.result !== null))
   );
 }
 
-function isChangedIds(value: unknown): value is readonly string[] | null {
+function isChangedPaths(value: unknown): value is readonly string[] | null {
   return (
     value === null ||
     (Array.isArray(value) &&
-      value.every((id) => typeof id === "string" && isEntryId(id)))
+      value.every((id) => typeof id === "string" && isEntryPath(id)))
   );
 }

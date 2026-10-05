@@ -25,23 +25,23 @@ function evidenceEntrySource(components: boolean, home: string): string {
 import { defineComponent, defineScreen } from "@mokly/mokly";
 const metadata = { relatedDocs: [] };
 const badge = defineComponent({ ...metadata,
-  id: "badge", title: "Badge", description: "A shared badge", route: "components/badge.html", navPath: ["Fixture"],
+  path: "badge", title: "Badge", description: "A shared badge",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <span className="badge">{props.label}</span>,
-  variants: [{ id: "badge-default", title: "Default", props: { label: "New" } }]
+  variants: [{ slug: "default", title: "Default", props: { label: "New" } }]
 });
 export const mockups = [
-  ${components ? "badge.entries," : ""}
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "home", title: "Home", description: "Home screen", route: "screens/home.html",
+  ${components ? "...badge.entries," : ""}
+  defineScreen({ ...metadata, path: "home", title: "Home", description: "Home screen",
     mobile: <main id="home"><button className="auth">${home}</button></main>,
     desktop: <main id="home"><button className="auth">${home}</button></main> }),
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "details", title: "Details", description: "Detail screen", route: "screens/details.html",
+  defineScreen({ ...metadata, path: "details", title: "Details", description: "Detail screen",
     mobile: <main id="details"><p className="guide">Guide</p></main>,
     desktop: <main id="details"><p className="guide">Guide</p></main> })${
       components
         ? ""
         : `,
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "compact", title: "Compact", description: "Compact screen", route: "screens/compact.html",
+  defineScreen({ ...metadata, path: "compact", title: "Compact", description: "Compact screen",
     mobile: <main id="compact"><button className="auth">Sign in</button></main>,
     desktop: <main id="compact"><p className="note">Sign in on mobile</p></main> })`
     }

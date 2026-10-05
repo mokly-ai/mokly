@@ -40,13 +40,10 @@ test("a marker from a separately bundled config places links and retains its sin
   assert.equal(config.stylesheets[0]!.componentPosition, 1);
   assert.doesNotThrow(() => structuredClone(config));
   const { manifest, outputs } = await compileCatalogue(config);
-  const screen = manifest.entries.find((entry) => entry.id === "home")!;
+  const screen = manifest.entries.find((entry) => entry.path === "home")!;
   assert.equal(screen.kind, "screen");
   if (screen.kind !== "screen") return;
-  const html = textOutput(
-    outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
-  )!;
+  const html = textOutput(outputs, viewRoute(screen.path, "mobile", "light"))!;
   assert.deepEqual(
     [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(
       (match) => match[1],
@@ -68,14 +65,14 @@ test("realpath aliases deduplicate declarations and reuse configured links", asy
   );
   const deduplicated = await compileCatalogue(await loadConfig(fixture.root));
   const first = deduplicated.manifest.entries.find(
-    (entry) => entry.id === "home",
+    (entry) => entry.path === "home",
   );
   assert.ok(first?.kind === "screen");
   assert.equal(
     (
       textOutput(
         deduplicated.outputs,
-        viewRoute(first.kind, first.id, "mobile", "light"),
+        viewRoute(first.path, "mobile", "light"),
       )!.match(/href="\.\.\/action\.css"/g) ?? []
     ).length,
     1,
@@ -89,13 +86,13 @@ test("realpath aliases deduplicate declarations and reuse configured links", asy
     ),
   );
   const reused = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = reused.manifest.entries.find((entry) => entry.id === "home");
+  const screen = reused.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   assert.equal(
     (
       textOutput(
         reused.outputs,
-        viewRoute(screen.kind, screen.id, "mobile", "light"),
+        viewRoute(screen.path, "mobile", "light"),
       )!.match(/href="\.\.\/alias\.css"/g) ?? []
     ).length,
     1,
@@ -120,12 +117,12 @@ test("renderer CSS aliases are ignored and declarations retain inserted provenan
     `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{path: "alias.css", componentIds: ["action"]}] });`,
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  const screen = result.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   assert.deepEqual(
     screen.componentViews![0]!.insertedStylesheets!.find(
       (resource) => resource.path === "action.css",
-    )?.componentIds,
+    )?.componentPaths,
     ["action"],
   );
   assert.ok(

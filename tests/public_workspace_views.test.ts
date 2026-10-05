@@ -31,35 +31,35 @@ test("public workspace keeps each saved variant's changed views", () => {
     revision: { content: 0, evidence: 1 },
   });
   const catalogue = viewerCatalogue(model);
-  const entry = catalogue.byId.get(component.id);
+  const entry = catalogue.byPath.get(component.path);
   assert.equal(entry?.kind, "component");
   assert.ok(entry?.kind === "component" && !("variantOf" in entry));
   if (entry?.kind !== "component" || "variantOf" in entry)
     throw new Error("Missing component parent");
 
   const data = workspaceData(catalogue, { base: "", updateVersion: 1 }, entry);
-  assert.deepEqual(data.changedViews["badge-default"], []);
-  assert.deepEqual(data.changedViews["badge-second"], [
+  assert.deepEqual(data.changedViews["badge/default"], []);
+  assert.deepEqual(data.changedViews["badge/second"], [
     { viewport: "mobile", colorScheme: "dark" },
     { viewport: "desktop", colorScheme: "dark" },
   ]);
-  assert.deepEqual(data.changedViews["badge-removed"], [
+  assert.deepEqual(data.changedViews["badge/removed"], [
     { viewport: "mobile", colorScheme: "light" },
     { viewport: "mobile", colorScheme: "dark" },
     { viewport: "desktop", colorScheme: "light" },
     { viewport: "desktop", colorScheme: "dark" },
   ]);
   assert.ok(
-    data.viewStates["badge-default"]?.every(
+    data.viewStates["badge/default"]?.every(
       ({ state }) => state === "unchanged",
     ),
   );
   assert.deepEqual(
-    data.viewStates["badge-second"]?.map(({ state }) => state),
+    data.viewStates["badge/second"]?.map(({ state }) => state),
     ["unchanged", "changed", "unchanged", "changed"],
   );
   assert.ok(
-    data.viewStates["badge-removed"]?.every(({ state }) => state === "removed"),
+    data.viewStates["badge/removed"]?.every(({ state }) => state === "removed"),
   );
 });
 
@@ -67,18 +67,19 @@ test("public workspace derives a screen's ready per-view states", () => {
   const screen = {
     colorSchemes: ["light"] as const,
     description: "Welcome screen",
-    id: "welcome",
+    path: "welcome",
     kind: "screen" as const,
-    navPath: [],
+
     relatedDocs: [],
     sourcePath: "entries/welcome.mockup.tsx",
     title: "Welcome",
-    useCaseIds: [],
+    useCasePaths: [],
   };
   const manifest: ManifestV8 = {
     entries: [screen],
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: [screen.sourcePath],
   };
   const result: ReviewResultV5 = {
@@ -89,12 +90,12 @@ test("public workspace derives a screen's ready per-view states", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5,
+    schemaVersion: 5 as const,
     screens: [
       {
-        after: { id: screen.id, title: screen.title },
-        before: { id: screen.id, title: screen.title },
-        id: screen.id,
+        after: { path: screen.path, title: screen.title },
+        before: { path: screen.path, title: screen.title },
+        path: screen.path,
         state: "changed",
         title: screen.title,
         views: [
@@ -123,7 +124,7 @@ test("public workspace derives a screen's ready per-view states", () => {
     revision: { content: 0, evidence: 1 },
   });
   const catalogue = viewerCatalogue(model);
-  const entry = catalogue.byId.get(screen.id);
+  const entry = catalogue.byPath.get(screen.path);
   assert.equal(entry?.kind, "screen");
   assert.ok(entry?.kind === "screen");
 

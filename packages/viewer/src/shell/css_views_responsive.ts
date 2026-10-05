@@ -151,8 +151,11 @@ body[data-mokly-color-scheme="dark"]
     flex: 1;
   }
 
+  /* Stacked frames start at the top: centring a column taller than the
+     stage would push its first frame above the scroll origin. */
   .mbk-stage {
     flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
   }
 

@@ -62,7 +62,10 @@ test("validated shell bootstrap JSON retains its canonical bytes", () => {
   const display = viewerCatalogue(catalogue);
   const bootstrap = shellBootstrap(
     catalogue,
-    viewerView(display, { ...defaultSelection, screenId: "home" }),
+    viewerView(display, {
+      ...defaultSelection,
+      screenPath: "product/browse/home",
+    }),
     {
       base: "origin/main",
       comparisons: false,
@@ -80,7 +83,10 @@ test("external shell bootstrap retains only the shared catalogue identity", () =
   const display = viewerCatalogue(catalogue);
   const bootstrap = shellBootstrap(
     catalogue,
-    viewerView(display, { ...defaultSelection, screenId: "home" }),
+    viewerView(display, {
+      ...defaultSelection,
+      screenPath: "product/browse/home",
+    }),
     {
       base: "origin/main",
       comparisons: false,
@@ -121,14 +127,18 @@ test("historical hydration reconstructs the exact removed selection", () => {
       ...source,
       entry: {
         ...source.entry,
-        id: current.id,
+        path: current.path,
         title: "Archived guide",
       },
       snapshotId,
     },
   ];
   const display = viewerCatalogue(model);
-  const selection = { ...defaultSelection, screenId: current.id, snapshotId };
+  const selection = {
+    ...defaultSelection,
+    screenPath: current.path,
+    snapshotId,
+  };
   const bootstrap = shellBootstrap(model, viewerView(display, selection), {
     base: "origin/main",
     comparisons: true,
@@ -137,7 +147,7 @@ test("historical hydration reconstructs the exact removed selection", () => {
   });
 
   const props = shellBootstrapProps(bootstrap);
-  assert.equal(props.context.activeId, current.id);
+  assert.equal(props.context.activeId, current.path);
   assert.equal(props.context.snapshotId, snapshotId);
   assert.equal(props.view.kind, "target");
   assert.equal(

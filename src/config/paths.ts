@@ -63,23 +63,35 @@ export function isInside(root: string, candidate: string): boolean {
 
 /** Resolve existing symlinks while projecting a path that may not exist yet. */
 export function projectRealPath(candidate: string): string {
-  const missingParts: string[] = [];
-  let existing = candidate;
-  while (!lexicallyExists(existing)) {
-    const parent = path.dirname(existing);
-    if (parent === existing) return candidate;
-    missingParts.unshift(path.basename(existing));
-    existing = parent;
+  for (let attempt = 0; ; attempt++) {
+    const missingParts: string[] = [];
+    let existing = candidate;
+    let stats = existingStats(existing);
+    while (!stats) {
+      const parent = path.dirname(existing);
+      if (parent === existing) return candidate;
+      missingParts.unshift(path.basename(existing));
+      existing = parent;
+      stats = existingStats(existing);
+    }
+    try {
+      return path.resolve(fs.realpathSync.native(existing), ...missingParts);
+    } catch (error) {
+      if (
+        (error as NodeJS.ErrnoException).code !== "ENOENT" ||
+        stats.isSymbolicLink() ||
+        attempt >= 4
+      )
+        throw error;
+    }
   }
-  return path.resolve(fs.realpathSync.native(existing), ...missingParts);
 }
 
-function lexicallyExists(candidate: string): boolean {
+function existingStats(candidate: string): fs.Stats | undefined {
   try {
-    fs.lstatSync(candidate);
-    return true;
+    return fs.lstatSync(candidate);
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
     throw error;
   }
 }

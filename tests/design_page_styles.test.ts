@@ -18,9 +18,9 @@ import {
   navRows,
 } from "./helpers/design_rows.js";
 
-const PAGE_STYLES = "design-review-style-page";
-const PAGE_VIEW = "design-page-view";
-const ACTION_STYLES = "design-component-style-changed";
+const PAGE_STYLES = "design/changes/impact/styles/page";
+const PAGE_VIEW = "design/browse/pages/view";
+const ACTION_STYLES = "design/components/states/shared-impact/style-changed";
 const ACTION_VARIANTS = ["Default", "Disabled", "Secondary"];
 /** The handbook, Action and Action's three saved variants. */
 const CHANGES = "5";
@@ -42,15 +42,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
       viewport,
     );
     assert.equal(entry.title, "Document page styles");
-    assert.equal(entryRoute("screen", entry.id), `screens/${PAGE_STYLES}.html`);
+    assert.equal(entryRoute(entry.path), `${PAGE_STYLES}/index.html`);
     assert.deepEqual(entry.colorSchemes, ["light"]);
-    assert.deepEqual(entry.navPath, [
-      "Design",
-      "Mokly design",
-      "Changes",
-      "Impact states",
-      "Stylesheet evidence",
-    ]);
+    assert.equal(
+      entry.path.split("/").slice(0, -1).join("/"),
+      "design/changes/impact/styles",
+    );
     const [card, ...others] = byClass(document, "mbk-comparison-details");
     assert.ok(card, route);
     assert.equal(others.length, 0, route);
@@ -97,12 +94,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.equal(byClass(document, "mbk-compare").length, 0, route);
     assert.equal(headTitle(document), "Getting started");
     assert.deepEqual(headCrumbs(document), [
-      ["Catalogue home", "design-browse-home"],
+      ["Catalogue home", "design/browse/views/home"],
       ["Example", undefined],
     ]);
     assert.equal(
-      textContent(byClass(document, "mbk-idchip")[0]!),
-      "#example-handbook",
+      textContent(byClass(document, "mbk-pathchip")[0]!),
+      "example/getting-started",
     );
     const status = byClass(document, "ce-change-status");
     assert.deepEqual(status.map(textContent), ["Changed"]);
@@ -117,14 +114,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     assert.deepEqual(
       welcome.map((link) => attribute(link, "data-mokly-link")),
-      ["design-browse-screen"],
+      ["design/browse/views/screen"],
     );
   });
 }
 
 test("desktop: Changes lists the changed document beside Action and its saved variants", async () => {
   const { document } = await designDocument(PAGE_STYLES, "desktop");
-  assert.deepEqual(navRows(document, "pages"), [
+  assert.deepEqual(navRows(document, "specs"), [
     ["Example", false, undefined, undefined],
     ["Getting started", true, PAGE_STYLES, "page"],
   ]);
@@ -146,9 +143,9 @@ test("desktop: Changes lists the changed document beside Action and its saved va
 test("the page designs open the changed document from their Changes filter", async () => {
   for (const [id, viewport] of [
     [PAGE_VIEW, "desktop"],
-    ["design-page-details", "desktop"],
-    ["design-page-navigation", "desktop"],
-    ["design-page-navigation", "mobile"],
+    ["design/browse/pages/details", "desktop"],
+    ["design/browse/pages/navigation", "desktop"],
+    ["design/browse/pages/navigation", "mobile"],
   ] as const) {
     const { document } = await designDocument(id, viewport);
     assert.deepEqual(
@@ -162,7 +159,7 @@ test("the page designs open the changed document from their Changes filter", asy
       `${id}/${viewport}`,
     );
   }
-  for (const id of [PAGE_VIEW, "design-page-details"]) {
+  for (const id of [PAGE_VIEW, "design/browse/pages/details"]) {
     const { document } = await designDocument(id, "mobile");
     assert.equal(byClass(document, "mbk-nav-filter").length, 0, id);
   }

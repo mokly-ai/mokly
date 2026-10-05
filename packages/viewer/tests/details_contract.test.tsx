@@ -15,28 +15,29 @@ const common = {
   title: "Example",
 };
 const manifest: ManifestV8 = {
+  folders: [],
   entries: [
-    { ...common, id: "page", kind: "page" },
+    { ...common, path: "page", kind: "page" },
     {
       ...common,
 
-      id: "screen",
+      path: "screen",
       kind: "screen",
       colorSchemes: ["light"],
-      useCaseIds: [],
+      useCasePaths: [],
     },
     {
       ...common,
-      id: "flow",
+      path: "flow",
       kind: "use-case",
 
-      steps: [{ screenId: "screen" }],
+      steps: [{ screenPath: "screen" }],
     },
     {
       ...common,
       controls: {},
       colorSchemes: ["light"],
-      id: "component",
+      path: "component",
       kind: "component",
       propSchema: { kind: "object", properties: {} },
 

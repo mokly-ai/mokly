@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   cssMembershipFixture,
-  changedIds,
+  changedEntries,
 } from "./helpers/css_membership_fixture.js";
 
 for (const delivery of [
@@ -20,11 +20,11 @@ for (const delivery of [
       before: ".action{color:red}",
       after: ".action{color:blue}",
     });
-    assert.deepEqual(changedIds(result), ["checkout"]);
+    assert.deepEqual(changedEntries(result), ["checkout"]);
     assert.deepEqual(result.affectedConsumers, []);
     assert.deepEqual(
       result.screens[0]!.views[0]!.reasons![0]!.analysis!.rules[0]!
-        .changedComponentIds,
+        .changedComponentPaths,
       [],
     );
   });
@@ -34,12 +34,12 @@ for (const delivery of [
       before: ".action { color:red }",
       after: ".action { color:blue }",
     });
-    assert.deepEqual(changedIds(result), ["action", "action-default"]);
+    assert.deepEqual(changedEntries(result), ["action", "action/default"]);
     const screen = result.screens[0]!;
     assert.equal(screen.views[0]!.state, "changed");
     assert.equal(screen.views[0]!.material, undefined);
     const analysis = screen.views[0]!.reasons![0]!.analysis!;
-    assert.deepEqual(analysis.rules[0]!.changedComponentIds, ["action"]);
+    assert.deepEqual(analysis.rules[0]!.changedComponentPaths, ["action"]);
     assert.equal(analysis.pageEvidence, undefined);
     assert.match(analysis.rules[0]!.ruleKey!, /^[a-f0-9]{64}$/);
     assert.ok(
@@ -60,14 +60,14 @@ for (const delivery of [
         after: `${selector}{color:blue}`,
       });
       assert.deepEqual(
-        changedIds(result),
+        changedEntries(result),
         name === "unresolved"
-          ? ["action-default", "checkout", "toolbar-default"]
+          ? ["action/default", "checkout", "toolbar/default"]
           : ["checkout"],
       );
       assert.deepEqual(result.affectedConsumers, []);
       const analysis = result.screens[0]!.views[0]!.reasons![0]!.analysis!;
-      assert.deepEqual(analysis.rules[0]!.changedComponentIds, []);
+      assert.deepEqual(analysis.rules[0]!.changedComponentPaths, []);
       assert.deepEqual(
         analysis.pageEvidence,
         name === "unresolved"
@@ -82,10 +82,10 @@ test("a contextual nested rule changes Toolbar when Action has no own-page match
     before: ".toolbar .action{color:red}",
     after: ".toolbar .action{color:blue}",
   });
-  assert.deepEqual(changedIds(result), ["toolbar", "toolbar-default"]);
+  assert.deepEqual(changedEntries(result), ["toolbar", "toolbar/default"]);
   assert.deepEqual(
     result.screens[0]!.views[0]!.reasons![0]!.analysis!.rules[0]!
-      .changedComponentIds,
+      .changedComponentPaths,
     ["toolbar"],
   );
 });

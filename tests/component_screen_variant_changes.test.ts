@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { componentScreenVariantEntrySource } from "./helpers/screen_variant_fixture.js";
@@ -26,20 +26,22 @@ for (const changed of ["parent", "variant"] as const)
     assert.equal(result.schemaVersion, 5);
     if (result.schemaVersion !== 5) return;
     const expected =
-      changed === "variant" ? ["home-empty", "variant-flow"] : ["home"];
+      changed === "variant" ? ["home/empty", "variant-flow"] : ["home"];
 
     assert.deepEqual(
-      result.changes.map((entry) => (entry.after ?? entry.before)!.id),
+      result.changes.map((entry) => (entry.after ?? entry.before)!.path),
       expected,
     );
     assert.deepEqual(
-      await computeChangedIds(fixture.config, "main", fixture.git),
+      await computeChangedPaths(fixture.config, "main", fixture.git),
       expected,
     );
     const flow = result.changes.find((entry) => entry.kind === "use-case");
     if (changed === "parent") assert.equal(flow, undefined);
     else
-      assert.deepEqual(flow?.reasons, [{ kind: "screen", id: "home-empty" }]);
+      assert.deepEqual(flow?.reasons, [
+        { kind: "screen", screenPath: "home/empty" },
+      ]);
   });
 
 test("a variant consuming a changed component is an affected screen on its own route", async (t) => {
@@ -66,7 +68,7 @@ test("a variant consuming a changed component is an affected screen on its own r
       ({ changedComponentId, consumer }) =>
         changedComponentId === "action" &&
         consumer.kind === "screen" &&
-        consumer.id === "home-empty",
+        consumer.path === "home/empty",
     ),
   );
 });

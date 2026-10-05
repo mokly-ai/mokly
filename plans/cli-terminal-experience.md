@@ -1,5 +1,8 @@
 # CLI Terminal Experience
 
+Status: Completed. [PR #85](https://github.com/mokly-ai/mokly/pull/85)
+merged on 2026-09-18.
+
 Make `mokly` pleasant to run from a terminal. Today `mokly serve` prints one
 line after about two seconds and then stays silent while the catalogue renders,
 the derived baseline rebuilds and Changes classify; watched edits, reloads and

@@ -60,7 +60,7 @@ test("the shell draws the published Mokly logo mark", () => {
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: design headers draw the shell's logo`, async () => {
-    const { html } = await designDocument("design-browse-home", viewport);
+    const { html } = await designDocument("design/browse/views/home", viewport);
     const brand = html.match(
       /class="mbk-mark" aria-hidden="true">(<svg[\s\S]*?<\/svg>)<\/span>((?:<span class="mbk-name">[^<]*<\/span>)?)<\/a>/,
     );

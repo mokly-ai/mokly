@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { viewHref } from "../src/navigation/routes.js";
 import { frameNavigationHref } from "../src/shell/frame_event_router.js";
 import { routeFromUrl, routeHref } from "../src/shell/routes.js";
-import { canonicalHistoricalUrl } from "../src/shell/store_browser_urls.js";
+import { canonicalRouteUrl } from "../src/shell/store_browser_urls.js";
 import {
   announceNavigation,
   hostRoute,
@@ -17,19 +17,19 @@ import { catalogue, model } from "./shell_state_fixture.js";
 test("shell routes derive entry targets, fragments, and misses from view URLs", () => {
   const screen = routeFromUrl(
     catalogue,
-    new URL("https://example.test/view/screens/home.html?fragment=hero"),
+    new URL("https://example.test/view/product/browse/home/?fragment=hero"),
   );
   assert.equal(screen.view.kind, "target");
   assert.equal(screen.fragment, "hero");
 
   const variant = routeFromUrl(
     catalogue,
-    new URL("https://example.test/view/components/action-default.html"),
+    new URL("https://example.test/view/components/action/default/"),
   );
   assert.equal(variant.view.kind, "target");
   assert.equal(
-    variant.view.kind === "target" ? variant.view.target.entry.id : undefined,
-    "action-default",
+    variant.view.kind === "target" ? variant.view.target.entry.path : undefined,
+    "components/action/default",
   );
   assert.equal(
     routeFromUrl(catalogue, new URL("https://example.test/id/home")).view.kind,
@@ -54,17 +54,17 @@ test("logical frame destinations resolve through catalogue identity", () => {
     frameNavigationHref(catalogue, {
       activation: "primary",
       fragment: "hero",
-      id: "home",
+      screenPath: "product/browse/home",
       target: { kind: "self" },
     }),
-    "/view/screens/home.html?fragment=hero",
+    "/view/product/browse/home/?fragment=hero",
   );
   const unknown = frameNavigationHref(catalogue, {
     activation: "primary",
-    id: "not-present",
+    screenPath: "not-present",
     target: { kind: "self" },
   });
-  assert.equal(unknown, "/view/not-present");
+  assert.equal(unknown, "/view/not-present/");
   assert.equal(
     routeFromUrl(catalogue, new URL(unknown, "https://example.test")).view.kind,
     "missing",
@@ -75,22 +75,18 @@ test("an inferred historical route is pinned in the installed browser URL", () =
   const historical = model.removedEntries[0]!;
   assert.ok(historical.snapshotId);
   const bare = new URL(
-    `https://example.test${viewHref(historical.entry.kind, historical.entry.id)}`,
+    `https://example.test${viewHref(historical.entry.path)}`,
   );
   const route = routeFromUrl(catalogue, bare);
   assert.equal(route.snapshot, historical.snapshotId);
   assert.equal(
-    canonicalHistoricalUrl(bare, route, false).href,
+    canonicalRouteUrl(bare, route).href,
     `${bare.href}?snapshot=${historical.snapshotId}`,
   );
 
   const mismatched = new URL(`${bare.href}?snapshot=${"f".repeat(64)}`);
   assert.equal(
-    canonicalHistoricalUrl(
-      mismatched,
-      routeFromUrl(catalogue, mismatched),
-      false,
-    ).href,
+    canonicalRouteUrl(mismatched, routeFromUrl(catalogue, mismatched)).href,
     mismatched.href,
   );
 });
@@ -99,7 +95,7 @@ test("provider-normalized routes resolve through the parser and catalogue", () =
   assert.equal(
     routeFromUrl(
       catalogue,
-      new URL("https://example.test/view/screens/home?fragment=hero"),
+      new URL("https://example.test/view/product/browse/home?fragment=hero"),
     ).view.kind,
     "target",
   );
@@ -114,11 +110,11 @@ test("provider-normalized routes resolve through the parser and catalogue", () =
 
 test("shell routes serialize workspace state without a second entry identity", () => {
   assert.equal(
-    routeHref("component", "action-default", undefined, {
+    routeHref("components/action/default", undefined, {
       colorScheme: "dark",
       viewport: "mobile",
     }),
-    "/view/components/action-default.html?viewport=mobile&scheme=dark",
+    "/view/components/action/default/?viewport=mobile&scheme=dark",
   );
 });
 
@@ -126,7 +122,7 @@ test("shell routes parse explicit view axes independently", () => {
   const valid = routeFromUrl(
     catalogue,
     new URL(
-      "https://example.test/view/screens/home.html?viewport=desktop&scheme=dark",
+      "https://example.test/view/product/browse/home/?viewport=desktop&scheme=dark",
     ),
   );
   assert.equal(valid.viewport, "desktop");
@@ -135,7 +131,7 @@ test("shell routes parse explicit view axes independently", () => {
   const partial = routeFromUrl(
     catalogue,
     new URL(
-      "https://example.test/view/screens/home.html?viewport=invalid&scheme=dark",
+      "https://example.test/view/product/browse/home/?viewport=invalid&scheme=dark",
     ),
   );
   assert.equal(partial.viewport, undefined);
@@ -144,7 +140,7 @@ test("shell routes parse explicit view axes independently", () => {
   const repeated = routeFromUrl(
     catalogue,
     new URL(
-      "https://example.test/view/screens/home.html?viewport=mobile&scheme=light&scheme=dark",
+      "https://example.test/view/product/browse/home/?viewport=mobile&scheme=light&scheme=dark",
     ),
   );
   assert.equal(repeated.viewport, "mobile");
@@ -156,7 +152,7 @@ test("live host routing carries exact history and announces its entry", () => {
   assert.ok(historical.snapshotId);
   const selection = {
     ...defaultSelection,
-    screenId: historical.entry.id,
+    screenPath: historical.entry.path,
     snapshotId: historical.snapshotId,
   };
   const route = hostRoute(catalogue, selection, "hero");
@@ -177,7 +173,7 @@ test("live host routing carries exact history and announces its entry", () => {
   );
   assert.deepEqual(navigations, [
     {
-      screenId: historical.entry.id,
+      screenPath: historical.entry.path,
       snapshotId: historical.snapshotId,
       fragment: "hero",
     },

@@ -35,14 +35,14 @@ const COPY = {
 const outsideRule = cssRule({
   ruleKey: "1".repeat(64),
   selectors: [".action", ".heading"],
-  changedComponentIds: ["action"],
+  changedComponentPaths: ["action"],
   pageSelectors: [".heading"],
 });
 /** `.action` changes Action and matches nothing else on the page. */
 const componentRule = cssRule({
   ruleKey: "2".repeat(64),
   selectors: [".action"],
-  changedComponentIds: ["action"],
+  changedComponentPaths: ["action"],
 });
 /** `.checkout-heading` styles only the screen and changes no component. */
 const headingRule = cssRule({
@@ -141,7 +141,7 @@ test("a wrapper-only rule gives a saved view its own page sentence", () => {
 test("a component rule that also styles the wrapper keeps both facts", () => {
   const both = cssRule({
     selectors: [".action", ".frame .action"],
-    changedComponentIds: ["action"],
+    changedComponentPaths: ["action"],
     pageSelectors: [".frame .action"],
   });
   assert.deepEqual(
@@ -174,7 +174,7 @@ test("an unresolved rule that changed the component keeps component wording", ()
   const own = cssRule({
     status: "unresolved",
     selectors: [".action"],
-    changedComponentIds: ["action"],
+    changedComponentPaths: ["action"],
   });
   assert.deepEqual(
     stylesheetEvidence([cssReason(RULES, [own])], ACTION)[0]?.outcomes,
@@ -228,5 +228,5 @@ test("rule keys and changed component ids never reach the presentation", () => {
     ),
   );
   for (const key of ["1", "2", "4"]) assert.ok(!text.includes(key.repeat(64)));
-  assert.doesNotMatch(text, /"action"|ruleKey|changedComponentIds/);
+  assert.doesNotMatch(text, /"action"|ruleKey|changedComponentPaths/);
 });

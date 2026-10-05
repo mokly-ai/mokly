@@ -25,9 +25,9 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(!live.changedIds?.includes("home"));
+    assert.ok(!live.changedEntries?.includes("home"));
     const { result } = await fixture.compare();
-    for (const view of result.screens.find((screen) => screen.id === "home")!
+    for (const view of result.screens.find((screen) => screen.path === "home")!
       .views)
       assert.equal(view.state, "unchanged");
   });
@@ -46,9 +46,9 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(live.changedIds?.includes("home"));
+    assert.ok(live.changedEntries?.includes("home"));
     const { result } = await fixture.compare();
-    for (const view of result.screens.find((screen) => screen.id === "home")!
+    for (const view of result.screens.find((screen) => screen.path === "home")!
       .views) {
       assert.equal(view.state, "changed");
       assert.deepEqual(cssSummary(view.reasons?.[0]?.analysis), {
@@ -79,9 +79,9 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(!live.changedIds?.includes("home"));
+    assert.ok(!live.changedEntries?.includes("home"));
     const { result } = await fixture.compare();
-    for (const view of result.screens.find((screen) => screen.id === "home")!
+    for (const view of result.screens.find((screen) => screen.path === "home")!
       .views)
       assert.deepEqual(view.excludedResources, [
         { path: "mockups/nested.css", reason: "no-matching-rule" },

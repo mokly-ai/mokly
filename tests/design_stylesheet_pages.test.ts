@@ -3,19 +3,13 @@ import { test } from "node:test";
 
 import { designCatalogue } from "./helpers/design_catalogue.js";
 
-const DESIGN = "examples/basic/entries/design";
-const STYLESHEETS = `${DESIGN}/review/impact/stylesheets`;
-const GALLERY = [
-  "Design",
-  "Mokly design",
-  "Changes",
-  "Impact states",
-  "Stylesheet evidence",
-];
+const DESIGN = "examples/basic/specs/design";
+const STYLESHEETS = `${DESIGN}/changes/impact/styles`;
+const GALLERY = "design/changes/impact/styles";
 
 /** One page of the gallery: its folder, its own source module and screens. */
 interface StylesheetPage {
-  navPath: string[];
+  folderPath: string;
   sourcePath: string;
   ids: string[];
 }
@@ -26,23 +20,26 @@ interface StylesheetPage {
  */
 const PAGES: StylesheetPage[] = [
   {
-    navPath: GALLERY,
+    folderPath: GALLERY,
     sourcePath: `${DESIGN}/review_style_screens.tsx`,
-    ids: ["design-review-style-page"],
+    ids: ["design/changes/impact/styles/page"],
   },
   {
-    navPath: [...GALLERY, "Matched and excluded"],
+    folderPath: `${GALLERY}/matched-excluded`,
     sourcePath: `${STYLESHEETS}/matched-excluded/screens.tsx`,
     ids: [
-      "design-review-style-excluded",
-      "design-review-style-excluded-only",
-      "design-review-style-matched",
+      "design/changes/impact/styles/matched-excluded/excluded",
+      "design/changes/impact/styles/matched-excluded/excluded-only",
+      "design/changes/impact/styles/matched-excluded/matched",
     ],
   },
   {
-    navPath: [...GALLERY, "Unresolved and unnamed"],
+    folderPath: `${GALLERY}/unresolved-unnamed`,
     sourcePath: `${STYLESHEETS}/unresolved-unnamed/screens.tsx`,
-    ids: ["design-review-style-unnamed", "design-review-style-unresolved"],
+    ids: [
+      "design/changes/impact/styles/unresolved-unnamed/unnamed",
+      "design/changes/impact/styles/unresolved-unnamed/unresolved",
+    ],
   },
 ];
 
@@ -50,19 +47,16 @@ test("the stylesheet evidence page shows one canonical screen and links two chil
   const { manifest } = await designCatalogue;
   const pages = new Map<string, StylesheetPage>();
   for (const entry of manifest.entries) {
-    if (
-      entry.kind !== "screen" ||
-      !GALLERY.every((label, index) => entry.navPath[index] === label)
-    )
+    if (entry.kind !== "screen" || !entry.path.startsWith(`${GALLERY}/`))
       continue;
-    const key = entry.navPath.join(" › ");
+    const key = entry.path.split("/").slice(0, -1).join("/");
     const page = pages.get(key) ?? {
-      navPath: [...entry.navPath],
+      folderPath: key,
       sourcePath: entry.sourcePath,
       ids: [],
     };
-    assert.equal(entry.sourcePath, page.sourcePath, entry.id);
-    page.ids.push(entry.id);
+    assert.equal(entry.sourcePath, page.sourcePath, entry.path);
+    page.ids.push(entry.path);
     pages.set(key, page);
   }
   assert.deepEqual(
@@ -79,12 +73,12 @@ test("every design folder holds at most five of its own screens", async () => {
   for (const entry of manifest.entries) {
     if (
       entry.kind !== "screen" ||
-      !entry.id.startsWith("design-") ||
+      !entry.path.startsWith("design/") ||
       entry.variantOf !== undefined
     )
       continue;
-    const key = entry.navPath.join(" › ");
-    folders.set(key, [...(folders.get(key) ?? []), entry.id]);
+    const key = entry.path.split("/").slice(0, -1).join("/");
+    folders.set(key, [...(folders.get(key) ?? []), entry.path]);
   }
   assert.ok(folders.size > 1);
   for (const [folder, ids] of folders)

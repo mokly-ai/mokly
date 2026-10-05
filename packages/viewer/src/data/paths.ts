@@ -1,10 +1,21 @@
-import { isWindowsDeviceName } from "../navigation/logical.js";
+import {
+  isWindowsDeviceName,
+  isEntryPath,
+  isSafeRepositoryPath,
+} from "../navigation/logical.js";
 
-const PORTABLE_URL_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._~-]*$/;
+const PORTABLE_URL_SEGMENT = /^[A-Za-z0-9_-][A-Za-z0-9._~-]*$/;
 
 /** Return whether a catalogue route is portable as both a path and a URL. */
 export function isSafeCatalogueRoute(value: string): boolean {
-  return value.endsWith(".html") && isPortableUrlPath(value);
+  const boundary = value.lastIndexOf("/");
+  return (
+    boundary > 0 &&
+    isEntryPath(value.slice(0, boundary)) &&
+    /^index(?:\.(?:mobile|desktop))?(?:\.dark)?\.html$/.test(
+      value.slice(boundary + 1),
+    )
+  );
 }
 
 /** Return whether every path segment is portable and URL-unreserved. */
@@ -33,18 +44,4 @@ export function encodeUrlPath(value: string): string {
       ),
     )
     .join("/");
-}
-
-/** Return whether a value is a canonical, portable repository-relative path. */
-export function isSafeRepositoryPath(value: string): boolean {
-  return (
-    value.length > 0 &&
-    !value.startsWith("/") &&
-    !value.includes("\\") &&
-    !value.includes(":") &&
-    !value.includes("\0") &&
-    !value
-      .split("/")
-      .some((part) => part === "" || part === "." || part === "..")
-  );
 }

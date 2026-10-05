@@ -48,10 +48,7 @@ for (const baseline of earlierBaselines) {
       assert.equal(catalogue.changesStatus, "unavailable");
       assert.equal(catalogue.comparisonUrl, null);
       assert.deepEqual(catalogue.removedEntries, []);
-      assert.equal(
-        (await fetch(`${running.url}/view/screens/home.html`)).status,
-        200,
-      );
+      assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
       assert.equal(
         messages.filter((line) => line.trim() === EARLIER_BASELINE_MESSAGE)
           .length,

@@ -144,7 +144,9 @@ async function execute(
       "Rendering catalogue",
       "Catalogue rendered",
       () =>
-        compileCatalogue(config, undefined, (warning) => warnings.add(warning)),
+        compileCatalogue(config, undefined, undefined, (warning) =>
+          warnings.add(warning),
+        ),
     );
     await reportPhase(
       reporter,
@@ -166,7 +168,9 @@ async function execute(
       "Rendering catalogue",
       "Catalogue rendered",
       () =>
-        compileCatalogue(config, undefined, (warning) => warnings.add(warning)),
+        compileCatalogue(config, undefined, undefined, (warning) =>
+          warnings.add(warning),
+        ),
     );
     warnings.flush();
     await reportPhase(

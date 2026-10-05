@@ -9,7 +9,7 @@ const rule = {
   ruleKey: "a".repeat(64),
   status: "matched",
   selectors: [".action"],
-  changedComponentIds: ["action"],
+  changedComponentPaths: ["action"],
   pageSelectors: [],
 };
 const analysis = { status: "matched", selectors: [".action"], rules: [rule] };
@@ -54,15 +54,15 @@ for (const [name, patch] of [
     { ...analysis, pageEvidence: { selectors: [".action"] } },
   ],
   [
-    "duplicate changed ids",
+    "duplicate changed paths",
     {
       ...analysis,
-      rules: [{ ...rule, changedComponentIds: ["action", "action"] }],
+      rules: [{ ...rule, changedComponentPaths: ["action", "action"] }],
     },
   ],
   [
-    "invalid changed id",
-    { ...analysis, rules: [{ ...rule, changedComponentIds: ["BAD"] }] },
+    "invalid changed path",
+    { ...analysis, rules: [{ ...rule, changedComponentPaths: ["bad path"] }] },
   ],
   [
     "matched unkeyed rule",
@@ -80,7 +80,7 @@ test("parse failure evidence is unkeyed and unresolved with no invented componen
       {
         status: "unresolved",
         selectors: [],
-        changedComponentIds: [],
+        changedComponentPaths: [],
         pageSelectors: [],
       },
     ],
@@ -89,7 +89,7 @@ test("parse failure evidence is unkeyed and unresolved with no invented componen
   assert.deepEqual(parseReviewResult(unresolved), unresolved);
   const reason = unresolved.screens[0]!.views[0]!.reasons![0]!;
   Object.assign(reason.analysis!.rules[0]!, {
-    changedComponentIds: ["action"],
+    changedComponentPaths: ["action"],
   });
   assert.throws(() => parseReviewResult(unresolved), /review/);
 });

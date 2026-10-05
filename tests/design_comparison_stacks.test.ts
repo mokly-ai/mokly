@@ -23,21 +23,21 @@ import { textOutput } from "./helpers/generated_text.js";
 
 /** Designs that stack both versions inside one device chrome. */
 const STACKED = [
-  ["design-changes-overlay", "overlay"],
-  ["design-changes-overlay-long", "overlay"],
-  ["design-changes-overlay-panel", "overlay"],
-  ["design-review-difference", "difference"],
-  ["design-appearance-difference", "difference"],
+  ["design/changes/diff-controls/overlay", "overlay"],
+  ["design/changes/diff-controls/overlay-long", "overlay"],
+  ["design/changes/diff-controls/overlay-panel", "overlay"],
+  ["design/changes/outcomes/difference", "difference"],
+  ["design/browse/appearance/workspaces/difference", "difference"],
 ] as const;
 
 /** Designs that keep one device chrome per version. */
 const SIDE_BY_SIDE = [
-  "design-review-changed",
-  "design-changes-side-by-side-apart",
-  "design-appearance-side-by-side",
-  "design-review-style-matched",
-  "design-review-style-unresolved",
-  "design-review-style-unnamed",
+  "design/changes/outcomes/changed",
+  "design/changes/diff-controls/side-by-side-apart",
+  "design/browse/appearance/workspaces/side-by-side",
+  "design/changes/impact/styles/matched-excluded/matched",
+  "design/changes/impact/styles/unresolved-unnamed/unresolved",
+  "design/changes/impact/styles/unresolved-unnamed/unnamed",
 ] as const;
 
 const CHROME: Record<Viewport, string> = {
@@ -94,7 +94,7 @@ test("Overlay and Difference draw one chrome holding both versions", async () =>
           ],
           where,
         );
-        const long = id === "design-changes-overlay-long";
+        const long = id === "design/changes/diff-controls/overlay-long";
         assert.equal(
           attribute(scroller, "data-scrolled") !== undefined,
           long,
@@ -139,7 +139,7 @@ test("Side by side keeps one chrome per version", async () => {
 async function designOutputs(): Promise<string[]> {
   const { manifest } = await designCatalogue;
   return manifest.entries.flatMap((entry) => {
-    if (!entry.id.startsWith("design-")) return [];
+    if (!entry.path.startsWith("design/")) return [];
     return generatedViews(entry).map((view) => view.path);
   });
 }
@@ -162,7 +162,8 @@ test("links inside every depicted comparison and pane sample do nothing", async 
     const depicted = COMPARISON_REGIONS.flatMap((name) =>
       byClass(document, name),
     );
-    if (depicted.length > 0 && route.startsWith("components/")) samples += 1;
+    if (depicted.length > 0 && route.startsWith("design/library/"))
+      samples += 1;
     for (const region of depicted) {
       regions += 1;
       assert.deepEqual(
@@ -180,7 +181,7 @@ test("links inside every depicted comparison and pane sample do nothing", async 
 
 test("the long overlay rewords one section and keeps the rest in place", async () => {
   for (const { document, route } of await renders(
-    "design-changes-overlay-long",
+    "design/changes/diff-controls/overlay-long",
   )) {
     for (const [viewport, preview] of previews(document)) {
       const where = `${route} ${viewport}`;

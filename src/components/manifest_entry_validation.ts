@@ -3,8 +3,8 @@ import {
   decodeProps,
   exactKeys,
   invalidData,
-  isCatalogueId,
-  isEntryId,
+  isKebabCase,
+  isEntryPath,
   sortedStrings,
   validateControlledValues,
   validateControls,
@@ -15,13 +15,13 @@ import {
 import { validateColorSchemes } from "../registry/manifest_values.js";
 
 const COMMON_KEYS = [
-  "id",
+  "path",
   "title",
   "description",
   "rationale",
+  "movedFrom",
   "relatedDocs",
   "sourcePath",
-  "navPath",
   "kind",
   "colorSchemes",
   "tags",
@@ -35,7 +35,7 @@ export function validateManifestComponent(
     validateVariantEntry(value);
     return;
   }
-  const at = `${String(value.id)} $component`;
+  const at = `${String(value.path)} $component`;
   exactKeys(value, [...COMMON_KEYS, "propSchema", "slots", "controls"], at);
   validatePropSchema(value.propSchema, at);
   if (value.propSchema.kind !== "object")
@@ -64,13 +64,13 @@ export function validateManifestComponent(
 }
 
 function validateVariantEntry(value: Record<string, unknown>): void {
-  const at = `${String(value.id)} $component-variant`;
+  const at = `${String(value.path)} $component-variant`;
   exactKeys(
     value,
     [...COMMON_KEYS, "variantOf", "props", "suppliedSlots", "componentViews"],
     at,
   );
-  if (!isEntryId(value.variantOf)) invalidData(at, "invalid variantOf");
+  if (!isEntryPath(value.variantOf)) invalidData(at, "invalid variantOf");
   validateTags(value.tags, at);
   validateColorSchemes(value.colorSchemes, at);
   sortedStrings(value.suppliedSlots, `${at}.suppliedSlots`);
@@ -84,20 +84,20 @@ export function validateVariantAgainstParent(
 ): void {
   const suppliedSlots = variant.suppliedSlots as string[];
   if (!suppliedSlots.every((slot) => parent.slots.includes(slot)))
-    invalidData(variant.id as string, "unknown supplied slot");
+    invalidData(variant.path as string, "unknown supplied slot");
   const data = validateProps(
     parent.propSchema,
     decodeProps(variant.props as never),
-    variant.id as string,
+    variant.path as string,
   );
-  validateControlledValues(parent.controls, data, variant.id as string);
+  validateControlledValues(parent.controls, data, variant.path as string);
 }
 
 function validateTags(value: unknown, at: string): void {
   if (
     value !== undefined &&
     (!Array.isArray(value) ||
-      !value.every(isCatalogueId) ||
+      !value.every(isKebabCase) ||
       new Set(value).size !== value.length)
   )
     invalidData(at, "invalid component tags");

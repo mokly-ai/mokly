@@ -11,7 +11,7 @@ export function classifiedScreenCss(
 ): ResourceEvidence | undefined {
   if (!result || !view) return undefined;
   const evidence = result.screens
-    .find((screen) => screen.id === view.id)
+    .find((screen) => screen.path === view.path)
     ?.views.find(
       (candidate) =>
         candidate.viewport === view.viewport &&

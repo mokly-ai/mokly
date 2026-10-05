@@ -17,7 +17,7 @@ test("preview capture normalizes only canonical HTML paths", async (context) => 
   ];
   const source = [
     '<script src="/__mokly/client/react-host.js" type="module"></script>',
-    '<a href="/view/screens/home.html?fragment=hero">Home</a>',
+    '<a href="/view/home/?fragment=hero">Home</a>',
     '<img src="/static/assets/logo.html#mark">',
     ...rejected.map((value) => `<a href="${value}">Rejected</a>`),
   ].join("");
@@ -29,7 +29,7 @@ test("preview capture normalizes only canonical HTML paths", async (context) => 
 
   await capturePage("http://127.0.0.1:1", "/", stage, "index.html");
   const captured = await fs.readFile(path.join(stage, "index.html"), "utf8");
-  assert.ok(captured.includes('href="/view/screens/home?fragment=hero"'));
+  assert.ok(captured.includes('href="/view/home/?fragment=hero"'));
   assert.ok(captured.includes('src="/static/assets/logo#mark"'));
   assert.ok(
     captured.includes(

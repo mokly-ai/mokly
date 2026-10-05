@@ -23,22 +23,22 @@ export const selectors: Record<string, string> = {
 
 export function assertComponentRows(
   result: {
-    changes: readonly { after?: { id: string }; before?: { id: string } }[];
+    changes: readonly { after?: { path: string }; before?: { path: string } }[];
   },
   fixture: Awaited<ReturnType<typeof designLibraryFixture>>,
   owners: readonly string[],
 ) {
   const direct = result.changes.map(
-    (change) => (change.after ?? change.before)!.id,
+    (change) => (change.after ?? change.before)!.path,
   );
   for (const owner of owners) assert.ok(direct.includes(owner), owner);
   for (const id of direct) {
     const entry = fixture.before.manifest.entries.find(
-      (entry) => entry.id === id,
+      (entry) => entry.path === id,
     )!;
     assert.ok(
       entry.kind === "component" &&
-        (owners.includes(entry.id) ||
+        (owners.includes(entry.path) ||
           ("variantOf" in entry && owners.includes(entry.variantOf))),
       id,
     );

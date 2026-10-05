@@ -27,13 +27,13 @@ test("projection exposes real usage and attribution without private evidence", a
     configPath: "mokly.config.ts",
     catalogue: createCatalogue(fixture.after.manifest),
     changesStatus: "ready" as const,
-    changedIds: evidence.changedIds,
+    changedEntries: evidence.changedEntries,
     evidence,
     comparisonUrl: null,
     revision: { content: 0, evidence: 0 },
   };
   const model = projectCatalogue(input);
-  const home = model.screens.find((screen) => screen.id === "home")!;
+  const home = model.screens.find((screen) => screen.path === "home")!;
   assert.deepEqual(home.changes, {
     status: "ready",
     kind: "unmodified",
@@ -45,7 +45,7 @@ test("projection exposes real usage and attribution without private evidence", a
     eligible: true,
   });
   assert.deepEqual(
-    model.components.find((entry) => entry.id === "action")?.changes,
+    model.components.find((entry) => entry.path === "action")?.changes,
     { status: "ready", kind: "changed", included: true },
   );
   assert.equal(home.views[0]?.usage.status, "ready");
@@ -79,8 +79,8 @@ test("projection exposes real usage and attribution without private evidence", a
   assert.deepEqual(
     reordered.components
       .filter((entry) => "variantOf" in entry)
-      .map((entry) => entry.id),
-    ["action-disabled", "action-default", "pane-default"],
+      .map((entry) => entry.path),
+    ["action/disabled", "action/default", "pane/default"],
   );
   assert.equal(model.comparisonUrl, null);
   assert.equal(
@@ -98,20 +98,20 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
     (entry): entry is CurrentManifestScreen => entry.kind === "screen",
   );
   assert.ok(parent);
-  const zetaId = `${parent.id}-zeta`;
+  const zetaId = `${parent.path}/zeta`;
   const zeta: CurrentManifestScreen = {
     ...structuredClone(parent),
     description: "Zeta workspace",
-    id: zetaId,
+    path: zetaId,
     title: `${parent.title}, zeta`,
-    useCaseIds: [],
-    variantOf: parent.id,
+    useCasePaths: [],
+    variantOf: parent.path,
   };
-  const alphaId = `${parent.id}-alpha`;
+  const alphaId = `${parent.path}/alpha`;
   const alpha: CurrentManifestScreen = {
     ...structuredClone(zeta),
     description: "Alpha workspace",
-    id: alphaId,
+    path: alphaId,
     title: `${parent.title}, alpha`,
   };
   const model = projectCatalogue({
@@ -126,28 +126,28 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
   });
 
   assert.equal(
-    model.screens.find(({ id }) => id === zeta.id)?.variantOf,
-    parent.id,
+    model.screens.find(({ path }) => path === zeta.path)?.variantOf,
+    parent.path,
   );
   assert.deepEqual(
     model.screens
-      .filter(({ id }) => [parent.id, zeta.id, alpha.id].includes(id))
-      .map(({ id }) => id),
-    [parent.id, zeta.id, alpha.id],
+      .filter(({ path }) => [parent.path, zeta.path, alpha.path].includes(path))
+      .map(({ path }) => path),
+    [parent.path, zeta.path, alpha.path],
   );
-  assert.deepEqual(findNode(model.tree.pages, parent.id), {
+  assert.deepEqual(findNode(model.tree, parent.path), {
     children: [
-      { id: zeta.id, kind: "entry" },
-      { id: alpha.id, kind: "entry" },
+      { path: zeta.path, kind: "entry" },
+      { path: alpha.path, kind: "entry" },
     ],
-    id: parent.id,
+    path: parent.path,
     kind: "entry",
   });
   const roundTrip = readCatalogue(JSON.parse(serializeCatalogue(model)));
   assert.deepEqual(roundTrip, model);
   assert.deepEqual(
-    findNode(roundTrip.tree.pages, parent.id),
-    findNode(model.tree.pages, parent.id),
+    findNode(roundTrip.tree, parent.path),
+    findNode(model.tree, parent.path),
   );
 });
 
@@ -155,21 +155,23 @@ test("removed variants keep baseline authored order at a surviving parent's posi
   const fixture = await componentReviewFixture(t, (source) => source);
   const current = fixture.after.manifest.entries.find(
     (entry): entry is CurrentManifestScreen =>
-      entry.kind === "screen" && entry.id === "home",
+      entry.kind === "screen" && entry.path === "home",
   );
   assert.ok(current);
   const removedScreen = (id: string, variantOf?: string) => ({
+    folderTitles: [],
+    ...(variantOf === undefined ? {} : { parentTitle: current.title }),
     entry: {
       ...structuredClone(current),
-      id,
+      path: id,
       title: id,
       ...(variantOf === undefined ? {} : { variantOf }),
     },
   });
   const catalogue = createCatalogue(fixture.after.manifest, [
     removedScreen("a-removed"),
-    removedScreen("z-variant", current.id),
-    removedScreen("b-variant", current.id),
+    removedScreen("z-variant", current.path),
+    removedScreen("b-variant", current.path),
     removedScreen("m-removed"),
   ]);
   const model = projectCatalogue({
@@ -181,7 +183,7 @@ test("removed variants keep baseline authored order at a surviving parent's posi
   });
 
   assert.deepEqual(
-    model.removedEntries.map(({ entry }) => entry.id),
+    model.removedEntries.map(({ entry }) => entry.path),
     ["a-removed", "z-variant", "b-variant", "m-removed"],
   );
 });
@@ -211,10 +213,18 @@ test("public v4 fixture conforms and compatible readers ignore additive fields",
   fixture.screens[0].future = true;
   fixture.screens[0].views[0].usage.future = true;
   assert.deepEqual(readCatalogue(fixture), model);
+  assert.throws(
+    () => readCatalogue({ ...fixture, schemaVersion: 3 }),
+    /unsupported schemaVersion/,
+  );
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 2 }));
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 1 }));
   assert.throws(() =>
-    readCatalogue({ schemaVersion: 5, generatedBy: "mokly", entries: [] }),
+    readCatalogue({
+      schemaVersion: 5 as const,
+      generatedBy: "mokly",
+      entries: [],
+    }),
   );
 });
 
@@ -248,10 +258,10 @@ test("reader rejects unsafe paths, private extensions and broken known reference
       value.extension = { styles: [{ startOffset: 2 }] };
     },
     (value: typeof fixture) => {
-      value.tree.pages[0].children[0].children[0].id = "missing";
+      value.tree[0].children[0].children[0].path = "missing";
     },
     (value: typeof fixture) => {
-      value.screens[0].useCaseIds = ["missing"];
+      value.screens[0].useCasePaths = ["missing"];
     },
     (value: typeof fixture) => {
       value.revision.evidence = -1;
@@ -269,7 +279,7 @@ function findNode(
   id: string,
 ): CatalogueNode | undefined {
   for (const node of nodes) {
-    if (node.kind === "entry" && node.id === id) return node;
+    if (node.kind === "entry" && node.path === id) return node;
     if (node.children) {
       const nested = findNode(node.children, id);
       if (nested) return nested;

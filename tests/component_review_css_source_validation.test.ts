@@ -20,7 +20,7 @@ test("source validation rejects a reason injected onto an affected-only screen",
   const changed = "mockups/action.css";
   const { before, after, result, classified } =
     await stylesheetValidationFixture(t, "component", true);
-  const screen = result.screens.find((entry) => entry.id === "home")!;
+  const screen = result.screens.find((entry) => entry.path === "home")!;
   assert.ok(
     screen.views.some((view) =>
       view.reasons?.some((reason) => reason.path === changed),
@@ -28,7 +28,7 @@ test("source validation rejects a reason injected onto an affected-only screen",
   );
   assert.ok(
     !result.changes.some(
-      (entry) => entry.kind === "screen" && entry.after?.id === "home",
+      (entry) => entry.kind === "screen" && entry.after?.path === "home",
     ),
   );
   const tampered = structuredClone(result);
@@ -62,8 +62,8 @@ for (const kind of ["component", "screen"] as const)
     assert.deepEqual(result.changes, []);
     const entry =
       kind === "component"
-        ? result.components.find((item) => item.id === "action")!
-        : result.screens.find((item) => item.id === "home")!;
+        ? result.components.find((item) => item.path === "action")!
+        : result.screens.find((item) => item.path === "home")!;
     const views =
       "variants" in entry
         ? entry.variants.flatMap((variant) => variant.views)
@@ -101,15 +101,15 @@ for (const kind of ["component", "screen"] as const)
 test("a configured and declared stylesheet retains its component and matching saved-variant Changes rows", async (t) => {
   const fixture = await stylesheetValidationFixture(t, "both", true);
   const { before, after, result, classified } = fixture;
-  const screen = result.screens.find((entry) => entry.id === "home")!;
+  const screen = result.screens.find((entry) => entry.path === "home")!;
   assert.ok(
     screen.views.some((view) =>
       view.reasons?.some((reason) => reason.path === "mockups/action.css"),
     ),
   );
   assert.deepEqual(
-    result.changes.map((entry) => entry.after?.id),
-    ["action", "action-default", "action-disabled"],
+    result.changes.map((entry) => entry.after?.path),
+    ["action", "action/default", "action/disabled"],
   );
   assert.ok(
     result.changes[0]!.reasons.some(
@@ -118,7 +118,7 @@ test("a configured and declared stylesheet retains its component and matching sa
     ),
   );
   assert.ok(
-    result.affectedConsumers.some(({ consumer }) => consumer.id === "home"),
+    result.affectedConsumers.some(({ consumer }) => consumer.path === "home"),
   );
   assert.doesNotThrow(() =>
     validateComponentReviewSources(
@@ -142,8 +142,8 @@ async function stylesheetValidationFixture(
   });
   if (declaration !== "screen")
     source = source.replace(
-      'id: "action",',
-      'id: "action", stylesheets: ["action.css"],',
+      'path: "action",',
+      'path: "action", stylesheets: ["action.css"],',
     );
   const fixture = await createFixture(source, {
     extraConfig:

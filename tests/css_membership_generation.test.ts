@@ -20,9 +20,9 @@ test("selected generations replace own-page CSS facts without evaluating consume
   const source = `import React from "react"; import fs from "node:fs"; import {defineComponent,defineScreen} from "@mokly/mokly";
 const counter = process.env.MOKLY_M19_COUNTER;
 if (counter) fs.appendFileSync(counter, 'module\\n');
-const action = defineComponent({id:'action',title:'Action',description:'Action',relatedDocs:[],propSchema:{kind:'object',properties:{active:{schema:{kind:'boolean'}}}},render:(props)=><b className={props.active?'action':'inactive'}>Action</b>,variants:[{id:'action-default',title:'Default',props:{active:false}}]});
+const action = defineComponent({path:'action',title:'Action',description:'Action',relatedDocs:[],propSchema:{kind:'object',properties:{active:{schema:{kind:'boolean'}}}},render:(props)=><b className={props.active?'action':'inactive'}>Action</b>,variants:[{slug:"default",title:'Default',props:{active:false}}]});
 function Consumer(){ if(counter) fs.appendFileSync(counter,'consumer\\n'); return <action.Component active />; }
-export const mockups=[action.entries,defineScreen({id:'checkout',title:'Checkout',description:'Checkout',relatedDocs:[],mobile:<Consumer />,desktop:<Consumer />})];`;
+export const mockups=[...action.entries,defineScreen({path:'checkout',title:'Checkout',description:'Checkout',relatedDocs:[],mobile:<Consumer />,desktop:<Consumer />})];`;
   const fixture = await changedFixture(
     t,
     source,
@@ -63,7 +63,7 @@ export const mockups=[action.entries,defineScreen({id:'checkout',title:'Checkout
   });
   let count = await fs.readFile(counter, "utf8");
   const first = (await cache.read(1))!;
-  assert.deepEqual(first.changedIds, ["checkout"]);
+  assert.deepEqual(first.changedEntries, ["checkout"]);
   const server = await startCatalogueServer(fixture.config, {
     base: "HEAD",
     port: 0,
@@ -75,7 +75,7 @@ export const mockups=[action.entries,defineScreen({id:'checkout',title:'Checkout
   fixture.beforeRemove(() => server.close());
   const select = async () => {
     const response = await fetch(
-      `${server.url}/__mokly/diffs/review.json?id=checkout`,
+      `${server.url}/__mokly/diffs/review.json?path=checkout`,
     );
     assert.equal(response.status, 200, await response.clone().text());
     return {
@@ -86,7 +86,7 @@ export const mockups=[action.entries,defineScreen({id:'checkout',title:'Checkout
   const before = await select();
   assert.deepEqual(
     before.result.screens[0]!.views[0]!.reasons![0]!.analysis!.rules[0]!
-      .changedComponentIds,
+      .changedComponentPaths,
     [],
   );
   assert.equal(await fs.readFile(counter, "utf8"), count);
@@ -99,18 +99,18 @@ export const mockups=[action.entries,defineScreen({id:'checkout',title:'Checkout
   count = await fs.readFile(counter, "utf8");
   cache.invalidate();
   const second = (await cache.read(2))!;
-  assert.deepEqual(second.changedIds, ["action", "action-default"]);
+  assert.deepEqual(second.changedEntries, ["action", "action/default"]);
   const runtime = componentRuntime(compiled);
   server.replaceComponentRuntime(runtime);
   server.completeCatalogue?.(compiled.manifest, runtime.generation);
   server.publishUpdate({
     componentChanges: second,
-    changedIds: second.changedIds,
+    changedEntries: second.changedEntries,
   });
   const after = await select();
   assert.notEqual(after.url, before.url);
   const analysis = after.result.screens[0]!.views[0]!.reasons![0]!.analysis!;
-  assert.deepEqual(analysis.rules[0]!.changedComponentIds, ["action"]);
+  assert.deepEqual(analysis.rules[0]!.changedComponentPaths, ["action"]);
   assert.equal(analysis.pageEvidence, undefined);
   assert.deepEqual(after.result.screens, second.result!.screens);
   assert.equal(await fs.readFile(counter, "utf8"), count);

@@ -3,13 +3,16 @@
 import type { CatalogueRecord } from "./types.js";
 
 interface CatalogueIdentity {
-  id: string;
+  path: string;
   kind: CatalogueRecord["kind"];
+  /** The branch-point path of a current entry the move contract paired. */
+  previousPath?: string;
 }
 
 interface CatalogueIndex<Entry extends CatalogueIdentity> {
   screens: readonly Entry[];
   pages: readonly Entry[];
+  documents: readonly Entry[];
   useCases: readonly Entry[];
   components: readonly Entry[];
   removedEntries: readonly { entry: Entry; snapshotId?: string }[];
@@ -18,6 +21,10 @@ interface CatalogueIndex<Entry extends CatalogueIdentity> {
 type ComponentVariant<Entry extends CatalogueIdentity> = Extract<
   Entry,
   { kind: "component"; variantOf: string }
+>;
+type ComponentParent<Entry extends CatalogueIdentity> = Exclude<
+  Extract<Entry, { kind: "component" }>,
+  { variantOf: string }
 >;
 
 export interface ResolvedCatalogueEntry<
@@ -34,18 +41,48 @@ export function currentCatalogueEntries<Entry extends CatalogueIdentity>(
   return [
     ...model.screens,
     ...model.pages,
+    ...model.documents,
     ...model.useCases,
     ...model.components,
   ];
 }
 
-/** Component variants in current order followed by retained removed variants. */
+/**
+ * The component parent a path names: a current or removed parent at that path,
+ * or else the current parent a move paired with that previous path.
+ */
+function catalogueComponentParent<
+  Entry extends CatalogueIdentity = CatalogueRecord,
+>(
+  model: CatalogueIndex<Entry>,
+  componentId: string,
+): ComponentParent<Entry> | undefined {
+  const parents = [
+    ...model.components,
+    ...model.removedEntries.map(({ entry }) => entry),
+  ].filter(
+    (entry): entry is ComponentParent<Entry> =>
+      entry.kind === "component" && !("variantOf" in entry),
+  );
+  return (
+    parents.find((entry) => entry.path === componentId) ??
+    parents.find((entry) => entry.previousPath === componentId)
+  );
+}
+
+/**
+ * Component variants in current order followed by retained removed variants.
+ * A moved parent also keeps the variants removed at its previous path, under
+ * either of its paths.
+ */
 export function catalogueComponentVariants<
   Entry extends CatalogueIdentity = CatalogueRecord,
 >(
   model: CatalogueIndex<Entry>,
   componentId: string,
 ): readonly ComponentVariant<Entry>[] {
+  const parent = catalogueComponentParent(model, componentId);
+  const paths = new Set([componentId, parent?.path, parent?.previousPath]);
   return [
     ...model.components,
     ...model.removedEntries.map(({ entry }) => entry),
@@ -53,7 +90,8 @@ export function catalogueComponentVariants<
     (entry): entry is ComponentVariant<Entry> =>
       entry.kind === "component" &&
       "variantOf" in entry &&
-      entry.variantOf === componentId,
+      typeof entry.variantOf === "string" &&
+      paths.has(entry.variantOf),
   );
 }
 
@@ -66,16 +104,16 @@ export function resolveCatalogueSelection<Entry extends CatalogueIdentity>(
   if (snapshotId !== undefined) {
     const historical = model.removedEntries.find(
       (record) =>
-        record.entry.id === entryId && record.snapshotId === snapshotId,
+        record.entry.path === entryId && record.snapshotId === snapshotId,
     );
     return historical ? { entry: historical.entry, snapshotId } : undefined;
   }
   const current = currentCatalogueEntries(model).find(
-    (entry) => entry.id === entryId,
+    (entry) => entry.path === entryId,
   );
   if (current) return { entry: current };
   const historical = model.removedEntries.filter(
-    (record) => record.entry.id === entryId,
+    (record) => record.entry.path === entryId,
   );
   if (historical.length !== 1) return undefined;
   const [record] = historical;
@@ -86,12 +124,12 @@ export function resolveCatalogueSelection<Entry extends CatalogueIdentity>(
   };
 }
 
-/** Resolve one kind-and-id address, inferring its published snapshot when unique. */
+/** Resolve one path address with a kind constraint, inferring its published snapshot when unique. */
 export function resolveCatalogueEntry<Entry extends CatalogueIdentity>(
   model: CatalogueIndex<Entry>,
-  identity: { id: string; kind: Entry["kind"] },
+  identity: { path: string; kind: Entry["kind"] },
   snapshotId?: string,
 ): ResolvedCatalogueEntry<Entry> | undefined {
-  const selected = resolveCatalogueSelection(model, identity.id, snapshotId);
+  const selected = resolveCatalogueSelection(model, identity.path, snapshotId);
   return selected?.entry.kind === identity.kind ? selected : undefined;
 }

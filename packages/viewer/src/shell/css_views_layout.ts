@@ -55,6 +55,16 @@ export const CSS_VIEWS_LAYOUT = `
   text-decoration: underline;
 }
 
+/* A folder without its own page reveals its row instead of navigating, so
+   its crumb is a button that reads exactly like the link crumbs. */
+button.mbk-crumb-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 .mbk-title-row {
   display: flex;
   align-items: center;
@@ -79,7 +89,7 @@ export const CSS_VIEWS_LAYOUT = `
   }
 }
 
-.mbk-idchip {
+.mbk-pathchip {
   padding: 2px 8px;
   border: 1px solid var(--chrome-border);
   border-radius: 6px;
@@ -91,7 +101,7 @@ export const CSS_VIEWS_LAYOUT = `
   cursor: pointer;
 }
 
-.mbk-idchip:active {
+.mbk-pathchip:active {
   background: var(--chrome-border);
   border-color: var(--chrome-border-strong);
   box-shadow: var(--chrome-shadow-press);

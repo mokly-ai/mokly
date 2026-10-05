@@ -93,14 +93,14 @@ test("source policy matches both aliases and projects missing children relative 
 });
 
 for (const [kind, route, exclusion] of [
-  ["page", "pages/page.html", "pages/**"],
-  ["screen", "screens/page.desktop.html", "screens/**"],
+  ["page", "page/index.html", "page/**"],
+  ["screen", "page/index.desktop.html", "page/**"],
 ] as const) {
   test(`build rejects excluded generated route ${route} before writing`, async (t) => {
     const definition =
       kind === "page"
-        ? 'definePage({ id: "page", title: "Page", description: "Page", relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })'
-        : 'defineScreen({ id: "page", title: "Page", description: "Page", relatedDocs: [], mobile: "Mobile", desktop: "Desktop" })';
+        ? 'definePage({ path: "page", title: "Page", description: "Page", relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })'
+        : 'defineScreen({ path: "page", title: "Page", description: "Page", relatedDocs: [], mobile: "Mobile", desktop: "Desktop" })';
     const fixture = await createFixture(
       `import { definePage, defineScreen } from "@mokly/mokly"; export const mockups = [${definition}];`,
       { extraConfig: `publicExclude: [${JSON.stringify(exclusion)}],` },
@@ -136,7 +136,7 @@ test("build rejects an excluded public resource with its referring route", async
     compileCatalogue(await loadConfig(fixture.root)),
     (error: Error) => {
       assert.match(error.message, /matches public exclusion.*publicExclude/);
-      assert.ok(error.message.includes("screens/home"));
+      assert.ok(error.message.includes("home/index"));
       assert.ok(error.message.includes("README.html"));
       return true;
     },
@@ -163,7 +163,7 @@ test("an excluded imported JSON file remains an authoring input and rebuilds", a
   );
   const second = await compileCatalogue(config);
   assert.equal(
-    second.manifest.entries.find((entry) => entry.id === "home")?.title,
+    second.manifest.entries.find((entry) => entry.path === "home")?.title,
     "After",
   );
 });

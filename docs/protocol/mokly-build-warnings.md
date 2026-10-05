@@ -8,8 +8,9 @@ all stylesheets is implemented in [M19](../../plans/remove-source-path-evidence.
 
 Generation-scoped watched Serve warnings are planned for
 [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
-The `sharedImpact?: never` config guard and stronger warning/type regression
-tests are planned for
+The `sharedImpact?: never` config guard is implemented in
+[M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
+Stronger warning/type regression tests are planned for
 [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
 
 ## Warning Boundary
@@ -95,32 +96,28 @@ One-shot commands and unwatched Serve retain their invocation/lifetime scopes.
 
 ## Exact Messages
 
-Placeholders `<id>`, `<path>`, `<href>` and `<route>` below are substituted as
-JSON-quoted strings (including their quotes and escaping). An entry id is the
-id of the direct entry, nested marker, root path, or variant that wrote
-the field. A stylesheet `<path>` is the authored, `mockupsDir`-relative public
-path; `<href>` is the configured href on that route; `<route>` is the generated
-document route. The message has no `[mokly/...]` prefix; the reporter supplies
-that framing.
+Placeholders `<entryPath>`, `<path>`, `<href>` and `<route>` are JSON-quoted
+strings, including quotes and escaping. Entry and component paths name the
+resolved entry or variant that wrote the field. A stylesheet `<path>` is the
+authored public path relative to `mockupsDir`; `<href>` is a configured href;
+`<route>` is a generated document route. The reporter supplies the prefix.
 
-| Code                                 | Deduplication context      | Exact message                                                                                                        |
-| ------------------------------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `removed-dependencies`               | Entry id                   | `dependencies has been removed; ignoring it on entry <id>. Delete the field.`                                        |
-| `removed-owned-dependencies`         | Component id               | `ownedDependencies has been removed; ignoring it on component <id>. Delete the field.`                               |
-| `removed-shared-impact`              | Config path                | `review.sharedImpact has been removed; ignoring it. Delete the field.`                                               |
-| `duplicate-component-stylesheet`     | Component id and real file | `duplicate component stylesheet <path> on component <id> is ignored; it is linked once.`                             |
-| `missing-configured-stylesheet-link` | Route and configured href  | `configured stylesheet link <href> is absent from <route>; component stylesheets use another anchor.`                |
-| `ignored-stylesheet-resource-owner`  | Route and file identity    | `Stylesheet ownership for <path> on <route> is ignored. Changes follow the elements that each changed rule matches.` |
+| Code                                 | Deduplication context        | Exact message                                                                                                        |
+| ------------------------------------ | ---------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `removed-dependencies`               | Entry path                   | `dependencies has been removed; ignoring it on entry <entryPath>. Delete the field.`                                 |
+| `removed-owned-dependencies`         | Component path               | `ownedDependencies has been removed; ignoring it on component <entryPath>. Delete the field.`                        |
+| `removed-shared-impact`              | Config path                  | `review.sharedImpact has been removed; ignoring it. Delete the field.`                                               |
+| `duplicate-component-stylesheet`     | Component path and real file | `duplicate component stylesheet <path> on component <entryPath> is ignored; it is linked once.`                      |
+| `missing-configured-stylesheet-link` | Route and configured href    | `configured stylesheet link <href> is absent from <route>; component stylesheets use another anchor.`                |
+| `ignored-stylesheet-resource-owner`  | Route and file identity      | `Stylesheet ownership for <path> on <route> is ignored. Changes follow the elements that each changed rule matches.` |
 
-For a duplicate declaration, `<path>` is its first authored public path. For
-removed root or folder metadata, the `removed-dependencies` code uses context
-`["root path:" + JSON.stringify(navPath)]` or
-`["folder:" + JSON.stringify(navPath)]`. Paths include the root labels and every
-ancestor folder title. The messages are exactly
-`dependencies has been removed; ignoring it on root path <path>. Delete the field.`
-and `dependencies has been removed; ignoring it on folder <path>. Delete the field.`,
-where `<path>` is the JSON-quoted path joined with `/`. A component variant
-that supplies a removed field uses its own global id, never its parent's id.
+For a duplicate declaration, `<path>` is its first authored public path.
+A `defineFolder` that supplies removed `dependencies` uses the context
+`["folder:" + path]` and the message
+`dependencies has been removed; ignoring it on folder <entryPath>. Delete the field.`
+Folder warnings never enter descendants. A variant uses its own complete path.
+The retired nested/root helpers have no runtime boundary. Directory folder
+JSON and document front matter retain their strict unknown-field rules.
 
 For an ignored renderer record, `<path>` is the first renderer-record public
 path for that file identity in authored order. This warning replaces the old
@@ -138,3 +135,20 @@ renderer links remain authored output rather than discarded input, so only a
 missing configured href emits the configured-link warning, and only when
 component-link insertion needs an anchor. Non-CSS resource owners and document
 `styles` records retain their existing rules.
+
+## Graceful Handling
+
+For the cases listed below, Mokly stops a build only when it cannot make
+correct, safe output, or when an input has two possible meanings. When an input is not necessary, or disagrees
+with a more specific input, Mokly uses the more specific input and continues.
+When Mokly ignores an input that the author wrote, it shows a warning. The
+[build warning contract](./mokly-build-warnings.md) defines collection,
+deduplication and terminal presentation for the affected cases. This rule does
+not waive public-file confinement, source protection or validation of the
+inputs Mokly actually uses. This rule applies to duplicate component
+CSS declarations, configured-link placement, configured/declared overlap,
+renderer ownership for every stylesheet, and exactly three removed inputs:
+removed entry `dependencies`, component `ownedDependencies`, and `review.sharedImpact`.
+Other unknown fields fail under their owning contract. This includes former
+configuration fields such as `entries` and `entriesDir`; the warning exception
+does not supply a configuration fallback.

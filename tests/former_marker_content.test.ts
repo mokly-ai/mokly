@@ -55,7 +55,7 @@ for (const [name, literal] of formerMarkers) {
   });
 
   test(`CSS containment preserves former ${name} spelling in script text`, () => {
-    const pair = componentCssDocuments(html, html, "screens/plain.mobile.html");
+    const pair = componentCssDocuments(html, html, "plain/index.mobile.html");
     assert.equal(serialize(pair.before!), serialize(parse(html)));
     assert.equal(serialize(pair.after!), serialize(parse(html)));
     assert.deepEqual(pair.ranges?.get(pair.before!), []);

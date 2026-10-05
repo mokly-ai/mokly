@@ -16,16 +16,16 @@ import { waitForClassifiedCount } from "../helpers/watched_catalogue.js";
  */
 const SOURCE = `import React from "react";
 import { defineComponent, definePage } from "@mokly/mokly";
-const metadata = { relatedDocs: [], navPath: ["Fixture"] };
-const action = defineComponent({ ...metadata, id: "action", title: "Action", description: "Action",
+const metadata = { relatedDocs: [] };
+const action = defineComponent({ ...metadata, path: "action", title: "Action", description: "Action",
   propSchema: { kind: "object", properties: {} }, render: () => <button className="action">Continue</button>,
-  variants: [{ id: "action-default", title: "Default", props: {} }] });
-const documentPage = (id, title, sheets, body) => definePage({ ...metadata, id, title, description: title,
+  variants: [{ slug: "default", title: "Default", props: {} }] });
+const documentPage = (entryPath, title, sheets, body) => definePage({ ...metadata, path: entryPath, title, description: title,
   render: () => '<!doctype html><html><head><title>' + title + '</title>' +
-    sheets.map((href) => '<link rel="stylesheet" href="../' + href + '">').join('') +
+    sheets.map((href) => '<link rel="stylesheet" href="' + '../'.repeat(entryPath.split('/').length) + href + '">').join('') +
     '</head><body>' + body + '</body></html>' });
-export const mockups = [action.entries,
-  documentPage("example-handbook", "Getting started", ["actions.css", "handbook.css"],
+export const mockups = [...action.entries,
+  documentPage("example/handbook", "Getting started", ["actions.css", "handbook.css"],
     '<article><h1>Getting started</h1><h2>Next steps</h2><p><span class="action">Open</span></p></article>'),
   documentPage("notes", "Notes", ["notes.css"], "<main><h1>Notes</h1></main>")];
 `;

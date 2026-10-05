@@ -9,7 +9,9 @@ import {
 } from "../src/shell/component_control_fields.js";
 import { type WorkspaceVariant } from "../src/shell/workspace_data.js";
 
-import { source, sourceVariant } from "./component_workspace_fixture.js";
+import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
+
+const { source, sourceVariant } = componentWorkspaceFixture();
 
 test("control drafts preserve primitive edits and emit typed overrides", () => {
   const component: ManifestComponent = {

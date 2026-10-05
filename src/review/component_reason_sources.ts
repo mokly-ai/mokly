@@ -42,7 +42,7 @@ export class ComponentReasonSources implements DependencyReasonSources {
   ): void {
     const components = new Map(
       entries.flatMap((entry) =>
-        entry.kind === "component" ? [[entry.id, entry] as const] : [],
+        entry.kind === "component" ? [[entry.path, entry] as const] : [],
       ),
     );
     for (const item of evidence) {

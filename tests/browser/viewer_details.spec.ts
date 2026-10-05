@@ -39,7 +39,8 @@ type JsonObject = Record<string, unknown>;
  */
 function readyCatalogue(source: CatalogueReadModel): CatalogueReadModel {
   const ready = (entry: JsonObject): JsonObject => {
-    const excluded = entry["id"] === "home" || entry["id"] === "action-default";
+    const excluded =
+      entry["path"] === "home" || entry["path"] === "action/default";
     const views = entry["views"];
     return {
       ...entry,
@@ -83,19 +84,19 @@ function readyCatalogue(source: CatalogueReadModel): CatalogueReadModel {
 /** Mount the public viewer over the ready catalogue and open its Details. */
 async function embeddedEvidence(
   page: Page,
-  screenId: string,
+  screenPath: string,
 ): Promise<Locator> {
   await page.goto(fixture.host.url);
   await page.waitForFunction(() => Boolean(window.viewerHarness));
   await page.evaluate(
-    ({ source, screenId }) => {
+    ({ source, screenPath }) => {
       window.viewerHarness.start("one", {
-        defaultSelection: { screenId },
+        defaultSelection: { screenPath },
         responsive: true,
         source: JSON.parse(source) as unknown,
       });
     },
-    { source: JSON.stringify(catalogue), screenId },
+    { source: JSON.stringify(catalogue), screenPath },
   );
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
@@ -123,7 +124,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("an embedded saved view keeps its Details without the branch-point sentence", async ({
       page,
     }) => {
-      const evidence = await embeddedEvidence(page, "action-default");
+      const evidence = await embeddedEvidence(page, "action/default");
       await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
       await expect(evidence.locator("p")).toHaveText([
         VARIANT_EXCLUDED_LEAD,

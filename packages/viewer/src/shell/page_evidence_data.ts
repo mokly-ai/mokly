@@ -4,6 +4,7 @@ import type { ResourceEvidence } from "../review/types.js";
 import { publicEntryStatus } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import type { ShellContext } from "./context.js";
 import type { EntryStatus } from "./view_status.js";
 
@@ -24,11 +25,11 @@ export interface PageComparisonEvidence {
 export function pageComparisonEvidence(
   catalogue: Catalogue,
   context: ShellContext,
-  id: string,
+  path: string,
 ): PageComparisonEvidence {
   const model = catalogue.publicModel;
   if (model) {
-    const page = model.pages.find((item) => item.id === id);
+    const page = model.pages.find((item) => item.path === path);
     const status = page && publicEntryStatus(page);
     return status
       ? {
@@ -39,19 +40,23 @@ export function pageComparisonEvidence(
         }
       : {};
   }
-  const current = catalogue.manifest.entries.some(
-    (entry) => entry.kind === "page" && entry.id === id,
+  const current = catalogue.manifest.entries.find(
+    (entry) => entry.kind === "page" && entry.path === path,
   );
   const snapshot = context.componentChanges;
-  if (!current || (snapshot === undefined && context.changedIds === undefined))
+  if (
+    !current ||
+    (snapshot === undefined && context.changedEntries === undefined)
+  )
     return {};
-  const live = snapshot?.pageEvidence?.find((item) => item.id === id);
-  const { id: _id, ...resources } = live ?? { id };
+  const live = snapshot?.pageEvidence?.find((item) => item.path === path);
+  const { path: _path, ...resources } = live ?? { path };
   return {
     status:
-      snapshot && !snapshot.baseline.entries.some((entry) => entry.id === id)
+      snapshot &&
+      !branchPoints(catalogue).baselineEntry(current, snapshot.baseline.entries)
         ? "Added"
-        : context.changedIds?.includes(id)
+        : (snapshot?.changedEntries ?? context.changedEntries)?.includes(path)
           ? "Changed"
           : "Unmodified",
     ...(live ? { resources } : {}),

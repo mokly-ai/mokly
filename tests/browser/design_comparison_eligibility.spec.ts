@@ -17,21 +17,23 @@ const manifest = JSON.parse(
   fs.readFileSync(path.join(directory, "mokly-manifest.json"), "utf8"),
 ) as ManifestV8;
 const changedDesigns = new Set([
-  "design-browse-variant-changes",
-  "design-changes-current",
-  "design-changes-overlay",
-  "design-changes-overlay-long",
-  "design-changes-overlay-panel",
-  "design-changes-side-by-side-apart",
-  "design-review-changed",
-  "design-review-difference",
-  "design-review-style-matched",
-  "design-review-style-excluded",
-  "design-review-style-unresolved",
-  "design-review-style-unnamed",
-  "design-publication-changes",
-  "design-appearance-side-by-side",
-  "design-appearance-difference",
+  "design/browse/variants/variant-changes",
+  "design/browse/index-entries/member-changes",
+  "design/changes/diff-controls/current",
+  "design/changes/outcomes/moved",
+  "design/changes/diff-controls/overlay",
+  "design/changes/diff-controls/overlay-long",
+  "design/changes/diff-controls/overlay-panel",
+  "design/changes/diff-controls/side-by-side-apart",
+  "design/changes/outcomes/changed",
+  "design/changes/outcomes/difference",
+  "design/changes/impact/styles/matched-excluded/matched",
+  "design/changes/impact/styles/unresolved-unnamed/unresolved",
+  "design/changes/impact/styles/unresolved-unnamed/unnamed",
+  "design/browse/publication/changes",
+  "design/browse/appearance/workspaces/side-by-side",
+  "design/browse/appearance/workspaces/difference",
+  "design/changes/impact/styles/matched-excluded/excluded",
 ]);
 
 async function assertFragmentEligibility(
@@ -42,7 +44,7 @@ async function assertFragmentEligibility(
   fragment: string,
 ): Promise<void> {
   await page.goto(pathToFileURL(path.join(directory, fragment)).href);
-  const componentDesign = entry.id.startsWith("design-component-");
+  const componentDesign = entry.path.startsWith("design/components/");
   const changedComponentOrScreen =
     componentDesign &&
     (await page.locator('[data-change-status="changed"]').count()) > 0;
@@ -51,7 +53,7 @@ async function assertFragmentEligibility(
     (await page.locator('[data-change-status="removed"]').count()) > 0 &&
     (await page.locator(".ce-variants").count()) > 0;
   const expected =
-    changedDesigns.has(entry.id) ||
+    changedDesigns.has(entry.path) ||
     changedComponentOrScreen ||
     removedComponent;
   const toolbar = page.locator(".mbk-cmp-toolbar");
@@ -79,7 +81,7 @@ async function assertFragmentEligibility(
     }
   }
   await page.screenshot({
-    path: testInfo.outputPath(`${entry.id}.${appearance}.png`),
+    path: testInfo.outputPath(`${entry.path}.${appearance}.png`),
     fullPage: true,
   });
 }
@@ -94,13 +96,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 1440, height: 1000 },
     );
     for (const entry of manifest.entries) {
-      if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
+      if (entry.kind !== "screen" || !entry.path.startsWith("design/"))
+        continue;
       for (const [appearance, fragment] of [
-        ["light", viewRoute("screen", entry.id, viewport, "light")],
+        ["light", viewRoute(entry.path, viewport, "light")],
         [
           "dark",
           entry.colorSchemes.includes("dark")
-            ? viewRoute("screen", entry.id, viewport, "dark")
+            ? viewRoute(entry.path, viewport, "dark")
             : undefined,
         ],
       ] as const) {

@@ -22,6 +22,7 @@ import {
   type ResolvedCatalogueChanges,
 } from "./changed.js";
 import type { ComponentChangeSnapshot } from "./component_changes.js";
+import type { ServerOptions } from "./http_types.js";
 
 const configIdentity = Symbol("validated catalogue config");
 
@@ -54,7 +55,7 @@ export async function loadCatalogueSnapshot(
   return {
     [configIdentity]: config,
     catalogue: timeSync("catalogue.index", () =>
-      createCatalogue(manifest, changes?.removedEntries),
+      createCatalogue(manifest, changes?.removedEntries, changes?.movedEntries),
     ),
     ...(changes ? { changes } : {}),
     ...(changes?.componentChanges
@@ -64,7 +65,7 @@ export async function loadCatalogueSnapshot(
 }
 
 /** Validate the distinct live index without claiming uncomputed render evidence. */
-export async function loadLiveCatalogueSnapshot(
+async function loadLiveCatalogueSnapshot(
   config: ResolvedConfig,
   index: CatalogueIndex,
 ): Promise<CatalogueSnapshot> {
@@ -74,7 +75,7 @@ export async function loadLiveCatalogueSnapshot(
 }
 
 /** Validate startup metadata once, retaining Browse when optional history is unavailable. */
-export function loadServedCatalogueSnapshot(
+function loadServedCatalogueSnapshot(
   config: ResolvedConfig,
   base?: string,
   manifest?: ManifestV8,
@@ -108,7 +109,7 @@ export function loadServedCatalogueSnapshot(
 }
 
 /** Reject snapshots from another configuration or outside the validation factory. */
-export function catalogueSnapshotForConfig(
+function catalogueSnapshotForConfig(
   snapshot: CatalogueSnapshot,
   config: ResolvedConfig,
 ): CatalogueSnapshot {
@@ -118,4 +119,28 @@ export function catalogueSnapshotForConfig(
       "catalogue snapshot does not belong to this configuration",
     );
   return snapshot;
+}
+
+/** Select and validate the initial accepted snapshot before the HTTP server starts. */
+export async function initialCatalogueSnapshot(
+  config: ResolvedConfig,
+  options: ServerOptions,
+): Promise<ReturnType<typeof catalogueSnapshotForConfig>> {
+  const snapshot =
+    options.snapshot ??
+    (options.manifest?.schemaVersion === "live-index-1"
+      ? await loadLiveCatalogueSnapshot(config, options.manifest)
+      : await loadServedCatalogueSnapshot(
+          config,
+          options.manifest ||
+            options.componentChanges ||
+            options.componentChangeSource
+            ? undefined
+            : options.review
+              ? options.base
+              : undefined,
+          options.manifest,
+          options.review?.repository,
+        ));
+  return catalogueSnapshotForConfig(snapshot, config);
 }

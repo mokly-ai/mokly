@@ -9,7 +9,7 @@ test("render requests merge only declared controls with lossless values and opti
   const fixture = await componentReviewFixture(t, (value) => value);
   const request = {
     componentId: "action",
-    variantId: "action-disabled",
+    variantPath: "action/disabled",
     viewport: "desktop",
     colorScheme: "light",
     generation: "generation",
@@ -57,7 +57,7 @@ test("render requests merge only declared controls with lossless values and opti
   assert.throws(
     () =>
       validateRenderRequest(
-        { ...request, variantId: "missing" },
+        { ...request, variantPath: "missing" },
         fixture.after.manifest,
         "generation",
       ),

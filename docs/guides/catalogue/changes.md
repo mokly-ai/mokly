@@ -10,7 +10,8 @@ order: 3
 Changes compares your working tree with the branch point shared by `HEAD` and
 the Git base your configuration names, which is `origin/main` unless you say
 otherwise. It compares the generated documents, the local resources they
-render, entry metadata and the `navPath` an entry sits in.
+render and entry metadata, pairing each entry with the baseline entry of the
+same kind at the same path.
 
 Commits added to the base branch after you diverged do not appear as your
 changes. Staged, unstaged and untracked edits in your working tree do.
@@ -19,7 +20,8 @@ changes. Staged, unstaged and untracked edits in your working tree do.
 
 A source edit that leaves a screen's output, rendered-resource references and
 reviewable metadata identical does not add the screen or comparison evidence,
-with or without registered components. Moving files around does not fill Changes.
+with or without registered components. A source move that keeps the entry path fixed adds no output change. A changed
+entry path appears as Moved. A folder title change changes no entry.
 Review-ignore can omit changes inside a marked region. Changed styles that
 reach nothing on a view are examined and excluded. Evidence remains available
 in Details even when no Changes row exists.
@@ -72,6 +74,52 @@ For example, Y's own-page matches are all inside a changed Z. On X's saved page,
 a match inside Y but outside Z is still taken from X by Y's own-page matches.
 If X keeps no other match, X is not changed as a component. Its saved view gets
 a page row because the match is outside Z. The change stays visible there.
+
+## Moved entries
+
+Because an entry's path is its identity, moving a file to another directory
+or renaming it gives the entry a new path. Changes pairs the entry at the new
+path with the baseline entry it came from instead of reporting a removal and
+an addition, and labels the row Moved; the details show the previous path. A
+pure move stays in Changes so that you can see it, without counting as an
+output change, and a move with edits offers the usual comparison against the
+version at the old path.
+
+Mokly pairs a moved entry when exactly one baseline entry of the same kind
+matches it: first by a `movedFrom` you declared, then by identical content,
+then, for entries defined in modules, by the same source module and title, and, for pages and Markdown
+documents only, by content that is at least half alike. The identical-content
+pass repeats after each round of new pairs, so entries that link to each other
+and move together still compare equal. A resource compares by the route it
+resolves to and by its bytes, not by how its link is spelled, so an unchanged
+image or stylesheet that moves with its entry adds no change. Similarity counts
+only what you wrote: a Markdown document's body without its front matter, and
+the text in a page's rendered body, never the shared template around them.
+When more than one candidate matches, nothing is paired, and Serve and export
+print the ambiguity in the terminal, suggesting `movedFrom`. Declare it on the
+entry, or in a document's front matter, with the complete previous path:
+
+```tsx
+// specs/account/home.mockup.tsx
+import { defineScreen } from "@mokly/mokly";
+
+export default defineScreen({
+  title: "Account home",
+  description: "The account landing screen.",
+  mobile: <main>Account</main>,
+  desktop: <main>Account</main>,
+
+  relatedDocs: [],
+  movedFrom: "account/overview",
+});
+```
+
+A `movedFrom` that names nothing in the baseline leaves the entry Added, and
+the terminal reports it. Once the base branch contains the move, the declaration names no
+removed entry and can be deleted; keeping it is harmless. A moved screen with
+variants carries its variants with it, pairing each by slug. A variant you
+delete during the move stays listed under the screen at its new place,
+labelled Removed.
 
 ## Compare a screen
 
@@ -132,16 +180,17 @@ dots and Changed views point to changes elsewhere.
 An added entry shows its current preview and an Added status, with no
 comparison controls, because there is no earlier version.
 
-A removed page or screen keeps its Removed status and opens the version from
-the branch point instead, labelled "Showing previous version". A page opens in
-its document pane and a screen in its mobile and desktop frames, with the
-themes it was captured in. A viewport that was never captured says so on the
-stage and names the one that still opens. That version is read only: you can
-scroll it, select text and follow anchors inside it, but its links and forms
-do nothing, so an old link can never take you to current content. While it is
-being retrieved the stage says so, and if it cannot be shown you get "Previous
-version unavailable" with a Retry, while the rest of the catalogue stays
-usable.
+A removed page, document or screen keeps its Removed status and opens the
+version from the branch point instead, labelled "Showing previous version". A
+page or document opens in its document pane and a screen in its mobile and
+desktop frames, with the themes it was captured in. A viewport that was never
+captured says so on the stage and names the one that still opens. That version
+is read only: you can scroll it, select text and follow anchors inside it, but
+its links and forms do nothing, so an old link can never take you to current
+content. While it is being retrieved the stage says so, and if it cannot be
+shown you get "Previous version unavailable" with a Retry, while the rest of
+the catalogue stays usable. An entry that Changes paired as moved is never
+shown as removed.
 
 A removed component variant keeps its earlier version, so it can still be
 compared.
@@ -151,4 +200,5 @@ compared.
 If a referenced public file is invalid, Changes is unavailable until it is
 repaired, while All stays open. A verified deletion still identifies the
 screens it affects. Where history is unavailable, current previews stay
-available without change evidence.
+available without change evidence. A comparison base built by an earlier
+Mokly release makes Changes unavailable until the base includes this version.

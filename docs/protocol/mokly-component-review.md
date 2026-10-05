@@ -5,23 +5,24 @@
 CSS per-rule attribution and the revised v5 evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
 of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
-The producer, source validator, artifact publisher, exporter, and browser decoder
-implement this unified Review schema v5 for [change attribution](./mokly-component-changes.md).
-`ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
-base [Changes contract](./mokly-changes.md) and
-[named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
-from the [component manifest](./mokly-component-manifest.md). Version 5,
-defined by the [id-derived routes plan](../../plans/id-derived-routes.md),
-addresses screens, components, variants, and views by entry id and view axes
-and stores no artifact path.
+The producer, source validator, artifact publisher, exporter, and browser
+decoder implement this path-keyed component-aware schema v5 for
+[change attribution](./mokly-component-changes.md). `ReviewResult`,
+`ScreenReview`, `ViewReview`, and `ReviewState` refer to the base
+[Changes contract](./mokly-changes.md) and
+[named result interfaces](../../packages/viewer/src/review/types.ts).
+Manifest/usage types come from the
+[component manifest](./mokly-component-manifest.md). Version 5 addresses
+screens, components, variants, and views by entry path and view axes, carries
+`previousPath` for paired moves, and stores no artifact path.
 
 ## Normative Result
 
-Every catalogue emits the [comparison v5 records](./mokly-component-comparison-records.md). These identity-keyed records preserve entry sides, variants, rendered view evidence and affected consumers.
+Every catalogue emits the [comparison v5 records](./mokly-component-comparison-records.md).
 
 ## Reasons And Secondary Evidence
 
-Changed entries have nonempty, duplicate-free reasons. Added/removed reasons
+Changed entries have duplicate-free reasons, empty only for a paired pure move. Added/removed reasons
 require the corresponding missing side; metadata compares the explicit entry
 projection, including a parent's schema/controls and a variant entry's props
 and supplied slots. Material means a
@@ -39,7 +40,7 @@ stylesheet reason may carry the
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
 stylesheet paths in analysis scope, a view carries `material: true` exactly
 when its normalized documents differ, and a view's `excludedResources` paths must be in
-`changedPaths` and never coincide with that view's dependency reasons. A screen reason is allowed only on a use case and
+`changedPaths` and never coincide with that view's dependency reasons. A screen reason names a step's `screenPath`, is allowed only on a use case, and
 must reference a directly changed screen actually used on at least one side.
 Use cases also retain their own metadata reasons. One screen with
 only affected component evidence cannot produce a use-case screen reason.
@@ -62,7 +63,7 @@ markers, and one-sided range validation.
 Views omit empty `reasons` and `excludedResources` lists and sort both by path.
 Entry reasons merge by path and rule key under the
 [CSS evidence schema](./mokly-css-attribution-membership.md). It adds per-rule
-changed component ids and page evidence in v5, without a new version. A
+changed component paths and page evidence in v5, without a new version. A
 component-only rule can be absent from a consumer's entry reasons while still
 appearing in its view evidence. CSS at an actual invocation cannot change a
 component whose own pages keep no match for that rule. Non-CSS resource
@@ -70,17 +71,17 @@ ownership keeps its current suppression policy. One view's exclusion never
 cancels another's retained evidence.
 
 Each affected record groups one changed component and one canonical consumer.
-Its component id must appear in `changes` with kind component, and evidence
-must be nonempty.
+Its `changedComponentId` must name a component that appears in `changes` with
+kind component, and evidence must be nonempty.
 Build its evidence from the union of baseline/current actual usage, deduplicating
 identical evidence. A consumer may also be directly changed. Self-impact is not
 listed. A component is listed as affected only through an actual usage path, not
 because it happens to share a directory.
 
 Every `via` is a nonempty caller-ownership chain from the consumer to the changed
-component; its last component id equals `changedComponentId`. Each instance key
+component; its last `componentId`, mapped through accepted pairs, equals `changedComponentId`. Each instance key
 must exist in the referenced side/context's manifest usage, with its stated
-component id and a valid ownership edge to the next occurrence. Direct screen
+`componentId` and a valid ownership edge to the next occurrence. Direct screen
 use has one element. A component consumer either owns the context entry or is
 an earlier instance on that chain within a screen/another component's context.
 The evidence's full context remains available to open that actual usage; never
@@ -88,7 +89,8 @@ invent a saved variant for a screen-supplied prop combination.
 
 Use input ownership, not physical slot placement, to determine these edges. A
 screen-supplied child in a container slot remains a direct screen dependency.
-For removed consumers the before-side address and usage supply the link target.
+The [branch-point lookup](./mokly-branch-point-lookup.md#reference-sides) resolves
+each evidence destination from its own side; stored evidence paths never change.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 

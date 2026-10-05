@@ -128,7 +128,7 @@ Parent status and variant status are distinct. Removing Compact from Action
 makes Compact its own Removed component variant entry, comparable with an
 explicit missing current side, while Action's status describes the parent
 only; Farewell is a Removed screen with no comparison controls.
-The `design-component-variants` mockup depicts the inverse boundary: the
+The `design/components/pages/variants` mockup depicts the inverse boundary: the
 selected Disabled variant entry is Unmodified and ineligible, so no comparison
 band appears, even though a sibling variant changed.
 The Added Badge example lives in States → Additions and shows its current saved
@@ -137,15 +137,19 @@ example remains Unmodified. Status must never be inferred from usage counts.
 
 ## Comparison Details
 
+Variant parents, workspace keys and paired inputs follow the
+[branch-point lookup](./mokly-branch-point-lookup.md). Presentation stays the same
+when a parent or variant moves or changes letter case.
+
 Name the information icon Details. Keep comparison evidence, when present,
 inside this panel alongside description and secondary source metadata. Do not
 add a comparison disclosure below the canvas or a separate explanatory banner
 above it. The panel remains available on a Removed screen's stage even though
 that screen has no comparison modes. Ordinary Unmodified mockups omit the
 comparison section unless there is retained or excluded rendered-resource evidence.
-The `design-component-shared-impact` artboard in States → Stylesheet evidence depicts
+The `design/components/states/shared-impact/shared-impact` artboard in States → Stylesheet evidence depicts
 Unmodified Action with excluded stylesheet evidence in Details and no comparison band.
-Its `design-component-style-changed` and `design-component-style-outside`
+Its `design/components/states/shared-impact/style-changed` and `design/components/states/shared-impact/style-outside`
 siblings depict a changed Action and a screen styled outside it; each changed
 file lists its outcomes under that file.
 

@@ -70,8 +70,8 @@ for (const adapter of ["same-origin", "postMessage"] as const) {
         await expect(frame).toHaveAttribute(
           "src",
           preview === "dark"
-            ? /home\.mobile\.dark\.html$/u
-            : /home\.mobile\.html$/u,
+            ? /home\/index\.mobile\.dark\.html$/u
+            : /home\/index\.mobile\.html$/u,
         );
         const content = page.frameLocator(
           `#${id} iframe[data-workspace-frame="mobile"]`,
@@ -168,7 +168,7 @@ test("an appearance change preserves everything the reader is doing", async ({
       {
         id: "marker",
         instance: {
-          screenId: "home",
+          screenPath: "home",
           viewport: "mobile",
           colorScheme: "light",
           key: "action",

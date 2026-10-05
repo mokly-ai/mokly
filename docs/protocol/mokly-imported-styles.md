@@ -34,15 +34,24 @@ sorted repo-relative symlink (even dangling), FIFO, socket or device without
 following it. Derived Check uses Git tracking for output ownership after its
 graph load. Successful Build prunes empty
 directories beneath the root (including it), never during rollback. Catalogue
-routes cannot begin with `mokly-generated/`; only portable `styles/**.css` and
+paths cannot have a first segment equal to `mokly-generated`, compared
+case-insensitively; only portable `styles/**.css` and
 supported `assets/**` can be generated inside it, never HTML.
 
-Reject `entries` static prefixes, `entriesDir` and `review.outDir` at or inside
-the reserved tree, and local `stylesheets` (shared/light/dark) paths inside it.
-Resolve existing symlink aliases for these configured path boundaries as well.
-Discovery skips it like Review output; broad co-located `entries` globs remain
-valid. The existing `entriesDir === mockupsDir` ban remains: otherwise every
-public file becomes authored source. Reject a consumer `publicExclude` only if
+Generated route segments allow a leading letter, digit, underscore or hyphen;
+subsequent characters may also include dot and tilde. Device-name stems and
+trailing dots remain invalid. A nonportable module file or directory name cannot
+produce a stylesheet route, even when an entry declares a valid `path`. Build
+fails with `cannot deliver imported CSS for {module}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`,
+where `{module}` is repository-relative. Entry identity and CSS delivery routes
+have distinct inputs; the override changes only entry identity.
+
+Reject root directories and `roots[].files` static prefixes, and `review.outDir`,
+at or inside the reserved tree, and local `stylesheets` (shared/light/dark) paths
+inside it. Resolve existing symlink aliases for these configured path boundaries.
+Discovery skips it like Review output; broad roots and file globs remain valid.
+A root directory cannot equal `mockupsDir`: otherwise every public file could
+become authored source. Reject a consumer `publicExclude` only if
 a brace-expanded alternative's first segment is literally `mokly-generated`.
 Build rejects generated stylesheet/asset routes matching **any** exclusion,
 defaults included, naming the route and glob. Reject authored inputs through
@@ -64,8 +73,8 @@ use parser recovery, and never parse or inventory package CSS under
 are relative to esbuild's real working directory even when the configured
 repository root is a symlink; map all keys back to the logical root before
 ordering roots or recording sources. When no renderer or entry reaches CSS, skip the
-stylesheet pass entirely. A CSS-only entry still has an entry root even if it
-registers no view. Two entries sharing CSS each emit it in their own bundle.
+stylesheet pass entirely. A module that exports only a folder record still has a CSS delivery root even
+though it registers no view. Every entry module must export a definition. Two entries sharing CSS each emit it in their own bundle.
 After the JavaScript graph build and before CSS bundling or graph inventory,
 validate each delivery root's direct CSS imports against `repoRoot`. Read the
 metafile edge's original specifier and importing module, including extensionless

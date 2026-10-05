@@ -15,49 +15,53 @@ import {
 test("the Welcome conversion keeps the approved screens as variants, not folder members", async () => {
   const { manifest } = await designCatalogue;
   const parent = manifest.entries.find(
-    (entry) => entry.id === "design-browse-screen",
+    (entry) => entry.path === "design/browse/views/screen",
   );
   assert.ok(parent?.kind === "screen");
   for (const [id] of convertedVariants) {
-    const entry = manifest.entries.find((candidate) => candidate.id === id);
+    const entry = manifest.entries.find((candidate) => candidate.path === id);
     assert.equal(entry?.kind, "screen", id);
     if (entry?.kind !== "screen") continue;
-    assert.equal(entryRoute("screen", entry.id), `screens/${id}.html`, id);
-    assert.equal(entry.variantOf, "design-browse-screen", id);
-    assert.deepEqual(entry.navPath, parent.navPath, id);
+    assert.equal(entryRoute(entry.path), `${id}/index.html`, id);
+    assert.equal(entry.variantOf, "design/browse/views/screen", id);
+    assert.ok(entry.path.startsWith(`${parent.path}/`), id);
   }
   assert.equal(
-    manifest.entries.some((entry) => entry.id === "design-browse-tags"),
+    manifest.entries.some((entry) => entry.path === "design-browse-tags"),
     false,
   );
   const filter = manifest.entries.find(
-    (entry) => entry.id === "design-browse-tag-filter",
+    (entry) => entry.path === "design/browse/states/tag-filter",
   );
-  assert.deepEqual(filter?.navPath, [
-    "Design",
-    "Mokly design",
-    "Browse shell",
-    "Shell states",
-  ]);
+  assert.equal(filter?.path, "design/browse/states/tag-filter");
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: catalogue navigation separates pages and components`, async () => {
+  test(`${viewport}: catalogue navigation separates specs and components`, async () => {
     const { document } = await designDocument(
-      viewport === "mobile" ? "design-browse-navigation" : "design-browse-home",
+      viewport === "mobile"
+        ? "design/browse/states/navigation"
+        : "design/browse/views/home",
       viewport,
     );
     const sections = byClass(document, "mbk-nav-section");
     assert.deepEqual(
       sections.map((section) => attribute(section, "data-nav-section")),
-      ["pages", "components"],
+      ["specs", "components"],
     );
     assert.ok(sections.every((section) => attribute(section, "open") === ""));
-    const pages = textContent(sections[0] ?? document);
+    assert.deepEqual(
+      sections.map((section) =>
+        textContent(byClass(section, "mbk-nav-section-head")[0]!).trim(),
+      ),
+      ["Specs", "Components"],
+    );
+    const specs = textContent(sections[0] ?? document);
     const components = textContent(sections[1] ?? document);
-    assert.match(pages, /Welcome/);
-    assert.match(pages, /Example tour/);
-    assert.doesNotMatch(pages, /Action|Toolbar/);
+    assert.match(specs, /Welcome/);
+    assert.match(specs, /Example tour/);
+    assert.match(specs, /Overview/);
+    assert.doesNotMatch(specs, /Action|Toolbar/);
     assert.match(components, /Action/);
     assert.match(components, /Toolbar/);
     assert.doesNotMatch(components, /Welcome|Example tour/);
@@ -66,7 +70,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: all five owning destinations keep their route and frame`, async () => {
     for (const [id, route] of additions) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entryRoute("screen", entry.id), route);
+      assert.equal(entryRoute(entry.path), route);
       assert.equal(byClass(document, "mbk-shell").length, 1);
       assert.equal(
         byClass(
@@ -80,11 +84,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: tag states agree on query, picker, selection, and visible rows`, async () => {
     for (const [id, tag, picker] of [
-      ["design-browse-tag-picker", undefined, true],
-      ["design-browse-tag-filter", "forms", true],
-      ["design-browse-tag-forms", "forms", false],
-      ["design-browse-tag-onboarding", "onboarding", false],
-      ["design-browse-tag-onboarding-picker", "onboarding", true],
+      ["design/browse/views/screen/tag-picker", undefined, true],
+      ["design/browse/states/tag-filter", "forms", true],
+      ["design/browse/views/screen/tag-forms", "forms", false],
+      ["design/browse/views/screen/tag-onboarding", "onboarding", false],
+      ["design/browse/views/screen/tag-onboarding-picker", "onboarding", true],
     ] as const) {
       const { document } = await designDocument(id, viewport);
       const query = byClass(document, "mbk-search-value").map(textContent);
@@ -112,51 +116,54 @@ for (const viewport of ["mobile", "desktop"] as const) {
 }
 
 test("inspector metadata belongs to its depicted subject", async () => {
-  const detailPage = await designDocument("design-review-added", "desktop");
+  const detailPage = await designDocument(
+    "design/changes/outcomes/added",
+    "desktop",
+  );
   const detailBody = byClass(detailPage.document, "mbk-details-body")[0];
   assert.ok(detailBody);
   const details = textContent(detailBody);
   assert.match(details, /Additional context for the example catalogue/);
-  assert.doesNotMatch(details, /Generated|screens\/details\.html/);
+  assert.doesNotMatch(details, /Generated|details\/index\.html/);
   assert.doesNotMatch(
     details,
-    /screens\/welcome\.html|landing screen|onboarding/,
+    /welcome\/index\.html|landing screen|onboarding/,
   );
   assert.match(details, /Example tour/);
-  const removedPage = await designDocument("design-review-removed", "desktop");
+  const removedPage = await designDocument(
+    "design/changes/outcomes/removed",
+    "desktop",
+  );
   const removedBody = byClass(removedPage.document, "mbk-details-body")[0];
   assert.ok(removedBody);
   const removed = textContent(removedBody);
-  assert.doesNotMatch(
-    removed,
-    /screens\/welcome\.html|Example tour|onboarding/,
-  );
+  assert.doesNotMatch(removed, /welcome\/index\.html|Example tour|onboarding/);
   assert.match(removed, /Farewell/);
 });
 
 test("review impact omits the path-only state and retains the rendered evidence states", async () => {
   const { manifest, outputs } = await designCatalogue;
   const impact = manifest.entries.filter((entry) =>
-    entry.navPath.includes("Impact states"),
+    entry.path.startsWith("design/changes/impact/"),
   );
-  assert.deepEqual(impact.map((entry) => entry.id).sort(), [
-    "design-review-empty",
-    "design-review-ignored-only",
-    "design-review-style-excluded",
-    "design-review-style-excluded-only",
-    "design-review-style-matched",
-    "design-review-style-page",
-    "design-review-style-unnamed",
-    "design-review-style-unresolved",
+  assert.deepEqual(impact.map((entry) => entry.path).sort(), [
+    "design/changes/impact/empty",
+    "design/changes/impact/ignored-only",
+    "design/changes/impact/styles/matched-excluded/excluded",
+    "design/changes/impact/styles/matched-excluded/excluded-only",
+    "design/changes/impact/styles/matched-excluded/matched",
+    "design/changes/impact/styles/page",
+    "design/changes/impact/styles/unresolved-unnamed/unnamed",
+    "design/changes/impact/styles/unresolved-unnamed/unresolved",
   ]);
   assert.equal(
     manifest.entries.some(
-      (entry) => entry.id === "design-review-shared-impact",
+      (entry) => entry.path === "design/changes/impact/shared-impact",
     ),
     false,
   );
   for (const [route, html] of outputs) {
-    if (!route.startsWith("screens/design-review-")) continue;
+    if (!route.startsWith("design/changes/")) continue;
     assert.ok(typeof html === "string");
     assert.doesNotMatch(
       html,

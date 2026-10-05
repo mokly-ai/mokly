@@ -20,25 +20,26 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     },
     details,
     documentPath: null,
-    id: "removed-page",
+    path: "removed-page",
     kind: "page" as const,
-    navPath: [],
+
     route: "removed.html",
     tags: [],
     title: "Removed page",
   };
   const model: CatalogueReadModel = {
+    documents: [],
     changesStatus: "ready",
     comparisonUrl: null,
     components: [],
     deploymentId: "0".repeat(64),
     identity: { id: "fixture", title: "Fixture" },
     pages: [],
-    removedEntries: [{ entry }],
+    removedEntries: [{ folderTitles: [], entry }],
     revision: { content: 1, evidence: 1 },
-    schemaVersion: 4,
+    schemaVersion: 4 as const,
     screens: [],
-    tree: { components: [], pages: [] },
+    tree: [],
     useCases: [],
   };
   const catalogue = viewerCatalogue(model);

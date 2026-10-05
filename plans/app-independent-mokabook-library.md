@@ -1,5 +1,10 @@
 # App-Independent Mokabook Npm Library
 
+Status: Active. [PR #1](https://github.com/mokly-ai/mokly/pull/1) merged on
+2026-07-20. Milestones 10–13 still have open TODOs. The package was later
+released as `mokabook` and then renamed to `@mokly/mokly` by
+[Mokly Package Migration](./mokly-package-migration.md).
+
 <!-- markdownlint-disable MD013 -->
 
 ## Status

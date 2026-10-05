@@ -7,7 +7,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
@@ -31,10 +31,10 @@ test("unrendered source files do not affect component Changes", async (t) => {
   if (result.schemaVersion !== 5) return;
   const expected: string[] = [];
   assert.deepEqual(
-    result.changes.map((entry) => entry.after!.id),
+    result.changes.map((entry) => entry.after!.path),
     expected,
   );
-  assert.deepEqual(await computeChangedIds(config, "main", git), expected);
+  assert.deepEqual(await computeChangedPaths(config, "main", git), expected);
   assert.deepEqual(result.affectedConsumers, []);
   assert.equal(Object.hasOwn(result, "sharedImpact"), false);
 });
@@ -47,10 +47,10 @@ for (const ownership of ["renderer", "declared", "unowned"] as const)
         '<button className="action" data-viewport=',
       )
       .replace(
-        'id: "action",',
+        'path: "action",',
         ownership === "declared"
-          ? 'id: "action", stylesheets: ["action.css"],'
-          : 'id: "action",',
+          ? 'path: "action", stylesheets: ["action.css"],'
+          : 'path: "action",',
       );
     const fixture = await createFixture(source, {
       extraConfig:
@@ -89,13 +89,13 @@ for (const ownership of ["renderer", "declared", "unowned"] as const)
     const artifact = await compareReview(after, config, git, "main");
     assert.equal(artifact.result.schemaVersion, 5);
     if (artifact.result.schemaVersion !== 5) return;
-    const expected = ["action", "action-default", "action-disabled"];
+    const expected = ["action", "action/default", "action/disabled"];
     assert.deepEqual(
-      artifact.result.changes.map((entry) => entry.after!.id),
+      artifact.result.changes.map((entry) => entry.after!.path),
       expected,
     );
     assert.deepEqual(
-      await computeChangedIds(config, "main", git),
+      await computeChangedPaths(config, "main", git),
       [...expected].sort(),
     );
     assert.equal(
@@ -135,7 +135,7 @@ for (const owned of [false, true])
     assert.equal(result.schemaVersion, 5);
     if (result.schemaVersion !== 5) return;
     assert.deepEqual(
-      result.changes.map((entry) => entry.after!.id),
+      result.changes.map((entry) => entry.after!.path),
       owned ? ["action"] : ["action", "pane", "home"],
     );
   });

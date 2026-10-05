@@ -23,23 +23,23 @@ import {
 
 test("served Browse adapts current HTML without mutating portable files", async (context) => {
   const fixture = await navigationFixture(context);
-  const diskPath = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const diskPath = path.join(fixture.mockupsDir, "home/index.mobile.html");
   const disk = await fs.promises.readFile(diskPath, "utf8");
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
 
-  const response = await fetch(`${server.url}/static/screens/home.mobile.html`);
+  const response = await fetch(`${server.url}/static/home/index.mobile.html`);
   const served = await response.text();
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("cache-control"), "no-store");
   assert.match(served, /data-mokly-link="details#section"/);
-  assert.match(served, /href="\.\/details\.mobile\.html#section"/);
+  assert.match(served, /href="\.\.\/details\/index\.mobile\.html#section"/);
   assert.doesNotMatch(served, /data-mokly-target="spoof"/);
   assert.equal(await fs.promises.readFile(diskPath, "utf8"), disk);
 
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "unowned.html"),
-    '<a data-mokly-link="details" data-mokly-target="_top" href="./screens/details.mobile.html">Details</a>',
+    '<a data-mokly-link="details" data-mokly-target="_top" href="./details/index.mobile.html">Details</a>',
   );
   const unowned = await (
     await fetch(`${server.url}/static/unowned.html`)
@@ -48,13 +48,13 @@ test("served Browse adapts current HTML without mutating portable files", async 
 
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "unowned.htm"),
-    '<a data-mokly-link="details" href="./screens/details.mobile.html">Details</a>',
+    '<a data-mokly-link="details" href="./details/index.mobile.html">Details</a>',
   );
   const htm = await fetch(`${server.url}/static/unowned.htm`);
   assert.match(htm.headers.get("content-type") ?? "", /text\/html/);
   assert.doesNotMatch(await htm.text(), /data-mokly-link/);
 
-  const head = await fetch(`${server.url}/static/screens/home.mobile.html`, {
+  const head = await fetch(`${server.url}/static/home/index.mobile.html`, {
     method: "HEAD",
   });
   assert.equal(head.status, 200);
@@ -76,24 +76,18 @@ test("served fragment queries validate once and reach every applicable frame", a
   fixture.beforeRemove(() => server.close());
 
   const screen = await (
-    await fetch(`${server.url}/view/screens/details.html?fragment=section`)
+    await fetch(`${server.url}/view/details/?fragment=section`)
   ).text();
+  assert.match(screen, /src="\/static\/details\/index\.mobile\.html#section"/);
   assert.match(
     screen,
-    /src="\/static\/screens\/details\.mobile\.html#section"/,
+    /data-fragment-dark="\/static\/details\/index\.mobile\.dark\.html#section"/,
   );
-  assert.match(
-    screen,
-    /data-fragment-dark="\/static\/screens\/details\.mobile\.dark\.html#section"/,
-  );
-  assert.match(
-    screen,
-    /src="\/static\/screens\/details\.desktop\.html#section"/,
-  );
+  assert.match(screen, /src="\/static\/details\/index\.desktop\.html#section"/);
   assert.equal(fragmentFrames(screen).length, 2);
 
   const flow = await (
-    await fetch(`${server.url}/view/user-flows/tour.html?fragment=section`)
+    await fetch(`${server.url}/view/tour/?fragment=section`)
   ).text();
   const flowFrames = documentFrames(flow);
   assert.equal(flowFrames.length, 2);
@@ -125,7 +119,7 @@ test("served fragment queries validate once and reach every applicable frame", a
     "fragment=absent",
   ]) {
     assert.equal(
-      (await fetch(`${server.url}/view/screens/details.html?${query}`)).status,
+      (await fetch(`${server.url}/view/details/?${query}`)).status,
       400,
       query,
     );
@@ -183,15 +177,18 @@ test("served Browse fails closed on post-build trusted tampering", async (contex
   const fixture = await navigationFixture(context);
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
-  const target = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const target = path.join(fixture.mockupsDir, "home/index.mobile.html");
   const original = await fs.promises.readFile(target, "utf8");
   await fs.promises.writeFile(
     target,
-    original.replace("./details.mobile.html", "./home.mobile.html"),
+    original.replace(
+      "../details/index.mobile.html",
+      "../home/index.mobile.html",
+    ),
   );
 
   assert.equal(
-    (await fetch(`${server.url}/static/screens/home.mobile.html`)).status,
+    (await fetch(`${server.url}/static/home/index.mobile.html`)).status,
     500,
   );
 });
@@ -242,11 +239,11 @@ function nodeRequest(
 function navigationSource(): string {
   return `import { defineScreen, defineUseCase } from "@mokly/mokly";
 import React from "react";
-const metadata = { navPath: ["Fixture"], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, description: "Home", desktop: <main><a data-mokly-target="spoof" href="mock:details#section">Details</a></main>, id: "home", mobile: <main><a data-mokly-target="spoof" href="mock:details#section">Details</a></main>, route: "screens/home.html", title: "Home", useCaseIds: ["tour"] }),
-  defineScreen({ ...metadata, description: "Details", desktop: <main id="section">Details</main>, id: "details", mobile: <main id="section">Details</main>, route: "screens/details.html", title: "Details", useCaseIds: ["tour"] }),
-  defineUseCase({ ...metadata, description: "Tour", id: "tour", route: "user-flows/tour.html", steps: [{ screenId: "details" }, { screenId: "home" }], title: "Tour" })
+  defineScreen({ ...metadata, description: "Home", desktop: <main><a data-mokly-target="spoof" href="mock:details#section">Details</a></main>, path: "home", mobile: <main><a data-mokly-target="spoof" href="mock:details#section">Details</a></main>, title: "Home", useCasePaths: ["tour"] }),
+  defineScreen({ ...metadata, description: "Details", desktop: <main id="section">Details</main>, path: "details", mobile: <main id="section">Details</main>, title: "Details", useCasePaths: ["tour"] }),
+  defineUseCase({ ...metadata, description: "Tour", path: "tour", steps: [{ screenPath: "details" }, { screenPath: "home" }], title: "Tour" })
 ];
 `;
 }

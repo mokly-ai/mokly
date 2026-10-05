@@ -89,13 +89,13 @@ throw; the stderr implementation tolerates a closed diagnostic stream.
 the marker records the commands. A complete entry for different settings fails
 explicitly and remains intact. Remove that commit's cache entry before changing
 its catalogue/build settings. Partial entries are rebuilt under the entry lock.
-`manifest.ts` validates canonical v8 output during adoption. It recognizes lower
-integer versions and former filenames as incompatible output; former filenames
-are sentinels and their contents are never read. The comparison gate reports
-unavailability without rerunning trusted baseline commands for a cached result.
-`compatibility.ts` owns that typed outcome and its single user-facing line.
-Newer or malformed output is not adopted. No older schema or stored layout is
-converted or admitted.
+`manifest.ts` fully validates v8 during adoption. It retains a lower integer
+version or earlier-name sentinel as completed incompatible output so the
+historical gate can report the expected unavailable outcome without rerunning
+trusted baseline commands. The gate accepts only path-keyed manifest v8 under
+the [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md). `compatibility.ts` owns that typed outcome and its
+single user-facing line. Newer or malformed output is not adopted.
+Former filenames are sentinels; their contents are never read. No schema or stored layout is converted.
 
 Lock publication uses a fully written temporary file and an exclusive hard link.
 The filesystem captures the temporary file's identity before publication and

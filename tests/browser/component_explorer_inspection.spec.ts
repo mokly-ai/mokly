@@ -2,24 +2,27 @@ import { expect, test } from "@playwright/test";
 
 import type { RunningServer } from "../../dist/server/http_types.js";
 
-import { createExplorerFixture } from "./component_explorer_fixture.js";
+import { startComponentExplorer } from "./component_explorer_runtime_fixture.js";
 
 let server: RunningServer;
-let close: () => Promise<void>;
+
+const cleanup: (() => Promise<void>)[] = [];
+
 test.beforeAll(async () => {
-  const fixture = await createExplorerFixture();
-  server = fixture.server;
-  close = fixture.close;
+  server = await startComponentExplorer(cleanup);
 });
-test.afterAll(async () => close());
+
+test.afterAll(async () => {
+  for (const dispose of cleanup.reverse()) await dispose();
+});
 
 test("screen inspection records real nested, repeated and hidden instances without listing the screen in Changes", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
   await expect(
-    page.locator('[data-nav-row][data-route="screens/home.html"]'),
+    page.locator('[data-nav-row][data-route="home/index.html"]'),
   ).not.toHaveAttribute("data-changed", "true");
   await page.getByRole("tab", { name: "Components", exact: true }).click();
   await expect(
@@ -59,7 +62,7 @@ test("desktop divider stays centered while resizing and mobile sheet keeps the p
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/components/pane.html`);
+  await page.goto(`${server.url}/view/pane/`);
   const divider = page.getByRole("separator", { name: "Resize inspector" });
   await expect(divider).toBeVisible();
   const before = await page.locator("[data-workspace-inspector]").boundingBox();
@@ -97,7 +100,7 @@ test("the inspector divider lights up like the navigation divider", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/components/pane.html`);
+  await page.goto(`${server.url}/view/pane/`);
   await page.addStyleTag({
     content: "*, *::after { transition: none !important; }",
   });

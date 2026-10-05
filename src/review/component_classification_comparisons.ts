@@ -4,15 +4,15 @@ import {
 } from "@mokly/viewer/data";
 import type { DependencyReason } from "@mokly/viewer/data";
 
-import { entryViews } from "./component_classification_entries.js";
 import type { entryPairs } from "./component_metadata.js";
-import { viewPairs } from "./component_pairing.js";
+import { entryViewPairs } from "./component_pairing.js";
 import type { componentVariantEntries } from "./component_variant_classification.js";
-import {
-  compareComponentView,
-  type ComparedComponentView,
-  type ComponentViewContext,
-} from "./component_view.js";
+import { compareComponentView } from "./component_view.js";
+import type {
+  ComparedComponentView,
+  ComponentViewContext,
+} from "./component_view_types.js";
+import type { EntryMove } from "./moves/types.js";
 
 /** Collect complete-catalogue own-page proof before assigning any CSS page reason. */
 export async function classificationComparisons(
@@ -20,24 +20,26 @@ export async function classificationComparisons(
   pairs: ReturnType<typeof entryPairs>,
   before: ReturnType<typeof componentVariantEntries>,
   after: ReturnType<typeof componentVariantEntries>,
+  moves: readonly EntryMove[],
 ) {
   const entries = [];
   for (const pair of pairs) {
     const entry = (pair.after ?? pair.before)!;
-    const root =
-      entry.kind === "component" && !isManifestComponentVariant(entry)
-        ? entry.id
-        : undefined;
-    const pairedViews = viewPairs(
-      entryViews(pair.before, before),
-      entryViews(pair.after, after),
+    const parent = [pair.after, pair.before].find(
+      (candidate) =>
+        candidate?.kind === "component" &&
+        !isManifestComponentVariant(candidate),
     );
+    if (entry.kind === "component" && !parent) continue;
+    const root = parent?.path;
+    const grouped = entryViewPairs(pair, before, after, moves);
+    const pairedViews = grouped.views;
     const compared = await Promise.all(
       pairedViews.map((view) =>
         compareComponentView(context, view.before, view.after, root),
       ),
     );
-    entries.push({ pair, pairedViews, compared, root });
+    entries.push({ pair, pairedViews, compared, root, grouped });
   }
   const attribution = context.resources.css.attribution;
   attribution.freeze();

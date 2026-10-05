@@ -8,6 +8,10 @@ import {
 
 import { compactRuntime } from "../../build/compact_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type {
+  AcceptedMoveTargets,
+  MoveTargetsProvider,
+} from "../../build/move_targets.js";
 import { errorMessage } from "../../errors.js";
 
 import type { TransientRender } from "./transient_assets.js";
@@ -19,15 +23,25 @@ export interface RenderWorker {
 export interface RenderWorkerFactory {
   create(): RenderWorker;
 }
+export interface RenderWorkerRequest {
+  request: ComponentRenderRequest;
+  moveTargets?: AcceptedMoveTargets;
+}
 export class NodeRenderWorkerFactory implements RenderWorkerFactory {
-  constructor(private readonly runtime: ComponentRuntime) {}
+  constructor(
+    private readonly runtime: ComponentRuntime,
+    private readonly moveTargets?: MoveTargetsProvider,
+  ) {}
   create(): RenderWorker {
-    return new NodeRenderWorker(this.runtime);
+    return new NodeRenderWorker(this.runtime, this.moveTargets);
   }
 }
 class NodeRenderWorker implements RenderWorker {
   private readonly worker: Worker;
-  constructor(runtime: ComponentRuntime) {
+  constructor(
+    private readonly runtime: ComponentRuntime,
+    private readonly moveTargets?: MoveTargetsProvider,
+  ) {
     this.worker = new Worker(new URL("./worker.js", import.meta.url), {
       workerData: compactRuntime(runtime),
       execArgv: [],
@@ -65,7 +79,11 @@ class NodeRenderWorker implements RenderWorker {
       this.worker.once("message", message);
       this.worker.once("error", errored);
       this.worker.once("exit", exited);
-      this.worker.postMessage(request);
+      const moveTargets = this.moveTargets?.(this.runtime.generation);
+      this.worker.postMessage({
+        request,
+        ...(moveTargets ? { moveTargets } : {}),
+      } satisfies RenderWorkerRequest);
     });
   }
   async close(): Promise<void> {

@@ -81,7 +81,7 @@ export class CssAttribution {
         ? (this.changed.get(rule.ruleKey) ?? new Set<string>())
         : new Set<string>();
       if (
-        canonicalJson(rule.changedComponentIds) !==
+        canonicalJson(rule.changedComponentPaths) !==
         canonicalJson([...proved].sort())
       )
         reviewInvalid("CSS component proof differs from kept own-page matches");
@@ -138,7 +138,7 @@ export class CssAttribution {
         ...(record.ruleKey ? { ruleKey: record.ruleKey } : {}),
         status: record.status,
         selectors: record.selectors,
-        changedComponentIds: [...changed].sort(),
+        changedComponentPaths: [...changed].sort(),
         pageSelectors: [
           ...new Set(
             record.matches

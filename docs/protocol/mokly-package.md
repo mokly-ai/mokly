@@ -20,6 +20,13 @@ the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+[Whole-document pages](./mokly-pages.md) use the same paths and hierarchy as
+screens and flows, and [Markdown documents](./mokly-documents.md) join them by
+file. Current and comparison-base manifests require v8; consumers use ordinary
+page definitions. Path identity, `roots` discovery, Markdown documents, and move
+detection are implemented. The earlier
+co-located layout was delivered by the
+[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Package Identity
 
@@ -103,28 +110,29 @@ The [configuration contract](./mokly-configuration.md) defines the complete type
 shape, path validation, source/output boundaries, and individual field behavior.
 
 `publicExclude` defaults and validation follow the
-[configuration contract](./mokly-configuration-discovery.md#public-exclusion-configuration),
+[configuration contract](./mokly-public-exclusions.md),
 with matching and public access defined by the
 [source-protection contract](./mokly-source-protection.md#public-exclusions).
 
-Two layouts are recommended. Sibling source and output directories use
-`entriesDir: "docs/mockups/entries"`, `mockupsDir: "docs/mockups/generated"`,
-and `renderer: "docs/mockups/renderer.tsx"` for a repository-root config, with
-public assets in `generated` and development documentation/configuration
-beside it. Co-located entries use `entries: ["src/**/*.mockup.{ts,tsx}"]` so
-each entry module sits beside the product component or screen it describes,
-with the same output and renderer locations. Nested `docs/mockups/src` layouts
-remain supported; source protection applies to every layout. These are
-examples, not mandatory runtime locations. An explicit `entries` glob defines
-the complete entry shape with no additional suffix filter. The `.mockup.ts` and
-`.mockup.tsx` convention remains recommended, and `entriesDir` selects it by
-expanding to `<dir>/**/*.mockup.{ts,tsx}`. See
-[entry discovery](./mokly-configuration-discovery.md#entry-discovery).
+Two layouts are recommended. A dedicated spec tree uses the default `specs`
+root for screens, pages, Markdown documents, and flows by product area, with
+`mockupsDir: "specs/generated"` and `renderer: "specs/renderer.tsx"` for a
+repository-root config; a component library adds a second root such as
+`{ dir: "packages/ui/src", path: "components" }` so component mockups stay
+beside component code. The co-located alternative places every mockup beside
+the product code it describes, for example
+`roots: [{ dir: "src/features", transparent: ["__mockups__"] }]`, with the
+same output and renderer locations. Both layouts derive the same catalogue
+paths; source protection applies to every layout. These are examples, not
+mandatory runtime locations. A root's `files` globs define the complete entry
+shape with no additional suffix filter; the default `**/*.mockup.{ts,tsx}` and
+`**/*.md` patterns select the recommended `.mockup.ts` and `.mockup.tsx`
+convention and Markdown documents. See [roots](./mokly-configuration.md#roots).
 
 ## Public Authoring API
 
 The [authoring contract](./mokly-authoring.md) defines exported helpers and
-input types, hierarchy, derived routes, and catalogue links.
+input types, path identity, derived file names, and catalogue links.
 
 ## Rendering Boundary
 
@@ -145,8 +153,8 @@ assets and per-root stylesheet routes in that output.
 
 ## Pages And Baseline Comparisons
 
-Register complete synchronous HTML with `definePage` or nested `page`. Current
-reads require canonical manifest v8 and validate the
+Register complete synchronous HTML with `definePage`; Markdown documents need
+no registration. Current reads require canonical manifest v8 and validate the
 [resolved source inventory](./mokly-source-protection.md). Git comparisons use
 the same version boundary; the
 [baseline compatibility contract](./mokly-baseline-compatibility.md) defines
@@ -154,7 +162,7 @@ how earlier output makes Changes unavailable without failing current output.
 Baseline readers never execute consumer code through the current package.
 
 The [page contract](./mokly-pages.md) defines the public page inputs,
-rendering pipeline, derived routes, inheritance, and schema validation.
+rendering pipeline, derived paths, inheritance, and schema validation.
 
 ## Packaged Documentation
 

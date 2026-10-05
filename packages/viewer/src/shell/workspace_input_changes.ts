@@ -12,6 +12,7 @@ import { generatedViews } from "../components/views.js";
 import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { branchPoints, type EntryIdentity } from "./catalogue_branch_point.js";
 
 /** One instance whose supplied props differ from the baseline render. */
 export interface InputChange {
@@ -19,17 +20,20 @@ export interface InputChange {
   title: string;
   viewport: "mobile" | "desktop";
   colorScheme: "light" | "dark";
-  variantId?: string;
+  variantPath?: string;
   before: ComponentWireProps;
   after: ComponentWireProps;
 }
 
 /** Compare matching views instance by instance; an unmatched view has nothing
- * to compare, and an unmatched instance is a structural change, not an input. */
+ * to compare, and an unmatched instance is a structural change, not an input.
+ * A variant's view and a nested component pair with their counterparts in the
+ * baseline `inventory`, so a move or a case-only rename keeps its inputs. */
 export function inputChanges(
   catalogue: Catalogue,
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   baseline: ManifestEntry | undefined,
+  inventory: readonly EntryIdentity[],
   currentVariants: readonly ManifestComponentVariant[] = [],
   baselineVariants: readonly ManifestComponentVariant[] = [],
 ): InputChange[] {
@@ -43,32 +47,45 @@ export function inputChanges(
     baseline.kind === "component"
       ? baselineVariants.flatMap((variant) => generatedViews(variant))
       : generatedViews(baseline);
+  const lookup = branchPoints(catalogue);
+  const counterpart = (path: string) =>
+    lookup.counterpart({ kind: "component", path }, inventory)?.path;
   for (const after of afterViews) {
+    const variantPath =
+      after.variantPath === undefined
+        ? undefined
+        : counterpart(after.variantPath);
+    if (after.variantPath !== undefined && variantPath === undefined) continue;
     const before = beforeViews.find(
       (view) =>
         view.viewport === after.viewport &&
         view.colorScheme === after.colorScheme &&
-        view.variantId === after.variantId,
+        view.variantPath === variantPath,
     );
     for (const current of after.usage?.instances ?? []) {
       if (current.owner.kind !== "entry") continue;
-      const previous = before?.usage?.instances.find(
-        (item) =>
-          item.key === current.key && item.componentId === current.componentId,
-      );
+      const componentId = counterpart(current.componentId);
+      const paired =
+        componentId === undefined
+          ? undefined
+          : before?.usage?.instances.find(
+              (item) =>
+                item.key === current.key && item.componentId === componentId,
+            );
       if (
-        !previous ||
-        JSON.stringify(previous.props) === JSON.stringify(current.props)
+        !paired ||
+        JSON.stringify(paired.props) === JSON.stringify(current.props)
       )
         continue;
       changes.push({
         instanceId: current.id,
         title:
-          catalogue.byId.get(current.componentId)?.title ?? current.componentId,
+          catalogue.byPath.get(current.componentId)?.title ??
+          current.componentId,
         viewport: after.viewport,
         colorScheme: after.colorScheme,
-        ...(after.variantId ? { variantId: after.variantId } : {}),
-        before: previous.props,
+        ...(after.variantPath ? { variantPath: after.variantPath } : {}),
+        before: paired.props,
         after: current.props,
       });
     }

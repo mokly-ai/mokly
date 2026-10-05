@@ -1,17 +1,14 @@
 import {
   defineComponent,
   definePage,
-  defineRoot,
+  defineFolder,
   defineScreen,
   defineUseCase,
-  folder,
-  page,
-  screen,
 } from "@mokly/mokly";
 
 const node = <main>Type check</main>;
 const screenInputBase = {
-  id: "typed-screen",
+  path: "typed-screen",
   title: "Typed screen",
   description: "Screen",
   relatedDocs: [],
@@ -19,14 +16,14 @@ const screenInputBase = {
   desktop: node,
 };
 const typedVariant = {
-  id: "typed-variant",
+  slug: "typed-variant",
   title: "Variant",
   description: "Variant",
   mobile: node,
   desktop: node,
 };
 const documentPage = {
-  id: "typed-page",
+  path: "typed-page",
   title: "Page",
   description: "Page",
   relatedDocs: [],
@@ -55,50 +52,27 @@ defineScreen({
 definePage({ ...documentPage, dependencies: [] });
 defineUseCase({
   description: "Flow",
-  id: "flow",
+  path: "flow",
   relatedDocs: [],
   steps: [],
   title: "Flow",
   // @ts-expect-error Use cases cannot declare removed dependencies.
   dependencies: [],
 });
-screen({
-  description: "Nested",
-  desktop: node,
-  id: "nested",
-  mobile: node,
-  title: "Nested",
-  // @ts-expect-error Nested screens cannot declare removed dependencies.
-  dependencies: [],
-});
-page({
-  description: "Nested",
-  id: "nested-page",
-  render: documentPage.render,
-  title: "Nested",
-  // @ts-expect-error Nested pages cannot declare removed dependencies.
-  dependencies: [],
-});
-folder({
+defineFolder({
+  path: "nested",
   title: "Nested group",
-  children: [],
   // @ts-expect-error Folder metadata cannot declare removed dependencies.
   dependencies: [],
 });
-defineRoot({
-  navPath: ["Nested"],
-  children: [],
-  // @ts-expect-error Root path metadata cannot declare removed dependencies.
-  dependencies: [],
-});
 const componentInput = {
-  id: "typed-component",
+  path: "typed-component",
   title: "Typed component",
   description: "Component",
   relatedDocs: [],
   propSchema: { kind: "object" as const, properties: {} },
   render: () => null,
-  variants: [{ id: "default", title: "Default", props: {} }],
+  variants: [{ slug: "default", title: "Default", props: {} }],
 };
 // @ts-expect-error Components cannot declare removed dependencies.
 defineComponent({ ...componentInput, dependencies: [] });
@@ -109,7 +83,7 @@ defineComponent({
   ...componentInput,
   variants: [
     {
-      id: "typed-component-default",
+      slug: "default",
       title: "Default",
       props: {},
       // @ts-expect-error Flattened component variants cannot declare removed dependencies.
@@ -121,7 +95,7 @@ defineComponent({
   ...componentInput,
   variants: [
     {
-      id: "typed-component-default",
+      slug: "default",
       title: "Default",
       props: {},
       // @ts-expect-error Flattened component variants cannot declare removed ownership paths.

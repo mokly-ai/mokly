@@ -19,7 +19,7 @@ import { removeFixture } from "./helpers/fixture.js";
 test("renderer-authored CSS links remain page comparison material", async (context) => {
   const source = componentEntrySource({
     body: '<action.Component label="Go" />',
-  }).replace('id: "action",', 'id: "action", stylesheets: ["action.css"],');
+  }).replace('path: "action",', 'path: "action", stylesheets: ["action.css"],');
   const fixture = await fixtureWithSheets(
     source,
     'renderer: "renderer.tsx", stylesheets: [],',
@@ -30,7 +30,7 @@ test("renderer-authored CSS links remain page comparison material", async (conte
   const renderer = (
     file: string,
   ) => `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<html><head>' + (input.entry.id === "home" ? '<link rel="stylesheet" href="../${file}">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+export default (input) => '<html><head>' + (input.entry.path === "home" ? '<link rel="stylesheet" href="../${file}">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
   await fs.writeFile(rendererPath, renderer("action.css"));
   const config = await loadConfig(fixture.root);
   const before = await compileCatalogue(config);
@@ -47,16 +47,16 @@ export default (input) => '<html><head>' + (input.entry.id === "home" ? '<link r
     afterFiles: compilationFiles(after, css),
     changedPaths: [
       "renderer.tsx",
-      "mockups/screens/home.mobile.html",
-      "mockups/screens/home.desktop.html",
+      "mockups/home/index.mobile.html",
+      "mockups/home/index.desktop.html",
     ],
     config,
   });
   assert.deepEqual(
-    result.changes.map((entry) => entry.after?.id),
+    result.changes.map((entry) => entry.after?.path),
     ["home"],
   );
-  const screen = after.manifest.entries.find((entry) => entry.id === "home");
+  const screen = after.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   assert.deepEqual(screen.componentViews![0]!.insertedStylesheets, []);
 });
@@ -67,7 +67,7 @@ test("ignored renderer ownership cannot turn an unrelated CSS edit into a compon
       '(props) => <button className="action">{props.label}</button>',
     paneRender: "(props) => <section>{props.children}</section>",
     body: '<pane.Component><p className="shared">Screen content</p></pane.Component>',
-  }).replace('id: "action",', 'id: "action", stylesheets: ["action.css"],');
+  }).replace('path: "action",', 'path: "action", stylesheets: ["action.css"],');
   const fixture = await fixtureWithSheets(
     source,
     'renderer: "renderer.tsx", stylesheets: [],',
@@ -78,7 +78,7 @@ test("ignored renderer ownership cannot turn an unrelated CSS edit into a compon
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const home = input.entry.id === "home"; const html = '<html><head>' + (home ? '<link rel="stylesheet" href="../action.css">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return home ? { html, resources: [{path: "action.css", componentIds: ["pane"]}] } : { html }; };`,
+export default (input) => { const home = input.entry.path === "home"; const html = '<html><head>' + (home ? '<link rel="stylesheet" href="../action.css">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return home ? { html, resources: [{path: "action.css", componentIds: ["pane"]}] } : { html }; };`,
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
@@ -86,12 +86,12 @@ export default (input) => { const home = input.entry.id === "home"; const html =
     compilation.warnings?.some(
       (warning) =>
         warning.code === "ignored-stylesheet-resource-owner" &&
-        warning.context[0] === "screens/home.mobile.html" &&
+        warning.context[0] === "home/index.mobile.html" &&
         warning.message.includes("action.css"),
     ),
   );
   const home = compilation.manifest.entries.find(
-    (entry) => entry.id === "home",
+    (entry) => entry.path === "home",
   );
   assert.ok(home?.kind === "screen");
   assert.deepEqual(home.componentViews![0]!.resources, []);
@@ -111,7 +111,7 @@ export default (input) => { const home = input.entry.id === "home"; const html =
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion !== 5) return;
   assert.deepEqual(
-    result.changes.map((entry) => entry.after?.id),
+    result.changes.map((entry) => entry.after?.path),
     ["home"],
   );
 });

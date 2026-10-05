@@ -5,7 +5,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
@@ -40,5 +40,5 @@ for (const components of [false, true])
         ),
       );
     }
-    assert.deepEqual(await computeChangedIds(config, "main", git), []);
+    assert.deepEqual(await computeChangedPaths(config, "main", git), []);
   });

@@ -55,7 +55,7 @@ export async function viewerHydrationFixture() {
     logLevel: "silent",
   });
   const defaultSelection = {
-    screenId: "action",
+    screenPath: "action",
     view: "all" as const,
     viewport: "mobile" as const,
     colorScheme: "light" as const,
@@ -65,7 +65,7 @@ export async function viewerHydrationFixture() {
   const catalogue = structuredClone(fixture.catalogue);
   const component = catalogue.components.find(
     (entry): entry is CatalogueComponent =>
-      entry.id === "action" && !("variantOf" in entry),
+      entry.path === "action" && !("variantOf" in entry),
   );
   const variant = catalogue.components.find(
     (entry): entry is CatalogueComponentVariant =>

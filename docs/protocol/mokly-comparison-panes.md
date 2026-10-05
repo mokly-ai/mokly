@@ -15,7 +15,8 @@ Before and Current panes that
 and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,
 current previews, or [removed previews](./mokly-removed-previews.md) beyond the
-shared pipeline named here.
+shared pipeline named here. Snapshot addresses below derive from paths under
+the [artifact path contract](./mokly-artifact-paths.md) and review v5.
 
 ## Behavior
 
@@ -46,8 +47,9 @@ the comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
 
 Review v5 supplies only entry identity, view axes, and state. The viewer derives
-each side's `snapshots/<side>/<viewRoute(...)>` address from kind and id; no
-entry route or snapshot path travels in comparison JSON.
+each side's `snapshots/<side>/<viewRoute(...)>` address from the entry's path,
+`previousPath` on a [moved](./mokly-moves.md) entry's before side; no entry route
+or snapshot path travels in comparison JSON.
 
 Acceptance, parsing, and transformation follow the
 [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle)
@@ -230,29 +232,6 @@ under `packages/viewer/tests/` cover the controllers.
 
 ## Design References
 
-The implemented design mockups depict this contract in both viewports, the
-screen comparisons in both schemes and component comparisons in Light.
-`design-changes-overlay` depicts a short Overlay and
-`design-changes-overlay-long` a long screen part-way down its shared chrome, with
-both layers at one offset, unchanged sections aligned, one reworded section
-showing both versions, and the viewport's scrollbar drawn part-way down.
-`design-review-difference` and `design-appearance-difference` depict Difference
-with the same single-chrome stack over an opaque Before layer, and
-`design-review-changed` and `design-appearance-side-by-side` depict Side by
-side with one chrome per version. For component comparisons,
-`design-component-overlay` and `design-component-difference` depict a saved
-variant's two versions in one bordered component frame, and
-`design-component-overlay-tall` depicts a component taller than that frame
-scrolled part-way inside it, with both versions at one scroll position and the
-frame's scrollbar drawn to match; `design-component-comparison` keeps one frame
-per version in Side by side. Links inside every depicted pane are inert.
-
-`design-changes-overlay-panel` depicts an app-shell screen in Overlay whose top bar and navigation stay in
-place while both versions' main panels sit part-way down at one position, with
-the panel's own scrollbar drawn and no page scrollbar on the chrome's viewport.
-`design-changes-side-by-side-apart` depicts Side by side with
-Scroll together off, each version at its own place with its own scrollbar.
-Every diff-mode screen design draws the Scroll together switch after its mode
-group, on everywhere but that one, as the runtime does.
-See [the shell design](./mokly-shell-design.md) and
-[the component design](./mokly-component-design.md) for the complete tables.
+The design catalogue depictions of every pane state, in both viewports and
+schemes, are inventoried in
+[comparison pane design references](./mokly-comparison-pane-designs.md).

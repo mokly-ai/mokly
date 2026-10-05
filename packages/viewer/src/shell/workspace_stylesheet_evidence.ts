@@ -75,7 +75,7 @@ function withRules(analysis: DependencyAnalysis): DependencyAnalysis {
           {
             status: analysis.status,
             selectors: analysis.selectors,
-            changedComponentIds: [],
+            changedComponentPaths: [],
             pageSelectors: [],
           },
         ],
@@ -92,7 +92,7 @@ function ruleOutcomes(
   ownId: string | undefined,
 ): StylesheetOutcome[] {
   const own = ownId
-    ? rules.filter((rule) => rule.changedComponentIds.includes(ownId))
+    ? rules.filter((rule) => rule.changedComponentPaths.includes(ownId))
     : [];
   const page = rules.filter((rule) => rule.pageSelectors.length > 0);
   const unresolved = rules.filter(
@@ -111,7 +111,7 @@ function ruleOutcomes(
     ),
     page.length
       ? {
-          lead: page.some((rule) => rule.changedComponentIds.length > 0)
+          lead: page.some((rule) => rule.changedComponentPaths.length > 0)
             ? wording.pageOutsideStyles
             : wording.pageStyles,
           selectors: union(page.flatMap((rule) => rule.pageSelectors)),

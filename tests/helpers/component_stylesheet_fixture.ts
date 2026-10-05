@@ -9,12 +9,12 @@ export const declared = (action = "action.css", pane = "pane.css") =>
     body: '<pane.Component><action.Component label="Go" /></pane.Component><action.Component moklyInstance="hidden" label="Hidden" hidden />',
   })
     .replace(
-      'id: "action",',
-      `id: "action", stylesheets: [${JSON.stringify(action)}],`,
+      'path: "action",',
+      `path: "action", stylesheets: [${JSON.stringify(action)}],`,
     )
     .replace(
-      'id: "pane",',
-      `id: "pane", stylesheets: [${JSON.stringify(pane)}],`,
+      'path: "pane",',
+      `path: "pane", stylesheets: [${JSON.stringify(pane)}],`,
     );
 
 export async function fixtureWithSheets(source = declared(), rule?: string) {

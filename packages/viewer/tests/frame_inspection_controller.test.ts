@@ -217,7 +217,7 @@ function sessionFixture(
     generation: registry.nextGeneration(),
     identity: {
       colorScheme: "light",
-      entryId: id,
+      entryPath: id,
       viewport: "desktop",
     },
     mounted,
@@ -254,8 +254,8 @@ function usage(key: string): CatalogueUsage {
 function reference(session: ShellFrameSession): InstanceRef {
   return {
     colorScheme: "light",
-    key: instanceKey(session.identity.entryId),
-    screenId: session.identity.entryId,
+    key: instanceKey(session.identity.entryPath),
+    screenPath: session.identity.entryPath,
     viewport: "desktop",
   };
 }

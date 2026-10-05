@@ -2,13 +2,17 @@
 import type { EventEmitter } from "node:events";
 import { Worker } from "node:worker_threads";
 
-import { entryRoute, generatedViews } from "@mokly/viewer/data";
+import { entryRoute, documentRoute, generatedViews } from "@mokly/viewer/data";
 
 import { compactRuntime } from "../../build/compact_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCache } from "../../build/document_cache.js";
 import type { CompiledDocument } from "../../build/document_types.js";
 import type { GeneratedFile } from "../../build/generated_file.js";
+import type {
+  AcceptedMoveTargets,
+  MoveTargetsProvider,
+} from "../../build/move_targets.js";
 import { timeAsync } from "../../diagnostics/timings.js";
 import { MoklyError } from "../../errors.js";
 
@@ -24,6 +28,11 @@ export interface DocumentServiceOptions {
   timeoutMs?: number;
   maxQueued?: number;
   onDocument?: (document: CompiledDocument) => void;
+  moveTargets?: MoveTargetsProvider;
+}
+export interface DocumentWorkerRequest {
+  route: string;
+  moveTargets?: AcceptedMoveTargets;
 }
 
 /** Admit foreground rendering only for an accepted lightweight generation. */
@@ -31,9 +40,13 @@ export function liveDocumentService(
   runtime: ComponentRuntime,
   busy: (active: boolean) => void,
   onDocument: (document: CompiledDocument) => void,
+  moveTargets?: MoveTargetsProvider,
 ): DocumentService | undefined {
   return runtime.manifest.schemaVersion === "live-index-1"
-    ? new DocumentService(runtime, busy, { onDocument })
+    ? new DocumentService(runtime, busy, {
+        onDocument,
+        ...(moveTargets ? { moveTargets } : {}),
+      })
     : undefined;
 }
 
@@ -65,9 +78,13 @@ export class DocumentService {
     this.styles = new Map(runtime.styleOutputs);
     this.routes = new Set(
       runtime.manifest.entries.flatMap((entry) =>
-        entry.kind === "page"
-          ? [entryRoute("page", entry.id)]
-          : generatedViews(entry).map((view) => view.path),
+        entry.kind === "document"
+          ? entry.colorSchemes.map((scheme) =>
+              documentRoute(entry.path, scheme),
+            )
+          : entry.kind === "page"
+            ? [entryRoute(entry.path)]
+            : generatedViews(entry).map((view) => view.path),
       ),
     );
   }
@@ -207,7 +224,11 @@ export class DocumentService {
     this.failActive = failed;
     worker.on("message", message);
     try {
-      worker.postMessage(job.route);
+      const moveTargets = this.options.moveTargets?.(this.generation);
+      worker.postMessage({
+        route: job.route,
+        ...(moveTargets ? { moveTargets } : {}),
+      } satisfies DocumentWorkerRequest);
     } catch (error) {
       failed(error);
     }

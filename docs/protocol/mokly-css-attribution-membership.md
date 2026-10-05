@@ -35,7 +35,7 @@ interface CssRuleAttribution {
   ruleKey?: string;
   status: "matched" | "unresolved";
   selectors: readonly string[];
-  changedComponentIds: readonly string[];
+  changedComponentPaths: readonly string[];
   pageSelectors: readonly string[];
 }
 
@@ -80,6 +80,9 @@ private imported source. `ruleKey` is the cross-stylesheet key defined in the
 `rules` is nonempty and contains each retained identity once for this path and
 view. Excluded rules are omitted. Repeated occurrences union their evidence;
 unresolved takes precedence over matched for the same identity on this view.
+Every [review result v5](./mokly-changes-serving.md#comparison-engine) view record
+carries these fields. Results without them remain valid and mean the analysis
+did not run.
 
 A parse failure has no diffed rule identity: emit one unkeyed unresolved record,
 with empty selector and component arrays, and no keyed records for that path
@@ -94,7 +97,7 @@ including `&` before query-only nesting substitution. Sort and deduplicate this
 presentation list by UTF-16 code units. It is distinct from the ordered selector
 arrays used in identity. Unresolved rules may have no selectors.
 
-`changedComponentIds` is the sorted, unique set of parent component ids proved
+`changedComponentPaths` is the sorted, unique set of parent component paths proved
 changed by this identity across the whole catalogue after the nested-component
 test. Unfiltered own-page matches decide whether Y takes a match from X; only
 kept matches decide which ids enter this array. It is independent of this
@@ -175,7 +178,7 @@ can validate id syntax; the complete producer also verifies unfiltered and kept 
   summary unions and unresolved precedence, including `pageEvidence` presence.
 - Producers validate each changed component id against its frozen kept own-page
   matches for that identity. Validate nested filtering against unfiltered own-page
-  sets, never against `changedComponentIds`. Page-only reasons never create affected consumers.
+  sets, never against `changedComponentPaths`. Page-only reasons never create affected consumers.
   Keep existing usage validation for the resulting implementation-impact set.
 - Entry reasons must come from recorded eligible rules, not merely a retained
   path. Source validation must reject a component-only rule forged as a page

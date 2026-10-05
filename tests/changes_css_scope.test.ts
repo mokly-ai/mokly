@@ -32,7 +32,10 @@ for (const components of [false, true])
     assert.equal(
       analysisOwnsStylesheet("mockups/src/private.css", {
         ...fixture.config,
-        entriesDir: path.join(fixture.mockupsDir, "src"),
+        sourceFiles: [
+          ...(fixture.config.sourceFiles ?? []),
+          "mockups/src/private.css",
+        ],
       }),
       false,
     );

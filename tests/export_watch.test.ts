@@ -46,7 +46,7 @@ test("watch ownership follows the inventory and does not suppress unowned descen
   for (const name of [
     EXPORT_MARKER,
     "index.html",
-    "static/screens/home.mobile.html",
+    "static/home/index.mobile.html",
   ])
     assert.equal(
       classifyWatchPath(
@@ -88,11 +88,7 @@ test("watch parses an unchanged marker once and reparses after replacement", asy
       return parseExportOwnership(content);
     },
   });
-  const owned = [
-    EXPORT_MARKER,
-    "index.html",
-    "static/screens/home.mobile.html",
-  ];
+  const owned = [EXPORT_MARKER, "index.html", "static/home/index.mobile.html"];
   for (let iteration = 0; iteration < 5; iteration++)
     for (const name of owned)
       assert.equal(

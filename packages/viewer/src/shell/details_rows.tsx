@@ -5,14 +5,12 @@
 
 import type { ReactNode } from "react";
 
+import { parseLogicalTarget } from "../navigation/logical.js";
 import { viewHref } from "../navigation/routes.js";
 import type { ManifestUseCase } from "../registry/types.js";
 
-import {
-  catalogueVariantParent,
-  type Catalogue,
-  type CatalogueManifestEntry,
-} from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
 import { TagChip } from "./tags.js";
 import { changedViewsLabel, type ChangedView } from "./view_marks.js";
@@ -49,17 +47,59 @@ export function ChangedViewsRow(props: { views: readonly ChangedView[] }) {
   );
 }
 
-/** Generated, source, and related-document paths rendered as monospace chips. */
-export function PathChips(props: { values: readonly string[] }) {
+/**
+ * The docs an entry names. A `mock:<path>` reference to a current document
+ * links to that document, labelled with its title; any other value is the
+ * repository label the catalogue published.
+ */
+export function RelatedDocChips(props: {
+  catalogue: Catalogue;
+  removed: boolean;
+  values: readonly string[];
+}) {
   return (
     <span className="mbk-chips">
-      {props.values.map((value) => (
-        <code className="mbk-code" key={value}>
-          {value}
-        </code>
-      ))}
+      {props.values.map((value) => {
+        const document = props.removed
+          ? undefined
+          : relatedDocument(props.catalogue, value);
+        return document ? (
+          <a
+            className="mbk-meta-link"
+            href={viewHref(document.path)}
+            key={value}
+          >
+            {document.title}
+          </a>
+        ) : (
+          <code className="mbk-code" key={value}>
+            {value}
+          </code>
+        );
+      })}
     </span>
   );
+}
+
+/**
+ * The current document a related-doc value names, if it names one: a public
+ * `mock:<path>` reference, or the repository source path the served manifest
+ * keeps.
+ */
+function relatedDocument(
+  catalogue: Catalogue,
+  value: string,
+): CatalogueManifestEntry | undefined {
+  const target = parseLogicalTarget(value);
+  const current = (entry: CatalogueManifestEntry | undefined) =>
+    entry?.kind === "document" &&
+    !catalogue.removedEntries.some(({ entry: removed }) => removed === entry)
+      ? entry
+      : undefined;
+  if (target) return current(catalogue.byPath.get(target.path));
+  for (const entry of catalogue.byPath.values())
+    if (entry.sourcePath === value && current(entry)) return entry;
+  return undefined;
 }
 
 /**
@@ -85,10 +125,10 @@ export function TagChips(props: { values: readonly string[] }) {
 /** The use cases whose ordered steps include this screen. */
 export function UsedByChips(props: {
   catalogue: Catalogue;
-  useCaseIds: readonly string[];
+  useCasePaths: readonly string[];
 }) {
-  const useCases = props.useCaseIds
-    .map((id) => props.catalogue.byId.get(id))
+  const useCases = props.useCasePaths
+    .map((id) => props.catalogue.byPath.get(id))
     .filter(
       (entry): entry is ManifestUseCase =>
         entry !== undefined && entry.kind === "use-case",
@@ -102,8 +142,8 @@ export function UsedByChips(props: {
         {useCases.map((useCase) => (
           <a
             className="mbk-chip flow"
-            href={viewHref(useCase.kind, useCase.id)}
-            key={useCase.id}
+            href={viewHref(useCase.path)}
+            key={useCase.path}
           >
             <FlowIcon size={11} />
             {useCase.title}
@@ -123,17 +163,13 @@ export function VariantChips(props: {
     return null;
   }
   const historical = props.catalogue.removedEntries.some(
-    ({ entry }) => entry.id === props.entry.id,
+    ({ entry }) => entry.path === props.entry.path,
   );
   const variants = historical
-    ? props.catalogue.removedEntries.flatMap(({ entry }) =>
-        (entry.kind === "screen" || entry.kind === "component") &&
-        "variantOf" in entry &&
-        entry.variantOf === props.entry.id
-          ? [entry]
-          : [],
-      )
-    : (props.catalogue.hierarchy.variantsById.get(props.entry.id) ?? []);
+    ? branchPoints(props.catalogue)
+        .removedVariants(props.entry)
+        .map(({ entry }) => entry)
+    : (props.catalogue.hierarchy.variantsByPath.get(props.entry.path) ?? []);
   if (variants.length === 0) {
     return null;
   }
@@ -144,7 +180,7 @@ export function VariantChips(props: {
           <a
             className="mbk-chip screen"
             href={entryHref(props.catalogue, variant)}
-            key={variant.id}
+            key={variant.path}
           >
             <VariantIcon size={11} />
             {variant.title}
@@ -160,15 +196,8 @@ export function VariantOfChip(props: {
   catalogue: Catalogue;
   entry: CatalogueManifestEntry;
 }) {
-  if (
-    (props.entry.kind !== "screen" && props.entry.kind !== "component") ||
-    !("variantOf" in props.entry) ||
-    props.entry.variantOf === undefined
-  ) {
-    return null;
-  }
-  const parent = catalogueVariantParent(props.catalogue, props.entry);
-  if (parent === undefined) {
+  const parent = branchPoints(props.catalogue).parentOf(props.entry);
+  if (parent === undefined || parent.source === "title") {
     return null;
   }
   return (
@@ -176,14 +205,14 @@ export function VariantOfChip(props: {
       <span className="mbk-chips">
         <a
           className="mbk-chip screen"
-          href={entryHref(props.catalogue, parent)}
+          href={entryHref(props.catalogue, parent.entry)}
         >
-          {parent.kind === "component" ? (
+          {parent.entry.kind === "component" ? (
             <WorkspaceIcon name="components" size={11} />
           ) : (
             <ScreenIcon size={11} />
           )}
-          {parent.title}
+          {parent.entry.title}
         </a>
       </span>
     </MetaRow>
@@ -195,9 +224,9 @@ function entryHref(
   entry: CatalogueManifestEntry,
 ): string {
   const snapshotId = catalogue.removedEntries.find(
-    ({ entry: candidate }) => candidate.id === entry.id,
+    ({ entry: candidate }) => candidate.path === entry.path,
   )?.snapshotId;
-  return `${viewHref(entry.kind, entry.id)}${
+  return `${viewHref(entry.path)}${
     snapshotId ? `?snapshot=${snapshotId}` : ""
   }`;
 }

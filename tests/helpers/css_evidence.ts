@@ -21,7 +21,7 @@ export function fixtureCssAnalysis(
           : {}),
         status,
         selectors: ordered,
-        changedComponentIds: [],
+        changedComponentPaths: [],
         pageSelectors: status === "matched" ? ordered : [],
       },
     ],
@@ -53,7 +53,7 @@ export function cssRule(
   return {
     ruleKey: "b".repeat(64),
     status: "matched",
-    changedComponentIds: [],
+    changedComponentPaths: [],
     pageSelectors: [],
     ...rule,
   };

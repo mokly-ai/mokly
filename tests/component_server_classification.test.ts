@@ -34,8 +34,8 @@ test("Browse responds before separately computed component evidence arrives", as
   assert.match(initial, /data-changes-status="pending"/);
 
   server.publishUpdate({
-    changedIds: result.changes.map(
-      (entry) => (entry.after ?? entry.before)!.id,
+    changedEntries: result.changes.map(
+      (entry) => (entry.after ?? entry.before)!.path,
     ),
     componentChanges: { baseline: fixture.before.manifest, result },
     version: 2,
@@ -77,21 +77,18 @@ test("ordinary Browse serves cached component evidence without generating or wri
   fixture.beforeRemove(() => server.close());
   for (const route of [
     "/",
-    "/view/screens/home.html",
-    "/static/screens/home.mobile.html",
-    "/view/screens/home.html",
+    "/view/home/",
+    "/static/home/index.mobile.html",
+    "/view/home/",
   ])
     assert.equal((await fetch(server.url + route)).status, 200);
   assert.equal(comparisons, 0);
   server.publishUpdate({
-    changedIds: ["action"],
+    changedEntries: ["action"],
     componentChanges: { baseline: fixture.before.manifest, result },
     version: 2,
   });
-  assert.equal(
-    (await fetch(server.url + "/view/screens/home.html")).status,
-    200,
-  );
+  assert.equal((await fetch(server.url + "/view/home/")).status, 200);
   assert.equal(comparisons, 0);
   await assert.rejects(fs.stat(path.join(fixture.root, ".review")), {
     code: "ENOENT",

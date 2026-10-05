@@ -40,10 +40,10 @@ export function publishedChangedViewsBySelection(
   variants: readonly ShellCatalogueVariant[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
-    return { [entry.id]: publishedChangedViews(entry.views) };
+    return { [entry.path]: publishedChangedViews(entry.views) };
   return Object.fromEntries(
     variants.map((variant) => [
-      variant.id,
+      variant.path,
       publishedChangedViews(variant.views),
     ]),
   );
@@ -74,12 +74,14 @@ export function publishedViewStatesBySelection(
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
     const states = publishedViewStates(entry.views);
-    return states === undefined ? {} : { [entry.id]: states };
+    return states === undefined
+      ? (Object.create(null) as Record<string, readonly ViewState[]>)
+      : { [entry.path]: states };
   }
-  const evidence: Record<string, readonly ViewState[]> = {};
+  const evidence: Record<string, readonly ViewState[]> = Object.create(null);
   for (const variant of variants) {
     const states = publishedViewStates(variant.views);
-    if (states !== undefined) evidence[variant.id] = states;
+    if (states !== undefined) evidence[variant.path] = states;
   }
   return evidence;
 }

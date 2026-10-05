@@ -13,14 +13,14 @@ import { textOutput } from "./helpers/generated_text.js";
 test("standalone links follow rendered variants without duplicate hrefs", async () => {
   const { manifest, outputs } = await designCatalogue;
   const topBar = manifest.entries.find(
-    (entry) => entry.id === "design-ui-top-bar",
+    (entry) => entry.path === "design/library/chrome/top-bar",
   );
   assert.ok(topBar?.kind === "component");
-  const closed = componentVariants(manifest, topBar.id).find(
-    (variant) => variant.id === "design-ui-top-bar-default",
+  const closed = componentVariants(manifest, topBar.path).find(
+    (variant) => variant.path === "design/library/chrome/top-bar/default",
   )!;
-  const opened = componentVariants(manifest, topBar.id).find(
-    (variant) => variant.id === "design-ui-top-bar-tag-picker",
+  const opened = componentVariants(manifest, topBar.path).find(
+    (variant) => variant.path === "design/library/chrome/top-bar/tag-picker",
   )!;
   const hrefs = (html: string) =>
     [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(
@@ -28,16 +28,10 @@ test("standalone links follow rendered variants without duplicate hrefs", async 
     );
   for (const viewport of ["mobile", "desktop"] as const) {
     const defaultLinks = hrefs(
-      textOutput(
-        outputs,
-        viewRoute("component", closed.id, viewport, "light"),
-      )!,
+      textOutput(outputs, viewRoute(closed.path, viewport, "light"))!,
     );
     const openedLinks = hrefs(
-      textOutput(
-        outputs,
-        viewRoute("component", opened.id, viewport, "light"),
-      )!,
+      textOutput(outputs, viewRoute(opened.path, viewport, "light"))!,
     );
     assert.equal(defaultLinks.length, new Set(defaultLinks).size);
     assert.equal(openedLinks.length, new Set(openedLinks).size);
@@ -59,30 +53,27 @@ test("standalone links follow rendered variants without duplicate hrefs", async 
 test("empty saved component variant retains its own link provenance without child styles", async () => {
   const { manifest, outputs } = await designCatalogue;
   const picker = manifest.entries.find(
-    (entry) => entry.id === "design-ui-tag-picker",
+    (entry) => entry.path === "design/library/controls/tag-picker",
   );
   assert.ok(picker?.kind === "component");
-  const empty = componentVariants(manifest, picker.id).find(
-    (variant) => variant.id === "design-ui-tag-picker-empty",
+  const empty = componentVariants(manifest, picker.path).find(
+    (variant) => variant.path === "design/library/controls/tag-picker/empty",
   )!;
   for (const viewport of ["mobile", "desktop"] as const) {
-    const html = textOutput(
-      outputs,
-      viewRoute("component", empty.id, viewport, "light"),
-    )!;
+    const html = textOutput(outputs, viewRoute(empty.path, viewport, "light"))!;
     assert.match(html, /href="[^"]*\/controls\/tag-picker\.css"/);
     assert.doesNotMatch(html, /href="[^"]*\/controls\/tag-chip\.css"/);
     assert.deepEqual(
       empty.componentViews
         .find((view) => view.viewport === viewport)!
-        .insertedStylesheets!.map(({ path, componentIds }) => ({
+        .insertedStylesheets!.map(({ path, componentPaths }) => ({
           path,
-          componentIds,
+          componentPaths,
         })),
       [
         {
           path: "design-library/controls/tag-picker.css",
-          componentIds: ["design-ui-tag-picker"],
+          componentPaths: ["design/library/controls/tag-picker"],
         },
       ],
     );
@@ -91,22 +82,22 @@ test("empty saved component variant retains its own link provenance without chil
 
 test("standalone variants emit only the exclusive child styles they actually render", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const entry = componentParent(manifest, "design-ui-top-bar");
-  const variants = componentVariants(manifest, entry.id);
+  const entry = componentParent(manifest, "design/library/chrome/top-bar");
+  const variants = componentVariants(manifest, entry.path);
   for (const viewport of ["mobile", "desktop"] as const) {
     const closedVariant = variants.find(
-      (variant) => variant.id === "design-ui-top-bar-default",
+      (variant) => variant.path === "design/library/chrome/top-bar/default",
     )!;
     const openedVariant = variants.find(
-      (variant) => variant.id === "design-ui-top-bar-tag-picker",
+      (variant) => variant.path === "design/library/chrome/top-bar/tag-picker",
     )!;
     const closed = textOutput(
       outputs,
-      viewRoute("component", closedVariant.id, viewport, "light"),
+      viewRoute(closedVariant.path, viewport, "light"),
     )!;
     const opened = textOutput(
       outputs,
-      viewRoute("component", openedVariant.id, viewport, "light"),
+      viewRoute(openedVariant.path, viewport, "light"),
     )!;
     assert.match(closed, /href="[^"]*design-library\/chrome\/top-bar\.css"/);
     assert.doesNotMatch(
@@ -119,9 +110,12 @@ test("standalone variants emit only the exclusive child styles they actually ren
     );
     assert.match(opened, /href="[^"]*design-library\/controls\/tag-chip\.css"/);
   }
-  const picker = componentParent(manifest, "design-ui-tag-picker");
-  const empty = componentVariants(manifest, picker.id).find(
-    (variant) => variant.id === "design-ui-tag-picker-empty",
+  const picker = componentParent(
+    manifest,
+    "design/library/controls/tag-picker",
+  );
+  const empty = componentVariants(manifest, picker.path).find(
+    (variant) => variant.path === "design/library/controls/tag-picker/empty",
   )!;
   for (const route of generatedViews(empty).map((view) => view.path))
     assert.doesNotMatch(
@@ -136,20 +130,20 @@ test("declared CSS records its declaring component in each inserted variant link
     if (
       entry.kind !== "component" ||
       "variantOf" in entry ||
-      !entry.id.startsWith("design-ui-")
+      !entry.path.startsWith("design-ui-")
     )
       continue;
-    const slug = entry.id.slice("design-ui-".length);
-    assert.equal(Object.hasOwn(entry, "ownedDependencies"), false, entry.id);
-    for (const variant of componentVariants(manifest, entry.id))
+    const slug = entry.path.split("/").at(-1)!;
+    assert.equal(Object.hasOwn(entry, "ownedDependencies"), false, entry.path);
+    for (const variant of componentVariants(manifest, entry.path))
       for (const view of variant.componentViews)
         assert.ok(
           view.insertedStylesheets!.some(
             (resource) =>
               resource.path.endsWith(`/` + slug + `.css`) &&
-              resource.componentIds.includes(entry.id),
+              resource.componentPaths.includes(entry.path),
           ),
-          `${entry.id}: ${view.viewport}`,
+          `${entry.path}: ${view.viewport}`,
         );
   }
 });

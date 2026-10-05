@@ -10,13 +10,15 @@ import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 import { renderViewer } from "../src/viewer/server.js";
 
-import { model } from "./component_workspace_fixture.js";
+import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 import {
   BASE,
   CHANGED,
   CHANGED_SECTION,
   published,
 } from "./page_evidence_fixture.js";
+
+const { model } = componentWorkspaceFixture();
 
 const HEADING = "<h3>Comparison details</h3>";
 
@@ -27,16 +29,17 @@ const HEADING = "<h3>Comparison details</h3>";
 const ENTRIES = [
   {
     kind: "screen",
-    id: "home",
+    id: "product/browse/details",
     evidence: "data-workspace-evidence",
     rest:
+      '<p>The previous version is at <code class="mbk-code">product/details</code>, where it was before the move.</p>' +
       "<p>This stylesheet changed, but none of the changed styles apply to this screen.</p>" +
       "<p>Examined and excluded:</p><ul><li>mockups/action.css</li></ul>" +
       "<p>No changes to this screen.</p>",
   },
   {
     kind: "saved component view",
-    id: "action-default",
+    id: "components/action/default",
     evidence: "data-workspace-evidence",
     rest:
       "<p>This stylesheet changed, but none of the changed styles apply to this variant.</p>" +
@@ -55,24 +58,24 @@ const ENTRIES = [
 ] as const;
 
 /** Render one entry as an embedding host does, from the public catalogue alone. */
-function embedded(catalogue: CatalogueReadModel, screenId: string): string {
+function embedded(catalogue: CatalogueReadModel, screenPath: string): string {
   return renderViewer({
     viewerId: "embedded",
     catalogue,
     baseUrl: "https://host.example/catalogue/",
-    defaultSelection: { screenId },
+    defaultSelection: { screenPath },
   }).replaceAll("<!-- -->", "");
 }
 
 /** Render one entry as Serve and export do, with a known name and private data. */
-function served(screenId: string): string {
+function served(screenPath: string): string {
   const { publicModel: _public, ...catalogue } = viewerCatalogue(model);
   return renderHydratedShellPage(
-    viewerView(viewerCatalogue(model), { ...defaultSelection, screenId }),
+    viewerView(viewerCatalogue(model), { ...defaultSelection, screenPath }),
     {
-      activeId: screenId,
+      activeId: screenPath,
       base: "main",
-      changedIds: [],
+      changedEntries: [],
       changesStatus: "ready",
       readModel: model,
       updateVersion: 1,

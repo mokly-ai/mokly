@@ -36,10 +36,8 @@ test("frame activations retain canonical files, fragments, and history", async (
   page.on("response", (response) => {
     if (response.status() >= 400) failures.push(response.url());
   });
-  await page.goto(`${site.url}/view/screens/home.html?fragment=home-mobile`);
-  await expect(page).toHaveURL(
-    `${site.url}/view/screens/home.html?fragment=home-mobile`,
-  );
+  await page.goto(`${site.url}/view/home/?fragment=home-mobile`);
+  await expect(page).toHaveURL(`${site.url}/view/home/?fragment=home-mobile`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "data-mokly-frame-state",
@@ -54,20 +52,16 @@ test("frame activations retain canonical files, fragments, and history", async (
   const popup = context.waitForEvent("page");
   await link.click({ modifiers: ["ControlOrMeta"] });
   const opened = await popup;
-  await expect(opened).toHaveURL(
-    `${site.url}/view/screens/details.html?fragment=details`,
-  );
+  await expect(opened).toHaveURL(`${site.url}/view/details/?fragment=details`);
   await opened.close();
   await link.click();
-  await expect(page).toHaveURL(
-    `${site.url}/view/screens/details.html?fragment=details`,
-  );
+  await expect(page).toHaveURL(`${site.url}/view/details/?fragment=details`);
   await expect(page.locator("html")).toHaveAttribute(
     "data-test-retained",
     "yes",
   );
   await expect(
-    page.locator('a[data-route="screens/details.html"]'),
+    page.locator('a[data-route="details/index.html"]'),
   ).toHaveAttribute("aria-current", "page");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "src",
@@ -78,9 +72,7 @@ test("frame activations retain canonical files, fragments, and history", async (
   await page.goForward();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await page.reload();
-  await expect(page).toHaveURL(
-    `${site.url}/view/screens/details.html?fragment=details`,
-  );
+  await expect(page).toHaveURL(`${site.url}/view/details/?fragment=details`);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   expect(failures).toEqual([]);
 });
@@ -88,23 +80,21 @@ test("frame activations retain canonical files, fragments, and history", async (
 test("static search, tags, Changes, details, and flows retain the existing shell", async ({
   page,
 }) => {
-  await page.goto(`${site.url}/view/screens/home.html`);
+  await page.goto(`${site.url}/view/home/`);
   await page.locator("[data-mokly-tag-toggle]").click();
   await page.locator('#mb-tag-picker [data-mokly-tag="forms"]').click();
   await expect(page.locator("[data-mokly-search]")).toHaveValue("tag:forms");
-  await expect(
-    page.locator('[data-route="user-flows/tour.html"]'),
-  ).toBeHidden();
+  await expect(page.locator('[data-route="tour/index.html"]')).toBeHidden();
   await page.locator("[data-mokly-search]").fill("");
   await page.locator('[data-filter="changed"]').click();
-  await expect(page.locator('[data-route="screens/home.html"]')).toBeVisible();
+  await expect(page.locator('[data-route="home/index.html"]')).toBeVisible();
   await page.locator('[data-filter="all"]').click();
   await page.getByRole("tab", { name: "Details", exact: true }).click();
   await expect(
     page.getByRole("tabpanel", { name: "Details", exact: true }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Details", exact: true }).click();
-  await page.locator('[data-route="user-flows/tour.html"]').click();
+  await page.locator('[data-route="tour/index.html"]').click();
   await expect(page.locator(".mbk-flow-screen iframe")).toHaveCount(2);
   await chooseScheme(page, "dark");
   for (const frame of await page.locator(".mbk-flow-screen iframe").all())
@@ -119,13 +109,13 @@ test("removed aliases are absent and canonical screens work without JavaScript",
     const page = await context.newPage();
     const removedAlias = await page.goto(`${site.url}/id/home/index.html`);
     expect(removedAlias?.status()).toBe(404);
-    await page.goto(`${site.url}/view/screens/home.html`);
+    await page.goto(`${site.url}/view/home/`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     await expect(
       page.frameLocator(".mbk-frame-mobile iframe").locator("h1"),
     ).toHaveText("Current home");
-    await page.locator('[data-route="screens/details.html"]').click();
-    await expect(page).toHaveURL(`${site.url}/view/screens/details.html`);
+    await page.locator('[data-route="details/index.html"]').click();
+    await expect(page).toHaveURL(`${site.url}/view/details/`);
   } finally {
     await context.close();
   }
@@ -135,20 +125,18 @@ test("keyboard, middle-click, and named frame targets use exact static routes", 
   page,
   context,
 }) => {
-  await page.goto(`${site.url}/view/screens/home.html`);
+  await page.goto(`${site.url}/view/home/`);
   await page
     .frameLocator(".mbk-frame-mobile iframe")
     .getByRole("link", { name: "Details", exact: true })
     .press("Enter");
-  await expect(page).toHaveURL(
-    `${site.url}/view/screens/details.html?fragment=details`,
-  );
+  await expect(page).toHaveURL(`${site.url}/view/details/?fragment=details`);
   for (const [name, button] of [
     ["Details", "middle"],
     ["New tab", "left"],
     ["Named tab", "left"],
   ] as const) {
-    await page.goto(`${site.url}/view/screens/home.html`);
+    await page.goto(`${site.url}/view/home/`);
     const pending = context.waitForEvent("page");
     await page
       .frameLocator(".mbk-frame-mobile iframe")
@@ -156,7 +144,7 @@ test("keyboard, middle-click, and named frame targets use exact static routes", 
       .click({ button });
     const opened = await pending;
     await expect(opened).toHaveURL(
-      `${site.url}/view/screens/details.html?fragment=details`,
+      `${site.url}/view/details/?fragment=details`,
     );
     expect(await opened.evaluate(() => window.opener === null)).toBe(true);
     await opened.close();
@@ -166,7 +154,7 @@ test("keyboard, middle-click, and named frame targets use exact static routes", 
 test("an exported catalogue restores a pinned then saved appearance", async ({
   page,
 }) => {
-  const screen = `${site.url}/view/screens/home.html`;
+  const screen = `${site.url}/view/home/`;
   await page.goto(`${screen}?scheme=dark`);
   await expect(page.locator("html")).toHaveAttribute(
     "data-mokly-theme",
@@ -174,7 +162,7 @@ test("an exported catalogue restores a pinned then saved appearance", async ({
   );
   await expectFrameSource(
     page.locator(".mbk-frame-mobile iframe"),
-    /home\.mobile\.dark\.html$/,
+    /home\/index\.mobile\.dark\.html$/,
   );
   // A pin dresses one document, so the export is still on Auto next visit.
   await page.goto(screen);
@@ -195,6 +183,6 @@ test("an exported catalogue restores a pinned then saved appearance", async ({
   );
   await expectFrameSource(
     page.locator(".mbk-frame-mobile iframe"),
-    /home\.mobile\.dark\.html$/,
+    /home\/index\.mobile\.dark\.html$/,
   );
 });

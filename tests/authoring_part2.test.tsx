@@ -23,19 +23,19 @@ test("empty tags are valid and equivalent to absent tags", () => {
   );
 });
 
-test("top-level entries default to an empty navigation path", () => {
+test("definitions do not invent a navigation label list", () => {
   const entry = defineScreen(screenBase);
-  assert.deepEqual(entry.navPath, []);
+  assert.equal(Object.hasOwn(entry, "navPath"), false);
   assert.deepEqual(validateEntry(resolved(entry), validationConfig), []);
 });
 
 test("entry validation rejects Windows device names without changing tag grammar", () => {
-  const definition = defineScreen({ ...screenBase, id: "con" });
+  const definition = defineScreen({ ...screenBase, path: "con" });
   assert.deepEqual(validateEntry(resolved(definition), validationConfig), [
     {
-      code: "invalid-id",
-      id: "con",
-      message: "id must be globally unique kebab-case",
+      code: "invalid-path",
+      path: "con",
+      message: "path must be a valid catalogue path",
       sourceRelativePath,
     },
   ]);

@@ -46,7 +46,8 @@ rendering, compatibility transformation, component metadata validation, logical
 links, ignore rules, manifest construction/validation, resource validation,
 HTML links, output-path checks and runtime retention. Watcher attachment,
 resource discovery, transactional output, and Changes have separate spans;
-`output.lock` measures the wait for the generated-output writer lock.
+`output.lock` measures the wait for the generated-output writer lock, including
+short output-validation snapshot reads. `output.paths` measures snapshot checks.
 Graph work for watcher inventory and source-freshness validation is deliberately
 visible even when it repeats compilation's graph work.
 

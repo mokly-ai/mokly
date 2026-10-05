@@ -11,7 +11,7 @@ import { catalogue, context } from "./shell_state_fixture.js";
 test("standalone store actions preserve every sequential search byte", () => {
   const route = routeFromUrl(
     catalogue,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/home/"),
   );
   let state = createInitialShellState(
     catalogue,

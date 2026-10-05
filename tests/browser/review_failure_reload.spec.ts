@@ -1,69 +1,69 @@
-import fs from "node:fs";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { readCatalogueChanges } from "../../dist/server/component_changes.js";
 import type { ServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
 import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
-import {
-  createFixture,
-  removeFixture,
-  type TestFixture,
-} from "../helpers/fixture.js";
+import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
-let fixture: TestFixture;
+const cleanup: (() => Promise<void>)[] = [];
 let server: RunningServer;
 let shouldFail = true;
 let generations = 0;
 
 test.beforeAll(async () => {
-  fixture = await createFixture();
+  const fixture = await componentReviewFixture(
+    { after: (dispose) => cleanup.push(dispose) },
+    (source) => source.replaceAll("Screen content", "Changed content"),
+  );
+  const changes = await readCatalogueChanges(
+    fixture.config,
+    fixture.after.manifest,
+    "origin/main",
+    fixture.git,
+    "a".repeat(40),
+  );
   const outDir = path.join(fixture.root, ".review");
+  const result = {
+    schemaVersion: 5 as const,
+    baseCommit: "a".repeat(40),
+    baseRef: "origin/main",
+    changedPaths: [],
+    ignoredImpact: [],
+    screens: [],
+    components: [],
+    changes: [],
+    affectedConsumers: [],
+  } satisfies ReviewResultV5;
   const review: ServedReview = {
     base: "origin/main",
     async generate(): Promise<void> {
-      generations += 1;
-      if (shouldFail) throw new Error("temporary comparison failure");
-      await fs.promises.mkdir(outDir, { recursive: true });
-      await fs.promises.writeFile(
-        path.join(outDir, "review.json"),
-        JSON.stringify({
-          schemaVersion: 5,
-          baseCommit: "a".repeat(40),
-          baseRef: "origin/main",
-          changedPaths: [],
-          ignoredImpact: [],
-          screens: [],
-          components: [],
-          changes: [],
-          affectedConsumers: [],
-        } satisfies ReviewResultV5),
-      );
-      await fs.promises.writeFile(
-        path.join(outDir, ".mokly-review-artifact"),
-        "schemaVersion=1\n",
-      );
+      throw new Error("The browser must request its selected comparison");
+    },
+    selected: {
+      async generate() {
+        generations += 1;
+        if (shouldFail) throw new Error("temporary comparison failure");
+        return { result, files: new Map() };
+      },
     },
     outDir,
   };
-  const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
-  server = await startCatalogueServer(config, {
+  server = await startCatalogueServer(fixture.config, {
     base: "origin/main",
-    changedIds: ["home"],
+    changedEntries: ["home"],
+    componentChanges: changes,
     port: 0,
     review,
   });
+  fixture.beforeRemove(() => server.close());
 });
 
 test.afterAll(async () => {
-  await server.close();
-  await removeFixture(fixture);
+  for (const dispose of cleanup.reverse()) await dispose();
 });
 
 test("a watched update resets failed diffs to Current without generating", async ({
@@ -74,7 +74,7 @@ test("a watched update resets failed diffs to Current without generating", async
       new URL(response.url()).pathname === "/__mokly/events" &&
       response.status() === 200,
   );
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await eventStream;
   await page.getByRole("button", { name: "Overlay", exact: true }).click();
   await expect(
@@ -82,7 +82,7 @@ test("a watched update resets failed diffs to Current without generating", async
   ).toBeVisible();
   expect(generations).toBe(1);
   shouldFail = false;
-  server.publishUpdate({ version: 2, changedIds: ["home"] });
+  server.publishUpdate({ version: 2, changedEntries: ["home"] });
   await expect(page.locator("html")).toHaveAttribute(
     "data-mokly-update-version",
     "2",

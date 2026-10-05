@@ -3,22 +3,22 @@ import { expect, test } from "@playwright/test";
 import type { RunningServer } from "../../dist/server/http_types.js";
 
 import { loadComparison, PANE_SOURCE } from "./comparison_actions.js";
-import { createExplorerFixture } from "./component_explorer_fixture.js";
+import { startComponentExplorer } from "./component_explorer_runtime_fixture.js";
 import { chooseVariant } from "./workspace_actions.js";
 
 let server: RunningServer;
-let close: () => Promise<void>;
+const cleanup: (() => Promise<void>)[] = [];
 test.beforeAll(async () => {
-  const fixture = await createExplorerFixture();
-  server = fixture.server;
-  close = fixture.close;
+  server = await startComponentExplorer(cleanup);
 });
-test.afterAll(async () => close());
+test.afterAll(async () => {
+  for (const dispose of cleanup.reverse()) await dispose();
+});
 
 test("component comparisons follow changed variants while added variants stay current", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
   await loadComparison(page, "Overlay");
   await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(2);
@@ -44,7 +44,7 @@ test("component comparisons follow changed variants while added variants stay cu
   await chooseVariant(page, "Disabled");
   await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
     PANE_SOURCE,
-    /disabled\.mobile\.html$/,
+    /action\/disabled\/index\.mobile\.html$/,
   );
   await page.getByRole("button", { name: "Current", exact: true }).click();
   await expect(
@@ -67,7 +67,7 @@ test("component comparisons follow changed variants while added variants stay cu
 test("Used by links select a real screen instance and clear stale selection on navigation", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   await page
     .getByRole("tabpanel", { name: "Usage", exact: true })
@@ -75,7 +75,7 @@ test("Used by links select a real screen instance and clear stale selection on n
     .first()
     .click();
   await expect(page).toHaveURL(
-    /screens\/home\.html\?viewport=mobile&scheme=light&instance=[a-f0-9]{64}/,
+    /view\/home\/\?viewport=mobile&scheme=light&instance=[a-f0-9]{64}/,
   );
   await expect(
     page.getByRole("tab", { name: "Props", exact: true }),
@@ -108,7 +108,7 @@ test("Used by links select a real screen instance and clear stale selection on n
 test("nested selection and frame Escape preserve focus and consumer markup", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await expect(
     page.getByRole("button", { name: "Highlight components", exact: true }),

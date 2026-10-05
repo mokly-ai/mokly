@@ -39,7 +39,7 @@ export interface ProcessSupervisor {
   ): void;
   close(): Promise<void>;
   notifyUpdate(
-    changedIds: readonly string[] | undefined,
+    changedEntries: readonly string[] | undefined,
     componentChanges?: ComponentChangeSnapshot,
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
@@ -210,7 +210,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
 
   notifyUpdate(
-    changedIds: readonly string[] | undefined,
+    changedEntries: readonly string[] | undefined,
     componentChanges?: ComponentChangeSnapshot,
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
@@ -222,7 +222,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     child.send(
       childUpdateMessage(
         this.#updateVersion,
-        changedIds,
+        changedEntries,
         componentChanges,
         changesStatus,
         kind,

@@ -7,42 +7,89 @@ order: 2
 
 ## Define a screen
 
-`defineScreen` takes the screen's identity and the two React nodes the
-catalogue renders.
+`defineScreen` takes the screen's title and the two React nodes the catalogue
+renders. The file's place inside a root gives the screen its path.
 
 ```tsx
+// specs/account/billing/invoice.mockup.tsx
 import { defineScreen } from "@mokly/mokly";
 
-export const accountHome = defineScreen({
-  id: "account-home",
-  title: "Account home",
-  description: "The account landing screen.",
-  mobile: <main>Account</main>,
-  desktop: <main>Account</main>,
-  relatedDocs: ["docs/account.md"],
-  useCaseIds: [],
+export default defineScreen({
+  title: "Invoice",
+  description: "One paid invoice.",
+  mobile: <main id="summary">Invoice</main>,
+  desktop: <main id="summary">Invoice</main>,
+  relatedDocs: ["docs/billing.md"],
 });
 ```
 
 | Field                  | Meaning                                                    |
 | ---------------------- | ---------------------------------------------------------- |
-| `id`                   | Lowercase kebab-case identity, unique across the catalogue |
 | `title`, `description` | What the catalogue shows                                   |
-| `navPath`              | Folder labels above this screen (defaults to `[]`)         |
 | `mobile`, `desktop`    | The React node each viewport renders                       |
 | `relatedDocs`          | Documents a reader should open beside it                   |
-| `useCaseIds`           | Flows this screen appears in                               |
+| `slug`                 | The last segment of the path; defaults to the file name    |
+| `path`                 | A complete path that replaces the derived one              |
+| `movedFrom`            | The complete path this screen had before it moved          |
+| `useCasePaths`         | Flows this screen appears in                               |
 | `tags`                 | Lowercase kebab-case classification, searched as `tag:`    |
 | `colorSchemes`         | Opt one screen out of a scheme the catalogue renders       |
+| `address`              | The address shown in the browser chrome around the screen  |
 | `rationale`            | Why the screen is the way it is                            |
 | `variants`             | States of this screen, each a full screen grouped under it |
 
-Mokly derives the route from the id: the documents are written under
-`mockupsDir` as `screens/<id>.mobile.html` and `screens/<id>.desktop.html`,
-with `.dark` before `.html` for dark views, and the catalogue addresses the
-screen at `screens/<id>.html`. An id may not be a Windows device name such as
-`con` or `nul`. Each view is generated as its own standalone page, so wrap the
-content in a landmark such as `main`.
+Each view is generated as its own standalone page, so wrap the content in a
+landmark such as `main`.
+
+## The path
+
+The screen above is `account/billing/invoice`: the directories between the
+root and the file, then the file name up to its first dot. That path is the
+screen's identity everywhere. Links name it, flows name it, its address in the
+catalogue is `/view/account/billing/invoice/`, and its views are written as
+`account/billing/invoice/index.mobile.html` and `index.desktop.html` under
+`mockupsDir`, with `.dark` before `.html` for dark views. Serve exposes these
+files below `/static/`, and export writes them below `static/`.
+
+Set `slug` when the last segment should differ from the file name, and set
+`path` when a file cannot sit where its path should be; a declared path is
+always complete. Every segment uses letters, digits, hyphens and underscores,
+case is kept as written, and two paths that differ only by case count as one.
+A file name outside that grammar is a build error that names the file.
+
+One module may export several screens as long as each derives its own path.
+A module named `index.mockup.tsx` is the page of its folder, so its slug-less
+screen takes the folder's path while the others declare slugs:
+
+```tsx
+// specs/account/billing/index.mockup.tsx
+import { defineScreen } from "@mokly/mokly";
+
+export const billing = defineScreen({
+  title: "Billing",
+  description: "Billing overview.",
+  mobile: <main>Billing</main>,
+  desktop: <main>Billing</main>,
+
+  relatedDocs: [],
+});
+
+export const history = defineScreen({
+  slug: "history",
+  title: "Payment history",
+  description: "Payments made on this account.",
+  mobile: <main>Payment history</main>,
+  desktop: <main>Payment history</main>,
+
+  relatedDocs: [],
+});
+```
+
+Two slug-less screens in one module derive one path and fail the build with
+both locations. So do `invoice.mockup.tsx` and `invoice/index.mockup.tsx`
+when neither declares another path. An ordinary entry cannot also name a folder
+that contains other entries. Use `invoice/index.mockup.tsx` for the folder page
+and put its members beside it.
 
 ## Keep scrolling panels paired
 
@@ -53,9 +100,11 @@ If adding a product `id` would be inappropriate, name the comparison pair
 directly with `data-mokly-scroll` instead:
 
 ```tsx
+import { Activity } from "./activity.js";
+
 <main data-mokly-scroll="account-activity" className="activity-panel">
   <Activity />
-</main>
+</main>;
 ```
 
 The name is lowercase kebab-case and must be unique among scrolling regions in
@@ -71,71 +120,41 @@ state or an error. Declare it inside the screen it varies, and it becomes a
 full screen of its own, grouped under the parent in the catalogue.
 
 ```tsx
-export const accountHomeStates = defineScreen({
-  id: "account-home",
-  title: "Account home",
-  description: "The account landing screen.",
-  mobile: <main>Account</main>,
-  desktop: <main>Account</main>,
-  relatedDocs: ["docs/account.md"],
-  useCaseIds: [],
+import { defineScreen } from "@mokly/mokly";
+
+export default defineScreen({
+  title: "Invoice",
+  description: "One paid invoice.",
+  mobile: <main id="summary">Invoice</main>,
+  desktop: <main id="summary">Invoice</main>,
+  relatedDocs: ["docs/billing.md"],
   variants: [
     {
-      id: "account-home-empty",
-      title: "Account home, empty",
-      description: "The landing screen before any account exists.",
-      mobile: <main>No accounts yet</main>,
-      desktop: <main>No accounts yet</main>,
+      slug: "overdue",
+      title: "Invoice, overdue",
+      description: "An invoice past its due date.",
+      mobile: <main>Overdue</main>,
+      desktop: <main>Overdue</main>,
     },
   ],
 });
 ```
 
-The variant's route derives from its own id, so this one lives at
-`screens/account-home-empty.html`. It inherits the parent's address, tags,
-color schemes and related docs unless it sets its own, and it
-keeps its own global id, so a link to `account-home-empty` opens it like any
-screen. Its `useCaseIds` defaults to an empty list and never inherits; list a
-flow only when one of that flow's steps names the variant. A variant cannot
-declare variants of its own or an independent `navPath`; it copies the
-parent's path and appears beneath the parent row. The call returns a
-readonly array containing the parent first and then the variants in authored
-order; `mockups` exports may include that result directly. A call without
-`variants` continues to return one screen definition. Nested `screen` markers
-accept the same `variants` field and flatten in the same order.
+A variant's path is the parent's path plus its `slug`, so this one is
+`account/billing/invoice/overdue` and a link to that path opens it like any
+screen. It inherits the parent's address, tags, color schemes
+and related docs unless it sets its own, and a list it sets replaces the
+inherited one. Its `useCasePaths` defaults to an empty list and never
+inherits; list a flow only when one of that flow's steps names the variant. A
+variant cannot declare variants of its own, and two variants of one parent
+cannot share a slug. The call returns a readonly array containing the parent
+first and then the variants in authored order; a call without `variants`
+returns one screen definition. Either result can be exported directly.
 
-## Nest a tree of screens
-
-`defineRoot` flattens a nested tree into ordinary definitions, so a folder of
-related screens is described once. Children are markers made by `screen` and
-`folder`, and their routes derive from their ids like every other entry.
-
-```tsx
-import { defineRoot, folder, screen } from "@mokly/mokly";
-
-export const mockups = defineRoot({
-  navPath: ["Account"],
-  children: [
-    folder({
-      title: "Billing",
-      children: [
-        screen({
-          id: "account-invoice",
-          title: "Invoice",
-          description: "One invoice.",
-          mobile: <main>Invoice</main>,
-          desktop: <main>Invoice</main>,
-        }),
-      ],
-    }),
-  ],
-});
-```
-
-The route of that screen is `screens/account-invoice.html`, derived from its
-id. The screen's `navPath` is `["Account", "Billing"]`; changing those titles
-does not change its route. A nested child inherits `relatedDocs` from its ancestors; tags are never inherited. An empty `folder()`
-is an authoring error.
+A directory named after a screen is a folder whose page is that screen, so
+`invoice/index.mockup.tsx` with variants renders the same row as
+`invoice.mockup.tsx` with the same variants; files beside it in that directory
+are ordinary members of the folder, not variants.
 
 ## Exported types
 
@@ -143,10 +162,11 @@ is an authoring error.
 | --------------------------------- | ----------------------------------------- |
 | `ScreenInput`, `ScreenDefinition` | What `defineScreen` takes and returns     |
 | `ScreenVariantInput`              | One screen state nested under its parent  |
-| `NestedScreenInput`               | What `screen` takes inside a tree         |
-| `RootInput`                       | What `defineRoot` takes                   |
 | `EntryInput`                      | The metadata every entry shares           |
 | `RegistryDefinition`              | Any definition an entry module may export |
 
-There is no `RoutedEntryInput`: every input extends `EntryInput`, and the
-route is derived from the id.
+Every input extends `EntryInput`; the path derives from the file. Unknown
+fields fail registry validation. Use `satisfies ScreenInput` to check extra
+top-level keys statically: generic inference can accept extra keys while
+preserving the precise return type through wrappers. Fresh variant literals
+in direct `defineScreen` calls still receive excess-key checks.

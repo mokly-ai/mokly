@@ -74,10 +74,11 @@ The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
 owns the complete `RenderInput.stylesheets` list, its order, href encoding
 and how pages link CSS.
 
-The owning entry root is the **resolved entry module whose `mockups` or
-default export yielded the definition** (including re-exports and flattened
-nested definitions), not the module where its `define*` call ran. Record it
-in memory during graph evaluation and propagate it through registry preparation
+The owning entry root is the **discovered entry module whose default or named
+export contributed the definition**, per the
+[entry-module contract](./mokly-entry-modules.md). It is independent of the module
+where its `define*` call ran. Record it in memory during export collection and
+propagate it through registry preparation
 without adding a manifest field. Two entries may import the same helper but
 link their own independent entry bundles.
 

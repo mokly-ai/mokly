@@ -17,7 +17,7 @@ import { validEntrySource } from "./helpers/fixture.js";
 function pageSource(id = "handbook"): string {
   return `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: ${JSON.stringify(id)}, title: "Handbook", description: "Catalogue guidance", relatedDocs: [], render: () => '<!doctype html><html><body><h1>Handbook</h1></body></html>' }));`;
+mockups.push(definePage({ path: ${JSON.stringify(id)}, title: "Handbook", description: "Catalogue guidance", relatedDocs: [], render: () => '<!doctype html><html><body><h1>Handbook</h1></body></html>' }));`;
 }
 
 test("hydrated Serve and export render a removed route", async (context) => {
@@ -27,23 +27,26 @@ test("hydrated Serve and export render a removed route", async (context) => {
   const server = await startReviewedServer(fixture);
   context.after(() => server.close());
 
-  const served = await fetch(`${server.url}/view/pages/handbook.html`);
+  const served = await fetch(`${server.url}/view/handbook/`);
   assert.equal(served.status, 200);
   assert.match(await served.text(), /Showing previous version/);
 
   await exportCatalogue(fixture.config, { outDir: "site" });
   const exported = await fs.readFile(
-    path.join(fixture.output, "view/pages/handbook.html"),
+    path.join(fixture.output, "view/handbook/index.html"),
     "utf8",
   );
   assert.match(exported, /data-mokly-react-shell=""/);
   assert.match(exported, /Showing previous version/);
 });
 
-test("hydrated Serve and export distinguish removed and replacement ids", async (context) => {
+test("hydrated Serve and export distinguish removed and unrelated replacement paths", async (context) => {
   const fixture = await createExportFixture(pageSource());
   context.after(() => fixture.close());
-  await fs.writeFile(fixture.entryPath, pageSource("guide"));
+  await fs.writeFile(
+    fixture.entryPath,
+    pageSource("guide").replaceAll("Handbook", "Quick guide"),
+  );
   const server = await startReviewedServer(fixture);
   context.after(() => server.close());
 
@@ -51,45 +54,38 @@ test("hydrated Serve and export distinguish removed and replacement ids", async 
     await fetch(`${server.url}/__mokly/catalogue.json`)
   ).json()) as {
     removedEntries: readonly {
-      entry: { id: string };
+      entry: { path: string };
       snapshotId: string;
     }[];
   };
   const historical = catalogue.removedEntries.find(
-    ({ entry }) => entry.id === "handbook",
+    ({ entry }) => entry.path === "handbook",
   );
   assert.ok(historical);
 
-  const oldRoute = await fetch(`${server.url}/view/pages/handbook.html`);
+  const oldRoute = await fetch(`${server.url}/view/handbook/`);
   assert.equal(oldRoute.status, 200);
   assert.match(await oldRoute.text(), /Showing previous version/);
   const exactOldRoute = await fetch(
-    `${server.url}/view/pages/handbook.html?snapshot=${historical.snapshotId}`,
+    `${server.url}/view/handbook/?snapshot=${historical.snapshotId}`,
   );
   assert.equal(exactOldRoute.status, 200);
   assert.match(await exactOldRoute.text(), /Showing previous version/);
-  const currentRoute = await fetch(`${server.url}/view/pages/guide.html`);
+  const currentRoute = await fetch(`${server.url}/view/guide/`);
   assert.equal(currentRoute.status, 200);
   assert.doesNotMatch(await currentRoute.text(), /Showing previous version/);
   assert.equal(
-    (
-      await fetch(
-        `${server.url}/view/pages/guide.html?snapshot=${historical.snapshotId}`,
-      )
-    ).status,
-    404,
-  );
-  assert.equal(
-    (
-      await fetch(
-        `${server.url}/view/pages/handbook.html?snapshot=${"f".repeat(64)}`,
-      )
-    ).status,
-    404,
-  );
-  assert.equal(
-    (await fetch(`${server.url}/view/pages/handbook.html?snapshot=invalid`))
+    (await fetch(`${server.url}/view/guide/?snapshot=${historical.snapshotId}`))
       .status,
+    404,
+  );
+  assert.equal(
+    (await fetch(`${server.url}/view/handbook/?snapshot=${"f".repeat(64)}`))
+      .status,
+    404,
+  );
+  assert.equal(
+    (await fetch(`${server.url}/view/handbook/?snapshot=invalid`)).status,
     400,
   );
   const removedAlias = await fetch(`${server.url}/id/guide`, {
@@ -109,10 +105,10 @@ test("hydrated Serve and export distinguish removed and replacement ids", async 
   const read = (name: string) =>
     fs.readFile(path.join(fixture.output, name), "utf8");
   assert.match(
-    await read("view/pages/handbook.html"),
+    await read("view/handbook/index.html"),
     /Showing previous version/,
   );
-  const current = await read("view/pages/guide.html");
+  const current = await read("view/guide/index.html");
   assert.match(current, /data-mokly-react-shell=""/);
   assert.doesNotMatch(current, /Showing previous version/);
 });

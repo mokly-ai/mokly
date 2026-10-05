@@ -62,7 +62,7 @@ function validateTarget(
     view.kind === "target" &&
     !resolveCatalogueEntry(
       catalogue,
-      { id: view.entryId, kind: view.entryKind },
+      { path: view.entryPath, kind: view.entryKind },
       view.snapshotId,
     )
   )

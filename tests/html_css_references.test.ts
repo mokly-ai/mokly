@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../dist/html_references.js";
+import { extractCssReferences } from "../dist/css_references.js";
+import { extractHtmlReferences } from "../dist/html_references.js";
 
 for (const [source, expected] of [
   ["color: red; padding: 2px", []],

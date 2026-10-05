@@ -1,19 +1,12 @@
-import { MoklyError } from "../errors.js";
-
-import { NESTED_AUTHORED_NAV_PATH } from "./markers.js";
+import { authoredInput } from "./fields.js";
+import { registerDefinition } from "./identity.js";
+import { DEFINITION, DEFINITION_IDENTITY } from "./markers.js";
 import type {
+  DefinitionBrand,
+  FolderDefinition,
+  FolderInput,
   PageDefinition,
   PageInput,
-  NestedPageInput,
-  NestedPageMarker,
-  NestedChild,
-  NestedFolderInput,
-  NestedFolderMarker,
-  NestedInherited,
-  NestedScreenInput,
-  NestedScreenMarker,
-  RegistryDefinition,
-  RootInput,
   ScreenDefinition,
   ScreenInput,
   ScreenVariantInput,
@@ -21,222 +14,92 @@ import type {
   UseCaseInput,
 } from "./types.js";
 import { flattenScreenVariants } from "./variants.js";
-import { attachPathWarning } from "./warnings.js";
-
-/** Whether a nested leaf explicitly authored a path before flattening. */
-export function nestedAuthoredNavPath(definition: object): boolean {
-  return NESTED_AUTHORED_NAV_PATH in definition;
-}
 
 type DefineScreenVariantsResult<T> = [T] extends [never]
   ? ScreenDefinition
   : T extends readonly ScreenVariantInput[]
     ? readonly ScreenDefinition[]
     : ScreenDefinition;
-
 type DefineScreenResult<T extends ScreenInput> = T extends unknown
   ? DefineScreenVariantsResult<
       "variants" extends keyof T ? T["variants" & keyof T] : undefined
     >
   : never;
 
-/** Loader hook used by module-bound consumer authoring facades. */
+/** Bind a definition to its creator without changing reference identity. */
 export function __attributeDefinition<T extends object>(
   value: readonly T[],
-  sourceRelativePath: string,
+  source: string,
 ): readonly (T & { definedIn: string })[];
-/** Loader hook used by module-bound consumer authoring facades. */
+/** Bind one definition to its creator without replacing an existing attribution. */
 export function __attributeDefinition<T extends object>(
   value: T,
-  sourceRelativePath: string,
+  source: string,
 ): T & { definedIn: string };
 export function __attributeDefinition(
   value: object | readonly object[],
-  sourceRelativePath: string,
+  source: string,
 ): object | readonly object[] {
-  if (Array.isArray(value)) {
-    return value.map((definition) => ({
-      ...definition,
-      definedIn: sourceRelativePath,
-    }));
+  for (const definition of Array.isArray(value) ? value : [value]) {
+    if (!("definedIn" in definition))
+      Object.assign(definition, { definedIn: source });
   }
-  return { ...value, definedIn: sourceRelativePath };
+  return value;
 }
 
-/** Define one canonical screen and flatten any declared variants after it. */
-export function defineScreen<const T extends ScreenInput>(
-  input: T,
+/** Define one screen and flatten its authored variants after it. */
+export function defineScreen<T extends ScreenInput>(
+  input: T & ScreenInput,
 ): DefineScreenResult<T>;
 export function defineScreen(
   input: ScreenInput,
 ): ScreenDefinition | readonly ScreenDefinition[] {
-  const { variants, ...parentInput } = input;
+  const { variants, ...parentInput } = authoredInput(input, "screen");
   const parent = branded({
     ...parentInput,
     kind: "screen" as const,
-    navPath: input.navPath === undefined ? [] : input.navPath,
-    useCaseIds: input.useCaseIds ?? [],
+    useCasePaths: input.useCasePaths ?? [],
   });
   return variants === undefined
     ? parent
     : flattenScreenVariants(parent, variants);
 }
 
-/** Define a complete document with a route derived from its id. */
+/** Define a complete document with a file-derived path. */
 export function definePage(input: PageInput): PageDefinition {
-  return branded({
-    ...input,
-    kind: "page",
-    navPath: input.navPath === undefined ? [] : input.navPath,
-  });
+  return branded({ ...authoredInput(input, "page"), kind: "page" });
 }
 
-/** Create a page marker inside a nested tree. */
-export function page(input: NestedPageInput): NestedPageMarker {
-  return { ...input, __nested: "page" };
-}
-
-/** Define an ordered journey that references canonical screens. */
+/** Define an ordered journey that references screens by path. */
 export function defineUseCase(input: UseCaseInput): UseCaseDefinition {
   return branded({
-    ...input,
+    ...authoredInput(input, "use-case"),
     kind: "use-case",
-    navPath: input.navPath === undefined ? [] : input.navPath,
   });
 }
 
-/** Create a screen marker inside a nested tree. */
-export function screen(input: NestedScreenInput): NestedScreenMarker {
-  return { ...input, __nested: "screen" };
+/** Describe the presentation of a folder created by entry paths. */
+export function defineFolder(input: FolderInput): FolderDefinition {
+  return branded({
+    ...authoredInput(input, "folder"),
+    kind: "folder",
+  });
 }
 
-/** Create a folder marker inside a nested tree. */
-export function folder(input: NestedFolderInput): NestedFolderMarker {
-  return { ...input, __nested: "folder" };
-}
-
-/** Flatten a nested tree into ordinary registry definitions. */
-export function defineRoot(input: RootInput): RegistryDefinition[] {
-  const definitions: RegistryDefinition[] = [];
-  if (input.navPath !== undefined && !Array.isArray(input.navPath)) {
-    throw new MoklyError("build-invalid", "root navPath must be an array");
-  }
-  if (input.navPath?.length && input.children.length === 0) {
-    throw new MoklyError(
-      "build-invalid",
-      `root ${labels(input.navPath)} has no children`,
-    );
-  }
-  const inherited: NestedInherited = input;
-  const navPath = input.navPath ?? [];
-  for (const child of input.children) {
-    flattenChild(child, inherited, navPath, definitions);
-  }
-  attachPathWarning(definitions, input, navPath, "root path");
-  return definitions;
-}
-
-function flattenChild(
-  node: NestedChild,
-  inherited: NestedInherited,
-  navPath: readonly string[],
-  definitions: RegistryDefinition[],
-): void {
-  const effective = mergeInherited(inherited, node);
-  if (node.__nested === "page") {
-    const {
-      __nested: _marker,
-      slug: _slug,
-      ...input
-    } = node as NestedPageMarker & { slug?: unknown };
-    const definition = definePage({
-      ...input,
-      navPath,
-      relatedDocs: effective.relatedDocs ?? [],
-    });
-    if (Object.hasOwn(node, "navPath")) {
-      Object.assign(definition, { [NESTED_AUTHORED_NAV_PATH]: true });
-    }
-    if (node.definedIn) definition.definedIn = node.definedIn;
-    definitions.push(definition);
-    return;
-  }
-  if (node.__nested === "screen") {
-    const flattened = defineScreen({
-      ...(effective.address ? { address: effective.address } : {}),
-      ...(node.colorSchemes ? { colorSchemes: node.colorSchemes } : {}),
-      ...removedDependencies(node),
-      description: node.description,
-      desktop: node.desktop,
-      id: node.id,
-      mobile: node.mobile,
-      navPath,
-      ...(node.rationale ? { rationale: node.rationale } : {}),
-      relatedDocs: effective.relatedDocs ?? [],
-      ...(node.tags ? { tags: node.tags } : {}),
-      title: node.title,
-      useCaseIds: node.useCaseIds ?? [],
-      ...(node.variants ? { variants: node.variants } : {}),
-    });
-    const screenDefinitions = Array.isArray(flattened)
-      ? flattened
-      : [flattened];
-    for (const definition of screenDefinitions) {
-      if (node.definedIn) definition.definedIn = node.definedIn;
-      if (
-        Object.hasOwn(node, "navPath") &&
-        definition.variantOf === undefined
-      ) {
-        Object.assign(definition, { [NESTED_AUTHORED_NAV_PATH]: true });
-      }
-      definitions.push(definition);
-    }
-    return;
-  }
-  if (node.children.length === 0) {
-    throw new MoklyError(
-      "build-invalid",
-      `folder ${labels([...navPath, node.title])} has no children`,
-    );
-  }
-  const firstChild = definitions.length;
-  for (const child of node.children) {
-    flattenChild(child, effective, [...navPath, node.title], definitions);
-  }
-  attachPathWarning(
-    definitions.slice(firstChild),
-    node,
-    [...navPath, node.title],
-    "folder",
-  );
-}
-
-function labels(values: readonly unknown[]): string {
-  return values.map(String).join(" › ");
-}
-
-function mergeInherited(
-  parent: NestedInherited,
-  child: NestedInherited,
-): NestedInherited {
-  return {
-    ...((child.address ?? parent.address)
-      ? { address: child.address ?? parent.address }
-      : {}),
-    ...((child.relatedDocs ?? parent.relatedDocs)
-      ? { relatedDocs: child.relatedDocs ?? parent.relatedDocs }
-      : {}),
+/** Brand a definition and allocate its per-definition resolved identity. */
+export function branded<T extends object>(value: T): T & DefinitionBrand {
+  const definition: T & DefinitionBrand = {
+    ...value,
+    __viaDefine: true,
+    [DEFINITION]: true,
+    [DEFINITION_IDENTITY]:
+      DEFINITION_IDENTITY in value
+        ? (
+            value as {
+              [DEFINITION_IDENTITY]: DefinitionBrand[typeof DEFINITION_IDENTITY];
+            }
+          )[DEFINITION_IDENTITY]
+        : {},
   };
-}
-
-function removedDependencies(input: object): object {
-  return Object.hasOwn(input, "dependencies")
-    ? { dependencies: (input as { dependencies?: unknown }).dependencies }
-    : {};
-}
-
-function branded<T extends object>(
-  value: T,
-): T & { __viaDefine: true; definedIn?: string } {
-  return { ...value, __viaDefine: true };
+  return registerDefinition(definition);
 }

@@ -26,9 +26,8 @@ is rejected at config validation because it emits an undelivered sibling
 stylesheet; rename the input to `.css` or use a JavaScript-safe loader.
 
 `<mockupsDir>/mokly-generated/` is reserved for generated stylesheets and
-binary assets. An `entries` glob cannot have a static prefix inside it;
-`entriesDir` and `review.outDir` cannot equal or be inside it, and broad
-entry discovery skips it. Local configured stylesheet paths and authored
+binary assets. A root directory or `roots[].files` static prefix cannot be inside
+it; `review.outDir` cannot equal or be inside it, and broad root discovery skips it. Local configured stylesheet paths and authored
 inputs cannot live there, including through symlink aliases. Consumer
 `publicExclude` globs cannot start with literal `mokly-generated` after brace
 expansion. Broad globs are allowed, but Build rejects any generated stylesheet

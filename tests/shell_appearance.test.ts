@@ -5,17 +5,19 @@ import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 
 import {
+  darkTokenSelectors,
+  flatCss,
+  occurrences,
+} from "./helpers/shell_assertions.js";
+import {
   context,
   darkManifest,
-  darkTokenSelectors,
   embeddedPage,
-  flatCss,
   homePage,
   manifest,
   notFoundPage,
-  occurrences,
   routePage,
-} from "./shell_fixture.js";
+} from "./helpers/shell_fixture.js";
 
 test("dark scheme paints device screens and leaves the chrome light", () => {
   const css = flatCss(SHELL_CSS);
@@ -164,8 +166,8 @@ test("standalone documents offer Appearance instead of preview switches", () => 
   }
   for (const html of [
     notFoundPage("view/unknown.html", light, context),
-    routePage(dark, "screens/welcome.html"),
-    routePage(dark, "user-flows/tour.html"),
+    routePage(dark, "example/screens/welcome/index.html"),
+    routePage(dark, "example/tour/index.html"),
   ])
     assert.equal(occurrences(html, "data-mokly-appearance-select"), 1);
 });

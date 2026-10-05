@@ -22,7 +22,7 @@ test("private controls rerender actual consumer code, keep immutable bundles and
   await fs.writeFile(fixture.entryPath, "invalid candidate source");
   const request = {
     componentId: "action",
-    variantId: "action-default",
+    variantPath: "action/default",
     generation: runtime.generation,
     viewport: "desktop",
     colorScheme: "light",
@@ -69,9 +69,7 @@ test("render HTTP validates authority, body limits and methods; memory documents
     componentRuntime: runtime,
   });
   fixture.beforeRemove(() => server.close());
-  const reactResponse = await fetch(
-    `${server.url}/view/components/action.html`,
-  );
+  const reactResponse = await fetch(`${server.url}/view/action/`);
   assert.equal(reactResponse.status, 200, await reactResponse.clone().text());
   const reactPage = await reactResponse.text();
   const state = reactPage.match(
@@ -94,7 +92,7 @@ test("render HTTP validates authority, body limits and methods; memory documents
   const capability = descriptor.renderCapability;
   const body = {
     componentId: "action",
-    variantId: "action-default",
+    variantPath: "action/default",
     viewport: "mobile",
     colorScheme: "light",
     generation: capability.generation,
@@ -194,16 +192,12 @@ test("a running server can attach the retained component runtime after readiness
   });
   fixture.beforeRemove(() => server.close());
 
-  const before = await (
-    await fetch(`${server.url}/view/components/action.html`)
-  ).text();
+  const before = await (await fetch(`${server.url}/view/action/`)).text();
   assert.doesNotMatch(before, /"renderCapability"/);
 
   server.replaceComponentRuntime(componentRuntime(fixture.after));
 
-  const after = await (
-    await fetch(`${server.url}/view/components/action.html`)
-  ).text();
+  const after = await (await fetch(`${server.url}/view/action/`)).text();
   assert.match(after, /"renderCapability"/);
 });
 

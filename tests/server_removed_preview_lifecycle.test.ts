@@ -12,7 +12,7 @@ import {
   pageArtifact,
   pageSource,
   start,
-} from "./server_removed_preview_lifecycle_fixture.js";
+} from "./helpers/removed_preview_lifecycle.js";
 
 test("page selections share immutable capture, refresh, and HTTP protections", async (t) => {
   let calls = 0;
@@ -20,11 +20,11 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
     async generate(source, selection) {
       calls++;
       assert.equal(selection.kind, "page");
-      assert.equal(selection.id, page.id);
+      assert.equal(selection.path, page.path);
       return pageArtifact(source);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
+  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.path}`;
   const [first, coalesced] = await Promise.all([fetch(stable), fetch(stable)]);
   assert.equal(first.status, 200);
   assert.equal(first.url, coalesced.url);
@@ -34,7 +34,7 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
   assert.deepEqual(await first.json(), pageArtifact().preview);
   assert.equal(calls, 1);
   const document = new URL(
-    `snapshots/before/${entryRoute("page", page.id)}`,
+    `snapshots/before/${entryRoute(page.path)}`,
     first.url,
   );
   assert.match(await (await fetch(document)).text(), /a{40}/);
@@ -47,9 +47,9 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
   assert.notEqual(refreshed.url, first.url);
   assert.equal(calls, 2);
   for (const query of [
-    `page=${page.id}&id=removed-screen`,
-    `page=${page.id}&route=default`,
-    `page=${page.id}&page=${page.id}`,
+    `page=${page.path}&path=removed-screen`,
+    `page=${page.path}&route=default`,
+    `page=${page.path}&page=${page.path}`,
     "page=../private",
   ])
     assert.equal(
@@ -71,10 +71,10 @@ test("page generation expiry reacquires without reviving an old URL", async (t) 
   const server = await start(t, {
     async generate(source, selection) {
       calls++;
-      return pageArtifact(source, selection.id);
+      return pageArtifact(source, selection.path);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
+  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.path}`;
   const first = await fetch(stable);
   assert.equal(first.status, 200);
   now += 60_001;
@@ -90,10 +90,10 @@ test("failed page refresh preserves the retained generation", async (t) => {
   const server = await start(t, {
     async generate(source, selection) {
       if (++attempts === 2) throw new Error("refresh failed");
-      return pageArtifact(source, selection.id);
+      return pageArtifact(source, selection.path);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
+  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.path}`;
   const first = await fetch(stable);
   assert.equal(first.status, 200);
   assert.equal((await fetch(`${stable}&refresh=1`)).status, 500);
@@ -111,16 +111,16 @@ test("restore and redelete cycles cannot reuse a prior page selection", async (t
       captures++;
       assert.ok(
         accepted.removedEntries.some(
-          ({ entry }) => entry.kind === "page" && entry.id === selection.id,
+          ({ entry }) => entry.kind === "page" && entry.path === selection.path,
         ),
       );
-      return pageArtifact(accepted, selection.id);
+      return pageArtifact(accepted, selection.path);
     },
   };
   const server = await start(t, provider, {
     page: { provider, source: () => source },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
+  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.path}`;
   const removed = await fetch(stable);
   assert.equal(removed.status, 200);
   source = undefined;
@@ -166,7 +166,7 @@ test("page captures retry after failure and cannot publish across an epoch", asy
     page: { provider, source: () => source },
   });
   const request = () =>
-    fetch(`${server.origin}/__mokly/diffs/review.json?page=${page.id}`);
+    fetch(`${server.origin}/__mokly/diffs/review.json?page=${page.path}`);
   assert.equal((await request()).status, 500);
   const stale = request();
   await started;

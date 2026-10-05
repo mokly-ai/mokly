@@ -21,6 +21,7 @@ import {
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
+import type { FolderRecord } from "./folder_records.js";
 import { validateManifest } from "./manifest_validation.js";
 
 /** Canonical generated manifest filename. */
@@ -38,22 +39,21 @@ export function createManifest(
   sourceFiles: readonly string[],
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord> = new Map(),
+  folders: readonly FolderRecord[] = [],
 ): ManifestV8 {
   return {
     entries: entries.map((entry) =>
-      toManifestEntry(
-        entry,
-        catalogueSchemes,
-        componentViews,
-        entry.navPath ?? [],
-        entries,
-      ),
+      toManifestEntry(entry, catalogueSchemes, componentViews, entries),
     ),
+    folders: [...folders]
+      .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+      .map(({ location: _location, ...record }) => record),
     generatedBy: "mokly",
     sourceFiles: [
       ...new Set([
         ...sourceFiles,
         ...entries.map((entry) => entry.sourceRelativePath),
+        ...folders.map((folder) => folder.sourcePath),
       ]),
     ].sort(),
     schemaVersion: 8,
@@ -103,14 +103,13 @@ function toManifestEntry(
   entry: ResolvedRegistryEntry,
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord>,
-  navPath: readonly string[],
   entries: readonly ResolvedRegistryEntry[],
 ): ManifestV8["entries"][number] {
   const common = {
     description: entry.description,
-    id: entry.id,
+    path: entry.path,
     kind: entry.kind,
-    navPath: [...navPath],
+    ...(entry.movedFrom === undefined ? {} : { movedFrom: entry.movedFrom }),
     ...(entry.rationale ? { rationale: entry.rationale } : {}),
     relatedDocs: [...entry.relatedDocs],
     sourcePath: entry.sourceRelativePath,
@@ -121,7 +120,7 @@ function toManifestEntry(
       (candidate): candidate is ComponentDefinition & ResolvedRegistryEntry =>
         candidate.kind === "component" &&
         !isComponentVariantDefinition(candidate) &&
-        candidate.id === entry.variantOf,
+        candidate.path === entry.variantOf,
     )!;
     return componentVariantManifestEntry(
       entry,
@@ -133,6 +132,14 @@ function toManifestEntry(
   }
   if (entry.kind === "component")
     return componentManifestEntry(entry, common, catalogueSchemes);
+  if (entry.kind === "document")
+    return {
+      ...common,
+      kind: "document",
+      colorSchemes: [...catalogueSchemes],
+      resources: [...entry.resources],
+      ...(entry.tags?.length ? { tags: [...entry.tags] } : {}),
+    };
   if (entry.kind === "page")
     return {
       ...common,
@@ -158,19 +165,14 @@ function toManifestEntry(
           componentViews: ["mobile", "desktop"].flatMap((viewport) =>
             colorSchemes.map((scheme) =>
               componentViews.get(
-                viewRoute(
-                  "screen",
-                  entry.id,
-                  viewport as "desktop" | "mobile",
-                  scheme,
-                ),
+                viewRoute(entry.path, viewport as "desktop" | "mobile", scheme),
               )!,
             ),
           ),
         }
       : {}),
     ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
-    useCaseIds: [...entry.useCaseIds],
+    useCasePaths: [...entry.useCasePaths],
     ...(entry.variantOf !== undefined ? { variantOf: entry.variantOf } : {}),
   };
 }

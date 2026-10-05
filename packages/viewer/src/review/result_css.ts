@@ -3,7 +3,7 @@ import {
   requireEqual,
   requireOrdered,
   reviewArray,
-  reviewId,
+  reviewEntryPath,
   reviewInvalid,
   reviewObject,
   reviewStrings,
@@ -23,7 +23,7 @@ export function validateCssAnalysis(value: unknown, aggregate = true): void {
   for (const value of rules) {
     const rule = reviewObject(
       value,
-      ["status", "selectors", "changedComponentIds", "pageSelectors"],
+      ["status", "selectors", "changedComponentPaths", "pageSelectors"],
       ["ruleKey"],
     );
     if (rule.status !== "matched" && rule.status !== "unresolved")
@@ -34,7 +34,7 @@ export function validateCssAnalysis(value: unknown, aggregate = true): void {
     )
       reviewInvalid("invalid stylesheet rule key");
     const selectors = reviewStrings(rule.selectors);
-    const ids = reviewStrings(rule.changedComponentIds, reviewId);
+    const ids = reviewStrings(rule.changedComponentPaths, reviewEntryPath);
     const page = reviewStrings(rule.pageSelectors);
     if (page.some((selector) => !selectors.includes(selector)))
       reviewInvalid("page selectors must belong to their rule");

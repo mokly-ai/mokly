@@ -12,7 +12,7 @@ function shellDesignUrl(id: string, viewport: string): string {
   return pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/generated/screens/${id}.${viewport}.html`,
+      `examples/basic/generated/${id}/index.${viewport}.html`,
     ),
   ).href;
 }
@@ -42,10 +42,19 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const url of [
-        shellDesignUrl("design-review-style-matched", viewport),
-        shellDesignUrl("design-review-style-page", viewport),
-        componentDesignUrl("design-component-style-changed", viewport),
-        componentDesignUrl("design-component-style-outside", viewport),
+        shellDesignUrl(
+          "design/changes/impact/styles/matched-excluded/matched",
+          viewport,
+        ),
+        shellDesignUrl("design/changes/impact/styles/page", viewport),
+        componentDesignUrl(
+          "design/components/states/shared-impact/style-changed",
+          viewport,
+        ),
+        componentDesignUrl(
+          "design/components/states/shared-impact/style-outside",
+          viewport,
+        ),
       ]) {
         await page.goto(url);
         const files = page.locator(".mbk-evidence-files");
@@ -61,8 +70,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const id of [
-        "design-review-style-excluded",
-        "design-review-style-matched",
+        "design/changes/impact/styles/matched-excluded/excluded",
+        "design/changes/impact/styles/matched-excluded/matched",
       ]) {
         await page.goto(shellDesignUrl(id, viewport));
         const spacing = await page
@@ -83,8 +92,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await page.goto(
         shellDesignUrl(
           viewport === "desktop"
-            ? "design-page-view"
-            : "design-page-navigation",
+            ? "design/browse/pages/view"
+            : "design/browse/pages/navigation",
           viewport,
         ),
       );
@@ -92,7 +101,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await expect(filter).toContainText("Changes5");
       await filter.getByRole("link", { name: /Changes/ }).click();
       await expect(page).toHaveURL(
-        shellDesignUrl("design-review-style-page", viewport),
+        shellDesignUrl("design/changes/impact/styles/page", viewport),
       );
       await expect(page.locator(".mbk-cmp-toolbar")).toHaveCount(0);
       await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
@@ -114,7 +123,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
           .getByRole("link", { name: "All" })
           .click();
         await expect(page).toHaveURL(
-          shellDesignUrl("design-page-view", viewport),
+          shellDesignUrl("design/browse/pages/view", viewport),
         );
       }
     });
@@ -123,7 +132,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        componentDesignUrl("design-component-style-outside", viewport),
+        componentDesignUrl(
+          "design/components/states/shared-impact/style-outside",
+          viewport,
+        ),
       );
       const count =
         viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
@@ -134,7 +146,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
       );
       await evidence.getByRole("link", { name: "Action" }).click();
       await expect(page).toHaveURL(
-        componentDesignUrl("design-component-style-changed", viewport),
+        componentDesignUrl(
+          "design/components/states/shared-impact/style-changed",
+          viewport,
+        ),
       );
       await expect(
         page.locator(".mbk-screen-head .ce-change-status"),

@@ -16,6 +16,11 @@ Generation-tagged background and preview-process warnings are planned for
 
 Serve loads one consumer graph and validates its catalogue metadata, routes,
 hierarchy, schemas, source inventory and output confinement before listening.
+Output collision/ownership/confinement checks capture one stable snapshot under
+the repository writer lock. The private runtime transfers its validated routes
+and orphan routes with the accepted generation. Demand and background workers
+reuse that evidence; they never scan a partially written output tree or acquire
+a writer lock while executing consumer code. A new generation captures new evidence.
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
@@ -33,8 +38,9 @@ reported separately and never repeated during ordinary large-fixture startup.
 
 ## Foreground documents
 
-Generated `/static/` routes render the requested page or screen/component variant,
-viewport and scheme through the retained consumer graph. Rendering runs outside
+Generated `/static/` routes render the requested page, document, or
+screen/component variant, viewport and scheme through the retained consumer
+graph. Rendering runs outside
 the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
 same view share work. Only validated results enter the generation-local bounded
 cache. A renderer failure cannot make unrelated routes or shutdown unavailable.

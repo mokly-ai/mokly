@@ -60,7 +60,7 @@ export function stylesheetRoute(root: string, repoRoot: string): string {
   if (!isPortableGeneratedPath(relative))
     throw new MoklyError(
       "build-invalid",
-      `generated stylesheet route is not portable: ${route}; rename the root module so every path segment is URL-safe`,
+      `cannot deliver imported CSS for ${relative}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`,
     );
   return route;
 }

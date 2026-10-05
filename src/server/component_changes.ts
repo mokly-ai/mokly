@@ -15,7 +15,7 @@ import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isMoklyError } from "../errors.js";
-import { changedManifestIds } from "../registry/changed_ids.js";
+import { changedManifestPaths } from "../registry/changed_paths.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import type { AcceptedGeneration } from "../review/accepted_generation.js";
 import { GitReviewAssetReader } from "../review/assets.js";
@@ -31,6 +31,9 @@ import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
 import { derivedHeadOutputs } from "../review/head_assets.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
+import { readMoveMarkdown } from "../review/moves/markdown_sources.js";
+import { prepareMoveClassification } from "../review/moves/prepare.js";
+import type { MovePairing } from "../review/moves/types.js";
 import {
   baselineReaderForCommit,
   comparisonNotPrepared,
@@ -42,12 +45,14 @@ import { classifyChangedContent } from "./changed_content.js";
 import type { CatalogueChangeClassification } from "./classification_result.js";
 import {
   screenViewChanges,
+  screenResultEvidence,
   type ScreenViewChanges,
 } from "./screen_view_changes.js";
 
 export interface ComponentChangeSnapshot {
   baseline: HistoricalManifest;
-  changedIds?: readonly string[];
+  pairing?: MovePairing;
+  changedEntries?: readonly string[];
   result?: ReviewResultV5;
   comparison?: ReviewEvidence;
   screenEvidence?: readonly ScreenResourceEvidence[];
@@ -199,7 +204,7 @@ export async function readCatalogueChanges(
       accepted?.routes,
     ));
   const cssAnalysis = new CssResourceAnalysis();
-  const result = await classifyComponents({
+  const prepared = await prepareMoveClassification({
     before: baseline,
     after: manifest,
     config,
@@ -209,7 +214,17 @@ export async function readCatalogueChanges(
     beforeReader,
     afterReader: reader,
     cssAnalysis,
+    sourceReader: git.sourceReader ?? git.reader,
+    markdown: await readMoveMarkdown(
+      baseline,
+      manifest,
+      config,
+      git.sourceReader ?? git.reader,
+      commit,
+      accepted?.documentMarkdown,
+    ),
   });
+  const result = await classifyComponents(prepared);
   const content = await classifyChangedContent(
     manifest,
     baseline,
@@ -219,25 +234,32 @@ export async function readCatalogueChanges(
     changedPaths,
     reader,
     components ? "pages" : "all",
+    {
+      pairing: prepared.pairing,
+      beforeReader: prepared.beforeReader,
+      ...(prepared.resources ? { resources: prepared.resources } : {}),
+    },
     cssAnalysis,
     result,
   );
   const pageIds = new Set(
     manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.id] : [],
+      entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
     ),
   );
-  const ids = changedManifestIds(
+  const ids = changedManifestPaths(
     manifest,
     baseline,
     config,
     content.changedPaths,
+    prepared.pairing.moves,
   ).filter((id) => !components || pageIds.has(id));
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry))
       if (!reader.digests[view.path]) await reader.read(view.path);
   return {
     baseline,
+    pairing: prepared.pairing,
     comparison: {
       baseCommit: commit,
       baseRef: base,
@@ -253,39 +275,25 @@ export async function readCatalogueChanges(
         : {}),
     },
     result,
-    screenViews: !components
-      ? screenViewChanges(manifest, baseline, config, content.changedPaths)
-      : result.screens.map(({ id, views }) => ({
-          id,
-          views: views.map(({ viewport, colorScheme, state }) => ({
-            viewport,
-            colorScheme,
-            state,
-          })),
-        })),
-    screenEvidence: !components
-      ? content.screens
-      : result.screens
-          .map(({ id, views }) => ({
-            id,
-            views: views
-              .filter(
-                (view) =>
-                  view.reasons?.length || view.excludedResources?.length,
-              )
-              .map(({ viewport, colorScheme, reasons, excludedResources }) => ({
-                viewport,
-                colorScheme,
-                ...(reasons ? { reasons } : {}),
-                ...(excludedResources ? { excludedResources } : {}),
-              })),
-          }))
-          .filter((entry) => entry.views.length),
+    ...(components
+      ? screenResultEvidence(result)
+      : {
+          screenViews: screenViewChanges(
+            manifest,
+            baseline,
+            config,
+            content.changedPaths,
+            prepared.pairing.moves,
+          ),
+          screenEvidence: content.screens,
+        }),
     ...(content.pages.length ? { pageEvidence: content.pages } : {}),
-    changedIds: [
+    changedEntries: [
       ...new Set([
         ...ids,
-        ...result.changes.map((entry) => (entry.after ?? entry.before)!.id),
+        ...result.changes
+          .filter((entry) => entry.reasons.length > 0)
+          .map((entry) => (entry.after ?? entry.before)!.path),
       ]),
     ].sort(),
   };

@@ -27,7 +27,8 @@ test("historical normalized resources use active exclusions relative to the base
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = {
-    schemaVersion: 8,
+    schemaVersion: 8 as const,
+    folders: [],
     generatedBy: "mokly",
     entries: [],
     sourceFiles: ["old-output/source.json"],

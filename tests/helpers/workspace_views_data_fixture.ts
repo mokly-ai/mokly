@@ -12,9 +12,9 @@ function variant(id: string, title: string): ManifestComponentVariant {
     componentViews: [],
 
     description: `${title} badge`,
-    id,
+    path: id,
     kind: "component",
-    navPath: [],
+
     props: {},
     relatedDocs: [],
     sourcePath: "entries/badge.mockup.tsx",
@@ -24,17 +24,17 @@ function variant(id: string, title: string): ManifestComponentVariant {
   };
 }
 
-export const DEFAULT_VARIANT = variant("badge-default", "Default");
-export const SECOND_VARIANT = variant("badge-second", "Second");
-export const REMOVED_VARIANT = variant("badge-removed", "Removed");
+export const DEFAULT_VARIANT = variant("badge/default", "Default");
+export const SECOND_VARIANT = variant("badge/second", "Second");
+export const REMOVED_VARIANT = variant("badge/removed", "Removed");
 
 export const component: ManifestComponent = {
   colorSchemes: ["light", "dark"],
   controls: {},
   description: "Badge component",
-  id: "badge",
+  path: "badge",
   kind: "component",
-  navPath: [],
+
   propSchema: { kind: "object", properties: {} },
   relatedDocs: [],
   slots: [],
@@ -45,7 +45,8 @@ export const component: ManifestComponent = {
 export const componentManifest: ManifestV8 = {
   entries: [component, DEFAULT_VARIANT, SECOND_VARIANT],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 8 as const,
+  folders: [],
   sourceFiles: [component.sourcePath],
 };
 
@@ -57,19 +58,20 @@ export const componentBaseline: ManifestV8 = {
 export const screen = {
   colorSchemes: ["light", "dark"],
   description: "Landing screen",
-  id: "welcome",
+  path: "welcome",
   kind: "screen",
-  navPath: [],
+
   relatedDocs: [],
   sourcePath: "entries/fixture.mockup.tsx",
   title: "Welcome",
-  useCaseIds: [],
+  useCasePaths: [],
 } as const;
 
 export const screenManifest: ManifestV8 = {
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 8 as const,
+  folders: [],
   sourceFiles: [screen.sourcePath],
 };
 
@@ -83,12 +85,12 @@ export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV5 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5,
+    schemaVersion: 5 as const,
     screens: [
       {
-        after: { id: screen.id, title: screen.title },
-        before: { id: screen.id, title: screen.title },
-        id: screen.id,
+        after: { path: screen.path, title: screen.title },
+        before: { path: screen.path, title: screen.title },
+        path: screen.path,
         state,
         title: screen.title,
         views: views("changed"),
@@ -126,16 +128,16 @@ export function componentVariantResult(): ReviewResultV5 {
     changes: [],
     components: [
       {
-        after: { id: component.id, title: component.title },
-        before: { id: component.id, title: component.title },
-        id: component.id,
+        after: { path: component.path, title: component.title },
+        before: { path: component.path, title: component.title },
+        path: component.path,
         state: "changed",
         title: component.title,
         variants: [
           {
             after: variantAddress(DEFAULT_VARIANT),
             before: variantAddress(DEFAULT_VARIANT),
-            id: DEFAULT_VARIANT.id,
+            path: DEFAULT_VARIANT.path,
             state: "unchanged",
             title: DEFAULT_VARIANT.title,
             views: views("unchanged"),
@@ -143,14 +145,14 @@ export function componentVariantResult(): ReviewResultV5 {
           {
             after: variantAddress(SECOND_VARIANT),
             before: variantAddress(SECOND_VARIANT),
-            id: SECOND_VARIANT.id,
+            path: SECOND_VARIANT.path,
             state: "changed",
             title: SECOND_VARIANT.title,
             views: views("changed"),
           },
           {
             before: variantAddress(REMOVED_VARIANT),
-            id: REMOVED_VARIANT.id,
+            path: REMOVED_VARIANT.path,
             state: "removed",
             title: REMOVED_VARIANT.title,
             views: views("removed", "removed"),
@@ -159,14 +161,14 @@ export function componentVariantResult(): ReviewResultV5 {
       },
     ],
     ignoredImpact: [],
-    schemaVersion: 5,
+    schemaVersion: 5 as const,
     screens: [],
   };
 }
 
 function variantAddress(variant: ManifestComponentVariant) {
   return {
-    id: variant.id,
+    path: variant.path,
     title: variant.title,
     props: variant.props,
     suppliedSlots: variant.suppliedSlots,

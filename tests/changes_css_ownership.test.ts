@@ -25,10 +25,10 @@ for (const ownership of ["renderer", "declared"] as const)
         actionRender:
           '(props) => <button className={props.label === "Finish" ? "actual-only" : "saved"}>{props.label}</button>',
       }).replace(
-        'id: "action",',
+        'path: "action",',
         ownership === "declared"
-          ? 'id: "action", stylesheets: ["action.css"],'
-          : 'id: "action",',
+          ? 'path: "action", stylesheets: ["action.css"],'
+          : 'path: "action",',
       );
       const fixture = await changedFixture(
         t,
@@ -61,7 +61,7 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         committedReviewRepository(fixture.config),
       );
       const expected = matches ? ["home"] : [];
-      assert.deepEqual(live.changedIds, expected);
+      assert.deepEqual(live.changedEntries, expected);
       const artifact = await compareReview(
         await compileCatalogue(fixture.config),
         fixture.config,
@@ -84,7 +84,7 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
           ),
           [reason],
         );
-      const home = result.screens.find((entry) => entry.id === "home")!;
+      const home = result.screens.find((entry) => entry.path === "home")!;
       assert.equal(home.views.length, 4);
       for (const view of home.views) {
         assert.equal(view.state, matches ? "changed" : "unchanged");
@@ -134,7 +134,7 @@ test("unreferenced public assets do not create file-level evidence", async (t) =
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedIds, []);
+  assert.deepEqual(live.changedEntries, []);
   const result = live.componentChanges?.result;
   assert.equal(result?.schemaVersion, 5);
   if (result?.schemaVersion !== 5) return;

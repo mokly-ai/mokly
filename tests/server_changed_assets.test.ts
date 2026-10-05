@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -16,7 +16,7 @@ for (const resource of ["home.css", "nested.css", "image.svg"]) {
       validEntrySource(),
       {
         extraConfig:
-          'stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }],',
+          'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }],',
       },
       async ({ mockupsDir }) => {
         await fs.writeFile(
@@ -38,7 +38,7 @@ for (const resource of ["home.css", "nested.css", "image.svg"]) {
       resource.endsWith(".css") ? "\nmain { color: red; }" : "\n",
     );
     assert.deepEqual(
-      await computeChangedIds(
+      await computeChangedPaths(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -65,7 +65,7 @@ test("a newline-only stylesheet edit leaves every consumer out of Changes", asyn
   );
   await fs.appendFile(path.join(fixture.mockupsDir, "home.css"), "\n");
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -81,7 +81,7 @@ test("unused public files do not fill Changes", async (t) => {
     "body { color: red; }",
   );
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -104,7 +104,7 @@ test("Changes includes a removed resource referenced by an unchanged screen", as
   );
   await fs.unlink(path.join(fixture.mockupsDir, "image.svg"));
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -130,7 +130,7 @@ test("assets used only inside paired ignored regions stay out of Changes", async
   );
   await fs.appendFile(path.join(fixture.mockupsDir, "image.svg"), "\n");
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

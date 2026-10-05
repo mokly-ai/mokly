@@ -55,14 +55,14 @@ export function propagateOwnedResources(
   changes: ChangedEntry[],
 ): void {
   for (const { componentId, reason } of evidence) {
-    const component = components.find((entry) => entry.id === componentId);
+    const component = components.find((entry) => entry.path === componentId);
     if (!component)
       throw new MoklyError("review-invalid", "resource owner has no component");
     impacting.add(componentId);
     const existing = changes.find(
       (entry) =>
         entry.kind === "component" &&
-        (entry.after ?? entry.before)?.id === componentId,
+        (entry.after ?? entry.before)?.path === componentId,
     );
     if (existing)
       existing.reasons = uniqueReasons([...existing.reasons, reason]);

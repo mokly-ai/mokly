@@ -5,57 +5,44 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const designIds: Readonly<Record<string, string>> = {
-  "browse/views/use-case": "design-browse-use-case",
-  "review/outcomes/changed": "design-review-changed",
-  "review/outcomes/added": "design-review-added",
-  "review/outcomes/removed": "design-review-removed",
-  "review/outcomes/difference": "design-review-difference",
-  "review/impact/stylesheets/excluded": "design-review-style-excluded",
-  "review/impact/stylesheets/excluded-only":
-    "design-review-style-excluded-only",
-  "review/impact/stylesheets/matched": "design-review-style-matched",
-  "review/impact/ignored-only": "design-review-ignored-only",
-  "review/outcomes/previous-version/no-captured-view":
-    "design-review-removed-no-view",
-  "review/impact/empty": "design-review-empty",
-};
-const design = (route: string): string => {
-  const match = /^(.*)\.(mobile|desktop)\.html$/u.exec(route);
-  const id = match && designIds[match[1] ?? ""];
-  if (!match || !id) throw new Error(`Unknown comparison design: ${route}`);
-  return pathToFileURL(
+const design = (entryPath: string, viewport: string): string =>
+  pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/generated/screens/${id}.${match[2]}.html`,
+      "examples/basic/generated",
+      entryPath,
+      `index.${viewport}.html`,
     ),
   ).href;
-};
 
 test("stylesheet and empty Changes filters preserve their depicted catalogue", async ({
   page,
 }) => {
-  await page.goto(design("review/impact/stylesheets/excluded.desktop.html"));
+  await page.goto(
+    design("design/changes/impact/styles/matched-excluded/excluded", "desktop"),
+  );
   await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
   await page.locator("a.mbk-nav-filter-opt").click();
   await expect(page).toHaveURL(
-    /screens\/design-review-style-matched\.desktop\.html$/,
+    /design\/changes\/impact\/styles\/matched-excluded\/matched\/index\.desktop\.html$/,
   );
   await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
     "Changes1",
   );
   await page.locator("a.mbk-nav-filter-opt").click();
   await expect(page).toHaveURL(
-    /screens\/design-review-style-excluded\.desktop\.html$/,
+    /design\/changes\/impact\/styles\/matched-excluded\/excluded\/index\.desktop\.html$/,
   );
 
-  await page.goto(design("review/impact/ignored-only.desktop.html"));
+  await page.goto(design("design/changes/impact/ignored-only", "desktop"));
   await page.locator("a.mbk-nav-filter-opt").click();
-  await expect(page).toHaveURL(/screens\/design-review-empty\.desktop\.html$/);
+  await expect(page).toHaveURL(
+    /design\/changes\/impact\/empty\/index\.desktop\.html$/,
+  );
   await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
   await page.locator("a.mbk-nav-filter-opt").click();
   await expect(page).toHaveURL(
-    /screens\/design-review-ignored-only\.desktop\.html$/,
+    /design\/changes\/impact\/ignored-only\/index\.desktop\.html$/,
   );
 });
 
@@ -64,7 +51,10 @@ test("Excluded styles shows changed Welcome controls in both artboards", async (
 }) => {
   for (const viewport of ["mobile", "desktop"] as const) {
     await page.goto(
-      design(`review/impact/stylesheets/excluded.${viewport}.html`),
+      design(
+        "design/changes/impact/styles/matched-excluded/excluded",
+        viewport,
+      ),
     );
     await expect(page.locator('[data-change-status="changed"]')).toHaveText(
       "Changed",
@@ -87,15 +77,22 @@ test("Excluded styles opens Details as Excluded styles only, which returns throu
 }) => {
   const row = (id: string) =>
     page.locator(`a.mbk-nav-row[data-mokly-link="${id}"]`);
-  await page.goto(design("review/impact/stylesheets/excluded.desktop.html"));
-  await row("design-review-style-excluded-only").click();
+  await page.goto(
+    design("design/changes/impact/styles/matched-excluded/excluded", "desktop"),
+  );
+  await row(
+    "design/changes/impact/styles/matched-excluded/excluded-only",
+  ).click();
   await expect(page).toHaveURL(
-    /screens\/design-review-style-excluded-only\.desktop\.html$/,
+    /design\/changes\/impact\/styles\/matched-excluded\/excluded-only\/index\.desktop\.html$/,
   );
   for (const viewport of ["desktop", "mobile"] as const) {
     if (viewport === "mobile")
       await page.goto(
-        design(`review/impact/stylesheets/excluded-only.${viewport}.html`),
+        design(
+          "design/changes/impact/styles/matched-excluded/excluded-only",
+          viewport,
+        ),
       );
     await expect(page.locator(".mbk-screen-head h2")).toHaveText("Details");
     await expect(page.locator('[data-change-status="unmodified"]')).toHaveText(
@@ -113,9 +110,11 @@ test("Excluded styles opens Details as Excluded styles only, which returns throu
         "All",
       );
       await expect(page.locator("a.mbk-nav-filter-opt")).toHaveCount(0);
-      await row("design-review-style-excluded").click();
+      await row(
+        "design/changes/impact/styles/matched-excluded/excluded",
+      ).click();
       await expect(page).toHaveURL(
-        /screens\/design-review-style-excluded\.desktop\.html$/,
+        /design\/changes\/impact\/styles\/matched-excluded\/excluded\/index\.desktop\.html$/,
       );
     }
   }
@@ -125,7 +124,7 @@ test("flow designs keep comparisons on the owning screens", async ({
   page,
 }) => {
   for (const viewport of ["desktop", "mobile"]) {
-    await page.goto(design(`browse/views/use-case.${viewport}.html`));
+    await page.goto(design("design/browse/views/use-case", viewport));
     await expect(
       page.getByRole("group", { name: "Comparison mode" }),
     ).toHaveCount(0);
@@ -142,10 +141,10 @@ test("comparison designs use screen context instead of report chrome", async ({
     "outcomes/removed",
     "outcomes/difference",
     "impact/ignored-only",
-    "impact/stylesheets/matched",
+    "impact/styles/matched-excluded/matched",
   ]) {
     for (const viewport of ["desktop", "mobile"]) {
-      await page.goto(design(`review/${route}.${viewport}.html`));
+      await page.goto(design(`design/changes/${route}`, viewport));
       await expect(
         page.locator(".mbk-title-row .mbk-status, .mbk-review-summary"),
       ).toHaveCount(0);
@@ -164,7 +163,7 @@ test("comparison designs use screen context instead of report chrome", async ({
         ).toBeVisible();
       }
       await expect(comparisonDetails).toBeVisible();
-      if (route === "impact/stylesheets/matched") {
+      if (route === "impact/styles/matched-excluded/matched") {
         await expect(
           page.getByText("Changed styles that apply to this screen:"),
         ).toBeVisible();
@@ -176,7 +175,10 @@ test("comparison designs use screen context instead of report chrome", async ({
         );
         await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
       }
-      if (route === "impact/stylesheets/matched" && viewport === "desktop") {
+      if (
+        route === "impact/styles/matched-excluded/matched" &&
+        viewport === "desktop"
+      ) {
         await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
           "Changes1",
         );
@@ -219,9 +221,7 @@ test("a viewport with no previous view names the one that still opens", async ({
 }) => {
   for (const viewport of ["desktop", "mobile"]) {
     await page.goto(
-      design(
-        `review/outcomes/previous-version/no-captured-view.${viewport}.html`,
-      ),
+      design("design/changes/outcomes/previous-version/no-view", viewport),
     );
     await expect(page.locator("[data-change-status]")).toHaveText("Removed");
     await expect(page.locator(".mbk-previous")).toHaveText(
@@ -254,7 +254,7 @@ test("empty Changes designs retain the selected current screen", async ({
   page,
 }) => {
   for (const viewport of ["desktop", "mobile"]) {
-    await page.goto(design(`review/impact/empty.${viewport}.html`));
+    await page.goto(design("design/changes/impact/empty", viewport));
     await expect(page.locator(".mbk-screen-head h2")).toHaveText("Welcome");
     await expect(
       page.getByRole("group", { name: "Comparison mode" }),

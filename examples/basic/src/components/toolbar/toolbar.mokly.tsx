@@ -5,10 +5,9 @@ import { action } from "../action/action.mokly.js";
 import { Toolbar } from "./toolbar.js";
 
 export const toolbar = defineComponent({
-  id: "example-toolbar",
+  slug: "index",
   title: "Toolbar",
   description: "A composed toolbar with caller-supplied content.",
-  navPath: ["Example", "Components"],
   stylesheets: ["example-components.css"],
   relatedDocs: ["examples/basic/README.md"],
   propSchema: {
@@ -42,7 +41,7 @@ export const toolbar = defineComponent({
   ),
   variants: [
     {
-      id: "example-toolbar-default",
+      slug: "default",
       title: "Default",
       props: {
         title: "Workspace actions",

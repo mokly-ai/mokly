@@ -8,10 +8,11 @@ export function publicShellContext(
   catalogue: Catalogue,
   context: ShellContext,
 ): ShellContext & { readModel: CatalogueReadModel } {
-  const changesStatus = context.changedIds === undefined ? "disabled" : "ready";
+  const changesStatus =
+    context.changedEntries === undefined ? "disabled" : "ready";
   const readModel = projectCatalogue({
     catalogue,
-    changedIds: context.changedIds,
+    changedEntries: context.changedEntries,
     changesStatus,
     comparisonUrl: null,
     configPath: "mokly.config.ts",

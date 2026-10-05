@@ -17,14 +17,16 @@ import type { Catalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { ShellMain } from "../src/shell/views.js";
 
-import { model as fixture } from "./component_workspace_fixture.js";
+import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
+
+const { model: fixture } = componentWorkspaceFixture();
 
 export const BASE = "origin/main";
 
 const rule = (fields: Partial<CssRuleAttribution>): CssRuleAttribution => ({
   status: "matched",
   selectors: [],
-  changedComponentIds: [],
+  changedComponentPaths: [],
   pageSelectors: [],
   ...fields,
 });
@@ -44,7 +46,7 @@ export const CHANGED: ResourceEvidence = {
       rule({
         ruleKey: "1".repeat(64),
         selectors: [".action"],
-        changedComponentIds: ["action"],
+        changedComponentPaths: ["action"],
         pageSelectors: [".action"],
       }),
     ]),
@@ -81,7 +83,7 @@ export const CHANGED_SECTION =
 
 /** The published fixture with its one page record replaced. */
 export function published(page: Partial<CataloguePage>): CatalogueReadModel {
-  const guide = fixture.pages.find((item) => item.id === "guide");
+  const guide = fixture.pages.find((item) => item.path === "guide");
   assert.ok(guide);
   const { resourceEvidence: _evidence, ...plain } = guide;
   return readCatalogue(
@@ -94,7 +96,7 @@ export function renderPage(
   catalogue: Catalogue,
   context: Partial<ShellContext> = {},
 ): string {
-  const entry = catalogue.byId.get("guide");
+  const entry = catalogue.byPath.get("guide");
   assert.ok(entry?.kind === "page");
   return renderToStaticMarkup(
     <ShellMain

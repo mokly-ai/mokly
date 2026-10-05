@@ -50,7 +50,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a screen names outside matches and keeps its unresolved paragraph", async ({
       page,
     }) => {
-      await page.goto(`${outside.url}/view/screens/checkout.html`);
+      await page.goto(`${outside.url}/view/checkout/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
@@ -85,7 +85,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("the changed component keeps its own sentence beside its saved view's", async ({
       page,
     }) => {
-      await page.goto(`${outside.url}/view/components/action-default.html`);
+      await page.goto(`${outside.url}/view/action/default/`);
       const evidence = await openEvidence(page);
       await expect(evidence.locator("p").first()).toHaveText(SERVED_BASE);
       await expect(
@@ -106,13 +106,16 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("the shell repeats the approved mockup's layout and copy", async ({
       page,
     }) => {
-      await page.goto(`${outside.url}/view/screens/checkout.html`);
+      await page.goto(`${outside.url}/view/checkout/`);
       const served = await evidenceFiles(await openEvidence(page));
       const servedSpacing = await evidenceSpacing(
         page.locator("[data-workspace-evidence]"),
       );
       await page.goto(
-        componentDesignUrl("design-component-style-outside", name),
+        componentDesignUrl(
+          "design/components/states/shared-impact/style-outside",
+          name,
+        ),
       );
       const card = page.locator(".ce-comparison-evidence");
       const [[, [approved]]] = (await evidenceFiles(card)) as [
@@ -129,7 +132,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("bundled CSS names the emitted file and keeps component-only styles out", async ({
       page,
     }) => {
-      await page.goto(`${bundled.url}/view/screens/checkout.html`);
+      await page.goto(`${bundled.url}/view/checkout/`);
       const evidence = await openEvidence(page);
       expect(await evidenceFiles(evidence)).toEqual([
         [BUNDLE, [[MATCHED_LEAD, [".heading"]]]],
@@ -141,7 +144,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a consuming component shows its styles in Current before any comparison", async ({
       page,
     }) => {
-      await page.goto(`${bundled.url}/view/components/toolbar.html`);
+      await page.goto(`${bundled.url}/view/toolbar/`);
       const evidence = await openEvidence(page);
       expect(await evidenceFiles(evidence)).toEqual([
         [BUNDLE, [[COMPONENT_LEAD, [".action"]]]],
@@ -161,7 +164,7 @@ test.describe("outside evidence across modes and filters", () => {
   test("Current, a loaded comparison and Changes show the same facts once", async ({
     page,
   }) => {
-    await page.goto(`${outside.url}/view/screens/checkout.html`);
+    await page.goto(`${outside.url}/view/checkout/`);
     const evidence = await openEvidence(page);
     const facts = await evidenceFiles(evidence);
     await page

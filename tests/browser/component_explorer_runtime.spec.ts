@@ -3,35 +3,38 @@ import { expect, test } from "@playwright/test";
 import type { RunningServer } from "../../dist/server/http_types.js";
 
 import { loadComparison } from "./comparison_actions.js";
-import { createExplorerFixture } from "./component_explorer_fixture.js";
+import { startComponentExplorer } from "./component_explorer_runtime_fixture.js";
 import { chooseVariant } from "./workspace_actions.js";
 
 let server: RunningServer;
-let close: () => Promise<void>;
+
+const cleanup: (() => Promise<void>)[] = [];
+
 test.beforeAll(async () => {
-  const fixture = await createExplorerFixture();
-  server = fixture.server;
-  close = fixture.close;
+  server = await startComponentExplorer(cleanup);
 });
-test.afterAll(async () => close());
+
+test.afterAll(async () => {
+  for (const dispose of cleanup.reverse()) await dispose();
+});
 
 test("saved variants, actual contexts, inspector tabs, and history work in the real shell", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(
     page.locator(
-      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-default.html"]',
+      '[data-nav-disclosure="variants:action"] [data-route="action/default/index.html"]',
     ),
   ).toBeVisible();
   await expect(
     page.locator(
-      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-disabled.html"]',
+      '[data-nav-disclosure="variants:action"] [data-route="action/disabled/index.html"]',
     ),
   ).toBeVisible();
   await expect(
@@ -49,13 +52,13 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     variants.getByRole("link", { name: "Default", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await variants.getByRole("link", { name: "Disabled", exact: true }).click();
-  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Copy ID action-disabled" }),
-  ).toHaveText("#action-disabled");
+    page.getByRole("button", { name: "Copy path action/disabled" }),
+  ).toHaveText("action/disabled");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
   await expect(
     page.getByLabel("Catalogue location").getByRole("link"),
@@ -75,13 +78,13 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     0,
   );
   await page.goBack();
-  await expect(page).toHaveURL(/\/view\/components\/action\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/$/);
   await expect(
     variants.getByRole("link", { name: "Default", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await expect(mobile.getByRole("button", { name: "Continue" })).toBeEnabled();
   await page.goForward();
-  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
   await expect(
     variants.getByRole("link", { name: "Disabled", exact: true }),
   ).toHaveAttribute("aria-current", "page");
@@ -91,21 +94,21 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
 test("Changes lists changed component variants beneath their parent", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await page.click('[data-filter="changed"]');
 
   const parent = page.locator(
-    'a[data-nav-row][data-route="components/action.html"]',
+    'a[data-nav-row][data-route="action/index.html"]',
   );
   await expect(parent).toHaveAttribute("data-changed-variants", "true");
   await expect(
     page.locator(
-      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-default.html"]',
+      '[data-nav-disclosure="variants:action"] [data-route="action/default/index.html"]',
     ),
   ).toBeVisible();
   await expect(
     page.locator(
-      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-disabled.html"]',
+      '[data-nav-disclosure="variants:action"] [data-route="action/disabled/index.html"]',
     ),
   ).toBeVisible();
 });
@@ -113,13 +116,13 @@ test("Changes lists changed component variants beneath their parent", async ({
 test("a generated MockLink opens a component variant entry", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await page
     .frameLocator('[data-workspace-frame="mobile"]')
     .getByRole("link", { name: "Open Disabled Action", exact: true })
     .click();
 
-  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
@@ -133,7 +136,7 @@ test("a generated MockLink opens a component variant entry", async ({
 test("a standalone frame miss keeps navigation available for a later route", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   const link = page
     .frameLocator('[data-workspace-frame="mobile"]')
     .getByRole("link", { name: "Open Disabled Action", exact: true });
@@ -141,13 +144,13 @@ test("a standalone frame miss keeps navigation available for a later route", asy
     element.setAttribute("data-mokly-link", "missing-entry"),
   );
   await link.click();
-  await expect(page).toHaveURL(/\/view\/missing-entry$/);
+  await expect(page).toHaveURL(/\/view\/missing-entry\/$/);
   await expect(
     page.getByRole("heading", { name: "Item not found", exact: true }),
   ).toBeVisible();
 
   await page.getByRole("link", { name: "Home", exact: true }).click();
-  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+  await expect(page).toHaveURL(/\/view\/home\/$/);
   await expect(
     page.getByRole("heading", { name: "Home", exact: true }),
   ).toBeVisible();
@@ -156,7 +159,7 @@ test("a standalone frame miss keeps navigation available for a later route", asy
 test("Side by side stays authoritative while switching sibling variants", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action-default.html`);
+  await page.goto(`${server.url}/view/action/default/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
   await loadComparison(page, "Side by side");
 

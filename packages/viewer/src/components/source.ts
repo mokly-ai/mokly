@@ -1,4 +1,4 @@
-import { isSafeRepositoryPath } from "../data/paths.js";
+import { isSafeRepositoryPath } from "../navigation/logical.js";
 
 import { exactKeys, invalidData } from "./data.js";
 import type { ComponentSourceLocation } from "./manifest_types.js";

@@ -1,4 +1,5 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { ManifestEntry } from "../registry/types.js";
 
 import type { ReviewResultV5 } from "./component_types.js";
 
@@ -14,7 +15,7 @@ export interface CssRuleAttribution {
   ruleKey?: string;
   status: "matched" | "unresolved";
   selectors: readonly string[];
-  changedComponentIds: readonly string[];
+  changedComponentPaths: readonly string[];
   pageSelectors: readonly string[];
 }
 
@@ -66,18 +67,18 @@ export type ViewResourceEvidence = Pick<
 
 /** Screen-only resource evidence retained by live classification. */
 export interface ScreenResourceEvidence {
-  id: string;
+  path: string;
   views: readonly ViewResourceEvidence[];
 }
 
 /** Single-document evidence, outside visual comparison records. */
 export interface PageResourceEvidence extends ResourceEvidence {
-  id: string;
+  path: string;
 }
 
 /** One stable screen identity comparison. */
 export interface ScreenReview {
-  id: string;
+  path: string;
   state: ReviewState;
   title: string;
   views: readonly ViewReview[];
@@ -87,6 +88,15 @@ export interface ScreenReview {
 export interface ReviewArtifact {
   files: ReadonlyMap<string, ReviewArtifactContent>;
   result: ReviewResult;
+  /** Typed comparison metadata; documents and pages add no visual result records. */
+  pairing?: {
+    moves: readonly {
+      kind: ManifestEntry["kind"];
+      path: string;
+      previousPath: string;
+    }[];
+    diagnostics: readonly string[];
+  };
 }
 
 /** The only accepted comparison payload. */

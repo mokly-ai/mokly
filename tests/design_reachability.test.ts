@@ -16,93 +16,98 @@ import {
 import { textOutput } from "./helpers/generated_text.js";
 
 const treeOnly = [
-  "design-appearance-auto",
-  "design-appearance-drawer",
-  "design-appearance-error",
-  "design-appearance-flow",
-  "design-appearance-home",
-  "design-appearance-instance",
-  "design-appearance-loading",
-  "design-appearance-props",
-  "design-appearance-unavailable",
-  "design-browse-changed-views",
-  "design-browse-dark-scheme",
-  "design-browse-details",
-  "design-browse-light-only",
-  "design-browse-missing-route",
-  "design-browse-variant-removed",
-  "design-browse-variant-reparented",
-  "design-changes-overlay-long",
-  "design-changes-overlay-panel",
-  "design-changes-side-by-side-apart",
-  "design-component-added",
-  "design-component-controls-comparison",
-  "design-component-controls-edited",
-  "design-component-controls-error",
-  "design-component-controls-invalid",
-  "design-component-controls-unset",
-  "design-component-empty",
-  "design-component-inspection-direct-change",
-  "design-component-inspection-loading",
-  "design-component-inspector-closed",
-  "design-component-overlay-tall",
-  "design-component-screen-inspector-closed",
-  "design-component-shared-impact",
-  "design-component-style-outside",
-  "design-component-unavailable",
-  "design-component-usage-failed",
-  "design-component-usage-loading",
-  "design-publication-catalogue",
-  "design-publication-changes",
-  "design-review-preparing",
-  "design-review-style-unnamed",
-  "design-review-style-unresolved",
-  "design-review-unavailable",
+  "design/browse/appearance/states/auto",
+  // The removed Payment terms branch is opened from its owning catalogue page.
+  "design/browse/appearance/states/light-only-document",
+  "design/browse/appearance/workspaces/drawer",
+  "design/browse/appearance/status/error",
+  "design/browse/appearance/status/flow",
+  "design/browse/appearance/status/home",
+  "design/browse/appearance/workspaces/instance",
+  "design/browse/appearance/status/loading",
+  "design/browse/appearance/workspaces/props",
+  "design/browse/appearance/status/unavailable",
+  "design/browse/variants/changed-views",
+  "design/browse/views/screen/dark-scheme",
+  "design/browse/states/details",
+  "design/browse/views/screen/light-only",
+  "design/browse/states/missing-route",
+  "design/browse/variants/variant-removed",
+  "design/browse/variants/variant-reparented",
+  "design/changes/diff-controls/overlay-long",
+  "design/changes/diff-controls/overlay-panel",
+  "design/changes/diff-controls/side-by-side-apart",
+  "design/components/states/additions/added",
+  "design/components/controls/states/comparison",
+  "design/components/controls/editing/edited",
+  "design/components/controls/states/error",
+  "design/components/controls/states/invalid",
+  "design/components/controls/editing/unset",
+  "design/components/states/empty",
+  "design/components/inspection/inspection-direct-change",
+  "design/components/states/loading/inspection-loading",
+  "design/components/inspector/inspector-closed",
+  "design/components/pages/stacked/overlay-tall",
+  "design/components/inspector/screen-inspector-closed",
+  "design/components/states/shared-impact/shared-impact",
+  "design/components/states/shared-impact/style-outside",
+  "design/components/states/unavailable",
+  "design/components/states/loading/usage-failed",
+  "design/components/states/loading/usage-loading",
+  "design/browse/publication/catalogue",
+  "design/browse/publication/changes",
+  "design/changes/availability/preparing",
+  "design/changes/impact/styles/unresolved-unnamed/unnamed",
+  "design/changes/impact/styles/unresolved-unnamed/unresolved",
+  "design/changes/availability/unavailable",
 ];
 
 test("every design screen has an inbound design link or opens only from the catalogue tree", async () => {
   const { manifest, outputs } = await designCatalogue;
   const screens = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.id.startsWith("design-") ? [entry] : [],
+    entry.kind === "screen" && entry.path.startsWith("design/") ? [entry] : [],
   );
-  const ids = new Set(screens.map((entry) => entry.id));
+  const ids = new Set(screens.map((entry) => entry.path));
   const inbound = new Set<string>();
   for (const source of screens)
     for (const viewport of ["mobile", "desktop"] as const) {
       const html = textOutput(
         outputs,
-        viewRoute(source.kind, source.id, viewport, "light"),
+        viewRoute(source.path, viewport, "light"),
       );
-      assert.ok(html, `${source.id}/${viewport}`);
+      assert.ok(html, `${source.path}/${viewport}`);
       for (const link of elements(
         parse(html),
         (node) => node.tagName === "a",
       )) {
         const target = attribute(link, "data-mokly-link");
-        if (target && target !== source.id && ids.has(target))
+        if (target && target !== source.path && ids.has(target))
           inbound.add(target);
       }
     }
   assert.deepEqual(
     screens
-      .filter((entry) => !inbound.has(entry.id))
-      .map((entry) => entry.id)
+      .filter((entry) => !inbound.has(entry.path))
+      .map((entry) => entry.path)
       .sort(),
-    treeOnly,
+    [...treeOnly].sort(),
   );
 });
 
 test("matched and excluded styles share one changed Welcome; empty Changes keeps its zero-count All state", async () => {
   const excluded = await designDocument(
-    "design-review-style-excluded",
+    "design/changes/impact/styles/matched-excluded/excluded",
     "desktop",
   );
   const matched = await designDocument(
-    "design-review-style-matched",
+    "design/changes/impact/styles/matched-excluded/matched",
     "desktop",
   );
-  const ignored = await designDocument("design-review-ignored-only", "desktop");
-  const empty = await designDocument("design-review-empty", "desktop");
+  const ignored = await designDocument(
+    "design/changes/impact/ignored-only",
+    "desktop",
+  );
+  const empty = await designDocument("design/changes/impact/empty", "desktop");
 
   for (const { document } of [excluded, matched]) {
     assert.equal(
@@ -132,7 +137,7 @@ test("matched and excluded styles share one changed Welcome; empty Changes keeps
 for (const viewport of ["mobile", "desktop"] as const)
   test(`${viewport}: Excluded styles keeps Changed status and Current comparison controls`, async () => {
     const { document } = await designDocument(
-      "design-review-style-excluded",
+      "design/changes/impact/styles/matched-excluded/excluded",
       viewport,
     );
     const status = byClass(document, "ce-change-status");
@@ -154,7 +159,7 @@ for (const viewport of ["mobile", "desktop"] as const)
       assert.ok(activeRow);
       assert.equal(
         attribute(activeRow, "data-mokly-link"),
-        "design-review-style-excluded",
+        "design/changes/impact/styles/matched-excluded/excluded",
       );
       assert.deepEqual(
         byClass(activeRow, "mbk-nav-changed-text").map(textContent),

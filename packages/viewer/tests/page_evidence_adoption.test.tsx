@@ -9,7 +9,7 @@ import {
   capabilitySource,
   viewerRevision,
 } from "./capability_adoption_fixture.js";
-import { model as fixture } from "./component_workspace_fixture.js";
+import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 import {
   CHANGED,
   CHANGED_SECTION,
@@ -19,11 +19,13 @@ import {
   status,
 } from "./page_evidence_fixture.js";
 
+const { model: fixture } = componentWorkspaceFixture();
+
 test("live evidence replaces a document page's status and Details in place", () => {
   const current = viewerCatalogue(fixture);
   const route = routeFromUrl(
     current,
-    new URL("https://example.test/view/pages/guide.html"),
+    new URL("https://example.test/view/guide/"),
   );
   assert.equal(route.view.kind, "target");
   const changed = published({

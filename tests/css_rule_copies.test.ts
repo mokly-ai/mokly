@@ -8,7 +8,7 @@ import { CssResourceAnalysis } from "../dist/review/css/resource_analysis.js";
 import { selectedComponentResult } from "../dist/review/selection_result.js";
 
 import {
-  changedIds,
+  changedEntries,
   cssMembershipFixture,
   membershipSource,
 } from "./helpers/css_membership_fixture.js";
@@ -20,13 +20,13 @@ test("equal changes in distinct generated entry bundles share component proof", 
     before: ".action{color:red}",
     after: ".action{color:blue}",
   });
-  assert.deepEqual(changedIds(result), ["action", "action-default"]);
-  const own = result.components.find((entry) => entry.id === "action")!
+  assert.deepEqual(changedEntries(result), ["action", "action/default"]);
+  const own = result.components.find((entry) => entry.path === "action")!
     .variants[0]!.views[0]!.reasons![0]!;
   const screen = result.screens[0]!.views[0]!.reasons![0]!;
   assert.notEqual(own.path, screen.path);
   assert.deepEqual(own.analysis!.rules, screen.analysis!.rules);
-  const selected = selectedComponentResult(result, { id: "checkout" });
+  const selected = selectedComponentResult(result, { path: "checkout" });
   assert.deepEqual(
     selected.screens[0]!.views[0]!.reasons,
     result.screens[0]!.views[0]!.reasons,
@@ -80,7 +80,7 @@ test("equal after declarations do not combine different before sides", () => {
   );
   analyzer.attribution.freeze();
   const reason = analyzer.attribution.project(other.reasons![0]!, "page")!;
-  assert.deepEqual(reason.analysis!.rules[0]!.changedComponentIds, []);
+  assert.deepEqual(reason.analysis!.rules[0]!.changedComponentPaths, []);
   assert.deepEqual(reason.analysis!.pageEvidence, { selectors: [".a"] });
 });
 
@@ -105,23 +105,40 @@ test("added and removed stylesheet rules have distinct keys and test both docume
 });
 
 test("added and removed saved views retain CSS proof only from their existing side", async (t) => {
+  const source = membershipSource
+    .replace(
+      'properties: {} }, render: () => <button className="action">Continue</button>',
+      'properties: {label:{schema:{kind:"string"}}} }, render: (props) => <button className="action">{props.label}</button>',
+    )
+    .replace(
+      'slug: "default", title: "Default", props: {}',
+      'slug: "default", title: "Default", props: {label:"Original"}',
+    )
+    .replaceAll(
+      "<action.Component />",
+      '<action.Component label="Original" />',
+    );
   const { result } = await cssMembershipFixture(t, {
+    source,
     before: ".action{color:red}",
     after: ".action{color:blue}",
-    afterSource: membershipSource.replace("action-default", "action-new"),
+    afterSource: source.replace(
+      'slug: "default", title: "Default", props: {label:"Original"}',
+      'slug: "new", title: "New", props: {label:"Different"}',
+    ),
   });
   const variants = result.components.find(
-    (entry) => entry.id === "action",
+    (entry) => entry.path === "action",
   )!.variants;
   for (const variant of variants)
     for (const view of variant.views) {
       assert.equal(
         view.state,
-        variant.id === "action-new" ? "added" : "removed",
+        variant.path === "action/new" ? "added" : "removed",
       );
       assert.equal(view.material, true);
       assert.deepEqual(
-        view.reasons![0]!.analysis!.rules[0]!.changedComponentIds,
+        view.reasons![0]!.analysis!.rules[0]!.changedComponentPaths,
         ["action"],
       );
     }

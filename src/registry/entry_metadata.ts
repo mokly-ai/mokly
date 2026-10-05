@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeRepositoryPath, isCatalogueId } from "@mokly/viewer/data";
+import { isSafeRepositoryPath, isKebabCase } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { isInside } from "../config/paths.js";
@@ -17,7 +17,7 @@ export function problem(
 ): RegistryViolation {
   return {
     code,
-    id: entry.id,
+    path: entry.path,
     message,
     sourceRelativePath: entry.sourceRelativePath,
   };
@@ -29,7 +29,7 @@ export function validateTags(
 ): void {
   const tags = entry.tags;
   if (tags === undefined) return;
-  if (!Array.isArray(tags) || !tags.every(isCatalogueId)) {
+  if (!Array.isArray(tags) || !tags.every(isKebabCase)) {
     violations.push(
       problem(
         entry,

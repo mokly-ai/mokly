@@ -1,61 +1,57 @@
-import path from "node:path";
-
 import { expect, test, type Page } from "@playwright/test";
 
-import { renderReviewArtifact } from "../../dist/review/artifact.js";
-import { compareReview } from "../../dist/review/compare.js";
-import { writeReviewArtifact } from "../../dist/review/write.js";
+import { readCatalogueChanges } from "../../dist/server/component_changes.js";
+import { configuredServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
 let server: RunningServer;
+let changedServer: RunningServer;
 const cleanup: (() => Promise<void>)[] = [];
 
 test.beforeAll(async () => {
+  server = await removedFixture(false);
+  changedServer = await removedFixture(true);
+});
+
+async function removedFixture(changeAction: boolean): Promise<RunningServer> {
   const fixture = await componentReviewFixture(
     { after: (dispose) => cleanup.push(dispose) },
     (source) =>
       source
         .replace(/ {2}defineScreen\([^\n]+\)\n/, "")
         .replace(
-          ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+          ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
           "",
         )
         .replace(
           "<button data-viewport=",
-          '<button className="changed" data-viewport=',
+          changeAction
+            ? '<button className="changed" data-viewport='
+            : "<button data-viewport=",
         ),
   );
-  const compared = await compareReview(
-    fixture.after,
+  const changes = await readCatalogueChanges(
     fixture.config,
-    fixture.git,
+    fixture.after.manifest,
     "main",
+    fixture.git,
+    "a".repeat(40),
   );
-  if (compared.result.schemaVersion !== 5)
-    throw new Error("Expected component result");
-  server = await startCatalogueServer(fixture.config, {
+  if (!changes.result) throw new Error("Expected component result");
+  expect(
+    changes.result.changes.some((entry) => entry.after?.path === "action"),
+  ).toBe(changeAction);
+  const running = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
-    componentChanges: {
-      baseline: fixture.before.manifest,
-      result: compared.result,
-    },
-    review: {
-      base: "main",
-      outDir: path.join(fixture.root, ".review"),
-      generate: async () => {
-        await writeReviewArtifact(
-          renderReviewArtifact(compared),
-          path.join(fixture.root, ".review"),
-          fixture.config,
-        );
-      },
-    },
+    componentChanges: changes,
+    review: configuredServedReview(fixture.config, "main", fixture.git),
   });
-  fixture.beforeRemove(() => server.close());
-});
+  fixture.beforeRemove(() => running.close());
+  return running;
+}
 
 test.afterAll(async () => {
   for (const dispose of cleanup.reverse()) await dispose();
@@ -78,7 +74,7 @@ async function expectRemovedPrevious(page: Page) {
 test("removed affected-screen links and legacy comparison URLs stay current", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${changedServer.url}/view/action/`);
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   const removed = page
     .getByRole("region", { name: "Inspector", exact: true })
@@ -87,35 +83,47 @@ test("removed affected-screen links and legacy comparison URLs stay current", as
   await removed.click();
   await expectRemovedPrevious(page);
 
-  await page.goto(`${server.url}/view/screens/home.html?comparison=side`);
+  await page.goto(`${changedServer.url}/view/home/?comparison=side`);
   await expectRemovedPrevious(page);
 });
 
-test("removed component variants still honor eligible comparison URLs", async ({
-  page,
-}) => {
-  await page.goto(`${server.url}/view/components/action.html`);
-  await page.click('[data-filter="changed"]');
-  const removed = page.locator(
-    'a[data-nav-row][data-route="components/action-disabled.html"]',
-  );
-  await expect(removed).toHaveAttribute(
-    "href",
-    /\/view\/components\/action-disabled\.html\?snapshot=[a-f0-9]{64}$/,
-  );
-  await removed.click();
-  await expect(page).toHaveURL(
-    /\/view\/components\/action-disabled\.html\?snapshot=[a-f0-9]{64}$/,
-  );
-  await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
-    "Disabled · Removed",
-  );
-  await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-  await page.getByRole("button", { name: "Side by side" }).click();
-  await expect(page.locator("[data-current-screen]")).toBeHidden();
-  await expect(page.locator("[data-diff-stage]")).toBeVisible();
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(1);
-  await expect(page.locator(".mb-pane-missing")).toContainText(
-    "This screen was removed on this branch.",
-  );
-});
+for (const changed of [false, true])
+  test(`removed component variants keep eligible comparisons from ${changed ? "a changed" : "an unchanged"} parent`, async ({
+    page,
+  }) => {
+    await page.goto(`${(changed ? changedServer : server).url}/view/action/`);
+    await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
+      "both",
+    );
+    await page.click('[data-filter="changed"]');
+    const removed = page.locator(
+      'a[data-nav-row][data-route="action/disabled/index.html"]',
+    );
+    await expect(removed).toHaveAttribute(
+      "href",
+      /\/view\/action\/disabled\/\?snapshot=[a-f0-9]{64}$/,
+    );
+    await removed.click();
+    await expect(page).toHaveURL(
+      /\/view\/action\/disabled\/\?snapshot=[a-f0-9]{64}$/,
+    );
+    await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
+      "Disabled · Removed",
+    );
+    await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
+      changed ? "both" : "mobile",
+    );
+    await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
+    await page.getByRole("button", { name: "Side by side" }).click();
+    await expect(page.locator("[data-current-screen]")).toBeHidden();
+    await expect(page.locator("[data-diff-stage]")).toBeVisible();
+    const panes = changed ? 2 : 1;
+    await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(panes);
+    await expect(page.locator(".mb-pane-missing")).toHaveCount(panes);
+    await expect(page.locator(".mb-pane-missing")).toContainText(
+      Array.from(
+        { length: panes },
+        () => "This screen was removed on this branch.",
+      ),
+    );
+  });

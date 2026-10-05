@@ -41,10 +41,7 @@ for (const shape of [
       }
       assert.equal(catalogue.changesStatus, "unavailable");
       assert.equal(catalogue.comparisonUrl, null);
-      assert.equal(
-        (await fetch(`${running.url}/view/screens/home.html`)).status,
-        200,
-      );
+      assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
       assert.ok(messages.length > 0);
       assert.ok(
         messages.every((line) => line.trim() !== EARLIER_BASELINE_MESSAGE),

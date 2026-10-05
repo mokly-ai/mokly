@@ -41,9 +41,9 @@ export function mergeCssAnalysis(
                 ? "unresolved"
                 : "matched",
             selectors: union([...previous.selectors, ...rule.selectors]),
-            changedComponentIds: union([
-              ...previous.changedComponentIds,
-              ...rule.changedComponentIds,
+            changedComponentPaths: union([
+              ...previous.changedComponentPaths,
+              ...rule.changedComponentPaths,
             ]),
             pageSelectors: union([
               ...previous.pageSelectors,

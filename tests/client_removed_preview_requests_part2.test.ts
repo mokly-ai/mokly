@@ -12,15 +12,15 @@ import {
   pagePath,
   removedPage,
   respond,
-} from "./client_removed_preview_requests_fixture.js";
+} from "./helpers/removed_preview_requests.js";
 
 test("a page preview must describe the entry that asked for it", async () => {
   const url = `https://catalogue.test/${pagePath}`;
   const payload = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     baseRef: "origin/main",
     baseCommit: "a".repeat(40),
-    id: "removed-page",
+    path: "removed-page",
   };
   const matching = respond(payload, url);
   const request = {
@@ -35,12 +35,12 @@ test("a page preview must describe the entry that asked for it", async () => {
   );
   assert.deepEqual(loaded.content, {
     kind: "page",
-    url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/pages/removed-page.html`,
+    url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/removed-page/index.html`,
   });
   const other = respond(
     {
       ...payload,
-      id: "other",
+      path: "other",
     },
     url,
   );

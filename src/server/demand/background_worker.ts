@@ -62,6 +62,12 @@ parentPort?.on(
             routes: runtime.styleOutputs.map(([route]) => route),
             ...(outputs ? { outputs } : {}),
             deliveredStyleSources: runtime.deliveredStyleSources,
+            documentMarkdown: new Map(
+              (runtime.bundle.documents ?? []).map((entry) => [
+                entry.sourceRelativePath,
+                entry.markdown,
+              ]),
+            ),
           },
         }),
       );

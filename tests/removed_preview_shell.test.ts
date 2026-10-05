@@ -16,7 +16,6 @@ import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture
 
 const metadata = {
   description: "Fixture",
-  navPath: [],
   relatedDocs: [],
   sourcePath: "entries/fixture.mockup.tsx",
 };
@@ -26,24 +25,24 @@ type RemovedEntry = RemovedEntrySnapshot["entry"];
 const page: RemovedEntry = {
   ...metadata,
   kind: "page",
-  id: "handbook",
+  path: "handbook",
   title: "Getting started",
 };
 
 const screen: RemovedEntry = {
   ...metadata,
   kind: "screen",
-  id: "farewell",
+  path: "farewell",
   title: "Farewell",
   colorSchemes: ["light"],
   address: "example.test/farewell",
-  useCaseIds: [],
+  useCasePaths: [],
 };
 
 const component: RemovedEntry = {
   ...metadata,
   kind: "component",
-  id: "chip",
+  path: "chip",
   title: "Chip",
   colorSchemes: ["light"],
   propSchema: { kind: "object", properties: {} },
@@ -54,7 +53,7 @@ const component: RemovedEntry = {
 const componentVariant: RemovedEntry = {
   ...metadata,
   kind: "component",
-  id: "chip-default",
+  path: "chip/default",
   title: "Default",
   colorSchemes: ["light"],
   variantOf: "chip",
@@ -66,7 +65,7 @@ const componentVariant: RemovedEntry = {
 const flow: RemovedEntry = {
   ...metadata,
   kind: "use-case",
-  id: "tour",
+  path: "tour",
   title: "Tour",
   steps: [],
 };
@@ -76,15 +75,20 @@ function removedShell(
   related: readonly RemovedEntry[] = [],
 ): string {
   const manifest: ManifestV8 = {
-    schemaVersion: 8,
+    schemaVersion: 8 as const,
+    folders: [],
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [],
   };
   const removed: RemovedEntrySnapshot[] = [
-    { entry: { ...entry, navPath: ["Example"] } },
+    { folderTitles: [], entry: { ...entry } },
     ...related.map((candidate) => ({
-      entry: { ...candidate, navPath: ["Example"] },
+      folderTitles: [],
+      entry: { ...candidate },
+      ...("variantOf" in candidate && candidate.variantOf !== undefined
+        ? { parentTitle: component.title }
+        : {}),
     })),
   ];
   const catalogue = createCatalogue(manifest, removed);
@@ -94,7 +98,7 @@ function removedShell(
     publicShellContext(catalogue, {
       base: "origin/main",
       comparisons: true,
-      changedIds: [entry.id],
+      changedEntries: [entry.path],
       updateVersion: 1,
     }),
   );
@@ -123,7 +127,7 @@ test("a removed document opens its previous version instead of an empty state", 
     /data-diff-screen|data-diff-mode|data-diff-refresh/,
   );
   assert.deepEqual(descriptor(html), {
-    id: "handbook",
+    path: "handbook",
     kind: "page",
     title: "Getting started",
   });
@@ -143,7 +147,7 @@ test("a removed screen opens historical frames without comparison controls", () 
   assert.match(html, /example\.test\/farewell/);
   assert.deepEqual(descriptor(html), {
     address: "example.test/farewell",
-    id: "farewell",
+    path: "farewell",
     kind: "screen",
     title: "Farewell",
   });
@@ -182,13 +186,21 @@ test("exported shells advertise only the packaged previous versions", async (t) 
   });
   const read = (route: string) =>
     fs.readFile(path.join(fixture.output, "view", route), "utf8");
-  const document = descriptor(await read("pages/removed-page.html"));
+  const document = descriptor(
+    await read(
+      "fixture/deleted-archive/deleted-section/removed-page/index.html",
+    ),
+  );
   assert.equal(document?.kind, "page");
   assert.equal(document?.published?.kind, "page");
   assert.deepEqual(document?.published, { kind: "page" });
-  const removedScreen = descriptor(await read("screens/removed-screen.html"));
+  const removedScreen = descriptor(
+    await read(
+      "fixture/deleted-archive/deleted-section/removed-screen/index.html",
+    ),
+  );
   assert.deepEqual(removedScreen?.published, { kind: "screen" });
-  const current = await read("screens/current.html");
+  const current = await read("current/index.html");
   assert.doesNotMatch(current, /data-mokly-preview=/);
   assert.doesNotMatch(current, /Showing previous version/);
 });

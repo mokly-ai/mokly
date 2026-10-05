@@ -23,7 +23,7 @@ export type CatalogueUsageScopeTarget =
   | { readonly kind: "missing"; readonly requested: string }
   | {
       readonly kind: "target";
-      readonly entryId: string;
+      readonly entryPath: string;
       readonly entryKind: CatalogueRecord["kind"];
       readonly snapshotId?: string;
     };
@@ -32,6 +32,7 @@ type ScopedEntry = CatalogueRecord | ShellCatalogueRoutedEntry;
 type ScopedView = CatalogueView | ShellCatalogueView;
 interface ScopeCatalogue {
   screens: readonly ScopedEntry[];
+  documents: readonly ScopedEntry[];
   pages: readonly ScopedEntry[];
   useCases: readonly ScopedEntry[];
   components: readonly ScopedEntry[];
@@ -59,7 +60,7 @@ export function resolveCatalogueUsageScope(
   if (target.kind !== "target") return scope;
   const resolved = resolveCatalogueEntry(
     model,
-    { id: target.entryId, kind: target.entryKind },
+    { path: target.entryPath, kind: target.entryKind },
     target.snapshotId,
   );
   if (!resolved) invalidData("$bootstrap", "invalid shell hydration target");
@@ -69,14 +70,14 @@ export function resolveCatalogueUsageScope(
   );
   if (entry.kind === "screen") addViews(scope, entry.views);
   if (entry.kind === "component") {
-    const parentId = "variantOf" in entry ? entry.variantOf : entry.id;
-    for (const variant of catalogueComponentVariants(model, parentId))
+    const parentPath = "variantOf" in entry ? entry.variantOf : entry.path;
+    for (const variant of catalogueComponentVariants(model, parentPath))
       addViews(scope, variant.views);
   }
   if (entry.kind === "use-case" && !historical) {
-    const screenIds = new Set(entry.steps.map((step) => step.screenId));
+    const screenPaths = new Set(entry.steps.map((step) => step.screenPath));
     for (const screen of model.screens)
-      if (screen.kind === "screen" && screenIds.has(screen.id))
+      if (screen.kind === "screen" && screenPaths.has(screen.path))
         addViews(scope, screen.views);
   }
   return scope;

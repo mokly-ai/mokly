@@ -39,7 +39,7 @@ for (const configured of [false, true])
         ".action{color:green}",
       );
       const config = await loadConfig(fixture.root);
-      const routes = ["screens/checkout", "components/action-default"].flatMap(
+      const routes = ["checkout/index", "action/default/index"].flatMap(
         (route) =>
           ["mobile", "desktop"].flatMap((viewport) =>
             ["", ".dark"].map((scheme) => `${route}.${viewport}${scheme}.html`),
@@ -63,19 +63,22 @@ for (const configured of [false, true])
           fs.access(path.join(fixture.mockupsDir, "mokly-manifest.json")),
         );
       }
-      for (const html of documents) {
+      for (const [index, html] of documents.entries()) {
+        const prefix = "../".repeat(
+          path.posix.dirname(routes[index]!).split("/").length,
+        );
         const links = [...html.matchAll(/<link\b[^>]*href="([^"]+)"/g)].map(
           (match) => match[1],
         );
         const generated = [
-          "../mokly-generated/styles/renderer.tsx.css",
-          "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
+          `${prefix}mokly-generated/styles/renderer.tsx.css`,
+          `${prefix}mokly-generated/styles/entries/fixture.mockup.tsx.css`,
         ];
         assert.deepEqual(
           links,
           configured
-            ? ["../base.css", "../action.css", ...generated]
-            : [...generated, "../action.css"],
+            ? [`${prefix}base.css`, `${prefix}action.css`, ...generated]
+            : [...generated, `${prefix}action.css`],
         );
         assert.ok(
           configured

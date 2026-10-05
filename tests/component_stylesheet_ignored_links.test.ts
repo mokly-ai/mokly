@@ -73,8 +73,10 @@ export default (input) => '<html><head>' + renderToStaticMarkup(<ReviewIgnore id
       const insertedChange =
         resource === "action.css" || resource === "nested.css";
       assert.deepEqual(
-        result.changes.map((entry) => (entry.after ?? entry.before)!.id).sort(),
-        insertedChange ? ["action", "action-default"] : [],
+        result.changes
+          .map((entry) => (entry.after ?? entry.before)!.path)
+          .sort(),
+        insertedChange ? ["action", "action/default"] : [],
       );
       assert.deepEqual(
         [
@@ -84,7 +86,7 @@ export default (input) => '<html><head>' + renderToStaticMarkup(<ReviewIgnore id
         ],
         insertedChange ? ["action"] : [],
       );
-      const screen = result.screens.find((entry) => entry.id === "checkout")!;
+      const screen = result.screens.find((entry) => entry.path === "checkout")!;
       assert.ok(
         screen.views.every(
           (view) => view.state === (insertedChange ? "changed" : "unchanged"),
@@ -98,7 +100,7 @@ export default (input) => '<html><head>' + renderToStaticMarkup(<ReviewIgnore id
         );
         if (insertedChange) {
           assert.deepEqual(
-            view.reasons![0]!.analysis!.rules[0]!.changedComponentIds,
+            view.reasons![0]!.analysis!.rules[0]!.changedComponentPaths,
             ["action"],
           );
           assert.equal(view.reasons![0]!.analysis!.pageEvidence, undefined);
@@ -144,8 +146,9 @@ test("ignored author markup and inline styles stay ignored beside inserted links
     ],
   });
   assert.deepEqual(result.changes, []);
-  for (const view of result.screens.find((screen) => screen.id === "checkout")!
-    .views) {
+  for (const view of result.screens.find(
+    (screen) => screen.path === "checkout",
+  )!.views) {
     assert.equal(view.state, "ignored-only");
     assert.equal(view.material, undefined);
     assert.equal(view.reasons, undefined);

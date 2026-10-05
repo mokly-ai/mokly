@@ -11,7 +11,7 @@ import { ShellMain } from "../src/shell/views.js";
 import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-import { model as fixture } from "./component_workspace_fixture.js";
+import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 import {
   BASE,
   CHANGED,
@@ -21,6 +21,8 @@ import {
   section,
   status,
 } from "./page_evidence_fixture.js";
+
+const { model: fixture } = componentWorkspaceFixture();
 
 test("a changed document shows its status and each stylesheet once in Details", () => {
   const markup = renderPage(
@@ -74,29 +76,29 @@ test("an added document shows Added without a terminal line", () => {
 });
 
 test("live classification supplies the same page facts without a published catalogue", () => {
-  const page = fixture.pages.find((item) => item.id === "guide");
+  const page = fixture.pages.find((item) => item.path === "guide");
   assert.ok(page);
   const entry: ManifestPage = {
-    id: "guide",
+    path: "guide",
     kind: "page",
     title: page.title,
     description: page.details.description,
-    navPath: [],
     relatedDocs: [],
     sourcePath: page.details.sourcePath,
   };
   const manifest: ManifestV8 = {
+    folders: [],
     schemaVersion: 8,
     generatedBy: "mokly",
     sourceFiles: [entry.sourcePath],
     entries: [entry],
   };
-  const live = (changedIds: readonly string[], baseline = [entry]) =>
+  const live = (changedEntries: readonly string[], baseline = [entry]) =>
     renderPage(createCatalogue(manifest), {
-      changedIds,
+      changedEntries,
       componentChanges: {
         baseline: { ...manifest, entries: baseline },
-        pageEvidence: [{ id: "guide", ...CHANGED }],
+        pageEvidence: [{ path: "guide", ...CHANGED }],
       },
     });
   const changed = live(["guide"]);
@@ -109,7 +111,7 @@ test("live classification supplies the same page facts without a published catal
 });
 
 test("Changes that are not ready show no page status or comparison details", () => {
-  const guide = fixture.pages.find((item) => item.id === "guide");
+  const guide = fixture.pages.find((item) => item.path === "guide");
   assert.ok(guide);
   const { resourceEvidence: _evidence, ...plain } = guide;
   for (const changesStatus of ["pending", "unavailable", "disabled"] as const) {
@@ -123,7 +125,9 @@ test("Changes that are not ready show no page status or comparison details", () 
           components: [],
           useCases: [],
           removedEntries: [],
-          tree: { pages: [{ kind: "entry", id: "guide" }], components: [] },
+          tree: [{ kind: "entry", path: "guide" }],
+          documents: [],
+          treeOrder: [],
           pages: [{ ...plain, changes: { status: changesStatus } }],
         }),
       ),
@@ -136,7 +140,7 @@ test("Changes that are not ready show no page status or comparison details", () 
 test("a removed document keeps its Removed badge and no comparison details", () => {
   const catalogue = viewerCatalogue(fixture);
   const removed = catalogue.removedEntries.find(
-    ({ entry }) => entry.id === "removed-page",
+    ({ entry }) => entry.path === "product/removed-page",
   );
   assert.ok(removed?.entry.kind === "page");
   const markup = renderToStaticMarkup(
@@ -157,7 +161,7 @@ test("server rendering carries the page evidence that the browser hydrates", () 
   });
   const view = viewerView(viewerCatalogue(model), {
     ...defaultSelection,
-    screenId: "guide",
+    screenPath: "guide",
   });
   const html = renderHydratedShellPage(view, {
     base: BASE,

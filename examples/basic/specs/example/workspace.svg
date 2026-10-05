@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="360" viewBox="0 0 800 360" role="img" aria-label="A catalogue beside a workspace">
+  <rect width="800" height="360" rx="16" fill="#f5f6f1"/>
+  <rect x="24" y="24" width="752" height="312" rx="12" fill="#fff" stroke="#dedfd8"/>
+  <path d="M24 80H776M240 80V336" stroke="#dedfd8"/>
+  <g fill="#252522" font-family="sans-serif" font-size="20">
+    <text x="48" y="60">Workspace</text>
+    <text x="48" y="124">Catalogue</text>
+    <text x="280" y="128">Welcome</text>
+  </g>
+  <g fill="#666963" font-family="sans-serif" font-size="16">
+    <text x="48" y="172">Overview</text>
+    <text x="48" y="212">Screens</text>
+    <text x="280" y="174">Explore your workspace.</text>
+  </g>
+  <rect x="280" y="212" width="160" height="44" rx="8" fill="#35664e"/>
+  <text x="312" y="240" fill="#fff" font-family="sans-serif" font-size="16">View details</text>
+</svg>

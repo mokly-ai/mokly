@@ -27,11 +27,11 @@ export async function smokeThemedConsumer(context) {
   await runBin(root, ["build"]);
   await runBin(root, ["check"]);
   const appFragment = await fs.promises.readFile(
-    path.join(root, "docs/mockups/screens/themed-dashboard.desktop.html"),
+    path.join(root, "docs/mockups/themed-dashboard/index.desktop.html"),
     "utf8",
   );
   const campaignFragment = await fs.promises.readFile(
-    path.join(root, "docs/mockups/screens/themed-campaign.desktop.html"),
+    path.join(root, "docs/mockups/themed-campaign/index.desktop.html"),
     "utf8",
   );
   assert.match(appFragment, /data-themed-renderer="desktop"/);
@@ -44,7 +44,7 @@ export async function smokeThemedConsumer(context) {
   assert.match(appFragment, /href="\.\.\/app\.css"/);
   assert.match(campaignFragment, /href="\.\.\/marketing\.css"/);
   assert.equal(
-    fs.existsSync(path.join(root, "docs/mockups/pages/themed-notice.html")),
+    fs.existsSync(path.join(root, "docs/mockups/themed-notice/index.html")),
     true,
   );
   const pageManifest = JSON.parse(
@@ -56,7 +56,7 @@ export async function smokeThemedConsumer(context) {
   assert.equal(pageManifest.schemaVersion, 8);
   assert.ok(
     pageManifest.entries.some(
-      (entry) => entry.id === "themed-notice" && entry.kind === "page",
+      (entry) => entry.path === "themed-notice" && entry.kind === "page",
     ),
   );
   assert.ok(
@@ -81,14 +81,16 @@ export async function smokeThemedConsumer(context) {
   assert.equal(review.schemaVersion, 5);
   assert.equal(Object.hasOwn(review, "sharedImpact"), false);
   assert.deepEqual(
-    review.changes.map(({ before, after }) => (after ?? before).id).sort(),
+    review.changes.map(({ before, after }) => (after ?? before).path).sort(),
     ["themed-dashboard", "themed-tour"],
   );
   assert.equal(
-    review.screens.find(({ id }) => id === "themed-dashboard").state,
+    review.screens.find(({ path }) => path === "themed-dashboard").state,
     "changed",
   );
-  const campaign = review.screens.find(({ id }) => id === "themed-campaign");
+  const campaign = review.screens.find(
+    ({ path }) => path === "themed-campaign",
+  );
   assert.equal(campaign.state, "unchanged");
   assert.equal(campaign.reasons, undefined);
   assert.ok(
@@ -96,8 +98,8 @@ export async function smokeThemedConsumer(context) {
   );
   await runBin(root, ["export", "--out", "published"]);
   await inspectConsumerExport(root, "published", "HEAD", [
-    "view/pages/themed-notice.html",
-    "static/screens/themed-dashboard.desktop.html",
+    "view/themed-notice/index.html",
+    "static/themed-dashboard/index.desktop.html",
   ]);
   await smokeRegisteredComponents(context, root, true);
 }

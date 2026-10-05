@@ -31,20 +31,21 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
   const entries = [
     ...model.screens,
     ...model.pages,
+    ...model.documents,
     ...model.useCases,
     ...model.components,
   ];
   assert.ok(entries.length > 0);
   for (const entry of entries) {
     assert.equal(Object.hasOwn(entry.details, "dependencies"), false);
-    const shell = path.join(root, "view", entryRoute(entry.kind, entry.id));
+    const shell = path.join(root, "view", entryRoute(entry.path));
     assert.ok((await fs.stat(shell)).isFile(), shell);
     const views = "views" in entry ? entry.views : [];
     for (const view of views) {
       const file = path.join(
         root,
         "static",
-        viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme),
+        viewRoute(entry.path, view.viewport, view.colorScheme),
       );
       assert.ok((await fs.stat(file)).isFile(), file);
     }

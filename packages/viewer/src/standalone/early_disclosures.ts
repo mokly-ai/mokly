@@ -4,7 +4,6 @@ import { isDisclosureKey } from "../shell/disclosure_keys.js";
 import {
   disclosureStorageKey,
   encodeDisclosureMap,
-  obsoleteDisclosureStorageKey,
   parseDisclosureMap,
 } from "../shell/disclosure_storage.js";
 import { queryConstrains, parseSearchQuery } from "../shell/search_query.js";
@@ -178,7 +177,6 @@ function rememberDisclosures(
       disclosureStorageKey,
       encodeDisclosureMap(disclosures),
     );
-    win.localStorage.removeItem(obsoleteDisclosureStorageKey);
   } catch {
     return;
   }
@@ -208,34 +206,51 @@ function storedDisclosures(
   }
 }
 
-/** Read either a native group or a screen-variant list disclosure. */
-function disclosureOpen(group: HTMLElement): boolean {
-  return group.hasAttribute("data-nav-variants")
-    ? !group.hidden
-    : (group as HTMLDetailsElement).open;
-}
-
-/** Apply one disclosure value to its container and associated button. */
-export function setDisclosureOpen(group: HTMLElement, open: boolean): void {
-  if (!group.hasAttribute("data-nav-variants")) {
-    (group as HTMLDetailsElement).open = open;
-    return;
-  }
-  group.hidden = !open;
+/** The disclosure button that controls an entry's list, when it is present. */
+function listToggle(group: HTMLElement): HTMLElement | undefined {
   const id = group.id;
-  const toggle = id
+  return id
     ? [
         ...group.ownerDocument.querySelectorAll<HTMLElement>(
           "[data-nav-variants-toggle]",
         ),
       ].find((candidate) => candidate.dataset["navVariantsToggle"] === id)
     : undefined;
+}
+
+/**
+ * Read either a native group or an entry's list disclosure. A list's button
+ * carries its open state, because the list also stays hidden while the row
+ * that owns it is hidden.
+ */
+function disclosureOpen(group: HTMLElement): boolean {
+  if (!group.hasAttribute("data-nav-variants"))
+    return (group as HTMLDetailsElement).open;
+  const expanded = listToggle(group)?.getAttribute("aria-expanded");
+  return expanded === undefined || expanded === null
+    ? !group.hidden
+    : expanded === "true";
+}
+
+/**
+ * Apply one disclosure value to its container and associated button. An open
+ * list stays hidden while its owning row is hidden, as the shell renders it.
+ */
+export function setDisclosureOpen(group: HTMLElement, open: boolean): void {
+  if (!group.hasAttribute("data-nav-variants")) {
+    (group as HTMLDetailsElement).open = open;
+    return;
+  }
+  const toggle = listToggle(group);
+  const rowHidden = toggle?.closest<HTMLElement>(".mbk-nav-leaf")?.hidden;
+  group.hidden = !open || rowHidden === true;
   if (!toggle) return;
   toggle.setAttribute("aria-expanded", String(open));
   const label = toggle.getAttribute("data-nav-variants-label");
+  const noun = toggle.getAttribute("data-nav-variants-noun") ?? "variants";
   if (label)
     toggle.setAttribute(
       "aria-label",
-      `${open ? "Hide" : "Show"} variants of ${label}`,
+      `${open ? "Hide" : "Show"} ${noun} of ${label}`,
     );
 }

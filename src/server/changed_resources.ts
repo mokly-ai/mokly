@@ -8,6 +8,11 @@ import type { ResourceEvidence } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { timeAsync } from "../diagnostics/timings.js";
+import { equivalentDocumentResources } from "../documents/moved_resources.js";
+import {
+  linkedDocumentResources,
+  type DocumentResourceIndex,
+} from "../documents/resource_references.js";
 import { referencedRoutes } from "../review/asset_references.js";
 import type {
   OptionalReviewAssetReader,
@@ -21,6 +26,7 @@ import {
 } from "../review/css/resource_analysis.js";
 import { documentStylesheetScope } from "../review/css/resource_scope.js";
 import { decideReferencedResource } from "../review/deleted_resource.js";
+import type { MoveResources } from "../review/moves/resources.js";
 import { ResourceGraph } from "../review/resource_graph.js";
 
 /** Cache shared resource edges for one immutable changed-route calculation. */
@@ -47,6 +53,11 @@ export class ChangedResourceGraph {
     private readonly documents: ReadonlyMap<string, string>,
     private readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
     private readonly compareBytes = false,
+    private readonly documentResources: {
+      before: DocumentResourceIndex;
+      after: DocumentResourceIndex;
+    } = { before: new Map(), after: new Map() },
+    private readonly identities?: MoveResources,
   ) {
     this.#base = new ComponentMaterialReader(baseline);
     this.#head = new ComponentMaterialReader({
@@ -71,9 +82,11 @@ export class ChangedResourceGraph {
         ),
       readReferences: async (route) =>
         /\.(css|html?)$/i.test(route)
-          ? referencedRoutes(route, await this.#base.resourceText(route), {
-              resourceHints: false,
-            })
+          ? this.referencePaths(
+              route,
+              await this.#base.resourceText(route),
+              "before",
+            )
           : [],
     });
   }
@@ -95,9 +108,7 @@ export class ChangedResourceGraph {
     const cached = this.#viewResources.get(source);
     if (cached?.document === document) return cached.resources;
     const resources = await timeAsync("review.resource-graph", () =>
-      this.#graph.collect(
-        referencedRoutes(source, document, { resourceHints: false }),
-      ),
+      this.#graph.collect(this.referencePaths(source, document, "after")),
     );
     this.#viewResources.set(source, { document, resources });
     return resources;
@@ -119,16 +130,27 @@ export class ChangedResourceGraph {
     const bases =
       before && (this.compareBytes || changedStylesheet || changedDocument)
         ? await this.#baseGraph.collect(
-            referencedRoutes(before.path, before.html, {
-              resourceHints: false,
-            }),
+            this.referencePaths(before.path, before.html, "before"),
           )
         : new Set<string>();
     const all = [...new Set([...bases, ...resources])];
+    const equivalent = new Set(
+      await equivalentDocumentResources(
+        source,
+        document,
+        before,
+        this.documentResources,
+        this.baseline,
+        this.reader,
+      ),
+    );
+    for (const route of this.identities?.equivalent(bases, resources) ?? [])
+      equivalent.add(route);
     const eligible = all.filter(
       (route) =>
-        this.changed.has(route) ||
-        this.changed.has(this.#physicalRoutes.get(route) ?? route),
+        !equivalent.has(route) &&
+        (this.changed.has(route) ||
+          this.changed.has(this.#physicalRoutes.get(route) ?? route)),
     );
     const analyzed = acceptedCss
       ? eligible.filter((route) => !isStylesheetPath(route))
@@ -199,7 +221,10 @@ export class ChangedResourceGraph {
       ...(reasons.length ? { reasons } : {}),
       ...(excludedResources?.length ? { excludedResources } : {}),
       ...(all.some(
-        (route) => this.#byteChanges.has(route) && !eligible.includes(route),
+        (route) =>
+          this.#byteChanges.has(route) &&
+          !eligible.includes(route) &&
+          !equivalent.has(route),
       )
         ? { resourceChanged: true as const }
         : {}),
@@ -259,6 +284,17 @@ export class ChangedResourceGraph {
       if (extension !== ".css") content = await this.#head.resourceText(route);
     }
     this.#contents.set(route, content);
-    return referencedRoutes(route, content, { resourceHints: false });
+    return this.referencePaths(route, content, "after");
+  }
+
+  private referencePaths(
+    route: string,
+    html: string,
+    side: "before" | "after",
+  ): readonly string[] {
+    return [
+      ...referencedRoutes(route, html, { resourceHints: false }),
+      ...linkedDocumentResources(route, html, this.documentResources[side]),
+    ];
   }
 }

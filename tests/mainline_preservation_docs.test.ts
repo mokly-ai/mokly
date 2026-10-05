@@ -17,7 +17,7 @@ const protocol = (name: string) => read(`docs/protocol/${name}.md`);
 test("watch contract retains imported CSS and PostCSS invalidation rules", async () => {
   const text = await protocol("mokly-watch");
   for (const rule of [
-    /CSS Modules, nested imports, local assets and PostCSS-reported files/u,
+    /(?:CSS Modules|modules), nested imports, local assets and PostCSS-reported files/u,
     /directory dependencies watch matching file additions, not deletions/u,
     /newly added non-ignored subdirectory/u,
     /absent glob means `\*\*\/\*`/u,
@@ -53,11 +53,11 @@ test("watch contract retains generation indexes and effective-root replacement",
     assert.match(text, rule);
 });
 
-test("quick start retains the identity-derived route example", async () => {
+test("quick start retains the file-derived path example", async () => {
   const text = await read("README.md");
-  assert.match(text, /route from the id/u);
-  assert.match(text, /`screens\/account-home\.html`/u);
-  assert.match(text, /generated view per viewport and color scheme/u);
+  assert.match(text, /derives everything else from the file/u);
+  assert.match(text, /`account\/account-home\/index\.mobile\.html`/u);
+  assert.match(text, /one file per viewport and color scheme/u);
   assert.match(
     text,
     /baseline compatibility.*mokly-baseline-compatibility\.md/u,
@@ -68,10 +68,13 @@ test("export contract keeps removed variants and identity-based missing sides", 
   const text = await protocol("mokly-export");
   assert.match(
     text,
-    /Removed screens, pages, components and variants retain their baseline context/u,
+    /Removed screens, pages, documents, components and variants retain their baseline context/u,
   );
-  assert.match(text, /current and removed records never share an id/u);
-  assert.match(text, /An id absent from a side's manifest/u);
+  assert.match(text, /current and removed records never share a path/u);
+  assert.match(
+    text,
+    /A path absent from one side follows the added\/removed rules unless the/u,
+  );
   assert.doesNotMatch(
     text,
     /current ids and routes win when reused|A route absent from a side's manifest/u,
@@ -89,10 +92,10 @@ test("catalogue contract retains source metadata privacy across its split", asyn
   assert.match(text, /They never become source-serving URLs/u);
 });
 
-test("component input contract retains global variant IDs and derived routes", async () => {
+test("component input contract retains variant slugs and derived paths", async () => {
   const text = await protocol("mokly-components");
-  assert.match(text, /ids are global kebab-case catalogue ids/u);
-  assert.match(text, /component paths follow the/u);
+  assert.match(text, /A variant's path is the parent's path plus its slug/u);
+  assert.match(text, /its file names follow the/u);
   assert.doesNotMatch(
     text,
     /input includes.*?a stable relative `\.html` route/u,

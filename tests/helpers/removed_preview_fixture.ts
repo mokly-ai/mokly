@@ -64,14 +64,14 @@ const paragraphs = Array.from(
 ).join("");
 
 const links = `
-  <meta http-equiv="refresh" content="3600; url=../screens/current.mobile.html">
+  <meta http-equiv="refresh" content="3600; url=../current/index.mobile.html">
   <p><a href="mock:current">Marked catalogue link</a></p>
-  <p><a href="../screens/current.mobile.html">Relative link</a></p>
+  <p><a href="../current/index.mobile.html">Relative link</a></p>
   <p><a href="https://example.invalid/away" target="_blank">External link</a></p>
   <p><a href="https://example.invalid/plain">Plain external link</a></p>
   <p><a download href="../assets/archive.css">Download link</a></p>
-  <div><template shadowrootmode="open"><a href="../screens/current.mobile.html">Shadow link</a></template></div>
-  <svg viewBox="0 0 120 24" width="120" height="24"><a xlink:href="../screens/current.mobile.html"><text x="0" y="18" font-size="16">SVG link</text></a></svg>
+  <div><template shadowrootmode="open"><a href="../current/index.mobile.html">Shadow link</a></template></div>
+  <svg viewBox="0 0 120 24" width="120" height="24"><a xlink:href="../current/index.mobile.html"><text x="0" y="18" font-size="16">SVG link</text></a></svg>
   <p><a href="#foot">Jump to the end</a></p>
   <form action="/submitted" method="get"><button type="submit">Send</button></form>
 `;
@@ -79,17 +79,17 @@ const links = `
 function removedPreviewSource(current: boolean): string {
   const removed = current
     ? ""
-    : `defineScreen({ ...metadata, navPath: ["Fixture"], id: "removed-screen", title: "Removed screen",
+    : `defineScreen({ ...metadata, path: "removed-screen", title: "Removed screen",
     colorSchemes: ["light"],
     mobile: <main id="top"><h1>Previous mobile screen</h1><div dangerouslySetInnerHTML={{ __html: ${JSON.stringify(links)} }} /><p id="foot">End of the archived screen.</p></main>,
     desktop: <main id="top"><h1>Previous desktop screen</h1><div dangerouslySetInnerHTML={{ __html: ${JSON.stringify(links)} }} /><p id="foot">End of the archived screen.</p></main>,
-    useCaseIds: [] }),
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "removed-dark", title: "Removed dark screen",
+    useCasePaths: [] }),
+  defineScreen({ ...metadata, path: "removed-dark", title: "Removed dark screen",
     colorSchemes: ["light", "dark"],
     mobile: <main><h1>Previous themed mobile screen</h1></main>,
     desktop: <main><h1>Previous themed desktop screen</h1></main>,
-    useCaseIds: [] }),
-  definePage({ ...metadata, navPath: ["Fixture"], id: "removed-page", title: "Removed page",
+    useCasePaths: [] }),
+  definePage({ ...metadata, path: "removed-page", title: "Removed page",
     render: () => ${JSON.stringify(
       `<!doctype html><html><head><link rel="stylesheet" href="../assets/archive.css"></head><body><main id="top"><h1>Previous page</h1>${links}${paragraphs}<p id="foot">End of the archived page.</p></main></body></html>`,
     )} }),`;
@@ -97,7 +97,7 @@ function removedPreviewSource(current: boolean): string {
 import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { description: "Fixture", relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "current", title: "Current", colorSchemes: ["light"], mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCaseIds: [] }),
+  defineScreen({ ...metadata, path: "current", title: "Current", colorSchemes: ["light"], mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCasePaths: [] }),
   ${removed}
 ];`;
 }

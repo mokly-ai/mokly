@@ -21,13 +21,13 @@ function currentScreen() {
     address: "/home",
     colorSchemes: ["light"] as const,
     description: "Home",
-    id: "home",
+    path: "home",
     kind: "screen" as const,
-    navPath: [] as string[],
+
     relatedDocs: [] as string[],
     sourcePath,
     title: "Home",
-    useCaseIds: [] as string[],
+    useCasePaths: [] as string[],
   };
 }
 
@@ -36,16 +36,28 @@ function currentManifest() {
     entries: [currentScreen()],
     generatedBy: "mokly" as const,
     schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: [sourcePath],
   };
 }
 
-test("manifest v8 carries identity and configuration but no derived paths", () => {
+test("manifest v8 carries paths and configuration but no derived artifact names", () => {
   const parsed = parseManifest(currentManifest());
   assert.deepEqual(parsed, currentManifest());
+  assert.throws(
+    () => parseManifest({ ...currentManifest(), schemaVersion: 7 }),
+    {
+      code: "manifest-invalid",
+      message:
+        "[mokly/manifest-invalid] expected Mokly manifest schema version 8; run mokly build",
+    },
+  );
 
   for (const [field, value] of [
-    ["route", entryRoute("screen", "home")],
+    ["id", "home"],
+    ["navPath", ["Home"]],
+    ["useCaseIds", []],
+    ["route", entryRoute("home")],
     ["fragments", { mobile: "home.mobile.html", desktop: "home.html" }],
     ["darkFragments", { mobile: "dark-mobile.html", desktop: "dark.html" }],
     ["viewports", ["mobile", "desktop"]],
@@ -75,8 +87,8 @@ test("baseline parsing rejects lower versions and derives current view paths", (
   assert.deepEqual(
     generatedViews(entry).map(({ path }) => path),
     [
-      viewRoute("screen", "home", "mobile", "light"),
-      viewRoute("screen", "home", "desktop", "light"),
+      viewRoute("home", "mobile", "light"),
+      viewRoute("home", "desktop", "light"),
     ],
   );
 });
@@ -90,7 +102,7 @@ test("review v5 is the only accepted comparison result", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5,
+    schemaVersion: 5 as const,
     screens: [],
   };
   assert.deepEqual(parseReviewResult(result), result);
@@ -100,12 +112,16 @@ test("review v5 is the only accepted comparison result", () => {
   );
 });
 
-test("removed page preview schema 2 carries only page identity", () => {
+test("removed page preview schema 3 carries only page identity", () => {
   const preview = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     baseRef: "origin/main",
     baseCommit: "b".repeat(40),
-    id: "guide",
+    path: "guide",
   };
   assert.deepEqual(parseRemovedPagePreview(preview), preview);
+  assert.throws(
+    () => parseRemovedPagePreview({ ...preview, schemaVersion: 2 }),
+    /^Error: \[mokly\/review\] unsupported preview version$/,
+  );
 });

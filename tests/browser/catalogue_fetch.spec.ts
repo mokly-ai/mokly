@@ -28,7 +28,7 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
       const view = screen.views[0];
       const fragment = await fetch(
         new URL(
-          `/static/screens/${screen.id}.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`,
+          `/static/${screen.path}/index.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`,
           origin,
         ),
         { credentials: "omit" },
@@ -50,7 +50,7 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
     }
     for (const route of [
       "/__mokly/catalogue.json",
-      "/static/screens/home.mobile.html",
+      "/static/home/index.mobile.html",
       "/static/missing.html",
     ]) {
       for (const method of ["GET", "HEAD"] as const) {
@@ -81,7 +81,7 @@ test("static hydration reads one same-origin catalogue without CORS or wildcard"
   });
   const other = await serveStaticFiles(site.root);
   try {
-    await page.goto(`${site.url}/view/screens/home.html`);
+    await page.goto(`${site.url}/view/home/`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     expect(
       site.requests.filter((request) => request === "/__mokly/catalogue.json"),
@@ -125,7 +125,7 @@ test("Serve hydrates from its inline catalogue without an initial read", async (
   page.on("request", (request) =>
     requests.push(new URL(request.url()).pathname),
   );
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
   expect(requests).not.toContain("/__mokly/catalogue.json");
 });

@@ -127,7 +127,7 @@ function reviewFixture(
 
 function reasonKinds(result: ReviewResultV5, id: string) {
   const change = result.changes.find(
-    (entry) => (entry.after ?? entry.before)?.id === id,
+    (entry) => (entry.after ?? entry.before)?.path === id,
   );
   assert.ok(change);
   return change.reasons.map((reason) => reason.kind);

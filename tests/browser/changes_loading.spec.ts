@@ -29,7 +29,7 @@ for (const mobile of [false, true]) {
       );
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      await page.goto(`${server.url}/view/screens/home.html`);
+      await page.goto(`${server.url}/view/home/`);
       await page
         .locator("html")
         .evaluate((root) => root.setAttribute("data-test-retained", "true"));
@@ -43,7 +43,7 @@ for (const mobile of [false, true]) {
       await expect(changes).toBeVisible();
       await expect(changes.locator(".mbk-nav-spinner")).toBeVisible();
       await expect(
-        page.locator('[data-nav-row][data-route="screens/home.html"]'),
+        page.locator('[data-nav-row][data-route="home/index.html"]'),
       ).toBeVisible();
       const initialFilter = await filter.boundingBox();
       const initialTree = await tree.boundingBox();
@@ -58,29 +58,29 @@ for (const mobile of [false, true]) {
       await changes.click();
 
       publish({
-        changedIds: ["details"],
+        changedEntries: ["details"],
         changesStatus: "ready",
       });
       await expect(filter).toHaveAttribute("data-changes-status", "ready");
       await expect(changes).toHaveAttribute("aria-pressed", "true");
       await expect(changes.locator(".mbk-nav-filter-count")).toHaveText("1");
       await expect(
-        page.locator('[data-nav-row][data-route="screens/details.html"]'),
+        page.locator('[data-nav-row][data-route="details/index.html"]'),
       ).toBeVisible();
       await expect(status).toBeHidden();
       expect(await filter.boundingBox()).toEqual(initialFilter);
       expect(await tree.boundingBox()).toEqual(initialTree);
 
-      publish({ changedIds: null, changesStatus: "pending" });
+      publish({ changedEntries: null, changesStatus: "pending" });
       await expect(status).toContainText("Checking for changes");
       await expect(changes).toHaveAttribute("aria-pressed", "true");
-      publish({ changedIds: [], changesStatus: "ready" });
+      publish({ changedEntries: [], changesStatus: "ready" });
       await expect(changes.locator(".mbk-nav-filter-count")).toHaveText("0");
       await expect(changes).toHaveAttribute("aria-pressed", "true");
       await expect(status).toContainText("No changes found");
       expect(await filter.boundingBox()).toEqual(initialFilter);
 
-      publish({ changedIds: null, changesStatus: "pending" });
+      publish({ changedEntries: null, changesStatus: "pending" });
       await expect(filter).toHaveAttribute("data-changes-status", "pending");
       publish({ changesStatus: "unavailable" });
       await expect(status).toContainText("Changes are unavailable");
@@ -89,11 +89,11 @@ for (const mobile of [false, true]) {
       await all.click();
       await expect(status).toBeHidden();
       await expect(
-        page.locator('[data-nav-row][data-route="screens/home.html"]'),
+        page.locator('[data-nav-row][data-route="home/index.html"]'),
       ).toBeVisible();
       expect(await filter.boundingBox()).toEqual(initialFilter);
       await page.emulateMedia({ reducedMotion: "reduce" });
-      publish({ changedIds: null, changesStatus: "pending" });
+      publish({ changedEntries: null, changesStatus: "pending" });
       await expect(changes.locator(".mbk-nav-spinner")).toHaveCSS(
         "animation-name",
         "none",

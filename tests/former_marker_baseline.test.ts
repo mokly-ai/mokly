@@ -39,7 +39,7 @@ for (const watch of [false, true])
     assert.equal(catalogue.comparisonUrl, null);
     assert.deepEqual(catalogue.removedEntries, []);
     assert.ok(catalogue.screens.length > 0);
-    const page = await fetch(`${running.url}/view/screens/home.html`);
+    const page = await fetch(`${running.url}/view/home/`);
     assert.equal(page.status, 200);
     assert.match(await page.text(), /Changes unavailable/i);
     assert.ok(

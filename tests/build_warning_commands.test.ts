@@ -28,8 +28,8 @@ const expectedWarnings = entryWarning + configWarning;
 
 function sourceWithRemovedField(): string {
   return validEntrySource().replace(
-    'id: "home",',
-    'dependencies: undefined, id: "home",',
+    'path: "home",',
+    'dependencies: undefined, path: "home",',
   );
 }
 
@@ -192,7 +192,7 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
   assert.equal(
     lines.filter((line) =>
       line.includes(
-        'configured stylesheet link "../base.css" is absent from "screens/home.mobile.html"',
+        'configured stylesheet link "../base.css" is absent from "home/index.mobile.html"',
       ),
     ).length,
     1,
@@ -200,7 +200,7 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
   assert.equal(
     lines.filter((line) =>
       line.includes(
-        'Stylesheet ownership for "action.css" on "screens/home.mobile.html"',
+        'Stylesheet ownership for "action.css" on "home/index.mobile.html"',
       ),
     ).length,
     1,

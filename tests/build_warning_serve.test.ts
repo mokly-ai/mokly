@@ -77,8 +77,8 @@ test(
   { timeout: 45_000 },
   async (context) => {
     const source = validEntrySource().replace(
-      'id: "home",',
-      'dependencies: undefined, id: "home",',
+      'path: "home",',
+      'dependencies: undefined, path: "home",',
     );
     const fixture = await createFixture(source);
     context.after(() => removeFixture(fixture));
@@ -112,14 +112,14 @@ test(
     await fs.writeFile(
       path.join(fixture.root, "renderer.tsx"),
       `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.id === "home" ? { html, resources: [{path: "action.css", componentIds: ["action"]}] } : { html }; };`,
+export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.path === "home" ? { html, resources: [{path: "action.css", componentIds: ["action"]}] } : { html }; };`,
     );
     const running = await startServe(fixture, true);
     const warning =
-      '[mokly/warning] Stylesheet ownership for "action.css" on "screens/home.mobile.html" is ignored. Changes follow the elements that each changed rule matches.';
+      '[mokly/warning] Stylesheet ownership for "action.css" on "home/index.mobile.html" is ignored. Changes follow the elements that each changed rule matches.';
     for (let attempt = 0; attempt < 2; attempt += 1)
       assert.equal(
-        (await fetch(`${running.url}/static/screens/home.mobile.html`)).status,
+        (await fetch(`${running.url}/static/home/index.mobile.html`)).status,
         200,
       );
     await waitFor(

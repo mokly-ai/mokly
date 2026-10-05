@@ -13,11 +13,11 @@ export function cssSchemaFiles(): Map<string, string> {
         [
           [`snapshots/${side}/shared.css`, ".auth { color: red; }"],
           [
-            `snapshots/${side}/screens/auth.mobile.html`,
+            `snapshots/${side}/auth/index.mobile.html`,
             `<!doctype html><link rel="stylesheet" href="../shared.css"><button class="auth">${side === "before" ? "Sign in" : "Continue"}</button>`,
           ],
           [
-            `snapshots/${side}/screens/auth.desktop.html`,
+            `snapshots/${side}/auth/index.desktop.html`,
             '<!doctype html><link rel="stylesheet" href="../shared.css"><p>Guide</p>',
           ],
         ] as [string, string][],
@@ -25,9 +25,9 @@ export function cssSchemaFiles(): Map<string, string> {
   );
 }
 
-/** Shared server/browser schema fixture uses the identity-only v5 result. */
+/** Shared server/browser schema fixture uses the path-addressed v5 result. */
 export function cssSchemaFixture(): ReviewResult {
-  const address = { id: "auth", title: "Sign in" };
+  const address = { path: "auth", title: "Sign in" };
   const views: ViewReview[] = [
     {
       viewport: "mobile",
@@ -66,7 +66,7 @@ export function cssSchemaFixture(): ReviewResult {
   };
   return {
     ...common,
-    schemaVersion: 5,
+    schemaVersion: 5 as const,
     screens: [{ ...screen, before: address, after: address }],
     components: [],
     affectedConsumers: [],

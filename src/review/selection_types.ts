@@ -11,13 +11,13 @@ import type { TransferredGeneratedFile } from "../build/generated_file.js";
 import type { CatalogueChangeSnapshot } from "../registry/changes.js";
 
 export interface ReviewSelection {
-  readonly id: string;
+  readonly path: string;
 }
 
 /** Explicit selection for a page proven removed by the accepted snapshot. */
 export interface RemovedPageSelection {
   readonly kind: "page";
-  readonly id: string;
+  readonly path: string;
 }
 
 /** Private evidence retained by background classification, never published as JSON. */

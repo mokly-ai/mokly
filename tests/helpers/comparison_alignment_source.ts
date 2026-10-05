@@ -89,16 +89,16 @@ function smoothScreen(changed: boolean): string {
 /** Authored entries for the alignment catalogue before and after the change. */
 export function comparisonAlignmentSource(changed: boolean): string {
   const screen = (id: string, title: string, body: string) =>
-    `defineScreen({ ...metadata, id: "${id}", title: "${title}", description: "${title} screen", useCaseIds: [], mobile: ${body}, desktop: ${body} })`;
+    `defineScreen({ ...metadata, path: "${id}", title: "${title}", description: "${title} screen", useCasePaths: [], mobile: ${body}, desktop: ${body} })`;
   return `import { defineComponent, defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { navPath: ["Alignment"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 const rows = Array.from({ length: 20 }, (_, index) => index);
 const checklist = defineComponent({ ...metadata,
-  id: "checklist", title: "Checklist", description: "A list taller than its frame",
+  path: "checklist", title: "Checklist", description: "A list taller than its frame",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <ol className="al-list">{rows.map((row) => <li className="al-row" id={"al-row-" + row} key={row}>{row === 7 ? props.label : "Row " + row}</li>)}</ol>,
-  variants: [{ id: "checklist-long", title: "Long", props: { label: "${changed ? "Current" : "Previous"} row" } }]
+  variants: [{ slug: "long", title: "Long", props: { label: "${changed ? "Current" : "Previous"} row" } }]
 });
 export const mockups = [
   ${screen("tall", "Tall", tallScreen(changed))},

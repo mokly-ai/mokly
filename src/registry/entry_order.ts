@@ -1,23 +1,26 @@
+import { VARIANT_INDEX } from "../authoring/markers.js";
+
 interface EntryOrderFields {
-  id: string;
+  path: string;
   kind: string;
   variantOf?: unknown;
+  [VARIANT_INDEX]?: number;
 }
 
 /**
- * Order ordinary entries by kind then id while keeping each valid screen or
+ * Order ordinary entries by kind then path while keeping each valid screen or
  * component parent's variants immediately after it in input order. A variant without one
- * uniquely valid non-variant parent stays in ordinary kind/id position so the
+ * uniquely valid non-variant parent stays in ordinary kind/path position so the
  * relationship validator can report it deterministically.
  */
 export function orderEntriesWithVariants<T>(
   values: readonly T[],
   entryOf: (value: T) => EntryOrderFields,
 ): T[] {
-  const byId = new Map<string, T[]>();
+  const byPath = new Map<string, T[]>();
   for (const value of values) {
     const entry = entryOf(value);
-    byId.set(entry.id, [...(byId.get(entry.id) ?? []), value]);
+    byPath.set(entry.path, [...(byPath.get(entry.path) ?? []), value]);
   }
 
   const grouped = new Set<T>();
@@ -30,7 +33,7 @@ export function orderEntriesWithVariants<T>(
     ) {
       continue;
     }
-    const candidates = byId.get(entry.variantOf) ?? [];
+    const candidates = byPath.get(entry.variantOf) ?? [];
     const parent = candidates.length === 1 ? candidates[0] : undefined;
     if (parent === undefined || parent === value) continue;
     const parentEntry = entryOf(parent);
@@ -46,6 +49,13 @@ export function orderEntriesWithVariants<T>(
     ]);
   }
 
+  for (const variants of variantsByParent.values())
+    variants.sort(
+      (left, right) =>
+        (entryOf(left)[VARIANT_INDEX] ?? 0) -
+        (entryOf(right)[VARIANT_INDEX] ?? 0),
+    );
+
   return values
     .filter((value) => !grouped.has(value))
     .sort((left, right) => compareEntries(entryOf(left), entryOf(right)))
@@ -53,7 +63,7 @@ export function orderEntriesWithVariants<T>(
 }
 
 function compareEntries(left: EntryOrderFields, right: EntryOrderFields) {
-  return lexical(left.kind, right.kind) || lexical(left.id, right.id);
+  return lexical(left.kind, right.kind) || lexical(left.path, right.path);
 }
 
 function lexical(left: string, right: string): number {

@@ -25,13 +25,10 @@ test("rendered components link their files in first-render order and record only
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const { manifest, outputs } = compilation;
-  const screen = manifest.entries.find((entry) => entry.id === "home")!;
+  const screen = manifest.entries.find((entry) => entry.path === "home")!;
   assert.equal(screen.kind, "screen");
   if (screen.kind !== "screen") return;
-  const html = textOutput(
-    outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
-  )!;
+  const html = textOutput(outputs, viewRoute(screen.path, "mobile", "light"))!;
   assert.deepEqual(
     [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(
       (match) => match[1],
@@ -41,12 +38,12 @@ test("rendered components link their files in first-render order and record only
   assert.deepEqual(
     screen
       .componentViews![0]!.insertedStylesheets!.map(
-        ({ path, componentIds }) => ({ path, componentIds }),
+        ({ path, componentPaths }) => ({ path, componentPaths }),
       )
       .sort((a, b) => a.path.localeCompare(b.path)),
     [
-      { path: "action.css", componentIds: ["action"] },
-      { path: "pane.css", componentIds: ["pane"] },
+      { path: "action.css", componentPaths: ["action"] },
+      { path: "pane.css", componentPaths: ["pane"] },
     ],
   );
   const action = componentVariants(manifest, "action")[0]!;
@@ -54,15 +51,15 @@ test("rendered components link their files in first-render order and record only
   if (action.kind !== "component") return;
   const actionHtml = textOutput(
     outputs,
-    viewRoute(action.kind, action.id, "mobile", "light"),
+    viewRoute(action.path, "mobile", "light"),
   )!;
   assert.match(actionHtml, /action\.css/);
   assert.doesNotMatch(actionHtml, /pane\.css/);
   assert.deepEqual(
     action.componentViews[0]!.insertedStylesheets!.map(
-      ({ path, componentIds }) => ({ path, componentIds }),
+      ({ path, componentPaths }) => ({ path, componentPaths }),
     ),
-    [{ path: "action.css", componentIds: ["action"] }],
+    [{ path: "action.css", componentPaths: ["action"] }],
   );
   const runtimeConfig = componentRuntime(compilation).config;
   assert.ok(
@@ -82,8 +79,8 @@ test("rendered components link their files in first-render order and record only
 test("null markup still links the declared root stylesheet without configured links", async (t) => {
   const fixture = await fixtureWithSheets(
     componentEntrySource({ actionRender: "() => null" }).replace(
-      'id: "action",',
-      'id: "action", stylesheets: ["action.css"],',
+      'path: "action",',
+      'path: "action", stylesheets: ["action.css"],',
     ),
     "stylesheets: [],",
   );
@@ -94,23 +91,23 @@ test("null markup still links the declared root stylesheet without configured li
   if (action.kind !== "component") return;
   const html = textOutput(
     result.outputs,
-    viewRoute(action.kind, action.id, "mobile", "light"),
+    viewRoute(action.path, "mobile", "light"),
   )!;
   assert.match(
     html,
-    /<link rel="stylesheet" href="\.\.\/action\.css"><\/head>/,
+    /<link rel="stylesheet" href="\.\.\/\.\.\/action\.css"><\/head>/,
   );
   assert.deepEqual(
     action.componentViews[0]!.insertedStylesheets!.map(
-      ({ path, componentIds }) => ({ path, componentIds }),
+      ({ path, componentPaths }) => ({ path, componentPaths }),
     ),
-    [{ path: "action.css", componentIds: ["action"] }],
+    [{ path: "action.css", componentPaths: ["action"] }],
   );
-  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  const screen = result.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   const screenHtml = textOutput(
     result.outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
+    viewRoute(screen.path, "mobile", "light"),
   )!;
   assert.match(screenHtml, /href="\.\.\/action\.css"/);
   assert.doesNotMatch(screenHtml, /<button/);
@@ -127,12 +124,9 @@ test("shared declarations merge declaring ids and encode public hrefs without do
   const { manifest, outputs } = await compileCatalogue(
     await loadConfig(fixture.root),
   );
-  const screen = manifest.entries.find((entry) => entry.id === "home");
+  const screen = manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
-  const html = textOutput(
-    outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
-  )!;
+  const html = textOutput(outputs, viewRoute(screen.path, "mobile", "light"))!;
   assert.equal(
     [...html.matchAll(/href="\.\.\/shared%20%26%20encoded\.css"/g)].length,
     1,
@@ -140,10 +134,10 @@ test("shared declarations merge declaring ids and encode public hrefs without do
   assert.deepEqual(
     screen
       .componentViews![0]!.insertedStylesheets!.map(
-        ({ path, componentIds }) => ({ path, componentIds }),
+        ({ path, componentPaths }) => ({ path, componentPaths }),
       )
       .sort((a, b) => a.path.localeCompare(b.path)),
-    [{ path: file, componentIds: ["action", "pane"] }],
+    [{ path: file, componentPaths: ["action", "pane"] }],
   );
 });
 
@@ -161,12 +155,9 @@ export default (input) => { const css = '.action{border-radius:12px}'; const htm
   const { manifest, outputs } = await compileCatalogue(
     await loadConfig(fixture.root),
   );
-  const screen = manifest.entries.find((entry) => entry.id === "home");
+  const screen = manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
-  const html = textOutput(
-    outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
-  )!;
+  const html = textOutput(outputs, viewRoute(screen.path, "mobile", "light"))!;
   const { startOffset, endOffset } = screen.componentViews![0]!.styles[0]!;
   assert.equal(
     html.slice(startOffset, endOffset),
@@ -203,17 +194,17 @@ test("renderer ownership for declared CSS is ignored while provenance is retaine
     `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({html: '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{path: "action.css", componentIds: ["action"]}]});`,
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  const screen = result.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   assert.deepEqual(
     screen
       .componentViews![0]!.insertedStylesheets!.map(
-        ({ path, componentIds }) => ({ path, componentIds }),
+        ({ path, componentPaths }) => ({ path, componentPaths }),
       )
       .sort((a, b) => a.path.localeCompare(b.path)),
     [
-      { path: "action.css", componentIds: ["action"] },
-      { path: "pane.css", componentIds: ["pane"] },
+      { path: "action.css", componentPaths: ["action"] },
+      { path: "pane.css", componentPaths: ["pane"] },
     ],
   );
   assert.ok(

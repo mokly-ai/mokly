@@ -6,28 +6,36 @@ Ignoring all CSS owner records after safety checks is implemented in [M19](../..
 of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The remaining contract is implemented.
+Build, Check, Serve, Review, export and publication share validated manifest-v8
+source inventories. Export admits exact generated files and traverses their
+ancestors under the [generated inventory rule](./mokly-export-public-files.md#generated-inventory);
+all other files keep their public-name and private-directory filters. Source,
+alias and metadata denials still win. The [current HTML ownership proof](./mokly-rendering-generated.md#ownership)
+grants replacement authority only; earlier headers grant none and never defeat
+source protection. Preview replacement also requires current export ownership.
 
 ## Protected Inputs
 
 Use one source-classification policy for current HTTP assets, generated-resource
 validation, Review resource reads, static publication, and public content-change
-classification. A file is protected if it is a resolved entry module, appears
-in the validated `sourceFiles` inventory, has a reserved source basename, or
-matches a public exclusion. Every resolved entry module is also an inventoried
-source, so the entry-set rule is a stable identity for entries rather than a
-second inventory. Apply each rule to both its requested path
-and its resolved repository-relative target. A public-looking symlink cannot
-make a protected target public. Existing regular-file and root-confinement
-checks remain mandatory. The same classifier runs over every resolved entry
-module at discovery, as defined by the
-[configuration contract](./mokly-configuration-discovery.md#entry-discovery). An entry
-may be nested below `mockupsDir`, including a `docs/mockups/src` layout, but it
-remains an inventoried protected input: public reads and exports deny both its
-lexical path and realpath aliases, and generated routes cannot collide with it.
-An entry cannot sit inside Review output, the baseline cache, or a
-package-owned private directory. The supported nesting and its output and alias
-protections are exercised by
-[`entry_discovery.test.ts`](../../tests/entry_discovery.test.ts),
+classification. A file is protected if it matches a root glob (even when a folder exclusion
+skips it without an import), is a resolved entry module or document, appears in the validated `sourceFiles` inventory, has a reserved
+source basename, or matches a public exclusion. Every resolved entry module and
+document is also an inventoried source, so the resolved-file rule is a stable
+identity for entries rather than a second inventory. Apply each rule to both its
+requested path and its resolved repository-relative target. A public-looking
+symlink cannot make a protected target public. Current reads protect new root
+matches immediately, before any candidate build succeeds. Historical reads use
+their validated inventory without guessing from current root globs. Existing regular-file and
+root-confinement checks remain mandatory. The same classifier runs over every
+resolved file at discovery, as defined by the
+[configuration contract](./mokly-configuration.md#roots). An entry may be nested
+below `mockupsDir`, including a `docs/mockups/src` layout, but it remains an
+inventoried protected input: public reads and exports deny both its lexical path
+and realpath aliases, and generated routes cannot collide with it. An entry
+cannot sit inside Review output, the baseline cache, or a package-owned private
+directory. The supported nesting and its output and alias protections are
+exercised by [`entry_discovery.test.ts`](../../tests/entry_discovery.test.ts),
 [`output_safety.test.ts`](../../tests/output_safety.test.ts), and
 [`server_safety.test.ts`](../../tests/server_safety.test.ts).
 
@@ -36,19 +44,22 @@ The canonical manifest and the obsolete-name sentinels listed by
 metadata. Deny those paths and realpath aliases at every public-resource
 boundary, even when absent or pending output. Internal build, freshness, and
 baseline compatibility checks may read them. They are not authoring inputs and
-must not enter `sourceFiles`. Ordinary public JSON remains supported. Browsers
-receive the catalogue data they need through the shell; no public manifest
-endpoint is provided.
-The implemented [public catalogue](./mokly-catalogue.md) adds
-`/__mokly/catalogue.json` beside this private boundary; it is not a manifest
-endpoint. Serve/export allowlist its viewer fields and omit `sourceFiles`,
+must not enter `sourceFiles`. Ordinary public JSON remains supported. The shell
+exposes viewer data without a public manifest endpoint.
+The [public catalogue](./mokly-catalogue.md) at `/__mokly/catalogue.json` is a
+viewer allowlist, not a manifest endpoint. Serve/export omit `sourceFiles`,
 resolved dependency evidence, ownership/style offsets, private envelopes, and
 absolute paths. Authored display metadata and optional
 [instance source locations](./mokly-instances.md#optional-invocation-source)
 remain repository-relative and confer no permission to fetch source files.
-Manifest denials include realpath aliases.
 An absent or dangling manifest alias remains private without
 preventing unrelated public files from loading.
+
+[Markdown file links](./mokly-documents.md#links-and-resources) classify output
+targets before inventory: reject proven Mokly-owned output and metadata, and
+render public-resource targets as plain text without adding them to `sourceFiles`.
+Sources stay private. [Move evidence](./mokly-moves.md) uses confined internal
+reads; it never exposes source bytes as resources or snapshots.
 
 The repository's `.mokly-cache/` is package-private in every mode, including
 physical aliases. Public readers, export, resource references, change evidence
@@ -57,7 +68,8 @@ Only the dedicated historical baseline reader may read its completed output.
 
 Reserve basenames ending in `.source.html`, `.source.htm`, `.source.ts`,
 `.source.tsx`, `.source.js`, `.source.jsx`, `.source.mts`, `.source.cts`,
-`.source.mjs`, or `.source.cjs`, matched case-insensitively. Their protection is
+`.source.mjs`, or `.source.cjs`, and `_folder.json`, matched case-insensitively.
+Only the exact name `_folder.json` is a discovered folder-record carrier. Their protection is
 independent of imports, manifest membership, and whether a page still uses them.
 This is a file-access rule, not a source-discovery or navigation mechanism,
 and applies in every directory.
@@ -66,12 +78,11 @@ For example, removing the final import of `old-page.source.tsx` must leave the
 file inaccessible through `/static` and absent from both publication options.
 Deleting source files is not a condition of migration. Arbitrarily named helpers
 are covered by the inventory while imported; helpers retained without imports
-must use a reserved basename, match a public exclusion, or be matched by an
-`entries` glob. A glob-matched file is an entry module and therefore protected
-authored source. If it exports no registry value, it contributes no definitions
-and can only trigger the normal empty-registry error. The `entriesDir` shorthand
-alone keeps the `.mockup.ts` and `.mockup.tsx` naming convention by expanding to
-its suffixed glob.
+must use a reserved basename, match a public exclusion, or be matched by a
+configured root's `files` glob. A matched file is an entry module or a Markdown
+document and therefore protected authored source. An entry module that exports
+no definition fails the build under the
+[entry module contract](./mokly-entry-modules.md#diagnostics).
 Ordinary public browser scripts are not made private merely because they end in `.js`.
 
 Reject generated output routes that use a reserved source basename, match a
@@ -81,10 +92,10 @@ source or internal-metadata protection. Only the builder's canonical manifest
 output may target its internal metadata path. A request for a protected file has
 the existing not-found behavior; a generated document that needs it as a public
 resource fails validation with its referring route. The shared classifier retains
-the denial cause: entries root, reserved basename, listed input, or exclusion
+the denial cause: root match, reserved basename, listed input, or exclusion
 with its matched glob. Build, ownership, publication, and resource diagnostics
 report that cause; exclusion errors name `publicExclude` and the matched glob.
-Lexical denial precedence is entries root, reserved basename, listed input,
+Lexical denial precedence is root match, reserved basename, listed input,
 then exclusion in every alias mode. Full alias resolution additionally checks
 the realpath source index as a fallback, including live retargeted aliases.
 Canonical manifest validation and ownership bypass only public exclusions via
@@ -158,14 +169,15 @@ as a source. Every file below `mokly-generated/` remains package-owned output,
 not an authored input, even without an HTML header. See
 [imported stylesheet delivery](./mokly-imported-styles.md).
 
-manifest v8 `sourceFiles` is a sorted, unique array of repository-relative POSIX
+Manifest v8 `sourceFiles` is a sorted, unique array of repository-relative POSIX
 paths. Derive it from the union of file inputs resolved by both the config
 bundle and the consumer bundle, including inputs eliminated by tree shaking:
 
 - The config entry module and every repository-owned authoring import it loads.
-- Every resolved entry module and its transitive authoring imports.
+- Every resolved entry module and document, and each module's transitive
+  authoring imports.
 - The configured renderer, compatibility transformer, and their transitive
-  authoring imports, including render helpers that no `entries` glob matches.
+  authoring imports, including render helpers that no root glob matches.
 - Repository-owned workspace package modules resolved through aliases or package
   imports; a bare package specifier alone does not imply an external dependency.
 
@@ -227,23 +239,5 @@ Current-side resource reads always use the current validated policy.
 
 ## Acceptance
 
-Add tests before implementation for abandoned reserved files, removing their
-last import, config/renderer/transformer/helper imports that no `entries` glob
-matches, entry modules co-located beside product components, tree-shaken
-inputs, local workspace packages, and arbitrary helper filenames.
-Test missing/stale inventories, logical and realpath aliases, symlink escapes,
-mixed source/asset roles, reserved output routes, and rejected protected links.
-Cover outside config, entry, renderer, transformer, page-helper, and raw-template
-imports, while proving installed dependencies outside the root still load.
-
-Exercise the same fixtures through GET/HEAD `/static`, resource validation,
-current and historical Review reads, and both publication options. Verify that
-CSS, fonts, images, and public scripts still work. Test watcher reclassification
-after dependency changes and prove default publication validation uses no Git.
-Cover internal manifests, their symlink aliases, generated links/resources,
-ordinary public JSON, compatible v8 baselines, and incompatible-name sentinels.
-Cover every shipped exclusion at root and nested paths, mixed case, dot-directories,
-consumer extensions, alias matches in either direction, and excluded generated
-routes/references. Prove excluded README edits create no public content evidence,
-real imported inputs still rebuild, and ordinary CSS, images, HTML and JSON remain
-public when no rule protects them.
+The [source protection acceptance contract](./mokly-source-protection-acceptance.md)
+lists the required boundary and lifecycle checks.

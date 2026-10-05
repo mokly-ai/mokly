@@ -1,5 +1,5 @@
 import { reviewMaterialKey } from "../data/material_key.js";
-import { isCatalogueId } from "../navigation/logical.js";
+import { isKebabCase, isEntryPath } from "../navigation/logical.js";
 import { isStylesheetPath } from "../review/css/stylesheet_path.js";
 
 import { decodeProps, encodeProps } from "./codec.js";
@@ -100,8 +100,9 @@ export function validateComponentViewRecord(
       validateComponentSource(instance.source, `${at}.source`);
     if (
       !isComponentKey(instance.key) ||
-      !isCatalogueId(instance.id) ||
-      !isCatalogueId(instance.componentId)
+      !isEntryPath(instance.componentId) ||
+      (!isKebabCase(instance.id) &&
+        instance.id !== instance.componentId.split("/").at(-1))
     )
       invalidData(at, "invalid component instance identity");
     validateOwner(instance.owner, at);
@@ -197,7 +198,11 @@ export function validateComponentViewRecord(
       invalidData(at, "insertedStylesheets must be an array");
     let previousEnd = 0;
     for (const link of view.insertedStylesheets) {
-      exactKeys(link, ["startOffset", "endOffset", "path", "componentIds"], at);
+      exactKeys(
+        link,
+        ["startOffset", "endOffset", "path", "componentPaths"],
+        at,
+      );
       if (
         typeof link.startOffset !== "number" ||
         typeof link.endOffset !== "number" ||
@@ -208,7 +213,7 @@ export function validateComponentViewRecord(
       )
         invalidData(at, "invalid or overlapping inserted stylesheet span");
       validateResourcePath(link.path, at);
-      validateOwners(link.componentIds, rendered, at);
+      validateOwners(link.componentPaths, rendered, at);
       previousEnd = link.endOffset;
     }
   }

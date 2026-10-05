@@ -81,7 +81,12 @@ export async function prepareWatchedSource(
     config.entryModules = graph.entrySources;
     config.sourceFiles = graph.sourceFiles;
     config.postcssWatchDirectories = graph.postcssWatchDirectories ?? [];
-    const registry = prepareRegistry(graph.definitions, config, onWarning);
+    const registry = prepareRegistry(
+      graph.definitions,
+      config,
+      graph.documents,
+      onWarning,
+    );
     if (isClosed()) return;
     if (
       JSON.stringify(initialTargets) !== JSON.stringify(watchTargets(config))

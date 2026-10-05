@@ -125,8 +125,8 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
       );
 
       assert.deepEqual(
-        fast.result.changes.map((entry) => entry.after?.id),
-        ["action", "action-default"],
+        fast.result.changes.map((entry) => entry.after?.path),
+        ["action", "action/default"],
       );
       assert.ok(
         fast.result.affectedConsumers.some(
@@ -134,10 +134,10 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
         ),
       );
       const expected = fast.result.screens.find(
-        (screen) => screen.id === "checkout",
+        (screen) => screen.path === "checkout",
       )!;
       const selectedResponse = await fetch(
-        `${running.url}/__mokly/diffs/review.json?id=checkout`,
+        `${running.url}/__mokly/diffs/review.json?path=checkout`,
       );
       assert.equal(
         selectedResponse.status,
@@ -151,14 +151,14 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
       );
       const evidence = (catalogue: typeof live) =>
         catalogue.screens
-          .find((screen) => screen.id === "checkout")!
+          .find((screen) => screen.path === "checkout")!
           .views.map((view) => view.resourceEvidence);
       assert.deepEqual(
         evidence(live),
         expected.views.map((view) => ({ reasons: view.reasons })),
       );
       const preview = await fetch(
-        `${running.url}/static/screens/checkout.mobile.html`,
+        `${running.url}/static/checkout/index.mobile.html`,
       );
       assert.equal(preview.status, 200);
       assert.match(

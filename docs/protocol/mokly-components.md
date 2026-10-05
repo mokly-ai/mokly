@@ -30,9 +30,11 @@ its count unless they have an independent screen change. See the
 
 ## Authoring Boundary
 
-The root package exports `defineComponent`. It returns `entries` for the
-`mockups` export, the parent entry followed by one entry per variant in
-authored order, beside a typed `Component` wrapper for composition. The wrapper
+The root package exports `defineComponent`. It returns `entries`, the parent
+entry followed by one entry per variant in authored order, beside a typed
+`Component` wrapper for composition. Exporting the returned object, or its
+`entries`, registers them under the
+[entry module contract](./mokly-entry-modules.md). The wrapper
 uses the consumer's real component through a render adapter. A consumer can
 re-export that wrapper once from its mockup component module and use ordinary
 JSX throughout its screens.
@@ -40,8 +42,8 @@ JSX throughout its screens.
 Register an adapter and its saved examples with the public API:
 
 ```tsx
+// src/components/action/index.mockup.tsx
 const action = defineComponent({
-  id: "action",
   title: "Action",
   description: "The primary action for a task.",
   stylesheets: ["components/action.css"],
@@ -56,12 +58,12 @@ const action = defineComponent({
   render: (props) => <Action disabled={props.disabled}>{props.label}</Action>,
   variants: [
     {
-      id: "action-default",
+      slug: "default",
       title: "Default",
       props: { label: "Continue", disabled: false },
     },
     {
-      id: "action-disabled",
+      slug: "disabled",
       title: "Disabled",
       props: { label: "Continue", disabled: true },
     },
@@ -72,7 +74,7 @@ const action = defineComponent({
   },
 });
 
-export const mockups = action.entries;
+export default action;
 
 // A screen uses the same registered render adapter.
 const submit = (
@@ -92,17 +94,20 @@ before output generation; helper branding alone is not validation.
 
 The input includes the common entry metadata, `propSchema`, `render`, and a
 nonempty ordered `variants` list. `tags`, `colorSchemes`, `controls`, `slots`,
-and `stylesheets` are optional. Existing id, tag, and
-color-scheme validation applies; component paths follow the
-[artifact path contract](./mokly-artifact-paths.md). Each
-variant contains an id, title, complete typed props, and an optional
-description. An authored description must be nonempty and becomes the variant
+and `stylesheets` are optional. Path, tag, and
+color-scheme validation applies; the parent's slug defaults to the module's
+file name, so the example above is `components/action` under a root with the
+prefix `components`, and its file names follow the
+[artifact path contract](./mokly-artifact-paths.md). Each variant contains a
+slug, title, complete typed props, and an optional description. An authored description must be nonempty and becomes the variant
 entry's description; when omitted, the flattened entry copies the parent's
-description. `defineComponent` rejects unknown variant fields. Variant
-ids are global kebab-case catalogue ids, and each variant flattens into its own
-`kind: "component"` entry carrying `variantOf`, `props`, and `suppliedSlots`,
-copying the parent's `navPath` and inheriting its `colorSchemes`,
-`relatedDocs` and `tags`, as the
+description. `defineComponent` retains unknown variant fields for general `invalid-field` validation after
+the final parent path is known; the diagnostic follows the
+[variant contract](./mokly-variants.md#authoring). A variant's path is the
+parent's path plus its slug, such as `components/action/default`, and each
+variant flattens into its own `kind: "component"` entry carrying the derived
+`variantOf`, `props`, and `suppliedSlots` and inheriting the parent's
+`colorSchemes`, `relatedDocs`, and `tags`, as the
 [variant contract](./mokly-variants.md) defines. The parent entry has no
 `variants` field and no views; its page shows its first variant entry, which
 is the default. There is no implicit merge between variants. Public component CSS is declared through `stylesheets` and linked under the [stylesheet contract](./mokly-component-stylesheets.md); it is absent from the renderer's `input.entry`.
@@ -149,10 +154,12 @@ to [Component Instance Identity](./mokly-instances.md). The
 records, input versus DOM ownership, repeated ranges, per-view separation, null
 instances, and the rule that only actual rendering establishes usage.
 
-Components author their own `navPath`; Components-section folders form from
-matching paths, independently of Pages. Components have derived routes, tags,
-and path-derived breadcrumbs, and a variant entry copies its parent's
-`navPath`. Use-case steps continue to reference screens only.
+A component's path derives from its file like every entry, and the viewer's
+Components section shows the folders that contain components under the
+[read model tree rule](./mokly-catalogue.md#tree); the documented convention
+is a root with `path: "components"` over the component library. Components
+have derived file names, tags, and breadcrumbs from folder titles. Use-case
+steps continue to reference screens only.
 Component-to-component and screen-to-component backlinks are derived from
 usage rather than separately authored relationships.
 
@@ -197,8 +204,8 @@ Implementations must not silently register an unreachable component page.
 - [Component change attribution](./mokly-component-changes.md)
 - [Component stylesheet declaration and linking](./mokly-component-stylesheets.md)
 - [Runtime prop schema and codec](./mokly-component-props.md)
-- [Manifest v8 schema](./mokly-component-manifest.md)
-- [Comparison v5 schema](./mokly-component-review.md)
+- [Manifest schema](./mokly-component-manifest.md)
+- [Comparison schema](./mokly-component-review.md)
 - [Component pages and screen inspection](./mokly-component-explorer.md)
 - [Component controls](./mokly-component-controls.md)
 - [Build pipeline](../architecture/build-pipeline.md)

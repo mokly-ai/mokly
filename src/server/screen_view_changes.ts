@@ -2,6 +2,10 @@ import path from "node:path";
 
 import { generatedViews } from "@mokly/viewer/data";
 import type {
+  ReviewResultV5,
+  ScreenResourceEvidence,
+} from "@mokly/viewer/data";
+import type {
   HistoricalManifest,
   ManifestEntry,
   ManifestV8,
@@ -10,9 +14,10 @@ import type {
 
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import type { EntryMove } from "../review/moves/types.js";
 
 export interface ScreenViewChanges {
-  id: string;
+  path: string;
   views: readonly Pick<ViewReview, "viewport" | "colorScheme" | "state">[];
 }
 
@@ -22,20 +27,29 @@ export function screenViewChanges(
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   materialPaths: readonly string[],
+  moves: readonly EntryMove[] = [],
 ): ScreenViewChanges[] {
   const changed = new Set(materialPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const beforeEntries: readonly ManifestEntry[] = baseline.entries;
   const afterEntries: readonly ManifestEntry[] = current.entries;
+  const moved = new Map(
+    moves
+      .filter((move) => move.kind === "screen")
+      .map((move) => [move.previousPath.toLowerCase(), move.path]),
+  );
   const before = new Map(
     beforeEntries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.id, entry]),
+      .map((entry) => [
+        (moved.get(entry.path.toLowerCase()) ?? entry.path).toLowerCase(),
+        entry,
+      ]),
   );
   const after = new Map(
     afterEntries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.id, entry]),
+      .map((entry) => [entry.path.toLowerCase(), entry]),
   );
   return [...new Set([...before.keys(), ...after.keys()])].sort().map((id) => {
     const previous = before.get(id),
@@ -70,6 +84,38 @@ export function screenViewChanges(
         ];
       }),
     );
-    return { id, views };
+    return { path: (current ?? previous)!.path, views };
   });
+}
+
+/** Project complete visual evidence without changing membership or view readiness. */
+export function screenResultEvidence(result: ReviewResultV5): {
+  screenViews: ScreenViewChanges[];
+  screenEvidence: ScreenResourceEvidence[];
+} {
+  return {
+    screenViews: result.screens.map(({ path, views }) => ({
+      path,
+      views: views.map(({ viewport, colorScheme, state }) => ({
+        viewport,
+        colorScheme,
+        state,
+      })),
+    })),
+    screenEvidence: result.screens
+      .map(({ path, views }) => ({
+        path,
+        views: views
+          .filter(
+            (view) => view.reasons?.length || view.excludedResources?.length,
+          )
+          .map(({ viewport, colorScheme, reasons, excludedResources }) => ({
+            viewport,
+            colorScheme,
+            ...(reasons ? { reasons } : {}),
+            ...(excludedResources ? { excludedResources } : {}),
+          })),
+      }))
+      .filter((entry) => entry.views.length),
+  };
 }

@@ -33,7 +33,7 @@ function context(evidence?: ShellContext["componentChanges"]): ShellContext {
   return {
     base: "main",
     updateVersion: 1,
-    activeId: screen.id,
+    activeId: screen.path,
     ...(evidence ? { componentChanges: evidence } : {}),
   };
 }
@@ -59,14 +59,14 @@ test("a v5 component result keys every saved variant's view states", () => {
   );
 
   assert.deepEqual(Object.keys(evidence), [
-    "badge-default",
-    "badge-second",
-    "badge-removed",
+    "badge/default",
+    "badge/second",
+    "badge/removed",
   ]);
   assert.deepEqual(
-    evidence["badge-second"],
+    evidence["badge/second"],
     comparison.variants
-      .find(({ id }) => id === "badge-second")
+      .find(({ path }) => path === "badge/second")
       ?.views.map(({ colorScheme, state, viewport }) => ({
         colorScheme,
         state,
@@ -78,9 +78,9 @@ test("a v5 component result keys every saved variant's view states", () => {
       component,
       context({ baseline: componentBaseline, result }),
       comparison,
-      "badge-default",
+      "badge/default",
     ),
-    evidence["badge-default"],
+    evidence["badge/default"],
   );
 });
 
@@ -89,7 +89,7 @@ test("lightweight screen-view evidence names the same views", () => {
     baseline: screenManifest,
     screenViews: [
       {
-        id: screen.id,
+        path: screen.path,
         views: [
           { viewport: "desktop", colorScheme: "dark", state: "changed" },
           { viewport: "mobile", colorScheme: "light", state: "unchanged" },
@@ -126,7 +126,7 @@ test("added and removed views count as changed views", () => {
     baseline: screenManifest,
     screenViews: [
       {
-        id: screen.id,
+        path: screen.path,
         views: [
           { viewport: "mobile", colorScheme: "light", state: "added" },
           { viewport: "mobile", colorScheme: "dark", state: "ignored-only" },
@@ -148,7 +148,10 @@ test("unknown evidence leaves the changed views empty", () => {
     [],
   );
   assert.equal(viewStates(screen, context(), undefined), undefined);
-  assert.deepEqual(viewStatesBySelection(screen, context(), undefined), {});
+  assert.deepEqual(
+    { ...viewStatesBySelection(screen, context(), undefined) },
+    {},
+  );
 });
 
 test("workspace data publishes one changed-view list for a screen", () => {
@@ -171,7 +174,7 @@ test("workspace data publishes one changed-view list for a screen", () => {
   assert.equal(data.status, "Changed");
   const unknown = workspaceData(catalogue, context(), screen);
   assert.deepEqual(unknown.changedViews, { welcome: [] });
-  assert.deepEqual(unknown.viewStates, {});
+  assert.deepEqual({ ...unknown.viewStates }, {});
 });
 
 test("workspace data keeps changed views with current and removed variants", () => {
@@ -190,9 +193,9 @@ test("workspace data keeps changed views with current and removed variants", () 
   );
 
   assert.deepEqual(data.changedViews, {
-    "badge-default": [],
-    "badge-second": DARK_VIEWS,
-    "badge-removed": [
+    "badge/default": [],
+    "badge/second": DARK_VIEWS,
+    "badge/removed": [
       { viewport: "mobile", colorScheme: "light" },
       { viewport: "mobile", colorScheme: "dark" },
       { viewport: "desktop", colorScheme: "light" },
@@ -200,10 +203,10 @@ test("workspace data keeps changed views with current and removed variants", () 
     ],
   });
   assert.deepEqual(
-    data.viewStates,
+    { ...data.viewStates },
     Object.fromEntries(
-      result.components[0]!.variants.map(({ id, views }) => [
-        id,
+      result.components[0]!.variants.map(({ path, views }) => [
+        path,
         views.map(({ colorScheme, state, viewport }) => ({
           colorScheme,
           state,
@@ -213,7 +216,7 @@ test("workspace data keeps changed views with current and removed variants", () 
     ),
   );
   assert.equal(
-    data.variants.find(({ value }) => value.id === "badge-removed")?.removed,
+    data.variants.find(({ value }) => value.path === "badge/removed")?.removed,
     true,
   );
 });

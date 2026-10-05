@@ -6,12 +6,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 
-import {
-  catalogue,
-  model,
-  source,
-  sourceVariant,
-} from "./component_workspace_fixture.js";
+import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
+
+const { catalogue, model, source, sourceVariant } = componentWorkspaceFixture();
 
 const EXCLUDED = {
   path: "mockups/action.css",
@@ -19,9 +16,9 @@ const EXCLUDED = {
 } as const;
 
 test("a published screen keeps its catalogue view evidence in Current", () => {
-  const entry = catalogue.byId.get("home");
+  const entry = catalogue.byPath.get("product/browse/details");
   assert.ok(entry?.kind === "screen");
-  const data = publicWorkspace(model, entry);
+  const data = publicWorkspace(catalogue, model, entry);
   assert.deepEqual(data.resourceEvidence, [
     { viewport: "mobile", colorScheme: "light", excludedResources: [EXCLUDED] },
   ]);
@@ -35,7 +32,7 @@ test("a published screen keeps its catalogue view evidence in Current", () => {
 
 test("a published component keeps its selected saved view's evidence", () => {
   for (const entry of [source, sourceVariant]) {
-    const data = publicWorkspace(model, entry);
+    const data = publicWorkspace(catalogue, model, entry);
     assert.deepEqual(
       data.resourceEvidence,
       (["mobile", "desktop"] as const).map((viewport) => ({
@@ -45,7 +42,7 @@ test("a published component keeps its selected saved view's evidence", () => {
       })),
     );
     const markup = renderToStaticMarkup(
-      <WorkspaceEvidence data={data} variantId={sourceVariant.id} />,
+      <WorkspaceEvidence data={data} variantPath={sourceVariant.path} />,
     );
     assert.match(
       markup,
@@ -56,7 +53,10 @@ test("a published component keeps its selected saved view's evidence", () => {
 });
 
 test("a published screen without view evidence projects none", () => {
-  const entry = catalogue.byId.get("home-empty");
+  const entry = catalogue.byPath.get("product/browse/home/empty");
   assert.ok(entry?.kind === "screen");
-  assert.equal(publicWorkspace(model, entry).resourceEvidence, undefined);
+  assert.equal(
+    publicWorkspace(catalogue, model, entry).resourceEvidence,
+    undefined,
+  );
 });

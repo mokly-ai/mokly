@@ -11,7 +11,8 @@ and export. The package graph check verifies every delivered static and dynamic
 import resolves within that complete inventory.
 
 `host_capability_descriptor.ts` validates the private live Serve bootstrap and
-source identity. `host_capabilities.ts` defines the behavior context, atomic
+source identity. Live capability requests select an `entryPath` (or `null` for home).
+`host_capabilities.ts` defines the behavior context, atomic
 public/private evidence revision and route/source cancellation scope. Route and
 live evidence use the one strict live reader, which accepts only the exact
 scope derived from the page route. The accepted catalogue and optional complete
@@ -56,7 +57,10 @@ entrypoints and shares containing-block-aware clipping with the inspector in
 mask, labels, selection and observer lifecycle.
 
 `same_origin_identity.ts` is the single document-authentication boundary for
-same-origin mounts. It records authenticated `Document` objects without
+same-origin mounts. Its shared pathname normalization accepts a page’s
+`index.html` and its directory with or without a trailing slash; viewport
+files also accept the host’s extensionless form. Origins and queries still
+match exactly. It records authenticated `Document` objects without
 retaining them, transfers mount-time navigation ownership only when the exact
 current object was previously authenticated for that frame, and separately
 checks every watcher or `load` candidate against the assigned resource through
@@ -137,8 +141,5 @@ npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adap
 Related boundaries: [inspector](../inspector/README.md),
 [Browse document adaptation](../../../../src/browse/README.md),
 [logical navigation](../../../../docs/protocol/mokly-navigation.md),
-[standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md).
-
-## Delivery Status
-
-The [implementation plan index](../../../../plans/README.md) records delivery.
+[standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md), and
+[implementation plans](../../../../plans/).

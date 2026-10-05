@@ -9,8 +9,8 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const validationCases = [
   {
-    diagnostic: /variant/,
-    exports: "forged, pane.entries,",
+    diagnostic: /invalid-definition/,
+    exports: "forged, ...pane.entries,",
     extra: "const forged = { ...action.entries[0], variants: {} };",
     name: "forged variants",
   },
@@ -53,18 +53,6 @@ const validationCases = [
     parentOnly: true,
   },
   {
-    diagnostic: /created with a define helper/,
-    exactViolations: [
-      "- [missing-helper] entries/fixture.mockup.tsx (action): entry must be created with a define helper",
-    ],
-    exports: "handwritten, action.entries.slice(1), pane.entries,",
-    extra:
-      'const handwritten = { kind: "component", id: "action", title: "Action", description: "A shared action", definedIn: action.entries[0].definedIn, relatedDocs: [], navPath: ["Components"] };',
-    name: "a hand-written component without a define helper",
-    noInvalidComponent: true,
-    parentOnly: true,
-  },
-  {
     diagnostic: /render must be a function/,
     extra: "action.entries[0].render = null;",
     name: "mutated render",
@@ -72,7 +60,7 @@ const validationCases = [
   {
     diagnostic: /label/,
     exactViolations: [
-      "- [invalid-component] entries/fixture.mockup.tsx (action-default): [mokly/components] Component action / action-default $.label: string does not satisfy its length constraints",
+      "- [invalid-component] entries/fixture.mockup.tsx (action/default): [mokly/components] Component action / action/default $.label: string does not satisfy its length constraints",
     ],
     extra: "action.entries[1].props = { label: 42 };",
     name: "invalid variant props with a valid parent",
@@ -102,8 +90,8 @@ for (const validationCase of validationCases) {
             validationCase.exactViolations,
           );
         if ("parentOnly" in validationCase && validationCase.parentOnly) {
-          assert.doesNotMatch(error.message, /\(action-default\):/);
-          assert.doesNotMatch(error.message, /\(action-disabled\):/);
+          assert.doesNotMatch(error.message, /\(action\/default\):/);
+          assert.doesNotMatch(error.message, /\(action\/disabled\):/);
         }
         if (
           "noInvalidComponent" in validationCase &&
@@ -116,25 +104,21 @@ for (const validationCase of validationCases) {
   });
 }
 
-test("component variant ids use registry-wide duplicate-id diagnostics", async (t) => {
+test("component variant ids use registry-wide duplicate-path diagnostics", async (t) => {
   const fixture = await createFixture(
-    componentEntrySource().replace(
-      'id: "action-disabled"',
-      'id: "action-default"',
-    ),
+    componentEntrySource().replace('slug: "disabled"', 'slug: "default"'),
   );
   t.after(() => removeFixture(fixture));
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /\[duplicate-id\].*action-default/,
+    /\[duplicate-path\].*action\/default/,
   );
 });
 
 test("an invalid component parent remains available to its variant relationships", async (t) => {
   const fixture = await createFixture(
     componentEntrySource({
-      extra: "const forged = { ...action.entries[0], variants: {} };",
-      exports: "forged, action.entries.slice(1), pane.entries,",
+      extra: 'action.entries[0].description = "";',
     }),
   );
   t.after(() => removeFixture(fixture));
@@ -142,7 +126,7 @@ test("an invalid component parent remains available to its variant relationships
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
     (error: Error) => {
-      assert.match(error.message, /definitions must flatten variants/);
+      assert.match(error.message, /description is required/);
       assert.doesNotMatch(error.message, /variant parent does not exist/);
       assert.equal(
         error.message.split("\n").filter((line) => line.startsWith("- ["))
@@ -174,5 +158,20 @@ test("a component rejected by definition validation remains available to its var
       );
       return true;
     },
+  );
+});
+
+test("unbranded component-shaped helper exports are ignored", async (t) => {
+  const fixture = await createFixture(
+    componentEntrySource({
+      extra:
+        'export const helper = {kind:"component",path:"helper",render:() => {throw new Error("must not render");}};',
+    }),
+  );
+  t.after(() => removeFixture(fixture));
+  const compiled = await compileCatalogue(await loadConfig(fixture.root));
+  assert.equal(
+    compiled.manifest.entries.some((entry) => entry.path === "helper"),
+    false,
   );
 });

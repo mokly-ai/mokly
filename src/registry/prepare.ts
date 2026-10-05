@@ -1,12 +1,8 @@
-import path from "node:path";
-
 import { ComponentValidationError } from "@mokly/viewer/data";
+import { resolveLinkPath } from "@mokly/viewer/data";
 
-import type {
-  RegistryDefinition,
-  ResolvedRegistryEntry,
-} from "../authoring/types.js";
-import { authoringWarnings } from "../authoring/warnings.js";
+import { existingDefinitionReference } from "../authoring/identity.js";
+import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import {
   removedDependencies,
   removedOwnedDependencies,
@@ -21,18 +17,19 @@ import type {
   ComponentDefinition,
   ComponentVariantDefinition,
 } from "../components/types.js";
-import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import type { ResolvedDocument } from "../documents/load.js";
 import { MoklyError } from "../errors.js";
 
 import { problem } from "./entry_metadata.js";
 import { orderEntriesWithVariants } from "./entry_order.js";
 import { validateEntry } from "./entry_validation.js";
+import { folderViolations } from "./folder_validation.js";
+import { moveHintDiagnostics } from "./move_hints.js";
+import { pathCollisions } from "./path_collisions.js";
 import type { PreparedRegistry, RegistryViolation } from "./prepared_types.js";
-import {
-  crossReferenceViolations,
-  duplicateViolations,
-} from "./relationships.js";
+import { crossReferenceViolations } from "./relationships.js";
+import { resolveDefinitions } from "./resolve_definitions.js";
 
 /**
  * Validate loaded values and prepare stable source-attributed entries. Valid
@@ -42,6 +39,7 @@ import {
 export function prepareRegistry(
   values: readonly unknown[],
   config: ResolvedConfig,
+  documents: readonly ResolvedDocument[] = [],
   onWarning?: (warning: BuildWarning) => void,
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
@@ -52,48 +50,51 @@ export function prepareRegistry(
     onWarning?.(warning);
   };
   const validComponentParents = new Set<ResolvedRegistryEntry>();
-  const flattened = values.flatMap((value) =>
-    Array.isArray(value) ? value : [value],
-  );
-  flattened.forEach((value, index) => {
-    if (value && typeof value === "object")
-      authoringWarnings(value).forEach(warn);
-    if (!isDefinition(value)) {
-      violations.push({
-        code: "invalid-definition",
-        message: `exported definition #${index + 1} is not a registry definition`,
-        sourceRelativePath: entryGlobLabel(config),
-      });
-      return;
-    }
-    const sourceRelativePath = value.definedIn ?? "<unattributed>";
-    const sourcePath = path.resolve(config.repoRoot, sourceRelativePath);
-    const entry = {
-      ...value,
-      sourcePath,
-      sourceRelativePath,
-    } as ResolvedRegistryEntry & {
-      dependencies?: unknown;
-      ownedDependencies?: unknown;
-    };
+  const resolved = resolveDefinitions(values, config, warn);
+  for (const diagnostic of resolved.diagnostics)
+    violations.push({ ...diagnostic, sourceRelativePath: "" });
+  for (const entry of [...resolved.entries, ...documents]) {
+    const { sourcePath, sourceRelativePath } = entry;
+    if (entry.kind === "screen" && Array.isArray(entry.useCasePaths))
+      entry.useCasePaths = entry.useCasePaths.map((target) =>
+        typeof target === "string"
+          ? (resolveLinkPath(target, entry.linkBase) ?? target)
+          : target,
+      );
+    if (entry.kind === "use-case" && Array.isArray(entry.steps))
+      entry.steps = entry.steps.map((step) =>
+        step && typeof step.screenPath === "string"
+          ? {
+              ...step,
+              screenPath:
+                resolveLinkPath(step.screenPath, entry.linkBase) ??
+                step.screenPath,
+            }
+          : step,
+      );
     if (Object.hasOwn(entry, "dependencies"))
-      warn(removedDependencies(String(entry.id)));
+      warn(removedDependencies(entry.path));
     if (entry.kind === "component" && Object.hasOwn(entry, "ownedDependencies"))
-      warn(removedOwnedDependencies(String(entry.id)));
-    delete entry.dependencies;
-    delete entry.ownedDependencies;
+      warn(removedOwnedDependencies(entry.path));
+    Reflect.deleteProperty(entry, "dependencies");
+    Reflect.deleteProperty(entry, "ownedDependencies");
     const metadataViolations = validateEntry(entry, config);
     violations.push(...metadataViolations);
     if (entry.kind === "component" && !("variantOf" in entry)) {
       if (metadataViolations.length) {
         entries.push(entry);
-        return;
+        continue;
       }
       try {
         const definition = {
           ...validateComponentDefinition(entry),
           sourcePath,
           sourceRelativePath,
+          path: entry.path,
+          slug: entry.slug,
+          index: entry.index,
+          linkBase: entry.linkBase,
+          location: entry.location,
         };
         entries.push(definition);
         validComponentParents.add(definition);
@@ -103,24 +104,42 @@ export function prepareRegistry(
         violations.push(problem(entry, "invalid-component", error.message));
       }
     } else entries.push(entry);
-  });
+  }
   validateComponentVariants(entries, validComponentParents, violations);
   const orderedEntries = orderEntriesWithVariants(entries, (entry) => entry);
   violations.push(
-    ...duplicateViolations(orderedEntries, "id"),
+    ...moveHintDiagnostics(orderedEntries).map((diagnostic) => ({
+      ...diagnostic,
+      sourceRelativePath: "",
+    })),
+    ...pathCollisions(orderedEntries).map((diagnostic) => ({
+      ...diagnostic,
+      sourceRelativePath: "",
+    })),
+    ...folderViolations(resolved.folders, orderedEntries),
     ...crossReferenceViolations(orderedEntries),
   );
-  if (entries.length === 0) {
+  if (entries.length === 0 && violations.length === 0) {
     violations.push({
       code: "empty-registry",
       message: "no registry definitions were exported",
-      sourceRelativePath: entryGlobLabel(config),
+      sourceRelativePath: "",
     });
   }
   if (violations.length > 0) throw invalidRegistry(violations);
   validateDeclaredStylesheets(orderedEntries, config, warn);
   return {
-    byId: new Map(orderedEntries.map((entry) => [entry.id, entry])),
+    folders: resolved.folders,
+    references: new Map(
+      orderedEntries.flatMap((entry) => {
+        const reference =
+          entry.kind === "document"
+            ? undefined
+            : existingDefinitionReference(entry);
+        return reference ? [[reference, entry.path] as const] : [];
+      }),
+    ),
+    byPath: new Map(orderedEntries.map((entry) => [entry.path, entry])),
     entries: orderedEntries,
     warnings,
   };
@@ -131,13 +150,13 @@ function validateComponentVariants(
   validParents: ReadonlySet<ResolvedRegistryEntry>,
   violations: RegistryViolation[],
 ): void {
-  const byId = new Map<string, ResolvedRegistryEntry[]>();
+  const byPath = new Map<string, ResolvedRegistryEntry[]>();
   for (const entry of entries)
-    byId.set(entry.id, [...(byId.get(entry.id) ?? []), entry]);
+    byPath.set(entry.path, [...(byPath.get(entry.path) ?? []), entry]);
   for (const [index, entry] of entries.entries()) {
     if (entry.kind !== "component" || !("variantOf" in entry)) continue;
     if (typeof entry.variantOf !== "string") continue;
-    const candidates = byId.get(entry.variantOf) ?? [];
+    const candidates = byPath.get(entry.variantOf) ?? [];
     const parent = candidates.length === 1 ? candidates[0] : undefined;
     if (!parent || parent.kind !== "component" || "variantOf" in parent)
       continue;
@@ -147,7 +166,7 @@ function validateComponentVariants(
           problem(
             entry,
             "invalid-variants",
-            `component variant ${entry.id} must inherit ${field} from ${parent.id}`,
+            `component variant ${entry.path} must inherit ${field} from ${parent.path}`,
           ),
         );
       }
@@ -161,32 +180,17 @@ function validateComponentVariants(
         ),
         sourcePath: entry.sourcePath,
         sourceRelativePath: entry.sourceRelativePath,
+        path: entry.path,
+        slug: entry.slug,
+        index: entry.index,
+        linkBase: entry.linkBase,
+        location: entry.location,
       };
     } catch (error) {
       if (!(error instanceof ComponentValidationError)) throw error;
       violations.push(problem(entry, "invalid-component", error.message));
     }
   }
-}
-
-/** Label registry-wide violations with the configured entry globs. */
-function entryGlobLabel(config: ResolvedConfig): string {
-  return config.entriesDir
-    ? toPosixPath(path.relative(config.repoRoot, config.entriesDir))
-    : config.entryGlobs.join(", ");
-}
-
-function isDefinition(value: unknown): value is RegistryDefinition {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-  const kind = (value as { kind?: unknown }).kind;
-  return (
-    kind === "page" ||
-    kind === "screen" ||
-    kind === "use-case" ||
-    kind === "component"
-  );
 }
 
 function invalidRegistry(violations: readonly RegistryViolation[]): MoklyError {
@@ -197,6 +201,6 @@ function invalidRegistry(violations: readonly RegistryViolation[]): MoklyError {
   );
   return new MoklyError(
     "build-invalid",
-    `catalogue is invalid:\n${ordered.map((item) => `- [${item.code}] ${item.sourceRelativePath}${item.id ? ` (${item.id})` : ""}: ${item.message}`).join("\n")}`,
+    `catalogue is invalid:\n${ordered.map((item) => `- [${item.code}] ${item.sourceRelativePath ? `${item.sourceRelativePath}${item.path ? ` (${item.path})` : ""}: ` : ""}${item.message}`).join("\n")}`,
   );
 }

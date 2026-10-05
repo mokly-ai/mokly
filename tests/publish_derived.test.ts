@@ -51,7 +51,7 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
     await fs.readFile(
       path.join(
         path.dirname(reviewPath),
-        "snapshots/after/screens/home.mobile.html",
+        "snapshots/after/home/index.mobile.html",
       ),
       "utf8",
     ),
@@ -61,7 +61,7 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
     await fs.readFile(
       path.join(
         path.dirname(reviewPath),
-        "snapshots/before/screens/home.mobile.html",
+        "snapshots/before/home/index.mobile.html",
       ),
       "utf8",
     ),

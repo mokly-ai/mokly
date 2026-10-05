@@ -5,8 +5,8 @@ import { membershipSource } from "./css_membership_fixture.js";
 import type { TestFixture } from "./fixture.js";
 
 export const linkSource = membershipSource.replace(
-  'id: "action",',
-  'id: "action", stylesheets: ["action.css"],',
+  'path: "action",',
+  'path: "action", stylesheets: ["action.css"],',
 );
 
 export const configuredLinks =

@@ -8,7 +8,7 @@ import { rewriteMockLinks } from "../dist/build/mock_links.js";
 test("logical links reject a use case without a screen first step", () => {
   const useCase = defineUseCase({
     description: "No first step",
-    id: "empty-flow",
+    path: "empty-flow",
     relatedDocs: [],
     steps: [],
     title: "Empty flow",
@@ -17,10 +17,10 @@ test("logical links reject a use case without a screen first step", () => {
     () =>
       rewriteMockLinks(
         '<a href="mock:empty-flow">Flow</a>',
-        "screens/home.mobile.html",
+        "home/index.mobile.html",
         "mobile",
         "light",
-        new Map([[useCase.id, useCase]]),
+        new Map([[useCase.path, useCase]]),
         ["light"],
       ),
     /use case empty-flow has no screen as its first step/,

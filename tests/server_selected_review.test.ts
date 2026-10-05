@@ -65,26 +65,23 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   if (unrelated?.kind !== "component" || !("variantOf" in unrelated))
     throw new Error("Missing component variant");
   await fs.rm(
-    path.join(
-      fixture.mockupsDir,
-      viewRoute("component", unrelated.id, "mobile", "light"),
-    ),
+    path.join(fixture.mockupsDir, viewRoute(unrelated.path, "mobile", "light")),
   );
 
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home`,
+    `${server.url}/__mokly/diffs/review.json?path=home`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
   assert.equal(result.schemaVersion, 5);
   assert.deepEqual(
-    result.screens.map((screen) => screen.id),
+    result.screens.map((screen) => screen.path),
     ["home"],
   );
   if (result.schemaVersion === 5) assert.deepEqual(result.components, []);
   assert.equal(reads.length, 4);
   assert.equal(await fs.readFile(renderLog, "utf8"), "");
-  assert.ok(reads.every((route) => route.startsWith("mockups/screens/home.")));
+  assert.ok(reads.every((route) => route.startsWith("mockups/home/index.")));
   const desktop = result.screens[0]!.views.find(
     (view) => view.viewport === "desktop" && view.colorScheme === "light",
   )!;
@@ -92,7 +89,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     await (
       await fetch(
         new URL(
-          `snapshots/before/${viewRoute("screen", "home", desktop.viewport, desktop.colorScheme)}`,
+          `snapshots/before/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
           response.url,
         ),
       )
@@ -103,18 +100,20 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     await (
       await fetch(
         new URL(
-          `snapshots/after/${viewRoute("screen", "home", desktop.viewport, desktop.colorScheme)}`,
+          `snapshots/after/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
           response.url,
         ),
       )
     ).text(),
     /Updated content/,
   );
-  const cached = await fetch(`${server.url}/__mokly/diffs/review.json?id=home`);
+  const cached = await fetch(
+    `${server.url}/__mokly/diffs/review.json?path=home`,
+  );
   assert.equal(cached.url, response.url);
   assert.equal(reads.length, 4);
   const pane = new URL(
-    `snapshots/after/${viewRoute("screen", "home", desktop.viewport, desktop.colorScheme)}`,
+    `snapshots/after/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
     response.url,
   );
   assert.equal((await fetch(pane, { method: "HEAD" })).status, 200);
@@ -126,7 +125,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     assert.equal((await fetch(new URL(relative, response.url))).status, 404);
   const edited = path.join(
     fixture.mockupsDir,
-    viewRoute("screen", "home", desktop.viewport, desktop.colorScheme),
+    viewRoute("home", desktop.viewport, desktop.colorScheme),
   );
   const checked = await fs.readFile(edited, "utf8");
   await fs.writeFile(
@@ -134,21 +133,21 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     checked.replace("Updated content", "Unchecked content"),
   );
   const failed = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home&refresh=1`,
+    `${server.url}/__mokly/diffs/review.json?path=home&refresh=1`,
   );
   assert.equal(failed.status, 500);
   assert.match(await failed.text(), /changed since the catalogue was checked/);
   assert.match(await (await fetch(pane)).text(), /Updated content/);
   server.publishUpdate({ changesStatus: "pending" });
   const pending = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home`,
+    `${server.url}/__mokly/diffs/review.json?path=home`,
   );
   assert.equal(pending.status, 500);
   assert.match(await pending.text(), /not ready/);
   await fs.writeFile(edited, checked);
   server.publishUpdate({ componentChanges: changes });
   const refreshed = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home`,
+    `${server.url}/__mokly/diffs/review.json?path=home`,
   );
   assert.equal(refreshed.status, 200);
   assert.notEqual(refreshed.url, response.url);
@@ -175,7 +174,7 @@ test("component comparison snapshots contain only the selected saved variant", a
   });
   fixture.beforeRemove(() => server.close());
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=action-disabled`,
+    `${server.url}/__mokly/diffs/review.json?path=action/disabled`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
@@ -184,14 +183,14 @@ test("component comparison snapshots contain only the selected saved variant", a
   assert.deepEqual(result.screens, []);
   assert.equal(result.components.length, 1);
   assert.deepEqual(
-    result.components[0]!.variants.map((variant) => variant.id),
-    ["action-disabled"],
+    result.components[0]!.variants.map((variant) => variant.path),
+    ["action/disabled"],
   );
   const view = result.components[0]!.variants[0]!.views[0]!;
   const before = await (
     await fetch(
       new URL(
-        `snapshots/before/${viewRoute("component", "action-disabled", view.viewport, view.colorScheme)}`,
+        `snapshots/before/${viewRoute("action/disabled", view.viewport, view.colorScheme)}`,
         response.url,
       ),
     )
@@ -199,7 +198,7 @@ test("component comparison snapshots contain only the selected saved variant", a
   const after = await (
     await fetch(
       new URL(
-        `snapshots/after/${viewRoute("component", "action-disabled", view.viewport, view.colorScheme)}`,
+        `snapshots/after/${viewRoute("action/disabled", view.viewport, view.colorScheme)}`,
         response.url,
       ),
     )
@@ -209,9 +208,10 @@ test("component comparison snapshots contain only the selected saved variant", a
   assert.match(after, /disabled/);
   for (const query of [
     "id=..%2Fprivate",
-    "id=action&id=home",
+    "path=action&path=home",
     "id=action&page=removed-page",
     "route=default",
+    "unknown=value",
   ])
     assert.equal(
       (await fetch(`${server.url}/__mokly/diffs/review.json?${query}`)).status,

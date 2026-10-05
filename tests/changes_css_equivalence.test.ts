@@ -55,8 +55,8 @@ for (const scenario of [
     );
     const { result } = await fixture.compare();
     assert.equal(result.schemaVersion, 5);
-    assert.ok(live.changedIds?.includes("home"));
-    assert.ok(!live.changedIds?.includes("details"));
+    assert.ok(live.changedEntries?.includes("home"));
+    assert.ok(!live.changedEntries?.includes("details"));
     assert.deepEqual(
       result.changedPaths.filter((route) => route.endsWith(".css")),
       scenario.stylesheet ? [`mockups/${scenario.stylesheet}`] : [],
@@ -64,15 +64,15 @@ for (const scenario of [
     const screenEvidence = live.componentChanges?.screenEvidence ?? [];
     assert.ok(
       screenEvidence.every((screen) =>
-        result.screens.some((compared) => compared.id === screen.id),
+        result.screens.some((compared) => compared.path === screen.path),
       ),
     );
     for (const screen of result.screens) {
-      const actual = screenEvidence.find((entry) => entry.id === screen.id);
+      const actual = screenEvidence.find((entry) => entry.path === screen.path);
       assert.equal(screen.views.length, 4);
       assert.equal(
         actual?.views.length ?? 0,
-        screen.id === "home" || scenario.stylesheet === "shared.css" ? 4 : 0,
+        screen.path === "home" || scenario.stylesheet === "shared.css" ? 4 : 0,
       );
       for (const view of screen.views) {
         const liveView = actual?.views.find(
@@ -82,7 +82,7 @@ for (const scenario of [
         );
         const expected = {
           reasons:
-            screen.id === "home"
+            screen.path === "home"
               ? [
                   scenario.deletedImage
                     ? "mockups/image.svg"
@@ -90,11 +90,11 @@ for (const scenario of [
                 ]
               : [],
           excluded:
-            screen.id === "details" && scenario.stylesheet === "shared.css"
+            screen.path === "details" && scenario.stylesheet === "shared.css"
               ? ["mockups/shared.css"]
               : [],
         };
-        const context = `${screen.id} (${view.viewport}, ${view.colorScheme})`;
+        const context = `${screen.path} (${view.viewport}, ${view.colorScheme})`;
         assert.deepEqual(evidencePaths(view), expected, context);
         assert.deepEqual(evidencePaths(liveView), evidencePaths(view), context);
       }

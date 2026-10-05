@@ -17,9 +17,9 @@ import {
 import { stylesheetGroups } from "./helpers/design_evidence.js";
 import { filterTargets, headTitle, navRows } from "./helpers/design_rows.js";
 
-const EXCLUDED = "design-review-style-excluded";
-const MATCHED = "design-review-style-matched";
-const ONLY = "design-review-style-excluded-only";
+const EXCLUDED = "design/changes/impact/styles/matched-excluded/excluded";
+const MATCHED = "design/changes/impact/styles/matched-excluded/matched";
+const ONLY = "design/changes/impact/styles/matched-excluded/excluded-only";
 const VIEWPORTS = ["mobile", "desktop"] as const;
 const SCREEN = entryWording("screen");
 const BRANCH_POINT = "Compared with the branch point on origin/main.";
@@ -58,12 +58,12 @@ for (const viewport of VIEWPORTS)
   test(`${viewport}: Excluded styles only opens unchanged Details from All without a comparison`, async () => {
     const { document, entry, route } = await designDocument(ONLY, viewport);
     assert.equal(entry.title, "Excluded styles only");
-    assert.equal(entryRoute("screen", entry.id), `screens/${ONLY}.html`);
+    assert.equal(entryRoute(entry.path), `${ONLY}/index.html`);
     assert.deepEqual(entry.colorSchemes, ["light"]);
     assert.equal(headTitle(document), "Details");
     assert.equal(
-      textContent(byClass(document, "mbk-idchip")[0]!),
-      "#example-details",
+      textContent(byClass(document, "mbk-pathchip")[0]!),
+      "example/screens/details",
     );
     const status = byClass(document, "ce-change-status");
     assert.deepEqual(status.map(textContent), ["Unmodified"]);
@@ -85,10 +85,17 @@ for (const viewport of VIEWPORTS)
 test("desktop: Excluded styles and Excluded styles only depict one branch and link each other", async () => {
   const rows = (active: string) => [
     ["Example", false, undefined, undefined],
+    ["Overview", false, "design/browse/views/folder-overview", undefined],
     ["Screens", false, undefined, undefined],
     ["Welcome", true, EXCLUDED, active === EXCLUDED ? "page" : undefined],
     ["Details", false, ONLY, active === ONLY ? "page" : undefined],
-    ["Example tour", false, "design-browse-use-case", undefined],
+    ["Example tour", false, "design/browse/views/use-case", undefined],
+    ["Getting started", false, "design/browse/pages/view", undefined],
+    ["Account", false, undefined, undefined],
+    ["Billing & Payments", false, undefined, undefined],
+    ["Invoice", false, undefined, undefined],
+    ["Payment terms", false, "design/browse/pages/document", undefined],
+    ["Profile", false, "design/browse/index-entries/screen", undefined],
     ["Design", false, undefined, undefined],
     ["Browse shell", false, undefined, undefined],
     ["Changes", false, undefined, undefined],
@@ -98,7 +105,7 @@ test("desktop: Excluded styles and Excluded styles only depict one branch and li
     [ONLY, []],
   ] as const) {
     const { document } = await designDocument(id, "desktop");
-    assert.deepEqual(navRows(document, "pages"), rows(id), id);
+    assert.deepEqual(navRows(document, "specs"), rows(id), id);
     assert.deepEqual(
       byClass(document, "mbk-nav-filter-opt").map((option) => [
         textContent(option).trim(),
@@ -150,12 +157,12 @@ test("the shell stylesheet evidence designs show only the viewer's Details copy"
   viewer.add(BRANCH_POINT);
   viewer.add("Examined and excluded:");
   for (const id of [
-    "design-review-style-page",
+    "design/changes/impact/styles/page",
     MATCHED,
     EXCLUDED,
     ONLY,
-    "design-review-style-unresolved",
-    "design-review-style-unnamed",
+    "design/changes/impact/styles/unresolved-unnamed/unresolved",
+    "design/changes/impact/styles/unresolved-unnamed/unnamed",
   ])
     for (const viewport of VIEWPORTS) {
       const { document, route } = await designDocument(id, viewport);

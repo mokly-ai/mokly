@@ -2,50 +2,33 @@ import type {
   GeneratedComponentView,
   EntryChangeReason,
   ViewReview,
-  DependencyReason,
 } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { stripMarkers } from "../components/comparison_material.js";
 import { changedComponentImplementations } from "../components/comparison_projection.js";
-import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
 import { MoklyError } from "../errors.js";
 
 import {
   prepareComponentProjection,
+  componentPageMaterial,
   normalizeOneSidedView,
   type PreparedComponentComparison,
 } from "./component_projection_resources.js";
 import {
   ownedResourceReasons,
   rootResourcesChanged,
-  type OwnedResourceReason,
 } from "./component_resource_attribution.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
-import type { ComponentMaterialReader } from "./component_resources.js";
 import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
+import type {
+  ComparedComponentView,
+  ComponentViewContext,
+} from "./component_view_types.js";
 import { componentCssDocuments } from "./css/containment.js";
 import { normalizeReviewPair } from "./ignore.js";
-import type { ResourceComparison } from "./resource_comparison.js";
 
-export interface ComparedComponentView {
-  comparisonPath: "fast" | "complete";
-  view: ViewReview;
-  reasons: readonly EntryChangeReason[];
-  changedImplementations: ReadonlySet<string>;
-  ownedResources: readonly OwnedResourceReason[];
-  componentCssReasons?: readonly DependencyReason[];
-}
-export interface ComponentViewContext {
-  beforeReader: ComponentMaterialReader;
-  afterReader: ComponentMaterialReader;
-  changed: ReadonlySet<string>;
-  prefix: string;
-  resources: ResourceComparison;
-  compareResourceBytes?: boolean;
-  useFastPath?: boolean;
-}
 /** Compare material and declared inputs without altering the retained view documents. */
 export async function compareComponentView(
   context: ComponentViewContext,
@@ -53,6 +36,8 @@ export async function compareComponentView(
   after: GeneratedComponentView | undefined,
   root?: string,
 ): Promise<ComparedComponentView> {
+  if (before?.usage && context.beforeUsage)
+    before = { ...before, usage: context.beforeUsage(before.usage) };
   const selected = after ?? before;
   if (!selected)
     throw new MoklyError(
@@ -140,7 +125,14 @@ export async function compareComponentView(
     if (attempt.comparison) return attempt.comparison;
     prepared = attempt.prepared;
   }
-  prepared ??= prepareComponentProjection(before!, after!, base, head, root);
+  prepared ??= prepareComponentProjection(
+    before!,
+    after!,
+    base,
+    head,
+    root,
+    context.links?.(before!.path, after!.path),
+  );
   const { baseRanges, headRanges, projected, excluded } = prepared;
   const reasons: EntryChangeReason[] = [];
   const rootOwnershipChanged = rootResourcesChanged(
@@ -156,40 +148,39 @@ export async function compareComponentView(
     stripMarkers(base, before?.usage, baseRanges),
     stripMarkers(head, after?.usage, headRanges),
     selected.path,
+    context.links?.(before!.path, after!.path),
   );
-  const baseMaterial = comparisonStylesheetMaterial(base, before!.usage, root);
-  const headMaterial = comparisonStylesheetMaterial(head, after!.usage, root);
-  const actual = normalizeReviewPair(
-    stripMarkers(
-      baseMaterial.html,
-      baseMaterial.usage,
-      baseMaterial.html === base ? baseRanges : undefined,
-    ),
-    stripMarkers(
-      headMaterial.html,
-      headMaterial.usage,
-      headMaterial.html === head ? headRanges : undefined,
-    ),
-    selected.path,
+  const actual = componentPageMaterial(
+    before!,
+    after!,
+    base,
+    head,
+    prepared,
+    root,
+    context.links?.(before!.path, after!.path),
   );
+  const resourceBefore = projected.resourceBefore ?? projected.before;
+  const resourceAfter = projected.resourceAfter ?? projected.after;
+  const actualBefore = actualResource.resourceBase ?? actualResource.base;
+  const actualAfter = actualResource.resourceHead ?? actualResource.head;
   const repoPath = (path: string) =>
     context.prefix ? `${context.prefix}/${path}` : path;
   const evidence = await context.resources.compare(
-    { path: before!.path, html: projected.before },
-    { path: after!.path, html: projected.after },
+    { path: before!.path, html: resourceBefore },
+    { path: after!.path, html: resourceAfter },
     excluded,
-    { before: actualResource.base, after: actualResource.head },
+    { before: actualBefore, after: actualAfter },
   );
   reasons.push(...(evidence.reasons ?? []));
   const actualEvidence = await context.resources.compare(
     {
       path: before!.path,
-      html: actualResource.base,
+      html: actualBefore,
       insertedStylesheets: baseStylesheets,
     },
     {
       path: after!.path,
-      html: actualResource.head,
+      html: actualAfter,
       insertedStylesheets: headStylesheets,
     },
     undefined,
@@ -209,34 +200,36 @@ export async function compareComponentView(
     ? await changedResourceBytes(
         await context.beforeReader.resources(
           before!.path,
-          projected.before,
+          resourceBefore,
           excluded,
         ),
         await context.afterReader.resources(
           after!.path,
-          projected.after,
+          resourceAfter,
           excluded,
         ),
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     : new Set<string>();
   const actualByteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
         await context.beforeReader.resources(
           before!.path,
-          actualResource.base,
+          actualBefore,
           undefined,
           baseStylesheets,
         ),
         await context.afterReader.resources(
           after!.path,
-          actualResource.head,
+          actualAfter,
           undefined,
           headStylesheets,
         ),
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     : new Set<string>();
   if (
@@ -268,6 +261,7 @@ export async function compareComponentView(
       after?.usage,
       baseRanges,
       headRanges,
+      context.links?.(before!.path, after!.path),
     ),
     view: {
       ...view,

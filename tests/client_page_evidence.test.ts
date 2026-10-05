@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { PAGE_STYLE_COPY } from "../examples/basic/entries/design/parts/stylesheet_evidence.js";
+import { PAGE_STYLE_COPY } from "../examples/basic/specs/design/parts/stylesheet_evidence.js";
 import { entryWording } from "../packages/viewer/dist/shell/entry_wording.js";
 import { stylesheetEvidence } from "../packages/viewer/dist/shell/workspace_stylesheet_evidence.js";
 
@@ -15,7 +15,7 @@ const PAGE = { kind: "page" } as const;
 const outsideRule = cssRule({
   ruleKey: "1".repeat(64),
   selectors: [".action"],
-  changedComponentIds: ["action"],
+  changedComponentPaths: ["action"],
   pageSelectors: [".action"],
 });
 /** `article h2` styles only the page and changes no component. */

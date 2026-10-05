@@ -41,19 +41,22 @@ export function isBuildWarning(value: unknown): value is BuildWarning {
   );
 }
 
-export function removedDependencies(id: string): BuildWarning {
+export function removedDependencies(
+  path: string,
+  subject: "entry" | "folder" = "entry",
+): BuildWarning {
   return {
     code: "removed-dependencies",
-    context: [id],
-    message: `dependencies has been removed; ignoring it on entry ${JSON.stringify(id)}. Delete the field.`,
+    context: [subject === "folder" ? `folder:${path}` : path],
+    message: `dependencies has been removed; ignoring it on ${subject} ${JSON.stringify(path)}. Delete the field.`,
   };
 }
 
-export function removedOwnedDependencies(id: string): BuildWarning {
+export function removedOwnedDependencies(path: string): BuildWarning {
   return {
     code: "removed-owned-dependencies",
-    context: [id],
-    message: `ownedDependencies has been removed; ignoring it on component ${JSON.stringify(id)}. Delete the field.`,
+    context: [path],
+    message: `ownedDependencies has been removed; ignoring it on component ${JSON.stringify(path)}. Delete the field.`,
   };
 }
 
@@ -67,14 +70,14 @@ export function removedSharedImpact(configPath: string): BuildWarning {
 }
 
 export function duplicateComponentStylesheet(
-  id: string,
+  componentPath: string,
   physicalPath: string,
   publicPath: string,
 ): BuildWarning {
   return {
     code: "duplicate-component-stylesheet",
-    context: [id, physicalPath],
-    message: `duplicate component stylesheet ${JSON.stringify(publicPath)} on component ${JSON.stringify(id)} is ignored; it is linked once.`,
+    context: [componentPath, physicalPath],
+    message: `duplicate component stylesheet ${JSON.stringify(publicPath)} on component ${JSON.stringify(componentPath)} is ignored; it is linked once.`,
   };
 }
 

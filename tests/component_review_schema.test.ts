@@ -137,7 +137,7 @@ test("source validation rejects a changed path supported only by a shared-impact
     changedPaths: [],
     sharedGlobs: ["src/tokens/**"],
   });
-  const screen = fixture.result.screens.find((entry) => entry.id === "home")!;
+  const screen = fixture.result.screens.find((entry) => entry.path === "home")!;
   const tampered = {
     ...fixture.result,
     changedPaths: ["src/tokens/theme.ts"],
@@ -180,7 +180,7 @@ test("source validation rejects a forged entry reason repeated on its view", asy
   });
   assert.deepEqual(fixture.result.changes, []);
   const tampered = structuredClone(fixture.result);
-  const screen = tampered.screens.find((entry) => entry.id === "home")!;
+  const screen = tampered.screens.find((entry) => entry.path === "home")!;
   screen.views[0]!.reasons = [{ kind: "dependency", path: changed }];
   tampered.changes = [
     {

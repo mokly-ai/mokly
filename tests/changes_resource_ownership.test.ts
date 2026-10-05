@@ -46,7 +46,7 @@ export default (input) => {
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion !== 5) return;
   assert.deepEqual(
-    result.changes.map((change) => (change.after ?? change.before)!.id),
+    result.changes.map((change) => (change.after ?? change.before)!.path),
     ["action"],
   );
   assert.ok(
@@ -61,7 +61,7 @@ export default (input) => {
         "main",
         committedReviewRepository(fixture.config),
       )
-    ).changedIds,
+    ).changedEntries,
     ["action"],
   );
 });

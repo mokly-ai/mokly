@@ -49,11 +49,11 @@ test("missing configured link places component links at the end of the head", as
     `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  const screen = result.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   const html = textOutput(
     result.outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
+    viewRoute(screen.path, "mobile", "light"),
   )!;
   assert.doesNotMatch(html, /href="\.\.\/base\.css"/);
   assert.match(html, /pane\.css/);
@@ -63,7 +63,7 @@ test("missing configured link places component links at the end of the head", as
 test("a configured link away from the insertion position may be absent", () => {
   const html = insertComponentStylesheets(
     '<html><head><link rel="stylesheet" href="b.css"><link rel="stylesheet" href="c.css"></head><body></body></html>',
-    "screens/home.html",
+    "home/index.html",
     ["a.css", "b.css", "c.css"],
     2,
     ["action.css"],
@@ -103,11 +103,13 @@ for (const [name, head] of [
       `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => \`<html><head>${head}</head><body>\${renderToStaticMarkup(input.node)}</body></html>\`;`,
     );
     const result = await compileCatalogue(await loadConfig(fixture.root));
-    const screen = result.manifest.entries.find((entry) => entry.id === "home");
+    const screen = result.manifest.entries.find(
+      (entry) => entry.path === "home",
+    );
     assert.ok(screen?.kind === "screen");
     const html = textOutput(
       result.outputs,
-      viewRoute(screen.kind, screen.id, "mobile", "light"),
+      viewRoute(screen.path, "mobile", "light"),
     )!;
     assert.match(html, /href="\.\.\/pane\.css"/);
     assert.match(html, /href="\.\.\/action\.css"/);

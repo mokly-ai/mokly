@@ -24,7 +24,7 @@ export function componentParent(
   manifest: ManifestV8,
   id: string,
 ): ManifestComponent {
-  const entry = manifest.entries.find((candidate) => candidate.id === id);
+  const entry = manifest.entries.find((candidate) => candidate.path === id);
   assert.ok(
     entry?.kind === "component" && !isManifestComponentVariant(entry),
     `Missing component ${id}`,

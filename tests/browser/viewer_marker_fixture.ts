@@ -7,6 +7,6 @@ export function markerFixture() {
       '(props, context) => props.hidden ? null : <button style={{width:"50%",height:40}} data-viewport={context.viewport} disabled={props.disabled}>{props.label}</button>',
     body: '<action.Component label="Visible" /><div style={{height:850}} /><action.Component moklyInstance="lower" label="Lower" /><div style={{height:120,overflow:"auto"}} data-inner-scroll><div style={{height:180}} /><action.Component moklyInstance="nested" label="Nested" /></div><action.Component moklyInstance="hidden" label="Hidden" hidden />',
     paneVariants:
-      '[{ id: "pane-default", title: "Default", props: { children: <strong>First content</strong> } }, { id: "pane-second", title: "Second", props: { children: <strong>Second content</strong> } }]',
+      '[{ slug: "default", title: "Default", props: { children: <strong>First content</strong> } }, { slug: "second", title: "Second", props: { children: <strong>Second content</strong> } }]',
   });
 }

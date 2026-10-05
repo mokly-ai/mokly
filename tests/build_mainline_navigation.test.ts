@@ -16,14 +16,14 @@ import {
 } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-test("registry reports source-attributed navigation path conflicts", async (context) => {
+test("registry reports source-attributed case-folded folder collisions", async (context) => {
   const fixture = await createFixture(`
 import { defineScreen } from "@mokly/mokly";
 import React from "react";
 const metadata = { relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, navPath: ["Browse"], description: "First screen", desktop: <main>First</main>, id: "first", mobile: <main>First</main>, route: "first.html", title: "First" }),
-  defineScreen({ ...metadata, navPath: ["browse"], description: "Second screen", desktop: <main>Second</main>, id: "second", mobile: <main>Second</main>, route: "second.html", title: "Second" })
+  defineScreen({ ...metadata, description: "First screen", desktop: <main>First</main>, path: "Browse/first", mobile: <main>First</main>, title: "First" }),
+  defineScreen({ ...metadata, description: "Second screen", desktop: <main>Second</main>, path: "browse/second", mobile: <main>Second</main>, title: "Second" })
 ];
 `);
   context.after(() => removeFixture(fixture));
@@ -34,7 +34,7 @@ export const mockups = [
     (error: Error) => {
       assert.match(
         error.message,
-        /\[nav-path-conflict\].*entries\/fixture\.mockup\.tsx/s,
+        /\[case-collision\].*entries\/fixture\.mockup\.tsx/s,
       );
       assert.match(error.message, /Browse.*browse/s);
       return true;
@@ -80,7 +80,7 @@ test("missing related documents and stylesheets are actionable", async (context)
   await fs.promises.writeFile(fixture.entryPath, validEntrySource());
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", stylesheets: [{ match: "**/*.html", stylesheets: ["missing.css"] }] };\n`,
+    `export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", stylesheets: [{ match: "**/*.html", stylesheets: ["missing.css"] }] };\n`,
   );
   const stylesheetConfig = await loadConfig(fixture.root);
   await assert.rejects(
@@ -106,10 +106,9 @@ test("scheme-specific stylesheets append after shared stylesheets", async (conte
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
-  const light =
-    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+  const light = textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
   const dark =
-    textOutput(compilation.outputs, "screens/home.mobile.dark.html") ?? "";
+    textOutput(compilation.outputs, "home/index.mobile.dark.html") ?? "";
   assert.deepEqual(stylesheetHrefs(light), ["../shared.css"]);
   assert.deepEqual(stylesheetHrefs(dark), ["../shared.css", "../dark.css"]);
 
@@ -125,7 +124,7 @@ test("writer refuses to overwrite an unowned route", async (context) => {
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const target = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const target = path.join(fixture.mockupsDir, "home/index.mobile.html");
   await fs.promises.mkdir(path.dirname(target), { recursive: true });
   await fs.promises.writeFile(target, "user-authored\n");
   await assert.rejects(
@@ -146,7 +145,7 @@ test("generic legacy TypeScript sources coexist through explicit config", async 
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: "entries",  mockupsDir: "mockups", repoRoot: "." };\n`,
+    `export default { roots: [{ dir: "entries" }],  mockupsDir: "mockups", repoRoot: "." };\n`,
   );
   await registerFixturePage(
     fixture,
@@ -156,7 +155,7 @@ test("generic legacy TypeScript sources coexist through explicit config", async 
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  assert.ok(compilation.outputs.has("pages/old.html"));
+  assert.ok(compilation.outputs.has("old/index.html"));
   await writeCompilation(compilation, config);
   checkCompilation(await compileCatalogue(config), config);
 });
@@ -179,11 +178,11 @@ export function source() { return "<!doctype html>" + renderToStaticMarkup(<html
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   assert.match(
-    textOutput(compilation.outputs, "pages/notice.html") ?? "",
+    textOutput(compilation.outputs, "notice/index.html") ?? "",
     /<aside id="notice">Expanded<\/aside>/,
   );
   assert.equal(
-    (textOutput(compilation.outputs, "pages/notice.html") ?? "").match(
+    (textOutput(compilation.outputs, "notice/index.html") ?? "").match(
       /<aside/g,
     )?.length,
     1,
@@ -204,10 +203,9 @@ export const mockups = [defineScreen({
   dependencies: [],
   description: "Scheme screen",
   desktop: <main>Desktop</main>,
-  id: "scheme-screen",
+  path: "scheme-screen",
   mobile: <main>Mobile</main>,
   relatedDocs: [],
-  route: "screens/scheme.html",
   title: "Scheme screen"
 })];
 `;

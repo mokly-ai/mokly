@@ -37,7 +37,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 1280, height: 900 },
     );
     const paths = [
-      "entries/design/library/chrome/top-bar.tsx",
+      "specs/design/library/chrome/top-bar.tsx",
       "generated/mokly-manifest.json",
     ];
     const contents = () =>
@@ -47,7 +47,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ),
       );
     const before = await contents();
-    await page.goto(`${running.url}/view/components/design-ui-top-bar.html`);
+    await page.goto(
+      `${running.url}/view/design/library/chrome/top-bar/search/`,
+    );
     await chooseViewport(page, viewport);
     const status = page.locator("[data-workspace-status]");
     await expect(status).toHaveText("Unmodified");
@@ -86,7 +88,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 1280, height: 900 },
     );
     await page.goto(
-      `${running.url}/view/screens/design-browse-tag-picker.html`,
+      `${running.url}/view/design/browse/views/screen/tag-picker/`,
     );
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Components", exact: true }).click();
@@ -130,7 +132,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await page
       .getByRole("link", { name: "Open component", exact: true })
       .click();
-    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
+    await expect(page).toHaveURL(
+      /\/view\/design\/library\/controls\/tag-chip\//,
+    );
     await page.getByRole("tab", { name: "Usage", exact: true }).click();
     const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
     await usage
@@ -138,13 +142,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .first()
       .click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-picker.html/,
+      /\/view\/design\/browse\/views\/screen\/tag-picker\//,
     );
     await page.goBack();
-    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
+    await expect(page).toHaveURL(
+      /\/view\/design\/library\/controls\/tag-chip\//,
+    );
     await page.goForward();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-picker.html/,
+      /\/view\/design\/browse\/views\/screen\/tag-picker\//,
     );
   });
 }

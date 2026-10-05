@@ -30,11 +30,11 @@ test("changed source paths alone add no screen evidence in All", async ({
         baseline: compilation.manifest,
         result: sourceOnlyResult(),
       },
-      changedIds: [],
+      changedEntries: [],
       changesStatus: "ready",
     });
 
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/home/`);
     await expect(page.locator('[data-filter="all"]')).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -68,7 +68,7 @@ test("a real unreferenced source edit adds no screen or component evidence in Al
     await fs.appendFile(path.join(fixture.root, "notes.md"), "Changed input\n");
     running = await serve(config, { base: "main", port: 0, watch: false });
 
-    await page.goto(`${running.url}/view/screens/home.html`);
+    await page.goto(`${running.url}/view/home/`);
     await expect(page.locator('[data-filter="all"]')).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -83,7 +83,7 @@ test("a real unreferenced source edit adds no screen or component evidence in Al
       0,
     );
     await expect(evidence.getByRole("listitem")).toHaveCount(0);
-    await page.goto(`${running.url}/view/components/action.html`);
+    await page.goto(`${running.url}/view/action/`);
     await expect(page.locator('[data-filter="all"]')).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -100,10 +100,8 @@ test("a real unreferenced source edit adds no screen or component evidence in Al
       "No changes to this saved view.",
     );
     await page.locator('[data-filter="changed"]').click();
-    await expect(page.locator('[data-route="screens/home.html"]')).toBeHidden();
-    await expect(
-      page.locator('[data-route="components/action.html"]'),
-    ).toBeHidden();
+    await expect(page.locator('[data-route="home/index.html"]')).toBeHidden();
+    await expect(page.locator('[data-route="action/index.html"]')).toBeHidden();
   } finally {
     await running?.close();
     await removeFixture(fixture);
@@ -115,7 +113,7 @@ function pathOnlyEntrySource(): string {
 }
 
 function sourceOnlyResult(): ReviewResultV5 {
-  const address = { id: "home", title: "Home" };
+  const address = { path: "home", title: "Home" };
   return {
     schemaVersion: 5,
     baseRef: "main",

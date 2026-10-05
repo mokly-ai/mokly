@@ -10,7 +10,7 @@ const page = (body: string) =>
   `<!doctype html><html><head><title>Control</title></head><body>${body}</body></html>`;
 const wrap = (body: string) => `${start}${body}${end}`;
 const adapt = (body: string) =>
-  adaptLinkControls(page(body), "screens/home.html");
+  adaptLinkControls(page(body), "home/index.html");
 
 test("patches retain unrelated bytes and marked control content exactly", () => {
   const outside =

@@ -2,11 +2,11 @@
 
 import { isDisclosureKey } from "./disclosure_keys.js";
 
-/** The only current localStorage key for navigation disclosures. */
-export const disclosureStorageKey = "mokly:nav-disclosure:v3";
-
-/** Obsolete closed-list key, removed on the first current write. */
-export const obsoleteDisclosureStorageKey = "mokly:nav-disclosure:v2";
+/**
+ * The only current localStorage key for navigation disclosures. Earlier
+ * versions are never read, translated, or removed.
+ */
+export const disclosureStorageKey = "mokly:nav-disclosure:v4";
 
 /** Whether a decoded value has the required object shape (not an array). */
 export function isDisclosureMap(

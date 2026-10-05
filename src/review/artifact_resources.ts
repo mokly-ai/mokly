@@ -15,13 +15,15 @@ export function validateArtifactResources(
   artifact: StylesheetReviewArtifact,
 ): void {
   const views: {
-    id: string;
+    path: string;
+    previousPath?: string;
     kind: "component" | "screen";
     view: ViewReview;
   }[] = [
     ...artifact.result.screens.flatMap((screen) =>
       screen.views.map((view) => ({
-        id: screen.id,
+        path: screen.path,
+        ...(screen.previousPath ? { previousPath: screen.previousPath } : {}),
         kind: "screen" as const,
         view,
       })),
@@ -29,7 +31,10 @@ export function validateArtifactResources(
     ...artifact.result.components.flatMap((entry) =>
       entry.variants.flatMap((variant) =>
         variant.views.map((view) => ({
-          id: variant.id,
+          path: variant.path,
+          ...(variant.previousPath
+            ? { previousPath: variant.previousPath }
+            : {}),
           kind: "component" as const,
           view,
         })),
@@ -58,21 +63,14 @@ export function validateArtifactResources(
         ? undefined
         : snapshotViewPath(
             "before",
-            item.kind,
-            item.id,
+            item.previousPath ?? item.path,
             view.viewport,
             view.colorScheme,
           );
     const afterPath =
       view.state === "removed"
         ? undefined
-        : snapshotViewPath(
-            "after",
-            item.kind,
-            item.id,
-            view.viewport,
-            view.colorScheme,
-          );
+        : snapshotViewPath("after", item.path, view.viewport, view.colorScheme);
     const before = beforePath ? text(beforePath) : undefined;
     const after = afterPath ? text(afterPath) : undefined;
     const normalized = normalizeReviewPair(

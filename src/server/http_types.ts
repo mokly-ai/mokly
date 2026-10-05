@@ -25,7 +25,7 @@ export interface ServerOptions {
   /** Reuse a validated startup or publication generation without rereading metadata. */
   snapshot?: CatalogueSnapshot;
   componentRuntime?: ComponentRuntime;
-  changedIds?: readonly string[];
+  changedEntries?: readonly string[];
   /** Precomputed component and screen evidence for the immutable generation. */
   componentChanges?: ComponentChangeSnapshot;
   componentChangeSource?: ComponentChangeSource;

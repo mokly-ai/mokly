@@ -27,13 +27,13 @@ export interface ResolvedCatalogueChanges extends CatalogueChangeSnapshot {
 }
 
 /** Compute routes affected since the base branch point, if available. */
-export async function computeChangedIds(
+export async function computeChangedPaths(
   config: ResolvedConfig,
   base: string,
   git: ReadOnlyReviewRepository,
 ): Promise<readonly string[] | undefined> {
   try {
-    return (await computeCatalogueChanges(config, base, git)).changedIds;
+    return (await computeCatalogueChanges(config, base, git)).changedEntries;
   } catch (error) {
     if (error instanceof MoklyError && error.code === "config-invalid")
       throw error;
@@ -68,18 +68,24 @@ export async function computeCatalogueChanges(
         : undefined),
     acceptedEvidence,
   );
-  const { baseline, changedIds } = componentChanges;
-  const removedEntries = removedManifestEntries(manifest, baseline);
+  const { baseline, changedEntries } = componentChanges;
+  const moves = componentChanges.pairing?.moves ?? [];
+  const removedEntries = removedManifestEntries(manifest, baseline, moves);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    movedEntries: moves.map(({ path, previousPath }) => ({
+      path,
+      previousPath,
+    })),
     componentChanges,
     baseRef: base,
     baseCommit: commit,
     removedEntries,
-    changedIds: [
+    changedEntries: [
       ...new Set([
-        ...(changedIds ?? []),
-        ...removedEntries.map(({ entry }) => entry.id),
+        ...(changedEntries ?? []),
+        ...moves.map((move) => move.path),
+        ...removedEntries.map(({ entry }) => entry.path),
       ]),
     ].sort(),
   };

@@ -11,16 +11,16 @@ import type {
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
 
-import { isAuthoringSource } from "../build/source_inventory.js";
-import { isInside, toPosixPath } from "../config/paths.js";
+import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
+import { documentResourceIndex } from "../documents/resource_references.js";
 import { MoklyError } from "../errors.js";
-import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
   type OptionalReviewAssetReader,
+  type ReviewAssetReader,
 } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
 import type { ChangeEvidence } from "../review/change_evidence.js";
@@ -30,16 +30,34 @@ import {
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "../review/ignore.js";
+import { catalogueLinkNormalizer } from "../review/moves/links.js";
+import {
+  readMoveResources,
+  type MoveResources,
+} from "../review/moves/resources.js";
+import type { MovePairing } from "../review/moves/types.js";
 
-import { documentPairs, type DocumentPair } from "./changed_document_pairs.js";
+import {
+  publicChangedRoutes,
+  documentPairs,
+  type DocumentPair,
+} from "./changed_document_pairs.js";
 import { ChangedResourceGraph } from "./changed_resources.js";
 import { classifiedScreenCss } from "./classified_css.js";
+import { contentResourceEvidence } from "./content_resource_evidence.js";
 
 /** Material membership and per-view resource evidence from one traversal. */
 export interface ChangedContent {
   changedPaths: readonly string[];
   screens: readonly ScreenResourceEvidence[];
   pages: readonly PageResourceEvidence[];
+}
+
+/** Reuse the comparison's accepted pairing and retained baseline reads. */
+export interface ChangedContentComparison {
+  pairing?: MovePairing;
+  beforeReader?: ReviewAssetReader;
+  resources?: MoveResources;
 }
 
 /**
@@ -57,6 +75,7 @@ export async function changedContentPaths(
     config,
   ),
   documents: "all" | "pages" = "all",
+  comparison?: ChangedContentComparison,
 ): Promise<readonly string[]> {
   return (
     await classifyChangedContent(
@@ -68,6 +87,7 @@ export async function changedContentPaths(
       changedPaths,
       headReader,
       documents,
+      comparison,
     )
   ).changedPaths;
 }
@@ -84,36 +104,52 @@ export async function classifyChangedContent(
     config,
   ),
   documents: "all" | "pages" = "all",
+  comparison?: ChangedContentComparison,
   css: CssResourceAnalysis = new CssResourceAnalysis(),
   classified?: ReviewResultV5,
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
-  const publicChanges = new Set(
-    changedPaths.flatMap((changed) => {
-      const candidate = path.resolve(config.repoRoot, changed);
-      if (
-        !isInside(config.mockupsDir, candidate) ||
-        isAuthoringSource(candidate, config, "exclusions") !== undefined
-      )
-        return [];
-      const route = toPosixPath(path.relative(config.mockupsDir, candidate));
-      return route === MANIFEST_NAME ||
-        EARLIER_MANIFEST_NAMES.includes(route as never)
-        ? []
-        : [route];
-    }),
-  );
+  const publicChanges = publicChangedRoutes(changedPaths, config);
   const derived = config.generatedOutput === "derived";
-  if (!derived && publicChanges.size === 0)
+  if (
+    !derived &&
+    publicChanges.size === 0 &&
+    !comparison?.pairing?.moves.length
+  )
     return { changedPaths: [], screens: [], pages: [] };
-  const pairs = documentPairs(manifest, baseline, publicChanges, documents);
+  const moves = comparison?.pairing?.moves ?? [];
+  const pairs = documentPairs(
+    manifest,
+    baseline,
+    publicChanges,
+    documents,
+    moves,
+  );
   if (derived) for (const pair of pairs) pair.changed = true;
-  const baseReader = new GitReviewAssetReader(
-    baselineResourceConfig(config, baseline),
-    git,
-    commit,
-    prefix,
+  const baseReader =
+    comparison?.beforeReader ??
+    new GitReviewAssetReader(
+      baselineResourceConfig(config, baseline),
+      git,
+      commit,
+      prefix,
+    );
+  const identities =
+    comparison?.resources ??
+    (
+      await readMoveResources(
+        baseline.entries,
+        manifest.entries,
+        baseReader,
+        headReader,
+      )
+    ).paired(baseline.entries, manifest.entries, moves);
+  const links = catalogueLinkNormalizer(
+    baseline.entries,
+    manifest.entries,
+    moves,
+    identities,
   );
   const result = new Set<string>();
   const normalizedDocuments = new Map<string, string>();
@@ -128,7 +164,14 @@ export async function classifyChangedContent(
   ) => {
     if (!batch.length) return;
     const bases = await timeAsync("review.base-documents", () =>
-      baseReader.readMany(batch.map((pair) => pair.base)),
+      baseReader.readMany
+        ? baseReader.readMany(batch.map((pair) => pair.base))
+        : Promise.all(
+            batch.map(
+              async (pair) =>
+                [pair.base, await baseReader.read(pair.base)] as const,
+            ),
+          ).then((entries) => new Map(entries)),
     );
     for (const pair of batch) {
       const base = bases.get(pair.base);
@@ -141,9 +184,20 @@ export async function classifyChangedContent(
       const after =
         headDocuments.get(pair.head) ??
         Buffer.from(await headReader.read(pair.head)).toString("utf8");
-      const normalized = normalizeReviewPair(before, after, pair.context);
-      normalizedDocuments.set(pair.head, normalized.head);
-      normalizedBases.set(pair.head, normalized.base);
+      const normalized = normalizeReviewPair(
+        before,
+        after,
+        pair.context,
+        links(pair.base, pair.head),
+      );
+      normalizedDocuments.set(
+        pair.head,
+        normalized.resourceHead ?? normalized.head,
+      );
+      normalizedBases.set(
+        pair.head,
+        normalized.resourceBase ?? normalized.base,
+      );
       if (normalized.base !== normalized.head) {
         result.add(repoPath(pair.head));
         if (derived) publicChanges.add(pair.head);
@@ -165,6 +219,11 @@ export async function classifyChangedContent(
     normalizedDocuments,
     css,
     derived,
+    {
+      before: documentResourceIndex(baseline.entries),
+      after: documentResourceIndex(manifest.entries),
+    },
+    identities,
   );
   await timeAsync("review.compare-screens", async () => {
     for (let offset = 0; offset < pairs.length; offset += 32) {
@@ -207,69 +266,24 @@ export async function classifyChangedContent(
         );
         if (evidence.reasons?.length || evidence.resourceChanged)
           result.add(repoPath(pair.head));
-        if (
-          pair.pageId &&
-          (evidence.reasons?.length || evidence.excludedResources?.length)
-        )
-          pages.push({
-            id: pair.pageId,
-            ...(evidence.reasons
-              ? {
-                  reasons: evidence.reasons.map((reason) => ({
-                    ...reason,
-                    path: repoPath(reason.path),
-                  })),
-                }
-              : {}),
-            ...(evidence.excludedResources
-              ? {
-                  excludedResources: evidence.excludedResources.map(
-                    (resource) => ({
-                      ...resource,
-                      path: repoPath(resource.path),
-                    }),
-                  ),
-                }
-              : {}),
-          });
-        if (
-          pair.view &&
-          (evidence.reasons?.length || evidence.excludedResources?.length)
-        ) {
-          const { id, viewport, colorScheme } = pair.view;
-          const views = screens.get(id) ?? [];
-          views.push({
-            viewport,
-            colorScheme,
-            ...(evidence.reasons
-              ? {
-                  reasons: evidence.reasons.map((reason) => ({
-                    ...reason,
-                    path: repoPath(reason.path),
-                  })),
-                }
-              : {}),
-            ...(evidence.excludedResources
-              ? {
-                  excludedResources: evidence.excludedResources.map(
-                    (resource) => ({
-                      ...resource,
-                      path: repoPath(resource.path),
-                    }),
-                  ),
-                }
-              : {}),
-          });
-          screens.set(id, views);
+        if (!evidence.reasons?.length && !evidence.excludedResources?.length)
+          continue;
+        const projected = contentResourceEvidence(evidence, repoPath);
+        if (pair.pagePath) pages.push({ path: pair.pagePath, ...projected });
+        if (pair.view) {
+          const { path, viewport, colorScheme } = pair.view;
+          const views = screens.get(path) ?? [];
+          views.push({ viewport, colorScheme, ...projected });
+          screens.set(path, views);
         }
       }
     }
   });
   return {
     changedPaths: [...result].sort(),
-    pages: pages.sort((a, b) => (a.id < b.id ? -1 : 1)),
+    pages: pages.sort((a, b) => (a.path < b.path ? -1 : 1)),
     screens: [...screens.keys()]
       .sort()
-      .map((id) => ({ id, views: screens.get(id)! })),
+      .map((path) => ({ path, views: screens.get(path)! })),
   };
 }

@@ -29,7 +29,10 @@ test("Review fast and complete paths agree for owned component CSS", async (t) =
           "<button data-viewport=",
           '<button className="owned-action" data-viewport=',
         )
-        .replace('id: "action",', 'id: "action", stylesheets: ["owned.css"],'),
+        .replace(
+          'path: "action",',
+          'path: "action", stylesheets: ["owned.css"],',
+        ),
   });
   await fixture.append(".owned-action { padding: 2px; }", "owned.css");
   const result = await equivalentReview(fixture);
@@ -38,7 +41,7 @@ test("Review fast and complete paths agree for owned component CSS", async (t) =
     result.changes.some(
       (entry) =>
         entry.kind === "component" &&
-        (entry.after ?? entry.before)?.id === "action",
+        (entry.after ?? entry.before)?.path === "action",
     ),
   );
 });

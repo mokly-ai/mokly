@@ -18,7 +18,7 @@ interface CatalogueRequestHandlerInput {
   activity: ForegroundActivity;
   activeCatalogue(): CatalogueRequestArguments[3];
   assets: CatalogueRequestArguments[8];
-  changedIds(): readonly string[] | undefined;
+  changedEntries(): readonly string[] | undefined;
   changesStatus(): ChangesStatus;
   componentChanges(): CatalogueRequestArguments[11];
   config: ResolvedConfig;
@@ -58,7 +58,7 @@ export function catalogueRequestHandler(
       return;
     }
     const requestedVersion = input.updateVersion();
-    const requestedChanges = input.changedIds();
+    const requestedChanges = input.changedEntries();
     void handleCatalogueRequest(
       request.url ?? "/",
       request.method ?? "GET",

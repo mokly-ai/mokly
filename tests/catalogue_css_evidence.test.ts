@@ -25,7 +25,7 @@ test("catalogue v4 carries comparison rule evidence on screen and saved componen
     reasons: result.screens[0]!.views[0]!.reasons,
   });
   const variant = model.components.find(
-    (entry) => entry.id === "action-default",
+    (entry) => entry.path === "action/default",
   )!;
   assert.ok("views" in variant);
   assert.deepEqual(variant.views[0]!.resourceEvidence, {

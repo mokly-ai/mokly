@@ -9,7 +9,8 @@ import type {
   ObjectPropSchema,
 } from "@mokly/viewer";
 
-import type { EntryInput } from "../authoring/types.js";
+import type { COMPONENT_REGISTRATION } from "../authoring/markers.js";
+import type { EntryInput, DefinitionBrand } from "../authoring/types.js";
 
 export interface ComponentRenderContext {
   viewport: Viewport;
@@ -23,7 +24,8 @@ export type ComponentProps<
 export interface ComponentVariant<P> {
   dependencies?: never;
   ownedDependencies?: never;
-  id: string;
+  slug: string;
+  movedFrom?: string;
   title: string;
   description?: string;
   props: P;
@@ -54,11 +56,8 @@ export interface ComponentInput<
 }
 
 /** Runtime definition retains the adapter and slots only inside the consumer graph. */
-export interface ComponentDefinition extends EntryInput {
-  readonly __viaDefine: true;
-  definedIn?: string;
+export interface ComponentDefinition extends EntryInput, DefinitionBrand {
   kind: "component";
-  navPath: readonly string[];
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
@@ -72,11 +71,9 @@ export interface ComponentDefinition extends EntryInput {
 }
 
 /** One saved component state flattened into the catalogue beside its parent. */
-export interface ComponentVariantDefinition extends EntryInput {
-  readonly __viaDefine: true;
-  definedIn?: string;
+export interface ComponentVariantDefinition
+  extends EntryInput, DefinitionBrand {
   kind: "component";
-  navPath: readonly string[];
   variantOf: string;
   props: Readonly<Record<string, unknown>>;
   suppliedSlots: readonly string[];
@@ -99,6 +96,7 @@ export interface RegisteredComponent<
   S extends ObjectPropSchema,
   Slots extends readonly string[],
 > {
+  readonly [COMPONENT_REGISTRATION]: true;
   entries: readonly [ComponentDefinition, ...ComponentVariantDefinition[]];
   Component: ComponentType<
     ComponentProps<S, Slots> & { moklyInstance?: string }

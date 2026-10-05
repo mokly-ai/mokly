@@ -1,3 +1,5 @@
+import { sameFrameResource } from "./same_origin_identity.js";
+
 /** Private local transport. Cross-origin mounts never enter this module. */
 export interface LocalFrameAccess {
   document(): Document | null;
@@ -11,18 +13,6 @@ export function localFrameAccess(frame: HTMLIFrameElement): LocalFrameAccess {
     pathname: () => frame.contentWindow?.location.pathname,
     replace: (url) => frame.contentWindow?.location.replace(url.href),
   };
-}
-
-function sameFrameResource(documentUrl: string, expected: URL): boolean {
-  const actual = new URL(documentUrl);
-  return (
-    actual.origin === expected.origin &&
-    !actual.username &&
-    !actual.password &&
-    normalizedHtmlPath(actual.pathname) ===
-      normalizedHtmlPath(expected.pathname) &&
-    actual.search === expected.search
-  );
 }
 
 export function recordedFrameResource(
@@ -42,8 +32,4 @@ export function recordedFrameResource(
   } catch {
     return false;
   }
-}
-
-function normalizedHtmlPath(pathname: string): string {
-  return pathname.endsWith(".html") ? pathname.slice(0, -5) : pathname;
 }

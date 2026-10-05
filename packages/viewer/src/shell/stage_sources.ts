@@ -20,14 +20,14 @@ export function framePath(path: string, fragment?: string): string {
 }
 
 export function frameSource(
-  entry: { id: string; kind: "component" | "screen" },
+  entry: { path: string; kind: "component" | "screen" },
   view: ShellCatalogueView | undefined,
   fragment?: string,
   stepIndex?: number,
 ): string | undefined {
   if (!view) return;
   return framePath(
-    `static/${viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme)}`,
+    `static/${viewRoute(entry.path, view.viewport, view.colorScheme)}`,
     stepIndex === undefined || stepIndex === 0 ? fragment : undefined,
   );
 }
@@ -42,7 +42,7 @@ export function shellFrameUsage(
 
 export function generatedView(
   views: readonly GeneratedComponentView[] | undefined,
-  variantId: string | undefined,
+  variantPath: string | undefined,
   viewport: "desktop" | "mobile",
   colorScheme: "dark" | "light",
 ): GeneratedComponentView | undefined {
@@ -50,7 +50,7 @@ export function generatedView(
     (view) =>
       view.viewport === viewport &&
       view.colorScheme === colorScheme &&
-      (view.variantId === undefined || view.variantId === variantId),
+      (view.variantPath === undefined || view.variantPath === variantPath),
   );
 }
 

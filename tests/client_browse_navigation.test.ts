@@ -26,13 +26,14 @@ import {
   fixtureShellState,
 } from "./helpers/viewer_catalogue.js";
 
-const welcome = leaf("welcome", "screens/welcome.html", "Welcome", [
+const noTitles = (): readonly string[] => [];
+const welcome = leaf("welcome", "welcome/index.html", "Welcome", [
   "forms",
   "onboarding",
 ]);
 const details = leaf(
   "transactions-list-transfer-ready",
-  "screens/details.html",
+  "details/index.html",
   "Details",
   ["forms"],
 );
@@ -40,36 +41,39 @@ const glossary = leaf("glossary", "docs/glossary.html", "Glossary");
 
 test("stable folder keys preserve independent disclosure values", () => {
   const disclosures = {
-    "folder:pages:alpha": false,
-    "folder:pages:beta": true,
+    "folder:specs:alpha": false,
+    "folder:specs:beta": true,
   };
-  assert.deepEqual(openDisclosures(disclosures, ["folder:pages:alpha"]), {
-    "folder:pages:alpha": true,
-    "folder:pages:beta": true,
+  assert.deepEqual(openDisclosures(disclosures, ["folder:specs:alpha"]), {
+    "folder:specs:alpha": true,
+    "folder:specs:beta": true,
   });
 });
 
-test("legacy label paths cannot match current disclosure keys", () => {
+test("label paths and earlier section ids naming a current folder are ignored", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery({ "/Example/Screens": false }) },
+    initial: {
+      recovery: recovery({ "/product": false, "folder:pages:product": false }),
+    },
   });
-  assert.equal(state.disclosures["folder:pages:Product"], true);
+  assert.equal(state.disclosures["folder:specs:product"], true);
 });
 
-test("obsolete keys do not discard a current folder preference", () => {
+test("earlier keys do not discard a current folder preference", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        "legacy:example": false,
-        "collection:Product": false,
-        "folder:pages:Product": false,
+        "legacy:product": true,
+        "collection:product": true,
+        "folder:pages:product": true,
+        "folder:specs:product": false,
       }),
     },
   });
-  assert.equal(state.disclosures["folder:pages:Product"], false);
-  assert.equal(state.disclosures["folder:components:Product"], true);
+  assert.equal(state.disclosures["folder:specs:product"], false);
+  assert.equal(state.disclosures["folder:components:components"], true);
 });
 
 test("removed pages appear only in Changes while removed screens remain in All", () => {
@@ -131,7 +135,7 @@ test("free text matches untagged rows and structured entry ids", () => {
 test("a parent remains visible when a filtered variant matches", () => {
   const failure = leaf(
     "welcome-failure",
-    "screens/welcome-failure.html",
+    "welcome-failure/index.html",
     "Failure",
     ["errors"],
   );
@@ -149,11 +153,7 @@ test("a parent remains visible when a filtered variant matches", () => {
 
 test("a removed variant is hidden in All and visible in Changes", () => {
   const removed = {
-    ...leaf(
-      "welcome-legacy",
-      "screens/welcome-legacy.html",
-      "Legacy · Removed",
-    ),
+    ...leaf("welcome-legacy", "welcome-legacy/index.html", "Legacy · Removed"),
     removedVariant: true,
   };
   const context = navigationContext([removed.entryId]);
@@ -168,24 +168,24 @@ test("a removed variant is hidden in All and visible in Changes", () => {
 test("an active variant opens its persisted list and ancestry", () => {
   const failure = leaf(
     "welcome-failure",
-    "screens/welcome-failure.html",
+    "welcome-failure/index.html",
     "Failure",
   );
   const section: NavSectionNode = {
     children: [{ ...welcome, variants: [failure] }],
-    id: "pages",
-    key: "section:pages",
-    label: "Pages",
+    id: "specs",
+    key: "section:specs",
+    label: "Specs",
   };
   const sections = [section];
 
   assert.equal(
-    defaultDisclosures(sections, failure.entryId)["variants:pages:welcome"],
+    defaultDisclosures(sections, failure.entryId)["variants:welcome"],
     true,
   );
   assert.deepEqual(disclosurePath(sections, failure.entryId), [
-    "section:pages",
-    "variants:pages:welcome",
+    "section:specs",
+    "variants:welcome",
   ]);
 });
 
@@ -193,20 +193,26 @@ test("navigation clears only a query that hides its destination", () => {
   const model = navigationModel();
   const welcomeSelection = {
     ...defaultSelection,
-    screenId: "welcome",
+    screenPath: "welcome",
     tags: ["onboarding"],
   };
-  assert.deepEqual(revealSelection(model, welcomeSelection), welcomeSelection);
   assert.deepEqual(
-    revealSelection(model, { ...welcomeSelection, screenId: "details" }),
-    { ...defaultSelection, screenId: "details" },
+    revealSelection(model, noTitles, welcomeSelection),
+    welcomeSelection,
+  );
+  assert.deepEqual(
+    revealSelection(model, noTitles, {
+      ...welcomeSelection,
+      screenPath: "product/browse/details",
+    }),
+    { ...defaultSelection, screenPath: "product/browse/details" },
   );
 });
 
-function navigationContext(changedIds: readonly string[]): ShellContext {
+function navigationContext(changedEntries: readonly string[]): ShellContext {
   return {
     base: "",
-    changedIds,
+    changedEntries,
     changesStatus: "ready",
     updateVersion: 0,
   };
@@ -234,6 +240,7 @@ function leaf(
     kind: "leaf",
     label,
     tags,
+    title: label,
   };
 }
 
@@ -269,13 +276,13 @@ function navigationModel(): CatalogueReadModel {
     screens: [
       {
         ...template,
-        id: welcome.entryId,
+        path: welcome.entryId,
         tags: welcome.tags ?? [],
         title: welcome.label,
       },
       {
         ...template,
-        id: "details",
+        path: "product/browse/details",
         tags: details.tags ?? [],
         title: details.label,
       },

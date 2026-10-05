@@ -19,16 +19,10 @@ import {
   previews,
 } from "./helpers/design_stacks.js";
 
-const STYLED = "design-component-style-changed";
-const OUTSIDE = "design-component-style-outside";
-const EXCLUDED = "design-component-shared-impact";
-const GALLERY = [
-  "Design",
-  "Mokly design",
-  "Component explorer",
-  "Empty and change states",
-  "Stylesheet evidence",
-];
+const STYLED = "design/components/states/shared-impact/style-changed";
+const OUTSIDE = "design/components/states/shared-impact/style-outside";
+const EXCLUDED = "design/components/states/shared-impact/shared-impact";
+
 const ACTION_VARIANTS = ["Default", "Disabled", "Secondary"];
 
 type Document = Awaited<ReturnType<typeof designDocument>>["document"];
@@ -89,22 +83,25 @@ test("the stylesheet evidence gallery holds three component stylesheet stories",
   const gallery = manifest.entries.filter(
     (entry) =>
       entry.kind === "screen" &&
-      entry.navPath.join(" › ") === GALLERY.join(" › "),
+      entry.path.startsWith("design/components/states/shared-impact/"),
   );
-  assert.deepEqual(gallery.map((entry) => [entry.id, entry.title]).sort(), [
+  assert.deepEqual(gallery.map((entry) => [entry.path, entry.title]).sort(), [
     [EXCLUDED, "Component with excluded styles"],
     [STYLED, "Component with changed styles"],
     [OUTSIDE, "Styles outside a changed component"],
   ]);
   for (const entry of gallery)
     if (entry.kind === "screen")
-      assert.deepEqual(entry.colorSchemes, ["light"], entry.id);
+      assert.deepEqual(entry.colorSchemes, ["light"], entry.path);
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: a component changed by its own styles lists its consumers as affected`, async () => {
     const { document, route } = await designDocument(STYLED, viewport);
-    assert.equal(textContent(byClass(document, "mbk-idchip")[0]!), "#action");
+    assert.equal(
+      textContent(byClass(document, "mbk-pathchip")[0]!),
+      "example/components/action",
+    );
     assert.deepEqual(
       byClass(document, "ce-change-status").map((node) => textContent(node)),
       ["Changed"],
@@ -124,13 +121,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
         attribute(link, "data-mokly-link"),
       ]),
       [
-        ["Welcome", "design-component-inspection-details"],
-        ["Details", "design-component-inspection-consumer"],
+        ["Welcome", "design/components/inspection/inspection-details"],
+        ["Details", "design/components/inspection/inspection-consumer"],
       ],
     );
     if (viewport === "desktop") {
-      assert.deepEqual(navRows(document, "pages"), [], "no screen rows");
+      assert.deepEqual(navRows(document, "specs"), [], "no screen rows");
       assert.deepEqual(navRows(document, "components"), [
+        ["Example", false, undefined, undefined],
         ["Components", false, undefined, undefined],
         ["Action", true, STYLED, "page"],
         ...ACTION_VARIANTS.map((label) => [label, true, undefined, undefined]),
@@ -173,8 +171,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: a changed style outside the changed component gives the screen its own row`, async () => {
     const { document, route } = await designDocument(OUTSIDE, viewport);
     assert.equal(
-      textContent(byClass(document, "mbk-idchip")[0]!),
-      "#example-welcome",
+      textContent(byClass(document, "mbk-pathchip")[0]!),
+      "example/screens/welcome",
     );
     assert.deepEqual(
       byClass(document, "ce-change-status").map((node) => textContent(node)),
@@ -182,11 +180,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     assert.equal(openPanel(document), "info", route);
     if (viewport === "desktop") {
-      assert.deepEqual(navRows(document, "pages"), [
+      assert.deepEqual(navRows(document, "specs"), [
+        ["Example", false, undefined, undefined],
         ["Screens", false, undefined, undefined],
         ["Welcome", true, OUTSIDE, "page"],
       ]);
       assert.deepEqual(navRows(document, "components"), [
+        ["Example", false, undefined, undefined],
         ["Components", false, undefined, undefined],
         ["Action", true, STYLED, undefined],
         ...ACTION_VARIANTS.map((label) => [label, true, undefined, undefined]),

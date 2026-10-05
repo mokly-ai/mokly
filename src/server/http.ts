@@ -3,31 +3,23 @@ import http, { type ServerResponse } from "node:http";
 import { createCatalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
-import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timeAsync, timeSync } from "../diagnostics/timings.js";
+import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import { parseManifest } from "../registry/manifest.js";
+import { includeMovedEntries } from "../review/moves/entries.js";
 
-import { catalogueAtBaseline } from "./baseline_catalogue.js";
-import {
-  catalogueSnapshotForConfig,
-  loadServedCatalogueSnapshot,
-  loadLiveCatalogueSnapshot,
-} from "./catalogue_snapshot.js";
+import { catalogueWithChanges } from "./baseline_catalogue.js";
+import { initialCatalogueSnapshot } from "./catalogue_snapshot.js";
 import { advanceCatalogueState } from "./catalogue_update.js";
-import {
-  loadBrowserClientModules,
-  loadBrowserNavigationModules,
-  loadShellFontAssets,
-} from "./client_modules.js";
+import { loadServeBrowserAssets } from "./client_modules.js";
 import { ComponentChangeCache } from "./component_change_cache.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { liveDocumentService } from "./demand/service.js";
 import {
   acceptedGeneratedStatic,
-  expectedGeneratedRoutes,
+  initialGeneratedStatic,
 } from "./generated_static.js";
 import { catalogueRequestHandler } from "./http_request_handler.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
@@ -35,6 +27,7 @@ import type { RunningServer, ServerOptions } from "./http_types.js";
 import { listenOnAvailablePort } from "./ports.js";
 import { LivePublicCatalogue } from "./public_catalogue.js";
 import type { PublicComparison } from "./public_review.js";
+import { RenderMoveTargets } from "./render_moves.js";
 import { ReviewRoutes } from "./review_routes.js";
 import {
   livePublicInput,
@@ -48,68 +41,52 @@ export async function startCatalogueServer(
   config: ResolvedConfig,
   options: ServerOptions,
 ): Promise<RunningServer> {
-  const snapshot =
-    options.snapshot ??
-    (options.manifest?.schemaVersion === "live-index-1"
-      ? await loadLiveCatalogueSnapshot(config, options.manifest)
-      : await loadServedCatalogueSnapshot(
-          config,
-          options.manifest ||
-            options.componentChanges ||
-            options.componentChangeSource
-            ? undefined
-            : options.review
-              ? options.base
-              : undefined,
-          options.manifest,
-          options.review?.repository,
-        ));
-  const validated = catalogueSnapshotForConfig(snapshot, config);
+  const validated = await initialCatalogueSnapshot(config, options);
   const changes = validated.changes;
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
-  const expectedGenerated = await expectedGeneratedRoutes(
+  let acceptedGenerated = await initialGeneratedStatic(
     config,
     options.componentRuntime,
   );
-  let acceptedGenerated: ReadonlyMap<string, GeneratedFile> =
-    acceptedGeneratedStatic(
-      config,
-      options.componentRuntime,
-      expectedGenerated,
-    );
+  const movedLinks = new RenderMoveTargets();
   let controls = options.componentRuntime
     ? new ComponentRenderService(
         options.componentRuntime,
+        movedLinks.read,
         options.onBuildWarning,
       )
     : undefined;
   const activity = new ForegroundActivity(options.onForeground ?? (() => {}));
   const createDocuments = (runtime: ComponentRuntime) =>
-    liveDocumentService(runtime, activity.channel(), (document) => {
-      document.warnings?.forEach((warning) =>
-        options.onBuildWarning?.(warning),
-      );
-      if (runtime.generation === controls?.capability().generation)
-        publicCatalogue.acceptDocument(document, publicInput(), contentVersion);
-      options.onPreviewResources?.({
-        generation: runtime.generation,
-        documents: [
-          [document.route, document.html],
-          ...(document.watchDocuments ?? []),
-        ],
-      });
-    });
+    liveDocumentService(
+      runtime,
+      activity.channel(),
+      (document) => {
+        document.warnings?.forEach((warning) =>
+          options.onBuildWarning?.(warning),
+        );
+        if (runtime.generation === controls?.capability().generation)
+          publicCatalogue.acceptDocument(
+            document,
+            publicInput(),
+            contentVersion,
+          );
+        options.onPreviewResources?.({
+          generation: runtime.generation,
+          documents: [
+            [document.route, document.html],
+            ...(document.watchDocuments ?? []),
+          ],
+        });
+      },
+      movedLinks.read,
+    );
   let documents = options.componentRuntime
     ? createDocuments(options.componentRuntime)
     : undefined;
-  const clientModules = timeSync("server.client-modules", () =>
-    loadBrowserClientModules(),
-  );
-  const navigationModules = timeSync("server.navigation-modules", () =>
-    loadBrowserNavigationModules(),
-  );
-  const fontAssets = timeSync("server.fonts", () => loadShellFontAssets());
+  const { clientModules, navigationModules, fontAssets } =
+    loadServeBrowserAssets();
   const streams = new Set<ServerResponse>();
   const reviewRoutes = options.review
     ? new ReviewRoutes(
@@ -130,20 +107,27 @@ export async function startCatalogueServer(
     : undefined;
   let componentChanges =
     options.componentChanges ??
-    snapshot.componentChanges ??
+    validated.componentChanges ??
     (options.review && options.componentChangeSource
       ? await new ComponentChangeCache(options.componentChangeSource).read(
           options.updateVersion ?? 1,
         )
       : undefined);
   let activeCatalogue = componentChanges
-    ? catalogueAtBaseline(manifest, componentChanges.baseline)
+    ? catalogueWithChanges(manifest, componentChanges)
     : catalogue;
-  let changedIds =
-    changes?.changedIds ?? options.changedIds ?? componentChanges?.changedIds;
+  let changedEntries =
+    changes?.changedEntries ??
+    options.changedEntries ??
+    componentChanges?.changedEntries;
+  changedEntries = includeMovedEntries(
+    changedEntries,
+    componentChanges?.pairing?.moves,
+  );
   let changesStatus: ChangesStatus =
     options.changesStatus ??
-    (changedIds || componentChanges ? "ready" : "unavailable");
+    (changedEntries || componentChanges ? "ready" : "unavailable");
+  movedLinks.accept(controls, componentChanges, changesStatus);
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
   let publicComparison: PublicComparison | undefined;
@@ -165,11 +149,11 @@ export async function startCatalogueServer(
     livePublicInput(
       activeCatalogue,
       publicChangesStatus(
-        changedIds,
+        changedEntries,
         componentChanges !== undefined,
         changesStatus,
       ),
-      changedIds,
+      changedEntries,
       componentChanges,
       comparison,
     );
@@ -184,7 +168,7 @@ export async function startCatalogueServer(
       activeCatalogue: () => activeCatalogue,
       assets: { clientModules, fontAssets, navigationModules },
       acceptedGenerated: () => acceptedGenerated,
-      changedIds: () => changedIds,
+      changedEntries: () => changedEntries,
       changesStatus: () => changesStatus,
       componentChanges: () => componentChanges,
       config,
@@ -215,7 +199,7 @@ export async function startCatalogueServer(
       parseManifest(complete);
       const nextCatalogue = createCatalogue(complete);
       const nextActive = componentChanges
-        ? catalogueAtBaseline(complete, componentChanges.baseline)
+        ? catalogueWithChanges(complete, componentChanges)
         : nextCatalogue;
       publicCatalogue.publish(
         { ...publicInput(), catalogue: nextActive },
@@ -235,6 +219,7 @@ export async function startCatalogueServer(
     },
     port: address.port,
     replaceComponentRuntime(runtime): void {
+      movedLinks.clear();
       acceptedGenerated = acceptedGeneratedStatic(config, runtime);
       publicCatalogue.clearUsage();
       void documents?.close();
@@ -246,14 +231,18 @@ export async function startCatalogueServer(
       }
       if (controls) controls.replace(runtime);
       else
-        controls = new ComponentRenderService(runtime, options.onBuildWarning);
+        controls = new ComponentRenderService(
+          runtime,
+          movedLinks.read,
+          options.onBuildWarning,
+        );
     },
     publishUpdate(update = {}): void {
       const next = advanceCatalogueState(
         {
           catalogue,
           activeCatalogue,
-          changedIds,
+          changedEntries,
           componentChanges,
           changesStatus,
           updateVersion,
@@ -266,11 +255,11 @@ export async function startCatalogueServer(
         livePublicInput(
           next.activeCatalogue,
           publicChangesStatus(
-            next.changedIds,
+            next.changedEntries,
             next.componentChanges !== undefined,
             next.changesStatus,
           ),
-          next.changedIds,
+          next.changedEntries,
           next.componentChanges,
           undefined,
         ),
@@ -279,12 +268,15 @@ export async function startCatalogueServer(
       );
       ({
         activeCatalogue,
-        changedIds,
+        changedEntries,
         componentChanges,
         changesStatus,
         updateVersion,
         contentVersion,
       } = next);
+      if (Object.hasOwn(update, "componentChanges"))
+        movedLinks.accept(controls, componentChanges, changesStatus);
+      else if (changesStatus !== "ready") movedLinks.clear();
       reviewRoutes?.invalidate();
       publicComparison = undefined;
       const payload = `event: update\ndata: ${updateVersion}\n\n`;

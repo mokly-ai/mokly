@@ -8,7 +8,7 @@ import {
   classifyFixtureWithSources,
 } from "./helpers/component_fast_path.js";
 import {
-  changedIds,
+  changedEntries,
   cssMembershipFixture,
   membershipSource,
 } from "./helpers/css_membership_fixture.js";
@@ -22,10 +22,10 @@ test("wrapper CSS gives saved views page rows without parent changes or affected
     before: ".frame{color:red}",
     after: ".frame{color:blue}",
   });
-  assert.deepEqual(changedIds(result), [
-    "action-default",
+  assert.deepEqual(changedEntries(result), [
+    "action/default",
     "checkout",
-    "toolbar-default",
+    "toolbar/default",
   ]);
   assert.deepEqual(result.affectedConsumers, []);
 });
@@ -40,9 +40,9 @@ test("a selector matching both component and page elements retains the exact out
     before: ".action{color:red}",
     after: ".action{color:blue}",
   });
-  assert.deepEqual(changedIds(result), [
+  assert.deepEqual(changedEntries(result), [
     "action",
-    "action-default",
+    "action/default",
     "checkout",
   ]);
   assert.deepEqual(
@@ -58,8 +58,8 @@ test("kept matches select only matching variants across all viewports and scheme
       'properties: {active:{schema:{kind:"boolean"}}} }, render: (props, context) => <button className={props.active && context.viewport === "desktop" && context.colorScheme === "dark" ? "action" : "other"}>',
     )
     .replace(
-      'id: "action-default", title: "Default", props: {}',
-      'id: "action-default", title: "Default", props: {active:true}}, {id: "action-other", title: "Other", props: {active:false}',
+      'slug: "default", title: "Default", props: {}',
+      'slug: "default", title: "Default", props: {active:true}}, {slug: "other", title: "Other", props: {active:false}',
     )
     .replaceAll("<action.Component />", "<action.Component active />");
   const { result } = await cssMembershipFixture(t, {
@@ -68,8 +68,8 @@ test("kept matches select only matching variants across all viewports and scheme
     before: ".action{color:red}",
     after: ".action{color:blue}",
   });
-  assert.deepEqual(changedIds(result), ["action", "action-default"]);
-  const action = result.components.find((entry) => entry.id === "action")!;
+  assert.deepEqual(changedEntries(result), ["action", "action/default"]);
+  const action = result.components.find((entry) => entry.path === "action")!;
   assert.deepEqual(
     action.variants[0]!.views.map((view) => view.state),
     ["unchanged", "unchanged", "unchanged", "changed"],
@@ -86,7 +86,9 @@ test("missing baseline roots fail instead of becoming page evidence", async (t) 
   });
   const before = structuredClone(input.before);
   const files = new Map(input.beforeFiles);
-  const entry = before.entries.find((entry) => entry.id === "action-default")!;
+  const entry = before.entries.find(
+    (entry) => entry.path === "action/default",
+  )!;
   for (const view of generatedViews(entry)) {
     Object.assign(view.usage!, { ranges: [] });
     files.set(
@@ -118,7 +120,7 @@ test("paired Review-ignore removes root elements before collecting own-page proo
     before: ".action{color:red}",
     after: ".action{color:blue}",
   });
-  assert.deepEqual(changedIds(result), []);
+  assert.deepEqual(changedEntries(result), []);
 });
 
 test("root boundaries rebase when Review-ignore removes only the start marker", async (t) => {
@@ -127,7 +129,7 @@ test("root boundaries rebase when Review-ignore removes only the start marker", 
     `(input.entry.kind === 'component' ? '<!--mokly-review-ignore:start:prefix-->' + renderToStaticMarkup(input.node).replace('<button', '<!--mokly-review-ignore:end:prefix--><button') : renderToStaticMarkup(input.node))`,
   );
   const source = membershipSource
-    .replace("action.entries, toolbar.entries,", "action.entries,")
+    .replace("action.entries, ...toolbar.entries,", "action.entries,")
     .replaceAll("<toolbar.Component />", "<action.Component />");
   const { result } = await cssMembershipFixture(t, {
     source,
@@ -135,14 +137,14 @@ test("root boundaries rebase when Review-ignore removes only the start marker", 
     before: ".action{color:red}",
     after: ".action{color:blue}",
   });
-  assert.deepEqual(changedIds(result), ["action", "action-default"]);
+  assert.deepEqual(changedEntries(result), ["action", "action/default"]);
 });
 
 test("the unchanged fast path validates an explicit root boundary", async (t) => {
   const { input } = await cssMembershipFixture(t, { before: "", after: "" });
   const files = new Map(input.beforeFiles);
   for (const view of generatedViews(
-    input.before.entries.find((entry) => entry.id === "action-default")!,
+    input.before.entries.find((entry) => entry.path === "action/default")!,
   ))
     files.set(
       view.path,
@@ -166,13 +168,13 @@ test("material describes documents even when non-CSS root ownership changes", as
   const { input } = await cssMembershipFixture(t, { before: "", after: "" });
   const after = structuredClone(input.after);
   for (const view of generatedViews(
-    after.entries.find((entry) => entry.id === "action-default")!,
+    after.entries.find((entry) => entry.path === "action/default")!,
   ))
     Object.assign(view.usage!, {
       resources: [{ path: "picture.svg", componentIds: ["action"] }],
     });
   const result = await assertFastPathEquivalent({ ...input, after });
-  const views = result.components.find((entry) => entry.id === "action")!
+  const views = result.components.find((entry) => entry.path === "action")!
     .variants[0]!.views;
   assert.ok(views.every((view) => view.state === "changed"));
   assert.ok(views.every((view) => view.material === undefined));

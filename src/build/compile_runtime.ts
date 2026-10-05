@@ -11,5 +11,14 @@ export async function compileRuntime(
 ): Promise<Compilation> {
   const graph = runtimeGraph(runtime);
   rememberBundle(graph, runtime.bundle);
-  return compileCatalogue(runtime.config, { graph, checkpoint }, onWarning);
+  return compileCatalogue(
+    runtime.config,
+    {
+      graph,
+      checkpoint,
+      outputSnapshot: runtime.outputSnapshot,
+    },
+    undefined,
+    onWarning,
+  );
 }

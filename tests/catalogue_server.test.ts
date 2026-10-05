@@ -53,7 +53,7 @@ test("catalogue GET/HEAD reads atomic live snapshots without rendering or Git", 
   );
   fixture.server.publishUpdate({
     kind: "evidence",
-    changedIds: [],
+    changedEntries: [],
     version: 2,
   });
   const complete = await (await fetch(url)).json();
@@ -71,7 +71,7 @@ test("catalogue GET/HEAD reads atomic live snapshots without rendering or Git", 
   assert.equal(changed.changesStatus, "pending");
   fixture.server.publishUpdate({
     kind: "evidence",
-    changedIds: [],
+    changedEntries: [],
     version: 2,
   });
   assert.deepEqual(await (await fetch(url)).json(), changed);
@@ -84,13 +84,13 @@ test("actual view usage refreshes evidence while failed complete candidates reta
   const url = `${fixture.server.url}/__mokly/catalogue.json`;
   const initial = await (await fetch(url)).json();
   const response = await fetch(
-    `${fixture.server.url}/__mokly/views/screens/home.mobile.html?generation=${fixture.runtime.generation}`,
+    `${fixture.server.url}/__mokly/views/home/index.mobile.html?generation=${fixture.runtime.generation}`,
   );
   assert.equal(response.status, 200);
   const rendered = await response.json();
   const visited = await (await fetch(url)).json();
   const home = visited.screens.find(
-    (entry: { id: string }) => entry.id === "home",
+    (entry: { path: string }) => entry.path === "home",
   );
   assert.deepEqual(home.views[0].usage, {
     status: "ready",

@@ -7,16 +7,17 @@ Continuation of [Optional Changes In Publication](./mokly-publication.md).
 With `--include-changes`, publish the existing All/Changes navigation and screen
 comparison controls, including a zero changed count. Retain removed-screen
 metadata, previous-version pages, and comparisons. Current and removed entries
-never share an id.
+never share a path; an entry the [move contract](./mokly-moves.md) pairs stays
+current, labelled Moved, with no removed row.
 Render those removed screens with their Removed badge and no comparison
 controls. Publication packages their baseline views and advertises the
 descriptor defined by [removed previews](./mokly-removed-previews.md), which the
 shell resolves into the previous version.
-Include page impact and removed registered-page states from the
+Include page and document impact and removed page and document states from the
 [shared catalogue snapshot](./mokly-catalogue-changes.md), including flat
-Changes rows after deleting their parents and each removed page's packaged
-preview. Pages have no visual comparisons; screen metadata
-remains supported.
+Changes rows after deleting their parents and each removed page's or
+document's packaged preview. Pages and documents have no visual comparisons;
+screen metadata remains supported.
 
 Resolve the effective base and HEAD once, then pin their merge-base commit for
 both entry impact and screen comparisons. Capture the current catalogue,

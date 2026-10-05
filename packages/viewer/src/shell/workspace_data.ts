@@ -15,13 +15,18 @@ import type { ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
-import type { ShellContext } from "./context.js";
+import { branchPoints } from "./catalogue_branch_point.js";
+import { materialChangedEntries, type ShellContext } from "./context.js";
 import {
   shownComparisonEligible,
   type EntryStatus,
   type ViewStatesBySelection,
 } from "./view_status.js";
-import { workspaceComponent, type WorkspaceEntry } from "./workspace_entry.js";
+import {
+  componentReview,
+  workspaceComponent,
+  type WorkspaceEntry,
+} from "./workspace_entry.js";
 import {
   inputChanges as entryInputChanges,
   type InputChange,
@@ -55,7 +60,7 @@ export interface WorkspaceData {
   entry: WorkspaceEntry;
   /** Parent schema and controls for a component parent or variant route. */
   component?: ManifestComponent;
-  components: readonly Pick<ManifestComponent, "id" | "title">[];
+  components: readonly Pick<ManifestComponent, "path" | "title">[];
   views: readonly GeneratedComponentView[];
   /**
    * Canonically ordered changed views, keyed by saved-variant id for a
@@ -78,7 +83,7 @@ export interface WorkspaceData {
   comparisons: boolean;
   comparisonEligible: boolean;
   removed: boolean;
-  relatedComponents: readonly { id: string; title: string }[];
+  relatedComponents: readonly { path: string; title: string }[];
   inputChanges: readonly InputChange[];
 }
 
@@ -90,6 +95,7 @@ export function workspaceData(
 ): WorkspaceData {
   if (catalogue.publicModel)
     return publicWorkspace(
+      catalogue,
       catalogue.publicModel,
       entry,
       context.comparisons ?? catalogue.publicModel.comparisonUrl !== null,
@@ -102,38 +108,47 @@ export function workspaceData(
     entry.kind === "component" &&
     isManifestComponentVariant(entry) &&
     component === undefined;
-  const componentId =
-    component?.id ?? (orphanVariant ? entry.variantOf : undefined);
+  const componentComparison =
+    entry.kind === "component"
+      ? componentReview(result?.components, component, entry)
+      : undefined;
+  const componentId = component?.path ?? componentComparison?.path;
   const evidenceEntry = component ?? entry;
   const resourceEvidence = snapshot?.screenEvidence?.find(
-    (screen) => screen.id === entry.id,
+    (screen) => screen.path === entry.path,
   )?.views;
-  const baseline = snapshot?.baseline.entries.find(
-    (item) => item.id === evidenceEntry.id,
-  );
+  const baseline =
+    snapshot &&
+    branchPoints(catalogue).baselineEntry(
+      evidenceEntry,
+      snapshot.baseline.entries,
+    );
   const removed = !catalogue.manifest.entries.some(
-    (candidate) => candidate.id === entry.id,
+    (candidate) => candidate.path === entry.path,
   );
   const change = result?.changes.find(
-    (item) => (item.after ?? item.before)?.id === entry.id,
+    (item) => (item.after ?? item.before)?.path === entry.path,
   );
-  const comparison = componentId
-    ? result?.components.find((item) => item.id === componentId)
-    : result?.screens.find((item) => item.id === entry.id);
-  const known = snapshot !== undefined || context.changedIds !== undefined;
+  /** A pure move is in Changes without changing, so it is not material. */
+  const materialChanges = materialChangedEntries(context);
+  const pureMove =
+    change?.previousPath !== undefined && change.reasons.length === 0;
+  const comparison =
+    entry.kind === "component"
+      ? componentComparison
+      : result?.screens.find((item) => item.path === entry.path);
+  const known = snapshot !== undefined || context.changedEntries !== undefined;
   const entryStatus: EntryStatus | undefined = !known
     ? undefined
     : removed
       ? "Removed"
       : snapshot && !baseline
         ? "Added"
-        : change ||
+        : (change && !pureMove) ||
             (entry.kind === "screen" && comparison?.state === "changed") ||
-            context.changedIds?.includes(entry.id)
+            (!pureMove && materialChanges?.includes(entry.path))
           ? "Changed"
           : "Unmodified";
-  const componentComparison =
-    comparison && "variants" in comparison ? comparison : undefined;
   const variantSet = component
     ? workspaceVariants(
         catalogue,
@@ -142,10 +157,10 @@ export function workspaceData(
         componentComparison,
         known,
         !catalogue.manifest.entries.some(
-          (candidate) => candidate.id === component.id,
+          (candidate) => candidate.path === component.path,
         ),
-        entry.id === component.id ? entryStatus : undefined,
-        context.changedIds,
+        entry.path === component.path ? entryStatus : undefined,
+        materialChanges,
       )
     : orphanVariant
       ? standaloneWorkspaceVariant(
@@ -163,13 +178,14 @@ export function workspaceData(
   const variants = variantSet.rows;
   const selectedVariant =
     entry.kind === "component" && isManifestComponentVariant(entry)
-      ? variants.find((variant) => variant.value.id === entry.id)
+      ? variants.find((variant) => variant.value.path === entry.path)
       : undefined;
   const status = selectedVariant?.status ?? entryStatus;
   const inputChanges = entryInputChanges(
     catalogue,
     evidenceEntry,
     baseline,
+    snapshot?.baseline.entries ?? [],
     currentVariants,
     baselineVariants,
   );
@@ -177,8 +193,8 @@ export function workspaceData(
     result?.affectedConsumers
       .filter((item) =>
         item.consumer.kind === "screen"
-          ? item.consumer.id === entry.id
-          : item.consumer.id === componentId,
+          ? item.consumer.path === entry.path
+          : item.consumer.path === componentId,
       )
       .map((item) => item.changedComponentId),
   );
@@ -205,16 +221,16 @@ export function workspaceData(
     inputChanges,
     relatedComponents: (result?.components ?? [])
       .filter((item) => {
-        const routed = catalogue.byId.get(item.id);
-        return relatedIds.has(item.id) && routed?.kind === "component";
+        const routed = catalogue.byPath.get(item.path);
+        return relatedIds.has(item.path) && routed?.kind === "component";
       })
-      .map(({ id, title }) => ({ id, title })),
+      .map(({ path, title }) => ({ path, title })),
     components: [...catalogue.manifest.entries, ...catalogue.removedComponents]
       .filter(
         (item): item is ManifestComponent =>
           item.kind === "component" && !isManifestComponentVariant(item),
       )
-      .map(({ id, title }) => ({ id, title })),
+      .map(({ path, title }) => ({ path, title })),
     views: (component
       ? currentVariants.flatMap((variant) => generatedViews(variant))
       : generatedViews(entry)
@@ -228,13 +244,13 @@ export function workspaceData(
       evidenceEntry,
       context,
       comparison,
-      variants.map(({ value }) => value.id),
+      variants.map(({ value }) => value.path),
     ),
     viewStates: viewStatesBySelection(
       evidenceEntry,
       context,
       comparison,
-      variants.map(({ value }) => value.id),
+      variants.map(({ value }) => value.path),
     ),
     variants,
     usedBy: usedByUsageLinks(catalogue, evidenceEntry),

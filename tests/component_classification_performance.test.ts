@@ -7,7 +7,7 @@ import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -21,7 +21,7 @@ test("component metadata reflects authored paths without a hierarchy projection"
   assert.equal(manifest.schemaVersion, 8);
   const entry = manifest.entries.find((item) => item.kind === "screen");
   assert.ok(entry);
-  assert.notEqual(metadata(entry), metadata({ ...entry, navPath: ["Moved"] }));
+  assert.notEqual(metadata(entry), metadata({ ...entry, path: "other/home" }));
 });
 
 test("component views validate each retained document range index once", async (t) => {
@@ -100,7 +100,7 @@ for (const baseline of ["screens", "components"] as const)
         },
       },
     };
-    const expected = await computeChangedIds(
+    const expected = await computeChangedPaths(
       fixture.config,
       "main",
       fixture.git,
@@ -108,7 +108,7 @@ for (const baseline of ["screens", "components"] as const)
     assert.ok(expected);
 
     assert.deepEqual(
-      await computeChangedIds(fixture.config, "main", git),
+      await computeChangedPaths(fixture.config, "main", git),
       expected,
     );
     const paths = fixture.before.manifest.entries.flatMap((entry) =>
@@ -126,7 +126,7 @@ for (const baseline of ["screens", "components"] as const)
 test("shared classification batches both sides including removed dark variants", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(
-      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );
@@ -198,7 +198,7 @@ test("shared classification batches both sides including removed dark variants",
     assert.deepEqual(reader.reads, [], "prefetched fragments must stay cached");
   }
   assert.equal(
-    expected.components.find((entry) => entry.id === "action")?.variants[1]
+    expected.components.find((entry) => entry.path === "action")?.variants[1]
       ?.state,
     "removed",
   );

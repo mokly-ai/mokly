@@ -1,6 +1,7 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   entryRoute,
+  documentRoute,
   effectiveColorSchemes,
   viewRoute,
   VIEWPORTS,
@@ -30,7 +31,11 @@ import { generatedByteLength, type GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
-import { validateGeneratedOutputPaths } from "./output_paths.js";
+import {
+  captureOutputSnapshot,
+  assertSnapshotRoutes,
+  type OutputSnapshot,
+} from "./output_snapshot.js";
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
@@ -44,22 +49,34 @@ export interface Compilation {
   /** Repository-relative inputs of delivered CSS and asset routes. */
   deliveredStyleSources: readonly string[];
   warnings?: readonly BuildWarning[];
+  /** Accepted authored Markdown bodies, keyed by repository source path. */
+  documentMarkdown?: ReadonlyMap<string, string>;
 }
 
 /** Compile all expected bytes without mutating consumer output. */
 export async function compileCatalogue(
   config: ResolvedConfig,
-  accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
+  accepted?: {
+    graph: LoadedGraph;
+    checkpoint: () => Promise<void>;
+    outputSnapshot: OutputSnapshot;
+  },
+  signal?: AbortSignal,
   onWarning?: (warning: BuildWarning) => void,
 ): Promise<Compilation> {
   return timeAsync("compile", () =>
-    compileMeasured(config, accepted, onWarning),
+    compileMeasured(config, accepted, signal, onWarning),
   );
 }
 
 async function compileMeasured(
   config: ResolvedConfig,
-  accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
+  accepted?: {
+    graph: LoadedGraph;
+    checkpoint: () => Promise<void>;
+    outputSnapshot: OutputSnapshot;
+  },
+  signal?: AbortSignal,
   onWarning?: (warning: BuildWarning) => void,
 ): Promise<Compilation> {
   const warnings: BuildWarning[] = [];
@@ -71,16 +88,17 @@ async function compileMeasured(
   const graph = accepted?.graph ?? (await loadConsumerGraph(config));
   config = {
     ...config,
+    ...graph.discovery,
     entryModules: graph.entrySources,
     sourceFiles: graph.sourceFiles,
   };
   const registry = timeSync("registry.prepare", () =>
-    prepareRegistry(graph.definitions, config, recordWarning),
+    prepareRegistry(graph.definitions, config, graph.documents, recordWarning),
   );
   timingCounts("catalogue", () => ({
     entries: registry.entries.length,
     ...Object.fromEntries(
-      ["screen", "component", "use-case", "page"].map((kind) => [
+      ["screen", "component", "use-case", "page", "document"].map((kind) => [
         kind,
         registry.entries.filter((entry) => entry.kind === kind).length,
       ]),
@@ -124,11 +142,14 @@ async function compileMeasured(
   pending.addHtmlMap(outputs);
   const generatedOwners = new Map<string, string>();
   for (const entry of registry.entries) {
+    if (entry.kind === "document")
+      for (const scheme of config.colorSchemes)
+        generatedOwners.set(
+          documentRoute(entry.path, scheme),
+          entry.sourceRelativePath,
+        );
     if (entry.kind === "page")
-      generatedOwners.set(
-        entryRoute("page", entry.id),
-        entry.sourceRelativePath,
-      );
+      generatedOwners.set(entryRoute(entry.path), entry.sourceRelativePath);
     if (
       entry.kind !== "screen" &&
       !(entry.kind === "component" && isComponentVariantDefinition(entry))
@@ -140,7 +161,7 @@ async function compileMeasured(
           entry,
           config.colorSchemes,
         )) {
-          const route = viewRoute(entry.kind, entry.id, viewport, colorScheme);
+          const route = viewRoute(entry.path, viewport, colorScheme);
           generatedOwners.set(route, entry.sourceRelativePath);
         }
       }
@@ -199,6 +220,7 @@ async function compileMeasured(
       graph.sourceFiles,
       config.colorSchemes,
       componentViews,
+      registry.folders,
     ),
   );
   timeSync("manifest.validate", () => parseManifest(manifest));
@@ -209,26 +231,36 @@ async function compileMeasured(
   timeSync("manifest.serialize", () =>
     outputs.set(MANIFEST_NAME, serializeManifest(manifest)),
   );
-  timeSync("html.links-and-resources", () =>
-    validateHtmlLinks(outputs, config, {
-      pending,
-      parsed: new Map(),
-      onDemand: false,
-    }),
-  );
   const compilationOutputs = new Map<string, GeneratedFile>(outputs);
   for (const [route, content] of graph.styleOutputs)
     compilationOutputs.set(route, content);
-  timeSync("output.paths", () =>
-    validateGeneratedOutputPaths(compilationOutputs.keys(), config),
+  const outputSnapshot =
+    accepted?.outputSnapshot ??
+    (await captureOutputSnapshot(compilationOutputs.keys(), config, signal));
+  assertSnapshotRoutes(outputSnapshot, compilationOutputs.keys());
+  timeSync("html.links-and-resources", () =>
+    validateHtmlLinks(outputs, config, {
+      pending,
+      pendingOrphans: new Set(outputSnapshot.orphanRoutes),
+      parsed: new Map(),
+      onDemand: false,
+    }),
   );
   const compilation = {
     manifest,
     outputs: compilationOutputs,
     deliveredStyleSources: graph.deliveredStyleSources,
     ...(warnings.length ? { warnings } : {}),
+    documentMarkdown: new Map(
+      (graph.documents ?? []).map((entry) => [
+        entry.sourceRelativePath,
+        entry.markdown,
+      ]),
+    ),
   };
-  timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
+  timeSync("runtime.retain", () =>
+    rememberRuntime(compilation, graph, config, outputSnapshot),
+  );
   timingCounts("output", () => ({
     files: compilationOutputs.size,
     views: fragmentViews.size,

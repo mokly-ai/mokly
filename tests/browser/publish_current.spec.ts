@@ -23,8 +23,8 @@ for (const width of [390, 1440]) {
       if (response.status() >= 400) failures.push(response.url());
     });
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto(`${site.url}/view/screens/home.html`);
-    await expect(page).toHaveURL(`${site.url}/view/screens/home.html`);
+    await page.goto(`${site.url}/view/home/`);
+    await expect(page).toHaveURL(`${site.url}/view/home/`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     await expect(
       page.getByRole("group", { name: "Comparison mode" }),
@@ -34,8 +34,8 @@ for (const width of [390, 1440]) {
       await page
         .getByRole("button", { name: "Open catalogue navigation" })
         .click();
-    await page.locator('[data-route="screens/details.html"]').click();
-    await expect(page).toHaveURL(`${site.url}/view/screens/details.html`);
+    await page.locator('[data-route="details/index.html"]').click();
+    await expect(page).toHaveURL(`${site.url}/view/details/`);
     await expect(page.locator("#mb-main h2")).toHaveText("Details");
     await page.goBack();
     await expect(page.locator("#mb-main h2")).toHaveText("Home");

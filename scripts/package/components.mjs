@@ -23,8 +23,8 @@ export async function smokeRegisteredComponents(
     );
   else {
     source = source.replace(
-      'id: "packed-action",',
-      'id: "packed-action", stylesheets: ["component.css"],',
+      'path: "packed-action",',
+      'path: "packed-action", stylesheets: ["component.css"],',
     );
     await fs.writeFile(
       path.join(root, "mockups/component.css"),
@@ -52,23 +52,23 @@ export async function smokeRegisteredComponents(
     3,
   );
   const consumer = manifest.entries.find(
-    (entry) => entry.id === "packed-components",
+    (entry) => entry.path === "packed-components",
   );
   if (!crossPlatform) {
     const action = manifest.entries.find(
-      (entry) => entry.id === "packed-action",
+      (entry) => entry.path === "packed-action",
     );
     const variant = componentEntries.find(
-      (entry) => entry.variantOf === action.id,
+      (entry) => entry.variantOf === action.path,
     );
     const view = variant.componentViews[0];
     assert.deepEqual(view.resources, []);
     assert.deepEqual(
-      view.insertedStylesheets.map(({ path, componentIds }) => ({
+      view.insertedStylesheets.map(({ path, componentPaths }) => ({
         path,
-        componentIds,
+        componentPaths,
       })),
-      [{ path: "component.css", componentIds: ["packed-action"] }],
+      [{ path: "component.css", componentPaths: ["packed-action"] }],
     );
     assert.equal(
       view.ranges.filter((range) => range.target.kind === "root").length,
@@ -79,14 +79,13 @@ export async function smokeRegisteredComponents(
         .href
     );
     const html = await fs.readFile(
-      path.join(
-        root,
-        output,
-        viewRoute("component", variant.id, "mobile", "light"),
-      ),
+      path.join(root, output, viewRoute(variant.path, "mobile", "light")),
       "utf8",
     );
-    assert.match(html, /<link rel="stylesheet" href="\.\.\/component\.css">/);
+    assert.match(
+      html,
+      /<link rel="stylesheet" href="\.\.\/\.\.\/component\.css">/,
+    );
   }
   for (const view of consumer.componentViews) {
     assert.ok(view.instances.length > 0);
@@ -103,9 +102,7 @@ export async function smokeRegisteredComponents(
     "utf8",
   );
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
-    const page = await (
-      await fetch(`${url}/view/components/packed-action.html`)
-    ).text();
+    const page = await (await fetch(`${url}/view/packed-action/`)).text();
     const state = page.match(
       /<script[^>]*data-mokly-host-capability-state=""[^>]*>([^<]+)<\/script>/,
     );
@@ -121,7 +118,7 @@ export async function smokeRegisteredComponents(
       },
       body: JSON.stringify({
         componentId: "packed-action",
-        variantId: "packed-action-default",
+        variantPath: "packed-action/default",
         viewport: "mobile",
         colorScheme: "light",
         generation: capability.generation,
@@ -144,12 +141,12 @@ export async function smokeRegisteredComponents(
     root,
     "published",
     "HEAD",
-    ["view/components/packed-action.html", "view/components/packed-panel.html"],
+    ["view/packed-action/index.html", "view/packed-panel/index.html"],
     5,
   );
   assert.equal(review.components.length, 2);
   const published = await fs.readFile(
-    path.join(root, "published/view/components/packed-action.html"),
+    path.join(root, "published/view/packed-action/index.html"),
     "utf8",
   );
   assert.doesNotMatch(published, /renderCapability/);

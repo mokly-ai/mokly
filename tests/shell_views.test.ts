@@ -13,18 +13,20 @@ import {
   SCHEME_SWITCH,
   assertAttributes,
   assertLightSrcMatchesAttribute,
-  darkManifest,
   detailsSection,
-  embeddedPage,
   hasClass,
-  manifest,
   occurrences,
   requiredElement,
-  routePage,
-  taggedFlowManifest,
   tagsRow,
   workspaceFrame,
-} from "./shell_fixture.js";
+} from "./helpers/shell_assertions.js";
+import {
+  darkManifest,
+  embeddedPage,
+  manifest,
+  routePage,
+  taggedFlowManifest,
+} from "./helpers/shell_fixture.js";
 
 test("embedded preview switches render only for catalogues with dark fragments", () => {
   const lightOnly = createCatalogue(manifest);
@@ -34,7 +36,9 @@ test("embedded preview switches render only for catalogues with dark fragments",
     false,
   );
   assert.equal(
-    embeddedPage(lightOnly, "welcome").includes("data-mokly-schemeswitch"),
+    embeddedPage(lightOnly, "example/screens/welcome").includes(
+      "data-mokly-schemeswitch",
+    ),
     false,
   );
 
@@ -48,7 +52,7 @@ test("embedded preview switches render only for catalogues with dark fragments",
     /data-mokly-search[\s\S]*?class="mbk-search-close"[\s\S]*?<\/button><span aria-label="Preview color scheme"[\s\S]*?<\/span><\/header>/,
   );
 
-  const screen = embeddedPage(dark, "welcome");
+  const screen = embeddedPage(dark, "example/screens/welcome");
   assert.equal(occurrences(screen, "data-mokly-schemeswitch"), 1);
   assert.equal(occurrences(screen, "data-workspace-scheme"), 1);
   assert.match(screen, /aria-label="Dark preview"/);
@@ -57,7 +61,7 @@ test("embedded preview switches render only for catalogues with dark fragments",
     /class="mbk-view-tools"[\s\S]*?data-workspace-viewport=""[\s\S]*?data-workspace-scheme=""/,
   );
 
-  const flow = embeddedPage(dark, "tour");
+  const flow = embeddedPage(dark, "example/tour");
   assert.equal(occurrences(flow, "data-mokly-schemeswitch"), 2);
   assert.equal(flow.includes("data-mokly-viewswitch"), false);
   assert.match(
@@ -65,22 +69,22 @@ test("embedded preview switches render only for catalogues with dark fragments",
     /<\/div><span aria-label="Preview color scheme"[\s\S]*?<\/span><\/div><div class="mbk-flow"/,
   );
 
-  const legacy = embeddedPage(dark, "old");
+  const legacy = embeddedPage(dark, "example/old");
   assert.equal(occurrences(legacy, "data-mokly-schemeswitch"), 1);
 });
 
 test("screen stage carries per-frame scheme fragment data", () => {
   const dark = createCatalogue(darkManifest);
-  const screen = routePage(dark, "screens/welcome.html");
+  const screen = routePage(dark, "example/screens/welcome/index.html");
   for (const viewport of ["mobile", "desktop"]) {
-    const suffix = `welcome.${viewport}`;
+    const suffix = `example/screens/welcome/index.${viewport}`;
     assertAttributes(workspaceFrame(screen, viewport), {
       class: "mbk-frag",
-      "data-fragment-dark": `/static/screens/${suffix}.dark.html`,
-      "data-fragment-light": `/static/screens/${suffix}.html`,
+      "data-fragment-dark": `/static/${suffix}.dark.html`,
+      "data-fragment-light": `/static/${suffix}.html`,
       "data-mokly-fragment-frame": "",
       sandbox: "allow-same-origin",
-      src: `/static/screens/${suffix}.html`,
+      src: `/static/${suffix}.html`,
       title: `Welcome — ${viewport}`,
     });
   }
@@ -88,7 +92,7 @@ test("screen stage carries per-frame scheme fragment data", () => {
   assert.equal(screen.includes("mbk-frame-scheme-note"), false);
   assertLightSrcMatchesAttribute(screen, 2);
 
-  const fallback = routePage(dark, "screens/details.html");
+  const fallback = routePage(dark, "example/screens/details/index.html");
   assert.match(
     fallback,
     /<div class="mbk-frame-wrap mbk-frame-mobile" data-color-scheme-fallback="" data-preview-color-scheme="light"><p class="mbk-frame-label">Mobile<span class="mbk-frame-scheme-note"> — Light only<\/span><\/p>/,
@@ -100,16 +104,16 @@ test("screen stage carries per-frame scheme fragment data", () => {
   assertAttributes(workspaceFrame(fallback, "mobile"), {
     class: "mbk-frag",
     "data-fragment-dark": undefined,
-    "data-fragment-light": "/static/screens/details.mobile.html",
+    "data-fragment-light": "/static/example/screens/details/index.mobile.html",
     "data-mokly-fragment-frame": "",
     sandbox: "allow-same-origin",
-    src: "/static/screens/details.mobile.html",
+    src: "/static/example/screens/details/index.mobile.html",
     title: "Details — mobile",
   });
   assert.equal(fallback.includes("data-fragment-dark"), false);
   assertLightSrcMatchesAttribute(fallback, 2);
 
-  const flow = routePage(dark, "user-flows/tour.html");
+  const flow = routePage(dark, "example/tour/index.html");
   const flowScreens = documentElements(flow, (element) =>
     hasClass(element, "mbk-flow-screen"),
   );
@@ -124,24 +128,28 @@ test("screen stage carries per-frame scheme fragment data", () => {
       elements(wrapper, (element) => element.tagName === "iframe")[0]!,
   );
   assertAttributes(flowFrames[0]!, {
-    "data-fragment-dark": "/static/screens/welcome.desktop.dark.html",
-    "data-fragment-light": "/static/screens/welcome.desktop.html",
+    "data-fragment-dark":
+      "/static/example/screens/welcome/index.desktop.dark.html",
+    "data-fragment-light": "/static/example/screens/welcome/index.desktop.html",
     "data-mokly-fragment-frame": "",
     sandbox: "allow-same-origin",
-    src: "/static/screens/welcome.desktop.html",
+    src: "/static/example/screens/welcome/index.desktop.html",
   });
   assertAttributes(flowFrames[1]!, {
     "data-fragment-dark": undefined,
-    "data-fragment-light": "/static/screens/details.desktop.html",
+    "data-fragment-light": "/static/example/screens/details/index.desktop.html",
     "data-mokly-fragment-frame": undefined,
     sandbox: "allow-same-origin",
-    src: "/static/screens/details.desktop.html",
+    src: "/static/example/screens/details/index.desktop.html",
   });
   assert.equal(flow.includes("mbk-frame-scheme-note"), false);
   assertLightSrcMatchesAttribute(flow, 2);
 
   const lightOnly = createCatalogue(manifest);
-  const lightScreen = routePage(lightOnly, "screens/welcome.html");
+  const lightScreen = routePage(
+    lightOnly,
+    "example/screens/welcome/index.html",
+  );
   const lightMobile = requiredElement(lightScreen, (element) =>
     hasClass(element, "mbk-frame-mobile"),
   );
@@ -159,12 +167,12 @@ test("screen stage carries per-frame scheme fragment data", () => {
     "data-fragment-light": undefined,
     "data-mokly-fragment-frame": "",
     sandbox: "allow-same-origin",
-    src: "/static/screens/welcome.mobile.html",
+    src: "/static/example/screens/welcome/index.mobile.html",
     title: "Welcome — mobile",
   });
   assert.equal(lightScreen.includes("data-fragment-"), false);
   assert.equal(lightScreen.includes("data-color-scheme-fallback"), false);
-  const lightFlow = routePage(lightOnly, "user-flows/tour.html");
+  const lightFlow = routePage(lightOnly, "example/tour/index.html");
   assert.match(
     lightFlow,
     /<div class="mbk-flow-screen" data-preview-color-scheme="light"><div class="browser-frame">/,
@@ -174,34 +182,37 @@ test("screen stage carries per-frame scheme fragment data", () => {
 
 test("details inspector omits derived paths and lists the schemes row", () => {
   const dark = createCatalogue(darkManifest);
-  const screen = routePage(dark, "screens/welcome.html");
+  const screen = routePage(dark, "example/screens/welcome/index.html");
   assert.match(
     screen,
     /<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes<\/span><span class="mbk-meta-v">light, dark<\/span><\/div>/,
   );
   assert.equal(screen.includes('mbk-meta-k">Generated'), false);
 
-  const fallback = routePage(dark, "screens/details.html");
+  const fallback = routePage(dark, "example/screens/details/index.html");
   assert.match(
     fallback,
     /<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes<\/span><span class="mbk-meta-v">light<\/span><\/div>/,
   );
   assert.equal(fallback.includes('mbk-meta-k">Generated'), false);
 
-  const flow = routePage(dark, "user-flows/tour.html");
+  const flow = routePage(dark, "example/tour/index.html");
   assert.equal(flow.includes('mbk-meta-k">Schemes'), false);
 
   const lightOnly = createCatalogue(manifest);
-  const lightScreen = routePage(lightOnly, "screens/welcome.html");
+  const lightScreen = routePage(
+    lightOnly,
+    "example/screens/welcome/index.html",
+  );
   assert.equal(lightScreen.includes('mbk-meta-k">Schemes'), false);
   assert.equal(lightScreen.includes('mbk-meta-k">Generated'), false);
-  const page = routePage(lightOnly, "pages/overview.html");
+  const page = routePage(lightOnly, "example/overview/index.html");
   assert.equal(page.includes('mbk-meta-k">Generated'), false);
 });
 
 test("details inspector chips the tags an entry declares", () => {
   const dark = createCatalogue(darkManifest);
-  const welcome = routePage(dark, "screens/welcome.html");
+  const welcome = routePage(dark, "example/screens/welcome/index.html");
   assert.ok(welcome.includes(tagsRow("forms", "onboarding")));
   assert.ok(
     welcome.includes(
@@ -209,10 +220,12 @@ test("details inspector chips the tags an entry declares", () => {
     ),
   );
 
-  const second = detailsSection(routePage(dark, "screens/details.html"));
+  const second = detailsSection(
+    routePage(dark, "example/screens/details/index.html"),
+  );
   assert.ok(second.includes(tagsRow("billing")));
 
-  const untagged = detailsSection(routePage(dark, "user-flows/tour.html"));
+  const untagged = detailsSection(routePage(dark, "example/tour/index.html"));
   assert.equal(untagged.includes('mbk-meta-k">Tags'), false);
   assert.equal(untagged.includes("data-mokly-tag"), false);
 });
@@ -220,7 +233,7 @@ test("details inspector chips the tags an entry declares", () => {
 test("a use case chips its tags in the same details row", () => {
   const flow = routePage(
     createCatalogue(taggedFlowManifest),
-    "user-flows/tour.html",
+    "example/tour/index.html",
   );
   assert.ok(
     flow.includes(

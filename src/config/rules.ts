@@ -106,20 +106,3 @@ export function requireString(
     );
   }
 }
-
-/** Validate a config list whose members must be non-empty strings. */
-export function validateStringArray(
-  value: readonly string[],
-  label: string,
-): string[] {
-  if (
-    !Array.isArray(value) ||
-    !value.every((item) => typeof item === "string" && item.trim().length > 0)
-  ) {
-    throw new MoklyError(
-      "config-invalid",
-      `${label} must be an array of non-empty strings`,
-    );
-  }
-  return [...value];
-}

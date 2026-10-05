@@ -41,10 +41,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
             await sameOriginAdapter().mount(
               document.querySelector<HTMLIFrameElement>("#frame")!,
               {
-                url: new URL(
-                  "/static/screens/home.mobile.html",
-                  location.origin,
-                ),
+                url: new URL("/static/home/index.mobile.html", location.origin),
                 usage: { status: "ready", ...usage },
               },
             );
@@ -53,7 +50,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       const child = page
         .frames()
         .find((frame) =>
-          frame.url().includes("/static/screens/home.mobile.html"),
+          frame.url().includes("/static/home/index.mobile.html"),
         )!;
       const expected = await child.evaluate((layout) => {
         const outer = document.querySelector<HTMLElement>("#outer")!;
@@ -107,7 +104,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
             )) as typeof LocalAdapter;
             return localInspection(
               document.querySelector<HTMLIFrameElement>("#frame")!,
-              "screens/home.mobile.html",
+              "home/index.mobile.html",
               JSON.parse(usageJson) as ComponentViewRecord,
             )!.measure(new Set([key]));
           },

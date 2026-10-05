@@ -43,7 +43,7 @@ function documentDesignUrl(viewport: string): string {
   return pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/generated/screens/design-review-style-page.${viewport}.html`,
+      `examples/basic/generated/design/changes/impact/styles/page/index.${viewport}.html`,
     ),
   ).href;
 }
@@ -60,7 +60,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a changed document names each stylesheet once with the page copy", async ({
       page,
     }) => {
-      await page.goto(`${fixture.url}/view/pages/example-handbook.html`);
+      await page.goto(`${fixture.url}/view/example/handbook/`);
       await expect(headStatus(page)).toHaveText("Changed");
       await expect(
         page.locator(
@@ -92,7 +92,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("the shell repeats the approved document mockup's layout and copy", async ({
       page,
     }) => {
-      await page.goto(`${fixture.url}/view/pages/example-handbook.html`);
+      await page.goto(`${fixture.url}/view/example/handbook/`);
       const evidence = await openPageEvidence(page);
       const served = await evidenceFiles(evidence);
       const spacing = await evidenceSpacing(evidence);
@@ -121,7 +121,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("an unchanged document lists its examined stylesheet and ends with its terminal line", async ({
       page,
     }) => {
-      await page.goto(`${fixture.url}/view/pages/notes.html`);
+      await page.goto(`${fixture.url}/view/notes/`);
       await expect(headStatus(page)).toHaveText("Unmodified");
       const evidence = await openPageEvidence(page);
       await expect(evidence.locator("p")).toHaveText([
@@ -142,7 +142,7 @@ test.describe("whole-document page evidence on a short screen", () => {
   test("the open Details scroll to the last style and keep the document in view", async ({
     page,
   }) => {
-    await page.goto(`${fixture.url}/view/pages/example-handbook.html`);
+    await page.goto(`${fixture.url}/view/example/handbook/`);
     const evidence = await openPageEvidence(page);
     const last = evidence.locator("code").last();
     await expect(last).toHaveText(":root");
@@ -160,12 +160,12 @@ test.describe("whole-document page evidence across navigation", () => {
   test("Changes lists the document and its Details keep the same facts", async ({
     page,
   }) => {
-    await page.goto(`${fixture.url}/view/pages/example-handbook.html`);
+    await page.goto(`${fixture.url}/view/example/handbook/`);
     const facts = await evidenceFiles(await openPageEvidence(page));
     await page.locator('[data-filter="changed"]').click();
     await expect(page.locator(".mbk-nav-filter-count")).toHaveText("3");
     await expect(
-      page.locator('[data-entry-id="example-handbook"]'),
+      page.locator('[data-entry-id="example/handbook"]'),
     ).toBeVisible();
     await expect(page.locator('[data-entry-id="notes"]')).toBeHidden();
     expect(await evidenceFiles(page.locator("[data-page-evidence]"))).toEqual(
@@ -173,7 +173,7 @@ test.describe("whole-document page evidence across navigation", () => {
     );
     await page.locator('[data-entry-id="action"]').click();
     await expect(page.locator("#mb-main h2")).toHaveText("Action");
-    await page.locator('[data-entry-id="example-handbook"]').click();
+    await page.locator('[data-entry-id="example/handbook"]').click();
     await expect(page.locator("#mb-main h2")).toHaveText("Getting started");
     await expect(headStatus(page)).toHaveText("Changed");
     expect(await evidenceFiles(await openPageEvidence(page))).toEqual(facts);

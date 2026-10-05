@@ -57,7 +57,7 @@ test("dev shim attaches source only to registered wrappers without mutating thei
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const { Component } = defineComponent({
-    id: "action",
+    path: "action",
     title: "Action",
     description: "Action",
     relatedDocs: [],
@@ -68,7 +68,8 @@ test("dev shim attaches source only to registered wrappers without mutating thei
     render: (props) => props.label,
     variants: [
       {
-        id: "action-default",
+        slug: "default",
+
         title: "Default",
         props: { label: "Continue" },
       },

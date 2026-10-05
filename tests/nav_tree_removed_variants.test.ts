@@ -23,21 +23,22 @@ const removed = {
   kind: "leaf" as const,
   label: "Save failed · Removed",
   removedPage: true,
-  variantOf: "welcome",
+  title: "Save failed",
+  parentId: "welcome",
 };
 
 test("removed variants remain represented exactly once across parent transitions", () => {
   const cases = [
     {
       label: "surviving parent",
-      entries: [screen("welcome", "Welcome", ["Screens"])],
+      entries: [screen("welcome", "Welcome")],
       nested: true,
     },
     {
       label: "former parent became a variant",
       entries: [
-        screen("workspace", "Workspace", ["Screens"]),
-        variant("welcome", "Welcome", "workspace", ["Screens"]),
+        screen("workspace", "Workspace"),
+        variant("welcome", "Welcome", "workspace"),
       ],
       nested: false,
     },
@@ -71,17 +72,53 @@ test("removed variants remain represented exactly once across parent transitions
   }
 });
 
+test("a removed variant attaches to a parent listed among a folder's own screen members", () => {
+  const nestedRemoved = {
+    ...removed,
+    entryId: "billing/welcome/error",
+    key: "removed:billing/welcome/error",
+    parentId: "billing/welcome",
+  };
+  const sections = buildNavSections(
+    createCatalogue(
+      manifest([
+        screen("billing", "Billing"),
+        screen("billing/welcome", "Welcome"),
+      ]),
+    ).hierarchy,
+    [nestedRemoved],
+  );
+  const nodes = sections.flatMap(({ children }) => children);
+  const index = nodes[0];
+  assert.ok(index?.kind === "leaf");
+  assert.equal(index.entryId, "billing");
+  const parent = index.members?.[0];
+  assert.ok(parent?.kind === "leaf");
+  assert.deepEqual(
+    parent.variants?.map(({ entryId, removedVariant }) => [
+      entryId,
+      removedVariant,
+    ]),
+    [["billing/welcome/error", true]],
+  );
+  assert.equal(nodes.length, 1);
+});
+
 test("an ineligible former parent remains a plain-text breadcrumb", () => {
-  const removedVariant = variant("welcome-error", "Save failed", "welcome", [
-    "Example",
-    "Screens",
-  ]);
+  const removedVariant = variant("welcome-error", "Save failed", "welcome");
   const catalogue = createCatalogue(
     manifest([
-      screen("workspace", "Workspace", ["Example", "Screens"]),
-      variant("welcome", "Welcome", "workspace", ["Example", "Screens"]),
+      screen("workspace", "Workspace"),
+      variant("welcome", "Welcome", "workspace"),
     ]),
-    [{ entry: removedVariant, snapshotId: "d".repeat(64) }],
+    [
+      {
+        folderTitles: ["Example", "Screens"],
+        entry: removedVariant,
+        parentTitle: "Welcome",
+        snapshotId: "d".repeat(64),
+      },
+    ],
   );
   const target = toRouteTarget(removedVariant);
   assert.ok(target);
@@ -119,39 +156,29 @@ function occurrences(nodes: readonly NavNode[], id: string): number {
   }, 0);
 }
 
-function screen(
-  id: string,
-  title: string,
-  navPath: readonly string[] = [],
-): ManifestScreen {
+function screen(id: string, title: string): ManifestScreen {
   return {
     colorSchemes: ["light"],
     description: title,
-    id,
+    path: id,
     kind: "screen",
-    navPath,
     relatedDocs: [],
     sourcePath: `entries/${id}.tsx`,
     title,
-    useCaseIds: [],
+    useCasePaths: [],
   };
 }
 
-function variant(
-  id: string,
-  title: string,
-  variantOf: string,
-  navPath: readonly string[],
-): ManifestScreen {
-  return { ...screen(id, title, navPath), variantOf };
+function variant(id: string, title: string, variantOf: string): ManifestScreen {
+  return { ...screen(id, title), variantOf };
 }
 
 function page(id: string, title: string, _route: string): ManifestPage {
   return {
     description: title,
-    id,
+    path: id,
     kind: "page",
-    navPath: [],
+
     relatedDocs: [],
     sourcePath: `entries/${id}.tsx`,
     title,
@@ -166,7 +193,8 @@ function manifest(
   return {
     entries: all,
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: [...new Set(all.map(({ sourcePath }) => sourcePath))].sort(),
   };
 }

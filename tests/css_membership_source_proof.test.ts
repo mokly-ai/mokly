@@ -15,7 +15,7 @@ test("source proof rejects a component-only rule forged into a page reason on a 
   const result = structuredClone(classified.result);
   const screen = result.screens[0]!;
   const change = result.changes.find(
-    (entry) => entry.after?.id === "checkout",
+    (entry) => entry.after?.path === "checkout",
   )!;
   Object.assign(change, { reasons: screen.views[0]!.reasons });
   assert.throws(
@@ -39,7 +39,7 @@ test("source proof rejects component ids that have no kept own-page match", asyn
   const classified = await classifyFixtureWithSources(input);
   const result = structuredClone(classified.result);
   Object.assign(result.screens[0]!.views[0]!.reasons![0]!.analysis!.rules[0]!, {
-    changedComponentIds: ["toolbar"],
+    changedComponentPaths: ["toolbar"],
   });
   assert.throws(
     () =>

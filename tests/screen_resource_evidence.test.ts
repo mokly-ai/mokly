@@ -49,13 +49,13 @@ for (const [name, edit, resource] of [
     assert.deepEqual(
       snapshot.screenEvidence,
       artifact.result.screens.map((screen) => ({
-        id: screen.id,
+        path: screen.path,
         views: resourceViews(screen),
       })),
     );
     const message = childUpdateMessage(
       2,
-      changes.changedIds,
+      changes.changedEntries,
       snapshot,
       "ready",
       "evidence",
@@ -66,7 +66,7 @@ for (const [name, edit, resource] of [
       await compileCatalogue(fixture.config).then((value) => value.manifest),
     );
     for (const screen of artifact.result.screens) {
-      const entry = catalogue.byId.get(screen.id);
+      const entry = catalogue.byPath.get(screen.path);
       assert.ok(entry?.kind === "screen");
       const data = workspaceData(
         catalogue,
@@ -74,7 +74,7 @@ for (const [name, edit, resource] of [
           base: "main",
           updateVersion: 2,
           comparisons: true,
-          changedIds: changes.changedIds,
+          changedEntries: changes.changedEntries,
           componentChanges: snapshot,
         },
         entry,
@@ -84,14 +84,14 @@ for (const [name, edit, resource] of [
       assert.deepEqual(
         data.change,
         artifact.result.changes.find(
-          (change) => (change.after ?? change.before)?.id === screen.id,
+          (change) => (change.after ?? change.before)?.path === screen.path,
         ),
       );
       const markup = renderEvidence(data);
       if (name === "matched and excluded rules") {
         assert.match(
           markup,
-          screen.id === "home"
+          screen.path === "home"
             ? /Changed styles that apply to this screen:/
             : /Examined and excluded:/,
         );
@@ -131,7 +131,7 @@ test("static screen-only shells project evidence from the unified v5 comparison"
   );
   for (const screen of comparison.result.screens) {
     const html = String(
-      site.inventory.files.get(`view/screens/${screen.id}.html`),
+      site.inventory.files.get(`view/${screen.path}/index.html`),
     );
     const json = /<script[^>]*data-workspace-data[^>]*>(.*?)<\/script>/s.exec(
       html,
@@ -143,7 +143,7 @@ test("static screen-only shells project evidence from the unified v5 comparison"
     assert.deepEqual(
       data.change,
       comparison.result.changes.find(
-        (change) => (change.after ?? change.before)?.id === screen.id,
+        (change) => (change.after ?? change.before)?.path === screen.path,
       ),
     );
   }

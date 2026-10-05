@@ -47,7 +47,7 @@ test("both graphs retain raw and tree-shaken inputs while public resources stay 
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'import { settings } from "./mockups/settings.ts"; export default { ...settings, entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };',
+    'import { settings } from "./mockups/settings.ts"; export default { ...settings, roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };',
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
@@ -92,7 +92,7 @@ test("both graphs retain raw and tree-shaken inputs while public resources stay 
       );
     await assert.rejects(reader.read(route), /not a public static file/, route);
   }
-  for (const route of ["public.svg", "public.css", "screens/home.desktop.html"])
+  for (const route of ["public.svg", "public.css", "home/index.desktop.html"])
     assert.equal(
       (await fetch(`${server.url}/static/${route}`)).status,
       200,
@@ -139,17 +139,17 @@ test("failed page builds and source collisions preserve the previous inventory a
   const good = await compileCatalogue(config);
   await writeCompilation(good, config);
   const inventory = config.sourceFiles;
-  const source = path.join(fixture.mockupsDir, "pages/document.html");
+  const source = path.join(fixture.mockupsDir, "document/index.html");
   const bytes = "<html><body>Protected source</body></html>";
   await fs.promises.mkdir(path.dirname(source), { recursive: true });
   await fs.promises.writeFile(source, bytes);
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", moduleResolution: { loaders: { ".html": "text" } } };',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", moduleResolution: { loaders: { ".html": "text" } } };',
   );
   await fs.promises.writeFile(
     fixture.entryPath,
-    'import { definePage } from "@mokly/mokly"; import html from "../mockups/pages/document.html"; export const mockups = [definePage({ id: "document", title: "Page", description: "Page", relatedDocs: [], render: () => html })];',
+    'import { definePage } from "@mokly/mokly"; import html from "../mockups/document/index.html"; export const mockups = [definePage({ path: "document", title: "Page", description: "Page", relatedDocs: [], render: () => html })];',
   );
   const next = await loadConfig(fixture.root);
   await assert.rejects(compileCatalogue(next), /authoring|source/);

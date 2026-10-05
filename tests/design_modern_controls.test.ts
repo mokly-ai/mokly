@@ -17,27 +17,27 @@ const manifest = JSON.parse(
 ) as ManifestV8;
 
 function component(id: string) {
-  const entry = manifest.entries.find((entry) => entry.id === id);
+  const entry = manifest.entries.find((entry) => entry.path === id);
   if (entry?.kind !== "component" || isManifestComponentVariant(entry))
     throw new Error(`Missing ${id}`);
   return entry;
 }
 
 test("the shared footer exposes only the icon panel and its current variants", () => {
-  const footer = component("design-ui-inspector");
+  const footer = component("design/library/inspector/inspector");
   assert.deepEqual(
     manifest.entries
       .filter(
         (entry) =>
           entry.kind === "component" &&
           isManifestComponentVariant(entry) &&
-          entry.variantOf === footer.id,
+          entry.variantOf === footer.path,
       )
-      .map((variant) => variant.id),
+      .map((variant) => variant.path),
     [
-      "design-ui-inspector-details",
-      "design-ui-inspector-props",
-      "design-ui-inspector-closed",
+      "design/library/inspector/inspector/details",
+      "design/library/inspector/inspector/props",
+      "design/library/inspector/inspector/closed",
     ],
   );
   if (footer.propSchema.kind !== "object")
@@ -47,8 +47,8 @@ test("the shared footer exposes only the icon panel and its current variants", (
 });
 
 test("view options have one icon presentation and no view-controls scheme control", () => {
-  const controls = component("design-ui-view-controls");
-  const topBar = component("design-ui-top-bar");
+  const controls = component("design/library/controls/view-controls");
+  const topBar = component("design/library/chrome/top-bar");
   if (
     controls.propSchema.kind !== "object" ||
     topBar.propSchema.kind !== "object"
@@ -79,7 +79,7 @@ test("view options have one icon presentation and no view-controls scheme contro
 
 test("every owning design and shared sample omits legacy footer and view markup", async () => {
   for (const entry of manifest.entries) {
-    if (!entry.id.startsWith("design-")) continue;
+    if (!entry.path.startsWith("design/")) continue;
     if (
       entry.kind === "screen" ||
       (entry.kind === "component" && isManifestComponentVariant(entry))

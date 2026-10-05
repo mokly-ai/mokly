@@ -77,6 +77,15 @@ export class ReviewRoutes {
     response: ServerResponse,
     method: string,
   ): Promise<void> {
+    if (url.pathname === `${DIFF_ROUTE}review.json`) {
+      const names = [...url.searchParams.keys()];
+      if (
+        names.some((name) => !["path", "page", "refresh"].includes(name)) ||
+        (!this.selected &&
+          names.some((name) => name === "path" || name === "page"))
+      )
+        return send(response, 404, "text/plain", "Not found", method);
+    }
     if (this.publicAliases.handle(url, response, method)) return;
     if (await this.selected?.handle(url, response, method)) return;
     if (url.pathname.startsWith(GENERATION_ROUTE)) {

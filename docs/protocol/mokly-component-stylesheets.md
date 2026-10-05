@@ -25,20 +25,20 @@ interface ComponentInput {
   stylesheets?: readonly string[];
 }
 
-const { Component, entries } = defineComponent({
-  id: "example-action",
+export const action = defineComponent({
+  path: "example/components/action",
   title: "Example action",
   description: "An action shared across screens.",
   relatedDocs: [],
   propSchema: { kind: "object", properties: {} },
   render: () => null,
-  variants: [{ id: "example-action-default", title: "Default", props: {} }],
+  variants: [{ slug: "default", title: "Default", props: {} }],
   stylesheets: ["design/components/action.css"],
 });
 ```
 
 Removed-field type rejection follows the
-[authoring contract](./mokly-authoring.md#input-types-and-nested-trees): values
+[authoring contract](./mokly-authoring.md#paths-and-urls): values
 are rejected; explicit `undefined` needs `exactOptionalPropertyTypes`, and
 runtime warnings cover it otherwise.
 
@@ -123,7 +123,7 @@ authored stylesheet list. Group declarations by resolved real file, not by
 their lexical paths: two components may name that file through different
 public aliases. Emit one link per real file that Mokly must link. The first
 occurrence determines its link position and the declared public path used for
-its href; retain all rendered declaring ids for inserted-link provenance. Do not
+its href; retain all rendered declaring paths for inserted-link provenance. Do not
 link the union of registered or saved-variant components: a component absent
 from this render contributes neither a link nor provenance. This order is stable
 in Build, Check, on-demand Serve and transient comparison renders.

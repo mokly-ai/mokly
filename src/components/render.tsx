@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
+import { definitionPath } from "../authoring/identity.js";
 import type { BuildWarning } from "../build/warnings.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
@@ -28,7 +29,7 @@ import type {
 
 export interface LinkedComponentStylesheet {
   physical: string;
-  componentIds: readonly string[];
+  componentPaths: readonly string[];
 }
 
 export interface ComponentRenderOutput {
@@ -57,9 +58,9 @@ export const renderWithComponents: ComponentGraphRenderer = (
   placement,
 ) => {
   const collector = new ComponentCollector(
-    new Map(definitions.map((entry) => [entry.id, entry])),
+    new Map(definitions.map((entry) => [definitionPath(entry), entry])),
     input,
-    `${input.entry.id} / ${input.viewport} / ${input.colorScheme}`,
+    `${input.entry.path} / ${input.viewport} / ${input.colorScheme}`,
   );
   const node = (
     <ComponentContext
@@ -72,7 +73,8 @@ export const renderWithComponents: ComponentGraphRenderer = (
         >
           <ComponentRoot
             definition={definitions.find(
-              (definition) => definition.id === input.entry.variantOf,
+              (definition) =>
+                definitionPath(definition) === input.entry.variantOf,
             )}
             entry={input.entry}
             input={input}
@@ -100,10 +102,14 @@ export const renderWithComponents: ComponentGraphRenderer = (
     serializeReviewSentinels(rendered.html),
     collector.boundaries,
   );
-  const declarations = new Map<string, { file: string; ids: Set<string> }>();
+  const declarations = new Map<string, { file: string; paths: Set<string> }>();
   const renderedDefinitions = [
     ...(input.entry.kind === "component"
-      ? [definitions.find((entry) => entry.id === input.entry.variantOf)!]
+      ? [
+          definitions.find(
+            (entry) => definitionPath(entry) === input.entry.variantOf,
+          )!,
+        ]
       : []),
     ...[...collector.instances.values()].map((instance) =>
       collector.definitions.get(instance.componentId)!,
@@ -115,8 +121,8 @@ export const renderWithComponents: ComponentGraphRenderer = (
         path.resolve(placement.mockupsDir, file),
       );
       if (!declarations.has(physical))
-        declarations.set(physical, { file, ids: new Set() });
-      declarations.get(physical)!.ids.add(definition.id);
+        declarations.set(physical, { file, paths: new Set() });
+      declarations.get(physical)!.paths.add(definitionPath(definition));
     }
   }
   const physicalPaths = new Set(declarations.keys());
@@ -157,9 +163,9 @@ export const renderWithComponents: ComponentGraphRenderer = (
   return {
     html,
     view,
-    stylesheetLinks: [...declarations].map(([physical, { ids }]) => ({
+    stylesheetLinks: [...declarations].map(([physical, { paths }]) => ({
       physical,
-      componentIds: [...ids].sort(),
+      componentPaths: [...paths].sort(),
     })),
     ...(warnings.length ? { warnings } : {}),
   };
@@ -174,11 +180,12 @@ function ComponentRoot({
   entry: ComponentVariantDefinition;
   input: RenderInput;
 }): ReactNode {
-  if (!definition) invalidData(entry.id, "unknown component parent");
+  if (!definition)
+    invalidData(entry.path ?? "<unresolved>", "unknown component parent");
   const { data, slots } = componentInputs(
     definition,
     entry.props,
-    `${definition.id} / ${entry.id}`,
+    `${definitionPath(definition)} / ${entry.path}`,
   );
   return definition.render(
     { ...(input.componentProps ?? data), ...slots },

@@ -4,5 +4,5 @@ import type { AffectedConsumer } from "./component_types.js";
 export function affectedConsumerOrderKey(
   record: Pick<AffectedConsumer, "changedComponentId" | "consumer">,
 ): string {
-  return `${record.changedComponentId}\u0000${record.consumer.kind}\u0000${record.consumer.id}`;
+  return `${record.changedComponentId}\u0000${record.consumer.kind}\u0000${record.consumer.path}`;
 }

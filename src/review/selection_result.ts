@@ -10,12 +10,14 @@ export function selectedComponentResult(
   result: ReviewResultV5,
   selection: ReviewSelection,
 ): ReviewResultV5 {
-  const screens = result.screens.filter((screen) => screen.id === selection.id);
+  const screens = result.screens.filter(
+    (screen) => screen.path === selection.path,
+  );
   const component = result.components.find((entry) =>
-    entry.variants.some((variant) => variant.id === selection.id),
+    entry.variants.some((variant) => variant.path === selection.path),
   );
   const variant = component?.variants.find(
-    (entry) => entry.id === selection.id,
+    (entry) => entry.path === selection.path,
   );
   if (!screens.length && (!component || !variant)) throw missingSelection();
   const components =
@@ -30,7 +32,7 @@ export function selectedComponentResult(
       if (entry.kind !== (components.length ? "component" : "screen"))
         return false;
       const address = entry.after ?? entry.before;
-      return address?.id === selection.id;
+      return address?.path === selection.path;
     }),
     affectedConsumers: [],
     ignoredImpact: aggregateIgnored(screens),

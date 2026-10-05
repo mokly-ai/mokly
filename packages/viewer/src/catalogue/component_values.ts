@@ -20,7 +20,7 @@ import {
   choice,
   counter,
   hash,
-  id,
+  entryPath,
   object,
   repositoryPath,
   string,
@@ -151,8 +151,8 @@ export function readInstance(value: unknown): ComponentInstanceRecord {
   const input = object(value);
   const result: ComponentInstanceRecord = {
     key: hash(input.key),
-    id: id(input.id),
-    componentId: id(input.componentId),
+    id: string(input.id),
+    componentId: entryPath(input.componentId),
     owner: owner(input.owner),
     order: counter(input.order),
     props: readProps(input.props),

@@ -14,10 +14,10 @@ test("authored dependencies are absent from every kind of entry details", async 
   page,
 }) => {
   for (const route of [
-    "screens/example-welcome.html",
-    "pages/example-handbook.html",
-    "user-flows/example-tour.html",
-    "components/example-action.html",
+    "example/screens/welcome/",
+    "example/getting-started/",
+    "example/tour/",
+    "example/components/action/",
   ]) {
     await page.goto(`/view/${route}`);
     await expect(
@@ -35,7 +35,7 @@ test("Usage and Changes completion preserve edited props and their live preview"
   const fixture = await startEvidenceFixture(controlsEntrySource());
   const { server, runtime, compilation } = fixture;
   try {
-    await page.goto(`${server.url}/view/components/action.html`);
+    await page.goto(`${server.url}/view/action/`);
     await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
     await page.getByRole("tab", { name: "Usage", exact: true }).click();
     await expect(page.locator('[data-inspector-panel="usage"]')).toContainText(
@@ -76,8 +76,8 @@ test("Usage and Changes completion preserve edited props and their live preview"
     ).not.toContainText("until the catalogue has been checked");
     server.publishUpdate({
       kind: "evidence",
-      componentChanges: { baseline: compilation.manifest, changedIds: [] },
-      changedIds: [],
+      componentChanges: { baseline: compilation.manifest, changedEntries: [] },
+      changedEntries: [],
       changesStatus: "ready",
     });
     await expect(page.locator("[data-workspace-status]")).toHaveText(
@@ -111,7 +111,7 @@ test("Usage and Changes completion preserve edited props and their live preview"
       "title",
       "No registered components are used in this view.",
     );
-    await page.locator('a[data-route="screens/home.html"]').click();
+    await page.locator('a[data-route="home/index.html"]').click();
     await expect(page.locator("[data-workspace-highlight]")).toBeEnabled();
     await page.locator("[data-workspace-highlight]").click();
     await expect(page.locator("[data-workspace-highlight]")).toHaveAttribute(
@@ -130,7 +130,7 @@ test("Changes completion preserves keyboard focus on an unchanged Usage link", a
   const fixture = await startEvidenceFixture(controlsEntrySource());
   const { server, runtime, compilation } = fixture;
   try {
-    await page.goto(`${server.url}/view/components/action.html`);
+    await page.goto(`${server.url}/view/action/`);
     expect(
       server.completeCatalogue?.(compilation.manifest, runtime.generation),
     ).toBe(true);
@@ -155,7 +155,7 @@ test("Changes completion preserves keyboard focus on an unchanged Usage link", a
         baseline: compilation.manifest,
         result: affectedUsageResult(),
       },
-      changedIds: [],
+      changedEntries: [],
       changesStatus: "ready",
     });
 
@@ -167,10 +167,12 @@ test("Changes completion preserves keyboard focus on an unchanged Usage link", a
     await expect(home).toBeFocused();
     expect(await retained!.evaluate((link) => link.isConnected)).toBe(true);
     await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/screens\/home\.html/);
+    await expect(page).toHaveURL(
+      /\/view\/home\/\?viewport=mobile&scheme=light&instance=[a-f0-9]{64}$/,
+    );
     await expectFrameLoaded(
       page.locator('[data-workspace-frame="mobile"]'),
-      /\/screens\/home\.mobile\.html/,
+      /\/home\/index\.mobile\.html/,
     );
   } finally {
     await fixture.close();
@@ -183,11 +185,11 @@ function affectedUsageResult(): ReviewResultV5 {
     baseRef: "main",
     changedPaths: ["entries/fixture.mockup.tsx"],
     ignoredImpact: [],
-    schemaVersion: 5,
+    schemaVersion: 5 as const,
     screens: [
       {
-        after: { id: "home", title: "Home" },
-        id: "home",
+        after: { path: "home", title: "Home" },
+        path: "home",
         state: "unchanged",
         title: "Home",
         views: [
@@ -202,19 +204,19 @@ function affectedUsageResult(): ReviewResultV5 {
     ],
     components: [
       {
-        after: { id: "action", title: "Action" },
-        id: "action",
+        after: { path: "action", title: "Action" },
+        path: "action",
         state: "changed",
         title: "Action",
         variants: [
           {
             after: {
-              id: "action-default",
+              path: "action/default",
               title: "Default",
               props: {},
               suppliedSlots: [],
             },
-            id: "action-default",
+            path: "action/default",
             state: "unchanged",
             title: "Default",
             views: [
@@ -233,7 +235,7 @@ function affectedUsageResult(): ReviewResultV5 {
       {
         kind: "component",
         after: {
-          id: "action",
+          path: "action",
           title: "Action",
         },
         reasons: [{ kind: "material" }],
@@ -242,14 +244,14 @@ function affectedUsageResult(): ReviewResultV5 {
     affectedConsumers: [
       {
         changedComponentId: "action",
-        consumer: { kind: "screen", id: "home" },
+        consumer: { kind: "screen", path: "home" },
         evidence: [
           {
             side: "after",
             context: {
               kind: "screen",
               entry: {
-                id: "home",
+                path: "home",
                 title: "Home",
               },
               viewport: "mobile",

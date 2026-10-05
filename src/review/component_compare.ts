@@ -20,6 +20,9 @@ import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
 import type { CssResourceAnalysis } from "./css/resource_analysis.js";
+import type { BaselineReader } from "./git.js";
+import type { MarkdownMoveSources } from "./moves/markdown_sources.js";
+import { prepareMoveClassification } from "./moves/prepare.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
 export async function compareComponentCatalogue(
@@ -33,8 +36,9 @@ export async function compareComponentCatalogue(
   baseRef: string,
   useFastPath?: boolean,
   cssAnalysis?: CssResourceAnalysis,
+  markdown?: MarkdownMoveSources,
+  sourceReader?: BaselineReader,
 ): Promise<StylesheetReviewArtifact> {
-  baseline = baselineForCurrentIdentities(baseline, compilation.manifest);
   const baseArtifacts = artifactViews(baseline);
   const headArtifacts = artifactViews(compilation.manifest);
   const basePaths = baseArtifacts.map(({ route }) => route);
@@ -62,7 +66,7 @@ export async function compareComponentCatalogue(
     compilation.outputs,
     headReader,
   );
-  const result = await classifyComponents({
+  const prepared = await prepareMoveClassification({
     before: baseline,
     after: compilation.manifest,
     beforeReader,
@@ -72,10 +76,19 @@ export async function compareComponentCatalogue(
     baseCommit,
     baseRef,
     ...(cssAnalysis ? { cssAnalysis } : {}),
+    ...(markdown ? { markdown } : {}),
+    ...(sourceReader ? { sourceReader } : {}),
     ...(useFastPath === undefined ? {} : { useFastPath }),
   });
+  const result = await classifyComponents(prepared);
+  baseline = baselineForCurrentIdentities(
+    baseline,
+    compilation.manifest,
+    prepared.pairing.moves,
+  );
+  const retainedBaseArtifacts = artifactViews(baseline);
   const files = new Map<string, ReviewArtifactContent>();
-  for (const artifact of baseArtifacts)
+  for (const artifact of retainedBaseArtifacts)
     addArtifactFile(
       files,
       artifact.snapshot.before,
@@ -90,7 +103,7 @@ export async function compareComponentCatalogue(
   await copySnapshotDependencies(
     files,
     "before",
-    new Set(basePaths),
+    new Set(retainedBaseArtifacts.map((artifact) => artifact.route)),
     (route) => beforeReader.read(route),
     (routes) => baseReader.readMany(routes),
   );
@@ -107,7 +120,14 @@ export async function compareComponentCatalogue(
         [artifact.snapshot.after, artifact.insertedStylesheets] as const,
     ),
   ]);
-  return { result, files, insertedStylesheets };
+  return {
+    result,
+    files,
+    insertedStylesheets,
+    ...(prepared.pairing.moves.length || prepared.pairing.diagnostics.length
+      ? { pairing: prepared.pairing }
+      : {}),
+  };
 }
 
 function artifactViews(manifest: Manifest) {
@@ -123,15 +143,13 @@ function artifactViews(manifest: Manifest) {
       snapshot: {
         after: snapshotViewPath(
           "after",
-          entry.kind,
-          entry.id,
+          entry.path,
           view.viewport,
           view.colorScheme,
         ),
         before: snapshotViewPath(
           "before",
-          entry.kind,
-          entry.id,
+          entry.path,
           view.viewport,
           view.colorScheme,
         ),

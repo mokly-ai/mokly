@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   COMPONENT_STYLE_COPY,
   SCREEN_STYLE_COPY,
-} from "../examples/basic/entries/design/parts/stylesheet_evidence.js";
+} from "../examples/basic/specs/design/parts/stylesheet_evidence.js";
 import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { ViewReview } from "../packages/viewer/dist/review/types.js";
@@ -20,13 +20,13 @@ const RULES = "mockups/rule.css";
 const outsideRule = cssRule({
   ruleKey: "1".repeat(64),
   selectors: [".action", ".heading"],
-  changedComponentIds: ["action"],
+  changedComponentPaths: ["action"],
   pageSelectors: [".heading"],
 });
 const componentRule = cssRule({
   ruleKey: "2".repeat(64),
   selectors: [".action"],
-  changedComponentIds: ["action"],
+  changedComponentPaths: ["action"],
 });
 
 test("a screen's changed file holds its outside sentence and styles, as the mockup does", () => {
@@ -48,7 +48,7 @@ test("a screen's changed file holds its outside sentence and styles, as the mock
 
 test("a component's own page keeps the mockup's matched-component sentence", () => {
   const data = componentWorkspace("Changed", [componentRule]);
-  const markup = render(data, "action-default");
+  const markup = render(data, "action/default");
   assert.ok(
     markup.includes(
       `<p>${COMPONENT_STYLE_COPY.files}</p>` +
@@ -93,8 +93,8 @@ test("classification and a loaded comparison merge into one file and one paragra
   const data = screenWorkspace([view("mobile", "light", [outsideRule])]);
   data.change = {
     kind: "screen",
-    before: { id: "home", title: "Home" },
-    after: { id: "home", title: "Home" },
+    before: { path: "home", title: "Home" },
+    after: { path: "home", title: "Home" },
     reasons: [cssReason(RULES, [outsideRule])],
   };
   const loaded = loadedScreen([view("mobile", "light", [outsideRule])]);
@@ -129,9 +129,9 @@ test("Details read the same facts whatever viewport or scheme is shown", () => {
 test("a consuming component shows its live view evidence before any comparison loads", () => {
   const data = componentWorkspace("Unmodified", [componentRule], "toolbar");
   delete data.change;
-  data.relatedComponents = [{ id: "action", title: "Action" }];
-  data.variants = savedViews("toolbar-default", "Changed");
-  const markup = render(data, "toolbar-default");
+  data.relatedComponents = [{ path: "action", title: "Action" }];
+  data.variants = savedViews("toolbar/default", "Changed");
+  const markup = render(data, "toolbar/default");
   assert.match(
     markup,
     /<li>mockups\/rule\.css<p>Changed styles that apply to this component:<\/p>/,
@@ -144,19 +144,19 @@ test("a parent route closes with the selected saved view's own status", () => {
   const frame = cssRule({ selectors: [".frame"], pageSelectors: [".frame"] });
   const data = componentWorkspace("Unmodified", [frame]);
   delete data.change;
-  data.variants = savedViews("action-default", "Changed");
-  const markup = render(data, "action-default");
+  data.variants = savedViews("action/default", "Changed");
+  const markup = render(data, "action/default");
   assert.match(markup, /Changed styles that apply to this saved view:/);
   assert.doesNotMatch(markup, /No changes to this saved view\./);
   assert.doesNotMatch(markup, /Shared component changes/);
 });
 
 function savedViews(
-  id: string,
+  path: string,
   status: "Changed" | "Unmodified",
 ): WorkspaceData["variants"] {
   return [
-    { value: { id }, removed: false, comparisonEligible: true, status },
+    { value: { path }, removed: false, comparisonEligible: true, status },
   ] as unknown as WorkspaceData["variants"];
 }
 
@@ -178,7 +178,7 @@ function screenWorkspace(views: readonly ViewReview[]): WorkspaceData {
   return {
     base: "main",
     status: "Changed",
-    entry: { id: "home", kind: "screen", title: "Home" },
+    entry: { path: "home", kind: "screen", title: "Home" },
     resourceEvidence: views.map(({ viewport, colorScheme, reasons }) => ({
       viewport,
       colorScheme,
@@ -202,13 +202,13 @@ function componentWorkspace(
   rules: Parameters<typeof cssReason>[1],
   id = "action",
 ): WorkspaceData {
-  const address = { id, title: id };
-  const variantId = `${id}-default`;
+  const address = { path: id, title: id };
+  const variantPath = `${id}/default`;
   return {
     base: "main",
     status,
-    entry: { id, kind: "component", title: id },
-    component: { id, title: id, kind: "component" },
+    entry: { path: id, kind: "component", title: id },
+    component: { path: id, title: id, kind: "component" },
     change: {
       kind: "component",
       before: address,
@@ -222,7 +222,7 @@ function componentWorkspace(
       state: "changed",
       variants: [
         {
-          id: variantId,
+          path: variantPath,
           title: "Default",
           state: "changed",
           views: [view("mobile", "light", rules)],
@@ -243,7 +243,7 @@ function componentWorkspace(
 }
 
 function loadedScreen(views: readonly ViewReview[]) {
-  const address = { id: "home", title: "Home" };
+  const address = { path: "home", title: "Home" };
   const result: ReviewResultV5 = {
     schemaVersion: 5,
     baseRef: "main",
@@ -262,13 +262,13 @@ function loadedScreen(views: readonly ViewReview[]) {
 
 function render(
   data: WorkspaceData,
-  variantId?: string,
+  variantPath?: string,
   loaded?: ReturnType<typeof parseReviewResult>,
 ): string {
   return renderToStaticMarkup(
     createElement(WorkspaceEvidence, {
       data,
-      ...(variantId ? { variantId } : {}),
+      ...(variantPath ? { variantPath } : {}),
       ...(loaded ? { loaded } : {}),
     }),
   );

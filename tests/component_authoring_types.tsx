@@ -4,10 +4,8 @@ import { defineComponent } from "../dist/components/definition.js";
 import type { RenderInput } from "../dist/renderer/types.js";
 
 const metadata = {
-  id: "test",
   title: "Test",
   description: "Typed component",
-  route: "test.html",
   relatedDocs: [],
 };
 const definition = defineComponent({
@@ -39,7 +37,8 @@ const definition = defineComponent({
   },
   variants: [
     {
-      id: "test-default",
+      slug: "default",
+
       title: "Default",
       props: { label: "Hello", intent: "primary", nested: { enabled: true } },
     },
@@ -62,7 +61,7 @@ if (renderInput.entry.kind === "component") {
   const props: Readonly<Record<string, unknown>> | undefined =
     renderInput.componentProps;
   // @ts-expect-error Component renders carry their variant through entry.
-  void renderInput.variantId;
+  void renderInput.variantPath;
   void [parentId, props];
 }
 // @ts-expect-error The component parent does not retain a nested variants list.
@@ -117,7 +116,8 @@ export const invalidVariant = defineComponent({
   render: (props) => String(props.enabled),
   variants: [
     {
-      id: "invalid-default",
+      slug: "default",
+
       title: "Default",
       props: {
         // @ts-expect-error Saved variants use the schema, not inference from example values.
@@ -134,7 +134,12 @@ export const invalidControl = defineComponent({
   },
   render: (props) => String(props.enabled),
   variants: [
-    { id: "invalid-default", title: "Default", props: { enabled: true } },
+    {
+      slug: "default",
+
+      title: "Default",
+      props: { enabled: true },
+    },
   ],
   // @ts-expect-error Controls must match the schema's primitive type.
   controls: { enabled: { kind: "number" } },

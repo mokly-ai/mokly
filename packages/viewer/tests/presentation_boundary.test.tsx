@@ -20,16 +20,19 @@ const fixture = readCatalogue(
 );
 
 test("SSR preserves pending entry and saved-variant comparison eligibility", () => {
-  for (const screenId of ["home", "action"] as const) {
+  for (const screenPath of [
+    "product/browse/home",
+    "components/action",
+  ] as const) {
     const model = structuredClone(fixture);
     const entry =
-      screenId === "home"
-        ? model.screens.find(({ id }) => id === screenId)!
-        : model.components.find(({ id }) => id === screenId)!;
+      screenPath === "product/browse/home"
+        ? model.screens.find(({ path }) => path === screenPath)!
+        : model.components.find(({ path }) => path === screenPath)!;
     entry.changes = { status: "ready", included: true, kind: "changed" };
     const variant =
       entry.kind === "component"
-        ? catalogueComponentVariants(model, entry.id)[0]!
+        ? catalogueComponentVariants(model, entry.path)[0]!
         : undefined;
     const views =
       variant?.views ?? (entry.kind === "screen" ? entry.views : []);
@@ -37,10 +40,10 @@ test("SSR preserves pending entry and saved-variant comparison eligibility", () 
     for (const view of views) view.comparison = { status: "pending" };
 
     const html = renderViewer({
-      viewerId: `pending-${screenId}`,
+      viewerId: `pending-${screenPath.replaceAll("/", "-")}`,
       catalogue: model,
       baseUrl: "https://catalogue.example",
-      defaultSelection: { screenId },
+      defaultSelection: { screenPath },
     });
     assert.match(html, /data-workspace-status="">Changed<\/span>/);
     assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
@@ -52,7 +55,7 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
   const screenModel = {
     ...originalScreenModel,
     components: originalScreenModel.components.map((candidate) =>
-      "variantOf" in candidate && candidate.variantOf === "action"
+      "variantOf" in candidate && candidate.variantOf === "components/action"
         ? {
             ...candidate,
             colorSchemes: ["light", "dark"] as const,
@@ -74,7 +77,7 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
     catalogue: screenModel,
     baseUrl: "https://catalogue.example",
     defaultSelection: {
-      screenId: home.id,
+      screenPath: home.path,
       colorScheme: "dark",
       viewport: "both",
     },
@@ -103,7 +106,7 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
   };
   const selected = catalogueComponentVariants(
     componentModel,
-    lightComponent.id,
+    lightComponent.path,
   )[0]!;
   selected.comparison = { status: "ready", kind: "changed", eligible: true };
   for (const view of selected.views)
@@ -113,7 +116,7 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
     catalogue: componentModel,
     baseUrl: "https://catalogue.example",
     defaultSelection: {
-      screenId: selected.id,
+      screenPath: selected.path,
       colorScheme: "dark",
       viewport: "both",
     },

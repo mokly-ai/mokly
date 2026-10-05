@@ -8,6 +8,7 @@ import {
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { MoklyError } from "../errors.js";
 
+import type { FolderRecord } from "./folder_records.js";
 import { createManifest } from "./manifest.js";
 import { validateManifestMetadata } from "./manifest_validation.js";
 
@@ -16,6 +17,7 @@ export interface CatalogueIndex {
   generatedBy: "mokly";
   sourceFiles: readonly string[];
   entries: ManifestV8["entries"];
+  folders: ManifestV8["folders"];
 }
 
 export type CatalogueMetadata = ManifestV8 | CatalogueIndex;
@@ -24,9 +26,10 @@ export function createCatalogueIndex(
   entries: readonly ResolvedRegistryEntry[],
   sourceFiles: readonly string[],
   schemes: readonly ColorScheme[],
+  folders: readonly FolderRecord[] = [],
 ): CatalogueIndex {
   return parseCatalogueIndex({
-    ...createManifest(entries, sourceFiles, schemes),
+    ...createManifest(entries, sourceFiles, schemes, new Map(), folders),
     schemaVersion: "live-index-1",
   });
 }

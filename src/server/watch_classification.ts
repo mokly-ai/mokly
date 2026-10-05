@@ -45,7 +45,7 @@ export class WatchClassification {
         )
           return;
         timingCounts("changes.publish", () => ({
-          changedIds: snapshot.changedIds?.length ?? 0,
+          changedEntries: snapshot.changedEntries?.length ?? 0,
         }));
         this.publish(snapshot);
       })

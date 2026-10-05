@@ -4,6 +4,7 @@ import { canonicalJson } from "@mokly/viewer/data";
 import {
   normalizeReviewPair,
   normalizeSingleDocument,
+  type ReviewLinkNormalization,
 } from "../review/ignore.js";
 
 import {
@@ -18,6 +19,8 @@ import { validateComponentRanges, type RenderedRange } from "./ranges.js";
 export interface ComponentProjection {
   before: string;
   after: string;
+  resourceBefore?: string;
+  resourceAfter?: string;
   inputs: boolean;
   structure: boolean;
   rawEqual: boolean;
@@ -35,6 +38,7 @@ export function projectComponentPair(
   rootComponentId?: string,
   beforeRanges?: readonly RenderedRange[],
   afterRanges?: readonly RenderedRange[],
+  links?: ReviewLinkNormalization,
 ): ComponentProjection {
   const validatedBefore = beforeView
     ? (beforeRanges ?? validateComponentRanges(before, beforeView.ranges))
@@ -45,10 +49,12 @@ export function projectComponentPair(
   const rawBefore = normalizeSingleDocument(
     stripMarkers(before, beforeView, validatedBefore),
     context,
+    links?.before,
   );
   const rawAfter = normalizeSingleDocument(
     stripMarkers(after, afterView, validatedAfter),
     context,
+    links?.after,
   );
   const pairs = new Map<string, string>();
   if (beforeView && afterView) {
@@ -93,11 +99,17 @@ export function projectComponentPair(
           validatedAfter,
         )
       : stripMarkers(after, afterView, validatedAfter);
-  const normalized = normalizeReviewPair(left, right, context);
+  const normalized = normalizeReviewPair(left, right, context, links);
   const { inputs, structure } = componentUsageSignals(beforeView, afterView);
   return {
     before: normalized.base,
     after: normalized.head,
+    ...(normalized.resourceBase === undefined
+      ? {}
+      : { resourceBefore: normalized.resourceBase }),
+    ...(normalized.resourceHead === undefined
+      ? {}
+      : { resourceAfter: normalized.resourceHead }),
     inputs,
     structure,
     rawEqual: rawBefore === rawAfter,
@@ -128,6 +140,7 @@ export function changedComponentImplementations(
   head: ComponentViewRecord | undefined,
   baseRanges?: readonly RenderedRange[],
   headRanges?: readonly RenderedRange[],
+  links?: ReviewLinkNormalization,
 ): ReadonlySet<string> {
   const changed = new Set<string>();
   if (!base || !head) return changed;
@@ -195,7 +208,7 @@ export function changedComponentImplementations(
     const left = contents(before, base, validatedBase);
     const right = contents(after, head, validatedHead);
     const match = (a: string, b: string) => {
-      const pair = normalizeReviewPair(a, b, instance.componentId);
+      const pair = normalizeReviewPair(a, b, instance.componentId, links);
       return pair.base === pair.head;
     };
     if (

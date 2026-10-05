@@ -33,7 +33,7 @@ export function catalogueModel(): CatalogueReadModel {
 
 /** Initialize the React shell state for one fixture route. */
 export function fixtureShellState({
-  href = "https://example.test/view/screens/home.html",
+  href = "https://example.test/view/product/browse/home/",
   initial,
   model = catalogueModel(),
 }: {
@@ -43,8 +43,8 @@ export function fixtureShellState({
 } = {}): ShellState {
   const catalogue = viewerCatalogue(model);
   const route = routeFromUrl(catalogue, new URL(href));
-  const screenId =
-    route.view.kind === "target" ? route.view.target.entry.id : null;
-  const context = viewerContext(model, { ...defaultSelection, screenId });
+  const screenPath =
+    route.view.kind === "target" ? route.view.target.entry.path : null;
+  const context = viewerContext(model, { ...defaultSelection, screenPath });
   return createInitialShellState(catalogue, context, route.view, initial);
 }

@@ -41,8 +41,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a wrapper-only saved view row names its own styles and no consumers", async ({
       page,
     }) => {
-      for (const route of ["action-default", "action"]) {
-        await page.goto(`${wrapper.url}/view/components/${route}.html`);
+      for (const route of ["action/default", "action"]) {
+        await page.goto(`${wrapper.url}/view/${route}/`);
         const evidence = await openEvidence(page);
         await expect(
           evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
@@ -59,7 +59,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("an affected-only screen keeps its full styles without a row of its own", async ({
       page,
     }) => {
-      await page.goto(`${componentOnly.url}/view/screens/checkout.html`);
+      await page.goto(`${componentOnly.url}/view/checkout/`);
       const evidence = await openEvidence(page);
       expect(await evidenceFiles(evidence)).toEqual([
         [RULES, [[MATCHED_LEAD, [".action"]]]],
@@ -72,10 +72,10 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await openCatalogue(page, name);
       await page.locator('[data-filter="changed"]').click();
       await expect(
-        page.locator('[data-route="screens/checkout.html"]'),
+        page.locator('[data-route="checkout/index.html"]'),
       ).toBeHidden();
       await expect(
-        page.locator('[data-route="components/action.html"]'),
+        page.locator('[data-route="action/index.html"]'),
       ).toBeVisible();
     });
   });

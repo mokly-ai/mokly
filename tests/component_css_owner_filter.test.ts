@@ -28,7 +28,7 @@ test("declared links retain provenance without CSS resource owners", async (t) =
     assert.ok(view.usage!.insertedStylesheets!.length);
     assert.ok(
       view.usage!.insertedStylesheets!.every(
-        (link) => link.componentIds.length,
+        (link) => link.componentPaths.length,
       ),
     );
   }
@@ -45,7 +45,7 @@ test("baseline and current v8 both reject CSS owners and missing roots", async (
       Object.assign(view.usage, {
         resources: [{ path: "old.CSS", componentIds: ["invalid owner"] }],
       });
-      if (entry.id === "action-default")
+      if (entry.path === "action/default")
         Object.assign(view.usage, { ranges: [] });
     }
   assert.throws(() => parseHistoricalManifest(old), /stylesheet|root|owner/);
@@ -79,12 +79,12 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
       (warning) => warning.code === "ignored-stylesheet-resource-owner",
     );
     const home = warnings.filter(
-      (warning) => warning.context[0] === "screens/home.mobile.html",
+      (warning) => warning.context[0] === "home/index.mobile.html",
     );
     assert.equal(home.length, 2);
     assert.equal(
       home[0]!.message,
-      'Stylesheet ownership for "unlinked.CSS" on "screens/home.mobile.html" is ignored. Changes follow the elements that each changed rule matches.',
+      'Stylesheet ownership for "unlinked.CSS" on "home/index.mobile.html" is ignored. Changes follow the elements that each changed rule matches.',
     );
     assert.ok(
       !result.warnings!.some(

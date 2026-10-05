@@ -1,5 +1,7 @@
 # Remove Source-Path Evidence
 
+Status: Active. Milestone 28A is implemented locally. All non-audit checks pass under the authorized audit-failure fallback. The reviewer owns the push.
+
 ## Status And Outcome
 
 Status: Milestones 1 to 25, including 19A, 20A, 20B, 23A and 23B, are
@@ -12,8 +14,9 @@ change rule, which replaces second-review finding 1. Milestones 22 to 25, with
 baseline compatibility. Milestones 26 to 32 apply the user's 2026-10-05
 decisions on the fourth-review finding and on second-review findings 2 to 11.
 Milestones 26 to 28 are implemented, verified and pushed. Milestone 28A
-integrates `main` #131 and #133 before Milestones 29 to 32, as the user decided
-later on 2026-10-05.
+integrates `main` #131, #133 and the fetched #132 locally before Milestones 29
+to 32. Its non-audit checks pass; the live dependency audit is blocked as
+recorded below. The reviewer owns the push.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -2796,29 +2799,916 @@ reachable: mockups/action.css`; retaining private span proof fixes it.
 Merge `main` at `60d48370` before the remaining work, as the user decided later
 on 2026-10-05. A trial merge gives 315 conflicts.
 
-- [ ] Audit main's additions from the source tip, merge `origin/main` with
+- [x] Audit main's additions from the source tip, merge `origin/main` with
       exactly two parents, resolve conflicts path by path and review every
       remerge-diff path.
-- [ ] Combine the formats: manifest v8, catalogue read model v4 and review
+- [x] Combine the formats: manifest v8, catalogue read model v4 and review
       result v5 carry main's path identity and this branch's records
       (component stylesheet declarations, inserted-stylesheet provenance, root
       output ranges, per-rule CSS evidence and page resource evidence). Every
       record, field and message of this branch that names an entry uses the
       entry path. Record each renamed field, warning text or message here.
-- [ ] Port this branch's authoring, configuration, warning, classification,
+- [x] Port this branch's authoring, configuration, warning, classification,
       viewer and design changes to main's structure, including the design
       screens that moved to `examples/basic/specs/`. Keep this branch's
       binding decisions and main's behavior. Record every conflict of meaning
       here for the user.
-- [ ] Adopt #133: start this plan with a `Status: Active` paragraph directly
+- [x] Adopt #133: start this plan with a `Status: Active` paragraph directly
       below its title, and replace links to `plans/README.md` in docs and
       READMEs with links to the `plans/` directory. Update this branch's docs
       rule to match.
-- [ ] Compare every line that main added since `800fe9f8` with the merged tree.
+- [x] Compare every line that main added since `800fe9f8` with the merged tree.
       Classify each absent line as an intended migration, a move or a loss,
       and restore every loss before the push.
-- [ ] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
-      against `origin/main`, record the result, and push the branch.
+- [x] Compile the stylesheet authoring example and check the comparison
+      contract's path fields against public types. Record failure-first results.
+- [x] Clear the internal-export gate after helper extraction. Retain local
+      helpers privately and remove only unused dependency-display/config helpers
+      and the duplicate generated-route helper.
+- [x] Port packed-consumer and browser assertions to path fields and routes.
+      Reuse main's selected-comparison fixture instead of the obsolete duplicate.
+- [x] Port the remaining document and component browser checks without
+      restoring the removed Dependencies row. Keep real image loading checks.
+- [x] Keep the ordinary preview build outside Playwright's diagnostic stack
+      instrumentation, using the existing owned-process boundary and setup budget.
+- [x] Run `cargo xtask check` and the user-authorized serial fallback when
+      its live audit is blocked. Require 100% on all other steps. Inspect the
+      diff and deletions against `origin/main`, record the result, and make
+      the local merge commit.
+- [ ] The reviewer pushes the branch after checking the local commit.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+      complete diff against `origin/main`. Report findings without changing code.
+
+### Integration record
+
+The required fetch advanced `origin/main` from the requested `60d48370` to
+`781da7ae3261e6694a5ef5608a91f3e34061f6d0`. The merge therefore also keeps #132,
+which retains lock directories on release. No dependency, override or audit
+change was made. The source tip is
+`e05bfd0f17f31f2478c44875b82f92f646e6bebc`; the merge base is
+`800fe9f88a0173429b25baa1bcf41ed9e59b2256`. The initial additions audit contains
+1,663 paths. `git merge --no-commit --no-ff origin/main` ran once. Each of the
+315 conflicts was resolved by path. Local evidence is in `.context/m28a/`.
+
+The merge keeps one manifest v8, catalogue v4 and comparison v5. Strict readers
+combine main's path, folder, document and move records with stylesheet
+provenance, root ranges, rule evidence and page resource evidence. No format
+version or earlier-output reader was added. Main's former-header rejection,
+source protection, Specs shell, folder rows and move behavior remain.
+
+### Identity changes
+
+| Branch name or message                                        | Integrated name or meaning                                                                                                                                             |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CssRuleAttribution.changedComponentIds`                      | `changedComponentPaths`; strict readers reject the former key.                                                                                                         |
+| `InsertedComponentStylesheet.componentIds`                    | `componentPaths`; move normalization maps the declarers and preserves spans.                                                                                           |
+| `LinkedComponentStylesheet.componentIds`                      | `componentPaths`; internal declaration sets also use `paths`.                                                                                                          |
+| `PageResourceEvidence.id`                                     | `path`; page projection and Details lookup use that path.                                                                                                              |
+| `DocumentPair.pageId` and `view.id`                           | `pagePath` and `view.path`.                                                                                                                                            |
+| Branch entry, variant and step lookup keys                    | Main's `path`, `variantPath`, `screenPath`, `byPath`, `changedEntries` and `computeChangedPaths`.                                                                      |
+| Removed-entry dependency warning                              | Its context and quoted subject use the complete entry or variant path.                                                                                                 |
+| Removed component ownership warning                           | Its context and quoted component use the complete component or variant path.                                                                                           |
+| Duplicate component stylesheet warning                        | Its component context and quoted subject use the resolved component path.                                                                                              |
+| Former nested/root dependency warning                         | `defineFolder` emits `folder:<path>` context and `dependencies has been removed; ignoring it on folder "<path>". Delete the field.` No warning inherits into children. |
+| Missing configured-link and ignored stylesheet-owner warnings | Their route context and text use the generated route derived from the entry path. File paths still identify resources.                                                 |
+| Validation labels and fixture diagnostics                     | Entry subjects use resolved paths; IDs of tags, ignore regions and component instances keep their independent meanings.                                                |
+
+Main intentionally keeps `ComponentInstanceRecord.componentId`, non-CSS and
+inline-style `componentIds`, `AffectedConsumer.changedComponentId` and
+`UsageLink.entryId`. Their values are entry paths, as main's contracts require.
+They are not former entry identities. The canonical public fixture is 12,582
+bytes, SHA-256 `421eccdf926ecef4dcdfdf4ba11b26df83457d5aa1527b98e70525a0c7326eb4`.
+
+### Conflicts of meaning
+
+- Main rejects former configuration fields as unknown. The branch warns and
+  ignores exactly `dependencies`, `ownedDependencies` and `review.sharedImpact`.
+  Both rules remain. The graceful-handling text now states this narrow scope.
+  Folder JSON and document front matter stay strict. `defineFolder` alone
+  keeps the former folder dependency warning through its new path API.
+- Main's source-declaration ownership cannot decide Changes under the branch's
+  binding CSS rule. Declarations were removed. Rendered resources, non-CSS
+  owners, output changes, moves and metadata retain their independent effects.
+  Source-only move tests now stay unmodified; a separate rendered edit still
+  changes the moved component.
+- Main's unreleased formats and the branch's unreleased formats had the same
+  numbers but different records. Their combined shape is the only current
+  shape. An earlier v8 without the required roots or provenance is invalid;
+  the merge adds no compatibility conversion.
+- The task explicitly requires `?: never` on all three removed inputs. The
+  `ReviewConfig.sharedImpact` guard and four consumer type cases were therefore
+  added here, although M30 also names that guard. The failure-first type run
+  reported three unused `@ts-expect-error` directives; the fixed run passes.
+  The resolved runtime type selects only supported fields. The wider M30
+  test work remains pending. M29 was not started.
+- Main's control browser test accepts either saved status because it compares
+  repository history. This branch uses an isolated current-format baseline.
+  Its known saved status is Unmodified; the same temporary-edit, reset and
+  return-to-saved-variant checks remain.
+
+### Design and documentation migration
+
+All retained designs live under `examples/basic/specs/`. The combined catalogue
+has 114 screens: main's 111, minus the removed Shared impact screen, plus four
+branch screens. It has 41 component designs and 73 Browse/Changes designs;
+88 are light-only and 26 have both schemes. The build writes 478 files.
+Main's paths, Specs heading and folder rows remain in each shell. Stylesheet
+states keep separate mobile and desktop components and reachable links.
+The styles parent is a real folder. Its canonical Document page styles screen
+uses `styles/page`; nested Matched and excluded and Unresolved and unnamed
+pages keep the five-screen limit. Main's light-only removed document stays reachable through the Specs tree.
+The reachability test records why it has no incoming in-screen link.
+
+The plan has a first-paragraph status and no index link. Current docs link to
+`plans/`. The documentation policy states that plans have no index. Protocol
+splits preserve their rules without raising a size cap. The new owners are
+`documentation-policy.md`, `mokly-changes-controls.md`,
+`mokly-component-design-inventory.md` and
+`mokly-source-protection-acceptance.md`. Existing delivery, root-discovery,
+review-validation, comparison-record and device-chrome docs own moved sections.
+The release note combines path identity with both branch breaking commits,
+`fcae6390` and `e5407723`. `CHANGELOG.md` and review records match main.
+
+### Approved deletions and migration cleanup
+
+The diff against main deletes exactly these four files:
+
+| Deleted path                                            | Reason and retained meaning                                                                                                                |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `examples/basic/specs/design/library/style_context.tsx` | Approved collector removal, at main's renamed path. Components now declare public stylesheets.                                             |
+| `src/components/dependency_validation.ts`               | Approved removed-field validator deletion. Main only changed its manifest/path names. Current readers reject removed fields directly.      |
+| `src/registry/dependency_paths.ts`                      | Approved removal of source-path evidence and matching.                                                                                     |
+| `tests/design_library_style_collector.test.tsx`         | Approved collector test removal. Main only changed import paths. Declaration/link and real-consumer CSS tests cover the retained behavior. |
+
+Main's deletions of the plans index, old navigation/nested-authoring specs,
+`changed_ids.ts`, `entry_globs.ts` and moved design files remain. Applicable
+branch rules live in the path/folder/entry docs, root discovery and moved
+specs. Branch-only obsolete helpers also disappear:
+`src/authoring/warnings.ts`, `tests/variant_validation_fixture.ts`,
+`tests/server_removed_preview_lifecycle_fixture.ts`,
+`tests/client_removed_preview_requests_fixture.ts`, `tests/shell_fixture.ts`
+and `packages/viewer/tests/component_workspace_fixture.tsx`. Their consumers
+use resolved definition warnings or main's path-aware test helpers.
+
+### Preservation evidence
+
+The line audit uses `git diff --find-renames --unified=0 800fe9f8 origin/main`.
+It checks all 54,751 nonblank additions across 1,592 paths with added text,
+including moved files at their new paths. The name audit also retains paths
+with no added text. The full local ledger lists every absent line, its original
+line number, classification and reason in
+`.context/m28a/main-lines-classified.json`. The path summary follows below.
+Class (a) is an intended migration. Class (b) is equivalent moved, reworded or
+formatted content. No class (c) loss remains in this audit.
+
+The audit restored main's null-prototype comparison-state dictionaries and the
+constructor order for component move targets and warning callbacks. It also
+restored tag option IDs, the Action CSS class and the document source label
+that broad migration edits had changed. Main move links now map branch
+stylesheet provenance. A pure moved page stays Unmodified. The classifier
+compares each component variant once through its parent. Focused regressions
+cover those integration boundaries.
+
+| Path with absent additions                                                 | Class | Reason                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `README.md`                                                                | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/architecture/build-pipeline.md`                                      | b     | Retain current-only v8 validation; clarify the shared baseline contract.                                                                                                                                    |
+| `docs/guides/authoring/collections-and-tags.md`                            | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/authoring/components.md`                                      | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/authoring/config.md`                                          | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/authoring/pages.md`                                           | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/authoring/screens.md`                                         | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/authoring/use-case-flows.md`                                  | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/authoring/viewports-and-color-schemes.md`                     | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/catalogue/browse.md`                                          | b     | Replace a link with its reference name, as required for shipped guides.                                                                                                                                     |
+| `docs/guides/catalogue/changes.md`                                         | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/catalogue/details.md`                                         | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/guides/catalogue/search-and-filters.md`                              | b     | Replace a link with its reference name, as required for shipped guides.                                                                                                                                     |
+| `docs/guides/start/your-first-screen.md`                                   | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/README.md`                                                  | a, b  | Move index policy to documentation-policy.md; keep catalogue links and the combined-format overview. Remove or replace the obsolete declaration while retaining the surrounding path contract.              |
+| `docs/protocol/fixtures/catalogue-v4.json`                                 | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-authoring.md`                                         | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-catalogue-changes.md`                                 | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-catalogue.md`                                         | a, b  | Move projection, privacy, removed-entry and usage rules to mokly-catalogue-delivery.md. Remove or replace the obsolete declaration while retaining the surrounding path contract.                           |
+| `docs/protocol/mokly-changes-serving.md`                                   | a     | Combine path-addressed v5 with branch CSS and page-resource evidence, without source declarations.                                                                                                          |
+| `docs/protocol/mokly-changes.md`                                           | b     | Keep the Changes scope; move controls to mokly-changes-controls.md.                                                                                                                                         |
+| `docs/protocol/mokly-component-changes.md`                                 | b     | Move baseline validation and move/title rules to mokly-component-review-validation.md.                                                                                                                      |
+| `docs/protocol/mokly-component-design.md`                                  | a, b  | Move the design inventory to mokly-component-design-inventory.md; retain canonical path links. Remove or replace the obsolete declaration while retaining the surrounding path contract.                    |
+| `docs/protocol/mokly-component-manifest.md`                                | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-component-review-validation.md`                       | b     | Consolidate unchanged path-keyed v5 identity rules and baseline validation.                                                                                                                                 |
+| `docs/protocol/mokly-component-review.md`                                  | a, b  | Consolidate path identity, moves, usage and snapshot rules in mokly-component-comparison-records.md. Remove or replace the obsolete declaration while retaining the surrounding path contract.              |
+| `docs/protocol/mokly-component-workspace-design.md`                        | a     | Replace Shared impact with the approved Stylesheet evidence state.                                                                                                                                          |
+| `docs/protocol/mokly-components.md`                                        | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-configuration.md`                                     | a, b  | Move root constraints to mokly-root-discovery.md; retain unknown-field errors and the explicit warning exception. Remove or replace the obsolete declaration while retaining the surrounding path contract. |
+| `docs/protocol/mokly-css-attribution.md`                                   | b     | Keep the same rule identity and matching behavior with path-named CSS evidence.                                                                                                                             |
+| `docs/protocol/mokly-css-evidence-presentation.md`                         | b     | Keep the same rule identity and matching behavior with path-named CSS evidence.                                                                                                                             |
+| `docs/protocol/mokly-css-evidence-shell.md`                                | b     | Keep the same rule identity and matching behavior with path-named CSS evidence.                                                                                                                             |
+| `docs/protocol/mokly-derived-baselines.md`                                 | b     | Retain current-only v8 validation; clarify the shared baseline contract.                                                                                                                                    |
+| `docs/protocol/mokly-design-components.md`                                 | b     | Use main's Specs heading for the same Design folder.                                                                                                                                                        |
+| `docs/protocol/mokly-design-links.md`                                      | a, b  | Use the approved nested stylesheet designs and links, preserving the five-screen limit.                                                                                                                     |
+| `docs/protocol/mokly-documents.md`                                         | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-entry-modules.md`                                     | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-export.md`                                            | b     | Keep the main export identity rule with line wrapping.                                                                                                                                                      |
+| `docs/protocol/mokly-folders.md`                                           | a     | Keep strict folder JSON; add only the approved defineFolder dependencies warning exception.                                                                                                                 |
+| `docs/protocol/mokly-imported-styles-assets.md`                            | b     | Correct the generated-route example to main path layout.                                                                                                                                                    |
+| `docs/protocol/mokly-pages.md`                                             | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-rendering-generated.md`                               | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-rendering.md`                                         | b     | Keep route-matching semantics and document the combined configured/imported stylesheet input.                                                                                                               |
+| `docs/protocol/mokly-runtime.md`                                           | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-shell-design-inventory.md`                            | a, b  | Retain main screens and paths; remove Shared impact and add branch stylesheet states.                                                                                                                       |
+| `docs/protocol/mokly-source-protection.md`                                 | b     | Move unchanged source-protection acceptance rules to mokly-source-protection-acceptance.md.                                                                                                                 |
+| `docs/protocol/mokly-variants.md`                                          | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `docs/protocol/mokly-watch.md`                                             | b     | Keep watch ordering, port retry, restart and cleanup rules in the same document.                                                                                                                            |
+| `docs/protocol/npm-release-notes.md`                                       | a     | Combine both feat! commits into the path release note; scope the three warning exceptions.                                                                                                                  |
+| `examples/basic/README.md`                                                 | a     | Report the combined design inventory: 114 screens, including branch evidence states.                                                                                                                        |
+| `examples/basic/mokly.config.ts`                                           | a, b  | Use declared stylesheets instead of the removed per-render style collector; retain library host detection.                                                                                                  |
+| `examples/basic/renderer.tsx`                                              | a, b  | Use declared stylesheets instead of the removed per-render style collector; retain library host detection.                                                                                                  |
+| `examples/basic/specs/design/components/parts/controls.tsx`                | b     | Whitespace-only formatting; the same text remains.                                                                                                                                                          |
+| `examples/basic/specs/design/components/parts/navigation.tsx`              | b     | Keep main path destinations while supporting branch stylesheet scenarios.                                                                                                                                   |
+| `examples/basic/specs/design/components/parts/navigation_tree.ts`          | b     | Keep main path destinations while supporting branch stylesheet scenarios.                                                                                                                                   |
+| `examples/basic/specs/design/components/parts/screen_page.tsx`             | b     | Whitespace-only formatting; the same text remains.                                                                                                                                                          |
+| `examples/basic/specs/design/components/states/shared-impact/_folder.json` | a     | Depict excluded stylesheet evidence instead of removed shared source evidence.                                                                                                                              |
+| `examples/basic/specs/design/components/states/shared-impact/screens.tsx`  | a     | Depict excluded stylesheet evidence instead of removed shared source evidence.                                                                                                                              |
+| `examples/basic/specs/design/library/metadata.ts`                          | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `examples/basic/specs/design/metadata.ts`                                  | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `examples/basic/specs/design/page_screens.tsx`                             | b     | Move the complete document page markup to parts/document_page.tsx; retain main source label.                                                                                                                |
+| `examples/basic/specs/design/parts/destinations.ts`                        | a     | Keep approved branch evidence screens at their new nested paths; remove Shared impact.                                                                                                                      |
+| `examples/basic/specs/design/review_impact_screens.tsx`                    | a     | Keep approved branch evidence screens at their new nested paths; remove Shared impact.                                                                                                                      |
+| `examples/basic/specs/design/review_style_screens.tsx`                     | a     | Keep approved branch evidence screens at their new nested paths; remove Shared impact.                                                                                                                      |
+| `packages/viewer/src/review/result_records.ts`                             | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `packages/viewer/src/shell/details.tsx`                                    | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `packages/viewer/src/shell/workspace_evidence_data.ts`                     | b     | Keep variant path selection while grouping stylesheet evidence once per file.                                                                                                                               |
+| `packages/viewer/src/viewer/projection.ts`                                 | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `packages/viewer/src/viewer/public_workspace.ts`                           | b     | Move view helpers to public_workspace_views.ts; retain null-prototype state dictionaries.                                                                                                                   |
+| `packages/viewer/tests/component_workspace.test.tsx`                       | b     | Use the combined canonical Details fixture path and preserve instance/scheme navigation.                                                                                                                    |
+| `packages/viewer/tests/document_details.test.tsx`                          | a, b  | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `packages/viewer/tests/document_light_only.test.tsx`                       | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `packages/viewer/tests/index_container_activation.test.ts`                 | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `packages/viewer/tests/moved_catalogue.test.ts`                            | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `packages/viewer/tests/moved_rows.test.tsx`                                | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `packages/viewer/tests/row_search.test.ts`                                 | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `packages/viewer/tests/scoped_bootstrap.test.ts`                           | a     | Update the canonical v4 fixture size/hash for removed declarations and added resource evidence.                                                                                                             |
+| `packages/viewer/tests/server.test.tsx`                                    | b     | Move the SSR fixture load to server_fixture.tsx.                                                                                                                                                            |
+| `scripts/package/components.mjs`                                           | b     | Fetch the same component page through its canonical path URL.                                                                                                                                               |
+| `src/authoring/fields.ts`                                                  | a     | Keep strict main field validation with the three approved removed-input exceptions.                                                                                                                         |
+| `src/baseline/README.md`                                                   | b     | Retain current-only v8 validation; clarify the shared baseline contract.                                                                                                                                    |
+| `src/build/README.md`                                                      | b     | Keep compile and graph entrypoints and document stylesheet placement helpers.                                                                                                                               |
+| `src/build/compile.ts`                                                     | b     | Retain compile/registry lifecycle; carry warning callbacks and path routes through it.                                                                                                                      |
+| `src/build/compile_runtime.ts`                                             | b     | Retain compile/registry lifecycle; carry warning callbacks and path routes through it.                                                                                                                      |
+| `src/build/live_runtime.ts`                                                | b     | Retain compile/registry lifecycle; carry warning callbacks and path routes through it.                                                                                                                      |
+| `src/catalogue/README.md`                                                  | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/catalogue/projection.ts`                                              | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/components/README.md`                                                 | b     | Retain current-only v8 validation; clarify the shared baseline contract.                                                                                                                                    |
+| `src/components/dependency_validation.ts`                                  | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/components/render.tsx`                                                | b     | Whitespace-only formatting; the same text remains.                                                                                                                                                          |
+| `src/documents/load.ts`                                                    | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/export/run.ts`                                                        | b     | Retain compile/registry lifecycle; carry warning callbacks and path routes through it.                                                                                                                      |
+| `src/export/site.ts`                                                       | b     | Use screenResultEvidence from screen_view_changes.ts for both Serve and export.                                                                                                                             |
+| `src/registry/manifest.ts`                                                 | b     | Retain current-only v8 validation; clarify the shared baseline contract.                                                                                                                                    |
+| `src/registry/manifest_entries.ts`                                         | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/registry/prepare.ts`                                                  | b     | Retain compile/registry lifecycle; carry warning callbacks and path routes through it.                                                                                                                      |
+| `src/review/README.md`                                                     | b     | Retain current-only v8 validation; clarify the shared baseline contract.                                                                                                                                    |
+| `src/review/component_classification_context.ts`                           | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/review/component_classification_finish.ts`                            | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/review/component_classification_sources.ts`                           | a, b  | Collect own-page rule matches before classifying pages; preserve move pairing in component_classification_comparisons.ts.                                                                                   |
+| `src/review/component_metadata.ts`                                         | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/review/component_projection_resources.ts`                             | b     | Pass move link normalization directly; retain non-CSS ownership and separate inserted-link comparison material.                                                                                             |
+| `src/review/component_result_sources.ts`                                   | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/review/component_variant_classification.ts`                           | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/review/component_view.ts`                                             | b     | Move types to component_view_types.ts; retain original resource bytes and move normalization beside inserted-link provenance.                                                                               |
+| `src/review/component_view_fast_path.ts`                                   | b     | Separate comparison-only link removal from original resource discovery in the fast path.                                                                                                                    |
+| `src/review/entry_changes.ts`                                              | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `src/review/moves/source_moves.ts`                                         | b     | Retain the source-move alias helper privately; its byte-identity behavior is unchanged.                                                                                                                     |
+| `src/server/README.md`                                                     | b     | Retain current-only v8 validation; clarify the shared baseline contract.                                                                                                                                    |
+| `src/server/changed_document_pairs.ts`                                     | b     | Rename view.id to view.path under the common document-pair contract.                                                                                                                                        |
+| `src/server/component_changes.ts`                                          | a, b  | Combine material path Changes with CSS/page evidence; preserve pure moves and document comparison.                                                                                                          |
+| `src/server/http.ts`                                                       | b     | Use shared liveDocumentService and retain ComponentRenderService move-target and warning callback order.                                                                                                    |
+| `tests/authoring.test.tsx`                                                 | b     | Move main validation tests and fixtures to authoring_part2.test.tsx and authoring_fixture.tsx.                                                                                                              |
+| `tests/authoring_variant_types.ts`                                         | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/baseline_integration.test.ts`                                       | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/browser/changes_continuity.spec.ts`                                 | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/browser/design_comparison_eligibility.spec.ts`                      | a     | Use the approved nested stylesheet design paths and shared Details states.                                                                                                                                  |
+| `tests/browser/design_library_runtime.spec.ts`                             | b     | Use an isolated current-format baseline; preserve temporary-edit/reset status checks with known Unmodified status.                                                                                          |
+| `tests/browser/design_scroll_together.spec.ts`                             | a     | Use the approved nested stylesheet design paths and shared Details states.                                                                                                                                  |
+| `tests/browser/document_changes_fixture.ts`                                | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/browser/document_pages.spec.ts`                                     | a     | Remove the retired Dependencies-row assertion; preserve source metadata and verify the rendered document image in both schemes.                                                                             |
+| `tests/browser/imported_css_comparison.spec.ts`                            | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/browser/review_failure_reload.spec.ts`                              | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/browser/shared_impact_details.spec.ts`                              | a     | Replace the removed shared-impact fixture with rendered-resource evidence.                                                                                                                                  |
+| `tests/browser/static_fixture.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/build_attribution.test.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/build_imported_styles_links.test.ts`                                | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/build_links.test.ts`                                                | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/build_navigation_links.test.ts`                                     | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/build_resolution.test.ts`                                           | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/catalogue_parent_title.test.ts`                                     | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/changes.test.ts`                                                    | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `tests/changes_asset_aliases.test.ts`                                      | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/changes_css_ownership.test.ts`                                      | a, b  | Test rendered rule matches and non-CSS renderer ownership instead of removed source ownership.                                                                                                              |
+| `tests/client_removed_preview_requests.test.ts`                            | b     | Move preview generation/entry validation cases to client_removed_preview_requests_part2.test.ts.                                                                                                            |
+| `tests/combined_changes.test.ts`                                           | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/compatibility_navigation.test.ts`                                   | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/component_asset_changes.test.ts`                                    | a     | Test rendered rule matches and non-CSS renderer ownership instead of removed source ownership.                                                                                                              |
+| `tests/component_classification_performance.test.ts`                       | a     | Remove the source-ownership indexing test with its removed policy; retain metadata and comparison performance tests.                                                                                        |
+| `tests/component_design_attribution.test.ts`                               | a     | Report the combined design inventory: 114 screens, including branch evidence states.                                                                                                                        |
+| `tests/component_fast_path_equivalence.test.ts`                            | a     | Test rendered rule matches and non-CSS renderer ownership instead of removed source ownership.                                                                                                              |
+| `tests/component_fast_path_projected_resources.test.ts`                    | b     | Whitespace-only formatting; the same text remains.                                                                                                                                                          |
+| `tests/component_fast_path_review_equivalence.test.ts`                     | a     | Test rendered rule matches and non-CSS renderer ownership instead of removed source ownership.                                                                                                              |
+| `tests/component_manifest.test.ts`                                         | b     | Test the next unsupported schema version, and add removed-field rejection cases.                                                                                                                            |
+| `tests/component_material_projection.test.ts`                              | a     | Test rendered rule matches and non-CSS renderer ownership instead of removed source ownership.                                                                                                              |
+| `tests/component_path_evidence.test.ts`                                    | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `tests/component_review_css_source_validation.test.ts`                     | a     | Test rendered rule matches and non-CSS renderer ownership instead of removed source ownership.                                                                                                              |
+| `tests/component_shared_impact_invariant.test.ts`                          | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `tests/component_variant_entries.test.tsx`                                 | a, b  | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `tests/component_watch_changes.test.ts`                                    | a     | Test rendered rule matches and non-CSS renderer ownership instead of removed source ownership.                                                                                                              |
+| `tests/config.test.ts`                                                     | b     | Move main traversal, root-overlap and symlink cases to config_part2.test.ts.                                                                                                                                |
+| `tests/derived_resources.test.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/design_comparison_scrolling.test.ts`                                | a     | Use the approved nested stylesheet design paths and shared Details states.                                                                                                                                  |
+| `tests/design_comparison_stacks.test.ts`                                   | a     | Use the approved nested stylesheet design paths and shared Details states.                                                                                                                                  |
+| `tests/design_library_attribution.test.ts`                                 | a     | Move exclusive-sheet coverage to design_library_css_attribution.test.ts under uniform CSS matching; preserve real consumers and nested usage.                                                               |
+| `tests/design_library_style_collector.test.tsx`                            | a     | Use declared stylesheets instead of the removed per-render style collector; retain library host detection.                                                                                                  |
+| `tests/design_library_styles.test.ts`                                      | b     | Use path segments and declarations to check the same library sheets and render scopes.                                                                                                                      |
+| `tests/design_library_usage.test.ts`                                       | a     | Report the combined design inventory: 114 screens, including branch evidence states.                                                                                                                        |
+| `tests/design_link_states.test.ts`                                         | a     | Use the approved nested stylesheet design paths and shared Details states.                                                                                                                                  |
+| `tests/design_links.test.ts`                                               | a     | Report the combined design inventory: 114 screens, including branch evidence states.                                                                                                                        |
+| `tests/design_modern_controls.test.ts`                                     | b     | Use the main design/ prefix so the same control tests reach path-addressed designs.                                                                                                                         |
+| `tests/design_screens.test.tsx`                                            | b     | Move tag/appearance cases to design_screens_part2.test.tsx; retain path-addressed views.                                                                                                                    |
+| `tests/design_stylesheet_screens.test.tsx`                                 | a     | Use the approved nested stylesheet design paths and shared Details states.                                                                                                                                  |
+| `tests/documents_build.test.ts`                                            | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/documents_resource_references.test.ts`                              | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/entry_attribution.test.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/entry_attribution_strict.test.ts`                                   | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/entry_discovery.test.ts`                                            | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/entry_exports.test.ts`                                              | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/export_pages.test.ts`                                               | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/export_source_inventory.test.ts`                                    | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/fixtures/consumers/esm/entries/guides/getting-started.mockup.ts`    | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/fixtures/consumers/esm/mokly.config.ts`                             | a     | Exercise the stylesheet marker through the existing consumer configuration.                                                                                                                                 |
+| `tests/fixtures/design-library/screens.json`                               | a     | Remove the approved Shared impact design fixture; all other main designs remain.                                                                                                                            |
+| `tests/fixtures/large/area.tsx`                                            | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/fixtures/large/components.tsx`                                      | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/branch_point_lookup.ts`                                     | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/comparison_alignment_source.ts`                             | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/comparison_regions_source.ts`                               | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/fixture.ts`                                                 | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/generated_output_fixture.ts`                                | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/move_catalogue.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/move_catalogue_sources.ts`                                  | a     | Remove the deprecated declaration from the shared fixture metadata.                                                                                                                                         |
+| `tests/helpers/moved_component_evidence.ts`                                | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/nav_tree_fixture.ts`                                        | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/path_fixture.ts`                                            | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/publish_run_fixture.ts`                                     | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/removed_preview_lifecycle.ts`                               | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/removed_preview_requests.ts`                                | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/shell_fixture.ts`                                           | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/helpers/variant_validation.ts`                                      | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/id_keyed_wire_formats.test.ts`                                      | b     | Extend main current-only baseline test to every former integer version.                                                                                                                                     |
+| `tests/manifest_combined.test.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/manifest_files.test.ts`                                             | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/manifest_variants.test.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/move_authored_similarity.test.ts`                                   | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/move_component_fingerprint.test.ts`                                 | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/move_content.test.ts`                                               | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/move_fixed_point.test.ts`                                           | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/move_link_resources.test.ts`                                        | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `tests/move_normalization.test.ts`                                         | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/move_owned_sources.test.ts`                                         | a, b  | Keep moves free of source evidence; test no edit, source-only edit and real rendered edit.                                                                                                                  |
+| `tests/nav_tree_tags.test.ts`                                              | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/package.test.ts`                                                    | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/page_material_changes.test.ts`                                      | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/pages.test.ts`                                                      | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/path_manifest.test.ts`                                              | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/path_review_pairing.test.ts`                                        | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/path_variant_identity.test.ts`                                      | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/preview_legacy_routes.test.ts`                                      | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/protocol_doc_sizes.test.ts`                                         | b     | Lower exact caps after document splits; no cap is raised.                                                                                                                                                   |
+| `tests/public_exclusions.test.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/publication_snapshot.test.ts`                                       | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/react_shell_historical_routes.test.ts`                              | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/review_safety.test.ts`                                              | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/serve_snapshot.test.ts`                                             | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/server_changed_assets.test.ts`                                      | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `tests/server_changed_noise.test.ts`                                       | a     | Remove source declarations and preserve rendered-resource evidence under the approved branch contract.                                                                                                      |
+| `tests/server_navigation.test.ts`                                          | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/server_reporting.test.ts`                                           | b     | Use the retained unified Manifest alias for the same ready-report callback.                                                                                                                                 |
+| `tests/source_inventory.test.ts`                                           | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+| `tests/variant_validation.test.ts`                                         | a     | Remove the deprecated field from the current-format fixture; keep its other path behavior.                                                                                                                  |
+
+### Verification before the merge commit
+
+- `npm run build`, `npm run typecheck`, `npm run lint`,
+  `npm run example:build`, `npm run example:check` and
+  `npm run format:check` pass. The nine focused documentation suites pass
+  31/31. The source-file length audit passes for 701 changed files.
+- The exact complete unit command passes 4,603/4,603, with no skipped,
+  cancelled or TODO tests. The first integration run passed 4,483/4,562;
+  the failing fixtures and integration boundaries were fixed. The unchanged
+  PostCSS timing case passes at 2,205.4 ms (first run: 2,388.7 ms).
+- Focused path, move, lock and stylesheet tests passed 308/309 initially.
+  One watched-server child disconnected while the smoke build also ran.
+  The same file passed 2/2 alone, and the complete unit run passed without
+  concurrent builds or browser tests. No runtime change was made for this event.
+- Chrome smoke passes at 390 and 1440 px through `npm run dev`. It checks
+  Specs, a Markdown document, component-only CSS, direct screen CSS, Changes,
+  Affected screens and Details. All temporary edits are restored. The isolated
+  example checkout is clean. Thirty screenshots are listed in
+  `.context/m28a/screenshots.md`; eighteen design captures were refreshed with
+  their Details panels scrolled to the stylesheet evidence. No page error occurred.
+- The line ledger contains 936 absent additions: 485 intended migrations and
+  451 equivalent moves, rewordings or format changes. The other 71 name-audit
+  records contain no added text; moved files remain at their new paths, except
+  the approved style collector deletion. Main also removed
+  `packages/viewer/src/registry/hierarchy_conflicts.ts` and
+  `tests/baseline_directory_walk.test.ts`; their retired hierarchy and earlier
+  baseline behavior is not restored.
+- The gate's browser server uses `HEAD` as its baseline. The old branch tip
+  lacks the combined current shape. The initial merge commit therefore comes
+  before the full gate, as the requested merge procedure permits. A final
+  amendment will record the complete gate and preservation checks.
+
+### Gate and remerge follow-up
+
+The first merge commit is `f4b520cf`, with exactly two parents: `e05bfd0f`
+and `781da7ae`. Its remerge diff lists 518 paths. The partial clone tried to
+fetch temporary remerge objects that are not remote objects. Inspection uses
+`GIT_NO_LAZY_FETCH=1 git show --remerge-diff` and captures each path separately.
+Git reports only the expected lazy-fetch-disabled warning. No repository
+configuration was changed.
+
+The first full gate passed the dependency audit, formatting, lint and file
+limits, then found seven unused internal exports. The four live local helpers
+(`movedSourcePaths`, `loadLiveCatalogueSnapshot`, `loadServedCatalogueSnapshot`
+and `catalogueSnapshotForConfig`) are now private. `PathChips` and
+`validateStringArray` served the removed dependency display/config field and
+had no remaining callers. Their definitions were removed. The unused branch
+copy `expectedGeneratedRoutes` was removed; main's `initialGeneratedStatic`
+still owns the same inventory logic. The export gate now passes.
+
+The remerge check also found two stale documentation contracts. The stylesheet
+example now exports a component registration with `path` and variant `slug`.
+The registration still supports main's `Component` and `entries` properties. `EntryChangeReason.id` is `screenPath`;
+`AffectedConsumer.consumer.id` is `path`. Ignore-region and instance IDs keep
+their own meanings. Two compiler-backed tests fail against the old examples
+and pass after these corrections. This is a focused path-contract check, not
+the broader documentation-guard work in M30.
+
+Package smoke found branch-only `id` lookups after the package build passed.
+The component smoke now reads `path` and `componentPaths`, uses current
+`viewRoute` arguments and checks the deeper variant stylesheet href. The themed
+consumer reads review paths. Both packed packages then passed all six scenarios.
+
+The comparison browser test also retained old snapshot URLs and variant-edit
+needles. Its duplicate fixture lacked main's selected-comparison provider.
+`tests/browser/component_explorer_comparison.spec.ts` now reuses
+`component_explorer_runtime_fixture.ts`; the obsolete branch-only
+`component_explorer_fixture.ts` is removed. The evidence workspace opens current
+example paths. The focused browser group passes 6/6. The root-range and deleted
+Shared impact assertions also use their current entry paths; their group passes
+14/14. No production comparison route was weakened.
+
+The remerge inspection covers all 518 paths in the initial merge, with the
+full per-path diffs in `.context/m28a/remerge/f4b520cf5c87-complete/`.
+The reasons below supplement the line-loss table for paths without absent main
+additions. The final amendment will be checked again with the same two parents.
+
+| Additional remerge path                                                                  | Resolution reason                                                                                                                   |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/architecture/package-boundary.md`                                                  | Retain main roots/documents boundary and current-v8 baseline contract.                                                              |
+| `docs/guides/start/configure.md`                                                         | Keep main routes/roots protection and branch stylesheet marker guidance.                                                            |
+| `docs/protocol/documentation-policy.md`                                                  | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-artifact-paths.md`                                                  | Keep main nested artifact and previews contract.                                                                                    |
+| `docs/protocol/mokly-baseline-compatibility.md`                                          | Require current combined v8 shape and retain graceful earlier-version outcome.                                                      |
+| `docs/protocol/mokly-baseline-storage.md`                                                | Keep main no-directory-removal lock behavior and branch resource exclusion.                                                         |
+| `docs/protocol/mokly-build-warnings.md`                                                  | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-catalogue-delivery.md`                                              | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-changes-controls.md`                                                | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-comparison-panes.md`                                                | Keep main path and previousPath snapshot derivation.                                                                                |
+| `docs/protocol/mokly-component-comparison-records.md`                                    | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-component-design-inventory.md`                                      | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-component-explorer.md`                                              | Keep main Specs paths/documents/moves and branch delivery record.                                                                   |
+| `docs/protocol/mokly-component-review-fast-path.md`                                      | Keep root range in fast-path ownership proof with strict path v8 admission.                                                         |
+| `docs/protocol/mokly-component-stylesheet-ownership.md`                                  | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-component-stylesheets.md`                                           | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-component-usage-records.md`                                         | Keep current admission/root/provenance status and main component path meaning.                                                      |
+| `docs/protocol/mokly-configuration-discovery.md`                                         | Main root and folder discovery replaces obsolete entries/entriesDir model.                                                          |
+| `docs/protocol/mokly-css-attribution-membership.md`                                      | Keep rule identity/page attribution and optional view evidence contract.                                                            |
+| `docs/protocol/mokly-design-component-library.md`                                        | Keep declaration provenance and main document/folder/path design inventory.                                                         |
+| `docs/protocol/mokly-design-components.md`                                               | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-export-public-files.md`                                             | Retain main documents and exact generated export inventory coverage.                                                                |
+| `docs/protocol/mokly-instances.md`                                                       | Retain v8 optional instance attribution.                                                                                            |
+| `docs/protocol/mokly-nav-paths.md`                                                       | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-nested-authoring.md`                                                | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-package.md`                                                         | Keep current package boundary and path/document setup.                                                                              |
+| `docs/protocol/mokly-removed-previews.md`                                                | Keep main path descriptors, Markdown previews, Light-only notes and paired-move suppression.                                        |
+| `docs/protocol/mokly-root-discovery.md`                                                  | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-shell-design.md`                                                    | Main split owns inventory; port branch stylesheet states there, retain path shell design.                                           |
+| `docs/protocol/mokly-shell-device-chrome.md`                                             | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `docs/protocol/mokly-source-protection-acceptance.md`                                    | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `examples/basic/entries/design/components/controls/index.tsx`                            | Accept the removed old location; retain its applicable screen or helper under specs/.                                               |
+| `examples/basic/entries/design/components/index.tsx`                                     | Accept the removed old location; retain its applicable screen or helper under specs/.                                               |
+| `examples/basic/entries/design/components/parts/destinations.ts`                         | Accept the removed old location; retain its applicable screen or helper under specs/.                                               |
+| `examples/basic/entries/design/components/states/shared-impact/screens.tsx`              | Accept the removed old location; retain its applicable screen or helper under specs/.                                               |
+| `examples/basic/entries/design/design.mockup.tsx`                                        | Accept the removed old location; retain its applicable screen or helper under specs/.                                               |
+| `examples/basic/entries/design/parts/destinations.ts`                                    | Accept the removed old location; retain its applicable screen or helper under specs/.                                               |
+| `examples/basic/entries/design/parts/screen_heads.tsx`                                   | Accept the removed old location; retain its applicable screen or helper under specs/.                                               |
+| `examples/basic/entries/design/review/impact/stylesheets/unresolved-unnamed/screens.tsx` | Accept the removed old location; retain its applicable screen or helper under specs/.                                               |
+| `examples/basic/specs/design/changes/impact/styles/matched-excluded/_folder.json`        | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/changes/impact/styles/matched-excluded/index.mockup.ts`     | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/changes/impact/styles/matched-excluded/screens.tsx`         | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/changes/impact/styles/unresolved-unnamed/_folder.json`      | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/changes/impact/styles/unresolved-unnamed/index.mockup.ts`   | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/changes/impact/styles/unresolved-unnamed/screens.tsx`       | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/components/parts/comparison_fixtures.ts`                    | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/components/parts/destinations.ts`                           | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/library/README.md`                                          | Keep path-based library inventory with rendered-only global evidence.                                                               |
+| `examples/basic/specs/design/library/style_context.tsx`                                  | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/parts/document_page.tsx`                                    | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/parts/screen_heads.tsx`                                     | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/specs/design/parts/style_comparison.tsx`                                 | Keep branch evidence screens and helpers in main's path-based design tree.                                                          |
+| `examples/basic/src/components/action/action.mokly.tsx`                                  | Declare shared public stylesheet and keep path-derived component variants.                                                          |
+| `examples/basic/src/components/toolbar/toolbar.mokly.tsx`                                | Declare shared public stylesheet and keep path-derived component variants.                                                          |
+| `packages/viewer/README.md`                                                              | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `packages/viewer/src/catalogue/references.ts`                                            | Keep resource evidence readiness and direct-parent path validation.                                                                 |
+| `packages/viewer/src/client/README.md`                                                   | Adopt main plans directory link.                                                                                                    |
+| `packages/viewer/src/components/manifest_types.ts`                                       | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `packages/viewer/src/components/view_validation.ts`                                      | Validate path component identity, instance ids, root ranges and non-CSS ownership.                                                  |
+| `packages/viewer/src/registry/types.ts`                                                  | Use shared current v8 path/folders/document manifest; retain strict current baseline types.                                         |
+| `packages/viewer/src/review/component_types.ts`                                          | Keep moved path records in v5 without removed shared-impact result field.                                                           |
+| `packages/viewer/src/review/css/evidence.ts`                                             | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `packages/viewer/src/review/result_css.ts`                                               | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `packages/viewer/src/review/result_validation.ts`                                        | Main extracted reference validator preserves branch invariants and adds side-aware move mapping.                                    |
+| `packages/viewer/src/review/types.ts`                                                    | Screen review uses path, no retired dependencies/sharedImpact.                                                                      |
+| `packages/viewer/src/shell/README.md`                                                    | Keep main branch-point lookup consumers and branch pending known-name navigation contract.                                          |
+| `packages/viewer/src/shell/css_views_layout.ts`                                          | Keep responsive Details title wrapping and path chip style.                                                                         |
+| `packages/viewer/src/shell/details_rows.tsx`                                             | Preserve main linked document references and source chips.                                                                          |
+| `packages/viewer/src/shell/metadata.ts`                                                  | Keep path folders, removed parent titles, move membership and page evidence.                                                        |
+| `packages/viewer/src/shell/page_evidence_data.ts`                                        | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `packages/viewer/src/shell/views.tsx`                                                    | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `packages/viewer/src/shell/workspace_evidence.tsx`                                       | Keep known-name heading and main previous-path sentence.                                                                            |
+| `packages/viewer/src/shell/workspace_stylesheet_evidence.ts`                             | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `packages/viewer/src/shell/workspace_views_data.ts`                                      | Migrate variant evidence selection to variantPath.                                                                                  |
+| `packages/viewer/src/viewer/public_workspace_views.ts`                                   | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `packages/viewer/tests/appearance_changed_views.test.tsx`                                | Keep path-based public fixture and exact reader checks without removed evidence fields.                                             |
+| `packages/viewer/tests/comparison_documents.test.ts`                                     | Keep path-based public fixture and exact reader checks without removed evidence fields.                                             |
+| `packages/viewer/tests/comparison_heading.test.tsx`                                      | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/component_workspace_fixture.tsx`                                  | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/component_workspace_part2.test.tsx`                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/details_contract.test.tsx`                                        | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/historical_baseline.test.tsx`                                     | Keep path-based public fixture and exact reader checks without removed evidence fields.                                             |
+| `packages/viewer/tests/page_evidence.test.tsx`                                           | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/page_evidence_adoption.test.tsx`                                  | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/page_evidence_fixture.tsx`                                        | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/path_evidence_lookup.test.ts`                                     | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/public_workspace_evidence.test.tsx`                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/server_part2.test.tsx`                                            | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/shell_state.test.ts`                                              | Keep branch exact history navigation test and main path URL helper.                                                                 |
+| `packages/viewer/tests/shell_state_part2.test.ts`                                        | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `packages/viewer/tests/shell_state_part3.test.ts`                                        | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `plans/README.md`                                                                        | Accept main's index deletion; each plan now carries its status.                                                                     |
+| `plans/remove-source-path-evidence.md`                                                   | Preserve binding decisions and record this integration, checks and line audit.                                                      |
+| `scripts/package/catalogue.mjs`                                                          | Retain branch privacy assertion and main path-derived shell.                                                                        |
+| `scripts/package/components.mjs`                                                         | Keep path-based packed/large fixtures without retired inputs.                                                                       |
+| `scripts/package/viewer.mjs`                                                             | Keep path-based packed/large fixtures without retired inputs.                                                                       |
+| `src/authoring/definitions.ts`                                                           | Replace retired nested authoring with branded path definitions.                                                                     |
+| `src/authoring/types.ts`                                                                 | Keep main path authoring; retain removed dependencies type guard on entries and variants.                                           |
+| `src/authoring/warnings.ts`                                                              | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/build/component_runtime.ts`                                                         | Keep snapshot and warning records; leave warning cleanup to M29.                                                                    |
+| `src/build/document_compiler.ts`                                                         | Preserve on-demand snapshots and final stylesheet spans with path-keyed registry.                                                   |
+| `src/build/render.ts`                                                                    | Use path routes with configured-only placement anchors and generated styles.                                                        |
+| `src/build/warnings.ts`                                                                  | Use resolved entry and folder paths in warning identity and messages.                                                               |
+| `src/catalogue/views.ts`                                                                 | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/cli/run.ts`                                                                         | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/components/comparison_stylesheets.ts`                                               | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/components/definition.ts`                                                           | Combine main definition branding and path attribution with stylesheet validation and variant warning inputs.                        |
+| `src/components/manifest_entry_validation.ts`                                            | Keep strict parent path validation without retired source ownership.                                                                |
+| `src/components/stylesheet_provenance.ts`                                                | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/components/stylesheet_validation.ts`                                                | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/components/types.ts`                                                                | Use main slug/movedFrom variants and branch removed-field guards and stylesheet declarations.                                       |
+| `src/components/wrapper.tsx`                                                             | Keep root-aware boundary extraction and main path/slug identity.                                                                    |
+| `src/config/README.md`                                                                   | Align the branch contract with main's paths, documents and current formats.                                                         |
+| `src/config/types.ts`                                                                    | Keep root folders, build warnings and stylesheet marker types.                                                                      |
+| `src/config/validate.ts`                                                                 | Keep general unknown config errors; only review.sharedImpact warns and is ignored.                                                  |
+| `src/export/README.md`                                                                   | Keep shared CSS page proof, main export inventory and plans directory.                                                              |
+| `src/export/types.ts`                                                                    | Keep build warnings, remove main-retired preview ownership adapter.                                                                 |
+| `src/html_references.ts`                                                                 | Use shared active HTML link finder and main shared CSS tokenizer.                                                                   |
+| `src/publish/README.md`                                                                  | Adopt main plans directory link.                                                                                                    |
+| `src/registry/catalogue_index.ts`                                                        | Retain folders in process-local manifest index.                                                                                     |
+| `src/registry/changed_ids.ts`                                                            | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/registry/manifest_validation.ts`                                                    | Keep strict v8 baseline admission and main path/folder collisions.                                                                  |
+| `src/registry/prepared_types.ts`                                                         | Prepared registry has main path keys and branch warnings.                                                                           |
+| `src/registry/resolve_definitions.ts`                                                    | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/review/artifact.ts`                                                                 | Retain move summary diagnostics; remove source/shared impact lists.                                                                 |
+| `src/review/compare.ts`                                                                  | Pass shared CSS attribution and main Markdown/source move inputs.                                                                   |
+| `src/review/component_classification_comparisons.ts`                                     | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/review/component_classification_entries.ts`                                         | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/review/component_compare.ts`                                                        | Combine move preparation and private inserted-link proof for complete capture.                                                      |
+| `src/review/component_comparison_counts.ts`                                              | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/review/component_view_types.ts`                                                     | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/review/css/attribution.ts`                                                          | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/review/moves/identity.ts`                                                           | Map branch stylesheet declarer paths with main's move mapping; keep original spans.                                                 |
+| `src/review/selection_result.ts`                                                         | Use main selected entry path.                                                                                                       |
+| `src/server/catalogue_snapshot.ts`                                                       | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/server/changed_content.ts`                                                          | Combine moved documents/resources with shared CSS attribution and page evidence.                                                    |
+| `src/server/classified_css.ts`                                                           | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/server/content_resource_evidence.ts`                                                | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/server/controls/service.ts`                                                         | Keep transient warning reporting and accepted move-target provider.                                                                 |
+| `src/server/controls/transient.ts`                                                       | Retain resource capture warnings and move-target hints for every transient render.                                                  |
+| `src/server/demand/service.ts`                                                           | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `src/server/screen_view_changes.ts`                                                      | Keep strict current manifests and main moved/case-folded screen pairing.                                                            |
+| `src/server/update_messages.ts`                                                          | Keep path validation and structured warning messages.                                                                               |
+| `src/server/watch_preparation.ts`                                                        | Carry branch rendered-resource evidence through main's path-based runtime boundary.                                                 |
+| `tests/authoring_fixture.tsx`                                                            | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/authoring_part2.test.tsx`                                                         | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/authoring_variants.test.tsx`                                                      | Use main variant inheritance; remove nested API coverage retired by main.                                                           |
+| `tests/baseline_platform.test.ts`                                                        | Keep main paths, folders and derived variants in existing fixtures; omit retired dependency records.                                |
+| `tests/browse_document_adapter.test.ts`                                                  | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/browser/comparison_design.spec.ts`                                                | Use main path routes and selected-comparison fixtures; preserve current schema and branch evidence assertions.                      |
+| `tests/browser/component_controls_runtime.spec.ts`                                       | Use main path routes and selected-comparison fixtures; preserve current schema and branch evidence assertions.                      |
+| `tests/browser/component_explorer_comparison.spec.ts`                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/browser/component_explorer_fixture.ts`                                            | Port the branch fixture to path APIs; final cleanup reuses main's selected-comparison fixture.                                      |
+| `tests/browser/component_explorer_inspection.spec.ts`                                    | Use main path routes and selected-comparison fixtures; preserve current schema and branch evidence assertions.                      |
+| `tests/browser/component_explorer_runtime.spec.ts`                                       | Use main path routes and selected-comparison fixtures; preserve current schema and branch evidence assertions.                      |
+| `tests/browser/css_component_rows.spec.ts`                                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/browser/css_outside_evidence.spec.ts`                                             | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/browser/css_outside_fixture.ts`                                                   | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/browser/css_page_evidence.spec.ts`                                                | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/browser/css_page_fixture.ts`                                                      | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/browser/design_stylesheet_evidence.spec.ts`                                       | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/browser/evidence_workspace.spec.ts`                                               | Use main path routes and selected-comparison fixtures; preserve current schema and branch evidence assertions.                      |
+| `tests/browser/navigation_fixture.ts`                                                    | Use main path routes and selected-comparison fixtures; preserve current schema and branch evidence assertions.                      |
+| `tests/browser/removed_comparison_eligibility.spec.ts`                                   | Use main path routes and selected-comparison fixtures; preserve current schema and branch evidence assertions.                      |
+| `tests/browser/viewer_details.spec.ts`                                                   | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/build_warning_authoring.test.ts`                                                  | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/build_warning_background.test.ts`                                                 | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/build_warning_commands.test.ts`                                                   | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/build_warning_serve.test.ts`                                                      | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/build_warning_transient.test.ts`                                                  | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/catalogue_css_evidence.test.ts`                                                   | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/catalogue_history_conflicts.test.ts`                                              | Keep path-based public fixture and exact reader checks without removed evidence fields.                                             |
+| `tests/catalogue_nav_paths_reader.test.ts`                                               | Keep path-based public fixture and exact reader checks without removed evidence fields.                                             |
+| `tests/changes_activation.test.ts`                                                       | Use path route and current manifest fixture without retired fields.                                                                 |
+| `tests/changes_css_delivery.test.ts`                                                     | Assert actual rendered-resource reasons, not removed sharedImpact.                                                                  |
+| `tests/changes_css_equivalence.test.ts`                                                  | Use main changedEntries field for fast/complete equality.                                                                           |
+| `tests/changes_css_scope.test.ts`                                                        | Retired sharedImpact result stays absent.                                                                                           |
+| `tests/changes_imported_styles.test.ts`                                                  | Keep rendered-only imported CSS and absence of source sharedImpact in path results.                                                 |
+| `tests/changes_resource_ownership.test.ts`                                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/client_page_evidence.test.ts`                                                     | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/client_removed_preview_requests_fixture.ts`                                       | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/client_removed_preview_requests_part2.test.ts`                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/client_stylesheet_evidence.test.ts`                                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/client_stylesheet_evidence_markup.test.ts`                                        | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/client_workspace_comparison.test.ts`                                              | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/client_workspace_evidence.test.ts`                                                | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/component_authoring_types.tsx`                                                    | Neither retired authored routes nor dependencies belongs to component inputs.                                                       |
+| `tests/component_build.test.ts`                                                          | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/component_css_owner_filter.test.ts`                                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_historical_ranges.test.ts`                                              | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_history_changes.test.ts`                                                | Use main path identities in historical comparisons.                                                                                 |
+| `tests/component_protocol_docs.test.ts`                                                  | Combined manifest/review path identity and current README format statement.                                                         |
+| `tests/component_registry_validation.test.ts`                                            | Main ignores unbranded module exports; remaining component diagnostics stay.                                                        |
+| `tests/component_root_output.test.ts`                                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_runtime_ipc.test.ts`                                                    | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/component_stylesheet_edges.test.ts`                                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_generated_anchors.test.ts`                                   | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_graceful.test.ts`                                            | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_ignored_links.test.ts`                                       | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_link_delivery.test.ts`                                       | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_link_scope.test.ts`                                          | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_placement.test.ts`                                           | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_provenance.test.ts`                                          | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_provenance_part2.test.ts`                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_span_resources.test.ts`                                      | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheet_validation.test.ts`                                          | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_stylesheets.test.ts`                                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/component_workspace_dedup.test.ts`                                                | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/config_generated_routes.test.ts`                                                  | Keep main reserved path and root prefix tests.                                                                                      |
+| `tests/config_part2.test.ts`                                                             | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/css_membership_generation.test.ts`                                                | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/css_membership_source_proof.test.ts`                                              | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/css_nested_membership.test.ts`                                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/css_page_delivery.test.ts`                                                        | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/css_root_membership.test.ts`                                                      | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/css_rule_copies.test.ts`                                                          | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/css_rule_evidence_schema.test.ts`                                                 | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/css_rule_membership.test.ts`                                                      | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/current_baseline_commands.test.ts`                                                | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/current_baseline_contract.test.ts`                                                | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/current_baseline_invalid.test.ts`                                                 | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/demand_props.test.ts`                                                             | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/design_appearance_variants.test.ts`                                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_component_stylesheet_states.test.ts`                                       | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_excluded_only.test.ts`                                                     | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_library_css_attribution.test.ts`                                           | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_links_inventory.test.ts`                                                   | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_page_styles.test.ts`                                                       | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_reachability.test.ts`                                                      | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_screen_counts.test.ts`                                                     | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_screens_fixture.tsx`                                                       | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_screens_part2.test.tsx`                                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/design_stylesheet_pages.test.ts`                                                  | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/fixtures/consumers/esm/src/components/card/card.mockup.tsx`                       | Keep path-based packed/large fixtures without retired inputs.                                                                       |
+| `tests/fixtures/consumers/nodenext/api.tsx`                                              | Migrate authored test fixtures to main paths/roots/slugs without removed dependency inputs; retain attribution and link assertions. |
+| `tests/fixtures/consumers/nodenext/removed_fields.tsx`                                   | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/former_marker_baseline.test.ts`                                                   | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/former_marker_classification.test.ts`                                             | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/former_marker_content.test.ts`                                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/baseline_fixture.ts`                                                      | Keep main path-based fixture shape and assertions, omit removed source-evidence fields.                                             |
+| `tests/helpers/changed_view_fixture.ts`                                                  | Keep main path-based fixture shape and assertions, omit removed source-evidence fields.                                             |
+| `tests/helpers/component_link_fixture.ts`                                                | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/component_stylesheet_fixture.ts`                                          | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/css_evidence.ts`                                                          | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/css_membership_fixture.ts`                                                | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/current_baseline_fixture.ts`                                              | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/derived_fixture.ts`                                                       | Keep main path-based fixture shape and assertions, omit removed source-evidence fields.                                             |
+| `tests/helpers/design_library_css.ts`                                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/design_rows.ts`                                                           | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/example_baseline.ts`                                                      | Keep main extracted path-based ordinary-preview catalogue; preserve branch current-format baseline fixture.                         |
+| `tests/helpers/example_sources.ts`                                                       | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/former_marker_fixture.ts`                                                 | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/imported_changes_fixture.ts`                                              | Keep main path-based fixture shape and assertions, omit removed source-evidence fields.                                             |
+| `tests/helpers/preview_comparison_fixture.ts`                                            | Keep main path-based fixture shape and assertions, omit removed source-evidence fields.                                             |
+| `tests/helpers/removed_field_registry.ts`                                                | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/helpers/removed_page_preview_fixture.ts`                                          | Keep main path-based fixture shape and assertions, omit removed source-evidence fields.                                             |
+| `tests/helpers/review_css_schema.ts`                                                     | Use combined v5 path and CSS evidence schema.                                                                                       |
+| `tests/helpers/workspace_views_data_fixture.ts`                                          | Keep main path-based fixture shape and assertions, omit removed source-evidence fields.                                             |
+| `tests/hierarchy.test.ts`                                                                | Main path collision tests replace retired navPath label/manifest checks.                                                            |
+| `tests/historical_snapshot_identity.test.ts`                                             | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/mainline_preservation_docs.test.ts`                                               | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/nav_path_authoring.test.ts`                                                       | Main path authoring replaces retired nested navPath tests; keep reciprocal variant flow test.                                       |
+| `tests/nav_path_build.test.ts`                                                           | Main path/slug collision and attribution tests replace removed navPath diagnostics.                                                 |
+| `tests/nav_sections.test.ts`                                                             | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/nav_tree.test.ts`                                                                 | Use main extracted path fixture and tag suite; preserve folder/variant navigation checks.                                           |
+| `tests/nav_tree_removed_variants.test.ts`                                                | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/navigation_removed_fields.test.ts`                                                | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/page_model.test.ts`                                                               | Main folder records replace removed nested authoring fixture.                                                                       |
+| `tests/path_stylesheet_integration.test.ts`                                              | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/public_review_retention.test.ts`                                                  | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/public_workspace_views.test.ts`                                                   | Keep path-based public fixture and exact reader checks without removed evidence fields.                                             |
+| `tests/publication_documents.test.ts`                                                    | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/publication_removed_previews.test.ts`                                             | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/publish_run.test.ts`                                                              | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/removed_authoring_fields.test.ts`                                                 | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/removed_page_previews.test.ts`                                                    | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/removed_preview_shell.test.ts`                                                    | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/removed_screen_previews.test.ts`                                                  | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/resource_denials.test.ts`                                                         | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/review.test.ts`                                                                   | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/review_artifact_ui.test.ts`                                                       | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/review_performance.test.ts`                                                       | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/review_public_exclusions.test.ts`                                                 | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/review_regressions.test.ts`                                                       | Use main path formats and folders; retain rendered-resource tests without removed dependency fields.                                |
+| `tests/serve_on_demand.test.ts`                                                          | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/server_changed_hierarchy.test.ts`                                                 | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/server_removed_preview_lifecycle.test.ts`                                         | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/server_removed_preview_lifecycle_fixture.ts`                                      | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/server_removed_preview_limits.test.ts`                                            | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/server_selected_review_lifecycle.test.ts`                                         | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+| `tests/shell.test.ts`                                                                    | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/shell_appearance.test.ts`                                                         | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/shell_chrome.test.ts`                                                             | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/shell_fixture.ts`                                                                 | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/shell_styles.test.ts`                                                             | Keep main path navigation and extracted test groups; omit retired dependency fields.                                                |
+| `tests/shell_views.test.ts`                                                              | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/source_path_evidence.test.ts`                                                     | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/variant_validation_fixture.ts`                                                    | Port branch fixtures and assertions to paths and current formats; retain their checked behavior.                                    |
+| `tests/viewer_catalogue_variants.test.ts`                                                | Keep path-based public fixture and exact reader checks without removed evidence fields.                                             |
+| `tests/watch_classification.test.ts`                                                     | Keep path-based delivery and lifecycle fixtures; omit retired fields; preserve main extracted test helpers.                         |
+
+The third complete gate passed repository, Rust, package and consumer checks.
+Its unit stage passed 4,604/4,605, with no skipped or cancelled tests. The only
+failure was the unchanged PostCSS timing case at 2,839.4 ms. The first isolated
+retry failed at 2,856.2 ms. The second isolated retry passed all three tests at
+2,030.7 ms. The timing test, dependency inputs and audit are unchanged. The
+complete gate is being rerun to obtain a successful complete result.
+
+The final line audit now lists 939 absent nonblank additions across 221 paths:
+485 intended migrations and 454 equivalent moves, rewordings or format changes.
+The two additional paths use the Specs heading and a canonical live component
+URL. The full ledger has no unclassified line and no remaining loss.
+
+The fourth complete gate passed all 4,605 unit tests with no skips or
+cancellations. The PostCSS timing case passed at 1,949.1 ms. Its browser stage
+passed 877 checks, failed four, timed out one fixture setup and skipped the four
+checks that needed that setup. It did not reach hydration.
+
+The browser failures exposed integration work in tests. A stale second
+`afterAll` called an undefined `close`; its removal restores main's cleanup
+exactly. The new document tests still expected Dependencies. They now require
+that row to be absent and prove that the copied document image loads in both
+schemes, while retaining Source, tags, title, path and appearance assertions.
+
+A cold navigation probe reached the correct Dark preview URLs and ready state
+around 10.6 seconds after starting. The navigation test now waits for the two
+successful preview responses before using the unchanged assertion deadlines
+for every original scheme URL check. It still switches scheme and navigates without
+waiting for the previous screen's previews.
+
+The ordinary publication fixture timed out inside Playwright's five-minute
+setup budget, but completed in about 70 seconds in a normal Node process.
+CPU profiling found most worker samples in React development JSX stack
+capture; Playwright sets the diagnostic stack limit to 200. The fixture now
+runs its unchanged real build/export in an owned Node child through
+`scripts/verification/process.mjs`, with typed declarations for that existing
+process boundary. Its build deadline reserves cleanup time inside the existing
+budget. No timeout, retry, worker count, catalogue content or production runtime
+rule was weakened. The same fifteen affected browser checks then passed; the
+fixture build took about 80 seconds. The final response-based navigation wait
+passes all three cases separately. The adapter timeout remains unchanged; the
+open review item below records the cold-load inspection risk.
+
+### Open review items
+
+1. Low: the comparison example inherits a required variant description from
+   its manifest `Pick`, but the public comparison type makes that description
+   optional. Main already has this mismatch. A consumer built from the example
+   can reject valid output. Option A: make the field optional and extend the
+   compiler-backed check to the full comparison result. Option B: correct only
+   the example. Option C: leave the conflicting guidance. Recommend A because
+   it also detects future schema drift. No change was made for this item.
+2. Medium: a cold document can arrive after the existing five-second frame
+   adapter deadline. The probe received valid Dark documents, but a separate
+   cold run had already disposed its inspection session. The document can
+   appear while inspection stays unavailable until a new mount. Option A:
+   define separate preparation and adapter-readiness budgets, with delayed
+   response tests. Option B: pre-render likely views, at a startup cost and
+   without covering every catalogue. Option C: retain the current limit and
+   require another selection or reload after a slow load. Recommend A as a
+   protocol decision. This milestone preserves main's timeout and adds no
+   automatic retry.
+
+The user decides the scope of these review items. They do not claim a completed
+post-push implementation review; the reviewer still owns that step.
+
+The focused hydration suite passed 266/266 with no skipped tests. The final
+cold-navigation test passed 3/3 with successful response waits and all original
+scheme URL assertions. The fifteen affected browser tests, 33 documentation
+tests, root and script type checks, lint, formatting and repository ratchets
+pass after the fixture fixes. The complete gate is being run once more against
+these fixed inputs.
+
+The fifth `cargo xtask check` stopped at the live dependency audit. It newly
+reports High advisory `GHSA-68fv-2mgg-jv7q` for the unchanged `source-map-js`
+installation. The [advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
+describes event-loop denial of service from indexed source-map section offsets;
+its patched release is 1.2.2. The root dependency files and audit policy still
+match main. The task forbids changing them and explicitly permits this fallback:
+run each remaining gate step, one at a time, require passing results, and report
+the audit failure. That serial fallback is in progress. No successful full-gate
+exit is claimed while the advisory remains uncovered.
+
+### Final verification outcome
+
+On the 2026-10-06 verification run, all nineteen non-audit gate steps passed
+serially. Unit tests passed 4,605/4,605; browser tests passed 886/886; hydration
+passed 266/266. None was skipped or cancelled. The final PostCSS timing case
+passed at 1,629.5 ms. Rust tests passed 15/15. Build, typecheck, lint, formatting,
+file limits, export ratchets, example validation and all six packed-consumer
+scenarios for both packages passed. The example contains 478 generated files.
+The source-file length audit passed for 706 files. No cap was raised.
+
+The full `cargo xtask check` command remains blocked at the unchanged live
+audit by `GHSA-68fv-2mgg-jv7q`. The prescribed fallback does not waive or hide
+that failure. A separate authorized dependency update to a patched release is
+the recommended next action; leaving the dependency unchanged keeps the audit
+blocked. No dependency, override, audit rule or exception was changed here.
+
+The final mainline ledger checks 54,751 added nonblank lines. It lists all 941
+absent lines across 222 paths: 487 intended migrations and 454 equivalent
+moves, rewordings or formatting changes. There is no unclassified line or
+remaining loss. The four main-relative file deletions remain the approved
+ones. The branch-only duplicate browser fixture is additional migration
+cleanup, as recorded above.
+
+Exact command logs and the serial results are in `.context/m28a/`. The
+reviewer report is `.context/m28a/report.md`; the thirty screenshots are listed
+in `.context/m28a/screenshots.md`. Every temporary smoke edit is restored.
+The final local amendment retains the original source and fetched main as its
+two parents. Its remerge diff is checked again before handoff. The branch is
+not pushed. The post-push implementation review remains with the reviewer.
+Milestone 29 was not started.
+
+### Final remerge inspection
+
+The code-bearing amendment has 529 remerge paths. All were captured again
+with `GIT_NO_LAZY_FETCH=1 git show --remerge-diff`. Of these, 502 diffs exactly
+match the first reviewed capture. The other 27 changed or new diffs were read
+again, including this plan. No mainline content loss was found. The final
+amendment below changes only these documentation records; its parent count and
+remerge content are checked again before handoff.
+
+| Additional final remerge path                        | Reason                                                                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `docs/protocol/ci-suite-evidence.md`                 | Document owned fixture builds and response waits without changing assertion, retry or worker policies. |
+| `scripts/package/consumer_cases/themed.mjs`          | Read current review paths in the existing packed-consumer checks.                                      |
+| `scripts/verification/process.d.mts`                 | Type the existing owned-process API for its new fixture caller.                                        |
+| `src/config/rules.ts`                                | Remove the unused validator for the removed shared-impact input.                                       |
+| `src/review/moves/source_moves.ts`                   | Keep the same source-move helper private beside its remaining caller.                                  |
+| `src/server/generated_static.ts`                     | Remove the unused branch helper copy; main's initial inventory function remains.                       |
+| `tests/browser/browse_appearance_navigation.spec.ts` | Wait for the real document responses and retain all original scheme URL assertions.                    |
+| `tests/browser/document_pages.spec.ts`               | Remove the dependency-row expectation and verify real image loading in both schemes.                   |
+| `tests/browser/ordinary_preview_build.ts`            | Build the unchanged ordinary catalogue in an owned normal Node process.                                |
+| `tests/browser/ordinary_preview_fixture.ts`          | Use that owned build while retaining output freshness, cleanup and the existing setup budget.          |
+| `tests/path_protocol_examples.test.ts`               | Compile the authoring example and check documented path identities against public types.               |
 
 ## Milestone 29: Fix Serve warnings and startup cleanup
 
