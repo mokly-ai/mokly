@@ -149,10 +149,13 @@ ArrowLeft when `scrollLeft > -horizontal range`.
 
 When such a region exists, do not prevent the key and do not move a page
 viewport; the browser scrolls that region and its scroll event drives region
-mirroring. When none exists, prevent the key and move the applicable chrome
-viewport: a page is 87.5% of its visible height, an arrow is 40 CSS pixels,
-Home is zero, End is the range end, and every result is clamped. The page write
-then follows the current Scroll together mode.
+mirroring. The browser may animate that scroll over several frames; each of
+its scroll events mirrors the offset reached so far, so counterparts follow
+every frame and come to rest with the region. When none exists, prevent the
+key and move the applicable chrome viewport: a page is 87.5% of its visible
+height, an arrow is 40 CSS pixels, Home is zero, End is the range end, and
+every result is clamped. The page write then follows the current Scroll
+together mode.
 
 ## Anchors
 

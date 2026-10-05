@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
   paneFrame,
+  paneFrameSelector,
   type Offset,
   type Side,
 } from "./comparison_alignment_helpers.js";
@@ -24,21 +25,46 @@ export function regionOffset(
     .evaluate((node) => ({ x: node.scrollLeft, y: node.scrollTop }));
 }
 
-/** Read one region's offsets in both versions of a section. */
+/**
+ * Read one region's offsets in both versions of a section, once both exist,
+ * in one task of the page, so both describe one rendering update. Reads taken
+ * apart may see two frames of a scroll the browser animates, or by chance
+ * one, which would make every check that compares versions depend on timing.
+ */
 export async function regionOffsets(
   section: Locator,
   selector: RegionSelector,
 ): Promise<Record<Side, Offset>> {
-  return {
-    before: await regionOffset(
-      paneFrame(section, "before"),
-      selectorFor(selector, "before"),
-    ),
-    after: await regionOffset(
-      paneFrame(section, "after"),
-      selectorFor(selector, "after"),
-    ),
+  const regions = {
+    after: selectorFor(selector, "after"),
+    before: selectorFor(selector, "before"),
   };
+  for (const side of ["before", "after"] as const)
+    await paneFrame(section, side)
+      .contentFrame()
+      .locator(regions[side])
+      .waitFor({ state: "attached" });
+  const frames = {
+    after: paneFrameSelector("after"),
+    before: paneFrameSelector("before"),
+  };
+  return section.evaluate(
+    (element, query) => {
+      const only = (scope: ParentNode | null | undefined, css: string) => {
+        const found = scope?.querySelectorAll(css) ?? [];
+        if (found.length !== 1)
+          throw new Error(`Expected one ${css}, found ${found.length}`);
+        return found[0]!;
+      };
+      const read = (side: Side): Offset => {
+        const frame = only(element, query.frames[side]) as HTMLIFrameElement;
+        const region = only(frame.contentDocument, query.regions[side]);
+        return { x: region.scrollLeft, y: region.scrollTop };
+      };
+      return { before: read("before"), after: read("after") };
+    },
+    { frames, regions },
+  );
 }
 
 /** Expect a region's vertical offsets, `[before, after]`, to settle. */
@@ -119,6 +145,14 @@ export function scrollRegion(
     }, offset);
 }
 
+/** Let a few rendering updates of the page pass. */
+export async function passRenderingUpdates(page: Page): Promise<void> {
+  for (let frames = 0; frames < 3; frames += 1)
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(resolve)),
+    );
+}
+
 /**
  * Wait until a region reaches an offset, then let a few rendering updates
  * pass, so any scroll event it still owes has run before a caller asserts that
@@ -139,10 +173,7 @@ export async function settleRegion(
       );
     })
     .toBe(true);
-  for (let frames = 0; frames < 3; frames += 1)
-    await page.evaluate(
-      () => new Promise((resolve) => requestAnimationFrame(resolve)),
-    );
+  await passRenderingUpdates(page);
 }
 
 /** Every error the shell page raises while a test runs. */

@@ -13,6 +13,7 @@ import {
 import {
   expectRegionsAt,
   expectRegionsTogether,
+  passRenderingUpdates,
   regionOffsets,
   scrollRegion,
 } from "./comparison_regions_helpers.js";
@@ -39,8 +40,11 @@ function yRange(frame: Locator, selector: string): Promise<number> {
 }
 
 /**
- * Press a key, then wait until both versions of a region agree on the
- * expected offset, or on any new offset when none is given.
+ * Press a key, then wait until both versions of a region rest at the expected
+ * offset, or at any new offset when none is given. The browser may animate
+ * the scroll a key starts and every version follows each of its frames, so an
+ * offset counts only once it holds while a few rendering updates pass; the
+ * next key then starts where this one stopped.
  */
 async function pressTogether(
   page: Page,
@@ -57,7 +61,11 @@ async function pressTogether(
       const offsets = await regionOffsets(section, selector);
       reached = offsets.after.y;
       if (offsets.before.y !== reached) return false;
-      return expected ? reached === expected(from) : reached !== from;
+      if (expected ? reached !== expected(from) : reached === from)
+        return false;
+      await passRenderingUpdates(page);
+      const later = await regionOffsets(section, selector);
+      return later.before.y === reached && later.after.y === reached;
     }, key)
     .toBe(true);
   return reached;
