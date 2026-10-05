@@ -16,6 +16,7 @@ import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import { withoutTreeEntries } from "./catalogue_fixture.js";
+import { historicalEntry } from "./path_fixture.js";
 import { catalogue, context, model } from "./shell_state_fixture.js";
 
 test("component variant heads keep the parent heading and shown entry path", () => {
@@ -63,7 +64,7 @@ test("removed component variants keep catalogue-wide Dark available", () => {
     removedEntries: [
       ...model.removedEntries,
       {
-        entry: historical,
+        entry: historicalEntry(historical),
         folderTitles: [],
         parentTitle: "Action",
         snapshotId: "e".repeat(64),

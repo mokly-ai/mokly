@@ -6,12 +6,14 @@ import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import { ComponentValidationError } from "../packages/viewer/src/components/data.js";
 
-type Mutable<T> = T extends readonly (infer Item)[]
-  ? Mutable<Item>[]
-  : T extends object
-    ? { -readonly [Key in keyof T]: Mutable<T[Key]> }
-    : T;
-type Fixture = Mutable<CatalogueReadModel>;
+type Mutable<T> = T extends string
+  ? T
+  : T extends readonly (infer Item)[]
+    ? Mutable<Item>[]
+    : T extends object
+      ? { -readonly [Key in keyof T]: Mutable<T[Key]> }
+      : T;
+type Fixture = Mutable<CatalogueReadModel<string, string>>;
 type Node = Fixture["tree"][number];
 const homePath = "product/browse/home";
 const variantPath = `${homePath}/empty`;

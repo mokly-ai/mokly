@@ -4,7 +4,7 @@ import { branchPoints } from "../catalogue/branch_point.js";
 import type { EntryIdentity } from "../catalogue/branch_point_types.js";
 import type {
   ShellCatalogueReadModel,
-  ShellCatalogueRoutedEntry,
+  AnyShellCatalogueEntry,
 } from "../catalogue/scoped_types.js";
 import { catalogueHasOmittedUsage } from "../catalogue/usage_scope.js";
 import { generatedViews } from "../components/views.js";
@@ -19,11 +19,13 @@ import { routedEntries } from "./selection.js";
 export function publicUsageLinks(
   catalogue: Catalogue,
   model: ShellCatalogueReadModel,
-  component: EntryIdentity,
+  component: EntryIdentity<string>,
 ): UsageLink[] {
   if (catalogueHasOmittedUsage(model)) return [];
   const lookup = branchPoints(catalogue);
-  const historical = new Set(model.removedEntries.map(({ entry }) => entry));
+  const historical = new Set<AnyShellCatalogueEntry>(
+    model.removedEntries.map(({ entry }) => entry),
+  );
   const links: UsageLink[] = [];
   for (const owner of routedEntries(model)) {
     if (owner.kind !== "screen" && owner.kind !== "component") continue;
@@ -58,7 +60,7 @@ export function publicUsageLinks(
 function publicEntryTitle(
   catalogue: Catalogue,
   model: ShellCatalogueReadModel,
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "component" | "screen" }>,
+  entry: Extract<AnyShellCatalogueEntry, { kind: "component" | "screen" }>,
 ): string {
   if (entry.kind !== "component" || !("variantOf" in entry)) return entry.title;
   const parent = publicParent(catalogue, model, entry);

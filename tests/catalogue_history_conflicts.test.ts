@@ -13,6 +13,7 @@ import { exportCatalogue } from "../dist/export/run.js";
 import { CommittedRepository } from "../dist/review/git.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
+import type { BranchPointPath } from "../packages/viewer/src/catalogue/path_types.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 
@@ -132,7 +133,7 @@ for (const delivery of ["Serve", "export"] as const) {
       ({ entry }) => entry.path === "home",
     )!.entry;
     if (home.kind !== "screen") throw new Error("Expected screen");
-    home.views[0]!.usage = oldUsage;
+    home.views[0]!.usage = oldUsage as CatalogueUsage<BranchPointPath>;
     assert.throws(() => readCatalogue(broken), /unknown component/);
   });
 }

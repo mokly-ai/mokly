@@ -2,7 +2,8 @@ import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import type { InstanceRef } from "@mokly/viewer";
-import { catalogueComponentVariants } from "@mokly/viewer/data";
+
+import { fixtureVariantsAt } from "../../packages/viewer/tests/path_fixture.js";
 
 import type { markerFixture } from "./viewer_marker_fixture.js";
 
@@ -32,10 +33,9 @@ export function variantInstance(fixture: MarkerFixture): InstanceRef {
   const component = fixture.catalogue.components.find(
     ({ path }) => path === "pane",
   )!;
-  const variant = catalogueComponentVariants(
-    fixture.catalogue,
-    component.path,
-  ).find(({ path }) => path === "pane/second")!;
+  const variant = fixtureVariantsAt(fixture.catalogue, component.path).find(
+    ({ path }) => path === "pane/second",
+  )!;
   const view = variant.views.find(
     (view) => view.viewport === "mobile" && view.colorScheme === "light",
   )!;

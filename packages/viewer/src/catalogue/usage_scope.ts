@@ -6,6 +6,7 @@ import {
   catalogueComponentVariants,
   resolveCatalogueEntry,
 } from "./entry_selection.js";
+import type { BranchPointPath, CurrentPath } from "./path_types.js";
 import type {
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
@@ -28,8 +29,12 @@ export type CatalogueUsageScopeTarget =
       readonly snapshotId?: string;
     };
 
-type ScopedEntry = CatalogueRecord | ShellCatalogueRoutedEntry;
-type ScopedView = CatalogueView | ShellCatalogueView;
+type ScopedEntry =
+  | CatalogueRecord<CurrentPath, CurrentPath | BranchPointPath>
+  | ShellCatalogueRoutedEntry<CurrentPath, CurrentPath | BranchPointPath>;
+type ScopedView =
+  | CatalogueView<CurrentPath | BranchPointPath>
+  | ShellCatalogueView<CurrentPath | BranchPointPath>;
 interface ScopeCatalogue {
   screens: readonly ScopedEntry[];
   documents: readonly ScopedEntry[];
@@ -46,12 +51,12 @@ interface ScopeCatalogue {
 export function resolveCatalogueUsageScope(
   model: CatalogueReadModel,
   target: CatalogueUsageScopeTarget,
-): ReadonlySet<CatalogueView>;
+): ReadonlySet<CatalogueView<CurrentPath | BranchPointPath>>;
 /** Resolve scope after parsing a shell catalogue that may contain omissions. */
 export function resolveCatalogueUsageScope(
   model: ShellCatalogueReadModel,
   target: CatalogueUsageScopeTarget,
-): ReadonlySet<ShellCatalogueView>;
+): ReadonlySet<ShellCatalogueView<CurrentPath | BranchPointPath>>;
 export function resolveCatalogueUsageScope(
   model: ScopeCatalogue,
   target: CatalogueUsageScopeTarget,
@@ -70,11 +75,13 @@ export function resolveCatalogueUsageScope(
   );
   if (entry.kind === "screen") addViews(scope, entry.views);
   if (entry.kind === "component") {
-    for (const variant of catalogueComponentVariants(model, entry.path))
+    for (const variant of catalogueComponentVariants(model, entry))
       addViews(scope, variant.views);
   }
   if (entry.kind === "use-case" && !historical) {
-    const screenPaths = new Set(entry.steps.map((step) => step.screenPath));
+    const screenPaths = new Set<string>(
+      entry.steps.map((step) => step.screenPath),
+    );
     for (const screen of model.screens)
       if (screen.kind === "screen" && screenPaths.has(screen.path))
         addViews(scope, screen.views);
@@ -85,11 +92,11 @@ export function resolveCatalogueUsageScope(
 /** Enumerate every usage-bearing view in current and historical index order. */
 export function catalogueUsageViews(
   model: CatalogueReadModel,
-): readonly CatalogueView[];
+): readonly CatalogueView<CurrentPath | BranchPointPath>[];
 /** Enumerate every usage-bearing view after shell-only usage parsing. */
 export function catalogueUsageViews(
   model: ShellCatalogueReadModel,
-): readonly ShellCatalogueView[];
+): readonly ShellCatalogueView<CurrentPath | BranchPointPath>[];
 export function catalogueUsageViews(
   model: ScopeCatalogue,
 ): readonly ScopedView[] {

@@ -1,5 +1,6 @@
 import type { CatalogueReadModel } from "../../packages/viewer/dist/catalogue/types.js";
 import { searchRow } from "../../packages/viewer/dist/shell/search_query.js";
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 
 import { catalogueModel } from "./viewer_catalogue.js";
 
@@ -35,14 +36,14 @@ export function selectionModel(detailsChanged: boolean): CatalogueReadModel {
       {
         ...template,
         changes: changes(false),
-        path: "welcome",
+        path: readCurrentPath("welcome"),
         tags: welcome.tags,
         title: welcome.title,
       },
       {
         ...template,
         changes: changes(detailsChanged),
-        path: "product/browse/details",
+        path: readCurrentPath("product/browse/details"),
         tags: details.tags,
         title: details.title,
       },

@@ -6,11 +6,11 @@ import type {
 import type { ColorScheme } from "../data/axes.js";
 
 /** Serializable common metadata for a current manifest entry. */
-export interface ManifestEntryBase {
+export interface ManifestEntryBase<Path extends string = string> {
   /** Explicit author declarations; source attribution is derived separately. */
   declaredDependencies: readonly string[];
   description: string;
-  path: string;
+  path: Path;
   kind: "screen" | "page" | "document" | "use-case" | "component";
   movedFrom?: string;
   rationale?: string;
@@ -20,30 +20,39 @@ export interface ManifestEntryBase {
 }
 
 /** Serializable screen manifest entry. */
-export interface ManifestScreen extends ManifestEntryBase {
+export interface ManifestScreen<
+  Path extends string = string,
+  Reference extends string = Path,
+> extends ManifestEntryBase<Path> {
   address?: string;
   colorSchemes: readonly ColorScheme[];
-  componentViews?: readonly ComponentViewRecord[];
+  componentViews?: readonly ComponentViewRecord<Reference>[];
   kind: "screen";
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
-  useCasePaths: readonly string[];
+  useCasePaths: readonly Reference[];
   /** Parent screen path, present only when this screen is a variant. */
-  variantOf?: string;
+  variantOf?: Reference;
 }
 
 /** Serializable whole-document page. */
-export interface ManifestPage extends ManifestEntryBase {
+export interface ManifestPage<
+  Path extends string = string,
+  _Reference extends string = Path,
+> extends ManifestEntryBase<Path> {
   kind: "page";
   tags?: readonly string[];
 }
 
 /** Serializable use-case manifest entry. */
-export interface ManifestUseCase extends ManifestEntryBase {
+export interface ManifestUseCase<
+  Path extends string = string,
+  Reference extends string = Path,
+> extends ManifestEntryBase<Path> {
   kind: "use-case";
   steps: readonly {
     description?: string;
-    screenPath: string;
+    screenPath: Reference;
     title?: string;
   }[];
   /** Declared classification tags, present only when the entry has them. */
@@ -51,17 +60,23 @@ export interface ManifestUseCase extends ManifestEntryBase {
 }
 
 /** Any entry emitted by the current manifest writer. */
-export type ManifestEntry =
-  | ManifestScreen
-  | ManifestDocument
-  | ManifestPage
-  | ManifestUseCase
-  | ManifestComponent
-  | ManifestComponentVariant;
+export type ManifestEntry<
+  Path extends string = string,
+  Reference extends string = Path,
+> =
+  | ManifestScreen<Path, Reference>
+  | ManifestDocument<Path, Reference>
+  | ManifestPage<Path, Reference>
+  | ManifestUseCase<Path, Reference>
+  | ManifestComponent<Path, Reference>
+  | ManifestComponentVariant<Path, Reference>;
 
 /** Current canonical identity-only manifest. */
-export interface ManifestV8 {
-  entries: readonly ManifestEntry[];
+export interface ManifestV8<
+  Path extends string = string,
+  Reference extends string = Path,
+> {
+  entries: readonly ManifestEntry<Path, Reference>[];
   generatedBy: "mokly";
   schemaVersion: 8;
   folders: readonly ManifestFolder[];
@@ -81,7 +96,10 @@ export type HistoricalManifestUseCase = ManifestUseCase;
 export type Manifest = ManifestV8;
 
 /** Whole-document entry rendered from Markdown. */
-export interface ManifestDocument extends ManifestEntryBase {
+export interface ManifestDocument<
+  Path extends string = string,
+  _Reference extends string = Path,
+> extends ManifestEntryBase<Path> {
   kind: "document";
   colorSchemes: readonly ColorScheme[];
   resources: readonly string[];

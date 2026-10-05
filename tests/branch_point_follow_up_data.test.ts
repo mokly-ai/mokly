@@ -1,16 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { catalogueComponentVariants } from "../packages/viewer/src/catalogue/entry_selection.js";
+import { readBranchPointPath } from "../packages/viewer/src/catalogue/path_values.js";
 import {
   readCatalogue,
   readShellCatalogue,
 } from "../packages/viewer/src/catalogue/reader.js";
 import { projectScopedCatalogue } from "../packages/viewer/src/catalogue/scoped_projection.js";
+import type { CatalogueView } from "../packages/viewer/src/catalogue/types.js";
 import { resolveCatalogueUsageScope } from "../packages/viewer/src/catalogue/usage_scope.js";
 import type { ComponentViewRecord } from "../packages/viewer/src/components/manifest_types.js";
 import { parseReviewResult } from "../packages/viewer/src/review/result_validation.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
+import { fixtureVariantsAt } from "../packages/viewer/tests/path_fixture.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
 import { compareReview } from "../src/review/compare.js";
 import { computeCatalogueChanges } from "../src/server/changed.js";
@@ -97,7 +99,7 @@ for (const name of [
           assert.ok(screen.kind === "screen");
           const usage = screen.views[0]!.usage;
           assert.ok(usage.status === "ready");
-          usage.instances[0]!.componentId = name;
+          usage.instances[0]!.componentId = readBranchPointPath(name);
           assert.throws(() => reader(invalid), {
             detail: "instance names an unknown component",
           });
@@ -128,11 +130,11 @@ for (const name of [
           `${before}/alpha`,
         ];
         assert.deepEqual(
-          catalogueComponentVariants(model, parent!).map(({ path }) => path),
+          fixtureVariantsAt(model, parent!).map(({ path }) => path),
           paths,
         );
         assert.deepEqual(
-          catalogueComponentVariants(model, before!).map(({ path }) => path),
+          fixtureVariantsAt(model, before!).map(({ path }) => path),
           paths,
         );
       }
@@ -170,10 +172,10 @@ for (const name of [
               ? "library/choice"
               : "library/archive/action"
             : entry.variantOf;
-        const variants = catalogueComponentVariants(model, parent);
+        const variants = fixtureVariantsAt(model, parent);
         assert.deepEqual(
           [...resolveCatalogueUsageScope(model, target)],
-          variants.flatMap((variant) => variant.views),
+          variants.flatMap<CatalogueView<string>>((variant) => variant.views),
         );
       }
     }

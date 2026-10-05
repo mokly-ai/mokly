@@ -1,3 +1,8 @@
+import {
+  readCurrentPath,
+  readBranchPointPath,
+} from "../catalogue/path_values.js";
+
 import type {
   ComponentVariantReview,
   ReviewResultV5,
@@ -24,7 +29,10 @@ export function validateResultReferences(result: ReviewResultV5): void {
   );
   const lookup = resultBranchPoints(result);
   const componentIdentity = (path: string, side: "before" | "after") =>
-    lookup.usageComponent(path, side)?.entry.path;
+    lookup.usageComponent(
+      side === "before" ? readBranchPointPath(path) : readCurrentPath(path),
+      side,
+    )?.entry.path;
   for (const affected of result.affectedConsumers) {
     if (!changed.has(affected.changedComponentId))
       reviewInvalid("affected evidence has no directly changed component");
@@ -32,12 +40,25 @@ export function validateResultReferences(result: ReviewResultV5): void {
       const context = evidence.context;
       const owner = (
         context.kind === "component"
-          ? lookup.usageComponent(context.entry.path, evidence.side)
-          : lookup.resolve({
-              kind: context.kind,
-              path: context.entry.path,
-              side: evidence.side,
-            })
+          ? lookup.usageComponent(
+              evidence.side === "before"
+                ? readBranchPointPath(context.entry.path)
+                : readCurrentPath(context.entry.path),
+              evidence.side,
+            )
+          : lookup.resolve(
+              evidence.side === "before"
+                ? {
+                    kind: context.kind,
+                    path: readBranchPointPath(context.entry.path),
+                    side: "before",
+                  }
+                : {
+                    kind: context.kind,
+                    path: readCurrentPath(context.entry.path),
+                    side: "after",
+                  },
+            )
       )?.entry.record;
       if (!owner?.[evidence.side])
         reviewInvalid("affected context side is missing");
@@ -47,11 +68,19 @@ export function validateResultReferences(result: ReviewResultV5): void {
           ? owner.views
           : "variants" in owner && context.kind === "component"
             ? (
-                lookup.resolve({
-                  kind: "component",
-                  path: context.variantPath,
-                  side: evidence.side,
-                })?.entry.record as ComponentVariantReview | undefined
+                lookup.resolve(
+                  evidence.side === "before"
+                    ? {
+                        kind: "component",
+                        path: readBranchPointPath(context.variantPath),
+                        side: "before",
+                      }
+                    : {
+                        kind: "component",
+                        path: readCurrentPath(context.variantPath),
+                        side: "after",
+                      },
+                )?.entry.record as ComponentVariantReview | undefined
               )?.views
             : undefined;
       if (

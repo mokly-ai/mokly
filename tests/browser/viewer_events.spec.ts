@@ -6,6 +6,7 @@ import type {
   ViewerSelection,
 } from "@mokly/viewer";
 
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import type {} from "./viewer_harness.js";
@@ -144,20 +145,26 @@ test("flow events preserve the screen key and identify the owning step", async (
     const catalogue = structuredClone(
       host.props.catalogue,
     ) as CatalogueReadModel;
-    catalogue.screens[0]!.useCasePaths = ["tour"];
+    catalogue.screens[0]!.useCasePaths = ["tour"].map(readCurrentPath);
     catalogue.useCases = [
       {
         kind: "use-case",
-        path: "tour",
+        path: readCurrentPath("tour"),
 
         title: "Tour",
         tags: [],
         details: catalogue.screens[0]!.details,
         changes: { status: "disabled" },
-        steps: [{ screenPath: "home" }, { screenPath: "home" }],
+        steps: [
+          { screenPath: readCurrentPath("home") },
+          { screenPath: readCurrentPath("home") },
+        ],
       },
     ];
-    catalogue.tree = [...catalogue.tree, { kind: "entry", path: "tour" }];
+    catalogue.tree = [
+      ...catalogue.tree,
+      { kind: "entry", path: readCurrentPath("tour") },
+    ];
     host.props = {
       ...host.props,
       catalogue,

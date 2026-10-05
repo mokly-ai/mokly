@@ -138,7 +138,7 @@ validation. A surviving parent's new title never changes this stored title.
 ## Typed References
 
 The shared data types give branch-point references and current paths distinct
-types. A value that names a baseline identity has the reference type: each
+types, `BranchPointPath` and `CurrentPath`. A baseline identity has the reference type: each
 branch-point reference above, every `previousPath`, and every path in a
 baseline inventory. A value that addresses a record of this catalogue has the
 current path type: a current entry's path, a current-side reference, and a
@@ -174,10 +174,10 @@ The review-result reader takes them from its own records: a record with an
 removed record, and each `previousPath` is a pair. It resolves each evidence
 context and chain component name on that evidence's side.
 
-The data helpers, `catalogueComponentVariants` and the usage scope, take a
-component parent, or resolve a variant's parent through the lookup. They
-collect that parent's current variants and the removed variants that resolve
-to it. A variant without an eligible parent collects only itself.
+The data helpers, `catalogueComponentVariants` and the usage scope, resolve a
+variant's parent or take a component parent through the lookup. The helpers take a typed record identity. The lookup's `at` operation locates
+its current or removed address without following pairs. They collect current variants and removed variants that
+resolve to that parent. A variant without an eligible parent collects only itself.
 
 All shells use this lookup for affected-consumer destinations, usage labels
 and links, `Used by` lists, the variant bar, Before and Current props,

@@ -1,6 +1,7 @@
 import { exactKeys, invalidData } from "../components/data.js";
 
 import { CHANGE_STATUSES, readEntry, readShellEntry } from "./entry_reader.js";
+import { readCurrentPath } from "./path_values.js";
 import { assertPublicCatalogue } from "./privacy.js";
 import { validateCatalogueReferences } from "./references.js";
 import type {
@@ -23,7 +24,6 @@ import {
   comparisonPath,
   counter,
   hash,
-  entryPath,
   object,
   text,
 } from "./values.js";
@@ -32,19 +32,20 @@ import {
 export function readCatalogue(value: unknown): CatalogueReadModel {
   const model = readCatalogueModel(value, readEntry);
   validateCatalogueReferences(model);
-  return model;
+  return model as unknown as CatalogueReadModel;
 }
 
 /** Parse the shell-only usage union before its route scope is enforced. */
 export function readShellCatalogue(value: unknown): ShellCatalogueReadModel {
   const model = readCatalogueModel(value, readShellEntry);
   validateCatalogueReferences(model);
-  return model;
+  return model as unknown as ShellCatalogueReadModel;
 }
 
-type ParsedRoutedEntry = CatalogueRecord | ShellCatalogueRoutedEntry;
+type ParsedRoutedEntry =
+  CatalogueRecord<string> | ShellCatalogueRoutedEntry<string>;
 type ParsedCatalogue<Entry extends ParsedRoutedEntry> = Omit<
-  CatalogueReadModel,
+  CatalogueReadModel<string, string>,
   | "screens"
   | "pages"
   | "documents"
@@ -168,7 +169,7 @@ function readNode(value: unknown): CatalogueNode {
     ? {
         kind,
         ...hidden,
-        path: entryPath(input.path),
+        path: readCurrentPath(input.path),
         ...ordered,
         ...(input.children !== undefined
           ? { children: array(input.children).map(readNode) }
@@ -177,9 +178,11 @@ function readNode(value: unknown): CatalogueNode {
     : {
         kind,
         ...hidden,
-        path: entryPath(input.path),
+        path: readCurrentPath(input.path),
         title: text(input.title),
-        ...(input.index === undefined ? {} : { index: entryPath(input.index) }),
+        ...(input.index === undefined
+          ? {}
+          : { index: readCurrentPath(input.index) }),
         ...ordered,
         children: array(input.children).map(readNode),
       };

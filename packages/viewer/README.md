@@ -273,6 +273,18 @@ the stored records. Removed views keep usage through component moves and
 case-only renames. Data helpers retain all variants of the resolved parent,
 or only a variant's own usage when it has no eligible parent.
 
+The v4 read model uses distinct `CurrentPath` and `BranchPointPath` string
+brands. Current entry paths and removed record addresses use `CurrentPath`.
+Removed parent and usage references, baseline inventory paths and all
+`previousPath` fields use `BranchPointPath`. Entry types carry both address and
+reference parameters. For example, a removed screen is
+`CatalogueScreen<CurrentPath, BranchPointPath>`. Stored JSON stays unchanged.
+Call `readCatalogue` on decoded JSON to obtain the validated types. Tooling can
+use `readCurrentPath` and `readBranchPointPath` from `@mokly/viewer/data` for
+individual stored paths. Resolve historical names through `branchPoints`
+before using them as current addresses. `catalogueComponentVariants` takes a
+typed record identity, including its kind and current address.
+
 Every shell uses this lookup per catalogue generation. A removed variant joins its moved or case-renamed parent in the
 tree, the variant bar and Changes activation, and opens in that parent's
 workspace. When its former parent's path now names another kind, its

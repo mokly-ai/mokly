@@ -312,16 +312,57 @@ new delivery status. That sentence was removed. The full rerun passed.
 Give branch-point references and current paths distinct types (item 1,
 step 2). The shell keeps compiling and adopts the types in Milestone 10.
 
-- [ ] Write the type design in this plan before code changes: the two path
+Type design:
+
+- `CurrentPath` and `BranchPointPath` are distinct branded strings. Their
+  values and JSON stay unchanged. Each brand identifies its side.
+- Entry and usage types carry path type parameters. Current entries use
+  `CurrentPath` for their address and references. Removed entries use
+  `CurrentPath` for their address and `BranchPointPath` for `variantOf`,
+  usage names and other retained references. Every `previousPath` uses
+  `BranchPointPath`. Baseline inventories use that type for addresses and
+  references. Raw manifest and review producer types remain available to
+  move pairing and removal selection outside the guarded scope.
+- Complete and scoped readers first validate stored strings with the existing
+  validators. They then brand each field on its known side. Review evidence
+  is a sided union, so narrowing `side` also narrows its paths. The projection
+  brands accepted inputs at its boundary. Test fixtures use typed helpers.
+- The lookup accepts sided references. `at` locates a typed record address
+  without following pairs. Variant collection takes that record identity,
+  rather than guessing a side from a bare path. Resolution returns current addresses.
+  Counterparts and previous paths return branch-point paths. Its entry types
+  retain the distinct current and removed reference fields. The shell adopts
+  these types at its catalogue and evidence boundaries in Milestone 10.
+- The type-aware guard uses the TypeScript checker. It rejects cross-side
+  comparisons and keys, widening a branded path to `string` or `any`, casts,
+  `String()` and string methods that erase a reference's type. It rejects
+  references hidden in comparison strings or keys, including templates and
+  concatenation. Display may show stored text. Reader validation and accepted
+  input branding are explicit boundaries. File selection uses repository-
+  relative POSIX paths, including when the input uses Windows separators.
+
+- [x] Write the type design in this plan before code changes: the two path
       types, where readers brand values, generic entry types, and the
       escape routes that the type-aware guard must reject. A removed
       record's own path is its current address; its `variantOf`, usage
       names, `previousPath` values and baseline inventory paths are
       branch-point references.
-- [ ] Readers, the projection and the lookup produce and accept the typed
+- [x] Readers, the projection and the lookup produce and accept the typed
       values. Test fixtures use typed helpers.
-- [ ] Add the type-aware guard for the data layer.
-- [ ] Run the unit tests, type checks and lint.
+- [x] Add the type-aware guard for the data layer.
+- [x] Run the unit tests, type checks and lint.
+
+Evidence: build, example build, all prepared type checks, lint, formatting and
+source-length checks passed. The full unit run covered 4,316 tests. One fixture
+test failed because it parsed deliberately invalid evidence. The typed fixture
+helper restored that input, and the five-test file recheck passed. The final
+17-test guard, protocol and workspace-evidence recheck passed. Real Git fixture
+server and export tests passed in the unit run.
+
+Type-only shell and embedded-viewer seams changed in this milestone so the new
+public read model keeps compiling. Their full path adoption and guard coverage
+remain in Milestone 10. The catalogue type declarations now have their own
+protocol page. No screen or stored JSON changed.
 
 ## Milestone 10: Typed branch-point references in the shell
 

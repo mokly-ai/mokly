@@ -6,10 +6,12 @@ import { currentCatalogueEntries } from "../catalogue/entry_selection.js";
 import type {
   ShellCatalogueComponent,
   ShellCatalogueReadModel,
-  ShellCatalogueRoutedEntry,
-  ShellCatalogueVariant,
+  AnyShellCatalogueEntry,
+  AnyShellCatalogueVariant,
 } from "../catalogue/scoped_types.js";
+import type { ManifestEntry } from "../registry/types.js";
 import type { Catalogue } from "../shell/catalogue.js";
+import type { RemovedEntrySnapshot } from "../shell/metadata.js";
 
 /**
  * The public record a lookup result names: the current record at the same
@@ -17,10 +19,10 @@ import type { Catalogue } from "../shell/catalogue.js";
  */
 function modelRecord(
   model: ShellCatalogueReadModel,
-  resolution: EntryResolution,
-): ShellCatalogueRoutedEntry | undefined {
+  resolution: EntryResolution<ManifestEntry, RemovedEntrySnapshot>,
+): AnyShellCatalogueEntry | undefined {
   const { entry } = resolution;
-  const same = (candidate: ShellCatalogueRoutedEntry) =>
+  const same = (candidate: AnyShellCatalogueEntry) =>
     candidate.kind === entry.kind && candidate.path === entry.path;
   return resolution.source === "current"
     ? currentCatalogueEntries(model).find(same)
@@ -32,14 +34,14 @@ function modelRecord(
 }
 
 function isParent(
-  entry: ShellCatalogueRoutedEntry | undefined,
+  entry: AnyShellCatalogueEntry | undefined,
 ): entry is ShellCatalogueComponent {
   return entry?.kind === "component" && !("variantOf" in entry);
 }
 
 function isVariant(
-  entry: ShellCatalogueRoutedEntry | undefined,
-): entry is ShellCatalogueVariant {
+  entry: AnyShellCatalogueEntry | undefined,
+): entry is AnyShellCatalogueVariant {
   return entry?.kind === "component" && "variantOf" in entry;
 }
 
@@ -47,7 +49,7 @@ function isVariant(
 export function publicParent(
   catalogue: Catalogue,
   model: ShellCatalogueReadModel,
-  entry: Pick<ShellCatalogueRoutedEntry, "kind" | "path">,
+  entry: Pick<AnyShellCatalogueEntry, "kind" | "path">,
 ): ShellCatalogueComponent | undefined {
   const parent = branchPoints(catalogue).parentOf(entry);
   const record =
@@ -66,15 +68,18 @@ export function publicVariants(
   model: ShellCatalogueReadModel,
   parent: ShellCatalogueComponent,
   parentRemoved: boolean,
-): readonly ShellCatalogueVariant[] {
+): readonly AnyShellCatalogueVariant[] {
   const current = parentRemoved
     ? []
     : (catalogue.hierarchy.variantsByPath.get(parent.path) ?? []).map(
-        (entry): EntryResolution => ({ source: "current", entry }),
+        (entry): EntryResolution<ManifestEntry, RemovedEntrySnapshot> => ({
+          source: "current",
+          entry,
+        }),
       );
   const removed = branchPoints(catalogue)
     .removedVariants(parent)
-    .map((record): EntryResolution => ({
+    .map((record): EntryResolution<ManifestEntry, RemovedEntrySnapshot> => ({
       source: "removed",
       entry: record.entry,
       record,

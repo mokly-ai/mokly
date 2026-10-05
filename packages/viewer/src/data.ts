@@ -212,3 +212,14 @@ export {
   isPortableUrlPath,
   encodeUrlPath,
 } from "./data/paths.js";
+
+export type { CurrentPath, BranchPointPath } from "./catalogue/path_types.js";
+export {
+  readCurrentPath,
+  readBranchPointPath,
+} from "./catalogue/path_values.js";
+export {
+  acceptedCatalogue,
+  baselineInventory,
+} from "./catalogue/accepted_paths.js";
+export type { TypedReviewResult } from "./review/types.js";

@@ -3,8 +3,8 @@
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
   ShellCatalogueReadModel,
-  ShellCatalogueRoutedEntry,
-  ShellCatalogueView,
+  AnyShellCatalogueEntry,
+  AnyShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import type { CatalogueEntry } from "../catalogue/types.js";
 import type {
@@ -30,7 +30,9 @@ function metadata(entry: CatalogueEntry) {
   };
 }
 
-function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
+function usageView(
+  view: AnyShellCatalogueView,
+): ComponentViewRecord | undefined {
   if (view.usage.status !== "ready") return;
   return {
     viewport: view.viewport,
@@ -43,7 +45,7 @@ function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
   };
 }
 
-export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
+export function displayEntry(entry: AnyShellCatalogueEntry): ManifestEntry {
   const base = { ...metadata(entry) };
   switch (entry.kind) {
     case "document":

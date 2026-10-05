@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { TargetStage } from "../packages/viewer/dist/shell/stages.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 
 import { catalogueModel } from "./helpers/viewer_catalogue.js";
 
@@ -59,7 +60,10 @@ test("only the first flow step receives a preview fragment", () => {
       ...flow,
       steps: [
         ...flow.steps,
-        { screenPath: "product/browse/home", title: "Return home" },
+        {
+          screenPath: readCurrentPath("product/browse/home"),
+          title: "Return home",
+        },
       ],
     },
   ];

@@ -1,3 +1,4 @@
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import type { ManifestEntry } from "../registry/types.js";
 
@@ -54,9 +55,9 @@ export interface ScreenResourceEvidence {
 }
 
 /** One stable screen identity comparison. */
-export interface ScreenReview {
+export interface ScreenReview<Path extends string = string> {
   dependencies: readonly string[];
-  path: string;
+  path: Path;
   sharedImpact: readonly string[];
   state: ReviewState;
   title: string;
@@ -80,3 +81,6 @@ export interface ReviewArtifact {
 
 /** The only accepted comparison payload. */
 export type ReviewResult = ReviewResultV5;
+
+/** Validated read result with current addresses and original before references. */
+export type TypedReviewResult = ReviewResultV5<CurrentPath, BranchPointPath>;

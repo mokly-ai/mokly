@@ -5,16 +5,16 @@ import type { CatalogueNode } from "./types.js";
 
 /** Validate public tree references without rebuilding private folder metadata. */
 export function validateCatalogueTree(
-  tree: readonly CatalogueNode[],
-  entries: readonly ShellCatalogueRoutedEntry[],
+  tree: readonly CatalogueNode<string>[],
+  entries: readonly ShellCatalogueRoutedEntry<string>[],
 ): void {
   const byPath = new Map(entries.map((entry) => [entry.path, entry]));
   const seen = new Set<string>();
   const folders = new Set<string>();
   const fail = (message: string): never => invalidData("$catalogue", message);
   const visit = (
-    nodes: readonly CatalogueNode[],
-    parent?: CatalogueNode,
+    nodes: readonly CatalogueNode<string>[],
+    parent?: CatalogueNode<string>,
   ): void => {
     for (const node of nodes) {
       const entry = node.kind === "entry" ? byPath.get(node.path) : undefined;

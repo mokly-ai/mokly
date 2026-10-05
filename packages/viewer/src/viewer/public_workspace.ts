@@ -4,10 +4,10 @@ import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
   ShellCatalogueComponent,
   ShellCatalogueReadModel,
-  ShellCatalogueRoutedEntry,
-  ShellCatalogueScreen,
-  ShellCatalogueVariant,
-  ShellCatalogueView,
+  AnyShellCatalogueEntry,
+  AnyShellCatalogueScreen,
+  AnyShellCatalogueVariant,
+  AnyShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { generatedViews } from "../components/views.js";
@@ -35,7 +35,7 @@ const reviewStates: Readonly<Record<keyof typeof statuses, ReviewState>> = {
   unmodified: "unchanged",
 };
 
-function status(entry: ShellCatalogueRoutedEntry): EntryStatus | undefined {
+function status(entry: AnyShellCatalogueEntry): EntryStatus | undefined {
   return entry.changes.status === "ready"
     ? statuses[entry.changes.kind]
     : undefined;
@@ -46,7 +46,9 @@ function status(entry: ShellCatalogueRoutedEntry): EntryStatus | undefined {
  * then its entry's change decides, so a metadata-only edit reads Changed and
  * a pure move Unmodified.
  */
-function variantStatus(entry: ShellCatalogueVariant): EntryStatus | undefined {
+function variantStatus(
+  entry: AnyShellCatalogueVariant,
+): EntryStatus | undefined {
   const compared =
     entry.comparison.status === "ready"
       ? statuses[entry.comparison.kind]
@@ -58,7 +60,7 @@ function variantStatus(entry: ShellCatalogueVariant): EntryStatus | undefined {
 
 /** Published per-view comparisons name the same changed views the shell derives. */
 function publishedChangedViews(
-  views: readonly ShellCatalogueView[],
+  views: readonly AnyShellCatalogueView[],
 ): readonly ChangedView[] {
   return orderChangedViews(
     views.flatMap((view) =>
@@ -72,8 +74,11 @@ function publishedChangedViews(
 
 /** Key public comparison evidence exactly like the served workspace data. */
 function publishedChangedViewsBySelection(
-  entry: ShellCatalogueScreen | ShellCatalogueComponent | ShellCatalogueVariant,
-  variants: readonly ShellCatalogueVariant[] = [],
+  entry:
+    | AnyShellCatalogueScreen
+    | ShellCatalogueComponent
+    | AnyShellCatalogueVariant,
+  variants: readonly AnyShellCatalogueVariant[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
     return { [entry.path]: publishedChangedViews(entry.views) };
@@ -87,7 +92,7 @@ function publishedChangedViewsBySelection(
 
 /** Keep only published views whose comparison state is ready. */
 function publishedViewStates(
-  views: readonly ShellCatalogueView[],
+  views: readonly AnyShellCatalogueView[],
 ): readonly ViewState[] | undefined {
   const states = views.flatMap((view) =>
     view.comparison.status === "ready"
@@ -105,8 +110,11 @@ function publishedViewStates(
 
 /** Key published ready states like the served workspace evidence. */
 function publishedViewStatesBySelection(
-  entry: ShellCatalogueScreen | ShellCatalogueComponent | ShellCatalogueVariant,
-  variants: readonly ShellCatalogueVariant[] = [],
+  entry:
+    | AnyShellCatalogueScreen
+    | ShellCatalogueComponent
+    | AnyShellCatalogueVariant,
+  variants: readonly AnyShellCatalogueVariant[] = [],
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
     const states = publishedViewStates(entry.views);
@@ -161,7 +169,7 @@ export function publicWorkspace(
   const parentRemoved = publicComponent
     ? model.removedEntries.some(({ entry }) => entry === publicComponent)
     : false;
-  const sourceVariants: readonly ShellCatalogueVariant[] = publicComponent
+  const sourceVariants: readonly AnyShellCatalogueVariant[] = publicComponent
     ? publicVariants(catalogue, model, publicComponent, parentRemoved)
     : orphanVariant
       ? [original]

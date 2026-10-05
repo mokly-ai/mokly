@@ -8,7 +8,6 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const protocolDirectory = path.join(repositoryRoot, "docs/protocol");
 const oversizedCaps: Readonly<Record<string, number>> = {
-  "mokly-catalogue.md": 251,
   "mokly-design-components.md": 253,
   "mokly-design-links.md": 328,
   "mokly-export-delivery.md": 263,

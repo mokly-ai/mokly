@@ -34,7 +34,7 @@ export function inputChanges(
   catalogue: Catalogue,
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   baseline: ManifestEntry | undefined,
-  inventory: readonly EntryIdentity[],
+  inventory: readonly EntryIdentity<string>[],
   currentVariants: readonly ManifestComponentVariant[] = [],
   baselineVariants: readonly ManifestComponentVariant[] = [],
 ): InputChange[] {

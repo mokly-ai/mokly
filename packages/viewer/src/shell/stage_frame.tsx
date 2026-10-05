@@ -3,8 +3,8 @@
 import { useContext, useMemo } from "react";
 
 import type {
-  ShellCatalogueRoutedEntry,
-  ShellCatalogueView,
+  AnyShellCatalogueEntry,
+  AnyShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
@@ -42,14 +42,14 @@ export function StageFrame({
   views,
   viewport,
 }: {
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "component" | "screen" }>;
+  entry: Extract<AnyShellCatalogueEntry, { kind: "component" | "screen" }>;
   flow?: boolean;
   fragment?: string;
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
   stepIndex?: number;
   variantPath?: string;
-  views: readonly ShellCatalogueView[];
+  views: readonly AnyShellCatalogueView[];
   viewport: "desktop" | "mobile";
 }) {
   const selection = useContext(DisplaySelection);
@@ -185,7 +185,7 @@ export function DocumentStageFrame({
   fragment,
   hasDarkFragments,
 }: {
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" | "document" }>;
+  entry: Extract<AnyShellCatalogueEntry, { kind: "page" | "document" }>;
   fragment?: string;
   hasDarkFragments: boolean;
 }) {

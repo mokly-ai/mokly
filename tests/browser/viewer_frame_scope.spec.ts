@@ -6,7 +6,9 @@ import type {
   InstanceRef,
   MoklyViewerProps,
 } from "@mokly/viewer";
-import { catalogueComponentVariants } from "@mokly/viewer/data";
+
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
+import { fixtureVariantsAt } from "../../packages/viewer/tests/path_fixture.js";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
@@ -30,24 +32,27 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
       const catalogue = structuredClone(
         host.props.catalogue,
       ) as CatalogueReadModel;
-      catalogue.screens[0]!.useCasePaths = ["tour"];
+      catalogue.screens[0]!.useCasePaths = ["tour"].map(readCurrentPath);
       catalogue.useCases = [
         {
           kind: "use-case",
-          path: "tour",
+          path: readCurrentPath("tour"),
 
           title: "Tour",
           tags: [],
           details: catalogue.screens[0]!.details,
           changes: { status: "disabled" },
           steps: [
-            { screenPath: "home" },
-            { screenPath: "home" },
-            { screenPath: "home" },
+            { screenPath: readCurrentPath("home") },
+            { screenPath: readCurrentPath("home") },
+            { screenPath: readCurrentPath("home") },
           ],
         },
       ];
-      catalogue.tree = [...catalogue.tree, { kind: "entry", path: "tour" }];
+      catalogue.tree = [
+        ...catalogue.tree,
+        { kind: "entry", path: readCurrentPath("tour") },
+      ];
       host.props = { ...host.props, catalogue } as MoklyViewerProps;
       host.render();
     },
@@ -175,7 +180,7 @@ for (const cross of [false, true]) {
     const component = fixture.catalogue.components.find(
       (entry) => entry.path === "pane",
     )!;
-    for (const variant of catalogueComponentVariants(
+    for (const variant of fixtureVariantsAt(
       fixture.catalogue,
       component.path,
     )) {

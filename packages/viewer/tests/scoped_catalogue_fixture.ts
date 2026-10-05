@@ -7,12 +7,14 @@ import type {
   CatalogueReadModel,
 } from "../src/catalogue/types.js";
 
-type Mutable<Value> = Value extends readonly (infer Item)[]
-  ? Mutable<Item>[]
-  : Value extends object
-    ? { -readonly [Key in keyof Value]: Mutable<Value[Key]> }
-    : Value;
-type MutableCatalogue = Mutable<CatalogueReadModel>;
+type Mutable<Value> = Value extends string
+  ? Value
+  : Value extends readonly (infer Item)[]
+    ? Mutable<Item>[]
+    : Value extends object
+      ? { -readonly [Key in keyof Value]: Mutable<Value[Key]> }
+      : Value;
+type MutableCatalogue = Mutable<CatalogueReadModel<string, string>>;
 
 /** Build a valid fixture covering every entry-scoping shape. */
 export function scopedCatalogueFixture(): CatalogueReadModel {
@@ -36,7 +38,7 @@ export function scopedCatalogueFixture(): CatalogueReadModel {
 function addRemovedVariant(value: MutableCatalogue): void {
   const variant = structuredClone(
     value.components.find(
-      (entry): entry is Mutable<CatalogueComponentVariant> =>
+      (entry): entry is Mutable<CatalogueComponentVariant<string>> =>
         "variantOf" in entry,
     )!,
   );
@@ -61,14 +63,15 @@ function addRemovedVariant(value: MutableCatalogue): void {
 function addRemovedComponent(value: MutableCatalogue): void {
   const parent = structuredClone(
     value.components.find(
-      (entry): entry is Mutable<CatalogueComponent> => !("variantOf" in entry),
+      (entry): entry is Mutable<CatalogueComponent<string>> =>
+        !("variantOf" in entry),
     )!,
   );
   parent.path = "removed-action";
   parent.title = "Removed action";
   parent.changes = { included: true, kind: "removed", status: "ready" };
   const sourceVariant = value.components.find(
-    (entry): entry is Mutable<CatalogueComponentVariant> =>
+    (entry): entry is Mutable<CatalogueComponentVariant<string>> =>
       "variantOf" in entry,
   )!;
   const variant = structuredClone(sourceVariant);

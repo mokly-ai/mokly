@@ -1,8 +1,5 @@
-import type {
-  HistoricalManifest,
-  HistoricalManifestEntry,
-  ManifestV8,
-} from "../registry/types.js";
+import type { BeforePath } from "../catalogue/path_types.js";
+import type { HistoricalManifest, ManifestV8 } from "../registry/types.js";
 import type { ReviewResultV5 } from "../review/component_types.js";
 import type {
   ReviewArtifact,
@@ -10,17 +7,17 @@ import type {
   ViewReview,
 } from "../review/types.js";
 
-export type CatalogueMetadata =
-  | ManifestV8
+export type CatalogueMetadata<Path extends string = string> =
+  | ManifestV8<Path>
   | {
       schemaVersion: "live-index-1";
-      entries: ManifestV8["entries"];
+      entries: ManifestV8<Path>["entries"];
       folders: ManifestV8["folders"];
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };
-export interface RemovedEntrySnapshot {
-  entry: HistoricalManifestEntry | ManifestV8["entries"][number];
+export interface RemovedEntrySnapshot<Path extends string = string> {
+  entry: ManifestV8<Path, BeforePath<Path>>["entries"][number];
   folderTitles: readonly string[];
   /** Baseline parent title, present exactly for a removed variant. */
   parentTitle?: string;

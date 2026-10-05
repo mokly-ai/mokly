@@ -1,6 +1,10 @@
 /** Component labels for authenticated public-viewer frame geometry. */
 
 import { branchPoints } from "../catalogue/branch_point.js";
+import {
+  readCurrentPath,
+  readBranchPointPath,
+} from "../catalogue/path_values.js";
 import type {
   CatalogueReadModel,
   CatalogueRecord,
@@ -66,7 +70,9 @@ export function viewerInspectionLabels(
         CatalogueRecord,
         CatalogueReadModel["removedEntries"][number]
       >(model).usageComponent(
-        instance.componentId,
+        historical
+          ? readBranchPointPath(instance.componentId)
+          : readCurrentPath(instance.componentId),
         historical ? "before" : "after",
       )?.entry;
       return [

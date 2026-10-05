@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import type {
   CatalogueDetails,
   CatalogueReadModel,
@@ -20,7 +21,7 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     },
     details,
     documentPath: null,
-    path: "removed-page",
+    path: readCurrentPath("removed-page"),
     kind: "page" as const,
 
     route: "removed.html",

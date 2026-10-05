@@ -1,44 +1,41 @@
+import type { BeforePath } from "../catalogue/path_types.js";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import {
   analyzeHierarchy,
   type CatalogueHierarchy,
 } from "../registry/hierarchy.js";
-import type {
-  HistoricalManifestEntry,
-  HistoricalManifestScreen,
-  ManifestEntry,
-  ManifestScreen,
-} from "../registry/types.js";
+import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
 
 import type { CatalogueMetadata } from "./metadata.js";
 import { type RemovedEntrySnapshot } from "./metadata.js";
 
 /** Validated lookup model used by server routes. */
-export interface Catalogue {
+export interface Catalogue<Path extends string = string> {
   publicModel?: ShellCatalogueReadModel;
-  byPath: ReadonlyMap<string, CatalogueManifestEntry>;
+  byPath: ReadonlyMap<Path, CatalogueManifestEntry<Path>>;
   /** Whether any current or retained view was rendered in the dark scheme. */
   hasDarkFragments: boolean;
-  hierarchy: CatalogueHierarchy<ManifestEntry>;
-  manifest: CatalogueMetadata;
+  hierarchy: CatalogueHierarchy<ManifestEntry<Path>>;
+  manifest: CatalogueMetadata<Path>;
   /** Every classification tag the entries declare, deduplicated and sorted. */
   tags: readonly string[];
   /** Baseline screens retained only for on-demand comparisons. */
-  removedScreens: readonly (ManifestScreen | HistoricalManifestScreen)[];
-  removedEntries: readonly RemovedEntrySnapshot[];
+  removedScreens: readonly ManifestScreen<Path, BeforePath<Path>>[];
+  removedEntries: readonly RemovedEntrySnapshot<Path>[];
   /** Removed component parents retained as schemas for historical variants. */
-  removedComponents: readonly CatalogueManifestEntry[];
+  removedComponents: readonly CatalogueManifestEntry<Path>[];
   /**
    * The branch-point path of each current entry the move contract paired with
    * a baseline entry, keyed by the current path. Empty until Changes is ready.
    * Shell consumers read pairs only through `branchPoints`.
    */
-  previousPaths: ReadonlyMap<string, string>;
+  previousPaths: ReadonlyMap<Path, BeforePath<Path>>;
 }
 
 /** Current and historical-v7 entries share identity and display metadata. */
-export type CatalogueManifestEntry = ManifestEntry | HistoricalManifestEntry;
+export type CatalogueManifestEntry<Path extends string = string> =
+  ManifestEntry<Path, Path | BeforePath<Path>>;
 
 /** Resolve an entry identity, giving current content precedence over history. */
 export function catalogueRouteEntry(

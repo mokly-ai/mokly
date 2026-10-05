@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { readBranchPointPath } from "../packages/viewer/src/catalogue/path_values.js";
 import {
   readCatalogue,
   readShellCatalogue,
@@ -24,7 +25,9 @@ for (const reader of [readCatalogue, readShellCatalogue]) {
       const model = catalogue();
       const [first, second] = model.screens;
       assert.ok(first && second);
-      second.previousPath = folded ? first.path.toUpperCase() : first.path;
+      second.previousPath = readBranchPointPath(
+        folded ? first.path.toUpperCase() : first.path,
+      );
       second.changes = { status: "ready", kind: "changed", included: true };
       assert.throws(() => reader(model), {
         detail: "previousPath cannot name a current entry of the same kind",
@@ -33,7 +36,7 @@ for (const reader of [readCatalogue, readShellCatalogue]) {
 
   test(`${reader.name} accepts a previous path used by a different kind`, () => {
     const model = catalogue();
-    model.screens[0]!.previousPath = model.pages[0]!.path;
+    model.screens[0]!.previousPath = readBranchPointPath(model.pages[0]!.path);
     model.screens[0]!.changes = {
       status: "ready",
       kind: "changed",

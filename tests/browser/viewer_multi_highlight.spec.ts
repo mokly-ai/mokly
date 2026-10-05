@@ -7,6 +7,8 @@ import type {
   MoklyViewerProps,
 } from "@mokly/viewer";
 
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
+
 import { followupFixture } from "./viewer_followup_fixture.js";
 
 import type {} from "./viewer_harness.js";
@@ -117,20 +119,26 @@ for (const cross of [false, true]) {
       const host = window.viewerHarness.get("one");
       const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
       const home = model.screens.find((entry) => entry.path === "home")!;
-      home.useCasePaths = ["tour"];
+      home.useCasePaths = ["tour"].map(readCurrentPath);
       model.useCases = [
         {
           kind: "use-case",
-          path: "tour",
+          path: readCurrentPath("tour"),
 
           title: "Tour",
           tags: [],
           details: home.details,
           changes: { status: "disabled" },
-          steps: [{ screenPath: "home" }, { screenPath: "home" }],
+          steps: [
+            { screenPath: readCurrentPath("home") },
+            { screenPath: readCurrentPath("home") },
+          ],
         },
       ];
-      model.tree = [...model.tree, { kind: "entry", path: "tour" }];
+      model.tree = [
+        ...model.tree,
+        { kind: "entry", path: readCurrentPath("tour") },
+      ];
       const view = home.views.find(
         (candidate) =>
           candidate.viewport === "desktop" && candidate.colorScheme === "light",

@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { navRowPresentation } from "../src/shell/nav_moves.js";
 import type { NavLeafNode, NavNode } from "../src/shell/nav_tree.js";
@@ -13,6 +12,7 @@ import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
 import { movedComponentModel } from "./moved_component_model.js";
+import { fixtureVariantsAt } from "./path_fixture.js";
 
 const model = movedComponentModel();
 const catalogue = viewerCatalogue(model);
@@ -44,7 +44,7 @@ const ROWS = [
 test("a moved parent keeps the variants removed at its previous path, under either path", () => {
   for (const parent of ["ui/action", "components/action"])
     assert.deepEqual(
-      catalogueComponentVariants(model, parent).map(({ path }) => path),
+      fixtureVariantsAt(model, parent).map(({ path }) => path),
       VARIANTS,
     );
 });

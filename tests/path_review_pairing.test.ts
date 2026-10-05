@@ -12,6 +12,7 @@ import { removedManifestEntries } from "../dist/registry/changes.js";
 import { compareReview } from "../dist/review/compare.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { entryPairs } from "../dist/review/component_metadata.js";
+import { acceptedCatalogue } from "../packages/viewer/src/catalogue/accepted_paths.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/src/shell/workspace_data.js";
 
@@ -104,7 +105,9 @@ test("kind changes are Added in catalogue projection and workspace evidence", as
   };
   assert.deepEqual(
     entryChanges(
-      entry,
+      acceptedCatalogue(catalogue).manifest.entries.find(
+        (item) => item.path === entry.path,
+      )!,
       {
         catalogue,
         configPath: "mokly.config.ts",

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { projectScopedCatalogue } from "../src/catalogue/scoped_projection.js";
+import type { AnyShellCatalogueView } from "../src/catalogue/scoped_types.js";
 import type { CatalogueRecord } from "../src/catalogue/types.js";
 import { catalogueUsageViews } from "../src/catalogue/usage_scope.js";
 import {
@@ -30,7 +31,7 @@ test("projection retains real route usage and omits every other view", () => {
     projectedScreen.views.map(({ usage }) => usage),
     screen.views.map(({ usage }) => usage),
   );
-  const retained = new Set(projectedScreen.views);
+  const retained = new Set<AnyShellCatalogueView>(projectedScreen.views);
   for (const view of catalogueUsageViews(projected))
     if (!retained.has(view))
       assert.deepEqual(view.usage, { status: "omitted" });

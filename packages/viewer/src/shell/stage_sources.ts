@@ -1,8 +1,8 @@
 /** Source and usage projection for saved and temporary stage views. */
 
 import type {
-  ShellCatalogueUsage,
-  ShellCatalogueView,
+  AnyShellCatalogueUsage,
+  AnyShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
@@ -12,7 +12,10 @@ import { viewRoute } from "../navigation/routes.js";
 
 export const unavailableUsage: CatalogueUsage = { status: "unavailable" };
 const pendingUsage: CatalogueUsage = { status: "pending" };
-const generatedUsages = new WeakMap<ComponentViewRecord, CatalogueUsage>();
+const generatedUsages = new WeakMap<
+  ComponentViewRecord,
+  CatalogueUsage<string>
+>();
 
 export function framePath(path: string, fragment?: string): string {
   const source = `/${encodeUrlPath(path)}`;
@@ -21,7 +24,7 @@ export function framePath(path: string, fragment?: string): string {
 
 export function frameSource(
   entry: { path: string; kind: "component" | "screen" },
-  view: ShellCatalogueView | undefined,
+  view: AnyShellCatalogueView | undefined,
   fragment?: string,
   stepIndex?: number,
 ): string | undefined {
@@ -34,7 +37,7 @@ export function frameSource(
 
 /** Normalize bootstrap-only omission to the frame's existing pending state. */
 export function shellFrameUsage(
-  usage: ShellCatalogueUsage | undefined,
+  usage: AnyShellCatalogueUsage | undefined,
 ): CatalogueUsage {
   if (!usage) return unavailableUsage;
   return usage.status === "omitted" ? pendingUsage : usage;
@@ -67,7 +70,9 @@ export function generatedFrameSource(
     : source;
 }
 
-export function generatedUsage(view: GeneratedComponentView): CatalogueUsage {
+export function generatedUsage(
+  view: GeneratedComponentView,
+): CatalogueUsage<string> {
   const record = view.usage;
   if (!record) return unavailableUsage;
   const current = generatedUsages.get(record);

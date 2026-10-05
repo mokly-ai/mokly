@@ -147,12 +147,14 @@ function owner(value: unknown): ComponentInputOwner {
     : { kind: "instance", instanceKey: hash(input.instanceKey) };
 }
 
-export function readInstance(value: unknown): ComponentInstanceRecord {
+export function readInstance<Path extends string = string>(
+  value: unknown,
+): ComponentInstanceRecord<Path> {
   const input = object(value);
-  const result: ComponentInstanceRecord = {
+  const result: ComponentInstanceRecord<Path> = {
     key: hash(input.key),
     id: string(input.id),
-    componentId: entryPath(input.componentId),
+    componentId: entryPath(input.componentId) as Path,
     owner: owner(input.owner),
     order: counter(input.order),
     props: readProps(input.props),

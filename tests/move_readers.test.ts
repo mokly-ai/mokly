@@ -8,6 +8,10 @@ import { createCatalogue } from "@mokly/viewer/server";
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { compareReview } from "../dist/review/compare.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
+import {
+  readBranchPointPath,
+  readCurrentPath,
+} from "../packages/viewer/src/catalogue/path_values.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 
@@ -31,14 +35,17 @@ test("the public reader rejects impossible previous paths and hidden pure moves"
   const cases: readonly [(model: CatalogueReadModel) => void, string][] = [
     [
       (value) => {
-        value.documents[0]!.previousPath = value.documents[0]!.path;
+        value.documents[0]!.previousPath = readBranchPointPath(
+          value.documents[0]!.path,
+        );
       },
       "previousPath must name a different identity",
     ],
     [
       (value) => {
-        value.documents[0]!.previousPath =
-          value.documents[0]!.path.toUpperCase();
+        value.documents[0]!.previousPath = readBranchPointPath(
+          value.documents[0]!.path.toUpperCase(),
+        );
       },
       "previousPath must name a different identity",
     ],
@@ -71,7 +78,7 @@ test("the public reader rejects impossible previous paths and hidden pure moves"
     [
       (value) => {
         const entry = structuredClone(value.documents[0]!);
-        entry.path = entry.previousPath!;
+        entry.path = readCurrentPath(entry.previousPath!);
         delete entry.previousPath;
         entry.changes = { status: "ready", kind: "removed", included: true };
         value.removedEntries = [{ entry, folderTitles: [] }];

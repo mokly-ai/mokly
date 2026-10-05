@@ -6,6 +6,8 @@ import type {
   MoklyViewerProps,
 } from "@mokly/viewer";
 
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
+
 import { markerFixture } from "./viewer_marker_fixture.js";
 import {
   expectMarkerAligned,
@@ -181,20 +183,26 @@ for (const cross of [false, true]) {
       const host = window.viewerHarness.get("one");
       const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
       const home = model.screens.find(({ path }) => path === "home")!;
-      home.useCasePaths = ["tour"];
+      home.useCasePaths = ["tour"].map(readCurrentPath);
       model.useCases = [
         {
           kind: "use-case",
-          path: "tour",
+          path: readCurrentPath("tour"),
 
           title: "Tour",
           tags: [],
           details: home.details,
           changes: { status: "disabled" },
-          steps: [{ screenPath: "home" }, { screenPath: "home" }],
+          steps: [
+            { screenPath: readCurrentPath("home") },
+            { screenPath: readCurrentPath("home") },
+          ],
         },
       ];
-      model.tree = [...model.tree, { kind: "entry", path: "tour" }];
+      model.tree = [
+        ...model.tree,
+        { kind: "entry", path: readCurrentPath("tour") },
+      ];
       const view = home.views.find(
         (view) => view.viewport === "desktop" && view.colorScheme === "light",
       )!;

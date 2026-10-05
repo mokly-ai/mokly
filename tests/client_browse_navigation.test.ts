@@ -20,6 +20,7 @@ import {
   defaultSelection,
   revealSelection,
 } from "../packages/viewer/dist/viewer/selection.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 
 import {
   catalogueModel,
@@ -276,13 +277,13 @@ function navigationModel(): CatalogueReadModel {
     screens: [
       {
         ...template,
-        path: welcome.entryId,
+        path: readCurrentPath(welcome.entryId),
         tags: welcome.tags ?? [],
         title: welcome.label,
       },
       {
         ...template,
-        path: "product/browse/details",
+        path: readCurrentPath("product/browse/details"),
         tags: details.tags ?? [],
         title: details.label,
       },

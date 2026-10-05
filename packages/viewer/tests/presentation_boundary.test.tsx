@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
-import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import type { CatalogueView } from "../src/catalogue/types.js";
 import { renderViewer } from "../src/viewer/server.js";
+
+import { fixtureVariantsAt } from "./path_fixture.js";
 
 const fixture = readCatalogue(
   JSON.parse(
@@ -32,7 +33,7 @@ test("SSR preserves pending entry and saved-variant comparison eligibility", () 
     entry.changes = { status: "ready", included: true, kind: "changed" };
     const variant =
       entry.kind === "component"
-        ? catalogueComponentVariants(model, entry.path)[0]!
+        ? fixtureVariantsAt(model, entry.path)[0]!
         : undefined;
     const views =
       variant?.views ?? (entry.kind === "screen" ? entry.views : []);
@@ -104,10 +105,7 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
     included: true,
     kind: "changed",
   };
-  const selected = catalogueComponentVariants(
-    componentModel,
-    lightComponent.path,
-  )[0]!;
+  const selected = fixtureVariantsAt(componentModel, lightComponent.path)[0]!;
   selected.comparison = { status: "ready", kind: "changed", eligible: true };
   for (const view of selected.views)
     view.comparison = { status: "ready", kind: "changed", eligible: true };

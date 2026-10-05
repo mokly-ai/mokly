@@ -5,8 +5,8 @@ import { useContext } from "react";
 import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type {
   ShellCatalogueReadModel,
-  ShellCatalogueRoutedEntry,
-  ShellCatalogueScreen,
+  AnyShellCatalogueEntry,
+  AnyShellCatalogueScreen,
 } from "../catalogue/scoped_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { viewHref } from "../navigation/routes.js";
@@ -25,7 +25,7 @@ export function PublicStage({
   variantPath,
 }: {
   catalogue: ShellCatalogueReadModel;
-  entry: ShellCatalogueRoutedEntry;
+  entry: AnyShellCatalogueEntry;
   fragment?: string;
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
@@ -53,16 +53,16 @@ export function PublicStage({
     entry.kind === "component"
       ? (("variantOf" in entry
           ? [entry]
-          : catalogueComponentVariants(catalogue, entry.path)
+          : catalogueComponentVariants(catalogue, entry)
         ).find((variant) => variant.path === variantPath) ??
         ("variantOf" in entry
           ? entry
-          : catalogueComponentVariants(catalogue, entry.path)[0]))
+          : catalogueComponentVariants(catalogue, entry)[0]))
       : undefined;
   const views =
     entry.kind === "component"
       ? (selectedVariant?.views ?? [])
-      : (entry as ShellCatalogueScreen).views;
+      : (entry as AnyShellCatalogueScreen).views;
   const effectiveVariant = selectedVariant?.path;
   const frameEntry = selectedVariant ?? entry;
   return (
@@ -98,7 +98,7 @@ function UseCaseFlow({
   hasDarkFragments,
 }: {
   catalogue: ShellCatalogueReadModel;
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "use-case" }>;
+  entry: Extract<AnyShellCatalogueEntry, { kind: "use-case" }>;
   fragment?: string;
   hasDarkFragments: boolean;
 }) {
