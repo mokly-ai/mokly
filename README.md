@@ -290,7 +290,7 @@ appearance with any preview scheme. See the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
-- [Implementation plans](./plans/README.md)
+- [Implementation plans](./plans/)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents

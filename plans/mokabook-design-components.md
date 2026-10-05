@@ -1,8 +1,11 @@
 # Reuse Registered Components In Mokabook's Design Catalogue
 
+Status: Completed. [PR #48](https://github.com/mokly-ai/mokly/pull/48)
+merged on 2026-09-10.
+
 ## Outcome And Status
 
-Status: completed and verified; review follow-ups are recorded for the user's decision.
+Completed and verified; review follow-ups are recorded for the user's decision.
 Give Mokabook's own design screens real shared component pages, saved
 variants, local controls, generated usage and reliable change attribution.
 

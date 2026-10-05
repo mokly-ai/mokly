@@ -1,13 +1,15 @@
 # Path-Based Navigation Hierarchy
 
-Status: Milestones 1–12 are complete, verified, pushed, and reviewed; findings
-1–16 are fixed and findings 17–21 await the user's decision. The plan stays
-Active until its PR merges.
+Status: Completed. [PR #123](https://github.com/mokly-ai/mokly/pull/123)
+merged on 2026-09-30. Milestones 1–12 are complete, verified, pushed, and
+reviewed; findings 1–16 are fixed and findings 17–21 await the user's
+decision. [Path Identity](./path-identity.md) later replaced `navPath` with
+file-derived paths.
 Created 2026-09-23 with the user's
 consent after the design discussion in this workspace. This plan supersedes the
 collection-forest contract delivered by
 [Hierarchy-Inferred Breadcrumbs](./hierarchy-inferred-breadcrumbs.md); that
-plan stays in Completed as history.
+plan stays completed as history.
 
 **Goal:** Replace authored collection entities and their `childIds` edges with
 a Storybook-style navigation path on every leaf. A folder exists because a leaf
