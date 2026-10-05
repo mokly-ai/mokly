@@ -81,7 +81,9 @@ module into a screen or create a second standalone implementation. Leave whole
 screens, stage/workspace layouts and fixture selection as ordinary composition.
 
 Pass actual screen data at the boundary: labels, destinations, query, selection,
-status and counts. Slots hold caller-owned JSX, including previews, inspector
+status and Changes counts. Catalogue navigation derives each folder's count
+from the rows written inside it, so write every row of a folder, including a
+closed one; a row record has no count. Slots hold caller-owned JSX, including previews, inspector
 bodies and native inputs. Resolve scenario navigation in an adapter before
 calling a component; missing destinations stay non-links. Top-bar Appearance owns scheme selection;
 header view controls own the viewport. Use ordinary `MockLink` anchors for inspector-body
@@ -95,7 +97,9 @@ Changes-filtered variant rows.
 `../parts/entry_paths.ts` owns the depicted paths that path chips show.
 `../parts/component_nav_data.ts` owns component parent and variant identities;
 the shared fixture and component-explorer scenarios compose its rows instead of
-copying titles or authored order.
+copying titles or authored order. `../components/parts/moved_variants.ts` holds
+the Changes rows and stage labels of the removed Link button whose variants
+moved.
 
 Use explicit semantic `moklyInstance` names for repeated siblings. The
 `DesignInstances` context supplies a stable prefix for simultaneous viewport
