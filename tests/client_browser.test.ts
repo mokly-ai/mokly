@@ -88,7 +88,7 @@ function descriptor(updateVersion: number): ViewerCapabilityDescriptor {
 }
 
 function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
-  return { route: null, source: value.source };
+  return { entryId: null, source: value.source };
 }
 
 function shellState(): ShellRecoverySnapshot {
@@ -99,11 +99,11 @@ function shellState(): ShellRecoverySnapshot {
 function browseState(): BrowseRecoveryState {
   return {
     changedOnly: false,
-    closedCollectionIds: ["collection:fixture"],
+    disclosures: { "folder:pages:fixture": false },
     colorScheme: "dark",
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineClosedCollectionIds: ["collection:fixture"],
+    filterBaselineDisclosures: { "folder:pages:fixture": false },
     navScroll: 12,
     query: "home",
     regionScrolls: { stage: 24 },

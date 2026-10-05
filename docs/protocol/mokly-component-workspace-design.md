@@ -2,10 +2,9 @@
 
 ## Delivery Status
 
-Milestones 4c, 4f, and 4g of the [component explorer plan](../../plans/component-explorer.md)
-revise the existing component, controls, and consuming-screen artboards after
-design feedback. The package-owned runtime implements the same layout. The existing owning routes and mobile/desktop screen components
-remain the review entry points. The removed-consumer workspace is aligned with
+The [component explorer plan](../../plans/component-explorer.md) delivered these
+component, controls, and consuming-screen artboards in the package-owned layout.
+Owning mobile/desktop screens remain review entry points, aligned with
 the [removed content previews plan](../../plans/removed-content-previews.md).
 
 ## View Controls
@@ -95,17 +94,16 @@ empty designs retain Current without comparison controls.
 
 All is a catalogue filter, not evidence that the selected example changed.
 Known examples show Added, Changed, Removed, or Unmodified beside the title,
-using the shown view's state. One selected viewport and scheme maps `changed`,
-`added`, and `removed` to their matching status, and `unchanged` or
-`ignored-only` to Unmodified. Both uses the first status present in this order:
-Changed, Added, Removed, Unmodified. Comparison controls follow that result:
-Changed is eligible, as is Removed only for a component saved variant. If
-neither a ready result nor screen-view evidence exists, retain route-level status and
-eligibility. Viewport, scheme, saved-variant, and background-evidence changes
-recompute both without a page load. When the shown view is Unmodified, its band
-is absent and the view-control marks and `Changed views` row identify changed
-views elsewhere. Removed screens show their badge without a comparison mode
-row, over their previous version under
+using the shown view's state. Resolve the selected screen or saved variant's
+effective displayed scheme before reading that state: a light-only preview uses
+Light status and marks while the catalogue's Dark preference stays selected.
+One view maps review states to Added, Changed, Removed, or Unmodified; Both uses
+that priority order. Changed is eligible, as is Removed only for a component
+variant. Missing or nonmatching evidence retains status and independently
+supplied eligibility; never derive one from the other. Axis, entry, and evidence
+updates recompute the decision. Unmodified omits the band and uses control marks
+plus `Changed views` for changes elsewhere. Removed screens show their badge
+without modes over their previous version under
 [removed previews](./mokly-removed-previews.md). Temporary prop
 edits never create committed changes or make comparison controls appear.
 
@@ -117,13 +115,20 @@ its previous version.
 Missing inspection metadata is distinct from comparison availability.
 
 The runtime uses actual comparison eligibility for the selected saved example.
-Missing per-view evidence uses the route-level fallback and cannot trigger eager
-screenshot work merely to decide whether to show a mode row.
+Missing, pending, or nonmatching per-view evidence uses the entry-level status
+fallback without changing that eligibility and cannot trigger eager screenshot
+work merely to decide whether to show a mode row. The same rule gates comparison
+deep links during server render, controlled selection, and later evidence
+updates.
 Affected consumers may still expose comparisons while staying out of Changes.
 
-Entry status and variant status are distinct. Removing Compact from Action is
-a Changed component with a comparable Removed variant; Farewell is a Removed
-screen with no comparison controls.
+Parent status and variant status are distinct. Removing Compact from Action
+makes Compact its own Removed component variant entry, comparable with an
+explicit missing current side, while Action's status describes the parent
+only; Farewell is a Removed screen with no comparison controls.
+The `design-component-variants` mockup depicts the inverse boundary: the
+selected Disabled variant entry is Unmodified and ineligible, so no comparison
+band appears, even though a sibling variant changed.
 The Added Badge example lives in States → Additions and shows its current saved
 preview without comparison controls, plus one Changes entry. The existing unused Badge
 example remains Unmodified. Status must never be inferred from usage counts.
@@ -134,11 +139,16 @@ Name the information icon Details. Keep comparison evidence, when present,
 inside this panel alongside description and secondary source metadata. Do not
 add a comparison disclosure below the canvas or a separate explanatory banner
 above it. The panel remains available on a Removed screen's stage even though
-that screen has no comparison modes. Unmodified
-examples omit the comparison section.
+that screen has no comparison modes. Ordinary Unmodified mockups omit the
+comparison section; a shared-impact-only component keeps its file list in Details.
+The `design-component-shared-impact` artboard in States → Shared impact depicts
+that Unmodified component with its Details open and no comparison band.
 
 Use structured evidence: entry/variant state, a generic output-change reason,
-paired prop values, and links to changed components actually used by the screen.
+the component-level changed-file list and style outcomes, selected-variant
+stylesheet exclusions, paired prop values, and links to changed components
+actually used by the screen. The [CSS evidence contract](./mokly-css-evidence-presentation.md#details-copy)
+owns the exact component and variant sentences.
 Prop rows identify their component instance and show Before and Current values.
 The mockup fixtures share these values with the rendered preview and Props panel.
 Do not invent explanations such as “corners and spacing changed”: the runtime

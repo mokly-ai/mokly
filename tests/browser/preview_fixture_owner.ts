@@ -38,6 +38,7 @@ export interface OwnedPreviewFixture extends PreviewEndpoint {
 
 interface OwnedPreviewOptions {
   readonly build: (artifact: string) => Promise<void>;
+  readonly artifactRelative?: string;
   readonly contextRoot: string;
   readonly prefix: string;
   readonly serve: (artifact: string) => Promise<PreviewEndpoint>;
@@ -64,7 +65,7 @@ export async function startOwnedPreviewFixture(
   const ownerRoot = await fs.mkdtemp(
     path.join(options.contextRoot, options.prefix),
   );
-  const artifact = path.join(ownerRoot, "site");
+  const artifact = path.join(ownerRoot, options.artifactRelative ?? "site");
   const preparationStartedAtMs = Date.now();
   let endpoint: PreviewEndpoint | undefined;
   try {

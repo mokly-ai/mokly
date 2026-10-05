@@ -1,6 +1,7 @@
 //! Injected subprocess boundary used by repository tasks.
 
 use std::ffi::OsStr;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::error::{Error, Result};
@@ -10,6 +11,7 @@ use crate::error::{Error, Result};
 pub(crate) struct CommandSpec {
     program: String,
     args: Vec<String>,
+    cwd: Option<PathBuf>,
 }
 
 impl CommandSpec {
@@ -18,6 +20,7 @@ impl CommandSpec {
         Self {
             program: program.into(),
             args: Vec::new(),
+            cwd: None,
         }
     }
 
@@ -25,6 +28,17 @@ impl CommandSpec {
     pub(crate) fn args(mut self, args: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.args.extend(args.into_iter().map(Into::into));
         self
+    }
+
+    /// Set the working directory for one repository subprocess.
+    pub(crate) fn in_directory(mut self, directory: impl Into<PathBuf>) -> Self {
+        self.cwd = Some(directory.into());
+        self
+    }
+
+    /// Inspect the working directory without changing the display command.
+    pub(crate) fn working_directory(&self) -> Option<&Path> {
+        self.cwd.as_deref()
     }
 
     /// Format the command for developer-facing output.
@@ -50,10 +64,12 @@ pub(crate) struct SystemCommandRunner;
 impl CommandRunner for SystemCommandRunner {
     fn run(&self, spec: &CommandSpec) -> Result<()> {
         eprintln!("$ {}", spec.display());
-        let status = match Command::new(&spec.program)
-            .args(spec.args.iter().map(OsStr::new))
-            .status()
-        {
+        let mut command = Command::new(&spec.program);
+        command.args(spec.args.iter().map(OsStr::new));
+        if let Some(directory) = spec.working_directory() {
+            command.current_dir(directory);
+        }
+        let status = match command.status() {
             Ok(status) => status,
             Err(source) => {
                 return Err(Error::CommandStart {

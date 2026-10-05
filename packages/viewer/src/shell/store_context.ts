@@ -27,7 +27,6 @@ export interface ShellStore {
   recoverySnapshot(): ShellRecoverySnapshot;
   select(selection: Partial<ViewerSelection>): void;
   selectColorScheme(value: "dark" | "light"): void;
-  selectVariant(value: string): void;
   selectViewport(value: "both" | "desktop" | "mobile"): void;
   setDetails(open: boolean, tab?: string): void;
   setDisclosure(key: string, open: boolean): void;

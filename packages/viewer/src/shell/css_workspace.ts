@@ -25,12 +25,20 @@ export const SHELL_WORKSPACE_CSS = `
 }
 .mbk-icon-button:disabled { opacity: .42; cursor: default; }
 .mbk-selection-bar {
-  display: flex; align-items: center; flex: none; gap: 12px; padding: 8px 24px;
+  display: flex; align-items: center; flex: none; flex-wrap: wrap; gap: 6px; padding: 10px 24px;
   background: var(--chrome-surface); border-bottom: 1px solid var(--chrome-border); font-size: 12px;
 }
 .mbk-selection-bar:has(> [hidden]:only-child) { display: none; }
-.mbk-selection-bar label { display: flex; align-items: center; gap: 10px; color: var(--chrome-muted); }
-.mbk-selection-bar select, .mbk-inspector select {
+.mbk-selection-bar > span:first-child { color: var(--chrome-muted); margin-right: 10px; }
+.mbk-selection-bar a {
+  border: 1px solid transparent; border-radius: 6px; color: var(--chrome-ink-2); padding: 5px 10px; text-decoration: none;
+}
+.mbk-selection-bar a:hover { background: var(--chrome-bg); }
+.mbk-selection-bar a:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
+.mbk-selection-bar a[aria-current="page"] {
+  background: var(--mokly-accent-soft); border-color: var(--mokly-accent); color: var(--mokly-accent); font-weight: 600;
+}
+.mbk-inspector select {
   background: var(--chrome-surface); color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; padding: 6px 28px 6px 8px; font: inherit;
 }
 .mbk-entry-status { border: 1px solid var(--chrome-border); border-radius: 5px; padding: 3px 7px; font-weight: 600; color: var(--chrome-ink-2); }
@@ -38,7 +46,6 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-entry-status[data-status="Changed"] { color: var(--mb-changed); background: var(--mb-changed-soft); }
 .mbk-entry-status[data-status="Removed"] { color: var(--mb-removed); background: var(--mb-removed-soft); }
 .mbk-variant-status { color: var(--chrome-muted); }
-.mbk-selection-error { margin: 0; padding: 10px 24px; color: var(--chrome-ink); }
 .mbk-workspace-panes { display: flex; flex: 1; flex-direction: column; position: relative; min-height: 0; min-width: 0; }
 .mbk-preview-pane { display: flex; flex: 1; flex-direction: column; min-height: 100px; min-width: 0; overflow: hidden; }
 .mbk-inspector { position: relative; flex: none; display: flex; flex-direction: column; min-height: 45px; background: var(--chrome-surface); border-top: 1px solid var(--chrome-border); z-index: 5; }
@@ -59,7 +66,7 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-component-canvas iframe { width: 100%; height: 520px; display: block; border: 1px solid var(--chrome-border); border-radius: 8px; }
 .mbk-workspace [data-mokly-stage][data-viewport="mobile"] .mbk-frame-desktop,
 .mbk-workspace [data-mokly-stage][data-viewport="desktop"] .mbk-frame-mobile { display: none; }
-.mbk-diff-screen[data-diff-component] .mb-pane-doc iframe { width: 100%; min-width: 390px; height: 520px; border: 1px solid var(--chrome-border); }
+.mb-component-frame { width: 100%; min-width: 390px; height: 520px; overflow: hidden; border: 1px solid var(--chrome-border); border-radius: 8px; }
 .mbk-instance-context { display: inline-block; margin: 0 8px 12px 0; }
 .mbk-instance-tree, .mbk-usage-list { list-style: none; padding: 0; margin: 0; }
 .mbk-instance-tree .mbk-instance-tree { padding-left: 20px; border-left: 1px solid var(--chrome-border); }
@@ -73,8 +80,11 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-props-table pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font-size: 12px; }
 .mbk-usage-list li { padding: 8px 0; border-bottom: 1px solid var(--chrome-border); }
 .mbk-usage-list small { display: block; margin-top: 4px; color: var(--chrome-muted); }
+.mbk-text-button { background: none; border: 0; color: var(--mbk-accent-deep); cursor: pointer; font: inherit; padding: 0; }
+.mbk-text-button:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
 .mbk-comparison-evidence { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--chrome-border); }
 .mbk-comparison-evidence p, .mbk-comparison-evidence ul { margin: 8px 0 0; }
+.mbk-comparison-evidence li { overflow-wrap: anywhere; }
 .mbk-comparison-evidence ul + p { margin-top: 14px; }
 .mbk-highlight-layer { position: fixed; pointer-events: none; z-index: 4; overflow: hidden; }
 .mbk-highlight-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; }

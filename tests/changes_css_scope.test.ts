@@ -43,7 +43,7 @@ for (const components of [false, true])
       }),
       false,
     );
-    assert.equal(result.schemaVersion, components ? 3 : 2);
+    assert.equal(result.schemaVersion, 4);
     assert.deepEqual(result.sharedImpact, [tokenPath]);
     for (const screen of result.screens) {
       assert.deepEqual(screen.sharedImpact, [tokenPath]);

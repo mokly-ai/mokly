@@ -15,6 +15,7 @@ const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
   ["muted on raised (navigation)", "--chrome-muted", "--chrome-raised", 4.5],
   ["muted on hover surface", "--chrome-muted", "--chrome-hover", 4.5],
   ["accent link on surface", "--chrome-accent", "--chrome-surface", 4.5],
+  ["brand mark on surface", "--chrome-brand", "--chrome-surface", 3],
   ["sage on surface", "--mbk-sage", "--chrome-surface", 4.5],
   ["deep sage on surface", "--mbk-sage-deep", "--chrome-surface", 4.5],
   [
@@ -88,6 +89,9 @@ const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
   ],
 ];
 
+/** Font stacks share the palette block but are not appearance roles. */
+const FONT_STACKS = new Set(["--sans", "--serif", "--mono"]);
+
 async function paletteContract(): Promise<string> {
   return await fs.readFile(
     path.join(repositoryRoot, "docs/protocol/mokly-viewer-palette.md"),
@@ -98,7 +102,7 @@ async function paletteContract(): Promise<string> {
 test("both palettes define exactly the same semantic roles", async () => {
   const palette = await designPalette();
   const light = [...palette.light.keys()].filter(
-    (name) => name !== "--sans" && name !== "--mono",
+    (name) => !FONT_STACKS.has(name),
   );
   assert.deepEqual([...palette.dark.keys()].sort(), light.sort());
   for (const [name, value] of palette.dark)
@@ -128,7 +132,7 @@ test("the palette contract records the implemented swatches", async () => {
       /^\|\s*`(--[a-z0-9-]+)`\s*\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|/gm,
     ),
   ];
-  assert.ok(rows.length >= palette.light.size - 2);
+  assert.ok(rows.length >= palette.light.size - FONT_STACKS.size);
   for (const [, name, light, dark] of rows) {
     if (!palette.light.has(name!)) continue;
     assert.equal(palette.light.get(name!), light, `${name} light`);

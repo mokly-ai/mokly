@@ -19,7 +19,6 @@ export function ClosedScreenMobile() {
 export const inspectorScreens = [
   screen({
     id: "design-component-inspector-closed",
-    slug: "component",
     title: "Component inspector closed",
     description:
       "The canvas stays visible with every inspector icon unselected. Open any icon to inspect the component.",
@@ -29,7 +28,6 @@ export const inspectorScreens = [
   }),
   screen({
     id: "design-component-screen-inspector-closed",
-    slug: "screen",
     title: "Screen inspector closed",
     description:
       "The same icon strip closes beneath a consuming screen, without a selected panel.",

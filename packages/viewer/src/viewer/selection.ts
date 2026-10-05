@@ -1,4 +1,9 @@
-import type { CatalogueReadModel } from "../catalogue/types.js";
+import {
+  currentCatalogueEntries,
+  resolveCatalogueSelection,
+} from "../catalogue/entry_selection.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
+import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import { parseSearchQuery, rowMatchesQuery } from "../shell/search_query.js";
 
 import type { ViewerSelection } from "./types.js";
@@ -13,7 +18,7 @@ export const defaultSelection: ViewerSelection = {
 };
 const selectionKeys = new Set([
   "screenId",
-  "variantId",
+  "snapshotId",
   "view",
   "viewport",
   "colorScheme",
@@ -22,22 +27,23 @@ const selectionKeys = new Set([
 ]);
 /** Normalize without mutating either the caller's object or tag array. */
 export function normalizeSelection(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   value: ViewerSelection,
 ): ViewerSelection {
-  const entry = routedEntries(model).find(
-    (candidate) => candidate.id === value?.screenId,
-  );
+  const resolved =
+    typeof value?.screenId === "string"
+      ? resolveCatalogueSelection(model, value.screenId, value.snapshotId)
+      : undefined;
+  const entry = resolved?.entry;
   if (
     !value ||
     !Object.keys(value).every((key) => selectionKeys.has(key)) ||
     !(value.screenId === null || typeof value.screenId === "string") ||
     !(
-      value.variantId === undefined ||
-      (typeof value.variantId === "string" &&
-        entry?.kind === "component" &&
-        entry.variants.some((variant) => variant.id === value.variantId))
+      value.snapshotId === undefined ||
+      (isHistoricalSnapshotId(value.snapshotId) && value.screenId !== null)
     ) ||
+    (value.snapshotId !== undefined && entry === undefined) ||
     !["all", "changes"].includes(value.view) ||
     !["mobile", "desktop", "both"].includes(value.viewport) ||
     !["light", "dark"].includes(value.colorScheme) ||
@@ -52,7 +58,7 @@ export function normalizeSelection(
   const query = parseSearchQuery(value.search);
   return {
     screenId: value.screenId,
-    ...(value.variantId === undefined ? {} : { variantId: value.variantId }),
+    ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     view: value.view,
     viewport: value.viewport,
     colorScheme: value.colorScheme,
@@ -68,7 +74,7 @@ export function normalizeSelection(
 export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
   return (
     a.screenId === b.screenId &&
-    a.variantId === b.variantId &&
+    a.snapshotId === b.snapshotId &&
     a.view === b.view &&
     a.viewport === b.viewport &&
     a.colorScheme === b.colorScheme &&
@@ -77,48 +83,54 @@ export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
     a.tags.every((tag, index) => tag === b.tags[index])
   );
 }
-/** Merge one public proposal and reset a saved variant on entry changes. */
+/** Merge one public proposal and normalize route-owned entry identity. */
 export function mergeSelection(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   current: ViewerSelection,
   partial: Partial<ViewerSelection>,
 ): ViewerSelection {
   const candidate: ViewerSelection = { ...current, ...partial };
+  const screenSupplied = Object.hasOwn(partial, "screenId");
+  const snapshotSupplied = Object.hasOwn(partial, "snapshotId");
   if (
-    partial.screenId !== undefined &&
-    partial.screenId !== current.screenId &&
-    !Object.hasOwn(partial, "variantId")
+    (screenSupplied && !snapshotSupplied) ||
+    (snapshotSupplied && partial.snapshotId === undefined)
   )
-    delete candidate.variantId;
+    delete candidate.snapshotId;
   const next = normalizeSelection(model, candidate);
-  return partial.screenId === undefined ? next : revealSelection(model, next);
+  return screenSupplied || snapshotSupplied
+    ? revealSelection(model, next)
+    : next;
 }
 export function selectionQuery(value: ViewerSelection): string {
   return [value.search, ...value.tags.map((tag) => `tag:${tag}`)]
     .filter(Boolean)
     .join(" ");
 }
-export function routedEntries(model: CatalogueReadModel) {
+export function routedEntries(model: ShellCatalogueReadModel) {
   return [
-    ...model.screens,
-    ...model.pages,
-    ...model.useCases,
-    ...model.components,
+    ...currentCatalogueEntries(model),
     ...model.removedEntries.map(({ entry }) => entry),
   ];
 }
 /** Route activation clears only constraints hiding its actual destination. */
 export function revealSelection(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   value: ViewerSelection,
 ): ViewerSelection {
-  const entry = routedEntries(model).find(
-    (entry) => entry.id === value.screenId,
-  );
+  const entry =
+    typeof value.screenId === "string"
+      ? resolveCatalogueSelection(model, value.screenId, value.snapshotId)
+          ?.entry
+      : undefined;
   if (!entry) return value;
   const matches = rowMatchesQuery(
     { freeText: value.search, tags: value.tags },
-    { id: entry.id, route: entry.route, tags: entry.tags, text: entry.title },
+    {
+      id: entry.id,
+      tags: entry.tags,
+      text: entry.title,
+    },
   );
   return {
     ...value,

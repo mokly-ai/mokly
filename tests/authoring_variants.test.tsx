@@ -6,9 +6,10 @@ import {
   __attributeDefinition,
   defineScreen,
 } from "../dist/authoring/definitions.js";
+import type { ScreenInput } from "../dist/authoring/types.js";
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
-import { defineCollection, defineRoot, screen } from "../dist/index.js";
+import { defineRoot, screen } from "../dist/index.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -18,7 +19,7 @@ const config: ResolvedConfig = {
   generatedOutput: "committed",
   publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
-  compatibility: { readManifestV2: false },
+  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
@@ -31,7 +32,7 @@ const config: ResolvedConfig = {
   watch: { debounceMs: 100, rules: [] },
 };
 
-test("screen variants inherit, override, brand, route, and attribute", () => {
+test("screen variants inherit, override, brand, derived route, and attribute", () => {
   const definitions = attributed(
     defineScreen({
       address: "example.test/welcome",
@@ -43,7 +44,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
       mobile: "Mobile",
       rationale: "Parent rationale",
       relatedDocs: ["docs/protocol/mokly-authoring.md"],
-      route: "screens/welcome.html",
       tags: ["onboarding"],
       title: "Welcome",
       useCaseIds: ["tour"],
@@ -53,7 +53,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
           desktop: "Empty desktop",
           id: "welcome-empty",
           mobile: "Empty mobile",
-          slug: "empty",
           title: "Welcome, empty workspace",
         },
         {
@@ -66,7 +65,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
           mobile: "Retry mobile",
           rationale: "Explain the recovery state",
           relatedDocs: ["docs/protocol/mokly-screen-variants.md"],
-          slug: "retry",
           tags: [],
           title: "Welcome, retry",
           useCaseIds: [],
@@ -91,8 +89,8 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
     id: "welcome-empty",
     kind: "screen",
     mobile: "Empty mobile",
+    navPath: [],
     relatedDocs: ["docs/protocol/mokly-authoring.md"],
-    route: "screens/welcome.variants/empty.html",
     tags: ["onboarding"],
     title: "Welcome, empty workspace",
     useCaseIds: [],
@@ -117,21 +115,15 @@ test("nested screen variants flatten beside the parent", () => {
         desktop: "Desktop",
         id: "nested-parent",
         mobile: "Mobile",
-        slug: "parent",
         tags: ["forms"],
         title: "Nested parent",
-        variants: [variant("nested-empty", "empty")],
+        variants: [variant("nested-empty")],
       }),
     ],
-    collection: {
-      address: "example.test/nested",
-      dependencies: ["README.md"],
-      description: "Nested collection",
-      id: "nested",
-      relatedDocs: ["docs/protocol/mokly-authoring.md"],
-      title: "Nested",
-    },
-    path: "screens",
+    address: "example.test/nested",
+    dependencies: ["README.md"],
+    navPath: ["Nested"],
+    relatedDocs: ["docs/protocol/mokly-authoring.md"],
   });
   const flattened = definitions.filter((entry) => entry.kind === "screen");
 
@@ -139,35 +131,25 @@ test("nested screen variants flatten beside the parent", () => {
     flattened.map(({ id }) => id),
     ["nested-parent", "nested-empty"],
   );
-  assert.equal(flattened[1]?.route, "screens/parent.variants/empty.html");
+  assert.equal(Object.hasOwn(flattened[0] ?? {}, "route"), false);
+  assert.equal(Object.hasOwn(flattened[1] ?? {}, "route"), false);
   assert.equal(flattened[1]?.variantOf, "nested-parent");
   assert.deepEqual(flattened[1]?.tags, ["forms"]);
   assert.deepEqual(flattened[1]?.dependencies, ["README.md"]);
+  assert.deepEqual(flattened[1]?.navPath, ["Nested"]);
 });
 
 test("registry preparation flattens one exported definition-array level", () => {
   const definitions = attributed(
     defineScreen({
       ...parentInput(),
-      variants: [variant("welcome-empty", "empty")],
-    }),
-  );
-  const collection = attributed(
-    defineCollection({
-      childIds: ["welcome"],
-      dependencies: [],
-      description: "Screens",
-      id: "screens",
-      relatedDocs: [],
-      title: "Screens",
+      variants: [variant("welcome-empty")],
     }),
   );
 
   assert.deepEqual(
-    prepareRegistry([definitions, collection], config).entries.map(
-      ({ id }) => id,
-    ),
-    ["screens", "welcome", "welcome-empty"],
+    prepareRegistry([definitions], config).entries.map(({ id }) => id),
+    ["welcome", "welcome-empty"],
   );
 });
 
@@ -175,36 +157,46 @@ test("registry preparation keeps authored sibling variant order", () => {
   const definitions = attributed(
     defineScreen({
       ...parentInput(),
-      variants: [
-        variant("welcome-zeta", "zeta"),
-        variant("welcome-alpha", "alpha"),
-      ],
-    }),
-  );
-  const collection = attributed(
-    defineCollection({
-      childIds: ["welcome"],
-      dependencies: [],
-      description: "Screens",
-      id: "screens",
-      relatedDocs: [],
-      title: "Screens",
+      variants: [variant("welcome-zeta"), variant("welcome-alpha")],
     }),
   );
   const next = attributed(
     defineScreen({
       ...parentInput(),
       id: "workspace",
-      route: "screens/workspace.html",
       title: "Workspace",
     }),
   );
 
   assert.deepEqual(
-    prepareRegistry([next, definitions, collection], config).entries.map(
-      ({ id }) => id,
-    ),
-    ["screens", "welcome", "welcome-zeta", "welcome-alpha", "workspace"],
+    prepareRegistry([next, definitions], config).entries.map(({ id }) => id),
+    ["welcome", "welcome-zeta", "welcome-alpha", "workspace"],
+  );
+});
+
+test("defineScreen runtime shape follows absent, undefined, empty, and broad variants", () => {
+  const absent = defineScreen(parentInput());
+  const explicitlyUndefined = defineScreen({
+    ...parentInput(),
+    variants: undefined,
+  });
+  const empty = defineScreen({ ...parentInput(), variants: [] });
+  const broadWithVariant: ScreenInput = {
+    ...parentInput(),
+    variants: [variant("welcome-empty")],
+  };
+  const broadResult = defineScreen(broadWithVariant);
+
+  assert.equal(Array.isArray(absent), false);
+  assert.equal(Array.isArray(explicitlyUndefined), false);
+  assert.deepEqual(
+    empty.map(({ id }) => id),
+    ["welcome"],
+  );
+  assert.ok(Array.isArray(broadResult));
+  assert.deepEqual(
+    Array.isArray(broadResult) ? broadResult.map(({ id }) => id) : [],
+    ["welcome", "welcome-empty"],
   );
 });
 
@@ -216,18 +208,16 @@ function parentInput() {
     id: "welcome",
     mobile: "Mobile",
     relatedDocs: [] as readonly string[],
-    route: "screens/welcome.html",
     title: "Welcome",
   };
 }
 
-function variant(id: string, slug: string) {
+function variant(id: string) {
   return {
     description: `${id} description`,
     desktop: `${id} desktop`,
     id,
     mobile: `${id} mobile`,
-    slug,
     title: id,
   };
 }

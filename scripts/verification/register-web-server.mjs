@@ -1,8 +1,8 @@
 import {
-  assertOwnerId,
   assertRealDirectory,
   writeProcessRecord,
 } from "./process-owner-records.mjs";
+import { assertOwnerId } from "./process-owner-registry.mjs";
 
 const ownerId = process.env.MOKLY_VERIFICATION_OWNER_ID;
 const registry = process.env.MOKLY_VERIFICATION_PROCESS_REGISTRY;

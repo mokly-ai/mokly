@@ -21,8 +21,16 @@ export const SHELL_PREVIEW_SCHEME_CSS = `
   background: var(--mbk-screen-bg);
 }
 
+.mb-viewport {
+  color-scheme: light;
+}
+
 .mb-pane-doc {
-  background: var(--mbk-screen-bg);
+  background-color: var(--mbk-screen-bg);
+  background-image: linear-gradient(
+    var(--mbk-comparison-canvas, transparent),
+    var(--mbk-comparison-canvas, transparent)
+  );
 }
 
 [data-preview-color-scheme="dark"] .mbk-frag {
@@ -60,7 +68,11 @@ export const SHELL_PREVIEW_SCHEME_CSS = `
   background: var(--mbk-dark-screen-bg);
 }
 
-.mb-pane-doc[data-preview-color-scheme="dark"] {
-  background: var(--mbk-dark-screen-bg);
+[data-preview-color-scheme="dark"] .mb-viewport {
+  color-scheme: dark;
+}
+
+[data-preview-color-scheme="dark"] .mb-pane-doc {
+  background-color: var(--mbk-dark-screen-bg);
 }
 `;

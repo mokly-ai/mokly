@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
 import {
   readViewerEvidenceRevision,
   ViewerCapabilityScope,
@@ -15,39 +13,19 @@ import {
   viewerCapabilityDescriptor,
   viewerCapabilityRequest,
 } from "../src/client/host_capability_descriptor.js";
-import { readViewerWorkspace } from "../src/client/workspace_descriptor.js";
 import {
   ViewerCapabilityBoundary,
   useViewerCapabilities,
   useViewerInitialWorkspace,
 } from "../src/shell/capability_context.js";
-import { renderHydratedShellPage } from "../src/shell/document.js";
 import type { WorkspaceData } from "../src/shell/workspace_data.js";
-import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
 
-const catalogue = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
-const generation = "a".repeat(32);
-const token = "b".repeat(64);
-const source = {
-  base: "origin/main",
-  catalogueId: catalogue.identity.id,
-  contentRevision: catalogue.revision.content,
-  evidenceRevision: catalogue.revision.evidence,
-  previewGeneration: generation,
-  renderGeneration: generation,
-  updateVersion: 4,
-};
+import {
+  catalogue,
+  generation,
+  source,
+  token,
+} from "./host_capabilities_fixture.js";
 
 test("the provider exposes live capabilities and export-style omission", () => {
   const capabilities = {
@@ -62,12 +40,12 @@ test("the provider exposes live capabilities and export-style omission", () => {
     },
   } satisfies ViewerHostCapabilities;
   const workspace = {
-    entry: { route: "components/action.html" },
+    entry: { id: "action" },
   } as unknown as WorkspaceData;
   const Probe = () => (
     <span>
       {useViewerCapabilities()?.source.catalogueId ?? "export"}:
-      {useViewerInitialWorkspace()?.entry.route ?? "none"}
+      {useViewerInitialWorkspace()?.entry.id ?? "none"}
     </span>
   );
   assert.equal(
@@ -79,28 +57,24 @@ test("the provider exposes live capabilities and export-style omission", () => {
         <Probe />
       </ViewerCapabilityBoundary>,
     ),
-    `<span>${catalogue.identity.id}:components/action.html</span>`,
+    `<span>${catalogue.identity.id}:action</span>`,
   );
   assert.equal(renderToStaticMarkup(<Probe />), "<span>export:none</span>");
 });
 
-test("a request scope cancels work when its source or route changes", () => {
-  const initial = viewerCapabilityRequest(source, "components/button.html");
+test("a request scope cancels work when its source or entry changes", () => {
+  const initial = viewerCapabilityRequest(source, "button");
   const scope = new ViewerCapabilityScope(initial);
   const first = scope.signal;
   assert.equal(scope.replace(initial), first);
-  const second = scope.replace(
-    viewerCapabilityRequest(source, "components/card.html"),
-  );
+  const second = scope.replace(viewerCapabilityRequest(source, "card"));
   assert.equal(first.aborted, true);
   assert.equal(second.aborted, false);
   const replacement = {
     ...source,
     contentRevision: source.contentRevision + 1,
   };
-  const third = scope.replace(
-    viewerCapabilityRequest(replacement, "components/card.html"),
-  );
+  const third = scope.replace(viewerCapabilityRequest(replacement, "card"));
   assert.equal(second.aborted, true);
   assert.equal(third.aborted, false);
   scope.close();
@@ -147,7 +121,7 @@ test("evidence adoption fences source identity and monotonic revisions", () => {
   assert.equal(
     readViewerEvidenceRevision(
       source,
-      viewerCapabilityRequest({ ...source, base: "release" }, request.route),
+      viewerCapabilityRequest({ ...source, base: "release" }, request.entryId),
       nextSource,
       next,
     ),
@@ -183,63 +157,4 @@ test("temporary rendering is independent from on-demand document availability", 
       }),
     /Live viewer render generations are inconsistent/,
   );
-});
-
-test("live SSR carries a private descriptor while export carries no host loader", () => {
-  const display = viewerCatalogue(catalogue);
-  const { publicModel: _publicModel, ...privateDisplay } = display;
-  const view = viewerView(display, {
-    ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
-  });
-  const liveContext = {
-    base: source.base,
-    contentVersion: source.contentRevision,
-    previewGeneration: generation,
-    readModel: catalogue,
-    renderCapability: { generation, token },
-    updateVersion: source.updateVersion,
-  };
-  assert.deepEqual(
-    viewerCapabilityDescriptor(catalogue, liveContext)?.source,
-    source,
-  );
-  const live = renderHydratedShellPage(view, liveContext, privateDisplay);
-  assert.match(live, /data-mokly-host-capabilities=""/);
-  assert.match(live, /client\/react-host\.js/);
-  assert.match(live, new RegExp(token));
-  const state = live.match(
-    /data-mokly-host-capability-state="" type="application\/json">([^<]+)<\/script>/,
-  )?.[1];
-  assert.ok(state);
-  const descriptor = JSON.parse(state);
-  assert.equal(view.kind, "target");
-  if (view.kind !== "target")
-    throw new Error("Expected a target fixture view.");
-  assert.equal(descriptor.workspace.entry.route, view.target.entry.route);
-  assert.equal(descriptor.workspace.base, source.base);
-  assert.equal("renderCapability" in descriptor.workspace, false);
-  for (const leaked of [{ token }, { renderCapability: { generation, token } }])
-    assert.throws(
-      () => readViewerWorkspace({ ...descriptor.workspace, ...leaked }, source),
-      /Invalid viewer workspace evidence/,
-    );
-
-  const deploymentId = "c".repeat(64);
-  const exported = renderHydratedShellPage(view, {
-    base: source.base,
-    delivery: {
-      schemaVersion: 2,
-      deploymentId,
-      canonicalPath: "/",
-      comparisonUrl: null,
-      idRoutes: {},
-    },
-    readModel: { ...catalogue, deploymentId },
-    updateVersion: 0,
-  });
-  assert.doesNotMatch(exported, /data-mokly-host-capabilities/);
-  assert.doesNotMatch(exported, /client\/react-host\.js/);
-  assert.doesNotMatch(exported, new RegExp(token));
-  assert.match(exported, /client\/react-shell\.js/);
 });

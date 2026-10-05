@@ -2,9 +2,14 @@
 
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
-import { viewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
+import { projectScopedCatalogue } from "../catalogue/scoped_projection.js";
+import {
+  serializeViewerCapabilityDescriptor,
+  viewerCapabilityDescriptor,
+} from "../client/host_capability_descriptor.js";
 import {
   externalShellBootstrap,
+  serializeShellBootstrap,
   shellBootstrap,
   shellBootstrapProps,
 } from "../standalone/bootstrap.js";
@@ -39,9 +44,18 @@ export function renderHydratedShellPage(
 ): string {
   if (!context.readModel)
     throw new Error("Hydrated shell rendering requires a public catalogue.");
-  const resolvedBootstrap = shellBootstrap(context.readModel, view, context);
+  const completeBootstrap = shellBootstrap(context.readModel, view, context);
+  const resolvedBootstrap = context.delivery
+    ? completeBootstrap
+    : {
+        ...completeBootstrap,
+        catalogue: projectScopedCatalogue(
+          context.readModel,
+          completeBootstrap.view,
+        ),
+      };
   const bootstrap = context.delivery
-    ? externalShellBootstrap(resolvedBootstrap)
+    ? externalShellBootstrap(completeBootstrap)
     : resolvedBootstrap;
   const initialWorkspace =
     privateCatalogue &&
@@ -56,12 +70,17 @@ export function renderHydratedShellPage(
     context,
     initialWorkspace,
   );
+  const bootstrapJson = serializeShellBootstrap(bootstrap);
+  const capabilityDescriptorJson = capabilityDescriptor
+    ? serializeViewerCapabilityDescriptor(capabilityDescriptor)
+    : undefined;
   const props = shellBootstrapProps(resolvedBootstrap);
   const markup = renderToString(
     <StandaloneShellDocument
       {...props}
-      bootstrap={bootstrap}
+      bootstrapJson={bootstrapJson}
       {...(capabilityDescriptor ? { capabilityDescriptor } : {})}
+      {...(capabilityDescriptorJson ? { capabilityDescriptorJson } : {})}
       {...(initialWorkspace ? { initialWorkspace } : {})}
     />,
   );

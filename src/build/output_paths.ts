@@ -9,8 +9,13 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
+import { assertSafeGeneratedTree } from "./reserved_tree.js";
 import { sourceDenialMessage } from "./source_denial.js";
-import { isAuthoringSource } from "./source_inventory.js";
+import {
+  isAuthoringSource,
+  matchingPublicExclusion,
+} from "./source_inventory.js";
+import { isGeneratedRoute, isValidGeneratedRoute } from "./styles/routes.js";
 
 /** Reject unsafe generated routes with the rule that protects their target. */
 export function validateGeneratedOutputPaths(
@@ -25,8 +30,15 @@ export function validateGeneratedOutputPaths(
       "mockupsDir resolves outside repoRoot through a symlink",
     );
   }
-  for (const route of routes) {
-    if (route !== MANIFEST_NAME && !isSafeCatalogueRoute(route)) {
+  assertSafeGeneratedTree(config);
+  for (const route of [...routes].sort()) {
+    const reserved = isGeneratedRoute(route);
+    if (reserved && !isValidGeneratedRoute(route))
+      throw new MoklyError(
+        "build-invalid",
+        `generated route is unsafe: ${route}; use mokly-generated/styles/<root path>.css or mokly-generated/assets/<asset path> with supported extensions`,
+      );
+    if (!reserved && route !== MANIFEST_NAME && !isSafeCatalogueRoute(route)) {
       throw new MoklyError(
         "build-invalid",
         `generated route is unsafe: ${route}`,
@@ -55,9 +67,23 @@ export function validateGeneratedOutputPaths(
         `generated route targets internal catalogue metadata: ${route}`,
       );
     }
-    const denial = isAuthoringSource(target, config, "all", {
-      ignorePublicExclusions: route === MANIFEST_NAME,
-    });
+    if (reserved) {
+      const glob = matchingPublicExclusion(
+        target,
+        config.mockupsDir,
+        config.publicExclude,
+      );
+      if (glob !== undefined)
+        throw new MoklyError(
+          "build-invalid",
+          `generated route matches public exclusion ${glob}: ${route}; narrow the exclusion so Mokly-generated files stay public`,
+        );
+    }
+    const denial = reserved
+      ? undefined
+      : isAuthoringSource(target, config, "all", {
+          ignorePublicExclusions: route === MANIFEST_NAME,
+        });
     if (denial) {
       throw new MoklyError(
         "build-invalid",

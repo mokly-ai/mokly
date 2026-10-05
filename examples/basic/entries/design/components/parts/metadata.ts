@@ -39,22 +39,90 @@ export const COMPONENTS = {
     source: "components/Badge.tsx",
     dependencies: ["components/Badge.tsx"],
   },
+  checklist: {
+    id: "checklist",
+    title: "Checklist",
+    description: "The steps to finish before starting, in order.",
+    source: "components/Checklist.tsx",
+    dependencies: ["components/Checklist.tsx"],
+  },
 } as const satisfies Record<string, ComponentMetadata>;
 
 export type ComponentId = keyof typeof COMPONENTS;
 
-export const COMPONENT_BY_STATE = {
-  default: "action",
-  disabled: "action",
-  comparison: "action",
-  affected: "action",
-  toolbar: "toolbar",
-  hidden: "help-hint",
-  unused: "badge",
-  added: "badge",
-  removed: "action",
-  closed: "action",
-} as const satisfies Record<ComponentPageState, ComponentId>;
+/** Identity shown by one parent or component-variant page mockup. */
+export interface ComponentEntryMetadata {
+  component: ComponentId;
+  id: string;
+  title: string;
+  variantOf?: ComponentId;
+}
+
+/** Parent and variant identities used across component-page design states. */
+export const COMPONENT_ENTRIES = {
+  action: { component: "action", id: "action", title: "Action" },
+  actionDefault: {
+    component: "action",
+    id: "action-default",
+    title: "Default",
+    variantOf: "action",
+  },
+  actionDisabled: {
+    component: "action",
+    id: "action-disabled",
+    title: "Disabled",
+    variantOf: "action",
+  },
+  actionCompact: {
+    component: "action",
+    id: "action-compact",
+    title: "Compact",
+    variantOf: "action",
+  },
+  toolbar: { component: "toolbar", id: "toolbar", title: "Toolbar" },
+  helpHint: {
+    component: "help-hint",
+    id: "help-hint",
+    title: "Help hint",
+  },
+  badge: { component: "badge", id: "badge", title: "Badge" },
+  badgeDefault: {
+    component: "badge",
+    id: "badge-default",
+    title: "Default",
+    variantOf: "badge",
+  },
+  checklist: {
+    component: "checklist",
+    id: "checklist",
+    title: "Checklist",
+  },
+  checklistDefault: {
+    component: "checklist",
+    id: "checklist-default",
+    title: "Default",
+    variantOf: "checklist",
+  },
+} as const satisfies Record<string, ComponentEntryMetadata>;
+
+export const COMPONENT_ENTRY_BY_STATE = {
+  default: COMPONENT_ENTRIES.action,
+  disabled: COMPONENT_ENTRIES.actionDisabled,
+  comparison: COMPONENT_ENTRIES.actionDefault,
+  overlay: COMPONENT_ENTRIES.actionDefault,
+  difference: COMPONENT_ENTRIES.actionDefault,
+  "overlay-tall": COMPONENT_ENTRIES.checklistDefault,
+  affected: COMPONENT_ENTRIES.actionDefault,
+  toolbar: COMPONENT_ENTRIES.toolbar,
+  hidden: COMPONENT_ENTRIES.helpHint,
+  unused: COMPONENT_ENTRIES.badge,
+  added: COMPONENT_ENTRIES.badgeDefault,
+  removed: COMPONENT_ENTRIES.actionCompact,
+  "usage-loading": COMPONENT_ENTRIES.action,
+  "usage-failed": COMPONENT_ENTRIES.action,
+  "shared-impact": COMPONENT_ENTRIES.action,
+  closed: COMPONENT_ENTRIES.action,
+} as const satisfies Record<ComponentPageState, ComponentEntryMetadata>;
 
 export const SCREENS = {
   welcome: {

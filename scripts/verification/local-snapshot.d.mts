@@ -1,6 +1,7 @@
 export interface CapturedSource {
   readonly head: string;
   readonly stagedDiff: string;
+  readonly mergeHead: string | null;
   readonly files: readonly {
     readonly name: string;
     readonly kind: "file" | "link";
@@ -12,6 +13,7 @@ export interface CapturedSource {
 }
 
 export function captureSource(root: string): Promise<CapturedSource>;
+export function createSnapshotDirectory(): Promise<string>;
 export function verifySource(
   root: string,
   captured: CapturedSource,

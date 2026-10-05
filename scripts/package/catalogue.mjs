@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { entryRoute, viewRoute } from "@mokly/viewer/data";
+
 /** A packed consumer reads only public JSON and artifact files. */
 export async function inspectPublicCatalogue(root, comparisonPath) {
   const json = await fs.readFile(
@@ -9,7 +11,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
     "utf8",
   );
   const model = JSON.parse(json);
-  assert.equal(model.schemaVersion, 1);
+  assert.equal(model.schemaVersion, 3);
   assert.match(model.identity.id, /^[a-f0-9]{64}$/);
   assert.match(model.deploymentId, /^[a-f0-9]{64}$/);
   assert.equal(model.comparisonUrl, comparisonPath);
@@ -19,7 +21,9 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
     "sourceFiles",
     "declaredDependencies",
     "ownedDependencies",
-    "legacyPages",
+    "route",
+    "documentPath",
+    "fragmentPath",
     "startOffset",
     "endOffset",
   ])
@@ -32,18 +36,17 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
   ];
   assert.ok(entries.length > 0);
   for (const entry of entries) {
-    const paths =
-      entry.kind === "page"
-        ? [entry.documentPath]
-        : entry.kind === "screen"
-          ? entry.views.map((view) => view.fragmentPath)
-          : entry.kind === "component"
-            ? entry.variants.flatMap((variant) =>
-                variant.views.map((view) => view.fragmentPath),
-              )
-            : [];
-    for (const file of paths.filter(Boolean))
-      assert.ok((await fs.stat(path.join(root, file))).isFile(), file);
+    const shell = path.join(root, "view", entryRoute(entry.kind, entry.id));
+    assert.ok((await fs.stat(shell)).isFile(), shell);
+    const views = "views" in entry ? entry.views : [];
+    for (const view of views) {
+      const file = path.join(
+        root,
+        "static",
+        viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme),
+      );
+      assert.ok((await fs.stat(file)).isFile(), file);
+    }
   }
   return model;
 }

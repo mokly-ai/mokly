@@ -3,11 +3,13 @@ import fs from "node:fs";
 import { test } from "node:test";
 
 import { readCatalogue } from "../src/catalogue/reader.js";
+import { viewHref } from "../src/navigation/routes.js";
 import {
   catalogueNavSections,
   disclosurePath,
 } from "../src/shell/nav_model.js";
 import { routeFromUrl } from "../src/shell/routes.js";
+import { currentContext, selectionForRoute } from "../src/shell/store.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import type {
@@ -21,7 +23,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -35,10 +37,10 @@ const route = routeFromUrl(
 );
 const context = {
   ...viewerContext(model, defaultSelection),
-  activeRoute: "screens/home.html",
+  activeId: "home",
 };
 const sections = catalogueNavSections(catalogue);
-const activePath = disclosurePath(sections, "screens/home.html");
+const activePath = disclosurePath(sections, "home");
 const defaults = createInitialShellState(
   catalogue,
   context,
@@ -126,13 +128,59 @@ test("reload recovery promotes active ancestry in state and its filter baseline"
   }
 });
 
+test("reload recovery keeps route and snapshot identity synchronized", () => {
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  const historicalRoute = routeFromUrl(
+    catalogue,
+    new URL(
+      `https://example.test${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
+    ),
+  );
+  const historicalSelection = selectionForRoute(
+    { ...defaultSelection, screenId: "home" },
+    historicalRoute,
+  );
+  assert.equal(historicalSelection.screenId, historical.entry.id);
+  assert.equal(historicalSelection.snapshotId, historical.snapshotId);
+
+  const currentSelection = selectionForRoute(historicalSelection, route);
+  assert.equal(currentSelection.screenId, "home");
+  assert.equal(currentSelection.snapshotId, undefined);
+});
+
+test("runtime context projects only the route's active snapshot", () => {
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  const historicalRoute = routeFromUrl(
+    catalogue,
+    new URL(
+      `https://example.test${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
+    ),
+  );
+  const state = recoveredState();
+  const initial = { ...context, snapshotId: historical.snapshotId };
+  assert.equal(
+    currentContext(initial, { ...state, route }).snapshotId,
+    undefined,
+  );
+  assert.equal(
+    currentContext(initial, { ...state, route: historicalRoute }).snapshotId,
+    historical.snapshotId,
+  );
+});
+
 function recoveredState(initial: Omit<ShellInitialState, "recovery"> = {}) {
   const recovery: ShellRecoverySnapshot = {
-    closedCollectionIds: [...activePath, unrelated],
+    disclosures: Object.fromEntries(
+      [...activePath, unrelated].map((key) => [key, false]),
+    ),
     colorScheme: "light",
     detailsOpen: false,
     drawerOpen: true,
-    filterBaselineClosedCollectionIds: [...activePath, unrelated],
+    filterBaselineDisclosures: Object.fromEntries(
+      [...activePath, unrelated].map((key) => [key, false]),
+    ),
     navScroll: 87,
     query: "home",
     regionScrolls: { stage: 41 },

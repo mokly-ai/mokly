@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  generatedBytes,
+  type GeneratedFile,
+} from "../dist/build/generated_file.js";
+import {
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   assertFastPathEquivalent,
@@ -69,11 +73,11 @@ test("marker movement with identical stripped HTML preserves consumer material",
 
 test("invocation line shifts alone keep every view on the fast path", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => "\n\n" + source);
-  const reader = (outputs: ReadonlyMap<string, string>) => ({
+  const reader = (outputs: ReadonlyMap<string, GeneratedFile>) => ({
     read: async (route: string) => {
       const content = outputs.get(route);
       assert.notEqual(content, undefined, route);
-      return Buffer.from(content!);
+      return generatedBytes(content!);
     },
   });
   const events: TimingEvent[] = [];
@@ -121,7 +125,7 @@ function reviewFixture(
   };
 }
 
-function reasonKinds(result: ReviewResultV3, id: string) {
+function reasonKinds(result: ReviewResultV4, id: string) {
   const change = result.changes.find(
     (entry) => (entry.after ?? entry.before)?.id === id,
   );

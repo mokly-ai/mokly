@@ -7,9 +7,11 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { LoadedGraph } from "./load_graph.js";
+import type { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 
 export async function renderCooperatively(
@@ -19,6 +21,7 @@ export async function renderCooperatively(
   fragmentViews: Map<string, ArtifactView>,
   componentViews: Map<string, ComponentViewRecord>,
   checkpoint: () => Promise<void>,
+  pending: PendingGeneratedFiles,
 ): Promise<Map<string, string>> {
   const outputs = new Map<string, string>();
   const render = async (
@@ -33,6 +36,7 @@ export async function renderCooperatively(
       graph.renderWithComponents,
       componentViews,
       selection,
+      { routes: graph.stylesheetRoutes, pending },
     ))
       outputs.set(route, content);
   };
@@ -47,21 +51,20 @@ export async function renderCooperatively(
         viewport: "desktop",
         colorScheme: "light",
       });
-    } else if (entry.kind === "screen" || entry.kind === "component") {
-      for (const variantId of entry.kind === "component"
-        ? entry.variants.map((variant) => variant.id)
-        : [undefined])
-        for (const viewport of VIEWPORTS)
-          for (const colorScheme of effectiveColorSchemes(
-            entry,
-            config.colorSchemes,
-          ))
-            await render({
-              entryId: entry.id,
-              viewport,
-              colorScheme,
-              ...(variantId ? { variantId } : {}),
-            });
+    } else if (
+      entry.kind === "screen" ||
+      (entry.kind === "component" && isComponentVariantDefinition(entry))
+    ) {
+      for (const viewport of VIEWPORTS)
+        for (const colorScheme of effectiveColorSchemes(
+          entry,
+          config.colorSchemes,
+        ))
+          await render({
+            entryId: entry.id,
+            viewport,
+            colorScheme,
+          });
     }
   }
   return outputs;

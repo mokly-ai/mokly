@@ -1,7 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isInside, projectRealPath, toPosixPath } from "./paths.js";
+import {
+  isInside,
+  projectRealPath,
+  resolveAbsolutePath,
+  toPosixPath,
+} from "./paths.js";
 
 /** Logical and canonical identities confined to the same configured root. */
 export interface FileLocation {
@@ -11,6 +16,19 @@ export interface FileLocation {
   readonly physicalRelativePath: string;
 }
 
+/** Map a reported physical path back through a symlinked configured root. */
+export function logicalRepositoryPath(
+  candidate: string,
+  repoRoot: string,
+): string {
+  const absolute = resolveAbsolutePath(candidate);
+  if (isInside(repoRoot, absolute)) return absolute;
+  const physicalRoot = projectRealPath(repoRoot);
+  return isInside(physicalRoot, absolute)
+    ? path.resolve(repoRoot, path.relative(physicalRoot, absolute))
+    : absolute;
+}
+
 /** Locate existing or missing paths without accepting escaping or dangling links. */
 export function locatePath(
   candidate: string,
@@ -18,7 +36,7 @@ export function locatePath(
   repoRoot = root,
 ): FileLocation | undefined {
   try {
-    const logicalPath = path.resolve(candidate);
+    const logicalPath = logicalRepositoryPath(candidate, repoRoot);
     if (!isInside(repoRoot, root) || !isInside(root, logicalPath)) return;
     const realRepo = fs.realpathSync(repoRoot);
     const realRoot = fs.realpathSync(root);

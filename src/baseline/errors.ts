@@ -1,4 +1,4 @@
-import { MoklyError } from "../errors.js";
+import { MoklyError, type MoklyErrorOptions } from "../errors.js";
 
 export type BaselineErrorCode =
   | "baseline-history-unavailable"
@@ -11,8 +11,16 @@ export type BaselineErrorCode =
 /** Stable failure reasons shared by preparation, CLI, and background evidence. */
 export class BaselineError extends MoklyError {
   declare readonly code: BaselineErrorCode;
-  constructor(code: BaselineErrorCode, message: string, cause?: unknown) {
-    super(code, message, cause === undefined ? undefined : { cause });
+  constructor(
+    code: BaselineErrorCode,
+    message: string,
+    cause?: unknown,
+    options: Pick<MoklyErrorOptions, "cancelled"> = {},
+  ) {
+    super(code, message, {
+      ...(cause === undefined ? {} : { cause }),
+      ...(options.cancelled ? { cancelled: true } : {}),
+    });
     this.name = "BaselineError";
   }
 }
@@ -43,5 +51,6 @@ export function assertBaselineActive(signal?: AbortSignal): void {
       "baseline-interrupted",
       "Baseline preparation was interrupted",
       signal.reason,
+      { cancelled: true },
     );
 }

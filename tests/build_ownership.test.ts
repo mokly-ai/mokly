@@ -12,6 +12,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("ownership headers encode every comment-unsafe source path", () => {
   for (const source of [
@@ -74,7 +75,8 @@ test("catalogue output safely owns a comment-unsafe entry filename", async (cont
   await fs.promises.writeFile(unsafePath, validEntrySource());
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const output = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const output =
+    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
   const header = output.slice(0, output.indexOf("\n") + 1);
 
   assert.equal(generatedSource(header), "entries/a-->b.mockup.tsx");

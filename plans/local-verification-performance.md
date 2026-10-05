@@ -1,6 +1,7 @@
 # Local Verification Performance
 
-Status: implementation delivered and reviewed; active until PR merge. Created
+Status: original implementation delivered and reviewed; main integration in progress.
+Active until PR merge. Created
 2026-09-23 at the user's request. This plan improves the local complete gate;
 the existing [CI Performance](./ci-performance.md) plan owns the
 already-delivered hosted fan-out. Plan creation changed no test or verification
@@ -168,3 +169,95 @@ review findings.
       findings with severity, plain-language context and impact of doing
       nothing, lettered solution options, and a recommended scope; make no
       automatic fixes.
+
+## Milestone 5: Integrate October Main Changes
+
+Summary: merge `origin/main` at `800fe9f8` from source tip `72fa0309` while
+preserving mainline features and the complete verification gate.
+
+- [x] Audit incoming mainline additions and resolve all ten conflicted paths.
+- [x] Add regression coverage for separate hydration evidence, pending-merge
+      snapshots, dependency containment, and independent dependency writes.
+      Keep every mainline suite, assertion, and test deadline.
+- [x] Preserve workspace-root execution, register process ownership, and split
+      branch-owned files to meet main's source-length and internal-export rules.
+- [x] Reserve three available CPUs per job, capped at four jobs and floored at
+      one. This host exposes seven of eight logical CPUs, so it runs two jobs.
+- [x] Use canonical system-temp worker paths. Cover temp aliases and retain
+      report artifacts in the initiating checkout's ignored `.context` directory.
+- [x] Profile the remaining 20,000-file timing failure. Optimize pure path
+      normalization and containment while retaining every realpath/stat check.
+      Prove equivalence with Node over 4,000 path pairs and fallback forms.
+- [x] Verify the normal two-file runner under contention: 32 benchmark/recovery
+      cases and 16 cases alongside real preview and design-library builds pass.
+      Remove the temporary serialization controls; retain native shard assignment.
+- [ ] Run the complete `cargo xtask check` on the final merged source tree, plus
+      relevant formatting, lint, type checks, builds, and smoke tests.
+- [ ] Inspect main-relative deletions, run `git add -A`, create a Conventional
+      Commit merge, immediately verify its two parents, inspect every remerge-diff
+      path, and push the current branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`. Report findings without changing the implementation.
+
+### Integration Decisions
+
+No PR exists for this branch. Copy these decisions into its description when one
+is opened. No mainline files, public behavior, assertions, or deadlines are removed.
+
+- `README.md`, `docs/protocol/README.md`, `docs/protocol/ci-verification.md`,
+  and `xtask/README.md` retain main's hydration suite, security rules, and audits
+  while documenting local isolation. `docs/protocol/local-verification.md` and
+  `docs/protocol/ci-suite-evidence.md` define the combined evidence and deadlines.
+- `playwright.config.ts` keeps main's `--base HEAD` and separate projects, plus
+  process-owner registration. `scripts/verification/playwright.d.mts` follows
+  main's project-aware discovery API.
+- `tests/browser/react_shell_hydration_routes.spec.ts` and
+  `tests/browser/react_shell_hydration_route_inventory.ts` retain the four
+  reusable inventories, main's ID-derived routes, encoded `/view/` navigation,
+  and shell-route expectations. All four files belong to the hydration suite.
+- `tests/browser/viewer_inspection_fixture.ts` keeps main's geometry filtering
+  and the branch's queued release handling.
+- `tests/design_library_attribution.test.ts` keeps the split test files;
+  `tests/design_library_attribution_metadata.test.ts` adopts main's updated
+  variant identities. All screen and value assertions remain intact.
+- `tests/preview.test.ts` keeps main's isolated committed fixture and exact
+  output assertions, with timing around both required builds.
+- `scripts/verification/local-check.mjs`, `local-evidence.mjs`, and
+  `local-evidence.d.mts` schedule hydration and require all nine reports. `local-workers.mjs`
+  and its declaration own scheduling/report helpers to meet the size cap.
+  Unused CLI-only exports and their declaration were removed.
+- `scripts/verification/local-snapshot.mjs` and its declaration preserve
+  `MERGE_HEAD`, detect drift, copy dependencies with copy-on-write support,
+  preserve executable/workspace links, and use canonical short worker paths.
+  Package CSS stays inside each worker and dependency writes remain isolated.
+- `scripts/verification/process-owner-records.mjs` moves registry parsing to
+  `process-owner-registry.mjs`. `process-owner.mjs` and
+  `register-web-server.mjs` import the validator from its owning module.
+- `tests/verification_inventory.test.ts` retains independent discovery with
+  main's project-aware API and sequential listings. `verification_local_check`,
+  `verification_local_tasks`, and `verification_local_evidence` tests cover the
+  snapshot, scheduling, temp-alias, and hydration contracts.
+- `xtask/src/check.rs` and `xtask/src/_tests_/check_tests.rs` keep the parallel
+  complete gate and main's workspace-root execution for the audit and runner.
+- `src/config/paths.ts`, `src/config/file_locations.ts`, and
+  `src/build/styles/dependency_inventory.ts` avoid repeated pure normalization
+  of already canonical absolute POSIX paths. Other path shapes and Windows
+  retain Node's existing behavior. `tests/path_containment.test.ts`,
+  `docs/protocol/local-verification.md`, and `src/build/README.md` preserve
+  and explain the unchanged containment and physical-admission rules.
+
+### Verification Context
+
+The final gate runs in a temporary checkout with the exact resolved merge tree
+and both intended parents. Main's example server compares with `HEAD`; the old
+pre-merge HEAD has an incompatible catalogue schema. The real merge commit must
+retain the exact tested tree. The current branch stays in place during validation.
+
+Four-job runs exceeded main's existing watcher and browser setup budgets, so
+local fan-out reserves CPU capacity. Additional unit serialization did not fix
+a 2.949-second PostCSS collection against its 2.5-second limit and was removed.
+Profiling attributed 53.8% of collector samples to relative-path and normalization
+work. The resulting pure fast paths passed 29 focused boundary/inventory tests,
+32 ordinary contention cases (1.55–2.15 seconds for the benchmark), and 16 heavy
+contention cases including both preview builds (2.04 seconds for the benchmark).
+Public and CI unit entrypoints keep their original two-file concurrency.

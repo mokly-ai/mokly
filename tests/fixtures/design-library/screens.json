@@ -1,426 +1,442 @@
 [
   {
-    "id": "design-browse-details",
-    "route": "design/browse/states/details.html",
+    "id": "design-browse-dark-scheme",
+    "route": "screens/design-browse-dark-scheme.html",
     "fragments": {
-      "desktop": "design/browse/states/details.desktop.html",
-      "mobile": "design/browse/states/details.mobile.html"
+      "desktop": "screens/design-browse-dark-scheme.desktop.html",
+      "mobile": "screens/design-browse-dark-scheme.mobile.html"
+    }
+  },
+  {
+    "id": "design-browse-details",
+    "route": "screens/design-browse-details.html",
+    "fragments": {
+      "desktop": "screens/design-browse-details.desktop.html",
+      "mobile": "screens/design-browse-details.mobile.html"
     }
   },
   {
     "id": "design-browse-details-screen",
-    "route": "design/browse/views/details-screen.html",
+    "route": "screens/design-browse-details-screen.html",
     "fragments": {
-      "desktop": "design/browse/views/details-screen.desktop.html",
-      "mobile": "design/browse/views/details-screen.mobile.html"
+      "desktop": "screens/design-browse-details-screen.desktop.html",
+      "mobile": "screens/design-browse-details-screen.mobile.html"
     }
   },
   {
     "id": "design-browse-home",
-    "route": "design/browse/views/home.html",
+    "route": "screens/design-browse-home.html",
     "fragments": {
-      "desktop": "design/browse/views/home.desktop.html",
-      "mobile": "design/browse/views/home.mobile.html"
+      "desktop": "screens/design-browse-home.desktop.html",
+      "mobile": "screens/design-browse-home.mobile.html"
+    }
+  },
+  {
+    "id": "design-browse-light-only",
+    "route": "screens/design-browse-light-only.html",
+    "fragments": {
+      "desktop": "screens/design-browse-light-only.desktop.html",
+      "mobile": "screens/design-browse-light-only.mobile.html"
     }
   },
   {
     "id": "design-browse-missing-route",
-    "route": "design/browse/states/missing-route.html",
+    "route": "screens/design-browse-missing-route.html",
     "fragments": {
-      "desktop": "design/browse/states/missing-route.desktop.html",
-      "mobile": "design/browse/states/missing-route.mobile.html"
+      "desktop": "screens/design-browse-missing-route.desktop.html",
+      "mobile": "screens/design-browse-missing-route.mobile.html"
     }
   },
   {
     "id": "design-browse-navigation",
-    "route": "design/browse/states/navigation.html",
+    "route": "screens/design-browse-navigation.html",
     "fragments": {
-      "desktop": "design/browse/states/navigation.desktop.html",
-      "mobile": "design/browse/states/navigation.mobile.html"
+      "desktop": "screens/design-browse-navigation.desktop.html",
+      "mobile": "screens/design-browse-navigation.mobile.html"
     }
   },
   {
     "id": "design-browse-screen",
-    "route": "design/browse/views/screen.html",
+    "route": "screens/design-browse-screen.html",
     "fragments": {
-      "desktop": "design/browse/views/screen.desktop.html",
-      "mobile": "design/browse/views/screen.mobile.html"
+      "desktop": "screens/design-browse-screen.desktop.html",
+      "mobile": "screens/design-browse-screen.mobile.html"
     }
   },
   {
     "id": "design-browse-tag-filter",
-    "route": "design/browse/states/tag-filter.html",
+    "route": "screens/design-browse-tag-filter.html",
     "fragments": {
-      "desktop": "design/browse/states/tag-filter.desktop.html",
-      "mobile": "design/browse/states/tag-filter.mobile.html"
+      "desktop": "screens/design-browse-tag-filter.desktop.html",
+      "mobile": "screens/design-browse-tag-filter.mobile.html"
     }
   },
   {
     "id": "design-browse-tag-forms",
-    "route": "design/browse/states/tags/forms.html",
+    "route": "screens/design-browse-tag-forms.html",
     "fragments": {
-      "desktop": "design/browse/states/tags/forms.desktop.html",
-      "mobile": "design/browse/states/tags/forms.mobile.html"
+      "desktop": "screens/design-browse-tag-forms.desktop.html",
+      "mobile": "screens/design-browse-tag-forms.mobile.html"
     }
   },
   {
     "id": "design-browse-tag-onboarding",
-    "route": "design/browse/states/tags/onboarding.html",
+    "route": "screens/design-browse-tag-onboarding.html",
     "fragments": {
-      "desktop": "design/browse/states/tags/onboarding.desktop.html",
-      "mobile": "design/browse/states/tags/onboarding.mobile.html"
+      "desktop": "screens/design-browse-tag-onboarding.desktop.html",
+      "mobile": "screens/design-browse-tag-onboarding.mobile.html"
     }
   },
   {
     "id": "design-browse-tag-onboarding-picker",
-    "route": "design/browse/states/tags/onboarding-picker.html",
+    "route": "screens/design-browse-tag-onboarding-picker.html",
     "fragments": {
-      "desktop": "design/browse/states/tags/onboarding-picker.desktop.html",
-      "mobile": "design/browse/states/tags/onboarding-picker.mobile.html"
+      "desktop": "screens/design-browse-tag-onboarding-picker.desktop.html",
+      "mobile": "screens/design-browse-tag-onboarding-picker.mobile.html"
     }
   },
   {
     "id": "design-browse-tag-picker",
-    "route": "design/browse/states/tags/picker.html",
+    "route": "screens/design-browse-tag-picker.html",
     "fragments": {
-      "desktop": "design/browse/states/tags/picker.desktop.html",
-      "mobile": "design/browse/states/tags/picker.mobile.html"
+      "desktop": "screens/design-browse-tag-picker.desktop.html",
+      "mobile": "screens/design-browse-tag-picker.mobile.html"
     }
   },
   {
     "id": "design-browse-use-case",
-    "route": "design/browse/views/use-case.html",
+    "route": "screens/design-browse-use-case.html",
     "fragments": {
-      "desktop": "design/browse/views/use-case.desktop.html",
-      "mobile": "design/browse/views/use-case.mobile.html"
+      "desktop": "screens/design-browse-use-case.desktop.html",
+      "mobile": "screens/design-browse-use-case.mobile.html"
     }
   },
   {
     "id": "design-changes-current",
-    "route": "design/review/controls/current.html",
+    "route": "screens/design-changes-current.html",
     "fragments": {
-      "desktop": "design/review/controls/current.desktop.html",
-      "mobile": "design/review/controls/current.mobile.html"
+      "desktop": "screens/design-changes-current.desktop.html",
+      "mobile": "screens/design-changes-current.mobile.html"
     }
   },
   {
     "id": "design-changes-overlay",
-    "route": "design/review/controls/overlay.html",
+    "route": "screens/design-changes-overlay.html",
     "fragments": {
-      "desktop": "design/review/controls/overlay.desktop.html",
-      "mobile": "design/review/controls/overlay.mobile.html"
+      "desktop": "screens/design-changes-overlay.desktop.html",
+      "mobile": "screens/design-changes-overlay.mobile.html"
     }
   },
   {
     "id": "design-component-added",
-    "route": "design/components/states/additions/added.html",
+    "route": "screens/design-component-added.html",
     "fragments": {
-      "desktop": "design/components/states/additions/added.desktop.html",
-      "mobile": "design/components/states/additions/added.mobile.html"
+      "desktop": "screens/design-component-added.desktop.html",
+      "mobile": "screens/design-component-added.mobile.html"
     }
   },
   {
     "id": "design-component-affected",
-    "route": "design/components/pages/affected.html",
+    "route": "screens/design-component-affected.html",
     "fragments": {
-      "desktop": "design/components/pages/affected.desktop.html",
-      "mobile": "design/components/pages/affected.mobile.html"
+      "desktop": "screens/design-component-affected.desktop.html",
+      "mobile": "screens/design-component-affected.mobile.html"
     }
   },
   {
     "id": "design-component-comparison",
-    "route": "design/components/pages/comparison.html",
+    "route": "screens/design-component-comparison.html",
     "fragments": {
-      "desktop": "design/components/pages/comparison.desktop.html",
-      "mobile": "design/components/pages/comparison.mobile.html"
+      "desktop": "screens/design-component-comparison.desktop.html",
+      "mobile": "screens/design-component-comparison.mobile.html"
     }
   },
   {
     "id": "design-component-controls",
-    "route": "design/components/controls/overview.html",
+    "route": "screens/design-component-controls.html",
     "fragments": {
-      "desktop": "design/components/controls/overview.desktop.html",
-      "mobile": "design/components/controls/overview.mobile.html"
+      "desktop": "screens/design-component-controls.desktop.html",
+      "mobile": "screens/design-component-controls.mobile.html"
     }
   },
   {
     "id": "design-component-controls-comparison",
-    "route": "design/components/controls/states/comparison.html",
+    "route": "screens/design-component-controls-comparison.html",
     "fragments": {
-      "desktop": "design/components/controls/states/comparison.desktop.html",
-      "mobile": "design/components/controls/states/comparison.mobile.html"
+      "desktop": "screens/design-component-controls-comparison.desktop.html",
+      "mobile": "screens/design-component-controls-comparison.mobile.html"
     }
   },
   {
     "id": "design-component-controls-edited",
-    "route": "design/components/controls/editing/edited.html",
+    "route": "screens/design-component-controls-edited.html",
     "fragments": {
-      "desktop": "design/components/controls/editing/edited.desktop.html",
-      "mobile": "design/components/controls/editing/edited.mobile.html"
+      "desktop": "screens/design-component-controls-edited.desktop.html",
+      "mobile": "screens/design-component-controls-edited.mobile.html"
     }
   },
   {
     "id": "design-component-controls-error",
-    "route": "design/components/controls/states/error.html",
+    "route": "screens/design-component-controls-error.html",
     "fragments": {
-      "desktop": "design/components/controls/states/error.desktop.html",
-      "mobile": "design/components/controls/states/error.mobile.html"
+      "desktop": "screens/design-component-controls-error.desktop.html",
+      "mobile": "screens/design-component-controls-error.mobile.html"
     }
   },
   {
     "id": "design-component-controls-invalid",
-    "route": "design/components/controls/states/invalid.html",
+    "route": "screens/design-component-controls-invalid.html",
     "fragments": {
-      "desktop": "design/components/controls/states/invalid.desktop.html",
-      "mobile": "design/components/controls/states/invalid.mobile.html"
+      "desktop": "screens/design-component-controls-invalid.desktop.html",
+      "mobile": "screens/design-component-controls-invalid.mobile.html"
     }
   },
   {
     "id": "design-component-controls-pending",
-    "route": "design/components/controls/states/pending.html",
+    "route": "screens/design-component-controls-pending.html",
     "fragments": {
-      "desktop": "design/components/controls/states/pending.desktop.html",
-      "mobile": "design/components/controls/states/pending.mobile.html"
+      "desktop": "screens/design-component-controls-pending.desktop.html",
+      "mobile": "screens/design-component-controls-pending.mobile.html"
     }
   },
   {
     "id": "design-component-controls-readonly",
-    "route": "design/components/controls/published/default.html",
+    "route": "screens/design-component-controls-readonly.html",
     "fragments": {
-      "desktop": "design/components/controls/published/default.desktop.html",
-      "mobile": "design/components/controls/published/default.mobile.html"
+      "desktop": "screens/design-component-controls-readonly.desktop.html",
+      "mobile": "screens/design-component-controls-readonly.mobile.html"
     }
   },
   {
     "id": "design-component-controls-readonly-variant",
-    "route": "design/components/controls/published/variant.html",
+    "route": "screens/design-component-controls-readonly-variant.html",
     "fragments": {
-      "desktop": "design/components/controls/published/variant.desktop.html",
-      "mobile": "design/components/controls/published/variant.mobile.html"
+      "desktop": "screens/design-component-controls-readonly-variant.desktop.html",
+      "mobile": "screens/design-component-controls-readonly-variant.mobile.html"
     }
   },
   {
     "id": "design-component-controls-reset",
-    "route": "design/components/controls/editing/reset.html",
+    "route": "screens/design-component-controls-reset.html",
     "fragments": {
-      "desktop": "design/components/controls/editing/reset.desktop.html",
-      "mobile": "design/components/controls/editing/reset.mobile.html"
+      "desktop": "screens/design-component-controls-reset.desktop.html",
+      "mobile": "screens/design-component-controls-reset.mobile.html"
     }
   },
   {
     "id": "design-component-controls-unset",
-    "route": "design/components/controls/editing/unset.html",
+    "route": "screens/design-component-controls-unset.html",
     "fragments": {
-      "desktop": "design/components/controls/editing/unset.desktop.html",
-      "mobile": "design/components/controls/editing/unset.mobile.html"
+      "desktop": "screens/design-component-controls-unset.desktop.html",
+      "mobile": "screens/design-component-controls-unset.mobile.html"
     }
   },
   {
     "id": "design-component-controls-variant",
-    "route": "design/components/controls/editing/variant.html",
+    "route": "screens/design-component-controls-variant.html",
     "fragments": {
-      "desktop": "design/components/controls/editing/variant.desktop.html",
-      "mobile": "design/components/controls/editing/variant.mobile.html"
+      "desktop": "screens/design-component-controls-variant.desktop.html",
+      "mobile": "screens/design-component-controls-variant.mobile.html"
     }
   },
   {
     "id": "design-component-empty",
-    "route": "design/components/states/empty.html",
+    "route": "screens/design-component-empty.html",
     "fragments": {
-      "desktop": "design/components/states/empty.desktop.html",
-      "mobile": "design/components/states/empty.mobile.html"
+      "desktop": "screens/design-component-empty.desktop.html",
+      "mobile": "screens/design-component-empty.mobile.html"
     }
   },
   {
     "id": "design-component-help",
-    "route": "design/components/pages/help.html",
+    "route": "screens/design-component-help.html",
     "fragments": {
-      "desktop": "design/components/pages/help.desktop.html",
-      "mobile": "design/components/pages/help.mobile.html"
+      "desktop": "screens/design-component-help.desktop.html",
+      "mobile": "screens/design-component-help.mobile.html"
     }
   },
   {
     "id": "design-component-inspection-consumer",
-    "route": "design/components/inspection/consumer.html",
+    "route": "screens/design-component-inspection-consumer.html",
     "fragments": {
-      "desktop": "design/components/inspection/consumer.desktop.html",
-      "mobile": "design/components/inspection/consumer.mobile.html"
+      "desktop": "screens/design-component-inspection-consumer.desktop.html",
+      "mobile": "screens/design-component-inspection-consumer.mobile.html"
     }
   },
   {
     "id": "design-component-inspection-details",
-    "route": "design/components/inspection/details.html",
+    "route": "screens/design-component-inspection-details.html",
     "fragments": {
-      "desktop": "design/components/inspection/details.desktop.html",
-      "mobile": "design/components/inspection/details.mobile.html"
+      "desktop": "screens/design-component-inspection-details.desktop.html",
+      "mobile": "screens/design-component-inspection-details.mobile.html"
     }
   },
   {
     "id": "design-component-inspection-direct-change",
-    "route": "design/components/inspection/direct-change.html",
+    "route": "screens/design-component-inspection-direct-change.html",
     "fragments": {
-      "desktop": "design/components/inspection/direct-change.desktop.html",
-      "mobile": "design/components/inspection/direct-change.mobile.html"
+      "desktop": "screens/design-component-inspection-direct-change.desktop.html",
+      "mobile": "screens/design-component-inspection-direct-change.mobile.html"
     }
   },
   {
     "id": "design-component-inspection-help",
-    "route": "design/components/inspection/selection/help.html",
+    "route": "screens/design-component-inspection-help.html",
     "fragments": {
-      "desktop": "design/components/inspection/selection/help.desktop.html",
-      "mobile": "design/components/inspection/selection/help.mobile.html"
+      "desktop": "screens/design-component-inspection-help.desktop.html",
+      "mobile": "screens/design-component-inspection-help.mobile.html"
     }
   },
   {
     "id": "design-component-inspection-highlight",
-    "route": "design/components/inspection/highlight.html",
+    "route": "screens/design-component-inspection-highlight.html",
     "fragments": {
-      "desktop": "design/components/inspection/highlight.desktop.html",
-      "mobile": "design/components/inspection/highlight.mobile.html"
+      "desktop": "screens/design-component-inspection-highlight.desktop.html",
+      "mobile": "screens/design-component-inspection-highlight.mobile.html"
     }
   },
   {
     "id": "design-component-inspection-nested",
-    "route": "design/components/inspection/nested.html",
+    "route": "screens/design-component-inspection-nested.html",
     "fragments": {
-      "desktop": "design/components/inspection/nested.desktop.html",
-      "mobile": "design/components/inspection/nested.mobile.html"
+      "desktop": "screens/design-component-inspection-nested.desktop.html",
+      "mobile": "screens/design-component-inspection-nested.mobile.html"
     }
   },
   {
     "id": "design-component-inspection-toolbar",
-    "route": "design/components/inspection/selection/toolbar.html",
+    "route": "screens/design-component-inspection-toolbar.html",
     "fragments": {
-      "desktop": "design/components/inspection/selection/toolbar.desktop.html",
-      "mobile": "design/components/inspection/selection/toolbar.mobile.html"
+      "desktop": "screens/design-component-inspection-toolbar.desktop.html",
+      "mobile": "screens/design-component-inspection-toolbar.mobile.html"
     }
   },
   {
     "id": "design-component-inspector-closed",
-    "route": "design/components/inspector/component.html",
+    "route": "screens/design-component-inspector-closed.html",
     "fragments": {
-      "desktop": "design/components/inspector/component.desktop.html",
-      "mobile": "design/components/inspector/component.mobile.html"
+      "desktop": "screens/design-component-inspector-closed.desktop.html",
+      "mobile": "screens/design-component-inspector-closed.mobile.html"
     }
   },
   {
     "id": "design-component-overview",
-    "route": "design/components/overview.html",
+    "route": "screens/design-component-overview.html",
     "fragments": {
-      "desktop": "design/components/overview.desktop.html",
-      "mobile": "design/components/overview.mobile.html"
+      "desktop": "screens/design-component-overview.desktop.html",
+      "mobile": "screens/design-component-overview.mobile.html"
     }
   },
   {
     "id": "design-component-removed",
-    "route": "design/components/states/removed.html",
+    "route": "screens/design-component-removed.html",
     "fragments": {
-      "desktop": "design/components/states/removed.desktop.html",
-      "mobile": "design/components/states/removed.mobile.html"
+      "desktop": "screens/design-component-removed.desktop.html",
+      "mobile": "screens/design-component-removed.mobile.html"
     }
   },
   {
     "id": "design-component-removed-consumer",
-    "route": "design/components/states/removed-consumer.html",
+    "route": "screens/design-component-removed-consumer.html",
     "fragments": {
-      "desktop": "design/components/states/removed-consumer.desktop.html",
-      "mobile": "design/components/states/removed-consumer.mobile.html"
+      "desktop": "screens/design-component-removed-consumer.desktop.html",
+      "mobile": "screens/design-component-removed-consumer.mobile.html"
     }
   },
   {
     "id": "design-component-screen-inspector-closed",
-    "route": "design/components/inspector/screen.html",
+    "route": "screens/design-component-screen-inspector-closed.html",
     "fragments": {
-      "desktop": "design/components/inspector/screen.desktop.html",
-      "mobile": "design/components/inspector/screen.mobile.html"
+      "desktop": "screens/design-component-screen-inspector-closed.desktop.html",
+      "mobile": "screens/design-component-screen-inspector-closed.mobile.html"
     }
   },
   {
     "id": "design-component-toolbar",
-    "route": "design/components/pages/toolbar.html",
+    "route": "screens/design-component-toolbar.html",
     "fragments": {
-      "desktop": "design/components/pages/toolbar.desktop.html",
-      "mobile": "design/components/pages/toolbar.mobile.html"
+      "desktop": "screens/design-component-toolbar.desktop.html",
+      "mobile": "screens/design-component-toolbar.mobile.html"
     }
   },
   {
     "id": "design-component-unavailable",
-    "route": "design/components/states/unavailable.html",
+    "route": "screens/design-component-unavailable.html",
     "fragments": {
-      "desktop": "design/components/states/unavailable.desktop.html",
-      "mobile": "design/components/states/unavailable.mobile.html"
+      "desktop": "screens/design-component-unavailable.desktop.html",
+      "mobile": "screens/design-component-unavailable.mobile.html"
     }
   },
   {
     "id": "design-component-unused",
-    "route": "design/components/states/unused.html",
+    "route": "screens/design-component-unused.html",
     "fragments": {
-      "desktop": "design/components/states/unused.desktop.html",
-      "mobile": "design/components/states/unused.mobile.html"
+      "desktop": "screens/design-component-unused.desktop.html",
+      "mobile": "screens/design-component-unused.mobile.html"
     }
   },
   {
     "id": "design-component-variants",
-    "route": "design/components/pages/variants.html",
+    "route": "screens/design-component-variants.html",
     "fragments": {
-      "desktop": "design/components/pages/variants.desktop.html",
-      "mobile": "design/components/pages/variants.mobile.html"
+      "desktop": "screens/design-component-variants.desktop.html",
+      "mobile": "screens/design-component-variants.mobile.html"
     }
   },
   {
     "id": "design-review-added",
-    "route": "design/review/outcomes/added.html",
+    "route": "screens/design-review-added.html",
     "fragments": {
-      "desktop": "design/review/outcomes/added.desktop.html",
-      "mobile": "design/review/outcomes/added.mobile.html"
+      "desktop": "screens/design-review-added.desktop.html",
+      "mobile": "screens/design-review-added.mobile.html"
     }
   },
   {
     "id": "design-review-changed",
-    "route": "design/review/outcomes/changed.html",
+    "route": "screens/design-review-changed.html",
     "fragments": {
-      "desktop": "design/review/outcomes/changed.desktop.html",
-      "mobile": "design/review/outcomes/changed.mobile.html"
+      "desktop": "screens/design-review-changed.desktop.html",
+      "mobile": "screens/design-review-changed.mobile.html"
     }
   },
   {
     "id": "design-review-difference",
-    "route": "design/review/outcomes/difference.html",
+    "route": "screens/design-review-difference.html",
     "fragments": {
-      "desktop": "design/review/outcomes/difference.desktop.html",
-      "mobile": "design/review/outcomes/difference.mobile.html"
+      "desktop": "screens/design-review-difference.desktop.html",
+      "mobile": "screens/design-review-difference.mobile.html"
     }
   },
   {
     "id": "design-review-empty",
-    "route": "design/review/impact/empty.html",
+    "route": "screens/design-review-empty.html",
     "fragments": {
-      "desktop": "design/review/impact/empty.desktop.html",
-      "mobile": "design/review/impact/empty.mobile.html"
+      "desktop": "screens/design-review-empty.desktop.html",
+      "mobile": "screens/design-review-empty.mobile.html"
     }
   },
   {
     "id": "design-review-ignored-only",
-    "route": "design/review/impact/ignored-only.html",
+    "route": "screens/design-review-ignored-only.html",
     "fragments": {
-      "desktop": "design/review/impact/ignored-only.desktop.html",
-      "mobile": "design/review/impact/ignored-only.mobile.html"
+      "desktop": "screens/design-review-ignored-only.desktop.html",
+      "mobile": "screens/design-review-ignored-only.mobile.html"
     }
   },
   {
     "id": "design-review-removed",
-    "route": "design/review/outcomes/removed.html",
+    "route": "screens/design-review-removed.html",
     "fragments": {
-      "desktop": "design/review/outcomes/removed.desktop.html",
-      "mobile": "design/review/outcomes/removed.mobile.html"
+      "desktop": "screens/design-review-removed.desktop.html",
+      "mobile": "screens/design-review-removed.mobile.html"
     }
   },
   {
     "id": "design-review-shared-impact",
-    "route": "design/review/impact/shared-impact.html",
+    "route": "screens/design-review-shared-impact.html",
     "fragments": {
-      "desktop": "design/review/impact/shared-impact.desktop.html",
-      "mobile": "design/review/impact/shared-impact.mobile.html"
+      "desktop": "screens/design-review-shared-impact.desktop.html",
+      "mobile": "screens/design-review-shared-impact.mobile.html"
     }
   }
 ]

@@ -1,11 +1,10 @@
-export {
-  catalogueViewHref,
-  parseStaticDelivery,
-} from "./navigation/delivery.js";
+export { parseStaticDelivery } from "./navigation/delivery.js";
 export type { StaticDelivery } from "./navigation/delivery.js";
 export {
   isCatalogueId,
+  isEntryId,
   isLogicalFragment,
+  isWindowsDeviceName,
   parseLogicalTarget,
   parseLogicalMarker,
   logicalMarker,
@@ -34,11 +33,22 @@ export {
 } from "./catalogue/component_values.js";
 export { projectTree } from "./catalogue/tree.js";
 export {
+  catalogueComponentVariants,
+  currentCatalogueEntries,
+  resolveCatalogueEntry,
+  resolveCatalogueSelection,
+} from "./catalogue/entry_selection.js";
+export type { ResolvedCatalogueEntry } from "./catalogue/entry_selection.js";
+export {
+  comparisonGeneration,
+  historicalSnapshotId,
+  isHistoricalSnapshotId,
+} from "./catalogue/snapshot_identity.js";
+export type { HistoricalSnapshotSource } from "./catalogue/snapshot_identity.js";
+export {
   counter,
   repositoryPath,
-  publicPath,
   comparisonPath,
-  pagePreviewPath,
   relatedDoc,
   lexical,
 } from "./catalogue/values.js";
@@ -88,13 +98,32 @@ export type {
   ComponentStyleOwnership,
   ComponentResourceOwnership,
 } from "./components/manifest_types.js";
+export { isManifestComponentVariant } from "./components/manifest_types.js";
 export { instanceKey, slotKey } from "./components/keys.js";
 export { resolveInstance } from "./components/resolve_instance.js";
 export type { InstanceResolution } from "./components/resolve_instance.js";
-export { componentFragmentRoute } from "./components/paths.js";
+export {
+  entryRoute,
+  pagePreviewMetadataPath,
+  parseViewHref,
+  providerNormalizedHtmlPath,
+  snapshotPagePath,
+  snapshotResourcePath,
+  snapshotSidePath,
+  snapshotViewPath,
+  unavailableViewHref,
+  viewHref,
+  viewRoute,
+} from "./navigation/routes.js";
+export type {
+  EntryRouteKind,
+  SnapshotSide,
+  ViewHrefIdentity,
+  ViewRouteKind,
+} from "./navigation/routes.js";
 export type {
   ReviewEntryAddress,
-  ScreenReviewV3,
+  ScreenReviewV4,
   ReviewVariantAddress,
   ComponentVariantReview,
   ComponentReview,
@@ -103,8 +132,9 @@ export type {
   ComponentUsageContext,
   AffectedUsageEvidence,
   AffectedConsumer,
-  ReviewResultV3,
+  ReviewResultV4,
 } from "./review/component_types.js";
+export { affectedConsumerOrderKey } from "./review/order.js";
 export type {
   ReviewArtifactContent,
   ReviewState,
@@ -128,17 +158,29 @@ export { isStylesheetPath } from "./review/css/stylesheet_path.js";
 export { VIEWPORTS, effectiveColorSchemes } from "./registry/views.js";
 export type { ArtifactView } from "./registry/views.js";
 export { analyzeHierarchy } from "./registry/hierarchy.js";
+export {
+  compareNavigationNodes,
+  navPathKey,
+  navConflictKey,
+  validNavLabel,
+} from "./registry/nav_paths.js";
 export type {
   HierarchyEntry,
   CatalogueHierarchy,
+  HierarchyNode,
+  HierarchyFolder,
 } from "./registry/hierarchy.js";
 export type {
   ManifestEntryBase,
   ManifestScreen,
   ManifestPage,
   ManifestEntry,
-  ManifestV5,
+  ManifestV7,
   Manifest,
+  HistoricalManifestEntry,
+  HistoricalManifestScreen,
+  HistoricalManifestPage,
+  HistoricalManifestUseCase,
   HistoricalManifest,
 } from "./registry/types.js";
 export { reviewMaterialKey } from "./data/material_key.js";

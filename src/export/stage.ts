@@ -8,7 +8,11 @@ import { timeAsync } from "../diagnostics/timings.js";
 import { finalizeDeployment } from "./deployment.js";
 import { assertExportActive } from "./error.js";
 import { ExportInventory } from "./inventory.js";
-import { EXPORT_MARKER } from "./ownership.js";
+import {
+  buildExportOwnership,
+  EXPORT_MARKER,
+  serializeExportOwnership,
+} from "./ownership.js";
 import { validateExportReferences } from "./references.js";
 
 /** Validate, identify, and stage either a compiled site or a captured catalogue. */
@@ -21,15 +25,19 @@ export async function stageExport(
   capture?: (
     files: ReadonlyMap<string, ReviewArtifactContent>,
   ) => Promise<void>,
+  publicationMetadata: ReadonlySet<string> = new Set(),
 ): Promise<string> {
   const files = new ExportInventory();
   for (const [name, bytes] of contents) files.add(name, Buffer.from(bytes));
-  files.add(
-    EXPORT_MARKER,
-    `${JSON.stringify({ schemaVersion: 1, files: [...files.files.keys()].sort() }, null, 2)}\n`,
+  const deploymentId = finalizeDeployment(
+    files.files,
+    shells,
+    aliases,
+    publicationMetadata,
   );
+  const ownership = buildExportOwnership(files.files);
+  files.add(EXPORT_MARKER, serializeExportOwnership(ownership));
   validateExportReferences(files.files, aliases);
-  const deploymentId = finalizeDeployment(files.files, shells, aliases);
   await timeAsync("review.write-artifact", async () => {
     for (const [name, bytes] of files.files) {
       assertExportActive(signal);

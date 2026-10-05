@@ -21,11 +21,7 @@ for (const route of routesForPartition(0)) {
   });
 }
 
-for (const route of [
-  "/",
-  "/view/not-in-catalogue.html",
-  "/id/example-welcome",
-]) {
+for (const route of ["/", "/view/not-in-catalogue.html"]) {
   test(`development React hydrates shell route ${route}`, async ({ page }) => {
     await hydrateShellRoute(page, developmentBundle, route);
   });

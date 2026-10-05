@@ -22,10 +22,7 @@ test("derived Changes and selected comparisons use compiled source when generate
     "HEAD",
     await prepareReviewRepository(fixture.config, "HEAD"),
   );
-  assert.deepEqual(changes.changedRoutes, [
-    "screens/home.html",
-    "user-flows/tour.html",
-  ]);
+  assert.deepEqual(changes.changedIds, ["home", "tour"]);
   const snapshot = changes.componentChanges!;
   assert.ok(snapshot.comparison);
   assert.ok(snapshot.comparison.headOutputs);
@@ -43,8 +40,9 @@ test("derived Changes and selected comparisons use compiled source when generate
       ...snapshot.comparison,
       before: snapshot.baseline,
       after: current.manifest,
+      result: snapshot.result!,
     },
-    { route: "screens/home.html" },
+    { id: "home" },
     new AbortController().signal,
   );
   assert.match(

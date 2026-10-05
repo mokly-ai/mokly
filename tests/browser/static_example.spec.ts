@@ -4,7 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 import { exportCatalogue } from "../../dist/export/run.js";
-import { createExampleBaseline } from "../helpers/example_baseline.js";
+import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
@@ -28,14 +28,17 @@ test.beforeAll(async () => {
     "static-example",
     "baseline-fixture",
     false,
-    () => createExampleBaseline(root),
+    () => createCommittedExampleBaseline(root, "static-example"),
   );
   output = path.join(root, "site");
   await timeExportPreparation("static-example", () =>
     exportCatalogue(config, { base: "HEAD", outDir: output }),
   );
   server = await serveStaticFiles(output);
-  await assertServedShellMarker(server.url, "/view/screens/welcome.html");
+  await assertServedShellMarker(
+    server.url,
+    "/view/screens/example-welcome.html",
+  );
 });
 test.afterAll(async () => {
   await server?.close();
@@ -51,9 +54,11 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
   });
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(`${server.url}/id/example-welcome/?fragment=welcome`);
+    await page.goto(
+      `${server.url}/view/screens/example-welcome.html?fragment=welcome`,
+    );
     await expect(page).toHaveURL(
-      `${server.url}/view/screens/welcome.html?fragment=welcome`,
+      `${server.url}/view/screens/example-welcome.html?fragment=welcome`,
     );
     await chooseViewport(page, width === 390 ? "mobile" : "desktop");
     await expect(page.locator("[data-workspace-status]")).toHaveText(
@@ -86,12 +91,16 @@ test("the exported example discloses a screen's variants without a server", asyn
   const list = page.locator(
     '[data-nav-disclosure="variants:pages:example-welcome"]',
   );
-  const toggle = page.locator("[data-nav-variants-toggle]");
+  const toggle = page
+    .locator(".mbk-nav-leaf", {
+      has: page.locator('a[data-entry-id="example-welcome"]'),
+    })
+    .locator("[data-nav-variants-toggle]");
   const variantRow = page.locator(
-    'a[data-nav-row][data-route="screens/welcome.variants/empty.html"]',
+    'a[data-nav-row][data-route="screens/example-welcome-empty.html"]',
   );
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/screens/details.html`);
+  await page.goto(`${server.url}/view/screens/example-details.html`);
   await expect(list).toBeHidden();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
@@ -101,7 +110,7 @@ test("the exported example discloses a screen's variants without a server", asyn
 
   await variantRow.click();
   await expect(page).toHaveURL(
-    `${server.url}/view/screens/welcome.variants/empty.html`,
+    `${server.url}/view/screens/example-welcome-empty.html`,
   );
   await expect(page.locator("#mb-main h2")).toHaveText(
     "Welcome, empty workspace",

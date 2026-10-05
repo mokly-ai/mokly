@@ -20,9 +20,11 @@ import type { ShellBrowserActions } from "./store_browser.js";
 import { withFilterSelection } from "./store_filters.js";
 import {
   announceNavigation,
+  frameMissState,
   hostClick,
   hostKeyDown,
   hostRoute,
+  hostSelectionRouteChanged,
   type PendingNavigation,
   withHostRoute,
 } from "./store_host_routes.js";
@@ -78,27 +80,40 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const current = stateRef.current;
       const routeChanged =
         current.selection.screenId !== selection.screenId ||
-        current.selection.variantId !== selection.variantId;
+        current.selection.snapshotId !== selection.snapshotId;
       const frameChanged =
         routeChanged ||
         current.selection.viewport !== selection.viewport ||
         current.selection.colorScheme !== selection.colorScheme;
+      const routeAligned = !hostSelectionRouteChanged(
+        input.catalogue,
+        current,
+        selection,
+        current.route.fragment,
+      );
       const fragment =
         pending?.fragment ??
-        (current.selection.screenId === selection.screenId
+        (current.selection.screenId === selection.screenId &&
+        current.selection.snapshotId === selection.snapshotId &&
+        routeAligned
           ? current.route.fragment
           : undefined);
+      const displayChanged = hostSelectionRouteChanged(
+        input.catalogue,
+        current,
+        selection,
+        fragment,
+      );
       let next = withFilterSelection(current, selection);
-      if (routeChanged || fragment !== current.route.fragment) {
+      if (displayChanged) {
         const route = hostRoute(input.catalogue, selection, fragment);
         next = withHostRoute(next, route, input.sections);
       }
       if (rawQuery !== undefined) next = { ...next, query: rawQuery };
       stateRef.current = next;
       input.setState(next);
-      if (frameChanged || fragment !== current.route.fragment)
-        environment.onNavigation();
-      if (routeChanged || fragment !== current.route.fragment) {
+      if (frameChanged || displayChanged) environment.onNavigation();
+      if (displayChanged) {
         announceNavigation(environment, selection, fragment, pending);
       }
     },
@@ -112,6 +127,13 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const current = stateRef.current.selection;
       const next = mergeSelection(environment.model, current, partial);
       if (sameSelection(current, next)) {
+        if (
+          !environment.controlled &&
+          hostSelectionRouteChanged(input.catalogue, stateRef.current, next)
+        ) {
+          commit(next, rawQuery);
+          return;
+        }
         if (rawQuery !== undefined) {
           pendingQuery.current = { raw: rawQuery, selection: next };
           input.setState((state) => ({ ...state, query: rawQuery }));
@@ -120,11 +142,12 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       }
       const routeChanged =
         current.screenId !== next.screenId ||
-        current.variantId !== next.variantId;
+        current.snapshotId !== next.snapshotId;
       const navigation = routeChanged
         ? {
             selection: next,
             ...(current.screenId === next.screenId &&
+            current.snapshotId === next.snapshotId &&
             stateRef.current.route.fragment
               ? { fragment: stateRef.current.route.fragment }
               : {}),
@@ -150,7 +173,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         stateRef.current.selection,
         {
           screenId,
-          variantId: route.variant,
+          snapshotId: route.snapshot,
           ...(route.viewport ? { viewport: route.viewport } : {}),
           ...(route.colorScheme ? { colorScheme: route.colorScheme } : {}),
         },
@@ -206,10 +229,29 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
     navigateFrame(href, navigation) {
       const environment = environmentRef.current;
       if (!environment) return;
-      requestRoute(
-        routeFromUrl(input.catalogue, new URL(href, environment.baseUrl)),
-        navigation,
+      const route = routeFromUrl(
+        input.catalogue,
+        new URL(href, environment.baseUrl),
       );
+      if (route.view.kind === "missing") {
+        const current = stateRef.current;
+        const next = frameMissState(
+          current,
+          route,
+          input.sections,
+          environment.controlled,
+        );
+        environment.events().onError?.({
+          code: "frame",
+          message: "The requested catalogue selection is unavailable.",
+        });
+        if (next === current) return;
+        stateRef.current = next;
+        input.setState(next);
+        environment.onNavigation();
+        return;
+      }
+      requestRoute(route, navigation);
     },
     onShellClick(event) {
       hostClick(
@@ -235,17 +277,5 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       );
     },
     select,
-    selectVariant(value) {
-      const environment = environmentRef.current;
-      if (!environment) return;
-      const route = hostRoute(
-        input.catalogue,
-        mergeSelection(environment.model, stateRef.current.selection, {
-          variantId: value,
-        }),
-        stateRef.current.route.fragment,
-      );
-      requestRoute(route);
-    },
   };
 }

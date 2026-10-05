@@ -24,7 +24,7 @@ test("real implementation and saved metadata edits have distinct impact", async 
       "chrome/top-bar.tsx",
       'title: "Search"',
       'title: "Filtered search"',
-      "top-bar",
+      "top-bar-search",
       false,
     ],
     [
@@ -38,7 +38,7 @@ test("real implementation and saved metadata edits have distinct impact", async 
       "chrome/top-bar.tsx",
       'query: "tag:forms"',
       'query: "tag:onboarding"',
-      "top-bar",
+      "top-bar-search",
       false,
     ],
   ] as const)

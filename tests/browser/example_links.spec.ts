@@ -21,13 +21,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
     }) => {
       if (viewport === "mobile" && scheme === "dark")
         await page.route(
-          "**/static/screens/welcome.mobile.dark.html",
+          "**/static/screens/example-welcome.mobile.dark.html",
           async (route) => {
             await setTimeout(500);
             await route.continue();
           },
         );
-      await page.goto("/view/screens/welcome.html");
+      await page.goto("/view/screens/example-welcome.html");
       await chooseViewport(page, viewport);
       if (scheme === "dark") await chooseScheme(page, "dark");
       const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
@@ -35,7 +35,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expectFrameLoaded(
         frameElement,
         new RegExp(
-          `/static/screens/welcome\\.${suffix.replaceAll(".", "\\.")}$`,
+          `/static/screens/example-welcome\\.${suffix.replaceAll(".", "\\.")}$`,
         ),
       );
       const frame = frameElement.contentFrame();
@@ -50,25 +50,25 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expect(next).toHaveCSS("outline-width", "2px");
       await page.keyboard.press("Enter");
       await expect(page).toHaveURL(
-        /\/view\/screens\/details\.html\?fragment=details$/,
+        /\/view\/screens\/example-details\.html\?fragment=details$/,
       );
       await expectFrameSource(
         page.locator(`.mbk-frame-${viewport} iframe`),
         new RegExp(
-          `details\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
+          `example-details\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
         ),
       );
       await frame
         .locator('a[data-mokly-link-control="button"]')
         .filter({ hasText: "Return to welcome" })
         .click();
-      await expect(page).toHaveURL(/\/view\/screens\/welcome\.html$/);
+      await expect(page).toHaveURL(/\/view\/screens\/example-welcome\.html$/);
 
       await page.goto(
         pathToFileURL(
           path.join(
             repositoryRoot,
-            `examples/basic/generated/screens/welcome.${suffix}`,
+            `examples/basic/generated/screens/example-welcome.${suffix}`,
           ),
         ).href,
       );
@@ -77,7 +77,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         .click();
       await expect(page).toHaveURL(
         new RegExp(
-          `/screens/details\\.${suffix.replaceAll(".", "\\.")}#details$`,
+          `/screens/example-details\\.${suffix.replaceAll(".", "\\.")}#details$`,
         ),
       );
       const back = page
@@ -89,7 +89,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expect(back).toHaveCSS("outline-style", "solid");
       await page.keyboard.press("Enter");
       await expect(page).toHaveURL(
-        new RegExp(`/screens/welcome\\.${suffix.replaceAll(".", "\\.")}$`),
+        new RegExp(
+          `/screens/example-welcome\\.${suffix.replaceAll(".", "\\.")}$`,
+        ),
       );
     });
   }
@@ -113,8 +115,8 @@ test("the real example tour reuses the styled buttons in both owning screens", a
       }
       await expect(page).toHaveURL(
         step === 0
-          ? /\/view\/screens\/details\.html\?fragment=details$/
-          : /\/view\/screens\/welcome\.html$/,
+          ? /\/view\/screens\/example-details\.html\?fragment=details$/
+          : /\/view\/screens\/example-welcome\.html$/,
       );
     }
   }

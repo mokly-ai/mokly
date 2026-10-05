@@ -52,6 +52,12 @@ test("exports contain only the hydrated shell inventory", async (context) => {
     noChanges: true,
   });
   const files = await directoryFiles(fixture.output);
+  assert.equal(
+    [...files.keys()].some(
+      (name) => name.startsWith("id/") || name.includes(".variants/"),
+    ),
+    false,
+  );
   assert.equal(files.has("__mokly/client/react-shell.js"), true);
   assert.match(files.get("index.html")!.toString(), /client\/react-shell\.js/);
   assert.doesNotMatch(

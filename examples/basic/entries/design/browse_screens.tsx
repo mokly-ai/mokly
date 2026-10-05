@@ -1,5 +1,10 @@
 import { screen } from "@mokly/mokly";
 
+import { formsFilterVariant } from "./browse/states/tags/forms.js";
+import { onboardingPickerVariant } from "./browse/states/tags/onboarding-picker.js";
+import { onboardingFilterVariant } from "./browse/states/tags/onboarding.js";
+import { tagPickerVariant } from "./browse/states/tags/picker.js";
+import { browseSchemeVariants } from "./browse/variants/appearance_screens.js";
 import { useCaseScreen } from "./browse/views/use-case.js";
 import { DesignNavigation } from "./parts/design_navigation.js";
 import { DESTINATIONS } from "./parts/destinations.js";
@@ -148,7 +153,6 @@ export const browseViewScreens = [
     desktop: <HomeDesktop />,
     id: "design-browse-home",
     mobile: <HomeMobile />,
-    slug: "home",
     title: "Home",
   }),
   screen({
@@ -157,8 +161,14 @@ export const browseViewScreens = [
     desktop: <SelectedScreenDesktop />,
     id: "design-browse-screen",
     mobile: <SelectedScreenMobile />,
-    slug: "screen",
     title: "Selected screen",
+    variants: [
+      ...browseSchemeVariants,
+      tagPickerVariant,
+      formsFilterVariant,
+      onboardingFilterVariant,
+      onboardingPickerVariant,
+    ],
   }),
   useCaseScreen,
 ];
@@ -171,7 +181,6 @@ export const browseStateScreens = [
     desktop: <DetailsOpenDesktop />,
     id: "design-browse-details",
     mobile: <DetailsOpenMobile />,
-    slug: "details",
     title: "Details panel",
   }),
   screen({
@@ -180,7 +189,6 @@ export const browseStateScreens = [
     desktop: <MissingRouteDesktop />,
     id: "design-browse-missing-route",
     mobile: <MissingRouteMobile />,
-    slug: "missing-route",
     title: "Missing route",
   }),
   screen({
@@ -190,7 +198,6 @@ export const browseStateScreens = [
     desktop: <NarrowNavigationDesktop />,
     id: "design-browse-navigation",
     mobile: <NarrowNavigationMobile />,
-    slug: "navigation",
     title: "Narrow navigation",
   }),
 ];

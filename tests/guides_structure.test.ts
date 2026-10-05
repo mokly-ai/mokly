@@ -24,6 +24,7 @@ const EXPECTED = [
   "authoring/pages",
   "authoring/links",
   "authoring/review-ignore",
+  "authoring/styles",
   "catalogue/browse",
   "catalogue/search-and-filters",
   "catalogue/changes",
@@ -46,6 +47,7 @@ const REFERENCE_SLUGS = new Set([
   "export-delivery",
   "export-ownership",
   "upload",
+  "upload-exchange",
   "navigation",
   "link-controls",
   "pages",
@@ -71,7 +73,7 @@ function allowedLink(destination: string): boolean {
   }
 }
 
-test("the guide tree contains the exact 30-page reading order", () => {
+test("the guide tree contains the exact 31-page reading order", () => {
   assert.deepEqual(
     GUIDES.map((guide) => guide.id),
     EXPECTED,
@@ -87,7 +89,7 @@ test("the guide tree contains the exact 30-page reading order", () => {
     readdirSync(guidesRoot, { recursive: true, withFileTypes: true }).filter(
       (entry) => entry.isFile(),
     ).length,
-    30,
+    31,
   );
 });
 
@@ -162,7 +164,7 @@ test("the initial corpus has no links and future destinations are bounded", () =
   }
   for (const destination of [
     "/docs/authoring/screens/",
-    "/docs/reference/upload/#limits",
+    "/docs/reference/upload-exchange/#export-files-and-limits",
     "/docs/",
     "/changelog/#v0100",
     "https://example.com/docs",

@@ -18,7 +18,6 @@ import { ShellInspectionController } from "./frame_inspection_controller.js";
 export interface ShellFrameIdentity {
   colorScheme?: "dark" | "light";
   entryId: string;
-  route: string;
   stepIndex?: number;
   variantId?: string;
   viewport?: "desktop" | "mobile";

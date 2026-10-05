@@ -124,6 +124,7 @@ function isBrowserManifest(
 export function loadBrowserNavigationModules(): ReadonlyMap<string, Buffer> {
   return loadModules("../navigation", [
     "logical.js",
+    "routes.js",
     "target.js",
     "delivery.js",
   ]);

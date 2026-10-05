@@ -2,16 +2,24 @@ import path from "node:path";
 
 import { runCaptured } from "./process.mjs";
 
-export async function discoverBrowserTests(repositoryRoot, shard) {
+export async function discoverBrowserTests(repositoryRoot, options = {}) {
+  const { project, shard } = options;
   const cli = path.join(repositoryRoot, "node_modules/@playwright/test/cli.js");
   const args = [cli, "test", "--list", "--reporter=json"];
+  if (project) args.push(`--project=${project}`);
   if (shard) args.push(`--shard=${shard.index}/${shard.total}`);
   const result = await runCaptured(process.execPath, args, {
     cwd: repositoryRoot,
   });
   if (result.exitCode !== 0 || result.signal !== null)
     throw new Error(
-      `Playwright discovery failed (${result.signal ?? result.exitCode})\n${result.stderr}`,
+      [
+        `Playwright discovery failed (${result.signal ?? result.exitCode})`,
+        ...reportedErrors(result.stdout),
+        result.stderr,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     );
   let report;
   try {
@@ -34,7 +42,16 @@ export async function discoverBrowserTests(repositoryRoot, shard) {
   };
 }
 
-export function playwrightTests(report, repositoryRoot) {
+/** Return the load errors a failed JSON list run reported, if its output parses. */
+function reportedErrors(stdout) {
+  try {
+    return (JSON.parse(stdout).errors ?? []).map((entry) => entry.message);
+  } catch {
+    return [];
+  }
+}
+
+function playwrightTests(report, repositoryRoot) {
   const tests = [];
   const testRoot = path.resolve(report.config?.rootDir ?? repositoryRoot);
   for (const suite of report.suites ?? [])

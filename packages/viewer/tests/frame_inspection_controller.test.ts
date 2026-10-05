@@ -218,7 +218,6 @@ function sessionFixture(
     identity: {
       colorScheme: "light",
       entryId: id,
-      route: `${id}.html`,
       viewport: "desktop",
     },
     mounted,

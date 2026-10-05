@@ -97,9 +97,10 @@ publishes only these documents in this order:
 | 1     | `docs/protocol/mokly-export-delivery.md`  | `export-delivery`  |
 | 2     | `docs/protocol/mokly-export-ownership.md` | `export-ownership` |
 | 3     | `docs/protocol/mokly-upload.md`           | `upload`           |
-| 4     | `docs/protocol/mokly-navigation.md`       | `navigation`       |
-| 5     | `docs/protocol/mokly-link-controls.md`    | `link-controls`    |
-| 6     | `docs/protocol/mokly-pages.md`            | `pages`            |
+| 4     | `docs/protocol/mokly-upload-exchange.md`  | `upload-exchange`  |
+| 5     | `docs/protocol/mokly-navigation.md`       | `navigation`       |
+| 6     | `docs/protocol/mokly-link-controls.md`    | `link-controls`    |
+| 7     | `docs/protocol/mokly-pages.md`            | `pages`            |
 
 The cloud renderer removes a published protocol document's first level-one
 heading and uses it as the page title. It preserves fragment-only and absolute
@@ -152,10 +153,12 @@ from different package versions.
 
 ## Writing And Verification Rules
 
-- Document only commands, flags, fields, exports, and behavior verified against
-  the current implementation.
-- Use present tense. Do not use "coming soon", invent customers or figures, or
-  tell readers what Mokly does not do.
+- Document shipped commands, flags, fields, exports, and behavior only after
+  verification against the current implementation. Guide examples must run
+  in the installed version; do not present future target behavior as shipped.
+- Use present tense for current behavior and conditional language for a
+  target. Do not use "coming soon", invent customers or figures, or list
+  unrelated absent features in place of actionable guidance.
 - Prefer one concept per page and keep a guide around 200 lines or fewer.
 - Use product nouns in headings. Put exact code identifiers in code spans,
   tables, or examples.

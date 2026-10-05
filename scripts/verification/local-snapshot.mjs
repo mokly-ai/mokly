@@ -1,15 +1,23 @@
 import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
+import { constants } from "node:fs";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
 const execute = promisify(execFile);
 const BUFFER_LIMIT = 64 * 1024 * 1024;
 
+/** Keep worker paths independent of the initiating checkout's nesting depth. */
+export async function createSnapshotDirectory() {
+  const temporary = await fs.realpath(os.tmpdir());
+  return fs.mkdtemp(path.join(temporary, "local-check-"));
+}
+
 /** Capture both the Git index and actual file bytes, not just HEAD. */
 export async function captureSource(root) {
-  const [head, names, stagedDiff] = await Promise.all([
+  const [head, names, stagedDiff, mergeHead] = await Promise.all([
     git(root, "rev-parse", "HEAD"),
     git(
       root,
@@ -21,6 +29,7 @@ export async function captureSource(root) {
       "--deduplicate",
     ),
     git(root, "diff", "--cached", "--binary", "HEAD"),
+    readMergeHead(root),
   ]);
   const files = [];
   for (const name of names.split("\0").filter(Boolean).sort()) {
@@ -48,7 +57,7 @@ export async function captureSource(root) {
       throw new Error(`Unsupported source entry ${name}`);
     }
   }
-  const captured = { head: head.trim(), stagedDiff, files };
+  const captured = { head: head.trim(), stagedDiff, mergeHead, files };
   return {
     ...captured,
     fingerprint: createHash("sha256")
@@ -82,6 +91,18 @@ export async function createSnapshot(root, captured, owner, label) {
   try {
     if (captured.stagedDiff.length > 0)
       await applyIndex(snapshot, captured.stagedDiff);
+    if (captured.mergeHead !== null) {
+      const mergePath = await git(
+        snapshot,
+        "rev-parse",
+        "--git-path",
+        "MERGE_HEAD",
+      );
+      await fs.writeFile(
+        path.resolve(snapshot, mergePath.trim()),
+        captured.mergeHead,
+      );
+    }
     const present = new Set(captured.files.map((file) => file.name));
     const original = await git(
       snapshot,
@@ -106,7 +127,7 @@ export async function createSnapshot(root, captured, owner, label) {
       }
     }
     await verifySource(snapshot, captured);
-    await linkDependencies(root, snapshot);
+    await copyDependencies(root, snapshot);
     return snapshot;
   } catch (error) {
     try {
@@ -122,49 +143,34 @@ export async function createSnapshot(root, captured, owner, label) {
   }
 }
 
-async function linkDependencies(root, snapshot) {
+/** Keep CSS inputs inside the snapshot and all dependency writes worker-local. */
+async function copyDependencies(root, snapshot) {
   const dependencies = path.join(root, "node_modules");
-  let entries;
+  const destination = path.join(snapshot, "node_modules");
   try {
-    entries = await fs.readdir(dependencies, { withFileTypes: true });
+    await fs.access(dependencies);
   } catch (error) {
     if (error?.code === "ENOENT") return;
     throw error;
   }
+  await fs.cp(dependencies, destination, {
+    recursive: true,
+    mode: constants.COPYFILE_FICLONE,
+    preserveTimestamps: true,
+    verbatimSymlinks: true,
+    filter: (source) => source !== path.join(dependencies, ".cache"),
+  });
   const manifest = JSON.parse(
     await fs.readFile(path.join(root, "package.json"), "utf8"),
   );
-  const workspaces = new Map();
   for (const directory of manifest.workspaces ?? []) {
     const workspace = JSON.parse(
       await fs.readFile(path.join(root, directory, "package.json"), "utf8"),
     );
-    workspaces.set(workspace.name, directory);
-  }
-  const destination = path.join(snapshot, "node_modules");
-  await fs.mkdir(destination);
-  for (const entry of entries) {
-    if (
-      entry.name.startsWith("@") &&
-      [...workspaces.keys()].some((name) => name.startsWith(`${entry.name}/`))
-    ) {
-      const scope = path.join(destination, entry.name);
-      await fs.mkdir(scope);
-      for (const packageEntry of await fs.readdir(
-        path.join(dependencies, entry.name),
-      )) {
-        const name = `${entry.name}/${packageEntry}`;
-        const target = workspaces.has(name)
-          ? path.join(snapshot, workspaces.get(name))
-          : path.join(dependencies, name);
-        await fs.symlink(target, path.join(scope, packageEntry));
-      }
-    } else {
-      await fs.symlink(
-        path.join(dependencies, entry.name),
-        path.join(destination, entry.name),
-      );
-    }
+    const link = path.join(destination, workspace.name);
+    await fs.mkdir(path.dirname(link), { recursive: true });
+    await fs.rm(link, { recursive: true, force: true });
+    await fs.symlink(path.join(snapshot, directory), link);
   }
 }
 
@@ -216,4 +222,14 @@ async function applyIndex(root, patch) {
 async function git(root, ...args) {
   return (await execute("git", args, { cwd: root, maxBuffer: BUFFER_LIMIT }))
     .stdout;
+}
+
+async function readMergeHead(root) {
+  const mergePath = await git(root, "rev-parse", "--git-path", "MERGE_HEAD");
+  try {
+    return await fs.readFile(path.resolve(root, mergePath.trim()), "utf8");
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
 }

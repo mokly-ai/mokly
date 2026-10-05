@@ -11,18 +11,17 @@ import type {
 } from "../dist/review/selection_types.js";
 import type { SelectedReviewRoutesOptions } from "../dist/server/selected_review_capture.js";
 import { SelectedReviewRoutes } from "../dist/server/selected_review_routes.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 import type { RemovedPagePreviewArtifact } from "../packages/viewer/dist/review/page_preview.js";
 import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
 const page = {
   declaredDependencies: [],
-  dependencies: [],
   description: "Removed page",
   id: "removed-page",
   kind: "page" as const,
   navPath: [],
   relatedDocs: [],
-  route: "archive/removed.html",
   sourcePath: "entries/removed.mockup.tsx",
   tags: [],
   title: "Removed page",
@@ -30,43 +29,59 @@ const page = {
 const baseline = {
   entries: [page],
   generatedBy: "mokly" as const,
-  schemaVersion: 5 as const,
-  sourceFiles: [],
+  schemaVersion: 7 as const,
+  sourceFiles: [page.sourcePath],
 };
 const pageSource: RemovedPagePreviewSource = {
   baseline,
   baseCommit: "a".repeat(40),
   baseRef: "main",
-  changedRoutes: [page.route],
-  removedEntries: [{ entry: page, ancestors: [] }],
+  changedIds: [page.id],
+  removedEntries: [{ entry: page }],
   schemaVersion: 1,
 };
 const reviewSource: SelectedReviewSource = {
-  after: { ...baseline, entries: [] },
+  after: {
+    entries: [],
+    generatedBy: "mokly",
+    schemaVersion: 7,
+    sourceFiles: [],
+  },
   before: baseline,
   baseCommit: pageSource.baseCommit,
   baseRef: pageSource.baseRef,
   changedPaths: [],
   headDigests: {},
+  result: {
+    affectedConsumers: [],
+    baseCommit: pageSource.baseCommit,
+    baseRef: pageSource.baseRef,
+    changedPaths: [],
+    changes: [],
+    components: [],
+    ignoredImpact: [],
+    schemaVersion: 4,
+    screens: [],
+    sharedImpact: [],
+  },
 };
 
 function pageArtifact(
   source = pageSource,
-  route = page.route,
+  id = page.id,
 ): RemovedPagePreviewArtifact {
   return {
     files: new Map([
       [
-        `snapshots/before/${route}`,
+        `snapshots/before/${entryRoute("page", id)}`,
         Buffer.from(`<main>${source.baseCommit}</main>`),
       ],
     ]),
     preview: {
-      schemaVersion: 1,
+      schemaVersion: 2,
       baseCommit: source.baseCommit,
       baseRef: source.baseRef,
-      route,
-      documentPath: `snapshots/before/${route}`,
+      id,
     },
   };
 }
@@ -81,9 +96,12 @@ function reviewArtifact(): ReviewArtifact {
       baseRef: reviewSource.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 2,
+      schemaVersion: 4,
       screens: [],
       sharedImpact: [],
+      components: [],
+      changes: [],
+      affectedConsumers: [],
     },
   };
 }
@@ -129,11 +147,11 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
     async generate(source, selection) {
       calls++;
       assert.equal(selection.kind, "page");
-      assert.equal(selection.route, page.route);
+      assert.equal(selection.id, page.id);
       return pageArtifact(source);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${encodeURIComponent(page.route)}`;
+  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
   const [first, coalesced] = await Promise.all([fetch(stable), fetch(stable)]);
   assert.equal(first.status, 200);
   assert.equal(first.url, coalesced.url);
@@ -142,7 +160,10 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
   assert.equal(first.headers.get("x-content-type-options"), "nosniff");
   assert.deepEqual(await first.json(), pageArtifact().preview);
   assert.equal(calls, 1);
-  const document = new URL(`snapshots/before/${page.route}`, first.url);
+  const document = new URL(
+    `snapshots/before/${entryRoute("page", page.id)}`,
+    first.url,
+  );
   assert.match(await (await fetch(document)).text(), /a{40}/);
   const head = await fetch(first.url, { method: "HEAD" });
   assert.equal(head.status, 200);
@@ -153,10 +174,10 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
   assert.notEqual(refreshed.url, first.url);
   assert.equal(calls, 2);
   for (const query of [
-    `page=${page.route}&route=screens/removed.html`,
-    `page=${page.route}&variant=default`,
-    `page=${page.route}&page=${page.route}`,
-    "page=../private.html",
+    `page=${page.id}&id=removed-screen`,
+    `page=${page.id}&route=default`,
+    `page=${page.id}&page=${page.id}`,
+    "page=../private",
   ])
     assert.equal(
       (await fetch(`${server.origin}/__mokly/diffs/review.json?${query}`))
@@ -164,11 +185,8 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
       404,
     );
   assert.equal(
-    (
-      await fetch(
-        `${server.origin}/__mokly/diffs/review.json?page=archive/missing.html`,
-      )
-    ).status,
+    (await fetch(`${server.origin}/__mokly/diffs/review.json?page=missing`))
+      .status,
     500,
   );
 });
@@ -180,10 +198,10 @@ test("page generation expiry reacquires without reviving an old URL", async (t) 
   const server = await start(t, {
     async generate(source, selection) {
       calls++;
-      return pageArtifact(source, selection.route);
+      return pageArtifact(source, selection.id);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${encodeURIComponent(page.route)}`;
+  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
   const first = await fetch(stable);
   assert.equal(first.status, 200);
   now += 60_001;
@@ -199,10 +217,10 @@ test("failed page refresh preserves the retained generation", async (t) => {
   const server = await start(t, {
     async generate(source, selection) {
       if (++attempts === 2) throw new Error("refresh failed");
-      return pageArtifact(source, selection.route);
+      return pageArtifact(source, selection.id);
     },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${encodeURIComponent(page.route)}`;
+  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
   const first = await fetch(stable);
   assert.equal(first.status, 200);
   assert.equal((await fetch(`${stable}&refresh=1`)).status, 500);
@@ -220,17 +238,16 @@ test("restore and redelete cycles cannot reuse a prior page selection", async (t
       captures++;
       assert.ok(
         accepted.removedEntries.some(
-          ({ entry }) =>
-            entry.kind === "page" && entry.route === selection.route,
+          ({ entry }) => entry.kind === "page" && entry.id === selection.id,
         ),
       );
-      return pageArtifact(accepted, selection.route);
+      return pageArtifact(accepted, selection.id);
     },
   };
   const server = await start(t, provider, {
     page: { provider, source: () => source },
   });
-  const stable = `${server.origin}/__mokly/diffs/review.json?page=${encodeURIComponent(page.route)}`;
+  const stable = `${server.origin}/__mokly/diffs/review.json?page=${page.id}`;
   const removed = await fetch(stable);
   assert.equal(removed.status, 200);
   source = undefined;
@@ -276,9 +293,7 @@ test("page captures retry after failure and cannot publish across an epoch", asy
     page: { provider, source: () => source },
   });
   const request = () =>
-    fetch(
-      `${server.origin}/__mokly/diffs/review.json?page=${encodeURIComponent(page.route)}`,
-    );
+    fetch(`${server.origin}/__mokly/diffs/review.json?page=${page.id}`);
   assert.equal((await request()).status, 500);
   const stale = request();
   await started;

@@ -4,8 +4,8 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
-import type { ReviewResultV2 } from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
@@ -54,6 +54,14 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
       ],
     },
   ];
+  loaded.ignoredImpact = [
+    {
+      viewport: "mobile",
+      colorScheme: "light",
+      id: "chrome",
+      count: 1,
+    },
+  ];
   const parsed = parseReviewResult(loaded);
   const markup = renderEvidence(data, parsed);
   assert.match(markup, /Changed styles that apply to this screen:/);
@@ -81,22 +89,117 @@ test("historical v2 loaded evidence remains available when classification has no
 test("loaded comparisons for another screen cannot add evidence to the selected workspace", () => {
   const data = workspace();
   const loaded = comparison();
-  loaded.screens = [{ ...loaded.screens[0]!, route: "screens/other.html" }];
+  loaded.screens = [{ ...loaded.screens[0]!, id: "other" }];
   assert.doesNotMatch(renderEvidence(data, loaded), /mockups\/logo.svg/);
+});
+
+test("v3 workspace evidence uses its selected comparison and keeps excluded stylesheets separate", () => {
+  const data = workspace();
+  data.status = "Unmodified";
+  data.comparison = componentComparison(
+    ["entries/renderer.ts", "mockups/unused.css"],
+    undefined,
+    "mockups/unused.css",
+  ).screens[0]!;
+  const loaded = parseReviewResult(componentComparison(["entries/stale.ts"]));
+
+  const markup = renderEvidence(data, loaded);
+  assert.match(
+    markup,
+    /Changes to these files may affect this screen:<\/p><ul><li>entries\/renderer\.ts<\/li><\/ul>/,
+  );
+  assert.doesNotMatch(markup, /entries\/stale\.ts/);
+  assert.match(
+    markup,
+    /Examined and excluded:<\/p><ul><li>mockups\/unused\.css<\/li><\/ul>/,
+  );
+  assert.doesNotMatch(markup, /Changed styles that apply to this screen/);
+});
+
+test("loaded v3 shared impact joins retained dependency paths once in sorted order", () => {
+  const loaded = parseReviewResult(
+    componentComparison(
+      ["entries/alpha.ts", "entries/beta.ts"],
+      "entries/beta.ts",
+    ),
+  );
+  const markup = renderEvidence(workspace(), loaded);
+
+  assert.match(
+    markup,
+    /Changes to these files may affect this screen:<\/p><ul><li>entries\/alpha\.ts<\/li><li>entries\/beta\.ts<\/li><\/ul>/,
+  );
+  assert.equal(markup.split("<li>entries/beta.ts</li>").length - 1, 1);
 });
 
 function renderEvidence(
   data: WorkspaceData,
-  loaded: ReturnType<typeof parseReviewResult>,
+  loaded?: ReturnType<typeof parseReviewResult>,
 ): string {
   return renderToStaticMarkup(
-    createElement(WorkspaceEvidence, { data, loaded }),
+    createElement(WorkspaceEvidence, {
+      data,
+      ...(loaded ? { loaded } : {}),
+    }),
   );
 }
 
-function comparison(): ReviewResultV2 {
+function componentComparison(
+  sharedImpact: string[],
+  reasonPath?: string,
+  excludedCss?: string,
+): ReviewResultV4 {
+  const address = { id: "home", title: "Home" };
   return {
-    schemaVersion: 2,
+    schemaVersion: 4,
+    baseRef: "main",
+    baseCommit: "a".repeat(40),
+    changedPaths: [
+      ...new Set([...sharedImpact, ...(reasonPath ? [reasonPath] : [])]),
+    ].sort(),
+    sharedImpact: [...sharedImpact].sort(),
+    ignoredImpact: [],
+    screens: [
+      {
+        ...address,
+        before: address,
+        after: address,
+        state: "unchanged",
+        dependencies: [],
+        sharedImpact,
+        views: (["mobile", "desktop"] as const).map((viewport) => ({
+          viewport,
+          colorScheme: "light",
+          state: "unchanged" as const,
+          ignoredIds: [],
+          ...(excludedCss
+            ? {
+                excludedResources: [
+                  { path: excludedCss, reason: "no-matching-rule" as const },
+                ],
+              }
+            : {}),
+        })),
+      },
+    ],
+    components: [],
+    changes: reasonPath
+      ? [
+          {
+            kind: "screen",
+            before: address,
+            after: address,
+            reasons: [{ kind: "dependency", path: reasonPath }],
+          },
+        ]
+      : [],
+    affectedConsumers: [],
+  };
+}
+
+function comparison(): ReviewResultV4 {
+  return {
+    schemaVersion: 4,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -108,8 +211,9 @@ function comparison(): ReviewResultV2 {
     ignoredImpact: [],
     screens: [
       {
+        before: { id: "home", title: "Home" },
+        after: { id: "home", title: "Home" },
         id: "home",
-        route: "screens/home.html",
         title: "Home",
         state: "changed",
         dependencies: [],
@@ -120,12 +224,13 @@ function comparison(): ReviewResultV2 {
             colorScheme: "light",
             state: "changed",
             ignoredIds: [],
-            beforePath: "snapshots/before/home.html",
-            afterPath: "snapshots/after/home.html",
           },
         ],
       },
     ],
+    components: [],
+    changes: [],
+    affectedConsumers: [],
   };
 }
 
@@ -138,18 +243,16 @@ function workspace(): WorkspaceData {
     comparisons: true,
     comparisonEligible: true,
     entry: {
+      colorSchemes: ["light"],
+      declaredDependencies: [],
       id: "home",
       kind: "screen",
-      route: "screens/home.html",
       title: "Home",
       description: "Home",
-      dependencies: [],
       relatedDocs: [],
       navPath: [],
       sourcePath: "entries/home.mockup.tsx",
       useCaseIds: [],
-      viewports: ["mobile", "desktop"],
-      fragments: { mobile: "home-mobile.html", desktop: "home-desktop.html" },
     },
     components: [],
     views: [],

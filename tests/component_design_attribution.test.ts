@@ -4,19 +4,20 @@ import test from "node:test";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [stylesheet, screens, components] of [
-    ["design-components.css", 32, 16],
-    ["design-component-inspection.css", 32, 16],
-    ["design-component-details.css", 32, 16],
-    ["design-component-inspector.css", 89, 16],
-    ["design-component-workspace.css", 89, 16],
-    ["design-component-view.css", 32, 16],
-    ["design-component-controls.css", 11, 16],
-    ["design.css", 89, 16],
-    ["design-library.css", 0, 16],
+    ["design-components.css", 39, 67],
+    ["design-component-inspection.css", 39, 67],
+    ["design-component-details.css", 39, 67],
+    ["design-component-inspector.css", "all-design", 67],
+    ["design-component-workspace.css", "all-design", 67],
+    ["design-component-view.css", 39, 67],
+    ["design-component-controls.css", 11, 67],
+    ["design.css", "all-design", 67],
+    ["design-library.css", 0, 67],
   ] as const)
     await t.test(stylesheet, async () => {
       await fixture.reset();
@@ -26,13 +27,23 @@ test("mixed component design styles retain their actual rendered resource scope"
       );
       const expected = fixture.before.manifest.entries.filter((entry) =>
         generatedViews(entry).some((view) =>
-          fixture.before.outputs.get(view.path)!.includes(`/${stylesheet}"`),
+          textOutput(fixture.before.outputs, view.path)!.includes(
+            `/${stylesheet}"`,
+          ),
         ),
       );
-      assert.equal(
-        expected.filter((entry) => entry.kind === "screen").length,
-        screens,
+      const expectedScreens = expected.filter(
+        (entry) => entry.kind === "screen",
       );
+      if (screens === "all-design") {
+        const allDesignScreens = fixture.before.manifest.entries.filter(
+          (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
+        );
+        assert.deepEqual(
+          expectedScreens.map(({ id }) => id).sort(),
+          allDesignScreens.map(({ id }) => id).sort(),
+        );
+      } else assert.equal(expectedScreens.length, screens);
       assert.equal(
         expected.filter((entry) => entry.kind === "component").length,
         components,
@@ -48,7 +59,7 @@ test("mixed component design styles retain their actual rendered resource scope"
       if (stylesheet !== "design.css")
         assert.ok(
           result.changes.every((change) =>
-            (change.after ?? change.before)!.route.startsWith("design/"),
+            (change.after ?? change.before)!.id.startsWith("design-"),
           ),
           "unrelated Example content stays unchanged",
         );

@@ -7,6 +7,7 @@ import { orderedInstances } from "../components/views.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
+import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
 /** Components or nested components panel for the selected preview. */
 export function WorkspaceInstances({
@@ -48,7 +49,11 @@ export function WorkspaceInstances({
         </div>
       ) : null}
       {!usage ? (
-        <p>Component inspection is unavailable for this view.</p>
+        <p role={data.viewUsagePending ? "status" : undefined}>
+          {data.viewUsagePending
+            ? WAITING_REASON
+            : "Component inspection is unavailable for this view."}
+        </p>
       ) : !usage.instances.length ? (
         <p>No registered components are used in this view.</p>
       ) : (

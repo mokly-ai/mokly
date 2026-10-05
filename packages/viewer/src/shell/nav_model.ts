@@ -4,6 +4,7 @@ import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { folderDisclosureKey } from "./disclosure_keys.js";
 import { buildNavSections } from "./nav_tree.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { queryConstrains, rowMatchesQuery } from "./search_query.js";
@@ -12,32 +13,40 @@ import { queryConstrains, rowMatchesQuery } from "./search_query.js";
 export function catalogueNavSections(
   catalogue: Catalogue,
 ): readonly NavSectionNode[] {
-  const removed: NavLeafNode[] = catalogue.removedEntries.map(({ entry }) => {
-    const variantOf = entry.kind === "screen" ? entry.variantOf : undefined;
-    return {
-      kind: "leaf",
-      key: `removed:${entry.route}`,
-      entryId: entry.id,
-      entryKind: entry.kind,
-      label: `${entry.title} · Removed`,
-      route: entry.route,
-      tags: entry.tags ?? [],
-      removedPage: entry.kind === "page",
-      ...(variantOf === undefined ? {} : { variantOf }),
-    };
-  });
+  const removed: NavLeafNode[] = catalogue.removedEntries.flatMap(
+    ({ entry, snapshotId }) => {
+      const variantOf =
+        (entry.kind === "screen" || entry.kind === "component") &&
+        "variantOf" in entry
+          ? entry.variantOf
+          : undefined;
+      return [
+        {
+          kind: "leaf",
+          key: `removed:${entry.id}`,
+          entryId: entry.id,
+          entryKind: entry.kind,
+          label: `${entry.title} · Removed`,
+          tags: entry.tags ?? [],
+          removedPage: entry.kind === "page",
+          ...(snapshotId ? { snapshotId } : {}),
+          ...(variantOf === undefined ? {} : { variantOf }),
+        },
+      ];
+    },
+  );
   return buildNavSections(catalogue.hierarchy, removed);
 }
 
 /** Initial disclosure values rendered on the server for one active route. */
 export function defaultDisclosures(
   sections: readonly NavSectionNode[],
-  activeRoute: string | undefined,
+  activeId: string | undefined,
 ): Record<string, boolean> {
   const result: Record<string, boolean> = {};
   for (const section of sections) {
     result[section.key] = true;
-    collectDefaults(section.children, section.id, activeRoute, 0, result);
+    collectDefaults(section.children, section.id, activeId, 0, result);
   }
   return result;
 }
@@ -45,10 +54,10 @@ export function defaultDisclosures(
 /** Disclosure identities that must open to expose one routed row. */
 export function disclosurePath(
   sections: readonly NavSectionNode[],
-  route: string,
+  id: string,
 ): readonly string[] {
   for (const section of sections) {
-    const descendants = nodePath(section.children, section.id, route);
+    const descendants = nodePath(section.children, section.id, id);
     if (descendants) return [section.key, ...descendants];
   }
   return [];
@@ -60,19 +69,18 @@ export function navLeafVisible(
   selection: ViewerSelection,
   context: ShellContext,
 ): boolean {
-  const status = context.changedRoutes ? "ready" : context.changesStatus;
+  const status = context.changedIds ? "ready" : context.changesStatus;
   if (selection.view === "changes" && status !== "ready") return false;
   if (
     selection.view === "changes"
-      ? !context.changedRoutes?.includes(leaf.route)
+      ? !context.changedIds?.includes(leaf.entryId)
       : leaf.removedPage || leaf.removedVariant
   )
     return false;
   return rowMatchesQuery(
     { freeText: selection.search, tags: selection.tags },
     {
-      ...(leaf.entryId ? { id: leaf.entryId } : {}),
-      route: leaf.route,
+      id: leaf.entryId,
       tags: leaf.tags ?? [],
       text: leaf.label,
     },
@@ -109,64 +117,54 @@ export function navigationFiltering(selection: ViewerSelection): boolean {
 function collectDefaults(
   nodes: readonly NavNode[],
   section: NavSectionNode["id"],
-  route: string | undefined,
+  id: string | undefined,
   depth: number,
   result: Record<string, boolean>,
 ): void {
   for (const node of nodes) {
     if (node.kind === "leaf") {
-      if (node.entryId && node.variants?.length)
-        result[variantDisclosureKey(section, node.entryId)] = containsRoute(
+      if (node.variants?.length)
+        result[variantDisclosureKey(section, node.entryId)] = containsEntryId(
           node,
-          route,
+          id,
         );
       continue;
     }
-    result[collectionKey(section, node.key)] =
-      depth === 0 || containsRoute(node, route);
-    collectDefaults(node.children, section, route, depth + 1, result);
+    result[folderDisclosureKey(section, node.key)] =
+      depth === 0 || containsEntryId(node, id);
+    collectDefaults(node.children, section, id, depth + 1, result);
   }
 }
 
 function nodePath(
   nodes: readonly NavNode[],
   section: NavSectionNode["id"],
-  route: string,
+  id: string,
 ): string[] | undefined {
   for (const node of nodes) {
     if (node.kind === "leaf") {
-      if (node.route === route)
-        return node.entryId && node.variants?.length
+      if (node.entryId === id)
+        return node.variants?.length
           ? [variantDisclosureKey(section, node.entryId)]
           : [];
-      if (
-        node.entryId &&
-        node.variants?.some((variant) => variant.route === route)
-      )
+      if (node.variants?.some((variant) => variant.entryId === id))
         return [variantDisclosureKey(section, node.entryId)];
       continue;
     }
-    const child = nodePath(node.children, section, route);
-    if (child) return [collectionKey(section, node.key), ...child];
+    const child = nodePath(node.children, section, id);
+    if (child) return [folderDisclosureKey(section, node.key), ...child];
   }
   return undefined;
 }
 
-function containsRoute(node: NavNode, route: string | undefined): boolean {
+function containsEntryId(node: NavNode, id: string | undefined): boolean {
   return (
-    route !== undefined &&
+    id !== undefined &&
     (node.kind === "leaf"
-      ? node.route === route ||
-        (node.variants ?? []).some((variant) => variant.route === route)
-      : node.children.some((child) => containsRoute(child, route)))
+      ? node.entryId === id ||
+        (node.variants ?? []).some((variant) => variant.entryId === id)
+      : node.children.some((child) => containsEntryId(child, id)))
   );
-}
-
-function collectionKey(section: NavSectionNode["id"], key: string): string {
-  const id = key.startsWith("collection:")
-    ? key.slice("collection:".length)
-    : key;
-  return `collection:${section}:${id}`;
 }
 
 /** Persisted disclosure identity for one screen's variant list. */

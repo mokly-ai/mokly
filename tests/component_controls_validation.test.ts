@@ -78,17 +78,16 @@ test("saved props and schemas are isolated from the author's later mutations", (
     id: "action",
     title: "Action",
     description: "Shared action",
-    route: "action.html",
     relatedDocs: [],
     dependencies: [],
     propSchema: input,
-    variants: [{ id: "default", title: "Default", props }],
+    variants: [{ id: "action-default", title: "Default", props }],
     render: (value) => value.label,
   });
   props.label = "After";
   Object.assign(input.properties.label.schema, { maxLength: 1 });
-  assert.equal(component.entry.variants[0]!.props.label, "Before");
-  assert.deepEqual(component.entry.propSchema.properties.label!.schema, {
+  assert.equal(component.entries[1]!.props.label, "Before");
+  assert.deepEqual(component.entries[0].propSchema.properties.label!.schema, {
     kind: "string",
   });
 });

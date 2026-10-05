@@ -1,52 +1,23 @@
 /** Browser harness for React frame lifecycle regression tests. */
 
 import { StrictMode } from "react";
+import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
-import type { Root } from "react-dom/client";
 
 import type { CatalogueUsage } from "../src/catalogue/types.js";
-import type {
-  FrameAdapter,
-  MountedFrame,
-} from "../src/client/frame_adapter.js";
-import type { ComponentViewRecord } from "../src/components/manifest_types.js";
 import { useMountedShellFrame } from "../src/shell/frame_mount_hook.js";
 import {
   ShellFrameRegistryProvider,
   useOptionalShellFrameRegistry,
-  type ShellFrameRegistry,
 } from "../src/shell/frame_registry.js";
 import { generatedUsage } from "../src/shell/stage_sources.js";
 
-interface Deferred<T> {
-  promise: Promise<T>;
-  reject(error: unknown): void;
-  resolve(value: T): void;
-}
-
-interface HookHost {
-  activeSubscriptions: number;
-  adapter: FrameAdapter;
-  deferredMount: boolean;
-  deferredUpdates: boolean;
-  disposals: number;
-  documentIdentity: number;
-  element: HTMLElement;
-  mounts: number;
-  previewUsage?: ComponentViewRecord;
-  pendingMounts: Deferred<MountedFrame>[];
-  pendingUpdates: Deferred<void>[];
-  registry: ShellFrameRegistry | undefined;
-  root: Root;
-  source: string;
-  status: string;
-  strict: boolean;
-  supportsUsageUpdates: boolean;
-  updateStatuses: string[];
-  usage: CatalogueUsage;
-  usageSnapshots: Map<string, CatalogueUsage>;
-  highlightedKeys: string[];
-}
+import {
+  createMountedFrame,
+  mountFrame,
+  previewUsage,
+  type HookHost,
+} from "./frame_hook_fakes.js";
 
 const hosts = new Map<string, HookHost>();
 
@@ -75,6 +46,10 @@ interface FrameHookHarness {
     id: string,
     status: "pending" | "unavailable",
     snapshot?: string,
+  ): void;
+  renderUsageWhileMountFinishes(
+    id: string,
+    status: "pending" | "unavailable",
   ): void;
   rerender(id: string): void;
   resolveMount(id: string): void;
@@ -135,6 +110,22 @@ export function installFrameHookHarness(): void {
       host.usage = retained ?? { status };
       if (snapshot && !retained) host.usageSnapshots.set(snapshot, host.usage);
       renderHost(host);
+    },
+    renderUsageWhileMountFinishes: (id, status) => {
+      const host = requiredHost(id);
+      const registry = host.registry;
+      if (!registry) throw new Error(`No frame registry for ${id}`);
+      const unsubscribe = registry.subscribe(() => {
+        const session = registry.values()[0];
+        if (!session?.mounted || session.status !== "loading") return;
+        unsubscribe();
+        queueMicrotask(() =>
+          flushSync(() => {
+            host.usage = { status };
+            renderHost(host);
+          }),
+        );
+      });
     },
     rerender: (id) => renderHost(requiredHost(id)),
     resolveMount: (id) => {
@@ -227,7 +218,6 @@ function HookFrame({ host, usage }: { host: HookHost; usage: CatalogueUsage }) {
     enabled: true,
     identity: {
       entryId: `frame-hook-${host.documentIdentity}`,
-      route: `screens/frame-hook-${host.documentIdentity}.html`,
     },
     onEvent: () => undefined,
     source: host.source,
@@ -242,82 +232,6 @@ function HookFrame({ host, usage }: { host: HookHost; usage: CatalogueUsage }) {
       title="Frame hook"
     />
   );
-}
-
-function mountFrame(host: HookHost): Promise<MountedFrame> {
-  host.mounts++;
-  if (!host.deferredMount) return Promise.resolve(createMountedFrame(host));
-  const pending = deferred<MountedFrame>();
-  host.pendingMounts.push(pending);
-  return pending.promise;
-}
-
-function createMountedFrame(host: HookHost): MountedFrame {
-  let disposed = false;
-  const mounted: MountedFrame = {
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      host.disposals++;
-    },
-    highlight: (keys) => {
-      host.highlightedKeys = [...keys];
-      return Promise.resolve();
-    },
-    listInstanceBoundaries: () => Promise.resolve([]),
-    scrollTo: () => Promise.resolve(),
-    subscribe: () => {
-      host.activeSubscriptions++;
-      let subscribed = true;
-      return () => {
-        if (!subscribed) return;
-        subscribed = false;
-        host.activeSubscriptions--;
-      };
-    },
-  };
-  if (host.supportsUsageUpdates)
-    mounted.updateUsage = (usage) => {
-      host.updateStatuses.push(usage.status);
-      host.highlightedKeys = [];
-      if (!host.deferredUpdates) return Promise.resolve();
-      const pending = deferred<void>();
-      host.pendingUpdates.push(pending);
-      return pending.promise;
-    };
-  return mounted;
-}
-
-function previewUsage(): ComponentViewRecord {
-  return {
-    colorScheme: "light",
-    instances: [
-      {
-        componentId: "component",
-        id: "instance",
-        key: "instance",
-        order: 0,
-        owner: { kind: "entry" },
-        props: {},
-        propsKey: "props",
-      },
-    ],
-    ranges: [],
-    resources: [],
-    slots: [],
-    styles: [],
-    viewport: "desktop",
-  };
-}
-
-function deferred<T>(): Deferred<T> {
-  let reject = (_error: unknown): void => undefined;
-  let resolve = (_value: T): void => undefined;
-  const promise = new Promise<T>((complete, fail) => {
-    reject = fail;
-    resolve = complete;
-  });
-  return { promise, reject, resolve };
 }
 
 function requiredHost(id: string): HookHost {

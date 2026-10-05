@@ -1,6 +1,8 @@
 /** Shared single-view render/validation with generation-local route and resource indexes. */
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
+  entryRoute,
+  isManifestComponentVariant,
   validateComponentViewRecord,
   generatedViews,
 } from "@mokly/viewer/data";
@@ -14,19 +16,28 @@ import {
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
-import { extractHtmlReferences } from "../html_references.js";
+import {
+  extractCssReferences,
+  extractHtmlReferences,
+} from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
+import type { GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
-import { validateGeneratedOwnershipHeaders } from "./ownership.js";
+import {
+  pendingGeneratedOrphanRoutes,
+  validateGeneratedOwnershipHeaders,
+} from "./ownership.js";
+import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 
 export interface CompiledDocument {
@@ -41,8 +52,21 @@ interface PreparedDocument extends CompiledDocument {
 }
 interface DocumentTarget extends ArtifactView {
   entryId: string;
-  variantId?: string;
 }
+
+/** Pure/countable boundaries used once per accepted document generation. */
+export interface DocumentValidationSeams {
+  readonly orphanRoutes: (
+    config: ResolvedConfig,
+    expected: Iterable<string>,
+  ) => readonly string[];
+  readonly parseCss: (text: string) => readonly string[];
+}
+
+const defaultValidationSeams: DocumentValidationSeams = {
+  orphanRoutes: pendingGeneratedOrphanRoutes,
+  parseCss: extractCssReferences,
+};
 
 export class DocumentCompiler {
   readonly entries: readonly ResolvedRegistryEntry[];
@@ -57,22 +81,27 @@ export class DocumentCompiler {
       ),
   );
   private readonly links: HtmlValidationContext;
+  private readonly pending: PendingGeneratedFiles;
+  private activeRead: ((route: string) => PreparedDocument) | undefined;
 
   constructor(
     readonly runtime: ComponentRuntime,
     private readonly graph: LoadedGraph,
+    seams: DocumentValidationSeams = defaultValidationSeams,
   ) {
     const registry = prepareRegistry(graph.definitions, runtime.config);
     this.entries = registry.entries;
     this.compatibility = { byId: registry.byId, routeIndexes: new Map() };
     this.components = new Map(
       runtime.manifest.entries.flatMap((entry) =>
-        entry.kind === "component" ? [[entry.id, entry] as const] : [],
+        entry.kind === "component" && !isManifestComponentVariant(entry)
+          ? [[entry.id, entry] as const]
+          : [],
       ),
     );
     for (const entry of runtime.manifest.entries) {
       if (entry.kind === "page")
-        this.routes.set(entry.route, {
+        this.routes.set(entryRoute("page", entry.id), {
           entryId: entry.id,
           viewport: "desktop",
           colorScheme: "light",
@@ -82,14 +111,21 @@ export class DocumentCompiler {
           entryId: entry.id,
           viewport: view.viewport,
           colorScheme: view.colorScheme,
-          ...(view.variantId ? { variantId: view.variantId } : {}),
         });
     }
+    this.pending = new PendingGeneratedFiles(
+      graph.styleOutputs,
+      this.routes.keys(),
+      (route) => (this.activeRead?.(route) ?? this.prepare(route)).html,
+      seams.parseCss,
+    );
     this.links = {
-      generatedRoutes: new Set(this.routes.keys()),
-      pendingOrphans: new Set(),
+      pending: this.pending,
+      pendingOrphans: new Set(
+        seams.orphanRoutes(runtime.config, this.pending.routes()),
+      ),
       parsed: new Map(),
-      readGenerated: (route) => this.prepare(route).html,
+      onDemand: true,
     };
   }
 
@@ -115,12 +151,11 @@ export class DocumentCompiler {
       this.runtime.config,
       (target) => read(target).anchors,
     );
+    this.activeRead = read;
     try {
-      validateHtmlLinks(outputs, this.runtime.config, {
-        ...this.links,
-        readGenerated: (target) => read(target).html,
-      });
+      validateHtmlLinks(outputs, this.runtime.config, this.links);
     } finally {
+      this.activeRead = undefined;
       // Generated views are resolved from the bounded document cache, never from stale prop edits.
       for (const target of this.links.parsed.keys())
         if (this.routes.has(target)) this.links.parsed.delete(target);
@@ -131,6 +166,12 @@ export class DocumentCompiler {
       ...(document.view ? { view: document.view } : {}),
       ...(observed.size ? { watchDocuments: [...observed] } : {}),
     };
+  }
+
+  /** Read one accepted pending route without consulting reserved files on disk. */
+  readGeneratedFile(route: string): GeneratedFile | undefined {
+    const file = this.pending.get(route);
+    return file?.kind === "bytes" ? file.bytes : file?.text;
   }
 
   private prepare(
@@ -162,6 +203,7 @@ export class DocumentCompiler {
         ),
       componentViews,
       target,
+      { routes: this.graph.stylesheetRoutes, pending: this.pending },
     );
     const original = outputs.get(route)!;
     const records = transformCompatibilityDocuments(
@@ -172,6 +214,7 @@ export class DocumentCompiler {
       views,
       [...this.routes.keys()],
       this.compatibility,
+      this.pending,
     );
     const html = outputs.get(route)!;
     const entry = this.compatibility.byId.get(target.entryId)!;
@@ -193,9 +236,15 @@ export class DocumentCompiler {
         view,
         this.components,
         route,
-        entry.kind === "component" ? entry.id : undefined,
+        entry.kind === "component" && "variantOf" in entry
+          ? entry.variantOf
+          : undefined,
       );
-      validateComponentResources(new Map([[route, view]]), config);
+      validateComponentResources(
+        new Map([[route, view]]),
+        config,
+        this.pending,
+      );
     }
     const prepared = {
       route,

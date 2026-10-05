@@ -7,41 +7,38 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import {
-  collectWorkerReport,
-  localWorkerLimit,
-  primaryCheckError,
-  workerFailure,
-  verificationTasks,
-} from "../scripts/verification/local-check.mjs";
-import { validateLocalReports } from "../scripts/verification/local-evidence.mjs";
 import { chooseBrowserPorts } from "../scripts/verification/local-ports.mjs";
 import {
   captureSource,
   createSnapshot,
+  createSnapshotDirectory,
   removeSnapshot,
   verifySource,
 } from "../scripts/verification/local-snapshot.mjs";
-import { runLocalTasks } from "../scripts/verification/local-tasks.mjs";
-
-import { browserTest, unitReport } from "./helpers/verification_evidence.js";
+import {
+  collectWorkerReport,
+  primaryCheckError,
+  workerFailure,
+} from "../scripts/verification/local-workers.mjs";
 
 const execute = promisify(execFile);
 
-test("local scheduling starts long independent shards before shorter ones", () => {
-  const tasks = verificationTasks();
-  assert.equal(tasks.length, 10);
-  assert.deepEqual(
-    tasks.slice(0, 5).map((task) => task.key),
-    ["repository", "browser-2", "unit-4", "browser-3", "package"],
+test("snapshot owners resolve a system-temp alias before Git sees their path", async (t) => {
+  const temporary = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-temp-alias-"),
   );
-  assert.deepEqual(
-    tasks.slice(5).map((task) => task.key),
-    ["browser-4", "browser-1", "unit-1", "unit-2", "unit-3"],
+  t.after(() => fs.rm(temporary, { recursive: true, force: true }));
+  const physical = path.join(temporary, "physical");
+  const alias = path.join(temporary, "alias");
+  await fs.mkdir(physical);
+  await fs.symlink(
+    physical,
+    alias,
+    process.platform === "win32" ? "junction" : "dir",
   );
-  assert.equal(new Set(tasks.map((task) => task.key)).size, 10);
-  assert.equal(localWorkerLimit(8), 4);
-  assert.equal(localWorkerLimit(3), 3);
+  t.mock.method(os, "tmpdir", () => alias);
+  const owner = await createSnapshotDirectory();
+  assert.equal(path.dirname(owner), await fs.realpath(physical));
 });
 
 test("an interrupted check reports the signal, not a secondary worker failure", () => {
@@ -118,14 +115,32 @@ test("a snapshot preserves HEAD, baseline, index, staged and unstaged bytes, unt
     "../../packages/viewer",
     path.join(root, "node_modules/@mokly/viewer"),
   );
+  await fs.mkdir(path.join(root, "node_modules/theme"));
+  await fs.writeFile(
+    path.join(root, "node_modules/theme/style.css"),
+    "body {}",
+  );
+  await fs.mkdir(path.join(root, "node_modules/.bin"));
+  await fs.symlink(
+    "../theme/style.css",
+    path.join(root, "node_modules/.bin/theme"),
+  );
+  const mergePath = path.join(root, ".git/MERGE_HEAD");
+  await fs.writeFile(mergePath, `${baseline}\n`);
   const context = path.join(root, ".context");
   await fs.mkdir(context);
   const captured = await captureSource(root);
-  const owner = await fs.mkdtemp(path.join(context, "local-check-"));
+  const owner = await createSnapshotDirectory();
+  t.after(() => fs.rm(owner, { recursive: true, force: true }));
+  assert.equal(path.dirname(owner), await fs.realpath(os.tmpdir()));
   const snapshot = await createSnapshot(root, captured, owner, "worker");
   assert.equal((await git(snapshot, "rev-parse", "HEAD")).trim(), baseline);
   assert.equal(
     (await git(snapshot, "rev-parse", "origin/main")).trim(),
+    baseline,
+  );
+  assert.equal(
+    (await git(snapshot, "rev-parse", "MERGE_HEAD")).trim(),
     baseline,
   );
   assert.equal((await git(snapshot, "show", ":edited.txt")).trim(), "staged");
@@ -145,7 +160,22 @@ test("a snapshot preserves HEAD, baseline, index, staged and unstaged bytes, unt
     await fs.realpath(path.join(snapshot, "node_modules/@mokly/viewer")),
     path.join(snapshot, "packages/viewer"),
   );
+  const dependency = path.join(snapshot, "node_modules/theme/style.css");
+  assert.equal(await fs.realpath(dependency), dependency);
+  assert.equal(
+    await fs.realpath(path.join(snapshot, "node_modules/.bin/theme")),
+    dependency,
+  );
   const peer = await createSnapshot(root, captured, owner, "peer");
+  await fs.writeFile(dependency, "body { color: red; }");
+  for (const repository of [root, peer])
+    assert.equal(
+      await fs.readFile(
+        path.join(repository, "node_modules/theme/style.css"),
+        "utf8",
+      ),
+      "body {}",
+    );
   await fs.mkdir(path.join(snapshot, ".context"));
   await fs.writeFile(path.join(snapshot, ".context/worker-output"), "private");
   await assert.rejects(fs.stat(path.join(peer, ".context/worker-output")), {
@@ -158,6 +188,9 @@ test("a snapshot preserves HEAD, baseline, index, staged and unstaged bytes, unt
     "",
   );
   await verifySource(root, captured);
+  await fs.rm(mergePath);
+  await assert.rejects(verifySource(root, captured), /drift|changed/i);
+  await fs.writeFile(mergePath, `${baseline}\n`);
   await fs.writeFile(path.join(root, "new.txt"), "changed");
   await assert.rejects(verifySource(root, captured), /drift|changed/i);
   await removeSnapshot(root, snapshot, owner);
@@ -193,80 +226,6 @@ test("browser port selection refuses a conflicting listener and never reuses sib
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
-});
-
-test("local evidence rejects missing, duplicate, stale and failed shards", () => {
-  const files = [1, 2, 3, 4].map((n) => `tests/${n}.test.ts`);
-  const browserFiles = [1, 2, 3, 4].map((n) => `tests/browser/${n}.spec.ts`);
-  const browserTests = browserFiles.map((file, n) =>
-    browserTest(String(n), file),
-  );
-  const unit = files.map((file, n) => unitReport(n + 1, [file], files));
-  const browser = browserTests.map((item, n) => ({
-    ...unitReport(n + 1, [item.file], browserFiles),
-    suite: "browser",
-    fullTests: browserTests,
-    assignedTests: [item],
-    observedTests: [{ ...item, durationMs: 1, status: "passed", errors: [] }],
-  }));
-  const options = {
-    commit: "a".repeat(40),
-    runtime: unit[0]!.runtime,
-    unitFiles: files,
-    browserTests,
-  };
-  validateLocalReports([...unit, ...browser], options);
-  assert.throws(
-    () => validateLocalReports([...unit.slice(1), ...browser], options),
-    /missing/i,
-  );
-  assert.throws(
-    () => validateLocalReports([...unit, unit[0], ...browser], options),
-    /extra|duplicate/i,
-  );
-  assert.throws(
-    () =>
-      validateLocalReports(
-        [{ ...unit[0], commit: "b".repeat(40) }, ...unit.slice(1), ...browser],
-        options,
-      ),
-    /commit/i,
-  );
-  assert.throws(
-    () =>
-      validateLocalReports(
-        [{ ...unit[0], observedFiles: [] }, ...unit.slice(1), ...browser],
-        options,
-      ),
-    /observed/i,
-  );
-});
-
-test("task fan-out stops dispatch on failure and drains existing workers", async () => {
-  const started: string[] = [];
-  const finished: string[] = [];
-  let release!: () => void;
-  const held = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await assert.rejects(
-    runLocalTasks(
-      ["fail", "active", "not-started"],
-      2,
-      async (task) => {
-        started.push(task);
-        if (task === "fail") throw new Error("first failure");
-        await held;
-        finished.push(task);
-      },
-      async () => {
-        release();
-      },
-    ),
-    /first failure/,
-  );
-  assert.deepEqual(started, ["fail", "active"]);
-  assert.deepEqual(finished, ["active"]);
 });
 
 async function git(root: string, ...args: string[]): Promise<string> {

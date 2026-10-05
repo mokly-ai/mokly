@@ -4,31 +4,66 @@ import path from "node:path";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
+import type { GitCommandRunner } from "../review/git.js";
 
+import { assertCommittableOutput } from "./committable_output.js";
 import type { Compilation } from "./compile.js";
+import { generatedBytes } from "./generated_file.js";
+import {
+  assertOutputLockHeld,
+  withOutputLock,
+  type OutputLock,
+} from "./output_lock.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import {
   generatedOwnershipDenial,
   pendingGeneratedOrphanRoutes,
 } from "./ownership.js";
+import {
+  assertSafeGeneratedTree,
+  pruneEmptyGeneratedDirectories,
+} from "./reserved_tree.js";
 
-/** Atomically replace owned generated files with rollback on any failure. */
+/**
+ * Atomically replace owned generated files with rollback on any failure, while
+ * holding the repository writer lock. `signal` stops only the wait for the lock.
+ */
 export async function writeCompilation(
   compilation: Compilation,
   config: ResolvedConfig,
+  runner?: GitCommandRunner,
+  signal?: AbortSignal,
 ): Promise<void> {
-  return timeAsync("output.write", () => writeMeasured(compilation, config));
+  return withOutputLock(config.repoRoot, signal ? { signal } : {}, (lock) =>
+    writeLockedCompilation(lock, compilation, config, runner),
+  );
+}
+
+/** Write under a lock the caller holds so it can also read the tree it wrote. */
+export async function writeLockedCompilation(
+  lock: OutputLock,
+  compilation: Compilation,
+  config: ResolvedConfig,
+  runner?: GitCommandRunner,
+): Promise<void> {
+  assertOutputLockHeld(lock, config.repoRoot);
+  return timeAsync("output.write", () =>
+    writeMeasured(compilation, config, runner),
+  );
 }
 
 async function writeMeasured(
   compilation: Compilation,
   config: ResolvedConfig,
+  runner?: GitCommandRunner,
 ): Promise<void> {
   const destinationConfig = config;
   config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
+  assertSafeGeneratedTree(config);
   timeSync("output.validate-targets", () =>
     rejectUnsafeTargets(compilation, config),
   );
+  await assertCommittableOutput(compilation.outputs.keys(), config, runner);
   await fs.promises.mkdir(path.dirname(config.mockupsDir), { recursive: true });
   const temporaryRoot = await fs.promises.mkdtemp(
     path.join(path.dirname(config.mockupsDir), ".mokly-write-"),
@@ -47,11 +82,10 @@ async function writeMeasured(
       for (const route of expected) {
         const staged = path.join(stageRoot, route);
         await fs.promises.mkdir(path.dirname(staged), { recursive: true });
-        await fs.promises.writeFile(
-          staged,
-          compilation.outputs.get(route) ?? "",
-          "utf8",
-        );
+        const content = compilation.outputs.get(route);
+        if (content === undefined)
+          throw new Error(`missing generated file: ${route}`);
+        await fs.promises.writeFile(staged, generatedBytes(content));
       }
     });
     await timeAsync("output.backup", async () => {
@@ -88,6 +122,7 @@ async function writeMeasured(
       fs.promises.rm(temporaryRoot, { force: true, recursive: true }),
     );
   }
+  await pruneEmptyGeneratedDirectories(config);
   destinationConfig.sourceFiles = compilation.manifest.sourceFiles;
 }
 

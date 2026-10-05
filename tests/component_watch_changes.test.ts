@@ -63,7 +63,7 @@ test(
     assert.equal((await workspace("screens/home.html")).change, undefined);
     assert.ok(
       (await workspace("components/action.html")).affected.some(
-        (item) => item.route === "screens/home.html",
+        (item) => item.entryId === "home",
       ),
     );
     await fs.writeFile(
@@ -87,7 +87,7 @@ test(
     const response = await fetch(server.url + "/__mokly/diffs/review.json");
     assert.equal(response.status, 200);
     const review = await response.json();
-    assert.equal(review.schemaVersion, 3);
+    assert.equal(review.schemaVersion, 4);
     assert.deepEqual(
       review.changes
         .map((entry: { after: { id: string } }) => entry.after.id)

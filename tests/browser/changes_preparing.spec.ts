@@ -65,14 +65,14 @@ for (const mobile of [false, true]) {
       expect(await tree.boundingBox()).toEqual(initialTree);
 
       await changes.click();
-      publish({ changedRoutes: null, changesStatus: "pending" });
+      publish({ changedIds: null, changesStatus: "pending" });
       await expect(filter).toHaveAttribute("data-changes-status", "pending");
       await expect(status).toContainText("Checking for changes");
       await expect(status.locator(".mbk-nav-status-detail")).toHaveCount(0);
       await expect(changes).toHaveAttribute("aria-pressed", "true");
 
       publish({
-        changedRoutes: ["screens/details.html"],
+        changedIds: ["details"],
         changesStatus: "ready",
       });
       await expect(changes.locator(".mbk-nav-filter-count")).toHaveText("1");

@@ -13,7 +13,7 @@ test("the selected React shell hydrates its server-rendered document", async ({
   });
   page.on("pageerror", (error) => errors.push(error.message));
 
-  const response = await page.goto("/view/screens/welcome.html");
+  const response = await page.goto("/view/screens/example-welcome.html");
   expect(response?.status()).toBe(200);
   await expect(page.locator("html")).toHaveAttribute(
     "data-mokly-react-shell",

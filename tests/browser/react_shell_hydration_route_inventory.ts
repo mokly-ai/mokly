@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, type Page } from "@playwright/test";
 
 import { parseManifest } from "../../dist/registry/manifest.js";
+import { entryRoute } from "../../packages/viewer/dist/data.js";
 
 import {
   captureBrowserErrors,
@@ -20,11 +21,7 @@ const manifest = parseManifest(
   ),
 );
 export const fixtureRoutes = [
-  ...new Set(
-    manifest.entries.flatMap((entry) =>
-      entry.kind === "collection" ? [] : [entry.route],
-    ),
-  ),
+  ...new Set(manifest.entries.map((entry) => entryRoute(entry.kind, entry.id))),
 ];
 expect(fixtureRoutes.length).toBeGreaterThan(80);
 

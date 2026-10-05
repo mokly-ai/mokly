@@ -11,9 +11,15 @@ export type WorkspaceIconName =
   | "viewport"
   | "close"
   | "caret";
-export function WorkspaceIcon({ name }: { name: WorkspaceIconName }) {
+export function WorkspaceIcon({
+  name,
+  size = 18,
+}: {
+  name: WorkspaceIconName;
+  size?: number;
+}) {
   return (
-    <IconSvg size={18}>
+    <IconSvg size={size}>
       {name === "details" ? (
         <>
           <circle cx="12" cy="12" r="9" />

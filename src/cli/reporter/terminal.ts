@@ -81,6 +81,29 @@ export function formatDuration(milliseconds: number): string {
   return `${minutes}m ${String(totalSeconds % 60).padStart(2, "0")}s`;
 }
 
+/** Format an exact byte count in compact binary terminal units. */
+export function formatBytes(bytes: number): string {
+  const safe = Math.max(0, Math.round(bytes));
+  if (safe < 1_024) return `${safe} B`;
+  const units = ["KiB", "MiB", "GiB"];
+  let value = safe / 1_024;
+  let unit = units[0]!;
+  for (let index = 1; index < units.length && value >= 1_024; index++) {
+    value /= 1_024;
+    unit = units[index]!;
+  }
+  return `${value.toFixed(1)} ${unit}`;
+}
+
+/** Format a count with a singular noun only when its value is exactly one. */
+export function formatCount(
+  count: number,
+  singular: string,
+  plural = `${singular}s`,
+): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 /** Bound one rendered line and avoid retaining incomplete ANSI sequences. */
 export function truncateTerminalLine(value: string, columns: number): string {
   const width = Number.isSafeInteger(columns) && columns > 0 ? columns : 80;

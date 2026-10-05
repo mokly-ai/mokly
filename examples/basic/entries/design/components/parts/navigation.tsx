@@ -2,6 +2,11 @@ import type { ReactNode } from "react";
 
 import { MockLink } from "@mokly/mokly";
 
+import {
+  COMPONENT_NAVIGATION,
+  componentVariantRows,
+  type ComponentNavigationIdentity,
+} from "../../parts/component_nav_data.js";
 import { NavTree, type NavNode } from "../../parts/nav.js";
 import { Shell, type ArtboardViewport } from "../../parts/shell.js";
 
@@ -13,31 +18,70 @@ import {
 import type { CatalogueIdentity } from "./metadata.js";
 
 export type ChangeScenario =
-  "all" | "component" | "screen" | "removed" | "added";
+  "all" | "component" | "screen" | "removed" | "added" | "checklist";
+
+/** Scenarios whose Changes hold one component outside Action's story. */
+const SOLE_CHANGES = {
+  added: { key: "badge", label: "Badge", to: COMPONENT_PAGES.added },
+  checklist: {
+    key: "checklist",
+    label: "Checklist",
+    to: COMPONENT_PAGES["overlay-tall"],
+  },
+} as const;
 
 function nodes(
   scenario: ChangeScenario,
   active: CatalogueIdentity,
   design: ComponentDesignDestination,
+  activeKey?: string,
 ): NavNode[] {
-  if (scenario === "added")
+  const linkedVariants = (
+    rows: readonly NavNode[],
+    destination?: ComponentDesignDestination,
+  ): NavNode[] =>
+    rows.map((row) => ({
+      ...row,
+      ...(scenario === "removed" ? {} : { changed: scenario !== "all" }),
+      ...(row.key === activeKey
+        ? { to: design }
+        : destination === undefined
+          ? {}
+          : { to: destination }),
+    }));
+  const componentBranch = (
+    identity: ComponentNavigationIdentity,
+    to: ComponentDesignDestination,
+    variants: readonly NavNode[] = componentVariantRows(identity, 2),
+    variantDestination?: ComponentDesignDestination,
+  ): NavNode[] => [
+    {
+      key: COMPONENT_NAVIGATION[identity].id,
+      changed: scenario !== "all",
+      depth: 1,
+      kind: "component",
+      label: COMPONENT_NAVIGATION[identity].title,
+      to,
+      variants: "open",
+    },
+    ...linkedVariants(variants, variantDestination),
+  ];
+  if (scenario === "added" || scenario === "checklist") {
+    const identity = scenario === "added" ? "badge" : "checklist";
+    const { to } = SOLE_CHANGES[scenario];
+    const variants = componentVariantRows(identity, 2);
     return [
       {
         key: "components",
         depth: 0,
-        kind: "collection",
+        kind: "folder",
         label: "Components",
         count: 1,
         open: true,
       },
-      {
-        key: "badge",
-        depth: 1,
-        kind: "component",
-        label: "Badge",
-        to: COMPONENT_PAGES.added,
-      },
+      ...componentBranch(identity, to, variants, to),
     ];
+  }
   const reading = active === "reading-room";
   const destination = (
     identity: CatalogueIdentity,
@@ -50,7 +94,7 @@ function nodes(
           {
             key: "screens",
             depth: 0,
-            kind: "collection",
+            kind: "folder",
             label: "Screens",
             count:
               scenario === "screen" || scenario === "removed"
@@ -102,48 +146,57 @@ function nodes(
     {
       key: "components",
       depth: 0,
-      kind: "collection",
+      kind: "folder",
       label: "Components",
       count: scenario === "all" ? 4 : 1,
       open: true,
     },
-    {
-      key: "action",
-      depth: 1,
-      kind: "component",
-      label: "Action",
-      to: destination(
-        "action",
-        scenario === "removed"
-          ? COMPONENT_PAGES.removed
-          : scenario === "all"
-            ? COMPONENT_PAGES.default
+    ...componentBranch(
+      "action",
+      scenario === "all"
+        ? destination("action", COMPONENT_PAGES.default)
+        : scenario === "removed"
+          ? activeKey === "example-action-compact"
+            ? design
+            : COMPONENT_PAGES.removed
+          : activeKey === COMPONENT_NAVIGATION.action.id ||
+              activeKey === COMPONENT_NAVIGATION.action.variants[0].id
+            ? design
             : COMPONENT_PAGES.affected,
-      ),
-    },
+      scenario === "removed"
+        ? [
+            {
+              key: "example-action-compact",
+              depth: 2,
+              kind: "variant",
+              label: "Compact · Removed",
+              to: COMPONENT_PAGES.removed,
+              variantParentKind: "component",
+            },
+          ]
+        : scenario === "all"
+          ? componentVariantRows("action", 2)
+          : componentVariantRows("action", 2).slice(0, 1),
+      scenario === "all"
+        ? undefined
+        : scenario === "removed"
+          ? COMPONENT_PAGES.removed
+          : COMPONENT_PAGES.affected,
+    ),
     ...(scenario === "all"
       ? [
-          {
-            key: "toolbar",
-            depth: 1,
-            kind: "component" as const,
-            label: "Toolbar",
-            to: destination("toolbar", COMPONENT_PAGES.toolbar),
-          },
-          {
-            key: "help-hint",
-            depth: 1,
-            kind: "component" as const,
-            label: "Help hint",
-            to: destination("help-hint", COMPONENT_PAGES.hidden),
-          },
-          {
-            key: "badge",
-            depth: 1,
-            kind: "component" as const,
-            label: "Badge",
-            to: destination("badge", COMPONENT_PAGES.unused),
-          },
+          ...componentBranch(
+            "toolbar",
+            destination("toolbar", COMPONENT_PAGES.toolbar),
+          ),
+          ...componentBranch(
+            "help-hint",
+            destination("help-hint", COMPONENT_PAGES.hidden),
+          ),
+          ...componentBranch(
+            "badge",
+            destination("badge", COMPONENT_PAGES.unused),
+          ),
         ]
       : []),
   ];
@@ -152,12 +205,14 @@ function nodes(
 /** Existing shell and navigation composed around the component design scenario. */
 export function ExplorerShell({
   active = "action",
+  activeKey,
   children,
   design,
   scenario = "all",
   viewport,
 }: {
   active?: CatalogueIdentity;
+  activeKey?: string | undefined;
   children: ReactNode;
   design: ComponentDesignDestination;
   scenario?: ChangeScenario;
@@ -172,7 +227,8 @@ export function ExplorerShell({
           ? 2
           : 1,
     changedOnly: scenario !== "all",
-    nodes: nodes(scenario, active, design),
+    nodes: nodes(scenario, active, design, activeKey),
+    ...(activeKey === undefined ? {} : { activeKey }),
   };
   return (
     <Shell
@@ -193,8 +249,8 @@ export function ExplorerShell({
           ) : (
             <MockLink
               to={
-                scenario === "added"
-                  ? COMPONENT_PAGES.added
+                scenario === "added" || scenario === "checklist"
+                  ? SOLE_CHANGES[scenario].to
                   : scenario === "removed"
                     ? "design-component-removed"
                     : scenario === "screen"

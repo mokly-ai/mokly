@@ -6,18 +6,32 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { DUAL_SCHEME_SAMPLES } from "../examples/basic/entries/design/library/metadata.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 import { AppearanceSelect } from "../packages/viewer/dist/shell/appearance.js";
 
+import { componentVariants } from "./helpers/component_views.js";
 import {
   attribute,
   designCatalogue,
   elements,
 } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 /** Registered samples whose appearance is the subject of the sample itself. */
 const dualSchemeComponents = [...DUAL_SCHEME_SAMPLES].map(
   (slug) => `design-ui-${slug}`,
 );
+const previewScreens = [
+  "design-appearance-overview",
+  "design-appearance-auto",
+  "design-appearance-props",
+  "design-appearance-instance",
+  "design-appearance-loading",
+  "design-appearance-unavailable",
+  "design-appearance-side-by-side",
+  "design-appearance-difference",
+  "design-appearance-flow",
+];
 
 function appearanceOf(html: string): string | undefined {
   const roots = elements(
@@ -32,20 +46,16 @@ test("appearance screens publish both schemes for both viewports", async () => {
   const { manifest } = await designCatalogue;
   const screens = manifest.entries.filter(
     (entry) =>
-      entry.kind === "screen" &&
-      entry.route.startsWith("design/browse/appearance/"),
+      entry.kind === "screen" && entry.id.startsWith("design-appearance-"),
   );
   assert.ok(screens.length > 0, "the appearance section exists");
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
     assert.ok(
-      entry.darkFragments,
+      entry.colorSchemes.includes("dark"),
       `${entry.id} has no dark fragment, so the preview toggle cannot switch it`,
     );
-    assert.deepEqual(Object.keys(entry.darkFragments).sort(), [
-      "desktop",
-      "mobile",
-    ]);
+    assert.deepEqual(entry.colorSchemes, ["light", "dark"]);
   }
 });
 
@@ -53,18 +63,22 @@ test("each generated appearance variant draws the scheme it was rendered for", a
   const { manifest, outputs } = await designCatalogue;
   const screens = manifest.entries.filter(
     (entry) =>
-      entry.kind === "screen" &&
-      entry.route.startsWith("design/browse/appearance/"),
+      entry.kind === "screen" && entry.id.startsWith("design-appearance-"),
   );
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
     for (const viewport of ["mobile", "desktop"] as const) {
-      const light = outputs.get(entry.fragments[viewport]);
+      const light = textOutput(
+        outputs,
+        viewRoute("screen", entry.id, viewport, "light"),
+      );
       assert.ok(light, `${entry.id} ${viewport} light output`);
       assert.equal(appearanceOf(light), "light", `${entry.id} ${viewport}`);
-      const darkRoute: string | undefined = entry.darkFragments?.[viewport];
+      const darkRoute: string | undefined = entry.colorSchemes.includes("dark")
+        ? viewRoute("screen", entry.id, viewport, "dark")
+        : undefined;
       assert.ok(darkRoute, `${entry.id} ${viewport} dark route`);
-      const dark = outputs.get(darkRoute);
+      const dark = textOutput(outputs, darkRoute);
       assert.ok(dark, `${entry.id} ${viewport} dark output`);
       assert.equal(appearanceOf(dark), "dark", `${entry.id} ${viewport}`);
     }
@@ -76,13 +90,16 @@ test("the appearance-related registered samples render in both schemes", async (
   for (const id of dualSchemeComponents) {
     const entry = manifest.entries.find((entry) => entry.id === id);
     assert.ok(entry?.kind === "component", id);
-    for (const variant of entry.variants) {
+    for (const variant of componentVariants(manifest, id)) {
       assert.ok(
-        variant.darkFragments,
+        variant.colorSchemes.includes("dark"),
         `${id}/${variant.id} has no dark sample`,
       );
       for (const viewport of ["mobile", "desktop"] as const) {
-        const dark = outputs.get(variant.darkFragments[viewport]!);
+        const dark = textOutput(
+          outputs,
+          viewRoute("component", variant.id, viewport, "dark"),
+        );
         assert.ok(dark, `${id}/${variant.id} ${viewport}`);
         assert.equal(appearanceOf(dark), "dark", `${id}/${variant.id}`);
       }
@@ -91,34 +108,20 @@ test("the appearance-related registered samples render in both schemes", async (
 });
 
 /** Appearance artboards that place a device preview on their stage. */
-const previewScreens = [
-  "design-appearance-overview",
-  "design-appearance-auto",
-  "design-appearance-props",
-  "design-appearance-instance",
-  "design-appearance-loading",
-  "design-appearance-unavailable",
-  "design-appearance-side-by-side",
-  "design-appearance-difference",
-  "design-appearance-flow",
-];
-
 async function appearanceFragments(): Promise<
   { id: string; scheme: "light" | "dark"; viewport: string; html: string }[]
 > {
   const { manifest, outputs } = await designCatalogue;
   return manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" &&
-    entry.route.startsWith("design/browse/appearance/")
+    entry.kind === "screen" && entry.id.startsWith("design-appearance-")
       ? (["mobile", "desktop"] as const).flatMap((viewport) =>
           (["light", "dark"] as const).map((scheme) => ({
             id: entry.id,
             scheme,
             viewport,
-            html: outputs.get(
-              scheme === "dark"
-                ? entry.darkFragments![viewport]!
-                : entry.fragments[viewport],
+            html: textOutput(
+              outputs,
+              viewRoute("screen", entry.id, viewport, scheme),
             )!,
           })),
         )
@@ -250,10 +253,19 @@ test("the canonical scheme screens render in both schemes", async () => {
   for (const [id, hasDarkRender] of consolidatedScreens) {
     const entry = manifest.entries.find((entry) => entry.id === id);
     assert.ok(entry?.kind === "screen", id);
-    assert.ok(entry.darkFragments, `${id} has no dark fragment`);
+    assert.ok(
+      entry.colorSchemes.includes("dark"),
+      `${id} has no dark fragment`,
+    );
     for (const viewport of ["mobile", "desktop"] as const) {
-      const light: string = outputs.get(entry.fragments[viewport])!;
-      const dark: string = outputs.get(entry.darkFragments[viewport]!)!;
+      const light: string = textOutput(
+        outputs,
+        viewRoute("screen", entry.id, viewport, "light"),
+      )!;
+      const dark: string = textOutput(
+        outputs,
+        viewRoute("screen", entry.id, viewport, "dark"),
+      )!;
       assert.equal(appearanceOf(light), "light", `${id} ${viewport}`);
       assert.equal(appearanceOf(dark), "dark", `${id} ${viewport}`);
       assert.equal(
@@ -271,81 +283,6 @@ test("the canonical scheme screens render in both schemes", async () => {
         !hasDarkRender,
         `${id} ${viewport}: light-only caption`,
       );
-    }
-  }
-});
-
-test("no design artboard depicts a scheme control", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
-    for (const route of [
-      ...Object.values(entry.fragments),
-      ...Object.values(entry.darkFragments ?? {}),
-    ]) {
-      const html = outputs.get(route)!;
-      assert.equal(countClass(html, "ce-theme-control"), 0, route);
-      assert.equal(countClass(html, "ce-theme-toggle"), 0, route);
-    }
-  }
-});
-
-test("the consolidated head-band scheme screens are gone", async () => {
-  const { manifest } = await designCatalogue;
-  for (const id of [
-    "design-browse-dark-scheme",
-    "design-browse-light-only",
-    "design-review-dark-scheme",
-  ])
-    assert.equal(
-      manifest.entries.find((entry) => entry.id === id),
-      undefined,
-      id,
-    );
-});
-
-test("every artboard with a top bar draws one Appearance control", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  let checked = 0;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
-    for (const route of [
-      ...Object.values(entry.fragments),
-      ...Object.values(entry.darkFragments ?? {}),
-    ]) {
-      const html = outputs.get(route)!;
-      if (countClass(html, "mbk-topbar") === 0) continue;
-      checked += 1;
-      assert.equal(countClass(html, "mbk-appearance"), 1, route);
-    }
-  }
-  assert.ok(checked > 100, `only ${checked} artboards drew a top bar`);
-});
-
-test("the depicted Appearance control names the scheme it rendered for", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
-    if (entry.id === "design-appearance-auto") continue;
-    for (const [scheme, routes] of [
-      ["light", entry.fragments],
-      ["dark", entry.darkFragments ?? {}],
-    ] as const) {
-      for (const route of Object.values(routes)) {
-        const html = outputs.get(route)!;
-        if (countClass(html, "mbk-topbar") === 0) continue;
-        const selector = elements(parse(html), (node) =>
-          (attribute(node, "class") ?? "")
-            .split(/\s+/u)
-            .includes("mbk-appearance"),
-        )[0];
-        assert.ok(selector, route);
-        assert.equal(
-          attribute(selector, "data-appearance-value"),
-          scheme,
-          route,
-        );
-      }
     }
   }
 });

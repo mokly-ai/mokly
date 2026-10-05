@@ -1,30 +1,33 @@
-// Builds one navigation model from explicit collection membership. Stable ids own disclosure identity;
-// display labels never act as structural keys.
+// Builds section folders from authored navigation paths.
 
-import type { CatalogueHierarchy } from "../registry/hierarchy.js";
+import type {
+  CatalogueHierarchy,
+  HierarchyNode,
+} from "../registry/hierarchy.js";
+import { compareNavigationNodes } from "../registry/nav_paths.js";
 import type { ManifestEntry } from "../registry/types.js";
 
 /** A leaf navigation row linking to one viewable route. */
 export interface NavLeafNode {
-  entryId?: string;
+  entryId: string;
   removedPage?: boolean;
   /**
    * A retained baseline variant placed under its surviving parent. Like a
    * removed page it is a Changes row: All hides it, Changes shows it.
    */
   removedVariant?: boolean;
-  /** Parent screen id a retained baseline variant still names. */
+  /** Parent entry id a retained baseline variant still names. */
   variantOf?: string;
   entryKind: "component" | "screen" | "use-case" | "page";
   key: string;
   kind: "leaf";
   label: string;
-  route: string;
+  snapshotId?: string;
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
   /**
-   * Screens this row discloses as its variants, in manifest order. Present
-   * only on a parent screen; a variant never carries variants of its own.
+   * Entries this row discloses as variants, in manifest order. Present only
+   * on a screen or component parent; a variant never owns variants itself.
    */
   variants?: readonly NavLeafNode[];
 }
@@ -48,21 +51,11 @@ export interface NavSectionNode {
   label: "Components" | "Pages";
 }
 
-/** One breadcrumb segment, representing an authored collection ancestor. */
+/** One breadcrumb segment, representing an authored folder label. */
 export interface CatalogueCrumb {
   /** A viewable route this crumb links to; plain text when absent. */
   href?: string;
   label: string;
-}
-
-/** Build the nested navigation tree over the explicit catalogue hierarchy. */
-export function buildNavTree(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
-): NavNode[] {
-  const structured = hierarchy.roots.map((entry) =>
-    structuredNode(entry, hierarchy, new Set()),
-  );
-  return sortNodes(structured);
 }
 
 /** Project the authored hierarchy into separate page and component sections. */
@@ -71,18 +64,41 @@ export function buildNavSections(
   additionalLeaves: readonly NavLeafNode[] = [],
 ): NavSectionNode[] {
   const adopted = adoptedVariants(hierarchy, additionalLeaves);
-  const tree = attachRemovedVariants(buildNavTree(hierarchy), adopted);
-  const flat = additionalLeaves.filter(
-    (leaf) => !(adopted.get(leaf.variantOf ?? "") ?? []).includes(leaf),
-  );
+  const attached = new Set<NavLeafNode>();
+  const tree = {
+    pages: attachRemovedVariants(
+      hierarchy.roots.pages.map((node) => structuredNode(node, hierarchy)),
+      adopted,
+      attached,
+    ),
+    components: attachRemovedVariants(
+      hierarchy.roots.components.map((node) => structuredNode(node, hierarchy)),
+      adopted,
+      attached,
+    ),
+  };
+  const flat = additionalLeaves.filter((leaf) => !attached.has(leaf));
   return (["pages", "components"] as const).flatMap((id) => {
-    const current = projectNodes(tree, id);
+    const current = tree[id];
     const additional = flat.filter((leaf) =>
       id === "components"
         ? leaf.entryKind === "component"
         : leaf.entryKind !== "component",
     );
-    const children = [...current, ...additional];
+    const children = [
+      ...current,
+      ...additional.sort((left, right) =>
+        left.entryKind < right.entryKind
+          ? -1
+          : left.entryKind > right.entryKind
+            ? 1
+            : left.entryId < right.entryId
+              ? -1
+              : left.entryId > right.entryId
+                ? 1
+                : 0,
+      ),
+    ];
     if (children.length === 0) return [];
     return [
       id === "pages"
@@ -102,15 +118,14 @@ export function structuredCrumbTrail(
   hierarchy: CatalogueHierarchy<ManifestEntry>,
   entryId: string,
 ): CatalogueCrumb[] {
-  return (hierarchy.ancestorsById.get(entryId) ?? []).map((ancestor) => ({
-    label: ancestor.title,
+  return (hierarchy.ancestorsById.get(entryId) ?? []).map((label) => ({
+    label,
   }));
 }
 
 /**
- * Retained baseline variants grouped by the surviving parent screen that
- * still claims them. A variant whose parent is gone, or whose parent is not a
- * current screen, keeps the flat removed row the removal rules give it.
+ * Retained baseline variants grouped by the surviving same-kind parent that
+ * still claims them. An ineligible variant keeps its flat removed row.
  */
 function adoptedVariants(
   hierarchy: CatalogueHierarchy<ManifestEntry>,
@@ -121,7 +136,11 @@ function adoptedVariants(
     const parentId = leaf.variantOf;
     if (parentId === undefined) continue;
     const parent = hierarchy.byId.get(parentId);
-    if (parent?.kind !== "screen") continue;
+    if (
+      parent?.kind !== leaf.entryKind ||
+      ("variantOf" in parent && parent.variantOf !== undefined)
+    )
+      continue;
     byParent.set(parentId, [...(byParent.get(parentId) ?? []), leaf]);
   }
   return byParent;
@@ -135,15 +154,17 @@ function adoptedVariants(
 function attachRemovedVariants(
   nodes: readonly NavNode[],
   byParent: ReadonlyMap<string, readonly NavLeafNode[]>,
+  attached: Set<NavLeafNode>,
 ): NavNode[] {
   if (byParent.size === 0) return [...nodes];
   return nodes.map((node) => {
     if (node.kind === "group")
       return {
         ...node,
-        children: attachRemovedVariants(node.children, byParent),
+        children: attachRemovedVariants(node.children, byParent, attached),
       };
-    const removed = node.entryId ? byParent.get(node.entryId) : undefined;
+    const removed = byParent.get(node.entryId);
+    for (const leaf of removed ?? []) attached.add(leaf);
     return removed
       ? {
           ...node,
@@ -156,16 +177,13 @@ function attachRemovedVariants(
   });
 }
 
-/** One routed entry, the only entry kind a navigation leaf can represent. */
-type RoutedManifestEntry = Exclude<ManifestEntry, { kind: "collection" }>;
-
 /**
  * One leaf row plus the variant rows it discloses. The hierarchy already keeps
- * variants out of `roots` and `childrenById`, so a variant reaches the tree
+ * variants out of folder nodes, so a variant reaches the tree
  * only through this list and never as a row of its own.
  */
 function leafNode(
-  entry: RoutedManifestEntry,
+  entry: ManifestEntry,
   variants: readonly NavLeafNode[],
 ): NavLeafNode {
   return {
@@ -174,64 +192,53 @@ function leafNode(
     key: `entry:${entry.id}`,
     kind: "leaf",
     label: entry.title,
-    route: entry.route,
     ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     ...(variants.length > 0 ? { variants } : {}),
   };
 }
 
 function structuredNode(
-  entry: ManifestEntry,
+  node: HierarchyNode<ManifestEntry>,
   hierarchy: CatalogueHierarchy<ManifestEntry>,
-  ancestors: ReadonlySet<string>,
 ): NavNode {
-  if (entry.kind !== "collection") {
+  if (node.kind === "entry") {
+    const entry = node.entry;
     return leafNode(
       entry,
-      (hierarchy.variantsById.get(entry.id) ?? []).flatMap((variant) =>
-        variant.kind === "collection" ? [] : [leafNode(variant, [])],
+      (hierarchy.variantsById.get(entry.id) ?? []).map((variant) =>
+        leafNode(variant, []),
       ),
     );
   }
-  const visited = new Set(ancestors);
-  visited.add(entry.id);
-  const children = (hierarchy.childrenById.get(entry.id) ?? [])
-    .filter((child) => !visited.has(child.id))
-    .map((child) => structuredNode(child, hierarchy, visited));
   return {
-    children: sortNodes(children),
-    key: `collection:${entry.id}`,
+    children: sortNodes(
+      node.children.map((child) => structuredNode(child, hierarchy)),
+    ),
+    key: `folder:${node.key}`,
     kind: "group",
-    label: entry.title,
+    label: node.label,
   };
 }
 
-function projectNodes(
-  nodes: readonly NavNode[],
-  section: NavSectionNode["id"],
-): NavNode[] {
-  return nodes.flatMap((node): NavNode[] => {
-    if (node.kind === "leaf") {
-      const component = node.entryKind === "component";
-      return component === (section === "components") ? [node] : [];
-    }
-    const children = projectNodes(node.children, section);
-    const emptyPageFolder = section === "pages" && node.children.length === 0;
-    return children.length > 0 || emptyPageFolder
-      ? [{ ...node, children }]
-      : [];
-  });
-}
-
 function sortNodes(nodes: readonly NavNode[]): NavNode[] {
-  return [...nodes].sort(
-    (left, right) =>
-      nodeRank(left) - nodeRank(right) ||
-      left.label.localeCompare(right.label) ||
-      left.key.localeCompare(right.key),
+  return [...nodes].sort((left, right) =>
+    compareNavigationNodes(
+      {
+        kind: left.kind === "group" ? "folder" : "entry",
+        label: left.label,
+        key:
+          left.kind === "group"
+            ? left.key.slice("folder:".length)
+            : left.entryId,
+      },
+      {
+        kind: right.kind === "group" ? "folder" : "entry",
+        label: right.label,
+        key:
+          right.kind === "group"
+            ? right.key.slice("folder:".length)
+            : right.entryId,
+      },
+    ),
   );
-}
-
-function nodeRank(node: NavNode): number {
-  return node.kind === "group" ? 1 : 2;
 }

@@ -19,7 +19,6 @@ export function matchesFrameInstance(
   const identity = session.identity;
   return (
     identity.entryId === instance.screenId &&
-    identity.variantId === instance.variantId &&
     identity.stepIndex === instance.stepIndex &&
     identity.viewport === instance.viewport &&
     identity.colorScheme === instance.colorScheme
@@ -92,23 +91,21 @@ export function frameInstanceRef(
     viewport: identity.viewport,
     colorScheme: identity.colorScheme,
     key,
-    ...(identity.variantId ? { variantId: identity.variantId } : {}),
     ...(identity.stepIndex === undefined
       ? {}
       : { stepIndex: identity.stepIndex }),
   };
 }
 
-/** Match the exact current workspace view, including route and effective axes. */
-export function matchesWorkspaceFrame(
+/** Match the exact current workspace view, including entry id and effective axes. */
+function matchesWorkspaceFrame(
   session: ShellFrameSession,
   data: WorkspaceData,
   view: GeneratedComponentView,
 ): boolean {
   const identity = session.identity;
   return (
-    identity.entryId === data.entry.id &&
-    identity.route === data.entry.route &&
+    identity.entryId === (view.variantId ?? data.entry.id) &&
     identity.stepIndex === undefined &&
     identity.variantId === view.variantId &&
     identity.viewport === view.viewport &&

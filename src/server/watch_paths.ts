@@ -3,26 +3,37 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import { isOwned } from "../build/ownership.js";
+import {
+  blocksRequiredInput,
+  packageOwnedPath,
+} from "../build/package_owned_paths.js";
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { globStablePrefix } from "../config/entry_globs.js";
+import { logicalRepositoryPath } from "../config/file_locations.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import { isDeniedSourceSegment } from "../config/private_directories.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { isExportIgnoredPath } from "../export/ignored.js";
-import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import type { WatchDirectoryStatus } from "./watch_events.js";
+import { RequiredWatchIndex } from "./watch_index.js";
+
+const requiredIndexes = new WeakMap<ResolvedConfig, RequiredWatchIndex>();
+const globRootIndexes = new WeakMap<ResolvedConfig, readonly string[]>();
 
 /** Stable prefixes of every entry glob, watched so new entry modules are found. */
-export function entryGlobRoots(config: ResolvedConfig): string[] {
-  return [
+function entryGlobRoots(config: ResolvedConfig): string[] {
+  const existing = globRootIndexes.get(config);
+  if (existing) return [...existing];
+  const roots = [
     ...new Set(
       config.entryGlobs.map((glob) =>
         path.resolve(config.repoRoot, globStablePrefix(glob)),
       ),
     ),
   ];
+  globRootIndexes.set(config, roots);
+  return roots;
 }
 
 /** A created or removed discoverable entry module must re-run discovery. */
@@ -36,10 +47,25 @@ export function isEntryGlobCandidate(
   const matchingGlobs = config.entryGlobs.filter((glob) =>
     minimatch(relative, glob, { dot: true }),
   );
-  return (
-    matchingGlobs.length > 0 &&
-    !isDiscoveryDeniedEntryPath(absolute, matchingGlobs, config, directory)
+  if (
+    matchingGlobs.length === 0 ||
+    isDiscoveryDeniedEntryPath(absolute, matchingGlobs, config, directory)
+  )
+    return false;
+  const relativeRoot =
+    deepestContainingRoot(
+      absolute,
+      matchingGlobs.map((glob) =>
+        path.resolve(config.repoRoot, globStablePrefix(glob)),
+      ),
+    ) ?? config.repoRoot;
+  const owned = packageOwnedPath(
+    absolute,
+    config,
+    directory === "directory",
+    relativeRoot,
   );
+  return !blocksRequiredInput(owned, false);
 }
 
 /** Return whether package-owned output should be pruned from a broad watch. */
@@ -50,13 +76,22 @@ export function isPackageOwnedIgnoredWatchPath(
   mode: "traverse" | "event" = "traverse",
   directory: WatchDirectoryStatus = "unknown",
 ): boolean {
-  const absolute = path.resolve(candidate);
+  const absolute = logicalRepositoryPath(candidate, config.repoRoot);
   if (isBaselineCachePath(absolute, config.repoRoot)) return true;
   if (!isInside(config.repoRoot, absolute)) return false;
-  if (isRequiredWatchPath(absolute, config)) return false;
   const globRoots = entryGlobRoots(config);
+  const packageRoot =
+    deepestContainingRoot(absolute, globRoots) ?? config.repoRoot;
+  const owned = packageOwnedPath(
+    absolute,
+    config,
+    stats?.isDirectory() ?? (directory === "directory" ? true : undefined),
+    packageRoot,
+  );
+  const required = isRequiredWatchPath(absolute, config);
+  if (blocksRequiredInput(owned, required)) return true;
+  if (required) return false;
   if (globRoots.some((root) => isInside(absolute, root))) return false;
-  if (isGeneratedOutputPath(absolute, config)) return true;
   if (isExportIgnoredPath(absolute, config.repoRoot, mode)) return true;
   if (isInside(config.review.outDir, absolute)) return true;
   const relativeRoot = deepestContainingRoot(absolute, globRoots);
@@ -70,11 +105,27 @@ export function isPackageOwnedIgnoredWatchPath(
   );
 }
 
+/** Keep a known public alias observable when its symlink temporarily escapes. */
+export function isRecoverablePublicResource(
+  candidate: string,
+  config: ResolvedConfig,
+): boolean {
+  if (!isInside(config.mockupsDir, candidate)) return false;
+  const reason = packageOwnedPath(candidate, config, false);
+  return reason === undefined || reason === "outside" || reason === "denied";
+}
+
 /** Resolve the finite roots/globs watched for this consumer. */
 export function watchTargets(config: ResolvedConfig): string[] {
-  const targets = [
-    config.configPath,
+  const directoryRoots = [
     ...entryGlobRoots(config),
+    ...(config.postcssWatchDirectories ?? []).map((entry) => entry.directory),
+    ...config.watch.rules.flatMap((rule) =>
+      rule.paths.map((glob) => globWatchRoot(config.repoRoot, glob)),
+    ),
+  ];
+  const fileTargets = [
+    config.configPath,
     ...(config.configSourceFiles ?? []).map((source) =>
       path.resolve(config.repoRoot, source),
     ),
@@ -82,16 +133,25 @@ export function watchTargets(config: ResolvedConfig): string[] {
       path.resolve(config.repoRoot, source),
     ),
   ];
-  if (config.renderer) targets.push(config.renderer);
+  if (config.renderer) fileTargets.push(config.renderer);
   for (const stylesheet of configuredStylesheetPaths(config)) {
     if (!/^https?:\/\//.test(stylesheet))
-      targets.push(path.resolve(config.mockupsDir, stylesheet));
+      fileTargets.push(path.resolve(config.mockupsDir, stylesheet));
   }
-  for (const rule of config.watch.rules) {
-    targets.push(
-      ...rule.paths.map((glob) => globWatchRoot(config.repoRoot, glob)),
-    );
-  }
+  const targets = [
+    ...directoryRoots,
+    ...fileTargets.filter(
+      (file) =>
+        !directoryRoots.some(
+          (root) =>
+            isInside(root, file) &&
+            !path
+              .relative(root, path.dirname(file))
+              .split(path.sep)
+              .some(isDeniedSourceSegment),
+        ),
+    ),
+  ];
   return [...new Set(targets)]
     .filter((target) => !isBaselineCachePath(target, config.repoRoot))
     .sort();
@@ -113,39 +173,31 @@ function globWatchRoot(repoRoot: string, glob: string): string {
   return path.resolve(repoRoot, stable.length === 0 ? "." : stable.join("/"));
 }
 
-/** Return whether a path is the manifest or header-proven generated output. */
-function isGeneratedOutputPath(
-  candidate: string,
-  config: ResolvedConfig,
-): boolean {
-  if (!isInside(config.mockupsDir, candidate)) return false;
-  const relative = toPosixPath(path.relative(config.mockupsDir, candidate));
-  return relative === MANIFEST_NAME || isOwned(candidate, config);
-}
-
 /** Preserve exact configured inputs and the ancestors needed to reach them. */
 function isRequiredWatchPath(
   candidate: string,
   config: ResolvedConfig,
 ): boolean {
-  const required = [
-    config.configPath,
-    ...(config.configSourceFiles ?? []).map((source) =>
-      path.resolve(config.repoRoot, source),
-    ),
-    ...(config.renderer ? [config.renderer] : []),
-    ...(config.sourceFiles ?? []).map((source) =>
-      path.resolve(config.repoRoot, source),
-    ),
-    ...configuredStylesheetPaths(config).flatMap((stylesheet) =>
-      /^https?:\/\//.test(stylesheet)
-        ? []
-        : [path.resolve(config.mockupsDir, stylesheet)],
-    ),
-  ];
-  return required.some(
-    (target) => isInside(candidate, target) || isInside(target, candidate),
-  );
+  let index = requiredIndexes.get(config);
+  if (!index) {
+    index = new RequiredWatchIndex(config.repoRoot, [
+      config.configPath,
+      ...(config.configSourceFiles ?? []).map((source) =>
+        path.resolve(config.repoRoot, source),
+      ),
+      ...(config.renderer ? [config.renderer] : []),
+      ...(config.sourceFiles ?? []).map((source) =>
+        path.resolve(config.repoRoot, source),
+      ),
+      ...configuredStylesheetPaths(config).flatMap((stylesheet) =>
+        /^https?:\/\//.test(stylesheet)
+          ? []
+          : [path.resolve(config.mockupsDir, stylesheet)],
+      ),
+    ]);
+    requiredIndexes.set(config, index);
+  }
+  return index.contains(candidate, config.repoRoot);
 }
 
 /** Select the most specific root containing a candidate path. */

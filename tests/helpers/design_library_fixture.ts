@@ -6,6 +6,7 @@ import {
   compileCatalogue,
   type Compilation,
 } from "../../dist/build/compile.js";
+import { generatedBytes } from "../../dist/build/generated_file.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { classifyComponents } from "../../dist/review/component_classification.js";
@@ -149,7 +150,7 @@ export function snapshotReader(
   const read = async (file: string) => {
     const value = compilation.outputs.get(file) ?? resources.get(file);
     assert.notEqual(value, undefined, file);
-    return Buffer.from(value!);
+    return generatedBytes(value!);
   };
   return {
     read,

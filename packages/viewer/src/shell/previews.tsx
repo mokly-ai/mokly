@@ -3,11 +3,11 @@
 // frames while the server render remains an explicit unavailable state.
 
 import type { RemovedEntryPreview } from "../catalogue/types.js";
-import type { PreviewPresentation } from "../previews/presentation.js";
+import { entryRoute } from "../navigation/routes.js";
+import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
-import type { ManifestEntry } from "../registry/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
 import { PreviewFrame } from "./preview_frame.js";
@@ -17,11 +17,14 @@ import { useRemovedPreview } from "./use_removed_preview.js";
 
 /** Everything the browser client needs to request one entry's previous version. */
 export interface RemovedPreviewData {
-  /** Stable entry id, so a reused route cannot adopt another entry's response. */
+  /** Stable entry id, so another entry cannot adopt this response. */
   id: string;
   kind: "page" | "screen";
-  route: string;
   title: string;
+  /** Catalogue that owns the selected historical record. */
+  catalogueIdentity?: string;
+  /** Exact historical record whose preview bytes may be displayed. */
+  snapshotId?: string;
   /** Address shown in a screen preview's browser chrome. */
   address?: string;
   /** The delivery's advertised descriptor; absent when nothing is published. */
@@ -36,18 +39,24 @@ export interface RemovedPreviewData {
 export function removedPreviewData(
   catalogue: Catalogue,
   context: ShellContext,
-  entry: Exclude<ManifestEntry, { kind: "collection" }>,
+  entry: CatalogueManifestEntry,
 ): RemovedPreviewData | undefined {
   if (entry.kind !== "page" && entry.kind !== "screen") return undefined;
   const model = catalogue.publicModel ?? context.readModel;
-  const published = model?.removedEntries.find(
-    (removed) => removed.entry.route === entry.route,
-  )?.preview;
+  const removed = model?.removedEntries.find(
+    (removed) => removed.entry.id === entry.id,
+  );
+  const published = removed?.preview;
   return {
     id: entry.id,
     kind: entry.kind,
-    route: entry.route,
     title: entry.title,
+    ...(model && removed?.snapshotId
+      ? {
+          catalogueIdentity: model.identity.id,
+          snapshotId: removed.snapshotId,
+        }
+      : {}),
     ...(entry.kind === "screen" && entry.address
       ? { address: entry.address }
       : {}),
@@ -74,7 +83,7 @@ function MissingView(props: { viewport: "desktop" | "mobile" }) {
 
 function ScreenFrame(props: {
   data: RemovedPreviewData;
-  presentation: PreviewPresentation;
+  presentation: SnapshotPresentation;
   scheme: "dark" | "light";
   view: PreviewScreenView;
   viewport: "desktop" | "mobile";
@@ -102,7 +111,7 @@ function ScreenFrame(props: {
         <PhoneFrame>{content}</PhoneFrame>
       ) : (
         <BrowserFrame
-          address={props.data.address ?? props.data.route}
+          address={props.data.address ?? entryRoute("screen", props.data.id)}
           expandable={false}
         >
           {content}
@@ -117,7 +126,7 @@ export function ReadyPreview(props: {
   colorScheme: "dark" | "light";
   data: RemovedPreviewData;
   loaded: LoadedPreview;
-  presentations: ReadonlyMap<string, PreviewPresentation>;
+  presentations: ReadonlyMap<string, SnapshotPresentation>;
   retry(): void;
   viewport: "both" | "desktop" | "mobile";
 }) {
@@ -175,9 +184,9 @@ export function ReadyPreview(props: {
 }
 
 function presentationFor(
-  presentations: ReadonlyMap<string, PreviewPresentation>,
+  presentations: ReadonlyMap<string, SnapshotPresentation>,
   address: string,
-): PreviewPresentation | undefined {
+): SnapshotPresentation | undefined {
   return presentations.get(address);
 }
 
@@ -248,19 +257,6 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
           viewport={viewport}
         />
       </div>
-      {props.data.kind === "screen" ? (
-        <>
-          <template data-mokly-preview-template="mobile">
-            <PhoneFrame />
-          </template>
-          <template data-mokly-preview-template="desktop">
-            <BrowserFrame
-              address={props.data.address ?? props.data.route}
-              expandable={false}
-            />
-          </template>
-        </>
-      ) : null}
     </>
   );
 }

@@ -29,21 +29,14 @@ export function withRoute(
   sections: readonly NavSectionNode[],
 ): ShellState {
   let selection = { ...state.selection, screenId: routeScreenId(route) };
-  const entry =
-    route.view.kind === "target" ? route.view.target.entry : undefined;
-  if (
-    route.variant &&
-    entry?.kind === "component" &&
-    entry.variants.some((variant) => variant.id === route.variant)
-  )
-    selection.variantId = route.variant;
-  else delete selection.variantId;
+  if (route.snapshot) selection.snapshotId = route.snapshot;
+  else delete selection.snapshotId;
   if (route.viewport) selection.viewport = route.viewport;
   if (catalogue.publicModel)
     selection = revealSelection(catalogue.publicModel, selection);
   let next = withSelection(state, selection, false);
   if (route.view.kind === "target") {
-    const path = disclosurePath(sections, route.view.target.entry.route);
+    const path = disclosurePath(sections, route.view.target.entry.id);
     next = {
       ...next,
       disclosures: openDisclosures(next.disclosures, path),
@@ -104,6 +97,5 @@ function sameQuery(left: ViewerSelection, right: ViewerSelection): boolean {
 function routeTitle(catalogue: Catalogue, route: ShellRoute): string {
   if (route.view.kind === "home") return "Mokly";
   if (route.view.kind === "missing") return "Not found · Mokly";
-  const entry = catalogue.byId.get(route.view.target.entry.id);
-  return `${entry?.title ?? route.view.target.entry.title} · Mokly`;
+  return `${route.view.target.entry.title} · Mokly`;
 }

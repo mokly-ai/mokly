@@ -1,8 +1,15 @@
 /** Resolve and fetch one removed entry's previous version. */
 
+import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
+import {
+  pagePreviewMetadataPath,
+  snapshotPagePath,
+  snapshotSidePath,
+  snapshotViewPath,
+} from "../navigation/routes.js";
 import { parseRemovedPagePreview } from "../review/page_preview.js";
 import { parseReviewResult } from "../review/result_validation.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
@@ -53,11 +60,11 @@ export interface PreviewRequestEnvironment {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 }
 
-/** Exact files and confined directory prefixes advertised for a preview. */
+/** Exact files and directory prefixes in the documented embedded fetch set. */
 export interface AdvertisedPreviewPaths {
-  /** Metadata files an embedded viewer may request directly. */
+  /** Metadata files that catalogue descriptors advertise. */
   files: readonly string[];
-  /** Directory prefixes beneath which historical documents may be requested. */
+  /** Snapshot prefixes advertised by the comparison generation. */
   prefixes: readonly string[];
 }
 
@@ -74,10 +81,7 @@ export function previewEndpoint(
 ): PreviewRequest | undefined {
   if (!delivery) {
     const endpoint = new URL(STABLE_ENDPOINT, base);
-    endpoint.searchParams.set(
-      data.kind === "page" ? "page" : "route",
-      data.route,
-    );
+    endpoint.searchParams.set(data.kind === "page" ? "page" : "id", data.id);
     if (refresh) endpoint.searchParams.set("refresh", "1");
     return { endpoint };
   }
@@ -89,17 +93,17 @@ export function previewEndpoint(
   const generation = new URL(`/${comparisonPath}`, base);
   if (advertised.kind === "screen") return { endpoint: generation };
   const prefix = comparisonPath.slice(0, -REVIEW_FILE.length);
-  return advertised.path === `${prefix}pages/${data.route}.json`
-    ? {
-        endpoint: new URL(`/${encodeUrlPath(advertised.path)}`, base),
-        generation,
-      }
-    : undefined;
+  const path = `${prefix}${pagePreviewMetadataPath(data.id)}`;
+  return {
+    endpoint: new URL(`/${encodeUrlPath(path)}`, base),
+    generation,
+  };
 }
 
 /**
- * Every address a catalogue advertises for historical content, relative to the
- * artifact root. An embedded viewer requests nothing outside this set.
+ * The documented embedded fetch set for one catalogue, relative to the
+ * artifact root. Tests verify this description; presentation loaders enforce
+ * their own generation and snapshot-side boundaries at runtime.
  */
 export function advertisedPreviewPaths(
   model: CatalogueReadModel,
@@ -109,13 +113,20 @@ export function advertisedPreviewPaths(
     files: [
       ...(comparison === null ? [] : [comparison]),
       ...model.removedEntries.flatMap((removed) =>
-        removed.preview?.kind === "page" ? [removed.preview.path] : [],
+        removed.preview?.kind === "page" && comparison !== null
+          ? [
+              `${comparison.slice(0, -REVIEW_FILE.length)}${pagePreviewMetadataPath(removed.entry.id)}`,
+            ]
+          : [],
       ),
     ],
     prefixes:
       comparison === null
         ? []
-        : [`${comparison.slice(0, -REVIEW_FILE.length)}snapshots/before/`],
+        : (["before", "after"] as const).map(
+            (side) =>
+              `${comparison.slice(0, -REVIEW_FILE.length)}${snapshotSidePath(side)}`,
+          ),
   };
 }
 
@@ -123,42 +134,106 @@ function unavailable(): never {
   throw new Error("The previous version is unavailable.");
 }
 
+interface ParsedPreview {
+  baseCommit: string;
+  content: PreviewContent;
+}
+
 function screenContent(
   data: RemovedPreviewData,
   payload: unknown,
   base: string,
-): PreviewContent {
+): ParsedPreview {
   const result = parseReviewResult(payload);
-  const screen = result.screens.find(
-    (candidate) => candidate.route === data.route,
-  );
-  if (!screen || screen.views.some((view) => view.afterPath)) unavailable();
+  const screen = result.screens.find((candidate) => candidate.id === data.id);
+  if (!screen || "after" in screen) unavailable();
   const views = screen.views.flatMap((view) =>
-    view.state === "removed" && view.beforePath
+    view.state === "removed"
       ? [
           {
             colorScheme: view.colorScheme,
-            url: new URL(encodeUrlPath(view.beforePath), base).href,
+            url: new URL(
+              encodeUrlPath(
+                snapshotViewPath(
+                  "before",
+                  "screen",
+                  data.id,
+                  view.viewport,
+                  view.colorScheme,
+                ),
+              ),
+              base,
+            ).href,
             viewport: view.viewport,
           },
         ]
       : [],
   );
   if (!views.length) unavailable();
-  return { kind: "screen", views };
+  return {
+    baseCommit: result.baseCommit,
+    content: { kind: "screen", views },
+  };
 }
 
 function pageContent(
   data: RemovedPreviewData,
   payload: unknown,
   base: string,
-): PreviewContent {
+): ParsedPreview {
   const preview = parseRemovedPagePreview(payload);
-  if (preview.route !== data.route) unavailable();
+  if (preview.id !== data.id) unavailable();
   return {
-    kind: "page",
-    url: new URL(encodeUrlPath(preview.documentPath), base).href,
+    baseCommit: preview.baseCommit,
+    content: {
+      kind: "page",
+      url: new URL(encodeUrlPath(snapshotPagePath(data.id)), base).href,
+    },
   };
+}
+
+function generationFromUrl(value: string | URL): string | undefined {
+  const path = new URL(value).pathname;
+  return /^\/__mokly\/diffs\/__generations\/([a-f0-9]{64})\//.exec(path)?.[1];
+}
+
+function snapshotMatches(
+  data: RemovedPreviewData,
+  request: PreviewRequest,
+  responseUrl: string,
+  baseCommit: string,
+): boolean {
+  if (data.snapshotId === undefined && data.catalogueIdentity === undefined)
+    return true;
+  if (!data.snapshotId || !data.catalogueIdentity) return false;
+  if (
+    historicalSnapshotId(
+      data.catalogueIdentity,
+      { kind: "baseline", identity: baseCommit },
+      data,
+    ) === data.snapshotId
+  )
+    return true;
+  const response = new URL(responseUrl);
+  if (response.origin !== request.endpoint.origin) return false;
+  const requestedGeneration = generationFromUrl(
+    request.generation ?? request.endpoint,
+  );
+  const responseGeneration = generationFromUrl(response);
+  if (
+    requestedGeneration !== undefined &&
+    responseGeneration !== requestedGeneration
+  )
+    return false;
+  const generation = requestedGeneration ?? responseGeneration;
+  return (
+    generation !== undefined &&
+    historicalSnapshotId(
+      data.catalogueIdentity,
+      { kind: "generation", identity: generation },
+      data,
+    ) === data.snapshotId
+  );
 }
 
 /** Request one preview and validate it against the entry that asked for it. */
@@ -175,11 +250,14 @@ export async function requestPreview(
   if (!response.ok) unavailable();
   const payload: unknown = await response.json();
   const base = request.generation?.href ?? response.url;
+  const parsed =
+    data.kind === "screen"
+      ? screenContent(data, payload, base)
+      : pageContent(data, payload, base);
+  if (!snapshotMatches(data, request, response.url, parsed.baseCommit))
+    unavailable();
   return {
-    content:
-      data.kind === "screen"
-        ? screenContent(data, payload, base)
-        : pageContent(data, payload, base),
+    content: parsed.content,
     generation: new URL(".", base).href,
     url: response.url,
   };

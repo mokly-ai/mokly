@@ -10,9 +10,12 @@ import {
   instanceKey,
   slotKey,
 } from "../packages/viewer/dist/components/keys.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
+import { componentVariants } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 async function compile(
   t: { after: (fn: () => Promise<void>) => void },
@@ -27,19 +30,24 @@ async function compile(
 
 test("component registration emits deterministic variants and actual per-view ownership", async (t) => {
   const result = await compile(t);
-  assert.equal(result.manifest.schemaVersion, 5);
+  assert.equal(result.manifest.schemaVersion, 7);
   const action = result.manifest.entries.find((entry) => entry.id === "action");
   assert.ok(action?.kind === "component");
+  assert.equal("variants" in action, false);
+  assert.equal("componentViews" in action, false);
+  const variants = componentVariants(result.manifest, action.id);
+  assert.equal(variants[0]!.variantOf, action.id);
+  assert.deepEqual(variants[0]!.navPath, action.navPath);
   assert.equal(
-    action.variants[0]!.fragments.mobile,
-    "components/action.variants/default.mobile.html",
+    viewRoute("component", variants[0]!.id, "mobile", "light"),
+    "components/action-default.mobile.html",
   );
   assert.equal(
-    action.variants[1]!.darkFragments?.desktop,
-    "components/action.variants/disabled.desktop.dark.html",
+    viewRoute("component", variants[1]!.id, "desktop", "dark"),
+    "components/action-disabled.desktop.dark.html",
   );
   assert.deepEqual(
-    action.variants[0]!.componentViews.map((view) => [
+    variants[0]!.componentViews.map((view) => [
       view.viewport,
       view.colorScheme,
       view.instances.length,
@@ -70,12 +78,12 @@ test("component registration emits deterministic variants and actual per-view ow
     instanceKey({ kind: "entry" }, slotted.slotKey, "action"),
   );
   assert.deepEqual(decodeProps(slotted.props), { label: "Slot action" });
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    result.outputs,
+    viewRoute("screen", screen.id, "mobile", "light"),
+  )!;
   assert.equal(html.includes("<template"), false);
-  assert.match(
-    html,
-    /href="..\/components\/action.variants\/default.mobile.html"/,
-  );
+  assert.match(html, /href="..\/components\/action-default.mobile.html"/);
   const ranges = validateComponentRanges(html, view.ranges);
   const hidden = view.instances.find((instance) => instance.id === "hidden")!;
   const hiddenRange = ranges.find(
@@ -131,7 +139,7 @@ for (const [name, options, error] of [
   ],
   [
     "unregistered wrapper",
-    { exports: "pane.entry,", extra: "" },
+    { exports: "pane.entries,", extra: "" },
     /missing-child|not exported/,
   ],
   [
@@ -159,14 +167,11 @@ for (const [name, options, error] of [
     await assert.rejects(compile(t, options), error);
   });
 
-test("v4 retains explicit dependency declarations separately from source attribution", async (t) => {
+test("v7 retains only explicit dependency declarations", async (t) => {
   const result = await compile(t);
   const action = result.manifest.entries.find(
     (entry) => entry.id === "action",
   )!;
   assert.deepEqual(Reflect.get(action, "declaredDependencies"), ["notes.md"]);
-  assert.deepEqual(action.dependencies, [
-    "entries/fixture.mockup.tsx",
-    "notes.md",
-  ]);
+  assert.equal("dependencies" in action, false);
 });

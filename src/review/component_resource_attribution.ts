@@ -13,7 +13,7 @@ import { MoklyError } from "../errors.js";
 import {
   uniqueReasons,
   type ComponentDependencyPolicy,
-  type RoutedEntry,
+  type ReviewEntry,
 } from "./component_metadata.js";
 
 /** Retained actual-invocation evidence can affect an owner without a saved variant. */
@@ -58,8 +58,8 @@ export function ownedCssReasons(
 
 /** Exact caller declarations remain independent, but cannot bypass CSS exclusion. */
 export function exactScreenCssReasons(
-  before: RoutedEntry | undefined,
-  after: RoutedEntry | undefined,
+  before: ReviewEntry | undefined,
+  after: ReviewEntry | undefined,
   views: readonly ViewReview[],
 ): DependencyReason[] {
   return views.flatMap((view) =>
@@ -75,14 +75,16 @@ export function exactScreenCssReasons(
   );
 }
 
-/** Preserve non-CSS diagnostics and derive stylesheet impact from retained evidence. */
+/** Preserve glob and unowned-path evidence alongside retained dependency reasons. */
 export function resourceImpact(
   shared: readonly string[],
+  unowned: readonly string[],
   reasons: readonly EntryChangeReason[],
 ): string[] {
   return [
     ...new Set([
       ...shared.filter((path) => !isStylesheetPath(path)),
+      ...unowned,
       ...reasons.flatMap((reason) =>
         reason.kind === "dependency" ? [reason.path] : [],
       ),

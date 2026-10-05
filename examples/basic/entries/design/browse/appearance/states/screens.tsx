@@ -53,7 +53,6 @@ export const appearanceStateScreens = [
     mobile: <AutoAppearance viewport="mobile" />,
     rationale:
       "Auto is the default and follows the system, including a change made while the catalogue is open. Each generated file depicts the system resolving to the scheme it was rendered for, so the example never reads the building or viewing machine's own setting.",
-    slug: "auto",
     title: "Auto appearance",
   }),
   screen({
@@ -64,7 +63,6 @@ export const appearanceStateScreens = [
     mobile: <LightOnlyScreen viewport="mobile" />,
     rationale:
       "One setting changes the catalogue and the screens it shows together, but a screen that renders in light only cannot follow. It keeps its real light frames and names that fallback in its caption, which is a fact about the screen rather than a second setting.",
-    slug: "light-only",
     title: "Light-only screen",
   }),
 ];

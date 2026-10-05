@@ -12,10 +12,18 @@ import { chooseBrowserPorts } from "./local-ports.mjs";
 import {
   captureSource,
   createSnapshot,
+  createSnapshotDirectory,
   removeSnapshot,
   verifySource,
 } from "./local-snapshot.mjs";
 import { runLocalTasks } from "./local-tasks.mjs";
+import {
+  collectWorkerReport,
+  localWorkerLimit,
+  primaryCheckError,
+  verificationTasks,
+  workerFailure,
+} from "./local-workers.mjs";
 import { discoverBrowserTests } from "./playwright.mjs";
 import { createVerificationProcessOwner } from "./process-owner.mjs";
 import { runInherited } from "./process.mjs";
@@ -23,16 +31,16 @@ import { runInherited } from "./process.mjs";
 const execute = promisify(execFile);
 const SHARDS = 4;
 
-export class SnapshotUnavailableError extends Error {}
+class SnapshotUnavailableError extends Error {}
 
 /** Run all work in isolated snapshots after xtask's live audit. */
-export async function runCompleteLocal(root) {
+async function runCompleteLocal(root) {
   await preflight(root);
   const initial = performance.now();
   const captured = await captureSource(root);
   const context = path.join(root, ".context");
   await fs.mkdir(context, { recursive: true });
-  const directory = await fs.mkdtemp(path.join(context, "local-check-"));
+  const directory = await createSnapshotDirectory();
   const reports = path.join(
     context,
     "verification-reports",
@@ -68,7 +76,7 @@ export async function runCompleteLocal(root) {
   process.on("SIGTERM", sigterm);
   try {
     const ports = await chooseBrowserPorts(
-      SHARDS,
+      SHARDS + 1,
       process.env.MOKLY_PLAYWRIGHT_PORT,
     );
     owner = await createVerificationProcessOwner({ cwd: root });
@@ -84,6 +92,7 @@ export async function runCompleteLocal(root) {
       task.snapshot = snapshot;
       if (task.suite === "repository") await seedCargoCache(root, snapshot);
       if (task.suite === "browser") task.port = ports[task.index - 1];
+      if (task.suite === "hydration") task.port = ports[SHARDS];
       await verifySource(root, captured);
     }
     await fs.mkdir(reports, { recursive: true });
@@ -101,7 +110,7 @@ export async function runCompleteLocal(root) {
           ...process.env,
           CARGO_TARGET_DIR: path.join(task.snapshot, "target"),
           ...(task.port ? { MOKLY_PLAYWRIGHT_PORT: String(task.port) } : {}),
-          ...(task.index
+          ...(task.index || task.suite === "hydration"
             ? {
                 MOKLY_VERIFICATION_REPORT: path.join(
                   task.snapshot,
@@ -123,7 +132,7 @@ export async function runCompleteLocal(root) {
         const succeeded =
           outcome.exitCode === 0 && !outcome.signal && !outcome.interrupted;
         let report;
-        if (task.index) {
+        if (task.index || task.suite === "hydration") {
           try {
             report = await collectWorkerReport(
               env.MOKLY_VERIFICATION_REPORT,
@@ -156,7 +165,12 @@ export async function runCompleteLocal(root) {
         process.env.MOKLY_VERIFICATION_RUNTIME ??
         `node-${process.versions.node}`,
       unitFiles: await discoverUnitFiles(root),
-      browserTests: (await discoverBrowserTests(browserRoot)).tests,
+      browserTests: (
+        await discoverBrowserTests(browserRoot, { project: "chromium" })
+      ).tests,
+      hydrationTests: (
+        await discoverBrowserTests(browserRoot, { project: "hydration" })
+      ).tests,
     };
     validateLocalReports(results, expected);
     await verifySource(root, captured);
@@ -207,7 +221,7 @@ export async function runCompleteLocal(root) {
   }
   if (failure) throw failure;
   console.error(
-    `[local-check] complete: ${completed.unitFiles.length} unit files, ${completed.browserTests.length} browser tests, ${((performance.now() - initial) / 1000).toFixed(1)}s; reports: ${reports}`,
+    `[local-check] complete: ${completed.unitFiles.length} unit files, ${completed.browserTests.length} browser tests, ${completed.hydrationTests.length} hydration tests, ${((performance.now() - initial) / 1000).toFixed(1)}s; reports: ${reports}`,
   );
 }
 
@@ -231,60 +245,6 @@ async function seedCargoCache(root, snapshot) {
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
-}
-
-/** Start the longest observed shards early so they do not extend the tail. */
-export function verificationTasks() {
-  return [
-    { key: "repository", suite: "repository" },
-    { key: "browser-2", suite: "browser", index: 2 },
-    { key: "unit-4", suite: "unit", index: 4 },
-    { key: "browser-3", suite: "browser", index: 3 },
-    { key: "package", suite: "package" },
-    { key: "browser-4", suite: "browser", index: 4 },
-    { key: "browser-1", suite: "browser", index: 1 },
-    { key: "unit-1", suite: "unit", index: 1 },
-    { key: "unit-2", suite: "unit", index: 2 },
-    { key: "unit-3", suite: "unit", index: 3 },
-  ];
-}
-
-/** Cap process-level parallelism independently of each runner's worker cap. */
-export function localWorkerLimit(available) {
-  return Math.max(1, Math.min(4, available));
-}
-
-/** A cancellation-caused worker exit must not replace the initiating signal. */
-export function primaryCheckError(error, interrupted) {
-  return interrupted ?? error;
-}
-
-/** Preserve a failed shard's evidence for diagnosis without accepting it. */
-export async function collectWorkerReport(source, destination, required) {
-  let contents;
-  try {
-    contents = await fs.readFile(source, "utf8");
-  } catch (error) {
-    if (required) throw error;
-    return undefined;
-  }
-  await fs.copyFile(source, destination);
-  try {
-    return JSON.parse(contents);
-  } catch (error) {
-    if (required) throw error;
-    return undefined;
-  }
-}
-
-/** Surface the originating test when a worker exits unsuccessfully. */
-export function workerFailure(key, outcome, report) {
-  const detail = (report?.failures ?? [])
-    .slice(0, 2)
-    .map((failure) => `${failure.name}: ${failure.diagnostic}`)
-    .join("\n");
-  const exit = outcome.signal ?? outcome.interrupted ?? outcome.exitCode;
-  return new Error(`${key} failed (${exit})${detail ? `\n${detail}` : ""}`);
 }
 
 if (

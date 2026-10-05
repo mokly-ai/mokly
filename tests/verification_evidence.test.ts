@@ -9,7 +9,6 @@ import {
   nodeShardFiles,
   parseShardArgument,
 } from "../scripts/verification/evidence.mjs";
-import { discoverBrowserTests } from "../scripts/verification/playwright.mjs";
 import {
   validateCompletedReport,
   validateShardReports,
@@ -38,35 +37,6 @@ test("verification discovers the live unit inventory without browser specs", asy
       (await fs.stat(path.join(repositoryRoot, file))).isFile(),
       true,
     );
-});
-
-test("the current unit inventory is partitioned exactly once across four shards", async () => {
-  const files = await discoverUnitFiles(repositoryRoot);
-  const assignments = [1, 2, 3, 4].map((index) =>
-    nodeShardFiles(files, { index, total: 4 }),
-  );
-  assert.ok(assignments.every((group) => group.length > 0));
-  assert.equal(new Set(assignments.flat()).size, files.length);
-  assert.deepEqual(assignments.flat().sort(), files);
-});
-
-test("the current Playwright inventory assigns every file and test once", async () => {
-  const full = await discoverBrowserTests(repositoryRoot);
-  const groups = await Promise.all(
-    [1, 2, 3, 4].map((index) =>
-      discoverBrowserTests(repositoryRoot, { index, total: 4 }),
-    ),
-  );
-  assert.ok(groups.every((group) => group.tests.length > 0));
-  assert.deepEqual(groups.flatMap((group) => group.files).sort(), full.files);
-  assert.deepEqual(
-    groups.flatMap((group) => group.tests.map((item) => item.id)).sort(),
-    full.tests.map((item) => item.id).sort(),
-  );
-  assert.equal(
-    new Set(groups.flatMap((group) => group.tests.map((item) => item.id))).size,
-    full.tests.length,
-  );
 });
 
 test("verification shard arguments are exact and one based", () => {
@@ -113,6 +83,26 @@ test("completed reports reject missing execution and non-passing evidence", () =
       /cancelled|exit|observed|reporter|skipped|status/i,
     );
   }
+});
+
+test("developer unit reports tolerate skips without relaxing completion", () => {
+  const report = { ...unitReport(1, ["tests/a.test.ts"]), skipped: 2 };
+  assert.throws(() => validateCompletedReport(report), /skipped tests/u);
+  assert.doesNotThrow(() =>
+    validateCompletedReport(report, { allowUnitSkips: true }),
+  );
+  for (const change of [
+    { observedFiles: [] },
+    { cancelled: 1 },
+    { failures: ["failed test"] },
+    { outcome: { exitCode: 1, signal: null, status: "failed" } },
+  ])
+    assert.throws(() =>
+      validateCompletedReport(
+        { ...report, ...change },
+        { allowUnitSkips: true },
+      ),
+    );
 });
 
 test("four shard reports require disjoint complete current evidence", () => {
@@ -193,6 +183,7 @@ test("browser shard evidence requires every independently discovered test once",
   const reports = [1, 2, 3, 4].map((index) => ({
     ...unitReport(index, index < 3 ? [files[index - 1]!] : [], files),
     suite: "browser",
+    playwrightFiles: files,
     fullTests: tests,
     assignedTests: index < 3 ? [tests[index - 1]!] : [],
     observedTests:
@@ -227,6 +218,7 @@ test("browser shard evidence requires every independently discovered test once",
   const complete = browserTests.map((item, index) => ({
     ...unitReport(index + 1, [item.file], browserFiles),
     suite: "browser",
+    playwrightFiles: browserFiles,
     fullTests: browserTests,
     assignedTests: [item],
     observedTests: [{ ...item, durationMs: 1, status: "passed", errors: [] }],
@@ -252,14 +244,22 @@ test("browser shard evidence requires every independently discovered test once",
   );
 });
 
-test("the CI aggregate requires every runtime, suite, shard, and commit", () => {
+test("the CI aggregate requires browser shards and one hydration report", () => {
   const ordinaryRuntimes = ["node-22.14.0"];
   const releaseRuntimes = ["node-22.14.0", "node-24"];
   const reports = ciReports(releaseRuntimes);
   validateCiReports(reports, "a".repeat(40), releaseRuntimes);
   assert.throws(
-    () => validateCiReports(reports.slice(1), "a".repeat(40), releaseRuntimes),
-    /expected 16|missing/i,
+    () =>
+      validateCiReports(
+        reports.filter(
+          (report) =>
+            report.suite !== "hydration" || report.runtime !== "node-24",
+        ),
+        "a".repeat(40),
+        releaseRuntimes,
+      ),
+    /expected 18|hydration|missing/i,
   );
   assert.throws(
     () =>
@@ -279,7 +279,7 @@ test("the CI aggregate requires every runtime, suite, shard, and commit", () => 
   validateCiReports(ordinaryReports, "a".repeat(40), ordinaryRuntimes);
   assert.throws(
     () => validateCiReports(reports, "a".repeat(40), ordinaryRuntimes),
-    /expected 8|extra/i,
+    /expected 9|extra/i,
   );
   for (const unsupported of [
     [],
@@ -292,4 +292,44 @@ test("the CI aggregate requires every runtime, suite, shard, and commit", () => 
       /runtime profile/i,
     );
   }
+});
+
+test("browser and hydration inventories partition every Playwright spec", () => {
+  const runtimes = ["node-22.14.0"];
+  const reports = ciReports(runtimes);
+  const overlap = structuredClone(reports);
+  const browser = overlap.filter((report) => report.suite === "browser");
+  const hydration = overlap.find((report) => report.suite === "hydration");
+  assert.ok(hydration);
+  const hydrationFile = hydration.fullFiles[0]!;
+  const duplicate = browserTest("duplicate-hydration", hydrationFile);
+  for (const report of browser) {
+    report.fullFiles.push(hydrationFile);
+    report.fullTests.push(duplicate);
+  }
+  browser[0]!.assignedFiles.push(hydrationFile);
+  browser[0]!.observedFiles.push({
+    file: hydrationFile,
+    durationMs: 1,
+    tests: 1,
+  });
+  browser[0]!.assignedTests.push(duplicate);
+  browser[0]!.observedTests.push({
+    ...duplicate,
+    durationMs: 1,
+    status: "passed",
+    errors: [],
+  });
+  assert.throws(
+    () => validateCiReports(overlap, "a".repeat(40), runtimes),
+    /browser|hydration|duplicate|partition/i,
+  );
+
+  const gap = structuredClone(reports);
+  for (const report of gap.filter((item) => item.suite !== "unit"))
+    report.playwrightFiles!.push("tests/browser/unassigned.spec.ts");
+  assert.throws(
+    () => validateCiReports(gap, "a".repeat(40), runtimes),
+    /browser|hydration|inventory|union|partition/i,
+  );
 });

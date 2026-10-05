@@ -57,7 +57,7 @@ test("invalid initial and incoming selection report a safe state without crashin
 });
 
 for (const cross of [false, true])
-  test(`${cross ? "postMessage" : "same-origin"} shell links retain variants and fragments without duplicate navigation`, async ({
+  test(`${cross ? "postMessage" : "same-origin"} shell links retain variant entry fragments without duplicate navigation`, async ({
     page,
   }) => {
     await page.evaluate(
@@ -66,12 +66,15 @@ for (const cross of [false, true])
     );
     const action = page.getByRole("link", { name: "Action", exact: true });
     await action.evaluate((link) => {
-      (link as HTMLAnchorElement).href += "?variant=disabled&fragment=details";
+      (link as HTMLAnchorElement).href =
+        "/view/components/action-disabled.html?fragment=details";
     });
     await action.click();
     await expect(
-      page.getByRole("combobox", { name: "Saved variant" }),
-    ).toHaveValue("disabled");
+      page
+        .getByRole("navigation", { name: "Saved variants" })
+        .getByRole("link", { name: "Disabled", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
     await expect
       .poll(async () => {
         const element = await page
@@ -80,9 +83,6 @@ for (const cross of [false, true])
         return (await element?.contentFrame())?.url();
       })
       .toMatch(/disabled\.mobile\.html(?:\?[^#]*)?#details$/);
-    await page
-      .getByRole("combobox", { name: "Saved variant" })
-      .dispatchEvent("change");
     expect(
       await page.evaluate(() =>
         window.viewerHarness
@@ -92,10 +92,52 @@ for (const cross of [false, true])
       ),
     ).toEqual([
       {
-        screenId: "action",
-        route: "components/action.html",
-        variantId: "disabled",
+        screenId: "action-disabled",
         fragment: "details",
       },
     ]);
   });
+
+test("host routing preserves unrelated links and blocks invalid historical links", async ({
+  page,
+}) => {
+  await page.evaluate(() => window.viewerHarness.start("one"));
+  const action = page.getByRole("link", { name: "Action", exact: true });
+  const intercepted = async (href: string) =>
+    action.evaluate((link, destination) => {
+      link.setAttribute("href", destination);
+      let prevented = false;
+      document.addEventListener(
+        "click",
+        (event) => {
+          prevented = event.defaultPrevented;
+          event.preventDefault();
+        },
+        { once: true },
+      );
+      (link as HTMLAnchorElement).click();
+      return prevented;
+    }, href);
+
+  expect(await intercepted("/documentation/help.html")).toBe(false);
+  expect(
+    await intercepted(
+      `/view/components/action.html?snapshot=${"f".repeat(64)}`,
+    ),
+  ).toBe(true);
+  expect(
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .events.filter((event) => event.name === "error"),
+    ),
+  ).toEqual([
+    {
+      name: "error",
+      value: {
+        code: "selection",
+        message: "The requested catalogue selection is unavailable.",
+      },
+    },
+  ]);
+});

@@ -4,9 +4,10 @@ import { pathToFileURL } from "node:url";
 
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
+import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV5,
+  ManifestV7,
 } from "../../packages/viewer/dist/registry/types.js";
 import { paletteColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -14,11 +15,14 @@ import { repositoryRoot } from "../helpers/fixture.js";
 const directory = path.join(repositoryRoot, "examples/basic/generated");
 const manifest = JSON.parse(
   fs.readFileSync(path.join(directory, "mokly-manifest.json"), "utf8"),
-) as ManifestV5;
+) as ManifestV7;
 const changedDesigns = new Set([
   "design-browse-variant-changes",
   "design-changes-current",
   "design-changes-overlay",
+  "design-changes-overlay-long",
+  "design-changes-overlay-panel",
+  "design-changes-side-by-side-apart",
   "design-review-changed",
   "design-review-difference",
   "design-review-style-matched",
@@ -37,7 +41,7 @@ async function assertFragmentEligibility(
   fragment: string,
 ): Promise<void> {
   await page.goto(pathToFileURL(path.join(directory, fragment)).href);
-  const componentDesign = entry.route.startsWith("design/components/");
+  const componentDesign = entry.id.startsWith("design-component-");
   const changedComponentOrScreen =
     componentDesign &&
     (await page.locator('[data-change-status="changed"]').count()) > 0;
@@ -91,8 +95,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
     for (const entry of manifest.entries) {
       if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
       for (const [appearance, fragment] of [
-        ["light", entry.fragments[viewport]],
-        ["dark", entry.darkFragments?.[viewport]],
+        ["light", viewRoute("screen", entry.id, viewport, "light")],
+        [
+          "dark",
+          entry.colorSchemes.includes("dark")
+            ? viewRoute("screen", entry.id, viewport, "dark")
+            : undefined,
+        ],
       ] as const) {
         if (!fragment) continue;
         await assertFragmentEligibility(

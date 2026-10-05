@@ -2,13 +2,22 @@
 
 import type { ViewerSelection } from "../viewer/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import {
+  catalogueSelectionEntry,
+  type Catalogue,
+  type CatalogueManifestEntry,
+} from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { ShellRoute } from "./routes.js";
 import { rowMatchesQuery } from "./search_query.js";
-import type { RoutedEntry } from "./target.js";
 import { workspaceData } from "./workspace_data.js";
+import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
+
+interface ChangedDestination {
+  entry: CatalogueManifestEntry;
+  snapshotId?: string;
+}
 
 /** Apply the destination and first-arrival view rules for a visible Changes row. */
 export function changesActivation(
@@ -19,37 +28,46 @@ export function changesActivation(
 ): ShellRoute {
   if (
     selection.view !== "changes" ||
-    !context.changedRoutes ||
+    !context.changedIds ||
     route.view.kind !== "target"
   )
     return route;
   const requested = route.view.target.entry;
-  const destination = context.changedRoutes.includes(requested.route)
-    ? requested
+  const destination = context.changedIds.includes(requested.id)
+    ? {
+        entry: requested,
+        ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
+      }
     : firstVisibleChangedVariant(catalogue, context, selection, requested.id);
   if (!destination) return route;
-  const redirected = destination.route !== requested.route;
+  const redirected = destination.entry.id !== requested.id;
   const next: ShellRoute = redirected
     ? {
         ...route,
         view: {
           kind: "target",
-          target: { kind: "entry", entry: destination },
+          target: { kind: "entry", entry: destination.entry },
         },
       }
     : route;
+  if (redirected) {
+    if (destination.snapshotId) next.snapshot = destination.snapshotId;
+    else delete next.snapshot;
+  }
   if (
     selectionHasChangedRoute(catalogue, context, selection) ||
     route.viewport !== undefined ||
     route.colorScheme !== undefined ||
-    (destination.kind !== "screen" && destination.kind !== "component")
+    (destination.entry.kind !== "screen" &&
+      destination.entry.kind !== "component")
   )
     return next;
-  const data = workspaceData(catalogue, context, destination);
+  const data = workspaceData(catalogue, context, destination.entry);
   const first = selectedChangedViews(
-    destination,
+    workspaceEvidenceEntry(data),
     data.changedViews,
-    data.variants[0]?.value.id,
+    data.variants.find(({ value }) => value.id === destination.entry.id)?.value
+      .id ?? data.variants[0]?.value.id,
   )[0];
   return first
     ? { ...next, viewport: first.viewport, colorScheme: first.colorScheme }
@@ -62,10 +80,14 @@ function selectionHasChangedRoute(
   selection: ViewerSelection,
 ): boolean {
   const current = selection.screenId
-    ? catalogue.byId.get(selection.screenId)
+    ? catalogueSelectionEntry(
+        catalogue,
+        selection.screenId,
+        selection.snapshotId,
+      )
     : undefined;
-  return current !== undefined && current.kind !== "collection"
-    ? context.changedRoutes?.includes(current.route) === true
+  return current !== undefined
+    ? context.changedIds?.includes(current.id) === true
     : false;
 }
 
@@ -74,32 +96,35 @@ function firstVisibleChangedVariant(
   context: ShellContext,
   selection: ViewerSelection,
   parentId: string,
-): RoutedEntry | undefined {
+): ChangedDestination | undefined {
   const parent = catalogue.hierarchy.byId.get(parentId);
   if (
-    parent?.kind !== "screen" ||
-    parent.variantOf !== undefined ||
-    !catalogue.byRoute.has(parent.route)
+    (parent?.kind !== "screen" && parent?.kind !== "component") ||
+    ("variantOf" in parent && parent.variantOf !== undefined) ||
+    !catalogue.manifest.entries.some((entry) => entry.id === parent.id)
   )
     return;
-  const current = (
-    catalogue.hierarchy.variantsById.get(parentId) ?? []
-  ).flatMap((entry): RoutedEntry[] =>
-    entry.kind === "collection" ? [] : [entry],
+  const current = (catalogue.hierarchy.variantsById.get(parentId) ?? []).map(
+    (entry) => ({ entry }),
   );
-  const removed = catalogue.removedEntries.flatMap(({ entry }) =>
-    entry.kind === "screen" && entry.variantOf === parentId ? [entry] : [],
+  const removed = catalogue.removedEntries.flatMap(({ entry, snapshotId }) =>
+    entry.kind === parent.kind &&
+    "variantOf" in entry &&
+    entry.variantOf === parentId
+      ? [{ entry, ...(snapshotId ? { snapshotId } : {}) }]
+      : [],
   );
   return [...current, ...removed].find(
-    (entry) =>
-      context.changedRoutes?.includes(entry.route) &&
+    ({ entry }) =>
+      context.changedIds?.includes(entry.id) &&
       rowMatchesQuery(
         { freeText: selection.search, tags: selection.tags },
         {
           id: entry.id,
-          route: entry.route,
           tags: entry.tags ?? [],
-          text: catalogue.byRoute.has(entry.route)
+          text: catalogue.manifest.entries.some(
+            (candidate) => candidate.id === entry.id,
+          )
             ? entry.title
             : `${entry.title} · Removed`,
         },

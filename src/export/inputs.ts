@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { compileCatalogue, type Compilation } from "../build/compile.js";
+import { withOutputLock } from "../build/output_lock.js";
 import { loadConfig } from "../config/load.js";
 import { publicPathLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -51,7 +52,11 @@ export function pinnedEvidence(
   };
 }
 
-/** Recheck effective source/config, public bytes, and evidence before installation. */
+/**
+ * Recheck effective source/config, public bytes, and evidence before
+ * installation. Public bytes are re-read under the generated-output writer lock
+ * so a concurrent writer's transaction is never observed half-installed.
+ */
 export async function assertInputsUnchanged(
   config: ResolvedConfig,
   compilation: Compilation,
@@ -59,25 +64,33 @@ export async function assertInputsUnchanged(
   prepared: PreparedReviewRepository | undefined,
   changed: readonly string[],
   exclusions: readonly string[],
+  compareEvidence = true,
+  signal?: AbortSignal,
 ): Promise<void> {
   const freshConfig = await loadConfig(config.repoRoot, config.configPath);
   const fresh = await compileCatalogue(freshConfig);
   freshConfig.sourceFiles = fresh.manifest.sourceFiles;
-  const publicNow = await capturePublicFiles(
-    freshConfig,
-    freshConfig.generatedOutput === "derived" ? fresh.outputs : undefined,
+  const publicNow = await withOutputLock(
+    freshConfig.repoRoot,
+    signal ? { signal } : {},
+    () =>
+      capturePublicFiles(
+        freshConfig,
+        freshConfig.generatedOutput === "derived" ? fresh.outputs : undefined,
+      ),
   );
-  const changedNow = prepared
-    ? await reviewChangedPaths(
-        prepared.evidence,
-        prepared.commit,
-        config,
-        config.review.outDir,
-        exclusions,
-      )
-    : [];
+  const changedNow =
+    prepared && compareEvidence
+      ? await reviewChangedPaths(
+          prepared.evidence,
+          prepared.commit,
+          config,
+          config.review.outDir,
+          exclusions,
+        )
+      : [];
   if (
-    !isDeepStrictEqual(config, freshConfig) ||
+    !isDeepStrictEqual(materialConfig(config), materialConfig(freshConfig)) ||
     !isDeepStrictEqual(compilation, fresh) ||
     !isDeepStrictEqual(publicFiles, publicNow) ||
     !isDeepStrictEqual(changed, changedNow)
@@ -86,4 +99,10 @@ export async function assertInputsUnchanged(
       "Export inputs changed during generation; retry the export.",
     );
   await prepared?.assertUnchanged();
+}
+
+function materialConfig(config: ResolvedConfig): ResolvedConfig {
+  const comparable = { ...config };
+  delete comparable.postcssWatchDirectories;
+  return comparable;
 }

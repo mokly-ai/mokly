@@ -1,9 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeCatalogueRoute } from "@mokly/viewer/data";
-
 import { MoklyError } from "../errors.js";
+
+const dotSegment = /(?:^|\/)\.\.?(?:\/|$)/u;
+
+/** Normalize an absolute path without re-normalizing canonical POSIX input. */
+export function resolveAbsolutePath(candidate: string): string {
+  return path.sep === "/" && normalizedAbsolutePosix(candidate)
+    ? candidate
+    : path.resolve(candidate);
+}
 
 /** Convert a platform path to stable POSIX separators. */
 export function toPosixPath(value: string): string {
@@ -52,26 +59,34 @@ export function validateRelativeRoute(value: string, label: string): string {
   return normalized.replace(/^\.\//, "");
 }
 
-/** Normalize and require a portable static catalogue `.html` route. */
-export function validateCatalogueRoute(value: string, label: string): string {
-  const normalized = validateRelativeRoute(value, label);
-  if (!isSafeCatalogueRoute(normalized)) {
-    throw new MoklyError(
-      "config-invalid",
-      `${label} must use portable URL-safe path segments and end in .html`,
-    );
-  }
-  return normalized;
-}
-
 /** Return whether a candidate path is contained by a configured root. */
 export function isInside(root: string, candidate: string): boolean {
+  if (
+    path.sep === "/" &&
+    normalizedAbsolutePosix(root) &&
+    normalizedAbsolutePosix(candidate)
+  )
+    return (
+      root === candidate ||
+      (candidate.startsWith(root) && candidate[root.length] === "/")
+    );
   const relative = path.relative(root, candidate);
   return (
     relative === "" ||
     (!path.isAbsolute(relative) &&
       !relative.startsWith(`..${path.sep}`) &&
       relative !== "..")
+  );
+}
+
+/** Only normalized absolute POSIX paths have equivalent segment-prefix semantics. */
+function normalizedAbsolutePosix(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.startsWith("/") &&
+    !value.endsWith("/") &&
+    !value.includes("//") &&
+    !dotSegment.test(value)
   );
 }
 

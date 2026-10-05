@@ -35,8 +35,24 @@ catalogue skips its historical rebuild too.
 Your authoring code runs during the export, so only grant upload credentials
 to workflows you trust. A pull request from a fork should not receive them.
 
+## What success prints
+
+The counted line of a successful job is, for example,
+`Published Mokly catalogue. 1 file uploaded, 266 unchanged.` or
+`Published Mokly catalogue. 12 files uploaded, 255 unchanged.` It is followed
+by the catalogue address when the service returns one. Plan-archive files count
+as uploaded when their digest matches an ownership entry; every other entry
+counts after its digest's Blob PUT is attempted. Only missing Blobs are sent, so a job publishing an unchanged
+catalogue can send no Blob PUT and still succeed; it still sends the Plan
+archive.
+A rerun for a commit the service already published prints
+`Mokly catalogue already published for this commit.` with the existing address
+and also succeeds.
+
 ## What a failure tells you
 
 The command exits non-zero with a category, so a job log says whether the
-build failed, the history was missing or the service refused the upload. The
-token is never printed, and no response body or header is echoed.
+build failed, the history was missing or the service refused the upload.
+Temporary failures are retried before the job fails, and rerunning the job
+resumes from whatever the service already stored. The token is never printed,
+and no response body or header is echoed.

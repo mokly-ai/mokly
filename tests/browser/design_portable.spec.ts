@@ -5,13 +5,28 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const design = (route: string, viewport: string) =>
-  pathToFileURL(
+const designIds: Readonly<Record<string, string>> = {
+  "browse/views/home": "design-browse-home",
+  "browse/views/screen": "design-browse-screen",
+  "browse/views/details-screen": "design-browse-details-screen",
+  "browse/views/screen.variants/onboarding": "design-browse-tag-onboarding",
+  "browse/views/screen.variants/onboarding-picker":
+    "design-browse-tag-onboarding-picker",
+  "browse/views/use-case": "design-browse-use-case",
+  "review/controls/current": "design-changes-current",
+  "review/outcomes/removed": "design-review-removed",
+  "review/impact/empty": "design-review-empty",
+};
+const design = (route: string, viewport: string) => {
+  const id = designIds[route];
+  if (!id) throw new Error(`Unknown design route: ${route}`);
+  return pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/generated/design/${route}.${viewport}.html`,
+      `examples/basic/generated/screens/${id}.${viewport}.html`,
     ),
   ).href;
+};
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: portable design links work without Browse enhancement`, async ({
@@ -39,15 +54,15 @@ for (const viewport of ["mobile", "desktop"] as const) {
       .getByRole("link", { name: "onboarding", exact: true })
       .click();
     await expect(page).toHaveURL(
-      design("browse/states/tags/onboarding", viewport),
+      design("browse/views/screen.variants/onboarding", viewport),
     );
     await page.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      design("browse/states/tags/onboarding-picker", viewport),
+      design("browse/views/screen.variants/onboarding-picker", viewport),
     );
     await page.getByRole("link", { name: "Close tag picker" }).click();
     await expect(page).toHaveURL(
-      design("browse/states/tags/onboarding", viewport),
+      design("browse/views/screen.variants/onboarding", viewport),
     );
     await page.goto(design("browse/views/use-case", viewport));
     await page.locator(".flow-step-link").nth(1).click();

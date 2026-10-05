@@ -3,18 +3,16 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { pathToFileURL } from "node:url";
 
 import {
   loadBrowserClientModules,
   loadBrowserClientModulesFrom,
 } from "../dist/server/client_modules.js";
-
-type BrowserGraphModule = {
-  inspectBrowserGraph(): number;
-  inspectDeliveredBrowserGraph(modules: ReadonlyMap<string, Buffer>): number;
-  sourceImportSpecifiers(code: string, filename?: string): string[];
-};
+import { inspectBrowserGraph } from "../scripts/package/browser_graph.mjs";
+import {
+  inspectDeliveredBrowserGraph,
+  sourceImportSpecifiers,
+} from "../scripts/package/browser_graph_analysis.mjs";
 
 test("browser build enumeration reports a missing output directory", (context) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "mokly-browser-modules-"));
@@ -62,17 +60,15 @@ test("browser build enumeration rejects unexpected output files", (context) => {
   );
 });
 
-test("delivered browser graph resolves every import", async () => {
+test("delivered browser graph resolves every import", () => {
   assert.ok(
     loadBrowserClientModules().has("appearance-startup.js"),
     "the standalone appearance startup is not delivered",
   );
-  const graph = await loadBrowserGraph();
-  assert.ok(graph.inspectBrowserGraph() > 0);
+  assert.ok(inspectBrowserGraph() > 0);
 });
 
-test("delivered browser graph rejects a missing import target", async () => {
-  const graph = await loadBrowserGraph();
+test("delivered browser graph rejects a missing import target", () => {
   const modules = new Map([
     [
       "/__mokly/client/react-shell.js",
@@ -80,13 +76,12 @@ test("delivered browser graph rejects a missing import target", async () => {
     ],
   ]);
   assert.throws(
-    () => graph.inspectDeliveredBrowserGraph(modules),
+    () => inspectDeliveredBrowserGraph(modules),
     /Missing delivered module: \/__mokly\/client\/react-shell\.js -> \.\/missing\.js/,
   );
 });
 
-test("delivered browser graph confines React to the hydration bundle", async () => {
-  const graph = await loadBrowserGraph();
+test("delivered browser graph confines React to the hydration bundle", () => {
   const modules = new Map([
     [
       "/__mokly/client/react-shell.js",
@@ -98,15 +93,14 @@ test("delivered browser graph confines React to the hydration bundle", async () 
     ],
   ]);
   assert.throws(
-    () => graph.inspectDeliveredBrowserGraph(modules),
+    () => inspectDeliveredBrowserGraph(modules),
     /Unexpected React runtime in \/__mokly\/client\/frame_adapter\.js/,
   );
 });
 
-test("delivered graph parser reads every import form", async () => {
-  const graph = await loadBrowserGraph();
+test("delivered graph parser reads every import form", () => {
   assert.deepEqual(
-    graph.sourceImportSpecifiers(
+    sourceImportSpecifiers(
       'import type { One } from "./one.js";\nimport "./side-effect.js";\nexport { two } from "./two.js";\nvoid import("./dynamic.js");\ntype Five = import("./import-type.js").Five;\n',
     ),
     [
@@ -118,12 +112,6 @@ test("delivered graph parser reads every import form", async () => {
     ],
   );
 });
-
-async function loadBrowserGraph(): Promise<BrowserGraphModule> {
-  return import(
-    pathToFileURL(path.resolve("scripts/package/browser_graph.mjs")).href
-  ) as Promise<BrowserGraphModule>;
-}
 
 function writeBrowserManifest(directory: string, modules: readonly string[]) {
   fs.writeFileSync(

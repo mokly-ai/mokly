@@ -17,6 +17,7 @@ export default defineConfig({
     "examples/basic/src/components/**/*.mockup.{ts,tsx}",
   ],
   mockupsDir: "generated",
+  postcss: "postcss.config.mjs",
   moduleResolution: {
     aliases: { "react-native": "react-native-web" },
     conditions: ["react-native", "import", "module", "default"],
@@ -53,7 +54,7 @@ export default defineConfig({
   },
   stylesheets: [
     {
-      match: "design/library/**",
+      match: "components/design-ui-*.html",
       stylesheets: withLibraryStyles(designBaseStyles, [
         ...componentLayoutStyles,
         "design-component-controls.css",
@@ -61,32 +62,44 @@ export default defineConfig({
       ]),
     },
     {
-      match: "design/components/controls/**",
+      match: "screens/design-component-controls*.html",
       stylesheets: withLibraryStyles(designBaseStyles, [
         ...componentLayoutStyles,
         "design-component-controls.css",
       ]),
     },
     {
-      match: "design/components/**",
+      match: "screens/design-component-*.html",
       stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
     },
     {
-      match: "design/browse/appearance/**",
+      match: "screens/design-appearance-*.html",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css", "design-review.css"],
         workspaceLayoutStyles,
       ),
     },
     {
-      match: "design/review/**",
+      match: "screens/design-changes-*.html",
+      stylesheets: withLibraryStyles(
+        [
+          "design.css",
+          "design-stage.css",
+          "design-review.css",
+          "design-review-scroll.css",
+        ],
+        workspaceLayoutStyles,
+      ),
+    },
+    {
+      match: "screens/design-review-*.html",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css", "design-review.css"],
         workspaceLayoutStyles,
       ),
     },
     {
-      match: "design/**",
+      match: "screens/design-*.html",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css"],
         workspaceLayoutStyles,
@@ -114,6 +127,7 @@ export default defineConfig({
           "examples/basic/generated/design-component-workspace.css",
           "examples/basic/generated/design-component-view.css",
           "examples/basic/generated/design-review.css",
+          "examples/basic/generated/design-review-scroll.css",
           "examples/basic/generated/design-stage.css",
           "examples/basic/generated/design.css",
           "examples/basic/generated/styles.css",

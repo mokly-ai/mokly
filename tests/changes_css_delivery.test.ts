@@ -6,12 +6,11 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { readManifest } from "../dist/registry/manifest.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import {
-  ComponentChangeCache,
-  RepositoryComponentChanges,
-} from "../dist/server/component_changes.js";
+import { ComponentChangeCache } from "../dist/server/component_change_cache.js";
+import { RepositoryComponentChanges } from "../dist/server/component_changes.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
@@ -26,7 +25,7 @@ for (const components of [false, true])
     await fixture.append(".guide { padding: 2px; }");
     const snapshot = await cache.read(1);
     assert.ok(snapshot);
-    assert.ok(!snapshot.changedRoutes?.includes("screens/home.html"));
+    assert.ok(!snapshot.changedIds?.includes("home"));
     const artifact = await fixture.compare();
     const expected = artifact.result.screens.find(
       (entry) => entry.id === "home",
@@ -44,7 +43,7 @@ for (const components of [false, true])
     });
     t.after(() => server.close());
     const response = await fetch(
-      `${server.url}/__mokly/diffs/review.json?route=screens%2Fhome.html`,
+      `${server.url}/__mokly/diffs/review.json?id=home`,
     );
     assert.equal(response.status, 200, await response.clone().text());
     const selected = parseReviewResult(await response.json());
@@ -52,7 +51,14 @@ for (const components of [false, true])
     for (const view of selected.screens[0]!.views) {
       assert.equal(view.state, "unchanged");
       assert.equal(
-        (await fetch(new URL(view.afterPath!, response.url))).status,
+        (
+          await fetch(
+            new URL(
+              `snapshots/after/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+              response.url,
+            ),
+          )
+        ).status,
         200,
       );
     }
@@ -79,9 +85,9 @@ for (const components of [false, true])
     cache.invalidate();
     const updated = await cache.read(2);
     assert.ok(updated);
-    assert.ok(updated?.changedRoutes?.includes("screens/home.html"));
+    assert.ok(updated?.changedIds?.includes("home"));
     const complete = await fixture.compare();
-    if (complete.result.schemaVersion === 3)
+    if (complete.result.schemaVersion === 4)
       assert.deepEqual(updated.result, complete.result);
   });
 
@@ -101,7 +107,7 @@ for (const components of [false, true])
       assert.equal(Boolean(view.excludedResources), view.viewport === "mobile");
     }
     assert.deepEqual(home.sharedImpact, ["mockups/shared.css"]);
-    if (result.schemaVersion === 3)
+    if (result.schemaVersion === 4)
       assert.deepEqual(
         result.changes.find((entry) => entry.after?.id === "home")?.reasons,
         home.views.find((view) => view.viewport === "desktop")?.reasons,
@@ -118,5 +124,5 @@ for (const components of [false, true])
         entry.views.every((view) => !view.reasons && !view.excludedResources),
       ),
     );
-    if (result.schemaVersion === 3) assert.deepEqual(result.changes, []);
+    if (result.schemaVersion === 4) assert.deepEqual(result.changes, []);
   });

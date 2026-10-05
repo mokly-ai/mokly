@@ -3,6 +3,7 @@ export interface LocalEvidenceExpectation {
   readonly runtime: string;
   readonly unitFiles: readonly string[];
   readonly browserTests: readonly { readonly id: string }[];
+  readonly hydrationTests: readonly { readonly id: string }[];
 }
 
 export function validateLocalReports(

@@ -11,7 +11,7 @@ import type { RunningServer } from "../../dist/server/http_types.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
-import { chooseScheme } from "./workspace_actions.js";
+import { chooseScheme, chooseVariant } from "./workspace_actions.js";
 
 function withSecondControlledComponent(source: string): string {
   const actionStart = source.indexOf("const action = defineComponent");
@@ -22,20 +22,17 @@ function withSecondControlledComponent(source: string): string {
     .slice(actionStart, paneStart)
     .replace("const action =", "const alternate =")
     .replace('id: "action"', 'id: "alternate"')
+    .replaceAll('"action-default"', '"alternate-default"')
+    .replaceAll('"action-disabled"', '"alternate-disabled"')
     .replace('title: "Action"', 'title: "Alternate"')
     .replace(
       'route: "components/action.html"',
       'route: "components/alternate.html"',
     );
-  return `${source.slice(0, paneStart)}${alternate}${source.slice(paneStart)}`
-    .replace(
-      'childIds: ["action", "pane"]',
-      'childIds: ["action", "alternate", "pane"]',
-    )
-    .replace(
-      "action.entry, pane.entry,",
-      "action.entry, alternate.entry, pane.entry,",
-    );
+  return `${source.slice(0, paneStart)}${alternate}${source.slice(paneStart)}`.replace(
+    "action.entries, pane.entries,",
+    "action.entries, alternate.entries, pane.entries,",
+  );
 }
 
 let server: RunningServer;
@@ -60,7 +57,7 @@ test.beforeAll(async () => {
     fixture.git,
     "main",
   );
-  if (compared.result.schemaVersion !== 3)
+  if (compared.result.schemaVersion !== 4)
     throw new Error("Expected component comparison");
   const result = compared.result;
   server = await startCatalogueServer(fixture.config, {
@@ -153,9 +150,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(
       frame.getByRole("button", { name: "Temporary" }),
     ).toBeVisible();
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("disabled");
+    await chooseVariant(page, "Disabled");
     await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
       "Continue",
     );

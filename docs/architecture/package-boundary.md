@@ -7,15 +7,16 @@ owns everything that gives a screen application meaning or appearance. The
 boundary is enforced through peer dependencies, a renderer hook, declarative
 paths, and synthetic tests.
 
-| Mokly owns                              | Consumer owns                    | Configured at the boundary |
-| --------------------------------------- | -------------------------------- | -------------------------- |
-| Registry definitions and validation     | Product screens and fixture data | Source and output roots    |
-| esbuild discovery and one-graph loading | Product component library        | Renderer/module resolution |
-| Static fragments and manifest schema    | Theme/tokens/providers           | Stylesheet rules           |
-| Generated-file ownership and check      | Product CSS/fonts/images         | Document transformer       |
-| Safe routes and catalogue navigation    | Product route semantics          | Additional watch inputs    |
-| Git comparison and Review-ignore rules  | Comparison policy                | Base, output, impact globs |
-| Complete static catalogue export        | Hosting, credentials, deployment | Export output and Git base |
+| Mokly owns                                            | Consumer owns                                 | Configured at the boundary               |
+| ----------------------------------------------------- | --------------------------------------------- | ---------------------------------------- |
+| Registry definitions and validation                   | Product screens and fixture data              | Source and output roots                  |
+| esbuild discovery and one-graph loading               | Product component library                     | Renderer/module resolution               |
+| Static fragments and manifest schema                  | Theme/tokens/providers                        | Stylesheet rules                         |
+| Per-root CSS/asset bundling and PostCSS orchestration | Imported CSS/fonts/images and PostCSS plugins | `postcss` module and CSS `empty` opt-out |
+| Generated-file ownership and check                    | Product CSS/fonts/images                      | Document transformer                     |
+| Safe routes and catalogue navigation                  | Product route semantics                       | Additional watch inputs                  |
+| Git comparison and Review-ignore rules                | Comparison policy                             | Base, output, impact globs               |
+| Complete static catalogue export                      | Hosting, credentials, deployment              | Export output and Git base               |
 
 ## Dependency Direction
 
@@ -35,6 +36,11 @@ Module-resolution configuration is likewise consumer-owned: aliases,
 conditions, package fields, extensions, loaders, and package roots describe the
 consumer component tree. Mokly validates and applies them without supplying
 React Native Web or application-specific defaults.
+The [imported-CSS contract](../protocol/mokly-imported-styles.md) reserves
+`.css`/`.module.css` import handling and `mokly-generated/` ownership for
+Mokly. Consumer files, PostCSS plugins and their dependency/version choices
+remain consumer-owned; Mokly owns their private inventory and byte-safe
+delivery rather than shipping product CSS in its npm package.
 
 ## Registered Components
 
@@ -60,7 +66,7 @@ never imports the CLI, Node built-ins, Git or consumer application code. Its `./
 is explicitly Node-only SSR and is excluded from the browser entry graph.
 
 The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
-the [catalogue v1 projection](../protocol/mokly-catalogue.md), the
+the [catalogue v3 projection](../protocol/mokly-catalogue.md), the
 [React/SSR viewer API](../protocol/mokly-viewer.md) and
 [FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
 documented public artifacts, without private manifest access, deep imports or
@@ -90,11 +96,11 @@ the viewer before the CLI that depends on it.
 ## Complete-Document Boundary
 
 Consumers register complete HTML with `definePage` or nested `page`. A callback
-may reuse an existing render helper, but discovery, comment expansion, route
-aliases, and legacy lint settings are removed. Consumer policy owns source
-allowlists and document-stage rules. A configured complete-document transformer
-remains an explicit, deterministic consumer boundary whose result receives all
-normal validation. Historical v2/v3 support belongs only to Git comparisons.
+may reuse an existing render helper; consumer policy owns source allowlists and
+document-stage rules. A configured complete-document transformer remains an
+explicit deterministic boundary whose result receives normal validation.
+Current and comparison-base manifests both require v7 under the
+[baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
 
 ## Runtime Boundary
 

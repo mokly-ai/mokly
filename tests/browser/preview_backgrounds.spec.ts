@@ -9,8 +9,8 @@ const layouts = [
   '<div class="browser-viewport"><iframe class="mbk-frag"></iframe></div>',
   '<div class="mbk-stage-embed"><iframe class="mbk-frag"></iframe></div>',
   '<div class="mbk-component-canvas"><iframe class="mbk-frag"></iframe></div>',
-  '<div class="mb-pane-doc" data-preview-color-scheme="light"><iframe class="mbk-frag"></iframe></div>',
-  '<div class="mbk-diff-screen" data-diff-component><div class="mb-pane-doc" data-preview-color-scheme="light"><iframe class="mbk-frag"></iframe></div></div>',
+  '<div class="mb-pane-chrome" data-preview-color-scheme="light"><div class="browser-viewport"><div class="mb-viewport"><div class="mb-viewport-box"><div class="mb-pane mb-pane--before"><div class="mb-pane-doc"><iframe class="mbk-frag"></iframe></div></div></div></div></div></div>',
+  '<div class="mbk-diff-screen" data-diff-component><div class="mb-pane-chrome" data-preview-color-scheme="light"><div class="mb-component-frame"><div class="mb-viewport"><div class="mb-viewport-box"><div class="mb-pane-doc"><iframe class="mbk-frag"></iframe></div></div></div></div></div></div>',
 ];
 
 for (const mode of ["standalone", "embedded"] as const) {
@@ -61,6 +61,8 @@ for (const mode of ["standalone", "embedded"] as const) {
         );
         for (const surface of await surfaces.all())
           await expect(surface).toHaveCSS("background-color", background);
+        for (const viewport of await page.locator(".mb-viewport").all())
+          await expect(viewport).toHaveCSS("color-scheme", scheme);
       }
     }
   });

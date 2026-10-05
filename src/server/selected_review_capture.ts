@@ -1,5 +1,5 @@
 /** Parse and capture one selection without owning its generation lifetime. */
-import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+import { isEntryId } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
@@ -45,28 +45,22 @@ export interface SelectedCapture {
 }
 
 export function parseSelectedRequest(url: URL): SelectedRequest | undefined {
+  if (url.searchParams.has("route") || url.searchParams.has("variant"))
+    return undefined;
   const pages = url.searchParams.getAll("page");
-  const routes = url.searchParams.getAll("route");
-  const variants = url.searchParams.getAll("variant");
-  if (pages.length === 1 && routes.length === 0 && variants.length === 0) {
-    const route = pages[0]!;
-    return isSafeCatalogueRoute(route)
-      ? { kind: "page", selection: { kind: "page", route } }
+  const ids = url.searchParams.getAll("id");
+  if (pages.length === 1 && ids.length === 0) {
+    const id = pages[0]!;
+    return isEntryId(id)
+      ? { kind: "page", selection: { kind: "page", id } }
       : undefined;
   }
-  if (pages.length > 0 || routes.length !== 1 || variants.length > 1)
-    return undefined;
-  const route = routes[0]!;
-  const variantId = variants[0];
-  if (
-    !isSafeCatalogueRoute(route) ||
-    (variantId !== undefined &&
-      !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(variantId))
-  )
-    return undefined;
+  if (pages.length > 0 || ids.length !== 1) return undefined;
+  const id = ids[0]!;
+  if (!isEntryId(id)) return undefined;
   return {
     kind: "comparison",
-    selection: { route, ...(variantId !== undefined ? { variantId } : {}) },
+    selection: { id },
   };
 }
 
@@ -74,12 +68,7 @@ export function selectedRequestKey(
   epoch: number,
   request: SelectedRequest,
 ): string {
-  return JSON.stringify([
-    epoch,
-    request.kind,
-    request.selection.route,
-    request.kind === "comparison" ? request.selection.variantId : undefined,
-  ]);
+  return JSON.stringify([epoch, request.kind, request.selection.id]);
 }
 
 export function prepareSelectedCapture(
@@ -97,7 +86,7 @@ export function prepareSelectedCapture(
         signal,
       );
       if (
-        artifact.preview.route !== request.selection.route ||
+        artifact.preview.id !== request.selection.id ||
         artifact.preview.baseCommit !== source.baseCommit ||
         artifact.preview.baseRef !== source.baseRef
       )

@@ -15,7 +15,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -42,62 +42,43 @@ test("selection normalizes mixed tag terms without mutating host values", () => 
   );
 });
 
-test("selection validates saved variants without guessing another entry", () => {
-  const component = fixture.components[0]!;
-  const variantId = component.variants[0]!.id;
+test("selection addresses a component variant as an ordinary entry", () => {
+  const variant = fixture.components.find((entry) => "variantOf" in entry)!;
   const selected = normalizeSelection(fixture, {
     ...defaultSelection,
-    screenId: component.id,
-    variantId,
+    screenId: variant.id,
   });
-  assert.equal(selected.variantId, variantId);
-  assert.throws(() =>
-    normalizeSelection(fixture, {
-      ...selected,
-      variantId: "missing-variant",
-    }),
-  );
-  assert.throws(() =>
-    normalizeSelection(fixture, {
-      ...defaultSelection,
-      screenId: fixture.screens[0]!.id,
-      variantId,
-    }),
-  );
+  assert.equal(selected.screenId, variant.id);
 });
 
-test("screen changes drop omitted variants while explicit variants round trip", () => {
-  const [component] = fixture.components;
+test("component parent and variant identities round trip through selection", () => {
+  const component = fixture.components.find(
+    (entry) => !("variantOf" in entry),
+  )!;
+  const variant = fixture.components.find((entry) => "variantOf" in entry)!;
   const current = normalizeSelection(fixture, {
     ...defaultSelection,
-    screenId: component!.id,
-    variantId: component!.variants[0]!.id,
+    screenId: component.id,
   });
-  const screen = mergeSelection(fixture, current, {
-    screenId: fixture.screens[0]!.id,
+  const selectedVariant = mergeSelection(fixture, current, {
+    screenId: variant.id,
   });
-  assert.equal(screen.variantId, undefined);
+  assert.equal(selectedVariant.screenId, variant.id);
   assert.equal(
-    mergeSelection(fixture, screen, {
-      screenId: component!.id,
-      variantId: component!.variants[0]!.id,
-    }).variantId,
-    component!.variants[0]!.id,
+    mergeSelection(fixture, selectedVariant, { screenId: component.id })
+      .screenId,
+    component.id,
   );
 });
 
-test("variant identity participates in equality and survives reveal", () => {
-  const component = fixture.components[0]!;
+test("variant entry identity participates in equality and survives reveal", () => {
+  const variant = fixture.components.find((entry) => "variantOf" in entry)!;
   const selected = normalizeSelection(fixture, {
     ...defaultSelection,
-    screenId: component.id,
-    variantId: component.variants[0]!.id,
+    screenId: variant.id,
     search: "does-not-match",
   });
-  assert.equal(
-    sameSelection(selected, { ...selected, variantId: undefined }),
-    false,
-  );
+  assert.equal(sameSelection(selected, { ...selected, screenId: null }), false);
   assert.deepEqual(revealSelection(fixture, selected), {
     ...selected,
     search: "",
@@ -111,6 +92,7 @@ for (const [field, value] of Object.entries({
   colorScheme: "system",
   search: null,
   tags: ["two words"],
+  variantId: "action-default",
   unexpected: true,
 }))
   test(`invalid ${field} selection is rejected`, () =>
