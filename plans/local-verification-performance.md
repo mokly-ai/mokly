@@ -1,11 +1,11 @@
 # Local Verification Performance
 
 Status: Active. [PR #136](https://github.com/mokly-ai/mokly/pull/136) is open.
-The first main integration passed its checks and review. Its snapshot
-file/folder-transition finding remains for the user's decision. The next main
-integration is in progress. The user approved fixing the cold-preview failure
-before the final checks and push. Created 2026-09-23 at the user's request. The
-[CI Performance](./ci-performance.md) plan owns the delivered hosted fan-out.
+The path-identity main integration is verified, pushed, and reviewed. The
+snapshot file/folder finding and a CI timeout-documentation finding remain for
+the user's decision in the [integration review](../docs/reviews/local-verification-path-identity-integration.md).
+Created 2026-09-23 at the user's request. The [CI Performance](./ci-performance.md)
+plan owns the delivered hosted fan-out. This plan closes when PR #136 merges.
 
 ## Outcome And Boundaries
 
@@ -272,6 +272,8 @@ contains the impact, solution options, and recommendation.
 
 ## Milestone 6: Integrate Path Identity Main Changes
 
+Status: completed.
+
 Summary: merge `origin/main` at `781da7ae` from source tip `e53dd431`.
 Preserve file-path identity, Markdown documents, lock-release fixes, and the
 complete local verification runner. Record each conflict decision in PR #136.
@@ -292,11 +294,15 @@ complete local verification runner. Record each conflict decision in PR #136.
 - [x] Cover cold HTML and stylesheet waits in the shared browser helpers.
       Use the documented 30-second resource-load budget for frame-source checks;
       keep other assertions and whole-test deadlines unchanged.
-- [ ] Run focused tests, builds, and the complete `cargo xtask check` gate on
+- [x] Run focused tests, builds, and the complete `cargo xtask check` gate on
       the resolved merge tree. Record test counts and timing.
-- [ ] Inspect main-relative deletions, run `git add -A`, commit with a
+- [x] Inspect main-relative deletions, run `git add -A`, commit with a
       Conventional Commit, check the two merge parents and every remerge-diff
       path, update PR #136 with the integration decisions, and push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete diff against `origin/main`. Report findings without
       changing the implementation.
+
+The [integration record](../docs/reviews/local-verification-path-identity-integration.md)
+records merge `f7ace878`, the exact tested tree, all 5,364 passing tests in
+51m21.661s, and the two review findings left for the user's decision.
