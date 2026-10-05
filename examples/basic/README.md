@@ -78,6 +78,10 @@ shell's own typography, and `design/changes/outcomes/moved` shows `billing` move
 Details, and the Overlay comparison. The `design/browse/index-entries/**`
 states list Profile's variant and members under its row, keep the unmodified
 row as an undotted Changes container, and open its first changed member. The
+`design/browse/variants/changed-views` state shows Welcome without a list
+button because Changes keeps no variant row. Filtered lists show a button
+only when they have a matching variant or folder member.
+The
 [depicted catalogue](../../docs/protocol/mokly-shell-design-catalogue.md)
 lists its folders, paths, and transitions.
 

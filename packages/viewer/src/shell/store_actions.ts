@@ -96,12 +96,11 @@ export function shellStore(input: StoreActionsInput): ShellStore {
     revealFolder(section, path) {
       const reveal = folderRevealPath(input.sections, section, path);
       if (!reveal) return;
+      const before = input.stateRef.current.selection;
+      const target = folderRevealSelection(reveal.node, before, input.context);
+      if (!target) return;
       if (input.embedded) {
-        const before = input.stateRef.current.selection;
-        const proposal = folderRevealProposal(
-          before,
-          folderRevealSelection(reveal.node, before, input.context),
-        );
+        const proposal = folderRevealProposal(before, target);
         if (proposal) input.propose(proposal.selection, proposal.rawQuery);
       }
       const drawer = navigationDrawerShown();
@@ -113,6 +112,7 @@ export function shellStore(input: StoreActionsInput): ShellStore {
               current.selection,
               input.context,
             );
+        if (!selection) return current;
         const filtered =
           selection === current.selection
             ? current

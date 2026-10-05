@@ -80,13 +80,13 @@ Tags: mockup
 Make the approved mockups follow the list state of item 5: a list with no
 visible row has no button.
 
-- [ ] In `examples/basic/specs/design/parts/variant_nav_data.ts`, remove the
+- [x] In `examples/basic/specs/design/parts/variant_nav_data.ts`, remove the
       closed "Show variants of Welcome" button from the
       `design/browse/variants/changed-views` state, because Changes shows no
       Welcome variant. Update `tests/design_variant_changes.test.ts`.
-- [ ] Check every other filtered-state mockup for a list button whose list
+- [x] Check every other filtered-state mockup for a list button whose list
       has no visible row, and correct each one in both variants.
-- [ ] Run `npm run build`, `npm run example:build` and
+- [x] Run `npm run build`, `npm run example:build` and
       `npm run example:check`, run the design tests, and smoke-test the
       changed pages at mobile and desktop widths through `npm run dev`.
 
@@ -204,14 +204,17 @@ Tags: ui
 Make list buttons and folder crumbs follow one visible-row rule (items 5
 and 9).
 
-- [ ] A list is open only when its saved choice is open and it has a visible
+- [x] A list is open only when its saved choice is open and it has a visible
       row in the active selection. A list without a visible row has no
       button. Collapse all closes lists in every filter state.
-- [ ] A folder crumb is a reveal only when All without search shows its row;
+- [x] A folder crumb is a reveal only when All without search shows its row;
       otherwise it is plain text. A reveal that no filter change can complete
       ends at once.
-- [ ] Add unit tests and browser tests under All, search and Changes.
-- [ ] In `docs/guides/catalogue/browse.md`, replace "When that folder is
+- [x] Add unit tests and browser tests under All, search and Changes.
+- [x] Preserve saved folder and list values during the browser preference
+      handoff, while keeping lists without visible rows closed. Test hidden
+      folders and lists through hydration.
+- [x] In `docs/guides/catalogue/browse.md`, replace "When that folder is
       hidden, or sits inside a hidden folder, the breadcrumb is plain text
       instead." with "When All shows no row for that folder, because it is
       hidden, sits inside a hidden folder, or holds only hidden folders, the
@@ -219,9 +222,9 @@ and 9).
       everything else.", add "A list you close while you search or view
       Changes stays closed, and a parent shows no chevron when its list has
       nothing to show."
-- [ ] Update `packages/viewer/src/shell/README.md` for the crumb and list
+- [x] Update `packages/viewer/src/shell/README.md` for the crumb and list
       rules.
-- [ ] Run the related tests, and smoke-test the shell in a browser.
+- [x] Run the related tests, and smoke-test the shell in a browser.
 
 ## Milestone 7: Comparison mode lifetime
 
@@ -229,17 +232,20 @@ Tags: ui
 
 Keep the selected comparison mode until a listed reset event (item 6).
 
-- [ ] Remove the evidence revision from the mode owner. Adopting a newer
+- [x] Remove the evidence revision from the mode owner. Adopting a newer
       evidence revision renews only a loaded live comparison.
-- [ ] A view or sibling without changes shows Current, keeps the selected
+- [x] A view or sibling without changes shows Current, keeps the selected
       mode, and the next eligible view or sibling applies it. A live update
       resets to Current.
 - [ ] Use `reviewSnapshotViewPath` in the shell comparison selection.
-- [ ] Add a Serve test that opens a newly rendered entry without a warm-up
+      The orchestrator completes this item after the milestone branches merge.
+- [x] Wait for the resolved requested view before adopting the initial mode.
+      Test a Dark URL whose hydration presentation first describes Light.
+- [x] Add a Serve test that opens a newly rendered entry without a warm-up
       step. Remove the warm-up step or correct its comment.
-- [ ] Remove the evidence-revision sentences from
+- [x] Remove the evidence-revision sentences from
       `packages/viewer/src/shell/README.md`.
-- [ ] Run the related unit and browser tests, and smoke-test Serve.
+- [x] Run the related unit and browser tests, and smoke-test Serve.
 
 ## Milestone 8: Test-suite rules
 

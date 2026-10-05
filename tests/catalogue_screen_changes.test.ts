@@ -9,6 +9,7 @@ import { projectCatalogue } from "../src/catalogue/projection.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { attribute, documentElements, elements } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
 import { screenVariantEntrySource } from "./helpers/screen_variant_fixture.js";
 
@@ -135,9 +136,29 @@ test("a committed baseline places a removed variant under its parent row", async
   });
   const html = homePage(catalogue, context);
 
-  assert.match(
+  const [list] = documentElements(
     html,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:home"[^>]*id="mb-nav-variants-specs-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="home\/empty\/index\.html"/,
+    (node) => attribute(node, "data-nav-disclosure") === "variants:home",
+  );
+  assert.ok(list);
+  assert.equal(attribute(list, "hidden"), "");
+  assert.equal(attribute(list, "data-nav-has-rows"), "false");
+  const [row] = elements(
+    list,
+    (node) => attribute(node, "data-route") === "home/empty/index.html",
+  );
+  assert.ok(row);
+  assert.equal(attribute(row, "data-nav-removed"), "");
+  assert.equal(attribute(row, "data-removed-variant"), "");
+  assert.equal(attribute(row, "hidden"), "");
+  assert.deepEqual(
+    documentElements(
+      html,
+      (node) =>
+        node.tagName === "button" &&
+        attribute(node, "aria-controls") === attribute(list, "id"),
+    ),
+    [],
   );
   assert.match(html, /Home empty · Removed<span class="mbk-nav-changed-text"/);
   assert.match(html, /<span class="mbk-nav-filter-count">1<\/span>/);

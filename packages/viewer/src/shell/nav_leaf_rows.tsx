@@ -22,10 +22,11 @@ import {
 } from "./nav_changed.js";
 import { navRowStyle } from "./nav_guides.js";
 import {
+  navDisclosureOpen,
   navLeafVisible,
   navNodeContains,
   navNodeVisible,
-  navigationFiltering,
+  UNFILTERED_SELECTION,
   variantDisclosureKey,
 } from "./nav_model.js";
 import { navRowPresentation } from "./nav_moves.js";
@@ -144,11 +145,9 @@ export function LeafRow(props: {
   const listId = useShellIdentifier(
     `mb-nav-variants-${props.sectionId}-${parentId ?? "unknown"}`,
   );
-  const leafVisible = store
-    ? navLeafVisible(props.node, store.state.selection, store.context)
-    : !props.node.removedPage &&
-      !props.node.removedVariant &&
-      !props.node.hidden;
+  const selection = store?.state.selection ?? UNFILTERED_SELECTION;
+  const context = store?.context ?? props.context;
+  const leafVisible = navLeafVisible(props.node, selection, context);
   if ((variants.length === 0 && members.length === 0) || !parentId) {
     return (
       <NavRowLink
@@ -160,22 +159,16 @@ export function LeafRow(props: {
     );
   }
   const key = variantDisclosureKey(parentId);
-  const filtering = store ? navigationFiltering(store.state.selection) : false;
-  const parentVisible = store
-    ? navNodeVisible(props.node, store.state.selection, store.context)
-    : !props.node.hidden;
-  const listMatches = store
-    ? variants.some((variant) =>
-        navLeafVisible(variant, store.state.selection, store.context),
-      ) ||
-      members.some((member) =>
-        navNodeVisible(member, store.state.selection, store.context),
-      )
-    : true;
+  const parentVisible = navNodeVisible(props.node, selection, context);
+  const listMatches =
+    variants.some((variant) => navLeafVisible(variant, selection, context)) ||
+    members.some((member) => navNodeVisible(member, selection, context));
   const active = navNodeContains(props.node, props.context.activeId);
-  const open = filtering
-    ? listMatches
-    : (store?.state.disclosures[key] ?? active);
+  const open = navDisclosureOpen(
+    store?.state.disclosures[key],
+    active,
+    listMatches,
+  );
   const noun = members.length > 0 ? "contents" : "variants";
   const link = (
     <NavRowLink context={props.context} depth={props.depth} node={props.node} />
@@ -184,22 +177,26 @@ export function LeafRow(props: {
     <>
       <div className="mbk-nav-leaf" hidden={!parentVisible}>
         {link}
-        <button
-          aria-controls={listId}
-          aria-expanded={open ? "true" : "false"}
-          aria-label={`${open ? "Hide" : "Show"} ${noun} of ${props.node.title}`}
-          className="mbk-nav-variants-toggle"
-          data-nav-variants-label={props.node.title}
-          data-nav-variants-noun={noun}
-          data-nav-variants-toggle={listId}
-          onClick={() => store?.setDisclosure(key, !open)}
-          type="button"
-        >
-          <ChevronIcon size={16} />
-        </button>
+        {listMatches ? (
+          <button
+            aria-controls={listId}
+            aria-expanded={open ? "true" : "false"}
+            aria-label={`${open ? "Hide" : "Show"} ${noun} of ${props.node.title}`}
+            className="mbk-nav-variants-toggle"
+            data-nav-variants-label={props.node.title}
+            data-nav-variants-noun={noun}
+            data-nav-variants-toggle={listId}
+            onClick={() => store?.setDisclosure(key, !open)}
+            type="button"
+          >
+            <ChevronIcon size={16} />
+          </button>
+        ) : null}
       </div>
       <div
         className="mbk-nav-variants"
+        data-nav-has-rows={String(listMatches)}
+        data-nav-saved-open={String(store?.state.disclosures[key] ?? active)}
         data-filter-open={
           store?.state.filterBaseline
             ? store.state.filterBaseline[key]

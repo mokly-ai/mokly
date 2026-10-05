@@ -1,71 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
-import { catalogueNavSections } from "../src/shell/nav_model.js";
-import { shellStore } from "../src/shell/store_actions.js";
 import { withFilterSelection } from "../src/shell/store_filters.js";
-import type { ShellState } from "../src/shell/store_state.js";
-import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 
 import { baseModel, initialState } from "./disclosure_evidence_fixture.js";
-
-/** A standalone or embedded store over the public fixture with fake storage. */
-function harness(
-  model: CatalogueReadModel,
-  initial: ShellState,
-  options: { embedded?: boolean; changedEntries?: readonly string[] } = {},
-) {
-  const catalogue = viewerCatalogue(model);
-  let state = initial;
-  const stateRef = { current: state };
-  const proposals: unknown[] = [];
-  const store = shellStore({
-    catalogue,
-    context: {
-      ...viewerContext(model, state.selection),
-      changedEntries: options.changedEntries ?? [],
-      changesStatus: "ready",
-    },
-    embedded: options.embedded ?? false,
-    interactive: true,
-    navigation: {
-      navigateFrame() {},
-      onShellClick() {},
-      onShellKeyDown() {},
-      openFrame() {},
-    },
-    propose(selection, rawQuery) {
-      proposals.push([selection, rawQuery]);
-    },
-    sections: catalogueNavSections(catalogue),
-    setState(action) {
-      state = typeof action === "function" ? action(state) : action;
-      stateRef.current = state;
-    },
-    state,
-    stateRef,
-  });
-  return { proposals, state: () => state, store };
-}
-
-function fakeStorage(context: test.TestContext): Map<string, string> {
-  const saved = new Map<string, string>();
-  const previous = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
-  Object.defineProperty(globalThis, "localStorage", {
-    configurable: true,
-    value: {
-      getItem: (key: string) => saved.get(key) ?? null,
-      removeItem: (key: string) => saved.delete(key),
-      setItem: (key: string, value: string) => saved.set(key, value),
-    },
-  });
-  context.after(() => {
-    if (previous) Object.defineProperty(globalThis, "localStorage", previous);
-    else Reflect.deleteProperty(globalThis, "localStorage");
-  });
-  return saved;
-}
+import { fakeStorage, harness } from "./navigation_store_fixture.js";
 
 test("revealFolder opens and focuses a folder, saving v4 without touching earlier keys", (context) => {
   const saved = fakeStorage(context);
@@ -190,3 +129,51 @@ test("revealing an unknown folder changes nothing", (context) => {
   store.revealFolder("components", "product/browse");
   assert.equal(state(), initial);
 });
+
+for (const embedded of [false, true]) {
+  test(`${embedded ? "embedded" : "standalone"}: an impossible reveal keeps filters, drawer, and disclosures`, (context) => {
+    const saved = fakeStorage(context);
+    const previous = Object.getOwnPropertyDescriptor(globalThis, "window");
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: { matchMedia: () => ({ matches: true }) },
+    });
+    context.after(() => {
+      if (previous) Object.defineProperty(globalThis, "window", previous);
+      else Reflect.deleteProperty(globalThis, "window");
+    });
+    const model = baseModel();
+    const hiddenTree = model.tree.map((node) =>
+      node.kind === "folder" && node.path === "product"
+        ? {
+            ...node,
+            children: node.children.map((child) =>
+              child.path === "product/browse"
+                ? { ...child, hidden: true as const }
+                : child,
+            ),
+          }
+        : node,
+    );
+    const hidden = { ...model, tree: hiddenTree };
+    const initial = initialState(hidden, "/");
+    for (const filters of [
+      {},
+      { search: "zzz", tags: ["forms"] },
+      { view: "changes" as const, search: "zzz" },
+    ]) {
+      const filtered = withFilterSelection(initial, {
+        ...initial.selection,
+        ...filters,
+      });
+      const { proposals, state, store } = harness(hidden, filtered, {
+        embedded,
+      });
+      store.revealFolder("specs", "product/browse");
+      assert.equal(state(), filtered);
+      assert.equal(state().revealedFolder, undefined);
+      assert.deepEqual(proposals, []);
+      assert.equal(saved.size, 0);
+    }
+  });
+}

@@ -25,6 +25,7 @@ import {
   attribute,
   documentElements,
   documentText,
+  elements,
   textContent,
 } from "./helpers/html.js";
 import { screenVariantEntrySource } from "./helpers/screen_variant_fixture.js";
@@ -198,10 +199,21 @@ test("review export retains a removed variant route and parent context", async (
   assert.match(documentText(removed), /Showing previous version/);
   assert.match(documentText(removed), /Previous version unavailable/);
   assert.doesNotMatch(documentText(removed), /This screen was removed/);
-  assert.match(
+  const [list] = documentElements(
     removed,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:fixture\/home"[^>]*id="mb-nav-variants-specs-fixture\/home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
+    (node) =>
+      attribute(node, "data-nav-disclosure") === "variants:fixture/home",
   );
+  assert.ok(list);
+  const [row] = elements(
+    list,
+    (node) => attribute(node, "data-entry-id") === "fixture/home/empty",
+  );
+  assert.ok(row);
+  assert.equal(attribute(row, "data-nav-removed"), "");
+  assert.equal(attribute(row, "data-removed-variant"), "");
+  assert.equal(attribute(list, "data-nav-has-rows"), "false");
+  assert.equal(attribute(list, "hidden"), "");
   assert.match(removed, /Home empty · Removed/);
   await assert.rejects(fs.access(path.join(fixture.output, "id")));
 

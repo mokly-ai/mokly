@@ -63,12 +63,32 @@ test("a dark-only change marks the views it hides and opens on one", async ({
       "both",
     );
     await expectShownStatus(page, "Changed", true);
+    await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page
+      .getByRole("button", { name: "Side by side", exact: true })
+      .click();
+    await expect(page.locator('[data-diff-mode="side"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
 
     await scheme.selectOption("light");
     await expect(page.locator("body")).toHaveAttribute(
       "data-mokly-color-scheme",
       "light",
     );
+    await expectShownStatus(page, "Unmodified", false);
+
+    await scheme.selectOption("dark");
+    await expectShownStatus(page, "Changed", true);
+    await expect(page.locator('[data-diff-mode="side"]')).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await scheme.selectOption("light");
     await expectShownStatus(page, "Unmodified", false);
 
     expect(await dotStyle(page, SCHEME_DOT)).toEqual({

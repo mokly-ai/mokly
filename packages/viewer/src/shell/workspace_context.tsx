@@ -28,6 +28,8 @@ import {
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 interface ActiveWorkspace extends WorkspaceDataState {
+  /** Whether the resolved requested view has replaced the hydration presentation. */
+  initialModeReady: boolean;
   marks: ViewMarks;
   presentation: WorkspaceHydrationState;
   selection: WorkspaceVariantSelection;
@@ -96,6 +98,7 @@ export function WorkspaceProvider({
     workspace && selection && resolvedView && presentation
       ? {
           ...workspace,
+          initialModeReady: hydration === undefined,
           selection,
           resolvedView,
           presentation,

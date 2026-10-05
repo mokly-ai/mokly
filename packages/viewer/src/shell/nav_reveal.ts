@@ -33,13 +33,14 @@ type NavFilters = Pick<ViewerSelection, "view" | "search" | "tags">;
  * and the Changes filter gives way to All when no changed row lies inside.
  * Constraints that leave the row visible are kept. When the query and the
  * Changes filter hide the row only together, the query is cleared, and All
- * is the last resort.
+ * is the last resort. A row that no allowed filter change can show has no
+ * selection result.
  */
 export function folderRevealSelection(
   node: NavGroupNode,
   selection: ViewerSelection,
   context: ShellContext,
-): ViewerSelection {
+): ViewerSelection | undefined {
   if (navNodeVisible(node, selection, context)) return selection;
   const queryHides = !navNodeVisible(
     node,
@@ -55,9 +56,9 @@ export function folderRevealSelection(
   };
   if (navNodeVisible(node, separate, context)) return separate;
   const cleared = withoutQuery(separate);
-  return navNodeVisible(node, cleared, context)
-    ? cleared
-    : { ...cleared, view: "all" };
+  if (navNodeVisible(node, cleared, context)) return cleared;
+  const all = { ...cleared, view: "all" as const };
+  return navNodeVisible(node, all, context) ? all : undefined;
 }
 
 /**

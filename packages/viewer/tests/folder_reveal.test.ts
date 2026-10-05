@@ -30,9 +30,11 @@ const entries = [
   entry("billing/invoice/history", "screen", "History"),
   entry("billing/invoice/archive/old", "screen", "Old"),
   entry("kit/parts/chip", "component", "Chip"),
+  entry("pruned/secret/plan", "screen", "Plan"),
 ];
 const folders: ManifestFolder[] = [
   { path: "guide/secret", hidden: true, sourcePath: "specs/secret.ts" },
+  { path: "pruned/secret", hidden: true, sourcePath: "specs/pruned.ts" },
 ];
 const hierarchy = analyzeHierarchy(entries, folders).hierarchy;
 const sections = buildNavSections(hierarchy);
@@ -58,6 +60,10 @@ test("folder crumbs link to the folder's own page, reveal plain folders, and kee
     { label: "Secret" },
   ]);
   assert.deepEqual(structuredCrumbTrail(hierarchy, "guide"), []);
+  assert.deepEqual(structuredCrumbTrail(hierarchy, "pruned/secret/plan"), [
+    { label: "Pruned" },
+    { label: "Secret" },
+  ]);
 });
 
 test("crumbs under a screen index use its title and link, and components reveal their own section", () => {
@@ -157,6 +163,20 @@ test("a reveal clears the search when it and Changes hide the folder only togeth
       select({ view: "changes", search: "zzz" }),
       context([]),
     ),
-    select({ view: "all", search: "", tags: [] }),
+    undefined,
   );
+});
+
+test("a reveal that no filter change can complete returns no selection", () => {
+  const pruned = folderRevealPath(sections, "specs", "pruned");
+  assert.ok(pruned);
+  for (const selection of [
+    select({}),
+    select({ search: "zzz", tags: ["forms"] }),
+    select({ view: "changes", search: "zzz" }),
+  ])
+    assert.equal(
+      folderRevealSelection(pruned.node, selection, context([])),
+      undefined,
+    );
 });
