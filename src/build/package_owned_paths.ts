@@ -47,6 +47,7 @@ export function packageOwnedPath(
   directory?: boolean,
   deniedRoot = config.repoRoot,
   roots?: PackageOwnedRoots,
+  projectPath: (candidate: string) => string = projectRealPath,
 ): PackageOwnedReason | undefined {
   const absolute = logicalRepositoryPath(candidate, config.repoRoot);
   if (!isInside(config.repoRoot, absolute)) return "outside";
@@ -101,7 +102,7 @@ export function packageOwnedPath(
   if (lexical && lexical !== "denied") return lexical;
   try {
     const projectedRoots = roots ?? packageOwnedRoots(config);
-    const physical = projectRealPath(absolute);
+    const physical = projectPath(absolute);
     if (!isInside(projectedRoots.repo, physical)) return "outside";
     if (
       isPackageCode(absolute, config.repoRoot, {
@@ -110,6 +111,14 @@ export function packageOwnedPath(
       })
     )
       return "package";
+    if (
+      physical === absolute &&
+      projectedRoots.repo === config.repoRoot &&
+      projectedRoots.mockups === config.mockupsDir &&
+      projectedRoots.review === config.review.outDir &&
+      deniedRoot === config.repoRoot
+    )
+      return lexical;
     const physicalReason = inspect(
       physical,
       projectedRoots.repo,

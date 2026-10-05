@@ -62,8 +62,13 @@ test("package-owned watch rules precede broad consumer rules", async (context) =
   const nestedEntries = path.join(fixture.root, "dist/entries");
   const nestedSources: ResolvedConfig = {
     ...broad,
-    entriesDir: nestedEntries,
-    entryGlobs: ["dist/entries/**/*.mockup.{ts,tsx}"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "dist/entries"),
+        files: ["**/*.mockup.{ts,tsx}"],
+        transparent: [],
+      },
+    ],
     entryModules: [path.join(nestedEntries, "screen.mockup.tsx")],
     renderer: nestedRenderer,
   };
@@ -94,7 +99,7 @@ test(
     const fixture = await createFixture();
     await fs.promises.writeFile(
       fixture.configPath,
-      'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "restart", paths: ["**/*"] }] } };\n',
+      'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "restart", paths: ["**/*"] }] } };\n',
     );
     const config = await loadConfig(fixture.root);
     const supervisor = new CountingSupervisor();
@@ -138,7 +143,7 @@ test(
     await fs.promises.writeFile(publicHtml, "<!doctype html><p>Before</p>\n");
     await fs.promises.writeFile(
       fixture.configPath,
-      'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "reload", paths: ["mockups/static/**"] }] } };\n',
+      'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "reload", paths: ["mockups/static/**"] }] } };\n',
     );
     const config = await loadConfig(fixture.root);
     assert.equal(
@@ -174,7 +179,7 @@ test(
     const fixture = await createFixture();
     await fs.promises.writeFile(
       fixture.configPath,
-      'export default { entries: ["entries/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "restart", paths: ["**/*.txt"] }] } };\n',
+      'export default { roots: [{ dir: "entries", files: ["**/*.mockup.{ts,tsx}"] }], mockupsDir: "mockups", repoRoot: ".", watch: { debounceMs: 0, rules: [{ action: "restart", paths: ["**/*.txt"] }] } };\n',
     );
     const config = await loadConfig(fixture.root);
     const supervisor = new CountingSupervisor();

@@ -39,8 +39,8 @@ import fs from "node:fs";
 import { defineScreen } from "@mokly/mokly";
 const text = fs.readFileSync(new URL("../notes.md", import.meta.url), "utf8");
 export const mockups = [defineScreen({
-  dependencies: [], description: text, desktop: "Desktop", id: "node-only",
-  mobile: "Mobile", relatedDocs: [], route: "screens/node-only.html", title: "Node only"
+  dependencies: [], description: text, desktop: "Desktop", path: "node-only",
+  mobile: "Mobile", relatedDocs: [], title: "Node only"
 })];
 `);
   t.after(() => removeFixture(fixture));
@@ -57,7 +57,11 @@ export const mockups = [defineScreen({
 
   await assert.rejects(
     new EsbuildInteractiveBundleCompiler().compile({
-      config: { ...config, entryModules: graph.entrySources },
+      config: {
+        ...config,
+        ...graph.discovery,
+        entryModules: graph.entrySources,
+      },
       signal: new AbortController().signal,
       sources,
     }),
@@ -81,12 +85,12 @@ test("browser bundle owns consumer peer-resolution diagnostics", async (t) => {
     path.join(root, "entries", "peer.mockup.tsx"),
     `import { defineScreen } from "@mokly/mokly";
 export const mockups = [defineScreen({
-  dependencies: [], description: "Peer", desktop: <main>Peer</main>, id: "peer",
-  mobile: <main>Peer</main>, relatedDocs: [], route: "peer.html", title: "Peer"
+  dependencies: [], description: "Peer", desktop: <main>Peer</main>, path: "peer",
+  mobile: <main>Peer</main>, relatedDocs: [], title: "Peer"
 })];`,
   );
   const config = resolveConfig(
-    { entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." },
+    { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." },
     path.join(root, "mokly.config.ts"),
   );
   const bytes = await fs.readFile(

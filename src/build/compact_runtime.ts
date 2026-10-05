@@ -16,19 +16,19 @@ export function compactRuntime(runtime: ComponentRuntime): ComponentRuntime {
           const { componentViews: _usage, ...metadata } = entry;
           return {
             ...metadata,
-            interactive: interactiveEntry(runtime, entry.id),
+            interactive: interactiveEntry(runtime, entry.path),
           };
         }
         if (entry.kind === "component" && isManifestComponentVariant(entry))
           return {
             ...entry,
-            interactive: interactiveEntry(runtime, entry.id),
+            interactive: interactiveEntry(runtime, entry.path),
             componentViews: [],
           };
         if (entry.kind === "component")
           return {
             ...entry,
-            interactive: interactiveEntry(runtime, entry.id),
+            interactive: interactiveEntry(runtime, entry.path),
           };
         return entry;
       }),

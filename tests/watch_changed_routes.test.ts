@@ -78,7 +78,7 @@ test(
       validEntrySource(),
       {
         extraConfig:
-          'stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }],',
+          'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }],',
       },
       async ({ mockupsDir }) => {
         await fs.promises.writeFile(
@@ -112,10 +112,7 @@ test(
           const html = await (await fetch(url)).text();
           return html.includes('data-changes-status="unavailable"');
         });
-        assert.equal(
-          (await fetch(`${url}/view/screens/home.html`)).status,
-          200,
-        );
+        assert.equal((await fetch(`${url}/view/home/`)).status, 200);
         await fs.promises.writeFile(
           path.join(fixture.mockupsDir, "home.css"),
           "body { color: red; }",

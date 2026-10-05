@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import { catalogueNavigation } from "../examples/basic/entries/design/library/chrome/catalogue-navigation.js";
-import { DUAL_SCHEME_SAMPLES } from "../examples/basic/entries/design/library/metadata.js";
-import { NAV_TREE } from "../examples/basic/entries/design/parts/nav_data.js";
+import { catalogueNavigation } from "../examples/basic/specs/design/library/chrome/catalogue-navigation.js";
+import { DUAL_SCHEME_SAMPLES } from "../examples/basic/specs/design/library/metadata.js";
+import { NAV_TREE } from "../examples/basic/specs/design/parts/nav_data.js";
 import {
+  analyzeHierarchy,
   entryRoute,
   generatedViews,
   viewRoute,
@@ -20,9 +21,7 @@ import { designLibrary } from "./helpers/design_library.js";
 
 test("catalogue navigation's All example matches its in-screen navigation", () => {
   const all = catalogueNavigation.entries.find(
-    (variant) =>
-      "variantOf" in variant &&
-      variant.id === "design-ui-catalogue-navigation-all",
+    (variant) => "variantOf" in variant && variant.slug === "all",
   );
   assert.ok(all);
   if (!all || !("variantOf" in all))
@@ -32,7 +31,7 @@ test("catalogue navigation's All example matches its in-screen navigation", () =
 
 /**
  * `screens.json` is a frozen record proving the shared-library refactor never
- * dropped a screen or changed a route, so an entry may only be removed from it
+ * dropped a screen, so an entry may only be removed from it
  * with the user's recorded approval. `plans/screen-variants-follow-up.md`
  * approves six Welcome variant route moves, while `plans/viewer-dark-mode.md`
  * removes the dark-comparison screen. Other disappearances are regressions,
@@ -42,25 +41,22 @@ test("catalogue navigation's All example matches its in-screen navigation", () =
  * Baseline screens that have since gained a dark render: the canonical screens
  * that absorbed the removed head-band scheme pairs, and the Welcome comparison
  * family, whose members must publish the same schemes so a dark comparison
- * never links into a light document. Their routes and light fragments are
- * unchanged, which is what the baseline records.
+ * never links into a light document. Their file-derived paths are recorded by the inventory.
  */
 const DUAL_SCHEME_SINCE_BASELINE = new Set([
-  "design-browse-screen",
-  "design-browse-details-screen",
-  "design-browse-dark-scheme",
-  "design-browse-light-only",
-  "design-changes-current",
-  "design-changes-overlay",
-  "design-review-changed",
-  "design-review-difference",
+  "design/browse/views/screen",
+  "design/browse/views/details-screen",
+  "design/browse/views/screen/dark-scheme",
+  "design/browse/views/screen/light-only",
+  "design/changes/diff-controls/current",
+  "design/changes/diff-controls/overlay",
+  "design/changes/outcomes/changed",
+  "design/changes/outcomes/difference",
 ]);
 
 test("the shared library preserves every existing design screen and viewport route", async () => {
   const baseline: {
-    id: string;
-    route: string;
-    fragments: Record<string, string>;
+    path: string;
   }[] = JSON.parse(
     await fs.readFile(
       new URL("./fixtures/design-library/screens.json", import.meta.url),
@@ -70,16 +66,18 @@ test("the shared library preserves every existing design screen and viewport rou
   const { manifest } = await designCatalogue;
   assert.equal(baseline.length, 55);
   for (const original of baseline) {
-    const entry = manifest.entries.find((entry) => entry.id === original.id);
-    assert.ok(entry?.kind === "screen", original.id);
-    assert.equal(entryRoute("screen", entry.id), `screens/${entry.id}.html`);
+    const entry = manifest.entries.find(
+      (entry) => entry.path === original.path,
+    );
+    assert.ok(entry?.kind === "screen", original.path);
+    assert.equal(entryRoute(entry.path), `${entry.path}/index.html`);
     assert.deepEqual(
       (["mobile", "desktop"] as const).map((viewport) =>
-        viewRoute("screen", entry.id, viewport, "light"),
+        viewRoute(entry.path, viewport, "light"),
       ),
-      [`screens/${entry.id}.mobile.html`, `screens/${entry.id}.desktop.html`],
+      [`${entry.path}/index.mobile.html`, `${entry.path}/index.desktop.html`],
     );
-    if (!DUAL_SCHEME_SINCE_BASELINE.has(original.id))
+    if (!DUAL_SCHEME_SINCE_BASELINE.has(original.path))
       assert.deepEqual(entry.colorSchemes, ["light"]);
   }
 });
@@ -90,39 +88,49 @@ test("all seventeen shared components have connected pages, controls and saved e
     (entry) =>
       entry.kind === "component" &&
       !("variantOf" in entry) &&
-      entry.id.startsWith("design-ui-"),
+      entry.path.startsWith("design/library/"),
   );
   assert.equal(components.length, 17);
   assert.equal(
-    manifest.entries.some((entry) => entry.id === "design-root"),
+    manifest.entries.some((entry) => entry.path === "design-root"),
     false,
   );
+  const hierarchy = analyzeHierarchy(
+    manifest.entries,
+    manifest.folders,
+  ).hierarchy;
+  const groupTitles = {
+    chrome: "Chrome",
+    controls: "Controls",
+    inspector: "Inspector",
+    preview: "Preview",
+  };
   for (const [group, slug, variants] of designLibrary) {
-    const id = `design-ui-${slug}`;
+    const id = `design/library/${group}/${slug}`;
     const entry = componentParent(manifest, id);
     const saved = componentVariants(manifest, id);
-    assert.equal(entryRoute("component", entry.id), `components/${id}.html`);
+    assert.equal(entryRoute(entry.path), `${id}/index.html`);
     assert.deepEqual(
-      saved.map((variant) => variant.id),
-      variants.map((variant) => `${id}-${variant}`),
+      saved.map((variant) => variant.path),
+      variants.map((variant) => `${id}/${variant}`),
     );
     assert.ok(Object.keys(entry.controls).length > 0, id);
-    const groupTitle = group[0]!.toUpperCase() + group.slice(1);
-    assert.deepEqual(entry.navPath, [
+    assert.deepEqual(hierarchy.ancestorsByPath.get(entry.path), [
       "Design",
       "Shared components",
-      groupTitle,
+      groupTitles[group],
     ]);
     assert.ok(
-      components.filter((component) => component.navPath.at(-1) === groupTitle)
-        .length <= 5,
+      components.filter((component) =>
+        component.path.startsWith(`design/library/${group}/`),
+      ).length <= 5,
     );
     for (const variant of saved) {
       // Only the samples whose own subject is appearance render in both schemes.
       assert.equal(
         !variant.colorSchemes.includes("dark"),
         !DUAL_SCHEME_SAMPLES.has(slug),
-        `${id}/${variant.id}`,
+        `${id}/${variant.path}`,
       );
       const schemes = DUAL_SCHEME_SAMPLES.has(slug) ? 2 : 1;
       assert.deepEqual(

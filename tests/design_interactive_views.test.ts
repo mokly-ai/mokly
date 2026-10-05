@@ -19,13 +19,13 @@ import {
 } from "./helpers/design_interactive.js";
 
 const OWNING = [
-  ["design-interactive-overview", "Static and Live"],
-  ["design-interactive-static", "Preview states"],
-  ["design-interactive-preparing", "Preview states"],
-  ["design-interactive-unavailable", "Preview states"],
-  ["design-interactive-component", "Component workspace"],
-  ["design-interactive-screen", "Component workspace"],
-  ["design-interactive-static-catalogue", "Component workspace"],
+  ["design/interactive/overview", "Static and Live"],
+  ["design/interactive/modes/static", "Preview states"],
+  ["design/interactive/modes/preparing", "Preview states"],
+  ["design/interactive/modes/unavailable", "Preview states"],
+  ["design/interactive/workspace/component", "Component workspace"],
+  ["design/interactive/workspace/screen", "Component workspace"],
+  ["design/interactive/workspace/static-catalogue", "Component workspace"],
 ] as const;
 
 /**
@@ -33,19 +33,24 @@ const OWNING = [
  * component workspace unchanged, so they carry those states' own control.
  */
 const REBUILD_STATUS_CARRIERS = [
-  "design-rebuild-failure",
-  "design-rebuild-details",
-  "design-rebuild-updating",
-  "design-rebuild-failure-updating",
-  "design-rebuild-live-component",
+  "design/rebuild-status/failure",
+  "design/rebuild-status/details",
+  "design/rebuild-status/updating",
+  "design/rebuild-status/failure-updating",
+  "design/rebuild-status/live-component",
 ];
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: the Static and Live gallery owns seven light-only artboards`, async () => {
     for (const [id, folder] of OWNING) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entryRoute("screen", entry.id), `screens/${id}.html`);
-      assert.equal(entry.navPath.at(-1), folder);
+      assert.equal(entryRoute(entry.path), `${id}/index.html`);
+      assert.equal(
+        (await designCatalogue).manifest.folders.find(
+          (item) => item.path === entry.path.split("/").slice(0, -1).join("/"),
+        )?.title,
+        folder,
+      );
       assert.deepEqual(entry.colorSchemes, ["light"]);
       assert.equal(byClass(document, "mbk-shell").length, 1, id);
       assert.equal(
@@ -58,14 +63,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: the preview control names its group and both options`, async () => {
     for (const id of [
-      "design-interactive-overview",
-      "design-interactive-static",
-      "design-interactive-preparing",
-      "design-interactive-unavailable",
-      "design-interactive-component",
-      "design-interactive-screen",
-      "design-browse-screen",
-      "design-component-overview",
+      "design/interactive/overview",
+      "design/interactive/modes/static",
+      "design/interactive/modes/preparing",
+      "design/interactive/modes/unavailable",
+      "design/interactive/workspace/component",
+      "design/interactive/workspace/screen",
+      "design/browse/views/screen",
+      "design/components/overview",
     ]) {
       const { document } = await designDocument(id, viewport);
       const group = previewMode(document);
@@ -83,51 +88,51 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: one segment is selected and the other opens its state`, async () => {
     for (const [id, expected] of [
       [
-        "design-browse-screen",
+        "design/browse/views/screen",
         [
           ["Static", true, undefined],
-          ["Live", false, "design-interactive-overview"],
+          ["Live", false, "design/interactive/overview"],
         ],
       ],
       [
-        "design-interactive-overview",
+        "design/interactive/overview",
         [
-          ["Static", false, "design-interactive-static"],
+          ["Static", false, "design/interactive/modes/static"],
           ["Live", true, undefined],
         ],
       ],
       [
-        "design-interactive-static",
+        "design/interactive/modes/static",
         [
           ["Static", true, undefined],
-          ["Live", false, "design-interactive-preparing"],
+          ["Live", false, "design/interactive/modes/preparing"],
         ],
       ],
       [
-        "design-interactive-preparing",
+        "design/interactive/modes/preparing",
         [
-          ["Static", false, "design-interactive-static"],
+          ["Static", false, "design/interactive/modes/static"],
           ["Live", true, undefined],
         ],
       ],
       [
-        "design-component-overview",
+        "design/components/overview",
         [
           ["Static", true, undefined],
-          ["Live", false, "design-interactive-component"],
+          ["Live", false, "design/interactive/workspace/component"],
         ],
       ],
       [
-        "design-interactive-component",
+        "design/interactive/workspace/component",
         [
-          ["Static", false, "design-component-overview"],
+          ["Static", false, "design/components/overview"],
           ["Live", true, undefined],
         ],
       ],
       [
-        "design-interactive-screen",
+        "design/interactive/workspace/screen",
         [
-          ["Static", false, "design-component-inspection-details"],
+          ["Static", false, "design/components/inspection/inspection-details"],
           ["Live", true, undefined],
         ],
       ],
@@ -141,7 +146,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: an unavailable live preview describes itself without a link`, async () => {
     const { document } = await designDocument(
-      "design-interactive-unavailable",
+      "design/interactive/modes/unavailable",
       viewport,
     );
     const group = previewMode(document);
@@ -169,7 +174,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: preparing waits inside the device frame and keeps Static`, async () => {
     const { document } = await designDocument(
-      "design-interactive-preparing",
+      "design/interactive/modes/preparing",
       viewport,
     );
     const states = byClass(document, "mbk-preview-state");
@@ -192,22 +197,23 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     const group = previewMode(document);
     assert.ok(group);
-    assert.equal(segments(group)[0]?.[2], "design-interactive-static");
+    assert.equal(segments(group)[0]?.[2], "design/interactive/modes/static");
   });
 
   test(`${viewport}: preview mode stays out of every other design artboard`, async () => {
     const { manifest } = await designCatalogue;
     const carriers = new Set([
-      "design-browse-screen",
-      "design-component-overview",
+      "design/browse/views/screen",
+      "design/components/overview",
       ...OWNING.map(([id]) => id),
       ...REBUILD_STATUS_CARRIERS,
     ]);
     for (const entry of manifest.entries) {
-      if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
-      if (carriers.has(entry.id)) continue;
-      const { document } = await designDocument(entry.id, viewport);
-      assert.equal(previewMode(document), undefined, entry.id);
+      if (entry.kind !== "screen" || !entry.path.startsWith("design/"))
+        continue;
+      if (carriers.has(entry.path)) continue;
+      const { document } = await designDocument(entry.path, viewport);
+      assert.equal(previewMode(document), undefined, entry.path);
     }
   });
 }
@@ -215,18 +221,18 @@ for (const viewport of ["mobile", "desktop"] as const) {
 test("the Live preview never announces itself inside the device frame", async () => {
   for (const [id, still, frameClasses] of [
     [
-      "design-interactive-overview",
-      "design-interactive-static",
+      "design/interactive/overview",
+      "design/interactive/modes/static",
       ["phone-screen"],
     ],
     [
-      "design-interactive-component",
-      "design-component-overview",
+      "design/interactive/workspace/component",
+      "design/components/overview",
       ["ce-canvas"],
     ],
     [
-      "design-interactive-screen",
-      "design-component-inspection-details",
+      "design/interactive/workspace/screen",
+      "design/components/inspection/inspection-details",
       ["phone-screen", "browser-viewport"],
     ],
   ] as const)

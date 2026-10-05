@@ -94,8 +94,10 @@ Exports, publication and public catalogue JSON do not include these settings.
 
 ## What it serves
 
-Navigation and local controls are available immediately, and each preview is
-rendered and validated when you ask for it. The complete generated output and
+Every entry answers at `/view/<path>/`, and `/view/<path>` or
+`/view/<path>/index.html` opens the same page. Navigation and local controls
+are available immediately, and each preview is rendered and validated when you
+ask for it. The complete generated output and
 the Git comparison finish in the background while you read, and previews and
 prop edits take priority over that work.
 

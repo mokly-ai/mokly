@@ -34,7 +34,7 @@ for (const consumer of [
     if (consumer === "config") {
       await fs.promises.writeFile(
         fixture.configPath,
-        `import { title } from ${imported}; export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", review: { base: title } };`,
+        `import { title } from ${imported}; export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", review: { base: title } };`,
       );
     } else if (consumer === "entry") {
       await fs.promises.appendFile(
@@ -57,7 +57,7 @@ for (const consumer of [
       await registerFixturePage(fixture, "external", "external.html", page);
       await fs.promises.writeFile(
         fixture.configPath,
-        'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", moduleResolution: { loaders: { ".html": "text" } } };',
+        'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", moduleResolution: { loaders: { ".html": "text" } } };',
       );
     } else {
       const module = path.join(fixture.root, `${consumer}.ts`);
@@ -71,7 +71,7 @@ for (const consumer of [
           : 'compatibility: { transformer: "transformer.ts" }';
       await fs.promises.writeFile(
         fixture.configPath,
-        `export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", ${setting} };`,
+        `export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", ${setting} };`,
       );
     }
     await assert.rejects(
@@ -101,7 +101,11 @@ test("outside installed dependencies remain excluded from authoring inputs", asy
     `\nimport { title } from ${JSON.stringify(dependency)}; mockups[0].title = title;`,
   );
   const graph = await loadConsumerGraph(await loadConfig(fixture.root));
-  assert.equal((graph.definitions[0] as { title: string }).title, "Dependency");
+  assert.equal(
+    (graph.definitions[0] as { definition: { title: string } }).definition
+      .title,
+    "Dependency",
+  );
   assert.deepEqual(graph.sourceFiles, [
     "entries/fixture.mockup.tsx",
     "mokly.config.ts",

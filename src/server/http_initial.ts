@@ -1,6 +1,7 @@
 /** Initial validated catalogue selection for one HTTP server process. */
 
 import type { ResolvedConfig } from "../config/types.js";
+import { includeMovedEntries } from "../review/moves/entries.js";
 
 import {
   catalogueSnapshotForConfig,
@@ -8,6 +9,8 @@ import {
   loadServedCatalogueSnapshot,
   type CatalogueSnapshot,
 } from "./catalogue_snapshot.js";
+import { ComponentChangeCache } from "./component_change_cache.js";
+import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type { ServerOptions } from "./http_types.js";
 import { validateServeOrigins } from "./origin_options.js";
 
@@ -41,4 +44,29 @@ export async function loadInitialCatalogueSnapshot(
     ),
     config,
   );
+}
+
+/** Resolve initial change membership, including accepted moves, before serving. */
+export async function loadInitialChanges(
+  snapshot: CatalogueSnapshot,
+  options: ServerOptions,
+): Promise<{
+  componentChanges: ComponentChangeSnapshot | undefined;
+  changedEntries: readonly string[] | undefined;
+}> {
+  const componentChanges =
+    options.componentChanges ??
+    snapshot.componentChanges ??
+    (options.review && options.componentChangeSource
+      ? await new ComponentChangeCache(options.componentChangeSource).read(
+          options.updateVersion ?? 1,
+        )
+      : undefined);
+  const changedEntries = includeMovedEntries(
+    snapshot.changes?.changedEntries ??
+      options.changedEntries ??
+      componentChanges?.changedEntries,
+    componentChanges?.pairing?.moves,
+  );
+  return { componentChanges, changedEntries };
 }

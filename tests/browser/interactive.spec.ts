@@ -41,7 +41,7 @@ test("Live mounts state and sends MockLink navigation through the frame adapter"
   await frame.locator("#increment").click();
   await expect(count).toHaveText("Saved: 1 items");
   const sourceRoute = serveFixture.livePath.replace(/^\/static\//u, "");
-  const detailsRoute = viewRoute("screen", "details", "mobile", "light");
+  const detailsRoute = viewRoute("details", "mobile", "light");
   await expect(frame.locator("#raw-link")).toHaveAttribute(
     "href",
     path.posix.relative(path.posix.dirname(sourceRoute), detailsRoute),
@@ -118,7 +118,7 @@ test("Live reports a bounded root render error to its generation endpoint", asyn
     body: {
       code: "render-error",
       colorScheme: "light",
-      entryId: "broken",
+      entryPath: "broken",
       entryKind: "screen",
       message: "browser render exploded",
       viewport: "mobile",
@@ -149,7 +149,7 @@ test("Live reports pre-mount failures without replacing static content", async (
     body: {
       code: "render-error",
       colorScheme: "light",
-      entryId: "missing-entry",
+      entryPath: "missing-entry",
       entryKind: "screen",
       message: "Live entry is missing from the browser registry.",
       viewport: "mobile",
@@ -186,7 +186,7 @@ test("Live still warns for an unkeyed dynamic JSX list", async ({ page }) => {
 async function navigationIds(page: Page) {
   return page.evaluate(() =>
     (window as unknown as InteractiveTestWindow).frameEvents.flatMap((event) =>
-      event.type === "navigation" ? [event.navigation.id] : [],
+      event.type === "navigation" ? [event.navigation.screenPath] : [],
     ),
   );
 }

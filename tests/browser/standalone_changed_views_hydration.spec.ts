@@ -11,8 +11,8 @@ import {
 } from "./react_shell_hydration_helpers.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
-const home = "screens/home.html";
-const homeId = "home";
+const home = "fixture/screens/home/index.html";
+const homePath = "fixture/screens/home";
 
 test("restored Dark hydrates the active workspace's changed-view evidence", async ({
   page,
@@ -21,7 +21,7 @@ test("restored Dark hydrates the active workspace's changed-view evidence", asyn
   try {
     fixture.server.publishUpdate({
       kind: "evidence",
-      changedIds: [homeId],
+      changedEntries: [homePath],
       changesStatus: "ready",
       componentChanges: {
         baseline: fixture.compilation.manifest,
@@ -50,14 +50,14 @@ test("Changes navigation respects a reader's Light choice and clears route evide
   try {
     fixture.server.publishUpdate({
       kind: "evidence",
-      changedIds: [homeId],
+      changedEntries: [homePath],
       changesStatus: "ready",
       componentChanges: {
         baseline: fixture.compilation.manifest,
         screenViews: darkOnlyScreenViews(),
       },
     });
-    await page.goto(`${fixture.server.url}/view/screens/details.html`);
+    await page.goto(`${fixture.server.url}/view/fixture/screens/details/`);
     await page.getByLabel("Appearance", { exact: true }).selectOption("light");
     await page.locator('[data-filter="changed"]').click();
     await page.locator(`a[data-nav-row][data-route="${home}"]`).click();
@@ -70,7 +70,7 @@ test("Changes navigation respects a reader's Light choice and clears route evide
     );
     await expectFrameSource(
       page.locator('[data-workspace-frame="mobile"]'),
-      /home\.mobile\.html$/,
+      /home\/index\.mobile\.html$/,
     );
     await expect(
       page.locator('.mbk-appearance [data-view-changed="scheme"]'),

@@ -15,7 +15,7 @@ test("interactive config defaults off and accepts only off or serve", async (t) 
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const input = {
-    entriesDir: "entries",
+    roots: [{ dir: "entries" }],
     mockupsDir: "mockups",
     repoRoot: ".",
   };

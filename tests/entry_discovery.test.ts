@@ -7,7 +7,6 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConsumerGraph } from "../dist/build/load_graph.js";
 import { discoverEntryModules } from "../dist/config/entry_discovery.js";
 import { loadConfig } from "../dist/config/load.js";
-import { resolveConfig } from "../dist/config/validate.js";
 
 import {
   createFixture,
@@ -15,10 +14,10 @@ import {
   type TestFixture,
 } from "./helpers/fixture.js";
 
-const screen = (id: string, route: string) =>
+const screen = (id: string, _route: string) =>
   `import { defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCaseIds: [] };
-export const mockups = [defineScreen({ ...metadata, description: ${JSON.stringify(id)}, desktop: ${JSON.stringify(id)}, id: ${JSON.stringify(id)}, mobile: ${JSON.stringify(id)}, route: ${JSON.stringify(route)}, title: ${JSON.stringify(id)} })];
+const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCasePaths: [] };
+export const mockups = [defineScreen({ ...metadata, description: ${JSON.stringify(id)}, desktop: ${JSON.stringify(id)}, path: ${JSON.stringify(id)}, mobile: ${JSON.stringify(id)}, title: ${JSON.stringify(id)} })];
 `;
 
 async function writeConfig(fixture: TestFixture, body: string): Promise<void> {
@@ -39,45 +38,27 @@ async function addModule(
   return target;
 }
 
-test("entriesDir is shorthand for one glob and resolves the same modules", async (t) => {
+test("root defaults and explicit files resolve the same modules", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  const shorthand = await loadConfig(fixture.root);
-  assert.deepEqual(shorthand.entryGlobs, ["entries/**/*.mockup.{ts,tsx}"]);
-  assert.equal(shorthand.entriesDir, fixture.entriesDir);
-  await writeConfig(fixture, 'entries: ["entries/**/*.mockup.{ts,tsx}"]');
+  const defaults = await loadConfig(fixture.root);
+  assert.deepEqual(defaults.roots[0]?.files, [
+    "**/*.mockup.{ts,tsx}",
+    "**/*.md",
+  ]);
+  await writeConfig(
+    fixture,
+    'roots: [{dir: "entries", files: ["**/*.mockup.{ts,tsx}"]}]',
+  );
   const explicit = await loadConfig(fixture.root);
-  assert.deepEqual(explicit.entryGlobs, shorthand.entryGlobs);
-  assert.equal(explicit.entriesDir, undefined);
   assert.deepEqual(
     discoverEntryModules(explicit),
-    discoverEntryModules(shorthand),
+    discoverEntryModules(defaults),
   );
-  const first = (await compileCatalogue(shorthand)).manifest;
-  const second = (await compileCatalogue(explicit)).manifest;
-  assert.deepEqual(second, first);
-});
-
-test("config requires exactly one of entries and entriesDir", async (t) => {
-  const fixture = await createFixture();
-  t.after(() => removeFixture(fixture));
-  for (const [label, input] of [
-    ["both", { entries: ["entries/**"], entriesDir: "entries" }],
-    ["neither", {}],
-    ["empty", { entries: [] }],
-    ["duplicate", { entries: ["entries/**", "entries/**"] }],
-    ["escaping", { entries: ["../outside/**"] }],
-    ["absolute", { entries: ["/entries/**"] }],
-    ["cache", { entries: [".mokly-cache/**/*.mockup.tsx"] }],
-    ["non-string", { entries: [1] }],
-  ] as const) {
-    assert.throws(
-      () =>
-        resolveConfig({ ...input, mockupsDir: "mockups" }, fixture.configPath),
-      { code: "config-invalid" },
-      label,
-    );
-  }
+  assert.deepEqual(
+    (await compileCatalogue(explicit)).manifest,
+    (await compileCatalogue(defaults)).manifest,
+  );
 });
 
 test("a glob makes every matched file an entry module", async (t) => {
@@ -88,22 +69,23 @@ test("a glob makes every matched file an entry module", async (t) => {
     "src/helper.ts",
     "export const value = 1;\n",
   );
-  await writeConfig(fixture, 'entries: ["src/**/*.ts"]');
+  await writeConfig(fixture, 'roots: [{ dir: "src", files: ["**/*.ts"] }]');
   const config = await loadConfig(fixture.root);
   assert.deepEqual(config.entryModules, [helper]);
   await assert.rejects(compileCatalogue(config), {
     code: "build-invalid",
-    message: /\[empty-registry\].*no registry definitions were exported/s,
+    message: /\[empty-module\] src\/helper.ts exports no Mokly definition/,
   });
 });
 
 test("a glob matching no module is a config error", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  await writeConfig(fixture, 'entries: ["src/**/*.ts"]');
+  await fs.promises.mkdir(path.join(fixture.root, "src"));
+  await writeConfig(fixture, 'roots: [{ dir: "src", files: ["**/*.ts"] }]');
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message: /entries glob matches no module: src\/\*\*\/\*\.ts/,
+    message: /root matches no file: src/,
   });
 });
 
@@ -115,7 +97,7 @@ test("a resolved config carries its entry set and compilation refreshes it", asy
   const created = await addModule(
     fixture,
     "entries/second.mockup.tsx",
-    screen("second", "screens/second.html"),
+    screen("second", "second/index.html"),
   );
   const graph = await loadConsumerGraph(config);
   assert.deepEqual(graph.entrySources, [fixture.entryPath, created]);
@@ -128,12 +110,12 @@ test("config loading rejects review output below a resolved entry directory", as
   await addModule(
     fixture,
     "src/components/button/button.mockup.tsx",
-    screen("button", "components/button.html"),
+    screen("button", "button/index.html"),
   );
   await fs.promises.writeFile(
     fixture.configPath,
     `export default {
-  entries: ["src/**/*.mockup.{ts,tsx}"],
+  roots: [{ dir: "src", files: ["**/*.mockup.{ts,tsx}"] }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: { outDir: "src/components/button/.review" }
@@ -166,19 +148,27 @@ test("discovery unions globs, ignores order, and sorts by repository path", asyn
     path.join(fixture.root, "src/widgets/alpha/alpha.mockup.ts"),
     path.join(fixture.root, "src/widgets/zeta/zeta.mockup.tsx"),
   ];
-  for (const globs of [
-    '["entries/**/*.mockup.{ts,tsx}", "src/**/*.mockup.{ts,tsx}"]',
-    '["src/**/*.mockup.{ts,tsx}", "entries/**/*.mockup.{ts,tsx}"]',
-    '["src/widgets/zeta/*.mockup.tsx", "src/widgets/alpha/*.mockup.{ts,tsx}", "entries/**"]',
+  for (const roots of [
+    [{ dir: "entries" }, { dir: "src" }],
+    [{ dir: "src" }, { dir: "entries" }],
+    [
+      { dir: "src/widgets/zeta", files: ["*.mockup.tsx"] },
+      { dir: "src/widgets/alpha", files: ["*.mockup.{ts,tsx}"] },
+      { dir: "entries", files: ["**"] },
+    ],
   ]) {
-    await writeConfig(fixture, `entries: ${globs}`);
+    await writeConfig(fixture, `roots: ${JSON.stringify(roots)}`);
     const config = await loadConfig(fixture.root);
-    assert.deepEqual(discoverEntryModules(config), expected, globs);
+    assert.deepEqual(
+      discoverEntryModules(config),
+      expected,
+      JSON.stringify(roots),
+    );
     const graph = await loadConsumerGraph(config);
     assert.deepEqual(graph.entrySources, expected);
     const manifest = (await compileCatalogue(config)).manifest;
     assert.equal(
-      manifest.entries.find((entry) => entry.id === "alpha")?.sourcePath,
+      manifest.entries.find((entry) => entry.path === "alpha")?.sourcePath,
       "src/widgets/alpha/alpha.mockup.ts",
     );
     assert.ok(
@@ -193,29 +183,32 @@ test("discovery rejects entry modules inside private, output, and review trees",
   await addModule(fixture, ".mokly-cache/x.mockup.tsx", screen("x", "x.html"));
   await writeConfig(
     fixture,
-    'entries: ["entries/**/*.mockup.{ts,tsx}", ".mokly-cache/x.mockup.tsx"]',
+    'roots: [{ dir: "entries", files: ["**/*.mockup.{ts,tsx}"] }, { dir: ".mokly-cache", files: ["x.mockup.tsx"] }]',
   );
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message:
-      /entries glob must stay inside repoRoot and outside \.mokly-cache: \.mokly-cache\/x\.mockup\.tsx/,
+    message: /roots\[1\].dir must not be inside \.mokly-cache/,
   });
   await fs.promises.rm(path.join(fixture.root, ".mokly-cache"), {
     force: true,
     recursive: true,
   });
-  for (const [relative, glob, reason] of [
+  for (const [relative, root, reason] of [
     [
       "src/node_modules/pkg/x.mockup.tsx",
-      "src/**/*.mockup.{ts,tsx}",
-      /entries glob matches no module: src\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: src\/node_modules/,
+      { dir: "src" },
+      /root matches no file: src; not searched: src\/node_modules/,
     ],
-    [".review/x.mockup.tsx", ".review/x.mockup.tsx", /inside review\.outDir/],
+    [
+      ".review/x.mockup.tsx",
+      { dir: ".review", files: ["x.mockup.tsx"] },
+      /inside review\.outDir/,
+    ],
   ] as const) {
     await addModule(fixture, relative, screen("x", "x.html"));
     await writeConfig(
       fixture,
-      `entries: ["entries/**/*.mockup.{ts,tsx}", ${JSON.stringify(glob)}]`,
+      `roots: [{dir:"entries"}, ${JSON.stringify(root)}]`,
     );
     await assert.rejects(
       async () => discoverEntryModules(await loadConfig(fixture.root)),
@@ -240,7 +233,7 @@ test("discovery rejects an entry module that escapes repoRoot through a symlink"
   );
   await writeConfig(
     fixture,
-    'entries: ["entries/**/*.mockup.{ts,tsx}", "linked/**/*.mockup.{ts,tsx}"]',
+    'roots: [{ dir: "entries", files: ["**/*.mockup.{ts,tsx}"] }, { dir: "linked", files: ["**/*.mockup.{ts,tsx}"] }]',
   );
   await assert.rejects(
     async () => discoverEntryModules(await loadConfig(fixture.root)),
@@ -257,7 +250,10 @@ test("a glob may reach nested entries beside output while the output root stays 
     fixture.entryPath,
     path.join(nested, "fixture.mockup.tsx"),
   );
-  await writeConfig(fixture, 'entries: ["mockups/src/**/*.mockup.{ts,tsx}"]');
+  await writeConfig(
+    fixture,
+    'roots: [{ dir: "mockups/src", files: ["**/*.mockup.{ts,tsx}"] }]',
+  );
   const config = await loadConfig(fixture.root);
   assert.deepEqual(discoverEntryModules(config), [
     path.join(nested, "fixture.mockup.tsx"),

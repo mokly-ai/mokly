@@ -71,15 +71,15 @@ function Counter({ label }) {
   const [count, setCount] = useState(0);
   return <main><p id="count">{label}: {count}</p><button id="increment" type="button" onClick={() => setCount((value) => value + 1)}>Increment</button> <MockLink id="details-link" to="details">Open details</MockLink></main>;
 }
-const counter = defineComponent({ ...metadata, id: "counter", title: "Counter", description: "A counter that remembers clicks", propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } }, controls: { label: { kind: "text", label: "Label", maxLength: 40 } }, render: (props) => <Counter label={props.label} />, variants: [{ id: "counter-default", title: "Default", props: { label: "Saved" } }, { id: "counter-other", title: "Other", props: { label: "Other" } }] });
-const badge = defineComponent({ ...metadata, interactive: false, id: "badge", title: "Badge", description: "A badge that stays static", propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } }, controls: { label: { kind: "text", label: "Label", maxLength: 40 } }, render: (props) => <Counter label={props.label} />, variants: [{ id: "badge-default", title: "Default", props: { label: "Badge" } }, { id: "badge-quiet", title: "Quiet", props: { label: "Quiet" } }] });
+const counter = defineComponent({ ...metadata, path: "counter", title: "Counter", description: "A counter that remembers clicks", propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } }, controls: { label: { kind: "text", label: "Label", maxLength: 40 } }, render: (props) => <Counter label={props.label} />, variants: [{ slug: "default", title: "Default", props: { label: "Saved" } }, { slug: "other", title: "Other", props: { label: "Other" } }] });
+const badge = defineComponent({ ...metadata, interactive: false, path: "badge", title: "Badge", description: "A badge that stays static", propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } }, controls: { label: { kind: "text", label: "Label", maxLength: 40 } }, render: (props) => <Counter label={props.label} />, variants: [{ slug: "default", title: "Default", props: { label: "Badge" } }, { slug: "quiet", title: "Quiet", props: { label: "Quiet" } }] });
 export const mockups = [
-  defineScreen({ ...metadata, id: "home", title: "Home", description: "Stateful home", useCaseIds: ["tour"], mobile: <Counter label="Home" />, desktop: <Counter label="Home" /> }),
-  defineScreen({ ...metadata, id: "details", title: "Details", description: "Details", useCaseIds: ["tour"], mobile: <main id="details">${details}</main>, desktop: <main id="details">${details}</main> }),
-  defineScreen({ ...metadata, interactive: false, id: "notes", title: "Notes", description: "Notes that stay static", useCaseIds: [], mobile: <Counter label="Notes" />, desktop: <Counter label="Notes" /> }),
-  ${current ? "" : 'defineScreen({ ...metadata, id: "retired", title: "Retired", description: "Retired", useCaseIds: [], mobile: <main>Retired</main>, desktop: <main>Retired</main> }),'}
-  definePage({ ...metadata, id: "guide", title: "Guide", description: "Guide", render: () => "<!doctype html><html><body><h1>Guide</h1></body></html>" }),
-  defineUseCase({ ...metadata, id: "tour", title: "Tour", description: "Tour", steps: [{ screenId: "home" }, { screenId: "details" }] }),
+  defineScreen({ ...metadata, path: "home", title: "Home", description: "Stateful home", useCasePaths: ["tour"], mobile: <Counter label="Home" />, desktop: <Counter label="Home" /> }),
+  defineScreen({ ...metadata, path: "details", title: "Details", description: "Details", useCasePaths: ["tour"], mobile: <main id="details">${details}</main>, desktop: <main id="details">${details}</main> }),
+  defineScreen({ ...metadata, interactive: false, path: "notes", title: "Notes", description: "Notes that stay static", useCasePaths: [], mobile: <Counter label="Notes" />, desktop: <Counter label="Notes" /> }),
+  ${current ? "" : 'defineScreen({ ...metadata, path: "retired", title: "Retired", description: "Retired", useCasePaths: [], mobile: <main>Retired</main>, desktop: <main>Retired</main> }),'}
+  definePage({ ...metadata, path: "guide", title: "Guide", description: "Guide", render: () => "<!doctype html><html><body><h1>Guide</h1></body></html>" }),
+  defineUseCase({ ...metadata, path: "tour", title: "Tour", description: "Tour", steps: [{ screenPath: "home" }, { screenPath: "details" }] }),
   ...counter.entries,
   ...badge.entries,
 ];

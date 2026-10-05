@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { canonicalJson } from "../components/data.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { ControlledDiffScreen } from "./diffs.js";
@@ -45,11 +46,14 @@ export function ComponentWorkspace({
   const { data, refresh, request, selection, resolvedView, presentation } =
     workspace;
   const variant = selection.variant;
-  const variantId = variant?.value.id;
+  const variantPath = variant?.value.path;
+  const previousPath = branchPoints(catalogue).previousPath(
+    variant?.value ?? entry,
+  );
   const changedViews = selectedChangedViews(
     workspaceEvidenceEntry(data),
     data.changedViews,
-    variantId,
+    variantPath,
   );
   const viewport = store?.state.selection.viewport ?? "both";
   const colorScheme = store?.state.selection.colorScheme ?? "light";
@@ -57,8 +61,8 @@ export function ComponentWorkspace({
   const comparison = useComparison({
     effectiveColorScheme: resolvedView.colorScheme,
     eligible: Boolean(data.comparisons && presentation.comparisonEligible),
-    entryId: variantId ?? entry.id,
-    ...(data.component ? { owner: data.component.id } : {}),
+    entryId: variantPath ?? entry.path,
+    ...(data.component ? { owner: data.component.path } : {}),
   });
   const comparing = comparison.mode !== "current";
   const live = useLivePreview({ comparing, data, request, selection });
@@ -75,11 +79,11 @@ export function ComponentWorkspace({
     () =>
       visibleWorkspaceViews(
         { ...data, views: controls.previewViews },
-        variantId,
+        variantPath,
         viewport,
         colorScheme,
       ),
-    [colorScheme, controls.previewViews, data, variantId, viewport],
+    [colorScheme, controls.previewViews, data, variantPath, viewport],
   );
   const [activeViewport, setActiveViewport] = useState<"desktop" | "mobile">(
     viewport === "mobile" ? "mobile" : "desktop",
@@ -113,7 +117,7 @@ export function ComponentWorkspace({
       store?.state.route.viewport === "mobile" ? "mobile" : "desktop",
     );
     setSelectedKey(store?.state.route.instance);
-  }, [entry.id, store?.state.route.instance, store?.state.route.viewport]);
+  }, [entry.path, store?.state.route.instance, store?.state.route.viewport]);
 
   useEffect(() => {
     if (selectedKey && activeView?.usage && !selectedInstance)
@@ -158,7 +162,7 @@ export function ComponentWorkspace({
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
   const headStatus =
-    data.component?.id === entry.id ? data.status : presentation.status;
+    data.component?.path === entry.path ? data.status : presentation.status;
   const preview = data.removed
     ? removedPreviewData(catalogue, context, entry)
     : undefined;
@@ -171,7 +175,7 @@ export function ComponentWorkspace({
         previewViews={controls.previewViews}
         target={target}
         variantRemoved={variant?.removed ?? false}
-        {...(variantId ? { variantId } : {})}
+        {...(variantPath ? { variantPath } : {})}
       />
     </LivePreviewFrameProvider>
   );
@@ -213,7 +217,7 @@ export function ComponentWorkspace({
         }
         crumbs={head.crumbs}
         heading={head.title}
-        id={head.id}
+        path={head.path}
         status={
           <span
             className="mbk-entry-status"
@@ -233,7 +237,7 @@ export function ComponentWorkspace({
           ) : data.comparisons ? (
             <ControlledDiffScreen
               comparison={comparison}
-              entryId={variantId ?? entry.id}
+              entryId={variantPath ?? entry.path}
               entryKind={entry.kind}
               eligible={presentation.comparisonEligible}
             >
@@ -257,9 +261,10 @@ export function ComponentWorkspace({
           onViewport={setActiveViewport}
           props={propsPanel}
           selectedKey={selectedKey}
-          variantId={variantId}
+          variantPath={variantPath}
           views={views}
           usageDelivery={workspace.usageDelivery}
+          previousPath={previousPath}
         />
       </div>
       {inspection.overlay}

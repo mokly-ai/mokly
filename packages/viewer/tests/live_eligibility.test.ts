@@ -19,7 +19,7 @@ const catalogue = viewerCatalogue(
     JSON.parse(
       fs.readFileSync(
         new URL(
-          "../../../docs/protocol/fixtures/catalogue-v3.json",
+          "../../../docs/protocol/fixtures/catalogue-v4.json",
           import.meta.url,
         ),
         "utf8",
@@ -27,8 +27,8 @@ const catalogue = viewerCatalogue(
     ),
   ),
 );
-const screen = catalogue.byId.get("home");
-const component = catalogue.byId.get("action");
+const screen = catalogue.byPath.get("product/browse/home");
+const component = catalogue.byPath.get("components/action");
 if (screen?.kind !== "screen" || component?.kind !== "component")
   throw new Error("Missing Live eligibility fixtures");
 const generation = "e".repeat(32);
@@ -37,7 +37,7 @@ const descriptor: ViewerInteractiveDescriptor = {
   port: 4174,
   state: "ready",
 };
-const view = { entryId: "home" };
+const view = { entryPath: "product/browse/home" };
 
 function adopted(
   entry: WorkspaceData["entry"],

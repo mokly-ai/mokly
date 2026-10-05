@@ -1,7 +1,8 @@
 declare module "mokly:interactive-consumer" {
-  import type { RegistryDefinition } from "../../authoring/types.js";
   import type { InteractiveRenderer } from "../../renderer/types.js";
 
-  export const definitions: readonly RegistryDefinition[];
+  import type { InteractiveEntryModule } from "./definitions.js";
+
+  export const modules: readonly InteractiveEntryModule[];
   export const interactiveRenderer: InteractiveRenderer | undefined;
 }

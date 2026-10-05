@@ -5,7 +5,8 @@
 Implemented. Delivery and verification are tracked by the active
 [viewer comment anchoring plan](../../plans/viewer-comment-anchoring.md). The
 viewer composes the existing instance identity and frame adapter without adding
-a comment model or changing the adapter wire protocol.
+a comment model or changing the adapter wire protocol. References name entries
+by path under the [instance contract](./mokly-instances.md).
 
 ## Purpose And Boundary
 
@@ -51,7 +52,7 @@ with valid markers recovers without remounting the viewer.
 
 Each marker matches its complete reference against the effective mounted view:
 entry, flow step when present, viewport, effective scheme and instance key. A
-component variant is addressed by its own entry id. A Dark selection that falls back to a light-only view
+component variant is addressed by its own entry path. A Dark selection that falls back to a light-only view
 mounts Light, so a Light reference matches it. A host supplies separate markers
 when one logical comment should appear on several views.
 
@@ -63,8 +64,8 @@ The viewer evaluates every marker to exactly one state:
 - `hidden`: the matching Current frame is mounted and ready, its usage contains
   the key, but measurement produces no visible box.
 - `unavailable`: there is no exact current frame; the frame or usage is pending
-  or unavailable; the key is absent; the entry is a page; the frame is showing
-  a non-Current comparison; or boundary measurement fails.
+  or unavailable; the key is absent; the entry is a page or document; the frame
+  is showing a non-Current comparison; or boundary measurement fails.
 
 Unavailable markers do not cause navigation, scrolling or fallback to another
 instance. Marker evaluation does not emit inspection,

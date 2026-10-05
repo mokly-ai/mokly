@@ -3,12 +3,15 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { Script } from "node:vm";
 
-import type { LoadedGraph } from "./load_graph.js";
+import type { ResolvedDocument } from "../documents/load.js";
+
+import type { LoadedGraph } from "./loaded_graph.js";
 
 export interface ConsumerBundle {
   code: string;
   filename: string;
   entrySources: readonly string[];
+  documents?: readonly ResolvedDocument[];
 }
 const bundles = new WeakMap<LoadedGraph, ConsumerBundle>();
 

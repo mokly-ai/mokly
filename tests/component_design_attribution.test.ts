@@ -9,15 +9,15 @@ import { textOutput } from "./helpers/generated_text.js";
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [stylesheet, screens, components] of [
-    ["design-components.css", 43, 71],
-    ["design-component-inspection.css", 43, 71],
-    ["design-component-details.css", 43, 71],
-    ["design-component-inspector.css", "all-design", 71],
-    ["design-component-workspace.css", "all-design", 71],
-    ["design-component-view.css", 43, 71],
-    ["design-component-controls.css", 11, 71],
-    ["design.css", "all-design", 71],
-    ["design-library.css", 0, 71],
+    ["design-components.css", 43, 73],
+    ["design-component-inspection.css", 43, 73],
+    ["design-component-details.css", 43, 73],
+    ["design-component-inspector.css", "all-design", 73],
+    ["design-component-workspace.css", "all-design", 73],
+    ["design-component-view.css", 43, 73],
+    ["design-component-controls.css", 11, 73],
+    ["design.css", "all-design", 73],
+    ["design-library.css", 0, 73],
   ] as const)
     await t.test(stylesheet, async () => {
       await fixture.reset();
@@ -37,11 +37,12 @@ test("mixed component design styles retain their actual rendered resource scope"
       );
       if (screens === "all-design") {
         const allDesignScreens = fixture.before.manifest.entries.filter(
-          (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
+          (entry) =>
+            entry.kind === "screen" && entry.path.startsWith("design/"),
         );
         assert.deepEqual(
-          expectedScreens.map(({ id }) => id).sort(),
-          allDesignScreens.map(({ id }) => id).sort(),
+          expectedScreens.map(({ path }) => path).sort(),
+          allDesignScreens.map(({ path }) => path).sort(),
         );
       } else assert.equal(expectedScreens.length, screens);
       assert.equal(
@@ -49,17 +50,17 @@ test("mixed component design styles retain their actual rendered resource scope"
         components,
       );
       const result = await fixture.compare();
-      const ids = expected.map((entry) => entry.id);
+      const ids = expected.map((entry) => entry.path);
       assert.deepEqual(
         result.changes
-          .map((change) => (change.after ?? change.before)!.id)
+          .map((change) => (change.after ?? change.before)!.path)
           .sort(),
         ids.sort(),
       );
       if (stylesheet !== "design.css")
         assert.ok(
           result.changes.every((change) =>
-            (change.after ?? change.before)!.id.startsWith("design-"),
+            (change.after ?? change.before)!.path.startsWith("design/"),
           ),
           "unrelated Example content stays unchanged",
         );

@@ -1,10 +1,15 @@
-import { parseBrowsingTarget, parseLogicalTarget } from "@mokly/viewer/data";
+import { parseBrowsingTarget, resolveLinkPath } from "@mokly/viewer/data";
 import {
   INTERACTIVE_NAVIGATION_EVENT,
   type LinkIdentity,
 } from "@mokly/viewer/runtime";
 
+import { referencedDefinition } from "../../authoring/identity.js";
+import { DEFINITION_IDENTITY } from "../../authoring/markers.js";
+import { parseAuthoredLink } from "../../build/authored_links.js";
 import type { InteractiveRouteTable } from "../types.js";
+
+import type { InteractiveDefinition } from "./definitions.js";
 
 export interface ResolvedInteractiveLink {
   href: string;
@@ -20,13 +25,16 @@ interface ResolvedRawLink {
 
 let routes: InteractiveRouteTable | undefined;
 let baseTarget: string | undefined;
+let source: InteractiveDefinition | undefined;
 
 /** Install the immutable route table before React evaluates consumer links. */
 export function configureInteractiveRoutes(
   next: InteractiveRouteTable,
   document?: Document,
+  entry?: InteractiveDefinition,
 ): void {
   routes = next;
+  source = entry;
   baseTarget =
     document
       ?.querySelector<HTMLBaseElement>("base[target]")
@@ -43,18 +51,25 @@ export function resolveInteractiveLink(
   logical: string,
   targetValue?: string,
 ): ResolvedInteractiveLink | undefined {
-  const destination = parseLogicalTarget(logical);
+  const destination = parseAuthoredLink(logical);
+  const reference =
+    destination?.path.startsWith("~definition-") && source
+      ? referencedDefinition(destination.path, source)?.[DEFINITION_IDENTITY]
+          .path
+      : destination
+        ? resolveLinkPath(destination.path, source?.linkBase ?? "")
+        : undefined;
   const route =
-    destination && routes && Object.hasOwn(routes, destination.id)
-      ? routes[destination.id]
+    reference && routes && Object.hasOwn(routes, reference)
+      ? routes[reference]
       : undefined;
-  if (!destination || !route) return;
+  if (!destination || !reference || !route) return;
   const target = parseBrowsingTarget(targetValue ?? baseTarget);
   if (target.kind === "invalid") return;
   return {
     href: `${route.href}${destination.fragment ? `#${destination.fragment}` : ""}`,
     identity: {
-      id: destination.id,
+      screenPath: reference,
       target,
       ...(destination.fragment ? { fragment: destination.fragment } : {}),
     },

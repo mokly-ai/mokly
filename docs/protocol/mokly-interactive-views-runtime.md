@@ -22,9 +22,9 @@ complete Live head contains these three scripts:
 3. one `<script type="module" src="/__mokly/interactive/<generation>/bundle.js">`.
 
 The bootstrap is canonical JSON with inline-script escapes containing the
-entry id, entry kind, optional variant id, viewport, color scheme, the
+entry path, entry kind, optional variant path, viewport, color scheme, the
 catalogue generation, and the route table: a map from every logical
-`mock:<id>` value resolvable from this view to its portable relative href for
+`mock:<path>` value resolvable from this view to its portable relative href for
 the same viewport and scheme. Shipped Serve resolves this table only from the
 accepted generation's manifest fragment routes; parity tests pin those
 materialized routes to the ordinary authored-entry Build resolver across every
@@ -49,6 +49,17 @@ each one to 404 before starting a bundle. Invalid generations or malformed
 adapted documents are internal composition failures, never
 `interactive-bundle` failures. Live documents carry the response policy in the
 [interactive-origin contract](./mokly-interactive-views-serve.md#interactive-origin).
+
+## Browser Entry Identity
+
+The browser collects every branded named or default export through the same
+module collector as Build. It uses the accepted root membership, prefix,
+transparent directories, file name, authored path, and local variant slug to
+resolve each path. It does not discover files again. Component wrappers and
+imported definition links receive this resolved identity before React mounts.
+The current entry's link base resolves relative logical links. Definition
+references use an unguessable token until their target path is known. The
+browser uses Web Crypto, including on forwarded HTTP origins.
 
 ## Mount Contract
 
@@ -100,8 +111,7 @@ The configured renderer module may export a second function:
 ```ts
 interface InteractiveRenderInput {
   colorScheme: ColorScheme;
-  entry: ScreenDefinition | ComponentDefinition;
-  variantId?: string;
+  entry: (ScreenDefinition | ComponentVariantDefinition) & { path: string };
   componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   viewport: Viewport;
@@ -130,8 +140,8 @@ through the bootstrap route table to the same portable href the build emitted.
 Native `MockLink`, `MockLink asChild`, and a delegated handler for resolved raw
 `mock:` anchors own unmodified primary activation. They prevent the native
 click and dispatch the package-owned `mokly:interactive-navigation` DOM event
-with the exact logical identity `{ id, fragment?, target }`. The inspector
-accepts only a plain object with the existing bounded id, fragment and target
+with the exact logical identity `{ screenPath, fragment?, target }`. The inspector
+accepts only a plain object with the existing bounded path, fragment and target
 grammars and no extra fields, then emits the unchanged frame-adapter
 `navigation` message with `activation: "primary"`. The event never carries an
 href, label or arbitrary URL.
@@ -142,7 +152,7 @@ and the host's independent catalogue destination validation remain
 authoritative. Primary activation is prevented before the frame can navigate,
 even without a host subscription. Modified and middle activation dispatch no
 Live event and keep native behaviour on the resolved portable href within the
-frame sandbox, which forbids top navigation and popups. An id absent from the
+frame sandbox, which forbids top navigation and popups. A path absent from the
 route table renders inert and reports nothing. Valid fragments and browsing
 targets are carried as logical identity only; neither layer trusts the
 portable href as the host destination.

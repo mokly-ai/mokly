@@ -1,15 +1,19 @@
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 
+import type { FolderRecord } from "./folder_records.js";
+
 /** One actionable catalogue validation failure. */
 export interface RegistryViolation {
   code: string;
-  id?: string;
+  path?: string;
   message: string;
   sourceRelativePath: string;
 }
 
 /** A prepared and cross-reference-validated registry. */
 export interface PreparedRegistry {
+  folders: readonly FolderRecord[];
+  references: ReadonlyMap<string, string>;
   entries: readonly ResolvedRegistryEntry[];
-  byId: ReadonlyMap<string, ResolvedRegistryEntry>;
+  byPath: ReadonlyMap<string, ResolvedRegistryEntry>;
 }

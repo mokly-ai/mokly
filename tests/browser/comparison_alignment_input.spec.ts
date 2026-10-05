@@ -25,7 +25,7 @@ test.afterAll(async () => {
   await fixture?.close();
 });
 
-const tall = () => `${fixture.url}/view/screens/tall.html`;
+const tall = () => `${fixture.url}/view/tall/`;
 
 /** Wait for both versions' late images so document heights are final. */
 async function settleImages(section: Locator): Promise<void> {
@@ -189,7 +189,7 @@ test("smooth-scrolling documents and hosts still move as one", async ({
 }) => {
   await openComparison(
     page,
-    `${fixture.url}/view/screens/smooth.html`,
+    `${fixture.url}/view/smooth/`,
     "desktop",
     "Overlay",
   );

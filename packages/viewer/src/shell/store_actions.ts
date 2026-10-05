@@ -7,20 +7,23 @@ import type { ViewerSelection } from "../viewer/types.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import {
-  decodeDisclosureMap,
   disclosureStorageKey,
   encodeDisclosureMap,
-  obsoleteDisclosureStorageKey,
 } from "./disclosure_storage.js";
 import { navigationFiltering } from "./nav_model.js";
+import {
+  folderRevealPath,
+  folderRevealProposal,
+  folderRevealSelection,
+} from "./nav_reveal.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { withLiveUnavailable, withPreviewMode } from "./preview_mode.js";
 import { clearTagTerm, parseSearchQuery, setTagTerm } from "./search_query.js";
 import type { ShellBrowserActions } from "./store_browser.js";
 import type { ShellStore } from "./store_context.js";
 import { withFilterSelection } from "./store_filters.js";
-import { captureScrolls } from "./store_scroll.js";
-import type { ShellState } from "./store_state.js";
+import { shellRecoverySnapshot } from "./store_recovery.js";
+import { openDisclosures, type ShellState } from "./store_state.js";
 
 const detailsStorageKey = "mokly:details-disclosure";
 const widthStorageKey = "mokly:navigation-width:v1";
@@ -99,6 +102,46 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         input.stateRef.current,
         input.interactive && !input.embedded,
       );
+    },
+    revealFolder(section, path) {
+      const reveal = folderRevealPath(input.sections, section, path);
+      if (!reveal) return;
+      if (input.embedded) {
+        const before = input.stateRef.current.selection;
+        const proposal = folderRevealProposal(
+          before,
+          folderRevealSelection(reveal.node, before, input.context),
+        );
+        if (proposal) input.propose(proposal.selection, proposal.rawQuery);
+      }
+      const drawer = navigationDrawerShown();
+      input.setState((current) => {
+        const selection = input.embedded
+          ? current.selection
+          : folderRevealSelection(
+              reveal.node,
+              current.selection,
+              input.context,
+            );
+        const filtered =
+          selection === current.selection
+            ? current
+            : withFilterSelection(current, selection);
+        const disclosures = openDisclosures(filtered.disclosures, reveal.keys);
+        persistDisclosures(filtered.selection, disclosures, !input.embedded);
+        return {
+          ...filtered,
+          disclosures,
+          drawerOpen: filtered.drawerOpen || drawer,
+          filterBaseline:
+            filtered.filterBaseline &&
+            openDisclosures(filtered.filterBaseline, reveal.keys),
+          revealedFolder: {
+            key: reveal.keys.at(-1) ?? "",
+            selection: filtered.selection,
+          },
+        };
+      });
     },
     select: updateSelection,
     selectColorScheme(value) {
@@ -185,33 +228,6 @@ export function shellStore(input: StoreActionsInput): ShellStore {
   };
 }
 
-/** Capture reload state without assuming that this shell owns the document. */
-export function shellRecoverySnapshot(
-  state: ShellState,
-  interactive: boolean,
-): ReturnType<ShellStore["recoverySnapshot"]> {
-  const regionScrolls =
-    interactive && typeof document !== "undefined"
-      ? captureScrolls(document)
-      : state.regionScrolls;
-  return {
-    ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
-    disclosures: decodeDisclosureMap(state.disclosures),
-    colorScheme: state.selection.colorScheme,
-    detailsOpen: state.detailsOpen,
-    drawerOpen: state.drawerOpen,
-    filterBaselineDisclosures: state.filterBaseline
-      ? decodeDisclosureMap(state.filterBaseline)
-      : null,
-    navScroll: state.navScroll,
-    previewMode: state.previewMode,
-    query: state.query,
-    regionScrolls,
-    view: state.selection.view,
-    viewport: state.selection.viewport,
-  };
-}
-
 function persistDisclosures(
   selection: ViewerSelection,
   disclosures: Readonly<Record<string, boolean>>,
@@ -223,11 +239,18 @@ function persistDisclosures(
         disclosureStorageKey,
         encodeDisclosureMap(disclosures),
       );
-      localStorage.removeItem(obsoleteDisclosureStorageKey);
     } catch {
       return;
     }
   }
+}
+
+/** Whether the catalogue is a closed drawer at the current width. */
+function navigationDrawerShown(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 56.25rem)").matches
+  );
 }
 
 function copyText(text: string): void {

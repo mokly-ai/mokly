@@ -1,29 +1,37 @@
 import type {
   HistoricalManifest,
   HistoricalManifestEntry,
-  ManifestV7,
+  ManifestV8,
 } from "../registry/types.js";
-import type { ReviewResultV4 } from "../review/component_types.js";
-import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
+import type { ReviewResultV5 } from "../review/component_types.js";
+import type {
+  ReviewArtifact,
+  ScreenResourceEvidence,
+  ViewReview,
+} from "../review/types.js";
 
 /** One private live-index entry with resolved Live-preview eligibility. */
 export type CatalogueIndexEntry =
   | (Extract<
-      ManifestV7["entries"][number],
+      ManifestV8["entries"][number],
       { kind: "component" | "screen" }
     > & { interactive: boolean })
-  | Exclude<ManifestV7["entries"][number], { kind: "component" | "screen" }>;
+  | Exclude<ManifestV8["entries"][number], { kind: "component" | "screen" }>;
 
 export type CatalogueMetadata =
-  | ManifestV7
+  | ManifestV8
   | {
       schemaVersion: "live-index-1";
       entries: readonly CatalogueIndexEntry[];
+      folders: ManifestV8["folders"];
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };
 export interface RemovedEntrySnapshot {
-  entry: HistoricalManifestEntry | ManifestV7["entries"][number];
+  entry: HistoricalManifestEntry | ManifestV8["entries"][number];
+  folderTitles: readonly string[];
+  /** Baseline parent title, present exactly for a removed variant. */
+  parentTitle?: string;
   snapshotId?: string;
 }
 /**
@@ -32,12 +40,15 @@ export interface RemovedEntrySnapshot {
  * it without depending on the build.
  */
 export interface ScreenViewChanges {
-  id: string;
+  path: string;
   views: readonly Pick<ViewReview, "colorScheme" | "state" | "viewport">[];
 }
 export interface ShellEvidence {
   baseline: HistoricalManifest;
-  result?: ReviewResultV4;
+  /** Actual material/metadata changes, independent of pure-move membership. */
+  changedEntries?: readonly string[];
+  pairing?: NonNullable<ReviewArtifact["pairing"]>;
+  result?: ReviewResultV5;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
 }

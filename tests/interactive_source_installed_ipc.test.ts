@@ -231,6 +231,7 @@ function runtimeCommand(interactiveSources: unknown): object {
       generation: "a".repeat(32),
       interactiveEntries: {},
       interactiveSources,
+      outputSnapshot: { routes: [], orphanRoutes: [] },
       outputs: [],
       stylesheetRoutes: [],
       styleOutputs: [],

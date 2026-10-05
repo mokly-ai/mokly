@@ -117,7 +117,7 @@ test("committed output suggests exact negations for HTML and manifest routes", a
     new FileSystemGeneratedOutputStore().write(compilation, config),
     (error: Error) => {
       assert.match(error.message, /!\/mockups\/mokly-manifest\.json/);
-      assert.match(error.message, /!\/mockups\/screens\/home\.desktop\.html/);
+      assert.match(error.message, /!\/mockups\/home\/index\.desktop\.html/);
       return true;
     },
   );

@@ -54,7 +54,7 @@ for (const specifier of [
     const runtime = await acceptedStyles(fixture.root);
     const documents = new DocumentService(runtime);
     t.after(() => documents.close());
-    const html = (await documents.read("screens/home.desktop.html")).html;
+    const html = (await documents.read("home/index.desktop.html")).html;
     const name = html.match(/data-module="([^"]+)"/)?.[1];
     assert.ok(name);
     const code = await compileLiveStyles(runtime);

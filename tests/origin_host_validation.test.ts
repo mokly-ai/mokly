@@ -196,7 +196,7 @@ test("caller mutation cannot replace admitted origins in headers or descriptors"
     200,
   );
   const document = await httpRequest(
-    `http://127.0.0.1:${server.interactivePort}/static/screens/home.mobile.html?mokly-host=${encodeURIComponent(appOrigin)}`,
+    `http://127.0.0.1:${server.interactivePort}/static/home/index.mobile.html?mokly-host=${encodeURIComponent(appOrigin)}`,
     "GET",
     { host: new URL(interactiveOrigin).host },
   );

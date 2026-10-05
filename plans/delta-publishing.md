@@ -1,5 +1,10 @@
 # Delta Publishing
 
+Status: Completed. [PR #122](https://github.com/mokly-ai/mokly/pull/122)
+merged on 2026-09-30. Open findings in the
+[review record](../docs/reviews/delta-publishing.md) await the user's
+decision.
+
 Replace the single-archive `mokly publish` upload with the content-addressed
 delta exchange that Mokly Cloud is adopting: the receiver learns every file's
 SHA-256 from the export ownership marker before any catalogue bytes are sent,

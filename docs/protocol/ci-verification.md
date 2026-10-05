@@ -109,6 +109,7 @@ destinations and count. The browser suite's example server runs with
 `--base HEAD` and compares with the checked-out `HEAD`. A fixture repository may
 create and read its own remotes because those references are fixture-owned
 inputs inside the test tree.
+Saved-status assertions use a current fixture-owned baseline.
 
 CI's package, unit, browser, and hydration jobs key npm's download cache from
 the checked-out `package-lock.json`; none resolves `origin/main` or reads a
@@ -196,7 +197,9 @@ Development hydration registers one browser test per unique generated catalogue
 route at discovery time, plus the home and missing-route cases. Each route keeps
 the normal test deadline and error assertions; catalogue growth cannot exhaust a
 shared route-loop deadline. Unit coverage checks that browser discovery includes
-every generated route exactly once.
+every generated route exactly once. Browser error assertions accept only Chrome's
+report that a viewer-owned sandboxed frame (`/static/`, a temporary render, or
+`about:srcdoc`) blocked a script, as `tests/browser/console_notices.ts` defines.
 
 Each runner records the commit SHA, runtime, suite, optional shard, complete
 discovered file inventory, assigned file inventory, observed executed files,

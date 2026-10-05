@@ -1,53 +1,69 @@
-# Identity-Derived Artifact Paths
+# Path-Derived Artifact Paths
 
 ## Delivery Status
 
-Entry/view, snapshot, preview, normalized-path, and unknown-destination helpers
-are implemented through the shared viewer data and navigation modules.
+Path-derived documents, snapshots, previews and canonical shell URLs are
+implemented for every entry kind, including Markdown documents.
 
-This is the single contract for entry routes, generated view names, comparison
-snapshot names, removed-page metadata, provider-normalized shell paths, and
-unknown logical destinations. Authors never supply any of these paths.
+This is the single contract for entry documents, generated view names,
+comparison snapshot names, preview metadata, shell documents, URL parsing, and
+reserved prefixes. Every name derives from an entry's path under the
+[path contract](./mokly-paths.md); authors never supply any of them.
 
-## Entry And View Paths
+## Layout
+
+Every entry owns one directory named by its path. Its own document, when it
+has one, is `index.html` inside that directory, and its rendered views sit
+beside it with viewport and scheme suffixes. Because path segments contain no dot, no child entry directory can collide
+with these HTML filenames, and a folder page coexists with the folder's children on every static
+host.
+
+| Kind              | Documents under `static/`                        |
+| ----------------- | ------------------------------------------------ |
+| Screen            | `<path>/index.<viewport>[.dark].html` per view   |
+| Component variant | `<path>/index.<viewport>[.dark].html` per view   |
+| Page              | `<path>/index.html`                              |
+| Document          | `<path>/index.html` and `<path>/index.dark.html` |
+| Use case          | none; the shell composes its steps               |
+| Component parent  | none; its page shows its first variant           |
+
+`<viewport>` is `mobile` or `desktop`; the `.dark` infix is present only for
+`colorScheme: "dark"`. The logical entry route of every kind is
+`<path>/index.html`; for a screen, use case, or component parent it is a
+durable identifier and not a written file.
+
+## Shared Functions
 
 `@mokly/viewer/data` exports the shared pure path functions:
 
 ```ts
-type EntryKind = "component" | "page" | "screen" | "use-case";
+type EntryKind = "component" | "document" | "page" | "screen" | "use-case";
 type ViewKind = "component" | "screen";
 type SnapshotSide = "before" | "after";
 
-function entryRoute(kind: EntryKind, id: string): string;
+function entryRoute(path: string): string;
 function viewRoute(
-  kind: ViewKind,
-  id: string,
+  path: string,
   viewport: "mobile" | "desktop",
   colorScheme: "light" | "dark",
 ): string;
-function viewHref(kind: EntryKind, id: string): string;
+function documentRoute(path: string, colorScheme: "light" | "dark"): string;
+function viewHref(path: string): string;
+function parseViewHref(pathname: string): string | undefined;
 ```
 
-The results are:
-
-| Kind      | `entryRoute`           | `viewRoute`                              |
-| --------- | ---------------------- | ---------------------------------------- |
-| Screen    | `screens/<id>.html`    | `screens/<id>.<viewport>[.dark].html`    |
-| Page      | `pages/<id>.html`      | Not applicable                           |
-| Use case  | `user-flows/<id>.html` | Not applicable                           |
-| Component | `components/<id>.html` | `components/<id>.<viewport>[.dark].html` |
-
-`viewHref` prepends `/view/` to `entryRoute`. The dark infix is present only
-for `colorScheme: "dark"`. Variants use their own kind and global id exactly
-like every other entry. IDs have no `.`, so an entry document cannot collide
-with a view suffix belonging to another id.
-
-`parseViewHref(pathname)` is the inverse for canonical `.html` and
-provider-normalized extensionless paths. It accepts only the four literal
-prefixes in the table and a portable entry id. Property names inherited from
-JavaScript objects, including `constructor`, `__proto__`, and `toString`, are
-not prefixes. A query or fragment is not part of `pathname` and is rejected if
-passed to this parser.
+`entryRoute` returns `<path>/index.html`. `viewRoute` returns
+`<path>/index.<viewport>[.dark].html`. `documentRoute` returns
+`<path>/index[.dark].html` for pages and documents. `viewHref` returns the
+canonical URL `/view/<path>/`. `parseViewHref` accepts `/view/<path>/`,
+`/view/<path>`, and `/view/<path>/index.html`, decodes percent-encoded
+segments, validates the result as a path, and returns the path; any other
+pathname, including one with a query or fragment, returns `undefined`. The
+parser knows no kinds: the shell resolves the path against its catalogue read
+model and opens the missing view when no current or removed entry has it.
+Property names inherited from JavaScript objects, including `constructor`,
+`__proto__`, and `toString`, are ordinary segments that resolve against the
+catalogue like any other and never against object prototypes.
 
 ## Comparison And Preview Paths
 
@@ -56,60 +72,75 @@ The same module exports:
 ```ts
 function snapshotViewPath(
   side: SnapshotSide,
-  kind: ViewKind,
-  id: string,
+  path: string,
   viewport: "mobile" | "desktop",
   colorScheme: "light" | "dark",
 ): string;
-function snapshotPagePath(id: string): string;
+function snapshotDocumentPath(
+  side: SnapshotSide,
+  path: string,
+  colorScheme: "light" | "dark",
+): string;
 function snapshotSidePath(side: SnapshotSide): string;
 function snapshotResourcePath(side: SnapshotSide, route: string): string;
-function pagePreviewMetadataPath(id: string): string;
+function previewMetadataPath(path: string): string;
 ```
 
-`snapshotViewPath` returns
-`snapshots/<side>/<viewRoute(kind, id, viewport, colorScheme)>`.
-`snapshotPagePath` returns `snapshots/before/pages/<id>.html`; removed pages
-have no after side. `snapshotSidePath` returns the directory prefix
-`snapshots/<side>/`, including its trailing slash. `snapshotResourcePath`
-appends one nonempty path accepted by `isSafeRepositoryPath` to that prefix;
-it rejects absolute paths, empty or dot segments, backslashes, colons, and NUL.
-`pagePreviewMetadataPath` returns `pages/<id>.json` within the comparison
-generation. Each identity-specific function validates its typed axes and entry
-id before composing a relative POSIX path.
+`snapshotViewPath` returns `snapshots/<side>/<viewRoute(...)>`.
+`snapshotDocumentPath` returns `snapshots/<side>/<documentRoute(...)>`; a
+removed page or document has a before side only. `snapshotSidePath` returns
+the directory prefix `snapshots/<side>/`, including its trailing slash.
+`snapshotResourcePath` appends one nonempty path accepted by
+`isSafeRepositoryPath` to that prefix; it rejects absolute paths, empty or dot
+segments, backslashes, colons, and NUL. `previewMetadataPath` returns
+`previews/<path>/index.json` within the comparison generation. Each function
+validates its typed axes and its path before composing a relative POSIX path.
 
 Review production, selected capture, packaging, export checks, shell comparison
 frames, previous-version requests, snapshot presentation roots, and public
 generation validation call these functions. They do not join or slice a
-`snapshots/` or `pages/` literal themselves. Review result v4 and catalogue v3
-carry identity and axes rather than any of these paths.
+`snapshots/` or `previews/` literal themselves. The review result and the
+public read model carry paths and axes rather than any of these file names.
 
-## Browser Path Helpers
+## Shell Documents And Browser Paths
 
-The navigation module also owns two browser-only derivations:
+An export writes one shell document per current or removed entry at
+`view/<path>/index.html`, the home at `index.html`, and the not-found view at
+`404.html`. A static host serves `view/<path>/index.html` for `/view/<path>/`
+without rewrites, which is why the canonical URL carries a trailing slash.
+Serve answers `/view/<path>`, `/view/<path>/`, and `/view/<path>/index.html`
+with the same shell, and the shell normalises its history entries to the
+canonical form. Hosts that remove `index.html` or add or remove a trailing
+slash therefore need no Mokly adapter; `parseViewHref` accepts every form.
+
+The navigation module also owns:
 
 ```ts
 function providerNormalizedHtmlPath(pathname: string): string | undefined;
-function unavailableViewHref(id: string): string;
 ```
 
-`providerNormalizedHtmlPath` accepts a canonical absolute pathname produced by
-`viewHref` or a confined `/static/**.html` artifact path and removes only its
-final `.html`. A query, fragment, encoded separator, dot segment, or other
-prefix returns `undefined`; callers preserve an already-separated query/hash.
-Shell history, static workspace evidence, and both preview adapters use it
-whenever a host removes HTML extensions, so preview scripts carry no rewrite
-regular expressions.
+It accepts a canonical shell pathname produced by `viewHref`, a
+`/view/<path>/index.html` document path, or a confined `/static/**.html`
+artifact path and returns the form a host serves for it: the canonical
+trailing-slash URL for shell documents and static `index.html` documents,
+and the pathname without its final `.html` for other static artifacts. A query, fragment, encoded separator, dot
+segment, or other prefix returns `undefined`; callers preserve an already
+separated query and hash. The former `unavailableViewHref` is unnecessary:
+`viewHref` of a path with no entry opens the missing view.
 
-`unavailableViewHref` returns `/view/<percent-encoded id>` for a logical frame
-destination whose id is absent from the catalogue. That URL deliberately fails
-the canonical route parser and opens the shell's missing view; it never guesses
-an entry kind. The shell and every provider adapter share this function.
+## Reserved Prefixes And Validation
 
-## Ownership And Validation
+`view/`, `static/`, `__mokly/`, `snapshots/`, `previews/`, and
+`mokly-generated/` are reserved artifact prefixes. The last contains only
+generated CSS and assets beneath `mockupsDir` (or exported `static/`). An
+entry's first path segment cannot equal `mokly-generated`, compared
+case-insensitively, under the [path grammar](./mokly-paths.md#segment-grammar). No kind prefix exists, so a top-level folder may be
+named `screens`, `pages`, or `components`. Generated file names use the
+authored case of each segment; the output inventory rejects two files whose
+case-folded paths collide, including a resource against a document directory.
 
-All returned paths are artifact-root-relative except `viewHref`, normalized
-view paths, and unavailable-view hrefs, which begin with `/`. Callers still
-apply their own output inventory, case-folded collision, source exclusion,
-regular-file, and generation-confinement checks. These builders centralize
-naming; they do not authorize reading or writing a path.
+All returned paths are artifact-root-relative except `viewHref` and
+`providerNormalizedHtmlPath`, which begin with `/`. Callers still apply their
+own output inventory, case-folded collision, source exclusion, regular-file,
+and generation-confinement checks. These builders centralise naming; they do
+not authorise reading or writing a path.

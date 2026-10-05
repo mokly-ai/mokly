@@ -15,7 +15,7 @@ import {
   type ViewerCapabilityRequest,
 } from "../client/host_capability_descriptor.js";
 
-import { viewerCapabilityEntryId } from "./capability_adoption.js";
+import { viewerCapabilityEntryPath } from "./capability_adoption.js";
 import {
   commitViewerEvidence,
   type BoundViewerWorkspace,
@@ -143,7 +143,7 @@ function currentRequestOwns(
   return Boolean(
     snapshot.source &&
     viewerCapabilitySourceEquals(snapshot.source, request.source) &&
-    viewerCapabilityEntryId(state.route) === request.entryId,
+    viewerCapabilityEntryPath(state.route) === request.entryPath,
   );
 }
 
@@ -154,7 +154,7 @@ export function sameCapabilityRequest(
 ): boolean {
   return (
     left !== undefined &&
-    left.entryId === right.entryId &&
+    left.entryPath === right.entryPath &&
     viewerCapabilitySourceEquals(left.source, right.source)
   );
 }

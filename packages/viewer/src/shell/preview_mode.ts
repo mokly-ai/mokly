@@ -27,8 +27,8 @@ export type LivePreviewAvailability =
 
 /** A current screen or saved component variant that can offer Live. */
 export interface LivePreviewView {
-  entryId: string;
-  variantId?: string;
+  entryPath: string;
+  variantPath?: string;
 }
 
 /** Product copy shared by the toolbar, the stage and the inspector. */
@@ -52,10 +52,10 @@ export function livePreviewView(
   selection: WorkspaceVariantSelection,
 ): LivePreviewView | undefined {
   if (data.removed) return;
-  if (data.entry.kind === "screen") return { entryId: data.entry.id };
+  if (data.entry.kind === "screen") return { entryPath: data.entry.path };
   const variant = selection.variant;
   return variant && !variant.removed
-    ? { entryId: data.entry.id, variantId: variant.value.id }
+    ? { entryPath: data.entry.path, variantPath: variant.value.path }
     : undefined;
 }
 
@@ -66,7 +66,7 @@ export function liveGenerationKey(generation: string): string {
 
 /** Key recorded when one view's Live frame could not be mounted. */
 export function liveViewKey(generation: string, view: LivePreviewView): string {
-  return JSON.stringify([generation, view.entryId, view.variantId ?? null]);
+  return JSON.stringify([generation, view.entryPath, view.variantPath ?? null]);
 }
 
 /**
@@ -80,7 +80,10 @@ export function liveEligibility(input: {
   workspace: WorkspaceData | undefined;
 }): LiveEligibility {
   const { entry, workspace } = input;
-  if (workspace?.entry.id === entry.id && workspace.entry.kind === entry.kind)
+  if (
+    workspace?.entry.path === entry.path &&
+    workspace.entry.kind === entry.kind
+  )
     return workspace.interactive === true ? "eligible" : "ineligible";
   return input.pending ? "pending" : "ineligible";
 }

@@ -1,4 +1,4 @@
-import type { ReviewResultV4 } from "@mokly/viewer/data";
+import type { ReviewResultV5 } from "@mokly/viewer/data";
 
 import type { ComponentClassificationInput } from "./component_classification_input.js";
 import { classifyComponentsWithSources } from "./component_classification_sources.js";
@@ -7,7 +7,7 @@ import { validateComponentReviewSources } from "./component_result_sources.js";
 /** The sole component-aware membership policy, shared by Browse, Review, and publishing. */
 export async function classifyComponents(
   input: ComponentClassificationInput,
-): Promise<ReviewResultV4> {
+): Promise<ReviewResultV5> {
   const classified = await classifyComponentsWithSources(input);
   validateComponentReviewSources(
     classified.result,
@@ -15,6 +15,7 @@ export async function classifyComponents(
     input.after,
     classified.implementationImpact,
     classified.sources,
+    classified.pairing.moves,
   );
   return classified.result;
 }

@@ -14,15 +14,13 @@ test("consumer module resolution supports package roots, aliases, and web condit
 import { defineScreen } from "@mokly/mokly";
 import React from "react";
 import { FixturePanel } from "fixture-ui";
-const metadata = { dependencies: [], relatedDocs: [], useCaseIds: [] };
+const metadata = { dependencies: [], relatedDocs: [], useCasePaths: [] };
 export const mockups = [defineScreen({
   ...metadata,
   description: "Consumer resolution fixture",
   desktop: <FixturePanel />,
-  id: "consumer-resolution",
-  mobile: <FixturePanel />,
-  route: "screens/consumer-resolution.html",
-  title: "Consumer resolution"
+  path: "consumer-resolution",
+  mobile: <FixturePanel />, title: "Consumer resolution"
 })];
 `);
   context.after(() => removeFixture(fixture));
@@ -57,7 +55,7 @@ export const mockups = [defineScreen({
   await fs.promises.writeFile(
     fixture.configPath,
     `export default {
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   moduleResolution: {
     aliases: { "fixture-native": "fixture-web" },
@@ -75,10 +73,8 @@ export const mockups = [defineScreen({
   const compilation = await compileCatalogue(config);
 
   assert.match(
-    textOutput(
-      compilation.outputs,
-      "screens/consumer-resolution.desktop.html",
-    ) ?? "",
+    textOutput(compilation.outputs, "consumer-resolution/index.desktop.html") ??
+      "",
     /data-platform="web"/,
   );
 });

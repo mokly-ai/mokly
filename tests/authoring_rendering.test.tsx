@@ -40,7 +40,7 @@ test("MockLink keeps fragment identity out of rendered package props", () => {
   assert.doesNotMatch(html, /fragment=/);
   assert.throws(
     () => renderToStaticMarkup(<MockLink to="details#billing">Bad</MockLink>),
-    /expected kebab-case/,
+    /expected a complete path/,
   );
 });
 

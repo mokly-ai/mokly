@@ -3,10 +3,14 @@
 ## Delivery Status
 
 Implemented by the [in-frame navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-[Pages](./mokly-pages.md) share the screen/flow link and breadcrumb rules. The
-hydrated shell and [frame adapters](./mokly-frame-adapter.md) apply every marker,
-sandbox, target, and outer-navigation rule in Serve, export, and embedded hosts.
-Controlled and uncontrolled unknown-id handling is implemented.
+[Pages](./mokly-pages.md) and [documents](./mokly-documents.md) share the
+screen/flow link and breadcrumb rules. The hydrated shell and
+[frame adapters](./mokly-frame-adapter.md) apply every marker, sandbox, target,
+and outer-navigation rule in Serve, export, and embedded hosts, and controlled
+and uncontrolled unknown-destination handling is implemented. Path-addressed
+links and `/view/<path>/` URLs are implemented, as are the Specs and Components
+sections, browse-only folder rows, `Overview` rows, and the breadcrumb folder
+links and reveals of the [folder contract](./mokly-folders.md#rows-and-clicks).
 
 ## Scope
 
@@ -19,15 +23,18 @@ Mokly owns navigation between catalogue entries. Consumers continue to own
 their product's application routes and the behavior of ordinary document,
 asset, external, download, and same-document links.
 
-Folders follow the [navigation path contract](./mokly-nav-paths.md) and have
-no link or destination.
-`design-browse-tags` (Tag states) has no routed descendants after its six
-screens became variants of `design-browse-screen`, so its former folder row
-is absent from the path-based example.
+Folders follow the [folder contract](./mokly-folders.md#rows-and-clicks): a
+folder row only expands or collapses and is never a destination; an entry row
+navigates; a folder's own page is its first child row, labelled with its title
+or `Overview`, or, for a screen or component index, the folder renders as that
+entry's row; and a breadcrumb folder segment opens the folder page when one
+exists and otherwise expands the folder. Empty folders have no row.
+Every row uses the single [search rule](./mokly-folders.md#titles). Changes
+activation uses the built tree under the [branch-point lookup](./mokly-branch-point-lookup.md#consumers).
 
 ## Component Navigation
 
-Registered component and component variant ids share the existing catalogue
+Registered component and component variant paths share the one catalogue
 namespace. A portable link to a component parent resolves to its first variant
 entry's view in the effective viewport and color scheme, and a link to a
 variant resolves to that variant's own view; Browse opens the component page,
@@ -44,16 +51,17 @@ the same script-disabled boundary and do not grant nested frames shell access.
 The opt-in `MockLink asChild` extension and its static-control adaptation
 contract are specified in [Styled catalogue link controls](./mokly-link-controls.md).
 
-The target helper API is `mockLink(id, fragment?)` and
-`<MockLink to={id} fragment={fragment}>`. The id and optional fragment remain
-separate authoring concepts: `to` and the first function argument contain only
-the stable entry id, while `fragment` is a bare HTML id without `#` or
-percent-encoding. The helper id must match the registry's lowercase kebab-case
-grammar. The helpers reject overloaded or encoded target syntax such as
-`id#fragment`, `id%23fragment`, or `mock:id` in `to` or the id argument; an
-unknown but well-formed id fails later during the catalogue build. The helpers
-emit a complete `mock:<id>[#fragment]` value, and authors may still use that raw
-form in supported navigation attributes.
+The target helper API is `mockLink(to, fragment?)` and
+`<MockLink to={to} fragment={fragment}>`. The destination and optional fragment
+remain separate authoring concepts: `to` and the first function argument hold
+only the destination, a complete path, a relative path, or a definition
+reference under the [authoring contract](./mokly-authoring.md#links), while
+`fragment` is a bare HTML id without `#` or percent-encoding. The helpers reject
+overloaded or encoded target syntax such as `path#fragment`, `path%23fragment`,
+or `mock:path` in `to` or the first argument; an unknown but well-formed path
+fails later during the catalogue build, naming the new path when the target
+moved. The helpers emit a complete `mock:<path>[#fragment]` value, and authors
+may still use that raw form in supported navigation attributes.
 
 A complete document that contains an activatable logical `href` must not
 contain an HTML `<base href>` element. The base URL would change the browser's
@@ -70,58 +78,35 @@ build instead of becoming an accidental resource request. Authors use
 `data-nav-href` for metadata-only references; it is valid on any element but
 does not invent click or keyboard semantics. A logical `data-nav-href` may
 coexist with an eligible logical `href`, in which case both must name the same
-destination. The entry's derived route is its current Browse location. A
-folder has no id or route and is not a destination. A use-case destination opens the use-case page,
-even though its portable fragment fallback resolves through the first screen in
-that use case.
+destination. The entry's path is its Browse location, `/view/<path>/`. A folder
+is not a destination; its own page, when it has one, shares its path. A use-case
+destination opens the use-case page, even though its portable fragment fallback
+resolves through the first screen in that use case.
 
-A logical fragment begins with an ASCII letter and then contains only ASCII
-letters, digits, `_`, `:`, `.`, or `-`. It names an HTML `id`, not a CSS
+A logical fragment contains one or more Unicode letters, numbers or combining
+marks, `_`, `:`, `.`, or `-`. It names an HTML `id`, not a CSS
 selector. The builder validates that it exists in every generated mobile,
 desktop, light, and applicable dark artifact that Browse may show for the
-destination screen. For a use case, this requirement applies to its first
-screen. This cross-view rule lets one canonical outer route drive every visible
-frame without silently losing the anchor in another viewport or color scheme.
+destination screen, or in every generated document of a destination page or
+document. For a use case, this requirement applies to its first screen. This
+cross-view rule lets one canonical outer route drive every visible frame without
+silently losing the anchor in another viewport or color scheme.
 
 The builder must:
 
-- validate the destination id and optional fragment before writing output;
+- validate the destination path and optional fragment before writing output;
 - rewrite the actual `href` and `data-nav-href` to the relative generated
   artifact for the source viewport and color scheme, retaining light fallback;
-- add one package-owned `data-mokly-link` marker containing the original
-  `<id>[#fragment]` destination only to an activatable native link; and
+- add one package-owned `data-mokly-link` marker holding the resolved complete
+  `<path>[#fragment]` destination only to an activatable native link; and
 - reject a logical `href` on any other element, a `<base href>` in a document
   with an activatable logical link, a reserved marker supplied by consumer
   output, duplicate occurrences of either reserved navigation attribute, or
   conflicting logical destinations carried by two navigation attributes on
   one element.
 
-Before invoking a compatibility transformer, the builder records a multiset of
-complete logical-reference records: expected marker presence and value, the
-native-link class (`html-a`, `html-area`, `svg-a`, or metadata-only), which of
-`href` and `data-nav-href` carried the logical destination, and each such
-attribute's resolved portable value. It reparses the transformed document and
-requires the same multiset. Adding or removing a marker, preserving a marker
-while changing its portable destination, element kind, or namespace, changing
-a metadata-only reference into an activatable link, or moving logical identity
-between navigation attributes fails the build. Unrelated attributes remain
-consumer-owned. Duplicate reserved attributes are detected from the raw start
-tag rather than the parser-normalized attribute map, so a transformer cannot
-hide a second marker or target through HTML's first-attribute-wins parsing. A
-transformer that adds `<base href>` to a document retaining an activatable
-record also fails the build. After every document has been transformed, the
-builder indexes anchors from the final documents and repeats cross-view
-fragment validation for every retained logical-reference record. A transformer
-that removes or renames an anchor in any destination viewport or scheme
-therefore fails the build even when the source link record itself is unchanged.
-The builder also requires every transformed screen fragment and page document
-to retain a generated ownership header that decodes to its expected source
-path. The versioned header encodes that identity with canonical base64 so no
-source filename can alter HTML comment parsing. Header parsing accepts LF and
-CRLF line endings. Final transformed output must retain the current encoded
-form; safe legacy raw-path headers remain recognizable only for migration,
-while a missing, malformed, downgraded, or changed source identity fails before
-any output is written.
+A compatibility transformer must preserve every logical-reference record and
+ownership header under [transformer validation](./mokly-link-transform-validation.md).
 
 The marker is inert metadata, not a second resource URL. HTML escaping must be
 deterministic, and link/resource validation continues to inspect the portable
@@ -146,9 +131,9 @@ presented beneath `/static/` in served Browse or in the deployed Browse preview,
 Mokly authenticates its marker for trusted parent enhancement while retaining
 the portable `href` and live `target`. The trusted-document set is exactly every
 current manifest screen fragment, including dark fragments, plus every
-generated page in that manifest. Its generated header must name the same
-`sourcePath` as that manifest entry. The parent resolves the marker's id through its catalogue read model to the
-canonical `/view/<route>` or `/view/<route>?fragment=<encoded-fragment>`
+generated page and document in that manifest. Its generated header must name
+the same `sourcePath` as that manifest entry. The parent resolves the marker's path through its catalogue read model to the
+canonical `/view/<path>/` or `/view/<path>/?fragment=<encoded-fragment>`
 destination; it never trusts the portable URL as entry identity. The adapter removes any
 consumer-authored `data-mokly-target`, resolves the eligible link's effective
 request from its own `target` or the document's applicable first `<base target>`,
@@ -200,7 +185,7 @@ nested content the adapter cannot inspect. Trusted parent code is the only
 outer-navigation authority. Portable and comparison documents retain their original
 bytes; viewer-owned, script-disabled comparison panes cancel navigation.
 
-In served Browse, `/view/<route>?fragment=<encoded-fragment>` carries the
+In served Browse, `/view/<path>/?fragment=<encoded-fragment>` carries the
 optional request-visible `fragment` query. The server accepts at most one
 value, decodes it exactly once, checks the grammar and cross-view anchor
 existence above, and returns HTTP 400 without injecting a fragment when
@@ -229,7 +214,7 @@ With the hydrated shell available, an unmodified primary or keyboard
 activation of a default/`_self` marked link asks the outer shell to navigate
 through its latest-wins route transition. The shell resolves the destination in
 its catalogue read model and renders it; it does not fetch a shell document.
-The resulting history entry has the canonical `/view/<route>[?fragment=...]`
+The resulting history entry has the canonical `/view/<path>/[?fragment=...]`
 URL; the title, breadcrumbs, heading, details inspector, frames, focus, and
 status announcement all describe the destination. Back and Forward return
 through those outer route entries and restore their route-owned scroll.
@@ -261,16 +246,16 @@ result cannot replace the retained view. Saved scroll positions may be
 restored without a reload. A changed route or query still uses in-shell
 navigation and its normal history restoration.
 
-In every delivery the shell resolves that trusted id through its catalogue
-read model to the exact `/view/<route>` URL before rendering or opening any
-context; there is no id alias page or redirect. See
+In every delivery the shell resolves that trusted path through its catalogue
+read model to the exact `/view/<path>/` URL before rendering or opening any
+context; there is no alias page or redirect. See
 [Static export delivery](./mokly-export-delivery.md).
 
-For an absent runtime frame id, standalone/uncontrolled shells show the shared
-missing destination and any later selection reinstalls its canonical route. A
-controlled Viewer emits one frame error, changes no selection/display, and emits
-no selection/navigation event. [Identity-derived paths](./mokly-artifact-paths.md)
-owns the helper.
+For a frame path that names no current or removed entry, standalone and
+uncontrolled shells show the shared missing destination and any later selection
+reinstalls its canonical URL. A controlled Viewer emits one frame error, changes
+no selection/display, and emits no selection/navigation event.
+[Path-derived artifact paths](./mokly-artifact-paths.md) owns `viewHref`.
 
 The same trusted parent enhancement exclusively handles modified pointer
 activation and explicit non-self targets after validating the marker and
@@ -306,7 +291,7 @@ parsing, marker/ownership checks, modifier/target classification, canonical
 routes and safe degradation do not change. No adapter gains nested-frame access.
 The optional `postMessageAdapter` requires a separate, nonopaque frame origin
 and the [inspector handshake](./mokly-frame-adapter.md#cross-origin-mount-and-handshake).
-It carries bounded logical ids/fragments and activation/target states, never
+It carries bounded logical paths/fragments and activation/target states, never
 consumer hrefs, labels or arbitrary navigation URLs. The host revalidates the
 destination against its catalogue and owns the navigation action; the inspector
 never reads or changes `window.top` or `parent.location`. Cross-origin hosts
@@ -323,7 +308,7 @@ To establish the invariant, Browse must:
 
 1. remove `aria-current` from every other row;
 2. open each ancestor `[data-nav-disclosure]` of the active row, including
-   its Pages or Components section and, for an entry with variants or one of
+   its Specs or Components section and, for an entry with variants or one of
    its variants, the parent
    row's variant list defined by the
    [variant contract](./mokly-variants.md). That list is a
@@ -353,35 +338,18 @@ Enhanced navigation preserves the selected viewport, color scheme, and details
 disclosure. It collapses an expanded frame before installing the destination.
 Filters and search remain unchanged when the destination is already visible.
 
-Shell destinations may explicitly request `viewport=mobile|desktop|both` and
-`scheme=light|dark`. The parser treats the axes independently and recognizes an
-axis only when exactly one supported value is present. A valid value applies in
-the same atomic route or controlled-selection update while an omitted, invalid,
-or repeated axis retains its sticky selection. This also applies when only an
-axis changes on the current destination. In Changes, at least one valid
-explicit axis suppresses first-changed-view landing; invalid or repeated values
-do not. Embedded and standalone shells use this one parser, so controlled hosts
-receive the complete proposal and commit nothing until they supply it back.
-
-A removed-entry destination also carries its public `snapshot` identity. Route
-parsing accepts exactly one lowercase 64-hex value and requires it to match that
-removed entry's id. The query survives same-entry axis and filter changes,
-Back/Forward and hydration. Unknown, stale, repeated, or mismatched snapshots
-are unavailable through the Viewer error state rather than retargeted.
-Snapshot queries are supported only on the removed entry's
-canonical `/view/<route>` URL or its provider-normalized extensionless form,
-where the route derives from the removed entry's kind and id. Without the query,
-an id-only removed selection normalizes to its published identity when present.
+Destination queries for the view axes and removed-entry snapshots follow the
+[shell destination contract](./mokly-shell-destinations.md).
 
 ## Verification Contract
 
 Coverage must prove:
 
-- helper-level id/fragment separation and id grammar, portable output, eligible
+- helper-level path/fragment separation and grammar, portable output, eligible
   native-link markers, metadata-only `data-nav-href`, rejection of logical
   `href` on resource/non-link elements, rejection of `<base href>` before and
   after compatibility transformation, dual navigation attributes, hashes,
-  use-case ids, dark-to-light fallback, conflicts, and reserved-marker errors;
+  use-case paths, dark-to-light fallback, conflicts, and reserved-marker errors;
 - served and preview adaptation without mutating generated fragments, including
   LF/CRLF ownership-gated promotion, unowned reserved-metadata removal, secure
   target parsing, portable live attributes, and request-visible fragment
@@ -405,6 +373,10 @@ Coverage must prove:
 ## Related Docs
 
 - [Package and authoring contract](./mokly-package.md)
+- [Paths, roots, and identity](./mokly-paths.md)
+- [Folders](./mokly-folders.md)
+- [Shell destination queries](./mokly-shell-destinations.md)
+- [Logical link transformer validation](./mokly-link-transform-validation.md)
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Shell design contract](./mokly-shell-design.md)
 - [Build pipeline](../architecture/build-pipeline.md)

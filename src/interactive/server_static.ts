@@ -97,10 +97,10 @@ export async function serveInteractiveStatic(
       catalogueSchemes: context.config.colorSchemes,
       colorScheme: target.colorScheme,
       entries: context.entries,
-      entryId: target.entryId,
+      entryPath: target.entryPath,
       generation: context.generation,
       sourceRoute: route,
-      ...(target.variantId ? { variantId: target.variantId } : {}),
+      ...(target.variantPath ? { variantPath: target.variantPath } : {}),
       viewport: target.viewport,
     });
   } catch (error) {

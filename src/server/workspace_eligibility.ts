@@ -48,12 +48,12 @@ export class ServeWorkspaceEligibility implements WorkspaceEligibilityReporter {
         if (oldest) this.reported.delete(oldest);
       }
     }
-    if (entries.has(entry.id)) return;
-    entries.add(entry.id);
+    if (entries.has(entry.path)) return;
+    entries.add(entry.path);
     this.onDiagnostic(
       new WorkspaceEligibilityDiagnostic(
-        entry.id,
-        entryRoute(entry.kind, entry.id),
+        entry.path,
+        entryRoute(entry.path),
         generation,
       ),
     );
@@ -72,18 +72,18 @@ export function resolvedWorkspaceInteractive(
     (entry?.kind !== "screen" && entry?.kind !== "component")
   )
     return;
-  const value = source.entries[entry.id];
+  const value = source.entries[entry.path];
   if (typeof value !== "boolean") {
     source.reporter.missing(entry, source.generation);
     return;
   }
-  return { entryId: entry.id, entryKind: entry.kind, value };
+  return { entryPath: entry.path, entryKind: entry.kind, value };
 }
 
 class WorkspaceEligibilityDiagnostic extends Error {
-  constructor(entryId: string, route: string, generation: string) {
+  constructor(entryPath: string, route: string, generation: string) {
     super(
-      `Live runtime generation ${generation} is missing eligibility for ${entryId} at ${route}; Static remains available and Live is unavailable.`,
+      `Live runtime generation ${generation} is missing eligibility for ${entryPath} at ${route}; Static remains available and Live is unavailable.`,
     );
     this.name = "WorkspaceEligibilityDiagnostic";
   }

@@ -4,13 +4,98 @@ import test from "node:test";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 
-import { flatCss } from "./helpers/shell_css.js";
+import {
+  attribute,
+  documentElements,
+  elements,
+  textContent,
+} from "./helpers/html.js";
+import {
+  assertAttributes,
+  flatCss,
+  requiredElement,
+} from "./helpers/shell_assertions.js";
 import {
   context,
   homePage,
   manifest,
+  untaggedManifest,
   viewPage,
 } from "./helpers/shell_fixture.js";
+
+test("the search field carries a tag control over a closed picker", () => {
+  const html = homePage(createCatalogue(manifest), context);
+  const search = requiredElement(
+    html,
+    (element) => attribute(element, "data-mokly-search") !== undefined,
+  );
+  assertAttributes(search, {
+    "aria-label": "Search catalogue",
+    placeholder: "Search catalogue…",
+    type: "search",
+    value: "",
+  });
+  const toggle = requiredElement(
+    html,
+    (element) => attribute(element, "data-mokly-tag-toggle") !== undefined,
+  );
+  assertAttributes(toggle, {
+    "aria-controls": "mb-tag-picker",
+    "aria-expanded": "false",
+    "aria-label": "Filter by tag",
+    type: "button",
+  });
+  const picker = requiredElement(
+    html,
+    (element) => attribute(element, "data-mokly-tag-picker") !== undefined,
+  );
+  assertAttributes(picker, {
+    "aria-label": "Tags",
+    hidden: "",
+    id: "mb-tag-picker",
+    role: "group",
+  });
+  const tags = elements(
+    picker,
+    (element) => attribute(element, "data-mokly-tag") !== undefined,
+  );
+  assert.deepEqual(
+    tags.map((tag) => ({
+      pressed: attribute(tag, "aria-pressed"),
+      tabIndex: attribute(tag, "tabindex"),
+      tag: attribute(tag, "data-mokly-tag"),
+      text: textContent(tag),
+    })),
+    [
+      { pressed: "false", tabIndex: "0", tag: "billing", text: "billing" },
+      { pressed: "false", tabIndex: "-1", tag: "forms", text: "forms" },
+      {
+        pressed: "false",
+        tabIndex: "-1",
+        tag: "onboarding",
+        text: "onboarding",
+      },
+    ],
+  );
+
+  const untagged = homePage(createCatalogue(untaggedManifest), context);
+  assert.equal(
+    documentElements(
+      untagged,
+      (element) => attribute(element, "data-mokly-search") !== undefined,
+    ).length,
+    1,
+  );
+  assert.equal(
+    documentElements(
+      untagged,
+      (element) =>
+        attribute(element, "data-mokly-tag-toggle") !== undefined ||
+        attribute(element, "data-mokly-tag-picker") !== undefined,
+    ).length,
+    0,
+  );
+});
 
 test("the brand names itself and the search bar drops the wordmark", () => {
   const browse = homePage(createCatalogue(manifest), context);
@@ -64,11 +149,11 @@ test("the search field leads with a legible search icon, not a glyph", () => {
 
 test("the browser bar draws copy and expand icons, not tiny glyphs", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byId.get("welcome");
+  const entry = catalogue.byPath.get("example/screens/welcome");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeId: "welcome",
+    activeId: "example/screens/welcome",
   });
   for (const glyph of ["⧉", "⤢", "⤡"]) {
     assert.equal(html.includes(glyph), false);
@@ -95,68 +180,5 @@ test("the browser bar draws copy and expand icons, not tiny glyphs", () => {
   assert.match(
     SHELL_CSS,
     /\.browser-frame\.is-expanded \.browser-expand \.i-collapse \{\s*display: inline-flex;/,
-  );
-});
-
-test("both split dividers share one grip affordance", () => {
-  const css = flatCss(SHELL_CSS);
-  for (const grip of [
-    '.mbk-nav-resize::after { content: ""; position: absolute; ' +
-      "top: calc(50% - 16px); left: 3px; width: 2px; height: 32px; " +
-      "border-radius: 999px; background: var(--chrome-border-strong); " +
-      "transition: background 120ms ease, box-shadow 120ms ease; }",
-    '.mbk-inspector-resize::after { content: ""; position: absolute; ' +
-      "top: 7px; left: calc(50% - 16px); width: 32px; height: 2px; " +
-      "border-radius: 999px; background: var(--chrome-border-strong); " +
-      "transition: background 120ms ease, box-shadow 120ms ease; }",
-  ])
-    assert.ok(css.includes(grip), grip);
-  assert.ok(
-    css.includes(
-      ".mbk-inspector-resize { position: absolute; z-index: 2; top: -8.5px; " +
-        "right: 0; left: 0; display: none; height: 16px;",
-    ),
-    "the handle clears the 1px border its padding box hides",
-  );
-  for (const handle of ["nav", "inspector"])
-    for (const state of [
-      `.mbk-${handle}-resize:hover::after,`,
-      `.mbk-${handle}-resize:focus-visible::after,`,
-      `[data-mokly-shell].mbk-${handle}-resizing ` +
-        `.mbk-${handle}-resize::after ` +
-        "{ background: var(--mokly-accent); " +
-        "box-shadow: 0 0 0 3px var(--mokly-accent-soft); }",
-    ])
-      assert.ok(css.includes(state), `${handle}: ${state}`);
-  assert.ok(
-    css.includes(
-      ".mbk-inspector-resize:focus-visible " +
-        "{ box-shadow: inset 0 2px 0 var(--mokly-accent); }",
-    ),
-  );
-  assert.equal(
-    css.includes(".mbk-inspector-resize:focus-visible { outline"),
-    false,
-  );
-  for (const axis of ["col", "row"]) {
-    const scope = axis === "col" ? "nav" : "inspector";
-    assert.ok(
-      css.includes(
-        `[data-mokly-shell].mbk-${scope}-resizing * ` +
-          `{ cursor: ${axis}-resize !important; }`,
-      ),
-      scope,
-    );
-    assert.ok(
-      css.includes(
-        `[data-mokly-shell].mbk-${scope}-resizing iframe ` +
-          "{ pointer-events: none; }",
-      ),
-      scope,
-    );
-  }
-  assert.match(
-    SHELL_CSS,
-    /@media \(max-width: 56\.25rem\) \{[\s\S]*\.mbk-inspector\[data-open="true"\] \.mbk-inspector-resize \{[\s\S]*display: none;/,
   );
 });

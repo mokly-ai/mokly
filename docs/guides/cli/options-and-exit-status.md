@@ -31,6 +31,7 @@ takes no value. There are no silent positional arguments.
 | `--strict-port`                      | `serve`                      | Fail instead of advancing either requested Serve port          |
 | `--watch`                            | `serve`                      | Watch your inputs; the default                                 |
 | `--no-watch`                         | `serve`                      | Serve one deterministic snapshot                               |
+| `--open`                             | `serve`                      | Open the catalogue in your default browser                     |
 | `--base <ref>`                       | `serve`, `export`, `publish` | Git base ref used to find the branch point                     |
 | `--out <path>`                       | `export`, `publish`          | Config-relative output directory                               |
 | `--endpoint <url>`                   | `publish`                    | The service's plan URL, or `MOKLY_ENDPOINT`                    |

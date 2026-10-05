@@ -23,7 +23,7 @@ test.afterAll(async () => {
 });
 
 async function open(page: Page, route: string): Promise<void> {
-  await page.goto(`${fixture.url}/view/${route}`);
+  await page.goto(`${fixture.url}/view/${route.replace(/index\.html$/, "")}`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-react-shell");
 }
 
@@ -31,8 +31,8 @@ test("Static and Live appear only for current screens and saved variants", async
   page,
 }) => {
   for (const [route, heading] of [
-    [entryRoute("screen", "home"), "Home"],
-    [entryRoute("component", "counter"), "Counter"],
+    [entryRoute("home"), "Home"],
+    [entryRoute("counter"), "Counter"],
   ] as const) {
     await open(page, route);
     await expect(page.locator("#mb-main h2")).toHaveText(heading);
@@ -43,16 +43,16 @@ test("Static and Live appear only for current screens and saved variants", async
     await expectStatic(page);
   }
   for (const [route, heading] of [
-    [entryRoute("page", "guide"), "Guide"],
-    [entryRoute("use-case", "tour"), "Tour"],
-    [entryRoute("screen", "retired"), "Retired"],
+    [entryRoute("guide"), "Guide"],
+    [entryRoute("tour"), "Tour"],
+    [entryRoute("retired"), "Retired"],
   ] as const) {
     await open(page, route);
     await expect(page.locator("#mb-main h2")).toHaveText(heading);
     await expect(previewMode(page)).toHaveCount(0);
   }
 
-  await open(page, entryRoute("screen", "details"));
+  await open(page, entryRoute("details"));
   await expect(previewMode(page)).toBeVisible();
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
   await expect(previewMode(page)).toHaveCount(0);
@@ -79,7 +79,7 @@ test("a failed preparation keeps Static with Live described as unavailable", asy
       status: 503,
     });
   });
-  await open(page, entryRoute("screen", "home"));
+  await open(page, entryRoute("home"));
   const live = previewMode(page).getByRole("button", { name: "Live" });
   await live.click();
   await expect(live).toHaveAttribute("aria-disabled", "true");
@@ -89,9 +89,7 @@ test("a failed preparation keeps Static with Live described as unavailable", asy
   await expect(
     page.locator('iframe[data-workspace-frame="desktop"]'),
   ).toHaveAttribute("sandbox", "allow-same-origin");
-  await page
-    .locator(`a[data-route="${entryRoute("component", "counter")}"]`)
-    .click();
+  await page.locator(`a[data-route="${entryRoute("counter")}"]`).click();
   await expect(page.locator("#mb-main h2")).toHaveText("Counter");
   await expect(live).toHaveAttribute("aria-disabled", "true");
   await page.unroute("**/__mokly/interactive/*/prepare");
@@ -102,11 +100,11 @@ test("a failed preparation keeps Static with Live described as unavailable", asy
 test("Live prepares while the bundle builds, then mounts on the Live origin", async ({
   page,
 }) => {
-  await open(page, entryRoute("screen", "home"));
+  await open(page, entryRoute("home"));
   const staticFrame = page.locator('iframe[data-workspace-frame="desktop"]');
   await expect(staticFrame).toHaveAttribute(
     "src",
-    `/static/${viewRoute("screen", "home", "desktop", "light")}`,
+    `/static/${viewRoute("home", "desktop", "light")}`,
   );
   await expect(staticFrame).toHaveAttribute("sandbox", "allow-same-origin");
   const prepared = page.waitForRequest("**/__mokly/interactive/*/prepare");
@@ -142,7 +140,7 @@ test("Live prepares while the bundle builds, then mounts on the Live origin", as
   expect(location).toEqual({
     host: new URL(fixture.url).origin,
     origin: fixture.liveOrigin,
-    pathname: `/static/${viewRoute("screen", "home", "desktop", "light")}`,
+    pathname: `/static/${viewRoute("home", "desktop", "light")}`,
   });
   const count = liveFrame(page, "desktop").locator("#count");
   await expect(count).toHaveText("Home: 0");
@@ -154,13 +152,11 @@ test("a link inside a Live frame opens its destination in the shell", async ({
   page,
 }) => {
   fixture.gate.open();
-  await open(page, entryRoute("screen", "home"));
+  await open(page, entryRoute("home"));
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await expectLiveReady(page);
   await liveFrame(page, "desktop").locator("#details-link").click();
-  await expect(page).toHaveURL(
-    new URL(viewHref("screen", "details"), fixture.url).href,
-  );
+  await expect(page).toHaveURL(new URL(viewHref("details"), fixture.url).href);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expectLive(page);
   await expectLiveReady(page);
@@ -173,12 +169,10 @@ test("the preview mode follows view changes and resets with the document", async
   page,
 }) => {
   fixture.gate.open();
-  await open(page, entryRoute("screen", "home"));
+  await open(page, entryRoute("home"));
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await expectLive(page);
-  await page
-    .locator(`a[data-route="${entryRoute("component", "counter")}"]`)
-    .click();
+  await page.locator(`a[data-route="${entryRoute("counter")}"]`).click();
   await expect(page.locator("#mb-main h2")).toHaveText("Counter");
   await expectLive(page);
   await expectLiveReady(page);

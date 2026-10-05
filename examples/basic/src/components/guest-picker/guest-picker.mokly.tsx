@@ -7,10 +7,9 @@ const implementation =
   "examples/basic/src/components/guest-picker/guest-picker.tsx";
 
 export const guestPicker = defineComponent({
-  id: "example-guest-picker",
+  slug: "index",
   title: "Guest picker",
   description: "A guest count control for bookings.",
-  navPath: ["Example", "Components"],
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],
   relatedDocs: ["examples/basic/README.md"],
@@ -53,12 +52,12 @@ export const guestPicker = defineComponent({
   ),
   variants: [
     {
-      id: "example-guest-picker-dinner",
+      slug: "dinner",
       title: "Dinner for two",
       props: { initialCount: 2, label: "Guests", maximum: 8 },
     },
     {
-      id: "example-guest-picker-group",
+      slug: "group",
       title: "Small group",
       props: { initialCount: 5, label: "Guests", maximum: 12 },
     },

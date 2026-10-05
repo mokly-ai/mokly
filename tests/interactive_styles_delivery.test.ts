@@ -57,7 +57,7 @@ for (const mode of ["derived", "committed"] as const) {
       assert.equal((await fetch(`${origin}/static/${route}`)).status, 200);
     }
     assert.equal(bundler.requests.length, 0);
-    const viewUrl = `${origin}/static/screens/home.desktop.html`;
+    const viewUrl = `${origin}/static/home/index.desktop.html`;
     assert.equal((await fetch(viewUrl)).status, 503);
     bundler.succeed(runtime.generation);
     await setImmediate();
@@ -81,7 +81,7 @@ for (const mode of ["derived", "committed"] as const) {
       "mokly-manifest.json",
       "mokly-generated/styles/stale.css",
       "entries/card.module.css",
-      "pages/guide.html",
+      "guide/index.html",
     ])
       assert.equal(
         (await fetch(`${origin}/static/${route}`)).status,

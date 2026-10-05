@@ -1,4 +1,4 @@
-import { isCatalogueId, isPortableUrlPath } from "@mokly/viewer/data";
+import { isEntryPath, isPortableUrlPath } from "@mokly/viewer/data";
 
 import type { InteractiveBootstrap, InteractiveRoute } from "../types.js";
 
@@ -19,20 +19,20 @@ export function readInteractiveBootstrap(
   if (!record(value) || !exact(value, bootstrapKeys(value)))
     throw new Error("Invalid Live bootstrap.");
   if (
-    !isCatalogueId(value.entryId) ||
+    !isEntryPath(value.entryPath) ||
     (value.entryKind !== "screen" && value.entryKind !== "component") ||
     (value.viewport !== "mobile" && value.viewport !== "desktop") ||
     (value.colorScheme !== "light" && value.colorScheme !== "dark") ||
     typeof value.generation !== "string" ||
     !/^[A-Za-z0-9_-]{1,128}$/.test(value.generation) ||
-    (value.variantId !== undefined && !isCatalogueId(value.variantId)) ||
-    (value.entryKind === "component") !== (value.variantId !== undefined) ||
+    (value.variantPath !== undefined && !isEntryPath(value.variantPath)) ||
+    (value.entryKind === "component") !== (value.variantPath !== undefined) ||
     !record(value.routes)
   )
     throw new Error("Invalid Live bootstrap values.");
   const routes = Object.fromEntries(
     Object.entries(value.routes).map(([id, route]) => {
-      if (!isCatalogueId(id)) throw new Error("Invalid Live route id.");
+      if (!isEntryPath(id)) throw new Error("Invalid Live route id.");
       return [id, readRoute(route)];
     }),
   );
@@ -63,12 +63,12 @@ function relativeHref(value: unknown): value is string {
 function bootstrapKeys(value: Record<string, unknown>): string[] {
   return [
     "colorScheme",
-    "entryId",
+    "entryPath",
     "entryKind",
     "generation",
     "routes",
     "viewport",
-    ...(value.variantId === undefined ? [] : ["variantId"]),
+    ...(value.variantPath === undefined ? [] : ["variantPath"]),
   ];
 }
 

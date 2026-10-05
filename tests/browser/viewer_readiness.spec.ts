@@ -48,7 +48,7 @@ for (const cross of [false, true]) {
         )!.usage;
         if (usage.status !== "ready") throw new Error("Expected ready usage");
         await host.ref.current.highlightInstance({
-          screenId: "home",
+          screenPath: "home",
           viewport: "mobile",
           colorScheme: "light",
           key: usage.instances.find((instance) => instance.id === "action")!
@@ -77,7 +77,7 @@ for (const cross of [false, true]) {
         .toEqual([
           {
             name: "navigate",
-            value: expect.objectContaining({ screenId: "action" }),
+            value: expect.objectContaining({ screenPath: "action" }),
           },
         ]);
       expect(

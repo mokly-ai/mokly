@@ -17,7 +17,7 @@ test("Live replays the exact Static CSS Module map and empty plain stylesheet mo
   const runtime = await acceptedStyles(fixture.root);
   const documents = new DocumentService(runtime);
   t.after(() => documents.close());
-  const document = await documents.read("screens/home.desktop.html");
+  const document = await documents.read("home/index.desktop.html");
   const code = await compileLiveStyles(runtime);
   const name = document.html.match(/class="(mokly_[a-f0-9]{12}_card)"/)?.[1];
   assert.ok(name);

@@ -1,6 +1,6 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 import type { RebuildStatus } from "@mokly/viewer/runtime";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -231,7 +231,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
 
   notifyUpdate(
-    changedIds: readonly string[] | undefined,
+    changedEntries: readonly string[] | undefined,
     componentChanges?: ComponentChangeSnapshot,
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
@@ -243,7 +243,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     child.send(
       childUpdateMessage(
         version,
-        changedIds,
+        changedEntries,
         componentChanges,
         changesStatus,
         kind,
@@ -252,7 +252,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     );
   }
 
-  completeCatalogue(manifest: ManifestV7, generation: string): void {
+  completeCatalogue(manifest: ManifestV8, generation: string): void {
     if (
       this.#runtime?.generation !== generation ||
       !this.#child ||

@@ -1,12 +1,12 @@
 import path from "node:path";
 
-import { entryRoute, type ArtifactView } from "@mokly/viewer/data";
+import { type ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { walkFiles } from "../build/discovery.js";
 import { validateControlMetadata } from "../build/link_control_metadata.js";
 import { adaptLinkControls } from "../build/link_controls.js";
-import type { LoadedGraph } from "../build/load_graph.js";
+import type { LoadedGraph } from "../build/loaded_graph.js";
 import type { LogicalReferenceRecord } from "../build/logical_record_types.js";
 import { validateCompatibilityRecords } from "../build/logical_records.js";
 import { artifactRouteForEntry } from "../build/mock_link_routes.js";
@@ -17,8 +17,10 @@ import { isGeneratedRoute } from "../build/styles/routes.js";
 import { toPosixPath } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { validateDocumentHtml } from "../documents/safety.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
+import type { EntryMove } from "../review/moves/types.js";
 
 /** Resolve catalogue id links and apply an explicitly configured migration bridge. */
 export function transformCompatibilityDocuments(
@@ -31,8 +33,8 @@ export function transformCompatibilityDocuments(
   context?: CompatibilityContext,
   pending?: PendingGeneratedFiles,
 ): readonly LogicalReferenceRecord[] {
-  const byId =
-    context?.byId ?? new Map(entries.map((entry) => [entry.id, entry]));
+  const byPath =
+    context?.byPath ?? new Map(entries.map((entry) => [entry.path, entry]));
   const records: LogicalReferenceRecord[] = [];
   const outputRoutes = [...outputs.keys()];
   const availableRoutes = graph.compatibilityTransformer
@@ -53,8 +55,9 @@ export function transformCompatibilityDocuments(
       route,
       viewport,
       colorScheme,
-      byId,
+      byPath,
       config.colorSchemes,
+      context?.moves,
     );
     records.push(...linked.records);
     const transformer = graph.compatibilityTransformer;
@@ -106,14 +109,19 @@ export function transformCompatibilityDocuments(
     validateCompatibilityRecords(route, normalized, linked.records);
     outputs.set(route, normalized);
   }
+  for (const [route, html] of outputs) {
+    const entry = byPath.get(route.slice(0, route.lastIndexOf("/")));
+    if (entry?.kind === "document") validateDocumentHtml(html, entry.location);
+  }
   return records;
 }
 
 /** Immutable-route indexes reused across documents of one consumer generation. */
 export interface CompatibilityContext {
-  byId: ReadonlyMap<string, ResolvedRegistryEntry>;
+  byPath: ReadonlyMap<string, ResolvedRegistryEntry>;
   availableRoutes?: string[];
   routeIndexes: Map<string, LogicalArtifactRouteIndex>;
+  moves?: readonly EntryMove[];
 }
 
 type LogicalArtifactRouteIndex = Readonly<Record<string, string>>;
@@ -124,20 +132,21 @@ function logicalArtifactRoutes(
   colorScheme: Parameters<typeof artifactRouteForEntry>[2],
   catalogueSchemes: Parameters<typeof artifactRouteForEntry>[4],
 ): LogicalArtifactRouteIndex {
-  const byId = new Map(entries.map((entry) => [entry.id, entry]));
-  return Object.fromEntries(
-    entries.flatMap((entry) => {
-      const artifact = artifactRouteForEntry(
-        entry,
-        viewport,
-        colorScheme,
-        byId,
-        catalogueSchemes,
-      );
-      return artifact
-        ? [[entryRoute(entry.kind, entry.id), artifact] as const]
-        : [];
-    }),
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  return Object.assign(
+    Object.create(null) as Record<string, string>,
+    Object.fromEntries(
+      entries.flatMap((entry) => {
+        const artifact = artifactRouteForEntry(
+          entry,
+          viewport,
+          colorScheme,
+          byPath,
+          catalogueSchemes,
+        );
+        return artifact ? [[entry.path, artifact] as const] : [];
+      }),
+    ),
   );
 }
 

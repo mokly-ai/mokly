@@ -3,9 +3,33 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
+import { serve } from "../../dist/server/serve.js";
+import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
+import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
+import { waitForInitialChanges } from "../helpers/watched_catalogue.js";
 
 import { chooseVariant, chooseViewport } from "./workspace_actions.js";
+
+let root: string;
+let running: Awaited<ReturnType<typeof serve>> | undefined;
+
+test.beforeAll(async () => {
+  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
+  await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
+  root = await fs.mkdtemp(
+    path.join(repositoryRoot, ".context/design-runtime-"),
+  );
+  const config = await createCommittedExampleBaseline(root, "ordinary-preview");
+  running = await serve(config, { base: "HEAD", port: 0, watch: false });
+  const shell = await waitForInitialChanges(running.url, 180_000);
+  expect(shell).toContain('data-changes-status="ready"');
+});
+
+test.afterAll(async () => {
+  await running?.close();
+  if (root) await fs.rm(root, { recursive: true, force: true });
+});
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: design props are temporary, support unset/reset, and load newly visible nested styles`, async ({
@@ -17,23 +41,24 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 1280, height: 900 },
     );
     const paths = [
-      "entries/design/library/chrome/top-bar.tsx",
+      "specs/design/library/chrome/top-bar.tsx",
       "generated/mokly-manifest.json",
     ];
     const contents = () =>
       Promise.all(
         paths.map((file) =>
-          fs.readFile(
-            path.join(repositoryRoot, "examples/basic", file),
-            "utf8",
-          ),
+          fs.readFile(path.join(root, "examples/basic", file), "utf8"),
         ),
       );
     const before = await contents();
-    await page.goto("/view/components/design-ui-top-bar.html");
+    // Compare the Search variant with its own saved status before temporary edits.
+    await page.goto(
+      `${running!.url}/view/design/library/chrome/top-bar/search/`,
+    );
     await chooseViewport(page, viewport);
     const status = page.locator("[data-workspace-status]");
-    const parentStatus = await status.innerText();
+    await expect(status).toHaveText(/^(Changed|Unmodified)$/);
+    const savedStatus = await status.innerText();
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
@@ -53,10 +78,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await expect(status).toHaveText(parentStatus);
+    await expect(status).toHaveText(savedStatus);
     await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(status).toHaveText("Unmodified");
+    await expect(status).toHaveText(savedStatus);
     expect(await contents()).toEqual(before);
   });
 
@@ -68,7 +93,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1280, height: 900 },
     );
-    await page.goto("/view/screens/design-browse-tag-picker.html");
+    await page.goto(
+      `${running!.url}/view/design/browse/views/screen/tag-picker/`,
+    );
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Components", exact: true }).click();
     if (viewport === "mobile")
@@ -111,7 +138,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await page
       .getByRole("link", { name: "Open component", exact: true })
       .click();
-    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
+    await expect(page).toHaveURL(
+      /\/view\/design\/library\/controls\/tag-chip\//,
+    );
     await page.getByRole("tab", { name: "Usage", exact: true }).click();
     const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
     await usage
@@ -119,13 +148,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .first()
       .click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-picker.html/,
+      /\/view\/design\/browse\/views\/screen\/tag-picker\//,
     );
     await page.goBack();
-    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
+    await expect(page).toHaveURL(
+      /\/view\/design\/library\/controls\/tag-chip\//,
+    );
     await page.goForward();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-picker.html/,
+      /\/view\/design\/browse\/views\/screen\/tag-picker\//,
     );
   });
 }

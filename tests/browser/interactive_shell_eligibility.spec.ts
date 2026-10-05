@@ -27,7 +27,7 @@ test.afterAll(async () => {
 });
 
 async function open(page: Page, route: string): Promise<void> {
-  await page.goto(`${fixture.url}/view/${route}`);
+  await page.goto(`${fixture.url}/view/${route.replace(/index\.html$/, "")}`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-react-shell");
 }
 
@@ -45,12 +45,14 @@ test("opted-out screens and components keep their toolbar without Static and Liv
 }) => {
   const seen = recordLiveRequests(page, fixture.liveOrigin!);
   for (const [route, heading, eligible] of [
-    [entryRoute("screen", "home"), "Home", true],
-    [entryRoute("screen", "notes"), "Notes", false],
-    [entryRoute("component", "counter"), "Counter", true],
-    [entryRoute("component", "badge"), "Badge", false],
+    [entryRoute("home"), "Home", true],
+    [entryRoute("notes"), "Notes", false],
+    [entryRoute("counter"), "Counter", true],
+    [entryRoute("badge"), "Badge", false],
   ] as const) {
-    const served = await page.request.get(`${fixture.url}/view/${route}`);
+    const served = await page.request.get(
+      `${fixture.url}/view/${route.replace(/index\.html$/, "")}`,
+    );
     expect((await served.text()).includes('aria-label="Preview mode"')).toBe(
       eligible,
     );
@@ -74,11 +76,11 @@ test("Live follows eligible views while opted-out screens and components stay St
   page,
 }) => {
   const seen = recordLiveRequests(page, fixture.liveOrigin!);
-  await open(page, entryRoute("screen", "home"));
+  await open(page, entryRoute("home"));
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await expectLiveReady(page);
 
-  await navigate(page, entryRoute("screen", "notes"), "Notes");
+  await navigate(page, entryRoute("notes"), "Notes");
   await expect(previewMode(page)).toHaveCount(0);
   await expectStaticFrames(page);
   const staticDesktop = page.frameLocator(
@@ -88,21 +90,21 @@ test("Live follows eligible views while opted-out screens and components stay St
   await page.getByRole("tab", { name: "Components", exact: true }).click();
   await expect(panel(page, "Components")).not.toHaveText(NOTICE);
 
-  await navigate(page, entryRoute("component", "counter"), "Counter");
+  await navigate(page, entryRoute("counter"), "Counter");
   await expectLive(page);
   await expectLiveReady(page);
   await expect(liveFrame(page, "desktop").locator("#count")).toHaveText(
     "Saved: 0",
   );
 
-  await navigate(page, entryRoute("component", "badge"), "Badge");
+  await navigate(page, entryRoute("badge"), "Badge");
   await expect(previewMode(page)).toHaveCount(0);
   await expectStaticFrames(page);
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   await expect(page.getByLabel("Label", { exact: true })).toHaveValue("Badge");
   await chooseVariant(page, "Quiet");
   await expect(page).toHaveURL(
-    new URL(viewHref("component", "badge-quiet"), fixture.url).href,
+    new URL(viewHref("badge/quiet"), fixture.url).href,
   );
   await expect(staticDesktop.locator("#count")).toHaveText("Quiet: 0");
   await expectStaticFrames(page);
@@ -114,7 +116,7 @@ test("Live follows eligible views while opted-out screens and components stay St
   await expectLive(page);
   await expectLiveReady(page);
 
-  await navigate(page, entryRoute("screen", "home"), "Home");
+  await navigate(page, entryRoute("home"), "Home");
   await expectLive(page);
   await expectLiveReady(page);
   await liveFrame(page, "desktop").locator("#increment").click();
@@ -128,25 +130,25 @@ test("route evidence that cannot load leaves the view Static without the control
   page,
 }) => {
   const seen = recordLiveRequests(page, fixture.liveOrigin!);
-  await open(page, entryRoute("screen", "home"));
+  await open(page, entryRoute("home"));
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await expectLiveReady(page);
   let fetches = 0;
-  const detailsHref = viewHref("screen", "details");
+  const detailsHref = viewHref("details");
   await page.route(`**${detailsHref}`, (route) =>
     route.request().resourceType() === "fetch"
       ? ((fetches += 1), route.abort())
       : route.continue(),
   );
 
-  await navigate(page, entryRoute("screen", "details"), "Details");
+  await navigate(page, entryRoute("details"), "Details");
   await expect.poll(() => fetches).toBeGreaterThan(0);
   await expect(previewMode(page)).toHaveCount(0);
   await expectStaticFrames(page);
   expect(seen.documents.filter((path) => path.includes("details"))).toEqual([]);
 
   await page.unroute(`**${detailsHref}`);
-  await navigate(page, entryRoute("component", "counter"), "Counter");
+  await navigate(page, entryRoute("counter"), "Counter");
   await expectLive(page);
   await expectLiveReady(page);
 });

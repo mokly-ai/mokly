@@ -4,6 +4,7 @@ import type {
   CatalogueComponent,
   CatalogueComponentVariant,
   CataloguePage,
+  CatalogueDocument,
   CatalogueReadModel,
   CatalogueScreen,
   CatalogueUsage,
@@ -40,6 +41,7 @@ export type ShellCatalogueComponent = CatalogueComponent;
 export type ShellCatalogueRoutedEntry =
   | ShellCatalogueScreen
   | CataloguePage
+  | CatalogueDocument
   | CatalogueUseCase
   | ShellCatalogueComponent
   | ShellCatalogueVariant;
@@ -53,6 +55,9 @@ export interface ShellCatalogueReadModel extends Omit<
   components: readonly (ShellCatalogueComponent | ShellCatalogueVariant)[];
   removedEntries: readonly {
     entry: ShellCatalogueRoutedEntry;
+    folderTitles: readonly string[];
+    /** Required exactly when the removed entry is a variant. */
+    parentTitle?: string;
     snapshotId?: string;
     preview?: CatalogueReadModel["removedEntries"][number]["preview"];
   }[];

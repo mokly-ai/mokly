@@ -30,24 +30,24 @@ test("the example's Live mode stays outside build, check, and export bytes", asy
   const serve = await compileCatalogue(serveConfig);
   assert.equal(componentRuntime(serve).interactiveSources, undefined);
   assert.deepEqual(componentRuntime(serve).interactiveEntries, {
-    "example-action": true,
-    "example-action-default": true,
-    "example-action-disabled": true,
-    "example-action-secondary": true,
-    "example-details": false,
-    "example-guest-picker": true,
-    "example-guest-picker-dinner": true,
-    "example-guest-picker-group": true,
-    "example-visit": true,
-    "example-welcome": true,
-    "example-welcome-empty": true,
-    "example-toolbar": true,
-    "example-toolbar-default": true,
-    "example-workspace-note": true,
-    "example-workspace-note-default": true,
+    "example/components/action": true,
+    "example/components/action/default": true,
+    "example/components/action/disabled": true,
+    "example/components/action/secondary": true,
+    "example/screens/details": false,
+    "example/components/guest-picker": true,
+    "example/components/guest-picker/dinner": true,
+    "example/components/guest-picker/group": true,
+    "example/screens/visit": true,
+    "example/screens/welcome": true,
+    "example/screens/welcome/empty": true,
+    "example/components/toolbar": true,
+    "example/components/toolbar/default": true,
+    "example/components/workspace-note": true,
+    "example/components/workspace-note/default": true,
     ...Object.fromEntries(
       Object.entries(componentRuntime(serve).interactiveEntries).filter(
-        ([id]) => id.startsWith("design-"),
+        ([id]) => id.startsWith("design/"),
       ),
     ),
   });
@@ -55,18 +55,19 @@ test("the example's Live mode stays outside build, check, and export bytes", asy
     (entry) =>
       entry.kind === "component" &&
       "variantOf" in entry &&
-      entry.variantOf === "example-guest-picker",
+      entry.variantOf === "example/components/guest-picker",
   );
   assert.deepEqual(
-    guestPickerVariants.map(({ id }) => id),
-    ["example-guest-picker-dinner", "example-guest-picker-group"],
+    guestPickerVariants.map(({ path }) => path),
+    [
+      "example/components/guest-picker/dinner",
+      "example/components/guest-picker/group",
+    ],
   );
   assert.match(
     generatedText(
-      serve.outputs.get(
-        viewRoute("screen", "example-visit", "desktop", "light"),
-      ),
-      viewRoute("screen", "example-visit", "desktop", "light"),
+      serve.outputs.get(viewRoute("example/screens/visit", "desktop", "light")),
+      viewRoute("example/screens/visit", "desktop", "light"),
     ) ?? "",
     /data-testid="guest-count"[^>]*>2</,
   );

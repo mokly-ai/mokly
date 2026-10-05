@@ -81,7 +81,7 @@ test("discovered nested invocations build before exporting and honor configured 
   );
   assert.match(stdout, /Exported Mokly/);
   const html = await fs.promises.readFile(
-    path.join(fixture.output, "view/screens/home.html"),
+    path.join(fixture.output, "view/home/index.html"),
     "utf8",
   );
   assert.match(html, /Published home/);
@@ -104,7 +104,7 @@ test("explicit nested configs resolve output beside the config, not the process"
   const nested = path.join(fixture.root, "configuration");
   await fs.promises.mkdir(nested);
   const config = (await fs.promises.readFile(fixture.configPath, "utf8"))
-    .replace('entriesDir: "entries"', 'entriesDir: "../entries"')
+    .replace('roots: [{ dir: "entries" }]', 'roots: [{ dir: "../entries" }]')
     .replace('mockupsDir: "mockups"', 'mockupsDir: "../mockups"')
     .replace('repoRoot: "."', 'repoRoot: ".."');
   await fs.promises.writeFile(path.join(nested, "custom.ts"), config);

@@ -1,6 +1,6 @@
 /** Contracts for watched Serve child-process supervision. */
 
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 
@@ -12,7 +12,7 @@ import type { ChangesStatus, CatalogueUpdateKind } from "./update_messages.js";
 /** Restartable child interface used by watched Serve. */
 export interface ProcessSupervisor extends RebuildStatusPublisher {
   interactivePort?(): number | undefined;
-  completeCatalogue?(manifest: ManifestV7, generation: string): void;
+  completeCatalogue?(manifest: ManifestV8, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
   onPreviewResources?(
@@ -27,7 +27,7 @@ export interface ProcessSupervisor extends RebuildStatusPublisher {
   ): void;
   close(): Promise<void>;
   notifyUpdate(
-    changedIds: readonly string[] | undefined,
+    changedEntries: readonly string[] | undefined,
     componentChanges?: ComponentChangeSnapshot,
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,

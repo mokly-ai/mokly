@@ -1,9 +1,10 @@
-/** Small, shared validators; no DOM or server dependency enters the wire schema. */
 import type {
   Box,
   FrameNavigation,
   NavigationTarget,
 } from "../client/frame_adapter.js";
+import { isEntryPath } from "../navigation/logical.js";
+/** Small, shared validators; no DOM or server dependency enters the wire schema. */
 export const BYTE_LIMIT = 262144;
 const KEY = /^[a-f0-9]{64}$/;
 const RANGE = /^r-\d+$/;
@@ -63,11 +64,19 @@ const target = (value: unknown): value is NavigationTarget =>
       textMatch(value.name, /^[A-Za-z0-9][A-Za-z0-9._:-]*$/, 256)
     : shape(value, 1) &&
       ["self", "top", "parent", "blank"].includes(value.kind as string));
-export const identity = (value: JsonObject): boolean =>
-  textMatch(value.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 256) &&
+const identity = (value: JsonObject): boolean =>
+  isEntryPath(value.screenPath) &&
+  value.screenPath.length <= 256 &&
   (!Object.hasOwn(value, "fragment") ||
     textMatch(value.fragment, /^[A-Za-z][A-Za-z0-9_:.-]*$/, 256)) &&
   target(value.target);
+/** Exact logical identity shared by inert metadata and Live navigation events. */
+export const linkIdentity = (
+  value: unknown,
+): value is Omit<FrameNavigation, "activation"> =>
+  object(value) &&
+  shape(value, 2 + Number(Object.hasOwn(value, "fragment"))) &&
+  identity(value);
 export const navigation = (value: unknown): value is FrameNavigation =>
   object(value) &&
   shape(value, 3 + Number(Object.hasOwn(value, "fragment"))) &&

@@ -5,6 +5,7 @@ import type { Dispatch, SetStateAction } from "react";
 
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
+import { folderTitleLookup } from "../registry/folder_titles.js";
 import {
   mergeSelection,
   sameSelection,
@@ -79,7 +80,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       if (!environment) return;
       const current = stateRef.current;
       const routeChanged =
-        current.selection.screenId !== selection.screenId ||
+        current.selection.screenPath !== selection.screenPath ||
         current.selection.snapshotId !== selection.snapshotId;
       const frameChanged =
         routeChanged ||
@@ -93,7 +94,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       );
       const fragment =
         pending?.fragment ??
-        (current.selection.screenId === selection.screenId &&
+        (current.selection.screenPath === selection.screenPath &&
         current.selection.snapshotId === selection.snapshotId &&
         routeAligned
           ? current.route.fragment
@@ -125,7 +126,12 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const environment = environmentRef.current;
       if (!environment) return;
       const current = stateRef.current.selection;
-      const next = mergeSelection(environment.model, current, partial);
+      const next = mergeSelection(
+        environment.model,
+        folderTitleLookup(input.catalogue.hierarchy),
+        current,
+        partial,
+      );
       if (sameSelection(current, next)) {
         if (
           !environment.controlled &&
@@ -141,12 +147,12 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         return;
       }
       const routeChanged =
-        current.screenId !== next.screenId ||
+        current.screenPath !== next.screenPath ||
         current.snapshotId !== next.snapshotId;
       const navigation = routeChanged
         ? {
             selection: next,
-            ...(current.screenId === next.screenId &&
+            ...(current.screenPath === next.screenPath &&
             current.snapshotId === next.snapshotId &&
             stateRef.current.route.fragment
               ? { fragment: stateRef.current.route.fragment }
@@ -166,13 +172,14 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
     (route: ShellRoute, navigation?: FrameNavigation) => {
       const environment = environmentRef.current;
       if (!environment) return;
-      const screenId =
-        route.view.kind === "target" ? route.view.target.entry.id : null;
+      const screenPath =
+        route.view.kind === "target" ? route.view.target.entry.path : null;
       const next = mergeSelection(
         environment.model,
+        folderTitleLookup(input.catalogue.hierarchy),
         stateRef.current.selection,
         {
-          screenId,
+          screenPath,
           snapshotId: route.snapshot,
           ...(route.viewport ? { viewport: route.viewport } : {}),
           ...(route.colorScheme ? { colorScheme: route.colorScheme } : {}),

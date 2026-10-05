@@ -218,6 +218,7 @@ test("staging during startup cannot change the spawned child's retained graph", 
 
 function transferredRuntime(runtime: ComponentRuntime) {
   return {
+    outputSnapshot: runtime.outputSnapshot,
     bundle: runtime.bundle,
     generation: runtime.generation,
     interactiveEntries: runtime.interactiveEntries,

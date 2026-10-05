@@ -63,23 +63,23 @@ async function stated(file: string, pattern: RegExp): Promise<number[]> {
 test("documented design-screen counts match the compiled catalogue", async () => {
   const { manifest } = await designCatalogue;
   const designs = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.id.startsWith("design-") ? [entry] : [],
+    entry.kind === "screen" && entry.path.startsWith("design/") ? [entry] : [],
   );
   const components = designs.filter((entry) =>
-    entry.id.startsWith("design-component-"),
+    entry.path.startsWith("design/components/"),
   );
   const interactive = designs.filter((entry) =>
-    entry.id.startsWith("design-interactive-"),
+    entry.path.startsWith("design/interactive/"),
   );
   const interactiveWorkspaces = interactive.filter((entry) =>
-    entry.navPath.includes("Component workspace"),
+    entry.path.startsWith("design/interactive/workspace/"),
   );
   const rebuild = designs.filter((entry) =>
-    entry.id.startsWith("design-rebuild-"),
+    entry.path.startsWith("design/rebuild-status/"),
   );
   const dual = designs.filter((entry) => entry.colorSchemes.includes("dark"));
   const dualBrowse = dual.filter((entry) =>
-    entry.navPath.includes("Catalogue views"),
+    entry.path.startsWith("design/browse/views/"),
   );
   const variants = dualBrowse.filter((entry) => entry.variantOf !== undefined);
   const shell =
@@ -140,8 +140,10 @@ test("documented design-screen counts match the compiled catalogue", async () =>
       ),
       [
         dual.length,
-        dual.filter((entry) => entry.navPath.includes("Appearance")).length,
-        dual.filter((entry) => entry.navPath.includes("Changes")).length,
+        dual.filter((entry) =>
+          entry.path.startsWith("design/browse/appearance/"),
+        ).length,
+        dual.filter((entry) => entry.path.startsWith("design/changes/")).length,
         dualBrowse.length - variants.length,
         variants.length,
       ],
@@ -152,7 +154,7 @@ test("documented design-screen counts match the compiled catalogue", async () =>
       [components.length],
     ],
     [
-      "docs/protocol/mokly-component-design.md",
+      "docs/protocol/mokly-component-design-verification.md",
       /only from the ([a-z]+-[a-z]+) component design routes/gu,
       [components.length],
     ],
@@ -174,8 +176,9 @@ test("documented design-screen counts match the compiled catalogue", async () =>
     );
   assert.equal(
     dual.length,
-    dual.filter((entry) => entry.navPath.includes("Appearance")).length +
-      dual.filter((entry) => entry.navPath.includes("Changes")).length +
+    dual.filter((entry) => entry.path.startsWith("design/browse/appearance/"))
+      .length +
+      dual.filter((entry) => entry.path.startsWith("design/changes/")).length +
       dualBrowse.length,
     "every light/dark design belongs to one documented group",
   );

@@ -43,9 +43,47 @@ test("comparison snapshot links retain their existing resource-only validation",
   validateExportReferences(
     new Map([
       [
-        "__mokly/diffs/__generations/test/snapshots/before/view.html",
+        `__mokly/diffs/__generations/${"a".repeat(64)}/snapshots/before/view.html`,
         '<a href="unpublished.html#missing">Historical link</a>',
       ],
     ]),
   );
+});
+
+test("ordinary entry paths containing snapshots retain fragment validation", () => {
+  assert.throws(
+    () =>
+      validateExportReferences(
+        new Map([
+          [
+            "reports/snapshots/daily/index.html",
+            '<a href="#missing">Broken</a>',
+          ],
+        ]),
+      ),
+    /anchor/,
+  );
+});
+
+test("client modules check their imports, not text that ends in from or import", () => {
+  validateExportReferences(
+    new Map([
+      [
+        "__mokly/client/app.js",
+        'import{a as b}from"./chunk.js";import"/__mokly/client/side.js";const l={label:"Moved from",children:(0,se.jsx)("code",{})},m=["Ready to import","x"],n="Copy from"+"y";',
+      ],
+      ["__mokly/client/chunk.js", "export const a=1;"],
+      ["__mokly/client/side.js", ""],
+    ]),
+  );
+  for (const bundle of [
+    'import{a}from"./missing.js";const l="Moved from";',
+    'import"react";',
+  ])
+    assert.throws(
+      () =>
+        validateExportReferences(new Map([["__mokly/client/app.js", bundle]])),
+      /Export resource is unavailable/,
+      bundle,
+    );
 });

@@ -5,6 +5,7 @@ export type {
   ModuleLoader,
   ModuleResolutionConfig,
   MoklyConfig,
+  RootConfig,
   ReviewConfig,
   StylesheetRule,
   WatchAction,
@@ -12,27 +13,21 @@ export type {
   WatchRule,
 } from "./config/types.js";
 export {
-  folder,
-  defineRoot,
+  defineFolder,
   definePage,
-  page,
   defineScreen,
   defineUseCase,
-  screen,
 } from "./authoring/definitions.js";
 export { MockLink, mockLink } from "./authoring/links.js";
 export { ReviewIgnore, ReviewIgnoreScope } from "./authoring/review_ignore.js";
 export { reviewMaterialKey } from "@mokly/viewer/data";
 export type {
+  FolderInput,
+  FolderDefinition,
   PageInput,
   PageDefinition,
-  NestedPageInput,
   EntryInput,
-  NestedFolderInput,
-  NestedFolderMarker,
-  NestedScreenInput,
   RegistryDefinition,
-  RootInput,
   ScreenDefinition,
   ScreenInput,
   ScreenVariantInput,

@@ -27,14 +27,14 @@ test.afterAll(async () => {
 });
 
 async function open(page: Page, url: string, route: string): Promise<void> {
-  await page.goto(`${url}/view/${route}`);
+  await page.goto(`${url}/view/${route.replace(/index\.html$/, "")}`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-react-shell");
 }
 
 test("Live points inspection back to Static and discards unsaved edits", async ({
   page,
 }) => {
-  await open(page, fixture.url, "components/counter.html");
+  await open(page, fixture.url, "counter/index.html");
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   const label = page.getByLabel("Label", { exact: true });
   await expect(label).toHaveValue("Saved");
@@ -76,7 +76,7 @@ test("Live points inspection back to Static and discards unsaved edits", async (
   await expect(staticFrame.locator("#count")).toHaveText("Saved: 0");
   await expect(highlight).not.toHaveAttribute("title", HIGHLIGHT);
 
-  await page.locator('a[data-route="screens/home.html"]').click();
+  await page.locator('a[data-route="home/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await page.getByRole("tab", { name: "Components", exact: true }).click();
@@ -86,7 +86,7 @@ test("Live points inspection back to Static and discards unsaved edits", async (
 test("the preview mode control is operable from the keyboard", async ({
   page,
 }) => {
-  await open(page, fixture.url, "screens/home.html");
+  await open(page, fixture.url, "home/index.html");
   const group = previewMode(page);
   const staticButton = group.getByRole("button", { name: "Static" });
   const liveButton = group.getByRole("button", { name: "Live" });
@@ -124,7 +124,7 @@ test("an unreachable Live document returns that view to Static", async ({
       status: 404,
     }),
   );
-  await open(page, fixture.url, "screens/details.html");
+  await open(page, fixture.url, "details/index.html");
   const live = previewMode(page).getByRole("button", { name: "Live" });
   await live.click();
   await expect(page.locator(".mbk-live-preparing")).toHaveCount(2);
@@ -136,7 +136,7 @@ test("an unreachable Live document returns that view to Static", async ({
   await expect(
     page.locator('iframe[data-workspace-frame="desktop"]'),
   ).toBeVisible();
-  await page.locator('a[data-route="screens/home.html"]').click();
+  await page.locator('a[data-route="home/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await expect(live).not.toHaveAttribute("aria-disabled");
   await expectStatic(page);
@@ -147,8 +147,8 @@ test("a static-only catalogue keeps its toolbar without Static and Live", async 
 }) => {
   expect(staticOnly.liveOrigin).toBeUndefined();
   for (const [route, heading] of [
-    ["screens/home.html", "Home"],
-    ["components/counter.html", "Counter"],
+    ["home/index.html", "Home"],
+    ["counter/index.html", "Counter"],
   ] as const) {
     await open(page, staticOnly.url, route);
     await expect(page.locator("#mb-main h2")).toHaveText(heading);

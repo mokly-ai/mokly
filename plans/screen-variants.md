@@ -1,6 +1,7 @@
 # Screen Variants
 
-Status: completed for PR #101's delivered scope on 2026-09-22, at the user's
+Status: Completed. [PR #101](https://github.com/mokly-ai/mokly/pull/101)
+merged on 2026-09-22. The plan closed for that delivered scope at the user's
 request. Created 2026-09-19 with the user's consent after the design
 discussion in this workspace, then rewritten the same day when the user chose
 own routes over a query parameter. Milestones 1 to 8 and 10 to 12 are complete.

@@ -13,9 +13,9 @@ import { advertisePublicationPreview } from "../dist/publication/shell_previews.
 const page: ManifestPage = {
   declaredDependencies: [],
   description: "Removed page",
-  id: "removed-page",
+  path: "removed-page",
   kind: "page",
-  navPath: [],
+
   relatedDocs: [],
   sourcePath: "entries/removed.mockup.tsx",
   tags: [],
@@ -26,7 +26,7 @@ const result: ReviewResult = {
   baseRef: "main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 4,
+  schemaVersion: 5 as const,
   screens: [],
   sharedImpact: [],
   components: [],
@@ -36,7 +36,12 @@ const result: ReviewResult = {
 
 test("publication preview boundaries report typed MoklyError failures", () => {
   for (const operation of [
-    () => staticRemovedPreviews([{ entry: page }], { result }, new Map()),
+    () =>
+      staticRemovedPreviews(
+        [{ folderTitles: [], entry: page }],
+        { result },
+        new Map(),
+      ),
     () =>
       advertisePublicationPreview(
         "view/archive/removed.html",
@@ -52,3 +57,30 @@ test("publication preview boundaries report typed MoklyError failures", () => {
       return true;
     });
 });
+
+for (const kind of ["page", "screen"] as const)
+  test(`publication accepts a removed ${kind} descriptor addressed by its nested path`, () => {
+    const entry =
+      kind === "page"
+        ? { ...page, path: "account/old-page" }
+        : {
+            ...page,
+            kind,
+            path: "account/old-screen",
+            colorSchemes: ["light"] as const,
+            useCasePaths: [],
+          };
+    const descriptor = JSON.stringify({ kind, path: entry.path }).replaceAll(
+      '"',
+      "&quot;",
+    );
+    const html = `<html><body><div data-mokly-preview="${descriptor}"></div></body></html>`;
+    const result = advertisePublicationPreview(
+      `view/${entry.path}/index.html`,
+      html,
+      entry,
+      { kind },
+    );
+    assert.match(result, /&quot;published&quot;/);
+    assert.match(result, new RegExp(entry.path));
+  });

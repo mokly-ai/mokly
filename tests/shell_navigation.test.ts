@@ -37,52 +37,52 @@ test("nav tree nests pages and screens in one declared hierarchy", () => {
 
 test("page breadcrumbs use path folders without invented Overview links", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byId.get("old");
+  const entry = catalogue.byPath.get("example/old");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeId: "old",
+    activeId: "example/old",
   });
   assert.match(
     html,
-    /aria-label="Catalogue location" class="mbk-crumbs"><span>Example<\/span>/,
+    /aria-label="Catalogue location" class="mbk-crumbs"><span><button[^>]*data-crumb-folder="example"[^>]*>Example<\/button>/,
   );
   assert.match(html, /class="mbk-stage-embed"/);
 });
 
 test("catalogue nav marks active, changed, and iconed rows", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byId.get("welcome");
+  const entry = catalogue.byPath.get("example/screens/welcome");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeId: "welcome",
-    changedIds: ["welcome"],
+    activeId: "example/screens/welcome",
+    changedEntries: ["example/screens/welcome"],
   });
   assert.match(
     html,
-    /aria-current="page"[^>]*data-route="screens\/welcome\.html"/,
+    /aria-current="page"[^>]*data-route="example\/screens\/welcome\/index\.html"/,
   );
   assert.match(html, /data-changed="true"/);
   assert.match(
     html,
-    /data-entry-id="welcome"[^>]*data-route="screens\/welcome\.html"[^>]*data-tags="forms onboarding"/,
+    /data-entry-id="example\/screens\/welcome"[^>]*data-route="example\/screens\/welcome\/index\.html"[^>]*data-tags="forms onboarding"/,
   );
   assert.match(
     html,
-    /data-entry-id="details"[^>]*data-route="screens\/details\.html"[^>]*data-tags="billing"/,
+    /data-entry-id="example\/screens\/details"[^>]*data-route="example\/screens\/details\/index\.html"[^>]*data-tags="billing"/,
   );
   assert.equal(
-    /data-route="user-flows\/tour\.html"[^>]*data-tags/.test(html),
+    /data-route="example\/tour\/index\.html"[^>]*data-tags/.test(html),
     false,
   );
   assert.match(
     html,
-    /data-nav-disclosure="section:pages" data-nav-section="pages"/,
+    /data-nav-disclosure="section:specs" data-nav-section="specs"/,
   );
   assert.doesNotMatch(html, /data-nav-section="components"/);
-  assert.match(html, /data-nav-folder="folder:Example\/Screens"/);
-  assert.match(html, /data-nav-disclosure="folder:pages:Example\/Screens"/);
+  assert.match(html, /data-nav-folder="folder:example\/screens"/);
+  assert.match(html, /data-nav-disclosure="folder:specs:example\/screens"/);
   assert.match(html, /data-entry-kind="screen"/);
   assert.match(html, /class="mbk-nav-ico folder"><svg/);
   assert.match(html, /class="mbk-nav-count">2</);
@@ -109,13 +109,13 @@ test("filter renders in the nav only when changed routes are known", () => {
   const catalogue = createCatalogue(manifest);
   const withFilter = homePage(catalogue, {
     ...context,
-    changedIds: ["welcome"],
+    changedEntries: ["example/screens/welcome"],
   });
   assert.match(withFilter, /data-mokly-filter/);
   assert.match(withFilter, /class="mbk-nav-filter-count">1</);
   const withNoChanges = homePage(catalogue, {
     ...context,
-    changedIds: [],
+    changedEntries: [],
   });
   assert.match(withNoChanges, /data-mokly-filter/);
   assert.match(withNoChanges, /class="mbk-nav-filter-count">0</);

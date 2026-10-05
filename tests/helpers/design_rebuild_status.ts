@@ -16,39 +16,39 @@ export interface RebuildState {
 /** The five approved states; the first is the canonical screen. */
 export const REBUILD_STATES: readonly RebuildState[] = [
   {
-    id: "design-rebuild-failure",
+    id: "design/rebuild-status/failure",
     notice: "collapsed",
     updating: false,
-    workspace: "design-interactive-static",
-    navigation: "design-browse-screen",
+    workspace: "design/interactive/modes/static",
+    navigation: "design/browse/views/screen",
   },
   {
-    id: "design-rebuild-details",
+    id: "design/rebuild-status/details",
     notice: "open",
     updating: false,
-    workspace: "design-interactive-static",
-    navigation: "design-browse-screen",
+    workspace: "design/interactive/modes/static",
+    navigation: "design/browse/views/screen",
   },
   {
-    id: "design-rebuild-updating",
+    id: "design/rebuild-status/updating",
     notice: undefined,
     updating: true,
-    workspace: "design-interactive-static",
-    navigation: "design-browse-screen",
+    workspace: "design/interactive/modes/static",
+    navigation: "design/browse/views/screen",
   },
   {
-    id: "design-rebuild-failure-updating",
+    id: "design/rebuild-status/failure-updating",
     notice: "collapsed",
     updating: true,
-    workspace: "design-interactive-static",
-    navigation: "design-browse-screen",
+    workspace: "design/interactive/modes/static",
+    navigation: "design/browse/views/screen",
   },
   {
-    id: "design-rebuild-live-component",
+    id: "design/rebuild-status/live-component",
     notice: "collapsed",
     updating: false,
-    workspace: "design-interactive-component",
-    navigation: "design-interactive-component",
+    workspace: "design/interactive/workspace/component",
+    navigation: "design/interactive/workspace/component",
   },
 ];
 
@@ -70,5 +70,5 @@ export function fragment(
   state: RebuildState,
   viewport: "desktop" | "mobile",
 ): string {
-  return viewRoute("screen", state.id, viewport, "light");
+  return viewRoute(state.id, viewport, "light");
 }

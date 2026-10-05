@@ -12,7 +12,7 @@ import { buildPreview } from "../scripts/preview/catalogue.mjs";
 import { importedChangesFixture } from "./helpers/imported_changes_fixture.js";
 
 interface PublishedEntry {
-  readonly id: string;
+  readonly path: string;
   readonly changes: { readonly kind: string; readonly included: boolean };
 }
 
@@ -24,7 +24,7 @@ async function readMembership(
   ) as {
     screens: PublishedEntry[];
   };
-  return new Map(catalogue.screens.map((entry) => [entry.id, entry.changes]));
+  return new Map(catalogue.screens.map((entry) => [entry.path, entry.changes]));
 }
 
 for (const mode of ["committed", "derived"] as const)
@@ -54,7 +54,7 @@ for (const mode of ["committed", "derived"] as const)
         await exportCatalogue(fixture.config, { outDir: "site", base: "HEAD" });
         const exported = await readMembership(path.join(fixture.root, "site"));
         for (const [id, changes] of exported) {
-          const expected = live.changedIds.includes(id);
+          const expected = live.changedEntries.includes(id);
           assert.equal(
             changes.included,
             expected,

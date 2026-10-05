@@ -1,8 +1,9 @@
-import { definitions, interactiveRenderer } from "mokly:interactive-consumer";
+import { modules, interactiveRenderer } from "mokly:interactive-consumer";
 
+import { resolveInteractiveDefinitions } from "./definitions.js";
 import { mountInteractiveDocument } from "./mount.js";
 
 mountInteractiveDocument({
-  definitions,
+  definitions: resolveInteractiveDefinitions(modules),
   ...(interactiveRenderer ? { interactiveRenderer } : {}),
 });

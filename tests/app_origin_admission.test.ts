@@ -26,8 +26,8 @@ for (const appOrigin of [
     const publicHost = new URL(appOrigin).host;
     for (const route of [
       "/",
-      "/view/components/action.html",
-      "/static/components/action-default.mobile.html",
+      "/view/action/",
+      "/static/action/default/index.mobile.html",
       "/__mokly/catalogue.json",
       "/__mokly/client/inspector.js",
     ])
@@ -51,7 +51,7 @@ for (const appOrigin of [
       for (const route of [
         "/",
         "/__mokly/catalogue.json",
-        "/static/components/action-default.mobile.html",
+        "/static/action/default/index.mobile.html",
         "/__mokly/components/render",
       ])
         assert.equal(
@@ -65,16 +65,14 @@ for (const appOrigin of [
           403,
           `${host} ${route}`,
         );
-    const page = await httpRequest(
-      `${server.url}/view/components/action.html`,
-      "GET",
-      { host: publicHost },
-    );
+    const page = await httpRequest(`${server.url}/view/action/`, "GET", {
+      host: publicHost,
+    });
     const capability = renderCapabilityFromShell(page.body)!;
     assert.ok(capability);
     const body = JSON.stringify({
       componentId: "action",
-      variantId: "action-default",
+      variantPath: "action/default",
       viewport: "desktop",
       colorScheme: "light",
       generation: capability.generation,
@@ -208,7 +206,7 @@ test("explicit app origin protects catalogue routes without a controls runtime",
   for (const route of [
     "/",
     "/__mokly/catalogue.json",
-    "/static/components/action-default.mobile.html",
+    "/static/action/default/index.mobile.html",
   ]) {
     assert.equal(
       (

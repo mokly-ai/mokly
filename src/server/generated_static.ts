@@ -29,16 +29,16 @@ export function acceptedGeneratedStatic(
   return files;
 }
 
-/** Prepare committed startup resource bytes from the exact accepted route inventory. */
+/** Resolve the accepted stylesheet inventory once when starting a server. */
 export async function initialGeneratedStatic(
   config: ResolvedConfig,
   runtime?: ComponentRuntime,
 ): Promise<ReadonlyMap<string, GeneratedFile>> {
-  const routes =
+  const expected =
     !runtime &&
     config.generatedOutput === "committed" &&
     fs.existsSync(path.join(config.mockupsDir, GENERATED_DIRECTORY))
       ? new Set((await loadConsumerGraph(config, false)).styleOutputs.keys())
       : new Set<string>();
-  return acceptedGeneratedStatic(config, runtime, routes);
+  return acceptedGeneratedStatic(config, runtime, expected);
 }

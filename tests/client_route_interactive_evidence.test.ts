@@ -22,12 +22,12 @@ import {
 test("route loads and evidence refreshes retain private Live eligibility", async () => {
   const installed = interactiveDescriptor(true);
   const entry = installed.workspace!.entry;
-  const href = viewHref(entry.kind, entry.id);
+  const href = viewHref(entry.path);
   const next = structuredClone(catalogue);
   next.revision.evidence += 1;
   const scoped = projectScopedCatalogue(next, {
     kind: "target",
-    entryId: entry.id,
+    entryPath: entry.path,
     entryKind: entry.kind,
   });
   const nextDescriptor: ViewerCapabilityDescriptor = {
@@ -49,7 +49,7 @@ test("route loads and evidence refreshes retain private Live eligibility", async
     installed,
     routeEnvironment,
   ).evidence.loadRouteEvidence(
-    { entryId: entry.id, source: installed.source },
+    { entryPath: entry.path, source: installed.source },
     new AbortController().signal,
   );
   assert.equal(routed?.workspace?.interactive, true);
@@ -69,7 +69,7 @@ test("route loads and evidence refreshes retain private Live eligibility", async
   const adopted: boolean[] = [];
   const controller = new AbortController();
   createReactViewerCapabilities(installed, updateEnvironment).updates.subscribe(
-    { entryId: entry.id, source: installed.source },
+    { entryPath: entry.path, source: installed.source },
     {
       ...actions(),
       adoptEvidence(revision) {

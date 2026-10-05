@@ -7,9 +7,8 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
-import { extractCssReferences } from "../dist/html_references.js";
+import { extractCssReferences } from "../dist/css_references.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -20,16 +19,16 @@ import {
 } from "./helpers/fixture.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";
 
-test("multiple on-demand views scan orphans and parse CSS only once per generation", async (t) => {
+test("multiple on-demand views adopt retained orphans and parse CSS only once per generation", async (t) => {
   const fixture = await styleFixture(".entry{color:red}");
   t.after(() => removeFixture(fixture));
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   let orphanScans = 0;
   let cssParses = 0;
   const seams = {
-    orphanRoutes: (config, expected) => {
+    orphanRoutes: (snapshot) => {
       orphanScans += 1;
-      return pendingGeneratedOrphanRoutes(config, expected);
+      return snapshot.orphanRoutes;
     },
     parseCss: (text) => {
       cssParses += 1;
@@ -38,16 +37,16 @@ test("multiple on-demand views scan orphans and parse CSS only once per generati
   } satisfies ConstructorParameters<typeof DocumentCompiler>[2];
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime), seams);
   for (const route of [
-    "screens/home.mobile.html",
-    "screens/home.desktop.html",
-    "screens/home.mobile.html",
+    "home/index.mobile.html",
+    "home/index.desktop.html",
+    "home/index.mobile.html",
   ]) {
     assert.match(compiler.render(route).html, /mokly-generated/);
   }
   assert.equal(orphanScans, 1);
   assert.equal(cssParses, 1);
   const next = new DocumentCompiler(runtime, runtimeGraph(runtime), seams);
-  assert.match(next.render("screens/home.mobile.html").html, /mokly-generated/);
+  assert.match(next.render("home/index.mobile.html").html, /mokly-generated/);
   assert.equal(orphanScans, 2);
   assert.equal(cssParses, 2);
 });
@@ -67,7 +66,7 @@ test("pending CSS and assets validate without reading stale reserved disk files"
   await fs.writeFile(physical, Buffer.from([255, 0]));
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   assert.match(
-    compiler.render("screens/home.mobile.html").html,
+    compiler.render("home/index.mobile.html").html,
     /mokly-generated/,
   );
   const missingRuntime = {
@@ -77,7 +76,7 @@ test("pending CSS and assets validate without reading stale reserved disk files"
   assert.throws(
     () =>
       new DocumentCompiler(missingRuntime, runtimeGraph(missingRuntime)).render(
-        "screens/home.mobile.html",
+        "home/index.mobile.html",
       ),
     /missing target.*image\.png/,
   );
@@ -213,7 +212,7 @@ test("compatibility route discovery includes pending styles and omits reserved d
     'export default ({content, availableRoutes}) => content.replace("</body>", `<output data-available="${availableRoutes.join("|")}"></output></body>`);',
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  const html = compiled.outputs.get("screens/home.mobile.html") as string;
+  const html = compiled.outputs.get("home/index.mobile.html") as string;
   assert.match(
     html,
     /mokly-generated\/styles\/entries\/fixture\.mockup\.tsx\.css/,

@@ -31,8 +31,9 @@ export function WorkspaceInspector({
   onSelect,
   onViewport,
   props,
+  previousPath,
   selectedKey,
-  variantId,
+  variantPath,
   views,
   usageDelivery,
 }: {
@@ -46,8 +47,9 @@ export function WorkspaceInspector({
   onSelect(key: string, viewport: Viewport): void;
   onViewport(viewport: Viewport): void;
   props: ReactNode;
+  previousPath?: string | undefined;
   selectedKey?: string | undefined;
-  variantId?: string | undefined;
+  variantPath?: string | undefined;
   views: readonly GeneratedComponentView[];
   usageDelivery: UsageDeliveryState;
 }) {
@@ -80,7 +82,8 @@ export function WorkspaceInspector({
           <WorkspaceEvidence
             data={data}
             {...(loaded ? { loaded } : {})}
-            {...(variantId ? { variantId } : {})}
+            {...(previousPath ? { previousPath } : {})}
+            {...(variantPath ? { variantPath } : {})}
           />
         ),
         props: notice ?? props,

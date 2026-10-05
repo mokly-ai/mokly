@@ -135,14 +135,14 @@ function virtualEntryContents(
     runtimeModule("../renderer/default.js", "../renderer/default.tsx");
   const entryValues = entries.map(
     (source, index) =>
-      `...flatten([entry${index}.mockups ?? entry${index}.default ?? []]).map((definition) => ({ ...definition, entryRoot: ${quote(source)} }))`,
+      `collect(entry${index}, ${quote(toPosixPath(path.relative(config.repoRoot, source)))})`,
   );
   return [
     ...imports,
     transformerImport,
     `import renderer from ${quote(rendererPath)};`,
-    `const flatten = (values) => values.flat(Infinity);`,
-    `export const definitions = [${entryValues.join(",")}];`,
+    `import { collectModuleExports as collect } from ${quote(runtimeModule("../registry/export_collection.js", "../registry/export_collection.ts"))};`,
+    `export const definitions = [${entryValues.join(",")}].flat();`,
     ...(config.compatibility.transformer
       ? [`export { compatibilityTransformer };`]
       : []),
@@ -158,10 +158,20 @@ function interactiveEntryContents(
   const imports = entries.map(
     (source, index) => `import * as entry${index} from ${quote(source)};`,
   );
-  const entryValues = entries.map(
-    (_source, index) =>
-      `(entry${index}.mockups ?? entry${index}.default ?? [])`,
-  );
+  const entryValues = entries.map((source, index) => {
+    const modulePath = toPosixPath(path.relative(config.repoRoot, source));
+    const rootIndex = config.rootByFile?.[modulePath];
+    const root = rootIndex === undefined ? undefined : config.roots[rootIndex];
+    if (!root)
+      throw new Error(`Live entry has no accepted root: ${modulePath}`);
+    const projection = {
+      modulePath,
+      file: toPosixPath(path.relative(root.dir, source)),
+      ...(root.path === undefined ? {} : { prefix: root.path }),
+      transparent: root.transparent,
+    };
+    return `{...${JSON.stringify(projection)}, exports: entry${index}}`;
+  });
   const renderer = config.renderer
     ? [
         `import * as rendererModule from ${quote(config.renderer)};`,
@@ -171,8 +181,7 @@ function interactiveEntryContents(
   return [
     ...imports,
     ...renderer,
-    `const flatten = (values) => values.flat(Infinity);`,
-    `export const definitions = flatten([${entryValues.join(",")}]);`,
+    `export const modules = [${entryValues.join(",")}];`,
   ].join("\n");
 }
 
@@ -198,17 +207,13 @@ function attributedApiContents(
   return [
     `import * as api from ${quote(indexPath)};`,
     `import { __attributeDefinition as attribute } from ${quote(definitionsPath)};`,
-    `import { MoklyError, isMoklyError } from ${quote(runtimeModule("../errors.js", "../errors.ts"))};`,
     `const source = ${quote(sourceRelativePath)};`,
+    `export const defineFolder = (input) => attribute(api.defineFolder(input), source);`,
     `export const definePage = (input) => attribute(api.definePage(input), source);`,
-    `export const page = (input) => attribute(api.page(input), source);`,
     `import { defineComponent as registerComponent } from ${quote(runtimeModule("../components/definition.js", "../components/definition.ts"))};`,
     `export const defineComponent = (input) => { const value = registerComponent(input); value.entries.forEach((entry) => { entry.definedIn = source; }); return value; };`,
     `export const defineScreen = (input) => attribute(api.defineScreen(input), source);`,
     `export const defineUseCase = (input) => attribute(api.defineUseCase(input), source);`,
-    `export const screen = (input) => attribute(api.screen(input), source);`,
-    `export const folder = (input) => attribute(api.folder(input), source);`,
-    `export const defineRoot = (input) => { try { return api.defineRoot(input).map((definition) => definition.definedIn ? definition : attribute(definition, source)); } catch (error) { if (isMoklyError(error)) throw new MoklyError(error.code, source + ": " + error.detail, { cause: error }); throw error; } };`,
     `export const defineConfig = api.defineConfig;`,
     `export const MockLink = api.MockLink;`,
     `export const mockLink = api.mockLink;`,

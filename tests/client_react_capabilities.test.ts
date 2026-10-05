@@ -145,12 +145,12 @@ test("React evidence refresh validates page descriptors before store adoption", 
     },
     workspace: {
       ...descriptor.workspace!,
-      relatedComponents: [{ id: "field", title: "Field" }],
+      relatedComponents: [{ path: "field", title: "Field" }],
     },
   };
   environment.publicCatalogue = projectScopedCatalogue(next, {
     kind: "target",
-    entryId: currentRequest().entryId!,
+    entryPath: currentRequest().entryPath!,
     entryKind: descriptor.workspace!.entry.kind,
   });
   environment.responses.push(htmlResponse(environment.location.href));
@@ -193,7 +193,7 @@ test("React evidence refresh rejects mixed public and private revisions", async 
   };
   environment.publicCatalogue = projectScopedCatalogue(publicCatalogue, {
     kind: "target",
-    entryId: currentRequest().entryId!,
+    entryPath: currentRequest().entryPath!,
     entryKind: descriptor.workspace!.entry.kind,
   });
   environment.responses.push(htmlResponse(environment.location.href));

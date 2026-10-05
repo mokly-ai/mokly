@@ -5,11 +5,11 @@ import { test } from "node:test";
 
 import { parse } from "parse5";
 
-import { actionModes } from "../examples/basic/entries/design/components/parts/navigation_states.js";
+import { actionModes } from "../examples/basic/specs/design/components/parts/navigation_states.js";
 import {
   appearanceModes,
   welcomeModes,
-} from "../examples/basic/entries/design/parts/navigation_states.js";
+} from "../examples/basic/specs/design/parts/navigation_states.js";
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
@@ -21,12 +21,12 @@ import {
 import { repositoryRoot } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-test("the canonical documented inventory exactly matches the complete design ids", async () => {
+test("the canonical documented inventory exactly matches the complete design paths", async () => {
   const { manifest } = await designCatalogue;
   const spec = (
     await Promise.all(
       [
-        "docs/protocol/mokly-shell-design.md",
+        "docs/protocol/mokly-shell-design-inventory.md",
         "docs/protocol/mokly-component-design.md",
         "docs/protocol/mokly-component-inspector-design.md",
         "docs/protocol/mokly-component-controls-design.md",
@@ -35,13 +35,13 @@ test("the canonical documented inventory exactly matches the complete design ids
       ].map((file) => fs.readFile(path.join(repositoryRoot, file), "utf8")),
     )
   ).join("\n");
-  const documented = [...spec.matchAll(/\|\s*`(design-[^`]+)`\s*\|/g)]
+  const documented = [...spec.matchAll(/\|\s*`(design\/[^`]+)`\s*\|/g)]
     .map((match) => match[1])
     .sort();
   const actual = manifest.entries
     .flatMap((entry) =>
-      entry.kind === "screen" && entry.id.startsWith("design-")
-        ? [entry.id]
+      entry.kind === "screen" && entry.path.startsWith("design/")
+        ? [entry.path]
         : [],
     )
     .sort();
@@ -57,15 +57,15 @@ const COMPARISON_FAMILIES = [
 test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
   const { manifest, outputs } = await designCatalogue;
   const designs = manifest.entries.filter(
-    (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
   );
   let checked = 0;
   for (const entry of designs) {
     if (entry.kind !== "screen" || !entry.colorSchemes.includes("dark"))
       continue;
     for (const viewport of ["mobile", "desktop"] as const) {
-      const route = viewRoute("screen", entry.id, viewport, "dark");
-      assert.ok(route, `${entry.id} ${viewport}`);
+      const route = viewRoute(entry.path, viewport, "dark");
+      assert.ok(route, `${entry.path} ${viewport}`);
       const html = textOutput(outputs, route);
       assert.ok(html, route);
       for (const link of elements(
@@ -73,7 +73,7 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
         (node) => node.tagName === "a",
       )) {
         const id = attribute(link, "data-mokly-link");
-        const target = designs.find((entry) => entry.id === id);
+        const target = designs.find((entry) => entry.path === id);
         if (target?.kind !== "screen") continue;
         const href = attribute(link, "href");
         assert.ok(href, `${route}: ${id} has no href`);
@@ -83,8 +83,7 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
             path.posix.join(path.posix.dirname(route), href),
           ),
           viewRoute(
-            "screen",
-            target.id,
+            target.path,
             viewport,
             target.colorSchemes.includes("dark") ? "dark" : "light",
           ),
@@ -101,7 +100,7 @@ test("comparison families publish the same schemes for every member", async () =
   const dualFamilies: boolean[] = [];
   for (const family of COMPARISON_FAMILIES) {
     const members = family.map((id) => {
-      const entry = manifest.entries.find((entry) => entry.id === id);
+      const entry = manifest.entries.find((entry) => entry.path === id);
       assert.ok(entry?.kind === "screen", id);
       return [id, entry.colorSchemes.includes("dark")] as const;
     });
@@ -138,7 +137,7 @@ test("a tag chip without a destination is a label, not a control", async () => {
       );
   let labels = 0;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
+    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry)
       .filter((view) => view.colorScheme === "light")
       .map((view) => view.path)) {

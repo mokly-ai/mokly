@@ -26,7 +26,7 @@ export interface ViewerCapabilitySource {
 
 /** Current entry request; consumers recreate it after selection or revision adoption. */
 export interface ViewerCapabilityRequest {
-  entryId: string | null;
+  entryPath: string | null;
   source: ViewerCapabilitySource;
 }
 
@@ -155,9 +155,9 @@ export function serializeViewerCapabilityDescriptor(
 /** Bind the latest source revision to the currently routed entry. */
 export function viewerCapabilityRequest(
   source: ViewerCapabilitySource,
-  entryId: string | null,
+  entryPath: string | null,
 ): ViewerCapabilityRequest {
-  return { entryId, source };
+  return { entryPath, source };
 }
 
 /** Confirm that a current request still belongs to the installed live source. */

@@ -42,16 +42,14 @@ test("static export keeps component Changes, affected screens, saved variants an
   const result = parseReviewResult(
     JSON.parse(files.get(exported.comparisonUrl.slice(1))!.toString()),
   );
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(
-    result.changes.map((item) => (item.after ?? item.before)!.id),
+    result.changes.map((item) => (item.after ?? item.before)!.path),
     ["action"],
   );
-  const action = workspace(
-    files.get("view/components/action.html")!.toString(),
-  );
-  const home = workspace(files.get("view/screens/home.html")!.toString());
+  const action = workspace(files.get("view/action/index.html")!.toString());
+  const home = workspace(files.get("view/home/index.html")!.toString());
   assert.equal("interactive" in action, false);
   assert.equal("interactive" in action.entry, false);
   assert.equal("interactive" in home, false);
@@ -68,8 +66,8 @@ test("static export keeps component Changes, affected screens, saved variants an
     home.relatedComponents.map((item) => item.title),
     ["Action"],
   );
-  assert.ok(files.has("view/components/action.html"));
-  assert.ok(files.has("view/components/action-default.html"));
+  assert.ok(files.has("view/action/index.html"));
+  assert.ok(files.has("view/action/default/index.html"));
   assert.equal(
     [...files.keys()].some(
       (name) => name.startsWith("id/") || name.includes(".variants/"),
@@ -92,7 +90,7 @@ test("static export retains removed saved variants and baseline component consum
   const fixture = await createExportFixture(source);
   t.after(fixture.close);
   const changed = source.replace(
-    ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+    ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
     "",
   );
   assert.notEqual(changed, source);
@@ -100,28 +98,26 @@ test("static export retains removed saved variants and baseline component consum
   const exported = await exportCatalogue(fixture.config, { outDir: "site" });
   assert.ok(exported.comparisonUrl);
   const files = await directoryFiles(fixture.output);
-  const action = workspace(
-    files.get("view/components/action.html")!.toString(),
-  );
+  const action = workspace(files.get("view/action/index.html")!.toString());
   assert.deepEqual(
-    action.variants.map((item) => [item.value.id, item.removed]),
+    action.variants.map((item) => [item.value.path, item.removed]),
     [
-      ["action-default", false],
-      ["action-disabled", true],
+      ["action/default", false],
+      ["action/disabled", true],
     ],
   );
   const result = parseReviewResult(
     JSON.parse(files.get(exported.comparisonUrl.slice(1))!.toString()),
   );
-  if (result.schemaVersion !== 4) assert.fail("Expected component result");
+  if (result.schemaVersion !== 5) assert.fail("Expected component result");
   const removed = result.components
-    .find((item) => item.id === "action")!
-    .variants.find((item) => item.id === "action-disabled")!;
+    .find((item) => item.path === "action")!
+    .variants.find((item) => item.path === "action/disabled")!;
   assert.equal(removed.state, "removed");
   for (const view of removed.views)
     assert.ok(
       files.has(
-        `${path.posix.dirname(exported.comparisonUrl.slice(1))}/snapshots/before/${viewRoute("component", removed.id, view.viewport, view.colorScheme)}`,
+        `${path.posix.dirname(exported.comparisonUrl.slice(1))}/snapshots/before/${viewRoute(removed.path, view.viewport, view.colorScheme)}`,
       ),
     );
 });
@@ -144,11 +140,11 @@ test("preview capture retains route-scoped workspace evidence after removing liv
   const output = path.join(fixture.root, ".context/published");
   await buildPreview(fixture.config, output, { includeChanges: true });
   const actionPage = await fs.readFile(
-    path.join(output, "view/components/action.html"),
+    path.join(output, "view/action/index.html"),
     "utf8",
   );
   const homePage = await fs.readFile(
-    path.join(output, "view/screens/home.html"),
+    path.join(output, "view/home/index.html"),
     "utf8",
   );
   assert.doesNotMatch(actionPage, /data-mokly-host-capabilities/);

@@ -3,14 +3,14 @@ import path from "node:path";
 import { build } from "esbuild";
 
 import type { CompatibilityTransformer } from "../compatibility/types.js";
-import type { ComponentGraphRenderer } from "../components/render.js";
-import { discoverEntryModules } from "../config/entry_discovery.js";
+import { discoverEntries } from "../config/entry_discovery.js";
 import {
   FileSystemPostcssConfigLoader,
   type PostcssConfigLoader,
 } from "../config/postcss_loader.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
+import { loadDocuments } from "../documents/load.js";
 import { MoklyError, errorMessage, isMoklyError } from "../errors.js";
 import type { Renderer } from "../renderer/types.js";
 
@@ -25,10 +25,8 @@ import {
   packageNodePaths,
 } from "./consumer_resolution.js";
 import type { GeneratedFile } from "./generated_file.js";
-import {
-  interactiveSourceCapture,
-  type InteractiveSourceCaptureCandidate,
-} from "./interactive_source_capture.js";
+import { interactiveSourceCapture } from "./interactive_source_capture.js";
+import type { LoadedGraph } from "./loaded_graph.js";
 import { createMetafilePathMapper } from "./metafile_paths.js";
 import { assertSafeGeneratedTree } from "./reserved_tree.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
@@ -38,25 +36,6 @@ import { collectPostcssDependencies } from "./styles/dependency_inventory.js";
 import { createStyleProcessor } from "./styles/processor_setup.js";
 import { graphStyleRoots } from "./styles/root_graph.js";
 import { inventoryTransformerStyles } from "./styles/transformer_inventory.js";
-
-/** Consumer modules loaded in one React-safe esbuild graph. */
-export interface LoadedGraph {
-  compatibilityTransformer?: CompatibilityTransformer;
-  definitions: unknown[];
-  entrySources: readonly string[];
-  interactiveSourceCapture?: InteractiveSourceCaptureCandidate;
-  sourceFiles: readonly string[];
-  renderer: Renderer;
-  renderWithComponents: ComponentGraphRenderer;
-  /** Per-root generated CSS routes (renderer and entries only). */
-  stylesheetRoutes: ReadonlyMap<string, string>;
-  /** CSS text and opaque assets for this compilation. */
-  styleOutputs: ReadonlyMap<string, GeneratedFile>;
-  /** Authored CSS-pass inputs and assets actually delivered by a root. */
-  deliveredStyleSources: readonly string[];
-  /** Globbed plugin dependencies monitored for new authored files. */
-  postcssWatchDirectories?: ResolvedConfig["postcssWatchDirectories"];
-}
 
 /** Bundle and import all React-bearing consumer modules as one graph. */
 export async function loadConsumerGraph(
@@ -89,10 +68,10 @@ async function loadGraph(
   captureInteractiveSources: boolean,
 ): Promise<LoadedGraph> {
   assertSafeGeneratedTree(config);
-  const entrySources = timeSync("graph.discover", () =>
-    discoverEntryModules(config),
-  );
-  config = { ...config, entryModules: entrySources };
+  const discovery = timeSync("graph.discover", () => discoverEntries(config));
+  const entrySources = discovery.entryModules;
+  config = { ...config, ...discovery };
+  const documents = loadDocuments(config, discovery);
   const capture = captureInteractiveSources
     ? interactiveSourceCapture(config)
     : undefined;
@@ -168,10 +147,17 @@ async function loadGraph(
       config.mockupsDir,
       mapper,
     );
+    const documentSources = normalizeSourceFiles(
+      documents.sources,
+      config.repoRoot,
+      config.mockupsDir,
+    );
     const deliveryRoots = roots.filter((root) => root.emit);
     const transformerStyles = roots.find((root) => !root.emit)?.styles ?? [];
     const graphInputs = new Set(
-      graphFiles.map((file) => path.resolve(config.repoRoot, file)),
+      [...graphFiles, ...documentSources].map((file) =>
+        path.resolve(config.repoRoot, file),
+      ),
     );
     const bundled = deliveryRoots.some((root) => root.styles.length)
       ? await bundleStyles(
@@ -201,12 +187,14 @@ async function loadGraph(
     const sourceFiles = normalizeSourceFiles(
       [
         ...graphFiles,
+        ...documentSources,
         ...bundled.sourceFiles,
         ...transformerFiles,
         ...styles.preprocessor.sourceFiles,
         ...dependencies.sourceFiles,
         ...(config.configSourceFiles ?? [config.configPath]),
-        ...entrySources,
+        ...(config.protectedFiles ?? config.resolvedFiles ?? entrySources),
+        ...(config.folderRecords ?? []).map((folder) => folder.sourcePath),
         ...(config.renderer ? [config.renderer] : []),
         ...(config.compatibility.transformer
           ? [config.compatibility.transformer]
@@ -223,11 +211,13 @@ async function loadGraph(
     if (!evaluate)
       return {
         definitions: [],
+        discovery,
         entrySources,
         ...(capture ? { interactiveSourceCapture: capture.candidate } : {}),
         sourceFiles,
         stylesheetRoutes: bundled.routes,
-        styleOutputs: bundled.outputs,
+        styleOutputs: new Map([...bundled.outputs, ...documents.outputs]),
+        documents: documents.entries,
         deliveredStyleSources,
         postcssWatchDirectories: dependencies.watchDirectories,
         renderWithComponents: () => {
@@ -241,6 +231,7 @@ async function loadGraph(
       code: built.outputFiles!.find((file) => file.path === outputPath)!.text,
       filename: outputPath,
       entrySources,
+      documents: documents.entries,
     };
     const imported = timeSync("graph.evaluate", () => evaluateBundle(bundle));
     timingCounts("graph.bundle", () => ({
@@ -270,11 +261,13 @@ async function loadGraph(
           }
         : {}),
       definitions: imported.definitions,
+      discovery,
       entrySources,
       ...(capture ? { interactiveSourceCapture: capture.candidate } : {}),
       sourceFiles,
       stylesheetRoutes: bundled.routes,
-      styleOutputs: bundled.outputs,
+      styleOutputs: new Map([...bundled.outputs, ...documents.outputs]),
+      documents: documents.entries,
       deliveredStyleSources,
       postcssWatchDirectories: dependencies.watchDirectories,
       renderer: imported.renderer as Renderer,

@@ -51,7 +51,7 @@ test("a missing captured module fails Live while Static stays available", async 
   fixture.beforeRemove(() => server.close());
 
   const staticResponse = await fetch(
-    `${server.url}/static/screens/home.mobile.html`,
+    `${server.url}/static/home/index.mobile.html`,
   );
   assert.equal(staticResponse.status, 200);
   const prepared = await fetch(
@@ -60,7 +60,7 @@ test("a missing captured module fails Live while Static stays available", async 
   );
   assert.equal(prepared.status, 503);
   assert.equal(
-    (await fetch(`${server.url}/static/screens/home.mobile.html`)).status,
+    (await fetch(`${server.url}/static/home/index.mobile.html`)).status,
     200,
   );
   const failure = diagnostics.find(

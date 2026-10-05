@@ -23,7 +23,7 @@ test.afterAll(async () => {
 });
 
 async function open(page: Page, route: string): Promise<void> {
-  await page.goto(`${fixture.url}/view/${route}`);
+  await page.goto(`${fixture.url}/view/${route.replace(/index\.html$/, "")}`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-react-shell");
 }
 
@@ -51,12 +51,12 @@ test("a view waiting for its eligibility never prepares or mounts Live, and its 
   page,
 }) => {
   const seen = recordLiveRequests(page, fixture.liveOrigin!);
-  await open(page, "screens/home.html");
+  await open(page, "home/index.html");
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await expect.poll(() => seen.preparations).toBe(1);
   await expectPreparing(page);
 
-  const details = await navigateHeld(page, "screens/details.html", "Details");
+  const details = await navigateHeld(page, "details/index.html", "Details");
   await expectLive(page);
   await expectPreparing(page);
   expect(seen.preparations).toBe(1);
@@ -64,7 +64,7 @@ test("a view waiting for its eligibility never prepares or mounts Live, and its 
   await expect.poll(() => seen.preparations).toBe(2);
   expect(await details.presence()).toEqual([true]);
 
-  const notes = await navigateHeld(page, "screens/notes.html", "Notes");
+  const notes = await navigateHeld(page, "notes/index.html", "Notes");
   await expectLive(page);
   await expectPreparing(page);
   notes.release();
@@ -73,11 +73,7 @@ test("a view waiting for its eligibility never prepares or mounts Live, and its 
   expect(seen.preparations).toBe(2);
   expect(await notes.presence()).toEqual([true, false]);
 
-  const counter = await navigateHeld(
-    page,
-    "components/counter.html",
-    "Counter",
-  );
+  const counter = await navigateHeld(page, "counter/index.html", "Counter");
   await expect(previewMode(page)).toHaveCount(0);
   await expectStaticFrames(page);
   expect(seen.preparations).toBe(2);
@@ -88,7 +84,7 @@ test("a view waiting for its eligibility never prepares or mounts Live, and its 
 
   fixture.gate.open();
   await expectLiveReady(page);
-  const home = await navigateHeld(page, "screens/home.html", "Home");
+  const home = await navigateHeld(page, "home/index.html", "Home");
   await expectLive(page);
   await expectPreparing(page);
   expect(seen.documents.filter((path) => path.includes("home"))).toEqual([]);

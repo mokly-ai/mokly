@@ -5,6 +5,7 @@ import {
   generatedViews,
   encodeUrlPath,
   entryRoute,
+  documentRoute,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
 import type { LogicalTarget } from "@mokly/viewer/data";
@@ -26,7 +27,15 @@ export function trustedDocument(
   catalogue: Catalogue,
 ): TrustedBrowseDocument | undefined {
   for (const entry of catalogue.manifest.entries) {
-    if (entry.kind === "page" && entryRoute("page", entry.id) === route)
+    if (entry.kind === "document")
+      for (const colorScheme of entry.colorSchemes)
+        if (documentRoute(entry.path, colorScheme) === route)
+          return {
+            colorScheme,
+            sourcePath: entry.sourcePath,
+            viewport: "desktop",
+          };
+    if (entry.kind === "page" && entryRoute(entry.path) === route)
       return {
         colorScheme: "light",
         sourcePath: entry.sourcePath,
@@ -52,35 +61,43 @@ export function expectedPortableHref(
   destination: LogicalTarget,
   catalogue: Catalogue,
 ): string {
-  const entry = catalogue.byId.get(destination.id);
+  const entry = catalogue.byPath.get(destination.path);
   const screen =
     entry?.kind === "screen"
       ? entry
       : entry?.kind === "component"
         ? isManifestComponentVariant(entry)
           ? entry
-          : catalogue.hierarchy.variantsById.get(entry.id)?.[0]
+          : catalogue.hierarchy.variantsByPath.get(entry.path)?.[0]
         : entry?.kind === "use-case" && entry.steps[0]
-          ? catalogue.byId.get(entry.steps[0].screenId)
+          ? catalogue.byPath.get(entry.steps[0].screenPath)
           : undefined;
   if (
     entry?.kind !== "page" &&
+    entry?.kind !== "document" &&
     screen?.kind !== "screen" &&
     screen?.kind !== "component"
   ) {
     throw invalid(
       sourceRoute,
-      `trusted marker links to an invalid id: ${destination.id}`,
+      `trusted marker links to an invalid id: ${destination.path}`,
     );
   }
   const views = screen
     ? generatedViews(screen).filter((view) => view.viewport === source.viewport)
     : [];
   const targetRoute =
-    entry?.kind === "page"
-      ? entryRoute("page", entry.id)
-      : (views.find((view) => view.colorScheme === source.colorScheme)?.path ??
-        views[0]!.path);
+    entry?.kind === "document"
+      ? documentRoute(
+          entry.path,
+          entry.colorSchemes.includes(source.colorScheme)
+            ? source.colorScheme
+            : "light",
+        )
+      : entry?.kind === "page"
+        ? entryRoute(entry.path)
+        : (views.find((view) => view.colorScheme === source.colorScheme)
+            ?.path ?? views[0]!.path);
   const relative = path.posix.relative(
     path.posix.dirname(sourceRoute),
     targetRoute,

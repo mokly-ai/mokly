@@ -28,7 +28,7 @@ for (const request of ["package-name", "relative", "repository"] as const) {
         const accepted = await acceptedStyles(fixture.root);
         const documents = new DocumentService(accepted);
         t.after(() => documents.close());
-        const html = (await documents.read("screens/home.desktop.html")).html;
+        const html = (await documents.read("home/index.desktop.html")).html;
         const name = html.match(/data-module="([^"]+)"/)?.[1];
         assert.ok(name);
         assert.ok(
@@ -73,7 +73,7 @@ for (const request of ["package-name", "relative", "repository"] as const) {
           metadata,
         );
         assert.equal(
-          (await documents.read("screens/home.desktop.html")).html,
+          (await documents.read("home/index.desktop.html")).html,
           html,
         );
 

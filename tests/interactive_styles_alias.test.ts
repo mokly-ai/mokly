@@ -24,7 +24,7 @@ test("CSS Module aliases retain each logical path's accepted Static export map",
   const runtime = await acceptedStyles(fixture.root);
   const documents = new DocumentService(runtime);
   t.after(() => documents.close());
-  const html = (await documents.read("screens/home.desktop.html")).html;
+  const html = (await documents.read("home/index.desktop.html")).html;
   const direct = html.match(/data-module="([^"]+)"/)?.[1];
   const indirect = html.match(/data-alias="([^"]+)"/)?.[1];
   assert.ok(direct);

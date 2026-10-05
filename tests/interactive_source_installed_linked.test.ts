@@ -19,7 +19,7 @@ for (const mutation of ["edit", "delete", "syntax error"] as const) {
     const accepted = await acceptedStyles(fixture.root);
     const documents = new DocumentService(accepted);
     fixture.beforeRemove(() => documents.close());
-    const html = (await documents.read("screens/home.desktop.html")).html;
+    const html = (await documents.read("home/index.desktop.html")).html;
     assert.match(html, /accepted-linked-source/);
     assert.ok(
       accepted.interactiveSources!.files.some(
@@ -51,10 +51,7 @@ for (const mutation of ["edit", "delete", "syntax error"] as const) {
       await fs.readFile(path.join(fixture.installed, "index.js"), "utf8"),
       installed,
     );
-    assert.equal(
-      (await documents.read("screens/home.desktop.html")).html,
-      html,
-    );
+    assert.equal((await documents.read("home/index.desktop.html")).html, html);
     if (mutation === "edit") {
       const next = await acceptedStyles(fixture.root);
       const nextCode = await compileLiveStyles(next);

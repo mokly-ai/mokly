@@ -107,7 +107,7 @@ export function assignedFrameResource(
   }
 }
 
-/** Canonicalize the optional final `.html` suffix used by static hosts. */
+/** Canonicalize index directories and optional HTML suffixes from static hosts. */
 export function normalizedHtmlPath(pathname: string): string {
-  return pathname.endsWith(".html") ? pathname.slice(0, -5) : pathname;
+  return pathname.replace(/\/index\.html$|\/$/, "").replace(/\.html$/, "");
 }

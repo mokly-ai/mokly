@@ -14,9 +14,9 @@ import type { InteractiveSourceEntry } from "./route_table.js";
 /** One generated screen or saved component view eligible for Live selection. */
 export interface InteractiveViewTarget {
   colorScheme: "dark" | "light";
-  entryId: string;
+  entryPath: string;
   route: string;
-  variantId?: string;
+  variantPath?: string;
   viewport: "desktop" | "mobile";
 }
 
@@ -53,9 +53,9 @@ export function interactiveGeneration(
     );
   const entries = runtime.manifest.entries.map((entry) => {
     if (entry.kind !== "screen" && entry.kind !== "component") return entry;
-    const interactive = runtime.interactiveEntries[entry.id];
+    const interactive = runtime.interactiveEntries[entry.path];
     if (typeof interactive !== "boolean")
-      throw new Error(`Live runtime is missing eligibility for ${entry.id}`);
+      throw new Error(`Live runtime is missing eligibility for ${entry.path}`);
     return { ...entry, interactive };
   });
   const views = new Map<string, InteractiveViewTarget>();
@@ -64,13 +64,13 @@ export function interactiveGeneration(
     for (const view of generatedViews(entry))
       views.set(view.path, {
         colorScheme: view.colorScheme,
-        entryId:
+        entryPath:
           entry.kind === "component" && isManifestComponentVariant(entry)
             ? entry.variantOf
-            : entry.id,
+            : entry.path,
         route: view.path,
         ...(entry.kind === "component" && isManifestComponentVariant(entry)
-          ? { variantId: entry.id }
+          ? { variantPath: entry.path }
           : {}),
         viewport: view.viewport,
       });
@@ -110,7 +110,7 @@ export function validateInteractiveViewQuery(
   if (
     (viewport !== null && viewport !== target.viewport) ||
     (scheme !== null && scheme !== target.colorScheme) ||
-    (variant !== null && variant !== target.variantId)
+    (variant !== null && variant !== target.variantPath)
   )
     return "not-found";
   return "valid";

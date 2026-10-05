@@ -2,47 +2,56 @@
 import type { ColorScheme } from "@mokly/viewer";
 import {
   isManifestComponentVariant,
-  type ManifestV7,
+  type ManifestV8,
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { validateDependencyDeclarations } from "../components/dependency_validation.js";
 import { MoklyError } from "../errors.js";
 
+import type { FolderRecord } from "./folder_records.js";
 import { createManifest } from "./manifest.js";
 import { validateManifestMetadata } from "./manifest_validation.js";
 
 /** One private live-index entry with resolved Live-preview eligibility. */
 export type CatalogueIndexEntry =
   | (Extract<
-      ManifestV7["entries"][number],
+      ManifestV8["entries"][number],
       { kind: "component" | "screen" }
     > & { interactive: boolean })
-  | Exclude<ManifestV7["entries"][number], { kind: "component" | "screen" }>;
+  | Exclude<ManifestV8["entries"][number], { kind: "component" | "screen" }>;
 
 export interface CatalogueIndex {
   schemaVersion: "live-index-1";
   generatedBy: "mokly";
   sourceFiles: readonly string[];
   entries: readonly CatalogueIndexEntry[];
+  folders: ManifestV8["folders"];
 }
 
-export type CatalogueMetadata = ManifestV7 | CatalogueIndex;
+export type CatalogueMetadata = ManifestV8 | CatalogueIndex;
 
 export function createCatalogueIndex(
   entries: readonly ResolvedRegistryEntry[],
   sourceFiles: readonly string[],
   schemes: readonly ColorScheme[],
+  folders: readonly FolderRecord[] = [],
 ): CatalogueIndex {
-  const manifest = createManifest(entries, sourceFiles, schemes);
-  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  const manifest = createManifest(
+    entries,
+    sourceFiles,
+    schemes,
+    new Map(),
+    folders,
+  );
+  const byId = new Map(entries.map((entry) => [entry.path, entry]));
   return parseCatalogueIndex({
     ...manifest,
     entries: manifest.entries.map((entry) =>
       entry.kind === "screen" || entry.kind === "component"
         ? {
             ...entry,
-            interactive: interactiveEnabled(byId.get(entry.id)),
+            interactive: interactiveEnabled(byId.get(entry.path)),
           }
         : entry,
     ),
@@ -77,7 +86,7 @@ export function parseCatalogueIndex(value: unknown): CatalogueIndex {
     )
       throw new MoklyError(
         "manifest-invalid",
-        `${String(entry.id)} has invalid interactive eligibility`,
+        `${String(entry.path)} has invalid interactive eligibility`,
       );
     const { interactive: _interactive, ...manifestEntry } = entry;
     return manifestEntry;
@@ -85,8 +94,8 @@ export function parseCatalogueIndex(value: unknown): CatalogueIndex {
   const metadata = validateManifestMetadata({
     ...index,
     entries,
-    schemaVersion: 7,
-  }) as ManifestV7;
+    schemaVersion: 8,
+  }) as ManifestV8;
   for (const entry of metadata.entries) {
     validateDependencyDeclarations(entry);
     if (

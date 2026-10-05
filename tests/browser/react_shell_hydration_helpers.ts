@@ -3,6 +3,8 @@ import path from "node:path";
 import { expect, type Page } from "@playwright/test";
 import { build } from "esbuild";
 
+import { expectedConsoleNotice } from "./console_notices.js";
+
 export async function buildDevelopmentBundle(): Promise<string> {
   const result = await build({
     bundle: true,
@@ -51,14 +53,8 @@ export async function delayHydration(
 export function captureBrowserErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() !== "error") return;
-    const sandboxDiagnostic =
-      message.text().startsWith("Blocked script execution in") &&
-      (message.location().url.includes("/static/") ||
-        /^Blocked script execution in '(?:https?:\/\/[^/]+\/static\/|about:srcdoc')/u.test(
-          message.text(),
-        ));
-    if (!sandboxDiagnostic) errors.push(message.text());
+    if (message.type() === "error" && !expectedConsoleNotice(message))
+      errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;

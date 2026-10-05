@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
 import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
@@ -219,7 +219,7 @@ class RecordingReporter implements ServeReporter {
       `baseline-ready:${commit}:${cacheHit ? "reused" : "rebuilt"}`,
     );
   }
-  catalogueReady(manifest: ManifestV7): void {
+  catalogueReady(manifest: ManifestV8): void {
     const screens = manifest.entries.filter(
       (entry) => entry.kind === "screen",
     ).length;

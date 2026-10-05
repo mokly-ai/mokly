@@ -113,7 +113,7 @@ export async function interactiveServerFixture(
     throw error;
   }
   fixture.beforeRemove(() => server.close());
-  const home = runtime.manifest.entries.find((entry) => entry.id === "home");
+  const home = runtime.manifest.entries.find((entry) => entry.path === "home");
   if (home?.kind !== "screen")
     throw new Error("Interactive fixture Home screen is missing");
   return {
@@ -125,7 +125,7 @@ export async function interactiveServerFixture(
       server.interactivePort === undefined
         ? undefined
         : `http://127.0.0.1:${String(server.interactivePort)}`,
-    mobileRoute: viewRoute("screen", home.id, "mobile", "light"),
+    mobileRoute: viewRoute(home.path, "mobile", "light"),
     runtime,
     server,
   };

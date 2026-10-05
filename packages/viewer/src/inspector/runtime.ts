@@ -1,4 +1,8 @@
-import type { Box, InstanceBoundary } from "../client/frame_adapter.js";
+import type {
+  Box,
+  FrameNavigation,
+  InstanceBoundary,
+} from "../client/frame_adapter.js";
 
 import { inspection } from "./inspection.js";
 import {
@@ -42,6 +46,15 @@ export const inspectorRuntime = (
   };
   const emit = (body: MessageBody) => {
     if (events.includes(body.type as InspectorEventType)) send(body);
+  };
+  const publishNavigation = (
+    event: Event,
+    navigation: FrameNavigation | undefined,
+  ) => {
+    if (navigation && events.includes("navigation")) {
+      event.preventDefault();
+      emit({ type: "navigation", navigation });
+    }
   };
   const draw = () => {
     if (!active) layer?.remove();
@@ -122,11 +135,7 @@ export const inspectorRuntime = (
           return;
         }
       }
-      const navigation = navigate(event);
-      if (navigation && events.includes("navigation")) {
-        event.preventDefault();
-        emit({ type: "navigation", navigation });
-      }
+      publishNavigation(event, navigate(event));
     } catch (error) {
       fail(error);
     }
@@ -144,11 +153,7 @@ export const inspectorRuntime = (
   on("click", activate as EventListener);
   on("auxclick", activate as EventListener);
   on(INTERACTIVE_NAVIGATION_EVENT, (event) => {
-    const navigation = inspectorInteractiveNavigation(event);
-    if (navigation && events.includes("navigation")) {
-      event.preventDefault();
-      emit({ type: "navigation", navigation });
-    }
+    publishNavigation(event, inspectorInteractiveNavigation(event));
   });
   on("keydown", (event) => {
     if ((event as KeyboardEvent).key === "Escape" && active) {

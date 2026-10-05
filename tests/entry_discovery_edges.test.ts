@@ -23,7 +23,7 @@ test("entriesDir resolves lexical paths through an in-repository symlink and rej
   await fs.promises.symlink("source-entries", fixture.entriesDir);
 
   const config = await loadConfig(fixture.root);
-  assert.equal(config.entriesDir, fixture.entriesDir);
+  assert.equal(config.roots[0]?.dir, fixture.entriesDir);
   assert.deepEqual(config.entryModules, [fixture.entryPath]);
   assert.deepEqual(discoverEntryModules(config), [fixture.entryPath]);
 
@@ -31,7 +31,7 @@ test("entriesDir resolves lexical paths through an in-repository symlink and rej
   await fs.promises.symlink(outside.entriesDir, fixture.entriesDir);
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message: /entriesDir resolves outside repoRoot through a symlink/,
+    message: /roots\[0\].dir resolves outside repoRoot through a symlink/,
   });
 });
 
@@ -40,13 +40,12 @@ test("a missing entry glob stable prefix reports the zero-match error", async (c
   context.after(() => removeFixture(fixture));
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["missing/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "missing", files: ["**/*.mockup.{ts,tsx}"] }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message:
-      /entries glob matches no module: missing\/\*\*\/\*\.mockup\.\{ts,tsx\}/,
+    message: /roots\[0\].dir does not name a directory: .*missing/,
   });
 });
 
@@ -61,13 +60,12 @@ test("a zero-match error also lists unrelated denied roots", async (context) => 
   await fs.promises.writeFile(dependency, validEntrySource());
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["src/**/*.mokup.tsx"], mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "src", files: ["**/*.mokup.tsx"] }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message:
-      /entries glob matches no module: src\/\*\*\/\*\.mokup\.tsx; not searched: src\/node_modules/,
+    message: /root matches no file: src; not searched: src\/node_modules/,
   });
 });
 
@@ -79,7 +77,7 @@ test("discovery accepts denied basenames but prunes matching directories", async
   await fs.promises.writeFile(target, "export const mockups = [];\n");
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["src/**"], mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "src", files: ["**"] }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
   assert.deepEqual((await loadConfig(fixture.root)).entryModules, [target]);
@@ -92,8 +90,7 @@ test("discovery accepts denied basenames but prunes matching directories", async
   );
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message:
-      /entries glob matches no module: src\/\*\*; not searched: src\/target/,
+    message: /root matches no file: src; not searched: src\/target/,
   });
 });
 
@@ -105,7 +102,7 @@ test("a repository-root glob skips review output during discovery", async (conte
   await fs.promises.writeFile(reviewEntry, validEntrySource());
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: ".", review: { outDir: ".review" } };\n',
+    'export default { roots: [{ dir: ".", files: ["**/*.mockup.{ts,tsx}"] }], mockupsDir: "mockups", repoRoot: ".", review: { outDir: ".review" } };\n',
   );
 
   const config = await loadConfig(fixture.root);
@@ -125,7 +122,7 @@ test("discovery reports an inaccessible directory with config-invalid and EACCES
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["src/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "src", files: ["**/*.mockup.{ts,tsx}"] }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
   const readdir = fs.readdirSync;
   context.mock.method(
@@ -144,17 +141,20 @@ test("discovery reports an inaccessible directory with config-invalid and EACCES
   });
 });
 
-test("entry globs with backslashes normalize to POSIX", async (context) => {
+test("root files reject backslashes instead of normalizing them", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  await fs.promises.writeFile(
-    fixture.configPath,
-    'export default { entries: ["entries\\\\**\\\\*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
+  assert.throws(
+    () =>
+      resolveConfig(
+        {
+          roots: [{ dir: "entries", files: [String.raw`**\*.mockup.tsx`] }],
+          mockupsDir: "mockups",
+        },
+        fixture.configPath,
+      ),
+    /roots\[0\].files requires safe relative POSIX globs/,
   );
-
-  const config = await loadConfig(fixture.root);
-  assert.deepEqual(config.entryGlobs, ["entries/**/*.mockup.{ts,tsx}"]);
-  assert.deepEqual(config.entryModules, [fixture.entryPath]);
 });
 
 test("entry glob validation translates minimatch expansion failures", async (context) => {
@@ -165,14 +165,17 @@ test("entry glob validation translates minimatch expansion failures", async (con
   assert.throws(
     () =>
       resolveConfig(
-        { entries: [oversized], mockupsDir: "mockups" },
+        {
+          roots: [{ dir: "entries", files: [oversized] }],
+          mockupsDir: "mockups",
+        },
         fixture.configPath,
       ),
     (error: Error & { code?: string }) => {
       assert.equal(error.code, "config-invalid");
       assert.match(
         error.message,
-        /entries requires safe relative POSIX globs; invalid item/,
+        /roots\[0\].files requires safe relative POSIX globs; invalid item/,
       );
       return true;
     },
@@ -191,7 +194,13 @@ test("direct discovery retains the cache denial as defense in depth", async (con
     () =>
       discoverEntryModules({
         ...config,
-        entryGlobs: [".mokly-cache/*.mockup.tsx"],
+        roots: [
+          {
+            dir: path.resolve(config.repoRoot, ".mokly-cache"),
+            files: ["*.mockup.tsx"],
+            transparent: [],
+          },
+        ],
       }),
     {
       code: "config-invalid",
@@ -214,7 +223,7 @@ for (const code of ["ENOENT", "ENOTDIR"]) {
     );
     await fs.promises.writeFile(
       fixture.configPath,
-      'export default { entries: ["src/**/*.mockup.tsx"], mockupsDir: "mockups", repoRoot: "." };\n',
+      'export default { roots: [{ dir: "src", files: ["**/*.mockup.tsx"] }], mockupsDir: "mockups", repoRoot: "." };\n',
     );
     const readdir = fs.readdirSync;
     context.mock.method(
@@ -229,7 +238,7 @@ for (const code of ["ENOENT", "ENOTDIR"]) {
     await assert.rejects(loadConfig(fixture.root), {
       code: "config-invalid",
       message:
-        /entries glob matches no module: src\/\*\*\/\*\.mockup\.tsx; not searched: src\/dist, src\/vanished$/,
+        /root matches no file: src; not searched: src\/dist, src\/vanished$/,
     });
   });
 }

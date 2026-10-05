@@ -41,7 +41,7 @@ test(
       path.join(root, "build.cjs"),
       `const fs = require("node:fs");
 fs.mkdirSync("mockups");
-fs.writeFileSync("mockups/mokly-manifest.json", JSON.stringify({ schemaVersion: 7, generatedBy: "mokly", sourceFiles: [], entries: [] }));
+fs.writeFileSync("mockups/mokly-manifest.json", JSON.stringify({ schemaVersion: 8, folders: [], generatedBy: "mokly", sourceFiles: [], entries: [] }));
 fs.writeFileSync("mockups/page.html", "Historical output");
 `,
     );

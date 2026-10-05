@@ -24,7 +24,7 @@ appears only on screen and component-variant entries in a catalogue
 whose local Serve offers Live; pages, use-case steps, comparison panes and
 removed previous versions never show it. A static-only catalogue, or an entry
 that opted out, shows the existing toolbar unchanged, with no placeholder gap;
-`design-interactive-static-catalogue` depicts both. While a newly opened
+`design/interactive/workspace/static-catalogue` depicts both. While a newly opened
 view's Live availability is still loading, its toolbar keeps the control only
 if the previous view offered it, and the preview shows the preparing state
 only when that control has Live selected, so this interval needs no additional
@@ -58,7 +58,7 @@ While Live is selected, the Props/Controls and Usage tabs keep their icons and
 open normally, but their panels replace their content with one secondary line:
 "Switch to Static to inspect or edit this view." A Components (or Nested
 components) tab, which lists and selects instances in the rendered view,
-shows the same line; `design-interactive-screen` depicts it open on a screen.
+shows the same line; `design/interactive/workspace/screen` depicts it open on a screen.
 Details remains unchanged.
 Highlight components is disabled with the description "Highlighting works in
 Static." Comparison controls are unchanged and open the comparison stage as
@@ -67,26 +67,26 @@ while a comparison is shown and Current brings back the same choice.
 
 ## Owning Catalogue
 
-Source lives under `examples/basic/entries/design/interactive/`; generated
+Source lives under `examples/basic/specs/design/interactive/`; generated
 artboards live under `examples/basic/generated/design/interactive/`. The
 canonical screen shows a product screen in Live. Every screen has separate
 mobile and desktop components. The screens reuse the existing shell, view
 toolbar, artboard, device frames and icon inspector parts; they add no new
 shell chrome.
 
-| Entry id                              | Route                                           | State                                                       |
-| ------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
-| `design-interactive-overview`         | `design/interactive/overview.html`              | Welcome screen with Live selected                           |
-| `design-interactive-static`           | `design/interactive/modes/static.html`          | Same screen with Static selected                            |
-| `design-interactive-preparing`        | `design/interactive/modes/preparing.html`       | Live selected while the preview is being prepared           |
-| `design-interactive-unavailable`      | `design/interactive/modes/unavailable.html`     | Live disabled, Static selected                              |
-| `design-interactive-component`        | `design/interactive/workspace/component.html`   | Action saved variant in Live with the Props/Controls notice |
-| `design-interactive-screen`           | `design/interactive/workspace/screen.html`      | Welcome screen in Live with the Components notice           |
-| `design-interactive-static-catalogue` | `design/interactive/workspace/static-only.html` | Toolbar of a catalogue without Live, no control             |
+| Entry path                                      | Route                                                      | State                                                       |
+| ----------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------- |
+| `design/interactive/overview`                   | `design/interactive/overview/index.html`                   | Welcome screen with Live selected                           |
+| `design/interactive/modes/static`               | `design/interactive/modes/static/index.html`               | Same screen with Static selected                            |
+| `design/interactive/modes/preparing`            | `design/interactive/modes/preparing/index.html`            | Live selected while the preview is being prepared           |
+| `design/interactive/modes/unavailable`          | `design/interactive/modes/unavailable/index.html`          | Live disabled, Static selected                              |
+| `design/interactive/workspace/component`        | `design/interactive/workspace/component/index.html`        | Action saved variant in Live with the Props/Controls notice |
+| `design/interactive/workspace/screen`           | `design/interactive/workspace/screen/index.html`           | Welcome screen in Live with the Components notice           |
+| `design/interactive/workspace/static-catalogue` | `design/interactive/workspace/static-catalogue/index.html` | Toolbar of a catalogue without Live, no control             |
 
 Overview is the canonical parent screen. Modes and Workspace are bounded child
 galleries with three owning screens each. All screens are light-only
-documents, matching the existing shell mockups. Links use the logical-id
+documents, matching the existing shell mockups. Links use the logical-path
 navigation contract so they work from disk and in Browse. Static depictions of
 the control do not implement the separate runtime behaviour.
 
@@ -96,24 +96,24 @@ The control itself carries every transition; no design-only navigation is
 added inside or under an artboard. The top-bar Appearance selector remains the
 standalone catalogue's only color-scheme control.
 
-| Source                       | Segment | Destination                         |
-| ---------------------------- | ------- | ----------------------------------- |
-| design-browse-screen         | Live    | design-interactive-overview         |
-| design-interactive-overview  | Static  | design-interactive-static           |
-| design-interactive-static    | Live    | design-interactive-preparing        |
-| design-interactive-preparing | Static  | design-interactive-static           |
-| design-component-overview    | Live    | design-interactive-component        |
-| design-interactive-component | Static  | design-component-overview           |
-| design-interactive-screen    | Static  | design-component-inspection-details |
+| Source                                 | Segment | Destination                                     |
+| -------------------------------------- | ------- | ----------------------------------------------- |
+| design/browse/views/screen             | Live    | design/interactive/overview                     |
+| design/interactive/overview            | Static  | design/interactive/modes/static                 |
+| design/interactive/modes/static        | Live    | design/interactive/modes/preparing              |
+| design/interactive/modes/preparing     | Static  | design/interactive/modes/static                 |
+| design/components/overview             | Live    | design/interactive/workspace/component          |
+| design/interactive/workspace/component | Static  | design/components/overview                      |
+| design/interactive/workspace/screen    | Static  | design/components/inspection/inspection-details |
 
 Selecting Live for the first time prepares the preview, so the static screen
 opens the preparing state while the ready pair keeps its own transition.
-`design-interactive-unavailable` and `design-interactive-static-catalogue`
+`design/interactive/modes/unavailable` and `design/interactive/workspace/static-catalogue`
 have no incoming control transition, because no product action reaches them:
 they are entered from the catalogue navigation, exactly like the Changes
 availability states. Unavailable is also the only artboard whose Live segment
 is a described depiction instead of a link, and the static-only catalogue is
-the only workspace with no segments at all. `design-interactive-screen` is
+the only workspace with no segments at all. `design/interactive/workspace/screen` is
 entered from the catalogue navigation too: its Static segment opens the
 screen's own page, which keeps its toolbar unchanged under the rule below, so
 no Live segment leads back to it.
@@ -122,10 +122,10 @@ Only the two canonical entry points — the selected Browse screen and the
 component page — record a preview mode. Every other existing artboard keeps
 its toolbar unchanged, which is also the depiction of a catalogue that never
 offers Live. Each artboard declares its own mode, links and availability in
-`entries/design/parts/navigation_states.ts`, so a screen that has not been
+`specs/design/parts/navigation_states.ts`, so a screen that has not been
 designed for Live cannot acquire the control implicitly. The
 [rebuild status designs](./mokly-rebuild-status-design.md#owning-catalogue)
-draw the selected Browse screen and `design-interactive-component` unchanged
+draw the selected Browse screen and `design/interactive/workspace/component` unchanged
 under their notice, so they reuse those two records and add none.
 
 Every Workspace screen shows the Highlight components toggle. The component

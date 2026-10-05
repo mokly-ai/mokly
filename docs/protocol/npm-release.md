@@ -47,7 +47,7 @@ version dependency. Root build, clean, formatting, lint, typecheck and package
 gates cover both packages. Pack the viewer first; local smoke and release
 fixtures install both tarballs explicitly so an unpublished viewer is never
 resolved from the registry. Consumer fixtures exercise every public viewer
-entry, SSR of the [public v3 fixture](./fixtures/catalogue-v3.json) in
+entry, SSR of the [public v4 fixture](./fixtures/catalogue-v4.json) in
 `scripts/package/viewer.mjs` (`smokeViewer`), browser bundle boundaries and
 NodeNext declarations. Both manifests, packed metadata, export targets,
 allowlists, licenses, React peers and the exact viewer dependency are checked.

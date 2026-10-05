@@ -11,48 +11,50 @@ import {
 } from "./helpers/html.js";
 import {
   assertAttributes,
+  detailsSection,
+  requiredElement,
+  tagsRow,
+} from "./helpers/shell_assertions.js";
+import {
   context,
   darkManifest,
-  detailsSection,
   homePage,
   manifest,
-  requiredElement,
   routePage,
   taggedFlowManifest,
-  tagsRow,
   untaggedManifest,
 } from "./helpers/shell_fixture.js";
 
 test("details inspector omits derived paths and lists the schemes row", () => {
   const dark = createCatalogue(darkManifest);
-  const screen = routePage(dark, "screens/welcome.html");
+  const screen = routePage(dark, "example/screens/welcome/");
   assert.match(
     screen,
     /<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes<\/span><span class="mbk-meta-v">light, dark<\/span><\/div>/,
   );
   assert.equal(screen.includes('mbk-meta-k">Generated'), false);
 
-  const fallback = routePage(dark, "screens/details.html");
+  const fallback = routePage(dark, "example/screens/details/");
   assert.match(
     fallback,
     /<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes<\/span><span class="mbk-meta-v">light<\/span><\/div>/,
   );
   assert.equal(fallback.includes('mbk-meta-k">Generated'), false);
 
-  const flow = routePage(dark, "user-flows/tour.html");
+  const flow = routePage(dark, "example/tour/");
   assert.equal(flow.includes('mbk-meta-k">Schemes'), false);
 
   const lightOnly = createCatalogue(manifest);
-  const lightScreen = routePage(lightOnly, "screens/welcome.html");
+  const lightScreen = routePage(lightOnly, "example/screens/welcome/");
   assert.equal(lightScreen.includes('mbk-meta-k">Schemes'), false);
   assert.equal(lightScreen.includes('mbk-meta-k">Generated'), false);
-  const page = routePage(lightOnly, "pages/overview.html");
+  const page = routePage(lightOnly, "example/overview/");
   assert.equal(page.includes('mbk-meta-k">Generated'), false);
 });
 
 test("details inspector chips the tags an entry declares", () => {
   const dark = createCatalogue(darkManifest);
-  const welcome = routePage(dark, "screens/welcome.html");
+  const welcome = routePage(dark, "example/screens/welcome/");
   assert.ok(welcome.includes(tagsRow("forms", "onboarding")));
   assert.ok(
     welcome.includes(
@@ -60,19 +62,16 @@ test("details inspector chips the tags an entry declares", () => {
     ),
   );
 
-  const second = detailsSection(routePage(dark, "screens/details.html"));
+  const second = detailsSection(routePage(dark, "example/screens/details/"));
   assert.ok(second.includes(tagsRow("billing")));
 
-  const untagged = detailsSection(routePage(dark, "user-flows/tour.html"));
+  const untagged = detailsSection(routePage(dark, "example/tour/"));
   assert.equal(untagged.includes('mbk-meta-k">Tags'), false);
   assert.equal(untagged.includes("data-mokly-tag"), false);
 });
 
 test("a use case chips its tags in the same details row", () => {
-  const flow = routePage(
-    createCatalogue(taggedFlowManifest),
-    "user-flows/tour.html",
-  );
+  const flow = routePage(createCatalogue(taggedFlowManifest), "example/tour/");
   assert.ok(
     flow.includes(
       '<code class="mbk-code">entries/fixture.mockup.tsx</code></span></div>' +

@@ -35,7 +35,7 @@ test("real Serve pins installed-to-repository requests after IPC and deletion", 
     interactivePort: 0,
   });
   fixture.beforeRemove(() => server.close());
-  const route = "/static/screens/home.desktop.html";
+  const route = "/static/home/index.desktop.html";
   const html = await (await fetch(`${server.url}${route}`)).text();
   assert.match(html, /accepted-linked-source/);
   await fs.rm(path.join(fixture.linked, "index.ts"));

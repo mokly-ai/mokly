@@ -69,12 +69,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
   }) => {
     for (const [before, after] of [
       [
-        viewRoute("screen", "design-interactive-static", viewport, "light"),
-        fragment(state("design-rebuild-updating"), viewport),
+        viewRoute("design/interactive/modes/static", viewport, "light"),
+        fragment(state("design/rebuild-status/updating"), viewport),
       ],
       [
-        fragment(state("design-rebuild-failure"), viewport),
-        fragment(state("design-rebuild-failure-updating"), viewport),
+        fragment(state("design/rebuild-status/failure"), viewport),
+        fragment(state("design/rebuild-status/failure-updating"), viewport),
       ],
     ] as const) {
       await open(page, before, viewport);
@@ -115,7 +115,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   }) => {
     await open(
       page,
-      fragment(state("design-rebuild-failure"), viewport),
+      fragment(state("design/rebuild-status/failure"), viewport),
       viewport,
     );
     const summary = page.locator(".mbk-rebuild-details > summary");
@@ -150,7 +150,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: reduced motion stills the ring and keeps the text and geometry`, async ({
     page,
   }) => {
-    const route = fragment(state("design-rebuild-updating"), viewport);
+    const route = fragment(state("design/rebuild-status/updating"), viewport);
     await open(page, route, viewport);
     const spinner = page.locator(".mbk-progress-spinner");
     await expect(spinner).toHaveCSS("animation-name", "mbk-progress-spin");
@@ -167,7 +167,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   }) => {
     await open(
       page,
-      fragment(state("design-rebuild-details"), viewport),
+      fragment(state("design/rebuild-status/details"), viewport),
       viewport,
     );
     const detail = page.locator(".mbk-rebuild-detail");
@@ -192,7 +192,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   }) => {
     await open(
       page,
-      fragment(state("design-rebuild-failure-updating"), viewport),
+      fragment(state("design/rebuild-status/failure-updating"), viewport),
       viewport,
     );
     const card = page.locator(".mbk-rebuild-card");

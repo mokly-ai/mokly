@@ -1,7 +1,7 @@
 import type { FrameNavigation } from "../client/frame_adapter.js";
 
 import type { InspectorMetadata } from "./metadata.js";
-import { identity, object, shape } from "./values.js";
+import { linkIdentity } from "./values.js";
 
 /** Narrow DOM event used by the browser-mounted `MockLink asChild` adapter. */
 export const INTERACTIVE_NAVIGATION_EVENT = "mokly:interactive-navigation";
@@ -47,11 +47,6 @@ export const inspectorInteractiveNavigation = (
 ): FrameNavigation | undefined => {
   if (!(event instanceof CustomEvent)) return;
   const value: unknown = event.detail;
-  if (
-    !object(value) ||
-    !shape(value, 2 + Number(Object.hasOwn(value, "fragment"))) ||
-    !identity(value)
-  )
-    return;
-  return { ...value, activation: "primary" } as FrameNavigation;
+  if (!linkIdentity(value)) return;
+  return { ...value, activation: "primary" };
 };

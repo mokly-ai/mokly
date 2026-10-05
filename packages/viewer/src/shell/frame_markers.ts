@@ -256,7 +256,7 @@ function sameTargets(
       const candidate = next[index];
       return (
         candidate?.id === target.id &&
-        candidate.instance.screenId === target.instance.screenId &&
+        candidate.instance.screenPath === target.instance.screenPath &&
         candidate.instance.stepIndex === target.instance.stepIndex &&
         candidate.instance.viewport === target.instance.viewport &&
         candidate.instance.colorScheme === target.instance.colorScheme &&

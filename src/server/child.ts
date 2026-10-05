@@ -160,8 +160,8 @@ function waitForChildShutdown(
           ...(update.kind ? { kind: update.kind } : {}),
           changesStatus:
             update.changesStatus ??
-            (update.changedIds === null ? "pending" : "ready"),
-          changedIds: update.changedIds,
+            (update.changedEntries === null ? "pending" : "ready"),
+          changedEntries: update.changedEntries,
           componentChanges: update.componentChanges,
           version: update.version,
         });

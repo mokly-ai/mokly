@@ -19,7 +19,7 @@ import {
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: the live workspace points inspection and highlighting back to Static`, async () => {
     const { document } = await designDocument(
-      "design-interactive-component",
+      "design/interactive/workspace/component",
       viewport,
     );
     assert.deepEqual(noticePanels(document), ["Props", "Usage"]);
@@ -29,7 +29,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: a screen in Live opens its Components tab on the Static notice`, async () => {
     const { document } = await designDocument(
-      "design-interactive-screen",
+      "design/interactive/workspace/screen",
       viewport,
     );
     const tabs = elements(
@@ -64,7 +64,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: a catalogue without Live keeps its toolbar unchanged`, async () => {
     const { document } = await designDocument(
-      "design-interactive-static-catalogue",
+      "design/interactive/workspace/static-catalogue",
       viewport,
     );
     assert.equal(previewMode(document), undefined);

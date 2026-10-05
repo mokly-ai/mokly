@@ -142,10 +142,10 @@ export function readViewerRouteEvidenceRevision(
   rebuildStatus?: RebuildStatus,
 ): ViewerEvidenceRevision | undefined {
   const bootstrap = readLiveShellBootstrap(value);
-  const entryId =
-    bootstrap.view.kind === "target" ? bootstrap.view.entryId : null;
+  const entryPath =
+    bootstrap.view.kind === "target" ? bootstrap.view.entryPath : null;
   if (
-    entryId !== request.entryId ||
+    entryPath !== request.entryPath ||
     bootstrap.context.base !== nextSource.base ||
     bootstrap.context.contentVersion !== nextSource.contentRevision ||
     bootstrap.context.updateVersion !== nextSource.updateVersion ||
@@ -182,12 +182,12 @@ function validateEvidenceRevision(
     catalogue.revision.evidence !== nextSource.evidenceRevision
   )
     return;
-  const expected = workspaceEntry(catalogue, request.entryId);
+  const expected = workspaceEntry(catalogue, request.entryPath);
   if (
     (expected === undefined) !== (workspace === undefined) ||
     (expected &&
       workspace &&
-      (workspace.entry.id !== expected.id ||
+      (workspace.entry.path !== expected.path ||
         workspace.entry.kind !== expected.kind))
   )
     return;
@@ -209,7 +209,7 @@ function evidenceSourceMatches(
   return (
     viewerCapabilityRequestMatches(installed, request) &&
     viewerCapabilityRequestMatches(request.source, {
-      entryId: request.entryId,
+      entryPath: request.entryPath,
       source: nextSource,
     }) &&
     (!requireAdvance || sourceAdvances(request.source, nextSource))
@@ -256,16 +256,16 @@ function sameRequest(
   right: ViewerCapabilityRequest,
 ): boolean {
   return (
-    left.entryId === right.entryId &&
+    left.entryPath === right.entryPath &&
     viewerCapabilitySourceEquals(left.source, right.source)
   );
 }
 
 function workspaceEntry(
   catalogue: ShellCatalogueReadModel,
-  entryId: string | null,
+  entryPath: string | null,
 ) {
-  if (entryId === null) return;
+  if (entryPath === null) return;
   return [
     ...catalogue.screens,
     ...catalogue.components,
@@ -273,6 +273,6 @@ function workspaceEntry(
   ].find(
     (entry) =>
       (entry.kind === "screen" || entry.kind === "component") &&
-      entry.id === entryId,
+      entry.path === entryPath,
   );
 }

@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { entryRoute } from "@mokly/viewer/data";
 
-import { REBUILD_DETAIL } from "../examples/basic/entries/design/parts/rebuild_status.js";
+import { REBUILD_DETAIL } from "../examples/basic/specs/design/parts/rebuild_status.js";
 
 import {
   attribute,
@@ -50,17 +50,18 @@ test("Update status owns the five approved light-only states", async () => {
     manifest.entries
       .filter(
         (entry) =>
-          entry.kind === "screen" && entry.navPath.at(-1) === "Update status",
+          entry.kind === "screen" &&
+          entry.path.startsWith("design/rebuild-status/"),
       )
-      .map(({ id }) => id)
+      .map(({ path }) => path)
       .sort(),
     REBUILD_STATES.map(({ id }) => id).sort(),
   );
-  assert.equal(REBUILD_STATES[0]?.id, "design-rebuild-failure");
+  assert.equal(REBUILD_STATES[0]?.id, "design/rebuild-status/failure");
   for (const state of REBUILD_STATES) {
-    const entry = manifest.entries.find((entry) => entry.id === state.id);
+    const entry = manifest.entries.find((entry) => entry.path === state.id);
     assert.ok(entry?.kind === "screen", state.id);
-    assert.equal(entryRoute("screen", entry.id), `screens/${state.id}.html`);
+    assert.equal(entryRoute(entry.path), `${state.id}/index.html`);
     assert.deepEqual(entry.colorSchemes, ["light"], state.id);
   }
 });

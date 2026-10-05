@@ -6,7 +6,9 @@ test("desktop inspector uses a centered divider with real bounded resizing", asy
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(componentDesignUrl("controls/editing/edited", "desktop"));
+  await page.goto(
+    componentDesignUrl("design/components/controls/editing/edited", "desktop"),
+  );
   const divider = page.locator(".ce-inspector-resize");
   await expect(divider).toBeVisible();
   const region = page.locator(".ce-preview-region");
@@ -65,7 +67,9 @@ test.describe("mobile inspector sheet", () => {
   test("sheet overlays the preview and its grabber changes size without losing edits", async ({
     page,
   }) => {
-    await page.goto(componentDesignUrl("controls/editing/edited", "mobile"));
+    await page.goto(
+      componentDesignUrl("design/components/controls/editing/edited", "mobile"),
+    );
     const dock = page.locator(".ce-inspector-dock");
     const inspector = page.locator(".ce-inspector");
     const preview = page.locator(".ce-preview-pane");
@@ -124,7 +128,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1440, height: 1000 },
     );
-    await page.goto(componentDesignUrl("overview", viewport));
+    await page.goto(componentDesignUrl("design/components/overview", viewport));
     const usage = page.locator('[data-panel="usage"] > summary > svg');
     const ink = await usage.evaluate((node) => {
       const box = (node as SVGGraphicsElement).getBBox();

@@ -121,7 +121,10 @@ not `interactive-bundle` failures. `server_static.ts` refuses ineligible views
 before bundle preparation and composes only the current generation's ordinary
 on-demand document.
 
-`runtime/` strictly validates the bootstrap, configures the route table, finds
+`runtime/definitions.ts` collects all branded exports and derives their paths
+from accepted roots. It shares the collector and path rules with Build.
+Relative links use the selected entry's link base. Imported definitions resolve
+through their registered identity. `runtime/` strictly validates the bootstrap, configures the route table, finds
 the bundled registry entry, and mounts with React's `createRoot` inside
 `flushSync`. Component roots use their saved complete props; registered
 components inside any Live tree use the non-recording component context. A
@@ -176,13 +179,13 @@ Origin must be exactly `http://` plus the accepted loopback Host, or exact
 
 ## Navigation
 
-The bootstrap route table resolves every routable id from the accepted
+The bootstrap route table resolves every routable path from the accepted
 generation's manifest and maps it to only its portable href, without the
 inspector map's 1,024-link limit. Parity tests pin those manifest routes to the
 authored-entry Build resolver. Native `MockLink`, `MockLink asChild`, and
 resolved raw `mock:` anchors
 prevent unmodified primary activation and emit `mokly:interactive-navigation`
-with `{ id, fragment?, target }`. The inspector strictly validates that logical
+with `{ screenPath, fragment?, target }`. The inspector strictly validates that logical
 identity and sends the unchanged frame navigation protocol; the host remains
 the authority for catalogue destinations. Modified and middle activation keeps
 native behavior on the resolved href.

@@ -15,7 +15,7 @@ test("Live diagnostics validate, cap and log once per view generation", async (t
   const diagnostic = {
     code: "render-error",
     colorScheme: "light",
-    entryId: "home",
+    entryPath: "home",
     entryKind: "screen",
     message: "consumer\nrender failed",
     viewport: "mobile",
@@ -77,7 +77,7 @@ test("Live diagnostics reject non-JSON and unknown view identities", async (t) =
       await post(endpoint, {
         code: "render-error",
         colorScheme: "light",
-        entryId: "missing",
+        entryPath: "missing",
         entryKind: "screen",
         message: "wrong axes",
         viewport: "desktop",

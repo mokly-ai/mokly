@@ -48,7 +48,7 @@ test("a failed save keeps the last working version in Static and Live", async ({
 }) => {
   test.setTimeout(240_000);
   await instrument(page);
-  await page.goto(`${serve.url}/view/screens/home.html`);
+  await page.goto(`${serve.url}/view/home/`);
   await hydrated(page);
   await expect(notice(page)).toHaveCount(0);
   await previewMode(page).getByRole("button", { name: "Live" }).click();
@@ -128,7 +128,7 @@ test("an update that finishes within a second never shows progress", async ({
   test.setTimeout(120_000);
   await instrument(page);
   await page.clock.install();
-  await page.goto(`${serve.url}/view/screens/details.html`);
+  await page.goto(`${serve.url}/view/details/`);
   await hydrated(page);
   await freezeClock(page);
   await serve.save(serve.sources.broken);
@@ -147,7 +147,7 @@ test("progress appears exactly one second after updating begins", async ({
   test.setTimeout(120_000);
   await instrument(page);
   await page.clock.install();
-  await page.goto(`${serve.url}/view/screens/details.html`);
+  await page.goto(`${serve.url}/view/details/`);
   await hydrated(page);
   await freezeClock(page);
   await serve.gate.arm();
@@ -172,7 +172,7 @@ test("a page opened during an update starts the delay when it hydrates", async (
   await serve.save(serve.sources.held("load"));
   await serve.gate.entered();
   await serve.waitForStatus((status) => status.updating);
-  const route = `${serve.url}/view/screens/details.html`;
+  const route = `${serve.url}/view/details/`;
   const served = await (await fetch(route)).text();
   expect(served, "first paint never shows progress").not.toContain(
     "mbk-progress",

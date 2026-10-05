@@ -36,10 +36,10 @@ export enum InteractiveViewEligibilityReason {
 export class InteractiveViewEligibilityError extends Error {
   constructor(
     readonly reason: InteractiveViewEligibilityReason,
-    readonly entryId: string,
-    readonly variantId?: string,
+    readonly entryPath: string,
+    readonly variantPath?: string,
   ) {
-    super(eligibilityMessage(reason, entryId, variantId));
+    super(eligibilityMessage(reason, entryPath, variantPath));
     this.name = "InteractiveViewEligibilityError";
   }
 }
@@ -54,21 +54,21 @@ export class InteractiveDocumentError extends Error {
 
 function eligibilityMessage(
   reason: InteractiveViewEligibilityReason,
-  entryId: string,
-  variantId?: string,
+  entryPath: string,
+  variantPath?: string,
 ): string {
   switch (reason) {
     case InteractiveViewEligibilityReason.UnknownEntry:
-      return `Live entry is unknown: ${entryId}`;
+      return `Live entry is unknown: ${entryPath}`;
     case InteractiveViewEligibilityReason.NotLiveKind:
-      return `Live entry is not a screen or component: ${entryId}`;
+      return `Live entry is not a screen or component: ${entryPath}`;
     case InteractiveViewEligibilityReason.OptedOut:
-      return `Live entry opted out: ${entryId}`;
+      return `Live entry opted out: ${entryPath}`;
     case InteractiveViewEligibilityReason.MissingVariant:
-      return `Live component needs a saved variant: ${entryId}`;
+      return `Live component needs a saved variant: ${entryPath}`;
     case InteractiveViewEligibilityReason.UnknownVariant:
-      return `Live component has unknown saved variant: ${variantId ?? "<missing>"}`;
+      return `Live component has unknown saved variant: ${variantPath ?? "<missing>"}`;
     case InteractiveViewEligibilityReason.UnexpectedVariant:
-      return `Live screen cannot name a component variant: ${entryId}`;
+      return `Live screen cannot name a component variant: ${entryPath}`;
   }
 }

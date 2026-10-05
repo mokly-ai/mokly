@@ -68,7 +68,7 @@ test.afterAll(async () => {
 test("a watched rebuild reloads the Live frame on the new generation", async ({
   page,
 }) => {
-  await page.goto(`${url}/view/screens/home.html`);
+  await page.goto(`${url}/view/home/`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-react-shell");
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await expectLiveReady(page);

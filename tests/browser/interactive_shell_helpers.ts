@@ -97,13 +97,16 @@ export async function holdEvidence(
   const requested = new Promise<void>((resolve) => {
     markRequested = resolve;
   });
-  await page.route(`**/view/${route}`, async (intercepted) => {
-    if (intercepted.request().resourceType() === "fetch") {
-      markRequested();
-      await released;
-    }
-    await intercepted.continue().catch(() => undefined);
-  });
+  await page.route(
+    `**/view/${route.replace(/index\.html$/, "")}`,
+    async (intercepted) => {
+      if (intercepted.request().resourceType() === "fetch") {
+        markRequested();
+        await released;
+      }
+      await intercepted.continue().catch(() => undefined);
+    },
+  );
   return { release, requested };
 }
 

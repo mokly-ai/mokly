@@ -21,13 +21,13 @@ test("config discovery walks upward from nested workspace directories", async (c
   assert.equal(discoverConfig(nested), fixture.configPath);
   const config = await loadConfig(nested);
   assert.equal(config.repoRoot, fixture.root);
-  assert.equal(config.entriesDir, fixture.entriesDir);
+  assert.equal(config.roots[0]?.dir, fixture.entriesDir);
 });
 
 test("route-like config values normalize to platform-independent POSIX paths", () => {
   assert.equal(
-    validateRelativeRoute("screens\\home.html", "test route"),
-    "screens/home.html",
+    validateRelativeRoute("home\\index.html", "test route"),
+    "home/index.html",
   );
 });
 
@@ -35,7 +35,7 @@ test("config resolves the scoped API without changing its filename", async (cont
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const source = `import { defineConfig } from "@mokly/mokly";
-export default defineConfig({ repoRoot: ".", entriesDir: "entries", mockupsDir: "mockups" });
+export default defineConfig({ repoRoot: ".", roots: [{ dir: "entries" }], mockupsDir: "mockups" });
 `;
   await fs.promises.writeFile(fixture.configPath, source);
   const config = await loadConfig(fixture.root);
@@ -64,7 +64,7 @@ test("colorSchemes defaults to light and normalizes order", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const input = {
-    entriesDir: "entries",
+    roots: [{ dir: "entries" }],
     mockupsDir: "mockups",
     repoRoot: ".",
   };
@@ -85,7 +85,7 @@ test("colorSchemes rejects invalid sets", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const input = {
-    entriesDir: "entries",
+    roots: [{ dir: "entries" }],
     mockupsDir: "mockups",
     repoRoot: ".",
   };
@@ -107,7 +107,7 @@ test("scheme-specific stylesheet lists validate like shared stylesheets", async 
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const input = {
-    entriesDir: "entries",
+    roots: [{ dir: "entries" }],
     mockupsDir: "mockups",
     repoRoot: ".",
   };
@@ -141,7 +141,7 @@ test("stylesheet rules reject paths linked twice in one fragment", async (contex
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const input = {
-    entriesDir: "entries",
+    roots: [{ dir: "entries" }],
     mockupsDir: "mockups",
     repoRoot: ".",
   };
@@ -232,12 +232,12 @@ test("config rejects traversal and overlapping roots", async (context) => {
   context.after(() => removeFixture(fixture));
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: "../outside", mockupsDir: "mockups", repoRoot: "." };\n`,
+    `export default { roots: [{ dir: "../outside" }], mockupsDir: "mockups", repoRoot: "." };\n`,
   );
   await assert.rejects(() => loadConfig(fixture.root), /outside repoRoot/);
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: "mockups", mockupsDir: "mockups", repoRoot: "." };\n`,
+    `export default { roots: [{ dir: "mockups" }], mockupsDir: "mockups", repoRoot: "." };\n`,
   );
   await assert.rejects(
     () => loadConfig(fixture.root),
@@ -273,7 +273,7 @@ test("config rejects Review output through an external symlink", async (context)
   await fs.promises.symlink(outside, path.join(fixture.root, "review-link"));
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", review: { outDir: "review-link/artifact" } };\n',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", review: { outDir: "review-link/artifact" } };\n',
   );
 
   await assert.rejects(

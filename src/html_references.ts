@@ -1,10 +1,6 @@
 import { parse } from "parse5";
 
-import {
-  decodeCssIdentifier,
-  tokenizeCss,
-  type CssSourceToken,
-} from "./review/css/source.js";
+import { extractCssReferences } from "./css_references.js";
 
 interface HtmlAttribute {
   name: string;
@@ -30,7 +26,7 @@ export interface HtmlReferenceOptions {
   resourceHints?: boolean;
 }
 
-const SOURCE_ATTRIBUTES = new Map<string, readonly string[]>([
+export const SOURCE_ATTRIBUTES = new Map<string, readonly string[]>([
   ["audio", ["src"]],
   ["embed", ["src"]],
   ["iframe", ["src"]],
@@ -97,102 +93,27 @@ export function extractHtmlReferences(
   };
 }
 
-/** Extract `url()` and string-form `@import` references from CSS. */
-export function extractCssReferences(content: string): string[] {
-  if (!/url\(|image-set\(|@import|\\/i.test(content)) return [];
-  const tokens = tokenizeCss(content, { allowIncomplete: true });
-  const references: { start: number; value: string }[] = [
-    ...imageSetStringReferences(tokens),
-  ];
-  for (let index = 0; index < tokens.length; index++) {
-    const token = tokens[index]!;
-    const next = tokens[index + 1];
-    if (!token.word && token.value.endsWith(")")) {
-      const opening = token.value.indexOf("(");
-      if (
-        opening >= 0 &&
-        decodeCssIdentifier(token.value.slice(0, opening)).toLowerCase() ===
-          "url"
-      )
-        references.push({
-          start: token.start,
-          value: decodeCssIdentifier(token.value.slice(opening + 1, -1)),
-        });
-    } else if (
-      token.word &&
-      decodeCssIdentifier(token.value).toLowerCase() === "url" &&
-      next?.value === "(" &&
-      next.start === token.end
-    ) {
-      const value = tokens[index + 2]?.value;
-      if (value && /^["']/.test(value) && tokens[index + 3]?.value === ")") {
-        references.push({
-          start: token.start,
-          value: decodeCssIdentifier(value.slice(1, -1)),
-        });
-        index += 3;
-      }
-    } else if (
-      token.value === "@" &&
-      next?.start === token.end &&
-      decodeCssIdentifier(next.value).toLowerCase() === "import"
-    ) {
-      const value = tokens[index + 2]?.value;
-      if (value && /^["']/.test(value)) {
-        references.push({
-          start: token.start,
-          value: decodeCssIdentifier(value.slice(1, -1)),
-        });
-        index += 2;
-      }
-    }
-  }
-  return references
-    .sort((left, right) => left.start - right.start)
-    .map(({ value }) => value);
-}
-
-/** String-form image-set sources are not sent through esbuild's url-token resolver. */
-export function extractImageSetStringReferences(content: string): string[] {
-  if (!/image-set\(/i.test(content)) return [];
-  return imageSetStringReferences(
-    tokenizeCss(content, { allowIncomplete: true }),
-  ).map(({ value }) => value);
-}
-
-function imageSetStringReferences(
-  tokens: readonly CssSourceToken[],
-): { start: number; value: string }[] {
-  const references: { start: number; value: string }[] = [];
-  for (let index = 0; index < tokens.length; index += 1) {
-    const token = tokens[index]!;
-    const next = tokens[index + 1];
-    if (
-      !token.word ||
-      !["image-set", "-webkit-image-set"].includes(
-        decodeCssIdentifier(token.value).toLowerCase(),
-      ) ||
-      next?.value !== "(" ||
-      next.start !== token.end
-    )
-      continue;
-    let depth = 1;
-    for (let cursor = index + 2; cursor < tokens.length && depth; cursor += 1) {
-      const current = tokens[cursor]!;
-      if (current.value === "(") depth += 1;
-      else if (current.value === ")") depth -= 1;
-      else if (depth === 1 && /^['"]/.test(current.value))
-        references.push({
-          start: current.start,
-          value: decodeCssIdentifier(current.value.slice(1, -1)),
-        });
-    }
-  }
-  return references;
-}
-
 function extractSourceSetReferences(value: string): string[] {
-  const references: string[] = [];
+  return sourceSetReferences(value).map((reference) => reference.value);
+}
+
+/** Replace parsed URL spans without revisiting text written by a previous replacement. */
+export function rewriteSourceSetReferences(
+  value: string,
+  rewrite: (reference: string) => string,
+): string {
+  for (const reference of sourceSetReferences(value).reverse())
+    value =
+      value.slice(0, reference.start) +
+      rewrite(reference.value) +
+      value.slice(reference.end);
+  return value;
+}
+
+function sourceSetReferences(
+  value: string,
+): { start: number; end: number; value: string }[] {
+  const references: { start: number; end: number; value: string }[] = [];
   let position = 0;
   while (position < value.length) {
     while (/[\s,]/.test(value[position] ?? "")) position += 1;
@@ -202,7 +123,12 @@ function extractSourceSetReferences(value: string): string[] {
     }
     const token = value.slice(start, position);
     const reference = token.replace(/,+$/, "");
-    if (reference) references.push(reference);
+    if (reference)
+      references.push({
+        start,
+        end: start + reference.length,
+        value: reference,
+      });
     if (reference !== token) continue;
     while (position < value.length && value[position] !== ",") position += 1;
   }

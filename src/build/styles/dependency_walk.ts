@@ -4,7 +4,7 @@ import path from "node:path";
 import { Minimatch } from "minimatch";
 
 import { compareCodeUnits } from "../../config/path_order.js";
-import { isInside, toPosixPath } from "../../config/paths.js";
+import { isInside, projectRealPath, toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import {
   blocksRequiredInput,
@@ -16,6 +16,7 @@ import {
 
 /** Keep logical/physical classification stable and reusable throughout one load. */
 export interface DependencyPathCache {
+  readonly physicalPaths: Map<string, string>;
   readonly reasons: Map<string, PackageOwnedReason | undefined>;
   readonly roots: PackageOwnedRoots;
 }
@@ -24,7 +25,24 @@ export interface DependencyPathCache {
 export function createDependencyPathCache(
   config: ResolvedConfig,
 ): DependencyPathCache {
-  return { reasons: new Map(), roots: packageOwnedRoots(config) };
+  return {
+    physicalPaths: new Map(),
+    reasons: new Map(),
+    roots: packageOwnedRoots(config),
+  };
+}
+
+/** Reuse physical projections only within the current dependency collection. */
+export function dependencyPhysicalPath(
+  candidate: string,
+  cache: DependencyPathCache,
+): string {
+  let physical = cache.physicalPaths.get(candidate);
+  if (physical === undefined) {
+    physical = projectRealPath(candidate);
+    cache.physicalPaths.set(candidate, physical);
+  }
+  return physical;
 }
 
 /** Memoize one path's ownership for the duration of a dependency inventory. */
@@ -42,6 +60,7 @@ export function dependencyOwnership(
     directory,
     config.repoRoot,
     cache.roots,
+    (file) => dependencyPhysicalPath(file, cache),
   );
   cache.reasons.set(key, reason);
   return reason;

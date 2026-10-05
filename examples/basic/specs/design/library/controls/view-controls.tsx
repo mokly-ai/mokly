@@ -1,0 +1,139 @@
+import { defineComponent, type ComponentProps } from "@mokly/mokly";
+
+import { libraryMetadata } from "../metadata.js";
+import { destination, optionalFlag, previewViewport } from "../schemas.js";
+
+import { ViewControlsView } from "./view-controls.view.js";
+
+const previewMode = {
+  schema: { kind: "enum", values: ["static", "live"] },
+  optional: true,
+} as const;
+const propSchema = {
+  kind: "object",
+  properties: {
+    selection: previewViewport,
+    highlight: optionalFlag,
+    unavailable: {
+      schema: {
+        kind: "enum",
+        values: [
+          "empty",
+          "unavailable",
+          "loading",
+          "comparison",
+          "removed",
+          "live",
+        ],
+      },
+      optional: true,
+    },
+    previewMode,
+    previewModeDisabled: optionalFlag,
+    previewModeDestinations: {
+      schema: {
+        kind: "object",
+        properties: { static: destination, live: destination },
+      },
+      optional: true,
+    },
+    changedViews: {
+      schema: {
+        kind: "array",
+        items: {
+          kind: "object",
+          properties: {
+            viewport: {
+              schema: { kind: "enum", values: ["mobile", "desktop"] },
+            },
+            scheme: { schema: { kind: "enum", values: ["light", "dark"] } },
+          },
+        },
+      },
+      optional: true,
+    },
+  },
+} as const;
+export type ViewControlsProps = ComponentProps<typeof propSchema, []>;
+const sample = { selection: "desktop" } as const;
+export const viewControls = defineComponent({
+  ...libraryMetadata(
+    "controls",
+    "view-controls",
+    "View controls",
+    "Viewport, preview mode and component highlighting controls.",
+  ),
+  propSchema,
+  controls: {
+    selection: {
+      kind: "select",
+      label: "Viewport",
+      options: previewViewport.schema.values.map((value) => ({
+        label: value,
+        value,
+      })),
+    },
+    previewMode: {
+      kind: "select",
+      label: "Preview mode",
+      options: previewMode.schema.values.map((value) => ({
+        label: value,
+        value,
+      })),
+    },
+    previewModeDisabled: { kind: "boolean", label: "Live unavailable" },
+    highlight: { kind: "boolean", label: "Highlight components" },
+    unavailable: {
+      kind: "select",
+      label: "Unavailable reason",
+      options: propSchema.properties.unavailable.schema.values.map((value) => ({
+        label: value,
+        value,
+      })),
+    },
+  },
+  render: ViewControlsView,
+  variants: [
+    {
+      slug: "default",
+      title: "Default",
+      props: sample,
+    },
+    {
+      slug: "both",
+      title: "Both viewports",
+      props: { ...sample, selection: "both" },
+    },
+    {
+      slug: "highlighted",
+      title: "Highlighted",
+      props: { ...sample, highlight: true },
+    },
+    {
+      slug: "unavailable",
+      title: "Unavailable",
+      props: { ...sample, highlight: false, unavailable: "empty" },
+    },
+    {
+      slug: "live",
+      title: "Live preview",
+      props: {
+        ...sample,
+        previewMode: "live",
+        highlight: false,
+        unavailable: "live",
+      },
+    },
+    {
+      slug: "changed-views",
+      title: "Changed views",
+      props: {
+        ...sample,
+        changedViews: [
+          { viewport: "mobile", scheme: "dark" },
+          { viewport: "desktop", scheme: "dark" },
+        ],
+      },
+    },
+  ],
+});

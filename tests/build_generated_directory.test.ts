@@ -59,7 +59,11 @@ test("generated routes accept only portable stylesheets and supported assets", a
         path.join(fixture.root, "src/AUX.mockup.tsx"),
         fixture.root,
       ),
-    /generated stylesheet route is not portable: mokly-generated\/styles\/src\/AUX.mockup.tsx.css; rename the root module/,
+    {
+      code: "build-invalid",
+      message:
+        "[mokly/build-invalid] cannot deliver imported CSS for src/AUX.mockup.tsx: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)",
+    },
   );
   assert.doesNotThrow(() =>
     validateGeneratedOutputPaths([stylesheet, asset], config),

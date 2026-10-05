@@ -2,7 +2,7 @@
 import { setImmediate, setTimeout } from "node:timers/promises";
 import { parentPort, workerData, type MessagePort } from "node:worker_threads";
 
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
@@ -18,7 +18,7 @@ const { runtime, pause, debug, existingManifest, existingOutputs, gitPort } =
     runtime: ComponentRuntime;
     pause: SharedArrayBuffer;
     debug: boolean;
-    existingManifest?: ManifestV7;
+    existingManifest?: ManifestV8;
     existingOutputs?: ReadonlyMap<string, GeneratedFile>;
     gitPort: MessagePort;
   };
@@ -26,7 +26,7 @@ const classifier = new RepositoryCatalogueChangeClassifier(
   new WorkerGitCommandRunner(gitPort),
 );
 const state = new Int32Array(pause);
-let manifest: ManifestV7 | undefined = existingManifest;
+let manifest: ManifestV8 | undefined = existingManifest;
 let outputs = existingOutputs;
 const checkpoint = async () => {
   await setImmediate();
@@ -60,6 +60,12 @@ parentPort?.on(
             routes: runtime.styleOutputs.map(([route]) => route),
             ...(outputs ? { outputs } : {}),
             deliveredStyleSources: runtime.deliveredStyleSources,
+            documentMarkdown: new Map(
+              (runtime.bundle.documents ?? []).map((entry) => [
+                entry.sourceRelativePath,
+                entry.markdown,
+              ]),
+            ),
           },
         }),
       );

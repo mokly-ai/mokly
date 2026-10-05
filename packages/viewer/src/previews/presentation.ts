@@ -147,6 +147,9 @@ function sameResponseUrl(responseUrl: string, requested: URL): boolean {
   const extensionless = requested.pathname.endsWith(".html")
     ? requested.pathname.slice(0, -".html".length)
     : undefined;
+  const directory = requested.pathname.endsWith("/index.html")
+    ? requested.pathname.slice(0, -"index.html".length)
+    : undefined;
   return (
     received.origin === requested.origin &&
     !received.username &&
@@ -154,7 +157,10 @@ function sameResponseUrl(responseUrl: string, requested: URL): boolean {
     received.search === "" &&
     received.hash === "" &&
     (received.pathname === requested.pathname ||
-      received.pathname === extensionless)
+      received.pathname === extensionless ||
+      (directory !== undefined &&
+        (received.pathname === directory ||
+          received.pathname === directory.slice(0, -1))))
   );
 }
 

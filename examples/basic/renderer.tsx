@@ -10,13 +10,13 @@ import { AppRegistry } from "react-native-web";
 
 import type { InteractiveRenderInput, RenderInput } from "@mokly/mokly";
 
-import { LibraryHost } from "./entries/design/library/host.js";
+import { LibraryHost } from "./specs/design/library/host.js";
 import {
   DesignStyleCollector,
   DesignStyles,
-} from "./entries/design/library/style_context.js";
-import { libraryStyleCandidates } from "./entries/design/library/style_files.js";
-import { DesignRenderedScheme } from "./entries/design/parts/appearance.js";
+} from "./specs/design/library/style_context.js";
+import { libraryStyleCandidates } from "./specs/design/library/style_files.js";
+import { DesignRenderedScheme } from "./specs/design/parts/appearance.js";
 import { darkTokens, tokens } from "./theme.js";
 
 const themes = {
@@ -57,7 +57,7 @@ function RenderedView({
           <ViewportContext.Provider value={input.viewport}>
             <RenderBody>
               {input.entry.kind === "component" &&
-              input.entry.id.startsWith("design-ui-") ? (
+              input.entry.path.startsWith("design/library/") ? (
                 <LibraryHost input={input}>{input.node}</LibraryHost>
               ) : (
                 input.node

@@ -14,7 +14,7 @@ import {
 import {
   adoptedViewerCatalogue,
   shellStateWithViewerEvidence,
-  viewerCapabilityEntryId,
+  viewerCapabilityEntryPath,
 } from "./capability_adoption.js";
 import { adoptViewerRebuildStatus } from "./capability_rebuild_status.js";
 import type { ViewerRebuildStatusState } from "./capability_rebuild_status.js";
@@ -58,7 +58,7 @@ export function commitViewerEvidence(
   if (!nextState) return;
   const request = viewerCapabilityRequest(
     revision.source,
-    viewerCapabilityEntryId(nextState.route),
+    viewerCapabilityEntryPath(nextState.route),
   );
   const rebuild = adoptViewerRebuildStatus(
     current,

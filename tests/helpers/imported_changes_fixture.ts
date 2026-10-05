@@ -44,11 +44,12 @@ export async function importedChangesFixture(
 import { defineScreen } from "@mokly/mokly";
 import "./secondary.css";
 export const mockups = [defineScreen({
-  id: "secondary", route: "screens/secondary.html", title: "Secondary",
+  path: "secondary", title: "Secondary",
   description: "Independent screen", dependencies: [], relatedDocs: [],
   desktop: <main className="guide">Other</main>,
   mobile: <main className="guide">Other</main>,
-})];\n`,
+})];
+`,
     );
     await fs.writeFile(
       path.join(fixture.entriesDir, "secondary.css"),

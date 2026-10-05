@@ -37,9 +37,12 @@ function harness(query: string) {
             textContent: JSON.stringify({
               ranges: [],
               links: [
-                { id: "screen", target: { kind: "top" } },
-                { id: "screen", target: { kind: "parent" } },
-                { id: "screen", target: { kind: "named", name: "preview" } },
+                { screenPath: "screen", target: { kind: "top" } },
+                { screenPath: "screen", target: { kind: "parent" } },
+                {
+                  screenPath: "screen",
+                  target: { kind: "named", name: "preview" },
+                },
               ],
             }),
           },
@@ -244,7 +247,10 @@ test("top, parent and named navigation never access trapped outer windows", () =
   fixture.send(encodeMessage(nonce, { type: "hello" }));
   assert.equal(fixture.activate(0), false);
   assert.equal(
-    fixture.activateInteractive({ id: "screen", target: { kind: "self" } }),
+    fixture.activateInteractive({
+      screenPath: "screen",
+      target: { kind: "self" },
+    }),
     false,
   );
   assert.equal(fixture.messages.length, 1);
@@ -258,15 +264,15 @@ test("top, parent and named navigation never access trapped outer windows", () =
   for (let i = 0; i < 3; i++) assert.equal(fixture.activate(i), true);
   for (const detail of [
     0,
-    { id: "screen", target: { kind: "self" }, extra: true },
-    { id: "Screen", target: { kind: "self" } },
-    { id: "screen", target: { kind: "named", name: "bad name" } },
+    { screenPath: "screen", target: { kind: "self" }, extra: true },
+    { screenPath: "/Screen", target: { kind: "self" } },
+    { screenPath: "screen", target: { kind: "named", name: "bad name" } },
   ])
     assert.equal(fixture.activateInteractive(detail), false);
   assert.equal(
     fixture.activateInteractive({
       fragment: "section",
-      id: "interactive-screen",
+      screenPath: "interactive-screen",
       target: { kind: "parent" },
     }),
     true,
@@ -276,7 +282,7 @@ test("top, parent and named navigation never access trapped outer windows", () =
     .filter((message) => message.type === "navigation");
   assert.deepEqual(
     navigation.map((message) => [
-      message.navigation.id,
+      message.navigation.screenPath,
       message.navigation.fragment,
       message.navigation.target,
     ]),

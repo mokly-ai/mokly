@@ -13,10 +13,10 @@ import {
 import { fulfillScopedShell } from "./scoped_shell_fixture.js";
 import { expectHydrated, latch } from "./scoped_shell_helpers.js";
 
-const actionRoute = "/view/components/example-action.html";
-const handbookRoute = "/view/pages/example-handbook.html";
-const tourRoute = "/view/user-flows/example-tour.html";
-const welcomeRoute = "/view/screens/example-welcome.html";
+const actionRoute = "/view/example/components/action/";
+const handbookRoute = "/view/example/getting-started/";
+const tourRoute = "/view/example/tour/";
+const welcomeRoute = "/view/example/screens/welcome/";
 
 let developmentBundle: string;
 let developmentHostBundle: string;
@@ -73,7 +73,7 @@ test("use-case and page frames keep loading and navigating while evidence is una
   await details.click();
   tour.release();
   await expect(page).toHaveURL(
-    /\/view\/screens\/example-details\.html\?fragment=details$/,
+    /\/view\/example\/screens\/details\/\?fragment=details$/,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect(

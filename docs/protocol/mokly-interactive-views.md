@@ -57,11 +57,11 @@ defines the listener and forwarding policy.
 
 ### Per-entry opt-out
 
-`defineScreen`, screen-variant inputs, `defineComponent`, and nested `screen`
-inputs inside `folder()` trees accept `interactive?: false`. Declaring `true`
+`defineScreen`, screen-variant inputs, and `defineComponent` accept
+`interactive?: false`. Declaring `true`
 or any other value is rejected, so the field can only remove Live. Screen
-variants inherit the parent's value unless they declare their own. Folder
-markers, pages, and use cases reject the field. An opted-out entry shows no
+variants inherit the parent's value unless they declare their own. Folders,
+pages, documents, and use cases reject the field. An opted-out entry shows no
 Static/Live control, leaves no gap, and refuses Live document requests with 404.
 
 When the global private interactive descriptor exists, each current screen or
@@ -92,7 +92,7 @@ interactive descriptor.
 - Screen entries: each mobile or desktop view in every configured scheme.
 - Component variants: each saved view in every viewport and scheme.
 
-These never offer Live: pages, use-case steps, comparison panes, removed
+These never offer Live: pages, Markdown documents, use-case steps, comparison panes, removed
 previous versions, and transient control previews. Each is either a complete
 consumer document, a baseline-pinned document, or already a server render.
 

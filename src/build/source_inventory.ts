@@ -7,10 +7,14 @@ import { Minimatch } from "minimatch";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
-import { isAuthoredEntryPath } from "../config/entry_membership.js";
+import {
+  isAuthoredEntryPath,
+  projectedEntryPaths,
+} from "../config/entry_membership.js";
 import { locatePath, type FileLocation } from "../config/file_locations.js";
 import { isPackageCode } from "../config/package_code.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
+import { matchesRootFile } from "../config/root_membership.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
@@ -30,7 +34,10 @@ const VIEWER_RUNTIME_ROOT = fs.realpathSync(
 
 /** Names reserved for authoring, including stale helpers no longer imported. */
 function isReservedSource(candidate: string): boolean {
-  return /\.source\.(?:html?|[cm]?[jt]sx?)$/i.test(candidate);
+  return (
+    path.basename(candidate).toLowerCase() === "_folder.json" ||
+    /\.source\.(?:html?|[cm]?[jt]sx?)$/i.test(candidate)
+  );
 }
 
 interface SourceIndex {
@@ -65,7 +72,11 @@ export function isAuthoringSource(
   aliases: "all" | "exclusions" | "none" = "all",
   options: SourceClassificationOptions = {},
 ): SourceDenial | undefined {
-  if (isAuthoredEntryPath(candidate, config)) return { kind: "entries" };
+  if (
+    isAuthoredEntryPath(candidate, config) ||
+    (aliases !== "none" && matchesRootFile(candidate, config))
+  )
+    return { kind: "entries" };
   if (isReservedSource(candidate)) return { kind: "reserved" };
   if (isListedSource(candidate, config)) return { kind: "listed" };
   const logicalExclusion = options.ignorePublicExclusions
@@ -95,7 +106,11 @@ export function isAuthoringSource(
   if (physicalExclusion !== undefined)
     return { kind: "exclusion", glob: physicalExclusion };
   if (aliases === "exclusions") return;
-  if (isAuthoredEntryPath(real, config, true)) return { kind: "entries" };
+  if (
+    isAuthoredEntryPath(real, config, true) ||
+    matchesRootFile(real, config, true)
+  )
+    return { kind: "entries" };
   if (isReservedSource(real)) return { kind: "reserved" };
   const index = sourceIndex(config);
   if (
@@ -113,9 +128,10 @@ function sourceIndex(config: ResolvedConfig): SourceIndex {
   if (cached) return cached;
   const files = new Set<string>();
   const sourceAliases: string[] = [];
+  const matchedPaths = projectedEntryPaths(config);
   for (const source of inventory ?? []) {
     const logical = path.resolve(config.repoRoot, source);
-    const physical = projectRealPath(logical);
+    const physical = matchedPaths.get(logical) ?? projectRealPath(logical);
     files.add(logical);
     files.add(physical);
     if (logical !== physical) sourceAliases.push(logical);

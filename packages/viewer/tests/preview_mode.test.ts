@@ -17,8 +17,8 @@ import {
   withLiveUnavailable,
   withPreviewMode,
 } from "../src/shell/preview_mode.js";
-import { shellRecoverySnapshot } from "../src/shell/store_actions.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
+import { shellRecoverySnapshot } from "../src/shell/store_recovery.js";
 import type {
   WorkspaceData,
   WorkspaceVariant,
@@ -38,7 +38,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -52,9 +52,9 @@ const descriptor: ViewerInteractiveDescriptor = {
   port: 4174,
   state: "idle",
 };
-const component = catalogue.byId.get("action");
-const componentVariant = catalogue.byId.get("action-default");
-const screen = catalogue.byId.get("home");
+const component = catalogue.byPath.get("components/action");
+const componentVariant = catalogue.byPath.get("components/action/default");
+const screen = catalogue.byPath.get("product/browse/home");
 if (
   component?.kind !== "component" ||
   componentVariant?.kind !== "component" ||
@@ -72,7 +72,10 @@ function initialState() {
   return createInitialShellState(
     catalogue,
     viewerContext(model, defaultSelection),
-    viewerView(catalogue, { ...defaultSelection, screenId: "home" }),
+    viewerView(catalogue, {
+      ...defaultSelection,
+      screenPath: "product/browse/home",
+    }),
     undefined,
   );
 }
@@ -81,14 +84,17 @@ test("only current screens and saved variants name a Live view", () => {
   const screenData = { entry: screen, removed: false } as WorkspaceData;
   const componentData = { entry: component, removed: false } as WorkspaceData;
   assert.deepEqual(livePreviewView(screenData, { comparisonEligible: false }), {
-    entryId: "home",
+    entryPath: "product/browse/home",
   });
   assert.deepEqual(
     livePreviewView(componentData, {
       comparisonEligible: false,
       variant: savedVariant,
     }),
-    { entryId: "action", variantId: "action-default" },
+    {
+      entryPath: "components/action",
+      variantPath: "components/action/default",
+    },
   );
   assert.equal(
     livePreviewView(
@@ -113,8 +119,8 @@ test("availability is absent without Live and disabled only where it failed", ()
       eligibility: "eligible",
       retained: false,
     });
-  const view = { entryId: "action", variantId: "default" };
-  const other = { entryId: "home" };
+  const view = { entryPath: "components/action", variantPath: "default" };
+  const other = { entryPath: "product/browse/home" };
   assert.equal(known({ descriptor: undefined, unavailable: [], view }), "none");
   assert.equal(known({ descriptor, unavailable: [], view: undefined }), "none");
   assert.equal(known({ descriptor, unavailable: [], view }), "available");
@@ -156,8 +162,8 @@ test("availability is absent without Live and disabled only where it failed", ()
     "available",
   );
   assert.notEqual(
-    liveViewKey(generation, { entryId: "a/b" }),
-    liveViewKey(generation, { entryId: "a", variantId: "b" }),
+    liveViewKey(generation, { entryPath: "a/b" }),
+    liveViewKey(generation, { entryPath: "a", variantPath: "b" }),
   );
 });
 
@@ -168,7 +174,7 @@ test("preview mode starts Static and failures return to Static once", () => {
   assert.equal(withPreviewMode(state, "static"), state);
   const live = withPreviewMode(state, "live");
   assert.equal(live.previewMode, "live");
-  const key = liveViewKey(generation, { entryId: "home" });
+  const key = liveViewKey(generation, { entryPath: "product/browse/home" });
   const failed = withLiveUnavailable(live, key);
   assert.equal(failed.previewMode, "static");
   assert.deepEqual(failed.liveUnavailable, [key]);
@@ -185,7 +191,10 @@ test("a watched reload restores Live once while a manual load starts Static", ()
   const recovered = createInitialShellState(
     catalogue,
     viewerContext(model, defaultSelection),
-    viewerView(catalogue, { ...defaultSelection, screenId: "home" }),
+    viewerView(catalogue, {
+      ...defaultSelection,
+      screenPath: "product/browse/home",
+    }),
     { recovery: snapshot },
   );
   assert.equal(recovered.previewMode, "live");

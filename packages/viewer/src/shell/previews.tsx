@@ -13,14 +13,16 @@ import { BrowserFrame, PhoneFrame } from "./frames.js";
 import { PreviewFrame } from "./preview_frame.js";
 import { PreviewProgress } from "./preview_progress.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
+import { documentLightOnly } from "./scheme_fallback.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
 
 /** Everything the browser client needs to request one entry's previous version. */
 export interface RemovedPreviewData {
   /** Stable entry id, so another entry cannot adopt this response. */
-  id: string;
-  kind: "page" | "screen";
+  path: string;
+  kind: "page" | "document" | "screen";
+  colorSchemes?: readonly ("light" | "dark")[];
   title: string;
   /** Catalogue that owns the selected historical record. */
   catalogueIdentity?: string;
@@ -30,6 +32,8 @@ export interface RemovedPreviewData {
   address?: string;
   /** The delivery's advertised descriptor; absent when nothing is published. */
   published?: RemovedEntryPreview;
+  /** A document with no historical dark render in a catalogue with Dark. */
+  lightOnly?: true;
 }
 
 /**
@@ -42,16 +46,22 @@ export function removedPreviewData(
   context: ShellContext,
   entry: CatalogueManifestEntry,
 ): RemovedPreviewData | undefined {
-  if (entry.kind !== "page" && entry.kind !== "screen") return undefined;
+  if (
+    entry.kind !== "page" &&
+    entry.kind !== "document" &&
+    entry.kind !== "screen"
+  )
+    return undefined;
   const model = catalogue.publicModel ?? context.readModel;
   const removed = model?.removedEntries.find(
-    (removed) => removed.entry.id === entry.id,
+    (removed) => removed.entry.path === entry.path,
   );
   const published = removed?.preview;
   return {
-    id: entry.id,
+    path: entry.path,
     kind: entry.kind,
     title: entry.title,
+    ...(entry.kind === "document" ? { colorSchemes: entry.colorSchemes } : {}),
     ...(model && removed?.snapshotId
       ? {
           catalogueIdentity: model.identity.id,
@@ -62,12 +72,28 @@ export function removedPreviewData(
       ? { address: entry.address }
       : {}),
     ...(published ? { published } : {}),
+    ...(documentLightOnly(entry, catalogue.hasDarkFragments)
+      ? { lightOnly: true as const }
+      : {}),
   };
 }
 
-/** The quiet band naming what the stage below it holds. */
-function PreviousVersionLabel() {
-  return <p className="mbk-previous">Showing previous version</p>;
+/**
+ * The quiet band naming what the stage below it holds. A light-only document
+ * always carries the note, which the stylesheet shows only under Dark.
+ */
+function PreviousVersionLabel(props: { lightOnly: boolean }) {
+  return (
+    <p
+      className="mbk-previous"
+      data-color-scheme-fallback={props.lightOnly ? "" : undefined}
+    >
+      Showing previous version
+      {props.lightOnly ? (
+        <span className="mbk-frame-scheme-note"> — Light only</span>
+      ) : null}
+    </p>
+  );
 }
 
 function MissingView(props: { viewport: "desktop" | "mobile" }) {
@@ -112,7 +138,7 @@ function ScreenFrame(props: {
         <PhoneFrame>{content}</PhoneFrame>
       ) : (
         <BrowserFrame
-          address={props.data.address ?? entryRoute("screen", props.data.id)}
+          address={props.data.address ?? entryRoute(props.data.path)}
           expandable={false}
         >
           {content}
@@ -132,14 +158,20 @@ export function ReadyPreview(props: {
   viewport: "both" | "desktop" | "mobile";
 }) {
   const content = props.loaded.content;
-  if (content.kind === "page") {
-    const presentation = presentationFor(props.presentations, content.url);
+  if (content.kind === "page" || content.kind === "document") {
+    const view =
+      content.kind === "document"
+        ? (content.views.find(
+            (view) => view.colorScheme === props.colorScheme,
+          ) ?? content.views[0]!)
+        : { url: content.url, colorScheme: "light" };
+    const presentation = presentationFor(props.presentations, view.url);
     if (!presentation) return <PreviewUnavailable retry={props.retry} />;
     return (
       <div
         className="mbk-stage-embed"
         data-mokly-scroll="embed"
-        data-preview-color-scheme="light"
+        data-preview-color-scheme={view.colorScheme}
       >
         <PreviewFrame presentation={presentation} title={props.data.title} />
       </div>
@@ -239,7 +271,7 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
   const viewport = store?.state.selection.viewport ?? "both";
   return (
     <>
-      <PreviousVersionLabel />
+      <PreviousVersionLabel lightOnly={props.data.lightOnly === true} />
       <div
         aria-live="polite"
         className="mbk-preview"

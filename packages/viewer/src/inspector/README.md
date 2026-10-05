@@ -38,13 +38,15 @@ earlier ranges; the runtime also authenticates their actual DOM nesting.
 
 The Live runtime handles native, `asChild`, and resolved raw logical links. It
 prevents unmodified primary activation and emits
-`mokly:interactive-navigation` with exactly `{ id, fragment?, target }`; modified
+`mokly:interactive-navigation` with exactly `{ screenPath, fragment?, target }`; modified
 and middle activation keeps native sandbox behavior. The inspector requires a
 plain object, validates the existing bounded identity grammar, rejects extra
 fields, and sends the unchanged wire `navigation` event with primary activation.
 No DOM event carries an href, label or URL. Consumer code can synthesize the
 logical event because it already runs in the frame, so the host remains the
-security boundary: it revalidates every id and resolves the destination.
+security boundary: it revalidates every path and resolves the destination.
+Native and Live links share one publication function so both apply the same
+subscription and activation rules within the inspector bundle budget.
 
 `ranges.ts`, `geometry.ts` and `inspection.ts` authenticate every marker pair,
 measure real element and text regions, clip overflow and occlusion, and scroll

@@ -47,10 +47,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
   });
 
   test(`${viewport}: Static and Live show the same notice`, async () => {
-    const still = (await designDocument("design-rebuild-failure", viewport))
-      .document;
+    const still = (
+      await designDocument("design/rebuild-status/failure", viewport)
+    ).document;
     const live = (
-      await designDocument("design-rebuild-live-component", viewport)
+      await designDocument("design/rebuild-status/live-component", viewport)
     ).document;
     const notice = (document: typeof still) =>
       textContent(byClass(document, "mbk-rebuild")[0]!);
@@ -81,13 +82,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
 test("the notice and top bar are the shared components in every state", async () => {
   const { manifest } = await designCatalogue;
   for (const state of REBUILD_STATES) {
-    const entry = manifest.entries.find((entry) => entry.id === state.id);
+    const entry = manifest.entries.find((entry) => entry.path === state.id);
     assert.ok(entry?.kind === "screen" && entry.componentViews, state.id);
     for (const view of entry.componentViews) {
       const ids = view.instances.map((instance) => instance.componentId);
-      assert.ok(ids.includes("design-ui-top-bar"), state.id);
+      assert.ok(ids.includes("design/library/chrome/top-bar"), state.id);
       assert.equal(
-        ids.filter((id) => id === "design-ui-rebuild-notice").length,
+        ids.filter((id) => id === "design/library/chrome/rebuild-notice")
+          .length,
         state.notice ? 1 : 0,
         `${state.id}/${view.viewport}`,
       );

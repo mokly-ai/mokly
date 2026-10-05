@@ -17,16 +17,16 @@ import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 test("producer affected-consumer order is accepted for prefix-like component ids", async (t) => {
   const source = componentEntrySource({
     body: '<pane.Component><action.Component label="Nested" /><metric.Component /></pane.Component><action.Component label="Direct" /><metric.Component />',
-    exports: "action.entries, pane.entries, metric.entries,",
+    exports: "...action.entries, ...pane.entries, ...metric.entries,",
     extra: `const metric = defineComponent({ ...metadata,
-  id: "x2", title: "Metric", description: "A metric", navPath: ["Components"],
+  path: "x2", title: "Metric", description: "A metric",
   propSchema: { kind: "object", properties: {} },
   render: () => <aside className="metric-before" />,
-  variants: [{ id: "x2-default", title: "Default", props: {} }]
+  variants: [{ slug: "default",  title: "Default", props: {} }]
 });`,
   })
-    .replace('id: "action", title:', 'id: "x", title:')
-    .replace('id: "pane", title:', 'id: "x-y", title:')
+    .replace('path: "action", title:', 'path: "x", title:')
+    .replace('path: "pane", title:', 'path: "x-y", title:')
     .replace('to="action"', 'to="x"');
   const fixture = await componentReviewFixture(
     t,
@@ -93,7 +93,7 @@ test("review reader rejects Changes records outside kind-and-id order", async (t
 test("review reader keeps baseline-only component variants after current variants", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(
-      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );
@@ -103,19 +103,19 @@ test("review reader keeps baseline-only component variants after current variant
     fixture.git,
     "main",
   );
-  const component = result.components.find((entry) => entry.id === "action");
+  const component = result.components.find((entry) => entry.path === "action");
   assert.ok(component);
   assert.deepEqual(
-    component.variants.map((variant) => [variant.id, Boolean(variant.after)]),
+    component.variants.map((variant) => [variant.path, Boolean(variant.after)]),
     [
-      ["action-default", true],
-      ["action-disabled", false],
+      ["action/default", true],
+      ["action/disabled", false],
     ],
   );
   const reordered = {
     ...structuredClone(result),
     components: result.components.map((entry) =>
-      entry.id === "action"
+      entry.path === "action"
         ? { ...entry, variants: [...entry.variants].reverse() }
         : entry,
     ),

@@ -47,12 +47,14 @@ export async function generateLargeFixture(
   if ((await fs.readdir(root)).length)
     throw new Error("Fixture requires an empty directory");
   const templates = import.meta.dirname;
-  const entries = path.join(root, "entries");
+  const entries = path.join(root, "specs");
+  const sources = path.join(root, "src");
+  await fs.mkdir(sources);
   const assets = path.join(root, "mockups/assets");
   await fs.mkdir(entries);
   await fs.mkdir(assets, { recursive: true });
   for (const file of ["components.tsx", "screens.tsx", "area.tsx"])
-    await fs.copyFile(path.join(templates, file), path.join(entries, file));
+    await fs.copyFile(path.join(templates, file), path.join(sources, file));
   const renderer = await fs.readFile(
     path.join(templates, "renderer.tsx"),
     "utf8",
@@ -84,7 +86,7 @@ export async function generateLargeFixture(
     ...(sharedStylesheets.length && linkedScreens
       ? [
           {
-            match: `screens/area-*-screen-@(${Array.from({ length: linkedScreens }, (_, index) => index + 1).join("|")}).html`,
+            match: `area-*/screens/activity-group-*/screen-@(${Array.from({ length: linkedScreens }, (_, index) => index + 1).join("|")})/index*.html`,
             stylesheets: ["assets/catalogue.css", ...sharedStylesheets],
           },
         ]
@@ -111,7 +113,7 @@ export async function generateLargeFixture(
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   generatedOutput: ${JSON.stringify(generatedOutput)},
-  repoRoot: ".", entriesDir: "entries", mockupsDir: "mockups", renderer: "renderer.tsx",
+  repoRoot: ".", roots: [{ dir: "specs" }], mockupsDir: "mockups", renderer: "renderer.tsx",
   colorSchemes: ["light", "dark"],
   moduleResolution: { aliases: { "react-native": "react-native-web" }, conditions: ["react-native", "import", "module", "default"], loaders: { ".js": "jsx" }, mainFields: ["react-native", "module", "main"], resolveExtensions: [".web.tsx", ".web.ts", ".web.js", ".tsx", ".ts", ".js", ".jsx", ".json"] },
   stylesheets: ${JSON.stringify(stylesheets)},
@@ -122,16 +124,12 @@ export default defineConfig({
   } }
 });\n`,
   );
-  await fs.writeFile(
-    path.join(entries, "catalogue.mockup.tsx"),
-    `export const mockups = [];\n`,
-  );
   for (const id of areas) {
     const directory = path.join(entries, id);
     await fs.mkdir(directory);
     await fs.writeFile(
       path.join(directory, "catalogue.mockup.tsx"),
-      `import { createArea } from "../area.js";
+      `import { createArea } from "../../src/area.js";
 export const mockups = createArea(${JSON.stringify(id)}, ${size.screens}, ${size.rows});\n`,
     );
   }

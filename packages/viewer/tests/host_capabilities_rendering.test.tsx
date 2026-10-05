@@ -34,7 +34,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const { publicModel: _publicModel, ...privateDisplay } = display;
   const view = viewerView(display, {
     ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
+    screenPath: catalogue.components[0]!.path,
   });
   if (view.kind !== "target")
     throw new Error("Expected a target fixture view.");
@@ -51,7 +51,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
     renderCapability: { generation, token },
     updateVersion: source.updateVersion,
     workspaceInteractive: {
-      entryId: view.target.entry.id,
+      entryPath: view.target.entry.path,
       entryKind: "component" as const,
       value: false,
     },
@@ -85,7 +85,9 @@ test("live SSR carries a private descriptor while export carries no host loader"
     state: "idle",
   });
   assert.equal(view.kind, "target");
-  assert.equal(descriptor.workspace.entry.id, view.target.entry.id);
+  if (view.kind !== "target")
+    throw new Error("Expected a target fixture view.");
+  assert.equal(descriptor.workspace.entry.path, view.target.entry.path);
   assert.equal(descriptor.workspace.base, source.base);
   assert.equal(descriptor.workspace.interactive, false);
   assert.equal("interactive" in descriptor.workspace.entry, false);
@@ -163,7 +165,7 @@ test("server rendering serializes each embedded state exactly once", async () =>
   const { publicModel: _publicModel, ...privateDisplay } = display;
   const view = viewerView(display, {
     ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
+    screenPath: catalogue.components[0]!.path,
   });
   const session = new Session();
   session.connect();
@@ -204,14 +206,14 @@ test("static shell, workspace and deployment derive from the complete model", ()
   const { publicModel: _publicModel, ...privateDisplay } = display;
   const view = viewerView(display, {
     ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
+    screenPath: catalogue.components[0]!.path,
   });
   const deploymentId = "d".repeat(64);
   const publicModel = { ...catalogue, deploymentId };
   const delivery = {
     schemaVersion: 3 as const,
     deploymentId,
-    canonicalPath: "/view/components/action.html",
+    canonicalPath: "/view/components/action/",
     comparisonUrl: null,
   };
   const context = {
@@ -248,6 +250,8 @@ test("static shell, workspace and deployment derive from the complete model", ()
     throw new Error("Expected a current component route.");
   assert.deepEqual(
     JSON.parse(workspaceJson),
-    workspaceData(privateDisplay, context, view.target.entry),
+    JSON.parse(
+      JSON.stringify(workspaceData(privateDisplay, context, view.target.entry)),
+    ),
   );
 });

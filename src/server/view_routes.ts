@@ -3,7 +3,7 @@ import type { ServerResponse } from "node:http";
 import {
   isHistoricalSnapshotId,
   parseViewHref,
-  resolveCatalogueEntry,
+  resolveCatalogueSelection,
 } from "@mokly/viewer/data";
 import { catalogueRouteEntry } from "@mokly/viewer/server";
 import type { Catalogue, ShellContext } from "@mokly/viewer/server";
@@ -13,7 +13,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import type { DocumentService } from "./demand/service.js";
 import { requestedFragment } from "./fragments.js";
 import { notFoundPage, viewPage } from "./pages.js";
-import { safeDecodePath, send } from "./respond.js";
+import { send } from "./respond.js";
 import {
   resolvedWorkspaceInteractive,
   type WorkspaceEligibilitySource,
@@ -30,8 +30,7 @@ export async function renderView(
   documents?: DocumentService,
   workspaceEligibility?: WorkspaceEligibilitySource,
 ): Promise<void> {
-  const route = safeDecodePath(encodedRoute);
-  const identity = route ? parseViewHref(`/view/${route}`) : undefined;
+  const identity = parseViewHref(`/view/${encodedRoute}`);
   const snapshots = url.searchParams.getAll("snapshot");
   const requestedSnapshot = snapshots.length === 1 ? snapshots[0] : undefined;
   if (
@@ -48,7 +47,11 @@ export async function renderView(
     );
   const selected =
     identity && context.readModel
-      ? resolveCatalogueEntry(context.readModel, identity, requestedSnapshot)
+      ? resolveCatalogueSelection(
+          context.readModel,
+          identity,
+          requestedSnapshot,
+        )
       : undefined;
   const entry = identity
     ? context.readModel
@@ -56,17 +59,17 @@ export async function renderView(
         ? selected.snapshotId
           ? catalogue.removedEntries.find(
               ({ entry: candidate }) =>
-                candidate.id === selected.entry.id &&
+                candidate.path === selected.entry.path &&
                 candidate.kind === selected.entry.kind,
             )?.entry
           : catalogueRouteEntry(
               catalogue,
-              selected.entry.id,
+              selected.entry.path,
               selected.entry.kind,
             )
         : undefined
       : requestedSnapshot === undefined
-        ? catalogueRouteEntry(catalogue, identity.id, identity.kind)
+        ? catalogueRouteEntry(catalogue, identity)
         : undefined
     : undefined;
   if (!entry)
@@ -98,7 +101,7 @@ export async function renderView(
   );
   const viewContext = {
     ...context,
-    activeId: entry.id,
+    activeId: entry.path,
     ...(fragment ? { fragment } : {}),
     ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
     ...(workspaceInteractive ? { workspaceInteractive } : {}),

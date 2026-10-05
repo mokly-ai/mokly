@@ -50,7 +50,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
     new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
   );
   assert.equal(
-    result.screens.find((screen) => screen.id === "home")?.state,
+    result.screens.find((screen) => screen.path === "home")?.state,
     "changed",
   );
   assert.deepEqual(result.sharedImpact, ["notes.md"]);
@@ -63,7 +63,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
       "utf8",
     ),
   ) as { baseCommit: string; schemaVersion: number };
-  assert.equal(reviewJson.schemaVersion, 4);
+  assert.equal(reviewJson.schemaVersion, 5);
   assert.match(reviewJson.baseCommit, /^[a-f0-9]{40}$/);
   assert.equal(
     fs.existsSync(path.join(config.review.outDir, "index.html")),

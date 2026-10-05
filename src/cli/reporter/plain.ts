@@ -1,4 +1,4 @@
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
 import { errorMessage } from "../../errors.js";
@@ -35,7 +35,7 @@ export class PlainReporter implements CliReporter {
     _durationMs: number,
   ): void {}
 
-  catalogueReady(_manifest: ManifestV7, _durationMs: number): void {}
+  catalogueReady(_manifest: ManifestV8, _durationMs: number): void {}
 
   changesReady(_changed: number, _durationMs: number): void {}
 

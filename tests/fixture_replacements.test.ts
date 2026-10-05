@@ -9,8 +9,8 @@ import { optedOutFixtureSource } from "./helpers/interactive_server.js";
 
 test("fixture source rewrites fail loudly when expected text is absent", () => {
   const completeExceptBaseline = `export default defineConfig({
-  entries: [
-    "entries/**/*.mockup.tsx",
+  roots: [
+    { dir: "specs" },
   ],
 });`;
 
@@ -20,7 +20,7 @@ test("fixture source rewrites fail loudly when expected text is absent", () => {
   );
   assert.throws(
     () => focusedExampleConfigSource("export default defineConfig({", []),
-    /entries array.*was absent/u,
+    /roots array.*was absent/u,
   );
   assert.throws(
     () => focusedExampleConfigSource(completeExceptBaseline, []),

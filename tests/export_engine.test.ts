@@ -31,9 +31,9 @@ test("export builds a complete consumer catalogue with an isolated comparison", 
   for (const name of [
     "index.html",
     "404.html",
-    "view/screens/home.html",
-    "view/user-flows/tour.html",
-    "static/screens/home.mobile.html",
+    "view/home/index.html",
+    "view/tour/index.html",
+    "static/home/index.mobile.html",
   ])
     assert.ok(files.has(name), name);
   assert.equal(
@@ -44,7 +44,7 @@ test("export builds a complete consumer catalogue with an isolated comparison", 
   const review = JSON.parse(
     files.get(result.comparisonUrl.slice(1))!.toString(),
   ) as ReviewResult;
-  assert.equal(review.schemaVersion, 4);
+  assert.equal(review.schemaVersion, 5);
   assert.equal(review.baseRef, "origin/main");
   assert.ok(
     ![...files.keys()].some((name) =>

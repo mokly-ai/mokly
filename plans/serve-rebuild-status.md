@@ -1,5 +1,16 @@
 # Serve Rebuild Status
 
+Status: Active. Milestones 1 to 11 are complete. Milestones 7 and 8 close the
+Milestone 6 review's two Medium findings. Milestone 9 pins installed stylesheet
+requests and closes the mainline integration review's Medium finding (option A);
+its review found no new findings. Milestone 10 pins installed imports of linked
+repository packages and closes the Milestone 8 review's Medium finding.
+Milestone 11 strips eight-bit terminal string sequences and closes the
+Milestone 6 review's Low finding. Both use option A. Awaiting a decision: the
+Milestone 11 review's Medium finding (repository-linked React blocks Live) and
+Low finding (path redaction misses paths after field names). Close this plan
+when its PR merges.
+
 ## Summary
 
 Watched Serve keeps the last working catalogue when a saved change fails to

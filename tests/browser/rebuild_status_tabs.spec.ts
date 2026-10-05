@@ -43,14 +43,14 @@ test("a tab opened while failed shows the notice without announcing it", async (
 }) => {
   test.setTimeout(120_000);
   await instrument(page);
-  await page.goto(`${serve.url}/view/screens/home.html`);
+  await page.goto(`${serve.url}/view/home/`);
   await hydrated(page);
   await serve.save(serve.sources.broken);
   await expect(notice(page)).toBeVisible({ timeout: 60_000 });
   await expect.poll(() => failureAnnouncements(page)).toBe(1);
   const failed = await serve.waitForStatus((status) => !!status.failure);
   await page
-    .locator('a[data-nav-row][data-route="screens/details.html"]')
+    .locator('a[data-nav-row][data-route="details/index.html"]')
     .click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect(notice(page), "route changes keep the notice").toBeVisible();
@@ -59,7 +59,7 @@ test("a tab opened while failed shows the notice without announcing it", async (
   const second = await context.newPage();
   const errors = captureBrowserErrors(second);
   await instrument(second);
-  await second.goto(`${serve.url}/view/components/counter.html`);
+  await second.goto(`${serve.url}/view/counter/`);
   await expect(notice(second)).toBeVisible();
   await expectCleanHydration(second, errors, "a failed page hydrates cleanly");
   await expectReceived(
@@ -82,7 +82,7 @@ test("a reconnected stream replays the current failure once", async ({
 }) => {
   test.setTimeout(120_000);
   await instrument(page);
-  await page.goto(`${serve.url}/view/screens/home.html`);
+  await page.goto(`${serve.url}/view/home/`);
   await hydrated(page);
   await expectReceived(page, (status) => status.failure === null);
   await dropStream(page);
@@ -114,7 +114,7 @@ test("details stay open through progress and close in place when replaced", asyn
 }) => {
   test.setTimeout(180_000);
   await instrument(page);
-  await page.goto(`${serve.url}/view/screens/details.html`);
+  await page.goto(`${serve.url}/view/details/`);
   await hydrated(page);
   await serve.save(serve.sources.broken);
   await expect(notice(page)).toBeVisible({ timeout: 60_000 });

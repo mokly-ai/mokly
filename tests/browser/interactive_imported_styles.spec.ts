@@ -6,8 +6,6 @@ import {
   type Page,
 } from "@playwright/test";
 
-import { entryRoute } from "@mokly/viewer/data";
-
 import {
   expectLiveReady,
   expectStatic,
@@ -114,9 +112,9 @@ async function noteStyles(frame: FrameLocator) {
 }
 
 for (const viewport of ["desktop", "mobile"] as const) {
-  for (const [kind, id] of [
-    ["component", "example-workspace-note"],
-    ["screen", "example-welcome"],
+  for (const [_kind, id] of [
+    ["component", "example/components/workspace-note"],
+    ["screen", "example/screens/welcome"],
   ] as const) {
     test(`${id} keeps imported styles and pixels in ${viewport} Static and Live`, async ({
       page,
@@ -127,7 +125,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
           ? { width: 1440, height: 1000 }
           : { width: 390, height: 844 },
       );
-      await page.goto(`/view/${entryRoute(kind, id)}`);
+      await page.goto(`/view/${id}/`);
       await expectStatic(page);
       const frame = page.frameLocator(
         `iframe[data-workspace-frame="${viewport}"]`,

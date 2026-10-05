@@ -15,15 +15,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const route of [
-        "pages/comparison",
-        "design-component-overlay",
-        "design-component-difference",
-        "design-component-overlay-tall",
-        "pages/affected",
-        "controls/states/comparison",
-        "states/removed",
-        "states/removed-consumer",
-        "inspection/direct-change",
+        "design/components/pages/comparison",
+        "design/components/pages/stacked/overlay",
+        "design/components/pages/stacked/difference",
+        "design/components/pages/stacked/overlay-tall",
+        "design/components/pages/affected",
+        "design/components/controls/states/comparison",
+        "design/components/states/removed",
+        "design/components/states/removed-consumer",
+        "design/components/inspection/inspection-direct-change",
       ]) {
         await page.goto(componentDesignUrl(route, viewport));
         await expect(
@@ -43,7 +43,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         await expect(page.locator(".ce-comparison-evidence")).not.toContainText(
           "corners and spacing",
         );
-        if (route === "states/removed-consumer")
+        if (route === "design/components/states/removed-consumer")
           await expect(
             page.getByRole("region", { name: "Details", exact: true }),
           ).toContainText(
@@ -51,9 +51,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
           );
       }
       for (const route of [
-        "overview",
-        "controls/editing/edited",
-        "states/empty",
+        "design/components/overview",
+        "design/components/controls/editing/edited",
+        "design/components/states/empty",
       ]) {
         await page.goto(componentDesignUrl(route, viewport));
         await expect(page.locator(".ce-comparison-evidence")).toHaveCount(0);
@@ -63,7 +63,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("screen comparison names the instance and its before/current props", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("inspection/direct-change", viewport));
+      await page.goto(
+        componentDesignUrl(
+          "design/components/inspection/inspection-direct-change",
+          viewport,
+        ),
+      );
       await expect(page.locator(".ce-change-context")).toHaveCount(0);
       await page.getByRole("button", { name: "Details", exact: true }).click();
       const evidence = page.locator(".ce-comparison-evidence");
@@ -72,7 +77,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await expect(evidence.getByRole("table")).toContainText("Get started");
       await expect(
         evidence.getByRole("link", { name: "Action" }),
-      ).toHaveAttribute("data-mokly-link", "design-component-affected");
+      ).toHaveAttribute("data-mokly-link", "design/components/pages/affected");
       await page.getByRole("button", { name: "Props", exact: true }).click();
       await expect(page.getByLabel("Supplied props")).toContainText(
         "Get started",
@@ -84,10 +89,16 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const [route, reason] of [
-        ["states/empty", "No registered components in this view"],
-        ["states/unavailable", "Component inspection is unavailable"],
         [
-          "states/removed-consumer",
+          "design/components/states/empty",
+          "No registered components in this view",
+        ],
+        [
+          "design/components/states/unavailable",
+          "Component inspection is unavailable",
+        ],
+        [
+          "design/components/states/removed-consumer",
           "Highlighting is unavailable for removed screens",
         ],
       ]) {
@@ -102,7 +113,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
           reason!,
         );
       }
-      await page.goto(componentDesignUrl("inspection/details", viewport));
+      await page.goto(
+        componentDesignUrl(
+          "design/components/inspection/inspection-details",
+          viewport,
+        ),
+      );
       await expect(
         page.getByRole("switch", { name: "Highlight components" }),
       ).toBeEnabled();
@@ -112,9 +128,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const route of [
-        "inspection/highlight",
-        "inspection/nested",
-        "inspection/consumer",
+        "design/components/inspection/inspection-highlight",
+        "design/components/inspection/inspection-nested",
+        "design/components/inspection/inspection-consumer",
       ]) {
         await page.goto(componentDesignUrl(route, viewport));
         await page
@@ -149,13 +165,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const [route, status] of [
-        ["pages/affected", "Changed"],
-        ["inspection/direct-change", "Changed"],
-        ["states/removed", "Removed"],
-        ["states/removed-consumer", "Removed"],
-        ["states/unused", "Unmodified"],
-        ["controls/editing/edited", "Unmodified"],
-        ["states/additions/added", "Added"],
+        ["design/components/pages/affected", "Changed"],
+        ["design/components/inspection/inspection-direct-change", "Changed"],
+        ["design/components/states/removed", "Removed"],
+        ["design/components/states/removed-consumer", "Removed"],
+        ["design/components/states/unused", "Unmodified"],
+        ["design/components/controls/editing/edited", "Unmodified"],
+        ["design/components/states/additions/added", "Added"],
       ]) {
         await page.goto(componentDesignUrl(route!, viewport));
         await expect(

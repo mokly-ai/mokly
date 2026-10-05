@@ -33,7 +33,7 @@ export function createInitialShellState(
     context.snapshotId ??
     (context.readModel && view.kind === "target"
       ? resolveCatalogueEntry(context.readModel, {
-          id: view.target.entry.id,
+          path: view.target.entry.path,
           kind: view.target.entry.kind,
         })?.snapshotId
       : undefined);
@@ -47,7 +47,7 @@ export function createInitialShellState(
   const parsed = parseSearchQuery(recovery?.query ?? "");
   const selection = {
     ...defaultSelection,
-    screenId: routeScreenId(route),
+    screenPath: routeScreenId(route),
     ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
     view: recovery?.view ?? "all",
     viewport: recovery?.viewport ?? "both",
@@ -80,7 +80,7 @@ export function createInitialShellState(
       )
     : undefined;
   if (route.view.kind === "target") {
-    const activePath = disclosurePath(sections, route.view.target.entry.id);
+    const activePath = disclosurePath(sections, route.view.target.entry.path);
     disclosures = openDisclosures(disclosures, activePath);
     if (filterBaseline)
       filterBaseline = openDisclosures(filterBaseline, activePath);
@@ -116,6 +116,7 @@ export function createInitialShellState(
     previewMode: recovery?.previewMode ?? "static",
     query: recovery?.query ?? "",
     regionScrolls: recovery?.regionScrolls ?? {},
+    revealedFolder: undefined,
     route,
     selection,
     tagPickerIndex: 0,

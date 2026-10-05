@@ -158,7 +158,10 @@ export function classifyWatchPath(
       ? "ignore"
       : "rebuild";
   if (isAuthoredEntryPath(absolute, config)) return "rebuild";
-  if (isEntryGlobCandidate(absolute, config, directory)) return "rebuild";
+  if (
+    isEntryGlobCandidate(absolute, config, directory, { includeExcluded: true })
+  )
+    return "rebuild";
   if (config.renderer === absolute) return "rebuild";
   if (resources.has(absolute) && isRecoverablePublicResource(absolute, config))
     return "reload";

@@ -1,8 +1,8 @@
 import path from "node:path";
 
 import { toPosixPath } from "../../config/paths.js";
+import { extractImageSetStringReferences } from "../../css_references.js";
 import { MoklyError } from "../../errors.js";
-import { extractImageSetStringReferences } from "../../html_references.js";
 import { classifyResourceUrl } from "../../resource_url.js";
 
 /** Reject image-set strings before they escape esbuild's asset resolver. */

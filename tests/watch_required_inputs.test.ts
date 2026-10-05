@@ -22,7 +22,13 @@ test("exact CSS, package, configuration and entry inputs survive denied director
   ];
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["dist/entries/**/*.mockup.tsx"],
+    roots: [
+      {
+        dir: path.join(fixture.root, "dist/entries"),
+        files: ["**/*.mockup.tsx"],
+        transparent: [],
+      },
+    ],
     entryModules: [path.join(fixture.root, inputs[0]!)],
     sourceFiles: [inputs[1]!, inputs[2]!],
     configSourceFiles: [inputs[3]!],

@@ -11,10 +11,10 @@ export type InteractiveRouteTable = Readonly<Record<string, InteractiveRoute>>;
 /** Canonical browser bootstrap for one generation-scoped Live document. */
 export interface InteractiveBootstrap {
   colorScheme: ColorScheme;
-  entryId: string;
+  entryPath: string;
   entryKind: "component" | "screen";
   generation: string;
   routes: InteractiveRouteTable;
-  variantId?: string;
+  variantPath?: string;
   viewport: Viewport;
 }

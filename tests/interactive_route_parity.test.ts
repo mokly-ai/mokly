@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 
 import type { ColorScheme, Viewport } from "@mokly/viewer";
@@ -27,11 +29,16 @@ test("full example Live routes match Build routes for every source view", async 
     "examples/basic/mokly.config.ts",
   );
   const graph = await loadConsumerGraph(config);
-  const entries = prepareRegistry(graph.definitions, {
-    ...config,
-    entryModules: graph.entrySources,
-    sourceFiles: graph.sourceFiles,
-  }).entries;
+  const entries = prepareRegistry(
+    graph.definitions,
+    {
+      ...config,
+      ...graph.discovery,
+      entryModules: graph.entrySources,
+      sourceFiles: graph.sourceFiles,
+    },
+    graph.documents,
+  ).entries;
   const manifest = createManifest(
     entries,
     graph.sourceFiles,
@@ -46,13 +53,22 @@ test("focused Live routes preserve fallbacks, variants, flows and pages", async 
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
   t.after(() => removeFixture(fixture));
+  await fs.writeFile(
+    path.join(fixture.entriesDir, "guide.md"),
+    "# Markdown guide\n",
+  );
   const config = await loadConfig(fixture.root);
   const graph = await loadConsumerGraph(config);
-  const entries = prepareRegistry(graph.definitions, {
-    ...config,
-    entryModules: graph.entrySources,
-    sourceFiles: graph.sourceFiles,
-  }).entries;
+  const entries = prepareRegistry(
+    graph.definitions,
+    {
+      ...config,
+      ...graph.discovery,
+      entryModules: graph.entrySources,
+      sourceFiles: graph.sourceFiles,
+    },
+    graph.documents,
+  ).entries;
   const manifest = createManifest(
     entries,
     graph.sourceFiles,
@@ -72,7 +88,7 @@ function assertRouteParity(
   manifestEntries: Parameters<typeof buildInteractiveRouteTable>[0]["entries"],
   schemes: readonly ColorScheme[],
 ): void {
-  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
   const sources = entries.filter(
     (entry) => entry.kind === "screen" || entry.kind === "component",
   );
@@ -83,12 +99,12 @@ function assertRouteParity(
           source,
           viewport,
           scheme,
-          byId,
+          byPath,
           schemes,
         );
         assert.ok(
           sourceRoute,
-          `${source.id} needs a ${viewport}/${scheme} view`,
+          `${source.path} needs a ${viewport}/${scheme} view`,
         );
         const expected = authoredRouteTable(
           entries,
@@ -107,7 +123,7 @@ function assertRouteParity(
         assert.deepEqual(
           actual,
           expected,
-          `${source.id} ${viewport}/${scheme}`,
+          `${source.path} ${viewport}/${scheme}`,
         );
       }
     }
@@ -121,20 +137,20 @@ function authoredRouteTable(
   scheme: ColorScheme,
   schemes: readonly ColorScheme[],
 ): Readonly<Record<string, { href: string }>> {
-  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
   return Object.fromEntries(
     [...entries]
-      .sort((left, right) => left.id.localeCompare(right.id))
+      .sort((left, right) => left.path.localeCompare(right.path))
       .flatMap((entry) => {
         const route = artifactRouteForEntry(
           entry,
           viewport,
           scheme,
-          byId,
+          byPath,
           schemes,
         );
         return route
-          ? [[entry.id, { href: portableArtifactHref(sourceRoute, route) }]]
+          ? [[entry.path, { href: portableArtifactHref(sourceRoute, route) }]]
           : [];
       }),
   );
@@ -144,13 +160,13 @@ function parityFixtureSource(): string {
   return `import React from "react";
 import { defineComponent, definePage, defineScreen, defineUseCase } from "@mokly/mokly";
 const metadata = { dependencies: [], relatedDocs: [] };
-const card = defineComponent({ ...metadata, colorSchemes: ["light"], description: "Card", id: "card", propSchema: { kind: "object", properties: {} }, render: () => <aside>Card</aside>, title: "Card", variants: [{ id: "card-default", props: {}, title: "Default" }] });
+const card = defineComponent({ ...metadata, colorSchemes: ["light"], description: "Card", path: "card", propSchema: { kind: "object", properties: {} }, render: () => <aside>Card</aside>, title: "Card", variants: [{ slug: "default", props: {}, title: "Default" }] });
 export const mockups = [
-  defineScreen({ ...metadata, colorSchemes: ["light"], description: "Home", desktop: <main>Home</main>, id: "home", mobile: <main>Home</main>, title: "Home", useCaseIds: ["tour"], variants: [{ description: "Empty", desktop: <main>Empty</main>, id: "home-empty", mobile: <main>Empty</main>, title: "Empty" }] }),
-  defineScreen({ ...metadata, description: "Details", desktop: <main>Details</main>, id: "details", mobile: <main>Details</main>, title: "Details", useCaseIds: [] }),
+  ...defineScreen({ ...metadata, colorSchemes: ["light"], description: "Home", desktop: <main>Home</main>, path: "home", mobile: <main>Home</main>, title: "Home", useCasePaths: ["tour"], variants: [{ description: "Empty", desktop: <main>Empty</main>, slug: "empty", mobile: <main>Empty</main>, title: "Empty" }] }),
+  defineScreen({ ...metadata, description: "Details", desktop: <main>Details</main>, path: "details", mobile: <main>Details</main>, title: "Details", useCasePaths: [] }),
   ...card.entries,
-  defineUseCase({ ...metadata, description: "Tour", id: "tour", steps: [{ screenId: "home" }], title: "Tour" }),
-  definePage({ ...metadata, description: "Guide", id: "guide", render: () => "<!doctype html><html><body>Guide</body></html>", title: "Guide" })
+  defineUseCase({ ...metadata, description: "Tour", path: "tour", steps: [{ screenPath: "home" }], title: "Tour" }),
+  definePage({ ...metadata, description: "Guide", path: "html-guide", render: () => "<!doctype html><html><body>Guide</body></html>", title: "Guide" })
 ];
 `;
 }

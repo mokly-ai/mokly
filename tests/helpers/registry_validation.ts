@@ -13,8 +13,13 @@ export function registryValidationConfig(sourcePath: string): ResolvedConfig {
     colorSchemes: ["light"],
     compatibility: {},
     configPath: path.join(repositoryRoot, "mokly.config.ts"),
-    entriesDir: path.join(repositoryRoot, "tests"),
-    entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
+    roots: [
+      {
+        dir: path.join(repositoryRoot, "tests"),
+        files: ["**/*.test.{ts,tsx}"],
+        transparent: [],
+      },
+    ],
     interactive: "off",
     mockupsDir: path.join(repositoryRoot, "mockups"),
     moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },

@@ -4,17 +4,17 @@ import {
   designBaseStyles,
   componentLayoutStyles,
   workspaceLayoutStyles,
-} from "./entries/design/components/parts/styles.js";
+} from "./specs/design/components/parts/styles.js";
 import {
   libraryStyleCandidates,
   withLibraryStyles,
-} from "./entries/design/library/style_files.js";
+} from "./specs/design/library/style_files.js";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  entries: [
-    "examples/basic/entries/**/*.mockup.{ts,tsx}",
-    "examples/basic/src/components/**/*.mockup.{ts,tsx}",
+  roots: [
+    { dir: "specs" },
+    { dir: "src/components", path: "example/components" },
   ],
   interactive: "serve",
   mockupsDir: "generated",
@@ -55,7 +55,7 @@ export default defineConfig({
   },
   stylesheets: [
     {
-      match: "components/design-ui-*.html",
+      match: "design/library/**/index*.html",
       stylesheets: withLibraryStyles(designBaseStyles, [
         ...componentLayoutStyles,
         "design-component-controls.css",
@@ -63,38 +63,51 @@ export default defineConfig({
       ]),
     },
     {
-      match: "screens/design-component-controls*.html",
+      match: "design/components/controls/**/index*.html",
       stylesheets: withLibraryStyles(designBaseStyles, [
         ...componentLayoutStyles,
         "design-component-controls.css",
       ]),
     },
     {
-      match: "screens/design-component-*.html",
+      match: "design/components/**/index*.html",
+      stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
+    },
+    {
+      match: "design/interactive/workspace/**/index*.html",
+      stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
+    },
+    {
+      match: "design/rebuild-status/live-component/index*.html",
       stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
     },
     {
       match:
-        "screens/design-interactive-{component,screen,static-catalogue}.html",
-      stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
+        "design/browse/appearance/states/light-only-{current,document}/index*.html",
+      stylesheets: withLibraryStyles(
+        [
+          "design.css",
+          "design-stage.css",
+          "design-documents.css",
+          "design-review.css",
+        ],
+        workspaceLayoutStyles,
+      ),
     },
     {
-      match: "screens/design-rebuild-live-component.html",
-      stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
-    },
-    {
-      match: "screens/design-appearance-*.html",
+      match: "design/browse/appearance/**/index*.html",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css", "design-review.css"],
         workspaceLayoutStyles,
       ),
     },
     {
-      match: "screens/design-changes-*.html",
+      match: "design/changes/diff-controls/**/index*.html",
       stylesheets: withLibraryStyles(
         [
           "design.css",
           "design-stage.css",
+          "design-documents.css",
           "design-review.css",
           "design-review-scroll.css",
         ],
@@ -102,16 +115,22 @@ export default defineConfig({
       ),
     },
     {
-      match: "screens/design-review-*.html",
+      match: "design/changes/**/index*.html",
       stylesheets: withLibraryStyles(
-        ["design.css", "design-stage.css", "design-review.css"],
+        [
+          "design.css",
+          "design-stage.css",
+          "design-documents.css",
+          "design-review.css",
+          "design-review-scroll.css",
+        ],
         workspaceLayoutStyles,
       ),
     },
     {
-      match: "screens/design-*.html",
+      match: "design/**/index*.html",
       stylesheets: withLibraryStyles(
-        ["design.css", "design-stage.css"],
+        ["design.css", "design-stage.css", "design-documents.css"],
         workspaceLayoutStyles,
       ),
     },
@@ -138,6 +157,7 @@ export default defineConfig({
           "examples/basic/generated/design-component-view.css",
           "examples/basic/generated/design-review.css",
           "examples/basic/generated/design-review-scroll.css",
+          "examples/basic/generated/design-documents.css",
           "examples/basic/generated/design-stage.css",
           "examples/basic/generated/design.css",
           "examples/basic/generated/styles.css",

@@ -1,5 +1,9 @@
 # Viewer Comment Anchoring
 
+Status: Completed. [PR #84](https://github.com/mokly-ai/mokly/pull/84)
+merged on 2026-09-17. Viewer 0.2.0 released it. The cross-origin consumer
+smoke test in the post-merge follow-up is still open.
+
 Extend `@mokly/viewer` so a host application can build a comments feature on top
 of it: anchor a comment to a component instance, show every comment's marker on
 the preview, highlight every commented instance at once, and reopen a comment on
@@ -424,9 +428,10 @@ cases.
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Merge the release-please PR that ships the next viewer minor with its
+- [x] Merge the release-please PR that ships the next viewer minor with its
       paired CLI patch under the existing [release contract](../docs/protocol/npm-release.md).
+      PR #83 released viewer 0.2.0 with CLI 0.11.0.
 - [ ] From a clean consumer, mount the published viewer with the postMessage
       adapter against a published export on a second origin and exercise
       markers, `highlightInstances` and variant selection end to end.
-- [ ] Close this plan in `plans/README.md` when the implementation PR merges.
+- [x] Close this plan when the implementation PR merges.

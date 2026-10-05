@@ -8,8 +8,9 @@ import {
   type CatalogueManifestEntry,
 } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { catalogueNavSections, navLeafVisible } from "./nav_model.js";
+import type { NavLeafNode, NavNode } from "./nav_tree.js";
 import type { ShellRoute } from "./routes.js";
-import { rowMatchesQuery } from "./search_query.js";
 import { workspaceData } from "./workspace_data.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
@@ -28,19 +29,19 @@ export function changesActivation(
 ): ShellRoute {
   if (
     selection.view !== "changes" ||
-    !context.changedIds ||
+    !context.changedEntries ||
     route.view.kind !== "target"
   )
     return route;
   const requested = route.view.target.entry;
-  const destination = context.changedIds.includes(requested.id)
+  const destination = context.changedEntries.includes(requested.path)
     ? {
         entry: requested,
         ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
       }
-    : firstVisibleChangedVariant(catalogue, context, selection, requested.id);
+    : firstVisibleChangedEntry(catalogue, context, selection, requested);
   if (!destination) return route;
-  const redirected = destination.entry.id !== requested.id;
+  const redirected = destination.entry.path !== requested.path;
   const next: ShellRoute = redirected
     ? {
         ...route,
@@ -66,8 +67,8 @@ export function changesActivation(
   const first = selectedChangedViews(
     workspaceEvidenceEntry(data),
     data.changedViews,
-    data.variants.find(({ value }) => value.id === destination.entry.id)?.value
-      .id ?? data.variants[0]?.value.id,
+    data.variants.find(({ value }) => value.path === destination.entry.path)
+      ?.value.path ?? data.variants[0]?.value.path,
   )[0];
   return first
     ? { ...next, viewport: first.viewport, colorScheme: first.colorScheme }
@@ -79,55 +80,74 @@ function selectionHasChangedRoute(
   context: ShellContext,
   selection: ViewerSelection,
 ): boolean {
-  const current = selection.screenId
+  const current = selection.screenPath
     ? catalogueSelectionEntry(
         catalogue,
-        selection.screenId,
+        selection.screenPath,
         selection.snapshotId,
       )
     : undefined;
   return current !== undefined
-    ? context.changedIds?.includes(current.id) === true
+    ? context.changedEntries?.includes(current.path) === true
     : false;
 }
 
-function firstVisibleChangedVariant(
+/**
+ * The first visible changed row an unmodified container row lists, in the
+ * built tree's row order: its variants, then the removed variants attached
+ * after them, then its folder members, descending into member folders and
+ * member lists. Only a current screen or component row lists entries.
+ */
+function firstVisibleChangedEntry(
   catalogue: Catalogue,
   context: ShellContext,
   selection: ViewerSelection,
-  parentId: string,
+  container: CatalogueManifestEntry,
 ): ChangedDestination | undefined {
-  const parent = catalogue.hierarchy.byId.get(parentId);
-  if (
-    (parent?.kind !== "screen" && parent?.kind !== "component") ||
-    ("variantOf" in parent && parent.variantOf !== undefined) ||
-    !catalogue.manifest.entries.some((entry) => entry.id === parent.id)
-  )
-    return;
-  const current = (catalogue.hierarchy.variantsById.get(parentId) ?? []).map(
-    (entry) => ({ entry }),
+  const row = containerRow(
+    catalogueNavSections(catalogue).flatMap(({ children }) => children),
+    `entry:${container.path}`,
   );
-  const removed = catalogue.removedEntries.flatMap(({ entry, snapshotId }) =>
-    entry.kind === parent.kind &&
-    "variantOf" in entry &&
-    entry.variantOf === parentId
-      ? [{ entry, ...(snapshotId ? { snapshotId } : {}) }]
-      : [],
-  );
-  return [...current, ...removed].find(
-    ({ entry }) =>
-      context.changedIds?.includes(entry.id) &&
-      rowMatchesQuery(
-        { freeText: selection.search, tags: selection.tags },
-        {
-          id: entry.id,
-          tags: entry.tags ?? [],
-          text: catalogue.manifest.entries.some(
-            (candidate) => candidate.id === entry.id,
-          )
-            ? entry.title
-            : `${entry.title} · Removed`,
-        },
-      ),
-  );
+  for (const listed of row ? listedRows(row) : []) {
+    if (!navLeafVisible(listed, selection, context)) continue;
+    const entry = catalogueSelectionEntry(
+      catalogue,
+      listed.entryId,
+      listed.snapshotId,
+    );
+    if (entry)
+      return {
+        entry,
+        ...(listed.snapshotId ? { snapshotId: listed.snapshotId } : {}),
+      };
+  }
+  return undefined;
+}
+
+/** The row for one current entry, wherever a folder or member list holds it. */
+function containerRow(
+  nodes: readonly NavNode[],
+  key: string,
+): NavLeafNode | undefined {
+  for (const node of nodes) {
+    if (node.kind === "leaf" && node.key === key) return node;
+    const found = containerRow(
+      node.kind === "group" ? node.children : (node.members ?? []),
+      key,
+    );
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/** The rows a list discloses, in the order the list shows them. */
+function listedRows(row: NavLeafNode): NavLeafNode[] {
+  return [...(row.variants ?? []), ...(row.members ?? []).flatMap(memberRows)];
+}
+
+/** A member row followed by everything its folder or list holds. */
+function memberRows(node: NavNode): NavLeafNode[] {
+  return node.kind === "group"
+    ? node.children.flatMap(memberRows)
+    : [node, ...listedRows(node)];
 }

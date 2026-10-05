@@ -15,7 +15,7 @@ test("destination creation during initial ownership inspection cannot be adopted
   const output = path.join(fixture.root, "site");
   let inspected = false;
   await assert.rejects(
-    ExportTransaction.open(output, undefined, {
+    ExportTransaction.open(output, {
       ...fileExportOperations,
       lstat: async (candidate) => {
         const stat = await fileExportOperations.lstat(candidate);
@@ -66,7 +66,7 @@ for (const timing of ["before install", "during capture"] as const) {
       await fs.promises.rename(output, saved);
       await writeOwned(output, "Concurrent export");
     };
-    const transaction = await ExportTransaction.open(output, undefined, {
+    const transaction = await ExportTransaction.open(output, {
       ...fileExportOperations,
       rename: async (from, to) => {
         if (from === output && timing === "during capture") await replace();
@@ -102,7 +102,7 @@ for (const existed of [false, true]) {
     const output = path.join(fixture.root, "site");
     if (existed) await writeOwned(output, "Previous");
     let lateIdentity: Awaited<ReturnType<typeof fileExportOperations.lstat>>;
-    const transaction = await ExportTransaction.open(output, undefined, {
+    const transaction = await ExportTransaction.open(output, {
       ...fileExportOperations,
       rename: async (from, to) => {
         if (path.basename(from) === "stage") {
@@ -135,7 +135,7 @@ test("an empty output created at the restore operation is never replaced", async
   const output = path.join(fixture.root, "site");
   await writeOwned(output, "Previous");
   let lateIdentity: Awaited<ReturnType<typeof fileExportOperations.lstat>>;
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (path.basename(from) === "stage") throw new Error("Install failed");

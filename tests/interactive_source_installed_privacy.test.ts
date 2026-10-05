@@ -109,7 +109,7 @@ test("real Serve compiles installed stylesheet requests after IPC and deletion w
   });
   fixture.beforeRemove(() => server.close());
   const staticHtml = await (
-    await fetch(`${server.url}/static/screens/home.desktop.html`)
+    await fetch(`${server.url}/static/home/index.desktop.html`)
   ).text();
   const name = staticHtml.match(/data-module="([^"]+)"/)?.[1];
   assert.ok(name);
@@ -129,12 +129,12 @@ test("real Serve compiles installed stylesheet requests after IPC and deletion w
   assert.equal(bundle.status, 200);
   assert.ok((await bundle.text()).includes(name));
   const live = await fetch(
-    `${server.interactiveOrigin}/static/screens/home.desktop.html`,
+    `${server.interactiveOrigin}/static/home/index.desktop.html`,
   );
   assert.equal(live.status, 200);
   assert.ok((await live.text()).includes(name));
   const staticAfter = await fetch(
-    `${server.url}/static/screens/home.desktop.html`,
+    `${server.url}/static/home/index.desktop.html`,
   );
   assert.equal(staticAfter.status, 200);
   assert.equal(await staticAfter.text(), staticHtml);

@@ -20,13 +20,14 @@ import { ShellFrameRegistryProvider } from "./frame_registry.js";
 import { LivePreviewRetentionProvider } from "./live_preview_retention.js";
 import { catalogueNavSections } from "./nav_model.js";
 import { routeScreenId, type ShellRoute } from "./routes.js";
-import { shellRecoverySnapshot, shellStore } from "./store_actions.js";
+import { shellStore } from "./store_actions.js";
 import { useShellBrowser } from "./store_browser.js";
 import { ShellStoreBoundary, type ShellStore } from "./store_context.js";
 import { withFilterSelection } from "./store_filters.js";
 import { type EmbeddedShellEnvironment, useShellHost } from "./store_host.js";
 import { hostRoute } from "./store_host_routes.js";
 import { createInitialShellState } from "./store_initial.js";
+import { shellRecoverySnapshot } from "./store_recovery.js";
 import type {
   ShellInitialState,
   ShellRecoverySnapshot,
@@ -193,7 +194,7 @@ export function selectionForRoute(
   selection: ViewerSelection,
   route: ShellRoute,
 ): ViewerSelection {
-  const next = { ...selection, screenId: routeScreenId(route) };
+  const next = { ...selection, screenPath: routeScreenId(route) };
   if (route.snapshot) next.snapshotId = route.snapshot;
   else delete next.snapshotId;
   return next;
@@ -213,7 +214,7 @@ export function currentContext(
   } = context;
   const activeId =
     state.route.view.kind === "target"
-      ? state.route.view.target.entry.id
+      ? state.route.view.target.entry.path
       : undefined;
   return {
     ...stable,

@@ -33,7 +33,7 @@ async function open(
   route: string,
   heading: string,
 ): Promise<void> {
-  await page.goto(`${url}/view/${route}`);
+  await page.goto(`${url}/view/${route.replace(/index\.html$/, "")}`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-react-shell");
   await expect(page.locator("#mb-main h2")).toHaveText(heading);
 }
@@ -58,10 +58,10 @@ test("at narrow widths only a toolbar with Static and Live takes its own row", a
   page,
 }) => {
   for (const [route, heading, offered] of [
-    ["screens/home.html", "Home", true],
-    ["components/counter.html", "Counter", true],
-    ["screens/notes.html", "Notes", false],
-    ["components/badge.html", "Badge", false],
+    ["home/index.html", "Home", true],
+    ["counter/index.html", "Counter", true],
+    ["notes/index.html", "Notes", false],
+    ["badge/index.html", "Badge", false],
   ] as const) {
     await open(page, fixture.url, route, heading);
     expect(await toolbarPlacement(page), route).toEqual(
@@ -69,7 +69,7 @@ test("at narrow widths only a toolbar with Static and Live takes its own row", a
     );
   }
 
-  await open(page, fixture.url, "screens/details.html", "Details");
+  await open(page, fixture.url, "details/index.html", "Details");
   expect(await toolbarPlacement(page)).toEqual([true, "row"]);
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
   await expect(previewMode(page)).toHaveCount(0);
@@ -83,8 +83,8 @@ test("a static-only catalogue keeps its narrow toolbar beside the title", async 
   page,
 }) => {
   for (const [route, heading] of [
-    ["screens/home.html", "Home"],
-    ["components/counter.html", "Counter"],
+    ["home/index.html", "Home"],
+    ["counter/index.html", "Counter"],
   ] as const) {
     await open(page, staticOnly.url, route, heading);
     expect(await toolbarPlacement(page), route).toEqual([false, "beside"]);
@@ -99,9 +99,9 @@ test("a static-only catalogue keeps its narrow toolbar beside the title", async 
 test("a narrow toolbar moves at most once per navigation, with its control", async ({
   page,
 }) => {
-  await open(page, fixture.url, "screens/home.html", "Home");
+  await open(page, fixture.url, "home/index.html", "Home");
 
-  const notes = await navigateHeld(page, "screens/notes.html", "Notes");
+  const notes = await navigateHeld(page, "notes/index.html", "Notes");
   expect(await notes.placements()).toEqual([[true, "row"]]);
   notes.release();
   await expect(previewMode(page)).toHaveCount(0);
@@ -110,11 +110,7 @@ test("a narrow toolbar moves at most once per navigation, with its control", asy
     [false, "beside"],
   ]);
 
-  const counter = await navigateHeld(
-    page,
-    "components/counter.html",
-    "Counter",
-  );
+  const counter = await navigateHeld(page, "counter/index.html", "Counter");
   expect(await counter.placements()).toEqual([[false, "beside"]]);
   counter.release();
   await expect(previewMode(page)).toHaveCount(1);
@@ -123,7 +119,7 @@ test("a narrow toolbar moves at most once per navigation, with its control", asy
     [true, "row"],
   ]);
 
-  const home = await navigateHeld(page, "screens/home.html", "Home");
+  const home = await navigateHeld(page, "home/index.html", "Home");
   home.release();
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await page.waitForTimeout(500);

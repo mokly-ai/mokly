@@ -39,7 +39,7 @@ for (const rewriteHost of [true, false])
       fixture.beforeRemove(() => server.close());
       app.forwardTo(server.url);
       live.forwardTo(`http://127.0.0.1:${server.interactivePort}`);
-      const opened = await page.goto(`${app.url}/view/components/counter.html`);
+      const opened = await page.goto(`${app.url}/view/counter/`);
       expect(opened?.status()).toBe(200);
       await page
         .getByLabel("Viewport", { exact: true })

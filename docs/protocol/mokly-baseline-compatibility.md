@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Implemented as recorded in the
-[id-derived routes plan](../../plans/id-derived-routes.md).
+Current and historical readers accept manifest v8. Earlier baselines use the
+established Changes-unavailable outcome without conversion.
 
 This contract owns the version gate between a current catalogue and the Git
 comparison base used by Serve, export, and publication. Baseline storage and
@@ -12,18 +12,19 @@ rebuilding are defined by [Derived Baselines](./mokly-derived-baselines.md).
 ## Compatible Baseline
 
 A comparison base is compatible only when its output contains the canonical
-`mokly-manifest.json` and that manifest is a valid schema-v7 manifest. The
-historical boundary applies the same v7 shape, relationship, path, and source
+`mokly-manifest.json` and that manifest is a valid schema-v8 manifest. The
+historical boundary applies the same v8 shape, relationship, path, and source
 inventory validation as the current manifest reader. It reads baseline bytes
 but never executes baseline source through the current Mokly package.
 
 The boundary does not translate earlier schemas. Every accepted entry and
-artifact already has the identity-derived layout in
-the [artifact path contract](./mokly-artifact-paths.md).
+artifact already has the path-derived layout in the
+[artifact path contract](./mokly-artifact-paths.md), and the
+[move contract](./mokly-moves.md) pairs its entries with the current ones.
 
 ## Incompatible Earlier Baseline
 
-A canonical manifest with an integer `schemaVersion` below `7` is incompatible
+A canonical manifest with an integer `schemaVersion` below `8` is incompatible
 earlier output. A base that has no canonical manifest but contains
 `mokabook-manifest.json` or `mockbook-manifest.json` is also incompatible;
 those names are sentinels for earlier output, not fallback inputs. Mokly does
@@ -55,9 +56,9 @@ restores Changes without restarting Serve.
 ## Invalid Or Missing Data
 
 The graceful branch above is only for recognized earlier output. An integer
-`schemaVersion` above `7` is an unsupported newer baseline and follows the
+`schemaVersion` above `8` is an unsupported newer baseline and follows the
 invalid-baseline path. Invalid JSON, a non-object root, a missing or non-integer
-version, or a schema-v7 file that fails validation follows the same path.
+version, or a schema-v8 file that fails validation follows the same path.
 Absence of every recognized manifest is missing history. None of these cases
 falls back or becomes a successful empty comparison.
 
@@ -77,10 +78,10 @@ installed output; they do not parse or convert an incompatible baseline.
 
 ## Verification
 
-Coverage must prove that a valid v7 base compares normally and that a lower
+Coverage must prove that a valid v8 base compares normally and that a lower
 version or incompatible sentinel produces the command outcomes and single line
 above. A newer-version base must make Serve report Changes unavailable with its
-normal safe diagnostic and make explicit capture fail. Malformed v7, missing
+normal safe diagnostic and make explicit capture fail. Malformed v8, missing
 history, current-manifest failure, output cleanup, and rollback remain separate
 cases. Derived mode builds the base with that commit's tooling before this gate;
 committed mode applies it directly to Git blobs.

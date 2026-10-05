@@ -1,5 +1,13 @@
 # Interactive Views
 
+Status: Active. Implementation is complete, including the reference example,
+Static/Live parity and static-output regression coverage. Serve Rebuild Status
+Milestone 4 closes final review finding 1. Milestone 11 fixes finding 3
+(forwarded catalogue origins, option A). Milestone 12 integrates main's path
+identity and Markdown contracts. Awaiting a decision: finding 2 (`asChild`
+controls that ignore `onClick`) and the Milestone 11 review's Medium finding
+(IPv6 catalogue origins cannot frame Live). Close this plan when its PR merges.
+
 ## Summary
 
 Let a Serve user switch the current screen or component preview between
@@ -876,6 +884,455 @@ has the same Origin rule, so prop edits fail there too.
       cannot express an IPv6 literal, so Chrome ignores that
       `frame-ancestors` entry and blocks both Live frames. Both reverse-proxy
       browser tests and 347 focused tests passed.
+
+## Milestone 12: Integrate main's path identity contract
+
+Merge `781da7ae3261e6694a5ef5608a91f3e34061f6d0` into source tip
+`4cecfa5a2c5312d3592cb5eac63a8aab98fce005`. The merge base is
+`800fe9f88a0173429b25baa1bcf41ed9e59b2256`. Keep both feature sets.
+The initial merge has 75 conflicted paths. No PR exists, so this milestone
+records the intentional resolutions. Copy this record into the PR description
+when the PR opens. Main first pointed to `c4138a0b`. It advanced to `60d48370`
+with documentation changes, then to `781da7ae` with the generated-output lock
+fix. Merge each delta with the previous main target as its three-way base.
+Keep all completed code resolutions, then set the pending merge's second
+parent to the fully integrated main target. The final merge still has exactly
+two parents.
+
+- [x] Read the path, root, module and artifact contracts before resolving conflicts.
+- [x] Combine the contracts and migrate Live code, examples and fixtures to paths.
+- [x] Add a failing regression for definition link tokens, then fix the mismatch.
+- [x] Share native and Live navigation validation and publication to keep the inspector within
+      its existing 9,216-byte budget. The package check first reports 9,251 bytes.
+- [x] Update stale design link and documentation assertions. Check focused preview
+      component discovery against the real example catalogue.
+- [x] Remove repeated physical classification for paths with identical logical
+      and physical roots. The existing 20,000-file regression exceeds its
+      2,500-millisecond limit before this change. Keep that limit unchanged.
+      Cache physical projections within one collection. Add a failing call-count
+      regression and check that each collection rechecks changed symlink targets.
+- [x] Give design-library runtime tests a current isolated baseline so they
+      retain their saved-status assertions before this merge is committed.
+- [x] Move ordinary-preview preparation to an owned Node child process. The
+      browser fixture times out at 300 seconds before this change. Profiling
+      shows over 90 percent of sampled worker time in React debug-stack capture;
+      the same preparation takes 67 seconds in ordinary Node. Keep all artifact,
+      navigation and freshness assertions and the five-minute limit.
+      All 14 browser cases pass after the change; preparation takes 62 seconds.
+- [x] Integrate main's lock-directory preservation fix and its tests. The first
+      full gate passes before this new main commit is integrated. Run the full gate
+      again on the final merge tree before committing.
+- [x] Run the focused tests, example checks, browser smoke and `cargo xtask check`.
+      The final gate against `781da7ae` passes: 4,714 TypeScript tests,
+      902 browser cases, 286 hydration cases, and 15 Rust tests. Both packed
+      packages pass all six consumer scenarios. Build and example checks pass
+      with 524 generated files. The focused regressions and mobile/desktop
+      Live smoke checks also pass. Generated output remains ignored.
+- [ ] Audit every resolution and main deletion; stage all authored files,
+      commit with two parents, inspect every remerge-diff path and push.
+- [ ] Review after the push with `docs/implementation-review-prompt.md`
+      against `origin/main`. Report findings and recommendations without
+      changing the implementation.
+
+### Resolution record
+
+#### Documentation and public contracts
+
+Keep main's path, root, folder, Markdown, move, manifest-v8 and catalogue-v4 contracts. Keep the branch's Live, accepted-source and rebuild-status contracts. Replace old IDs and routes in branch prose. Move complete configuration, comparison and component-verification sections into focused documents to meet size limits. Keep links and exact reviewed caps aligned.
+
+Restore main's Runtime paragraph break and its existing 437-line cap. This
+document has no remaining content or formatting difference from main.
+
+- `README.md`
+- `docs/guides/authoring/config.md`
+- `docs/guides/start/serve.md`
+- `docs/protocol/ci-verification.md`
+- `docs/protocol/ci-suite-evidence.md`
+- `docs/protocol/README.md`
+- `docs/protocol/mokly-authoring.md`
+- `docs/protocol/mokly-comparison-pane-designs.md`
+- `docs/protocol/mokly-component-design-verification.md`
+- `docs/protocol/mokly-component-design.md`
+- `docs/protocol/mokly-configuration-discovery.md`
+- `docs/protocol/mokly-configuration.md`
+- `docs/protocol/mokly-design-component-library.md`
+- `docs/protocol/mokly-export-public-files.md`
+- `docs/protocol/mokly-interactive-host-integration.md`
+- `docs/protocol/mokly-interactive-views-design.md`
+- `docs/protocol/mokly-interactive-views-runtime.md`
+- `docs/protocol/mokly-interactive-views.md`
+- `docs/protocol/mokly-public-exclusions.md`
+- `docs/protocol/mokly-rebuild-status-design.md`
+- `docs/protocol/mokly-runtime.md`
+- `docs/protocol/mokly-shell-design.md`
+- `src/build/README.md`
+- `src/interactive/README.md`
+- `src/server/README.md`
+
+#### Reference catalogue migration
+
+Keep main's discovered `specs` tree. Move the branch's Live and rebuild-status screens from the old `entries` tree into that tree. Replace removed aggregate modules with discovered entry modules and folder metadata. Keep every screen, both viewports, shared controls, renderer providers, Live opt-outs, Guest picker and Workspace note. Update links, local variant slugs and stylesheet routes to the path contract. The old entry files are replaced by their `specs` owners; no main feature is removed.
+
+- `examples/basic/README.md`
+- `examples/basic/entries/design/components/parts/destinations.ts`
+- `examples/basic/entries/design/design.mockup.tsx`
+- `examples/basic/entries/design/interactive/index.tsx`
+- `examples/basic/entries/design/interactive/modes/screens.tsx`
+- `examples/basic/entries/design/interactive/parts/destinations.ts`
+- `examples/basic/entries/design/interactive/parts/live_screen.tsx`
+- `examples/basic/entries/design/interactive/parts/navigation_states.ts`
+- `examples/basic/entries/design/interactive/parts/preview_screen.tsx`
+- `examples/basic/entries/design/interactive/parts/static_notice.tsx`
+- `examples/basic/entries/design/interactive/parts/workspace_screen.tsx`
+- `examples/basic/entries/design/interactive/workspace/screens.tsx`
+- `examples/basic/entries/design/library/library.mockup.ts`
+- `examples/basic/entries/design/parts/destinations.ts`
+- `examples/basic/entries/design/rebuild-status/index.tsx`
+- `examples/basic/entries/design/rebuild-status/screens.tsx`
+- `examples/basic/mokly.config.ts`
+- `examples/basic/renderer.tsx`
+- `examples/basic/specs/catalogue.tsx`
+- `examples/basic/specs/design/components/parts/component_layout.tsx`
+- `examples/basic/specs/design/components/parts/destinations.ts`
+- `examples/basic/specs/design/components/parts/navigation.tsx`
+- `examples/basic/specs/design/components/parts/navigation_tree.ts`
+- `examples/basic/specs/design/components/parts/screen_info.tsx`
+- `examples/basic/specs/design/interactive/_folder.json`
+- `examples/basic/specs/design/interactive/index.mockup.ts`
+- `examples/basic/specs/design/interactive/index.tsx`
+- `examples/basic/specs/design/interactive/modes/_folder.json`
+- `examples/basic/specs/design/interactive/modes/index.mockup.ts`
+- `examples/basic/specs/design/interactive/modes/screens.tsx`
+- `examples/basic/specs/design/interactive/parts/destinations.ts`
+- `examples/basic/specs/design/interactive/parts/live_screen.tsx`
+- `examples/basic/specs/design/interactive/parts/navigation_states.ts`
+- `examples/basic/specs/design/interactive/parts/preview_screen.tsx`
+- `examples/basic/specs/design/interactive/parts/static_notice.tsx`
+- `examples/basic/specs/design/interactive/parts/workspace_screen.tsx`
+- `examples/basic/specs/design/interactive/workspace/_folder.json`
+- `examples/basic/specs/design/interactive/workspace/index.mockup.ts`
+- `examples/basic/specs/design/interactive/workspace/screens.tsx`
+- `examples/basic/specs/design/library/chrome/rebuild-notice.mockup.ts`
+- `examples/basic/specs/design/library/chrome/rebuild-notice.tsx`
+- `examples/basic/specs/design/library/chrome/rebuild-notice.view.tsx`
+- `examples/basic/specs/design/library/chrome/top-bar.tsx`
+- `examples/basic/specs/design/library/controls/view-controls.tsx`
+- `examples/basic/specs/design/parts/destinations.ts`
+- `examples/basic/specs/design/parts/rebuild_status.ts`
+- `examples/basic/specs/design/rebuild-status/_folder.json`
+- `examples/basic/specs/design/rebuild-status/index.mockup.ts`
+- `examples/basic/specs/design/rebuild-status/screens.tsx`
+- `examples/basic/specs/example/screens/visit.mockup.ts`
+- `examples/basic/src/components/guest-picker/guest-picker.mokly.tsx`
+- `examples/basic/src/components/workspace-note/workspace-note.mokly.tsx`
+
+#### Viewer state and frames
+
+Keep main's path lookup, move evidence, Markdown frames and scheme behavior. Keep Live eligibility, Static/Live selection, inspector restrictions and rebuild notices. Move the whole-document frame and recovery snapshot into focused owners. Update their callers without retaining pass-through exports.
+
+- `packages/viewer/src/inspector/README.md`
+- `packages/viewer/src/inspector/links.ts`
+- `packages/viewer/src/inspector/metadata.ts`
+- `packages/viewer/src/inspector/runtime.ts`
+- `packages/viewer/src/inspector/values.ts`
+- `packages/viewer/src/shell/capability_route_evidence.ts`
+- `packages/viewer/src/shell/capability_store.ts`
+- `packages/viewer/src/shell/component_controls.tsx`
+- `packages/viewer/src/shell/context.ts`
+- `packages/viewer/src/shell/document_stage_frame.tsx`
+- `packages/viewer/src/shell/metadata.ts`
+- `packages/viewer/src/shell/preview_mode.ts`
+- `packages/viewer/src/shell/stage_frame.tsx`
+- `packages/viewer/src/shell/store.tsx`
+- `packages/viewer/src/shell/store_actions.ts`
+- `packages/viewer/src/shell/store_recovery.ts`
+- `packages/viewer/src/shell/workspace.tsx`
+- `packages/viewer/src/shell/workspace_data.ts`
+- `packages/viewer/src/shell/workspace_inspector.tsx`
+
+#### Authoring and configuration
+
+Keep main's branded exports, flat definitions, root discovery, path identity and local variant slugs. Add the branch's existing `interactive` fields to the accepted shapes. Definition links retain the private 36-character token shape. Generate its random bytes through Web Crypto so Node and browser bundles share the same implementation.
+
+- `src/authoring/definitions.ts`
+- `src/authoring/fields.ts`
+- `src/authoring/identity.ts`
+- `src/authoring/links.tsx`
+- `src/authoring/types.ts`
+- `src/authoring/variants.ts`
+- `src/components/definition.ts`
+- `src/components/render_request.ts`
+- `src/components/types.ts`
+- `src/components/wrapper.tsx`
+- `src/config/types.ts`
+- `src/config/validate.ts`
+- `src/registry/catalogue_index.ts`
+- `src/registry/entry_validation.ts`
+
+#### Build and accepted runtime
+
+Keep main's output snapshot, source inventory, Markdown and move support. Keep accepted Live source capture, style replay and runtime eligibility. Project accepted root ownership into the browser module graph. Move `LoadedGraph` to its type owner and update direct imports. Preserve generated-output privacy and publication exclusions.
+
+The full gate exposes a 20,000-file dependency scan above its existing time
+limit. Reuse identical logical/physical classifications and cache physical
+projections for one collection. Keep the same ownership decisions and reset
+the cache at the next collection. The focused case falls from 2.76 seconds to
+1.63 seconds. Keep the 2.5-second limit and all validation precedence checks.
+
+- `scripts/preview/catalogue.mjs`
+- `docs/protocol/mokly-imported-styles-postcss.md`
+- `src/build/README.md`
+- `src/build/compact_runtime.ts`
+- `src/build/compile.ts`
+- `src/build/component_runtime.ts`
+- `src/build/consumer_bundle.ts`
+- `src/build/consumer_entry.ts`
+- `src/build/document_compiler.ts`
+- `src/build/live_runtime.ts`
+- `src/build/load_graph.ts`
+- `src/build/loaded_graph.ts`
+- `src/build/package_owned_paths.ts`
+- `src/build/render_cooperative.ts`
+- `src/build/source_freshness.ts`
+- `src/build/source_inventory.ts`
+- `src/build/styles/dependency_inventory.ts`
+- `src/build/styles/dependency_walk.ts`
+- `src/compatibility/transform.ts`
+- `src/review/accepted_generation.ts`
+
+#### Live browser runtime
+
+Use paths throughout private bootstrap, diagnostics and eligibility. Collect every branded named or default export. Derive paths with the same root rules as static compilation. Resolve relative links, imported definition links and variants through accepted identities. Use `screenPath` for navigation events and include Markdown destinations in the route table.
+
+- `src/interactive/diagnostics.ts`
+- `src/interactive/document.ts`
+- `src/interactive/errors.ts`
+- `src/interactive/generation.ts`
+- `src/interactive/route_table.ts`
+- `src/interactive/runtime/bootstrap.ts`
+- `src/interactive/runtime/consumer.d.ts`
+- `src/interactive/runtime/definitions.ts`
+- `src/interactive/runtime/diagnostics.ts`
+- `src/interactive/runtime/entry.ts`
+- `src/interactive/runtime/mount.tsx`
+- `src/interactive/runtime/route_context.ts`
+- `src/interactive/server_diagnostic.ts`
+- `src/interactive/server_static.ts`
+- `src/interactive/types.ts`
+
+#### Serve lifecycle
+
+Keep main's demand documents, accepted generated bytes, move targets and runtime replacement. Keep Live listener startup, forwarded origins, private capability state and rebuild events. Split initial change resolution, document observation and failure cleanup into their existing lifecycle owners to keep HTTP composition below the source limit.
+
+- `src/server/client_modules.ts`
+- `src/server/controls/runtime_ipc.ts`
+- `src/server/controls/transient.ts`
+- `src/server/generated_static.ts`
+- `src/server/http.ts`
+- `src/server/http_documents.ts`
+- `src/server/http_initial.ts`
+- `src/server/http_shutdown.ts`
+- `src/server/http_types.ts`
+- `src/server/http_update.ts`
+- `src/server/rebuild_status_state.ts`
+- `src/server/supervisor.ts`
+- `src/server/supervisor_types.ts`
+- `src/server/update_messages.ts`
+- `src/server/view_routes.ts`
+- `src/server/workspace_eligibility.ts`
+
+#### Regression coverage
+
+Keep main's tests and migrate branch fixtures and assertions to roots, paths, current wire formats, screenPath navigation and discovered example files. Keep the behavior each test checks. Add unit and browser cases for named exports, nested index roots, transparent folders, variants, stateful components, relative links, imported definitions and Markdown destinations. Capture the token-format failure before fixing it.
+
+- `packages/viewer/tests/disclosure_evidence.test.ts`
+- `packages/viewer/tests/document_light_only.test.tsx`
+- `packages/viewer/tests/host_capabilities_rendering.test.tsx`
+- `packages/viewer/tests/live_eligibility.test.ts`
+- `packages/viewer/tests/preview_mode.test.ts`
+- `packages/viewer/tests/preview_mode_markup.test.tsx`
+- `packages/viewer/tests/preview_mode_origin.test.ts`
+- `packages/viewer/tests/rebuild_status.test.tsx`
+- `packages/viewer/tests/rebuild_status_markup.test.tsx`
+- `tests/app_origin_admission.test.ts`
+- `tests/app_origin_watch.test.ts`
+- `tests/authoring.test.tsx`
+- `tests/authoring_rendering.test.tsx`
+- `tests/authoring_variants.test.tsx`
+- `tests/browser/design_rebuild_status.spec.ts`
+- `tests/browser/design_library_runtime.spec.ts`
+- `tests/browser/interactive.spec.ts`
+- `tests/browser/interactive_fixture.ts`
+- `tests/browser/interactive_fixture_sources.ts`
+- `tests/browser/interactive_forwarded_origin.spec.ts`
+- `tests/browser/interactive_imported_styles.spec.ts`
+- `tests/browser/interactive_path_identity.spec.ts`
+- `tests/browser/interactive_shell.spec.ts`
+- `tests/browser/interactive_shell_eligibility.spec.ts`
+- `tests/browser/interactive_shell_fixture.ts`
+- `tests/browser/interactive_shell_helpers.ts`
+- `tests/browser/interactive_shell_inspector.spec.ts`
+- `tests/browser/interactive_shell_pending.spec.ts`
+- `tests/browser/interactive_shell_toolbar.spec.ts`
+- `tests/browser/interactive_shell_watch.spec.ts`
+- `tests/browser/ordinary_preview_fixture.ts`
+- `tests/browser/react_shell_hydration_helpers.ts`
+- `tests/browser/rebuild_status_layout.spec.ts`
+- `tests/browser/rebuild_status_tabs.spec.ts`
+- `tests/browser/rebuild_status_watch.spec.ts`
+- `tests/client_interactive_capability.test.ts`
+- `tests/client_route_interactive_evidence.test.ts`
+- `tests/component_design_attribution.test.ts`
+- `tests/component_export.test.ts`
+- `tests/design_interactive_views.test.ts`
+- `tests/design_interactive_workspace.test.ts`
+- `tests/design_library_usage.test.ts`
+- `tests/design_link_states.test.ts`
+- `tests/design_links.test.ts`
+- `tests/design_rebuild_reuse.test.ts`
+- `tests/design_rebuild_status.test.ts`
+- `tests/design_screen_counts.test.ts`
+- `tests/example_links.test.ts`
+- `tests/example_focused_baseline.test.ts`
+- `tests/fixture_replacements.test.ts`
+- `tests/helpers/design_rebuild_status.ts`
+- `tests/helpers/example_baseline.ts`
+- `tests/helpers/interactive_server.ts`
+- `tests/helpers/ordinary_preview_source.ts`
+- `tests/helpers/ordinary_preview_worker.mjs`
+- `tests/helpers/registry_validation.ts`
+- `tests/helpers/shell_fixture.ts`
+- `tests/helpers/variant_validation.ts`
+- `tests/interactive_authoring.test.tsx`
+- `tests/interactive_bundle.test.ts`
+- `tests/interactive_compaction.test.ts`
+- `tests/interactive_configuration.test.ts`
+- `tests/interactive_diagnostics.test.ts`
+- `tests/interactive_document.test.ts`
+- `tests/interactive_eligibility.test.ts`
+- `tests/interactive_example_adoption.test.ts`
+- `tests/interactive_imported_styles.test.ts`
+- `tests/interactive_path_identity.test.ts`
+- `tests/interactive_route_parity.test.ts`
+- `tests/interactive_server.test.ts`
+- `tests/interactive_source_failure.test.ts`
+- `tests/interactive_source_installed_ipc.test.ts`
+- `tests/interactive_source_installed_linked.test.ts`
+- `tests/interactive_source_installed_linked_ipc.test.ts`
+- `tests/interactive_source_installed_linked_serve.test.ts`
+- `tests/interactive_source_installed_privacy.test.ts`
+- `tests/interactive_source_installed_styles.test.ts`
+- `tests/interactive_source_ipc.test.ts`
+- `tests/interactive_styles_alias.test.ts`
+- `tests/interactive_styles_delivery.test.ts`
+- `tests/interactive_styles_packages.test.ts`
+- `tests/interactive_workspace_eligibility.test.ts`
+- `tests/inspector_inert.test.ts`
+- `tests/origin_host_validation.test.ts`
+- `tests/postcss_dependency_cache.test.ts`
+- `tests/protocol_doc_sizes.test.ts`
+- `tests/server_update_messages.test.ts`
+- `tests/shell.test.ts`
+- `tests/shell_appearance.test.ts`
+- `tests/shell_chrome.test.ts`
+- `tests/shell_navigation.test.ts`
+- `tests/shell_styles.test.ts`
+- `tests/shell_tags.test.ts`
+- `tests/variant_validation.test.ts`
+
+#### Plan records
+
+Adopt main's status paragraphs and removal of the plans index. Keep the branch's two open plans and pending review decisions in their own status paragraphs. Use main's dated completion record for Route-Scoped Shell Bootstrap. Record this merge in the active Interactive Views plan without reopening completed milestones.
+
+- `plans/README.md`
+- `plans/interactive-views.md`
+
+#### Latest main documentation update
+
+Apply each documentation change from `60d48370`. Keep main's plan statuses and
+PR dates. Resolve the Route-Scoped Shell Bootstrap heading to main's more
+complete dated record. Move the two branch-only active plan summaries from the
+retired index into their owning status paragraphs. Update directory links and
+keep the branch's additional Live and rebuild documentation.
+
+- `AGENTS.md`
+- `README.md`
+- `examples/basic/README.md`
+- `packages/viewer/src/client/README.md`
+- `plans/README.md`
+- `plans/app-independent-mokabook-library.md`
+- `plans/authenticated-frame-document-handoff.md`
+- `plans/browse-shell-design-parity.md`
+- `plans/changes-path-only-evidence.md`
+- `plans/ci-performance.md`
+- `plans/cli-terminal-experience.md`
+- `plans/co-located-entry-discovery-follow-up.md`
+- `plans/co-located-entry-discovery.md`
+- `plans/comparison-pane-scroll-alignment.md`
+- `plans/component-explorer.md`
+- `plans/configurable-changes-listing.md`
+- `plans/consumer-static-export.md`
+- `plans/css-change-attribution.md`
+- `plans/delta-publishing.md`
+- `plans/derived-baseline-review-fixes.md`
+- `plans/derived-baselines.md`
+- `plans/evidence-first-release-publish.md`
+- `plans/hierarchy-inferred-breadcrumbs.md`
+- `plans/id-derived-routes.md`
+- `plans/imported-css-delivery.md`
+- `plans/in-frame-catalogue-link-navigation.md`
+- `plans/mocklink-child-controls.md`
+- `plans/mokabook-dependency-patch-upstreaming.md`
+- `plans/mokabook-design-components.md`
+- `plans/mokabook-design-mocklinks.md`
+- `plans/mokly-package-migration.md`
+- `plans/mokly-viewer-library.md`
+- `plans/native-color-scheme-support.md`
+- `plans/nav-path-hierarchy.md`
+- `plans/optional-published-changes.md`
+- `plans/package-documentation.md`
+- `plans/path-identity.md`
+- `plans/publish-catalogue.md`
+- `plans/react-browse-shell.md`
+- `plans/release-gated-node-compatibility.md`
+- `plans/removed-content-previews.md`
+- `plans/review-fix-followups.md`
+- `plans/route-scoped-shell-bootstrap.md`
+- `plans/screen-variants-follow-up.md`
+- `plans/screen-variants.md`
+- `plans/tag-filtering.md`
+- `plans/unchanged-view-fast-path.md`
+- `plans/unified-catalogue-pages.md`
+- `plans/viewer-comment-anchoring.md`
+- `plans/viewer-dark-mode.md`
+- `plans/viewer-owned-historical-previews.md`
+- `src/export/README.md`
+- `src/publish/README.md`
+- `plans/serve-rebuild-status.md`
+
+#### Latest main lock update
+
+Keep all 12 changes from `781da7ae` (PR #132). Lock release removes only the
+lock file, so another writer never loses its parent directory during creation.
+Keep main's regression for the APFS `EINVAL` race, its baseline directory
+simplification, and its updated cache assertions. Keep main's removal of
+`tests/baseline_directory_walk.test.ts`; it tested the retired retry behavior
+and is already absent from the new main. No file is deleted relative to main.
+Combine the build README addition with the branch's Live and dependency-cache
+documentation. All 12 paths merge without new conflicts.
+
+- `docs/protocol/mokly-baseline-storage.md`
+- `docs/protocol/mokly-rendering-generated.md`
+- `src/baseline/confinement.ts`
+- `src/build/README.md`
+- `src/build/output_lock_file.ts`
+- `tests/baseline_directory_walk.test.ts`
+- `tests/derived_build.test.ts`
+- `tests/derived_cache_boundaries.test.ts`
+- `tests/export_current_derived.test.ts`
+- `tests/generated_output_lock.test.ts`
+- `tests/helpers/output_directory_lock_spy.ts`
+- `tests/path_transaction_regressions.test.ts`
 
 ## Post-merge follow-up (non-blocking)
 

@@ -80,3 +80,15 @@ function sameStatus(left: RebuildStatus, right: RebuildStatus): boolean {
     left.failure?.id === right.failure?.id
   );
 }
+
+/** Advance failure state before announcing a new catalogue content version. */
+export function publishContentEvent(
+  streams: ReadonlySet<ServerResponse>,
+  updateVersion: number,
+  rebuildStatus: VersionedRebuildStatus | undefined,
+): void {
+  const adoptedStatus = rebuildStatus?.advance(updateVersion);
+  if (adoptedStatus) publishRebuildEvent(streams, adoptedStatus);
+  const payload = `event: update\ndata: ${updateVersion}\n\n`;
+  for (const stream of streams) stream.write(payload);
+}

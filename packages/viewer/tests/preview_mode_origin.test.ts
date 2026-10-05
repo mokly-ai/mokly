@@ -40,8 +40,8 @@ test("the Live origin is explicit or the shell host with the announced port", ()
 test("Live documents keep the static path, query and fragment on the Live origin", () => {
   const origin = "http://127.0.0.1:4174";
   assert.equal(
-    liveFrameSource("/static/screens/home.mobile.html", origin),
-    `${origin}/static/screens/home.mobile.html`,
+    liveFrameSource("/static/home/index.mobile.html", origin),
+    `${origin}/static/home/index.mobile.html`,
   );
   assert.equal(
     liveFrameSource(
@@ -52,10 +52,10 @@ test("Live documents keep the static path, query and fragment on the Live origin
   );
   assert.equal(
     liveFrameSource(
-      "http://127.0.0.1:4173/static/screens/home.desktop.html",
+      "http://127.0.0.1:4173/static/home/index.desktop.html",
       origin,
     ),
-    `${origin}/static/screens/home.desktop.html`,
+    `${origin}/static/home/index.desktop.html`,
   );
   assert.equal(
     liveFrameSource(

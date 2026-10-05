@@ -2,7 +2,7 @@
 
 import type { IncomingMessage } from "node:http";
 
-import { isCatalogueId } from "@mokly/viewer/data";
+import { isEntryPath } from "@mokly/viewer/data";
 
 import type { InteractiveRenderDiagnostic } from "./runtime/diagnostics.js";
 
@@ -64,25 +64,25 @@ export async function readInteractiveDiagnostic(
   const minimal = ["code", "message"];
   if (exact(value, minimal) && value["code"] === "render-error")
     return { code: "render-error", message: value["message"] };
-  const variantId = value["variantId"];
+  const variantPath = value["variantPath"];
   const keys = [
     "code",
     "colorScheme",
-    "entryId",
+    "entryPath",
     "entryKind",
     "message",
-    ...(variantId === undefined ? [] : ["variantId"]),
+    ...(variantPath === undefined ? [] : ["variantPath"]),
     "viewport",
   ];
   if (
     !exact(value, keys) ||
     value["code"] !== "render-error" ||
     (value["colorScheme"] !== "light" && value["colorScheme"] !== "dark") ||
-    !isCatalogueId(value["entryId"]) ||
+    !isEntryPath(value["entryPath"]) ||
     (value["entryKind"] !== "screen" && value["entryKind"] !== "component") ||
     (value["viewport"] !== "mobile" && value["viewport"] !== "desktop") ||
-    (variantId !== undefined && !isCatalogueId(variantId)) ||
-    (value["entryKind"] === "component") !== (variantId !== undefined)
+    (variantPath !== undefined && !isEntryPath(variantPath)) ||
+    (value["entryKind"] === "component") !== (variantPath !== undefined)
   )
     throw new InteractiveDiagnosticRequestError(
       InteractiveDiagnosticInputError.Invalid,
@@ -94,10 +94,10 @@ export async function readInteractiveDiagnostic(
 export function interactiveDiagnosticViewKey(
   diagnostic: InteractiveRenderDiagnostic,
 ): string {
-  return diagnostic.entryId
+  return diagnostic.entryPath
     ? [
-        diagnostic.entryId,
-        diagnostic.variantId ?? "",
+        diagnostic.entryPath,
+        diagnostic.variantPath ?? "",
         diagnostic.viewport,
         diagnostic.colorScheme,
       ].join("\0")
@@ -109,8 +109,8 @@ export function interactiveDiagnosticLine(
   generation: string,
   diagnostic: InteractiveRenderDiagnostic,
 ): string {
-  const view = diagnostic.entryId
-    ? `${diagnostic.entryId}${diagnostic.variantId ? `/${diagnostic.variantId}` : ""} ${diagnostic.viewport}/${diagnostic.colorScheme}`
+  const view = diagnostic.entryPath
+    ? `${diagnostic.entryPath}${diagnostic.variantPath ? `/${diagnostic.variantPath}` : ""} ${diagnostic.viewport}/${diagnostic.colorScheme}`
     : "unknown view";
   const message = diagnostic.message.replace(/\s+/g, " ").trim();
   return `[mokly/render-error] ${generation} ${view}: ${message}`;

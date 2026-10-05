@@ -5,6 +5,8 @@
 Local Serve edits props through the registered renderer; published controls are
 read-only. [Controls mockups](./mokly-component-controls-design.md) share the
 icon inspector and lifecycle. Forwarded loopback ports follow the rule below.
+The render request names entries by path and keeps a separate page id for
+coalescing requests from one open page.
 
 ## Scope And User Behavior
 
@@ -73,10 +75,10 @@ Users can browse, inspect, and compare the saved variants normally.
 
 ## Rendering Boundary
 
-Serve exposes private POST `/__mokly/components/render`. Its request carries a
-parent component id, global variant-entry id, view axes, catalogue generation,
-page id, and declared control overrides. It accepts no module path, source,
-callback, resource path, or renderer selection.
+Serve exposes private POST `/__mokly/components/render`. Its request carries
+the parent component's path, the variant entry's path, view axes, catalogue
+generation, page id, and declared control overrides. It accepts no module
+path, source, callback, resource path, or renderer selection.
 
 The response's `view` uses [manifest usage records](./mokly-component-manifest.md).
 The separate `X-Mokly-Render-Token` header never enters generated metadata.
@@ -84,7 +86,7 @@ The separate `X-Mokly-Render-Token` header never enters generated metadata.
 ```ts
 interface ComponentRenderRequest {
   componentId: string;
-  variantId: string;
+  variantPath: string;
   viewport: Viewport;
   colorScheme: ColorScheme;
   generation: string;
@@ -106,10 +108,10 @@ interface ComponentRenderSuccess {
 }
 ```
 
-`componentId` names the parent and `variantId` names the global variant entry.
-The server requires that entry's `variantOf` to equal `componentId`, then uses
-the parent schema/controls and variant props. Neither field is inferred or
-accepted independently.
+`componentId` names the parent by its path and `variantPath` names the variant
+entry. The server requires that entry's `variantOf` to equal `componentId`,
+then uses the parent schema/controls and variant props. Neither field is
+inferred or accepted independently.
 
 The parent creates one random 32-hex `pageId` per mounted component edit owner
 and rendered viewport/color-scheme context, retaining it until that owner is

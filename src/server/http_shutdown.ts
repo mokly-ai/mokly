@@ -18,3 +18,16 @@ export async function closeCatalogueHttp(
   for (const result of results)
     if (result.status === "rejected") throw result.reason;
 }
+
+/** Close partially started services while preserving the original startup failure. */
+export async function closeCatalogueHttpAfterFailure(
+  server: Server,
+  streams: ReadonlySet<ServerResponse>,
+  services: readonly ({ close(): Promise<void> } | undefined)[],
+): Promise<void> {
+  try {
+    await closeCatalogueHttp(server, streams, services);
+  } catch {
+    return;
+  }
+}

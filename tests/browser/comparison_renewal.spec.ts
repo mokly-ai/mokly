@@ -62,7 +62,7 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
     if (request.method() === "GET" && request.url().includes("review.json"))
       metadata.push(request.url());
   });
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Overlay");
   await expect(
@@ -104,7 +104,7 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
 
 for (const destination of ["Current", "another screen"])
   test(`a pending renewal cannot replace ${destination}`, async ({ page }) => {
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/home/`);
     await chooseViewport(page, "desktop");
     await loadComparison(page, "Overlay");
     const pending = await holdRenewal(page);
@@ -115,7 +115,7 @@ for (const destination of ["Current", "another screen"])
         await page
           .getByRole("button", { name: "Current", exact: true })
           .click();
-      else await page.locator('[data-route="components/action.html"]').click();
+      else await page.locator('[data-route="action/index.html"]').click();
       pending.release();
       await pending.finished;
       await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
@@ -124,7 +124,7 @@ for (const destination of ["Current", "another screen"])
         page.getByRole("button", { name: "Current", exact: true }),
       ).toHaveAttribute("aria-pressed", "true");
       if (destination === "another screen")
-        await expect(page).toHaveURL(/\/view\/components\/action\.html/);
+        await expect(page).toHaveURL(/\/view\/action\//);
     } finally {
       pending.release();
     }
@@ -133,7 +133,7 @@ for (const destination of ["Current", "another screen"])
 test("renewal failure offers a retry that reacquires the selected comparison", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Overlay");
   await page.route(
@@ -160,7 +160,7 @@ test("renewal failure offers a retry that reacquires the selected comparison", a
 test("a pending renewal cannot restore a previously selected saved variant", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action-disabled.html`);
+  await page.goto(`${server.url}/view/action/disabled/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   await expect(
@@ -180,7 +180,7 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
     ).toBeEnabled();
     pending.release();
     await pending.finished;
-    await expect(page).toHaveURL(/\/view\/components\/action-default\.html$/);
+    await expect(page).toHaveURL(/\/view\/action\/default\/$/);
     await expect(
       page
         .frameLocator(".mb-pane--after iframe")
@@ -199,7 +199,7 @@ test("new evidence cancels renewal in place and the next comparison uses fresh s
     if (new URL(request.url()).pathname === "/__mokly/diffs/review.json")
       requests.push(request.url());
   });
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Overlay");
   const frame = page.locator(".mb-pane--after iframe");
@@ -237,7 +237,7 @@ test("new evidence cancels renewal in place and the next comparison uses fresh s
       (await frame.getAttribute(PANE_SOURCE))!.split("/snapshots/")[0],
     ).not.toBe(snapshot!.split("/snapshots/")[0]);
     expect(requests).toHaveLength(2);
-    expect(new URL(requests[1]!).searchParams.get("id")).toBe("home");
+    expect(new URL(requests[1]!).searchParams.get("path")).toBe("home");
   } finally {
     pending.release();
   }

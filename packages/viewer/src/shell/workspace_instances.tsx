@@ -116,7 +116,7 @@ function InstanceList({
             item.owner.instanceKey === instance.key,
         );
         const component = data.components.find(
-          (item) => item.id === instance.componentId,
+          (item) => item.path === instance.componentId,
         );
         return (
           <li key={instance.key}>

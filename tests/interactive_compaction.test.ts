@@ -14,8 +14,8 @@ import React from "react";
 import { defineScreen } from "@mokly/mokly";
 export const mockups = [defineScreen({
   dependencies: [], description: "Static only", desktop: <main>Desktop</main>,
-  id: "static-only", interactive: false, mobile: <main>Mobile</main>,
-  relatedDocs: [], route: "screens/static-only.html", title: "Static only"
+  path: "static-only", interactive: false, mobile: <main>Mobile</main>,
+  relatedDocs: [], title: "Static only"
 })];
 `);
   t.after(() => removeFixture(fixture));
@@ -28,7 +28,7 @@ export const mockups = [defineScreen({
   if (manifest.schemaVersion !== "live-index-1")
     throw new Error("Expected a compact catalogue index");
   const entry = manifest.entries.find(
-    (candidate) => candidate.id === "static-only",
+    (candidate) => candidate.path === "static-only",
   );
 
   assert.equal(runtime.interactiveEntries["static-only"], false);

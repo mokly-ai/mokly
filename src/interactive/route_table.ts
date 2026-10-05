@@ -6,6 +6,7 @@ import type {
 import {
   effectiveColorSchemes,
   entryRoute,
+  documentRoute,
   isManifestComponentVariant,
   viewRoute,
   type ManifestEntry,
@@ -32,9 +33,9 @@ export interface InteractiveRouteTableInput {
 export function buildInteractiveRouteTable(
   input: InteractiveRouteTableInput,
 ): InteractiveRouteTable {
-  const byId = new Map(input.entries.map((entry) => [entry.id, entry]));
+  const byId = new Map(input.entries.map((entry) => [entry.path, entry]));
   const routed = [...input.entries].sort((left, right) =>
-    left.id.localeCompare(right.id),
+    left.path.localeCompare(right.path),
   );
   const routes: Record<string, InteractiveRouteTable[string]> = {};
   for (const entry of routed) {
@@ -47,7 +48,7 @@ export function buildInteractiveRouteTable(
       input.catalogueSchemes,
     );
     if (!artifact) continue;
-    routes[entry.id] = {
+    routes[entry.path] = {
       href: portableArtifactHref(input.sourceRoute, artifact),
     };
   }
@@ -62,7 +63,12 @@ function manifestArtifactRoute(
   entries: readonly InteractiveSourceEntry[],
   catalogueSchemes: readonly ColorScheme[],
 ): string | undefined {
-  if (entry.kind === "page") return entryRoute("page", entry.id);
+  if (entry.kind === "document")
+    return documentRoute(
+      entry.path,
+      entry.colorSchemes.includes(colorScheme) ? colorScheme : "light",
+    );
+  if (entry.kind === "page") return entryRoute(entry.path);
   if (entry.kind === "component") {
     const variant = isManifestComponentVariant(entry)
       ? entry
@@ -72,7 +78,7 @@ function manifestArtifactRoute(
           ): candidate is InteractiveSourceEntry<ManifestComponentVariant> =>
             candidate.kind === "component" &&
             isManifestComponentVariant(candidate) &&
-            candidate.variantOf === entry.id,
+            candidate.variantOf === entry.path,
         );
     if (!variant) return;
     const scheme = effectiveColorSchemes(variant, catalogueSchemes).includes(
@@ -80,13 +86,13 @@ function manifestArtifactRoute(
     )
       ? colorScheme
       : "light";
-    return viewRoute("component", variant.id, viewport, scheme);
+    return viewRoute(variant.path, viewport, scheme);
   }
   const screen =
     entry.kind === "screen"
       ? entry
       : entry.kind === "use-case" && entry.steps[0]
-        ? byId.get(entry.steps[0].screenId)
+        ? byId.get(entry.steps[0].screenPath)
         : undefined;
   if (!screen || screen.kind !== "screen") return;
   const scheme = effectiveColorSchemes(screen, catalogueSchemes).includes(
@@ -94,5 +100,5 @@ function manifestArtifactRoute(
   )
     ? colorScheme
     : "light";
-  return viewRoute("screen", screen.id, viewport, scheme);
+  return viewRoute(screen.path, viewport, scheme);
 }

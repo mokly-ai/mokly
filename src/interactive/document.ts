@@ -18,10 +18,10 @@ export interface InteractiveBootstrapInput {
   catalogueSchemes: readonly ColorScheme[];
   colorScheme: ColorScheme;
   entries: readonly InteractiveSourceEntry[];
-  entryId: string;
+  entryPath: string;
   generation: string;
   sourceRoute: string;
-  variantId?: string;
+  variantPath?: string;
   viewport: Viewport;
 }
 
@@ -37,57 +37,57 @@ export function buildInteractiveBootstrap(
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(input.generation))
     throw invalid("generation must be a nonempty URL-safe value");
   const entry = input.entries.find(
-    (candidate) => candidate.id === input.entryId,
+    (candidate) => candidate.path === input.entryPath,
   );
   if (!entry)
     throw ineligible(
       InteractiveViewEligibilityReason.UnknownEntry,
-      input.entryId,
-      input.variantId,
+      input.entryPath,
+      input.variantPath,
     );
   if (entry.kind !== "screen" && entry.kind !== "component")
     throw ineligible(
       InteractiveViewEligibilityReason.NotLiveKind,
-      input.entryId,
-      input.variantId,
+      input.entryPath,
+      input.variantPath,
     );
   if (entry.interactive === false)
     throw ineligible(
       InteractiveViewEligibilityReason.OptedOut,
-      input.entryId,
-      input.variantId,
+      input.entryPath,
+      input.variantPath,
     );
-  if (entry.kind === "component" && !input.variantId)
+  if (entry.kind === "component" && !input.variantPath)
     throw ineligible(
       InteractiveViewEligibilityReason.MissingVariant,
-      input.entryId,
+      input.entryPath,
     );
   if (entry.kind === "component") {
     const variant = input.entries.find(
       (candidate) =>
         candidate.kind === "component" &&
         isManifestComponentVariant(candidate) &&
-        candidate.variantOf === entry.id &&
-        candidate.id === input.variantId,
+        candidate.variantOf === entry.path &&
+        candidate.path === input.variantPath,
     );
     if (!variant)
       throw ineligible(
         InteractiveViewEligibilityReason.UnknownVariant,
-        input.entryId,
-        input.variantId,
+        input.entryPath,
+        input.variantPath,
       );
     if (variant.interactive === false)
       throw ineligible(
         InteractiveViewEligibilityReason.OptedOut,
-        input.entryId,
-        input.variantId,
+        input.entryPath,
+        input.variantPath,
       );
   }
-  if (entry.kind === "screen" && input.variantId !== undefined)
+  if (entry.kind === "screen" && input.variantPath !== undefined)
     throw ineligible(
       InteractiveViewEligibilityReason.UnexpectedVariant,
-      input.entryId,
-      input.variantId,
+      input.entryPath,
+      input.variantPath,
     );
   const routes = buildInteractiveRouteTable({
     catalogueSchemes: input.catalogueSchemes,
@@ -99,11 +99,11 @@ export function buildInteractiveBootstrap(
   return {
     bootstrap: {
       colorScheme: input.colorScheme,
-      entryId: entry.id,
+      entryPath: entry.path,
       entryKind: entry.kind,
       generation: input.generation,
       routes,
-      ...(input.variantId ? { variantId: input.variantId } : {}),
+      ...(input.variantPath ? { variantPath: input.variantPath } : {}),
       viewport: input.viewport,
     },
   };
@@ -197,10 +197,10 @@ function inlineJson(value: unknown): string {
 
 function ineligible(
   reason: InteractiveViewEligibilityReason,
-  entryId: string,
-  variantId?: string,
+  entryPath: string,
+  variantPath?: string,
 ): InteractiveViewEligibilityError {
-  return new InteractiveViewEligibilityError(reason, entryId, variantId);
+  return new InteractiveViewEligibilityError(reason, entryPath, variantPath);
 }
 
 function invalid(message: string): InteractiveDocumentError {

@@ -2,8 +2,7 @@ import path from "node:path";
 
 import { test as base } from "@playwright/test";
 
-import { buildPreview } from "../../scripts/preview/catalogue.mjs";
-import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
+import { NodeBaselineProcessRunner } from "../../dist/baseline/process.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
@@ -31,14 +30,9 @@ export const test = base.extend<
       const preview = await startOwnedPreviewFixture({
         artifactRelative: ".context/site",
         build: (output) =>
-          timeFixturePhase("ordinary-preview", "export", false, async () => {
-            const fixtureRoot = path.dirname(path.dirname(output));
-            const config = await createCommittedExampleBaseline(
-              fixtureRoot,
-              "ordinary-preview",
-            );
-            await buildPreview(config, output);
-          }),
+          timeFixturePhase("ordinary-preview", "export", false, () =>
+            prepareOrdinaryPreview(output),
+          ),
         contextRoot: previewFixtureContextRoot(
           path.join(repositoryRoot, ".context"),
         ),
@@ -57,3 +51,25 @@ export const test = base.extend<
     { scope: "worker", timeout: FULL_CATALOGUE_SETUP_TIMEOUT_MS },
   ],
 });
+
+/** Keep React's artifact rendering outside Playwright's expanded debug stacks. */
+async function prepareOrdinaryPreview(output: string): Promise<void> {
+  const result = await new NodeBaselineProcessRunner().run({
+    argv: [
+      process.execPath,
+      "--import",
+      "tsx",
+      path.join(repositoryRoot, "tests/helpers/ordinary_preview_worker.mjs"),
+      output,
+    ],
+    cwd: repositoryRoot,
+    env: Object.fromEntries(
+      Object.entries(process.env).filter(
+        (entry): entry is [string, string] => entry[1] !== undefined,
+      ),
+    ),
+    signal: AbortSignal.timeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS - 10_000),
+  });
+  if (result.exitCode !== 0 || result.signal !== null)
+    throw new Error(`Ordinary preview preparation failed: ${result.output}`);
+}

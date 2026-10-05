@@ -18,7 +18,7 @@ import { createFixture, removeFixture } from "./fixture.js";
 export async function resourceFixture(context: TestContext) {
   const fixture = await createFixture(undefined, {
     extraConfig:
-      'stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }],',
+      'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }],',
   });
   context.after(() => removeFixture(fixture));
   for (const [file, content] of [

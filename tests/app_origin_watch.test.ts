@@ -26,7 +26,7 @@ test(
       ],
     });
     t.after(() => running.stop());
-    const url = running.url + "/view/components/action.html";
+    const url = running.url + "/view/action/";
     let previousGeneration: string | undefined;
     let previousPort: number | undefined;
     for (let restart = 0; restart < 3; restart += 1) {
@@ -44,7 +44,7 @@ test(
       assert.equal(prepared.status, 200, prepared.body);
       const body = JSON.stringify({
         componentId: "action",
-        variantId: "action-default",
+        variantPath: "action/default",
         viewport: "desktop",
         colorScheme: "light",
         generation: descriptor.renderCapability.generation,
@@ -66,7 +66,7 @@ test(
       );
       assert.equal(rendered.status, 200, rendered.body);
       const document = await httpRequest(
-        `http://127.0.0.1:${port}/static/components/action-default.desktop.html?mokly-host=${encodeURIComponent(appOrigin)}`,
+        `http://127.0.0.1:${port}/static/action/default/index.desktop.html?mokly-host=${encodeURIComponent(appOrigin)}`,
         "GET",
         { host: new URL(interactiveOrigin).host },
       );

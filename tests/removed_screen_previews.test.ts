@@ -8,8 +8,8 @@ import {
   generatedViews,
   viewRoute,
   type ManifestScreen,
-  type ManifestV7,
-  type ReviewResultV4,
+  type ManifestV8,
+  type ReviewResultV5,
 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../dist/build/compile.js";
@@ -53,15 +53,19 @@ for (const mode of ["committed", "derived"] as const) {
     const artifact = await new RepositorySelectedReview(
       { ...fixture.config, generatedOutput: mode },
       fixture.reader,
-    ).generate(source, { id: fixture.screen.id }, new AbortController().signal);
+    ).generate(
+      source,
+      { path: fixture.screen.path },
+      new AbortController().signal,
+    );
 
-    assert.equal(artifact.result.schemaVersion, 4);
+    assert.equal(artifact.result.schemaVersion, 5);
     const screen = artifact.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.equal(screen.views.length, 4);
     for (const view of screen.views) {
       assert.equal(view.state, "removed");
-      const snapshot = `snapshots/before/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`;
+      const snapshot = `snapshots/before/${viewRoute(screen.path, view.viewport, view.colorScheme)}`;
       assert.match(String(artifact.files.get(snapshot)), /baseline view/);
     }
     assert.equal(
@@ -80,7 +84,7 @@ for (const mode of ["committed", "derived"] as const) {
       fixture.git,
       "main",
     );
-    assert.equal(complete.result.schemaVersion, 4);
+    assert.equal(complete.result.schemaVersion, 5);
     const selected = await new RepositorySelectedReview(
       { ...fixture.config, generatedOutput: mode },
       fixture.git.reader,
@@ -102,11 +106,11 @@ for (const mode of ["committed", "derived"] as const) {
           : {}),
         result: complete.result,
       },
-      { id: "home" },
+      { path: "home" },
       new AbortController().signal,
     );
 
-    assert.equal(selected.result.schemaVersion, 4);
+    assert.equal(selected.result.schemaVersion, 5);
     const screen = selected.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.ok(screen.views.length > 0);
@@ -115,13 +119,13 @@ for (const mode of ["committed", "derived"] as const) {
       assert.deepEqual(
         Buffer.from(
           selected.files.get(
-            `snapshots/before/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`,
+            `snapshots/before/${viewRoute(screen.path, view.viewport, view.colorScheme)}`,
           )!,
         ),
         Buffer.from(
           textOutput(
             fixture.before.outputs,
-            viewRoute("screen", screen.id, view.viewport, view.colorScheme),
+            viewRoute(screen.path, view.viewport, view.colorScheme),
           )!,
         ),
       );
@@ -135,7 +139,7 @@ test("removed screen capture never substitutes current files for deleted history
   await assert.rejects(
     new RepositorySelectedReview(fixture.config, fixture.reader).generate(
       selectedSource(fixture),
-      { id: fixture.screen.id },
+      { path: fixture.screen.path },
       new AbortController().signal,
     ),
     /Snapshot file is missing: assets\/removed\.css/,
@@ -144,15 +148,15 @@ test("removed screen capture never substitutes current files for deleted history
 
 test("removed screen capture fails when a historical view is missing", async (t) => {
   const fixture = await screenFixture(t);
-  fixture.files.delete("mockups/screens/removed.desktop.dark.html");
+  fixture.files.delete("mockups/removed/index.desktop.dark.html");
 
   await assert.rejects(
     new RepositorySelectedReview(fixture.config, fixture.reader).generate(
       selectedSource(fixture),
-      { id: fixture.screen.id },
+      { path: fixture.screen.path },
       new AbortController().signal,
     ),
-    /Snapshot file is missing: screens\/removed\.desktop\.dark\.html/,
+    /Snapshot file is missing: removed\/index\.desktop\.dark\.html/,
   );
 });
 
@@ -164,16 +168,16 @@ async function screenFixture(t: test.TestContext) {
   const config = await loadConfig(fixture.root);
   const current = await compileCatalogue(config);
   const currentHome = current.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   assert.ok(currentHome?.kind === "screen");
   const screen: ManifestScreen = {
     ...currentHome,
-    id: "removed",
+    path: "removed",
     title: "Removed",
-    useCaseIds: [],
+    useCasePaths: [],
   };
-  const storedBaseline: ManifestV7 = {
+  const storedBaseline: ManifestV8 = {
     entries: [
       {
         ...screen,
@@ -181,7 +185,8 @@ async function screenFixture(t: test.TestContext) {
       },
     ],
     generatedBy: "mokly",
-    schemaVersion: 7,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: current.manifest.sourceFiles,
   };
   const files = new Map<string, Uint8Array>([
@@ -220,7 +225,7 @@ function selectedSource(fixture: Awaited<ReturnType<typeof screenFixture>>) {
   };
 }
 
-function removedScreenResult(screen: ManifestScreen): ReviewResultV4 {
+function removedScreenResult(screen: ManifestScreen): ReviewResultV5 {
   return {
     affectedConsumers: [],
     baseCommit: commit,
@@ -229,12 +234,12 @@ function removedScreenResult(screen: ManifestScreen): ReviewResultV4 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 4,
+    schemaVersion: 5 as const,
     screens: [
       {
-        before: { id: screen.id, title: screen.title },
+        before: { path: screen.path, title: screen.title },
         dependencies: [],
-        id: screen.id,
+        path: screen.path,
         sharedImpact: [],
         state: "removed",
         title: screen.title,

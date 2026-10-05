@@ -2,10 +2,7 @@ import { type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 
-import type {
-  RegistryDefinition,
-  ScreenDefinition,
-} from "../../authoring/types.js";
+import type { ScreenDefinition } from "../../authoring/types.js";
 import { componentInputs } from "../../components/inputs.js";
 import { ComponentContext } from "../../components/render_context.js";
 import {
@@ -17,6 +14,7 @@ import type { InteractiveRenderer } from "../../renderer/types.js";
 import type { InteractiveBootstrap } from "../types.js";
 
 import { readInteractiveBootstrap } from "./bootstrap.js";
+import type { InteractiveDefinition } from "./definitions.js";
 import {
   HttpInteractiveDiagnosticReporter,
   renderDiagnostic,
@@ -29,7 +27,7 @@ import {
 
 /** Dependencies supplied by the package browser entry or a runtime test. */
 export interface InteractiveMountInput {
-  definitions: readonly RegistryDefinition[];
+  definitions: readonly InteractiveDefinition[];
   document?: Document;
   interactiveRenderer?: InteractiveRenderer;
   reporter?: InteractiveDiagnosticReporter;
@@ -64,7 +62,7 @@ export function mountInteractiveDocument(
   try {
     bootstrap = readInteractiveBootstrap(document);
     selection = interactiveSelection(input.definitions, bootstrap);
-    configureInteractiveRoutes(bootstrap.routes, document);
+    configureInteractiveRoutes(bootstrap.routes, document, selection.entry);
   } catch (error) {
     report(error);
     throw error;
@@ -156,15 +154,16 @@ export function mountInteractiveDocument(
 
 interface InteractiveSelection {
   component?: ComponentDefinition;
-  entry: ComponentVariantDefinition | ScreenDefinition;
+  entry: InteractiveDefinition &
+    (ComponentVariantDefinition | ScreenDefinition);
 }
 
 function interactiveSelection(
-  definitions: readonly RegistryDefinition[],
+  definitions: readonly InteractiveDefinition[],
   bootstrap: InteractiveBootstrap,
 ): InteractiveSelection {
   const entry = definitions.find(
-    (candidate) => candidate.id === bootstrap.entryId,
+    (candidate) => candidate.path === bootstrap.entryPath,
   );
   if (!entry || entry.kind !== bootstrap.entryKind)
     throw new Error("Live entry is missing from the browser registry.");
@@ -175,7 +174,7 @@ function interactiveSelection(
     throw new Error(
       "Live component parent is missing from the browser registry.",
     );
-  const variant = componentVariant(definitions, entry, bootstrap.variantId);
+  const variant = componentVariant(definitions, entry, bootstrap.variantPath);
   return {
     component: entry,
     entry: variant,
@@ -190,7 +189,8 @@ function InteractiveView({
 }: {
   bootstrap: InteractiveBootstrap;
   component?: ComponentDefinition;
-  entry: ComponentVariantDefinition | ScreenDefinition;
+  entry: InteractiveDefinition &
+    (ComponentVariantDefinition | ScreenDefinition);
   interactiveRenderer?: InteractiveRenderer;
 }): ReactNode {
   const node =
@@ -213,7 +213,7 @@ function InteractiveView({
     entry,
     node,
     viewport: bootstrap.viewport,
-    ...(bootstrap.variantId ? { variantId: bootstrap.variantId } : {}),
+    ...(bootstrap.variantPath ? { variantPath: bootstrap.variantPath } : {}),
     ...(entry.kind === "component" ? { componentProps: entry.props } : {}),
   });
 }
@@ -246,16 +246,18 @@ function diagnosticGeneration(document: Document): string | undefined {
 }
 
 function componentVariant(
-  definitions: readonly RegistryDefinition[],
+  definitions: readonly InteractiveDefinition[],
   entry: ComponentDefinition,
-  variantId: string | undefined,
-): ComponentVariantDefinition {
+  variantPath: string | undefined,
+): InteractiveDefinition & ComponentVariantDefinition {
   const variant = definitions.find(
-    (candidate): candidate is ComponentVariantDefinition =>
+    (
+      candidate,
+    ): candidate is InteractiveDefinition & ComponentVariantDefinition =>
       candidate.kind === "component" &&
       isComponentVariantDefinition(candidate) &&
-      candidate.variantOf === entry.id &&
-      candidate.id === variantId,
+      candidate.variantOf === entry.path &&
+      candidate.path === variantPath,
   );
   if (!variant) throw new Error("Live component variant is missing.");
   return variant;
@@ -269,7 +271,7 @@ function renderComponent(
   const { data, slots } = componentInputs(
     entry,
     props,
-    `${entry.id} / ${bootstrap.variantId ?? "Live"}`,
+    `${entry.path} / ${bootstrap.variantPath ?? "Live"}`,
   );
   return entry.render(
     { ...data, ...slots },

@@ -27,7 +27,7 @@ test.afterAll(async () => {
   await fixture?.close();
 });
 
-const shell = () => `${fixture.url}/view/screens/shell.html`;
+const shell = () => `${fixture.url}/view/shell/`;
 const still = { x: 0, y: 0 };
 
 /** A region's vertical scroll range in one version. */
@@ -158,7 +158,7 @@ test("a component's scrolling list moves in every version", async ({
 }) => {
   await openComparison(
     page,
-    `${fixture.url}/view/components/tasks-list.html`,
+    `${fixture.url}/view/tasks/list/`,
     "desktop",
     "Overlay",
   );

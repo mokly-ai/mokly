@@ -111,7 +111,11 @@ in derived mode skip those trees entirely.
 Each reported glob is compiled once per report, classification is cached
 within the graph load, and expanded files already checked as explicit
 dependencies are not checked again. Resolve fixed logical/physical roots once
-per dependency collection, compute each candidate's repository-relative path
+per dependency collection. Reuse a logical classification when the candidate
+and every classification root have identical physical paths. Ownership and the
+public-root guard share candidate projections within that collection; a new
+collection must resolve them again.
+Compute each candidate's repository-relative path
 once, sort each candidate class once, then apply generated-output, public-file,
 and regular-file checks in that order. A missing directory report is deferred
 until the regular-file pass, after any generated-output or public-file error;

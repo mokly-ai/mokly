@@ -77,23 +77,23 @@ absolute path, ANSI styling, HTML, or explanatory implementation annotations.
 
 ## Owning Catalogue
 
-Source lives under `examples/basic/entries/design/rebuild-status/`; the
+Source lives under `examples/basic/specs/design/rebuild-status/`; the
 `design-rebuild-status` collection, **Mokly design → Update status**, holds the
 five states with the canonical Failure screen as its first child. All are
 light-only artboards.
 
-| Entry id                          | Route                                         | State                                                        |
-| --------------------------------- | --------------------------------------------- | ------------------------------------------------------------ |
-| `design-rebuild-failure`          | `design/rebuild-status/failure.html`          | Failure: Welcome in Static under the collapsed notice        |
-| `design-rebuild-details`          | `design/rebuild-status/details.html`          | Failure details: the same screen with the detail disclosed   |
-| `design-rebuild-updating`         | `design/rebuild-status/updating.html`         | Updating: delayed progress beside search, with no notice     |
-| `design-rebuild-failure-updating` | `design/rebuild-status/failure-updating.html` | Failure and updating: the notice and progress together       |
-| `design-rebuild-live-component`   | `design/rebuild-status/live-component.html`   | Live component failure: Action in Live under the same notice |
+| Entry path                               | Route                                               | State                                                        |
+| ---------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------ |
+| `design/rebuild-status/failure`          | `design/rebuild-status/failure/index.html`          | Failure: Welcome in Static under the collapsed notice        |
+| `design/rebuild-status/details`          | `design/rebuild-status/details/index.html`          | Failure details: the same screen with the detail disclosed   |
+| `design/rebuild-status/updating`         | `design/rebuild-status/updating/index.html`         | Updating: delayed progress beside search, with no notice     |
+| `design/rebuild-status/failure-updating` | `design/rebuild-status/failure-updating/index.html` | Failure and updating: the notice and progress together       |
+| `design/rebuild-status/live-component`   | `design/rebuild-status/live-component/index.html`   | Live component failure: Action in Live under the same notice |
 
 The four Welcome states draw the selected Welcome screen in Static with the
-workspace of `design-interactive-static`, and keep the controls and links of
-the canonical `design-browse-screen`. The Live component state draws
-`design-interactive-component` unchanged and keeps its links. No control opens a rebuild status artboard: like the Changes
+workspace of `design/interactive/modes/static`, and keep the controls and links of
+the canonical `design/browse/views/screen`. The Live component state draws
+`design/interactive/workspace/component` unchanged and keeps its links. No control opens a rebuild status artboard: like the Changes
 availability states, they are entered from the catalogue navigation, and the
 disclosure opens and closes in place.
 

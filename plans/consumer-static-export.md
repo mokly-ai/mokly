@@ -1,5 +1,8 @@
 # Consumer Static Export
 
+Status: Completed. [PR #49](https://github.com/mokly-ai/mokly/pull/49)
+merged on 2026-09-10.
+
 Current validation: the complete post-integration `cargo xtask check` passes on
 macOS Node 25.4.0 and in CI on Node 22.14 and Node 24, including all 598
 unit/integration tests, 107 browser tests, three Rust tests, and packed consumer

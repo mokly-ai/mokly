@@ -33,7 +33,7 @@ for (const cross of [false, true]) {
             const host = window.viewerHarness.start("one", {
               cross,
               defaultSelection: {
-                screenId: transition === "variant" ? "pane" : "home",
+                screenPath: transition === "variant" ? "pane" : "home",
               },
             });
             const original = host.props.frameAdapter!;

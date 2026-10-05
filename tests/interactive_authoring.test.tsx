@@ -6,7 +6,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
   PageInput,
-  RegistryDefinition,
+  EntryDefinition,
+  FolderInput,
   ResolvedRegistryEntry,
   ScreenDefinition,
   ScreenInput,
@@ -14,40 +15,27 @@ import type {
 } from "../dist/authoring/types.js";
 import { ComponentContext } from "../dist/components/render_context.js";
 import type { ComponentInput } from "../dist/components/types.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
 import {
   defineComponent,
   definePage,
-  defineRoot,
+  defineFolder,
   defineScreen,
   defineUseCase,
   ReviewIgnore,
-  folder,
-  screen,
 } from "../dist/index.js";
 import { createCatalogueIndex } from "../dist/registry/catalogue_index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
+import { collectModuleExports } from "../dist/registry/export_collection.js";
+import { resolveDefinitions } from "../dist/registry/resolve_definitions.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { registryValidationConfig } from "./helpers/registry_validation.js";
+import { resolvedEntry } from "./helpers/resolved.js";
 
 const sourceRelativePath = "tests/interactive_authoring.test.tsx";
-const config: ResolvedConfig = {
-  colorSchemes: ["light"],
-  compatibility: {},
-  configPath: path.join(repositoryRoot, "mokly.config.ts"),
-  entriesDir: path.join(repositoryRoot, "tests"),
-  entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
-  generatedOutput: "committed",
-  interactive: "serve",
-  mockupsDir: path.join(repositoryRoot, "mockups"),
-  moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
-  publicExclude: DEFAULT_PUBLIC_EXCLUDE,
-  repoRoot: repositoryRoot,
-  review: { base: "main", outDir: ".review", sharedImpact: [] },
-  sourceFiles: [sourceRelativePath],
-  stylesheets: [],
-  watch: { debounceMs: 100, rules: [] },
+const config = {
+  ...registryValidationConfig(sourceRelativePath),
+  interactive: "serve" as const,
 };
 
 const common = {
@@ -71,19 +59,10 @@ test("screen variants and nested screens resolve the false-only opt-out", () => 
       variants: [variant("selective-opt-out", false)],
     }),
   );
-  const nested = defineRoot({
-    children: [
-      screen({
-        description: "Nested",
-        desktop: "Desktop",
-        id: "nested",
-        interactive: false,
-        mobile: "Mobile",
-        title: "Nested",
-      }),
-    ],
-    navPath: ["Screens"],
-  })[0];
+  const nested = defineScreen({
+    ...screenInput("Screens/nested"),
+    interactive: false,
+  });
 
   assert.deepEqual(
     inherited.map((entry) => entry.interactive),
@@ -91,7 +70,7 @@ test("screen variants and nested screens resolve the false-only opt-out", () => 
   );
   assert.equal("interactive" in selective[0]!, false);
   assert.equal(selective[1]?.interactive, false);
-  assert.equal(nested?.kind === "screen" && nested.interactive, false);
+  assert.equal(oneScreen(nested).interactive, false);
 });
 
 test("interactive accepts only false on screens and components", () => {
@@ -131,37 +110,36 @@ test("interactive accepts only false on screens and components", () => {
 });
 
 test("folders, pages and use cases reject interactive", () => {
-  assert.throws(
-    () =>
-      defineRoot({
-        children: [
-          folder({
-            children: [screen(screenInput("folder-child"))],
-            interactive: false,
-            title: "Folder",
-          } as Parameters<typeof folder>[0] & { interactive: false }),
-        ],
-      }),
-    /interactive is not supported on folder markers/,
+  const folder = defineFolder({
+    path: "Screens",
+    title: "Folder",
+    interactive: false,
+  } as FolderInput & { interactive: false });
+  assert.match(
+    resolveDefinitions(
+      collectModuleExports({ folder }, sourceRelativePath),
+      config,
+    ).diagnostics[0]?.message ?? "",
+    /unknown field interactive/,
   );
   const definitions = [
     definePage({
       ...common,
-      id: "page",
+      path: "page",
       interactive: false,
       render: () => "<html><body>Page</body></html>",
     } as PageInput & { interactive: false }),
     defineUseCase({
       ...common,
-      id: "journey",
+      path: "journey",
       interactive: false,
-      steps: [{ screenId: "screen" }],
+      steps: [{ screenPath: "screen" }],
     } as UseCaseInput & { interactive: false }),
   ];
   for (const definition of definitions)
     assert.match(
       validateEntry(resolved(definition), config)[0]?.message ?? "",
-      /interactive is not supported/,
+      /unknown field interactive/,
     );
 });
 
@@ -177,7 +155,7 @@ test("catalogue index carries resolved eligibility only for Live entry kinds", (
   const page = resolved(
     definePage({
       ...common,
-      id: "index-page",
+      path: "index-page",
       render: () => "<html><body>Page</body></html>",
     }),
   );
@@ -186,8 +164,12 @@ test("catalogue index carries resolved eligibility only for Live entry kinds", (
     [sourceRelativePath],
     ["light"],
   );
-  const enabledIndex = index.entries.find((entry) => entry.id === enabled.id);
-  const disabledIndex = index.entries.find((entry) => entry.id === disabled.id);
+  const enabledIndex = index.entries.find(
+    (entry) => entry.path === enabled.path,
+  );
+  const disabledIndex = index.entries.find(
+    (entry) => entry.path === disabled.path,
+  );
 
   assert.equal(enabledIndex?.kind, "screen");
   assert.equal(disabledIndex?.kind, "screen");
@@ -207,6 +189,10 @@ test("catalogue index carries resolved eligibility only for Live entry kinds", (
 
 test("interactive component scope emits no component or Review sentinels", () => {
   const registered = component(false);
+  resolveDefinitions(
+    collectModuleExports({ registered }, sourceRelativePath),
+    config,
+  );
   const html = renderToStaticMarkup(
     <ComponentContext
       value={{
@@ -229,7 +215,7 @@ function screenInput(id: string): ScreenInput {
   return {
     ...common,
     desktop: "Desktop",
-    id,
+    path: id,
     mobile: "Mobile",
   };
 }
@@ -238,7 +224,7 @@ function variant(id: string, interactive?: false) {
   return {
     description: id,
     desktop: "Desktop",
-    id,
+    slug: id,
     ...(interactive === false ? { interactive } : {}),
     mobile: "Mobile",
     title: id,
@@ -250,22 +236,21 @@ const emptySchema = { kind: "object", properties: {} } as const;
 function component(interactive: unknown) {
   const input = {
     ...common,
-    id: "action",
+    path: "action",
     interactive,
     propSchema: emptySchema,
     render: () => <button>Action</button>,
-    variants: [{ id: "action-default", props: {}, title: "Default" }],
+    variants: [{ slug: "default", props: {}, title: "Default" }],
   };
   return defineComponent(
     input as unknown as ComponentInput<typeof emptySchema, readonly []>,
   );
 }
 
-function resolved(definition: RegistryDefinition): ResolvedRegistryEntry {
+function resolved(definition: EntryDefinition): ResolvedRegistryEntry {
   return {
-    ...definition,
+    ...resolvedEntry(definition, sourceRelativePath),
     sourcePath: path.join(repositoryRoot, sourceRelativePath),
-    sourceRelativePath,
   };
 }
 

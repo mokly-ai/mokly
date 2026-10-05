@@ -48,6 +48,10 @@ export function baselineResourceConfig(
 ): ResolvedConfig {
   return {
     ...config,
+    roots: [],
+    entryModules: [],
+    resolvedFiles: [],
+    protectedFiles: [],
     sourceFiles: manifest.sourceFiles,
   };
 }

@@ -4,7 +4,8 @@
 
 The basic consumer records shared instances without changing existing design
 screens. Registered entries live under Components → Design → Shared components,
-beside Example Action and Toolbar. The generated manifest owns all counts.
+beside Example Action and Toolbar. The generated manifest owns all counts;
+the library and its consuming screens use paths.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
 define delivery; [shell design](./mokly-shell-design.md) and
@@ -19,14 +20,14 @@ implementations used by those pages. One component implementation or owned-style
 edit appears at its component entry; consuming artboards are affected unless
 they also have independent changes.
 
-This is adoption under `examples/basic/entries/design`, the repository's owning
+This is adoption under `examples/basic/specs/design`, the repository's owning
 mockup catalogue. It does not replace the package's actual browser/server shell
 with example code or move consumer fixtures into package runtime code. Existing
 Example Action/Toolbar components, miniature subject screens and pictured usage
 fixtures keep their separate roles. New usage in the outer inspector comes from
 the real generated manifest, not from those pictured fixtures.
 
-All existing design ids, relationships, mobile/desktop artboards, copy,
+All existing design entries, relationships, mobile/desktop artboards, copy,
 links and supported native controls remain. The requested normalization replaces
 the legacy Details disclosure and segmented viewport/theme controls throughout
 the catalogue with the shared icon inspector and view toolbar. The legacy footer
@@ -36,32 +37,30 @@ samples contain no implementation notes, environment badges or extra footers.
 
 ## Catalogue And Source Ownership
 
-Add `Components → Design → Shared components` by reusing the `Design` label
-from `Pages → Design → Mokly design`; this forms an independent folder in the
-Components section, not a shared root entity. Keep the
-existing Component explorer design section and Components → Example → Components group.
-The gallery folders are `Design → Shared components` and its
-`Chrome`, `Controls`, `Inspector`, and `Preview` children. They contain the 15
-component parents in the inventory; each parent's variant entries nest beneath
-its row under the [variant contract](./mokly-variants.md) rather than adding
-folder members.
+Add `Components → Design → Shared components` beneath the same `Design` folder
+as `Pages → Design`: a folder holding both kinds appears in both
+sections with its own children in each, under the
+[catalogue tree rule](./mokly-catalogue.md#tree). Keep the existing Component
+explorer design section and Components → Example → Components group. The
+gallery folders are `Design → Shared components` and its `Chrome`, `Controls`,
+`Inspector`, and `Preview` children. They contain the 16 component parents in
+the inventory; each parent's variant entries nest beneath its row under the
+[variant contract](./mokly-variants.md) rather than adding folder members.
 
-Use flat `defineComponent` exports from
-`entries/design/library/library.mockup.ts`, authoring a `navPath` on each
-component. Nested `folder()` groups screens and pages only; components stay
-flat-authored. Reuse the `Design` label in both sections without sharing
-folder identity across sections.
+Export `defineComponent` definitions from entry modules under
+`specs/design/library/`; each component's path derives from its module
+location, or a declared `path`, under the [path contract](./mokly-paths.md).
 
 For inventory group `G` and slug `S`:
 
-- Component id: `design-ui-S`; the [artifact contract](./mokly-artifact-paths.md)
-  derives its path and `navPath` places it in gallery `G`.
-- Registration/schema/variants: `entries/design/library/G/S.tsx`, split into
+- Component slug: `S` (for example, `style`); its path places it in gallery `G` under the
+  [path contract](./mokly-paths.md).
+- Registration/schema/variants: `specs/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its
   exclusive implementation helpers. Source and visible hierarchy must agree.
 - Public stylesheet: `generated/design-library/G/S.css` when styles are owned
   exclusively by that component. It is authored CSS, not generated HTML.
-- Variant entry ids and exposed props are defined by the inventory. Each
+- Variant entry slugs and exposed props are defined by the inventory. Each
   variant entry renders in both actual viewport contexts; the parent's page
   shows its first variant entry.
 
@@ -234,7 +233,7 @@ owned styles, not the old raw changed-path helper.
 
 ## Verification And Completion
 
-Freeze the existing id inventory before migration and assert it remains a
+Freeze the existing entry inventory before migration and assert it remains a
 subset of the finished catalogue. Every existing design screen must record its
 actual shared components in both views. Every inventory component must have a
 page, the specified saved variants, and real screen consumers (directly or through

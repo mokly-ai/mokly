@@ -18,7 +18,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -38,8 +38,11 @@ const failed: RebuildStatus = {
   updating: true,
 };
 
-function served(status?: RebuildStatus, screenId: string | null = "home") {
-  const view = viewerView(display, { ...defaultSelection, screenId });
+function served(
+  status?: RebuildStatus,
+  screenPath: string | null = "product/browse/home",
+) {
+  const view = viewerView(display, { ...defaultSelection, screenPath });
   return renderHydratedShellPage(
     view,
     {
@@ -60,13 +63,18 @@ function notice(html: string): string {
 }
 
 test("a failure at first paint renders the notice between the bar and the body", () => {
-  for (const screenId of [null, "home", "action", "unknown-item"]) {
-    const html = served(failed, screenId);
+  for (const screenPath of [
+    null,
+    "product/browse/home",
+    "components/action",
+    "unknown-item",
+  ]) {
+    const html = served(failed, screenPath);
     const bar = html.indexOf('<header class="mbk-topbar"');
     const barEnd = html.indexOf("</header>", bar);
     const start = html.indexOf('class="mbk-rebuild"');
-    assert.ok(bar !== -1 && barEnd < start, `${screenId} after the bar`);
-    assert.ok(start < html.indexOf('class="mbk-body"'), `${screenId} body`);
+    assert.ok(bar !== -1 && barEnd < start, `${screenPath} after the bar`);
+    assert.ok(start < html.indexOf('class="mbk-body"'), `${screenPath} body`);
     assert.equal(html.split('class="mbk-rebuild"').length, 2);
   }
 });
@@ -134,7 +142,7 @@ test("unwatched Serve, export and embedded viewers carry no status chrome", () =
   const embedded = renderViewer({
     baseUrl: "https://catalogue.example",
     catalogue: model,
-    defaultSelection: { screenId: "home" },
+    defaultSelection: { screenPath: "product/browse/home" },
     viewerId: "fixture",
   });
   for (const html of [served(), served(undefined, null), embedded]) {

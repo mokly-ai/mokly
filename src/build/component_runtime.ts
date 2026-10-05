@@ -1,7 +1,7 @@
 /** The last successfully compiled consumer graph, passed to Serve only in memory. */
 import { randomBytes } from "node:crypto";
 
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -16,15 +16,17 @@ import {
 } from "./consumer_bundle.js";
 import type { GeneratedFile } from "./generated_file.js";
 import type { InteractiveSourceCapture } from "./interactive_source_capture.js";
-import type { LoadedGraph } from "./load_graph.js";
+import type { LoadedGraph } from "./loaded_graph.js";
+import type { OutputSnapshot } from "./output_snapshot.js";
 
 export interface ComponentRuntime {
+  outputSnapshot: OutputSnapshot;
   bundle: ConsumerBundle;
   config: ResolvedConfig;
   generation: string;
   interactiveEntries: Readonly<Record<string, boolean>>;
   interactiveSources?: InteractiveSourceCapture;
-  manifest: ManifestV7 | CatalogueIndex;
+  manifest: ManifestV8 | CatalogueIndex;
   outputs: readonly (readonly [string, GeneratedFile])[];
   stylesheetRoutes: readonly (readonly [string, string])[];
   styleOutputs: readonly (readonly [string, GeneratedFile])[];
@@ -35,16 +37,18 @@ export function rememberRuntime(
   compilation: Compilation,
   graph: LoadedGraph,
   config: ResolvedConfig,
+  outputSnapshot: OutputSnapshot,
   entries: readonly ResolvedRegistryEntry[],
 ): void {
   runtimes.set(compilation, {
+    outputSnapshot,
     bundle: consumerBundle(graph),
     config,
     generation: randomBytes(16).toString("hex"),
     interactiveEntries: Object.fromEntries(
       entries.flatMap((entry) =>
         entry.kind === "screen" || entry.kind === "component"
-          ? [[entry.id, entry.interactive !== false] as const]
+          ? [[entry.path, entry.interactive !== false] as const]
           : [],
       ),
     ),
@@ -63,6 +67,7 @@ export function runtimeGraph(runtime: ComponentRuntime): LoadedGraph {
   return {
     ...evaluateBundle(runtime.bundle),
     entrySources: runtime.bundle.entrySources,
+    documents: runtime.bundle.documents ?? [],
     sourceFiles: runtime.config.sourceFiles ?? [],
     stylesheetRoutes: new Map(runtime.stylesheetRoutes),
     styleOutputs: new Map(runtime.styleOutputs),

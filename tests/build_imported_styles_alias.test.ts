@@ -24,7 +24,7 @@ test("symlinked repository root keeps identical CSS routes, links and inventory"
     direct.outputs.get(entryStyle),
   );
   assert.match(
-    indirect.outputs.get("screens/home.mobile.html") as string,
+    indirect.outputs.get("home/index.mobile.html") as string,
     /mokly-generated\/styles/,
   );
   assert.deepEqual(indirect.manifest.sourceFiles, direct.manifest.sourceFiles);

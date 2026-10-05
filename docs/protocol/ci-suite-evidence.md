@@ -17,6 +17,11 @@ removing owned output. If termination cannot be confirmed, teardown fails and
 retains the owned output for diagnosis; concurrent and repeated close calls
 share that same completion or failure.
 
+Ordinary-preview artifacts are prepared in an owned Node child process. This
+keeps React rendering outside Playwright's expanded debug-stack context. The
+five-minute fixture limit stays unchanged. The child's preparation deadline
+leaves ten seconds for process drainage before that fixture limit expires.
+
 `changedFixture` owns live test resources through `onCleanup`. It drains them in
 reverse registration order before deleting the consumer tree. Every registered
 cleanup runs even if another fails; failures retain the tree for diagnosis.

@@ -1,7 +1,14 @@
 import type { FrameNavigation } from "../client/frame_adapter.js";
 import type { ComponentRangeRecord } from "../components/manifest_types.js";
 
-import { array, boundedJson, identity, key, object, shape } from "./values.js";
+import {
+  array,
+  boundedJson,
+  key,
+  linkIdentity,
+  object,
+  shape,
+} from "./values.js";
 /** Range index n is r-n; null keys identify slots and null parents identify roots. */
 export type InspectorRange = readonly [
   key: string | null,
@@ -59,12 +66,7 @@ export const readMetadata = (json: unknown): InspectorMetadata | undefined => {
             (range[1] as number) >= 0 &&
             (range[1] as number) < index)),
     ) ||
-    !value.links.every(
-      (link) =>
-        object(link) &&
-        shape(link, 2 + Number(link.fragment !== undefined)) &&
-        identity(link),
-    )
+    !value.links.every(linkIdentity)
   )
     return;
   const metadata = value as unknown as InspectorMetadata;

@@ -12,7 +12,7 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
 const metadata =
-  'dependencies: [], relatedDocs: [], description: "Document", title: "Handbook", id: "handbook"';
+  'dependencies: [], relatedDocs: [], description: "Document", title: "Handbook", path: "handbook"';
 const document =
   '<!doctype html><html lang="en"><head><title>Handbook</title></head><body><main id="overview">Whole document</main></body></html>';
 const pageSource = (extra = "", render = `() => ${JSON.stringify(document)}`) =>
@@ -26,12 +26,12 @@ test("a page renders exactly one complete document even with dark screens enable
   const config = await loadConfig(fixture.root);
   const result = await compileCatalogue(config);
   assert.deepEqual([...result.outputs.keys()].sort(), [
+    "handbook/index.html",
     "mokly-manifest.json",
-    "pages/handbook.html",
   ]);
-  assert.equal(result.manifest.schemaVersion, 7);
+  assert.equal(result.manifest.schemaVersion, 8);
   assert.match(
-    textOutput(result.outputs, "pages/handbook.html") ?? "",
+    textOutput(result.outputs, "handbook/index.html") ?? "",
     /Whole document/,
   );
   await writeCompilation(result, config);
@@ -47,7 +47,7 @@ test("pages reject screen fields, asynchronous callbacks and incomplete document
     "desktop",
     "colorSchemes",
     "address",
-    "useCaseIds",
+    "useCasePaths",
     "steps",
     "viewports",
     "fragments",
@@ -78,9 +78,12 @@ test("legacy configuration is rejected even when explicitly undefined", async (c
   for (const value of ["undefined", '{ pagesDir: "missing" }']) {
     await fs.promises.writeFile(
       fixture.configPath,
-      `export default { entriesDir: "entries", mockupsDir: "mockups", legacy: ${value} };`,
+      `export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", legacy: ${value} };`,
     );
-    await assert.rejects(loadConfig(fixture.root), /legacy.*definePage/s);
+    await assert.rejects(
+      loadConfig(fixture.root),
+      /unknown configuration field: legacy/,
+    );
   }
 });
 
@@ -112,7 +115,7 @@ test("pages call the imported helper once and bypass the screen renderer", async
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", renderer: "renderer.ts", colorSchemes: ["light", "dark"] };',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", renderer: "renderer.ts", colorSchemes: ["light", "dark"] };',
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   assert.equal(result.outputs.size, 2);
@@ -130,8 +133,8 @@ test("pages share relationship and identity validation with screen entries", asy
   const config = await loadConfig(fixture.root);
   const declaration = `definePage({ ${metadata}, render: () => ${JSON.stringify(document)} })`;
   for (const [mutation, pattern] of [
-    ['mockups[2].steps[0].screenId = "handbook";', /screen/],
-    ['mockups.at(-1).id = "home";', /duplicate/],
+    ['mockups[2].steps[0].screenPath = "handbook";', /screen/],
+    ['mockups.at(-1).path = "home";', /duplicate/],
   ] as const) {
     await fs.promises.writeFile(
       fixture.entryPath,
@@ -144,18 +147,18 @@ test("pages share relationship and identity validation with screen entries", asy
 test("page logical links validate final page anchors and preserve native child controls", async (context) => {
   const source = `import { definePage, defineScreen, MockLink } from "@mokly/mokly"; import { renderToStaticMarkup } from "react-dom/server";
 const meta = { title: "Example", description: "Example", dependencies: [], relatedDocs: [] };
-export const mockups = [definePage({ ...meta, id: "page", render: () => '<html><body><h1 id="section">Page</h1><a href="mock:screen#section">Screen</a></body></html>' }), defineScreen({ ...meta, id: "screen", useCaseIds: [], mobile: <main id="section"><MockLink to="page" fragment="section" asChild><button>Open page</button></MockLink></main>, desktop: <main id="section"><a href="mock:page#section">Page</a></main> })];`;
+export const mockups = [definePage({ ...meta, path: "page", render: () => '<html><body><h1 id="section">Page</h1><a href="mock:screen#section">Screen</a></body></html>' }), defineScreen({ ...meta, path: "screen", useCasePaths: [], mobile: <main id="section"><MockLink to="page" fragment="section" asChild><button>Open page</button></MockLink></main>, desktop: <main id="section"><a href="mock:page#section">Page</a></main> })];`;
   const fixture = await createFixture(source);
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const result = await compileCatalogue(config);
   assert.match(
-    textOutput(result.outputs, "pages/page.html") ?? "",
-    /\.\.\/screens\/screen.desktop.html#section/,
+    textOutput(result.outputs, "page/index.html") ?? "",
+    /\.\.\/screen\/index.desktop.html#section/,
   );
   assert.match(
-    textOutput(result.outputs, "screens/screen.mobile.html") ?? "",
-    /<a[^>]*href="\.\.\/pages\/page.html#section"[^>]*>Open page<\/a>/,
+    textOutput(result.outputs, "screen/index.mobile.html") ?? "",
+    /<a[^>]*href="\.\.\/page\/index.html#section"[^>]*>Open page<\/a>/,
   );
   await fs.promises.writeFile(
     fixture.entryPath,
@@ -177,15 +180,15 @@ test("complete documents retain the established post-screen render context", asy
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", renderer: "renderer.ts" };',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", renderer: "renderer.ts" };',
   );
   await fs.promises.appendFile(
     fixture.entryPath,
-    '\nimport { definePage } from "@mokly/mokly"; import { document } from "../render-state.ts"; mockups.push(definePage({ id: "document", title: "Document", description: "Document", dependencies: [], relatedDocs: [], render: document }));',
+    '\nimport { definePage } from "@mokly/mokly"; import { document } from "../render-state.ts"; mockups.push(definePage({ path: "document", title: "Document", description: "Document", dependencies: [], relatedDocs: [], render: document }));',
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   assert.match(
-    textOutput(result.outputs, "pages/document.html") ?? "",
+    textOutput(result.outputs, "document/index.html") ?? "",
     /All screen styles are available/,
   );
 });
@@ -196,7 +199,7 @@ test("page callbacks share ReviewIgnore serialization and final validation", asy
   );
   context.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const html = textOutput(result.outputs, "pages/handbook.html") ?? "";
+  const html = textOutput(result.outputs, "handbook/index.html") ?? "";
   assert.doesNotMatch(html, /<template/);
   assert.match(html, /<!--.*chrome/);
 });

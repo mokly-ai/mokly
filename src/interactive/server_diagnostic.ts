@@ -38,11 +38,11 @@ export async function serveInteractiveDiagnostic(
   try {
     const diagnostic = await readInteractiveDiagnostic(request);
     if (
-      diagnostic.entryId &&
+      diagnostic.entryPath &&
       ![...context.views.values()].some(
         (view) =>
-          view.entryId === diagnostic.entryId &&
-          view.variantId === diagnostic.variantId &&
+          view.entryPath === diagnostic.entryPath &&
+          view.variantPath === diagnostic.variantPath &&
           view.viewport === diagnostic.viewport &&
           view.colorScheme === diagnostic.colorScheme,
       )

@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { changedManifestIds } from "../dist/registry/changed_ids.js";
+import { changedManifestPaths } from "../dist/registry/changed_paths.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
@@ -13,7 +13,7 @@ test("unchanged screens and flows stay out of Changes after dependency edits", a
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
   assert.deepEqual(
-    changedManifestIds(manifest, manifest, config, ["notes.md"]),
+    changedManifestPaths(manifest, manifest, config, ["notes.md"]),
     [],
   );
 });
@@ -28,7 +28,7 @@ test("shared source edits cannot turn the entire catalogue into Changes", async 
     review: { ...config.review, sharedImpact: ["src/**"] },
   };
   assert.deepEqual(
-    changedManifestIds(manifest, manifest, shared, ["src/settings.tsx"]),
+    changedManifestPaths(manifest, manifest, shared, ["src/settings.tsx"]),
     [],
   );
 });
@@ -43,5 +43,5 @@ test("dependency declarations and source moves alone do not need screen review",
     entry.sourcePath = "entries/old.mockup.tsx";
     entry.declaredDependencies = ["src/old-settings.tsx"];
   }
-  assert.deepEqual(changedManifestIds(manifest, baseline, config, []), []);
+  assert.deepEqual(changedManifestPaths(manifest, baseline, config, []), []);
 });

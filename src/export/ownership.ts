@@ -79,13 +79,6 @@ export interface ExportEntries {
   directories: string[];
 }
 
-/** Explicit repository-adapter migration; never accepted by the public CLI. */
-export interface LegacyExportOwnership {
-  marker: string;
-  contents: string;
-  accepts(name: string): boolean;
-}
-
 /** Parse the marker without trusting any path as a deletion target. */
 export function parseExportOwnership(
   content: string,
@@ -196,7 +189,6 @@ export async function ownedEntries(
 /** Validate ownership and return the exact existing names authorized for cleanup. */
 export async function assertExportOwnership(
   output: string,
-  legacy?: LegacyExportOwnership,
 ): Promise<ExportEntries | undefined> {
   const stat = await fs.promises
     .lstat(output)
@@ -210,27 +202,6 @@ export async function assertExportOwnership(
   const { files, directories } = await ownedEntries(output);
   if (files.length === 0 && directories.length === 0)
     return { files, directories };
-  if (
-    legacy &&
-    !files.includes(EXPORT_MARKER) &&
-    files.includes(legacy.marker)
-  ) {
-    const valid = await fs.promises.readFile(
-      path.join(output, legacy.marker),
-      "utf8",
-    );
-    if (
-      valid === legacy.contents &&
-      files.every((name) => name === legacy.marker || legacy.accepts(name)) &&
-      directories.every((name) =>
-        files.some((file) => file.startsWith(`${name}/`)),
-      )
-    )
-      return { files, directories };
-    throw exportError(
-      "Invalid legacy export ownership or unowned preview contents.",
-    );
-  }
   if (!files.includes(EXPORT_MARKER))
     throw exportError(
       "Export ownership is missing; choose an empty directory.",

@@ -17,7 +17,7 @@ import { derivedFixture } from "./helpers/derived_fixture.js";
 test("cache exclusions precede broad globs, resource matching and required source exceptions", async (t) => {
   const fixture = await derivedFixture(t);
   const cache = path.join(fixture.root, ".mokly-cache");
-  await fs.mkdir(cache);
+  await fs.mkdir(cache, { recursive: true });
   await fs.writeFile(path.join(cache, "private.txt"), "private");
   await fs.symlink(".mokly-cache", path.join(fixture.root, "alias"));
   const paths = [".mokly-cache/private.txt", "alias/private.txt"];

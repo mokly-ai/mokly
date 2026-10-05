@@ -21,7 +21,7 @@ const metadata = {
   links: [
     {
       fragment: "section",
-      id: "details",
+      screenPath: "details",
       target: { kind: "top" as const },
     },
   ],
@@ -40,12 +40,12 @@ test("route table reuses artifact routes without inspector indirection", () => {
     catalogueSchemes: ["light"],
     colorScheme: "light",
     entries,
-    sourceRoute: "screens/home.mobile.html",
+    sourceRoute: "home/index.mobile.html",
     viewport: "mobile",
   });
 
   assert.deepEqual(result.details, {
-    href: "./details.mobile.html",
+    href: "../details/index.mobile.html",
   });
 });
 
@@ -57,12 +57,12 @@ test("route tables support more than the inspector metadata link limit", () => {
     catalogueSchemes: ["light"],
     colorScheme: "light",
     entries: large,
-    sourceRoute: "screens/screen-0.mobile.html",
+    sourceRoute: "screen-0/index.mobile.html",
     viewport: "mobile",
   });
 
   assert.equal(Object.keys(routes).length, 1_201);
-  assert.equal(routes["screen-1200"]?.href, "./screen-1200.mobile.html");
+  assert.equal(routes["screen-1200"]?.href, "../screen-1200/index.mobile.html");
 });
 
 test("browser route lookup treats prototype names as absent", () => {
@@ -71,13 +71,15 @@ test("browser route lookup treats prototype names as absent", () => {
 });
 
 test("browser route lookup builds a validated logical identity", () => {
-  configureInteractiveRoutes({ details: { href: "./details.mobile.html" } });
+  configureInteractiveRoutes({
+    details: { href: "../details/index.mobile.html" },
+  });
 
   assert.deepEqual(resolveInteractiveLink("mock:details#section", "_top"), {
-    href: "./details.mobile.html#section",
+    href: "../details/index.mobile.html#section",
     identity: {
       fragment: "section",
-      id: "details",
+      screenPath: "details",
       target: { kind: "top" },
     },
   });
@@ -88,9 +90,9 @@ test("Live composition changes only head bytes and emits one script of each kind
     catalogueSchemes: ["light"],
     colorScheme: "light",
     entries,
-    entryId: "home",
+    entryPath: "home",
     generation: "generation_1",
-    sourceRoute: "screens/home.mobile.html",
+    sourceRoute: "home/index.mobile.html",
     viewport: "mobile",
   });
   const live = composeInteractiveDocument(adapted, built);
@@ -114,8 +116,8 @@ test("Live composition changes only head bytes and emits one script of each kind
   );
   assert.deepEqual(Object.keys(built.bootstrap).sort(), [
     "colorScheme",
-    "entryId",
     "entryKind",
+    "entryPath",
     "generation",
     "routes",
     "viewport",
@@ -129,7 +131,7 @@ test("Live composition changes only head bytes and emits one script of each kind
 test("bootstrap JSON is canonical and cannot terminate its script", () => {
   const bootstrap = {
     colorScheme: "light",
-    entryId: "home",
+    entryPath: "home",
     entryKind: "screen",
     generation: "generation",
     routes: {
@@ -153,9 +155,9 @@ test("invalid generations are document failures rather than bundle failures", ()
         catalogueSchemes: ["light"],
         colorScheme: "light",
         entries,
-        entryId: "home",
+        entryPath: "home",
         generation: "not valid",
-        sourceRoute: "screens/home.mobile.html",
+        sourceRoute: "home/index.mobile.html",
         viewport: "mobile",
       }),
     documentFailure,
@@ -175,9 +177,9 @@ test("missing and misplaced inspector metadata are document failures", () => {
     catalogueSchemes: ["light"],
     colorScheme: "light",
     entries,
-    entryId: "home",
+    entryPath: "home",
     generation: "generation",
-    sourceRoute: "screens/home.mobile.html",
+    sourceRoute: "home/index.mobile.html",
     viewport: "mobile",
   });
   for (const document of [
@@ -205,12 +207,11 @@ function screen(id: string): Extract<ManifestEntry, { kind: "screen" }> {
     colorSchemes: ["light"],
     declaredDependencies: [],
     description: id,
-    id,
+    path: id,
     kind: "screen",
-    navPath: [],
     relatedDocs: [],
     sourcePath: sourceRelativePath,
     title: id,
-    useCaseIds: [],
+    useCasePaths: [],
   };
 }

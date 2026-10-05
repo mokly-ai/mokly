@@ -62,7 +62,7 @@ export function useComponentControls({
   const capabilities = useViewerCapabilities();
   const component = data.component;
   const generation = request?.source.renderGeneration;
-  const scope = `${variant?.value.id ?? "none"}/${comparing}/${livePreview ? "live" : "static"}/${generation ?? "static"}/${variant ? JSON.stringify(variant.value.props) : ""}`;
+  const scope = `${variant?.value.path ?? "none"}/${comparing}/${livePreview ? "live" : "static"}/${generation ?? "static"}/${variant ? JSON.stringify(variant.value.props) : ""}`;
   const initial = useMemo(
     () =>
       initialComponentEditorState(
@@ -129,8 +129,8 @@ export function useComponentControls({
             return capabilities.temporaryPreviews!.render(
               request,
               {
-                componentId: component.id,
-                variantId: variant.value.id,
+                componentId: component.path,
+                variantPath: variant.value.path,
                 viewport: view.viewport,
                 colorScheme: view.colorScheme,
                 generation,
@@ -270,7 +270,7 @@ export function useComponentControls({
     () =>
       data.views.map((view) => {
         const preview = state.previews.get(controlViewKey(view));
-        return preview && view.variantId === variant?.value.id
+        return preview && view.variantPath === variant?.value.path
           ? {
               ...view,
               path: decodeURIComponent(preview.previewUrl),
@@ -278,7 +278,7 @@ export function useComponentControls({
             }
           : view;
       }),
-    [data.views, state.previews, variant?.value.id],
+    [data.views, state.previews, variant?.value.path],
   );
   return {
     panel: (

@@ -36,8 +36,8 @@ function Dashboard({ compact }: { compact: boolean }) {
 export const mockups = [
   definePage({
     ...common,
-    navPath: ["Themed fixture"],
-    id: "themed-notice",
+
+    path: "themed-notice",
     title: "Notice",
     description: "A complete consumer-composed document.",
     render: () =>
@@ -51,31 +51,36 @@ export const mockups = [
       ),
   }),
   defineScreen({
+    slug: "themed-dashboard",
     ...common,
-    navPath: ["Themed fixture"],
+
     description: "A synthetic application dashboard.",
     desktop: <Dashboard compact={false} />,
-    id: "themed-dashboard",
+    path: "themed-dashboard",
     mobile: <Dashboard compact />,
     title: "Workspace overview",
-    useCaseIds: ["themed-tour"],
+    useCasePaths: ["themed-tour"],
   }),
   defineScreen({
+    slug: "themed-campaign",
     ...common,
-    navPath: ["Themed fixture"],
+
     description: "A synthetic marketing route with separate styling.",
     desktop: <main data-campaign="desktop">Campaign desktop</main>,
-    id: "themed-campaign",
+    path: "themed-campaign",
     mobile: <main data-campaign="mobile">Campaign mobile</main>,
     title: "Campaign",
-    useCaseIds: ["themed-tour"],
+    useCasePaths: ["themed-tour"],
   }),
   defineUseCase({
     ...common,
-    navPath: ["Flows"],
+
     description: "A synthetic cross-style journey.",
-    id: "themed-tour",
-    steps: [{ screenId: "themed-dashboard" }, { screenId: "themed-campaign" }],
+    path: "themed-tour",
+    steps: [
+      { screenPath: "themed-dashboard" },
+      { screenPath: "themed-campaign" },
+    ],
     title: "Themed tour",
   }),
 ];

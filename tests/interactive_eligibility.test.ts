@@ -19,15 +19,15 @@ const component = entry("component", "panel") as Extract<
 
 interface EligibilityCase {
   entries?: readonly InteractiveSourceEntry[];
-  entryId?: string;
+  entryPath?: string;
   expected: InteractiveViewEligibilityReason;
   name: string;
-  variantId?: string;
+  variantPath?: string;
 }
 
 const cases: readonly EligibilityCase[] = [
   {
-    entryId: "missing",
+    entryPath: "missing",
     expected: InteractiveViewEligibilityReason.UnknownEntry,
     name: "unknown entry",
   },
@@ -43,25 +43,25 @@ const cases: readonly EligibilityCase[] = [
   },
   {
     entries: [component],
-    entryId: "panel",
+    entryPath: "panel",
     expected: InteractiveViewEligibilityReason.MissingVariant,
     name: "missing component variant",
   },
   {
     entries: [component],
-    entryId: "panel",
+    entryPath: "panel",
     expected: InteractiveViewEligibilityReason.UnknownVariant,
     name: "unknown component variant",
-    variantId: "missing",
+    variantPath: "missing",
   },
   {
     expected: InteractiveViewEligibilityReason.UnexpectedVariant,
     name: "unexpected screen variant",
-    variantId: "default",
+    variantPath: "default",
   },
 ];
 
-for (const { entries, entryId, expected, name, variantId } of cases) {
+for (const { entries, entryPath, expected, name, variantPath } of cases) {
   test(`bootstrap has a typed ${name} reason`, () => {
     assert.throws(
       () =>
@@ -69,10 +69,10 @@ for (const { entries, entryId, expected, name, variantId } of cases) {
           catalogueSchemes: ["light"],
           colorScheme: "light",
           entries: entries ?? [screen],
-          entryId: entryId ?? "home",
+          entryPath: entryPath ?? "home",
           generation: "generation",
-          sourceRoute: "screens/home.mobile.html",
-          ...(variantId ? { variantId } : {}),
+          sourceRoute: "home/index.mobile.html",
+          ...(variantPath ? { variantPath } : {}),
           viewport: "mobile",
         }),
       (error: unknown) => {
@@ -96,8 +96,7 @@ function entry(
   const common = {
     declaredDependencies: [],
     description: id,
-    id,
-    navPath: [],
+    path: id,
     relatedDocs: [],
     sourcePath: sourceRelativePath,
     title: id,
@@ -108,7 +107,7 @@ function entry(
       ...common,
       colorSchemes: ["light"],
       kind: "screen",
-      useCaseIds: [],
+      useCasePaths: [],
     };
   return {
     ...common,

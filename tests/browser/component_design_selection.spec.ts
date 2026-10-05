@@ -15,7 +15,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
       ["toolbar", "Toolbar", "Ready for your next step?"],
       ["help", "Help hint", "false"],
     ]) {
-      await page.goto(componentDesignUrl(`pages/${route}`, viewport));
+      await page.goto(
+        componentDesignUrl(`design/components/pages/${route}`, viewport),
+      );
       await page.getByRole("button", { name: "Usage", exact: true }).click();
       await page
         .getByRole("region", { name: "Used by", exact: true })
@@ -28,7 +30,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         page.getByRole("region", { name: "Selected instance" }),
       ).toContainText(value!);
       await expect(page).toHaveURL(
-        componentDesignUrl(`inspection/selection/${route}`, viewport),
+        componentDesignUrl(
+          `design/components/inspection/selection/inspection-${route}`,
+          viewport,
+        ),
       );
       if (route === "help")
         await expect(
@@ -47,7 +52,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 1440, height: 1000 }
         : { width: 390, height: 844 },
     );
-    for (const route of ["states/removed", "states/removed-consumer"]) {
+    for (const route of [
+      "design/components/states/removed",
+      "design/components/states/removed-consumer",
+    ]) {
       await page.goto(componentDesignUrl(route, viewport));
       await expect(
         page.locator(

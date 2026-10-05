@@ -114,13 +114,13 @@ Live documents rebuild native `MockLink` and raw `mock:` hrefs from their
 bootstrap route table. Native links and `MockLink asChild` prevent unmodified
 primary activation and dispatch the package-owned
 `mokly:interactive-navigation` event with exactly
-`{ id, fragment?, target }`. The inspector applies the bounded logical-identity
+`{ screenPath, fragment?, target }`. The inspector applies the bounded logical-pathentity
 validators, adds `activation: "primary"`, and sends the ordinary navigation
 wire event. The DOM and wire events contain no href, label, HTML, or arbitrary
 URL.
 
 Consumer JavaScript can synthesize the DOM event, so its shape is validated
-rather than authenticated. The host still validates the id against its public
+rather than authenticated. The host still validates the path against its public
 catalogue and resolves the canonical identity-derived route. Modified and
 middle activation emit no package event and retain native sandbox behavior on
 the resolved portable href. Missing route-table ids stay inert. The Live route

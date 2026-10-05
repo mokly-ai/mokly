@@ -162,7 +162,7 @@ so the fetched page is the authoritative atomic pair for that route. Mixed
 public/private revisions, changed content or catalogue identity, and older
 sources are rejected.
 
-Pages, flows, home and missing routes have no workspace result. A route or
+Pages, documents, flows, home and missing routes have no workspace result. A route or
 source replacement cancels the request and obsolete results are ignored.
 From navigation until the routed workspace is adopted, the store reports it as
 pending. A request for the current route and source that fails, returns no

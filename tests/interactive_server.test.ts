@@ -209,7 +209,7 @@ test("ineligible views return 404 before bundle work", async (t) => {
   const optedOut = await fetch(`${live.liveUrl}/static/${live.mobileRoute}`);
   assert.equal(optedOut.status, 404);
   assert.equal(
-    (await fetch(`${live.liveUrl}/static/user-flows/tour.html`)).status,
+    (await fetch(`${live.liveUrl}/static/tour/index.html`)).status,
     404,
   );
   assert.equal(live.bundler.requests.length, 0);

@@ -1,5 +1,5 @@
 /** Last-good runtime transfer over the watched child's private IPC channel. */
-import { isCatalogueId } from "@mokly/viewer/data";
+import { isEntryPath } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import {
@@ -9,6 +9,7 @@ import {
   type TransferredGeneratedFile,
 } from "../../build/generated_file.js";
 import type { InteractiveSourceCapture } from "../../build/interactive_source_capture.js";
+import { isOutputSnapshot } from "../../build/output_snapshot.js";
 import { validatePublicExclude } from "../../config/public_exclusions.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
@@ -29,6 +30,7 @@ export interface RuntimeStartupMessage {
 /** Heavy retained fields not already supplied in the startup message. */
 export type TransferredComponentRuntime = Pick<
   ComponentRuntime,
+  | "outputSnapshot"
   | "bundle"
   | "generation"
   | "interactiveEntries"
@@ -67,6 +69,7 @@ export function componentRuntimeMessage(
 ): RuntimeCommand {
   return {
     runtime: {
+      outputSnapshot: runtime.outputSnapshot,
       bundle: runtime.bundle,
       generation: runtime.generation,
       interactiveEntries: runtime.interactiveEntries,
@@ -142,8 +145,15 @@ function parseRuntimeStartupMessage(
   if (
     !config ||
     typeof config.configPath !== "string" ||
-    !Array.isArray(config.entryGlobs) ||
-    !config.entryGlobs.every((glob) => typeof glob === "string") ||
+    !Array.isArray(config.roots) ||
+    !config.roots.every(
+      (root) =>
+        root &&
+        typeof root.dir === "string" &&
+        Array.isArray(root.files) &&
+        root.files.every((glob: unknown) => typeof glob === "string") &&
+        Array.isArray(root.transparent),
+    ) ||
     (config.entryModules !== undefined &&
       (!Array.isArray(config.entryModules) ||
         !config.entryModules.every((module) => typeof module === "string"))) ||
@@ -152,7 +162,7 @@ function parseRuntimeStartupMessage(
     !Array.isArray(config.publicExclude) ||
     !manifest ||
     !Array.isArray(manifest.entries) ||
-    (manifest.schemaVersion !== 7 &&
+    (manifest.schemaVersion !== 8 &&
       manifest.schemaVersion !== "live-index-1") ||
     !Array.isArray(manifest.sourceFiles)
   )
@@ -194,6 +204,7 @@ export function parseRuntimeMessage(
     : undefined;
   if (
     !runtime ||
+    !isOutputSnapshot(runtime.outputSnapshot) ||
     typeof runtime.generation !== "string" ||
     typeof runtime.bundle?.code !== "string" ||
     !interactiveEntries(runtime.interactiveEntries) ||
@@ -229,6 +240,7 @@ export function parseRuntimeMessage(
     type: "component-runtime",
     ...(changesStatus ? { changesStatus } : {}),
     runtime: {
+      outputSnapshot: runtime.outputSnapshot,
       bundle: runtime.bundle,
       generation: runtime.generation,
       interactiveEntries: runtime.interactiveEntries,
@@ -251,7 +263,7 @@ function interactiveEntries(
     !Array.isArray(value) &&
     Object.entries(value).every(
       ([id, interactive]) =>
-        isCatalogueId(id) && typeof interactive === "boolean",
+        isEntryPath(id) && typeof interactive === "boolean",
     )
   );
 }

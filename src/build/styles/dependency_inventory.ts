@@ -3,12 +3,13 @@ import path from "node:path";
 
 import { logicalRepositoryPath } from "../../config/file_locations.js";
 import { compareCodeUnits } from "../../config/path_order.js";
-import { isInside, projectRealPath, toPosixPath } from "../../config/paths.js";
+import { isInside, toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
 
 import {
   dependencyOwnership,
+  dependencyPhysicalPath,
   createDependencyPathCache,
   ignoredDependencyPath,
   walkDependencyDirectory,
@@ -171,7 +172,7 @@ function isPublicMockupsDependency(
 ): boolean {
   if (
     !isInside(config.mockupsDir, file) &&
-    !isInside(cache.roots.mockups, projectRealPath(file))
+    !isInside(cache.roots.mockups, dependencyPhysicalPath(file, cache))
   )
     return false;
   return wouldPrivatizePublicFile(file, config, graphInputs);

@@ -6,10 +6,10 @@ const MESSAGE_LIMIT = 2048;
 export interface InteractiveRenderDiagnostic {
   code: "render-error";
   colorScheme?: InteractiveBootstrap["colorScheme"];
-  entryId?: string;
+  entryPath?: string;
   entryKind?: InteractiveBootstrap["entryKind"];
   message: string;
-  variantId?: string;
+  variantPath?: string;
   viewport?: InteractiveBootstrap["viewport"];
 }
 
@@ -53,9 +53,11 @@ export function renderDiagnostic(
     ...(bootstrap
       ? {
           colorScheme: bootstrap.colorScheme,
-          entryId: bootstrap.entryId,
+          entryPath: bootstrap.entryPath,
           entryKind: bootstrap.entryKind,
-          ...(bootstrap.variantId ? { variantId: bootstrap.variantId } : {}),
+          ...(bootstrap.variantPath
+            ? { variantPath: bootstrap.variantPath }
+            : {}),
           viewport: bootstrap.viewport,
         }
       : {}),

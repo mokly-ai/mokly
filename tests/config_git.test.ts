@@ -120,7 +120,7 @@ test("nested roots fail before preparation, pinned reads, classification or deri
   await assert.rejects(
     () =>
       new GitReviewAssetReader(config, reader, commit, "mockups").read(
-        "screens/home.mobile.html",
+        "home/index.mobile.html",
       ),
     expected,
   );

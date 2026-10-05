@@ -13,7 +13,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -37,11 +37,11 @@ const OFFERED_TOOLS =
   /^<div class="mbk-view-tools" data-preview-mode-offered="" role="group" aria-label="View options">/;
 
 function served(
-  screenId: string,
+  screenPath: string,
   descriptor: ViewerInteractiveDescriptor | null = interactive,
   eligible: boolean | null = true,
 ): string {
-  const view = viewerView(display, { ...defaultSelection, screenId });
+  const view = viewerView(display, { ...defaultSelection, screenPath });
   const entry = view.kind === "target" ? view.target.entry : undefined;
   return renderHydratedShellPage(
     view,
@@ -57,7 +57,7 @@ function served(
       eligible !== null
         ? {
             workspaceInteractive: {
-              entryId: entry.id,
+              entryPath: entry.path,
               entryKind: entry.kind,
               value: eligible,
             },
@@ -76,7 +76,7 @@ function toolbar(html: string): string {
 }
 
 test("Serve offers Static and Live for current screens and saved variants", () => {
-  for (const id of ["home", "action"]) {
+  for (const id of ["product/browse/home", "components/action"]) {
     const tools = toolbar(served(id));
     assert.match(tools, OFFERED_TOOLS);
     assert.match(tools, CONTROL);
@@ -98,7 +98,9 @@ test("Serve offers Static and Live for current screens and saved variants", () =
 });
 
 test("a failed generation keeps the control with Live described as unavailable", () => {
-  const tools = toolbar(served("home", { ...interactive, state: "failed" }));
+  const tools = toolbar(
+    served("product/browse/home", { ...interactive, state: "failed" }),
+  );
   assert.match(tools, OFFERED_TOOLS);
   assert.match(tools, CONTROL);
   assert.match(
@@ -108,7 +110,7 @@ test("a failed generation keeps the control with Live described as unavailable",
 });
 
 test("an opted-out or unknown entry keeps its toolbar with no control or gap", () => {
-  for (const id of ["home", "action"]) {
+  for (const id of ["product/browse/home", "components/action"]) {
     const eligible = toolbar(served(id));
     const staticOnly = toolbar(served(id, null));
     assert.doesNotMatch(staticOnly, CONTROL);
@@ -133,7 +135,10 @@ test("an opted-out or unknown entry keeps its toolbar with no control or gap", (
 });
 
 test("no control appears without Live, on pages, flows or removed entries", () => {
-  for (const html of [served("home", null), served("action", null)]) {
+  for (const html of [
+    served("product/browse/home", null),
+    served("components/action", null),
+  ]) {
     assert.doesNotMatch(html, CONTROL);
     assert.equal(html.includes(OFFERED), false);
   }
@@ -167,9 +172,9 @@ test("only a toolbar with Static and Live takes its own narrow row", () => {
 
 test("an exported page never offers Live, even from a Live context", () => {
   const deploymentId = "c".repeat(64);
-  for (const screenId of ["home", "action"]) {
+  for (const screenPath of ["product/browse/home", "components/action"]) {
     const exported = renderHydratedShellPage(
-      viewerView(display, { ...defaultSelection, screenId }),
+      viewerView(display, { ...defaultSelection, screenPath }),
       {
         base: "origin/main",
         delivery: {

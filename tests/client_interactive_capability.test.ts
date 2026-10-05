@@ -126,7 +126,7 @@ test("private Live event updates advance state only for stable identity", () => 
 });
 
 function request(): ViewerCapabilityRequest {
-  return { entryId: null, source: descriptor.source };
+  return { entryPath: null, source: descriptor.source };
 }
 
 class InteractiveSource {
@@ -160,7 +160,7 @@ class InteractiveEnvironment implements ReactCapabilityEnvironment {
     setItem: () => undefined,
   };
   readonly location = {
-    href: "http://127.0.0.1:4173/view/screens/home.html",
+    href: "http://127.0.0.1:4173/view/home/",
     reload: () => undefined,
   };
   requested: { init?: RequestInit; url: string } | undefined;

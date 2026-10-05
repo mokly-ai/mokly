@@ -1,7 +1,15 @@
-import { VARIANT_AUTHORING } from "./markers.js";
+import { unknownFields } from "./fields.js";
+import { registerDefinition } from "./identity.js";
+import {
+  VARIANT_AUTHORING,
+  VARIANT_PARENT,
+  VARIANT_INDEX,
+  DEFINITION,
+  DEFINITION_IDENTITY,
+} from "./markers.js";
 import type { ScreenDefinition, ScreenVariantInput } from "./types.js";
 
-const FORBIDDEN_VARIANT_FIELDS = ["variants", "navPath"] as const;
+const FORBIDDEN_VARIANT_FIELDS = ["variants"] as const;
 
 interface VariantAuthoringMetadata {
   forbiddenFields: readonly (typeof FORBIDDEN_VARIANT_FIELDS)[number][];
@@ -18,7 +26,9 @@ export function flattenScreenVariants(
 ): readonly ScreenDefinition[] {
   return [
     parent,
-    ...variants.map((variant) => variantDefinition(parent, variant)),
+    ...variants.map((variant, index) =>
+      variantDefinition(parent, variant, index),
+    ),
   ];
 }
 
@@ -32,6 +42,7 @@ export function screenVariantAuthoring(
 function variantDefinition(
   parent: ScreenDefinition,
   variant: ScreenVariantInput,
+  index: number,
 ): ScreenDefinition {
   const input = variant as ScreenVariantInput & Record<string, unknown>;
   const address = variant.address ?? parent.address;
@@ -40,29 +51,33 @@ function variantDefinition(
     "interactive" in input ? input.interactive : parent.interactive;
   const tags = variant.tags ?? parent.tags;
   const definition: AuthoredVariantDefinition = {
+    ...unknownFields(variant, "screen-variant"),
     __viaDefine: true,
     ...(address !== undefined ? { address } : {}),
     ...(colorSchemes !== undefined ? { colorSchemes } : {}),
     dependencies: variant.dependencies ?? parent.dependencies,
     description: variant.description,
     desktop: variant.desktop,
-    id: variant.id,
+    slug: variant.slug,
+    ...(variant.movedFrom === undefined
+      ? {}
+      : { movedFrom: variant.movedFrom }),
     ...(interactive !== undefined || "interactive" in input
       ? { interactive }
       : {}),
     kind: "screen",
     mobile: variant.mobile,
-    navPath: Array.isArray(parent.navPath)
-      ? [...parent.navPath]
-      : parent.navPath,
     ...(variant.rationale !== undefined
       ? { rationale: variant.rationale }
       : {}),
     relatedDocs: variant.relatedDocs ?? parent.relatedDocs,
     ...(tags !== undefined ? { tags } : {}),
     title: variant.title,
-    useCaseIds: variant.useCaseIds ?? [],
-    variantOf: parent.id,
+    useCasePaths: variant.useCasePaths ?? [],
+    [VARIANT_PARENT]: parent,
+    [VARIANT_INDEX]: index,
+    [DEFINITION]: true,
+    [DEFINITION_IDENTITY]: {},
     [VARIANT_AUTHORING]: {
       forbiddenFields: FORBIDDEN_VARIANT_FIELDS.filter(
         (field) => field in input,
@@ -70,5 +85,5 @@ function variantDefinition(
     },
   };
   if (parent.definedIn !== undefined) definition.definedIn = parent.definedIn;
-  return definition;
+  return registerDefinition(definition);
 }

@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { entryRoute } from "@mokly/viewer/data";
-
 import { compileCatalogue } from "../dist/build/compile.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -67,7 +65,7 @@ test("Serve keeps Static routes available when Live eligibility is unknown", asy
     const entry = live.runtime.manifest.entries.find(
       (candidate) =>
         (candidate.kind === "screen" || candidate.kind === "component") &&
-        candidate.id === id,
+        candidate.path === id,
     );
     assert.ok(entry);
     assert.ok(entry.kind === "screen" || entry.kind === "component");
@@ -77,11 +75,11 @@ test("Serve keeps Static routes available when Live eligibility is unknown", asy
     string,
     boolean
   >;
-  for (const entry of entries) delete interactiveEntries[entry.id];
+  for (const entry of entries) delete interactiveEntries[entry.path];
 
   for (const entry of entries) {
     for (let request = 0; request < 2; request += 1) {
-      const route = entryRoute(entry.kind, entry.id);
+      const route = `${entry.path}/`;
       const response = await fetch(`${live.server.url}/view/${route}`);
       assert.equal(response.status, 200, route);
       const descriptor = scriptValue(
@@ -96,9 +94,9 @@ test("Serve keeps Static routes available when Live eligibility is unknown", asy
   assert.equal(live.diagnostics.length, entries.length);
   for (const entry of entries) {
     const matching = live.diagnostics.filter((diagnostic) =>
-      String(diagnostic).includes(entry.id),
+      String(diagnostic).includes(entry.path),
     );
-    assert.equal(matching.length, 1, entry.id);
+    assert.equal(matching.length, 1, entry.path);
     assert.match(String(matching[0]), new RegExp(live.generation));
   }
 });
@@ -109,7 +107,7 @@ async function assertEligibility(
 ): Promise<void> {
   for (const [id, interactive] of expected) {
     const kind = id === "action" || id === "pane" ? "component" : "screen";
-    const route = entryRoute(kind, id);
+    const route = `${id}/`;
     const response = await fetch(`${origin}/view/${route}`);
     assert.equal(response.status, 200, route);
     const html = await response.text();
@@ -119,7 +117,7 @@ async function assertEligibility(
     ) as { workspace?: RoutedWorkspace };
     const workspace = descriptor.workspace;
     assert.ok(workspace, route);
-    assert.equal(workspace.entry.id, id);
+    assert.equal(workspace.entry.path, id);
     assert.equal(workspace.entry.kind, kind);
     assert.equal(workspace.interactive, interactive, route);
     assert.equal("interactive" in workspace.entry, false, route);
@@ -150,21 +148,21 @@ function scriptValue(html: string, attribute: string): unknown {
 }
 
 interface RoutedWorkspace {
-  entry: { id: string; kind: "component" | "screen"; [key: string]: unknown };
+  entry: { path: string; kind: "component" | "screen"; [key: string]: unknown };
   interactive?: boolean;
 }
 
 function eligibilitySource(): string {
   return componentEntrySource({
-    exports: `action.entries, pane.entries,
-  defineScreen({ ...metadata, id: "details", title: "Details", description: "An eligible screen", mobile: <main>Details</main>, desktop: <main>Details</main> }),`,
+    exports: `...action.entries, ...pane.entries,
+  defineScreen({ ...metadata, path: "details", title: "Details", description: "An eligible screen", mobile: <main>Details</main>, desktop: <main>Details</main> }),`,
   })
     .replace(
       "const action = defineComponent({ ...metadata,",
       "const action = defineComponent({ ...metadata, interactive: false,",
     )
     .replace(
-      'defineScreen({ ...metadata, id: "home"',
-      'defineScreen({ ...metadata, interactive: false, id: "home"',
+      'defineScreen({ ...metadata, path: "home"',
+      'defineScreen({ ...metadata, interactive: false, path: "home"',
     );
 }

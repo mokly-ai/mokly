@@ -15,12 +15,12 @@ const forged = defineScreen({
   dependencies: [],
   description: "Forged source",
   desktop: "Forged",
-  id: "forged",
+  path: "forged",
   mobile: "Forged",
   relatedDocs: [],
   route: "forged.html",
   title: "Forged",
-  useCaseIds: []
+  useCasePaths: []
 });
 forged.definedIn = "entries/not-imported.ts";
 export const mockups = [forged];
@@ -41,8 +41,8 @@ test("matched barrels that re-export registries fail with duplicate ids", async 
   await fs.promises.writeFile(
     path.join(sourceDir, "a.ts"),
     `import { defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCaseIds: [] };
-export const mockups = [defineScreen({ ...metadata, description: "A", desktop: "A", id: "a", mobile: "A", route: "a.html", title: "A" })];
+const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCasePaths: [] };
+export const mockups = [defineScreen({ ...metadata, description: "A", desktop: "A", path: "a", mobile: "A",  title: "A" })];
 `,
   );
   await fs.promises.writeFile(
@@ -51,11 +51,11 @@ export const mockups = [defineScreen({ ...metadata, description: "A", desktop: "
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["src/**/*.ts"], mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "src", files: ["**/*.ts"] }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
   await assert.rejects(compileCatalogue(await loadConfig(fixture.root)), {
     code: "build-invalid",
-    message: /duplicate-id/,
+    message: /duplicate-export/,
   });
 });
