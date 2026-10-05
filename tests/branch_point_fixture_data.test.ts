@@ -3,11 +3,12 @@ import test from "node:test";
 
 import { readCatalogue } from "@mokly/viewer";
 
+import { branchPoints } from "../packages/viewer/src/catalogue/branch_point.js";
 import { currentCatalogueEntries } from "../packages/viewer/src/catalogue/entry_selection.js";
 import { readShellCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectScopedCatalogue } from "../packages/viewer/src/catalogue/scoped_projection.js";
+import { parseReviewResult } from "../packages/viewer/src/review/result_validation.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
-import { branchPoints } from "../packages/viewer/src/shell/catalogue_branch_point.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
 import { compareReview } from "../src/review/compare.js";
 import { computeCatalogueChanges } from "../src/server/changed.js";
@@ -55,6 +56,7 @@ for (const expected of cases) {
     t.after(fixture.fixture.remove);
     const { config, before, after, git } = fixture;
     const review = await compareReview(after, config, git, "main");
+    assert.deepEqual(parseReviewResult(review.result), review.result);
     assert.deepEqual(
       (review.pairing?.moves ?? []).map(({ kind, path, previousPath }) => [
         kind,

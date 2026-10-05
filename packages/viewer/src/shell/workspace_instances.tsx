@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 
+import { branchPoints } from "../catalogue/branch_point.js";
 import type { ComponentInstanceRecord } from "../components/manifest_types.js";
 import { orderedInstances } from "../components/views.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
+import type { Catalogue } from "./catalogue.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
 /** Components or nested components panel for the selected preview. */
 export function WorkspaceInstances({
   activeViewport,
+  catalogue,
   data,
   onFocus,
   onSelect,
@@ -20,6 +23,7 @@ export function WorkspaceInstances({
   views,
 }: {
   activeViewport: "desktop" | "mobile";
+  catalogue: Catalogue;
   data: WorkspaceData;
   onFocus(key: string, viewport: "desktop" | "mobile"): void;
   onSelect(key: string, viewport: "desktop" | "mobile"): void;
@@ -64,6 +68,7 @@ export function WorkspaceInstances({
             {" components"}
           </p>
           <InstanceList
+            catalogue={catalogue}
             data={data}
             expanded={expanded}
             instances={orderedInstances(usage)}
@@ -86,6 +91,7 @@ export function WorkspaceInstances({
 }
 
 function InstanceList({
+  catalogue,
   data,
   expanded,
   instances,
@@ -94,6 +100,7 @@ function InstanceList({
   owner,
   selectedKey,
 }: {
+  catalogue: Catalogue;
   data: WorkspaceData;
   expanded: ReadonlySet<string>;
   instances: readonly ComponentInstanceRecord[];
@@ -115,9 +122,10 @@ function InstanceList({
             item.owner.kind === "instance" &&
             item.owner.instanceKey === instance.key,
         );
-        const component = data.components.find(
-          (item) => item.path === instance.componentId,
-        );
+        const component = branchPoints(catalogue).usageComponent(
+          instance.componentId,
+          data.removed ? "before" : "after",
+        )?.entry;
         return (
           <li key={instance.key}>
             <button
@@ -141,6 +149,7 @@ function InstanceList({
               >
                 <summary>{nested.length} nested instances</summary>
                 <InstanceList
+                  catalogue={catalogue}
                   data={data}
                   expanded={expanded}
                   instances={instances}

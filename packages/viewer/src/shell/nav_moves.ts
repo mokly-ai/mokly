@@ -6,7 +6,8 @@
  * its entry changed beyond the move.
  */
 
-import type { BranchPointLookup } from "./catalogue_branch_point.js";
+import type { BranchPointLookup } from "../catalogue/branch_point_types.js";
+
 import { materialChangedEntries, type ShellContext } from "./context.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 

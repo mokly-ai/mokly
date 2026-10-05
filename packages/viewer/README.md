@@ -264,8 +264,16 @@ therefore shows no Before and Current input changes, whether an entry moved or
 stayed at the same path. Serve and export shells carry that data and show those
 input changes.
 
-Every shell resolves branch-point references through one lookup per catalogue
-generation. A removed variant joins its moved or case-renamed parent in the
+The catalogue data layer owns one shared branch-point lookup. The server
+projection imports it from `@mokly/viewer/data`. Both catalogue readers and the
+review-result reader validate move records before they resolve references.
+They reject a previous path that a current entry of the same kind uses, with
+case folding. Usage names resolve on an explicit side and stay unchanged in
+the stored records. Removed views keep usage through component moves and
+case-only renames. Data helpers retain all variants of the resolved parent,
+or only a variant's own usage when it has no eligible parent.
+
+Every shell uses this lookup per catalogue generation. A removed variant joins its moved or case-renamed parent in the
 tree, the variant bar and Changes activation, and opens in that parent's
 workspace. When its former parent's path now names another kind, its
 breadcrumb shows the stored `parentTitle` as plain text.
@@ -575,7 +583,7 @@ consumers.
   including the baseline spelling after a case-only rename
 - [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
   ordering shared by review producers and readers
-- [`src/shell/catalogue_branch_point.ts`](./src/shell/catalogue_branch_point.ts) —
+- [`src/catalogue/branch_point.ts`](./src/catalogue/branch_point.ts) —
   the one branch-point lookup per catalogue generation, reached through
   `branchPoints`
 - [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and

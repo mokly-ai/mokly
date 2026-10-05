@@ -21,6 +21,7 @@ import type {
   ShellFrameSession,
 } from "../shell/frame_registry.js";
 
+import { viewerInspectionLabels } from "./inspection_labels.js";
 import type { InstanceRef } from "./types.js";
 
 export type ViewerInspectionPresentation =
@@ -29,16 +30,6 @@ export type ViewerInspectionPresentation =
       kind: "instances";
     }
   | { kind: "pick" };
-
-interface InspectionLabel {
-  boxes: readonly Box[];
-  id: string;
-  key: string;
-  left: number;
-  session: ShellFrameSession;
-  text: string;
-  top: number;
-}
 
 /** Share the registry geometry scheduler with markers and workspace inspection. */
 export function ViewerInspectionLayer({
@@ -119,7 +110,7 @@ export function ViewerInspectionLayer({
 
   const labels =
     current && layer.current
-      ? inspectionLabels(
+      ? viewerInspectionLabels(
           model,
           layer.current,
           sessions.map((session) => ({
@@ -163,57 +154,4 @@ function sessionKeys(
       ? [instance.key]
       : [],
   );
-}
-
-function inspectionLabels(
-  model: CatalogueReadModel,
-  layer: HTMLElement,
-  measured: readonly {
-    keys: readonly string[];
-    session: ShellFrameSession;
-  }[],
-  registry: ShellFrameRegistry,
-): readonly InspectionLabel[] {
-  const origin = layer.getBoundingClientRect();
-  return measured.flatMap(({ keys, session }) => {
-    const result = registry.geometry.snapshot(session).result;
-    const frame = session.element;
-    if (
-      result?.kind !== "ready" ||
-      !frame.getClientRects().length ||
-      !frame.offsetWidth ||
-      !frame.offsetHeight ||
-      session.usage.status !== "ready"
-    )
-      return [];
-    const rectangle = frame.getBoundingClientRect();
-    const scaleX = rectangle.width / frame.offsetWidth;
-    const scaleY = rectangle.height / frame.offsetHeight;
-    return keys.flatMap((key) => {
-      const boundary = result.boundaries.find((item) => item.key === key);
-      const boxes = boundary?.ranges.flatMap(({ boxes }) => boxes) ?? [];
-      const box = boxes[0];
-      const instance =
-        session.usage.status === "ready"
-          ? session.usage.instances.find((item) => item.key === key)
-          : undefined;
-      if (!box || !instance) return [];
-      const left = rectangle.left + (box.x + frame.clientLeft) * scaleX;
-      const top = rectangle.top + (box.y + frame.clientTop) * scaleY;
-      const component = model.components.find(
-        (item) => item.path === instance.componentId,
-      );
-      return [
-        {
-          boxes,
-          id: JSON.stringify([session.generation, key]),
-          key,
-          left: left - origin.left,
-          session,
-          text: `${component?.title ?? "Component"} · ${instance.id}`,
-          top: Math.max(0, top - origin.top - 22),
-        },
-      ];
-    });
-  });
 }

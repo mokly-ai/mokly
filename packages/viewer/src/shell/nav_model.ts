@@ -1,10 +1,10 @@
 /** Pure navigation-tree state used by SSR and the hydrated shell. */
 
+import { branchPoints } from "../catalogue/branch_point.js";
 import { folderTitlesAt } from "../registry/folder_titles.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import type { ShellContext } from "./context.js";
 import { folderDisclosureKey } from "./disclosure_keys.js";
 import { withMovedRows } from "./nav_moves.js";

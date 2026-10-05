@@ -22,6 +22,7 @@ import {
 import { relatedDocumentReferences } from "../documents/references.js";
 import { orderEntriesWithVariants } from "../registry/entry_order.js";
 
+import { projectionBranchPoints } from "./branch_points.js";
 import {
   entryChanges,
   entryPreviousPath,
@@ -39,19 +40,7 @@ export function projectCatalogue(
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const identity = catalogueIdentity(input.configPath);
   const snapshotSource = historicalSource(input, comparisonUrl);
-  const retainedComponents = new Set(
-    [
-      ...catalogue.manifest.entries,
-      ...(input.changesStatus === "ready"
-        ? catalogue.removedEntries.map(({ entry }) => entry)
-        : []),
-    ]
-      .filter(
-        (entry) =>
-          entry.kind === "component" && !isManifestComponentVariant(entry),
-      )
-      .map((entry) => entry.path),
-  );
+  const lookup = projectionBranchPoints(input);
   if (
     catalogue.manifest.schemaVersion !== 8 &&
     catalogue.manifest.schemaVersion !== "live-index-1"
@@ -111,7 +100,7 @@ export function projectCatalogue(
         ...base,
         kind: "screen",
         colorSchemes: [...entry.colorSchemes],
-        views: projectViews(input, retainedComponents, entry, removed),
+        views: projectViews(input, lookup, entry, removed),
         useCasePaths: [...entry.useCasePaths],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
@@ -119,8 +108,11 @@ export function projectCatalogue(
           : {}),
       };
     if (isManifestComponentVariant(entry)) {
+      const parent = lookup.parentOf(entry);
+      const parentPath =
+        parent && parent.source !== "title" ? parent.entry.path : undefined;
       const review = (input.comparison ?? input.evidence?.result)?.components
-        .find((item) => item.path === entry.variantOf)
+        .find((item) => item.path === parentPath)
         ?.variants.find((item) => item.path === entry.path);
       return {
         ...base,
@@ -129,7 +121,7 @@ export function projectCatalogue(
         variantOf: entry.variantOf,
         props: readProps(entry.props),
         suppliedSlots: [...entry.suppliedSlots],
-        views: projectViews(input, retainedComponents, entry, removed),
+        views: projectViews(input, lookup, entry, removed),
         comparison: comparisonSelection(
           input,
           removed ? "removed" : review?.state,
@@ -167,6 +159,16 @@ export function projectCatalogue(
             })),
           ],
           ({ entry }) => entry,
+          ({ entry, snapshot }) => {
+            const parent = lookup.parent(
+              snapshot
+                ? { source: "removed", entry, record: snapshot }
+                : { source: "current", entry },
+            );
+            return parent && parent.source !== "title"
+              ? parent.entry
+              : undefined;
+          },
         ).flatMap(({ snapshot }) => (snapshot ? [snapshot] : []))
       : [];
   const removedPaths = new Set(removedSnapshots.map(({ entry }) => entry.path));

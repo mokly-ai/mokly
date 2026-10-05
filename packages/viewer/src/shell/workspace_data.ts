@@ -1,3 +1,4 @@
+import { branchPoints } from "../catalogue/branch_point.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { RenderCapability } from "../components/render_types.js";
@@ -15,7 +16,6 @@ import type { ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import { materialChangedEntries, type ShellContext } from "./context.js";
 import {
   shownComparisonEligible,
@@ -112,7 +112,7 @@ export function workspaceData(
     entry.kind === "component"
       ? componentReview(result?.components, component, entry)
       : undefined;
-  const componentId = component?.path ?? componentComparison?.path;
+  const componentPath = component?.path ?? componentComparison?.path;
   const evidenceEntry = component ?? entry;
   const resourceEvidence = snapshot?.screenEvidence?.find(
     (screen) => screen.path === entry.path,
@@ -194,7 +194,7 @@ export function workspaceData(
       .filter((item) =>
         item.consumer.kind === "screen"
           ? item.consumer.path === entry.path
-          : item.consumer.path === componentId,
+          : item.consumer.path === componentPath,
       )
       .map((item) => item.changedComponentId),
   );
@@ -254,7 +254,7 @@ export function workspaceData(
     ),
     variants,
     usedBy: usedByUsageLinks(catalogue, evidenceEntry),
-    affected: affectedUsageLinks(catalogue, result, componentId),
+    affected: affectedUsageLinks(catalogue, result, componentPath),
     ...(status ? { status } : {}),
     ...(change ? { change } : {}),
     ...(comparison ? { comparison } : {}),

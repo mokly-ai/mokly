@@ -5,12 +5,12 @@
 
 import type { ReactNode } from "react";
 
+import { branchPoints } from "../catalogue/branch_point.js";
 import { parseLogicalTarget } from "../navigation/logical.js";
 import { viewHref } from "../navigation/routes.js";
 import type { ManifestUseCase } from "../registry/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
 import { TagChip } from "./tags.js";
 import { changedViewsLabel, type ChangedView } from "./view_marks.js";

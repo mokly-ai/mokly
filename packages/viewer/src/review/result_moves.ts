@@ -4,9 +4,17 @@ import { reviewInvalid } from "./result_helpers.js";
 /** One historical identity cannot be paired twice or also advertised as removed. */
 export function validateResultMoves(result: ReviewResultV5): void {
   const entries = [
-    ...result.screens,
-    ...result.components,
-    ...result.components.flatMap((component) => component.variants),
+    ...result.screens.map((entry) => ({ ...entry, kind: "screen" as const })),
+    ...result.components.map((entry) => ({
+      ...entry,
+      kind: "component" as const,
+    })),
+    ...result.components.flatMap((component) =>
+      component.variants.map((entry) => ({
+        ...entry,
+        kind: "component" as const,
+      })),
+    ),
     ...result.changes
       .filter((entry) => entry.kind === "use-case")
       .map((entry) => ({
@@ -27,5 +35,16 @@ export function validateResultMoves(result: ReviewResultV5): void {
     previous.add(path);
     if (removed.has(path))
       reviewInvalid("paired previous path cannot be removed");
+    if (
+      entries.some(
+        (candidate) =>
+          candidate.after &&
+          candidate.kind === entry.kind &&
+          candidate.path.toLowerCase() === path,
+      )
+    )
+      reviewInvalid(
+        "previousPath cannot name a current entry of the same kind",
+      );
   }
 }

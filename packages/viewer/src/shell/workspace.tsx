@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { branchPoints } from "../catalogue/branch_point.js";
 import { canonicalJson } from "../components/data.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { ControlledDiffScreen } from "./diffs.js";
@@ -150,6 +150,7 @@ export function ComponentWorkspace({
     [store],
   );
   const inspection = useWorkspaceInspection({
+    catalogue,
     comparisonActive: comparing,
     data,
     invalidSelection: Boolean(data.removed || variant?.removed),
@@ -181,6 +182,7 @@ export function ComponentWorkspace({
     views.some((view) => view.usage?.instances.length);
   const propsPanel = selectedInstance ? (
     <WorkspaceProps
+      catalogue={catalogue}
       data={data}
       selection={{
         instance: selectedInstance,
@@ -190,7 +192,7 @@ export function ComponentWorkspace({
   ) : entry.kind === "component" ? (
     controls.panel
   ) : (
-    <WorkspaceProps data={data} selection={{}} />
+    <WorkspaceProps catalogue={catalogue} data={data} selection={{}} />
   );
   const highlight = {
     available: inspection.available,
@@ -250,6 +252,7 @@ export function ComponentWorkspace({
               ? {
                   components: (
                     <WorkspaceInstances
+                      catalogue={catalogue}
                       activeViewport={resolvedViewport}
                       data={data}
                       onFocus={(key, nextViewport) =>

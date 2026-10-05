@@ -1,4 +1,8 @@
-import type { ReviewResultV5 } from "./component_types.js";
+import type {
+  ComponentVariantReview,
+  ReviewResultV5,
+} from "./component_types.js";
+import { resultBranchPoints } from "./result_branch_points.js";
 import { requireEqual, reviewInvalid } from "./result_helpers.js";
 
 export function validateResultReferences(result: ReviewResultV5): void {
@@ -18,22 +22,23 @@ export function validateResultReferences(result: ReviewResultV5): void {
       .filter((entry) => entry.kind === "component")
       .map((entry) => (entry.after ?? entry.before)!.path),
   );
+  const lookup = resultBranchPoints(result);
   const componentIdentity = (path: string, side: "before" | "after") =>
-    result.components.find((component) => component[side]?.path === path)?.path;
+    lookup.usageComponent(path, side)?.entry.path;
   for (const affected of result.affectedConsumers) {
     if (!changed.has(affected.changedComponentId))
       reviewInvalid("affected evidence has no directly changed component");
     for (const evidence of affected.evidence) {
       const context = evidence.context;
-      const owner =
-        context.kind === "screen"
-          ? result.screens.find(
-              (screen) => screen[evidence.side]?.path === context.entry.path,
-            )
-          : result.components.find(
-              (component) =>
-                component[evidence.side]?.path === context.entry.path,
-            );
+      const owner = (
+        context.kind === "component"
+          ? lookup.usageComponent(context.entry.path, evidence.side)
+          : lookup.resolve({
+              kind: context.kind,
+              path: context.entry.path,
+              side: evidence.side,
+            })
+      )?.entry.record;
       if (!owner?.[evidence.side])
         reviewInvalid("affected context side is missing");
       requireEqual(owner[evidence.side], context.entry);
@@ -41,12 +46,13 @@ export function validateResultReferences(result: ReviewResultV5): void {
         context.kind === "screen" && "views" in owner
           ? owner.views
           : "variants" in owner && context.kind === "component"
-            ? result.components
-                .flatMap((component) => component.variants)
-                .find(
-                  (variant) =>
-                    variant[evidence.side]?.path === context.variantPath,
-                )?.views
+            ? (
+                lookup.resolve({
+                  kind: "component",
+                  path: context.variantPath,
+                  side: evidence.side,
+                })?.entry.record as ComponentVariantReview | undefined
+              )?.views
             : undefined;
       if (
         !views?.some(

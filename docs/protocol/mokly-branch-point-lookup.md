@@ -64,12 +64,12 @@ current entry is `after`-side. One lookup operation resolves a name on a given
 side. Only a component parent is a destination; a variant at that identity
 counts as no destination.
 
-A name that resolves through a move pair or a case-only rename keeps its
-usage. The server projection publishes that usage, and both catalogue readers
-accept it. Every shell labels the instance with the resolved component's
-title and links to that component. This applies to instance lists, Props and
-its `Open component` link, and Highlight labels. A `Used by` list matches
-usage to its component through the same resolution.
+Projection and both catalogue readers retain usage through a move or case-only
+rename. Every shell labels and links instances with the resolved parent. This
+covers Components, Props and its `Open component` link, and Highlight labels.
+`Used by` matches names through the same lookup. Selecting a removed view's
+recorded instance opens read-only Props without a current frame. Historical
+previews keep Highlight disabled and provide no current marker bindings.
 
 Never rewrite a stored name. An instance id may equal the last segment of its
 component name; a rewrite that changes the name's letter case would then make

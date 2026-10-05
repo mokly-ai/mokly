@@ -51,9 +51,14 @@ descriptors remain absent. Changes-enabled consumer export and repository
 publication supply both screen descriptors and removed-page paths after their
 historical closures are packaged. Evidence replacement publishes the pointer,
 descriptors and removed-entry snapshot atomically. Current-only delivery supplies
-none of them. When a removed screen or variant uses a component absent from the
-published model, projection omits that usage and marks it unavailable. Readers
-still reject dangling references in supplied usage.
+none of them. The shared `@mokly/viewer/data` branch-point lookup resolves each
+usage component name on its record's side. A removed screen or variant keeps
+usage when the component moved or changed only letter case. Stored names stay
+unchanged, including case-sensitive instance ids. If a name has no component
+parent destination, projection marks that usage unavailable. Both readers
+reject such names in supplied usage. They also reject a previous path that a
+current entry of the same kind uses, with case folding. Another kind may reuse
+that path.
 
 `@mokly/viewer` owns the public types and `readCatalogue`; its value/reference
 validators reject unsupported versions, malformed known fields, private evidence,
@@ -75,6 +80,9 @@ folder-first English-locale comparator. Catalogue identity
 depends only on the repository-relative config path. Export stamps the complete
 artifact identity; Serve hashes its canonical snapshot with the identity field
 zeroed and advances content/evidence revisions on accepted updates.
+Removed variants resolve their parent through the lookup. They occupy that
+parent's kind/path position in baseline authored order, including after a move
+or a case-only rename.
 
 The [public fixture](../../docs/protocol/fixtures/catalogue-v4.json) ships in the
 npm package. Consumers need the documented JSON artifact, not a CLI deep import.

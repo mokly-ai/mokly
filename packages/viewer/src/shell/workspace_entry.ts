@@ -1,5 +1,6 @@
 /** Route-owned workspace entry and its component evidence parent. */
 
+import { branchPoints } from "../catalogue/branch_point.js";
 import {
   isManifestComponentVariant,
   type ManifestComponent,
@@ -9,7 +10,6 @@ import type { ManifestScreen } from "../registry/types.js";
 import type { ComponentReview } from "../review/component_types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** A routed entry that renders through the shared workspace. */

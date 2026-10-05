@@ -1,8 +1,8 @@
+import { branchPoints } from "../catalogue/branch_point.js";
 import { generatedViews, orderedInstances } from "../components/views.js";
 import type { ReviewResultV5 } from "../review/component_types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import { dedupeUsageLinks } from "./usage_links.js";
 import { shownComparisonEligible } from "./view_status.js";
 import {
@@ -80,7 +80,13 @@ export function usedByUsageLinks(
     if (owner.kind !== "screen" && owner.kind !== "component") return [];
     return generatedViews(owner).flatMap((view) =>
       orderedInstances(view.usage)
-        .filter((instance) => instance.componentId === evidenceEntry.path)
+        .filter(
+          (instance) =>
+            branchPoints(catalogue).usageComponent(
+              instance.componentId,
+              "after",
+            )?.entry.path === evidenceEntry.path,
+        )
         .map((instance) => ({
           entryId: owner.path,
           entryKind: owner.kind,

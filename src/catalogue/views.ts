@@ -1,5 +1,9 @@
 import type { CatalogueView } from "@mokly/viewer";
-import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
+import type {
+  BranchPointLookup,
+  ManifestEntry,
+  ManifestScreen,
+} from "@mokly/viewer/data";
 import {
   generatedViews,
   isManifestComponentVariant,
@@ -9,18 +13,25 @@ import {
   lexical,
 } from "@mokly/viewer/data";
 
+import { projectionBranchPoints } from "./branch_points.js";
 import { comparisonSelection } from "./changes.js";
 import type { CatalogueProjectionInput } from "./projection_input.js";
 
 export function projectViews(
   input: CatalogueProjectionInput,
-  retainedComponents: ReadonlySet<string>,
+  lookup: Pick<BranchPointLookup, "usageComponent">,
   entry: ManifestScreen | Extract<ManifestEntry, { kind: "component" }>,
   removed: boolean,
 ): CatalogueView[] {
   if (entry.kind === "component" && !isManifestComponentVariant(entry))
     return [];
   const result = input.comparison ?? input.evidence?.result;
+  const parent =
+    entry.kind === "component"
+      ? projectionBranchPoints(input).parentOf(entry)
+      : undefined;
+  const parentPath =
+    parent && parent.source !== "title" ? parent.entry.path : undefined;
   const reviewViews =
     entry.kind === "screen"
       ? (result?.screens.find((item) => item.path === entry.path)?.views ??
@@ -28,7 +39,7 @@ export function projectViews(
           ?.views)
       : result && isManifestComponentVariant(entry)
         ? result.components
-            .find((item) => item.path === entry.variantOf)
+            .find((item) => item.path === parentPath)
             ?.variants.find((item) => item.path === entry.path)?.views
         : undefined;
   return generatedViews(entry).map((view) => {
@@ -37,7 +48,7 @@ export function projectViews(
     const usage =
       removed &&
       recordedUsage?.instances.some(
-        (instance) => !retainedComponents.has(instance.componentId),
+        (instance) => !lookup.usageComponent(instance.componentId, "before"),
       )
         ? undefined
         : recordedUsage;

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { FrameEvent } from "../client/frame_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
+import type { Catalogue } from "./catalogue.js";
 import type { ShellFrameGeometryController } from "./frame_geometry_controller.js";
 import {
   captureFrame,
@@ -29,6 +30,7 @@ export interface WorkspaceInspectionContext {
 }
 
 export interface WorkspaceInspectionInput extends WorkspaceInspectionContext {
+  catalogue: Catalogue;
   onSelect(
     key: string,
     viewport: "desktop" | "mobile",
@@ -55,6 +57,25 @@ export interface WorkspaceInspectionResult {
 export interface InspectionAvailability {
   available: boolean;
   reason?: string;
+}
+
+/** Historical Props selection needs recorded usage, while current selection needs a frame. */
+export function canSelectWorkspaceInstance(
+  input: WorkspaceInspectionContext,
+  sessions: readonly ShellFrameSession[],
+  key: string,
+  viewport: "desktop" | "mobile",
+): boolean {
+  if (input.data.removed || input.invalidSelection)
+    return input.views.some(
+      (view) =>
+        view.viewport === viewport &&
+        view.usage?.instances.some((instance) => instance.key === key),
+    );
+  return sessions.some(
+    (session) =>
+      session.identity.viewport === viewport && frameHasInstance(session, key),
+  );
 }
 
 interface PresentationInput {

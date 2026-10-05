@@ -1,8 +1,10 @@
 /** React label presentation for adapter-owned workspace highlights. */
 
+import { branchPoints } from "../catalogue/branch_point.js";
 import { visibleFrameBox } from "../client/component_geometry.js";
 import type { InstanceBoundary } from "../client/frame_adapter.js";
 
+import type { Catalogue } from "./catalogue.js";
 import type { ShellFrameSession } from "./frame_registry.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
@@ -23,6 +25,7 @@ export function workspaceHighlightLabels(
     keys: readonly string[];
     session: ShellFrameSession;
   }[],
+  catalogue: Catalogue,
 ): readonly WorkspaceHighlightLabel[] {
   return measured.flatMap(({ boundaries, keys, session }) => {
     const viewport = session.identity.viewport;
@@ -54,9 +57,10 @@ export function workspaceHighlightLabels(
         top >= visible.bottom
       )
         return [];
-      const component = data.components.find(
-        (item) => item.path === instance.componentId,
-      );
+      const component = branchPoints(catalogue).usageComponent(
+        instance.componentId,
+        data.removed ? "before" : "after",
+      )?.entry;
       return [
         {
           id: JSON.stringify([session.generation, key]),

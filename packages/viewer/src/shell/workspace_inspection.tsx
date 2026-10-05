@@ -28,6 +28,7 @@ import {
   WorkspaceInspectionOverlay,
 } from "./workspace_inspection_labels.js";
 import {
+  canSelectWorkspaceInstance,
   focusWorkspaceHighlightControl,
   inspectionAvailability,
   presentWorkspaceInspection,
@@ -128,11 +129,7 @@ export function useWorkspaceInspection(
     (key: string, viewport: "desktop" | "mobile", openProps = true): void => {
       const state = latest.current;
       if (
-        !state.sessions.some(
-          (session) =>
-            session.identity.viewport === viewport &&
-            frameHasInstance(session, key),
-        )
+        !canSelectWorkspaceInstance(state.input, state.sessions, key, viewport)
       )
         return;
       state.input.onSelect(key, viewport, openProps);
@@ -278,7 +275,11 @@ export function useWorkspaceInspection(
             : [];
         })
       : [];
-  const labels = workspaceHighlightLabels(input.data, measured);
+  const labels = workspaceHighlightLabels(
+    input.data,
+    measured,
+    input.catalogue,
+  );
   return {
     available: availability.available,
     ...(availability.reason ? { reason: availability.reason } : {}),

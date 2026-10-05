@@ -1,5 +1,6 @@
 /** Supplied props and slots for a saved view or selected component instance. */
 
+import { branchPoints } from "../catalogue/branch_point.js";
 import { decodeProps } from "../components/codec.js";
 import type {
   ComponentInstanceRecord,
@@ -11,6 +12,7 @@ import type {
 } from "../components/prop_types.js";
 import { viewHref } from "../navigation/routes.js";
 
+import type { Catalogue } from "./catalogue.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
@@ -36,9 +38,11 @@ export function propText(value: PropValue): string {
 
 /** Read-only prop details used for inspected instances and undeclared fields. */
 export function WorkspaceProps({
+  catalogue,
   data,
   selection,
 }: {
+  catalogue?: Catalogue;
   data: WorkspaceData;
   selection: WorkspaceInspectorSelection;
 }) {
@@ -51,11 +55,13 @@ export function WorkspaceProps({
           : "Select a component instance to see its supplied props."}
       </p>
     );
-  const component = selection.instance
-    ? data.components.find(
-        (item) => item.path === selection.instance?.componentId,
-      )
-    : undefined;
+  const component =
+    selection.instance && catalogue
+      ? branchPoints(catalogue).usageComponent(
+          selection.instance.componentId,
+          data.removed ? "before" : "after",
+        )?.entry
+      : undefined;
   const slots = selection.instance
     ? selection.usage?.slots
         .filter((slot) => slot.instanceKey === selection.instance?.key)

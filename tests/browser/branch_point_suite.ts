@@ -14,13 +14,16 @@ import {
 import { BRANCH_POINT_CHECKS } from "./branch_point_checks.js";
 import { BRANCH_POINT_WIDTHS, serverErrors } from "./branch_point_ui.js";
 
-const CASES: readonly BranchPointCase[] = [
+const CASES = [
   "moved-consumers",
   "moved-parent",
   "moved-variant",
   "case-renames",
   "reused-parent",
-];
+  "removed-screen-usage",
+  "removed-variant-order",
+  "new-parent-variant",
+] as const satisfies readonly BranchPointCase[];
 
 /**
  * Start each case once on `kind`, then check its rendered UI at desktop and
