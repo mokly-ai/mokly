@@ -3,9 +3,10 @@
 ## Delivery Status And Boundary
 
 The installed `mokly publish` implements this Plan → Blobs → Complete exchange.
-The [CLI and manifest contract](./mokly-upload.md) owns repository metadata; the
-[ownership contract](./mokly-export-ownership.md) owns the content address
-list. This document owns all exchange and receiver behavior.
+The [CLI and manifest contract](./mokly-upload.md) owns repository metadata and
+the publication rule; the [ownership contract](./mokly-export-ownership.md)
+owns the content address list. This document owns exchange and receiver
+behavior.
 
 ## Upload Exchange
 
@@ -71,17 +72,14 @@ URLs are Mokly Cloud's; receiver paths are otherwise opaque to the CLI:
 
 At Plan time the receiver verifies and stores the manifest and optional review
 after matching their marker digests and sizes. It never lists those digests in
-`missing`. If a publication already exists for this `headSha` and `configPath`,
-it answers `missing: []`; Complete then resolves the keep-first result below.
-
-[The plan fixture](./fixtures/upload-plan-v1.json) has root fixture
-`schemaVersion: 1`, `endpoint`, marker digests and independent Plan/Complete
-`cases`. Cases have unique `name`, `valid`, `step` (`plan` by default), optional
-`status` (default 200), optional `contentType` (default `application/json`; null
-means absent), and `document` or raw `body`. Complete cases add `outcome`
-(`published`, `already-published`, `replan`, `retry`, or an error category) and
-normalized `viewerUrl` or null; invalid Plan cases are `upload-failed`. It
-covers every field, content-type, status, URL and placeholder boundary here.
+`missing`. A Plan or Complete joins an existing publication only when both have
+the same `uncommittedChanges` value, under the
+[publication rule](./mokly-upload.md#publication-rule). Only a clean upload
+joins: when a clean publication already exists for its `headSha` and
+`configPath`, the receiver answers `missing: []`, and Complete returns that
+publication. A dirty upload never joins, so its `missing` depends only on the
+content already stored. The [public fixtures](./mokly-upload-validation.md#public-fixtures)
+cover every boundary in this exchange.
 
 ### Blobs
 
@@ -119,13 +117,17 @@ that upload returns the same status and body and never creates another
 publication. A lost `201` response can therefore be retried without changing
 the publication or turning it into `200`.
 
-`201` means this upload created the first publication for its `headSha` and
-`configPath`. `200` means a different upload already completed that identity;
-the receiver keeps and returns that first publication unchanged. For
-overlapping uploads, the one that completes first receives `201`; the other
-receives `200`. The receiver resolves this before checking stored digests, so
-an upload of an already published identity completes with `200` even when it
-sent no blobs. Any other 2xx is `upload-failed`.
+`201` means this upload created the publication: for a clean upload, the first
+clean publication for its `headSha` and `configPath`; for a dirty upload, a new
+publication that claims no key. `200` means a different upload already completed
+that identity; the receiver keeps and returns that first clean publication
+unchanged. Only a clean upload can receive `200`; the CLI reports `200` for a
+dirty upload as `upload-failed`. For overlapping clean uploads, the one that
+completes first receives `201`; the other receives `200`. Overlapping dirty
+uploads each receive `201`. The receiver resolves a clean upload's identity
+before checking stored digests, so a clean upload of an already published
+identity completes with `200` even when it sent no blobs. Any other 2xx is
+`upload-failed`.
 
 Success does not depend on its optional
 `{ "id", "projectId", "state", "catalogueUrl", "viewerUrl" }` body. Use
@@ -194,7 +196,9 @@ Published Mokly catalogue. 2 files uploaded, <unchanged> unchanged.
 ```
 
 Zero and every value other than one use `files`. `unchanged` is not followed
-by a noun and does not pluralize. A `200` completion replaces the counted line
+by a noun and does not pluralize. A dirty upload adds the line
+`This publication includes uncommitted changes.` after the counted summary and
+before the viewer URL. A `200` completion replaces the counted line
 with `Mokly catalogue already published for this commit.` and may print the
 kept publication's viewer URL. Rich mode uses the same wording after its
 success glyph and before its duration.

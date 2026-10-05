@@ -5,13 +5,15 @@ export interface UploadRepository {
   name: string;
 }
 
-/** Upload envelope v1, documented independently of internal module paths. */
+/** Upload envelope v2, documented independently of internal module paths. */
 export interface UploadManifest {
-  schemaVersion: 1;
+  schemaVersion: 2;
   moklyVersion: string;
   repository: UploadRepository;
   branch: string;
   headSha: string;
+  /** Whether Git reported a change outside Mokly's working paths. */
+  uncommittedChanges: boolean;
   baseRef: string | null;
   baseSha: string | null;
   pullRequest: number | null;
@@ -33,6 +35,12 @@ export interface UploadIdentity {
 export interface UploadOptions {
   endpoint: string;
   token: string;
+}
+
+/** Complete request options, including the uploaded manifest's state. */
+export interface CompleteOptions extends UploadOptions {
+  /** A dirty upload never joins an earlier publication. */
+  uncommittedChanges?: boolean;
 }
 
 /** Validated response from the upload plan request. */
@@ -69,4 +77,6 @@ export interface PublishResult {
   uploaded: number;
   unchanged: number;
   viewerUrl: string | null;
+  /** The uploaded manifest's working-tree state. */
+  uncommittedChanges: boolean;
 }

@@ -184,17 +184,29 @@ Completion summaries are:
   ✔ Mokly catalogue already published for this commit (2.1s)
 ```
 
+A dirty publication renders its counted summary, then the unstyled line:
+
+```text
+  ✔ Published Mokly catalogue · 12 files uploaded, 266 unchanged (9.3s)
+This publication includes uncommitted changes.
+```
+
 Export follows its summary with the unstyled guidance
 `Deploy this directory at your site's root with your hosting provider.`
-Publish follows its summary with the receiver's viewer URL on its own unstyled
-line when the completion response supplied an accepted URL, and adds nothing
-otherwise. Omit that line when the normalized URL contains the bearer token or
-its `encodeURIComponent` form. The counted summary uses `file` only for one
-uploaded marker entry; zero and every other count use `files`. `unchanged` has
-no following noun. The exchange contract defines which digests count across
-Plan files, Blob attempts and re-plans. The already-published summary replaces
-the counted one only when Complete returns `200`, meaning a different upload
-kept the first publication for the same commit and config path.
+When the uploaded manifest has
+[`uncommittedChanges: true`](./mokly-upload.md#uncommitted-changes), publish
+follows its counted summary with the unstyled line
+`This publication includes uncommitted changes.` in both modes. A clean
+publication adds no line. Publish then writes the receiver's viewer URL on its
+own unstyled line when the completion response supplied an accepted URL, and
+adds nothing otherwise. Omit that line when the normalized URL contains the
+bearer token or its `encodeURIComponent` form. The counted summary uses `file`
+only for one uploaded marker entry; zero and every other count use `files`.
+`unchanged` has no following noun. The exchange contract defines which digests
+count across Plan files, Blob attempts and re-plans. The already-published
+summary replaces the counted one only when Complete returns `200` for a clean
+upload, meaning a different upload kept the first clean publication for the
+same commit and config path.
 
 ## Plain Compatibility And Errors
 

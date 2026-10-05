@@ -89,3 +89,52 @@ test("invalid metadata prevents capture and upload", async () => {
   );
   assert.equal(fixture.uploaded(), false);
 });
+
+test("a dirty checkout is written into the manifest and the result", async () => {
+  const fixture = dependencies(false, () => " M tracked.txt\0");
+  const result = await publishCatalogue(
+    config,
+    options,
+    "1.2.3",
+    {},
+    fixture.boundaries,
+  );
+  assert.equal(result.uncommittedChanges, true);
+  assert.equal(fixture.metadata()?.["uncommittedChanges"], true);
+  assert.equal(fixture.metadata()?.["schemaVersion"], 2);
+});
+
+test("a state change during export fails before Plan in both directions", async () => {
+  for (const [before, after] of [
+    ["", "?? docs/draft.md\0"],
+    ["?? docs/draft.md\0", ""],
+  ] as const) {
+    let reads = 0;
+    const fixture = dependencies(false, () => (reads++ === 0 ? before : after));
+    await assert.rejects(
+      publishCatalogue(config, options, "1.2.3", {}, fixture.boundaries),
+      /\[mokly\/git-failed\] Uncommitted changes appeared or disappeared during export\. Commit or ignore files that builds write, then publish again\./u,
+    );
+    assert.equal(reads, 2);
+    assert.equal(fixture.planArchive(), undefined);
+    assert.equal(fixture.uploaded(), false);
+  }
+});
+
+test("Mokly's own output never makes the recheck differ", async () => {
+  let reads = 0;
+  const fixture = dependencies(false, () =>
+    reads++ === 0
+      ? ""
+      : "?? tools/.context/mokly-publish/index.html\0?? tools/.context/.mokly-export-reservations/.owner\0?? .mokly-cache/locks/a\0",
+  );
+  const result = await publishCatalogue(
+    config,
+    options,
+    "1.2.3",
+    {},
+    fixture.boundaries,
+  );
+  assert.equal(result.uncommittedChanges, false);
+  assert.equal(reads, 2);
+});

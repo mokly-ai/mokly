@@ -14,6 +14,10 @@ export const comparisonPath = `__mokly/diffs/__generations/${"c".repeat(64)}/rev
 
 export const config = {
   configPath: "/repo/tools/mokly.config.ts",
+  generatedOutput: "committed",
+  mockupsDir: "/repo/tools/mockups",
+  repoRoot: "/repo",
+  review: { outDir: "/repo/tools/.context/mokly-review" },
 } as ResolvedConfig;
 
 export const options = {
@@ -22,7 +26,7 @@ export const options = {
   repository: "github.com/team/catalogue",
 };
 
-export function dependencies(duplicate = false) {
+export function dependencies(duplicate = false, status = () => "") {
   let uploaded = false;
   let metadata: Record<string, unknown> | undefined;
   let planArchive: Map<string, Buffer> | undefined;
@@ -34,7 +38,9 @@ export function dependencies(duplicate = false) {
           ? "feature"
           : args.includes("--show-toplevel")
             ? "/repo"
-            : head,
+            : args.includes("status")
+              ? status()
+              : head,
     },
     now: () => new Date("2026-09-26T12:00:00.000Z"),
     random: () => 0,

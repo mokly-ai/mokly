@@ -121,7 +121,7 @@ test("receiver inventory checks reject missing, unlisted and duplicate archive m
 
 test("the ownership builder hashes exact bytes and sorts entry paths", () => {
   const files = new Map([
-    ["mokly-upload.json", Buffer.from('{"schemaVersion":1}\n')],
+    ["mokly-upload.json", Buffer.from('{"schemaVersion":2}\n')],
     ["index.html", Buffer.from("Home 🌍\n")],
     ["404.html", Buffer.from([0, 1, 2, 255])],
   ]);

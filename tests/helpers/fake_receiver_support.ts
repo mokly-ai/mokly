@@ -36,7 +36,7 @@ export interface FakeReceiverPlan extends ValidatedFakePlan {
   missing: string[];
 }
 
-/** First publication retained for one commit and config path. */
+/** One completed publication; only a clean one holds its commit key. */
 export interface FakeReceiverPublication {
   body: Readonly<Record<string, string>>;
   manifest: UploadManifest;
@@ -155,9 +155,37 @@ export function expired(upload: FakeUpload): boolean {
   return Date.now() >= Date.parse(upload.expiresAt);
 }
 
-/** Build the keep-first identity within this fake receiver's project. */
+/** Build the clean keep-first identity within this fake receiver's project. */
 export function publicationKey(manifest: UploadManifest): string {
   return `${manifest.headSha}\0${manifest.configPath}`;
+}
+
+/** Store archived Plan files, then answer `missing` under the join rule. */
+export function planMissing(
+  validated: ValidatedFakePlan,
+  blobs: Map<string, Buffer>,
+  publications: ReadonlyMap<string, FakeReceiverPublication>,
+): string[] {
+  for (const [name, bytes] of validated.files) {
+    const entry = validated.ownership.files.find(
+      (candidate) => candidate.path === name,
+    );
+    if (entry) blobs.set(entry.sha256, bytes);
+  }
+  if (joinedPublication(validated.manifest, publications)) return [];
+  return [...validated.entriesByDigest.keys()]
+    .filter((digest) => !blobs.has(digest))
+    .sort();
+}
+
+/** Return the kept clean publication that a clean upload joins, if any. */
+export function joinedPublication(
+  manifest: UploadManifest,
+  publications: ReadonlyMap<string, FakeReceiverPublication>,
+): FakeReceiverPublication | undefined {
+  return manifest.uncommittedChanges
+    ? undefined
+    : publications.get(publicationKey(manifest));
 }
 
 /** Read the exact request bytes retained for validation and logging. */

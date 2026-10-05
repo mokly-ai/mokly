@@ -60,6 +60,29 @@ detection:
 npx mokly publish --no-changes --repository git.example.com/team/project
 ```
 
+## Uncommitted changes
+
+Publish records whether your checkout matches its commit. Before the export it
+asks Git for every change in the repository: modified, staged, deleted and
+renamed files, merge conflicts, submodule changes, and untracked files that Git
+does not ignore. Your Git settings cannot hide untracked files or submodule
+changes from this check. Files that Git ignores never count, and neither do the
+files Mokly writes for itself: the export folder and the reservation folder
+beside it, `.mokly-cache/`, the `review.outDir` folder, Mokly's temporary
+folders and, for a derived catalogue, the generated files that Mokly owns.
+
+The upload states the result, and a publication with uncommitted changes adds
+the line `This publication includes uncommitted changes.` to the result. A
+service keeps one clean publication for each commit and config path. A
+publication with uncommitted changes never replaces it, so a later clean
+publish of that commit becomes its publication.
+
+If the checkout gains or loses uncommitted changes while the export runs,
+publish stops before it uploads anything and prints
+`[mokly/git-failed] Uncommitted changes appeared or disappeared during export. Commit or ignore files that builds write, then publish again.`
+A committed catalogue whose generated files are out of date causes this,
+because the export rewrites them: run `mokly build` and commit the result.
+
 ## What is uploaded
 
 The export's `mokly-upload.json`, its ownership marker and, with comparisons,
@@ -93,11 +116,12 @@ frame and advances all entries sharing each completed digest. It reads
 `Uploading 0 of 1 file · <size>` for one file and uses `files` otherwise. A
 re-plan restarts the round label; an empty missing set shows no progress label.
 
-A service keeps the first publication it completed for a commit and config
-path. Publishing that commit again prints
+A service keeps the first clean publication it completed for a commit and
+config path. Publishing that commit again from a clean checkout prints
 `Mokly catalogue already published for this commit.` with the existing
-catalogue's address, and uncommitted changes in the working tree are not a
-way to replace a published commit.
+catalogue's address. A publication with uncommitted changes is always a new
+publication: it prints the counted line, then
+`This publication includes uncommitted changes.`, then the address.
 
 A failed publish leaves the complete local export in place for you to inspect,
 and running it again resumes from whatever the service already stored.

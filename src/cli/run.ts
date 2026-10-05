@@ -63,6 +63,7 @@ async function execute(
       arguments_.token ?? environment.env.MOKLY_TOKEN,
     );
     reporter.summary(output.plain, output.rich, environment.now() - startedAt);
+    if (output.note) reporter.write(`${output.note}\n`);
     if (output.viewerUrl) reporter.write(`${output.viewerUrl}\n`);
     return 0;
   }

@@ -115,3 +115,26 @@ test("Complete retries temporary statuses", async () => {
   assert.equal(calls, 2);
   assert.deepEqual(result, { outcome: "published", viewerUrl: null });
 });
+
+test("Complete never reports a dirty upload as already published", async () => {
+  const dirty = (response: Response) =>
+    completeUpload(
+      plan,
+      { ...options, uncommittedChanges: true },
+      { ...retryDependencies, fetch: async () => response },
+    );
+  assert.deepEqual(
+    await dirty(
+      Response.json({ viewerUrl: "https://mokly.ai/dirty" }, { status: 201 }),
+    ),
+    { outcome: "published", viewerUrl: "https://mokly.ai/dirty" },
+  );
+  await assert.rejects(
+    dirty(Response.json({ viewerUrl: "https://mokly.ai/clean" })),
+    (error: unknown) => {
+      assert.equal((error as { code?: string }).code, "upload-failed");
+      assert.match(String(error), /earlier publication instead of these/u);
+      return true;
+    },
+  );
+});

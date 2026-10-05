@@ -1,4 +1,9 @@
-import { publishCancelled, statusError, uploadFailed } from "./errors.js";
+import {
+  dirtyUploadJoined,
+  publishCancelled,
+  statusError,
+  uploadFailed,
+} from "./errors.js";
 import {
   cancelResponse,
   readBoundedBody,
@@ -8,13 +13,13 @@ import {
 } from "./http.js";
 import type { UploadRequestDependencies } from "./plan.js";
 import { ReplanRequired, retryRequest } from "./retry.js";
-import type { PlanResponse, PublishResult, UploadOptions } from "./types.js";
+import type { CompleteOptions, PlanResponse, PublishResult } from "./types.js";
 import { isRecord } from "./validation.js";
 
 /** Complete one upload plan, retrying safe failures until its expiry. */
 export async function completeUpload(
   plan: PlanResponse,
-  options: UploadOptions,
+  options: CompleteOptions,
   dependencies: UploadRequestDependencies,
   signal?: AbortSignal,
 ): Promise<Pick<PublishResult, "outcome" | "viewerUrl">> {
@@ -48,6 +53,10 @@ export async function completeUpload(
             await cancelResponse(response);
             if (response.ok) throw uploadFailed();
             throw statusError(response.status);
+          }
+          if (response.status === 200 && options.uncommittedChanges) {
+            await cancelResponse(response);
+            throw dirtyUploadJoined();
           }
           return {
             outcome:

@@ -31,7 +31,9 @@ redaction, and controls the exit code.
 
 Publish updates the active rich upload phase as missing blobs complete, then
 renders its counted or already-published `PublishResult`. Plain mode emits only
-the stable result line and optional credential-safe viewer URL. One terminal
+the stable result line, `This publication includes uncommitted changes.` for a
+dirty publication, and the optional credential-safe viewer URL; rich mode writes
+the same unstyled line after its summary. One terminal
 count formatter owns singular and plural nouns for publish and Serve output.
 Every in-place TTY frame erases the full current line before drawing, so shorter
 progress labels and re-plan resets cannot retain stale characters.

@@ -12,11 +12,12 @@ const digestA = "1".repeat(64);
 const digestB = "2".repeat(64);
 const endpoint = "https://api.example.com/plan?project=team";
 const manifest: UploadManifest = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   moklyVersion: "1.2.3",
   repository: { host: "example.com", owner: "team", name: "catalogue" },
   branch: "main",
   headSha: "a".repeat(40),
+  uncommittedChanges: false,
   baseRef: "origin/main",
   baseSha: "b".repeat(40),
   pullRequest: null,

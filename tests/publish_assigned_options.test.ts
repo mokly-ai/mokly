@@ -51,6 +51,7 @@ test("publish sends assigned leading-dash credentials and paths, preserving secr
   assert.equal(
     stdout,
     `Published Mokly catalogue. ${uploaded} ${uploaded === 1 ? "file" : "files"} uploaded, ${ownership.files.length - uploaded} unchanged.\n` +
+      "This publication includes uncommitted changes.\n" +
       `${receiver.origin}/catalogues/publication-1/view\n`,
   );
   assert.equal((stdout + stderr).includes(token), false);

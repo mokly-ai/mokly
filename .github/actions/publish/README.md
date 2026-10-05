@@ -60,6 +60,14 @@ the source branch. With the default checkout merge ref it instead identifies
 GitHub's synthetic merge commit. Publish detects branch and PR number from the
 Actions environment. Other CI systems can invoke the npm CLI directly.
 
+Publish also reports whether the checkout has uncommitted changes. Build steps
+that leave untracked files which Git does not ignore, for example output that a
+build writes into the repository, mark the publication as having uncommitted
+changes. Such a publication never becomes the publication of its commit, and
+its result adds the line `This publication includes uncommitted changes.` Add
+those files to `.gitignore` to prevent this. The action installs Mokly outside
+the checkout, and files that Mokly writes for itself never count.
+
 ## Inputs
 
 | Input        | Required | Behavior                                                                      |

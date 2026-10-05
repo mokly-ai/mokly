@@ -14,7 +14,7 @@ export async function checkUploadPlanFixtures(packageRoot) {
       "utf8",
     ),
   );
-  assert.equal(fixture.schemaVersion, 1);
+  assert.equal(fixture.schemaVersion, 2);
   assert.equal(
     new Set(fixture.cases.map(({ name }) => name)).size,
     fixture.cases.length,
@@ -85,6 +85,8 @@ function completeOutcome(sample) {
   ]).get(status);
   if (status !== 200 && status !== 201)
     return { outcome: category ?? "upload-failed", viewerUrl: null };
+  if (status === 200 && sample.uncommittedChanges === true)
+    return { outcome: "upload-failed", viewerUrl: null };
   return {
     outcome: status === 201 ? "published" : "already-published",
     viewerUrl: viewerUrl(sample),

@@ -9,12 +9,17 @@ uses the content-addressed Plan → Blobs → Complete exchange over a schema 2
 ownership marker.
 
 `run.ts` composes injected Git, export, HTTP and time boundaries. It pins the
-actual checkout HEAD, adds an owned manifest through the exporter, captures its
-finalized bytes before installation and rechecks HEAD. `snapshot.ts` validates
-that finalized map and indexes its blobs; `exchange.ts` owns Plan → Blobs →
-Complete and the single re-plan. HTTP failure leaves the complete local export
-intact. Capture failure happens before installation and retains the previous
-export through the normal transaction.
+actual checkout HEAD and its uncommitted-changes state, adds an owned schema 2
+manifest through the exporter, captures its finalized bytes before installation
+and rechecks both HEAD and that state before Plan. `working_tree.ts` runs the
+fixed-argument `git status --porcelain=v1 -z` command, parses its records and
+ignores Mokly's working paths: this run's export and reservation folders,
+`.mokly-cache/`, `review.outDir`, temporary `.mokly-write-*`/`.mokly-review-*`
+folders and, in derived mode, generated files that the build's ownership proof
+claims. `snapshot.ts` validates that finalized map and indexes its blobs;
+`exchange.ts` owns Plan → Blobs → Complete and the single re-plan. HTTP failure
+leaves the complete local export intact. Capture failure happens before
+installation and retains the previous export through the normal transaction.
 Changes-enabled exports already contain removed-page metadata and its complete
 historical resource closure under the comparison generation. Because publishing
 uses the finalized export map rather than walking the output directory, those
@@ -28,7 +33,11 @@ it neither rebundles the controller nor duplicates the review parser.
 
 `metadata.ts` handles repository remotes and Actions context. `manifest.ts` and
 `validation.ts` define the upload envelope and same-endpoint HTTP(S) URL
-invariants. `plan.ts` selects only the manifest, marker and optional review for
+invariants; the manifest validator checks `schemaVersion: 2` before the exact
+fields, including the boolean `uncommittedChanges`. `complete.ts` rejects a
+`200` answer for a dirty upload because only clean uploads join an earlier
+publication, and the CLI prints one extra result line for a dirty publication.
+`plan.ts` selects only the manifest, marker and optional review for
 `bundle.ts`; `blobs.ts` owns bounded concurrency, `complete.ts` owns completion,
 and `retry.ts` owns retries and expiry through exported schedule constants that
 keep guide conformance tests aligned. `accounting.ts` is the sole owner of
@@ -61,7 +70,7 @@ from causes, aggregate members, messages or a later command signal.
 
 ```bash
 npm run build
-node --import tsx --test --test-concurrency=2 tests/publish*.test.ts tests/export_current.test.ts
+node --import tsx --test --test-concurrency=2 tests/publish*.test.ts tests/upload_*_contract.test.ts tests/fake_receiver*.test.ts tests/export_current.test.ts
 npm run package:smoke
 ```
 

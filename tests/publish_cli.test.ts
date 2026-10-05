@@ -173,7 +173,8 @@ test("publish POSTs gzip using environment credentials and keeps a replaceable o
     assert.ok(entry, archivedPath);
     assert.equal(receiver.plans[0]!.missing.includes(entry.sha256), false);
   }
-  assert.equal(manifest.schemaVersion, 1);
+  assert.equal(manifest.schemaVersion, 2);
+  assert.equal(manifest.uncommittedChanges, false);
   assert.equal(manifest.branch, "feature/screens");
   assert.equal(manifest.pullRequest, 42);
   assert.equal(manifest.configPath, "mokly.config.ts");

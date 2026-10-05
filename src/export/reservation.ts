@@ -11,14 +11,20 @@ export const RESERVATION_DIRECTORY = ".mokly-export-reservations";
 const OWNER = ".owner";
 const OWNER_CONTENT = "mokly-export-reservations-v1\n";
 
+/** Owned reservation namespace beside an output's real location. */
+export function reservationNamespace(output: string): string {
+  return path.join(
+    path.dirname(projectRealPath(output)),
+    RESERVATION_DIRECTORY,
+  );
+}
+
 /** Preserve native filename equivalence instead of hashing caller spelling. */
 export function reservationPath(output: string): string {
-  const real = projectRealPath(output);
   return path.join(
-    path.dirname(real),
-    RESERVATION_DIRECTORY,
+    reservationNamespace(output),
     "locks",
-    path.basename(real),
+    path.basename(projectRealPath(output)),
   );
 }
 

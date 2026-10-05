@@ -38,12 +38,14 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
 - [Repository verification ratchets](./verification-ratchets.md)
-- [Catalogue upload v1](./mokly-upload.md) — public CLI, repository identity,
-  upload manifest, output entry point and composite action boundary.
+- [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity,
+  uncommitted-changes state, upload manifest, publication rule, output entry
+  point and composite action boundary.
 - [Catalogue upload exchange v1](./mokly-upload-exchange.md) — Plan, Blob and
   Complete requests, retries, expiry, and accounting.
 - [Catalogue upload validation v1](./mokly-upload-validation.md) — rejection
-  categories, limits, and independent receiver validation.
+  categories, limits, independent receiver validation, and the manifest and
+  plan fixtures.
 - [Root discovery and ownership](./mokly-root-discovery.md)
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,

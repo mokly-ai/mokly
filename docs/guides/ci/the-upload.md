@@ -63,20 +63,24 @@ Content-Length: 0
 `201` means this upload created the publication. Repeating Complete for that
 upload returns its first status and body and never publishes again. `200` means
 a different upload already completed this revision and config path, so the
-service kept and returned the first publication; publish then prints
-`Mokly catalogue already published for this commit.` instead of counts. Any
-other `2xx` fails. When the JSON answer carries an accepted absolute
-`viewerUrl`, publish prints it after success. `409` means the service still
+service kept and returned that first clean publication; publish then prints
+`Mokly catalogue already published for this commit.` instead of counts. Only a
+clean upload can join an earlier publication: an upload with uncommitted
+changes always creates its own publication, and publish fails if the service
+answers it with `200`. Any other `2xx` fails. When the JSON answer carries an
+accepted absolute `viewerUrl`, publish prints it after success. `409` means the service still
 lacks files and `410` means expiry: publish plans once more, uploads what comes
 back, and completes again; a second `409` or `410` fails.
 
 ## What the manifest says
 
 `mokly-upload.json` names the Mokly version, the repository, the branch, the
-head revision, the base ref and pinned base revision, the pull request number
-when the job is running on one, the config path and the time the export
+head revision, whether the checkout had uncommitted changes
+(`uncommittedChanges`), the base ref and pinned base revision, the pull request
+number when the job is running on one, the config path and the time the export
 finished. Without comparisons, `baseRef`, `baseSha` and `comparisonPath` are
-all `null`. Receivers must reject missing or extra manifest fields.
+all `null`. Receivers accept only manifest `schemaVersion` 2 and must reject
+missing or extra manifest fields.
 
 The source manifest the build writes is deliberately not part of the export:
 it holds your source inventory and is not a public artifact.
@@ -93,9 +97,12 @@ content received for an unfinished or expired upload. Each stored Blob must
 match its declared digest and size. An integer declared size above 64 MiB or a
 path above 1,024 UTF-8 bytes receives `413`; malformed values and path grammar
 receive `400` or `422`. The service commits only when every listed digest is
-present and answers `409` until then. It keeps the first publication completed
-for a revision and config path. Before exposure, it checks that the credential
-is allowed to publish for the repository named by the manifest.
+present and answers `409` until then. It keeps the first clean publication
+completed for a revision and config path. A publication with uncommitted
+changes never claims or replaces it, and a later clean publication of that
+revision becomes its publication even when publications with uncommitted
+changes exist. Before exposure, it checks that the credential is allowed to
+publish for the repository named by the manifest.
 
 Receivers accept only regular files. They reject symlinks, hard links,
 devices, FIFOs, sparse files and other special entries in the plan archive,

@@ -11,14 +11,17 @@ export async function fakePlanArchive(
     manifestVersion?: number;
     markerSize?: number;
     markerVersion?: number;
+    pageText?: string;
+    uncommittedChanges?: boolean;
   } = {},
 ) {
   const manifest: UploadManifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     moklyVersion: "1.2.3",
     repository: { host: "github.com", owner: "sample", name: "catalogue" },
     branch: "main",
     headSha: "a".repeat(40),
+    uncommittedChanges: options.uncommittedChanges ?? false,
     baseRef: null,
     baseSha: null,
     pullRequest: null,
@@ -28,10 +31,10 @@ export async function fakePlanArchive(
   };
   const manifestBytes = Buffer.from(
     options.manifestText ??
-      `${JSON.stringify({ ...manifest, schemaVersion: options.manifestVersion ?? 1 })}\n`,
+      `${JSON.stringify({ ...manifest, schemaVersion: options.manifestVersion ?? 2 })}\n`,
   );
   const files = new Map<string, Buffer>([
-    ["index.html", Buffer.from("home")],
+    ["index.html", Buffer.from(options.pageText ?? "home")],
     ["404.html", Buffer.from("missing")],
     ["mokly-upload.json", manifestBytes],
   ]);

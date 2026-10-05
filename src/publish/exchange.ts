@@ -77,13 +77,14 @@ export async function exchangeUpload(
         },
         (digest) => accounting.blobAttemptStarted(digest),
       );
+      const uncommittedChanges = snapshot.manifest.uncommittedChanges;
       const completion = await completeUpload(
         plan,
-        options,
+        { ...options, uncommittedChanges },
         dependencies,
         signal,
       );
-      return { ...completion, ...accounting.result() };
+      return { ...completion, ...accounting.result(), uncommittedChanges };
     } catch (error) {
       if (!(error instanceof ReplanRequired)) throw error;
       if (replanned) throw uploadFailed();

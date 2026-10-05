@@ -149,3 +149,18 @@ export async function initializeDerivedGit(root, generatedRoot) {
   );
   await initializeGit(root);
 }
+
+/** Commit the smoke's authored files and ignore its earlier export folder. */
+export async function commitSmokeEdits(root) {
+  await fs.promises.appendFile(path.join(root, ".gitignore"), "published/\n");
+  await runCommand(
+    "git",
+    ["add", ".gitignore", "entries", "verify-viewer.mjs"],
+    {
+      cwd: root,
+    },
+  );
+  await runCommand("git", ["commit", "-qm", "test: commit smoke edits"], {
+    cwd: root,
+  });
+}

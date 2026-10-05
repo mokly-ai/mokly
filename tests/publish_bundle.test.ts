@@ -10,7 +10,7 @@ import { bundleUpload, UPLOAD_LIMITS } from "../dist/publish/bundle.js";
 
 test("plan archive preserves binary bytes, Unicode and long paths without an enclosing directory", async () => {
   const files = new Map([
-    ["mokly-upload.json", Buffer.from('{"schemaVersion":1}\n')],
+    ["mokly-upload.json", Buffer.from('{"schemaVersion":2}\n')],
     ["index.html", Buffer.from("<html>catalogue</html>")],
     [
       `static/${"long-directory/".repeat(20)}café.bin`,

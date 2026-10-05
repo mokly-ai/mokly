@@ -112,16 +112,18 @@ test("fake receiver returns contract statuses for versions, expiry and missing b
     (await fakePlanRequest(receiver.endpoint, oldMarker.archive, token)).status,
     426,
   );
-  const newerEnvelope = await fakePlanArchive({ manifestVersion: 2 });
-  assert.equal(
-    (await fakePlanRequest(receiver.endpoint, newerEnvelope.archive, token))
-      .status,
-    426,
-  );
+  for (const manifestVersion of [1, 3]) {
+    const otherEnvelope = await fakePlanArchive({ manifestVersion });
+    assert.equal(
+      (await fakePlanRequest(receiver.endpoint, otherEnvelope.archive, token))
+        .status,
+      426,
+    );
+  }
   const duplicateManifest = await fakePlanArchive({
     manifestText: JSON.stringify(fixture.manifest).replace(
       /^\{/u,
-      '{"schemaVersion":1,',
+      '{"schemaVersion":2,',
     ),
   });
   assert.equal(
