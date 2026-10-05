@@ -2620,6 +2620,179 @@ result, although the example has only about 30 authored files. The
 recommendation is to decide each file once per compile and reuse the result,
 in the same module as the shared list builder that finding 14 recommends.
 
+## Milestone 19: Define the review-fix contracts
+
+Documentation only. On 2026-10-05 the user chose an option for each open
+finding below. This milestone records the decisions, defines the exact
+behaviour, messages and tests for Milestones 20–24 in the affected contracts,
+guides and READMEs, and fixes the documentation-only findings.
+
+### Decisions
+
+- **35 A:** Serve keeps the asset closure. One shared closure builder serves
+  build, on-demand rendering, the watcher, Serve, export and publication. On
+  demand it adds and walks authored link targets but stops at generated pages,
+  so earlier finding 7 does not return. Serve replaces its list only with a
+  checked result from that builder.
+- **14 B with 66 A:** renderer-declared resources pass the shared builder's
+  checks. Because 35 is A, Serve also reads each listed file without following
+  symbolic links and re-checks it when it reads it. One module decides once per
+  compile whether each authored file may be public, and every caller reuses
+  that decision.
+- **5 A:** build and export allow a referenced authored file unless it is a
+  Mokly input or inside a protected location. A file extension or a
+  build-folder name alone no longer makes a referenced file private.
+- **37 A:** restore `main`'s error "A consumer package root must not equal
+  mockupsDir; choose a separate public output directory.", its contract
+  sentence and its test.
+- **49 A:** remove the name-based skip of folders called `mokly-generated`;
+  keep the path check for the real output folder.
+- **61 B:** add no upgrade handling. Export refusals name the destination folder
+  and, where they exist, the unexpected files.
+- **56 B:** `parseStaticDelivery` classifies input as valid, unsupported-version
+  or invalid and never throws. Only browser boundary readers throw; export
+  restores its typed `export-invalid` error and the strict test.
+- **40 B and 9 B:** one watch-setup module serves Serve and `build --watch`:
+  source list, PostCSS scan folders, referenced-file watching and
+  classification. Edits saved during the first build are not lost, and
+  `serve --build` rewrites the manifest when a stylesheet reload changes the
+  closure.
+- **41 B:** Ctrl+C cancels the output-lock wait and the running compile in
+  `build --watch`; Ctrl+C during the first build writes nothing.
+- **50 B:** one summary helper for every writing command, with a `"."`
+  fallback; the terminal contract documents `serve --build` and `build --watch`.
+- **18 A:** in plain mode, the baseline rebuild notes and the earlier-version
+  line go to stdout. Successful plain commands write nothing to stderr.
+- **16 B:** `check` asks Git directly whether it is inside a work tree, never
+  matches message text, and reports a typed error when `git` is missing.
+- **51 A:** `check` suggestions use Git's real path when it differs from the
+  configured path.
+- **39 B:** one inventory reader per comparison side (base: `generatedFiles`
+  and `assetClosure`; head: the in-memory output and its closure) decides
+  "absent" versus "invalid" for every comparison reader.
+- **54 A:** restore targeted base reads for catalogues without components.
+- **55 A:** also remove the base's generated folder from Git's changed paths.
+- **59 A:** lock acquisition recreates a removed cache entry folder and retries
+  a bounded number of times.
+- **60 A:** moved-root discovery ignores earlier-version matches when exactly one
+  v8 match exists.
+- **48 A:** add tests for a SHA-256 repository, binary assets read from Git, and
+  Serve's earlier-version line (printed once, cleared when the base moves).
+- **58 A:** post-render edits report their text patches; style ownership
+  offsets move through one shared offset map instead of `<style>` counting.
+- **62 A:** remove the `dependencies` branch in `src/catalogue/projection.ts`,
+  its test case and the README sentence.
+- **10 B:** one shared "delivered document matches route" helper serves every
+  same-origin comparison and accepts the extensionless form.
+- **25 B:** decode the frame path once, test double-encoded paths, and make the
+  contract require only the checks the adapters can make.
+- **57 B:** remove the shared browser baseline setup and return both export
+  fixtures to the committed-output helper. Keep the cold-rebuild test and the
+  real `preview:build` test.
+- **63 B:** delete the dead code and stale references; add an unused-member
+  check with a ratchet like the existing internal-export check, and a test that
+  every exact file path in the ESLint configuration exists.
+- **65 A:** fix the listed tests and plan rows.
+- **42 B:** correct the release notes, and commit generated public API reports
+  for `@mokly/mokly` and `@mokly/viewer`. CI fails when a report changes
+  without a release-note change.
+- **45 A, 46 A and 64 A:** fix each listed documentation line, and rewrite
+  history wording in protocol documents as current contracts.
+- **3 B:** the squash-merge message carries `!` and `BREAKING CHANGE:` footers.
+  Mokly does not cache the earlier-version result.
+
+Findings 17 (rules 1 and 3; rule 2 is 37 A) and 52 await the user's decision.
+Do not change them. Approved changes to `main` behaviour: 18 A moves plain
+notices from stderr to stdout, and 5 A stops export from rejecting referenced
+authored files by extension or build-folder name alone. 37 A, 54 A and 57 B
+restore `main`'s behaviour.
+
+- [ ] Define the exact behaviour, messages and tests for every decision above
+      in the affected protocol documents, guides and READMEs.
+- [ ] Fix the documentation-only findings 45, 46 and 64, and the release-note
+      text of finding 42.
+- [ ] Write the squash-merge message text with `!` and `BREAKING CHANGE:`
+      footers into this milestone, for the PR description (3 B).
+- [ ] Run `npm run format:check` and the documentation tests; review the diff;
+      commit with Conventional Commits; push.
+
+## Milestone 20: One public-file policy
+
+Implements 35 A, 14 B, 66 A, 5 A, 37 A, 49 A, 61 B and 56 B.
+
+- [ ] One module decides once per compile whether each authored file may be
+      public. Build, rendering, the link walk, Serve, export and publication
+      use it.
+- [ ] One shared closure builder for build, on-demand rendering, the watcher,
+      Serve, export and publication. Test that the watcher's list equals the
+      build's list for a fixture with `<a href>`, `data-nav-href`, preload,
+      `<iframe>`, `srcset` and renderer resources. Add a watched-Serve test for
+      linked authored pages and PDFs.
+- [ ] Renderer resources pass the same checks. Serve reads listed files without
+      following symbolic links.
+- [ ] Implement 5 A, 37 A, 49 A, 61 B and 56 B with their tests.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; `git add -A`; commit with Conventional Commits; push.
+
+## Milestone 21: Shared watching and command output
+
+Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
+
+- [ ] Move the watch setup into one module that Serve and `build --watch` use.
+      Run each watch case through both commands in one test set, including
+      edits during the first build and closure changes from stylesheets.
+- [ ] Connect Ctrl+C to the lock wait and the running compile. Test it with a
+      held lock.
+- [ ] Implement 50 B, 18 A, 16 B and 51 A with their tests.
+- [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
+
+## Milestone 22: Comparisons, baselines and build edits
+
+Implements 39 B, 54 A, 55 A, 59 A, 60 A, 48 A, 58 A and 62 A.
+
+- [ ] Add the per-side inventory reader. Test added, removed and renamed pages,
+      screens, stylesheets, assets and authored files through `mokly review` and
+      live Changes.
+- [ ] Restore targeted base reads (54 A) and filter the base's generated folder
+      (55 A), with a moved-root comparison test.
+- [ ] Implement 59 A with a deterministic interleaving test, and 60 A.
+- [ ] Add the 48 A tests.
+- [ ] Implement 58 A with Build and Serve tests, and 62 A.
+- [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
+
+## Milestone 23: Viewer frame URLs
+
+Tags: ui
+
+Implements 10 B and 25 B in the viewer. No backend work.
+
+- [ ] Add the shared "delivered document matches route" helper and use it in
+      every same-origin comparison. Add a browser test with a static host that
+      redirects `x.html` to `x`.
+- [ ] Decode the frame path once and test double-encoded paths.
+- [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
+
+## Milestone 24: Test and release tooling
+
+Implements 57 B, 65 A, 63 B and 42 B.
+
+- [ ] Remove the shared browser baseline setup (57 B), and fix the tests and
+      plan rows of finding 65.
+- [ ] Delete the dead code and stale references, and add the unused-member
+      ratchet and the ESLint path test (63 B).
+- [ ] Add the public API reports and the CI rule (42 B).
+- [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
+
+## Milestone 25: Verify and review the review fixes
+
+- [ ] Re-read every document changed in Milestones 19–24 against the code, and
+      fix drift. Validate changed Markdown. If code changes, rerun the full gate.
+- [ ] `git add -A`; commit with Conventional Commits; push.
+- [ ] After the push, review the complete local diff against `origin/main`
+      using `docs/implementation-review-prompt.md`; report numbered findings
+      with severities and recommendations without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Parked: replace archive extraction with Git worktrees in a cache outside
