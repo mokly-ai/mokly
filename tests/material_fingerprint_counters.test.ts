@@ -3,10 +3,12 @@ import test from "node:test";
 
 import { stripComponentMarkers } from "../dist/components/comparison_material.js";
 import {
+  runWithComparisonWork,
   documentMaterialWork,
-  runWithDocumentWork,
+  timingMaterialWork,
+} from "../dist/diagnostics/material_timings.js";
+import {
   runWithTimings,
-  timingDocumentWork,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { normalizeSingleDocument } from "../dist/review/ignore.js";
@@ -17,7 +19,7 @@ test("material byte counters use UTF-8 and restore nested scope after failure", 
     true,
     "test",
     () =>
-      runWithDocumentWork(async () => {
+      runWithComparisonWork(async () => {
         stripComponentMarkers("é");
         assert.throws(
           () =>
@@ -30,16 +32,16 @@ test("material byte counters use UTF-8 and restore nested scope after failure", 
           /scope sentinel/,
         );
         normalizeSingleDocument("😀", "test");
-        const work = timingDocumentWork()!;
+        const work = timingMaterialWork()!;
         work.materials(["é", "😀"]);
         work.materialHash("é");
         work.inlineFingerprint("😀");
-      }),
+      }, true),
     { write: (event) => events.push(event) },
   );
   const counts = events.find(
     ({ stage, event }) =>
-      stage === "review.document-work" && event === "counts",
+      stage === "review.material-work" && event === "counts",
   )!.counts!;
   assert.equal(counts.materialBytes, 6);
   assert.equal(counts.materialNormalizationBytes, 7);
@@ -55,12 +57,12 @@ test("disabled material scope allocates no collector or emits counts", async () 
     false,
     "test",
     () =>
-      runWithDocumentWork(async () => {
+      runWithComparisonWork(async () => {
         documentMaterialWork(() => {
-          assert.equal(timingDocumentWork(), undefined);
+          assert.equal(timingMaterialWork(), undefined);
           assert.equal(normalizeSingleDocument("é", "test"), "é");
         });
-      }),
+      }, true),
     { write: (event) => events.push(event) },
   );
   assert.deepEqual(events, []);

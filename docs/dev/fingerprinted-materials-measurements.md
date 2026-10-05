@@ -1,5 +1,11 @@
 # Fingerprinted Material Measurements
 
+Method note: these historical values are unchanged and include the original M9
+combined diagnostics. The approved [separate collector](../protocol/mokly-material-work-counts.md#companion-collection)
+restores M8-level core collection for future timed samples. Material details
+belong to independent, explicitly untimed companion records; remeasurement
+follows checkpoint approval.
+
 The [fixed-code remeasurement](./fingerprinted-materials-remeasurement.md)
 preserves 24 further samples of `14447151` against same-session M8 controls.
 Linked improves; cumulative style remains 9.2–10.4% slower. The supervisor has

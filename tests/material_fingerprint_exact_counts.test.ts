@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { runWithComparisonWork } from "../dist/diagnostics/material_timings.js";
 import {
-  runWithDocumentWork,
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
@@ -50,7 +50,8 @@ for (const mode of ["committed", "derived"] as const)
       const prepared = await runWithTimings(
         true,
         "test",
-        () => runWithDocumentWork(async () => fingerprintMaterials(input)),
+        () =>
+          runWithComparisonWork(async () => fingerprintMaterials(input), true),
         { write: (event) => events.push(event) },
       );
       const { before, after } = selectedStyleViews(input);
@@ -98,7 +99,7 @@ for (const mode of ["committed", "derived"] as const)
       };
       const counts = events.find(
         ({ stage, event }) =>
-          stage === "review.document-work" && event === "counts",
+          stage === "review.material-work" && event === "counts",
       )!.counts!;
       assert.deepEqual(
         Object.fromEntries(fields.map((field) => [field, counts[field]])),

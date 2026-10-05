@@ -4,6 +4,7 @@ import path from "node:path";
 import { parse } from "parse5";
 
 import { waitForBrowseChanges } from "./browse.mjs";
+import { companionOutcome } from "./companion_outcome.mjs";
 import { measureInteractive } from "./interactive.mjs";
 import { sampleOutcome } from "./outcomes.mjs";
 import { start, stop } from "./process.mjs";
@@ -16,6 +17,45 @@ export async function benchmarkSample(
   scenario,
   state,
   cancellation,
+) {
+  return captureSample(
+    browser,
+    repository,
+    fixture,
+    scenario,
+    state,
+    cancellation,
+    false,
+  );
+}
+
+/** An independent classification over the same deterministic scenario inputs. */
+export async function companionSample(
+  browser,
+  repository,
+  fixture,
+  scenario,
+  cancellation,
+) {
+  return captureSample(
+    browser,
+    repository,
+    fixture,
+    scenario,
+    "cold",
+    cancellation,
+    true,
+  );
+}
+
+async function captureSample(
+  browser,
+  repository,
+  fixture,
+  scenario,
+  state,
+  cancellation,
+  details,
 ) {
   const measured = {
     ...scenario,
@@ -50,6 +90,7 @@ export async function benchmarkSample(
         "--debug-timings",
       ],
       fixture.root,
+      { MOKLY_MATERIAL_WORK: details ? "1" : "0" },
     );
     cancellation.setActive(running);
     failurePhase = "browser";
@@ -98,7 +139,7 @@ export async function benchmarkSample(
   }
   delete measured.url;
   delete measured.beginning;
-  return sampleOutcome(running?.timings ?? [], {
+  return (details ? companionOutcome : sampleOutcome)(running?.timings ?? [], {
     ...measured,
     stopRequestedMs,
   });

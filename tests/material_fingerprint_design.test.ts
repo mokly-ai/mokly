@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
+import { runWithComparisonWork } from "../dist/diagnostics/material_timings.js";
 import {
   runWithTimings,
   type TimingEvent,
@@ -32,13 +33,18 @@ test("design catalogue keeps fingerprints on all complete-path views", async (co
         useStylePath: false,
         useMaterialFingerprints,
       });
-    const result = await runWithTimings(true, "test", () => classify(true), {
-      write: (event) => events.push(event),
-    });
+    const result = await runWithTimings(
+      true,
+      "test",
+      () => runWithComparisonWork(() => classify(true), true),
+      {
+        write: (event) => events.push(event),
+      },
+    );
     assert.deepEqual(result, await classify(false));
     const counts = events.find(
       ({ stage, event }) =>
-        stage === "review.document-work" && event === "counts",
+        stage === "review.material-work" && event === "counts",
     )!.counts!;
     const paths = events.find(
       ({ stage, event }) =>

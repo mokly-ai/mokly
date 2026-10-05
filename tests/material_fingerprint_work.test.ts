@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { runWithComparisonWork } from "../dist/diagnostics/material_timings.js";
 import {
-  runWithDocumentWork,
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
@@ -22,12 +22,17 @@ import {
 
 async function work(operation: () => Promise<unknown>) {
   const events: TimingEvent[] = [];
-  await runWithTimings(true, "test", () => runWithDocumentWork(operation), {
-    write: (event) => events.push(event),
-  });
+  await runWithTimings(
+    true,
+    "test",
+    () => runWithComparisonWork(operation, true),
+    {
+      write: (event) => events.push(event),
+    },
+  );
   return events.find(
     ({ stage, event }) =>
-      stage === "review.document-work" && event === "counts",
+      stage === "review.material-work" && event === "counts",
   )!.counts!;
 }
 

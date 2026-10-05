@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
+import { runWithComparisonWork } from "../dist/diagnostics/material_timings.js";
 import {
-  runWithDocumentWork,
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
@@ -50,15 +50,17 @@ test("eligible styles interleaved with instances keep fingerprints per view", as
             true,
             "test",
             () =>
-              runWithDocumentWork(async () =>
-                fingerprintMaterials(input, true, "home", view.path),
+              runWithComparisonWork(
+                async () =>
+                  fingerprintMaterials(input, true, "home", view.path),
+                true,
               ),
             { write: (event) => events.push(event) },
           );
           assert.equal(prepared.inlineAnalysis?.status, "skipped");
           const counts = events.find(
             ({ stage, event }) =>
-              stage === "review.document-work" && event === "counts",
+              stage === "review.material-work" && event === "counts",
           )!.counts!;
           coverage.push({
             kind,

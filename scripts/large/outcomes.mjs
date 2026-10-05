@@ -3,6 +3,16 @@ import { classificationEvidence } from "./timings.mjs";
 
 export function sampleOutcome(records, sample) {
   const { stopRequestedMs, ...result } = sample;
+  const detailField = (name) =>
+    /^(?:kind$|timed$|companion|material|sourceNormalization|inlineFingerprint|fingerprinted|fingerprintSeam)/.test(
+      name,
+    );
+  const forbidden = Object.keys(result).filter(detailField);
+  for (const name of forbidden) delete result[name];
+  const detailedDocument = Object.keys(result.documentWork ?? {}).some(
+    detailField,
+  );
+  if (detailedDocument) delete result.documentWork;
   result.expectedChangedIds = [...new Set(sample.expectedChangedIds)].sort();
   result.expectedChangedRoutes = [
     ...new Set(sample.expectedChangedRoutes),
@@ -14,6 +24,17 @@ export function sampleOutcome(records, sample) {
   try {
     const evidence = classificationEvidence(records, stopRequestedMs);
     Object.assign(result, evidence);
+    if (
+      forbidden.length ||
+      detailedDocument ||
+      records.some(({ event }) => event.stage === "review.material-work") ||
+      Object.keys(result.documentWork ?? {}).some(detailField)
+    ) {
+      delete result.documentWork;
+      throw new Error(
+        "Material detail collection is forbidden in timed samples",
+      );
+    }
     if (evidence.classificationStatus === undefined) {
       result.outcome = "error";
       result.failurePhase ??= "measurement";

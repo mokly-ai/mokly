@@ -7,9 +7,9 @@ import type {
 import { renderMaterialRecipe } from "../components/material_recipe.js";
 import {
   documentMaterialWork,
-  documentWorkSync,
-  timingDocumentWork,
-} from "../diagnostics/timings.js";
+  timingMaterialWork,
+} from "../diagnostics/material_timings.js";
+import { documentWorkSync } from "../diagnostics/timings.js";
 
 import { normalizeSingleDocument } from "./ignore.js";
 import { pageMaterialRecipes } from "./page_material_recipes.js";
@@ -42,7 +42,7 @@ export function projectAnalyzedPair(
         projectedBefore,
       );
       const projectedRight = renderMaterialRecipe(after.source, projectedAfter);
-      timingDocumentWork()?.materials([
+      timingMaterialWork()?.materials([
         left,
         right,
         projectedLeft,

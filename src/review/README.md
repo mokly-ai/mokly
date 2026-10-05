@@ -281,6 +281,8 @@ Opt-in [classification diagnostics](../diagnostics/README.md) count HTML parses
 by step, exclusive document work and the classifying isolate's sampled heap.
 Disabled timings create no counter state and sample no heap. These counters
 include the server's preceding page pass without changing either matching policy.
+Material counters require the separate `MOKLY_MATERIAL_WORK=1` detail opt-in and
+emit `review.material-work`; core-only timing adds no material byte passes.
 
 ```bash
 node --import tsx --test tests/review_css_*.test.ts

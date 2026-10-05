@@ -12,7 +12,7 @@ import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { runWithDocumentWork } from "../diagnostics/timings.js";
+import { runWithComparisonWork } from "../diagnostics/material_timings.js";
 import { errorMessage, isMoklyError } from "../errors.js";
 import { changedManifestIds } from "../registry/changed_ids.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
@@ -278,5 +278,5 @@ export async function readCatalogueChanges(
       ].sort(),
     };
   };
-  return components ? runWithDocumentWork(classify) : classify();
+  return components ? runWithComparisonWork(classify) : classify();
 }

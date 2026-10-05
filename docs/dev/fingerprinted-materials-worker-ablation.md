@@ -1,5 +1,11 @@
 # M9 Full-Worker Ablation
 
+Method note: these historical values are unchanged and include the original M9
+combined diagnostics. The approved [separate collector](../protocol/mokly-material-work-counts.md#companion-collection)
+restores M8-level core collection for future timed samples. Material details
+belong to independent, explicitly untimed companion records; remeasurement
+follows checkpoint approval.
+
 Reverting the M9 **diagnostics group** recovers 15,085.30 ms on average,
 **2.7328 ms per view**, in two alternating production-worker pairs. Reverted
 runs span 208.03–210.14 s; M9 controls span 223.90–224.44 s. The ranges do not

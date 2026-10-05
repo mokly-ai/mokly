@@ -316,7 +316,33 @@ The subsequent [full-worker ablation](../../../docs/dev/fingerprinted-materials-
 recovers 15.09 s / 2.73 ms per view by reverting M9 diagnostics, with non-overlapping
 ranges. Its [GC and fixed-view heap records](../../../docs/dev/fingerprinted-materials-gc.md)
 show greater major-GC frequency with little added live heap. The gate and push
-remain stopped for the supervisor's decision on the measurement method.
+remain stopped pending the approved separate-collector checkpoint and remeasurement.
+The [separate-collector checkpoint](../../../docs/dev/fingerprinted-materials-detail-checkpoint.md)
+records implementation and verification. The historical records retain all original values. New timed samples use only
+M8-level core collection; exact M9 material counts come from companion passes.
+
+### Opt-in material details
+
+`MOKLY_MATERIAL_WORK=1` with `--debug-timings` emits a separate
+`review.material-work` counts record. It is off by default. `benchmark:large`
+forces it off even when inherited from the shell, and rejects detail/companion
+fields in timing records. After timed runs, collect independent untimed counts:
+
+```bash
+node scripts/large/cli.mjs details --config <prepared-config> --scenario linked-stylesheet
+node scripts/large/cli.mjs details --inline-styles --scenario component-style
+```
+
+Omit `--scenario` for all four scenarios. The detail pass uses the same prepared
+fixture identity and deterministic edits, one fresh classification per scenario,
+then restores setup state. `Material companion` JSON records are explicitly
+`timed: false`; their counts never enter `Benchmark sample` or acceptance times.
+See [harness usage](../../../scripts/large/README.md) and the
+[exact counter contract](../../../docs/protocol/mokly-material-work-counts.md).
+
+`templateDigest` hashes every template file here except this README. Diagnostics
+changes must not edit those files or regenerate fixtures: keeping their bytes
+preserves the M2 reference and shared fixtures for same-host M8/M9 controls.
 
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),

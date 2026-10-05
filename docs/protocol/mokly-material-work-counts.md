@@ -1,8 +1,12 @@
 # Comparison Material Work Counts
 
-These delivered M9 integer fields extend `review.document-work` under
-[timings](./mokly-timings.md#component-analysis-counts). Collection is opt-in,
-view/classification scoped and contains no document text, hashes or paths.
+These M9 integer fields belong only to `review.material-work` under
+[timings](./mokly-timings.md#component-analysis-counts). `MOKLY_MATERIAL_WORK=1`
+together with `--debug-timings` constructs a separate `MaterialWork` collector.
+It is off by default: no instance, material scope, byte-length calculation or
+material counting call runs. The core `DocumentWork` layout and behavior stay
+at M8: counts, fields, paths, HTML, inline, heap and exclusive timing.
+Collection is view/classification scoped and contains no document text, hashes or paths.
 Zero fields remain present. Bytes always mean UTF-8 input bytes, not UTF-16
 units, retained heap or RSS. Disabled collection computes no byte lengths.
 
@@ -18,6 +22,9 @@ units, retained heap or RSS. Disabled collection computes no byte lengths.
 | `fingerprintSeams`           | Non-adjacent joins checked in delivered raw, paired-normalized and actual single-normalized recipes before fingerprinting.                                                                                                                               |
 | `fingerprintSeamUnits`       | UTF-16 code units copied into those seam windows; at most 24 per checked seam, including traversal across tiny pieces. No retained piece's interior is scanned.                                                                                          |
 
+Nested comparison scopes share one collector within the same enabled timing
+session. Emit once in `finally`, including partial counts on failure; disabled
+and separate timing sessions never borrow the enclosing collector.
 Material-normalization scope nests synchronously and restores on failure.
 These counts describe actual work, including attempted work before an error.
 They neither select a comparison path nor alter cache, resource or validation
@@ -37,6 +44,27 @@ This is a work-bound proof, not a constant-time claim about source validation,
 HTML parsing, marker indexing, CSS preparation, matching or digest input.
 All materials and consumers remain strings under the
 [fingerprint contract](./mokly-page-analysis.md#fingerprinted-materials).
+
+## Companion Collection
+
+Never enable details in timed benchmark samples: added counting can affect both
+execution and GC. The [fixture harness](../../scripts/large/README.md) forces
+`MOKLY_MATERIAL_WORK=0` in timed Serve workers, regardless of inherited settings,
+and rejects any material/companion fields or detail events in a timed result.
+The independent `details` command prepares the same deterministic scenarios,
+fixture commit, template digest and rendering dependencies, then runs one fresh
+classification per scenario with details enabled. It emits `Material companion`
+records with `kind: material-work-companion`, `timed: false`, exact `materialWork`
+counts and identity/membership evidence. Shared document/path/inline counts may
+accompany them; no classification, startup, delivery duration or cold/warm label
+is reported. Preserve errors/incomplete outcomes and always restore setup inputs.
+Companion counts are separate evidence, never copied into timed sample records.
+Historical reports retain their original values and explain the method change.
+
+Tests pin the core collector shape, probe every detail method/constructor with
+collection off/on, retain exact-count/work-bound assertions with details on, and
+reject timed-record contamination. Real Serve proves environment isolation,
+companion counts/membership and scenario restoration.
 
 ## Required Proof
 

@@ -41,6 +41,14 @@ their element/segment counts reuse preparation instead of repeating parsing.
 Usage-topology/signal checks still contribute `implementationMs` on shortcut
 paths; that field alone does not imply a markup implementation comparison.
 
+`material_timings.ts` owns a separate opt-in scope: `MOKLY_MATERIAL_WORK=1`
+alongside enabled timings creates `MaterialWork` and emits `review.material-work`
+once at comparison completion, including failure. Without that opt-in there is
+no detail collector or material counting call. The core collector and its timing
+helpers keep their exact M8 shape. Nested comparisons share details only within
+the same core scope; disabled or different timing sessions cannot borrow them.
+Benchmark timing forces this detail level off; separate companion passes enable it.
+
 [Material counters](../../docs/protocol/mokly-material-work-counts.md) distinguish
 constructed string bytes and their normalization/hash inputs from original-source
 normalization and fingerprint SHA-256 input bytes. Complete-path work-bound tests

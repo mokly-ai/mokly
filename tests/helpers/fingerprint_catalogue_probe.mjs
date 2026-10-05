@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { mock } from "node:test";
 
+import { runWithComparisonWork } from "../../dist/diagnostics/material_timings.js";
 import { runWithTimings } from "../../dist/diagnostics/timings.js";
 import { generatedViews } from "../../packages/viewer/dist/components/views.js";
 
@@ -147,10 +148,14 @@ async function compare(input) {
         true,
         "fingerprint-test",
         () =>
-          original.classifyComponentsWithSources({
-            ...candidate,
-            useMaterialFingerprints: true,
-          }),
+          runWithComparisonWork(
+            () =>
+              original.classifyComponentsWithSources({
+                ...candidate,
+                useMaterialFingerprints: true,
+              }),
+            true,
+          ),
         { write: (event) => events.push(event) },
       ),
     );
@@ -166,12 +171,12 @@ async function compare(input) {
     counts.fingerprintHashes +=
       events.find(
         ({ stage, event }) =>
-          stage === "review.document-work" && event === "counts",
+          stage === "review.material-work" && event === "counts",
       )?.counts?.inlineFingerprintHashes ?? 0;
     counts.fingerprintedViews +=
       events.find(
         ({ stage, event }) =>
-          stage === "review.document-work" && event === "counts",
+          stage === "review.material-work" && event === "counts",
       )?.counts?.fingerprintedViews ?? 0;
     try {
       assert.equal(

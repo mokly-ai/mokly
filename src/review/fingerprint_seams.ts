@@ -3,7 +3,7 @@ import type {
   MaterialPiece,
   MaterialRecipe,
 } from "../components/material_recipe.js";
-import { timingDocumentWork } from "../diagnostics/timings.js";
+import { timingMaterialWork } from "../diagnostics/material_timings.js";
 
 import type { MaterialMarkerOffsets } from "./material_marker_offsets.js";
 import type { StyleSeamOffsets } from "./style_seam_offsets.js";
@@ -24,7 +24,7 @@ export function fingerprintAtSeam(
     if (index) {
       const before = window(source, pieces, index - 1, -1);
       const after = window(source, pieces, index, 1);
-      timingDocumentWork()?.fingerprintSeam(before.length + after.length);
+      timingMaterialWork()?.fingerprintSeam(before.length + after.length);
       if (
         open ||
         crosses(before, after, prefix) ||

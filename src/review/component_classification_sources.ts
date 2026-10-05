@@ -10,7 +10,8 @@ import type {
 } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
-import { runWithDocumentWork, timeAsync } from "../diagnostics/timings.js";
+import { runWithComparisonWork } from "../diagnostics/material_timings.js";
+import { timeAsync } from "../diagnostics/timings.js";
 
 import { affectedConsumers } from "./component_affected.js";
 import {
@@ -261,7 +262,7 @@ export async function classifyComponentsWithSources(
     }
   };
   await timeAsync("review.compare-screens", () =>
-    componentAware ? runWithDocumentWork(compare) : compare(),
+    componentAware ? runWithComparisonWork(compare) : compare(),
   );
   propagateOwnedResources(ownedResources, impacting, components, changes);
   reasonSources.recordOwnedResources(

@@ -8,8 +8,8 @@ const repository = path.resolve(import.meta.dirname, "../..");
 async function main() {
   const args = process.argv.slice(2);
   const mode = args.shift();
-  if (!["generate", "serve", "benchmark"].includes(mode))
-    throw new Error("Use generate, serve or benchmark");
+  if (!["generate", "serve", "benchmark", "details"].includes(mode))
+    throw new Error("Use generate, serve, benchmark or details");
   const size = {
     areas: 30,
     inlineStyles: false,
@@ -26,8 +26,14 @@ async function main() {
     const flag = args.shift();
     if (flag === "--scenario") {
       const value = args.shift();
-      if (mode !== "benchmark" || !value || value.startsWith("--"))
-        throw new Error("--scenario <name> is a benchmark-only filter");
+      if (
+        !["benchmark", "details"].includes(mode) ||
+        !value ||
+        value.startsWith("--")
+      )
+        throw new Error(
+          "--scenario <name> is a benchmark-only filter (including details)",
+        );
       scenarioNames.push(value);
     } else if (flag === "--debug-timings") debug = true;
     else if (flag === "--derived") generatedOutput = "derived";
@@ -68,6 +74,10 @@ async function main() {
   if (mode === "benchmark") {
     const { benchmark } = await import("./benchmark.mjs");
     return benchmark(repository, fixture, scenarios);
+  }
+  if (mode === "details") {
+    const { materialDetails } = await import("./details.mjs");
+    return materialDetails(repository, fixture, scenarios);
   }
   const running = start(
     [

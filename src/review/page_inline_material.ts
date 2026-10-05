@@ -1,10 +1,8 @@
 /** Fingerprint complete-path materials while preserving the delivered text oracle. */
 import { createHash } from "node:crypto";
 
-import {
-  documentWorkSync,
-  timingDocumentWork,
-} from "../diagnostics/timings.js";
+import { timingMaterialWork } from "../diagnostics/material_timings.js";
+import { documentWorkSync } from "../diagnostics/timings.js";
 
 import type { InlineAttributionResult } from "./css/inline_attribution.js";
 import {
@@ -87,7 +85,7 @@ function prepareMaterials(
   const comment = (kind: "rules" | "style", source: string): string => {
     let digest = digests.get(source);
     if (digest === undefined) {
-      timingDocumentWork()?.inlineFingerprint(source);
+      timingMaterialWork()?.inlineFingerprint(source);
       digest = documentWorkSync("hashMs", () =>
         createHash("sha256").update(source, "utf8").digest("base64url"),
       );
@@ -122,7 +120,7 @@ function prepareMaterials(
     };
   };
   const result = { before: side("before"), after: side("after") };
-  timingDocumentWork()?.fingerprintedView();
+  timingMaterialWork()?.fingerprintedView();
   return result;
 }
 

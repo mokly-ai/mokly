@@ -1,8 +1,6 @@
 import { generatedSource } from "../build/ownership.js";
-import {
-  documentWorkSync,
-  timingDocumentWork,
-} from "../diagnostics/timings.js";
+import { timingMaterialWork } from "../diagnostics/material_timings.js";
+import { documentWorkSync } from "../diagnostics/timings.js";
 
 const ID = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const KEY = "[a-f0-9]{64}";
@@ -49,8 +47,8 @@ export function normalizeReviewPair(
   route: string,
 ): NormalizedReviewPair {
   return documentWorkSync("normalizationMs", () => {
-    timingDocumentWork()?.normalization(baseHtml);
-    timingDocumentWork()?.normalization(headHtml);
+    timingMaterialWork()?.normalization(baseHtml);
+    timingMaterialWork()?.normalization(headHtml);
     const base = parseReviewDocument(baseHtml, route);
     const head = parseReviewDocument(headHtml, route);
     const paired = new Set(
@@ -95,7 +93,7 @@ export function normalizeReviewPair(
 /** Validate and strip markers while retaining real child content. */
 export function normalizeSingleDocument(html: string, route: string): string {
   return documentWorkSync("normalizationMs", () => {
-    timingDocumentWork()?.normalization(html);
+    timingMaterialWork()?.normalization(html);
     return render(parseReviewDocument(html, route), new Set());
   });
 }

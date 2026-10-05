@@ -1,5 +1,11 @@
 # Fingerprinted Materials: Narrow Remeasurement
 
+Method note: these historical values are unchanged and include the original M9
+combined diagnostics. The approved [separate collector](../protocol/mokly-material-work-counts.md#companion-collection)
+restores M8-level core collection for future timed samples. Material details
+belong to independent, explicitly untimed companion records; remeasurement
+follows checkpoint approval.
+
 The follow-up [full-worker ablation](./fingerprinted-materials-worker-ablation.md)
 recovers most of the measured style gap by reverting M9 diagnostics. This report
 preserves all narrow samples; the gate/push remain blocked pending the supervisor's

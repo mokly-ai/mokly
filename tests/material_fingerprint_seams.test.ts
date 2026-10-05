@@ -5,8 +5,8 @@ import type {
   MaterialPiece,
   MaterialRecipe,
 } from "../dist/components/material_recipe.js";
+import { runWithComparisonWork } from "../dist/diagnostics/material_timings.js";
 import {
-  runWithDocumentWork,
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
@@ -89,7 +89,7 @@ test("seam windows read at most 24 UTF-16 units per seam independent of sheet si
       true,
       "test",
       () =>
-        runWithDocumentWork(async () => {
+        runWithComparisonWork(async () => {
           assert.equal(
             inspect(source, [
               { kind: "source", start: 0, end: offset + 3 },
@@ -97,12 +97,12 @@ test("seam windows read at most 24 UTF-16 units per seam independent of sheet si
             ]),
             true,
           );
-        }),
+        }, true),
       { write: (event) => events.push(event) },
     );
     const counts = events.find(
       ({ stage, event }) =>
-        stage === "review.document-work" && event === "counts",
+        stage === "review.material-work" && event === "counts",
     )!.counts!;
     assert.equal(counts.fingerprintSeams, 1);
     assert.equal(counts.fingerprintSeamUnits, 24);

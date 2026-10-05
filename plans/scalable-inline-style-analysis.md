@@ -1590,11 +1590,46 @@ comparison's text work no longer grows with the style sheet. See the
       records 15.09 s / 2.73 ms per-view mean recovery, spread 2.49–2.97 ms/view,
       with non-overlapping ranges. Stop at diagnostics group A as instructed;
       groups B/C are not run. All eight diagnostic/ablation samples complete.
-- [ ] Discovered: obtain the supervisor's fix-scope decision for the identified
+- [x] Discovered: obtain the supervisor's fix-scope decision for the identified
       diagnostic instrumentation tax. The report proposes separating benchmark
       timing from detailed counter collection, or further isolating/optimizing
-      the full collector. No implementation or contract change is approved yet;
-      the gate and push remain blocked pending that decision.
+      the full collector. The supervisor approved option A: restore the exact
+      M8 core collector and move all nine counters/material scope to a separate,
+      opt-in `MaterialWork` collector. Timed samples use only core collection;
+      exact detail counts belong to separately labelled companion passes.
+- [x] Discovered: implement the separate material detail collector test-first,
+      preserve core M8 fields/branches and all exact counter semantics, and prove
+      that detail-off creates no collector or material/byte-counting calls.
+- [x] Discovered: add companion benchmark passes for the same prepared inputs,
+      forbid detail collection and companion fields in timed samples, update
+      timing/work-count protocols and the fixture README, and keep historical
+      values intact with a note explaining the method change. The separate
+      [collector checkpoint](../docs/dev/fingerprinted-materials-detail-checkpoint.md)
+      records the opt-in, exact counter probes and timed-record separation.
+- [x] Discovered: preserve the fixture digest under the supervisor's correction.
+      Do not edit any file under `tests/fixtures/large/` except `README.md`.
+      Its benchmark contract already specifies the M8-level core collection;
+      retain that file and the M2 reference digest so both clean engines can
+      share the prepared fixtures. Document detail/companion behavior outside
+      the hashed template files and test timed-record field separation.
+- [x] Discovered: retain all oracles/mutations, run targeted/package/full unit,
+      pinned browser/hydration and static checks, commit locally and stop for review.
+      The [detail checkpoint](../docs/dev/fingerprinted-materials-detail-checkpoint.md)
+      records 427 focused, 4,909 unit and 219 hydration passes, passing package/static
+      checks and ten caught mutations. After the reboot to Xeon 2.50GHz, the full
+      browser run has 722 passes and three non-passing cases; it is not green.
+- [ ] Discovered: obtain the supervisor's decision on the three intermittent
+      browser failures before measurement or gate/push. Both trees pass 21/21
+      focused repetitions; clean prepared M8 also passes its complete 725-test
+      browser suite. The initial M8 focused run has one mobile timeout at a
+      neighboring operation, not all three exact failures. The brief's
+      environmental rule is not met; no UI/timeouts are changed or waiver claimed.
+- [ ] After that checkpoint's approval, remeasure with core collection against
+      same-host M8 `5e5111dc`: default ABBA no-change/linked cold/warm; cumulative
+      two alternating M8/M9 style-cold pairs and one linked-cold pair. Retain
+      companion detail records separately. If a shortcut cell remains clearly
+      slower with non-overlapping ranges, report before the gate/push; otherwise
+      proceed with the gate and push below under the audit-blocker rule.
 - [x] Update relevant READMEs and the contracts' Delivery Status for delivered
       fingerprints, preserve the 250-line protocol caps, and record the approved
       gap fix and M8 review findings.

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { runWithComparisonWork } from "../dist/diagnostics/material_timings.js";
 import {
-  runWithDocumentWork,
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
@@ -70,11 +70,13 @@ for (const mode of ["committed", "derived"] as const)
                 true,
                 "test",
                 () =>
-                  runWithDocumentWork(() =>
-                    fingerprintComparison(input, true, "home", undefined, {
-                      useFastPath,
-                      useStylePath,
-                    }),
+                  runWithComparisonWork(
+                    () =>
+                      fingerprintComparison(input, true, "home", undefined, {
+                        useFastPath,
+                        useStylePath,
+                      }),
+                    true,
                   ),
                 { write: (event) => events.push(event) },
               );
@@ -84,7 +86,7 @@ for (const mode of ["committed", "derived"] as const)
               assert.equal(current.result.comparisonPath, "complete");
               const work = events.find(
                 ({ stage, event }) =>
-                  stage === "review.document-work" && event === "counts",
+                  stage === "review.material-work" && event === "counts",
               )!.counts!;
               assert.equal(work.fingerprintedViews, 1);
               assert.equal(proofs, useFastPath && useStylePath ? 1 : 0);
