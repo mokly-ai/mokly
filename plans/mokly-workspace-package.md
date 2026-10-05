@@ -140,9 +140,8 @@ modules exactly as `scripts/copy-assets.mjs` does today.
 
 ## Execution Rules
 
-- Use the Node version in `.node-version` (24.21.0). The cloud sandbox ships
-  Node 24.14.1, which the `engines` range excludes; install 24.21.0 before any
-  gate run.
+- Use the Node version in `.node-version` (24.21.0) and npm 11.7.0. The
+  workspace already has both versions installed; no toolchain change is needed.
 - Move files with `git mv` so history follows `src/`, `CHANGELOG.md`,
   `README.md`, and `scripts/copy-assets.mjs`.
 - Never force-add `packages/mokly/dist` or `packages/mokly/docs`.
@@ -169,20 +168,31 @@ Update the documentation and protocol documents so they define the complete
 target before any file moves. Prose changes only; no link may point at a path
 that does not exist yet.
 
-- [ ] `docs/protocol/npm-release.md`: in Package Metadata, state that
+- [x] `docs/protocol/npm-release.md`: in Package Metadata, state that
       `packages/mokly/package.json` describes `@mokly/mokly`, that the root
       manifest is a private workspace root, that the build copies
       `docs/guides` and `docs/protocol` into the package before packing, that
       the lockfile mirrors the package under `packages/mokly` with a
       `node_modules/@mokly/mokly` link, and that Release Please registers the
       package as `packages/mokly` with unchanged `vX.Y.Z` tags.
-- [ ] `docs/protocol/verification-ratchets.md`: list the five source roots and
+- [x] `docs/protocol/verification-ratchets.md`: list the five source roots and
       the two package roots from Decision 11.
-- [ ] `docs/architecture/package-boundary.md`: rename "Viewer Package
-      Boundary" to "Workspace Package Boundary" and describe both workspace
-      members, the private root, the tests at the root, and the docs copy.
-- [ ] `plans/README.md`: add this plan to Active.
-- [ ] Validate the changed Markdown with `npx prettier --check` and run
+- [x] `docs/architecture/package-boundary.md`: rename the title "Package And
+      Consumer Boundary" to "Workspace Package Boundary" and describe both
+      workspace members, the private root, the tests at the root, and the docs
+      copy. Update inbound links or tests that name the old headings.
+- [x] `plans/README.md`: verify this plan is under Active and keep its status
+      current. The plan commit already added the entry.
+- [x] Fix other prose-only layout conflicts in `docs/protocol/npm-release-management.md`,
+      `docs/protocol/mokly-guides.md`, and `docs/protocol/mokly-package.md`.
+      Name the package root exports explicitly in `docs/protocol/mokly-authoring.md`,
+      `docs/protocol/mokly-components.md`, `docs/protocol/mokly-pages.md`, and
+      `docs/protocol/mokly-viewer-appearance.md`; qualify viewer-relative source
+      paths. Add links that need moved files to Milestone 3.
+- [x] Search current docs and READMEs for remaining layout conflicts, excluding
+      historical review records. Run each test that asserts changed doc text.
+- [x] Validate the changed Markdown with `npx prettier --check` and run
+      `npm run example:build` before
       `node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_sizes.test.ts`.
 - [ ] Commit with Conventional Commits and push the branch.
 
@@ -258,11 +268,13 @@ Perform the move and every path update in one commit so the gate never breaks.
       `tests/ci_workflow.test.ts` (root and package `engines` parity, root
       README sentences).
 - [ ] Update `tests/helpers/example_baseline.ts` to copy `package.json`,
-      `package-lock.json`, `tsconfig.json`, `docs/guides`, `packages/viewer`,
-      and `packages/mokly` while excluding `dist`, `node_modules`, and the
-      copied `packages/mokly/docs`.
+      `package-lock.json`, `tsconfig.json`, `docs/guides`, `docs/protocol`,
+      `packages/viewer`, and `packages/mokly` while excluding `dist`,
+      `node_modules`, and the copied `packages/mokly/docs`.
 - [ ] Update `tests/component_protocol_docs.test.ts` to read the moved README
       sentence from `packages/mokly/README.md`.
+- [ ] Update `tests/guides_versions.test.ts` to read the CLI version from
+      `packages/mokly/package.json`. The private root will not own that version.
 - [ ] Write the new root `README.md` and trim `packages/mokly/README.md` per
       Decision 9; update the Packages table link and every Key code link.
 - [ ] Fix the 93 upward links in the READMEs under `packages/mokly/src/` and
@@ -271,6 +283,11 @@ Perform the move and every path update in one commit so the gate never breaks.
       `docs/protocol/mokly-instances.md`,
       `docs/protocol/mokly-export-public-files.md`, `xtask/README.md`, and
       `docs/protocol/npm-release.md`.
+- [ ] Update the CLI Browse README links in
+      `packages/viewer/src/client/README.md` and
+      `packages/viewer/src/inspector/README.md` after the move. Both currently
+      link to `../../../../src/browse/README.md`; the new target is
+      `../../../../packages/mokly/src/browse/README.md`.
 - [ ] Confirm the public export ratchet still resolves the `v0.13.0` baseline
       tag for `packages/mokly`.
 - [ ] Compare `npm pack --dry-run --json --ignore-scripts` from

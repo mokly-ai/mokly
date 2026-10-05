@@ -8,7 +8,8 @@ Conventional Commits feed two release-please Node components through
 `release-please-config.json` and `.release-please-manifest.json`. A push to
 `main` creates or updates a release PR; an ordinary push with no release does
 not publish. The single release PR owns both package versions and changelogs,
-the root lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
+the root lockfile and the release manifest. The CLI component is
+`packages/mokly`, with `packages/mokly/CHANGELOG.md`. It keeps `vX.Y.Z` tags
 (`include-component-in-tag: false`, `include-v-in-tag: true`). The viewer uses
 `viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
 Both tags must identify the same reviewed release commit.
@@ -21,12 +22,13 @@ that title from `main`. It accepts generated release titles such as
 `BREAKING CHANGE:` footer in the squash body; the title check does not replace
 or generate that body.
 
-The root component also owns the literal documentation version in
+The CLI component also owns the literal documentation version in
 `docs/guides/start/install.md` and `docs/guides/ci/github-action.md` through
-`generic` `extra-files`. Each version-bearing region is bounded by the Release
-Please HTML markers defined in the
+`generic` `extra-files` with root-anchored paths. Each version-bearing region
+is bounded by the Release Please HTML markers defined in the
 [guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
-those literals with the root package version; root tests reject drift.
+those literals with the `packages/mokly/package.json` version; root tests
+reject drift.
 
 The viewer manifest is seeded at **0.0.0**, not 0.1.0, to record that it has no
 prior release. Its per-package `initial-version` is explicitly **0.1.0** because
@@ -48,15 +50,19 @@ packages whenever either releases, including a patch of an otherwise unchanged
 package. It preserves the CLI's exact dependency (no caret or local link).
 Versions remain independent; `linked-versions` would incorrectly force them
 equal and is unnecessary for a combined PR. A viewer `extra-files` JSON updater
-also sets the root lockfile's `packages[""].dependencies["@mokly/viewer"]`:
+also sets the root lockfile's
+`packages["packages/mokly"].dependencies["@mokly/viewer"]` through JSONPath
+`$['packages']['packages/mokly']['dependencies']['@mokly/viewer']`:
 release-please 17.6.0's workspace updater handles linked workspace versions but
-does not update that root dependency edge. Release PR checks must pass `npm ci`
+does not update that exact dependency edge. Release PR checks must pass `npm ci`
 and the same version-pair gate before merge.
 
 The release workflow then:
 
-1. Selects both release-please tags (the viewer uses the path-prefixed action
-   output), or explicit manual `publish_ref` and `viewer_ref` inputs. An
+1. Selects both release-please tags. CLI outputs are
+   `packages/mokly--release_created` and `packages/mokly--tag_name`; viewer
+   outputs retain their `packages/viewer--` prefix. Explicit manual
+   `publish_ref` and `viewer_ref` inputs can select the pair instead. An
    incomplete pair fails closed; ordinary pushes do nothing.
 2. Checks out the CLI tag with history on GitHub-hosted `ubuntu-24.04`.
 3. Resolves the latest available Node 24 patch for the single publish job and

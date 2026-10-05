@@ -1,4 +1,22 @@
-# Package And Consumer Boundary
+# Workspace Package Boundary
+
+## Workspace Layout
+
+The private root package is `mokly-workspace`. Its npm workspaces are
+`packages/viewer` (`@mokly/viewer`) and `packages/mokly` (`@mokly/mokly`). The
+root owns the shared development toolchain, repository-wide scripts, tests,
+docs, and examples. It does not publish a package. Each workspace member owns
+its public manifest, source, build output, README, changelog, and license.
+
+The CLI's unit, browser, helper, and fixture files stay under the root
+`tests/` directory. Viewer-owned tests stay under `packages/viewer/tests/`.
+The root commands build the viewer before the CLI and verify both packages.
+
+The root `docs/` tree remains the only source for guides and protocol
+documents. The CLI build copies `docs/guides` and `docs/protocol` into
+`packages/mokly/docs/` before packing. These copies are Git-ignored and
+`npm run clean` removes them. The published CLI keeps its existing
+`docs/guides` and `docs/protocol` paths and the same tarball file layout.
 
 ## Rule
 
@@ -54,16 +72,17 @@ and in memory; controls do not change source, committed fragments or Changes.
 Static export carries saved variants and inspection without the local capability.
 See the [component contract](../protocol/mokly-components.md).
 
-## Viewer Package Boundary
+## Viewer Responsibilities
 
-The repository uses npm workspaces with `packages/viewer` as `@mokly/viewer`;
-root `@mokly/mokly` depends on its exact coordinated release version, without
-`workspace:` or filesystem dependency specifiers. The shell component tree
-and CSS, its hydration entries, navigation, frame adapters, inspector and
-public catalogue/instance readers belong to the viewer. Shared pure validation and DTOs live there too. The CLI retains config, authoring/build, comparisons,
-Serve/watch, export/upload and private control/evidence transports. The viewer
-never imports the CLI, Node built-ins, Git or consumer application code. Its `./server` entry
-is explicitly Node-only SSR and is excluded from the browser entry graph.
+`@mokly/mokly` depends on the exact coordinated release version of
+`@mokly/viewer`, without `workspace:` or filesystem dependency specifiers.
+The shell component tree and CSS, hydration entries, navigation, frame
+adapters, inspector, and public catalogue/instance readers belong to the viewer.
+Shared pure validation and DTOs live there too. The CLI retains config,
+authoring/build, comparisons, Serve/watch, export/upload, and private
+control/evidence transports. The viewer never imports the CLI, Node built-ins,
+Git, or consumer application code. Its `./server` entry is explicitly Node-only
+SSR and is excluded from the browser entry graph.
 
 The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
 the [catalogue v4 projection](../protocol/mokly-catalogue.md), the
@@ -147,9 +166,9 @@ link marker, sandbox boundary, and active-tree invariant.
 
 ## Export Boundary
 
-`src/export` orchestrates existing Build, Browse rendering, and comparison
-boundaries. Its only new consumer interface is the CLI: no deep imports or
-hosting SDK is required. Typed shell-owned delivery metadata supplies each
+`packages/mokly/src/export` orchestrates existing Build, Browse rendering, and
+comparison boundaries. Its only new consumer interface is the CLI: no deep
+imports or hosting SDK is required. Typed shell-owned delivery metadata supplies each
 page's canonical `/view/<path>/` URL and immutable comparison URLs. The exporter
 owns file selection, input consistency, exclusive output reservation,
 replacement, and rollback; `scripts/preview` captures one already-built Browse

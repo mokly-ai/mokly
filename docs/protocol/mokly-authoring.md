@@ -11,7 +11,7 @@ rendering follows the [rendering contract](./mokly-rendering.md).
 
 ## Public Authoring API
 
-The root package export supplies typed, documented authoring helpers:
+The `@mokly/mokly` root export supplies typed, documented authoring helpers:
 
 - `defineConfig`;
 - `defineScreen`, `definePage`, `defineUseCase`, and `defineFolder`;
@@ -19,7 +19,7 @@ The root package export supplies typed, documented authoring helpers:
 - `mockLink` and `MockLink` for path-addressed links;
 - `ReviewIgnore`, `ReviewIgnoreScope`, and `reviewMaterialKey`.
 
-The root also exports the input and definition types `EntryInput`,
+That entry also exports the input and definition types `EntryInput`,
 `ScreenInput`, `ScreenVariantInput`, `ScreenDefinition`, `PageInput`,
 `PageDefinition`, `UseCaseInput`, `UseCaseStep`, `UseCaseDefinition`,
 `FolderInput`, `FolderDefinition`, and `RegistryDefinition`, plus the

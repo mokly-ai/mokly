@@ -22,7 +22,7 @@ its count unless they have an independent screen change. See the
 
 ## Authoring Boundary
 
-The root package exports `defineComponent`. It returns `entries`, the parent
+`@mokly/mokly` exports `defineComponent`. It returns `entries`, the parent
 entry followed by one entry per variant in authored order, beside a typed
 `Component` wrapper for composition. Exporting the returned object, or its
 `entries`, registers them under the

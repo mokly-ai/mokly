@@ -26,10 +26,17 @@ source-file-length audit uses the same Git comparison boundary.
 ## JavaScript And TypeScript File Length
 
 Audit regular `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` modules
-beneath `src/`, `packages/viewer/src/`, and `scripts/` when they are added,
-renamed, or changed relative to the comparison commit. Normalize CRLF to LF and
-count LF-delimited physical lines; a final LF does not add an empty line.
-Deleted files do not participate.
+beneath these five source roots when they are added, renamed, or changed
+relative to the comparison commit:
+
+- `packages/mokly/src/`;
+- `packages/mokly/scripts/`;
+- `packages/viewer/src/`;
+- `packages/viewer/scripts/`;
+- `scripts/`.
+
+Normalize CRLF to LF and count LF-delimited physical lines; a final LF does not
+add an empty line. Deleted files do not participate.
 
 For a new file, the maximum is 300 lines. For an existing or Git-detected
 renamed file:
@@ -40,7 +47,7 @@ renamed file:
   shrink, but any growth fails.
 
 A rename keeps its predecessor comparison only when Git identifies that source;
-otherwise it is a new file. Generated output is outside the three source roots
+otherwise it is a new file. Generated output is outside the five source roots
 and therefore outside this ratchet. Diagnostics list candidate path, current
 line count, allowed count, and predecessor when applicable.
 
@@ -75,7 +82,7 @@ predecessor or ambiguous rename is treated as new.
 ## Public Package Exports
 
 The published packages are exactly the paths under `packages` in
-`release-please-config.json`; currently `.` (`@mokly/mokly`) and
+`release-please-config.json`: `packages/mokly` (`@mokly/mokly`) and
 `packages/viewer` (`@mokly/viewer`). Derive each tag prefix from that package's
 release configuration: prepend `<component>-` when
 `include-component-in-tag` is true, then append `v` when
@@ -149,7 +156,7 @@ that removal; until then, the same reachable baseline still reports it.
 ## Unused Internal Exports
 
 The auditor follows imports and re-exports across `.ts`, `.tsx`, `.mts`, `.cts`,
-`.js`, `.mjs`, and `.cjs` modules beneath the three source roots. A named export
+`.js`, `.mjs`, and `.cjs` modules beneath the five source roots. A named export
 is internal when no package export-map entry or documented public barrel
 exposes it. It is unused when no distinct workspace module imports or
 re-exports that symbol through a statically resolvable path; same-file

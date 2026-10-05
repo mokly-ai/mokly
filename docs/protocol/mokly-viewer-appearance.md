@@ -74,7 +74,7 @@ a workspace clears its mark; no control depends on a second evidence fetch.
 
 ## React And Server API
 
-The root package exports a documented `ViewerTheme` type:
+The `@mokly/viewer` root export supplies a documented `ViewerTheme` type:
 
 ```ts
 export type ViewerTheme = "auto" | "dark" | "light";
@@ -213,7 +213,7 @@ Provide Light and Dark values for these responsibilities:
 - Navigation guides, stage dots, browser toolbar/address controls, tooltips,
   backdrops, shadows, inspector tabs, native fields and scrollbars.
 
-Audit literal colors in `src/shell/css_*.ts`, `src/viewer/styles.ts` and
+In `packages/viewer`, audit `src/shell/css_*.ts`, `src/viewer/styles.ts` and
 package-owned overlay/control creation. Replace theme-dependent literals with
 semantic roles, not a growing dark-mode override sheet. Use a focused source
 rule with an explicit allowance for fixed device artwork to prevent new

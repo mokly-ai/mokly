@@ -18,19 +18,41 @@ inspection requires that worker file in the archive. See
 [dependency security](./dependency-security.md)
 and [imported styles](./mokly-imported-styles-modules.md).
 
-`package.json` describes public ESM package `@mokly/mokly`: managed version, MIT
-license, Mokly authorship, exact repository metadata, Node range
-`>=22.14.0 <24.14.0 || >=24.19.0`, `mokly` bin, exports, types, and file
-allowlist.
+`packages/mokly/package.json` describes public ESM package `@mokly/mokly`. It
+owns the managed version, description, MIT license, Mokly authorship, homepage,
+repository and bugs metadata, Node range, `mokly` bin, exports, types, file
+allowlist, `publishConfig`, runtime dependencies, React peers, and the `build`,
+`typecheck`, and `prepack` scripts. Its `repository.directory` is
+`packages/mokly`. The bin remains `./dist/cli/bin.js`; public exports and the
+tarball file layout stay unchanged.
 
-Read the checkout's version from `package.json`; `.release-please-manifest.json`
-tracks release-please's version state, and `package-lock.json` mirrors package
-metadata. Release PRs update these together. The completed one-time
+The root `package.json` is the private `mokly-workspace` manifest with
+`private: true` and `workspaces: ["packages/viewer", "packages/mokly"]`. It owns
+the repository-wide scripts, all development dependencies, overrides,
+`packageManager`, and engines. Both root and CLI manifests declare the same
+Node range: `>=22.14.0 <24.14.0 || >=24.19.0`. The root is not published.
+
+Read the CLI version from `packages/mokly/package.json`.
+`.release-please-manifest.json` tracks its version under `packages/mokly`.
+The root `package-lock.json` mirrors CLI metadata in `packages["packages/mokly"]`
+and records `node_modules/@mokly/mokly` with `resolved: "packages/mokly"` and
+`link: true`. Its root entry describes the private workspace and toolchain.
+Release PRs update the package manifest, package changelog, release manifest,
+and lockfile together. The completed one-time
 [registry bootstrap](./npm-bootstrap.md) registered `@mokly/mokly@0.8.0` without
 changing those release-managed files. It is the accepted initial `latest`
 release and also retains the `bootstrap` tag. Do not repeat the bootstrap
 publication; later reviewed releases advance `latest` through the normal release
 workflow.
+
+Release Please registers the CLI at `packages/mokly` in both release config
+and manifest. `include-component-in-tag: false` and `include-v-in-tag: true`
+keep CLI tags at `vX.Y.Z`. The workflow reads
+`packages/mokly--release_created` and `packages/mokly--tag_name`.
+The CLI changelog is `packages/mokly/CHANGELOG.md`. Its guide `extra-files`
+are root-anchored `/docs/guides/start/install.md` and
+`/docs/guides/ci/github-action.md`. The viewer's lockfile updater targets
+`$['packages']['packages/mokly']['dependencies']['@mokly/viewer']`.
 
 `publishConfig` targets the public npm registry with public access. The CLI
 package contains compiled runtime code, declarations, private host modules,
@@ -40,8 +62,17 @@ package version so the cloud documentation site and independent upload receivers
 can implement that release's documented boundaries. Source fixtures, tests,
 plans, caches, review artifacts and generated demo output are not published.
 
-The repository also builds the `@mokly/viewer` workspace, initially version
-0.1.0. Its MIT ESM distribution owns shell assets, public data readers,
+The root `docs/` tree is the single source for shipped documentation. The CLI
+build replaces `packages/mokly/docs/` with fresh copies of `docs/guides` and
+`docs/protocol` before packing. These copies are Git-ignored; `npm run clean`
+removes them. The copy runs in `build`, not only in `prepack`, so
+`npm pack --dry-run --ignore-scripts` and `tests/package.test.ts` can inspect
+the complete package after a build. `prepack` also runs `npm run build`.
+Package-local paths remain `docs/guides` and `docs/protocol` in the published
+archive.
+
+The other workspace member is `@mokly/viewer` at `packages/viewer`, initially
+version 0.1.0. Its MIT ESM distribution owns shell assets, public data readers,
 adapters, React mounting and Node-only SSR. The CLI declares an exact registry
 version dependency. Root build, clean, formatting, lint, typecheck and package
 gates cover both packages. Pack the viewer first; local smoke and release

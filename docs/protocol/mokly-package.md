@@ -164,11 +164,15 @@ rendering pipeline, derived paths, inheritance, and schema validation.
 
 ## Packaged Documentation
 
-The root package ships the plain-Markdown CLI guides under `docs/guides` and
+`@mokly/mokly` ships the plain-Markdown CLI guides under `docs/guides` and
 the protocol sources under `docs/protocol`. The package version is the
 documentation version. The private cloud repository renders those files into
 the public documentation site and owns its cloud, review, changelog, legal, and
 marketing pages; this repository owns no site runtime or deployment.
+
+The root `docs/` tree is the source. The CLI build copies its guides and
+protocol documents into Git-ignored `packages/mokly/docs/` before packing.
+`npm run clean` removes the copies.
 
 The [guides contract](./mokly-guides.md) defines the source tree, frontmatter,
 sections, link mapping, published Reference allowlist, release-managed version

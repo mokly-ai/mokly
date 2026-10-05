@@ -25,7 +25,7 @@ callback always returns HTML, including printable documents.
 
 ## Public Authoring
 
-The root package exports `definePage` and its public input and definition
+`@mokly/mokly` exports `definePage` and its public input and definition
 types. The input is:
 
 ```ts
