@@ -4,7 +4,10 @@ Status: Active. Created 2026-10-05 with the user's consent. This plan fixes
 the open review items of [Path Identity](./path-identity.md), which merged in
 PR #131 (`c4138a0`). The work uses the existing workspace branch
 `calummoore/filenav-review-items` and one new pull request. Milestone 1 is
-complete.
+complete. On 2026-10-05 the user asked to delegate the fixes to Codex
+(`gpt-6.1-sol`, effort `max`). Four Codex workspaces implement Milestones 2
+and 6–7, 3–4, 5, and 8 from this branch. The orchestrator checks each branch
+independently and merges it here; Milestones 9–11 follow after the merges.
 
 ## Scope And Decisions
 
