@@ -75,17 +75,22 @@ test("a removed variant stays under its surviving parent", async () => {
   ]);
 });
 
-test("a change confined to other views keeps the parent row closed", async () => {
-  const { document } = await designDocument(
-    "design/browse/variants/changed-views",
-    "desktop",
-  );
-  assert.deepEqual(rowLabels(document), ["Example", "Screens", "Welcome"]);
-  const toggles = variantToggles(document);
-  assert.equal(toggles.length, 1);
-  assert.equal(attribute(toggles[0]!, "aria-expanded"), "false");
-  assert.equal(byClass(document, "mbk-nav-changed").length, 1);
-  assert.deepEqual(filterTargets(document), [
-    ["All", "design/browse/views/screen"],
-  ]);
-});
+for (const viewport of ["mobile", "desktop"] as const) {
+  test(`${viewport}: a changed parent has no button without a visible variant`, async () => {
+    const { document } = await designDocument(
+      "design/browse/variants/changed-views",
+      viewport,
+    );
+    const desktop = viewport === "desktop";
+    assert.deepEqual(
+      rowLabels(document),
+      desktop ? ["Example", "Screens", "Welcome"] : [],
+    );
+    assert.deepEqual(variantToggles(document), []);
+    assert.equal(byClass(document, "mbk-nav-changed").length, desktop ? 1 : 0);
+    assert.deepEqual(
+      filterTargets(document),
+      desktop ? [["All", "design/browse/views/screen"]] : [],
+    );
+  });
+}

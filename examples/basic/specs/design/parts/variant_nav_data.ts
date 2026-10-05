@@ -90,6 +90,5 @@ export const CHANGED_VIEW_ROWS: NavigationRows = [
     kind: "screen",
     label: "Welcome",
     to: DESTINATIONS.changedViews,
-    variants: "closed",
   },
 ];

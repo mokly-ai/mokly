@@ -77,13 +77,13 @@ Tags: mockup
 Make the approved mockups follow the list state of item 5: a list with no
 visible row has no button.
 
-- [ ] In `examples/basic/specs/design/parts/variant_nav_data.ts`, remove the
+- [x] In `examples/basic/specs/design/parts/variant_nav_data.ts`, remove the
       closed "Show variants of Welcome" button from the
       `design/browse/variants/changed-views` state, because Changes shows no
       Welcome variant. Update `tests/design_variant_changes.test.ts`.
-- [ ] Check every other filtered-state mockup for a list button whose list
+- [x] Check every other filtered-state mockup for a list button whose list
       has no visible row, and correct each one in both variants.
-- [ ] Run `npm run build`, `npm run example:build` and
+- [x] Run `npm run build`, `npm run example:build` and
       `npm run example:check`, run the design tests, and smoke-test the
       changed pages at mobile and desktop widths through `npm run dev`.
 
