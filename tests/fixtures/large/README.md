@@ -326,6 +326,11 @@ pass. Four cumulative style pairs give M9/M8 **1.0050** with overlapping ranges,
 meeting the supervisor's continuation rule. Default cold no-change (+6.9%, overlap)
 and linked (+4.8%, disjoint) remain slower; this is not Decision 13 acceptance.
 
+The [M9A residual-cost checkpoint](../../../docs/dev/residual-sheet-cost-checkpoint.md)
+records the full 2.50 GHz diagnostic matrix, worker profiles and design options.
+Cumulative style/no-change is 3.0623 cold / 2.9067 warm; implementation and the
+reference-machine decision await approval.
+
 ### Opt-in material details
 
 `MOKLY_MATERIAL_WORK=1` with `--debug-timings` emits a separate

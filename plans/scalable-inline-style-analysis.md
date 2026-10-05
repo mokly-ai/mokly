@@ -1761,15 +1761,48 @@ occurrences, avoiding sorting/copying/concatenation of cancelled rules for
 equality alone. This requires the user's approval and a change to the route
 contract's Result and proof sections before implementation (M6 finding 2).
 
-- [ ] Reconcile the post-M9 counts/profiles with M6's ranges. Record per-path
+- [x] Reconcile the post-M9 counts/profiles with M6's ranges. Record per-path
       costs and identify the remaining obstacle to every Decision 13 ratio;
       if the targets already hold, record that evidence instead of adding work.
+      The [residual-cost checkpoint](../docs/dev/residual-sheet-cost-checkpoint.md)
+      records all 16 current 2.50 GHz cells and two worker-only profiles, with
+      core collection, exact membership and restored fixtures. Cumulative
+      style is 232.152 / 222.292 s; its same-session style/no-change ratios
+      are 3.0623 / 2.9067. No algorithm, Decision or contract changes.
+- [x] Discovered: separate same-session style/no-change and C/D ratios from
+      cross-host C/B and D/B. Preserve raw values and the supervisor's 1.29–1.45
+      host-factor sensitivity. Different machine identity already fails
+      acceptance; the reference/host decision stays with the user.
+- [x] Discovered: use M9 review finding 2's paired core buckets to distinguish
+      complete-path cost from drift. Ordinary complete views cost an estimated
+      extra 0.08–0.13 ms; large ones save 1.30 ms in changed-code buckets.
+      [Per-path evidence](../docs/dev/residual-sheet-cost-evidence.md) retains
+      page sizes, allocations, HTML/other/unattributed deltas and limitations.
+      A material size threshold versus accepting that cost remains undecided.
+- [x] Discovered: explain the remaining route work without implementing M8
+      finding 4. Profiles separate rule-data access, composition/projection,
+      scan/cache/cancellation, resource walks, windows, metadata, GC and idle.
+      The untimed inventory finds 5508 distinct cumulative sheets in 5520
+      views: exact-sheet reuse covers only 0.30% of segment work.
+- [x] Discovered: present A–E savings assumptions, proof/test obligations and
+      non-overlapping combination projections. No proposed range reaches every
+      Decision 13 target; stronger reuse or user-approved target changes need
+      a decision. Do not implement per-rule cancellation, residual equality,
+      regex changes, route remedies or any recorded M9 finding automatically.
 - [ ] If residual sheet work still dominates, design a contract-preserving
       bound on unchanged-prefix/suffix scanning, lookup and cancellation, or
       another measured remedy. Preserve current segment equivalence, bounded
       flat retention, ordinals, grouped displacement and pair-wide fallback.
       Ask for approval before any new cache semantics or Decision/contract
       change; the checkpoint does not choose an unapproved algorithm.
+      **Decision point:** the linked report recommends seeking approval for B
+      plus bounded cache-free work first. A and E1/E2/E3/E5 preserve the contract
+      only with their stated proofs; B needs a route-contract amendment, C a
+      Decision 5 change, and D/E4 new cache/index semantics. No scope is approved.
+- [x] Discovered: validate and commit/push this documentation-only analysis
+      checkpoint, including the fixture README link and focused evidence.
+      The Markdown exception applies; runtime verification and the remaining
+      implementation/measurement TODOs below await the scope decision.
 - [ ] Implement an approved remedy only if required; add failing work-bound
       tests first, plus full-result differentials and production-path GC tests.
       Prove that unique-sheet/Emotion cold costs do not conceal a default
