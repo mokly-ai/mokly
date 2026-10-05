@@ -2,6 +2,12 @@
 
 ## Active
 
+- [Move `@mokly/mokly` Into `packages/mokly`](./mokly-workspace-package.md) —
+  make the CLI a real workspace member beside `packages/viewer`: private
+  workspace root, `packages/mokly` package manifest, build-time copies of the
+  shipped guides and protocol docs, rewritten test and script paths, and
+  Release Please keyed on `packages/mokly` with unchanged `vX.Y.Z` tags. The
+  tarball layout stays identical. Created 2026-10-05; Milestone 1 is next.
 - [Path Identity, Spec Tree, And Markdown Documents](./path-identity.md) —
   replace `id` and `navPath` with one file-derived path per entry, add
   Markdown documents, detect moves, rename Pages to Specs, and make folder
