@@ -4,7 +4,8 @@ Continuation of [CI Verification](./ci-verification.md).
 
 ## Dependency Cache And Security
 
-CI caches npm's download cache only. `actions/setup-node` keys it from the
+CI caches npm's download cache only; the [native engine contract](./mokly-native-engine.md) adds a
+Cargo cache keyed from `Cargo.lock` when the engine is delivered. `actions/setup-node` keys it from the
 committed `package-lock.json`. `npm ci` always runs, including after a cache
 hit, and every platform's optional native package remains available. A cache
 miss is an ordinary cold install and never permits a skipped command.

@@ -5,7 +5,9 @@
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
 share this attribution policy and its path-keyed result and changed-entry set. The
 [component explorer plan](../../plans/component-explorer.md) records delivery.
-Unregistered catalogues retain their ordinary behavior.
+Unregistered catalogues retain their ordinary behavior. The
+[native engine contract](./mokly-native-engine.md) is the approved target for running this
+attribution in the Rust engine; the policy and result are unchanged.
 
 ## Changes Membership
 

@@ -1,9 +1,11 @@
 # Native Rust Engine
 
-Status: Planned; not started. Created 2026-10-05 with the user's consent after
-the measurement step recorded below. No code has changed. The measurement logs
-and the span aggregator live under `.context/timings/` on the measuring
-machine; they are not tracked.
+Status: Active. Created 2026-10-05 with the user's consent after the
+measurement step recorded below. Milestone 1 is complete: the native engine
+contract and every dependent document name it as the approved target, and the
+measurements are recorded in the fixture guide. No code has changed. The raw
+measurement logs and the span aggregator live under `.context/timings/` on the
+measuring machine; they are not tracked.
 
 **Goal:** add a Rust engine that the TypeScript CLI loads in its own process
 through Node-API bindings built with napi-rs. Move the work that does not need
@@ -111,7 +113,7 @@ npm layout:
 
 Define the complete native boundary before any code.
 
-- [ ] Create `docs/protocol/mokly-native-engine.md` (at most 250 lines): the
+- [x] Create `docs/protocol/mokly-native-engine.md` (at most 250 lines): the
       package layout above, the supported platforms, the loader rules and the
       version check, the exact unavailable-platform error, the data that may
       cross, the event callback shape and its timing mapping, the error-code
@@ -119,38 +121,42 @@ Define the complete native boundary before any code.
       inputs and outputs: `engineVersion`, `renameExclusive`, `createProcessJob`
       with `assign`/`terminate`/`dispose`, `resourceClosure`,
       `analyzeStylesheetChange`, `compareCatalogue`, and `classifyChanges`.
-- [ ] Update `mokly-export-recovery.md` and `mokly-baseline-storage.md`: the
+- [x] Update `mokly-export-recovery.md` and `mokly-baseline-storage.md`: the
       exclusive rename and the Windows job come from the engine, with the same
       primitives, flags, path rules, synchronous error capture, and fail-closed
       behavior as today. Remove the Koffi references and update the primary
       references.
-- [ ] Update `mokly-package.md`, `npm-release.md`, `npm-release-operations.md`,
+- [x] Update `mokly-package.md`, `npm-release.md`, `npm-release-operations.md`,
       `npm-release-evidence.md`, and `dependency-security.md`: platform
       packages, exact-version pairing, the publish order (platform packages,
       viewer, CLI), the registry guard for every package, the Rust advisory
       audit and its exception rules, and the removal of `koffi`.
-- [ ] Update `ci-workflow.md`, `ci-verification.md`,
+- [x] Update `ci-workflow.md`, `ci-verification.md`,
       `ci-verification-security.md`, and `ci-suite-evidence.md`: the native
       build step in every verification job, the Cargo build cache, the
       release build matrix for the five targets, and the native platform job
       changes.
-- [ ] Update `mokly-timings.md`: engine spans keep their names and nesting;
+- [x] Update `mokly-timings.md`: engine spans keep their names and nesting;
       the `review.*` stages report from the engine through the event callback
       with the same session and role; add `engine.load`.
-- [ ] Update `mokly-changes.md`, `mokly-component-review.md`,
+- [x] Update `mokly-changes.md`, `mokly-component-review.md`,
       `mokly-component-changes.md`, `mokly-css-attribution.md`, and
       `mokly-moves.md` Delivery Status lines: the producer is the engine; the
       result schemas are unchanged.
-- [ ] Update `docs/architecture/package-boundary.md`, `README.md` (Develop
-      Mokly, Packages, Key code), `xtask/README.md`, `src/review/README.md`,
-      `src/export/README.md`, and `src/baseline/README.md`.
-- [ ] Add the new document to `docs/protocol/README.md` and list the supported
+- [x] Update `docs/architecture/package-boundary.md`, `README.md` (Develop
+      Mokly, Packages, Documentation), `xtask/README.md`,
+      `src/review/README.md`, `src/export/README.md`, and
+      `src/baseline/README.md`. README Key code entries for `crates/` and
+      `src/engine/` are added when those directories exist.
+- [x] Add the new document to `docs/protocol/README.md` and list the supported
       platforms in `docs/guides/start/install.md`.
-- [ ] Add this plan to `plans/README.md` (done at creation) and keep its Status
+- [x] Add this plan to `plans/README.md` (done at creation) and keep its Status
       current.
-- [ ] Validate Prettier, links, anchors, protocol sizes, and the
+- [x] Record the 2026-10-05 measurements in `tests/fixtures/large/README.md`
+      and point the diagnostic contract at them.
+- [x] Validate Prettier, links, anchors, protocol sizes, and the
       protocol-reading tests.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 2: Native build skeleton
 

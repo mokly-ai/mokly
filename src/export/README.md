@@ -168,6 +168,8 @@ validated, exclusively reserved output. `destination.ts` retains initial absence
 or exact bigint directory identity and checks it before and after capture.
 `rename.ts` lazily binds OS-enforced no-replace moves through Koffi for Linux,
 macOS, and Windows; capture, installation, and recovery share this boundary.
+The [native engine contract](../../docs/protocol/mokly-native-engine.md) is the
+approved target for moving this primitive into the engine's platform crate.
 There is no check-then-replacing-rename or copy fallback. Preserve optional
 platform dependencies when installing the package.
 `inventory.ts` and `references.ts` use

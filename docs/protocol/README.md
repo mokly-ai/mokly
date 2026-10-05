@@ -46,6 +46,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   categories, limits, and independent receiver validation.
 - [Root discovery and ownership](./mokly-root-discovery.md)
 - [Package and authoring contract](./mokly-package.md)
+- [Native engine](./mokly-native-engine.md) — approved Rust engine boundary:
+  platform packages, loader, operations, events, errors, and release rules.
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, watched events, and shortcuts.
 - [CLI terminal compatibility and errors](./mokly-terminal-errors.md) — exact

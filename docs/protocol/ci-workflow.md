@@ -5,7 +5,9 @@
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`. It has
 read-only repository contents permission and cancels superseded workflow runs.
 The repository job is every verification job's shared prerequisite and runs the
-audit-first repository suite.
+audit-first repository suite. The native engine's build steps, Cargo cache, and
+release build matrix are the approved target of the [native engine contract](./mokly-native-engine.md);
+its Delivery Status records their delivery.
 
 The repository job's full-history checkout uses `fetch-depth: 0`. It must fetch
 release tags for the public-package-export ratchet, plus `origin/main` and
@@ -76,7 +78,8 @@ formatting, Clippy, and tests run only in the repository job; selected suite
 jobs still compile xtask to dispatch their gate.
 
 Every npm-running job installs npm 11.7.0 and runs `npm ci`. CI caches only npm
-downloads. Every npm-running job keys npm's download cache from the checked-out
+downloads until the native engine adds its Cargo cache keyed from `Cargo.lock`.
+Every npm-running job keys npm's download cache from the checked-out
 `package-lock.json`; none reads a branch-point lockfile. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)

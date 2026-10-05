@@ -11,7 +11,9 @@ decoder implement this path-keyed component-aware schema v5 for
 Manifest/usage types come from the
 [component manifest](./mokly-component-manifest.md). Version 5 addresses
 screens, components, variants, and views by entry path and view axes, carries
-`previousPath` for paired moves, and stores no artifact path.
+`previousPath` for paired moves, and stores no artifact path. The
+[native engine contract](./mokly-native-engine.md) is the approved target for producing
+this schema in the Rust engine without changing it.
 
 ## Normative Result
 

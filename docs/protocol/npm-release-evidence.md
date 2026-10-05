@@ -112,8 +112,9 @@ workflow step result remains the authority for whether publishing may continue.
 ## Publish Boundary And Timing
 
 Verification selection does not replace release-specific checks. Both modes
-verify immutable local and remote tags, run the live audit, pack and inspect the
-exact viewer and CLI archives, smoke-test clean consumers, recheck source and
+verify immutable local and remote tags, run the live audit, download the native
+engine binaries from the release build matrix, pack and inspect the exact
+platform, viewer, and CLI archives, smoke-test clean consumers, recheck source and
 tags, guard existing registry versions, publish with trusted provenance, and
 verify registry bytes and attestations.
 

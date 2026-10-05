@@ -278,6 +278,12 @@ appearance with any preview scheme. See the
 [viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md) and
 [semantic palette](./docs/protocol/mokly-viewer-palette.md).
 
+A planned native engine adds optional `@mokly/engine-<platform>` packages that
+`@mokly/mokly` installs for the exclusive export rename, the Windows baseline
+job, and catalogue comparison. The
+[native engine contract](./docs/protocol/mokly-native-engine.md) defines the
+platforms, the loader, and every operation.
+
 ## Documentation
 
 - [Getting started](./docs/guides/start/install.md)
@@ -289,6 +295,7 @@ appearance with any preview scheme. See the
 - [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
+- [Native engine contract](./docs/protocol/mokly-native-engine.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/README.md)
 - [Changelog](./CHANGELOG.md)
@@ -301,7 +308,9 @@ generated output, and tests aligned.
 
 For repository development, use the tested Node.js version in
 [`.node-version`](./.node-version), npm 11.7, Rust 1.95, and Chromium for the
-browser suite.
+browser suite. The [native engine plan](./plans/native-rust-engine.md) adds
+Rust crates under `crates/` that `npm run build` compiles for the host; until
+it lands, Rust is used only by `cargo xtask`.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git

@@ -204,6 +204,20 @@ The current maintenance choices are:
   TypeScript analysis. Workspace and packed-consumer checks exercise it; it adds
   no advisory or exception to the reviewed Braces record above.
 
+## Rust Dependencies
+
+The native engine's crates are audited with `cargo audit` against the RustSec
+advisory database in the repository suite, directly after the npm audit, under
+the [native engine contract](./mokly-native-engine.md). Every Low-or-higher
+RustSec advisory fails unless an active reviewed exception in
+`scripts/verification/rust-audit-exceptions.json` covers it. A record names
+the `advisory` (a RUSTSEC identifier), `crate`, inclusive UTC `until` date,
+`reason`, and `tracking` URL, and follows the 31-day, stale-record, and
+duplicate rules above. Database or network failures fail the gate. Engine
+dependencies are reviewed for license and for the absence of consumer-code
+execution before they are added; `Cargo.lock` is committed and updated with
+`cargo update` for targeted advisories, never by hand.
+
 ## Required Evidence
 
 Add a regression first when a reported bug can be reproduced safely. Keep

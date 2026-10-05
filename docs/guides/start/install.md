@@ -55,6 +55,8 @@ npm install --save-dev @mokly/mokly@0.13.0
   select 24.19 or later to avoid the affected runtime releases.
 - A repository with React components, or somewhere to write new ones.
 - Git, once you want to compare a branch with its base.
+- A platform that Mokly's native components support: Linux x64 or arm64 with
+  glibc, macOS x64 or arm64, or Windows x64.
 
 ## Next
 

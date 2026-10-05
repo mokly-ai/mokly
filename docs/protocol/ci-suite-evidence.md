@@ -128,7 +128,8 @@ the calculated runner-minute consumption.
 
 The initial 6–10 minute goal assumes enough concurrent hosted runners and is not
 an acceptance waiver. Queue time and the up-to-22 downstream verification jobs
-must be reported separately from execution. Compare shard balance and the
+must be reported separately from execution, and so is the native engine build
+step of each job under the [native engine contract](./mokly-native-engine.md). Compare shard balance and the
 measured setup/teardown phases of the slow export fixtures before changing
 partitioning. Coverage, assertion deadlines, worker limits, audits and zero
 retry behavior are never relaxed to meet the timing target.

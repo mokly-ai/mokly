@@ -7,6 +7,11 @@ accepted pairing and cached readers for classification and capture. The pure
 policy uses declared hints, identical material, source/title and document/page
 similarity in order. Review v5 emits `previousPath` on paired records; pure
 moves retain empty reasons and do not inflate material output counts.
+The [native engine contract](../../docs/protocol/mokly-native-engine.md) is
+the approved target for running comparison in the Rust engine. Until its
+Delivery Status records delivery, every module here runs in TypeScript; during
+the migration the engine's `MOKLY_NATIVE_ENGINE=0` switch selects this
+implementation for differential runs.
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
 and `BaselineReader` (historical files) interfaces. Paths at the reader boundary

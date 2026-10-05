@@ -7,7 +7,8 @@
   Rust platform primitives, publish per-platform packages, then move the
   comparison engine to Rust phase by phase behind differential tests. Created
   2026-10-05 after measuring the large fixture: comparison is the slowest
-  phase and exhausts memory in Serve and Export. Planned; not started.
+  phase and exhausts memory in Serve and Export. Milestone 1 (contracts and
+  documentation) is complete; implementation starts with Milestone 2.
 - [Path Identity, Spec Tree, And Markdown Documents](./path-identity.md) —
   replace `id` and `navPath` with one file-derived path per entry, add
   Markdown documents, detect moves, rename Pages to Specs, and make folder

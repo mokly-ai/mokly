@@ -72,6 +72,10 @@ adding screens does not consume one shared test deadline. The unsharded
 Tests using `changedFixture` register servers and workers with
 `fixture.onCleanup` to drain them before removing their working tree.
 
+The [native engine contract](../docs/protocol/mokly-native-engine.md) assigns
+this crate the `build-engine` command and the Rust advisory audit; its Delivery
+Status records when they exist.
+
 ## Quick Start
 
 ```bash
@@ -137,3 +141,4 @@ cargo test --package xtask
 - [CI and npm release contract](../docs/protocol/npm-release.md)
 - [CI verification](../docs/protocol/ci-verification.md)
 - [Dependency security](../docs/protocol/dependency-security.md)
+- [Native engine contract](../docs/protocol/mokly-native-engine.md)

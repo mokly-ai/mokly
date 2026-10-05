@@ -57,12 +57,20 @@ checkout version and several later viewer versions; intentionally mismatched
 dependencies are derived from each packed viewer's actual version, so future
 release PRs cannot invalidate the test.
 
+The repository also holds five `@mokly/engine-<platform>` workspaces under
+`crates/mokly-engine/npm/`. They share the CLI version and `v*` tag, and the
+CLI lists them as exact optional dependencies that Release Please bumps with
+it. Publication order is platform packages, viewer, then CLI, each guarded and
+verified in the registry; the native engine contract owns the release build
+matrix and the per-platform load check that precede packing.
+
 Runtime dependencies are intentional and minimal. Mokly does not take a runtime
 dependency on consumer applications, their component systems, or Playwright.
 Development and browser-test packages remain development dependencies. The
-exporter's Koffi dependency supplies OS-enforced exclusive directory rename; its
-optional platform binaries must remain available for export. The native bridge
-is lazy and does not load for build/check/serve or help. The standalone CSS rule
+exclusive directory rename and the Windows baseline job come from the native
+engine's optional platform packages under the
+[native engine contract](./mokly-native-engine.md); they load lazily and never for
+build, check, or help. The standalone CSS rule
 parser uses the production `lightningcss` dependency. Keep its optional native
 packages installed: Linux x64 glibc, macOS arm64/x64, and Windows x64 binaries
 cover the CI runners. Its Node floor is below Mokly's 22.14 floor. The installed
@@ -135,7 +143,9 @@ Release publishing accepts only the dual-runtime profile under the
 [release verification evidence contract](./npm-release-evidence.md).
 The [CI verification contract](./ci-verification-security.md#dependency-cache-and-security)
 owns cache inputs and install guarantees; the
-[CI workflow graph contract](./ci-workflow.md) owns checkout history.
+[CI workflow graph contract](./ci-workflow.md) owns checkout history. The
+native engine's build steps, Cargo cache, Rust advisory audit, and release
+build matrix follow the [native engine contract](./mokly-native-engine.md).
 
 ## Preview Deployments
 

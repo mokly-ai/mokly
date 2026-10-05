@@ -5,7 +5,9 @@ keeps affected-only consumers out of Changes and links them from the component.
 Screen and Review-ignore behavior remains below. Pairing uses kind and path,
 then the move signals; review result v5 carries `previousPath` on paired moves.
 Documents use the page material rules. The viewer presents paired entries under
-the [move contract](./mokly-moves.md).
+the [move contract](./mokly-moves.md). The
+[native engine contract](./mokly-native-engine.md) is the approved target for producing
+this result in the Rust engine; the result schema does not change.
 
 The catalogue's All / Changes filter narrows one navigation tree. There is no
 Review tab, report, or `mokly review`; `--out` belongs only to static `export`.

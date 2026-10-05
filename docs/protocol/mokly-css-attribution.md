@@ -10,6 +10,8 @@ screen-only catalogues, including before a comparison is loaded. Screen-only
 delivery reuses the screen-only classification without component
 classification or a second resource analysis. The result version follows the
 [Changes contract](./mokly-changes-serving.md#comparison-engine), whose v5 is approved.
+The [native engine contract](./mokly-native-engine.md) is the approved target for running
+rule analysis in the Rust engine; the keep-list, outcomes, and result are unchanged.
 
 ## Purpose
 

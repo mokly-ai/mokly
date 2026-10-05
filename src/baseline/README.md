@@ -119,7 +119,9 @@ falling through to a different installation. Arguments remain literal. Combined 
 retain at most 64 KiB; command errors expose the last 40 lines and a zero-based
 command index, argv, exit code and signal. `process_scope.ts` owns command
 lifecycle: POSIX uses process groups with TERM then KILL; Windows uses a native
-kill-on-close Job Object through the existing Koffi bridge. `process_worker.ts`
+kill-on-close Job Object through the existing Koffi bridge; the
+[native engine contract](../../docs/protocol/mokly-native-engine.md) is the
+approved target for moving it into the engine. `process_worker.ts`
 waits for the parent's release until the POSIX group is registered with an
 inherited verification owner, when present, and Windows job assignment succeeds.
 Commands therefore cannot start descendants before ownership is established.

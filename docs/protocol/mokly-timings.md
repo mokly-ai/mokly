@@ -108,6 +108,22 @@ For the scale fixture's CSS share of total review time, divide the union of
 `changes.classify` duration, separately for cold and warm runs. Do not use the
 supervisor's wait span, whole startup time, or sums across sessions.
 
+## Engine spans
+
+Operations of the [native engine](./mokly-native-engine.md) report their spans
+through its event callback into the caller's session with the caller's role,
+numbered from the id the caller supplies and nested under the caller's span.
+Stage names, nesting, counts, and status are the same whether TypeScript or the
+engine runs a phase, so `review.*` records keep this contract unchanged.
+`engine.load` measures loading and version validation of the engine once per
+process; it ends with `status: error` when the engine is unavailable. The
+engine emits no record while timings are disabled.
+
+The scale fixture's recorded measurements live in the
+[fixture guide](../../tests/fixtures/large/README.md#recorded-measurements).
+The memory budget for Changes-ready Serve and complete export on the default
+scale fixture is recorded here when it is measured against the engine.
+
 ## Historical baseline phases
 
 `baseline.resolve` measures repository-root validation and resolving (or accepting

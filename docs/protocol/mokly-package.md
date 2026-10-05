@@ -162,6 +162,16 @@ Baseline readers never execute consumer code through the current package.
 The [page contract](./mokly-pages.md) defines the public page inputs,
 rendering pipeline, derived paths, inheritance, and schema validation.
 
+## Native Engine
+
+The CLI loads a Rust engine into its own process for work that needs no React
+or consumer JavaScript: the exclusive export rename, the Windows baseline job,
+and catalogue comparison. The engine ships as five optional platform packages,
+`@mokly/engine-<platform>`, at the CLI's exact version for Linux x64 and arm64
+with glibc, macOS x64 and arm64, and Windows x64. The
+[native engine contract](./mokly-native-engine.md) defines the packages, the loader,
+every operation, and its Delivery Status.
+
 ## Packaged Documentation
 
 The root package ships the plain-Markdown CLI guides under `docs/guides` and
@@ -187,4 +197,5 @@ literals, and package boundary.
 - [Generated output and manifest v8](./mokly-rendering-generated.md#generated-contract)
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
+- [Native engine](./mokly-native-engine.md)
 - [CI and npm release](./npm-release.md)
