@@ -199,18 +199,20 @@ request without applying review findings automatically.
       severity, impact, lettered solution options and a recommendation without
       changing the implementation.
 
-Verification evidence: the repository and package suites pass, including
-format, lint, both length audits, the four ratchets, Rust checks, typecheck,
-package inspection and all six packed-consumer scenarios, whose ESM consumer
-publishes a dirty and then a clean checkout. The unit suite passes 4,247 of
-4,247 tests and the hydration suite passes all 263. The browser suite passes
-839 of 844 tests. The five failures are all in
-`tests/browser/preview_design_links.spec.ts`, whose shared `ordinaryPreview`
-fixture exceeded its fixed 300-second setup timeout: this sandbox needs about
-289 seconds for that preview build. The same fixture also times out on
+Verification evidence: before the rebase onto `60d48370`, the complete gate
+passed the repository, package, unit (4,247 of 4,247) and hydration (263 of 263) suites. The packed ESM consumer publishes a dirty and then a clean
+checkout. The browser suite passed 839 of 844 tests. The five failures are all
+in `tests/browser/preview_design_links.spec.ts`: its shared `ordinaryPreview`
+fixture exceeded its fixed 300-second setup timeout, because this sandbox needs
+about 289 seconds for that preview build. The same fixture also times out on
 unmodified `origin/main` here, and both preview spec files pass when they run
-alone on this branch (14 of 14). The complete gate therefore stays open until
-hosted CI runs it.
+alone on this branch (14 of 14). After the rebase, which brought only
+documentation changes, the repository and package suites pass again. The unit
+suite passes 4,246 of 4,247: the 2,500 ms bound in
+`tests/postcss_dependency_review.test.ts` measured 2,779 ms. On this sandbox
+that test measures 2,153–2,999 ms with this branch and 2,906–2,965 ms with
+`origin/main`'s code, so the failure depends on load, not on this change. The
+complete gate therefore stays open until hosted CI runs it.
 
 ## Post-merge follow-up (non-blocking)
 

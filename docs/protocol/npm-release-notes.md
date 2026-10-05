@@ -8,8 +8,8 @@ commit returned by
 
 - `43404882 feat!: derive entry identity from paths` — the path identity note
   below.
-- `feat(publish)!: report uncommitted changes` — the uncommitted changes note
-  below.
+- `89eedbdd feat(publish)!: report uncommitted changes` — the uncommitted
+  changes note below.
 
 The historical notes retain coverage for earlier releases: `7aba5ec2`
 (navigation paths), `d227702e` (identity), `40ab4324` (comparison baseline),
