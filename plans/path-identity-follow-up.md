@@ -167,14 +167,17 @@ Tags: ui
 Make list buttons and folder crumbs follow one visible-row rule (items 5
 and 9).
 
-- [ ] A list is open only when its saved choice is open and it has a visible
+- [x] A list is open only when its saved choice is open and it has a visible
       row in the active selection. A list without a visible row has no
       button. Collapse all closes lists in every filter state.
-- [ ] A folder crumb is a reveal only when All without search shows its row;
+- [x] A folder crumb is a reveal only when All without search shows its row;
       otherwise it is plain text. A reveal that no filter change can complete
       ends at once.
-- [ ] Add unit tests and browser tests under All, search and Changes.
-- [ ] In `docs/guides/catalogue/browse.md`, replace "When that folder is
+- [x] Add unit tests and browser tests under All, search and Changes.
+- [x] Preserve saved folder and list values during the browser preference
+      handoff, while keeping lists without visible rows closed. Test hidden
+      folders and lists through hydration.
+- [x] In `docs/guides/catalogue/browse.md`, replace "When that folder is
       hidden, or sits inside a hidden folder, the breadcrumb is plain text
       instead." with "When All shows no row for that folder, because it is
       hidden, sits inside a hidden folder, or holds only hidden folders, the
@@ -182,9 +185,9 @@ and 9).
       everything else.", add "A list you close while you search or view
       Changes stays closed, and a parent shows no chevron when its list has
       nothing to show."
-- [ ] Update `packages/viewer/src/shell/README.md` for the crumb and list
+- [x] Update `packages/viewer/src/shell/README.md` for the crumb and list
       rules.
-- [ ] Run the related tests, and smoke-test the shell in a browser.
+- [x] Run the related tests, and smoke-test the shell in a browser.
 
 ## Milestone 7: Comparison mode lifetime
 

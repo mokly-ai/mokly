@@ -1,13 +1,13 @@
 // Breadcrumb trails derived from the one path tree.
 
 import { viewHref } from "../navigation/routes.js";
-import type {
-  CatalogueHierarchy,
-  HierarchyNode,
-} from "../registry/hierarchy.js";
+import type { CatalogueHierarchy } from "../registry/hierarchy.js";
 import type { ManifestEntry } from "../registry/types.js";
 
+import { navNodeVisible, UNFILTERED_SELECTION } from "./nav_model.js";
+import { folderRevealPath } from "./nav_reveal.js";
 import type { NavSectionNode } from "./nav_tree.js";
+import { buildNavSections } from "./nav_tree.js";
 
 /** A folder row that a breadcrumb reveals in the navigation tree. */
 export interface CrumbFolder {
@@ -30,8 +30,8 @@ export interface CatalogueCrumb {
 /**
  * Derive the folder crumbs above a current entry. A variant's crumbs are its
  * parent's, because the variant is listed under that parent rather than in a
- * folder of its own. Hidden folders without their own page stay text, since
- * All and search never show their rows.
+ * folder of its own. A folder without its own page stays text when All
+ * without search has no row for it, including pruned or hidden ancestry.
  */
 export function structuredCrumbTrail(
   hierarchy: CatalogueHierarchy<ManifestEntry>,
@@ -46,15 +46,13 @@ export function structuredCrumbTrail(
     hierarchy.byPath.get(entryId)?.kind === "component"
       ? "components"
       : "specs";
-  let nodes: readonly HierarchyNode<ManifestEntry>[] = hierarchy.tree;
-  let hidden = false;
+  const sections = buildNavSections(hierarchy);
   return titles.map((label, index) => {
     const path = segments.slice(0, index + 1).join("/");
-    const node = nodes.find((candidate) => candidate.key === path);
-    hidden ||= node?.hidden === true;
-    nodes = node?.children ?? [];
     if (hierarchy.byPath.has(path)) return { href: viewHref(path), label };
-    if (node === undefined || hidden) return { label };
+    const reveal = folderRevealPath(sections, section, path);
+    if (!reveal || !navNodeVisible(reveal.node, UNFILTERED_SELECTION, {}))
+      return { label };
     return { folder: { path, section }, label };
   });
 }

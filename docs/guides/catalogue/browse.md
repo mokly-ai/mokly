@@ -35,8 +35,9 @@ Breadcrumbs above an entry are the titles of its folders, and the entry's
 path sits beside its title as a chip you can copy, so the name to use in a
 link is always in front of you. A breadcrumb folder opens the folder's page
 when it has one; otherwise it opens the folder in the tree, bringing up the
-navigation drawer on a narrow screen. When that folder is hidden, or sits
-inside a hidden folder, the breadcrumb is plain text instead. A link inside a
+navigation drawer on a narrow screen. When All shows no row for that folder,
+because it is hidden, sits inside a hidden folder, or holds only hidden
+folders, the breadcrumb is plain text instead. A link inside a
 screen opens its destination's canonical page, carries its fragment and
 reveals it in the tree.
 
@@ -52,7 +53,8 @@ matching, and the [navigation reference](/docs/reference/navigation/) links to
 the exact rule. The details of a parent list its variants, and the details of a
 variant name the parent it belongs to. Whether a list is open is remembered as
 you move between entries and reload, and Collapse all closes it with everything
-else.
+else. A list you close while you search or view Changes stays closed, and a
+parent shows no chevron when its list has nothing to show.
 
 ## Look at a screen
 

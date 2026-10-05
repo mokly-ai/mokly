@@ -5,7 +5,11 @@ import { folderDisclosureKey } from "./disclosure_keys.js";
 import { FolderIcon, FolderOpenIcon } from "./icons.js";
 import { navRowStyle } from "./nav_guides.js";
 import { LeafRow } from "./nav_leaf_rows.js";
-import { navNodeVisible, UNFILTERED_SELECTION } from "./nav_model.js";
+import {
+  navDisclosureOpen,
+  navNodeVisible,
+  UNFILTERED_SELECTION,
+} from "./nav_model.js";
 import type { NavGroupNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
 
@@ -23,12 +27,16 @@ function GroupRow(props: {
   const store = useOptionalShellStore();
   const node = props.node;
   const key = folderDisclosureKey(props.sectionId, node.key);
-  const open = store?.state.disclosures[key] ?? props.depth === 0;
   const selection = store?.state.selection ?? UNFILTERED_SELECTION;
   const context = store?.context ?? props.context;
   const hidden = !navNodeVisible(node, selection, context);
   const countedChildren = node.children.filter((child) =>
     navNodeVisible(child, selection, context),
+  );
+  const open = navDisclosureOpen(
+    store?.state.disclosures[key],
+    props.depth === 0,
+    countedChildren.length > 0,
   );
   return (
     <details
@@ -42,6 +50,10 @@ function GroupRow(props: {
       }
       data-nav-folder={node.key}
       data-nav-disclosure={key}
+      data-nav-has-rows={String(countedChildren.length > 0)}
+      data-nav-saved-open={String(
+        store?.state.disclosures[key] ?? props.depth === 0,
+      )}
       hidden={hidden}
       onToggle={(event) => {
         if (store?.interactive && event.currentTarget.open !== open)

@@ -64,7 +64,9 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await expect(archive).not.toHaveAttribute("open", "");
   await page.fill("[data-mokly-search]", "home");
   await expect(screens).toHaveAttribute("open", "");
-  await expect(archive).toHaveAttribute("open", "");
+  await expect(archive).toBeHidden();
+  await expect(archive).not.toHaveAttribute("open", "");
+  await expect(archive).toHaveAttribute("data-nav-saved-open", "true");
   await chooseViewport(page, "mobile");
   await chooseScheme(page, "dark");
   await expectFrameSource(
@@ -109,7 +111,9 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await expect(page.locator("[data-mokly-search]")).toHaveValue("home");
   await expect(screens).toHaveAttribute("open", "");
-  await expect(archive).toHaveAttribute("open", "");
+  await expect(archive).toBeHidden();
+  await expect(archive).not.toHaveAttribute("open", "");
+  await expect(archive).toHaveAttribute("data-nav-saved-open", "true");
   await expect(page.locator(".mbk-frame-mobile")).toBeVisible();
   await expect(page.locator(".mbk-frame-desktop")).toBeHidden();
   await expect(page.locator("body")).toHaveAttribute(

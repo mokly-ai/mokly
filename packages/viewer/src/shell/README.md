@@ -81,19 +81,27 @@ Changes activation and route reveals all use that shared query and row, and
 entry kind. The [shell layout contract](../../../../docs/protocol/mokly-shell-design.md#layout)
 owns both rules.
 `crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
-links to it, a visible folder without one becomes a button that
+links to it. A folder without one becomes a reveal button only when All
+without search shows its row in the entry's section. Hidden folders, their
+descendants, and folders holding only hidden rows keep plain-text crumbs.
+The button calls
 `nav_reveal.ts` resolves to the disclosures exposing that folder, and the
 store's `revealFolder` opens them, clears only a hiding filter, opens the
 drawer at narrow widths, and asks `nav_scroll.ts` to focus the folder row.
 An embedded reveal proposes the cleared query as a whole; `nav_scroll.ts`
 keeps the reveal pending until the host commits a selection that shows the
-row, and gives up when a commit leaves it hidden.
+row, and gives up when a commit leaves it hidden. A reveal that no allowed
+filter change can complete ends before it changes filters, disclosures, the
+drawer, or pending reveal state, and proposes nothing to an embedded host.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
 fixed prefixes and complete paths; display labels never enter a key. It rejects
 empty path segments and every earlier key form on restore.
 `disclosure_storage.ts` owns the v4 map codec and its storage key; early
 capture, hydration, the shell store, and watched-reload recovery share its
 validation. Earlier storage versions are never read, translated, or removed.
+The browser preference handoff reads each folder or list's saved value
+separately from its rendered open state. It uses the same visible-row rule,
+so an empty list stays hidden through hydration without losing its saved value.
 `routes.ts` resolves URL paths to current or retained manifest entries;
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
@@ -329,8 +337,11 @@ the startup controller only reports the effective scheme, avoiding iframe
 history entries during manual or automatic appearance changes. The frame-source
 hook preserves initial markup and updates sources only for frames without an
 active adapter; it must not race adapter-owned history-replacing navigation.
-Display-only selection updates preserve manually collapsed filtered groups;
-only changed search, tag or Changes filters reveal their matching groups.
+Display-only selection updates preserve manually collapsed filtered folders
+and lists; only changed search, tag or Changes filters open all their keys.
+Folders and lists use the current map in every filter state. A list opens
+only when its map value is open and it holds a matching row, and has no
+button without such a row. Collapse all closes every folder and list.
 
 `diffs.tsx` owns the comparison band and stage; `comparison_toolbar.tsx`
 renders the band's mode group, the Scroll together switch (a native checkbox

@@ -6,6 +6,7 @@ import {
   encodeDisclosureMap,
   parseDisclosureMap,
 } from "../shell/disclosure_storage.js";
+import { navDisclosureOpen } from "../shell/nav_model.js";
 import { queryConstrains, parseSearchQuery } from "../shell/search_query.js";
 
 import { HYDRATED_EVENT } from "./hydration_event.js";
@@ -145,7 +146,7 @@ function restoreEarlyDisclosures(doc: Document): void {
   )) {
     const key = group.getAttribute("data-nav-disclosure");
     const open = key ? state.get(key) : undefined;
-    if (open !== undefined) group.open = open;
+    if (open !== undefined) setDisclosureOpen(group, open);
   }
 }
 
@@ -224,6 +225,8 @@ function listToggle(group: HTMLElement): HTMLElement | undefined {
  * that owns it is hidden.
  */
 function disclosureOpen(group: HTMLElement): boolean {
+  const saved = group.getAttribute("data-nav-saved-open");
+  if (saved !== null) return saved === "true";
   if (!group.hasAttribute("data-nav-variants"))
     return (group as HTMLDetailsElement).open;
   const expanded = listToggle(group)?.getAttribute("aria-expanded");
@@ -237,20 +240,27 @@ function disclosureOpen(group: HTMLElement): boolean {
  * list stays hidden while its owning row is hidden, as the shell renders it.
  */
 export function setDisclosureOpen(group: HTMLElement, open: boolean): void {
+  if (group.hasAttribute("data-nav-saved-open"))
+    group.setAttribute("data-nav-saved-open", String(open));
+  const expanded = navDisclosureOpen(
+    open,
+    false,
+    group.getAttribute("data-nav-has-rows") !== "false",
+  );
   if (!group.hasAttribute("data-nav-variants")) {
-    (group as HTMLDetailsElement).open = open;
+    (group as HTMLDetailsElement).open = expanded;
     return;
   }
   const toggle = listToggle(group);
   const rowHidden = toggle?.closest<HTMLElement>(".mbk-nav-leaf")?.hidden;
-  group.hidden = !open || rowHidden === true;
+  group.hidden = !expanded || rowHidden === true;
   if (!toggle) return;
-  toggle.setAttribute("aria-expanded", String(open));
+  toggle.setAttribute("aria-expanded", String(expanded));
   const label = toggle.getAttribute("data-nav-variants-label");
   const noun = toggle.getAttribute("data-nav-variants-noun") ?? "variants";
   if (label)
     toggle.setAttribute(
       "aria-label",
-      `${open ? "Hide" : "Show"} ${noun} of ${label}`,
+      `${expanded ? "Hide" : "Show"} ${noun} of ${label}`,
     );
 }

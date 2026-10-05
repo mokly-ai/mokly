@@ -12,6 +12,12 @@ import { buildNavSections } from "./nav_tree.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { queryConstrains, rowMatchesQuery, searchRow } from "./search_query.js";
 
+/** Change evidence used by navigation visibility under the Changes filter. */
+type NavVisibilityContext = Pick<
+  ShellContext,
+  "changedEntries" | "changesStatus"
+>;
+
 /**
  * Build the complete current-and-removed tree displayed in the rail. A removed
  * variant attaches to the current parent the branch-point lookup resolves for
@@ -77,11 +83,20 @@ export const UNFILTERED_SELECTION: Pick<
   "view" | "search" | "tags"
 > = { view: "all", search: "", tags: [] };
 
+/** A folder or list opens only when its current value and visible rows allow it. */
+export function navDisclosureOpen(
+  saved: boolean | undefined,
+  fallback: boolean,
+  hasVisibleRow: boolean,
+): boolean {
+  return hasVisibleRow && (saved ?? fallback);
+}
+
 /** Whether one leaf survives the current search and Changes constraints. */
 export function navLeafVisible(
   leaf: NavLeafNode,
   selection: Pick<ViewerSelection, "view" | "search" | "tags">,
-  context: ShellContext,
+  context: NavVisibilityContext,
 ): boolean {
   const status = context.changedEntries ? "ready" : context.changesStatus;
   if (selection.view === "changes" && status !== "ready") return false;
@@ -109,7 +124,7 @@ export function navLeafVisible(
 export function navNodeVisible(
   node: NavNode,
   selection: Pick<ViewerSelection, "view" | "search" | "tags">,
-  context: ShellContext,
+  context: NavVisibilityContext,
 ): boolean {
   if (selection.view !== "changes" && node.hidden) return false;
   if (node.kind === "leaf")
