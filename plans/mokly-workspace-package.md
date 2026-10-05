@@ -1,7 +1,7 @@
 # Move `@mokly/mokly` Into `packages/mokly`
 
-Status: Active. Milestone 1 is complete. Milestone 2 is in progress. Milestone 3
-starts after the coordinating reviewer approves Milestone 2. The reviewer owns
+Status: Active. Milestones 1 and 2 are complete. Milestone 3 is next and waits
+for the coordinating reviewer to approve Milestone 2. The reviewer owns
 Milestone 4.
 
 Make the CLI package a real npm workspace member at `packages/mokly`, beside
@@ -209,7 +209,7 @@ that does not exist yet.
 The approved `main` change later removed the index. The checked index item is
 history. The plan's `Status:` paragraph now records its progress.
 
-## Milestone 2: Add layout seams with the current layout
+## Milestone 2: Add layout seams with the current layout (complete)
 
 Introduce the names that the move will redefine, while `src/` and `dist/` stay
 at the root. The gate stays green.
@@ -285,7 +285,7 @@ at the root. The gate stays green.
 - [x] Capture `.context/pack-baseline.json` from
       `npm pack --dry-run --json --ignore-scripts` after `npm run build`.
 - [x] Run `cargo xtask check` and fix every failure.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 
 ### Mainline integration notes
 
