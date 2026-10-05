@@ -29,9 +29,10 @@
   desktop and mobile widths. The approved outcomes are recorded. A third
   fresh review found [six findings](../docs/reviews/path-identity.md#third-review),
   and Milestone 16 reported four more items. Milestone 18 fixes third-review
-  finding 9, which failed the pull request's CI, with one shared browser
-  console rule. The other items and the ten undecided second-review findings
-  await the user's decision. The plan stays Active until its pull request
+  item 9, which failed the pull request's CI, with one shared browser
+  console rule; CI now passes, and its review found four Low findings. They,
+  the other items, and the ten undecided second-review findings await the
+  user's decision. The plan stays Active until its pull request
   merges.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive

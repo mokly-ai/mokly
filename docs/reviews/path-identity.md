@@ -685,3 +685,50 @@ disables scripts in those frames by design. The
 
 The other findings of the third review, and the ten undecided second-review
 findings, still await the user's decision.
+
+#### Milestone 18 Review
+
+A fresh reviewer reviewed `7664e598`, focused on Milestone 18. The reviewer
+confirmed the cause with a scratch Chrome probe, and confirmed that the rule
+misses no viewer-owned sandboxed frame and that the regression test is
+deterministic. The pull request's CI run on that commit passed every job. The
+reviewer found four Low findings. The orchestrator confirmed each one by
+reading the code. Nothing was changed during the review.
+
+1. **Low — The rule is wider than the frames it describes.**
+   [`console_notices.ts`](../../tests/browser/console_notices.ts) accepts
+   `/static/` at any path depth and allows text after Chrome's sentence.
+   Viewer frames load `/static/` only from the origin root, so the rule also
+   accepts a report located at a shell route such as `/view/design/static/…`.
+   Its unit test accepts a `/site/static/` frame that the viewer never uses.
+   **Options:** **A)** anchor the path to the root and the sentence to its
+   end, turn the `/site/static/` case into a rejected case, and add rejected
+   cases for a shell route with a `static` segment; **B)** do A and import
+   the root prefixes from the viewer; **C)** document the wide match.
+   **Recommended: A.**
+2. **Low — Four checks still copy the capture code, and nothing stops a new
+   filter.** The hydration helper, `react_host_capabilities.spec.ts`,
+   `react_shell_smoke.spec.ts`, and `moved_rows.ts` each register their own
+   listener. A new spec can copy an old broad filter, which is how item 9
+   arose. **Options:** **A)** use the hydration helper's capture function in
+   the other checks; **B)** move one capture function into
+   `console_notices.ts` and add a guard test that rejects console listeners
+   elsewhere, with an allowlist for the two checks that read one message
+   type; **C)** do nothing. **Recommended: B.**
+3. **Low — The new sentence in `ci-verification.md` says that browser error
+   assertions accept "only" the sandbox report.** `moved_rows.ts` also
+   accepts the embedded host page's `favicon.ico` 404, and two checks fail
+   only on hydration or CSP messages. The sentence also names the file
+   without a link. **Options:** **A)** name those exceptions and add the
+   link; **B)** do A together with finding 2 option B, and name the guard
+   test. **Recommended: B** if finding 2 B is accepted, otherwise A.
+4. **Low — The evidence is labelled inconsistently.** The record above
+   gives 23 of 50 failures (the orchestrator's probe) and 13 of 50 (the
+   real spec before the fix) without saying that these were two runs. The
+   plan says that the 36-test run covered every chromium spec that uses the
+   changed helpers, but four more specs use the hydration helper; they passed
+   in the local full gate and in CI. Some text calls the fixed item
+   "third-review finding 9", but it is one of the four items found during
+   Milestone 16. **Options:** **A)** label both runs, name the full gate as
+   the evidence for those four specs, and call it "item 9"; **B)** do
+   nothing. **Recommended: A.**
