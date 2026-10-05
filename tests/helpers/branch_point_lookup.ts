@@ -1,4 +1,7 @@
-import type { ManifestComponent } from "../../packages/viewer/src/components/manifest_types.js";
+import type {
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "../../packages/viewer/src/components/manifest_types.js";
 import type {
   ManifestEntry,
   ManifestScreen,
@@ -37,6 +40,21 @@ export function lookupComponent(path: string): ManifestComponent {
     slots: [],
     controls: {},
     ownedDependencies: [],
+  };
+}
+
+export function lookupComponentVariant(
+  path: string,
+  variantOf: string,
+): ManifestComponentVariant {
+  return {
+    ...metadata(path),
+    kind: "component",
+    colorSchemes: ["light"],
+    variantOf,
+    props: {},
+    suppliedSlots: [],
+    componentViews: [],
   };
 }
 

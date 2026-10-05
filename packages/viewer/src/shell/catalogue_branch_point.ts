@@ -52,6 +52,12 @@ export interface BranchPointLookup {
   parentOf(variant: EntryIdentity): VariantParentResolution | undefined;
   /** The previous path of a paired current entry only. */
   previousPath(current: EntryIdentity): string | undefined;
+  /**
+   * Current variants whose accepted pair names a former variant of `parent`,
+   * in manifest order. A variant's path is its parent's path plus its slug,
+   * so the former parent is the previous path without its last segment.
+   */
+  movedVariants(parent: EntryIdentity): readonly CatalogueManifestEntry[];
   /** Removed variants whose parent resolves to `parent`, in record order. */
   removedVariants(parent: EntryIdentity): readonly RemovedEntrySnapshot[];
 }
@@ -94,11 +100,20 @@ function createBranchPointLookup(
   );
   const moved = new Map<string, CatalogueManifestEntry>();
   const previous = new Map<string, string>();
+  const departed = new Map<string, CatalogueManifestEntry[]>();
   for (const entry of catalogue.manifest.entries) {
     const previousPath = catalogue.previousPaths.get(entry.path);
     if (previousPath === undefined) continue;
     moved.set(identityKey({ kind: entry.kind, path: previousPath }), entry);
     previous.set(identityKey(entry), previousPath);
+    const end = previousPath.lastIndexOf("/");
+    if (!("variantOf" in entry) || entry.variantOf === undefined || end <= 0)
+      continue;
+    const former = identityKey({
+      kind: entry.kind,
+      path: previousPath.slice(0, end),
+    });
+    departed.set(former, [...(departed.get(former) ?? []), entry]);
   }
   const inventories = new WeakMap<
     readonly EntryIdentity[],
@@ -194,6 +209,7 @@ function createBranchPointLookup(
       return own && parent(own);
     },
     previousPath: (reference) => previous.get(identityKey(reference)),
+    movedVariants: (owner) => departed.get(identityKey(owner)) ?? [],
     removedVariants: (owner) => adopted.get(identityKey(owner)) ?? [],
   };
 }

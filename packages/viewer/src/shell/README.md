@@ -29,7 +29,10 @@ afterwards. `resolve` requires an explicit before/after side and kind.
 `parent` gives an eligible parent of a resolved variant or a stored title
 without a link, and `parentOf` locates a current entry or removed record first.
 `removedVariants(parent)` lists the removed variants whose parent resolves to
-that entry, in record order. `previousPath` gives only accepted move pairs.
+that entry, in record order. `movedVariants(parent)` lists the current variants
+whose accepted pair names a former variant of that parent, in manifest order;
+a removed parent's stage links to them. `previousPath` gives only accepted move
+pairs.
 Results retain current entries or complete removed records. The baseline
 inventory is supplied per call from `componentChanges.baseline`; it adds
 same-path and case-only counterparts, while pairs alone prove moved

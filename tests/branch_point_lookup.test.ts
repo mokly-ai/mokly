@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { branchPoints } from "../packages/viewer/src/shell/catalogue_branch_point.js";
+import {
+  branchPoints,
+  type EntryIdentity,
+} from "../packages/viewer/src/shell/catalogue_branch_point.js";
 import { pairMoves } from "../src/review/moves/pair.js";
 
 import {
   lookupCatalogue,
   lookupComponent,
+  lookupComponentVariant,
   lookupScreen,
 } from "./helpers/branch_point_lookup.js";
 import { moveEntry, moveSignals } from "./helpers/move_entries.js";
@@ -156,4 +160,42 @@ test("move candidates cannot pair a previous path that remains current in the sa
       ),
       { moves: [], diagnostics: [] },
     );
+});
+
+test("moved variants are the current variants that left one former parent", () => {
+  const action = lookupComponent("library/action");
+  const kept = lookupComponentVariant("library/action/default", action.path);
+  const quiet = lookupComponentVariant("library/action/quiet", action.path);
+  const donor = lookupComponent("library/donor");
+  const spare = lookupComponentVariant("library/donor/spare", donor.path);
+  const receipt = lookupScreen("shop/receipt");
+  const paid = lookupScreen("shop/receipt/paid", receipt.path);
+  const toolbar = lookupComponent("library/toolbar");
+  const inline = lookupComponentVariant("library/toolbar/inline", toolbar.path);
+  const lent = lookupComponentVariant("library/toolbar/lent", toolbar.path);
+  const lookup = branchPoints(
+    lookupCatalogue(
+      [action, kept, quiet, donor, spare, receipt, paid, toolbar, inline, lent],
+      [],
+      [
+        { path: quiet.path, previousPath: "Link-Button/quiet" },
+        { path: paid.path, previousPath: "link-button/paid" },
+        { path: toolbar.path, previousPath: "library/bar" },
+        { path: inline.path, previousPath: "link-button/Inline" },
+        { path: lent.path, previousPath: "library/donor/lent" },
+      ],
+    ),
+  );
+  const moved = (parent: EntryIdentity) =>
+    lookup.movedVariants(parent).map(({ path }) => path);
+  for (const path of ["link-button", "LINK-BUTTON"])
+    assert.deepEqual(moved({ kind: "component", path }), [
+      quiet.path,
+      inline.path,
+    ]);
+  assert.deepEqual(moved({ kind: "screen", path: "link-button" }), [paid.path]);
+  assert.deepEqual(moved({ kind: "component", path: donor.path }), [lent.path]);
+  assert.deepEqual(moved({ kind: "component", path: "library" }), []);
+  assert.deepEqual(moved({ kind: "component", path: "library/bar" }), []);
+  assert.deepEqual(moved({ kind: "component", path: action.path }), []);
 });

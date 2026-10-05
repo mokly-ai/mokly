@@ -163,14 +163,17 @@ tests pass. In Serve, the new artboard and the home artboard render at 1440 and
 
 Add the data operation that the shell needs. No presentation changes.
 
-Status: Not started.
+Status: Complete.
 
-- [ ] Write failing pure tests in `tests/branch_point_lookup.test.ts`: two
+- [x] Write failing pure tests in `tests/branch_point_lookup.test.ts`: two
       former parents, case folding, kind isolation, manifest order, a
       surviving donor, and no result for case-only renames or unpaired
       variants.
-- [ ] Add `movedVariants` to `catalogue_branch_point.ts`.
-- [ ] Update the shell README.
+- [x] Add `movedVariants` to `catalogue_branch_point.ts`.
+- [x] Update the shell README.
+
+Verification: the new lookup test failed before the operation existed. All
+seven lookup tests and both guard tests pass.
 
 ## Milestone 4: Removed-entry presentation
 
