@@ -1,16 +1,11 @@
-import fs from "node:fs";
 import path from "node:path";
 
 import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 
-import {
-  isInternalCatalogueFile,
-  isPublicStaticFile,
-  privateStaticPathReason,
-} from "../config/public_files.js";
+import { isInternalCatalogueFile } from "../config/public_files.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
-import { exportResourceDenial } from "../export/resource_policy.js";
 import {
   fragmentViolation,
   htmlResource,
@@ -18,20 +13,21 @@ import {
   type ResourceReference,
 } from "../html_link_validation.js";
 import {
-  extractCssReferences,
   extractHtmlReferences,
   resolveLocalReferencePath,
 } from "../html_references.js";
 import { classifyResourceUrl } from "../resource_url.js";
 
 import { PendingGeneratedFiles } from "./pending_generated.js";
-import { validateImageSetStrings } from "./styles/image_set.js";
+import { loadPublicResource } from "./public_resource.js";
 
 /** Generation-scoped resource parsing, shared by complete and demand compilation. */
 export interface HtmlValidationContext {
   pending: PendingGeneratedFiles;
   parsed: Map<string, ParsedResource>;
   onDemand: boolean;
+  policy?: PublicFilePolicy;
+  watch?: boolean;
 }
 
 interface ReferenceResult {
@@ -39,47 +35,112 @@ interface ReferenceResult {
   violation?: string;
 }
 
+/** Traversal evidence belongs to the same checked closure as Build output. */
+export interface PublicClosureSnapshot {
+  closure: ReadonlySet<string>;
+  references: ReadonlyMap<string, readonly string[]>;
+  locations: ReadonlyMap<string, readonly string[]>;
+  invalid: ReadonlySet<string>;
+}
+export interface ResourceSeed {
+  path: string;
+  sourceRoute: string;
+}
+
 /** Validate generated resources and return only their referenced authored closure. */
 export function validateHtmlLinks(
   outputs: ReadonlyMap<string, string>,
   config: ResolvedConfig,
   context?: HtmlValidationContext,
-  resourceSeeds: readonly string[] = [],
+  resourceSeeds: readonly (string | ResourceSeed)[] = [],
 ): string[] {
+  return [
+    ...buildPublicClosure(outputs, config, context, resourceSeeds).closure,
+  ].sort();
+}
+
+/** One traversal for full compilation, requested views, watching and publication. */
+export function buildPublicClosure(
+  outputs: ReadonlyMap<string, string>,
+  config: ResolvedConfig,
+  context?: HtmlValidationContext,
+  resourceSeeds: readonly (string | ResourceSeed)[] = [],
+  recovery?: PublicClosureSnapshot,
+): PublicClosureSnapshot {
   const pendingFiles = context?.pending ?? new PendingGeneratedFiles(new Map());
   if (!context) pendingFiles.addHtmlMap(outputs);
   const parsed = context?.parsed ?? new Map<string, ParsedResource>();
-  const denial = exportResourceDenial(config);
-  for (const [route, content] of outputs) {
+  const policy = context?.policy ?? new PublicFilePolicy(config);
+  const references = new Map<string, readonly string[]>();
+  const locations = new Map<string, readonly string[]>();
+  const invalid = new Set<string>();
+  for (const [route, content] of outputs)
     if (route.endsWith(".html"))
       parsed.set(
         generatedRoute(route),
         htmlResource(extractHtmlReferences(content)),
       );
-  }
   for (const route of pendingFiles.stylesheetRoutes()) {
     const resource = pendingFiles.resource(route);
     if (resource) parsed.set(generatedRoute(route), resource);
   }
-  const pending = [
+  const origins = new Map(
+    resourceSeeds.map((seed) =>
+      typeof seed === "string"
+        ? [seed, outputs.keys().next().value ?? seed]
+        : [seed.path, seed.sourceRoute],
+    ),
+  );
+  const queue = [
     ...new Set([...outputs.keys(), ...pendingFiles.stylesheetRoutes()]),
   ]
     .map(generatedRoute)
     .filter((route) => parsed.has(route))
-    .concat(resourceSeeds)
+    .concat([...origins.keys()])
     .sort();
+  const queued = new Set(queue);
   const visited = new Set<string>();
   const closure = new Set<string>();
   const violations: string[] = [];
-  while (pending.length) {
-    const route = pending.shift();
-    if (!route || visited.has(route)) continue;
+  for (let index = 0; index < queue.length; index++) {
+    const route = queue[index]!;
+    if (visited.has(route)) continue;
     visited.add(route);
+    const authored = generatedRelative(route) === undefined;
+    if (authored)
+      locations.set(route, [path.resolve(config.mockupsDir, route)]);
+    const decision = authored ? policy.inspect(route) : undefined;
+    if (decision && "location" in decision && decision.location)
+      locations.set(route, [
+        ...new Set([
+          decision.location.logicalPath,
+          decision.location.physicalPath,
+        ]),
+      ]);
     const resource =
-      parsed.get(route) ?? loadResource(route, pendingFiles, config);
-    if (!resource) continue;
+      decision && decision.kind !== "public"
+        ? undefined
+        : (parsed.get(route) ??
+          loadPublicResource(route, pendingFiles, policy, config));
+    if (!resource) {
+      invalid.add(route);
+      const reason =
+        decision?.kind === "private"
+          ? `protected target ${route}: ${decision.reason}`
+          : `missing target ${route}`;
+      violations.push(`${origins.get(route) ?? route}: ${reason}`);
+      const prior = recovery?.references.get(route) ?? [];
+      references.set(route, prior);
+      for (const target of prior)
+        if (!queued.has(target)) {
+          queued.add(target);
+          queue.push(target);
+        }
+      continue;
+    }
     parsed.set(route, resource);
-    if (generatedRelative(route) === undefined) closure.add(route);
+    if (authored) closure.add(route);
+    const edges: string[] = [];
     for (const reference of resource.references) {
       const result = validateReference(
         reference,
@@ -89,20 +150,24 @@ export function validateHtmlLinks(
         config,
         pendingFiles,
         context?.onDemand ?? false,
-        denial,
+        policy,
+        context?.watch ?? false,
       );
-      if (result.violation) violations.push(`${route}: ${result.violation}`);
-      if (
-        result.target &&
-        !visited.has(result.target) &&
-        !pending.includes(result.target)
-      ) {
-        pending.push(result.target);
-        pending.sort();
+      if (result.violation) {
+        invalid.add(route);
+        violations.push(`${route}: ${result.violation}`);
+      }
+      if (result.target) {
+        edges.push(result.target);
+        if (!queued.has(result.target)) {
+          queued.add(result.target);
+          queue.push(result.target);
+        }
       }
     }
+    references.set(route, edges);
   }
-  if (violations.length)
+  if (violations.length && !recovery)
     throw new MoklyError(
       "build-invalid",
       `document links and resources are invalid:\n${violations
@@ -110,7 +175,12 @@ export function validateHtmlLinks(
         .map((item) => `- ${item}`)
         .join("\n")}`,
     );
-  return [...closure].sort();
+  return {
+    closure: new Set([...closure].sort()),
+    references,
+    locations,
+    invalid,
+  };
 }
 
 function generatedRoute(route: string): string {
@@ -130,7 +200,8 @@ function validateReference(
   config: ResolvedConfig,
   pending: PendingGeneratedFiles,
   onDemand: boolean,
-  resourceDenial: (route: string) => string | undefined,
+  policy: PublicFilePolicy,
+  watch: boolean,
 ): ReferenceResult {
   const reference = item.value;
   if (
@@ -167,50 +238,27 @@ function validateReference(
   if (generated !== undefined) {
     if (!pending.has(generated))
       return { violation: `missing target ${reference}` };
-    if (onDemand && item.checkFragment && !reference.includes("#")) return {};
+    if (item.checkFragment && (watch || (onDemand && !reference.includes("#"))))
+      return {};
   } else {
-    const denial =
-      privateStaticPathReason(candidate, config) ?? resourceDenial(target);
-    if (denial)
-      return { violation: `protected target ${reference}: ${denial}` };
+    const decision = policy.inspect(target);
+    if (decision.kind === "private")
+      return {
+        target,
+        violation: `protected target ${reference}: ${decision.reason}`,
+      };
+    if (decision.kind === "missing")
+      return { target, violation: `missing target ${reference}` };
   }
-  const resource = parsed.get(target) ?? loadResource(target, pending, config);
+  const resource =
+    parsed.get(target) ?? loadPublicResource(target, pending, policy, config);
   if (!resource) return { violation: `missing target ${reference}` };
   parsed.set(target, resource);
   const violation = item.checkFragment
     ? fragmentViolation(reference, resource.anchors)
     : undefined;
   if (violation) return { violation };
-  return onDemand && item.checkFragment ? {} : { target };
-}
-
-function loadResource(
-  route: string,
-  pending: PendingGeneratedFiles,
-  config: ResolvedConfig,
-): ParsedResource | undefined {
-  const generated = generatedRelative(route);
-  if (generated !== undefined) return pending.resource(generated);
-  const candidate = path.resolve(config.mockupsDir, route);
-  if (!isPublicStaticFile(candidate, config)) return;
-  let checked = config.mockupsDir;
-  for (const segment of route.split("/")) {
-    checked = path.join(checked, segment);
-    if (fs.lstatSync(checked).isSymbolicLink()) return;
-  }
-  const extension = path.posix.extname(route).toLowerCase();
-  if (![".css", ".html", ".htm"].includes(extension))
-    return { anchors: new Set(), references: [] };
-  const content = fs.readFileSync(candidate, "utf8");
-  if (extension === ".css") {
-    validateImageSetStrings(content, candidate, config.repoRoot);
-    return {
-      anchors: new Set(),
-      references: extractCssReferences(content).map((value) => ({
-        checkFragment: false,
-        value,
-      })),
-    };
-  }
-  return htmlResource(extractHtmlReferences(content));
+  return onDemand && item.checkFragment && generated !== undefined
+    ? {}
+    : { target };
 }

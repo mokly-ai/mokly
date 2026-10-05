@@ -255,7 +255,14 @@ See the [build pipeline](../../docs/architecture/build-pipeline.md),
 [manifest schema](../../docs/protocol/mokly-component-manifest.md), and
 [component guide](../components/README.md).
 
-The approved [public closure contract](../../docs/protocol/mokly-public-closure.md)
+The implemented [public closure contract](../../docs/protocol/mokly-public-closure.md)
 uses one policy instance per compile for configured stylesheets, renderer seeds
 and transitive links. The [post-render edit contract](../../docs/protocol/mokly-comparison-inventory.md#post-render-offset-mapping)
 maps style ownership through exact text patches rather than style positions.
+
+`config/public_policy.ts` caches authored-file decisions for one compilation;
+`config/public_denial.ts` shares lexical/current privacy with export. The
+`html_links.ts` closure builder returns checked membership and watch evidence;
+`public_resource.ts` parses only authorized HTML/CSS, and `resource_seeds.ts`
+retains the route that declares each renderer resource. Requested documents
+carry those seeds through the existing preview observation.

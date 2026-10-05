@@ -2808,20 +2808,112 @@ Branch guards precede the documentation commit and explicit branch push.
 
 Implements 35 A, 14 B, 66 A, 5 A, 37 A, 49 A, 61 B and 56 B.
 
-- [ ] One module decides once per compile whether each authored file may be
+Review correction: 37 A restores main's realpath equality check in the export
+resource policy with `exportError` and the exact package-root message. It does
+not add `config-invalid` or a config-load/Build/Serve rejection. The contracts
+and restored main test title/assertion follow that boundary.
+
+- [x] One module decides once per compile whether each authored file may be
       public. Build, rendering, the link walk, Serve, export and publication
       use it.
-- [ ] One shared closure builder for build, on-demand rendering, the watcher,
+- [x] One shared closure builder for build, on-demand rendering, the watcher,
       Serve, export and publication. Test that the watcher's list equals the
       build's list for a fixture with `<a href>`, `data-nav-href`, preload,
       `<iframe>`, `srcset` and renderer resources. Add a watched-Serve test for
       linked authored pages and PDFs.
-- [ ] Renderer resources pass the same checks. Serve reads listed files without
+- [x] Renderer resources pass the same checks. Serve reads listed files without
       following symbolic links.
-- [ ] Implement 5 A, 37 A, 49 A, 61 B and 56 B with their tests.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Implement 5 A, 37 A, 49 A, 61 B and 56 B with their tests.
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits; push.
+
+### Regression-first evidence and implementation
+
+Before production edits, `node --import tsx --test tests/public_closure_shared.test.ts tests/review_boundary_results.test.ts`
+failed all nine cases. The failures reproduced the separate Watch closure,
+authored navigation 404, unchecked seed, extension/folder-only rejection,
+symlink read, missing package-root export guard, source-name skip, throwing
+delivery parser and export refusal without a destination. Exact output includes:
+
+```text
+404 !== 200
+Missing expected exception.
+[mokly/build-invalid] document links and resources are invalid:
+200 !== 404
+Missing expected rejection.
+Unsupported Mokly delivery version undefined; this viewer supports version 4.
+[mokly/export-invalid] Export ownership is missing; choose an empty directory.
+```
+
+The complete errors and assertion diffs are in `.context/milestone-20/red.log`.
+Two test fixtures were corrected before acceptance: the discovery module exports
+its definitions through `mockups` and directly asserts discovery membership;
+the startup test uses the live runtime rather than preloaded compiled bytes.
+The new implementation shares generation-scoped decisions and one link walk.
+Watch recovery retains confined observable aliases separately from checked
+serving membership. Existing alias/recovery tests stay intact; Serve reads never
+follow those links. Component-resource declarations keep their existing typed
+validation error and route, while the shared link walker keeps `build-invalid`;
+this preserves the existing main error boundary. Renderer-only seeds retain their declaring route. Export's
+package-root check uses the exact restored `exportError` boundary.
+
+The focused 51-case suite and the watched authored-link regression pass. The
+smoke command `node --import tsx .context/milestone-20/smoke.ts` returns 200 for
+`http://127.0.0.1:46253/static/guide.html`, `guide.css`, `spec.pdf` and the
+generated screen. Editing the PDF publishes its new bytes. All servers stop.
+The type check passes after correcting optional fixture metadata. The first
+full unit run found two issues: an escaping alias changed the existing missing
+target diagnostic, and one exact ownership-error assertion still omitted the
+new destination. The policy now retains the missing-target diagnostic while
+still denying the alias; the assertion includes the exact output path under
+61 B. Exact failure lines were:
+
+```text
+The input did not match the regular expression /font\.css: missing target font\.woff2/.
++ '[mokly/export-invalid] Invalid export ownership inventory: /home/vercel-sandbox/mokly/.context/mokly-test-yzMtnl/site.'
+- '[mokly/export-invalid] Invalid export ownership inventory.'
+```
+
+Development failures and complete error objects stay under
+`.context/milestone-20/`; the full gate is rerun after these fixes.
+
+### Full gate and preservation
+
+All seven commands pass on Node 22.14.0:
+
+| Command                                                                  | Result                                                                                                    |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `npm run format:check`                                                   | Pass.                                                                                                     |
+| `npm run lint`                                                           | Pass.                                                                                                     |
+| `npm run typecheck`                                                      | Pass.                                                                                                     |
+| `npm test`                                                               | 3,786 pass; zero skipped or cancelled.                                                                    |
+| `npm run test:browser -- --output .context/milestone-20/browser-results` | 970 pass; no retries or skips.                                                                            |
+| `npm run example:check`                                                  | 436 valid untracked files.                                                                                |
+| `cargo xtask check`                                                      | Pass; audit, 15 Rust tests, six packed consumers, 3,786 unit tests, 747 Chromium and 223 hydration cases. |
+
+The complete cargo gate took 2,906.842 seconds. Repository length and export
+ratchets pass with no cap increase or new exception. The combined closure fixture
+now includes renderer-only CSS in the same document as every required link form;
+its five focused tests and the complete cargo unit run pass. Its first setup
+omitted the declared component owner and failed with
+`[mokly/components] home / mobile/light: style/resource owners must render in this view`;
+adding the rendered owner corrected the fixture without a production change.
+
+No main file or main test title is removed or renamed. Main's exact title
+`a package root equal to mockupsDir fails explicitly instead of publishing a package`
+is restored, replacing this branch's metadata-only title. The shared policy
+reuses the existing source/location helpers. Existing Watch alias recovery
+coverage remains; recovery locations never confer serving permission.
+
+The final fetch found main at `c4138a0b9578448d81ce2a2868bd7ec47f5a88c6`,
+`feat!: file-path identity and Markdown documents (#131)`, after the merged
+source tip `800fe9f8`. Per the user's instruction, it is not merged. Its new
+files and contracts are unmerged additions, not deletions by this milestone.
+The milestone itself has no deleted file. The full gate's comparison boundary
+remains the existing merge base. Final Markdown checks and `git diff --check`
+pass. All smoke and verification processes stop. Branch checks precede commit
+and explicit push; the final review remains with the orchestrator.
 
 ## Milestone 21: Shared watching and command output
 

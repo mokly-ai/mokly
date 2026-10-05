@@ -1,10 +1,7 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import { GENERATED_DIRECTORY, isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
-import { isPublicStaticFile } from "../config/public_files.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
@@ -19,6 +16,7 @@ export async function capturePublicFiles(
 ): Promise<ReadonlyMap<string, Buffer>> {
   const files = new Map<string, Buffer>();
   const denial = exportResourceDenial(config);
+  const policy = new PublicFilePolicy(config);
   for (const name of closure) {
     if (
       !isSafeRepositoryPath(name) ||
@@ -28,27 +26,12 @@ export async function capturePublicFiles(
     const reason = denial(name);
     if (reason)
       throw exportError(`Private export resource: ${name} (${reason})`);
-    const segments = name.split("/");
-    let candidate = config.mockupsDir;
-    for (const [index, segment] of segments.entries()) {
-      candidate = path.join(candidate, segment);
-      const stat = await fs.promises.lstat(candidate).catch(() => undefined);
-      if (!stat || stat.isSymbolicLink())
-        throw exportError(
-          `Referenced export resource is missing or a symlink: ${name}`,
-        );
-      if (index < segments.length - 1 && !stat.isDirectory())
-        throw exportError(
-          `Referenced export resource is not a regular file: ${name}`,
-        );
-      if (index === segments.length - 1 && !stat.isFile())
-        throw exportError(
-          `Referenced export resource is not a regular file: ${name}`,
-        );
-    }
-    if (!isPublicStaticFile(candidate, config))
-      throw exportError(`Private export resource: ${name}`);
-    files.set(name, await fs.promises.readFile(candidate));
+    const content = policy.read(name);
+    if (!content)
+      throw exportError(
+        `Referenced export resource is missing, private, non-regular or a symlink: ${name}`,
+      );
+    files.set(name, content);
   }
   for (const [name, content] of generated) {
     if (name === MANIFEST_NAME) continue;

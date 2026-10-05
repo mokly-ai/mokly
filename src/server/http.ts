@@ -75,6 +75,9 @@ export async function startCatalogueServer(
               );
             options.onPreviewResources?.({
               generation: runtime.generation,
+              ...(document.resourceSeeds
+                ? { resourceSeeds: document.resourceSeeds }
+                : {}),
               documents: [
                 [document.route, document.html],
                 ...(document.watchDocuments ?? []),

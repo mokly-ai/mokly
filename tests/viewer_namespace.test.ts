@@ -103,7 +103,7 @@ test("old export markers fail before mutation with the current ownership error",
     assert.ok(error instanceof Error);
     assert.equal(
       error.message,
-      "[mokly/export-invalid] Invalid export ownership inventory.",
+      `[mokly/export-invalid] Invalid export ownership inventory: ${output}.`,
     );
     return true;
   });

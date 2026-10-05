@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-This contract defines the approved target in
+This contract defines the implemented public-file boundary tracked by
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
 It applies to compilation, on-demand rendering, Watch, Serve, export and
 publication. The [source protection contract](./mokly-source-protection.md)
@@ -30,11 +30,14 @@ Unreferenced files remain private regardless of their names.
 
 Configured package roots may contain the catalogue or sit strictly inside it;
 an inner package tree remains private. A package root equal to `mockupsDir`,
-lexically or after realpath resolution, fails `config-invalid` with:
+after realpath resolution fails export capture with `export-invalid` and:
 
 ```text
 A consumer package root must not equal mockupsDir; choose a separate public output directory.
 ```
+
+This is an export-policy check. Config loading, Build and Serve do not add
+this rejection. Ancestor roots such as `packageRoots: ["."]` remain supported.
 
 Entry discovery and PostCSS scanning skip the actual configured generated
 directory and its aliases by path. An unrelated directory named
@@ -62,7 +65,10 @@ Binary resources retain their exact bytes and have no parsed child links.
 Every renderer resource seed passes the same policy and existence checks as a
 document link before it enters the closure. A declaration cannot bypass source
 protection, authorize a symlink or make an unlisted file public. A failure names
-the declaring/referring generated route and retains `build-invalid`:
+the declaring/referring generated route. Link/seed traversal retains
+`build-invalid`; declared component-resource validation retains its existing
+component-validation error and `component resource is not a public file`
+detail. Both use the same policy. Link diagnostics are:
 
 ```text
 document links and resources are invalid:

@@ -90,14 +90,15 @@ export function assembleExport(
     comparison,
     comparisonFiles,
   );
-  const delivery = parseStaticDelivery({
+  const parsedDelivery = parseStaticDelivery({
     schemaVersion: 4,
     deploymentId: STAGED_DEPLOYMENT_ID,
     canonicalPath: "/",
     comparisonUrl: comparison ? `/${prefix}/review.json` : null,
   });
-  if (!delivery)
+  if (parsedDelivery.kind !== "valid")
     throw exportError("Invalid static catalogue delivery metadata.");
+  const delivery = parsedDelivery.value;
   const inventory = new ExportInventory();
   const shells = new Map<string, StaticDelivery>();
   const addShell = (name: string, html: string, descriptor: StaticDelivery) => {

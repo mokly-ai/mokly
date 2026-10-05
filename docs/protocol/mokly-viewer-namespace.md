@@ -112,7 +112,7 @@ The catalogue service does not support this Mokly version. Update the service an
 Do not retry, send Blobs, call Complete, downgrade, or expose a response body.
 An old-format artifact offered to the current receiver also fails 426. For local
 export replacement, a regular marker with an unsupported version fails before
-mutation with `[mokly/export-invalid] Invalid export ownership inventory.`
+mutation with `[mokly/export-invalid] Invalid export ownership inventory: <output>.`
 Missing ownership and unsafe filesystem entries retain separate errors.
 The marker remains required for upload and local recovery.
 

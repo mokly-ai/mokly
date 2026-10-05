@@ -1,5 +1,3 @@
-import path from "node:path";
-
 import { minimatch } from "minimatch";
 
 import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
@@ -20,10 +18,7 @@ import {
   isComponentVariantDefinition,
   type ComponentDefinition,
 } from "../components/types.js";
-import {
-  isPublicStaticFile,
-  publicFileFailureReason,
-} from "../config/public_files.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
@@ -196,16 +191,18 @@ export function stylesheetsFor(
   ];
   const local = configured.map((stylesheet) => {
     if (/^https?:\/\//.test(stylesheet)) return stylesheet;
-    const absolute = path.resolve(config.mockupsDir, stylesheet);
-    if (
-      !styles?.pending.has(stylesheet) &&
-      (isGeneratedRoute(stylesheet) || !isPublicStaticFile(absolute, config))
-    ) {
-      const denial = publicFileFailureReason(absolute, config);
-      throw new MoklyError(
-        "build-invalid",
-        `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
+    if (!styles?.pending.has(stylesheet)) {
+      const decision = (styles?.policy ?? new PublicFilePolicy(config)).inspect(
+        stylesheet,
       );
+      if (isGeneratedRoute(stylesheet) || decision.kind !== "public") {
+        const denial =
+          decision.kind === "private" ? decision.reason : undefined;
+        throw new MoklyError(
+          "build-invalid",
+          `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
+        );
+      }
     }
     return stylesheetHref(`${GENERATED_DIRECTORY}/${viewPath}`, stylesheet);
   });

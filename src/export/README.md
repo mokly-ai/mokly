@@ -226,7 +226,7 @@ Controls have no rendering capability in exported pages, while usage,
 highlighting and navigation between variant entries remain available without
 the consumer repository.
 
-The approved [boundary contract](../../docs/protocol/mokly-boundary-results.md)
+The implemented [boundary contract](../../docs/protocol/mokly-boundary-results.md)
 keeps static-delivery parsing nonthrowing and converts invalid/unsupported
 metadata to `export-invalid`. Ownership refusals name the destination and any
 unexpected files. The [shared closure](../../docs/protocol/mokly-public-closure.md)

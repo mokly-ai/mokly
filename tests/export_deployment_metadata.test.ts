@@ -13,6 +13,8 @@ const alterations: Record<string, (html: string) => string> = {
   duplicate: (html) => html.replace(/( data-mokly-delivery="[^"]+")/, "$1$1"),
   malformed: (html) =>
     html.replace(/data-mokly-delivery="[^"]+"/, 'data-mokly-delivery="{}"'),
+  unsupported: (html) =>
+    html.replace("&quot;schemaVersion&quot;:4", "&quot;schemaVersion&quot;:3"),
   canonical: (html) =>
     html.replace(
       "&quot;canonicalPath&quot;:&quot;/&quot;",
@@ -38,7 +40,7 @@ for (const [name, alter] of Object.entries(alterations)) {
           },
         },
       }),
-      /shell.*metadata|metadata.*shell|Unsupported Mokly delivery version/i,
+      /\[mokly\/export-invalid\].*shell.*metadata/i,
     );
     assert.deepEqual(await directoryFiles(fixture.output), previous);
   });

@@ -101,7 +101,7 @@ to delete, overwrite, extract, or serve them. Local export recovery can tolerate
 missing owned files but rejects unexpected files. The exporter accepts only
 schema 3 in an existing output directory. A regular marker that parses as
 invalid, too large or unsupported, including an earlier version, fails with
-`[mokly/export-invalid] Invalid export ownership inventory.` Missing ownership
+`[mokly/export-invalid] Invalid export ownership inventory: <output>.` Missing ownership
 and unsafe filesystem entries retain their separate errors. There is no
 version-specific local recovery path. Before clearing a destination manually,
 move any files that must be kept. Upload acceptance requires the complete inventory with

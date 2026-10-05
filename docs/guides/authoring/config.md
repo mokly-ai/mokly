@@ -176,5 +176,5 @@ Stylesheet hrefs are relative to each generated document inside `mokly-generated
 A referenced authored file can be public regardless of its extension or a
 folder name such as `dist`. Keep it outside actual source, package, cache and
 other protected locations. Mokly uses the same checked referenced files in
-Build, Serve and export. A consumer package root must not equal `mockupsDir`;
-choose a separate public catalogue directory.
+Build, Serve and export. Export refuses a consumer package root equal to
+`mockupsDir`; choose a separate public catalogue directory for export.

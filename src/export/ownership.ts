@@ -181,7 +181,7 @@ export async function ownedEntries(
     } else if (entry.isFile()) files.push(name);
     else
       throw exportError(
-        `Export ownership contains a symlink or special entry: ${name}`,
+        `Export ownership contains a symlink or special entry: ${root} (${name})`,
       );
   }
   return { files: files.sort(), directories: directories.sort() };
@@ -199,29 +199,30 @@ export async function assertExportOwnership(
     });
   if (!stat) return;
   if (!stat.isDirectory() || stat.isSymbolicLink())
-    throw exportError("Export ownership requires a real directory.");
+    throw exportError(`Export ownership requires a real directory: ${output}.`);
   const { files, directories } = await ownedEntries(output);
   if (files.length === 0 && directories.length === 0)
     return { files, directories };
   if (!files.includes(EXPORT_MARKER))
     throw exportError(
-      "Export ownership is missing; choose an empty directory.",
+      `Export ownership is missing: ${output}; choose an empty directory.`,
     );
   const parsed = parseExportOwnership(
     await fs.promises.readFile(path.join(output, EXPORT_MARKER), "utf8"),
   );
   if (parsed.kind !== "valid")
-    throw exportError("Invalid export ownership inventory.");
+    throw exportError(`Invalid export ownership inventory: ${output}.`);
   const paths = parsed.value.files.map(({ path: name }) => name);
   const allowed = new Set([...paths, EXPORT_MARKER]);
-  if (
-    files.some((name) => !allowed.has(name)) ||
-    directories.some(
+  const unexpected = [
+    ...files.filter((name) => !allowed.has(name)),
+    ...directories.filter(
       (name) => !paths.some((file) => file.startsWith(`${name}/`)),
-    )
-  )
+    ),
+  ].sort();
+  if (unexpected.length)
     throw exportError(
-      "Export output contains unowned files or directories; move them before exporting.",
+      `Export output contains unowned files or directories: ${output}:\n${unexpected.map((name) => `- ${name}`).join("\n")}\nMove these files or directories before exporting.`,
     );
   return { files, directories };
 }

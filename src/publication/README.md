@@ -39,6 +39,6 @@ See the [publication contract](../../docs/protocol/mokly-publication.md),
 [removed-preview contract](../../docs/protocol/mokly-removed-previews.md), and
 [export internals](../export/README.md).
 
-The approved [public closure contract](../../docs/protocol/mokly-public-closure.md)
+The implemented [public closure contract](../../docs/protocol/mokly-public-closure.md)
 supplies the same per-compilation decisions and checked closure as Build and
 Serve. Capture does not introduce its own public extension or folder-name list.

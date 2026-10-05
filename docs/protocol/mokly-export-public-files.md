@@ -29,8 +29,9 @@ an export referencing remote resources is not guaranteed to work offline.
 One export resource policy applies to current copies and comparison snapshots.
 Exclude configured consumer package roots strictly inside `mockupsDir`, including
 their metadata and non-source payloads. A package root equal to `mockupsDir`
-fails with the exact [package-root error](./mokly-public-closure.md#one-policy-per-compilation).
-Ancestor roots such as `packageRoots: ["."]` remain supported.
+fails explicitly; ancestor roots such as `packageRoots: ["."]` remain supported.
+The [package-root error](./mokly-public-closure.md#one-policy-per-compilation)
+is an export policy error, not a config-load check.
 
 Copy public resources into owned output as ordinary files, never symlinks.
 Reject selected symlink files/directories and escaping references explicitly;

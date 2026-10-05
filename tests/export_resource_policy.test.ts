@@ -19,7 +19,7 @@ test("authored style and asset names retain private-folder checks", async (t) =>
   t.after(() => fixture.close());
   for (const route of [
     "styles/node_modules/private.css",
-    "assets/dist/private.svg",
+    "assets/node_modules/private.svg",
   ]) {
     const policy = exportResourceDenial(
       fixture.config,
@@ -69,7 +69,7 @@ test("nested package payloads are excluded but ancestor package roots remain usa
   );
 });
 
-test("a package root equal to mockupsDir still protects its package metadata", async (context) => {
+test("a package root equal to mockupsDir fails explicitly instead of publishing a package", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
   await fs.promises.writeFile(
@@ -85,7 +85,7 @@ test("a package root equal to mockupsDir still protects its package metadata", a
   };
   await assert.rejects(
     capturePublicFiles(config, new Map(), ["package.json"]),
-    /consumer package metadata/,
+    /package root.*mockupsDir/,
   );
 });
 

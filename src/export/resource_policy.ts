@@ -1,48 +1,8 @@
-import path from "node:path";
-
-import {
-  generatedResourceRoute,
-  isSafeRepositoryPath,
-} from "@mokly/viewer/data";
-
-import { sourceDenialMessage } from "../build/source_denial.js";
-import { isAuthoringSource } from "../build/source_inventory.js";
-import { entryModuleRoots } from "../config/entry_membership.js";
-import { isInside, projectRealPath } from "../config/paths.js";
+import { projectRealPath } from "../config/paths.js";
+import { publicResourceDenial } from "../config/public_denial.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { MANIFEST_NAME } from "../registry/manifest.js";
 
-const PRIVATE_DIRECTORIES = new Set([
-  "node_modules",
-  "target",
-  "dist",
-  "coverage",
-  "test-results",
-  "playwright-report",
-]);
-
-function exportPublicNameDenial(
-  name: string,
-  config: ResolvedConfig,
-  resolveAliases: boolean,
-): string | undefined {
-  if (!isSafeRepositoryPath(name))
-    return "is not a safe repository-relative path";
-  const denial = isAuthoringSource(
-    path.resolve(config.mockupsDir, name),
-    config,
-    resolveAliases ? "all" : "none",
-  );
-  if (denial) return sourceDenialMessage(denial);
-  if (name === MANIFEST_NAME) return "targets internal catalogue metadata";
-  for (const part of name.split("/")) {
-    if (part.startsWith(".")) return "contains a hidden path segment";
-    if (PRIVATE_DIRECTORIES.has(part))
-      return `is inside a private build or dependency directory (${part})`;
-  }
-  if (/\.(?:[cm]?[jt]sx?|map)$/i.test(name))
-    return "uses a private module or source-map extension";
-}
+import { exportError } from "./error.js";
 
 /** Snapshot names use lexical policy; current capture additionally resolves aliases. */
 export function exportResourcePolicy(
@@ -53,7 +13,7 @@ export function exportResourcePolicy(
   return (name) => denial(name) === undefined;
 }
 
-/** Retain the public-policy cause when a required snapshot resource is rejected. */
+/** Export cannot publish the directory that owns a consumer package. */
 export function exportResourceDenial(
   config: ResolvedConfig,
   resolveAliases = true,
@@ -61,62 +21,9 @@ export function exportResourceDenial(
 ): (name: string) => string | undefined {
   const mockups = projectRealPath(config.mockupsDir);
   const packages = config.moduleResolution.packageRoots.map(projectRealPath);
-  const roots = [
-    ...entryModuleRoots(config).map((root) => ({
-      path: root,
-      reason: sourceDenialMessage({ kind: "entries" }),
-    })),
-    {
-      path: config.review.outDir,
-      reason: "is inside the Review output directory",
-    },
-    ...packages
-      .filter((root) => root !== mockups && isInside(mockups, root))
-      .map((root) => ({
-        path: root,
-        reason: "is inside a consumer package root",
-      })),
-  ].flatMap((root) => [root, { ...root, path: projectRealPath(root.path) }]);
-  const files = [
-    ...packages.map((root) => ({
-      path: path.join(root, "package.json"),
-      reason: "is consumer package metadata",
-    })),
-    {
-      path: config.configPath,
-      reason: "is the catalogue configuration module",
-    },
-    { path: config.renderer, reason: "is the configured renderer module" },
-
-    ...(config.sourceFiles ?? []).map((name) => ({
-      path: path.resolve(config.repoRoot, name),
-      reason: sourceDenialMessage({ kind: "listed" }),
-    })),
-  ].flatMap(({ path: file, reason }) =>
-    file
-      ? [
-          { path: file, reason },
-          { path: projectRealPath(file), reason },
-        ]
-      : [],
-  );
-  return (name) => {
-    const generated = generatedResourceRoute(name);
-    if (generated !== undefined)
-      return generatedRoutes.has(generated) && generated !== MANIFEST_NAME
-        ? undefined
-        : "is not an accepted generated resource";
-    const denial = exportPublicNameDenial(name, config, resolveAliases);
-    if (denial) return denial;
-    const candidates = [
-      path.resolve(config.mockupsDir, name),
-      path.resolve(mockups, name),
-    ];
-    for (const candidate of candidates) {
-      const protectedPath =
-        files.find((file) => file.path === candidate) ??
-        roots.find((root) => isInside(root.path, candidate));
-      if (protectedPath) return protectedPath.reason;
-    }
-  };
+  if (packages.includes(mockups))
+    throw exportError(
+      "A consumer package root must not equal mockupsDir; choose a separate public output directory.",
+    );
+  return publicResourceDenial(config, resolveAliases, generatedRoutes);
 }

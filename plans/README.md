@@ -36,7 +36,10 @@
   findings 17 and 52 await decisions. Milestone 19 defines the shared closure,
   watching, comparison, frame and verification contracts, fixes the approved
   documentation findings, and records the TypeScript member ratchet decision.
-  Its format and 13 documentation checks pass.
+  Its format and 13 documentation checks pass. Milestone 20 implements the
+  shared checked closure and export boundary fixes; its full gate passes with
+  3,786 unit tests and 970 browser cases. Main moved to `c4138a0b` and remains
+  unmerged under the user's instruction.
   Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.

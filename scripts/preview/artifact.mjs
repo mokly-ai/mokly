@@ -36,13 +36,15 @@ export async function stagePreviewArtifact(
     ...manifest.entries,
     ...removed.filter((entry) => !currentIds.has(entry.id)),
   ];
-  const delivery = parseStaticDelivery({
+  const parsedDelivery = parseStaticDelivery({
     schemaVersion: 4,
     deploymentId: STAGED_DEPLOYMENT_ID,
     canonicalPath: "/",
     comparisonUrl: comparison ? `/${comparison.directory}/review.json` : null,
   });
-  if (!delivery) throw new Error("Invalid preview delivery metadata");
+  if (parsedDelivery.kind !== "valid")
+    throw new Error("Invalid preview delivery metadata");
+  const delivery = parsedDelivery.value;
   const shells = new Map();
   const addShell = (name, canonicalPath, source = name) => {
     const bytes = files.get(source);

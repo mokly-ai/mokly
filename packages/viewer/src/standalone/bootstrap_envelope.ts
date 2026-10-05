@@ -84,12 +84,15 @@ function readContext(value: Record<string, unknown>): BootstrapContext {
     theme !== "light"
   )
     throw new Error("Invalid shell appearance.");
-  const delivery =
+  const parsedDelivery =
     value["delivery"] === undefined
       ? undefined
       : parseStaticDelivery(value["delivery"]);
-  if (value["delivery"] !== undefined && !delivery)
+  if (parsedDelivery?.kind === "unsupported-version")
+    throw new MoklyVersionError("delivery", parsedDelivery.version, 4);
+  if (parsedDelivery?.kind === "invalid")
     throw new Error("Invalid shell delivery metadata.");
+  const delivery = parsedDelivery?.value;
   return {
     base: value["base"],
     updateVersion: value["updateVersion"],

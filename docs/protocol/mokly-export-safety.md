@@ -37,7 +37,7 @@ must have a regular `.mokly-export-artifact` ownership file using the
 Reject missing/malformed markers, unexpected files outside the inventory,
 unsafe inventory paths, symlink entries, and unsupported versions, including
 older marker versions. A regular marker that fails parsing uses
-`[mokly/export-invalid] Invalid export ownership inventory.` This includes
+`[mokly/export-invalid] Invalid export ownership inventory: <output>.` This includes
 unsupported versions and over-limit marker data. Missing ownership and unsafe
 filesystem entries keep their separate errors; no old marker grants adoption.
 

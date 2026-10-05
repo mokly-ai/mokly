@@ -5,6 +5,7 @@ import type { ManifestV8, ArtifactView } from "@mokly/viewer/data";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import {
@@ -34,6 +35,7 @@ import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
+import { componentResourceSeeds } from "./resource_seeds.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
@@ -76,6 +78,7 @@ async function compileMeasured(
   const fragmentViews = new Map<string, ArtifactView>();
   const componentViews = new Map<string, ComponentViewRecord>();
   const pending = new PendingGeneratedFiles(graph.styleOutputs);
+  const policy = new PublicFilePolicy(config);
   const outputs = accepted
     ? await timeAsync("render", () =>
         renderCooperatively(
@@ -86,6 +89,7 @@ async function compileMeasured(
           componentViews,
           accepted.checkpoint,
           pending,
+          policy,
         ),
       )
     : timeSync("render", () =>
@@ -97,7 +101,7 @@ async function compileMeasured(
           graph.renderWithComponents,
           componentViews,
           undefined,
-          { routes: graph.stylesheetRoutes, pending },
+          { routes: graph.stylesheetRoutes, pending, policy },
         ),
       );
   pending.addHtmlMap(outputs);
@@ -139,17 +143,15 @@ async function compileMeasured(
     ),
   );
   timeSync("components.validate-resources", () =>
-    validateComponentResources(componentViews, config, pending),
+    validateComponentResources(componentViews, config, pending, policy),
   );
   await accepted?.checkpoint();
-  const resourceSeeds = [...componentViews.values()].flatMap((view) =>
-    view.resources.map((resource) => resource.path),
-  );
+  const resourceSeeds = componentResourceSeeds(componentViews);
   const assetClosure = timeSync("html.links-and-resources", () =>
     validateHtmlLinks(
       outputs,
       config,
-      { pending, parsed: new Map(), onDemand: false },
+      { pending, parsed: new Map(), onDemand: false, policy },
       resourceSeeds,
     ),
   );

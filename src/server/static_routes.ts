@@ -1,6 +1,5 @@
 /** Public `/static/` delivery with Browse-only HTML authentication. */
 
-import fs from "node:fs";
 import type { ServerResponse } from "node:http";
 import path from "node:path";
 
@@ -9,7 +8,7 @@ import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
 import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
-import { publicFileLocation } from "../config/public_files.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
@@ -54,22 +53,11 @@ export function serveStatic(
   )
     return send(response, 404, "text/plain", "Not found", method);
   const candidate = path.resolve(config.mockupsDir, relative);
-  const location =
+  const content =
     generated === undefined
-      ? publicFileLocation(candidate, config)
-      : { physicalPath: path.resolve(config.generatedDir, generatedRoute!) };
-  if (!location) {
-    return send(response, 404, "text/plain", "Not found", method);
-  }
-  let content: Buffer;
-  try {
-    content =
-      generated === undefined
-        ? fs.readFileSync(location.physicalPath)
-        : generatedBytes(generated);
-  } catch {
-    return send(response, 404, "text/plain", "Not found", method);
-  }
+      ? new PublicFilePolicy(config).read(relative)
+      : generatedBytes(generated);
+  if (!content) return send(response, 404, "text/plain", "Not found", method);
   const type = contentType(candidate);
   let body: Buffer | string = content;
   if (type.startsWith("text/html")) {

@@ -70,7 +70,7 @@ test("export refuses unowned, malformed, and mixed output", async (context) => {
   );
   await assert.rejects(assertExportOwnership(output), {
     code: "export-invalid",
-    message: "[mokly/export-invalid] Invalid export ownership inventory.",
+    message: `[mokly/export-invalid] Invalid export ownership inventory: ${output}.`,
   });
   await fs.promises.writeFile(
     marker,

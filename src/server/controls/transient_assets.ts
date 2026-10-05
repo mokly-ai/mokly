@@ -1,6 +1,4 @@
 /** Immutable resource closure for an edited document; all bytes remain in memory. */
-import fs from "node:fs";
-import path from "node:path";
 
 import type { ComponentViewRecord, ComponentWireProps } from "@mokly/viewer";
 import {
@@ -18,10 +16,7 @@ import {
   type GeneratedFile,
 } from "../../build/generated_file.js";
 import { isGeneratedRoute } from "../../build/styles/routes.js";
-import {
-  isPublicStaticFile,
-  publicFileFailureReason,
-} from "../../config/public_files.js";
+import { PublicFilePolicy } from "../../config/public_policy.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import type { CatalogueMetadata } from "../../registry/catalogue_index.js";
 import { referencedRoutes } from "../../review/asset_references.js";
@@ -55,6 +50,7 @@ export function captureRenderBundle(
     ]),
   );
   const files = new Map<string, RenderFile>();
+  const policy = new PublicFilePolicy(config);
   const pending = [generatedResourcePath(route)];
   let size = 0;
   while (pending.length) {
@@ -70,15 +66,16 @@ export function captureRenderBundle(
         "render-failed",
         "Preview resource is unavailable; rebuild the catalogue and try again.",
       );
-    const candidate = path.resolve(config.mockupsDir, current);
-    if (generated === undefined && !isPublicStaticFile(candidate, config))
-      throw new Error(
-        `Preview resource is unavailable: ${current} (referenced by ${route}; ${publicFileFailureReason(candidate, config) ?? "missing, non-regular, or outside mockupsDir"})`,
-      );
+    const decision =
+      generated === undefined ? policy.inspect(current) : undefined;
     let bytes =
       generated === undefined
-        ? fs.readFileSync(candidate)
+        ? policy.read(current)
         : generatedBytes(generated);
+    if (!bytes)
+      throw new Error(
+        `Preview resource is unavailable: ${current} (referenced by ${route}; ${decision?.kind === "private" ? decision.reason : "missing, non-regular, or outside mockupsDir"})`,
+      );
     const type = contentType(current);
     const references = referencedRoutes(current, bytes, {
       resourceHints: false,

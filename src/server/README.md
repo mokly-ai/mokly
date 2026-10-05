@@ -262,8 +262,14 @@ when its effective configuration matches. A fresh in-memory compilation already
 provides its source inventory; supplied manifests retain the independent freshness
 check. This avoids a second PostCSS pass merely to recover accepted head bytes.
 
-The approved [shared closure](../../docs/protocol/mokly-public-closure.md)
+The implemented [shared closure](../../docs/protocol/mokly-public-closure.md)
 replaces the separate Watch list with checked serving membership. Serve still
 rechecks each listed file without following symlinks. The
 [shared watch setup](../../docs/protocol/mokly-watch-writers.md) also supplies
 `build --watch`, including initial edits and interruptible lock waits.
+
+`watch_resources.ts` uses Build's closure builder. Invalid recovery edges can
+keep a confined path observable but cannot grant HTTP access. The resource
+watcher retains the previous checked closure on failure. Static and transient
+reads use `PublicFilePolicy.read`, which rechecks components and the open file
+without following symbolic links.

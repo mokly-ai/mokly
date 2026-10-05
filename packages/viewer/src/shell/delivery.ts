@@ -20,7 +20,9 @@ export function readShellDelivery(doc: Document): StaticDelivery | undefined {
   if (mode === "" && raw !== null) {
     try {
       const value = parseStaticDelivery(JSON.parse(raw));
-      if (value) return value;
+      if (value.kind === "valid") return value.value;
+      if (value.kind === "unsupported-version")
+        throw new MoklyVersionError("delivery", value.version, 4);
     } catch (error) {
       if (error instanceof MoklyVersionError) throw error;
       // The shared failure below keeps malformed and missing metadata alike.

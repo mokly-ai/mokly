@@ -13,6 +13,7 @@ import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import { MoklyError } from "../errors.js";
 import {
   extractCssReferences,
@@ -25,13 +26,18 @@ import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
 import { resolveDocumentLinks } from "./document_links.js";
 import type { GeneratedFile } from "./generated_file.js";
-import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
+import {
+  validateHtmlLinks,
+  type HtmlValidationContext,
+  type ResourceSeed,
+} from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
+import { componentResourceSeeds } from "./resource_seeds.js";
 
 export interface CompiledDocument {
   route: string;
@@ -39,6 +45,7 @@ export interface CompiledDocument {
   view?: ComponentViewRecord;
   watchDocuments?: readonly (readonly [string, string])[];
   assetClosure?: readonly string[];
+  resourceSeeds?: readonly ResourceSeed[];
 }
 interface PreparedDocument extends CompiledDocument {
   records: readonly LogicalReferenceRecord[];
@@ -112,6 +119,7 @@ export class DocumentCompiler {
       pending: this.pending,
       parsed: new Map(),
       onDemand: true,
+      policy: new PublicFilePolicy(runtime.config),
     };
   }
 
@@ -144,6 +152,9 @@ export class DocumentCompiler {
         outputs,
         this.runtime.config,
         this.links,
+        document.view
+          ? componentResourceSeeds(new Map([[route, document.view]]))
+          : [],
       );
     } finally {
       this.activeRead = undefined;
@@ -159,6 +170,9 @@ export class DocumentCompiler {
       route,
       html: document.html,
       assetClosure,
+      resourceSeeds: document.view
+        ? componentResourceSeeds(new Map([[route, document.view]]))
+        : [],
       ...(document.view ? { view: document.view } : {}),
       ...(observed.size ? { watchDocuments: [...observed] } : {}),
     };
@@ -199,7 +213,11 @@ export class DocumentCompiler {
         ),
       componentViews,
       target,
-      { routes: this.graph.stylesheetRoutes, pending: this.pending },
+      {
+        routes: this.graph.stylesheetRoutes,
+        pending: this.pending,
+        ...(this.links.policy ? { policy: this.links.policy } : {}),
+      },
     );
     const original = outputs.get(route)!;
     const records = resolveDocumentLinks(
@@ -233,6 +251,7 @@ export class DocumentCompiler {
         new Map([[route, view]]),
         config,
         this.pending,
+        this.links.policy,
       );
     }
     const prepared = {

@@ -44,6 +44,13 @@ for (const [boundary, supported, read] of [
           throw new Error("Unexpected payload read");
         },
       };
+      if (boundary === "delivery") {
+        assert.deepEqual(parseStaticDelivery(value), {
+          kind: "unsupported-version",
+          version,
+        });
+        continue;
+      }
       assert.throws(
         () => read(value),
         (error: unknown) => {

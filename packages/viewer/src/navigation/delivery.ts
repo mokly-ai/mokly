@@ -1,5 +1,4 @@
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
-import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import { parseViewHref, viewHref } from "./routes.js";
 
@@ -21,20 +20,29 @@ function isCanonicalViewPath(value: unknown): value is string {
   );
 }
 
-/** Validate static metadata before it can authorize browser requests. */
-export function parseStaticDelivery(
-  value: unknown,
-): StaticDelivery | undefined {
-  if (
-    value &&
-    typeof value === "object" &&
-    (!("schemaVersion" in value) || value.schemaVersion !== 4)
-  )
-    throw new MoklyVersionError(
-      "delivery",
-      "schemaVersion" in value ? value.schemaVersion : undefined,
-      4,
-    );
+/** Classify untrusted metadata without crossing a browser error boundary. */
+export type StaticDeliveryParseResult =
+  | { kind: "valid"; value: StaticDelivery }
+  | { kind: "unsupported-version"; version: unknown }
+  | { kind: "invalid" };
+
+export function parseStaticDelivery(value: unknown): StaticDeliveryParseResult {
+  try {
+    if (
+      value &&
+      typeof value === "object" &&
+      "schemaVersion" in value &&
+      value.schemaVersion !== 4
+    )
+      return { kind: "unsupported-version", version: value.schemaVersion };
+    const parsed = parseCurrentDelivery(value);
+    return parsed ? { kind: "valid", value: parsed } : { kind: "invalid" };
+  } catch {
+    return { kind: "invalid" };
+  }
+}
+
+function parseCurrentDelivery(value: unknown): StaticDelivery | undefined {
   if (
     !value ||
     typeof value !== "object" ||
