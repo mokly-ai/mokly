@@ -11,10 +11,9 @@ change rule, which replaces second-review finding 1. Milestones 22 to 25, with
 23A and 23B, apply the user's 2026-10-04 decisions on the third review and on
 baseline compatibility. Milestones 26 to 32 apply the user's 2026-10-05
 decisions on the fourth-review finding and on second-review findings 2 to 11.
-Milestone 26 is implemented, verified and pushed as docs only. Milestone 27 is
-implemented, verified and pushed as mockup work. Milestone 28 is implemented
-and verified under the approved PostCSS timing retry rule. Its local commit
-awaits the reviewer's push. Milestones 29 to 31 have not started.
+Milestones 26 to 28 are implemented, verified and pushed. Milestone 28A
+integrates `main` #131 and #133 before Milestones 29 to 32, as the user decided
+later on 2026-10-05.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -2410,6 +2409,19 @@ findings 2 to 11. The numbers below are the ones the user saw on 2026-10-05:
 The user gave no decision about the Unmodified badge on document pages, so it
 keeps the screen rule.
 
+Later on 2026-10-05 the user decided to integrate `main` before Milestones 29
+to 32, and to combine the two format changes. `main` moved to `60d48370` with
+#131 (file-path identity and Markdown documents) and #133 (plan status
+paragraphs). #131 replaces `id` and `navPath` with one file-derived path per
+entry, adds Markdown documents and move detection, renames Pages to Specs, and
+moves the example catalogue to `examples/basic/specs/`. It also defines its own
+unreleased manifest v8, catalogue read model v4 and review result v5. The
+merged branch keeps one unreleased manifest v8, catalogue read model v4 and
+review result v5. They carry main's path identity and this branch's records;
+no version is added. Every record, field and message of this branch that names
+an entry uses main's path identity. The branch adopts #133: there is no plans
+index, and each plan states its status in its first paragraph.
+
 ## Milestone 26: Document the 2026-10-05 review decisions
 
 Docs only. Define the contract for Milestones 27 to 31.
@@ -2778,6 +2790,35 @@ reachable: mockups/action.css`; retaining private span proof fixes it.
   Logs, exact commands and gate reports are under `.context/m28/`.
   Delivery is one local Conventional Commit. The reviewer owns the push and
   the later review. Milestone 29 has not started.
+
+## Milestone 28A: Integrate `main` #131 and #133
+
+Merge `main` at `60d48370` before the remaining work, as the user decided later
+on 2026-10-05. A trial merge gives 315 conflicts.
+
+- [ ] Audit main's additions from the source tip, merge `origin/main` with
+      exactly two parents, resolve conflicts path by path and review every
+      remerge-diff path.
+- [ ] Combine the formats: manifest v8, catalogue read model v4 and review
+      result v5 carry main's path identity and this branch's records
+      (component stylesheet declarations, inserted-stylesheet provenance, root
+      output ranges, per-rule CSS evidence and page resource evidence). Every
+      record, field and message of this branch that names an entry uses the
+      entry path. Record each renamed field, warning text or message here.
+- [ ] Port this branch's authoring, configuration, warning, classification,
+      viewer and design changes to main's structure, including the design
+      screens that moved to `examples/basic/specs/`. Keep this branch's
+      binding decisions and main's behavior. Record every conflict of meaning
+      here for the user.
+- [ ] Adopt #133: start this plan with a `Status: Active` paragraph directly
+      below its title, and replace links to `plans/README.md` in docs and
+      READMEs with links to the `plans/` directory. Update this branch's docs
+      rule to match.
+- [ ] Compare every line that main added since `800fe9f8` with the merged tree.
+      Classify each absent line as an intended migration, a move or a loss,
+      and restore every loss before the push.
+- [ ] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
+      against `origin/main`, record the result, and push the branch.
 
 ## Milestone 29: Fix Serve warnings and startup cleanup
 
