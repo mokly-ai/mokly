@@ -203,9 +203,9 @@ gain Browse interaction. The builder rejects logical `href` on every non-link
 or resource element and rejects `<base href>` in a document containing an
 activatable logical link. It validates matching destinations when both
 navigation attributes coexist, rejects consumer-authored markers, verifies
-fragment anchors across every target view, and binds expected marker presence,
-element namespace/native-link class, and each logical attribute to the exact
-portable value produced for that element.
+fragment anchors across every target view, and retains each logical target with
+its referring route for that final check. Element namespace and native-link
+classification belong to rewriting, not retained per-reference metadata.
 
 After link rewriting, validate final HTML, component ranges, controls,
 resources and every logical fragment target. Configured renderers and page

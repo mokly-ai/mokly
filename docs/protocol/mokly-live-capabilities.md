@@ -170,7 +170,7 @@ They retain the full reload lifecycle.
 ## Recovery And Optional Transports
 
 Reload recovery uses the existing one-shot session-storage payload. The host
-converts between the legacy `changedOnly` value and the shell's `view` value,
+converts between the stored `changedOnly` value and the shell's `view` value,
 and accepts recovery only for the current URL and a version no newer than the
 rendered page. Reading removes the payload.
 

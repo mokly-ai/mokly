@@ -162,8 +162,8 @@ directory prefixes and the final ownership marker. Reference validation also
 proves local resource closure. `ignored.ts` keeps schema 3 owned outputs and
 transactions out of broad Watch rules. It caches parsed ownership by file
 identity and timestamps as bounded path/prefix sets, revalidating with one
-metadata read per lookup. Retired schema 1 outputs are
-intentionally treated as unowned, so their events are not suppressed and their
+metadata read per lookup. Every marker that is not a valid v3 marker proves
+no ownership, so events for those files are not suppressed and the
 files never gain replacement authority. The repository-only preview
 adapter supplies validated host aliases and uses current export ownership. It
 captures an in-memory compilation, retaining optional Changes and its
@@ -181,7 +181,8 @@ owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Only the current reservation namespace controls writer admission.
 Export captures only compiled `mokly-generated/` files and the v8
 `assetClosure`. Reference validation, Review and content-change classification
-use the same confined closure. Manifest and cache privacy is unconditional.
+use the same confined closure. Comparison copies also pass the same lexical
+consumer-package and source policy. Manifest and cache privacy is unconditional.
 A protected closure reference fails with its referring route; unreferenced
 HTTP paths return 404. Build and export share HTML anchor validation through
 `html_link_validation.ts`. Watch ignores `mokly-generated/` by prefix and
@@ -224,3 +225,9 @@ shared workspace; removed components and variants retain baseline snapshots.
 Controls have no rendering capability in exported pages, while usage,
 highlighting and navigation between variant entries remain available without
 the consumer repository.
+
+The approved [boundary contract](../../docs/protocol/mokly-boundary-results.md)
+keeps static-delivery parsing nonthrowing and converts invalid/unsupported
+metadata to `export-invalid`. Ownership refusals name the destination and any
+unexpected files. The [shared closure](../../docs/protocol/mokly-public-closure.md)
+removes extension/build-folder-only denials while preserving source privacy.

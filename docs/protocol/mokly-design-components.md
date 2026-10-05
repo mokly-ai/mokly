@@ -27,10 +27,10 @@ fixtures keep their separate roles. New usage in the outer inspector comes from
 the real generated manifest, not from those pictured fixtures.
 
 All existing design ids, relationships, mobile/desktop artboards, copy,
-links and supported native controls remain. The requested normalization replaces
-the legacy Details disclosure and segmented viewport/theme controls throughout
-the catalogue with the shared icon inspector and view toolbar. The legacy footer
-variant and its presentation/behavior fields are removed, not retained as options.
+links and supported native controls remain. All catalogue screens use the shared
+icon inspector and view toolbar for Details, viewport and theme controls.
+The footer has one current form; no alternative disclosure, presentation or
+behavior fields are supported. Comparison-mode controls keep their segments.
 New component entry metadata belongs outside the rendered sample;
 samples contain no implementation notes, environment badges or extra footers.
 
@@ -228,7 +228,7 @@ Acceptance after a registered baseline exists:
 The initial registration migration may create legitimate one-time structural
 changes against an unregistered baseline. Do not add blanket Review ignores to
 hide them. Prove steady-state attribution with two fully registered snapshots.
-Update existing legacy style-attribution tests deliberately: retain meaningful
+Style-attribution tests cover the current model: retain meaningful
 global/layout assertions and use the shared component-aware classifier for
 owned styles, not the old raw changed-path helper.
 

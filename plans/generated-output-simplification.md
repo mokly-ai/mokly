@@ -2689,9 +2689,15 @@ guides and READMEs, and fixes the documentation-only findings.
 - **57 B:** remove the shared browser baseline setup and return both export
   fixtures to the committed-output helper. Keep the cold-rebuild test and the
   real `preview:build` test.
-- **63 B:** delete the dead code and stale references; add an unused-member
-  check with a ratchet like the existing internal-export check, and a test that
-  every exact file path in the ESLint configuration exists.
+- **63 B:** delete the listed dead code and stale references. Use a small
+  repository script built on TypeScript's language service `findReferences`,
+  not Knip v6 or pinned Knip v5. Check class methods, getters, setters and
+  properties in `src/` and `packages/viewer/src` for references outside their
+  declarations. Ratchet results like the internal-export check and run it in
+  the same gate. Measure its runtime; if it exceeds about 60 seconds, restrict
+  it to non-exported classes and record that choice. Written-but-unread
+  interface fields are outside this tool; remove only the listed fields by hand.
+  Also test that every exact file path in the ESLint configuration exists.
 - **65 A:** fix the listed tests and plan rows.
 - **42 B:** correct the release notes, and commit generated public API reports
   for `@mokly/mokly` and `@mokly/viewer`. CI fails when a report changes
@@ -2707,14 +2713,96 @@ notices from stderr to stdout, and 5 A stops export from rejecting referenced
 authored files by extension or build-folder name alone. 37 A, 54 A and 57 B
 restore `main`'s behaviour.
 
-- [ ] Define the exact behaviour, messages and tests for every decision above
+- [x] Define the exact behaviour, messages and tests for every decision above
       in the affected protocol documents, guides and READMEs.
-- [ ] Fix the documentation-only findings 45, 46 and 64, and the release-note
+- [x] Fix the documentation-only findings 45, 46 and 64, and the release-note
       text of finding 42.
-- [ ] Write the squash-merge message text with `!` and `BREAKING CHANGE:`
+- [x] Write the squash-merge message text with `!` and `BREAKING CHANGE:`
       footers into this milestone, for the PR description (3 B).
-- [ ] Run `npm run format:check` and the documentation tests; review the diff;
+- [x] Run `npm run format:check` and the documentation tests; review the diff;
       commit with Conventional Commits; push.
+
+### Contract choices and verified review detail
+
+The focused contracts are `mokly-public-closure.md`,
+`mokly-watch-writers.md`, `mokly-comparison-inventory.md`,
+`mokly-boundary-results.md` and `verification-api-members.md` under
+`docs/protocol/`. Existing owner documents link to their approved targets.
+The contracts keep findings 17 and 52 unchanged. Package-root equality is the
+separately approved restoration, not resolution of finding 17's other rules.
+
+The detailed reports in `.context/review-reports/INDEX.md` resolve the missing
+file lists. Their references were checked against the current tree. The
+source of each requested fix is recorded in that index; already-correct text
+is retained. Findings 45, 46 and 64 are documentation work here. The listed
+member/test cleanup and inaccurate Milestone 17 table rows belong to the
+approved tooling step. No unrelated review finding is changed.
+
+Tool discovery confirms API Extractor 7.59.3 supports the required Node runtime.
+The report design runs it per typed public subpath and inventories non-code
+exports. Knip 6.39.0 is current and supports Node 22.14.0, but its maintained
+v6 line removed `classMembers`. The user's follow-up explicitly selects a
+small TypeScript language-service ratchet using `findReferences` instead.
+No new member-analysis package or old Knip version is installed. API Extractor
+still comes from the current npm release when implementation starts. Registry
+metadata and research receipts are under `.context/milestone-19/`.
+
+### Squash-merge message
+
+Use this text in the PR description and as the squash-merge message; release
+versions and changelogs remain owned by the release workflow:
+
+```text
+feat!: simplify generated output and delivery
+
+Use one generated tree, checked authored resources, shared watching and
+per-commit v8 baseline selection. Keep current format rejection, safe output
+transactions and content-delta publication.
+
+BREAKING CHANGE: Remove generatedOutput and publicExclude configuration.
+Only build, build --watch and serve --build write generated output. Check
+uses Git-index tracking. Generated files and the private v8 manifest live
+under mockupsDir/mokly-generated. Earlier baseline results are not cached.
+
+BREAKING CHANGE: Remove compatibility.transformer and its public types.
+Author portable documents and links directly. Current readers do not adopt
+or convert older catalogue, baseline, cache or export formats.
+
+BREAKING CHANGE: Viewer resources use mokly-viewer with no __mokly alias.
+Catalogue and static delivery use v4, bootstrap uses v1, ownership uses v3,
+and upload uses v2. Older services must update before accepting publication.
+ManifestV8 replaces ManifestV7 and adds the closure and generated inventory.
+
+BREAKING CHANGE: Stored Browse recovery requires changesStatus and
+filterBaselineDisclosures. Removed records require snapshotId with any
+non-null comparisonUrl. Static delivery parsing returns a tagged result;
+browser readers retain typed version failures. Plain successful baseline
+notices use stdout. See npm-release-notes.md for the complete API migration.
+```
+
+### Documentation verification and scope
+
+Verified every explicit report reference against current source. The corrected
+facts include generated CSS/assets in guides, catalogue v4, current-marker
+stripping, unsafe-tree Check errors, complete baseline IPC descriptors,
+`html.links` timings, completion temporary cleanup, and lexical policy on
+comparison copies. Protocol prose describes current rules; meaningful Git
+merge-base terminology, former-parent labels, unsupported-input rejection and
+release migration guidance remain. No new history lint is added (46 A).
+The full search and its retained normative matches are under
+`.context/milestone-19/`. No main file or main test title is removed or renamed.
+
+The Review acceptance matrix uses the existing internal Review operation;
+the CLI has no `review` command, so this plan does not add one. The debris
+regression is assigned to the baseline/comparison step. Existing capped protocol
+pages keep their exact line counts; no cap or test metadata changes here.
+
+Validation: Node 22.14.0; `npm run format:check` passes. The exact Markdown
+command is `node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_sizes.test.ts tests/protocol_split_links.test.ts tests/protocol_doc_history.test.ts tests/guides_structure.test.ts tests/guides_copy.test.ts`;
+all 13 pass with no failures, skips or cancellations. `git diff --check` passes.
+No validation failed. This documentation-only step requires no full cargo gate.
+The source tip remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge.
+Branch guards precede the documentation commit and explicit branch push.
 
 ## Milestone 20: One public-file policy
 
@@ -2752,11 +2840,13 @@ Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
 Implements 39 B, 54 A, 55 A, 59 A, 60 A, 48 A, 58 A and 62 A.
 
 - [ ] Add the per-side inventory reader. Test added, removed and renamed pages,
-      screens, stylesheets, assets and authored files through `mokly review` and
-      live Changes.
+      screens, stylesheets, assets and authored files through the internal Review
+      operation and live Changes. The public CLI has no `review` command.
 - [ ] Restore targeted base reads (54 A) and filter the base's generated folder
       (55 A), with a moved-root comparison test.
 - [ ] Implement 59 A with a deterministic interleaving test, and 60 A.
+- [ ] Add a table-driven cache-debris sweep test for every temporary name the
+      builder writes, including `complete-<uuid>.tmp` (64 A).
 - [ ] Add the 48 A tests.
 - [ ] Implement 58 A with Build and Serve tests, and 62 A.
 - [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.

@@ -16,7 +16,7 @@ One package-owned semantic palette carries the recorded swatches and their
 three Light corrections, in
 [mokly-viewer-palette.md](./mokly-viewer-palette.md). The appearance mockups
 are delivered: every appearance entry renders in both schemes, the depicted top
-bar component owns the one Appearance control, and the legacy head-band scheme
+bar component owns the one Appearance control, and a separate head-band scheme
 depictions are gone.
 
 The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the work.

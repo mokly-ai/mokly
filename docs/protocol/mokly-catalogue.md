@@ -260,7 +260,7 @@ remain allowlisted. The [path contract](./mokly-nav-paths.md#order-and-keys)
 owns the intentional change from v1's authored tree order. Version 3 removes
 every route and path field, makes component variants entries, and keys removal
 by id. Version 4 uses one fixed layout from `GENERATED_DIRECTORY` and stores
-no prefix field. Its unreleased version number remains 4. Optional fields are additive; removals, required additions, changed
+no prefix field. Its schema version is 4. Optional fields are additive; removals, required additions, changed
 meaning, new union discriminants or incompatible paths require a new version.
 Ownership v3 and upload v2 gate the viewer namespace; the review result and delivery
 descriptor follow [Changes](./mokly-changes.md) and

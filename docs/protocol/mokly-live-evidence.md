@@ -19,7 +19,7 @@ Changes status and workspace evidence from one request snapshot.
 
 Content version starts at the server's initial update version. A content update
 advances both versions; an evidence update advances only the update version.
-An omitted update kind means content, including legacy parent/child messages.
+An omitted update kind means content, including parent/child messages without that optional field.
 Explicit kinds are `content` and `evidence`; invalid IPC kinds are rejected.
 Child restarts retain the supervisor's monotonically increasing version boundary.
 

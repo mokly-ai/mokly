@@ -27,7 +27,7 @@ All paths in the compiled output map and `generatedFiles` are relative to
   <authored closure files at their existing catalogue-relative paths>
 ```
 
-Preserve `main`'s kind/id route derivation and variant identities. A logical
+Preserve kind/id route derivation and variant identities. A logical
 entry route need not have a generated HTML file: component parents and use
 cases remain shell routes. The manifest inventory records actual files only.
 Keep the module extension before `.css`: `src/home.mockup.tsx` produces
@@ -37,9 +37,9 @@ root order, and byte-identical asset deduplication from `main`.
 
 `GENERATED_DIRECTORY` remains defined only in
 `packages/viewer/src/catalogue/delivery_paths.ts`, exported by
-`@mokly/viewer/data`. Replace `main`'s definition in `src/build/styles/routes.ts`
-with a direct import. Do not retain a second constant or prepend the directory
-twice when moving `main`'s catalogue-relative style routes into this map.
+`@mokly/viewer/data`. The style route builder imports this shared constant.
+No second definition or duplicate directory prefix is permitted. Generated
+style and asset keys in the output map are relative to the generated root.
 
 Keep authored entries, renderer, package roots and PostCSS modules
 outside this tree through both lexical and physical aliases. Broad entry globs
@@ -49,7 +49,7 @@ child. Entry modules may sit below `mockupsDir` as protected authored sources,
 but `entriesDir` must not equal `mockupsDir`, including through a real-path
 alias. Preserve the current `config-invalid` error:
 `authored source directories must not equal mockupsDir`. Do not restore
-`publicExclude`. Imported CSS keeps `main`'s public-source privacy checks.
+`publicExclude`. Imported CSS keeps public-source privacy checks.
 
 Reserve `styles` and `assets` as the first segment of any generated HTML page
 or fragment route, including supplied internal routes and future route kinds.
@@ -69,7 +69,7 @@ identity helpers cannot produce these prefixes; test the lower-level route
 boundary too. This does not add an authored `route` option. Only v8 baselines
 reach a content reader; there is no earlier route model to adapt.
 
-Finding 32 changes documentation only: generated HTML derives from kind/id and
+Generated HTML derives from kind/id and
 starts with `pages/`, `screens/` or `components/`. The outer delivery prefix is
 not part of those routes; an id may still contain the text `mokly-generated`.
 The helper's construction guarantees the first segment, not a generic path
@@ -98,7 +98,7 @@ file below the outer `mokly-generated/` prefix gets that access.
 
 Generated CSS traverses `@import` and `url()` against the pending output map;
 binary resources are checked by existence and bytes, never parsed as text.
-Keep `main`'s local `image-set()` string rejection and remote/data URL handling.
+Keep local `image-set()` string rejection and remote/data URL handling.
 An input CSS file or asset outside `mockupsDir` can be copied by the imported
 CSS pipeline into the generated set; its original source path stays private
 and never enters `assetClosure`. Direct links outside `mockupsDir` stay invalid.
@@ -118,7 +118,7 @@ the definition, not necessarily the module that called its helper.
 
 ## Commands And Accepted Generations
 
-Remove committed/derived branches and Git-ignore committability checks from
+No output-mode branches or Git-ignore committability checks participate in
 the imported CSS implementation. Only `check` reads the current index, using
 the complete expected tree including pages, manifest, CSS, and binary assets.
 Keep the exact tracked/mixed/untracked and stale-output errors in
@@ -126,7 +126,7 @@ Keep the exact tracked/mixed/untracked and stale-output errors in
 Untracked checks never inspect an old output tree, even for CSS ownership.
 Build can write ignored output; neither `.gitignore` nor head tracking gates it.
 
-Preserve main's repository-scoped generated-output lock and its exact holder,
+Preserve the repository-scoped generated-output lock and its exact holder,
 realpath-alias, bounded wait, cancellation, dead-holder reclamation and cleanup
 guarantees. Acquire it once for the entire generated-tree transaction, including
 validation, staging, backup, install, rollback and cleanup. Build, watched Build
@@ -147,7 +147,7 @@ Plain Serve, export, publication, selected comparisons and component previews
 use accepted in-memory CSS/assets even when local output is absent or stale.
 Serve exposes only accepted generated files and the validated authored closure;
 the private manifest returns 404. Export and publication omit that manifest.
-Retain `main`'s lazy per-generation CSS validation and route indexes, MIME
+Retain lazy per-generation CSS validation and route indexes, MIME
 handling, GET/HEAD behavior, source-input drift checks and cancellation fences.
 
 Imported CSS, nested imports, assets, PostCSS configuration/helpers and plugin
@@ -158,7 +158,7 @@ watcher. `serve --build --no-watch` writes once. The Serve child never writes.
 
 ## PostCSS Content Inputs Without Modes
 
-Preserve `main`'s isolated per-graph plugin worker, module resolution, pruning
+Preserve isolated per-graph plugin worker, module resolution, pruning
 before PostCSS, CSS Modules after PostCSS, dependency aliases, source inventory,
 diagnostic ordering, exact-required-input exceptions and worker-failure handling.
 Apply one output policy regardless of Git tracking:
@@ -175,7 +175,7 @@ Apply one output policy regardless of Git tracking:
   A report rooted inside it contributes no files or watches. Do this even
   when output is tracked. Remove the committed-mode directory-scan error.
 - Keep Review/cache/dependency and denied-directory exclusions. Remaining
-  plugin-only inputs under `mockupsDir` still fail `main`'s public-file guard
+  plugin-only inputs under `mockupsDir` still fail public-file guard
   unless already graph-inventoried; exclusion of generated output does not
   make authored public files into private inputs.
 
@@ -202,12 +202,12 @@ older layouts into v8. A pre-v8 manifest selected inside the generated tree or f
 own build produces the typed earlier-baseline unavailable outcome. Committed
 root-level metadata cannot suppress a rebuild; invalid caches rebuild.
 Feed changed compiled CSS to rule-aware attribution; its private CSS source
-is dependency evidence, not a second public stylesheet. Preserve `main`'s
+is dependency evidence, not a second public stylesheet. Preserve the
 delivered-source suppression, shared-impact fallbacks, removed-resource rules,
 component fast paths and generation consistency. Pre-v8 baselines do not
 produce a one-time stylesheet Changes jump because their content is not read.
 
-Acceptance must retain `main`'s CSS/Modules/PostCSS regressions and this branch's
+Acceptance covers CSS/Modules/PostCSS regressions and the
 tracking, transaction, baseline and closure tests. Add reserved-route rejection,
 raw binary inventory hashes, no stale-disk fallback, all three styled delivery
 surfaces, watcher success/failure, output-independent PostCSS scans, and v8

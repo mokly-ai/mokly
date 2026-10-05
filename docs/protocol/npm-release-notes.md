@@ -2,21 +2,28 @@
 
 ## Unreleased Breaking-Change Coverage
 
-Before a close-out commit, `npm-release-notes.md` must name every `feat!`
-commit returned by
-`git log --oneline origin/main..HEAD | grep 'feat!'`. The current coverage is:
+The squash-merge commit uses `!` and `BREAKING CHANGE:` footers for the
+contracts below. Release Please owns package versions and changelogs. The
+[public API reports](./verification-api-members.md#public-api-reports) cover
+all typed package entry points and the non-code export inventory. Any report
+change relative to `origin/main` requires a release-note change in that diff.
+The existing released-export-name check remains independent.
 
-- `7aba5ec2 feat!: replace collections with navigation paths` — the navigation
-  path note below;
-- `d227702e feat!: close out id-derived routes plan` — the identity note;
-- `40ab4324 feat!: drop comparisons against older baselines` — the comparison
-  baseline note;
-- `c16926ba feat!: close out id-derived routes review fixes` — the baseline and
-  viewer host notes;
-- `52ca8548 feat(publish)!: upload catalogue content deltas` — the delta
-  publishing note; and
-- `6775282d feat!: use portable viewer namespace` — the portable namespace
-  note below.
+## Generated Output And Manifest API
+
+`MoklyConfig` no longer accepts `generatedOutput` or `publicExclude`.
+`mockupsDir` names the authored catalogue root, and all generated files live in
+its `mokly-generated/` child. Only Build, `build --watch` and `serve --build`
+write that tree. Plain Serve, export and publish compile in memory. Check uses
+Git-index tracking to choose its tracked or untracked validation boundary.
+Remove the old options; no default-output mode replaces them.
+
+`ManifestV8` replaces `ManifestV7`. The `Manifest` and `HistoricalManifest`
+aliases now name v8. V8 requires `assetClosure`, `generatedFiles` and
+`blobHashAlgorithm` in addition to the identity-only entries and source
+inventory. Regenerate this data with Build; do not hand-convert old manifests.
+Only v8 is readable as baseline content. Earlier-version detection returns the
+existing unavailable outcome, which is never cached.
 
 ## Removed Public Options And Types
 
@@ -28,12 +35,11 @@ Render portable HTML and links directly in entries or the configured renderer.
 Supplying `compatibility`, including `undefined`, fails with
 `compatibility was removed; author portable links directly`.
 
-Catalogue v4 has one fixed layout and no `generatedPathPrefix`.
-Remove `CatalogueReadModel.generatedPathPrefix`, `GeneratedPathPrefix`,
-`FrameMount.generatedPathPrefix` and `FrameMount.route`. Call
-`currentDocumentPath(route)` and `currentDocumentRoute(pathname)` without
-prefix arguments. The viewer uses `GENERATED_DIRECTORY` directly; the
-unreleased catalogue version remains 4. No DOM prefix override is supported.
+Catalogue v4 has one fixed layout. The branch-only `generatedPathPrefix`,
+`GeneratedPathPrefix`, `FrameMount.generatedPathPrefix` and `FrameMount.route`
+never shipped and have no migration API. `currentDocumentPath(route)` and
+`currentDocumentRoute(pathname)` use `GENERATED_DIRECTORY` directly. The
+catalogue schema version is 4. No DOM prefix override is supported.
 
 Export directories require the current v3 ownership marker or must be empty.
 There is no preview-marker migration. Baseline caches accept only complete v8
@@ -169,7 +175,7 @@ content digests and upload URLs, verify raw Blob PUTs by digest and size, and
 make Complete idempotent under the documented first-publication rule. Clients
 upload only content the receiver does not already hold.
 
-Export ownership marker schema 2 replaces schema 1. Each owned file is recorded
+Export ownership marker schema 3 records each owned file
 as `{ path, sha256, size }`, and the marker covers the exact finalized bytes that
 the exchange addresses. Export folders written by earlier releases are not
 recognized as owned: move any files you added, delete the old export folder,
@@ -189,3 +195,16 @@ opaque identity.
 
 Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
 the applicable upgrades above; the release PR owns versions and changelogs.
+
+## Boundary And Tooling Changes
+
+`parseStaticDelivery` returns `valid`, `unsupported-version` or `invalid` results
+and never throws. Callers read the descriptor from a valid result's `value`.
+Browser boundary readers throw `MoklyVersionError`; export keeps `export-invalid`.
+`ViewerError.code` includes `version`, with optional diagnostic `details` beside
+the existing product-facing `message`.
+
+Successful plain baseline notes and the earlier-version notice use stdout;
+errors and requested timing JSON retain stderr. Referenced authored files are
+not private solely because of an extension or build-folder name; source inputs,
+protected locations, hidden segments and symlinks remain private.

@@ -17,9 +17,9 @@ evidence; projection performs no filesystem reads, Git commands, or rendering.
 The v8 and CLI live-index producers emit `sourcePath` and
 `declaredDependencies`; runtime and worker transfers retain those fields.
 Their public `details.dependencies` is the sorted unique union. The viewer's
-current `displayEntry` conversion also copies the public dependency labels onto
-live-index display entries. Projection preserves that current display list when
-present; it is not an older manifest reader.
+`displayEntry` conversion is a shell read representation; no product caller
+feeds its records back into the CLI projector. Public projection derives labels
+from source and declared paths only, as the comparison inventory contract requires.
 Changes membership comes from entry and component attribution, independently
 of per-view comparison eligibility. Removed entries retain baseline labels, an
 opaque per-record `snapshotId` when real immutable identity is available, plus

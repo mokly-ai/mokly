@@ -95,3 +95,8 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 - [Package and CLI contract](../../docs/protocol/mokly-package.md)
 - [Timing diagnostics](../../docs/protocol/mokly-timings.md)
 - [Watched development](../../docs/protocol/mokly-watch.md)
+
+The approved [watch-writer contract](../../docs/protocol/mokly-watch-writers.md)
+shares summaries across writing commands and sends successful plain baseline
+notes to stdout. [Check boundaries](../../docs/protocol/mokly-boundary-results.md#git-state-for-check)
+use machine-readable Git results without matching localized messages.

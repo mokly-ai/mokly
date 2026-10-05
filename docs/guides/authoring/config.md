@@ -172,3 +172,9 @@ Stylesheet hrefs are relative to each generated document inside `mokly-generated
 | `WatchConfig`, `WatchRule`, `WatchAction` | The `watch` object and its rules              |
 | `ModuleResolutionConfig`, `ModuleLoader`  | The `moduleResolution` object and its loaders |
 | `Renderer`, `RenderInput`, `RenderResult` | Your renderer, its context and its result     |
+
+A referenced authored file can be public regardless of its extension or a
+folder name such as `dist`. Keep it outside actual source, package, cache and
+other protected locations. Mokly uses the same checked referenced files in
+Build, Serve and export. A consumer package root must not equal `mockupsDir`;
+choose a separate public catalogue directory.

@@ -347,3 +347,8 @@ and [component result schema](../../docs/protocol/mokly-component-review.md).
 `GitReviewAssetReader` retains one immutable byte cache per baseline reader.
 Imported CSS change detection and resource classification share those bytes,
 so a generated stylesheet or asset is read once within the accepted comparison.
+
+The approved [comparison inventory contract](../../docs/protocol/mokly-comparison-inventory.md)
+provides one reader per side. It distinguishes absent counterparts from invalid
+listed files, preserves targeted screen-only base reads and removes both
+historical and current generated roots from Git dependency evidence.

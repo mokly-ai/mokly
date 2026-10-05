@@ -23,8 +23,8 @@ npx mokly build --watch
 ## What it writes
 
 Only under `<mockupsDir>/mokly-generated/`: one document per screen for each
-effective viewport and color scheme, the documents of your pages, and
-`mokly-manifest.json`. The entire directory is disposable and replaced as a
+effective viewport and color scheme, the documents of your pages,
+`mokly-manifest.json`, compiled CSS in `styles/` and copied assets in `assets/`. The entire directory is disposable and replaced as a
 transaction; a failed build leaves the previous output in place. Your
 authored stylesheet and other referenced assets stay in `mockupsDir` outside
 `mokly-generated/`.

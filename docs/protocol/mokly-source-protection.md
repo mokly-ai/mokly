@@ -209,3 +209,9 @@ missing and protected closure references, and `mokly-generated/` escapes. Prove
 unreferenced README edits create no public content evidence, real imported
 inputs still rebuild, and referenced CSS and images remain public when no
 source-protection rule denies them.
+
+The approved [public-file policy](./mokly-public-closure.md) centralizes these
+checks once per compile. File extensions and build-folder names alone do not
+protect a referenced authored file. Actual source and protected-location rules
+still win. Renderer seeds use the same validation, and Serve rechecks each
+listed file without following symbolic links at read time.

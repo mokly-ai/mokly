@@ -24,7 +24,7 @@ an arbitrary safe-relative-path grammar rejects every other prefix. The
 `mokly-generated/` delivery prefix is outside the logical generated route.
 An id can contain the text `mokly-generated`; for example,
 `screens/mokly-generated.mobile.html` still starts with `screens/`. No new
-substring or id-name prohibition is part of finding 32.
+substring or id-name prohibition applies.
 
 Logical shell routes additionally include `user-flows/<id>.html`. A use case
 has no generated HTML file of its own; a component parent likewise has no
@@ -71,15 +71,15 @@ of the private live rendering, navigation, view-evidence or event endpoints.
 ## Frames And Reverse Mapping
 
 Keep existing origin, session, pathname, encoding, traversal and authentication
-checks. A current frame URL must match the exact file derived for the mounted
-entry/view under `/static/mokly-generated/`. Strip that fixed delivery prefix once
+checks. The shell derives the mounted entry/view URL; adapters validate its
+current-file path under `/static/mokly-generated/`. Strip that fixed prefix once
 before resolving the logical route through the catalogue's kind/id helpers.
 Retain a valid fragment separately. Authored closure URLs are resources, not
 entry routes; temporary renders and historical generations use their existing
 separate adapters. Do not accept an old prefixless current URL by treating a
 missing field as permission for another layout.
 
-Provider-normalized extensionless URLs remain supported under `main`'s shared
+Provider-normalized extensionless URLs remain supported under shared
 normalization helpers and must identify the same derived document. This work
 adds no new route validator or removes a mainline path check. The already
 approved reserved first segments for raw generated HTML remain in
@@ -95,7 +95,7 @@ references behave the same on disk and through `/static/`.
 
 Only v8 baselines provide comparison content. A pre-v8 base follows the exact
 [earlier-baseline outcome](./mokly-generated-manifest.md#earlier-baseline-outcome);
-it supplies no legacy-layout snapshots or removed-entry previews. Snapshot
+it supplies no older-layout snapshots or removed-entry previews. Snapshot
 publication uses its existing generation-local layout for accepted v8 content.
 
 Current delivery uses catalogue v4, static delivery v4 and bootstrap v1.

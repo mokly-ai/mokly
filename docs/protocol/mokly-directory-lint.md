@@ -48,12 +48,11 @@ strings outside these production globs. Do not implement this with another
 
 ## Locale-Independent Source Ordering
 
-Keep `main`'s separate `no-restricted-syntax` rule, selector
+Keep separate `no-restricted-syntax` rule, selector
 `CallExpression[callee.property.name='localeCompare']`, at error severity for:
 
 ```text
 src/config/**/*.ts
-src/build/discovery.ts
 src/build/styles/**/*.ts
 src/build/source_inventory.ts
 src/build/package_owned_paths.ts
@@ -65,8 +64,8 @@ Keep its message:
 Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.
 ```
 
-Use `main`'s `compareCodeUnits` helper at those boundaries. Do not expand the
-ban to presentation sorting; `main`'s navigation label comparator deliberately
+Use `compareCodeUnits` helper at those boundaries. Do not expand the
+ban to presentation sorting; navigation label comparator deliberately
 uses English collation. Both rule IDs must be active on overlapping files.
 The new local rule must not replace or weaken this existing rule's options.
 
@@ -98,7 +97,7 @@ filename under the folder being checked; no source probe is written to disk.
   a nested `.mjs` path under `scripts/preview`. Do not skip a matched folder
   because its real files currently contain no directory literal.
 - For every folder matched by the recursive locale rule, probe a `.ts` file.
-  Also probe each of its three individually named build files, and synthetic
+  Also probe each of its two individually named build files, and synthetic
   nested paths under `src/config` and `src/build/styles`. This covers both
   recursive globs and exact-file config entries.
 - At every directory-rule probe, assert the exact local rule ID and message
@@ -114,7 +113,7 @@ filename under the folder being checked; no source probe is written to disk.
 
 Reject an ignored-file result or a missing expected rule as a test failure;
 an empty message list is not proof that the file was linted. Use the actual
-ignore configuration, including `main`'s Git-ignore integration and this
-branch's generated output/cache ignores. Verify an unrelated presentation
+ignore configuration, including Git-ignore integration and generated
+output/cache ignores. Verify an unrelated presentation
 folder remains outside the locale ban. These tests must fail if a later flat
 config block replaces either rule or an intended folder drops out of coverage.

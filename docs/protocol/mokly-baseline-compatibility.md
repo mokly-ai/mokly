@@ -59,7 +59,7 @@ The graceful branch above is only for recognized earlier output. An integer
 `schemaVersion` above `8` is an unsupported newer baseline and follows the
 invalid-baseline path. Invalid JSON, a non-object root, a missing or non-integer
 version, or a schema-v8 file that fails validation follows the same path.
-Absence of every recognized manifest selects a rebuild with that commit's own recipe under the [manifest selection contract](./mokly-generated-manifest.md#selection-cache-and-resource-addressing). None of these cases
+Absence of the canonical generated manifest at the requested root selects a rebuild with that commit's own recipe under the [manifest selection contract](./mokly-generated-manifest.md#selection-cache-and-resource-addressing). None of these cases
 falls back or becomes a successful empty comparison.
 
 Serve reports invalid or missing history as Changes unavailable and logs its

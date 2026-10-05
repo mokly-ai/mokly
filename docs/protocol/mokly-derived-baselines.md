@@ -89,7 +89,7 @@ No head-index state participates in these decisions.
 
 Both readable implementations accept a commit and repository-relative path.
 The Git reader reads blobs. The rebuilt v8 reader appends that path beneath
-its cache `output/`, using the pinned historical root. There is no flat legacy
+its cache `output/`, using the pinned historical root. There is no flat alternative
 reader. Keep regular-file/symlink checks, 4,096-object and 48 MiB batch bounds,
 and at most 32 disk reads in flight. Authored resources come from the v8
 closure; generated CSS and opaque assets come from its verified inventory.
@@ -104,7 +104,7 @@ source/dependency evidence. See the
 
 ### Earlier-Baseline Availability
 
-Preserve `main`'s typed outcome for every pre-v8 base. Serve keeps All usable
+Preserve typed outcome for every pre-v8 base. Serve keeps All usable
 with Changes unavailable and no changed/removed entries, comparisons or previous
 versions. Export and Changes-enabled publication succeed with current content,
 `changesStatus: "unavailable"`, `comparisonUrl: null`, and no historical files.
@@ -131,8 +131,9 @@ pinned commit, handing only read-only evidence and reader capabilities to
 classification. The Serve child never selects a new baseline or writes output.
 No-Git Serve may still browse without Changes; comparison requires a Git base.
 
-The parent sends `baselineCommit` in a versioned update IPC message before
-classification. Omission retains the reader; `null` revokes it while a new
+The parent sends `baselineCommit`, `baselineSelection` (`blobs` or `rebuild`)
+and a matching `baselineDescriptor` in its versioned update before classification.
+Omitting the commit retains the reader; `null` revokes it while a new
 base prepares; stale update versions cannot restore an old commit. The child
 opens the already-selected read-only Git or cache reader; `--no-watch` uses
 the same handoff without IPC. Until handoff, unselected
@@ -182,3 +183,8 @@ flag. Navigation targets and `preparing → pending` timing remain measurable.
 - Test Serve's `preparing → pending → ready | unavailable` lifecycle, export
   pinning and explicit failure, and no writes outside the three opted-in
   commands.
+
+The approved [side-inventory contract](./mokly-comparison-inventory.md) makes
+absent counterparts distinct from corrupt listed files, restores targeted
+screen-only base reads, and excludes both generated roots from Git evidence.
+Plain successful baseline notices use stdout; earlier output is never cached.

@@ -38,10 +38,10 @@ After the base's own commands finish successfully and before adopting output:
 
 1. Inspect `mokly-generated/mokly-manifest.json` at the requested root, then
    root-level `mokly-manifest.json` solely for the version check. The first
-   existing file is authoritative. Earlier output returns
-   `baseline-incompatible-earlier`; malformed/nonregular/newer output or v8 at
+   existing file is authoritative for that root. Earlier output is retained as
+   a candidate while looking for moved v8 output; malformed/nonregular/newer output or v8 at
    the flat location fails `baseline-output-invalid`. No fallback masks it.
-2. If no recognized filename exists there, walk the extraction in UTF-16
+2. If no v8 catalogue exists there, walk the extraction in UTF-16
    code-unit order. Exclude `.git`, `.mokly-cache` and `node_modules` at every
    depth. Never follow symlinks. Keep confined `lstat`, bounded manifest reads
    and the 65,536-entry traversal limit.
@@ -52,12 +52,12 @@ After the base's own commands finish successfully and before adopting output:
    old entries. A malformed/newer preferred file makes that directory ineligible;
    never retry another manifest path in that directory. Do not count the generated child again as a flat
    catalogue when its manifest belongs to the parent candidate.
-4. Exactly one candidate is required, whether compatible or incompatible.
-   Zero or several fail `baseline-output-invalid` with
+4. Exactly one v8 candidate wins over earlier candidates. Multiple v8 matches,
+   or zero/several candidates with no v8 match, fail `baseline-output-invalid` with
    `No unique historical catalogue after baseline build; candidates: <list>.`
    Use `(none)` for zero. Otherwise list `<root> (generated-v8)` or
    `<root> (incompatible-earlier)`, sorted by root then classification and
-   joined by comma and space. Do not prefer a v8 candidate over ambiguity.
+   joined by comma and space. Earlier files cannot make one v8 match ambiguous.
 5. A sole earlier candidate returns the typed earlier-baseline outcome. Do not
    harvest it, create a current descriptor or read its resources. A sole v8
    candidate selects its historical root and must pass complete generated-file
@@ -84,7 +84,7 @@ under `output/<historicalCatalogueRoot>/`. Each reader accepts a pinned commit
 and repository-relative path, proves that the path belongs to the generated
 set or authored closure under that descriptor, and reads a confined regular
 file. The Git reader uses that path directly; the cache reader appends it to
-`output/`. No reader strips a legacy root to access flat output.
+`output/`. No reader strips a different root to access flat output.
 
 A completed cache has one current format. The
 [storage validator](./mokly-baseline-storage.md#cache-layout) returns a warm
@@ -112,3 +112,8 @@ Classification, selected comparisons, removed previews, component fast paths,
 CSS attribution and export/publication capture consume this same v8 descriptor.
 Snapshot publication retains its generation-local URLs; these are not a second
 baseline storage layout. Earlier output supplies no snapshot or removed entry.
+
+The approved [comparison inventory rules](./mokly-comparison-inventory.md)
+refine moved-root selection: one valid v8 candidate wins over stale earlier
+candidates. Multiple v8 candidates remain an error. With no v8 result, retain
+the existing earlier-envelope/ambiguity outcomes and never cache incompatibility.

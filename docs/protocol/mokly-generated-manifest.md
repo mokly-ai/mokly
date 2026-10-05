@@ -58,7 +58,7 @@ fields remain invalid.
 
 The only content layout is v8 at
 `<catalogueRoot>/mokly-generated/mokly-manifest.json`. Mokly recognizes only
-the canonical `mokly-manifest.json` name. It has no former-name sentinels,
+the canonical `mokly-manifest.json` name. It has no other-name sentinels,
 old entry readers, layout conversion or old cache readers.
 
 ## Selection, Cache And Resource Addressing
@@ -110,7 +110,7 @@ safe cleanup and atomic marker publication.
 
 ## Earlier-Baseline Outcome
 
-Retain `main`'s typed `baseline-incompatible-earlier` handling:
+Retain typed `baseline-incompatible-earlier` handling:
 
 | Command                     | Required result                                                                                                                        |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |

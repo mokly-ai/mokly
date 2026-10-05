@@ -33,7 +33,10 @@
   970 browser cases. Its final review reported 8 new findings without changes
   (58–65: 1 medium, 7 low); low performance finding 66 was added later.
   Milestones 19–25 implement the user's decisions on the open findings;
-  findings 17 and 52 await decisions.
+  findings 17 and 52 await decisions. Milestone 19 defines the shared closure,
+  watching, comparison, frame and verification contracts, fixes the approved
+  documentation findings, and records the TypeScript member ratchet decision.
+  Its format and 13 documentation checks pass.
   Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.

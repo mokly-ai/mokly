@@ -6,7 +6,7 @@ The `mokly-viewer/` namespace and its version gates are implemented in
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
 Delivery uses catalogue v4, delivery v4, bootstrap v1, ownership v3 and upload v2.
 Content-delta uploads and Plan v1 remain unchanged. The current Cloud service
-requires the separate post-merge receiver and viewer update before publishing.
+must support those versions and paths before accepting a publication.
 
 ## Paths And Single Ownership
 
@@ -16,7 +16,7 @@ Define `VIEWER_DIRECTORY = "mokly-viewer"` alongside `GENERATED_DIRECTORY` in
 it directly. The [directory lint](./mokly-directory-lint.md) covers both names.
 Identifiers, DOM attributes and protocol names containing `mokly` do not change.
 
-All package-owned public and private Serve routes move to this root:
+All package-owned public and private Serve routes use this root:
 
 | Path below `mokly-viewer/`            | Purpose                                                  |
 | ------------------------------------- | -------------------------------------------------------- |
@@ -27,10 +27,10 @@ All package-owned public and private Serve routes move to this root:
 | `components/**`                       | Live controls and transient component renders            |
 | `views/**`, `navigation/**`, `events` | Live evidence, navigation and watch capabilities         |
 
-Apply the prefix change to every descendant endpoint, including any retained
-local generation aliases, without changing their authentication, retention or
-generation identity rules. Rename the nested `__generations` segment to
-`generations` too; otherwise a Mokly-owned path segment would still start with `_`.
+Every descendant endpoint uses this prefix, including retained
+local generation aliases, with their authentication, retention and
+generation identity rules. The nested generation segment is `generations`;
+no deployed Mokly-owned path segment starts with `_`.
 Retain generation-local `snapshots/before/`, `snapshots/after/` and page metadata
 paths. Do not change their identity-derived names or review-v4 content shape.
 
@@ -60,40 +60,40 @@ removed; hosts must not rewrite it to the new catalogue.
 
 ## Version Matrix
 
-Versions identify meaning before readers interpret any paths. The final target
-is:
+Versions identify meaning before readers interpret any paths. The supported versions
+are:
 
-| Boundary                            | New writer | Reader policy                                                               |
-| ----------------------------------- | ---------- | --------------------------------------------------------------------------- |
-| Private source manifest             | 8          | Read current and baseline v8 only; older baselines yield incompatibility    |
-| Public complete or scoped catalogue | 4          | Accept 4 only; reject 1–3 and unknown versions before entry/path validation |
-| Static delivery descriptor          | 4          | Accept 4 only; retain the four v3 fields and their types                    |
-| Shell bootstrap envelope            | 1          | Add a required root `schemaVersion: 1`; reject absent/other versions        |
-| Export ownership marker             | 3          | Accept 3 only for new uploads and local export replacement                  |
-| Upload metadata envelope            | 2          | Retain v1 fields; new comparison-path namespace                             |
-| Plan response                       | 1          | Unchanged content-delta exchange                                            |
-| Comparison result                   | 4          | Unchanged identity-derived snapshot schema from `main`                      |
+| Boundary                            | Writer | Reader policy                                                               |
+| ----------------------------------- | ------ | --------------------------------------------------------------------------- |
+| Private source manifest             | 8      | Read current and baseline v8 only; older baselines yield incompatibility    |
+| Public complete or scoped catalogue | 4      | Accept 4 only; reject 1–3 and unknown versions before entry/path validation |
+| Static delivery descriptor          | 4      | Accept 4 only with its four required fields                                 |
+| Shell bootstrap envelope            | 1      | Require root `schemaVersion: 1`; reject absent/other versions               |
+| Export ownership marker             | 3      | Accept 3 only for new uploads and local export replacement                  |
+| Upload metadata envelope            | 2      | Use the strict upload fields and current comparison namespace               |
+| Plan response                       | 1      | Unchanged content-delta exchange                                            |
+| Comparison result                   | 4      | Identity-derived snapshot schema                                            |
 
-The unified layout already emits catalogue v4, delivery v4 and bootstrap v1:
-moving static generated paths is incompatible with v3 readers. Its intermediate
-`__mokly/` format was branch-only and has no compatibility reader. The namespace rename finalizes the paths below and bumps
-upload/ownership together. Strict version gates apply throughout; no v3 parser
-may interpret a v4 model.
+Catalogue v4, delivery v4 and bootstrap v1 identify the unified layout.
+Only the current `mokly-viewer/` namespace is accepted. Upload v2 and ownership
+v3 require that namespace even for current-only artifacts. Strict version gates
+apply before reading paths; unsupported versions never authorize a content read.
+A v3 catalogue reader cannot interpret a v4 model.
 
 Catalogue v4 retains identity-only entries. It contains no layout-prefix field,
 per-entry routes, `documentPath` or `fragmentPath`. Derive current files from
-kind/id/viewport/scheme and `GENERATED_DIRECTORY`. The unreleased version stays 4. Public models remain
+kind/id/viewport/scheme and `GENERATED_DIRECTORY`. The schema version is 4. Public models remain
 complete; `omitted` usage is permitted only in the strictly scoped live reader.
-Bootstrap v1 adds its version to `main`'s previously unversioned envelope and
-keeps its scopes; its external reference
+Bootstrap v1 requires its root version field and validates its scope;
+its external reference
 is exactly `/mokly-viewer/catalogue.json`. Static descriptor v4 keeps
 `canonicalPath`, `comparisonUrl`, `deploymentId`, and `schemaVersion`; only
-the new pinned comparison namespace is valid. Catalogue comparison paths are
+the pinned comparison namespace is valid. Catalogue comparison paths are
 root-relative without `/`; descriptor URLs include `/`.
 
-Ownership v3 retains v2's `{ path, sha256, size }` inventory and all limits,
+Ownership v3 uses the `{ path, sha256, size }` inventory and all limits,
 collision rules, classification precedence, content-delta semantics and
-duplicate-JSON-key checks. Upload v2 retains v1's strict field list, limits,
+duplicate-JSON-key checks. Upload v2 requires the strict field list, limits,
 metadata identity and null-without-comparisons rule. Version changes are
 deliberate even when comparisons are disabled. A current-only artifact must
 not bypass the gate simply because it contains no comparison path.
@@ -101,16 +101,16 @@ not bypass the gate simply because it contains no comparison path.
 ## Compatibility Failure
 
 An older conforming receiver rejects ownership v3 or upload v2 with HTTP 426
-before validating paths or creating a publication. Preserve `main`'s bounded
+before validating paths or creating a publication. Preserve bounded
 archive parsing, authentication and upload-limit checks before version checks.
-The new CLI maps 426 to `upload-unsupported-version`, with this exact message:
+The CLI maps 426 to `upload-unsupported-version`, with this exact message:
 
 ```text
 The catalogue service does not support this Mokly version. Update the service and try again.
 ```
 
 Do not retry, send Blobs, call Complete, downgrade, or expose a response body.
-An old-format artifact offered to the new receiver also fails 426. For local
+An old-format artifact offered to the current receiver also fails 426. For local
 export replacement, a regular marker with an unsupported version fails before
 mutation with `[mokly/export-invalid] Invalid export ownership inventory.`
 Missing ownership and unsafe filesystem entries retain separate errors.
@@ -118,7 +118,7 @@ The marker remains required for upload and local recovery.
 
 An independently hosted older viewer given catalogue v4 must reject its
 unsupported version before deriving `/static/` URLs or reading entry fields.
-`main`'s strict v3 reader already rejects a non-3 version. The updated viewer
+strict v3 reader already rejects a non-3 version. The updated viewer
 must expose a typed version failure that a host can distinguish from malformed
 data; its diagnostic is `Unsupported Mokly catalogue version <version>; this viewer supports version 4.`
 Unknown delivery/bootstrap versions likewise fail before any resource request
@@ -159,8 +159,8 @@ envelopes are checked solely to produce the approved earlier-baseline outcome;
 they cannot authorize content reads or a mixed public artifact.
 Mokly Cloud must update upload validation, stored path lookup, catalogue fetch
 URLs and embedded viewer/version-error handling before accepting this format.
-That external rollout is a post-merge follow-up, not an implicit code change
-or prerequisite to completing this branch. Until then, publish fails 426.
+A receiver that does not support this contract rejects publication with 426.
+Receiver deployment is independent of local catalogue compilation and export.
 
 ## Names And Acceptance
 
@@ -168,7 +168,7 @@ Fixed deployed names that Mokly chooses must not start with `.`, `_`, `#` or
 `~`. This applies to the generated tree, viewer namespace, `generations`, and
 other fixed path segments written by Mokly. It adds no validation rule for
 authored closure names, entry ids, or repository paths mirrored below `styles/`
-and `assets/`. Those user-chosen names retain `main`'s existing path validation
+and `assets/`. Those user-chosen names retain existing path validation
 and diagnostics, including its hidden-segment rejection. Do not reject or
 rename an otherwise accepted authored path to enforce this naming policy.
 

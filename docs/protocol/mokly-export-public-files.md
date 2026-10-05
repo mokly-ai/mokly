@@ -21,7 +21,7 @@ unmodified and receives resource-only validation.
 
 The shared public-file confinement check is a minimum boundary, not permission
 to copy the whole repository. Prune entry trees, inventoried sources, the config
-and renderer, source modules, dotfiles/directories, Git/dependency/cache trees,
+and renderer, inventoried source modules, dotfiles/directories, Git/dependency/cache trees,
 review/export outputs, and transaction paths for each selected closure file. Explicit HTTP(S)
 and data resources retain the existing resource policy and are not downloaded;
 an export referencing remote resources is not guaranteed to work offline.
@@ -29,7 +29,8 @@ an export referencing remote resources is not guaranteed to work offline.
 One export resource policy applies to current copies and comparison snapshots.
 Exclude configured consumer package roots strictly inside `mockupsDir`, including
 their metadata and non-source payloads. A package root equal to `mockupsDir`
-remains supported when it exposes no protected files; ancestor roots such as `packageRoots: ["."]` remain supported.
+fails with the exact [package-root error](./mokly-public-closure.md#one-policy-per-compilation).
+Ancestor roots such as `packageRoots: ["."]` remain supported.
 
 Copy public resources into owned output as ordinary files, never symlinks.
 Reject selected symlink files/directories and escaping references explicitly;
@@ -39,7 +40,7 @@ Run the shared ownership-aware Browse adapter on published current HTML copies;
 comparison documents remain byte-unmodified in separate before/after trees.
 
 Publish the required package shell assets and complete browser/navigation module
-graph from the installed package. Do not ship consumer TS/TSX, source maps,
+graph from the installed package. Do not ship consumer inputs, inventoried source maps,
 config modules, npm packages, `.git`, local environment files, comparison
 diagnostic summaries, or comparison ownership markers. The export's own
 public-safe inventory is distinct from private comparison metadata.
@@ -113,3 +114,8 @@ requests. The existing resource validation, deployment identity, adapter
 aliases, reservations, transaction, and immutable snapshot rules apply to
 component pages as well, and each variant entry's shell is written once at its
 derived `view/<route>`.
+
+The approved [shared closure builder](./mokly-public-closure.md) is the single
+capture boundary. A referenced authored extension or build-folder name is not
+itself a denial. Runtime inputs, protected locations, hidden segments and
+symlinks remain private. Required references fail with their referring route.

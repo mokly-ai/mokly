@@ -122,7 +122,7 @@ Tags are optional catalogue vocabulary, not a second hierarchy: an untagged
 catalogue stays valid.
 
 The TypeScript input types are the authoring contract. A key they do not
-declare, such as a former `route`, `slug`, `segment`, or root `path`, is a
+declare, such as `route`, `slug`, `segment`, or root `path`, is a
 type error in TypeScript and is ignored at runtime like any other unknown key;
 there is no runtime migration guard. `defineComponent` keeps rejecting unknown
 variant fields under the [component contract](./mokly-components.md).

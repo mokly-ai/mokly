@@ -4,7 +4,7 @@ This is the storage and command contract for [per-commit baseline selection](./m
 Historical commands execute trusted repository code; preparation is never an HTTP operation.
 This contract defines the v8 storage and compatibility boundary.
 The [v8 manifest gate](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
-permits only v8 content readers and retains `main`'s earlier-version outcome.
+permits only v8 content readers and retains earlier-version outcome.
 Process ownership, locking, confinement and metadata-only retention follow the rules below.
 
 ## Rebuild Procedure
@@ -60,7 +60,7 @@ and is not converted to a baseline history error.
    manifest's `assetClosure` beside it under the historical catalogue root.
    Validate every file as a confined regular file; missing, symlinked or
    protected sources fail `baseline-output-invalid`. Never harvest a flat
-   legacy tree. Readers map repository-relative paths directly into this v8
+   flat tree. Readers map repository-relative paths directly into this v8
    cache using the historical root. Delete the remaining extraction, including
    installed dependencies. Write `inputs.json`, then write the completion
    marker to a unique `complete-<uuid>.tmp` beside `complete.json`. Rename that
@@ -200,12 +200,16 @@ Windows closes its job handle and terminates the owned tree.
 ## Crash Leftovers
 
 Before reading or rebuilding an entry under its lock, remove its owned
-`discard-<commit>` directories and regular `.lock-<pid>-<uuid>` temporary files
-whose process no longer exists. Skip live owners, unrecognized names, symlinks
+`discard-<commit>` directories, regular `complete-<uuid>.tmp` files and regular
+`.lock-<pid>-<uuid>` temporary files whose process no longer exists. Skip live owners, unrecognized names, symlinks
 and special files. Per-file failures are reported and do not invalidate a
 completed baseline. This sweep also runs on warm cache reuse.
 
 Identity-specific `lock.retired-<hash>` tombstones deliberately survive until
 the whole entry is retired: removing them independently would allow a delayed
-reclaimer to unlink a successor's lock. Legacy temporaries without a PID are
+reclaimer to unlink a successor's lock. Unrecognized temporaries without a PID are
 also retained until entry retirement because their owner cannot be checked.
+
+The approved [cache acquisition rule](./mokly-comparison-inventory.md#cache-acquisition-and-discovery)
+recreates an entry directory removed by retention and retries only ENOENT, at
+most three attempts. Existing lock deadlines, cancellation and ownership stay.

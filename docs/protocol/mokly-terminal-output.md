@@ -224,3 +224,10 @@ works regardless of Git tracking and with `--no-watch`; the flag is rejected for
 other commands. macOS uses `open`, Linux uses `xdg-open`, and Windows uses
 `cmd.exe /d /s /c start "" <url>`, detached with ignored stdio. A launch failure
 is a warning and does not stop Serve.
+
+## Writing Watch Commands
+
+`build --watch` and `serve --build` use the same generated-file summary helper
+as `build`, with `.` for an empty relative catalogue path. Report completed
+writes only. The [watch-writer contract](./mokly-watch-writers.md) defines
+cancellation and plain stdout notices; plain Serve performs no write.

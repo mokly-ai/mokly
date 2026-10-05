@@ -207,6 +207,11 @@ extension because it would emit an undelivered sibling stylesheet. React and
 React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
+A consumer package root must not equal `mockupsDir`, including after realpath
+resolution. The exact `config-invalid` detail is
+`A consumer package root must not equal mockupsDir; choose a separate public output directory.`
+See the [shared public-file policy](./mokly-public-closure.md).
+
 The removed `compatibility` key is rejected even when its value is `undefined`,
 with `compatibility was removed; author portable links directly`.
 The obsolete `legacy` config key is rejected, including `legacy: undefined`.

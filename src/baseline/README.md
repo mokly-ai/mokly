@@ -111,8 +111,9 @@ simultaneous stale observers cannot unlink a replacement lock. Waiters poll ever
 commits by default, always keeping the active entry and skipping locked entries.
 Retired entries are moved beneath the active locked entry before removal.
 All builder calls acquire the lock before reuse. They sweep discarded output
-and dead-owner temporary lock files, including on cache hits. Tombstones and
-legacy temporaries without owner identity remain until entry retirement.
+and regular `complete-<uuid>.tmp` files, plus dead-owner temporary lock files,
+including on cache hits. Tombstones and unrecognized temporaries without owner
+identity remain until entry retirement.
 
 `archive.ts` uses the tar parser without its filesystem extractor, validates all
 paths and symlink chains before writing, and rejects hard links, device files,
@@ -168,3 +169,7 @@ requiring a Windows host.
 The Windows fixture detaches its descendant from Node's automatic
 kill-child-on-parent-exit relationship. It must still belong to Mokly's enclosing
 job; otherwise the fixture would exit automatically before testing cancellation.
+
+The approved [cache and moved-root rules](../../docs/protocol/mokly-comparison-inventory.md#cache-acquisition-and-discovery)
+cover retention racing lock acquisition and one v8 catalogue beside stale older
+files. No earlier-format content reader or cached incompatibility is added.

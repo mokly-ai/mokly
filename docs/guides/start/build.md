@@ -12,8 +12,8 @@ npx mokly build
 ```
 
 Build validates your entries, renders every screen and writes the result
-under `<mockupsDir>/mokly-generated/`: one document per viewport and color scheme, plus
-`mokly-manifest.json`. Writes are transactional, so a failed build leaves the
+under `<mockupsDir>/mokly-generated/`: documents, `mokly-manifest.json`,
+compiled CSS in `styles/` and copied assets in `assets/`. Writes are transactional, so a failed build leaves the
 previous output in place.
 
 ## Ignore the output, or commit it

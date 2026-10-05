@@ -9,8 +9,8 @@ order: 2
 
 Create `mokly.config.ts` at the root of the repository and export the result
 of `defineConfig`. Two things are required: where your entry modules live, and
-`mockupsDir`, the catalogue folder whose `mokly-generated/` child receives only
-generated pages and the manifest.
+`mockupsDir`, the catalogue folder whose `mokly-generated/` child receives
+generated pages, the manifest, compiled CSS in `styles/` and copied assets in `assets/`.
 
 Entry modules can sit beside the components and screens they describe. List
 one or more `entries` globs, relative to the repository root. Every matched

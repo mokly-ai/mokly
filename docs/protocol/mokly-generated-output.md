@@ -8,6 +8,9 @@ The command, closure, unified layout and writer behavior follows
 [configuration](./mokly-configuration.md), [baseline selection](./mokly-derived-baselines.md),
 [baseline storage](./mokly-baseline-storage.md) and [terminal output](./mokly-terminal-output.md)
 and [viewer namespace](./mokly-viewer-namespace.md) define the implemented contract.
+The approved [public closure](./mokly-public-closure.md),
+[watch writers](./mokly-watch-writers.md), [comparison inventories](./mokly-comparison-inventory.md)
+and [boundary results](./mokly-boundary-results.md) define the pending review fixes.
 The [lint contract](./mokly-directory-lint.md) defines implemented folder coverage
 and duplicate-import checks.
 
@@ -46,8 +49,8 @@ Production code defines `GENERATED_DIRECTORY` and `VIEWER_DIRECTORY` once in
 and regular-expression literals under `src/`, `packages/viewer/src/`, and
 `scripts/preview/`, including escaped spellings. The
 [lint contract](./mokly-directory-lint.md) keeps this rule independent of
-`main`'s source-ordering check and covers both directory names.
-The former dot-directory name was never released and is not a read alias.
+source-ordering check and covers both directory names.
+Only the fixed generated-directory prefix is accepted; no alternate layout alias exists.
 
 Resolved entries, the renderer, module-resolution
 package roots, and imported authoring sources may be under `mockupsDir`, but
@@ -123,8 +126,8 @@ baseline preparation, export, or publication. See
 
 For tracked `check`, compare **every regular file** under `mokly-generated/` with
 the in-memory expected map by path and exact bytes. A missing tree makes all
-expected files missing; an unexpected path, including a symlink or an empty
-directory, is extra. If any mismatch exists, fail `build-invalid` with this exact text:
+expected files missing; an unexpected regular path or empty directory is extra.
+A symlink or special entry fails the separate unsafe-tree check before comparison. If any mismatch exists, fail `build-invalid` with this exact text:
 
 ```text
 generated output does not match source:
@@ -149,7 +152,7 @@ are specified in [terminal output](./mokly-terminal-output.md).
 
 The [manifest contract](./mokly-generated-manifest.md) defines identity-only v8
 entries, authored closure, exact generated-file inventory and Git blob hashes.
-It also owns ordered per-commit lookup, complete inventory verification and
+It also owns canonical per-commit selection, complete inventory verification and
 rebuild diagnostics. Only v8 content is readable. Earlier manifests at the selected generated location or after rebuilding
 produce the
 incompatible-earlier outcome. Invalid caches are partial and rebuild.

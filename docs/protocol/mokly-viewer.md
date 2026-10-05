@@ -465,8 +465,8 @@ correct screen before any script runs. Serve and export then load
 the documented standalone hydration entry, which bundles React and hydrates
 that tree in place. React hosts render `MoklyViewer` with their own React and
 hydrate it the same way. **Exported catalogues ship React and hydrate**; the
-former rule that exported browsers contain no React is withdrawn so that one
-shell implementation serves every delivery mode. An SSR-only unhydrated export
+bundled runtime and server-rendered shell share their accepted catalogue data.
+One shell implementation serves every delivery mode. An SSR-only unhydrated export
 remains possible because first paint does not depend on hydration, but it is
 not a supported mode.
 

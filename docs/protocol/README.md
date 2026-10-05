@@ -35,6 +35,17 @@ version gates reject unsupported data before content or path interpretation.
 
 ## Contracts
 
+- [Public file policy and closure](./mokly-public-closure.md) — approved shared
+  classification, traversal, safe Serve reads and acceptance.
+- [Shared Watch and output writers](./mokly-watch-writers.md) — approved input
+  setup, cancellation, summaries and notice streams.
+- [Comparison inventories and post-render edits](./mokly-comparison-inventory.md)
+  — approved side-aware resource reads, baseline races and offset mapping.
+- [Check, export and frame boundaries](./mokly-boundary-results.md) — approved
+  machine-readable Git state, nonthrowing parsing, refusal paths and frame URLs.
+- [Public API reports and unused members](./verification-api-members.md) —
+  approved signature reports, release-note gate and member ratchet.
+
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
@@ -73,7 +84,7 @@ version gates reject unsupported data before content or path interpretation.
   — approved independent literal guard, retained source-ordering rule and
   duplicate-import enforcement with folder coverage probes.
 - [Historical catalogue discovery and addressing](./mokly-baseline-addressing.md)
-  — approved moved-root v8 discovery and descriptors without legacy content readers.
+  — approved moved-root v8 discovery and descriptors without older-format content readers.
 - [Generated document delivery](./mokly-generated-delivery.md)
   — identity-derived HTML prefixes, catalogue-v4 policy and static/frame URL mapping.
 - [Public authoring API](./mokly-authoring.md)

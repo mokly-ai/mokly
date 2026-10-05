@@ -21,9 +21,9 @@ asset, external, download, and same-document links.
 
 Folders follow the [navigation path contract](./mokly-nav-paths.md) and have
 no link or destination.
-`design-browse-tags` (Tag states) has no routed descendants after its six
-screens became variants of `design-browse-screen`, so its former folder row
-is absent from the path-based example.
+`design-browse-tags` (Tag states) has no routed descendants. Its six sample
+screens are variants of `design-browse-screen`; the catalogue groups them under
+that parent rather than a separate Tag states folder row.
 
 ## Component Navigation
 
@@ -97,13 +97,13 @@ The builder must:
   one element.
 
 The builder records every logical reference after adapting controls and
-resolving ids. Records retain the source route, target identity, view axes and
+resolving ids. Records retain the source route, target identity and optional destination
 fragment. After rendering the complete output set, index its final anchors and
 validate each reference across the required destination views. An absent or
 renamed anchor fails with the referring route. No consumer transformation runs
 between link rewriting and final validation.
-Consumer-authored or duplicate reserved attributes still fail at the normal
-renderer boundary. Markers never grant permission to read a source or resource.
+Authored `data-mokly-link` and duplicate navigation attributes fail validation.
+Authored `data-mokly-target` is stripped by Browse, not trusted as input. Markers never grant permission to read a source or resource.
 The builder validates final documents against the accepted route set; it does
 not parse a source-path header. The plain generated marker has no security role.
 
@@ -368,7 +368,7 @@ Coverage must prove:
   rendered documents, dual navigation attributes, hashes,
   use-case ids, dark-to-light fallback, conflicts, and reserved-marker errors;
 - served and preview adaptation without mutating generated fragments, including
-  LF/CRLF ownership-gated promotion, unowned reserved-metadata removal, secure
+  LF/CRLF current-notice stripping, unowned reserved-metadata removal, secure
   target parsing, portable live attributes, and request-visible fragment
   transport;
 - served cross-view fragment validation and JavaScript-disabled anchor
