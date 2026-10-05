@@ -331,6 +331,11 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+Set `MOKLY_TEST_TIME_SCALE=2` for a local run on a slow machine. This scales
+fixture setup and measured readiness limits. It keeps assertion deadlines,
+retries and worker limits unchanged. The value must be a decimal of at least 1.
+See the [test rules](./docs/protocol/ci-verification-test-rules.md).
+
 `npm run dependencies:check` audits every workspace dependency category against
 the live registry. It fails on Low-or-higher advisories unless an active reviewed
 exception covers the exact dev-only path. Exceptions expire on an inclusive UTC

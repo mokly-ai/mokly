@@ -4,9 +4,11 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { build } from "esbuild";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
+import { captureBrowserErrors } from "./console_notices.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   expectCleanHydration,
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";
@@ -22,7 +24,7 @@ let developmentBundle: string;
 let developmentHostBundle: string;
 
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   developmentBundle = await buildDevelopmentBundle();
   const result = await build({
     bundle: true,

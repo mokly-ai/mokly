@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   startLightOnlyDocument,
   type LightOnlyDocumentHost,
@@ -8,7 +10,7 @@ import {
 let served: LightOnlyDocumentHost;
 
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
+  test.setTimeout(scaledTimeLimit(180_000));
   served = await startLightOnlyDocument();
 });
 

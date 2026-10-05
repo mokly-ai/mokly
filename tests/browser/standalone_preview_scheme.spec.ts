@@ -5,9 +5,9 @@ import { createExportFixture } from "../helpers/export_fixture.js";
 import { validEntrySource } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { captureBrowserErrors } from "./console_notices.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   delayHydration,
   expectCleanHydration,
 } from "./react_shell_hydration_helpers.js";

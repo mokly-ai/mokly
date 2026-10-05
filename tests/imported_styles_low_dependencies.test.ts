@@ -5,9 +5,13 @@ import { performance } from "node:perf_hooks";
 import test from "node:test";
 
 import { collectPostcssDependencies } from "../dist/build/styles/dependency_inventory.js";
-import { walkDependencyDirectory } from "../dist/build/styles/dependency_walk.js";
+import {
+  createDependencyPathCache,
+  walkDependencyDirectory,
+} from "../dist/build/styles/dependency_walk.js";
 import { loadConfig } from "../dist/config/load.js";
 
+import { countingDependencyWork } from "./helpers/dependency_work.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("directory reports compare candidate paths in code-unit order", async (context) => {
@@ -54,13 +58,22 @@ test(
         ),
       );
     const config = await loadConfig(fixture.root);
+    const { counts, work } = countingDependencyWork();
+    const cache = createDependencyPathCache(config, work);
     const started = performance.now();
-    const matches = walkDependencyDirectory(directory, "**/*.tsx", config);
+    const matches = walkDependencyDirectory(
+      directory,
+      "**/*.tsx",
+      config,
+      cache,
+    );
     const duration = performance.now() - started;
     assert.equal(matches.length, count);
-    assert.ok(
-      duration < 1_500,
-      `directory walk took ${duration.toFixed(1)} ms`,
-    );
+    context.diagnostic(`directory walk took ${duration.toFixed(1)} ms`);
+    assert.deepEqual(counts, {
+      sorts: 2,
+      rootProjections: 1,
+      globCompilations: 1,
+    });
   },
 );

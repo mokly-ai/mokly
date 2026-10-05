@@ -7,6 +7,7 @@ import test from "node:test";
 import { collectPostcssDependencies } from "../dist/build/styles/dependency_inventory.js";
 import { loadConfig } from "../dist/config/load.js";
 
+import { countingDependencyWork } from "./helpers/dependency_work.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("public PostCSS dependency diagnostics precede missing-file diagnostics", async (context) => {
@@ -130,12 +131,22 @@ test(
       },
     ];
     const started = performance.now();
-    const inventory = collectPostcssDependencies(config, reports, new Set());
+    const { counts, work } = countingDependencyWork();
+    const inventory = collectPostcssDependencies(
+      config,
+      reports,
+      new Set(),
+      work,
+    );
     const elapsed = performance.now() - started;
     context.diagnostic(
       `Tailwind-shaped 20,000-file collection: ${elapsed.toFixed(1)} ms`,
     );
     assert.equal(inventory.sourceFiles.size, count);
-    assert.ok(elapsed < 2_500, `20,000 reports took ${elapsed.toFixed(1)} ms`);
+    assert.deepEqual(counts, {
+      sorts: 7,
+      rootProjections: 1,
+      globCompilations: 1,
+    });
   },
 );

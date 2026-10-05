@@ -13,6 +13,7 @@ import {
   ignoredDependencyPath,
   walkDependencyDirectory,
   type DependencyPathCache,
+  type DependencyWork,
 } from "./dependency_walk.js";
 import type { StyleDependencyReport } from "./postcss.js";
 import { wouldPrivatizePublicFile } from "./public_source.js";
@@ -41,14 +42,18 @@ export function collectPostcssDependencies(
   config: ResolvedConfig,
   reports: readonly StyleDependencyReport[],
   graphInputs: ReadonlySet<string>,
+  work?: DependencyWork,
 ): PostcssDependencies {
   const explicit: Candidate[] = [];
   const expanded: Candidate[] = [];
   const missingDirectories: Candidate[] = [];
   const directories = new Map<string, PostcssWatchDirectory>();
   const scanned = new Map<string, readonly string[]>();
-  const ownership: DependencyPathCache = createDependencyPathCache(config);
-  const ordered = [...reports].sort((first, second) =>
+  const ownership: DependencyPathCache = createDependencyPathCache(
+    config,
+    work,
+  );
+  const ordered = ownership.work.sort([...reports], (first, second) =>
     compareCodeUnits(
       `${first.source}\0${first.plugin}\0${first.type}`,
       `${second.source}\0${second.plugin}\0${second.type}`,
@@ -105,8 +110,8 @@ export function collectPostcssDependencies(
   }
   const byPath = (first: Candidate, second: Candidate) =>
     compareCodeUnits(first.relativePath, second.relativePath);
-  explicit.sort(byPath);
-  expanded.sort(byPath);
+  ownership.work.sort(explicit, byPath);
+  ownership.work.sort(expanded, byPath);
   for (const candidate of explicit)
     if (isGenerated(candidate.file, config, ownership))
       throw generatedError(candidate, config);
@@ -136,7 +141,7 @@ export function collectPostcssDependencies(
       );
     sourceFiles.add(candidate.file);
   }
-  missingDirectories.sort(byPath);
+  ownership.work.sort(missingDirectories, byPath);
   if (missingDirectories.length) {
     const first = missingDirectories[0]!;
     throw new MoklyError(
@@ -146,11 +151,13 @@ export function collectPostcssDependencies(
   }
   return {
     sourceFiles,
-    watchDirectories: [...directories.values()].sort((first, second) =>
-      compareCodeUnits(
-        `${first.directory}\0${first.glob}`,
-        `${second.directory}\0${second.glob}`,
-      ),
+    watchDirectories: ownership.work.sort(
+      [...directories.values()],
+      (first, second) =>
+        compareCodeUnits(
+          `${first.directory}\0${first.glob}`,
+          `${second.directory}\0${second.glob}`,
+        ),
     ),
   };
 }

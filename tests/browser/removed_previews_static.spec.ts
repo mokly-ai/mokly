@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   startExportedPreviews,
   type RemovedPreviewHost,
@@ -9,7 +11,7 @@ import { chooseViewport } from "./workspace_actions.js";
 let host: RemovedPreviewHost & { requests: readonly string[] };
 
 test.beforeAll(async () => {
-  test.setTimeout(240_000);
+  test.setTimeout(scaledTimeLimit(240_000));
   host = await startExportedPreviews();
 });
 test.afterAll(async () => {

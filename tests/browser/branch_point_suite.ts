@@ -4,6 +4,7 @@ import { expect, test, type Browser } from "@playwright/test";
 
 import { branchPointFixture } from "../helpers/branch_point_fixture.js";
 import type { BranchPointCase } from "../helpers/branch_point_sources.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import {
   startBranchHost,
@@ -61,7 +62,7 @@ export function branchPointSuite(kind: BranchHostKind): void {
       let host: BranchHost | undefined;
 
       test.beforeAll(async ({ browser }) => {
-        test.setTimeout(180_000);
+        test.setTimeout(scaledTimeLimit(180_000));
         host = await startBranchHost(kind, () => branchPointFixture(name));
         if (kind === "serve")
           await prepareServedComparisons(

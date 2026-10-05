@@ -7,6 +7,7 @@ import { verifyModuleScoping } from "../dist/build/styles/module_verify.js";
 import { scopeModule } from "../dist/build/styles/modules.js";
 
 import { pluginModuleOutput } from "./helpers/css_module_plugin_output.js";
+import { scaledTimeLimit } from "./helpers/time_limits.js";
 
 const relative = "entries/matrix.module.css";
 const prefix = `mokly_${createHash("sha256").update(relative).digest("hex").slice(0, 12)}_`;
@@ -186,7 +187,7 @@ test(
       `${accepted + rejected} generated selector cases: ${accepted} accepted, ${rejected} rejected, ${elapsed.toFixed(1)} ms`,
     );
     assert.ok(
-      elapsed < 10_000,
+      elapsed < scaledTimeLimit(10_000),
       `generated selector matrix took ${elapsed.toFixed(1)} ms`,
     );
   },

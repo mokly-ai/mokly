@@ -2,7 +2,7 @@
 
 import { expect, type Page } from "@playwright/test";
 
-import { expectedConsoleNotice } from "./console_notices.js";
+import { captureBrowserErrors } from "./console_notices.js";
 
 export const INVOICE = "account/billing/invoice";
 export const ACTION = "ui/action";
@@ -19,21 +19,9 @@ export function dot(page: Page, entry: string): Promise<string> {
   );
 }
 
-/**
- * Console errors other than the viewer's expected sandbox reports and the
- * embedded viewer's host page asking for a favicon it does not serve.
- */
+/** Record unexpected console errors and page errors in moved-entry checks. */
 export function consoleErrors(page: Page): string[] {
-  const errors: string[] = [];
-  page.on("console", (message) => {
-    if (
-      message.type() === "error" &&
-      !expectedConsoleNotice(message) &&
-      !message.location().url.endsWith("/favicon.ico")
-    )
-      errors.push(message.text());
-  });
-  return errors;
+  return captureBrowserErrors(page);
 }
 
 /** Select the Details panel, which some entries open with already. */

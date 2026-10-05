@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   HISTORY_ENTRIES,
   startHistoricalSelectionHistory,
@@ -9,7 +11,7 @@ for (const mode of ["serve", "static"] as const) {
   test.describe(`${mode} historical navigation`, () => {
     let host: Awaited<ReturnType<typeof startHistoricalSelectionHistory>>;
     test.beforeAll(async () => {
-      test.setTimeout(240_000);
+      test.setTimeout(scaledTimeLimit(240_000));
       host = await startHistoricalSelectionHistory(mode);
     });
     test.afterAll(async () => {

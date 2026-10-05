@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   documentRequests,
   historical,
@@ -15,7 +17,7 @@ import {
 let host: RemovedPreviewHost;
 
 test.beforeAll(async () => {
-  test.setTimeout(240_000);
+  test.setTimeout(scaledTimeLimit(240_000));
   host = await startServedPreviews();
 });
 

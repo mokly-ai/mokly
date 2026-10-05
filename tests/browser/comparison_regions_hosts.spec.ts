@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { comparisonRegionsExport } from "../helpers/comparison_regions_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import {
   comparisonSection,
@@ -24,7 +25,7 @@ let viewer: HostedViewer;
 
 test.describe.configure({ timeout: 90_000 });
 test.beforeAll(async () => {
-  test.setTimeout(240_000);
+  test.setTimeout(scaledTimeLimit(240_000));
   exported = await comparisonRegionsExport();
   site = await serveStaticFiles(exported.output);
   viewer = await hostExportedViewer(exported.output);

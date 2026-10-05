@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   branchCatalogue,
   startBranchHost,
@@ -38,7 +40,7 @@ function shopCatalogue() {
 let host: BranchHost;
 
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
+  test.setTimeout(scaledTimeLimit(180_000));
   host = await startBranchHost("serve", shopCatalogue);
 });
 

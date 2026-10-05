@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { expectedConsoleNotice } from "./console_notices.js";
+import { captureBrowserErrors } from "./console_notices.js";
 import { startStaticFixture } from "./static_fixture.js";
 
 let exported: Awaited<ReturnType<typeof startStaticFixture>>;
@@ -16,7 +16,7 @@ test.afterAll(async () => {
 test("live host waits for explicit capabilities and repeated bootstrap stays single", async ({
   page,
 }) => {
-  const errors = captureErrors(page);
+  const errors = captureBrowserErrors(page);
   await countHydrations(page);
   const gate = await delayHost(page);
   await page.goto("/view/example/screens/welcome/", {
@@ -49,7 +49,7 @@ test("live host waits for explicit capabilities and repeated bootstrap stays sin
 test("export auto-hydrates once without live capabilities", async ({
   page,
 }) => {
-  const errors = captureErrors(page);
+  const errors = captureBrowserErrors(page);
   await countHydrations(page);
   await page.goto(new URL("/view/home/", exported.url).href);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
@@ -105,14 +105,4 @@ async function delayHost(page: Page): Promise<{
     await route.continue();
   });
   return { release, requested };
-}
-
-function captureErrors(page: Page): string[] {
-  const errors: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() === "error" && !expectedConsoleNotice(message))
-      errors.push(message.text());
-  });
-  page.on("pageerror", (error) => errors.push(error.message));
-  return errors;
 }

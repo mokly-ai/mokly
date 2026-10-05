@@ -207,29 +207,45 @@ Keep the selected comparison mode until a listed reset event (item 6).
 ## Milestone 8: Test-suite rules
 
 Make time limits and console checks follow one shared rule (items 7, 13 and
-14). Tooling and tests only.
+14). Tooling and tests, with an optional PostCSS counting collaborator.
+Complete on the workspace branch.
 
-- [ ] The PostCSS dependency test counts sorts and root projections through
+- [x] The PostCSS dependency test counts sorts and root projections through
       an injected seam. Time stays a diagnostic.
-- [ ] Add `scaledTimeLimit` and `MOKLY_TEST_TIME_SCALE`. The
+- [x] Add `scaledTimeLimit` and `MOKLY_TEST_TIME_SCALE`. The
       `ordinaryPreview` fixture builds only what its tests need.
-- [ ] Move every fixture setup limit to `scaledTimeLimit`: the
+- [x] Move every fixture setup limit to `scaledTimeLimit`: the
       `ordinaryPreview` worker fixture and the `test.setTimeout` calls in
       `beforeAll` hooks. Move other fixed time assertions to work counts or
       to the scaled limit. Add the time-limit guard test.
-- [ ] Anchor the console rule, and make `/site/static/` a rejected case.
-- [ ] Move `captureBrowserErrors` into `console_notices.ts`. It records
+- [x] Anchor the console rule, and make `/site/static/` a rejected case.
+- [x] Move `captureBrowserErrors` into `console_notices.ts`. It records
       console errors and page errors. A guard test rejects other console
       listeners, with an allowlist for the two checks that read one message
       type.
-- [ ] Give the embedded test host page an empty icon as a same-origin file,
+- [x] Give the embedded test host page an empty icon as a same-origin file,
       not a `data:` URL, because the strict-CSP host blocks `data:` images.
       Remove the `favicon.ico` exception.
-- [ ] Add a guide test that the search summary names each field of the
+- [x] Add a guide test that the search summary names each field of the
       folder contract's search rule.
-- [ ] Update the setup-limit paragraph in `ci-suite-evidence.md`, and the
+- [x] Update the setup-limit paragraph in `ci-suite-evidence.md`, and the
       Delivery Status of `ci-verification-test-rules.md`.
-- [ ] Run the related unit and browser tests.
+- [x] Run the related unit and browser tests.
+
+Evidence: `cargo xtask check` passed on Node 24.21.0 with 4,229 unit tests,
+844 browser tests and 263 hydration tests. It also passed formatting, lint,
+type checks, repository ratchets, Rust checks, the example check and all six
+packed-consumer smoke scenarios. A focused 55-test browser run passed the
+moved-entry Serve, export and embedded cases, ordinary publication navigation
+at mobile and desktop widths, and the strict-CSP host. The shared capture
+found no new page errors.
+
+The focused fixture keeps required component registrations with one saved
+variant each. Those variants are navigation-only stand-ins because the
+component contract requires a saved variant. The test rules document this
+constraint. The runners already passed the scale unchanged; a test now checks
+that behavior. The first full gate found a protocol history sentence in the
+new delivery status. That sentence was removed. The full rerun passed.
 
 ## Milestone 9: Typed branch-point references in the data layer
 

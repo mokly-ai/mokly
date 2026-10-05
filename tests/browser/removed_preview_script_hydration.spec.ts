@@ -3,14 +3,16 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   branchCatalogue,
   startBranchHost,
   type BranchHost,
 } from "./branch_hosts.js";
+import { captureBrowserErrors } from "./console_notices.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   expectCleanHydration,
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";
@@ -41,7 +43,7 @@ let bundle: string;
 const hosts = new Map<(typeof KINDS)[number], BranchHost>();
 
 test.beforeAll(async () => {
-  test.setTimeout(360_000);
+  test.setTimeout(scaledTimeLimit(360_000));
   bundle = await buildDevelopmentBundle();
   for (const kind of KINDS)
     hosts.set(kind, await startBranchHost(kind, scriptedRemoval));

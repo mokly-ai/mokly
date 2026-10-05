@@ -7,10 +7,10 @@
  * recorder. Each such report is expected; every other console error is not.
  */
 
-import type { ConsoleMessage } from "@playwright/test";
+import type { ConsoleMessage, Page } from "@playwright/test";
 
 const SANDBOX_NOTICE =
-  /^Blocked script execution in '([^']*)' because the document's frame is sandboxed and the 'allow-scripts' permission is not set\./u;
+  /^Blocked script execution in '([^']*)' because the document's frame is sandboxed and the 'allow-scripts' permission is not set\.$/u;
 
 /** Whether a frame document URL belongs to one of the viewer's sandboxed frames. */
 function viewerSandboxedDocument(url: string): boolean {
@@ -23,7 +23,7 @@ function viewerSandboxedDocument(url: string): boolean {
   }
   return (
     (parsed.protocol === "http:" || parsed.protocol === "https:") &&
-    (/(?:^|\/)static\//u.test(parsed.pathname) ||
+    (parsed.pathname.startsWith("/static/") ||
       parsed.pathname.startsWith("/__mokly/components/renders/"))
   );
 }
@@ -37,8 +37,10 @@ export function viewerSandboxNotice(
   text: string,
   locationUrl: string,
 ): boolean {
-  const named = SANDBOX_NOTICE.exec(text)?.[1];
+  const notice = SANDBOX_NOTICE.exec(text);
+  const named = notice?.[1];
   return (
+    notice?.[0] === text &&
     named !== undefined &&
     (viewerSandboxedDocument(named) || viewerSandboxedDocument(locationUrl))
   );
@@ -47,4 +49,15 @@ export function viewerSandboxNotice(
 /** Whether a browser console message is an expected viewer sandbox report. */
 export function expectedConsoleNotice(message: ConsoleMessage): boolean {
   return viewerSandboxNotice(message.text(), message.location().url);
+}
+
+/** Record every unexpected console error and every page error for one page. */
+export function captureBrowserErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && !expectedConsoleNotice(message))
+      errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  return errors;
 }

@@ -45,11 +45,12 @@ inputs because preparation is part of what those tests verify. Fixture phases
 emit `[mokly:fixture-timing]` JSON with the fixture, phase, duration, status,
 and whether the operation itself is under test.
 
-Full-catalogue browser preparations share a five-minute setup budget in
-`tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline
-exports, and ordinary publication fixtures use that budget independently of the
-default one-minute browser test timeout. Assertion deadlines, retries, and
-worker limits remain unchanged; server readiness retains its own bound.
+Full-catalogue browser preparations share one setup limit: five minutes, scaled
+by the [time-limit rule](./ci-verification-test-rules.md#scaled-limits). Cold
+package/example builds, baseline exports, and ordinary publication fixtures use
+that limit independently of the default one-minute browser test timeout.
+Assertion deadlines, retries, and worker limits remain unchanged; server
+readiness retains its own bound.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.

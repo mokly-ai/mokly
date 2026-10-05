@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   branchCatalogue,
   startBranchHost,
@@ -51,7 +53,7 @@ for (const kind of ["serve", "export"] as const)
     let host: BranchHost;
 
     test.beforeAll(async () => {
-      test.setTimeout(180_000);
+      test.setTimeout(scaledTimeLimit(180_000));
       host = await startBranchHost(kind, lightOnlyCatalogue);
     });
 

@@ -8,6 +8,7 @@ import { componentEntrySource } from "../helpers/component_fixture.js";
 import { createExportFixture } from "../helpers/export_fixture.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
 import { expectFrameSource } from "./workspace_actions.js";
@@ -20,7 +21,7 @@ let mountedCatalogue: string;
 const fragment = "react-native-stylesheet";
 
 test.beforeAll(async () => {
-  test.setTimeout(90_000);
+  test.setTimeout(scaledTimeLimit(90_000));
   fixture = await createExportFixture(componentEntrySource());
   installed = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/static-state-installed-"),

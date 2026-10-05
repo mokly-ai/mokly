@@ -1,5 +1,7 @@
 import { test } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   startMovedHost,
   type MovedChangesHost,
@@ -11,7 +13,7 @@ import { movedRowCases } from "./moved_row_cases.js";
 let host: MovedChangesHost;
 
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
+  test.setTimeout(scaledTimeLimit(180_000));
   host = await startMovedHost("serve");
 });
 

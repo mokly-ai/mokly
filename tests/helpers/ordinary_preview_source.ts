@@ -4,12 +4,10 @@ import { DESTINATIONS } from "../specs/design/parts/destinations.js";
 import { COMPONENT_PAGES, CONTROLS_PAGES, INSPECTION_PAGES } from "../specs/design/components/parts/destinations.js";
 
 const existing = new Set([
-  DESTINATIONS.home, DESTINATIONS.exampleOverview, DESTINATIONS.welcome,
-  DESTINATIONS.welcomeAppearanceVariant, DESTINATIONS.detailsAppearanceVariant,
-  DESTINATIONS.details, DESTINATIONS.tour, DESTINATIONS.tagPicker,
-  DESTINATIONS.forms, DESTINATIONS.onboarding, DESTINATIONS.onboardingPicker,
-  DESTINATIONS.document, DESTINATIONS.page, DESTINATIONS.pageDetails,
-  DESTINATIONS.pageNavigation, DESTINATIONS.pageRemoved,
+  DESTINATIONS.home, DESTINATIONS.welcome, DESTINATIONS.details, DESTINATIONS.tagPicker,
+  DESTINATIONS.onboarding, DESTINATIONS.onboardingPicker,
+  DESTINATIONS.welcomeAppearanceVariant, DESTINATIONS.detailsAppearanceVariant, DESTINATIONS.forms,
+  DESTINATIONS.page, DESTINATIONS.pageDetails,
 ]);
 export const mockups = [...new Set([
   ...Object.values(DESTINATIONS), ...Object.values(COMPONENT_PAGES),

@@ -14,17 +14,36 @@ import {
   type PackageOwnedReason,
 } from "../package_owned_paths.js";
 
+/** Work shared by inventory ordering, root projection and directory expansion. */
+export interface DependencyWork {
+  /** Sort the supplied array in place and return that array. */
+  sort<Value>(
+    values: Value[],
+    compare: (first: Value, second: Value) => number,
+  ): Value[];
+  projectRoots(config: ResolvedConfig): PackageOwnedRoots;
+  compileGlob(glob: string): Pick<Minimatch, "match">;
+}
+
+const dependencyWork: DependencyWork = {
+  sort: (values, compare) => values.sort(compare),
+  projectRoots: packageOwnedRoots,
+  compileGlob: (glob) => new Minimatch(glob, { dot: true, nocase: false }),
+};
+
 /** Keep logical/physical classification stable and reusable throughout one load. */
 export interface DependencyPathCache {
   readonly reasons: Map<string, PackageOwnedReason | undefined>;
   readonly roots: PackageOwnedRoots;
+  readonly work: DependencyWork;
 }
 
 /** Share fixed root projections and path decisions throughout one collection. */
 export function createDependencyPathCache(
   config: ResolvedConfig,
+  work: DependencyWork = dependencyWork,
 ): DependencyPathCache {
-  return { reasons: new Map(), roots: packageOwnedRoots(config) };
+  return { reasons: new Map(), roots: work.projectRoots(config), work };
 }
 
 /** Memoize one path's ownership for the duration of a dependency inventory. */
@@ -55,7 +74,7 @@ export function walkDependencyDirectory(
   cache: DependencyPathCache = createDependencyPathCache(config),
 ): readonly string[] {
   const matches: string[] = [];
-  const matcher = new Minimatch(glob, { dot: true, nocase: false });
+  const matcher = cache.work.compileGlob(glob);
   const realMockupsDir = cache.roots.mockups;
   const visit = (current: string): void => {
     const owned = dependencyOwnership(current, config, cache, true);
@@ -67,9 +86,10 @@ export function walkDependencyDirectory(
     const insideMockups =
       isInside(config.mockupsDir, current) ||
       isInside(realMockupsDir, fs.realpathSync.native(current));
-    for (const entry of fs
-      .readdirSync(current, { withFileTypes: true })
-      .sort((first, second) => compareCodeUnits(first.name, second.name))) {
+    for (const entry of cache.work.sort(
+      fs.readdirSync(current, { withFileTypes: true }),
+      (first, second) => compareCodeUnits(first.name, second.name),
+    )) {
       const candidate = path.join(current, entry.name);
       if (entry.isDirectory()) {
         visit(candidate);
@@ -86,7 +106,7 @@ export function walkDependencyDirectory(
     }
   };
   visit(directory);
-  return matches.sort(compareCodeUnits);
+  return cache.work.sort(matches, compareCodeUnits);
 }
 
 /** Skip external/denied paths before touching source inventory normalization. */

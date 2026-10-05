@@ -57,9 +57,10 @@ export async function hostExportedViewer(
     path.join(output, "fixture.js"),
     `window.fixture=${data};`,
   );
+  await fs.writeFile(path.join(output, "viewer-icon.ico"), "");
   await fs.writeFile(
     path.join(output, "viewer.html"),
-    '<!doctype html><link rel="stylesheet" href="/viewer.css"><body><script src="/fixture.js"></script><script type="module" src="/viewer.js"></script></body>',
+    '<!doctype html><link rel="icon" href="/viewer-icon.ico"><link rel="stylesheet" href="/viewer.css"><body><script src="/fixture.js"></script><script type="module" src="/viewer.js"></script></body>',
   );
   const host = await serveStaticFiles(output);
   const cspHost = await serveStaticFiles(output, {

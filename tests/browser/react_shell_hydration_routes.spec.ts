@@ -5,10 +5,11 @@ import { expect, test } from "@playwright/test";
 
 import { parseManifest } from "../../dist/registry/manifest.js";
 import { entryRoute } from "../../packages/viewer/dist/data.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
+import { captureBrowserErrors } from "./console_notices.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   expectCleanHydration,
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";
@@ -28,7 +29,7 @@ expect(fixtureRoutes.length).toBeGreaterThan(80);
 
 let developmentBundle: string;
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   developmentBundle = await buildDevelopmentBundle();
 });
 

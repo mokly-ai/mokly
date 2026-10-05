@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import {
   startDocumentChangesFixture,
   type DocumentChangesFixture,
@@ -8,7 +10,7 @@ import {
 let served: DocumentChangesFixture;
 
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   served = await startDocumentChangesFixture();
 });
 

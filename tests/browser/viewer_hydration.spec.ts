@@ -16,7 +16,11 @@ test("independent application-owned server roots hydrate in place", async ({
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text());
+    if (
+      message.type() === "error" &&
+      /hydration|server rendered|client rendered/i.test(message.text())
+    )
+      consoleErrors.push(message.text());
   });
   page.on("pageerror", (error) => pageErrors.push(error.message));
 

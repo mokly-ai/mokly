@@ -7,6 +7,7 @@ import { exportCatalogue } from "../../dist/export/run.js";
 import { createExportFixture } from "../helpers/export_fixture.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
 
@@ -15,7 +16,7 @@ let server: Awaited<ReturnType<typeof serveStaticFiles>>;
 let isolated: string;
 
 test.beforeAll(async () => {
-  test.setTimeout(60_000);
+  test.setTimeout(scaledTimeLimit(60_000));
   fixture = await createExportFixture();
   isolated = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/static-deployment-"),

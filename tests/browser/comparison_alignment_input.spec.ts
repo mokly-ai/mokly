@@ -1,6 +1,7 @@
 import { expect, test, type Locator } from "@playwright/test";
 
 import { comparisonAlignmentFixture } from "../helpers/comparison_alignment_fixture.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import {
   comparisonSection,
@@ -18,7 +19,7 @@ import {
 let fixture: Awaited<ReturnType<typeof comparisonAlignmentFixture>>;
 test.describe.configure({ timeout: 90_000 });
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   fixture = await comparisonAlignmentFixture();
 });
 test.afterAll(async () => {

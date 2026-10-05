@@ -6,6 +6,7 @@ import {
   ALIGNMENT_SHORT_CANVAS,
   ALIGNMENT_SHORT_HEIGHTS,
 } from "../helpers/comparison_alignment_source.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import {
   comparisonSection,
@@ -27,7 +28,7 @@ import {
 let fixture: Awaited<ReturnType<typeof comparisonAlignmentFixture>>;
 test.describe.configure({ timeout: 90_000 });
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   fixture = await comparisonAlignmentFixture();
 });
 test.afterAll(async () => {

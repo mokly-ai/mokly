@@ -6,14 +6,9 @@ which browser console messages a check accepts.
 
 ## Delivery Status
 
-Both rules are approved targets of the
-[path identity follow-up plan](../../plans/path-identity-follow-up.md). Until
-that work lands, several unit tests assert fixed elapsed-time limits, fixture
-setup limits are fixed values, and `scaledTimeLimit` and the two guards below
-do not exist. The current console rule accepts `/static/` at any path depth and
-text after Chrome's sentence. Six browser test files register their own
-console listener. One of them also accepts a missing `/favicon.ico` and ignores
-page errors.
+Both rules are delivered.
+The shared helpers, work-count checks, focused preview fixture and repository
+guards enforce the rules below.
 
 ## Time Limits
 
@@ -78,7 +73,10 @@ The `ordinaryPreview` worker fixture in
 [`ordinary_preview_fixture.ts`](../../tests/browser/ordinary_preview_fixture.ts)
 builds a focused catalogue. It holds the entries that its specs open, and a
 navigation-only stand-in for each other destination that those entries link
-to. A spec that opens another entry adds that entry to the focused catalogue.
+to. It keeps only the component registrations those entries use. Each keeps
+one required saved variant as a navigation-only stand-in. Variant stand-ins
+keep their parent reference.
+A spec that opens another entry adds that entry to the focused catalogue.
 The fixture uses the full-catalogue setup limit.
 
 ### Time Limit Guard
