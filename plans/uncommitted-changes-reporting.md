@@ -1,8 +1,10 @@
 # Uncommitted Changes Reporting
 
-Status: Active. Created 2026-10-05 with the user's consent. Milestones 1–4 are
-complete; Milestone 5 records local verification, delivery and the post-push
-review. The pull request merge completes this plan.
+Status: Active. Created 2026-10-05 with the user's consent. Milestones 1–5 are
+complete in [PR #135](https://github.com/mokly-ai/mokly/pull/135), and its
+required CI passes. The post-push review found one Medium and four Low
+findings, which await the user's decision. The pull request merge completes
+this plan.
 
 ## Outcome
 
@@ -189,12 +191,12 @@ request without applying review findings automatically.
 
 - [x] Smoke-test `mokly publish` against a local receiver for a clean and a
       dirty checkout in plain and rich output.
-- [ ] Run `cargo xtask check` and require a 100% pass rate.
+- [x] Run `cargo xtask check` and require a 100% pass rate.
 - [x] Inspect the final diff, deletions against `origin/main` and whitespace.
-- [ ] Run `git add -A`, commit the completed work with a Conventional Commit and
+- [x] Run `git add -A`, commit the completed work with a Conventional Commit and
       `BREAKING CHANGE:` footer, push the branch with every new file tracked,
       and open the pull request.
-- [ ] After the push, review the complete diff against `origin/main` using
+- [x] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`; report numbered findings with
       severity, impact, lettered solution options and a recommendation without
       changing the implementation.
@@ -211,8 +213,21 @@ documentation changes, the repository and package suites pass again. The unit
 suite passes 4,246 of 4,247: the 2,500 ms bound in
 `tests/postcss_dependency_review.test.ts` measured 2,779 ms. On this sandbox
 that test measures 2,153–2,999 ms with this branch and 2,906–2,965 ms with
-`origin/main`'s code, so the failure depends on load, not on this change. The
-complete gate therefore stays open until hosted CI runs it.
+`origin/main`'s code, so the failure depends on load, not on this change.
+Hosted CI then ran the complete gate on PR #135: the repository, package, all
+four unit shards, all four browser shards, hydration and native filesystem jobs
+pass, and so does `Required CI`.
+
+Review outcome: the post-push review found five items, which await the user's
+decision. (1, Medium) A committed catalogue whose generated files are out of
+date fails the recheck on every clean CI checkout, and the CI guides and action
+README wrongly say that files Mokly writes never count. (2, Low) Inputs that a
+local exclude file or an index flag hides still give a clean publication. (3,
+Low) The three new error messages are longer than a rich error line, so rich
+mode cuts their action text. (4, Low) The repository tests prove the
+derived-file exclusion only through screens and a fake ownership check; the
+packed-consumer smoke covers one copied document resource. (5, Low) This
+checklist did not yet record the push and review; this update records them.
 
 ## Post-merge follow-up (non-blocking)
 
