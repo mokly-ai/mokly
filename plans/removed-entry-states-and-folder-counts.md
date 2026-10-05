@@ -2,9 +2,9 @@
 
 Status: Active until its pull request merges. Created 2026-10-05 with the
 user's consent, as the design-first group of the path identity review
-follow-up. Milestones 1–4 are complete and pushed. Milestone 5 verification is
-done except for the fixed fixture budget of third-review item 8, and the
-post-push review follows.
+follow-up. Milestones 1–5 are complete and pushed. The gate passes except for
+the fixed fixture budget of third-review item 8 on this machine. The fresh
+review found six Low findings, which await the user's decision.
 
 **Goal:** Fix three Low findings from the
 [second path identity review](../docs/reviews/path-identity.md#second-review)
@@ -217,7 +217,7 @@ comparison band, the heading, the moved-variant links and Details without
 
 ## Milestone 5: Verification, commit, push and review
 
-Status: In progress. Everything except the post-push review is done.
+Status: Complete.
 
 - [x] Run a real CLI smoke test in a scratch Git repository with
       `serve --base main` and `export --base main` at desktop and mobile
@@ -251,10 +251,13 @@ Status: In progress. Everything except the post-push review is done.
       update this plan's status paragraph.
 - [x] Run `git add -A`, commit with Conventional Commits, and push the
       branch.
-- [ ] After the push, a fresh reviewer uses
+- [x] After the push, a fresh reviewer uses
       `docs/implementation-review-prompt.md` against the complete diff from
       `origin/main` and reports findings without changing the
-      implementation.
+      implementation. The reviewer confirmed the approved fixes and found six
+      Low findings, recorded in the
+      [review record](../docs/reviews/path-identity.md#design-follow-up-review)
+      for the user's decision. No finding was fixed during the review.
 
 ## Post-merge follow-up (non-blocking)
 

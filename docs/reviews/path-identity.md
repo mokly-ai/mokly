@@ -761,3 +761,48 @@ delivers them:
 
 The `departed-variants` case is the sixth shared branch-point case. It passes
 in Serve, export and the embedded viewer at desktop and mobile widths.
+
+### Design Follow-up Review
+
+A fresh reviewer reviewed the pushed branch at `8b929bd3` against
+`origin/main`, with the implementation review prompt. The reviewer rendered
+both shells for the `departed-variants` fixture and confirmed the approved
+fixes, the lookup and the guard. The reviewer found six Low findings. Nothing
+was changed during the review. The user decides what to address next.
+
+1. **Low — No test checks that the removed-parent page hydrates cleanly.**
+   The server builds the moved-variant links from the served catalogue and
+   the browser from the public read model. The `departed-variants` browser
+   case fails only on HTTP 5xx responses and wrong final text, not on console
+   or page errors. **Options:** **A)** add its `link-button` route to a
+   development-React hydration spec in Serve and export; **B)** make the
+   branch-point suite fail on console and page errors through
+   `tests/browser/console_notices.ts`; **C)** rely on the CLI smoke test.
+   **Recommended: B,** and A if the cost is acceptable.
+2. **Low — Two contract states of the removed-parent page have no rendered
+   test:** the heading-only page, and a parent that keeps a removed variant
+   and also lost a moved one. **Options:** **A)** add both to
+   `tests/removed_parent_stage.test.ts` with in-memory catalogues; **B)** add
+   both as shared Git fixture cases; **C)** do nothing. **Recommended: A.**
+3. **Low — The new artboard's Usage panel shows text that the product never
+   shows.** The mockup reads `No screens or components use Link button.`;
+   the product reads `No recorded consumers.` Three older unused-component
+   artboards have the same mismatch, and no protocol defines the copy.
+   **Options:** **A)** change the mockups to the product text; **B)** define
+   one user-facing sentence in the protocol and use it in the product and
+   all four artboards; **C)** do nothing. **Recommended: B,** as a separate
+   change.
+4. **Low — The Changes guide does not describe the new page.**
+   `docs/guides/catalogue/changes.md` says what each removed kind shows, but
+   not a removed component. **Options:** **A)** add two sentences; **B)** do
+   nothing. **Recommended: A.**
+5. **Low — This record and the plan overstate one outcome and keep a stale
+   count.** The two component-explorer depictions draw `Location` as a text
+   line, not as the product's metadata row. The third review still says ten
+   second-review findings are undecided; seven remain: 2, 3, 4, 5, 10, 14 and 15. **Options:** **A)** reword the outcome and list the open findings;
+   **B)** leave the record as history. **Recommended: A.**
+6. **Low — Seven branch commit titles are longer than 50 characters.**
+   Pull requests are squash-merged, and CI checks only the pull request title.
+   **Options:** **A)** keep the pushed history and give the pull request a
+   valid title; **B)** add a local commit-title check; **C)** apply the limit
+   to the pull request title in `AGENTS.md`. **Recommended: A,** and C.
