@@ -2624,7 +2624,7 @@ in the same module as the shared list builder that finding 14 recommends.
 
 Documentation only. On 2026-10-05 the user chose an option for each open
 finding below. This milestone records the decisions, defines the exact
-behaviour, messages and tests for Milestones 20–24 in the affected contracts,
+behaviour, messages and tests for Milestones 20 and 24–27 in the affected contracts,
 guides and READMEs, and fixes the documentation-only findings.
 
 ### Decisions
@@ -2915,7 +2915,95 @@ remains the existing merge base. Final Markdown checks and `git diff --check`
 pass. All smoke and verification processes stop. Branch checks precede commit
 and explicit push; the final review remains with the orchestrator.
 
-## Milestone 21: Shared watching and command output
+## Milestone 21: Define the merge with path identity
+
+Documentation only. On 2026-10-05 `main` moved to `c4138a0b` (#131, "file-path
+identity and Markdown documents"), which changes 1,614 files. It replaces each
+entry's `id` and `navPath` with one path derived from the entry's file
+location, makes Markdown files `document` entries, detects moves with
+`previousPath`, and renames the Pages section to Specs. It defines its own
+manifest v8, public catalogue read model v4 and review result v5, which differ
+from this branch's v8 and v4. Its code still has the output modes, ownership
+headers, the `__mokly/` namespace and compatibility code that this branch
+removed.
+
+The user decided:
+
+- **1 A:** merge `main` now, before the remaining review fixes. Codex astra at
+  maximum thinking performs the merge.
+- **2 A:** give the merged formats new numbers: manifest v9, public catalogue
+  read model v5 and review result v6. One number means one shape. Output from
+  `main`'s unreleased v8, v4 and v5 then counts as earlier output and gets the
+  earlier-version outcome. Any other format that has two different shapes
+  under one number after the merge also gets a new number.
+
+The merged design keeps every `main` feature and every approved decision of
+this branch:
+
+- From `main`: path identity, folders, `_folder.json` and `defineFolder`,
+  Markdown documents and their resources, moves with `previousPath`, the Specs
+  and Components sections, and every other feature and test of #131 and of any
+  later `main` commit that this merge includes.
+- From this branch: one Mokly-owned `<mockupsDir>/mokly-generated/` tree for
+  every generated file, written only by `build`, `build --watch` and
+  `serve --build`; Git index tracking for `check`; the referenced asset closure
+  and the shared public-file policy; per-commit baselines that read only the
+  current format; the `mokly-viewer/` namespace and its version gates;
+  ownership v3 and upload v2; no backward-compatibility code (Milestone 16);
+  and the implemented decisions of Milestones 19–20.
+- Where `main` brings back something that an approved decision of this branch
+  removed (for example output modes, ownership headers, `__mokly/`, earlier
+  manifest names, the compatibility transformer or legacy export ownership),
+  the removal stays approved. Record each such removal of `main` code, with
+  its decision, in the preservation audit.
+
+- [ ] Fetch `main`. Capture the source tip and merge base before any merge,
+      audit `main`'s additions with
+      `git diff --name-status <merge-base>..origin/main`, and write a
+      preservation list into this milestone.
+- [ ] Define the combined design in the protocol documents, guides and
+      READMEs: path-identity routes inside `mokly-generated/`, the asset closure
+      for Markdown document resources, the version number of every format
+      after the merge, the earlier-version outcome for `main`'s v8 output, and
+      the `mokly-viewer/` paths for the new viewer features.
+- [ ] Record every planned removal of `main` code with its approving decision.
+- [ ] Run `npm run format:check` and the documentation tests; review the diff;
+      commit with Conventional Commits; push.
+
+## Milestone 22: Merge `main` and apply the combined design
+
+- [ ] Merge `origin/main` once under `AGENTS.md` "Mainline Feature
+      Preservation": resolve conflicts path by path, confirm that the merge
+      commit has exactly two parents, review `git show --remerge-diff` for every
+      listed path, and check deletions against `main`. If `main` moves again
+      during this milestone, do not merge again; report the new tip.
+- [ ] Apply the combined design from Milestone 21 to the merged code, including
+      the new format numbers.
+- [ ] Keep every `main` test title and assertion except the approved removals,
+      and list each removal in the commit body.
+- [ ] Smoke-test `build`, `check`, Serve and export with Markdown documents,
+      folders and a moved entry. Changes against a base built by `main`'s #131
+      code must give the earlier-version line, and
+      `npm run preview:build -- --include-changes --base origin/main` must
+      succeed with Changes unavailable.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; `git add -A`; commit; push.
+
+## Milestone 23: Verify the merge and re-plan the review fixes
+
+- [ ] Re-read every document changed in Milestones 21 and 22 against the code,
+      and fix drift. If code changes, rerun the full gate.
+- [ ] Check each decision of Milestones 24–27 against the merged code. Update
+      their TODOs with current files, routes and fixtures. Record each finding
+      that the merge resolved or changed, and stop for the user's decision
+      where a recorded decision no longer fits.
+- [ ] `git add -A`; commit with Conventional Commits; push.
+- [ ] After the push, review the merge against `origin/main` using
+      `docs/implementation-review-prompt.md`; report numbered findings with
+      severities and recommendations without changing the implementation.
+
+## Milestone 24: Shared watching and command output
 
 Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
 
@@ -2927,7 +3015,7 @@ Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
 - [ ] Implement 50 B, 18 A, 16 B and 51 A with their tests.
 - [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
 
-## Milestone 22: Comparisons, baselines and build edits
+## Milestone 25: Comparisons, baselines and build edits
 
 Implements 39 B, 54 A, 55 A, 59 A, 60 A, 48 A, 58 A and 62 A.
 
@@ -2943,7 +3031,7 @@ Implements 39 B, 54 A, 55 A, 59 A, 60 A, 48 A, 58 A and 62 A.
 - [ ] Implement 58 A with Build and Serve tests, and 62 A.
 - [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
 
-## Milestone 23: Viewer frame URLs
+## Milestone 26: Viewer frame URLs
 
 Tags: ui
 
@@ -2955,7 +3043,7 @@ Implements 10 B and 25 B in the viewer. No backend work.
 - [ ] Decode the frame path once and test double-encoded paths.
 - [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
 
-## Milestone 24: Test and release tooling
+## Milestone 27: Test and release tooling
 
 Implements 57 B, 65 A, 63 B and 42 B.
 
@@ -2966,9 +3054,9 @@ Implements 57 B, 65 A, 63 B and 42 B.
 - [ ] Add the public API reports and the CI rule (42 B).
 - [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
 
-## Milestone 25: Verify and review the review fixes
+## Milestone 28: Verify and review the review fixes
 
-- [ ] Re-read every document changed in Milestones 19–24 against the code, and
+- [ ] Re-read every document changed in Milestones 19–27 against the code, and
       fix drift. Validate changed Markdown. If code changes, rerun the full gate.
 - [ ] `git add -A`; commit with Conventional Commits; push.
 - [ ] After the push, review the complete local diff against `origin/main`

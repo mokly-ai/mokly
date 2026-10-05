@@ -32,8 +32,10 @@
   checks all changed documents. Its full gate passes with 3,773 unit tests and
   970 browser cases. Its final review reported 8 new findings without changes
   (58–65: 1 medium, 7 low); low performance finding 66 was added later.
-  Milestones 19–25 implement the user's decisions on the open findings;
-  findings 17 and 52 await decisions. Milestone 19 defines the shared closure,
+  Milestones 19, 20 and 24–28 implement the user's decisions on the open
+  findings; findings 17 and 52 await decisions. Milestones 21–23 first merge
+  `main`'s path identity (#131), with manifest v9, catalogue v5 and review
+  result v6. Milestone 19 defines the shared closure,
   watching, comparison, frame and verification contracts, fixes the approved
   documentation findings, and records the TypeScript member ratchet decision.
   Its format and 13 documentation checks pass. Milestone 20 implements the
