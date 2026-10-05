@@ -1,22 +1,4 @@
-# Workspace Package Boundary
-
-## Workspace Layout
-
-The private root package is `mokly-workspace`. Its npm workspaces are
-`packages/viewer` (`@mokly/viewer`) and `packages/mokly` (`@mokly/mokly`). The
-root owns the shared development toolchain, repository-wide scripts, tests,
-docs, and examples. It does not publish a package. Each workspace member owns
-its public manifest, source, build output, README, changelog, and license.
-
-The CLI's unit, browser, helper, and fixture files stay under the root
-`tests/` directory. Viewer-owned tests stay under `packages/viewer/tests/`.
-The root commands build the viewer before the CLI and verify both packages.
-
-The root `docs/` tree remains the only source for guides and protocol
-documents. The CLI build copies `docs/guides` and `docs/protocol` into
-`packages/mokly/docs/` before packing. These copies are Git-ignored and
-`npm run clean` removes them. The published CLI keeps its existing
-`docs/guides` and `docs/protocol` paths and the same tarball file layout.
+# Package And Consumer Boundary
 
 ## Rule
 
@@ -72,7 +54,23 @@ and in memory; controls do not change source, committed fragments or Changes.
 Static export carries saved variants and inspection without the local capability.
 See the [component contract](../protocol/mokly-components.md).
 
-## Viewer Responsibilities
+## Workspace Package Boundary
+
+The private root package is `mokly-workspace`. Its npm workspaces are
+`packages/viewer` (`@mokly/viewer`) and `packages/mokly` (`@mokly/mokly`). The
+root owns the shared development toolchain, repository-wide scripts, tests,
+docs, and examples. It does not publish a package. Each workspace member owns
+its public manifest, source, build output, README, changelog, and license.
+
+The CLI's unit, browser, helper, and fixture files stay under the root
+`tests/` directory. Viewer-owned tests stay under `packages/viewer/tests/`.
+The root commands build the viewer before the CLI and verify both packages.
+
+The root `docs/` tree remains the only source for guides and protocol
+documents. The CLI build copies `docs/guides` and `docs/protocol` into
+`packages/mokly/docs/` before packing. These copies are Git-ignored and
+`npm run clean` removes them. The published CLI keeps its existing
+`docs/guides` and `docs/protocol` paths and the same tarball file layout.
 
 `@mokly/mokly` depends on the exact coordinated release version of
 `@mokly/viewer`, without `workspace:` or filesystem dependency specifiers.

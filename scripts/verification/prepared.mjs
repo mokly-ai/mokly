@@ -1,8 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { CLI_PACKAGE_PATH } from "../package/layout.mjs";
+
 const outputs = {
-  package: ["dist/cli/bin.js", "packages/viewer/dist/browser/inspector.js"],
+  package: [
+    path.posix.join(CLI_PACKAGE_PATH, "dist/cli/bin.js"),
+    "packages/viewer/dist/browser/inspector.js",
+  ],
   example: ["examples/basic/generated/mokly-manifest.json"],
 };
 

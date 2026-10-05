@@ -7,7 +7,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { repositoryRoot, packageRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
@@ -170,7 +170,7 @@ async function writePlaywrightScopeHarness(
   resourceFile: string,
 ): Promise<void> {
   const processScope = pathToFileURL(
-    path.join(repositoryRoot, "dist/baseline/process_scope.js"),
+    path.join(packageRoot, "dist/baseline/process_scope.js"),
   ).href;
   const child = `
     process.on("SIGTERM", () => {});

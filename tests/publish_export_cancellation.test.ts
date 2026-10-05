@@ -12,9 +12,9 @@ import {
   directoryFiles,
 } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { repositoryRoot, cliBinPath } from "./helpers/fixture.js";
 
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 const preload = pathToFileURL(
   path.join(repositoryRoot, "tests/helpers/export_failure_preload.ts"),
 ).href;

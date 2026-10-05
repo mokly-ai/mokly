@@ -1,23 +1,20 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
-import fs from "node:fs/promises";
-import path from "node:path";
 import test from "node:test";
-import { promisify } from "node:util";
 
 import { parse } from "yaml";
 
+import { TESTED_NODE_VERSIONS } from "../dist/cli/bootstrap.js";
+
 import {
-  SUPPORTED_NODE_RANGE,
-  TESTED_NODE_VERSIONS,
-  isSupportedNodeVersion,
-} from "../dist/cli/bootstrap.js";
+  assertFullHistoryCheckout,
+  assertPinnedActions,
+  runGuard,
+  setupNodeVersion,
+  workflowSource,
+  type Workflow,
+} from "./helpers/ci_workflow.js";
 
-import { repositoryRoot } from "./helpers/fixture.js";
-
-const execute = promisify(execFile);
-const testedNodeVersions: readonly string[] = TESTED_NODE_VERSIONS;
-const [minimumTestedNode, currentTestedNode] = TESTED_NODE_VERSIONS;
+const [minimumTestedNode] = TESTED_NODE_VERSIONS;
 const resultVariables = [
   "REPOSITORY_RESULT",
   "PACKAGE_RESULT",
@@ -26,35 +23,6 @@ const resultVariables = [
   "HYDRATION_RESULT",
   "NATIVE_RESULT",
 ] as const;
-
-interface WorkflowStep {
-  id?: string;
-  name?: string;
-  run?: string;
-  uses?: string;
-  with?: Readonly<Record<string, unknown>>;
-}
-
-interface WorkflowJob {
-  if?: string;
-  name?: string;
-  needs?: readonly string[];
-  outputs?: Readonly<Record<string, string>>;
-  steps: readonly WorkflowStep[];
-  strategy?: {
-    "fail-fast"?: boolean;
-    matrix: Readonly<Record<string, readonly (string | number)[] | string>>;
-  };
-  "timeout-minutes"?: number;
-}
-
-interface Workflow {
-  concurrency: { "cancel-in-progress": boolean };
-  env: Readonly<Record<string, string>>;
-  jobs: Readonly<Record<string, WorkflowJob>>;
-  on: Readonly<Record<string, unknown>>;
-  permissions: Readonly<Record<string, string>>;
-}
 
 test("CI shards complete verification behind one prerequisite", async () => {
   const source = await workflowSource();
@@ -246,34 +214,6 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assertPinnedActions(workflow);
 });
 
-test("local, package and CI runtimes share the Node compatibility policy", async () => {
-  const [version, manifestSource, lockSource, readme] = await Promise.all([
-    fs.readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
-    fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
-    fs.readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),
-    fs.readFile(path.join(repositoryRoot, "README.md"), "utf8"),
-  ]);
-  const manifest = JSON.parse(manifestSource) as {
-    engines: { node: string };
-  };
-  const lock = JSON.parse(lockSource) as {
-    packages: { "": { engines: { node: string } } };
-  };
-  assert.equal(version.trim(), currentTestedNode);
-  assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
-  assert.equal(lock.packages[""].engines.node, manifest.engines.node);
-  assert.ok(
-    readme.includes(`\`${SUPPORTED_NODE_RANGE}\``),
-    "the README must document the supported Node range",
-  );
-  assert.ok(
-    readme.includes("[`.node-version`](./.node-version)"),
-    "development setup must follow the tested Node version",
-  );
-  assert.ok(TESTED_NODE_VERSIONS.every(isSupportedNodeVersion));
-  assert.ok(testedNodeVersions.includes(version.trim()));
-});
-
 test("CI resolves the latest Node 24 patch once for every dependent job", async () => {
   const source = await workflowSource();
   const workflow = parse(source) as Workflow;
@@ -345,42 +285,3 @@ test("Required CI fails closed for every prerequisite result", async (context) =
     }
   }
 });
-
-async function runGuard(
-  script: string,
-  results: Readonly<Record<string, string>>,
-): Promise<void> {
-  await execute(
-    "bash",
-    ["--noprofile", "--norc", "-e", "-o", "pipefail", "-c", script],
-    { cwd: repositoryRoot, env: { ...process.env, ...results } },
-  );
-}
-
-async function workflowSource(): Promise<string> {
-  return await fs.readFile(
-    path.join(repositoryRoot, ".github/workflows/ci.yml"),
-    "utf8",
-  );
-}
-
-function assertPinnedActions(workflow: Workflow): void {
-  const actions = Object.values(workflow.jobs).flatMap((job) =>
-    job.steps.flatMap((step) => (step.uses ? [step.uses] : [])),
-  );
-  assert.ok(actions.length > 0);
-  for (const action of actions) assert.match(action, /@[a-f0-9]{40}$/);
-}
-
-function assertFullHistoryCheckout(job: WorkflowJob): void {
-  const checkout = job.steps.find((step) =>
-    step.uses?.startsWith("useblacksmith/checkout@"),
-  );
-  assert.ok(checkout);
-  assert.equal(checkout.with?.["fetch-depth"], 0);
-}
-
-function setupNodeVersion(job: WorkflowJob): unknown {
-  return job.steps.find((step) => step.uses?.startsWith("actions/setup-node@"))
-    ?.with?.["node-version"];
-}

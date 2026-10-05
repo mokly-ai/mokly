@@ -108,6 +108,11 @@ protocol documents. Created 2026-10-05.
     `packages/viewer`.
 12. **CI.** `ci.yml` and `preview.yml` run root npm scripts and `cargo xtask`
     suites and need no path change. Only `release.yml` changes.
+13. **Ratchet history follows package moves.** Detect module renames over the
+    whole tree before filtering source candidates. Match internal-export
+    exceptions by predecessor module and unchanged export name. Resolve each
+    released package root at its tag by npm name. Derive current CLI roots
+    from the layout module so the move does not reset either export ratchet.
 
 ## Target Layout
 
@@ -209,40 +214,97 @@ history. The plan's `Status:` paragraph now records its progress.
 Introduce the names that the move will redefine, while `src/` and `dist/` stay
 at the root. The gate stays green.
 
-### Mainline integration notes
-
-- Integrate the approved `60d4837` change by merge, with source tip `8b79af5`.
-- Accept main's deletion of `plans/README.md`; do not recreate an index.
-- Preserve main's agent rules and historical plan status updates unchanged.
-- Preserve main's `plans/` links in the root README, example README, viewer
-  client README, and CLI export and publish READMEs.
-- This plan uses its own `Status:` paragraph. Milestone 1 stays closed.
-
-- [ ] `tests/helpers/fixture.ts`: export `packageRoot` (equal to
+- [x] Fix the Milestone 1 boundary finding: restore "Package And Consumer
+      Boundary" as the document title. Merge Workspace Layout and Viewer
+      Responsibilities into one "Workspace Package Boundary" section at the
+      old viewer section position. Check inbound headings and anchors.
+- [x] Define rename and package-history rules in
+      `docs/protocol/verification-ratchets.md`, within its cap. Update the
+      Gate Placement And Evidence test list and the relevant README.
+- [x] Add failing ratchet tests before fixing the code. Cover whole-tree
+      rename predecessors, moved baseline exceptions, rejected new export
+      names and modules, invalid root prefixes, package roots resolved by
+      tag-time npm name, and missing name matches.
+- [x] Implement the ratchet rules with the current layout: whole-tree rename
+      detection before root filtering, predecessor-aware shrink-only baseline
+      comparison, five layout-derived source roots, public entrypoints from
+      the CLI/viewer manifests, and tag-time package-root resolution.
+- [x] Keep the public-export ratchet active during an uncommitted package move.
+      Resolve the release-state owner at `HEAD` by package name when its
+      current path has no entry. Add a failing regression and define the rule.
+- [x] `tests/helpers/fixture.ts`: export `packageRoot` (equal to
       `repositoryRoot` for now) and `cliBinPath`
       (`path.join(packageRoot, "dist/cli/bin.js")`).
-- [ ] Replace every `path.join(repositoryRoot, "dist/...")` and
+- [x] Replace every `path.join(repositoryRoot, "dist/...")` and
       `path.join(repositoryRoot, "src", ...)` in `tests/` with `packageRoot`,
       and every CLI executable path with `cliBinPath`: the 30 files found by
       `grep -rlE 'repositoryRoot, "(dist|src)' tests` plus
       `tests/browser/watched_serve.ts`, `tests/helpers/publish_process.ts`,
       `tests/helpers/publish_pre_installation_cancellation.ts`, and
       `tests/package.test.ts` (`npm pack --dry-run` `cwd`).
-- [ ] Add `scripts/package/layout.mjs` exporting `CLI_PACKAGE_PATH` (`"."`
+- [x] Add `scripts/package/layout.mjs` exporting `CLI_PACKAGE_PATH` (`"."`
       for now), `cliPackageRoot(repositoryRoot)`, and `cliLockKey()` (`""`
       when the path is `"."`, otherwise the path), with a `.d.mts` declaration.
-- [ ] Use the layout module in `scripts/package/pair.mjs`,
+- [x] Test the layout helpers for the root and a package subdirectory. Check
+      the declaration with `npm run typecheck:script-declarations`.
+- [x] Use the layout module in `scripts/package/pair.mjs`,
       `scripts/package/manifest.mjs` (`validatePackageManifest` repository
       `directory` and `validateLockPair` keys), `scripts/package-check.mjs`,
       `scripts/package-smoke.mjs`, `scripts/release/refs.mjs`,
       `scripts/verification/prepared.mjs`, `scripts/large/setup.mjs`, and
       `scripts/clean.mjs`.
-- [ ] `tests/release_packages.test.ts` and `tests/release_config.test.ts`:
+- [x] Use the layout module for the CLI executable in
+      `scripts/large/benchmark.mjs` and `scripts/large/cli.mjs`, and for the
+      `npm pack` working directory in `scripts/large/toolchain.mjs`.
+- [x] Make `validateLockPair` derive CLI lockfile assertions from the layout.
+      Preserve root-layout assertions; validate package metadata and the CLI
+      workspace link for a subdirectory. Require CLI `repository.directory`
+      for that layout. Test both shapes and invalid metadata/link variants.
+- [x] Route CLI-manifest reads in tests through `packageRoot`. Keep workspace
+      scripts, devDependencies, overrides, and packageManager reads at the
+      repository root. Split mixed CLI/workspace reads where needed.
+- [x] Split modified tests that exceed 300 lines by responsibility. Keep every
+      existing test and assertion. Update the plan's test-file references.
+- [x] Update the CLI metadata source in `tests/release_archives.test.ts`
+      without changing its historical bootstrap fixture or archived layout.
+- [x] Include the layout module in the isolated verification-wrapper harness.
+      Derive its prepared CLI path from the layout. Add checked declarations
+      for ratchet modules used directly by the regression tests.
+- [x] Include the layout module in `tests/large_fixture_stylesheets.test.ts`.
+      Derive its compiled CLI path from the layout. Preserve its real compile,
+      stylesheet-baseline, and Git assertions.
+- [x] Make the unused `browserManifestPath` helper private in
+      `packages/viewer/scripts/browser.mjs`. The wider source-root audit found
+      that no other module imports it. Keep its behavior unchanged.
+- [x] `tests/release_packages.test.ts` and `tests/release_config.test.ts`:
       read the CLI package path from the layout module instead of `"."`.
-- [ ] Capture `.context/pack-baseline.json` from
+- [x] Audit source-string readers, isolated package fixtures, and historical
+      source links for the move.
+      Record the uncovered migration work under Milestone 3. Do not change
+      historical review records or start the move in Milestone 2.
+- [x] Capture `.context/pack-baseline.json` from
       `npm pack --dry-run --json --ignore-scripts` after `npm run build`.
-- [ ] Run `cargo xtask check` and fix every failure.
+- [x] Run `cargo xtask check` and fix every failure.
 - [ ] Commit with Conventional Commits and push the branch.
+
+### Mainline integration notes
+
+- Merge `de9f4fd` integrates `60d4837` from source tip `8b79af5`. Its two
+  parents are `8b79af5` and `60d4837`.
+- The remerge review covered all 53 imported mainline paths and this plan.
+  Every imported path matches `origin/main` exactly at the merge commit.
+- Accept main's approved deletion of `plans/README.md`; do not recreate an index.
+- Preserve main's agent rules and historical plan status updates unchanged.
+- Preserve main's `plans/` links in the root README, example README, viewer
+  client README, and CLI export and publish READMEs.
+- Resolve this plan's stash conflict by keeping the new status and integration
+  notes plus all completed Milestone 2 tasks. Milestone 1 stays closed.
+- The complete gate passed: 15 Rust tests, six packed-consumer scenarios,
+  4,231 unit/integration tests, 844 browser tests, and 263 hydration tests.
+  The pre-move pack baseline contains 2,104 unique file paths.
+- The first merged gate found one missing layout dependency in the isolated
+  large-fixture harness. Add that dependency without changing its assertions.
+  Its five focused tests and the subsequent complete gate passed.
 
 ## Milestone 3: Move the CLI package into `packages/mokly`
 
@@ -274,15 +336,25 @@ Perform the move and every path update in one commit so the gate never breaks.
       `scripts/package/browser_graph.mjs` to the new relative path; verify
       with `tsc --project tsconfig.json --noEmit`, `npm run typecheck:script-declarations`,
       and `npm run lint`.
-- [ ] Update the ratchet roots in `scripts/verification/ratchets/internal-exports.mjs`
-      and `scripts/verification/ratchets/typescript-length.mjs`, and the path
-      in `xtask/unused-internal-exports.txt`.
+- [ ] Update the mixed reader in `tests/guides_ci.test.ts`: resolve its raw
+      `src/...` strings from `packageRoot` and docs from `repositoryRoot`.
+      Split that oversized test file by responsibility without removing tests.
+- [ ] Give `tests/release_refs.test.ts` a fixture for the current CLI layout.
+      It now reuses the root-layout bootstrap fixture, while `verifyReleaseRefs`
+      follows the layout module. Keep the protected bootstrap files unchanged.
+- [ ] Before moving files, resolve the historical-review link contract with
+      the coordinating reviewer. `tests/markdown_links.test.ts` checks
+      `docs/reviews/**`, whose old relative `src/` targets will disappear.
+      Keep Decision 10 and the link check intact unless the reviewer approves
+      a concrete way to preserve those historical references.
+- [ ] Confirm the layout flip updates both source-root and public-entrypoint
+      ratchet roots. Update the path in `xtask/unused-internal-exports.txt`.
 - [ ] Update `release-please-config.json`, `.release-please-manifest.json`, and
       `.github/workflows/release.yml` per Decision 7.
 - [ ] Update `tests/release_config.test.ts` (package manifest location,
       `repository.directory`, lockfile keys, config keys and `extra-files`),
       `tests/release_packages.test.ts` (lockfile fixture entries), and
-      `tests/ci_workflow.test.ts` (root and package `engines` parity, root
+      `tests/ci_workflow_runtime.test.ts` (root and package `engines` parity, root
       README sentences).
 - [ ] Update `tests/helpers/example_baseline.ts` to copy `package.json`,
       `package-lock.json`, `tsconfig.json`, `docs/guides`, `docs/protocol`,
@@ -290,8 +362,8 @@ Perform the move and every path update in one commit so the gate never breaks.
       `node_modules`, and the copied `packages/mokly/docs`.
 - [ ] Update `tests/component_protocol_docs.test.ts` to read the moved README
       sentence from `packages/mokly/README.md`.
-- [ ] Update `tests/guides_versions.test.ts` to read the CLI version from
-      `packages/mokly/package.json`. The private root will not own that version.
+- [ ] Confirm `tests/guides_versions.test.ts` reads the moved CLI version
+      through `packageRoot`. The private root will not own that version.
 - [ ] Write the new root `README.md` and trim `packages/mokly/README.md` per
       Decision 9; update the Packages table link and every Key code link.
 - [ ] Fix the 93 upward links in the READMEs under `packages/mokly/src/` and

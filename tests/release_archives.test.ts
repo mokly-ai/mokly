@@ -5,7 +5,7 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 
 import { bootstrapFixture } from "./helpers/bootstrap_fixture.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { packageRoot, repositoryRoot } from "./helpers/fixture.js";
 import type { PackageReport } from "./helpers/release_fixture.js";
 
 interface Archive {
@@ -18,7 +18,10 @@ async function archiveFixture(t: test.TestContext, viewerVersion?: string) {
   for (const relative of [".", "packages/viewer"]) {
     const metadata = JSON.parse(
       await fs.readFile(
-        path.join(repositoryRoot, relative, "package.json"),
+        path.join(
+          relative === "." ? packageRoot : path.join(repositoryRoot, relative),
+          "package.json",
+        ),
         "utf8",
       ),
     ) as {

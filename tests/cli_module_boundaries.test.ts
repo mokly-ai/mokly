@@ -5,7 +5,7 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { repositoryRoot, packageRoot } from "./helpers/fixture.js";
 
 test("the CLI runtime avoids eager ESM-to-CommonJS edges", async () => {
   const loader = `
@@ -17,9 +17,7 @@ test("the CLI runtime avoids eager ESM-to-CommonJS edges", async () => {
     }
   `;
   const loaderUrl = `data:text/javascript,${encodeURIComponent(loader)}`;
-  const runUrl = pathToFileURL(
-    path.join(repositoryRoot, "dist/cli/run.js"),
-  ).href;
+  const runUrl = pathToFileURL(path.join(packageRoot, "dist/cli/run.js")).href;
   const source = `
     import { register } from "node:module";
     register(${JSON.stringify(loaderUrl)});

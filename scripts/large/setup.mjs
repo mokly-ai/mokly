@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { cliPackageRoot } from "../package/layout.mjs";
+
 import { start, stop } from "./process.mjs";
 import { prepareDerivedToolchain } from "./toolchain.mjs";
 
@@ -37,7 +39,7 @@ export async function prepareFixture(
   else {
     const baseline = start(
       [
-        path.join(repository, "dist/cli/bin.js"),
+        path.join(cliPackageRoot(repository), "dist/cli/bin.js"),
         "build",
         "--config",
         fixture.configPath,

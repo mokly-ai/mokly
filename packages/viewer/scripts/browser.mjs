@@ -4,7 +4,7 @@ import path from "node:path";
 import { build } from "esbuild";
 
 /** Path of the generated inventory adjacent to one browser output directory. */
-export function browserManifestPath(target) {
+function browserManifestPath(target) {
   return `${target}.manifest.json`;
 }
 

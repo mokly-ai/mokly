@@ -7,8 +7,8 @@ import test from "node:test";
 import {
   createFixture,
   removeFixture,
-  repositoryRoot,
   validEntrySource,
+  cliBinPath,
 } from "./helpers/fixture.js";
 import {
   captureOutput,
@@ -25,7 +25,7 @@ test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async 
   const child = spawn(
     process.execPath,
     [
-      path.join(repositoryRoot, "dist/cli/bin.js"),
+      cliBinPath,
       "serve",
       "--config",
       fixture.configPath,
@@ -66,13 +66,7 @@ test(
     context.after(() => removeFixture(fixture));
     const child = spawn(
       process.execPath,
-      [
-        path.join(repositoryRoot, "dist/cli/bin.js"),
-        "--config",
-        fixture.configPath,
-        "--port",
-        "0",
-      ],
+      [cliBinPath, "--config", fixture.configPath, "--port", "0"],
       { cwd: fixture.root, stdio: ["ignore", "pipe", "pipe"] },
     );
     context.after(() => {

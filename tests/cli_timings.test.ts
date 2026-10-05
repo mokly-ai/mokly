@@ -8,14 +8,10 @@ import { promisify } from "node:util";
 import type { TimingEvent } from "../dist/diagnostics/timings.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
-import {
-  createFixture,
-  removeFixture,
-  repositoryRoot,
-} from "./helpers/fixture.js";
+import { createFixture, removeFixture, cliBinPath } from "./helpers/fixture.js";
 
 const exec = promisify(execFile);
-const bin = path.join(repositoryRoot, "dist/cli/bin.js");
+const bin = cliBinPath;
 const TIMING_PREFIX = "[mokly:timing] ";
 
 function events(stderr: string): TimingEvent[] {

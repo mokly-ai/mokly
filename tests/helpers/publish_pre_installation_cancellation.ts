@@ -12,9 +12,9 @@ import { derivedFixture } from "./derived_fixture.js";
 import { esbuildCancellationEnvironment } from "./esbuild_cancellation.js";
 import { createExportFixture, directoryFiles } from "./export_fixture.js";
 import { startFakeReceiver } from "./fake_receiver.js";
-import { repositoryRoot } from "./fixture.js";
+import { repositoryRoot, cliBinPath } from "./fixture.js";
 
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 const preload = pathToFileURL(
   path.join(
     repositoryRoot,

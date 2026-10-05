@@ -6,7 +6,7 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { repositoryRoot, cliBinPath } from "./helpers/fixture.js";
 
 for (const mode of ["rollback", "backup", "cancellation", "cleanup"] as const) {
   test(`real export CLI reports ${mode} failures without losing recovery information`, async (context) => {
@@ -30,7 +30,7 @@ for (const mode of ["rollback", "backup", "cancellation", "cleanup"] as const) {
               "tests/helpers/export_failure_preload.ts",
             ),
           ).href,
-          path.join(repositoryRoot, "dist/cli/bin.js"),
+          cliBinPath,
           "export",
           "--out",
           "site",

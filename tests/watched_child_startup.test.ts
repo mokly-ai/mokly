@@ -11,11 +11,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { MANIFEST_NAME } from "../dist/registry/manifest.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
-import {
-  createFixture,
-  removeFixture,
-  repositoryRoot,
-} from "./helpers/fixture.js";
+import { createFixture, removeFixture, cliBinPath } from "./helpers/fixture.js";
 
 test(
   "watched child uses retained manifest and reports readiness before requesting its full runtime",
@@ -29,7 +25,7 @@ test(
       path.join(fixture.mockupsDir, MANIFEST_NAME),
       "invalid stale manifest\n",
     );
-    const childBin = path.join(repositoryRoot, "dist/cli/bin.js");
+    const childBin = cliBinPath;
     const childArguments = [
       "__serve-child",
       "--config",

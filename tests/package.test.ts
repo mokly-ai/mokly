@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import fs from "node:fs";
-import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
@@ -14,7 +13,7 @@ import {
 } from "../dist/index.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { packageRoot, cliBinPath } from "./helpers/fixture.js";
 import { GUIDE_PATHS } from "./helpers/guides.js";
 
 const execFileAsync = promisify(execFile);
@@ -105,7 +104,7 @@ test("packed package contains only the declared public surface", async () => {
     "npm",
     ["pack", "--dry-run", "--json", "--ignore-scripts"],
     {
-      cwd: repositoryRoot,
+      cwd: packageRoot,
       maxBuffer: 16 * 1024 * 1024,
     },
   );
@@ -136,9 +135,6 @@ test("packed package contains only the declared public surface", async () => {
       false,
       `${excluded} must stay outside the package`,
     );
-  const bin = await fs.promises.readFile(
-    path.join(repositoryRoot, "dist/cli/bin.js"),
-    "utf8",
-  );
+  const bin = await fs.promises.readFile(cliBinPath, "utf8");
   assert.ok(bin.startsWith("#!/usr/bin/env node"));
 });

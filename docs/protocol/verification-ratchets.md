@@ -35,6 +35,10 @@ relative to the comparison commit:
 - `packages/viewer/scripts/`;
 - `scripts/`.
 
+The CLI roots derive from `CLI_PACKAGE_PATH` in `scripts/package/layout.mjs`.
+Before the move, that path is `.`; the roots follow the current package layout.
+Changing the layout path updates both CLI roots without changing the rules.
+
 Normalize CRLF to LF and count LF-delimited physical lines; a final LF does not
 add an empty line. Deleted files do not participate.
 
@@ -46,8 +50,10 @@ renamed file:
 - if its predecessor is already over 300, the candidate may stay equal or
   shrink, but any growth fails.
 
-A rename keeps its predecessor comparison only when Git identifies that source;
-otherwise it is a new file. Generated output is outside the five source roots
+A rename keeps its predecessor comparison when Git identifies that source.
+Run Git rename detection over the whole tree, then filter candidates by source
+root. A module moved into a source root from any other path keeps its
+predecessor. An unpaired candidate is a new file. Generated output is outside the five source roots
 and therefore outside this ratchet. Diagnostics list candidate path, current
 line count, allowed count, and predecessor when applicable.
 
@@ -89,8 +95,11 @@ release configuration: prepend `<component>-` when
 `include-v-in-tag` is true. The current prefixes are therefore `v` and
 `viewer-v`.
 
-Read the package path's entry in `.release-please-manifest.json` at `HEAD`. An
-absent entry or the exact version `0.0.0` means that package has never been
+Read release state from `.release-please-manifest.json` at `HEAD`. If the current
+path has no entry, resolve its owner at `HEAD` by matching the current npm name
+against that revision's configured package manifests. Reject multiple matches.
+This preserves release state during an uncommitted move. An absent entry after
+that lookup or the exact version `0.0.0` means that package has never been
 released, so skip it. For every released package, the baseline is the newest
 tag matching `<prefix>[0-9]*` that is reachable from `HEAD`, equivalent to:
 
@@ -101,6 +110,12 @@ git describe --tags --abbrev=0 --match '<prefix>[0-9]*' HEAD
 Do not fall back to the merge base or an unreachable tag. If a released
 package has no matching reachable tag, fail closed and tell the author to run
 `git fetch --tags origin` before retrying.
+
+Resolve the baseline package root by npm name, not its current path. Read the
+tag's `release-please-config.json` and inspect the manifests at its `packages`
+keys. Exactly one manifest must match the current package's `name`; no match
+or multiple matches is a clear finding. Read the baseline manifest and sources
+under that tag root. Read current files under the current package root.
 
 The released surface comes from the baseline tag; the current surface comes
 from the working tree, including staged, unstaged, and untracked changes. For
@@ -190,12 +205,17 @@ Import use is recorded by these rules:
 Known exceptions live in the reviewed, sorted
 `xtask/unused-internal-exports.txt` baseline as
 `<repository-relative module path>#<export name>`, one exact symbol per line,
-with no globs. The discovered unused set must be a subset of that baseline:
+with no globs. Entries must start with one of the five source roots. Public
+entrypoints and package aliases come from export maps at the CLI and viewer
+package roots; the layout module supplies the current CLI root.
+The discovered unused set must be a subset of that baseline:
 any new unused export fails. A baseline entry no longer discovered also fails
-with an instruction to delete that line. The candidate baseline must also be a
-subset of the baseline stored at the comparison commit: any entry absent there
-fails even when the current scan discovers it. These two checks make the list
-shrink-only across the branch. If the comparison commit predates the baseline
+with an instruction to delete that line. Compare each candidate exception with
+the same export name at its Git-paired predecessor module, or at the same path
+when it did not move. Use the same whole-tree rename pairing as the length
+ratchet. A new export name or a module with no comparison entry always fails;
+renaming cannot grow the allowed set. These checks keep the list shrink-only.
+If the comparison commit predates the baseline
 file itself, the candidate list is the one-time bootstrap; every entry must
 still be discovered, and the comparison-commit rule applies after that file
 lands. Public entrypoint exports, type-only exports erased from JavaScript, and
@@ -215,3 +235,7 @@ newly unused symbols, CommonJS use, attempted baseline growth, stale baseline
 removal, release-tag selection, public name and subpath removals, explicit
 exports, recursive star re-exports, unresolved star targets, release-note
 retention, and a moving `origin/main` whose merge base stays fixed.
+They also cover moves from outside a source root, moved baseline exceptions,
+rejected new names and modules, invalid root prefixes, public entrypoints from
+package manifests, tag-time roots that differ from current roots, and missing
+or ambiguous package-name matches, and release state during uncommitted moves.

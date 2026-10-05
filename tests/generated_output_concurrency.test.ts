@@ -14,8 +14,8 @@ import { exportCatalogue } from "../dist/export/run.js";
 import {
   createFixture,
   removeFixture,
-  repositoryRoot,
   type TestFixture,
+  packageRoot,
 } from "./helpers/fixture.js";
 import {
   allSettledOrThrow,
@@ -54,7 +54,7 @@ async function assertTree(
 
 function module(relative: string): string {
   return JSON.stringify(
-    pathToFileURL(path.join(repositoryRoot, "dist", relative)).href,
+    pathToFileURL(path.join(packageRoot, "dist", relative)).href,
   );
 }
 

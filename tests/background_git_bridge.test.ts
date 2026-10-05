@@ -13,7 +13,7 @@ import { blockingGit, processExists } from "./helpers/blocking_git.js";
 import {
   createFixture,
   removeFixture,
-  repositoryRoot,
+  packageRoot,
 } from "./helpers/fixture.js";
 
 test("the Git bridge preserves concurrent text, binary input and command errors", async (t) => {
@@ -90,7 +90,7 @@ for (const action of ["block", "crash"] as const) {
         `
         const { parentPort, workerData } = require("node:worker_threads");
         (async () => {
-          const { WorkerGitCommandRunner } = await import(${JSON.stringify(pathToFileURL(path.join(repositoryRoot, "dist/server/demand/git_worker.js")).href)});
+          const { WorkerGitCommandRunner } = await import(${JSON.stringify(pathToFileURL(path.join(packageRoot, "dist/server/demand/git_worker.js")).href)});
           const runner = new WorkerGitCommandRunner(workerData);
           void runner.run(["rev-parse", "--show-toplevel"]).catch(() => {});
           parentPort.once("message", (action) => {

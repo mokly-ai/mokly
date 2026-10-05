@@ -1,11 +1,10 @@
 import { execFile } from "node:child_process";
-import path from "node:path";
 import { promisify } from "node:util";
 
-import { repositoryRoot } from "./fixture.js";
+import { cliBinPath } from "./fixture.js";
 
 const execute = promisify(execFile);
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 
 /** Spawn the built publish CLI in deterministic plain-output mode. */
 export function runPublishedCli(

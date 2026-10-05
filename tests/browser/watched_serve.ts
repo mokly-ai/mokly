@@ -1,11 +1,10 @@
 import { spawn } from "node:child_process";
-import path from "node:path";
 
 import {
   createFixture,
   removeFixture,
-  repositoryRoot,
   type TestFixture,
+  cliBinPath,
 } from "../helpers/fixture.js";
 
 /** A watched fixture whose process exits before its files are removed. */
@@ -21,7 +20,7 @@ export async function startWatchedServe(
   options?: { extraConfig?: string },
 ): Promise<WatchedServe> {
   const fixture = await createFixture(entrySource, options);
-  const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+  const cli = cliBinPath;
   const child = spawn(
     "node",
     [cli, "serve", "--config", fixture.configPath, "--port", "0"],

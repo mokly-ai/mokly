@@ -16,7 +16,7 @@ import { runReview } from "../dist/review/run.js";
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { directoryFiles } from "./helpers/export_fixture.js";
-import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
+import { validEntrySource, cliBinPath } from "./helpers/fixture.js";
 import {
   assertComparisonCounts,
   assertReviewTimings,
@@ -25,7 +25,7 @@ import {
 } from "./helpers/timing_events.js";
 
 const exec = promisify(execFile);
-const bin = path.join(repositoryRoot, "dist/cli/bin.js");
+const bin = cliBinPath;
 const commandOptions = { timeout: 120000, maxBuffer: 16 * 1024 * 1024 };
 
 async function reviewFixture(t: TestContext, components: boolean) {

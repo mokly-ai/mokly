@@ -7,7 +7,7 @@ import { pathToFileURL } from "node:url";
 
 import { withCommandKeepAlive } from "../dist/cli/keep_alive.js";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { repositoryRoot, packageRoot } from "./helpers/fixture.js";
 
 test("the command keep-alive lets unreferenced awaited work settle", async () => {
   const result = await withCommandKeepAlive(
@@ -22,7 +22,7 @@ test("the command keep-alive lets unreferenced awaited work settle", async () =>
 
 test("the command keep-alive prevents unsettled top-level await exit", () => {
   const helper = pathToFileURL(
-    path.join(repositoryRoot, "dist/cli/keep_alive.js"),
+    path.join(packageRoot, "dist/cli/keep_alive.js"),
   ).href;
   const action = `new Promise((resolve) => {
     const timer = setTimeout(() => resolve("settled"), 10);

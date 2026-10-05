@@ -3,13 +3,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { packageRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
 
 const version = (
-  JSON.parse(
-    readFileSync(path.join(repositoryRoot, "package.json"), "utf8"),
-  ) as {
+  JSON.parse(readFileSync(path.join(packageRoot, "package.json"), "utf8")) as {
     version: string;
   }
 ).version;

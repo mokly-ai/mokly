@@ -7,6 +7,7 @@ import {
   inspectDryRun,
   inspectRuntimeLicenses,
 } from "./archive.mjs";
+import { cliPackageRoot } from "./layout.mjs";
 import {
   readPackageManifest,
   validateExportFiles,
@@ -25,7 +26,7 @@ export async function packPackagePair(repositoryRoot, destination) {
     "@mokly/viewer",
   );
   const cli = await createPackageArchive(
-    repositoryRoot,
+    cliPackageRoot(repositoryRoot),
     path.join(destination, "cli"),
   );
   await inspectPackagePair(cli, viewer);
@@ -55,7 +56,8 @@ export async function readPackagePair(directory) {
 }
 
 export async function checkPackagePair(repositoryRoot, suppliedPair) {
-  const cli = await readPackageManifest(repositoryRoot);
+  const cliRoot = cliPackageRoot(repositoryRoot);
+  const cli = await readPackageManifest(cliRoot);
   const viewerRoot = path.join(repositoryRoot, "packages/viewer");
   const viewer = await readPackageManifest(viewerRoot);
   validateVersionPair(cli, viewer);
@@ -65,7 +67,7 @@ export async function checkPackagePair(repositoryRoot, suppliedPair) {
   validateLockPair(lock, cli, viewer);
   for (const [root, metadata] of [
     [viewerRoot, viewer],
-    [repositoryRoot, cli],
+    [cliRoot, cli],
   ]) {
     validatePackageManifest(metadata, metadata.name);
     validateExportFiles(metadata, await inspectDryRun(root, metadata.name));

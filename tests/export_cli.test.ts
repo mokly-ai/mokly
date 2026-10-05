@@ -9,10 +9,10 @@ import { parseArguments } from "../dist/cli/arguments.js";
 import { HELP } from "../dist/cli/help.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { repositoryRoot, cliBinPath } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 
 test("export CLI requires an explicit output and rejects misplaced options", () => {
   assert.deepEqual(

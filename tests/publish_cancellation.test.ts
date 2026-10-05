@@ -1,13 +1,12 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import path from "node:path";
 import test from "node:test";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { cliBinPath } from "./helpers/fixture.js";
 
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 const token = "cancel-receiver-token";
 
 test("SIGINT during Blob upload has dedicated plain and rich output", async (context) => {

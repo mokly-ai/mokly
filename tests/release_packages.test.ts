@@ -5,6 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
+import { CLI_PACKAGE_PATH } from "../scripts/package/layout.mjs";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDE_PATHS } from "./helpers/guides.js";
 import {
@@ -59,7 +61,7 @@ async function metadata(relative: string): Promise<Metadata> {
 
 test("both package manifests enforce their public release boundaries", async () => {
   const { validatePackageManifest } = await manifestModule();
-  for (const relative of [".", "packages/viewer"]) {
+  for (const relative of [CLI_PACKAGE_PATH, "packages/viewer"]) {
     const original = await metadata(relative);
     validatePackageManifest(original, original.name);
     const invalid: Array<(value: Metadata) => void> = [
@@ -169,7 +171,7 @@ test("runtime license inspection resolves production workspace links", async (t)
 
 test("exact viewer pairing accepts later releases and rejects ranges or stale versions", async () => {
   const { validateVersionPair } = await manifestModule();
-  const cli = await metadata(".");
+  const cli = await metadata(CLI_PACKAGE_PATH);
   const viewer = await metadata("packages/viewer");
   viewer.version = "0.2.0";
   cli.dependencies = { ...cli.dependencies, "@mokly/viewer": "0.2.0" };

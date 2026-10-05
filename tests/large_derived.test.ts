@@ -7,7 +7,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { prepareDerivedToolchain } from "../scripts/large/toolchain.mjs";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { packageRoot, repositoryRoot } from "./helpers/fixture.js";
 
 test("the derived large fixture archives install/build inputs and ignores only generated output", async (t) => {
   const root = await fs.mkdtemp(
@@ -48,7 +48,7 @@ test("the derived large fixture archives install/build inputs and ignores only g
     async (executable, argv, options) => {
       calls.push([executable, ...argv]);
       if (argv[0] === "pack") {
-        assert.equal(options.cwd, repositoryRoot);
+        assert.equal(options.cwd, packageRoot);
         assert.ok(argv.includes("--ignore-scripts"));
         await fs.writeFile(
           path.join(root, "tooling", "mokly-test.tgz"),

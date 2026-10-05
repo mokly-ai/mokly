@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { cliPackageRoot } from "../package/layout.mjs";
+
 import { start, stop } from "./process.mjs";
 import { prepareFixture, preparedFixture } from "./setup.mjs";
 
@@ -58,7 +60,7 @@ async function main() {
   }
   const running = start(
     [
-      path.join(repository, "dist/cli/bin.js"),
+      path.join(cliPackageRoot(repository), "dist/cli/bin.js"),
       "serve",
       "--config",
       fixture.configPath,

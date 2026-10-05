@@ -2,24 +2,24 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { inspectBrowserGraph } from "./package/browser_graph.mjs";
+import { CLI_PACKAGE_PATH, cliPackageRoot } from "./package/layout.mjs";
 import { checkPackagePair, readPackagePair } from "./package/pair.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
+const packageRoot = cliPackageRoot(repositoryRoot);
 const args = process.argv.slice(2);
 if (args.length !== 0 && (args.length !== 2 || args[0] !== "--artifacts"))
   throw new Error("usage: package-check.mjs [--artifacts <directory>]");
 const pair = args.length === 0 ? undefined : await readPackagePair(args[1]);
 await checkPackagePair(repositoryRoot, pair);
 const packageJson = JSON.parse(
-  await fs.promises.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+  await fs.promises.readFile(path.join(packageRoot, "package.json"), "utf8"),
 );
 if (!packageJson.dependencies.marked)
   throw new Error("Markdown parser must be a runtime dependency");
 if (!packageJson.dependencies["es-module-lexer"])
   throw new Error("Export module lexer must be a runtime dependency");
-await fs.promises.access(
-  path.join(repositoryRoot, "dist/documents/markdown.js"),
-);
+await fs.promises.access(path.join(packageRoot, "dist/documents/markdown.js"));
 const required = [
   "name",
   "version",
@@ -40,7 +40,7 @@ if (
   throw new Error("package identity or executable is invalid");
 }
 const bin = await fs.promises.readFile(
-  path.join(repositoryRoot, "dist/cli/bin.js"),
+  path.join(packageRoot, "dist/cli/bin.js"),
   "utf8",
 );
 if (!bin.startsWith("#!/usr/bin/env node"))
@@ -62,8 +62,16 @@ const viewer = JSON.parse(
 );
 if (packageJson.dependencies["@mokly/viewer"] !== viewer.version)
   throw new Error("CLI must depend on the exact viewer version");
+const workspaceJson = JSON.parse(
+  await fs.promises.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+);
+const workspacePaths =
+  CLI_PACKAGE_PATH === "."
+    ? ["packages/viewer"]
+    : ["packages/viewer", CLI_PACKAGE_PATH];
 if (
-  JSON.stringify(packageJson.workspaces) !== '["packages/viewer"]' ||
+  JSON.stringify(workspaceJson.workspaces) !== JSON.stringify(workspacePaths) ||
+  (CLI_PACKAGE_PATH !== "." && workspaceJson.private !== true) ||
   viewer.license !== "MIT" ||
   viewer.type !== "module"
 )

@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { bootstrapCli, isSupportedNodeVersion } from "../dist/cli/bootstrap.js";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { cliBinPath, packageRoot } from "./helpers/fixture.js";
 
 const VERSION_CASES = [
   ["22.13.99", false],
@@ -58,8 +58,8 @@ test("the CLI loads application modules on a fixed Node release", async () => {
 
 test("the executable statically loads only the Node bootstrap", async () => {
   const [binSource, bootstrapSource] = await Promise.all([
-    fs.readFile(path.join(repositoryRoot, "dist/cli/bin.js"), "utf8"),
-    fs.readFile(path.join(repositoryRoot, "dist/cli/bootstrap.js"), "utf8"),
+    fs.readFile(cliBinPath, "utf8"),
+    fs.readFile(path.join(packageRoot, "dist/cli/bootstrap.js"), "utf8"),
   ]);
   assert.deepEqual(staticImports(binSource), ["./bootstrap.js"]);
   assert.deepEqual(staticImports(bootstrapSource), []);

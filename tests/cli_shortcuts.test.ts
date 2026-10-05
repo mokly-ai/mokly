@@ -18,10 +18,11 @@ import {
   createFixture,
   removeFixture,
   repositoryRoot,
+  cliBinPath,
 } from "./helpers/fixture.js";
 import { memoryTerminal } from "./helpers/terminal.js";
 
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 
 test("serve --open is accepted only by the public Serve command", () => {
   assert.equal(parseArguments(["serve", "--open"]).open, true);

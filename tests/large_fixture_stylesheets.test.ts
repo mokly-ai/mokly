@@ -11,9 +11,10 @@ import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { expectedStylesheetChanges } from "../scripts/large/browse.mjs";
+import { cliPackageRoot } from "../scripts/package/layout.mjs";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { packageRoot, repositoryRoot } from "./helpers/fixture.js";
 
 const exec = promisify(execFile);
 
@@ -48,12 +49,23 @@ test(
       path.join(repository, "scripts/large"),
       { recursive: true },
     );
-    for (const directory of ["dist", "tests"])
-      await fs.symlink(
-        path.join(repositoryRoot, directory),
-        path.join(repository, directory),
-        "junction",
-      );
+    await fs.mkdir(path.join(repository, "scripts/package"), {
+      recursive: true,
+    });
+    await fs.copyFile(
+      path.join(repositoryRoot, "scripts/package/layout.mjs"),
+      path.join(repository, "scripts/package/layout.mjs"),
+    );
+    for (const [source, target] of [
+      [
+        path.join(packageRoot, "dist"),
+        path.join(cliPackageRoot(repository), "dist"),
+      ],
+      [path.join(repositoryRoot, "tests"), path.join(repository, "tests")],
+    ] as const) {
+      await fs.mkdir(path.dirname(target), { recursive: true });
+      await fs.symlink(source, target, "junction");
+    }
     const record = path.join(repository, ".context/large-1-3-1-2-0.34.json");
     const { stdout } = await exec(
       process.execPath,

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 
+import { CLI_PACKAGE_PATH, cliLockKey } from "./layout.mjs";
+
 const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const PEERS = { react: ">=19.0.0", "react-dom": ">=19.0.0" };
 const entry = (name, condition = "import") => ({
@@ -18,7 +20,11 @@ const VIEWER_EXPORTS = {
 };
 
 /** Validate the public contract in either source or packed package metadata. */
-export function validatePackageManifest(metadata, name) {
+export function validatePackageManifest(
+  metadata,
+  name,
+  cliPath = CLI_PACKAGE_PATH,
+) {
   assert.ok(["@mokly/mokly", "@mokly/viewer"].includes(name));
   const viewer = name === "@mokly/viewer";
   assert.equal(metadata.name, name);
@@ -36,7 +42,11 @@ export function validatePackageManifest(metadata, name) {
   assert.deepEqual(metadata.repository, {
     type: "git",
     url: "git+https://github.com/mokly-ai/mokly.git",
-    ...(viewer ? { directory: "packages/viewer" } : {}),
+    ...(viewer
+      ? { directory: "packages/viewer" }
+      : cliPath === "."
+        ? {}
+        : { directory: cliPath }),
   });
   assert.deepEqual(
     [...metadata.files].sort(),
@@ -89,13 +99,24 @@ export function validateVersionPair(cli, viewer) {
   );
 }
 
-export function validateLockPair(lock, cli, viewer) {
-  assert.equal(lock.name, cli.name);
-  assert.equal(lock.version, cli.version);
-  assert.equal(lock.packages[""].version, cli.version);
+export function validateLockPair(
+  lock,
+  cli,
+  viewer,
+  cliPath = CLI_PACKAGE_PATH,
+) {
+  if (cliPath === ".") {
+    assert.equal(lock.name, cli.name);
+    assert.equal(lock.version, cli.version);
+  } else {
+    assert.equal(lock.packages["node_modules/@mokly/mokly"].resolved, cliPath);
+    assert.equal(lock.packages["node_modules/@mokly/mokly"].link, true);
+  }
+  const cliEntry = lock.packages[cliLockKey(cliPath)];
+  assert.equal(cliEntry.version, cli.version);
   assert.equal(lock.packages["packages/viewer"].version, viewer.version);
   assert.equal(
-    lock.packages[""].dependencies["@mokly/viewer"],
+    cliEntry.dependencies["@mokly/viewer"],
     viewer.version,
     "lockfile must use the exact viewer version",
   );

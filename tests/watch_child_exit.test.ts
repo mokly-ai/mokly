@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { fork, type ChildProcess } from "node:child_process";
-import path from "node:path";
 import test from "node:test";
 
 import type { Compilation } from "../dist/build/compile.js";
@@ -31,11 +30,7 @@ import type {
   ConsumerWatcherFactory,
 } from "../dist/server/watcher.js";
 
-import {
-  createFixture,
-  removeFixture,
-  repositoryRoot,
-} from "./helpers/fixture.js";
+import { createFixture, removeFixture, cliBinPath } from "./helpers/fixture.js";
 
 test(
   "watched child exits when its parent IPC channel disconnects",
@@ -44,7 +39,7 @@ test(
     const fixture = await createFixture();
     const config = await loadConfig(fixture.root);
     await writeCompilation(await compileCatalogue(config), config);
-    const childBin = path.join(repositoryRoot, "dist/cli/bin.js");
+    const childBin = cliBinPath;
     const childArguments = [
       "__serve-child",
       "--config",

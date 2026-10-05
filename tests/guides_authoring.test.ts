@@ -5,17 +5,14 @@ import test from "node:test";
 
 import { generatedOutputMode } from "../dist/config/generated_output.js";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { packageRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
 
 const pages = GUIDES.filter((page) => page.frontmatter.section === "authoring");
 const sources = new Map(pages.map((page) => [page.id, page.source]));
-const index = readFileSync(
-  path.join(repositoryRoot, "src", "index.ts"),
-  "utf8",
-);
+const index = readFileSync(path.join(packageRoot, "src", "index.ts"), "utf8");
 const configTypes = readFileSync(
-  path.join(repositoryRoot, "src", "config", "types.ts"),
+  path.join(packageRoot, "src", "config", "types.ts"),
   "utf8",
 );
 

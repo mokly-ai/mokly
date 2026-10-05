@@ -7,11 +7,11 @@ import { promisify } from "node:util";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { cliBinPath } from "./helpers/fixture.js";
 import { expectedUploadedEntries } from "./helpers/publish_counts.js";
 
 const execute = promisify(execFile);
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 const token = "-synthetic/credential+padding==";
 
 test("publish sends assigned leading-dash credentials and paths, preserving secrecy on rejection", async (context) => {

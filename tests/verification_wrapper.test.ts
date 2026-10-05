@@ -6,6 +6,8 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
+import { CLI_PACKAGE_PATH } from "../scripts/package/layout.mjs";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
@@ -95,13 +97,18 @@ async function createHarness(): Promise<string> {
     path.join(root, "scripts/verification"),
     { recursive: true },
   );
+  await fs.mkdir(path.join(root, "scripts/package"), { recursive: true });
+  await fs.copyFile(
+    path.join(repositoryRoot, "scripts/package/layout.mjs"),
+    path.join(root, "scripts/package/layout.mjs"),
+  );
   await fs.symlink(
     path.join(repositoryRoot, "node_modules"),
     path.join(root, "node_modules"),
     process.platform === "win32" ? "junction" : "dir",
   );
   const files = new Map([
-    ["dist/cli/bin.js", ""],
+    [path.posix.join(CLI_PACKAGE_PATH, "dist/cli/bin.js"), ""],
     ["packages/viewer/dist/browser/inspector.js", ""],
     ["examples/basic/generated/mokly-manifest.json", "{}\n"],
     [

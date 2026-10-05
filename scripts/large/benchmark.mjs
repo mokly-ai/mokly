@@ -4,6 +4,7 @@ import path from "node:path";
 import { chromium, expect } from "@playwright/test";
 
 import { loadConfig } from "../../dist/config/load.js";
+import { cliPackageRoot } from "../package/layout.mjs";
 
 import { resetFixtureBaseline } from "./baseline.mjs";
 import { expectedStylesheetChanges, waitForBrowseChanges } from "./browse.mjs";
@@ -28,7 +29,7 @@ export async function benchmark(repository, fixture) {
       const beginning = performance.now();
       const running = start(
         [
-          path.join(repository, "dist/cli/bin.js"),
+          path.join(cliPackageRoot(repository), "dist/cli/bin.js"),
           "serve",
           "--config",
           fixture.configPath,

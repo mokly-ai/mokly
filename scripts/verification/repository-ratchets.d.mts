@@ -28,6 +28,7 @@ export function internalExportAudit(input: {
   baseline: readonly string[];
   baselineAtComparison?: readonly string[];
   aliases?: Readonly<Record<string, string>>;
+  predecessors?: Readonly<Record<string, string>>;
 }): { findings: string[]; unused: string[] };
 export function publicPackageExportAudit(repositoryRoot: string): {
   findings: string[];

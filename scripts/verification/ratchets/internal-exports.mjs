@@ -1,16 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { CLI_PACKAGE_PATH } from "../../package/layout.mjs";
+
 import { isSourceModulePath } from "./lines.mjs";
 import { discoverUnusedInternalExports } from "./module-graph.mjs";
 import {
   javascriptExportTargets,
   sourcePathForExport,
 } from "./package-exports.mjs";
+import { SOURCE_ROOTS } from "./source-roots.mjs";
 
 const BASELINE = "xtask/unused-internal-exports.txt";
-const SOURCE_ROOTS = ["src", "packages/viewer/src", "scripts"];
-const PACKAGE_ROOTS = ["", "packages/viewer"];
+const PACKAGE_ROOTS = [CLI_PACKAGE_PATH, "packages/viewer"];
 
 /** Compare discovered unused exports with one exact shrinking baseline. */
 export function internalExportAudit({
@@ -19,6 +21,7 @@ export function internalExportAudit({
   baseline,
   baselineAtComparison,
   aliases,
+  predecessors = {},
 }) {
   const unused = discoverUnusedInternalExports({
     modules,
@@ -31,7 +34,9 @@ export function internalExportAudit({
   if (baselineAtComparison) {
     const comparisonEntries = new Set(baselineAtComparison);
     for (const key of baseline) {
-      if (!comparisonEntries.has(key))
+      const [modulePath, exportName] = key.split("#");
+      const comparisonKey = `${predecessors[modulePath] ?? modulePath}#${exportName}`;
+      if (!comparisonEntries.has(comparisonKey))
         findings.push(
           `baseline entry was not present at the comparison commit: ${key}`,
         );
@@ -77,6 +82,12 @@ export function auditInternalExports(repositoryRoot, git) {
     baseline,
     baselineAtComparison,
     aliases: publicSurface.aliases,
+    predecessors: Object.fromEntries(
+      git
+        .changedFiles(SOURCE_ROOTS)
+        .filter((change) => change.status.startsWith("R"))
+        .map((change) => [normalize(change.path), normalize(change.source)]),
+    ),
   });
   return {
     findings: result.findings,
@@ -104,7 +115,8 @@ function baselineFormatFindings(baseline) {
     findings.push("unused internal export baseline contains duplicates");
   for (const entry of baseline) {
     if (
-      !/^(?:src|packages\/viewer\/src|scripts)\/[^#\s]+#[^#\s]+$/u.test(entry)
+      !/^[^#\s]+#[^#\s]+$/u.test(entry) ||
+      !SOURCE_ROOTS.some((root) => entry.startsWith(`${root}/`))
     )
       findings.push(`invalid unused internal export baseline entry: ${entry}`);
   }

@@ -3,24 +3,21 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { packageRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
 
 const HIDDEN = ["--retained-runtime", "--strict-port", "--update-version"];
 const parser = readFileSync(
-  path.join(repositoryRoot, "src", "cli", "arguments.ts"),
+  path.join(packageRoot, "src", "cli", "arguments.ts"),
   "utf8",
 );
 const help = readFileSync(
-  path.join(repositoryRoot, "src", "cli", "help.ts"),
+  path.join(packageRoot, "src", "cli", "help.ts"),
   "utf8",
 );
-const errors = readFileSync(
-  path.join(repositoryRoot, "src", "errors.ts"),
-  "utf8",
-);
+const errors = readFileSync(path.join(packageRoot, "src", "errors.ts"), "utf8");
 const baselineErrors = readFileSync(
-  path.join(repositoryRoot, "src", "baseline", "errors.ts"),
+  path.join(packageRoot, "src", "baseline", "errors.ts"),
   "utf8",
 );
 const pages = GUIDES.filter((page) => page.frontmatter.section === "cli");

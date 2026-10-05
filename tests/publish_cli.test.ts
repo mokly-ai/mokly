@@ -9,11 +9,11 @@ import { parseArguments } from "../dist/cli/arguments.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { cliBinPath } from "./helpers/fixture.js";
 import { expectedUploadedEntries } from "./helpers/publish_counts.js";
 
 const execute = promisify(execFile);
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 
 test("publish accepts its options without making export an upload alias", () => {
   assert.deepEqual(

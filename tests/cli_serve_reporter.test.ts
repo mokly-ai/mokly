@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import path from "node:path";
 import test from "node:test";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { cliBinPath } from "./helpers/fixture.js";
 
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 
 test(
   "forced rich Serve reports ready, catalogue, baseline, and Changes in order",

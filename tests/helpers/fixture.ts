@@ -4,6 +4,12 @@ import path from "node:path";
 /** Repository root containing the package under test. */
 export const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
+/** Directory of the CLI package under test. */
+export const packageRoot = repositoryRoot;
+
+/** Built CLI executable for process and archive tests. */
+export const cliBinPath = path.join(packageRoot, "dist/cli/bin.js");
+
 /** Dependent resource that must close before a fixture workspace is removed. */
 export type FixtureCleanup = () => Promise<void> | void;
 

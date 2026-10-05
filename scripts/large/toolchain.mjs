@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { cliPackageRoot } from "../package/layout.mjs";
+
 const execute = promisify(execFile);
 
 export async function prepareDerivedToolchain(repository, root, run = execute) {
@@ -12,7 +14,7 @@ export async function prepareDerivedToolchain(repository, root, run = execute) {
   const packed = await run(
     "npm",
     ["pack", "--ignore-scripts", "--json", "--pack-destination", tooling],
-    { cwd: repository, maxBuffer: 8 * 1024 * 1024 },
+    { cwd: cliPackageRoot(repository), maxBuffer: 8 * 1024 * 1024 },
   );
   const [{ filename }] = JSON.parse(packed.stdout);
   await fs.rename(

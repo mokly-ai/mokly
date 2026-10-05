@@ -7,6 +7,7 @@ import { smokeJunoFixture } from "./package/consumer_cases/juno.mjs";
 import { smokeNodeNextConsumer } from "./package/consumer_cases/nodenext.mjs";
 import { smokeThemedConsumer } from "./package/consumer_cases/themed.mjs";
 import { smokeImportedStylesConsumer } from "./package/imported_styles.mjs";
+import { cliPackageRoot } from "./package/layout.mjs";
 import {
   inspectPackagePair,
   packPackagePair,
@@ -23,6 +24,12 @@ const workingRoot = await fs.promises.mkdtemp(
 
 try {
   const packageJson = JSON.parse(
+    await fs.promises.readFile(
+      path.join(cliPackageRoot(repositoryRoot), "package.json"),
+      "utf8",
+    ),
+  );
+  const workspaceJson = JSON.parse(
     await fs.promises.readFile(
       path.join(repositoryRoot, "package.json"),
       "utf8",
@@ -45,11 +52,11 @@ try {
     viewerVersion: pair.viewer.report.version,
     versions: {
       esbuild: packageJson.dependencies.esbuild,
-      react: packageJson.devDependencies.react,
-      reactDom: packageJson.devDependencies["react-dom"],
-      reactDomTypes: packageJson.devDependencies["@types/react-dom"],
-      reactTypes: packageJson.devDependencies["@types/react"],
-      typescript: packageJson.devDependencies.typescript,
+      react: workspaceJson.devDependencies.react,
+      reactDom: workspaceJson.devDependencies["react-dom"],
+      reactDomTypes: workspaceJson.devDependencies["@types/react-dom"],
+      reactTypes: workspaceJson.devDependencies["@types/react"],
+      typescript: workspaceJson.devDependencies.typescript,
     },
     workingRoot,
   };

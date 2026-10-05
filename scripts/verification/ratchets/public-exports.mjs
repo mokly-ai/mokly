@@ -24,12 +24,25 @@ export function auditPublicPackageExports(repositoryRoot, git) {
   for (const [packageRoot, packageConfig] of Object.entries(
     releaseConfig.packages ?? {},
   )) {
-    const releasedVersion = releaseManifest[packageRoot];
-    if (releasedVersion === undefined || releasedVersion === "0.0.0") continue;
+    let releasedVersion = releaseManifest[packageRoot];
+    if (releasedVersion === "0.0.0") continue;
     const currentManifest = readCurrentJson(
       repositoryRoot,
       packagePath(packageRoot, "package.json"),
     );
+    if (releasedVersion === undefined) {
+      const owners = revisionPackages(git, "HEAD", currentManifest.name);
+      if (owners.length > 1) {
+        findings.push(
+          `${currentManifest.name}: multiple packages with the same name in HEAD; cannot resolve release state`,
+        );
+        continue;
+      }
+      releasedVersion =
+        owners.length === 1 ? releaseManifest[owners[0].root] : undefined;
+      if (releasedVersion === undefined || releasedVersion === "0.0.0")
+        continue;
+    }
     const pattern = `${tagPrefix(packageConfig)}[0-9]*`;
     const tag = git.newestReachableTag(pattern);
     if (!tag) {
@@ -39,16 +52,19 @@ export function auditPublicPackageExports(repositoryRoot, git) {
       continue;
     }
     baselines.push(`${currentManifest.name}: ${tag}`);
-    const releasedManifest = readRevisionJson(
-      git,
-      tag,
-      packagePath(packageRoot, "package.json"),
-    );
+    const matches = revisionPackages(git, tag, currentManifest.name);
+    if (matches.length !== 1) {
+      findings.push(
+        `${currentManifest.name}: ${matches.length === 0 ? "no package" : "multiple packages"} with the same name in ${tag}; cannot resolve the baseline package root`,
+      );
+      continue;
+    }
+    const [{ root: baselineRoot, manifest: releasedManifest }] = matches;
     const released = packageSurface({
       exists: (file) => git.revisionFileExists(tag, file),
       label: tag,
       manifest: releasedManifest,
-      packageRoot,
+      packageRoot: baselineRoot,
       read: (file) => git.readRevision(tag, file).toString("utf8"),
     });
     const current = packageSurface({
@@ -77,6 +93,18 @@ export function auditPublicPackageExports(repositoryRoot, git) {
     findings: [...new Set(findings)].sort(),
     summary: `${baselineSummary}; ${notedRemovals} noted removal(s)`,
   };
+}
+
+function revisionPackages(git, revision, packageName) {
+  const roots = Object.keys(
+    readRevisionJson(git, revision, RELEASE_CONFIG).packages ?? {},
+  );
+  return roots.flatMap((root) => {
+    const file = packagePath(root, "package.json");
+    if (!git.revisionFileExists(revision, file)) return [];
+    const manifest = readRevisionJson(git, revision, file);
+    return manifest.name === packageName ? [{ root, manifest }] : [];
+  });
 }
 
 function packageSurface({ exists, label, manifest, packageRoot, read }) {

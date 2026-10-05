@@ -73,15 +73,15 @@ export class GitWorkspace {
   changedFiles(roots) {
     const base = this.requireBase();
     const tracked = parseNameStatus(
-      this.#run([
-        "diff",
-        "--name-status",
-        "-z",
-        "--find-renames",
-        base,
-        "--",
-        ...roots,
-      ]),
+      this.#run(["diff", "--name-status", "-z", "--find-renames", base]),
+    ).filter((change) =>
+      roots.some(
+        (root) =>
+          root === "." ||
+          root === "" ||
+          change.path === root ||
+          change.path.startsWith(`${root}/`),
+      ),
     );
     const known = new Set(tracked.map((change) => change.path));
     const untracked = this.#paths([

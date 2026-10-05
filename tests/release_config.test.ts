@@ -3,14 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { CLI_PACKAGE_PATH } from "../scripts/package/layout.mjs";
+
+import { repositoryRoot, packageRoot } from "./helpers/fixture.js";
 
 test("scoped npm identity preserves the Mokly executable", async () => {
   const packageJson = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package.json"),
-      "utf8",
-    ),
+    await fs.promises.readFile(path.join(packageRoot, "package.json"), "utf8"),
   );
   assert.equal(packageJson.name, "@mokly/mokly");
   assert.equal(packageJson.author, "Mokly");
@@ -55,22 +54,26 @@ test("release-please owns the Node manifest and first release state", async () =
     ),
   );
   assert.equal(
-    config.packages["."].releaseType ?? config.packages["."]["release-type"],
+    config.packages[CLI_PACKAGE_PATH].releaseType ??
+      config.packages[CLI_PACKAGE_PATH]["release-type"],
     "node",
   );
-  assert.equal(config.packages["."]["include-v-in-tag"], true);
+  assert.equal(config.packages[CLI_PACKAGE_PATH]["include-v-in-tag"], true);
   assert.equal(
     config["bootstrap-sha"],
     "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
   );
-  assert.equal(config.packages["."]["bump-minor-pre-major"], true);
-  const releaseAs = config.packages["."]["release-as"];
+  assert.equal(config.packages[CLI_PACKAGE_PATH]["bump-minor-pre-major"], true);
+  const releaseAs = config.packages[CLI_PACKAGE_PATH]["release-as"];
   if (releaseAs !== undefined) {
     assert.match(releaseAs, /^0\.\d+\.\d+$/);
   }
-  assert.equal(config.packages["."]["include-component-in-tag"], false);
+  assert.equal(
+    config.packages[CLI_PACKAGE_PATH]["include-component-in-tag"],
+    false,
+  );
   assert.deepEqual(
-    Object.keys(config.packages["."])
+    Object.keys(config.packages[CLI_PACKAGE_PATH])
       .filter((key) => key !== "release-as")
       .sort(),
     [
@@ -82,7 +85,7 @@ test("release-please owns the Node manifest and first release state", async () =
       "release-type",
     ],
   );
-  assert.deepEqual(config.packages["."]["extra-files"], [
+  assert.deepEqual(config.packages[CLI_PACKAGE_PATH]["extra-files"], [
     {
       type: "generic",
       path: "docs/guides/start/install.md",
@@ -93,12 +96,9 @@ test("release-please owns the Node manifest and first release state", async () =
     },
   ]);
   const packageVersion = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package.json"),
-      "utf8",
-    ),
+    await fs.promises.readFile(path.join(packageRoot, "package.json"), "utf8"),
   ).version;
-  assert.equal(manifest["."], packageVersion);
+  assert.equal(manifest[CLI_PACKAGE_PATH], packageVersion);
   const viewer = JSON.parse(
     await fs.promises.readFile(
       path.join(repositoryRoot, "packages/viewer/package.json"),
@@ -111,7 +111,10 @@ test("release-please owns the Node manifest and first release state", async () =
   );
   if (manifest["packages/viewer"] === "0.0.0")
     assert.equal(viewer.version, "0.1.0");
-  assert.deepEqual(Object.keys(config.packages), [".", "packages/viewer"]);
+  assert.deepEqual(Object.keys(config.packages), [
+    CLI_PACKAGE_PATH,
+    "packages/viewer",
+  ]);
   assert.deepEqual(config.plugins, [
     { type: "node-workspace", updateAllPackages: true },
   ]);
@@ -132,10 +135,7 @@ test("release-please owns the Node manifest and first release state", async () =
     ],
   });
   const root = JSON.parse(
-    await fs.promises.readFile(
-      path.join(repositoryRoot, "package.json"),
-      "utf8",
-    ),
+    await fs.promises.readFile(path.join(packageRoot, "package.json"), "utf8"),
   );
   assert.equal(root.dependencies["@mokly/viewer"], viewer.version);
 });

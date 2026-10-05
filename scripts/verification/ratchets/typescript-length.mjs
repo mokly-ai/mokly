@@ -2,9 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { countPhysicalLines, isSourceModulePath } from "./lines.mjs";
+import { SOURCE_ROOTS } from "./source-roots.mjs";
 
 const MAX_LINES = 300;
-const ROOTS = ["src", "packages/viewer/src", "scripts"];
 
 /** Compare candidate module contents with their optional predecessors. */
 export function typeScriptLengthFindings(changes) {
@@ -31,7 +31,7 @@ export function typeScriptLengthFindings(changes) {
 /** Audit changed JavaScript and TypeScript files in the contracted roots. */
 export function auditTypeScriptLength(repositoryRoot, git) {
   const candidates = [];
-  for (const change of git.changedFiles(ROOTS)) {
+  for (const change of git.changedFiles(SOURCE_ROOTS)) {
     if (change.status.startsWith("D") || !isSourceModulePath(change.path))
       continue;
     const absolute = path.join(repositoryRoot, change.path);

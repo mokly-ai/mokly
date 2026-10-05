@@ -15,7 +15,7 @@ import {
   BUILD_NAMES,
   namedEntryFixture,
 } from "./helpers/export_named_entries.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { cliBinPath } from "./helpers/fixture.js";
 
 for (const mode of ["committed", "derived"] as const)
   test(`${mode}: legal build-directory entry names survive every delivery boundary`, async (t) => {
@@ -23,7 +23,7 @@ for (const mode of ["committed", "derived"] as const)
     execFileSync(
       process.execPath,
       [
-        path.join(repositoryRoot, "dist/cli/bin.js"),
+        cliBinPath,
         "check",
         "--config",
         path.join(fixture.root, "mokly.config.ts"),

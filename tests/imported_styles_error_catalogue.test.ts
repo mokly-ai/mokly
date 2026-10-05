@@ -5,7 +5,7 @@ import test from "node:test";
 
 import ts from "typescript";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { repositoryRoot, packageRoot } from "./helpers/fixture.js";
 
 function normalized(value: string): string {
   return value.replaceAll("\\n", " ").replace(/\s+/gu, " ").trim();
@@ -51,7 +51,7 @@ test("every imported-styles error template has a source message", async () => {
     .filter((value): value is string => value !== undefined)
     .filter((value) => value.length > 25);
   const corpora = await Promise.all(
-    (await sourceFiles(path.join(repositoryRoot, "src"))).map(async (file) =>
+    (await sourceFiles(path.join(packageRoot, "src"))).map(async (file) =>
       literalText(await fs.readFile(file, "utf8"), file),
     ),
   );

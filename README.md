@@ -317,6 +317,11 @@ npm run dev
 renderer, and stylesheets. Changes to Mokly's own `src/` files require
 restarting the command so the CLI is rebuilt.
 
+Repository scripts resolve the CLI package through
+[`scripts/package/layout.mjs`](./scripts/package/layout.mjs). Test helpers
+expose `packageRoot` and `cliBinPath` for package files and executable calls.
+Use `repositoryRoot` for workspace tooling, shared docs, and examples.
+
 Run the complete repository gate before submitting a change:
 
 ```bash

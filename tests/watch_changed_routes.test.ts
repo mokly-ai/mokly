@@ -13,13 +13,13 @@ import { changedFixture } from "./helpers/changed_fixture.js";
 import {
   createFixture,
   removeFixture,
-  repositoryRoot,
   validEntrySource,
+  cliBinPath,
 } from "./helpers/fixture.js";
 import { waitForClassifiedCount } from "./helpers/watched_catalogue.js";
 
 const execFileAsync = promisify(execFile);
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
+const cli = cliBinPath;
 
 test(
   "content-only watched rebuilds refresh changed routes without restart",

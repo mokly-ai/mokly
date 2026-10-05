@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 
 import { runCommand } from "../package/command.mjs";
+import { cliPackageRoot } from "../package/layout.mjs";
 import {
   readPackageManifest,
   validateVersionPair,
@@ -10,7 +11,7 @@ import { remoteTagCommit, validateTagVersion } from "./context.mjs";
 
 /** Both protected tag streams must identify the same clean release tree. */
 export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
-  const cli = await readPackageManifest(repositoryRoot);
+  const cli = await readPackageManifest(cliPackageRoot(repositoryRoot));
   const viewer = await readPackageManifest(`${repositoryRoot}/packages/viewer`);
   validateVersionPair(cli, viewer);
   validateTagVersion(cliRef, cli.version);

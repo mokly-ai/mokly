@@ -6,7 +6,7 @@ import test from "node:test";
 import { promisify } from "node:util";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { cliBinPath } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
@@ -17,7 +17,7 @@ test("publish categorizes unexpected local preparation failures before writing o
     execute(
       process.execPath,
       [
-        path.join(repositoryRoot, "dist/cli/bin.js"),
+        cliBinPath,
         "publish",
         "--no-changes",
         "--repository",

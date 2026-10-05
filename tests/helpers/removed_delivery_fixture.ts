@@ -7,7 +7,12 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 
-import { createFixture, removeFixture, repositoryRoot } from "./fixture.js";
+import {
+  createFixture,
+  removeFixture,
+  repositoryRoot,
+  packageRoot,
+} from "./fixture.js";
 
 const execute = promisify(execFile);
 
@@ -82,7 +87,7 @@ export async function prepareRemovedPreviewEntrypoint(
     { recursive: true },
   );
   await fs.symlink(
-    path.join(repositoryRoot, "dist"),
+    path.join(packageRoot, "dist"),
     path.join(fixture.root, "dist"),
   );
   await fs.symlink(
