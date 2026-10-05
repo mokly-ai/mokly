@@ -11,11 +11,12 @@ import {
   sameSelection,
 } from "../src/viewer/selection.js";
 
+const noTitles = (): readonly string[] => [];
 const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -46,9 +47,9 @@ test("selection addresses a component variant as an ordinary entry", () => {
   const variant = fixture.components.find((entry) => "variantOf" in entry)!;
   const selected = normalizeSelection(fixture, {
     ...defaultSelection,
-    screenId: variant.id,
+    screenPath: variant.path,
   });
-  assert.equal(selected.screenId, variant.id);
+  assert.equal(selected.screenPath, variant.path);
 });
 
 test("component parent and variant identities round trip through selection", () => {
@@ -58,16 +59,17 @@ test("component parent and variant identities round trip through selection", () 
   const variant = fixture.components.find((entry) => "variantOf" in entry)!;
   const current = normalizeSelection(fixture, {
     ...defaultSelection,
-    screenId: component.id,
+    screenPath: component.path,
   });
-  const selectedVariant = mergeSelection(fixture, current, {
-    screenId: variant.id,
+  const selectedVariant = mergeSelection(fixture, noTitles, current, {
+    screenPath: variant.path,
   });
-  assert.equal(selectedVariant.screenId, variant.id);
+  assert.equal(selectedVariant.screenPath, variant.path);
   assert.equal(
-    mergeSelection(fixture, selectedVariant, { screenId: component.id })
-      .screenId,
-    component.id,
+    mergeSelection(fixture, noTitles, selectedVariant, {
+      screenPath: component.path,
+    }).screenPath,
+    component.path,
   );
 });
 
@@ -75,24 +77,27 @@ test("variant entry identity participates in equality and survives reveal", () =
   const variant = fixture.components.find((entry) => "variantOf" in entry)!;
   const selected = normalizeSelection(fixture, {
     ...defaultSelection,
-    screenId: variant.id,
+    screenPath: variant.path,
     search: "does-not-match",
   });
-  assert.equal(sameSelection(selected, { ...selected, screenId: null }), false);
-  assert.deepEqual(revealSelection(fixture, selected), {
+  assert.equal(
+    sameSelection(selected, { ...selected, screenPath: null }),
+    false,
+  );
+  assert.deepEqual(revealSelection(fixture, noTitles, selected), {
     ...selected,
     search: "",
   });
 });
 
 for (const [field, value] of Object.entries({
-  screenId: 1,
+  screenPath: 1,
   view: "current",
   viewport: "tablet",
   colorScheme: "system",
   search: null,
   tags: ["two words"],
-  variantId: "action-default",
+  variantPath: "components/action/default",
   unexpected: true,
 }))
   test(`invalid ${field} selection is rejected`, () =>

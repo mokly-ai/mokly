@@ -23,12 +23,17 @@ test("entry glob roots prune ignored descendants without pruning their ancestors
   const loaded = await loadConfig(fixture.root);
   const srcConfig: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["src/**/*.mockup.{ts,tsx}"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "src"),
+        files: ["**/*.mockup.{ts,tsx}"],
+        transparent: [],
+      },
+    ],
     entryModules: [
       path.join(fixture.root, "src/components/card/card.mockup.tsx"),
     ],
   };
-  delete srcConfig.entriesDir;
   for (const relative of ["src/node_modules/x/index.js", "src/dist/x.js"]) {
     assert.equal(
       isPackageOwnedIgnoredWatchPath(
@@ -52,7 +57,13 @@ test("entry glob roots prune ignored descendants without pruning their ancestors
 
   const rootConfig: ResolvedConfig = {
     ...srcConfig,
-    entryGlobs: ["**/*.mockup.{ts,tsx}"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "."),
+        files: ["**/*.mockup.{ts,tsx}"],
+        transparent: [],
+      },
+    ],
   };
   for (const relative of ["node_modules/x/index.js", ".git/HEAD"]) {
     assert.equal(
@@ -72,10 +83,15 @@ test("discovery and watching share denied segments below glob roots", async (con
   const baseline = await loadConfig(fixture.root);
   const broad: ResolvedConfig = {
     ...baseline,
-    entryGlobs: ["src/**/*.mockup.{ts,tsx}"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "src"),
+        files: ["**/*.mockup.{ts,tsx}"],
+        transparent: [],
+      },
+    ],
     entryModules: [],
   };
-  delete broad.entriesDir;
   const denied = path.join(fixture.root, "src/dist/x.mockup.tsx");
   await fs.promises.mkdir(path.dirname(denied), { recursive: true });
   await fs.promises.writeFile(denied, validEntrySource());
@@ -83,15 +99,14 @@ test("discovery and watching share denied segments below glob roots", async (con
   assert.equal(isEntryGlobCandidate(denied, broad), false);
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["src/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "src", files: ["**/*.mockup.{ts,tsx}"] }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
   await assert.rejects(loadConfig(fixture.root), {
     code: "config-invalid",
-    message:
-      /entries glob matches no module: src\/\*\*\/\*\.mockup\.\{ts,tsx\}; not searched: src\/dist/,
+    message: /root matches no file: src; not searched: src\/dist/,
   });
 
-  const loaded = await loadConfigFor(fixture, "dist/entries/**");
+  const loaded = await loadConfigFor(fixture);
   const explicit = path.join(fixture.root, "dist/entries/a.mockup.tsx");
   assert.deepEqual(loaded.entryModules, [explicit]);
   assert.equal(isPackageOwnedIgnoredWatchPath(explicit, loaded), false);
@@ -111,10 +126,20 @@ test("a non-matching glob root is excluded from the entry denial base", async (c
   const loaded = await loadConfig(fixture.root);
   const config: ResolvedConfig = {
     ...loaded,
-    entryGlobs: ["src/**/*.mockup.{ts,tsx}", "src/dist/entries/**/*.json"],
+    roots: [
+      {
+        dir: path.resolve(fixture.root, "src"),
+        files: ["**/*.mockup.{ts,tsx}"],
+        transparent: [],
+      },
+      {
+        dir: path.resolve(fixture.root, "src/dist/entries"),
+        files: ["**/*.json"],
+        transparent: [],
+      },
+    ],
     entryModules: [],
   };
-  delete config.entriesDir;
   assert.equal(
     isEntryGlobCandidate(
       path.join(fixture.root, "src/dist/entries/new.mockup.tsx"),
@@ -126,14 +151,13 @@ test("a non-matching glob root is excluded from the entry denial base", async (c
 
 async function loadConfigFor(
   fixture: Awaited<ReturnType<typeof createFixture>>,
-  glob: string,
 ): Promise<ResolvedConfig> {
   const entry = path.join(fixture.root, "dist/entries/a.mockup.tsx");
   await fs.promises.mkdir(path.dirname(entry), { recursive: true });
   await fs.promises.writeFile(entry, validEntrySource());
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entries: [${JSON.stringify(glob)}], mockupsDir: "mockups", repoRoot: "." };\n`,
+    'export default { roots: [{dir:"dist/entries",files:["**"]}], mockupsDir: "mockups", repoRoot: "." };\n',
   );
   return loadConfig(fixture.root);
 }

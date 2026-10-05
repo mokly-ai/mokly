@@ -8,6 +8,7 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type { MoveTargetsProvider } from "../../build/move_targets.js";
 import { validateRenderRequest } from "../../components/render_request.js";
 
 import { RenderQueue } from "./queue.js";
@@ -20,8 +21,13 @@ export class ComponentRenderService {
   private queue: RenderQueue;
   private replacement: Promise<void> = Promise.resolve();
   private closed = false;
-  constructor(private runtime: ComponentRuntime) {
-    this.queue = new RenderQueue(new NodeRenderWorkerFactory(runtime));
+  constructor(
+    private runtime: ComponentRuntime,
+    private readonly moveTargets?: MoveTargetsProvider,
+  ) {
+    this.queue = new RenderQueue(
+      new NodeRenderWorkerFactory(runtime, moveTargets),
+    );
   }
   capability(): RenderCapability {
     return { token: this.token, generation: this.runtime.generation };
@@ -33,7 +39,9 @@ export class ComponentRenderService {
     );
     this.runtime = runtime;
     this.store.clear();
-    this.queue = new RenderQueue(new NodeRenderWorkerFactory(runtime));
+    this.queue = new RenderQueue(
+      new NodeRenderWorkerFactory(runtime, this.moveTargets),
+    );
   }
   async render(
     value: unknown,

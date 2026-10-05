@@ -1,4 +1,4 @@
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../baseline/compatibility.js";
 import { errorMessage } from "../errors.js";
@@ -27,7 +27,7 @@ export interface WatchReport {
 export interface ServeReporter {
   baselinePreparing(base: string): void;
   baselineReady(commit: string, cacheHit: boolean, durationMs: number): void;
-  catalogueReady(manifest: ManifestV7, durationMs: number): void;
+  catalogueReady(manifest: ManifestV8, durationMs: number): void;
   changesReady(changed: number, durationMs: number): void;
   changesUnavailable(durationMs: number): void;
   gitReferenceRefresh(base: string): void;
@@ -53,7 +53,7 @@ export class PlainServeReporter implements ServeReporter {
     _cacheHit: boolean,
     _durationMs: number,
   ): void {}
-  catalogueReady(_manifest: ManifestV7, _durationMs: number): void {}
+  catalogueReady(_manifest: ManifestV8, _durationMs: number): void {}
   changesReady(_changed: number, _durationMs: number): void {}
   changesUnavailable(_durationMs: number): void {}
   gitReferenceRefresh(_base: string): void {}

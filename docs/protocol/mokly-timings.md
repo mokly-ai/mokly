@@ -42,7 +42,8 @@ rendering, compatibility transformation, component metadata validation, logical
 links, ignore rules, manifest construction/validation, resource validation,
 HTML links, output-path checks and runtime retention. Watcher attachment,
 resource discovery, transactional output, and Changes have separate spans;
-`output.lock` measures the wait for the generated-output writer lock.
+`output.lock` measures the wait for the generated-output writer lock, including
+short output-validation snapshot reads. `output.paths` measures snapshot checks.
 Graph work for watcher inventory and source-freshness validation is deliberately
 visible even when it repeats compilation's graph work.
 
@@ -52,7 +53,7 @@ Review phases use the same session, role and parent context as their caller:
   Pinned readers reuse the resolved commit without another Git span.
 - `review.changed-paths` covers output exclusions, tracked/untracked discovery,
   deduplication and sorting, including later input-freshness checks.
-- `review.base-manifest` covers canonical baseline reading, v7 validation, and
+- `review.base-manifest` covers canonical baseline reading, v8 validation, and
   incompatible-version detection.
 - `review.base-documents` covers each bulk baseline-document read, including
   live component prefetch and bounded live document-comparison batches. It does

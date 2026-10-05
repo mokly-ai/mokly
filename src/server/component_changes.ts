@@ -3,8 +3,8 @@ import path from "node:path";
 import { generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifest,
-  ManifestV7,
-  ReviewResultV4,
+  ManifestV8,
+  ReviewResultV5,
   ScreenResourceEvidence,
 } from "@mokly/viewer/data";
 
@@ -14,7 +14,7 @@ import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isMoklyError } from "../errors.js";
-import { changedManifestIds } from "../registry/changed_ids.js";
+import { changedManifestPaths } from "../registry/changed_paths.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import type { AcceptedGeneration } from "../review/accepted_generation.js";
 import { GitReviewAssetReader } from "../review/assets.js";
@@ -29,6 +29,9 @@ import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
 import { derivedHeadOutputs } from "../review/head_assets.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
+import { readMoveMarkdown } from "../review/moves/markdown_sources.js";
+import { prepareMoveClassification } from "../review/moves/prepare.js";
+import type { MovePairing } from "../review/moves/types.js";
 import {
   baselineReaderForCommit,
   comparisonNotPrepared,
@@ -45,8 +48,9 @@ import {
 
 export interface ComponentChangeSnapshot {
   baseline: HistoricalManifest;
-  changedIds?: readonly string[];
-  result?: ReviewResultV4;
+  pairing?: MovePairing;
+  changedEntries?: readonly string[];
+  result?: ReviewResultV5;
   comparison?: ReviewEvidence;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
@@ -66,7 +70,7 @@ export interface CatalogueClassificationInputs {
 export interface CatalogueChangeClassifier {
   read(
     config: ResolvedConfig,
-    manifest: ManifestV7,
+    manifest: ManifestV8,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
@@ -79,7 +83,7 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
 
   async read(
     config: ResolvedConfig,
-    manifest: ManifestV7,
+    manifest: ManifestV8,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
@@ -115,7 +119,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
   private git: ReadOnlyReviewRepository;
   constructor(
     private readonly config: ResolvedConfig,
-    private readonly manifest: ManifestV7,
+    private readonly manifest: ManifestV8,
     private readonly base: string,
     private readonly signal?: AbortSignal,
     commands?: GitCommandRunner,
@@ -157,7 +161,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
 /** Classify pages and ownership-aware component views against one pinned baseline. */
 export async function readCatalogueChanges(
   config: ResolvedConfig,
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   base: string,
   git: ReadOnlyReviewRepository,
   commit: string,
@@ -195,6 +199,25 @@ export async function readCatalogueChanges(
       accepted?.deliveredStyleSources,
       accepted?.routes,
     ));
+  const prepared = await prepareMoveClassification({
+    before: baseline,
+    after: manifest,
+    config,
+    baseCommit: commit,
+    baseRef: base,
+    changedPaths,
+    beforeReader,
+    afterReader: reader,
+    sourceReader: git.sourceReader ?? git.reader,
+    markdown: await readMoveMarkdown(
+      baseline,
+      manifest,
+      config,
+      git.sourceReader ?? git.reader,
+      commit,
+      accepted?.documentMarkdown,
+    ),
+  });
   const content = await classifyChangedContent(
     manifest,
     baseline,
@@ -204,33 +227,31 @@ export async function readCatalogueChanges(
     changedPaths,
     reader,
     components ? "pages" : "all",
+    {
+      pairing: prepared.pairing,
+      beforeReader: prepared.beforeReader,
+      ...(prepared.resources ? { resources: prepared.resources } : {}),
+    },
   );
-  const result = await classifyComponents({
-    before: baseline,
-    after: manifest,
-    config,
-    baseCommit: commit,
-    baseRef: base,
-    changedPaths,
-    beforeReader,
-    afterReader: reader,
-  });
+  const result = await classifyComponents(prepared);
   const pageIds = new Set(
     manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.id] : [],
+      entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
     ),
   );
-  const ids = changedManifestIds(
+  const ids = changedManifestPaths(
     manifest,
     baseline,
     config,
     content.changedPaths,
+    prepared.pairing.moves,
   ).filter((id) => !components || pageIds.has(id));
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry))
       if (!reader.digests[view.path]) await reader.read(view.path);
   return {
     baseline,
+    pairing: prepared.pairing,
     comparison: {
       baseCommit: commit,
       baseRef: base,
@@ -253,17 +274,20 @@ export async function readCatalogueChanges(
             baseline,
             config,
             content.changedPaths,
+            prepared.pairing.moves,
           ),
         }
       : {}),
     ...(!components && content.screens.length
       ? { screenEvidence: content.screens }
       : {}),
-    changedIds: [
+    changedEntries: [
       ...new Set([
         ...ids,
         ...(components
-          ? result.changes.map((entry) => (entry.after ?? entry.before)!.id)
+          ? result.changes
+              .filter((entry) => entry.reasons.length > 0)
+              .map((entry) => (entry.after ?? entry.before)!.path)
           : []),
       ]),
     ].sort(),

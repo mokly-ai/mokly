@@ -22,7 +22,7 @@ test("baseline rebuild adopts once and a cache hit executes no commands", async 
     onProgress: (event) => events.push(event),
   });
   assert.equal(first.cacheHit, false);
-  assert.equal(first.marker.manifestVersion, 7);
+  assert.equal(first.marker.manifestVersion, 8);
   assert.deepEqual(first.marker.commands, request.commands);
   assert.equal(
     await fs.stat(path.join(path.dirname(first.outputDir), "source")),

@@ -18,43 +18,40 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => fixture?.close());
 
-async function start(page: Page, cross: boolean, screenId = "home") {
+async function start(page: Page, cross: boolean, screenPath = "home") {
   await page.goto(fixture.host.url);
   await page.waitForFunction(() => Boolean(window.viewerHarness));
   await page.evaluate(
-    ({ cross, screenId }) => {
+    ({ cross, screenPath }) => {
       const host = window.viewerHarness.start("one", {
         cross,
-        defaultSelection: { screenId, viewport: "both" },
+        defaultSelection: { screenPath, viewport: "both" },
       });
       const catalogue = structuredClone(
         host.props.catalogue,
       ) as CatalogueReadModel;
-      catalogue.screens[0]!.useCaseIds = ["tour"];
+      catalogue.screens[0]!.useCasePaths = ["tour"];
       catalogue.useCases = [
         {
           kind: "use-case",
-          id: "tour",
-          navPath: [],
+          path: "tour",
+
           title: "Tour",
           tags: [],
           details: catalogue.screens[0]!.details,
           changes: { status: "disabled" },
           steps: [
-            { screenId: "home" },
-            { screenId: "home" },
-            { screenId: "home" },
+            { screenPath: "home" },
+            { screenPath: "home" },
+            { screenPath: "home" },
           ],
         },
       ];
-      catalogue.tree.pages = [
-        ...catalogue.tree.pages,
-        { kind: "entry", id: "tour" },
-      ];
+      catalogue.tree = [...catalogue.tree, { kind: "entry", path: "tour" }];
       host.props = { ...host.props, catalogue } as MoklyViewerProps;
       host.render();
     },
-    { cross, screenId },
+    { cross, screenPath },
   );
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
@@ -158,7 +155,7 @@ for (const cross of [false, true]) {
       ).entries())
         await highlight(
           page,
-          { screenId: "home", key, viewport, colorScheme },
+          { screenPath: "home", key, viewport, colorScheme },
           cross,
           index,
         );
@@ -176,11 +173,11 @@ for (const cross of [false, true]) {
   }) => {
     await start(page, cross, "pane");
     const component = fixture.catalogue.components.find(
-      (entry) => entry.id === "pane",
+      (entry) => entry.path === "pane",
     )!;
     for (const variant of catalogueComponentVariants(
       fixture.catalogue,
-      component.id,
+      component.path,
     )) {
       await chooseVariant(page, variant.title);
       await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
@@ -191,7 +188,7 @@ for (const cross of [false, true]) {
       await highlight(
         page,
         {
-          screenId: variant.id,
+          screenPath: variant.path,
           key: usage.instances[0]!.key,
           viewport: "desktop",
           colorScheme: "light",
@@ -211,14 +208,16 @@ for (const cross of [false, true]) {
     )!.key;
     for (const stepIndex of [0, 1, 2]) {
       const instance = {
-        screenId: "home",
+        screenPath: "home",
         key,
         viewport: "desktop" as const,
         colorScheme: "light" as const,
         stepIndex,
       };
       const clicked = await highlight(page, instance, cross, stepIndex);
-      expect(clicked).toMatchObject({ frame: { entryId: "tour", stepIndex } });
+      expect(clicked).toMatchObject({
+        frame: { entryPath: "tour", stepIndex },
+      });
     }
   });
 }

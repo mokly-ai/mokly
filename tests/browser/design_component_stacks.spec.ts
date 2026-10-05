@@ -6,9 +6,9 @@ type Viewport = "desktop" | "mobile";
 
 /** Component routes whose comparisons stack both versions in one frame. */
 const STACKED = [
-  ["design-component-overlay", "overlay"],
-  ["design-component-difference", "difference"],
-  ["design-component-overlay-tall", "overlay"],
+  ["design/components/pages/stacked/overlay", "overlay"],
+  ["design/components/pages/stacked/difference", "difference"],
+  ["design/components/pages/stacked/overlay-tall", "overlay"],
 ] as const;
 
 async function open(
@@ -158,7 +158,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   }) => {
     const scroller = await open(
       page,
-      "design-component-overlay-tall",
+      "design/components/pages/stacked/overlay-tall",
       viewport,
     );
     const facts = await scroller.evaluate((node) => {
@@ -235,14 +235,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 1440, height: 1000 },
     );
     await page.goto(
-      componentDesignUrl("design-component-comparison", viewport),
+      componentDesignUrl("design/components/pages/comparison", viewport),
     );
     const modes = page.getByRole("group", { name: "Comparison mode" });
     for (const [label, route] of [
-      ["Overlay", "design-component-overlay"],
-      ["Difference", "design-component-difference"],
-      ["Current", "design-component-affected"],
-      ["Side by side", "design-component-comparison"],
+      ["Overlay", "design/components/pages/stacked/overlay"],
+      ["Difference", "design/components/pages/stacked/difference"],
+      ["Current", "design/components/pages/affected"],
+      ["Side by side", "design/components/pages/comparison"],
     ] as const) {
       const link = modes.getByRole("link", { name: label, exact: true });
       await link.focus();

@@ -29,7 +29,7 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
           configPath,
           (await fs.readFile(configPath, "utf8")).replace(
             'match: "**/*.html"',
-            'match: "screens/home.html"',
+            'match: "home/index.html"',
           ),
         );
       },
@@ -61,10 +61,10 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
       documents.sort(),
       resource === "shared.css"
         ? [
-            "mockups/screens/home.desktop.dark.html",
-            "mockups/screens/home.desktop.html",
-            "mockups/screens/home.mobile.dark.html",
-            "mockups/screens/home.mobile.html",
+            "mockups/home/index.desktop.dark.html",
+            "mockups/home/index.desktop.html",
+            "mockups/home/index.mobile.dark.html",
+            "mockups/home/index.mobile.html",
           ]
         : [],
     );
@@ -74,7 +74,7 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
 test("non-CSS evidence does not traverse a supplied base resource graph", async (t) => {
   const fixture = await cssAttributionFixture(t, false);
   const document = await fs.readFile(
-    path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+    path.join(fixture.mockupsDir, "home/index.mobile.html"),
     "utf8",
   );
   const graph = new ChangedResourceGraph(
@@ -88,8 +88,8 @@ test("non-CSS evidence does not traverse a supplied base resource graph", async 
     new Map(),
   );
   assert.deepEqual(
-    await graph.compare("screens/home.mobile.html", document, {
-      path: "screens/home.mobile.html",
+    await graph.compare("home/index.mobile.html", document, {
+      path: "home/index.mobile.html",
       html: document,
     }),
     {
@@ -111,7 +111,7 @@ test("deleted stylesheet resources still retain their consumers", async (t) => {
     await git.evidence.mergeBase("main", "HEAD"),
     asChangeEvidence(["mockups/shared.css"]),
   );
-  assert.ok(result.changedPaths.includes("mockups/screens/home.mobile.html"));
+  assert.ok(result.changedPaths.includes("mockups/home/index.mobile.html"));
   assert.equal(
     result.screens[0]?.views[0]?.reasons?.[0]?.analysis?.status,
     "unresolved",
@@ -153,9 +153,9 @@ test("changed documents retain a removed image without any stylesheet in the dif
   );
   for (const viewport of ["mobile", "desktop"])
     assert.ok(
-      result.changedPaths.includes(`mockups/screens/home.${viewport}.html`),
+      result.changedPaths.includes(`mockups/home/index.${viewport}.html`),
     );
-  const consumer = result.screens.find((screen) => screen.id === "home");
+  const consumer = result.screens.find((screen) => screen.path === "home");
   assert.equal(consumer?.views.length, 2);
   for (const view of consumer!.views)
     assert.deepEqual(view.reasons, [

@@ -157,7 +157,7 @@
   explanatory annotations inside the rendered screen area. Put implementation
   hints below the screen or in a separate non-screen section.
 - Mokly's example catalogue under `examples/basic/generated/` is generated from
-  the structured definitions under `examples/basic/entries/` using
+  the structured definitions under `examples/basic/specs/` using
   `examples/basic/mokly.config.ts`. Canonical entry modules end in `.mockup.ts`
   or `.mockup.tsx`; shared TSX components and page-render helpers live alongside
   them in the example source tree. Definitions and helpers should compose TSX

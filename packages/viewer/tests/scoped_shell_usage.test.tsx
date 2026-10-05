@@ -27,17 +27,17 @@ test("omitted usage becomes pending instead of unavailable in frames", () => {
 
 test("a partial fallback derives no cross-route Usage or false empty state", () => {
   const component = complete.components.find(
-    (entry) => entry.id === "action" && !("variantOf" in entry),
+    (entry) => entry.path === "components/action" && !("variantOf" in entry),
   )!;
   const scoped = projectScopedCatalogue(complete, {
     kind: "target",
-    entryId: component.id,
+    entryPath: component.path,
     entryKind: component.kind,
   });
   const catalogue = viewerCatalogue(scoped);
-  const entry = catalogue.byId.get(component.id);
+  const entry = catalogue.byPath.get(component.path);
   assert.ok(entry?.kind === "component");
-  const data = publicWorkspace(scoped, entry);
+  const data = publicWorkspace(catalogue, scoped, entry);
   assert.deepEqual(data.usedBy, []);
   assert.deepEqual(data.affected, []);
 
@@ -63,17 +63,17 @@ test("a partial fallback derives no cross-route Usage or false empty state", () 
 
 test("an out-of-scope workspace shows the mockup's inspection waiting copy", () => {
   const component = complete.components.find(
-    (entry) => entry.id === "action" && !("variantOf" in entry),
+    (entry) => entry.path === "components/action" && !("variantOf" in entry),
   )!;
   const scoped = projectScopedCatalogue(complete, {
     kind: "target",
-    entryId: component.id,
+    entryPath: component.path,
     entryKind: component.kind,
   });
   const catalogue = viewerCatalogue(scoped);
-  const entry = catalogue.byId.get("home");
+  const entry = catalogue.byPath.get("product/browse/home");
   assert.ok(entry?.kind === "screen");
-  const data = publicWorkspace(scoped, entry);
+  const data = publicWorkspace(catalogue, scoped, entry);
   assert.equal(data.viewUsagePending, true);
   const views = data.views.filter(({ colorScheme }) => colorScheme === "light");
 

@@ -23,10 +23,10 @@ for (const components of [false, true]) {
         "main",
         committedReviewRepository(fixture.config),
       );
-      assert.equal(live.changedIds?.includes("home"), included);
+      assert.equal(live.changedEntries?.includes("home"), included);
       const artifact = await fixture.compare();
       const screen = artifact.result.screens.find(
-        (entry) => entry.id === "home",
+        (entry) => entry.path === "home",
       )!;
       assert.equal(screen.views.length, 4);
       for (const view of screen.views) {
@@ -54,16 +54,16 @@ for (const components of [false, true]) {
         screen.sharedImpact.includes("mockups/shared.css"),
         included,
       );
-      if (artifact.result.schemaVersion === 4) {
+      if (artifact.result.schemaVersion === 5) {
         assert.deepEqual(live.componentChanges?.result, artifact.result);
         assert.equal(
-          artifact.result.changes.some((entry) => entry.after?.id === "home"),
+          artifact.result.changes.some((entry) => entry.after?.path === "home"),
           included,
         );
       }
       if (status === "unresolved") {
         const views = artifact.result.screens.flatMap((entry) => entry.views);
-        if (artifact.result.schemaVersion === 4)
+        if (artifact.result.schemaVersion === 5)
           views.push(
             ...artifact.result.components.flatMap((entry) =>
               entry.variants.flatMap((variant) => variant.views),
@@ -83,7 +83,7 @@ for (const components of [false, true]) {
       assert.ok(files.has("snapshots/after/shared.css"));
       assert.match(
         String(files.get("summary.md")),
-        artifact.result.schemaVersion === 4
+        artifact.result.schemaVersion === 5
           ? new RegExp(`Changes: ${artifact.result.changes.length};`)
           : new RegExp(
               `output changes: ${artifact.result.screens.filter((screen) => screen.state === "changed").length};`,
@@ -101,10 +101,10 @@ for (const components of [false, true]) {
         "main",
         committedReviewRepository(fixture.config),
       );
-      assert.ok(live.changedIds?.includes("home"));
+      assert.ok(live.changedEntries?.includes("home"));
       const artifact = await fixture.compare();
       for (const view of artifact.result.screens.find(
-        (entry) => entry.id === "home",
+        (entry) => entry.path === "home",
       )!.views) {
         assert.deepEqual(view.reasons, [
           { kind: "dependency", path: `mockups/${resource}` },

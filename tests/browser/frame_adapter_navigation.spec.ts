@@ -47,7 +47,7 @@ test("cross-origin native activations report bounded targets and modifiers witho
       .toEqual([
         {
           type: "navigation",
-          navigation: { id: "action", activation: "primary", target },
+          navigation: { screenPath: "action", activation: "primary", target },
         },
       ]);
   }
@@ -76,7 +76,11 @@ test("cross-origin native activations report bounded targets and modifiers witho
       .toEqual([
         {
           type: "navigation",
-          navigation: { id: "action", activation, target: { kind: "self" } },
+          navigation: {
+            screenPath: "action",
+            activation,
+            target: { kind: "self" },
+          },
         },
       ]);
   }

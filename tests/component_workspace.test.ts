@@ -20,12 +20,12 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 4) assert.fail("Expected component result");
+  if (result.schemaVersion !== 5) assert.fail("Expected component result");
   const catalogue = createCatalogue(
     fixture.after.manifest,
     removedManifestEntries(fixture.after.manifest, fixture.before.manifest),
   );
-  const entry = catalogue.byId.get("action");
+  const entry = catalogue.byPath.get("action");
   if (entry?.kind !== "component" || "variantOf" in entry)
     assert.fail("Expected component");
   const context = {
@@ -51,11 +51,11 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
     16,
   );
   assert.equal(
-    data.usedBy.filter((item) => item.entryId === "pane-default").length,
+    data.usedBy.filter((item) => item.entryId === "pane/default").length,
     4,
   );
   const defaultSelection = selectedVariant(data);
-  assert.equal(defaultSelection.variant?.value.id, "action-default");
+  assert.equal(defaultSelection.variant?.value.path, "action/default");
   assert.equal(defaultSelection.comparisonEligible, false);
   assert.ok(data.views.every((view) => view.usage));
   const live = workspaceData(
@@ -66,20 +66,29 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
   assert.deepEqual(live.usedBy, data.usedBy);
   assert.equal(live.previewGeneration, "live-generation");
   assert.ok(live.views.every((view) => view.usage === undefined));
-  const disabled = catalogue.byId.get("action-disabled");
+  const disabled = catalogue.byPath.get("action/disabled");
   if (disabled?.kind !== "component" || !("variantOf" in disabled))
     assert.fail("Expected component variant");
   const disabledData = workspaceData(catalogue, context, disabled);
-  assert.equal(selectedVariant(disabledData).variant?.value.id, disabled.id);
+  assert.equal(
+    selectedVariant(disabledData).variant?.value.path,
+    disabled.path,
+  );
   assert.equal(
     workspaceData(catalogue, { base: "main", updateVersion: 1 }, entry).status,
     undefined,
   );
 });
 
-test("a changed screen id keeps distinct Added and Removed evidence in a component catalogue", async (t) => {
+test("unrelated screens retain distinct Added and Removed evidence in a component catalogue", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
-    source.replace('id: "home"', 'id: "renamed"'),
+    source
+      .replace(
+        'path: "home", title: "Home"',
+        'path: "renamed", title: "Another screen"',
+      )
+      .replaceAll("<main>", "<aside>")
+      .replaceAll("</main>", "</aside>"),
   );
   const { result } = await compareReview(
     fixture.after,
@@ -87,12 +96,12 @@ test("a changed screen id keeps distinct Added and Removed evidence in a compone
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 4) assert.fail("Expected component result");
+  if (result.schemaVersion !== 5) assert.fail("Expected component result");
   const catalogue = catalogueAtBaseline(
     fixture.after.manifest,
     fixture.before.manifest,
   );
-  const current = catalogue.byId.get("renamed");
+  const current = catalogue.byPath.get("renamed");
   if (current?.kind !== "screen") assert.fail("Expected current screen");
   const context = {
     base: "main",
@@ -122,7 +131,7 @@ test("a changed screen id keeps distinct Added and Removed evidence in a compone
 test("a removed component variant retains its previous comparison", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(
-      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );
@@ -132,12 +141,12 @@ test("a removed component variant retains its previous comparison", async (t) =>
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 4) assert.fail("Expected component result");
+  if (result.schemaVersion !== 5) assert.fail("Expected component result");
   const catalogue = createCatalogue(
     fixture.after.manifest,
     removedManifestEntries(fixture.after.manifest, fixture.before.manifest),
   );
-  const entry = catalogue.byId.get("action");
+  const entry = catalogue.byPath.get("action");
   if (entry?.kind !== "component" || "variantOf" in entry)
     assert.fail("Expected component");
   const data = workspaceData(
@@ -154,13 +163,13 @@ test("a removed component variant retains its previous comparison", async (t) =>
   assert.equal(data.comparisonEligible, false);
   assert.deepEqual(
     data.variants.map((variant) => [
-      variant.value.id,
+      variant.value.path,
       variant.status,
       variant.comparisonEligible,
     ]),
     [
-      ["action-default", "Unmodified", false],
-      ["action-disabled", "Removed", true],
+      ["action/default", "Unmodified", false],
+      ["action/disabled", "Removed", true],
     ],
   );
   assert.equal(
@@ -174,7 +183,7 @@ test("a removed component variant retains its previous comparison", async (t) =>
           componentChanges: { baseline: fixture.before.manifest, result },
         },
         catalogue.removedEntries.find(
-          ({ entry }) => entry.id === "action-disabled",
+          ({ entry }) => entry.path === "action/disabled",
         )!.entry as Parameters<typeof workspaceData>[2],
       ),
     ).comparisonEligible,

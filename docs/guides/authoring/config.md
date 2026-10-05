@@ -8,39 +8,38 @@ order: 1
 ## The shape of a config
 
 `defineConfig` takes one object of type `MoklyConfig` and returns it typed.
-`mockupsDir` and exactly one of `entries` or `entriesDir` are required;
-everything else has a default.
+`mockupsDir` is required; everything else has a default.
 
 ```ts
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  entries: ["src/**/*.mockup.{ts,tsx}"],
-  mockupsDir: "docs/mockups/generated",
-  renderer: "docs/mockups/renderer.tsx",
+  mockupsDir: "specs/generated",
+  renderer: "specs/renderer.tsx",
   repoRoot: ".",
-  stylesheets: [{ match: "screens/*.html", stylesheets: ["app.css"] }],
+  roots: [{ dir: "specs" }, { dir: "packages/ui/src", path: "components" }],
+  stylesheets: [{ match: "**/index.html", stylesheets: ["app.css"] }],
   review: {
     base: "origin/main",
     outDir: ".context/mokly-review",
-    sharedImpact: ["src/components/**", "src/tokens/**"],
+    sharedImpact: ["packages/ui/src/**", "src/tokens/**"],
   },
 });
 ```
 
 Folder paths are relative to the config file and stay inside `repoRoot`.
-Globs are relative to `repoRoot`.
+Repository globs such as `review.sharedImpact` are relative to `repoRoot`;
+the `files` globs of a root are relative to that root.
 
 ## Fields
 
 | Field              | Meaning                                                                           |
 | ------------------ | --------------------------------------------------------------------------------- |
-| `entries`          | Globs whose matched regular files are entry modules                               |
-| `entriesDir`       | Shorthand for `<folder>/**/*.mockup.{ts,tsx}`                                     |
+| `roots`            | The directories Mokly scans; defaults to one `specs` root                         |
 | `mockupsDir`       | Where the generated catalogue is written                                          |
 | `generatedOutput`  | `"derived"` (default) requires untracked output; `"committed"` verifies Git bytes |
-| `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`                        |
+| `colorSchemes`     | Schemes rendered for screens, components and documents; defaults to `["light"]`   |
 | `repoRoot`         | The root every path is confined to; defaults to the config directory              |
 | `renderer`         | Your module that wraps a screen in your theme and returns a document              |
 | `stylesheets`      | Ordered route-to-stylesheet rules                                                 |
@@ -49,32 +48,44 @@ Globs are relative to `repoRoot`.
 | `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources              |
 | `review`           | The Git base, the artifact directory and shared-impact globs                      |
 | `watch`            | Extra inputs the watched server reacts to                                         |
-| `compatibility`    | Temporary bridges while a repository moves to the current output                  |
+| `compatibility`    | A consumer-owned transformer for complete generated documents                     |
 
-## Entries
+Every configured root defines its own file selection and path derivation.
 
-`entries` lists repository-relative globs. Every matched regular file is an
-entry module, with no separate suffix or extension filter. A glob such as
-`src/**/*.mockup.{ts,tsx}` selects the recommended naming convention and lets
-each entry live beside the component or screen it describes. A broader glob
-such as `src/**/*.ts` deliberately makes every matched TypeScript file an entry,
-but a file with no registry export simply contributes no definitions. If no
-matched file contributes a definition, compilation reports the normal empty
-registry error. The matched set is sorted by path, so neither glob order nor
-filesystem order changes the catalogue. Discovery skips denied directories and
-`review.outDir`. A glob with no matched module reports the skipped denied roots,
-if any. A matched barrel that re-exports another matched module's registry array
-fails with `duplicate-id`. Narrow the glob, rename the barrel so the glob no
-longer matches it, or stop re-exporting registry arrays.
+## Roots
 
-List multiple globs when entry modules genuinely live in multiple locations,
-for example `entries: ["src/**/*.mockup.{ts,tsx}",
-"docs/mockups/entries/**/*.mockup.tsx"]`. Every item is validated separately,
-so each glob must match at least one entry module.
+A root is a directory Mokly reads, with up to three refinements:
 
-`entriesDir` names one folder relative to the config file and is exactly
-`entries: ["<folder>/**/*.mockup.{ts,tsx}"]`. Set one of the two fields, not
-both.
+| Root field    | Meaning                                                                   |
+| ------------- | ------------------------------------------------------------------------- |
+| `dir`         | The directory, relative to the config file                                |
+| `files`       | Globs relative to `dir`; defaults to `**/*.mockup.{ts,tsx}` and `**/*.md` |
+| `path`        | A prefix placed before every path derived from this root                  |
+| `transparent` | Directory names removed from derived paths                                |
+
+Matched `.md` files render as documents and stay protected and watched as source.
+Other matched files are entry modules whose exported definitions join the catalogue. The glob alone
+decides the shape: `files: ["**/*.ts"]` reads every TypeScript file below the
+root as a module. A file's path is the root's `path`, then the directories
+between the root and the file with transparent names removed, then the file
+name up to its first dot, so the paths are the same whether the files sit in
+a dedicated spec tree or beside product code.
+
+Omitting `roots` means `[{ dir: "specs" }]`. The recommended layout is that
+spec tree for screens, pages, documents and flows by product area, with
+`mockupsDir` and `renderer` inside it, plus a second root over a component
+library such as `{ dir: "packages/ui/src", path: "components" }`. The
+alternative keeps every mockup beside the code it describes, for example
+`{ dir: "src/features", transparent: ["__mockups__"] }`.
+
+Each root must exist, must not equal `mockupsDir`, and must match at least
+one file; a root that matches nothing lists the directories it could not
+search. Two roots cannot share a `dir`, and a file matched by two roots is
+a `config-invalid` error: `file <path> is matched by roots[<n>] and roots[<m>]`. Below a root, Mokly skips `.git`,
+`node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`, `test-results`,
+`playwright-report` and `.context`. A `_folder.json` file is read as a folder
+record, never as an entry. Its `exclude` globs skip matching files as entries;
+those files remain protected source inputs and stay watched.
 
 Helpers imported by an entry module are attributed to their own file: a
 component registered in `button.mokly.tsx` beside `button.tsx` records that
@@ -82,11 +93,10 @@ file as its source, wherever the entry module that exports it lives.
 
 ## Stylesheets
 
-Rules are evaluated in declaration order. A rule matches a screen's derived
-route, such as `screens/account-home.html`, with a POSIX glob and lists
-stylesheets relative to `mockupsDir`, or absolute HTTP(S)
-URLs. A rule may append `lightStylesheets` or `darkStylesheets` after its
-shared list for the matching output.
+Rules are evaluated in declaration order. A rule matches an entry's route,
+`<path>/index.html`, with a POSIX glob and lists stylesheets relative to
+`mockupsDir`, or absolute HTTP(S) URLs. A rule may append `lightStylesheets`
+or `darkStylesheets` after its shared list for the matching output.
 Imported CSS delivery appends the
 configured renderer stylesheet and then the entry stylesheet after those
 links, even if no rule matches. Complete page callbacks receive no automatic
@@ -100,14 +110,19 @@ HTTP(S), protocol-relative and `data:` sources remain
 external and unchanged.
 
 ```ts
-stylesheets: [
-  {
-    match: "screens/account-*.html",
-    stylesheets: ["app.css"],
-    darkStylesheets: ["dark.css"],
-  },
-  { match: "**/*.html", stylesheets: ["base.css"] },
-];
+import { defineConfig } from "@mokly/mokly";
+
+export default defineConfig({
+  mockupsDir: "specs/generated",
+  stylesheets: [
+    {
+      match: "account/**/index.html",
+      stylesheets: ["app.css"],
+      darkStylesheets: ["dark.css"],
+    },
+    { match: "**/index.html", stylesheets: ["base.css"] },
+  ],
+});
 ```
 
 ## Review
@@ -130,7 +145,8 @@ path, and it is rejected in committed mode.
 `watch.rules` classify extra inputs with `ignore`, `rebuild`, `reload` or
 `restart`, and `watch.debounceMs` sets the window a burst of filesystem
 notifications is collected in. Package-owned paths, configured stylesheets and
-referenced resources are already handled.
+referenced resources are already handled, and so is every file a root matches:
+creating, moving or deleting one is noticed without a rule.
 
 ## Renderer
 
@@ -144,15 +160,27 @@ import type { RenderInput } from "@mokly/mokly";
 import { renderToStaticMarkup } from "react-dom/server";
 
 export default function render(input: RenderInput): string {
-  const body = renderToStaticMarkup(
-    <ThemeProvider scheme={input.colorScheme}>{input.node}</ThemeProvider>,
+  return (
+    "<!doctype html>" +
+    renderToStaticMarkup(
+      <html lang="en">
+        <head>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>{input.entry.title}</title>
+          {input.stylesheets.map((href) => (
+            <link key={href} rel="stylesheet" href={href} />
+          ))}
+        </head>
+        <body data-theme={input.colorScheme}>{input.node}</body>
+      </html>,
+    )
   );
-  const links = input.stylesheets
-    .map((href) => `<link rel="stylesheet" href="${href}">`)
-    .join("");
-  return `<!doctype html><html lang="en"><head>${links}</head><body>${body}</body></html>`;
 }
 ```
+
+Wrap `input.node` in your product's providers when it needs them. React escapes
+the stylesheet URLs and title in this complete-document example.
 
 React and React DOM resolve from the config's own location, so the screens use
 one React runtime even when the executable came from an npx cache.
@@ -166,13 +194,14 @@ are matched case-insensitively; an empty list keeps them.
 
 ## Exported types
 
-| Type                                                      | Use                                           |
-| --------------------------------------------------------- | --------------------------------------------- |
-| `MoklyConfig`                                             | The object `defineConfig` takes               |
-| `StylesheetRule`                                          | One entry of `stylesheets`                    |
-| `ReviewConfig`                                            | The `review` object                           |
-| `WatchConfig`, `WatchRule`, `WatchAction`                 | The `watch` object and its rules              |
-| `ModuleResolutionConfig`, `ModuleLoader`                  | The `moduleResolution` object and its loaders |
-| `CompatibilityConfig`                                     | The `compatibility` object                    |
-| `Renderer`, `RenderInput`, `RenderResult`                 | Your renderer, its context and its result     |
-| `CompatibilityTransformer`, `CompatibilityTransformInput` | A temporary document bridge                   |
+| Type                                                      | Use                                               |
+| --------------------------------------------------------- | ------------------------------------------------- |
+| `RootConfig`                                              | One source directory and its discovery/path rules |
+| `MoklyConfig`                                             | The object `defineConfig` takes                   |
+| `StylesheetRule`                                          | One entry of `stylesheets`                        |
+| `ReviewConfig`                                            | The `review` object                               |
+| `WatchConfig`, `WatchRule`, `WatchAction`                 | The `watch` object and its rules                  |
+| `ModuleResolutionConfig`, `ModuleLoader`                  | The `moduleResolution` object and its loaders     |
+| `CompatibilityConfig`                                     | The `compatibility` object                        |
+| `Renderer`, `RenderInput`, `RenderResult`                 | Your renderer, its context and its result         |
+| `CompatibilityTransformer`, `CompatibilityTransformInput` | A temporary document bridge                       |

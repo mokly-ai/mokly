@@ -6,9 +6,10 @@ behavior, including imported CSS and optional PostCSS.
 
 ## Delivery Status
 
-Every setting in this document is implemented, including glob-based entry
-discovery through `entries` and the `entriesDir` shorthand delivered by the
-[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+Roots and their defaults, globs, prefixes and transparent directories are
+implemented. Matched Markdown files become document entries. Their sources and
+resource inputs remain protected and watched. A catalogue may contain only
+documents. Every setting below is implemented.
 The reserved CSS output directory, CSS delivery and `postcss` key are
 implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
 and [diagnostics](./mokly-imported-styles-errors.md) for exact errors.
@@ -27,9 +28,9 @@ globs operate on repo-relative POSIX paths; `publicExclude` uses the
 the following contract:
 
 - `mockupsDir`: output/catalogue root, such as `docs/mockups/generated`;
-- `entries`: repository-relative POSIX globs that define which regular files
-  are entry modules anywhere in the repository, or the `entriesDir` shorthand
-  for conventional `.mockup.ts` and `.mockup.tsx` files in one directory;
+- `roots`: the directories Mokly scans for entry modules and Markdown
+  documents, each with optional file globs, a path prefix, and transparent
+  directory names, defaulting to one `specs` root;
 - `repoRoot`: repository root, defaulting to the config file's directory;
 - a light-only or light-and-dark catalogue rendering set;
 - optional renderer-module path and declarative route-to-stylesheet rules;
@@ -42,7 +43,8 @@ the following contract:
 - an optional temporary document transformer for an existing consumer cutover.
 
 The resolved config has one repository root, one mockups root, one sorted
-resolved entry-module set, and normalized repo-relative POSIX paths. Config
+resolved source-file set across every root, and normalized repo-relative POSIX
+paths. Config
 validation rejects path traversal, output outside the repository (including
 through symlinks), entry modules inside internal or package-owned private roots,
 duplicate rules, and a watch path that cannot be classified safely. An entry
@@ -84,12 +86,18 @@ type ModuleLoader =
   | "ts"
   | "tsx";
 
+interface RootConfig {
+  dir: string; // config-relative directory inside repoRoot
+  files?: readonly string[]; // ["**/*.mockup.{ts,tsx}", "**/*.md"]
+  path?: string; // prefix for every derived path; none by default
+  transparent?: readonly string[]; // directory names removed from paths
+}
+
 interface MoklyConfig {
   colorSchemes?: readonly ColorScheme[]; // ["light"]
-  entries?: readonly string[]; // exactly one of entries or entriesDir
-  entriesDir?: string; // shorthand for [`${dir}/**/*.mockup.{ts,tsx}`]
   generatedOutput?: "committed" | "derived"; // "derived"
   mockupsDir: string;
+  roots?: readonly RootConfig[]; // [{ dir: "specs" }]
   publicExclude?: readonly string[]; // extends shipped public exclusions
   repoRoot?: string; // config directory
   renderer?: string;
@@ -127,11 +135,11 @@ interface MoklyConfig {
 }
 ```
 
-Filesystem fields (`repoRoot`, `entriesDir`, `mockupsDir`, `renderer`,
+Filesystem fields (`repoRoot`, `roots[].dir`, `mockupsDir`, `renderer`,
 compatibility transformer, module-resolution package
-roots, and Review `outDir`) are config-relative. `entries` globs are
-repository-relative, like `review.sharedImpact` and `watch.rules[].paths`;
-see [entry discovery](./mokly-configuration-discovery.md#entry-discovery). Stylesheet file paths are
+roots, and Review `outDir`) are config-relative. `roots[].files` globs are
+relative to their root; `review.sharedImpact` and `watch.rules[].paths` are
+repository-relative; see [roots](#roots). Stylesheet file paths are
 relative to `mockupsDir`; HTTP(S) stylesheet URLs are allowed.
 `colorSchemes` is a non-empty, duplicate-free subset of `"light" | "dark"`
 that must include `"light"`; it defaults to `["light"]` and normalizes to
@@ -158,22 +166,22 @@ generated, and transaction paths. An unowned public HTML file below
 `mockupsDir` remains consumer-authored and can match an explicit watch rule.
 The repository's `.mokly-cache/` and its physical aliases are always private
 and ignored before source exceptions or broad globs, and cannot be configured
-as an entry glob root, mockups, Review output, or an export destination.
-Two layouts are recommended. A sibling layout for a repository-root config
-uses `entriesDir: "docs/mockups/entries"`, `mockupsDir: "docs/mockups/generated"`,
-and `renderer: "docs/mockups/renderer.tsx"`; public assets live under
-`generated`, and README and tsconfig files can live beside it with the renderer
-and entry sources, so publication output never mixes with developer files. A
-co-located layout keeps each entry module beside the product component or
-screen it describes, for example `entries: ["src/**/*.mockup.{ts,tsx}"]` with
-the same `mockupsDir` and renderer. The `.mockup.ts` and `.mockup.tsx` names are
-the recommended convention selected by that example glob, not an additional
-runtime suffix rule. Both layouts are examples, not runtime defaults.
-Authored source directories and entry modules may sit below `mockupsDir` for a
-`docs/mockups/src` layout. They remain inventoried protected inputs rather than
-public output. When `entriesDir` supplies the entry set, that shorthand root
-must not equal `mockupsDir`; glob-matched modules may sit directly below
-`mockupsDir`. Generated routes are collision-checked against every inventoried
+as a root, mockups, Review output, or an export destination.
+The recommended layout is a dedicated spec tree: the default root `specs`
+holds screens, pages, documents, and flows by product area, with
+`mockupsDir: "specs/generated"` or another output directory and
+`renderer: "specs/renderer.tsx"`, so publication output never mixes with
+authored files. A component library adds a second root over its source tree,
+such as `{ dir: "packages/ui/src", path: "components" }`, so component mockups
+stay beside component code. The documented alternative co-locates every mockup
+beside the product code it describes, for example
+`{ dir: "src/features", transparent: ["__mockups__"] }`; both layouts produce
+the same catalogue paths under the [path contract](./mokly-paths.md). The
+`.mockup.ts` and `.mockup.tsx` names are the convention the default `files`
+pattern selects, not a runtime suffix rule.
+Authored source directories and entry modules may sit below `mockupsDir`. They
+remain inventoried protected inputs rather than public output. A root
+directory must not equal `mockupsDir`; matched files may sit below it. Generated routes are collision-checked against every inventoried
 source before writing, including through aliases. Review output must not overlap an entry
 module's directory or `mockupsDir` in either direction. Those boundaries are
 covered by the nested discovery, output collision, and public alias tests in
@@ -207,14 +215,33 @@ extension because it would emit an undelivered sibling stylesheet. React and
 React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
-The obsolete `legacy` config key is rejected, including `legacy: undefined`.
-Register every complete document explicitly with `definePage` or nested `page`;
-baseline compatibility never restores source discovery or old configuration.
+Configuration accepts only the declared fields above. An undeclared field fails
+with `config-invalid` and `unknown configuration field: <field>`.
 
-`postcss` and reserved-output configuration continues in
-[Imported CSS Configuration](./mokly-configuration-imported-styles.md).
+## Roots
 
-Entry discovery and public exclusions continue in
-[Configuration Discovery And Exclusions](./mokly-configuration-discovery.md).
-[Imported stylesheet delivery](./mokly-imported-styles.md) specifies reserved
-CSS output and consumer PostCSS.
+`roots` is a non-empty list of root objects. `dir` names an existing
+directory inside `repoRoot`, config-relative, outside `.mokly-cache/`, Review
+output, and package-owned private roots, and not equal to `mockupsDir`.
+`files` is a non-empty list of safe relative POSIX globs matched against paths
+relative to `dir` with the same minimatch syntax and path rules as
+`review.sharedImpact`; it defaults to `**/*.mockup.{ts,tsx}` and `**/*.md`.
+`path` is a path under the [segment grammar](./mokly-paths.md#segment-grammar)
+and prefixes every path derived from the root. `transparent` lists directory
+names, each a valid segment, that derivation removes. Omitting `roots` means
+`[{ dir: "specs" }]`. A missing directory, an empty or duplicate glob, two
+roots with the same `dir`, or an invalid `path` or `transparent` value fails
+with `config-invalid` naming `roots[<index>].<field>`.
+
+The [discovery contract](./mokly-configuration-discovery.md) defines traversal,
+folder-record ownership, filesystem races and the retained source inventory.
+
+Every matched
+entry module or Markdown file belongs to exactly one root, including through
+physical aliases. If a file matches two roots after exclusions, discovery fails
+with `config-invalid` and exact text `file <path> is matched by roots[<n>] and
+roots[<m>]`, naming its repository-relative path and both zero-based root
+indices. Overlapping directories remain legal when their file sets are disjoint.
+[Public exclusions](./mokly-public-exclusions.md) defines defaults, frozen
+resolution and safe glob matching. [Imported CSS configuration](./mokly-configuration-imported-styles.md)
+defines `postcss` and reserved output.

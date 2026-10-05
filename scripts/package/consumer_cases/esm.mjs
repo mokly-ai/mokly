@@ -5,6 +5,7 @@ import path from "node:path";
 import { runCommand } from "../command.mjs";
 import { smokeRegisteredComponents } from "../components.mjs";
 import { consumerPackage } from "../consumer_package.mjs";
+import { inspectMarkdownDocuments } from "../documents.mjs";
 import { inspectConsumerExport } from "../export.mjs";
 import {
   copyFixture,
@@ -46,17 +47,18 @@ export async function smokeEsmConsumer(context) {
   await fs.promises.mkdir(nested, { recursive: true });
   await runBin(root, ["build"], { cwd: nested });
   await runBin(root, ["check"]);
+  await inspectMarkdownDocuments(root, "mockups");
   const fragment = await fs.promises.readFile(
-    path.join(root, "mockups/screens/packed-home.desktop.html"),
+    path.join(root, "mockups/packed-home/index.desktop.html"),
     "utf8",
   );
   assert.match(fragment, /data-fixture="esm-desktop"/);
   assert.match(
     fragment,
-    /href="\.\/packed-detail\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
+    /href="\.\.\/packed-detail\/index\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
   );
   const coLocated = await fs.promises.readFile(
-    path.join(root, "mockups/screens/packed-card.desktop.html"),
+    path.join(root, "mockups/packed-card/index.desktop.html"),
     "utf8",
   );
   assert.match(coLocated, /data-packed-card=""/);
@@ -67,14 +69,50 @@ export async function smokeEsmConsumer(context) {
     ),
   );
   assert.equal(
-    packedManifest.entries.find((entry) => entry.id === "packed-card")
+    packedManifest.entries.find((entry) => entry.path === "packed-card")
       ?.sourcePath,
     "src/components/card/card.mockup.tsx",
   );
   assert.ok(
     packedManifest.sourceFiles.includes("src/components/card/card.tsx"),
   );
-  await smokeServer(root);
+  for (const [entryPath, sourcePath] of [
+    ["account/invoice", "entries/account/invoice.mockup.tsx"],
+    ["guides/getting-started", "entries/guides/getting-started.mockup.ts"],
+  ]) {
+    assert.equal(
+      packedManifest.entries.find((entry) => entry.path === entryPath)
+        ?.sourcePath,
+      sourcePath,
+    );
+  }
+  assert.deepEqual(packedManifest.folders, [
+    {
+      path: "account",
+      title: "Billing & invoices",
+      order: ["invoice"],
+      sourcePath: "entries/account/_folder.json",
+    },
+    {
+      path: "guides",
+      title: "Guides & notes",
+      order: ["getting-started"],
+      sourcePath: "entries/guides/getting-started.mockup.ts",
+    },
+  ]);
+  assert.ok(
+    packedManifest.sourceFiles.includes("entries/account/_folder.json"),
+  );
+  await smokeServer(root, [], async (url) => {
+    const shell = await fetch(`${url}/view/account/invoice/`);
+    assert.equal(shell.status, 200);
+    assert.match(await shell.text(), /Billing &amp; invoices/);
+    const document = await fetch(
+      `${url}/static/account/invoice/index.mobile.html`,
+    );
+    assert.equal(document.status, 200);
+    assert.match(await document.text(), /data-packed-derived="mobile"/);
+  });
   await runCommand("npx", ["--no-install", "mokly", "--help"], {
     cwd: root,
   });
@@ -93,19 +131,20 @@ export async function smokeEsmConsumer(context) {
     review = await response.json();
   });
   assert.equal(
-    review.screens.find((screen) => screen.id === "packed-home")?.state,
+    review.screens.find((screen) => screen.path === "packed-home")?.state,
     "changed",
   );
   await runBin(root, ["export", "--out", "published", "--base", "HEAD"], {
     cwd: nested,
   });
   const exported = await inspectConsumerExport(root, "published", "HEAD", [
-    "view/screens/packed-home.html",
+    "view/packed-home/index.html",
   ]);
   assert.equal(
-    exported.screens.find((screen) => screen.id === "packed-home")?.state,
+    exported.screens.find((screen) => screen.path === "packed-home")?.state,
     "changed",
   );
+  await inspectMarkdownDocuments(root, "published", true);
   await smokeViewer(root);
   await smokeRegisteredComponents(context, root);
   await smokeConsumerPublish(context, root);

@@ -8,10 +8,10 @@ const BACKGROUNDS = {
   light: "rgb(244, 244, 241)",
 } as const;
 
-const routes = [
-  ["screens/design-appearance-overview.html", "a selected screen"],
-  ["screens/design-appearance-side-by-side.html", "a comparison"],
-  ["screens/design-appearance-light-only.html", "a light-only screen"],
+const paths = [
+  ["design/browse/appearance/overview", "a selected screen"],
+  ["design/browse/appearance/workspaces/side-by-side", "a comparison"],
+  ["design/browse/appearance/states/light-only", "a light-only screen"],
 ] as const;
 
 async function artboard(
@@ -44,14 +44,16 @@ async function frameSource(
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  for (const [route, description] of routes) {
+  for (const [entryPath, description] of paths) {
     test(`${viewport}: the preview toggle switches ${description} between the mockup's schemes`, async ({
       page,
     }) => {
       await page.setViewportSize({ width: 1600, height: 1000 });
-      await page.goto(`/view/${route}`);
+      await page.goto(`/view/${entryPath}/`);
       await chooseViewport(page, viewport);
-      const row = page.locator(`a[data-nav-row][data-route="${route}"]`);
+      const row = page.locator(
+        `a[data-nav-row][data-route="${entryPath}/index.html"]`,
+      );
       await expect(row).toHaveAttribute("aria-current", "page");
 
       const wrap = page.locator(`.mbk-frame-${viewport}`);
@@ -74,7 +76,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       }
 
       await expect(row).toHaveAttribute("aria-current", "page");
-      await expect(page).toHaveURL(new RegExp(route.replace(/\./gu, "\\.")));
+      await expect(page).toHaveURL(`/view/${entryPath}/`);
     });
   }
 
@@ -82,7 +84,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/screens/design-appearance-light-only.html");
+    await page.goto("/view/design/browse/appearance/states/light-only/");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     for (const scheme of ["dark", "light", "dark"] as const) {
@@ -103,7 +105,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/screens/design-appearance-overview.html");
+    await page.goto("/view/design/browse/appearance/overview/");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     for (const scheme of ["dark", "light", "dark"] as const) {

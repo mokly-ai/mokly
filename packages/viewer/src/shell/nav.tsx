@@ -10,7 +10,7 @@ import { NavFilter, NavStatus } from "./nav_filter.js";
 import {
   catalogueNavSections,
   navNodeVisible,
-  navigationFiltering,
+  UNFILTERED_SELECTION,
 } from "./nav_model.js";
 import { NavigationResizeHandle } from "./nav_resize.js";
 import { NavRows } from "./nav_rows.js";
@@ -27,12 +27,13 @@ function SectionRows({
 }) {
   const store = useOptionalShellStore();
   const open = store?.state.disclosures[section.key] ?? true;
-  const filtered = store ? navigationFiltering(store.state.selection) : false;
-  const visible =
-    !store ||
-    section.children.some((node) =>
-      navNodeVisible(node, store.state.selection, store.context),
-    );
+  const visible = section.children.some((node) =>
+    navNodeVisible(
+      node,
+      store?.state.selection ?? UNFILTERED_SELECTION,
+      store?.context ?? context,
+    ),
+  );
   return (
     <details
       className="mbk-nav-section"
@@ -45,7 +46,7 @@ function SectionRows({
       }
       data-nav-disclosure={section.key}
       data-nav-section={section.id}
-      hidden={filtered && !visible}
+      hidden={!visible}
       onToggle={(event) => {
         if (store?.interactive && event.currentTarget.open !== open)
           store.setDisclosure(section.key, event.currentTarget.open);
@@ -80,7 +81,9 @@ export function CatalogueNav({
   const navigationId = useShellIdentifier("mb-nav");
   const sections = store?.sections ?? catalogueNavSections(catalogue);
   const scroll = useNavigationScroll(store, store?.state.route);
-  const changesStatus = context.changedIds ? "ready" : context.changesStatus;
+  const changesStatus = context.changedEntries
+    ? "ready"
+    : context.changesStatus;
   const waiting =
     store?.state.selection.view === "changes" &&
     (changesStatus === "pending" || changesStatus === "preparing");

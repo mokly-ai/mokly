@@ -56,38 +56,38 @@ test("Review classifies added, removed, and unchanged routes independently", asy
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const detail = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "details",
+    (entry) => entry.kind === "screen" && entry.path === "details",
   );
   const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   assert.ok(detail?.kind === "screen" && home?.kind === "screen");
   const old = {
     ...home,
-    id: "old-screen",
+    path: "old-screen",
     title: "Old screen",
-    useCaseIds: [],
+    useCasePaths: [],
   };
   const baseManifest = {
     ...compilation.manifest,
-    entries: [{ ...detail, useCaseIds: [] }, old],
+    entries: [{ ...detail, useCasePaths: [] }, old],
   };
   const gitFiles = new Map<string, string>([
     ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
     [
-      "mockups/screens/details.mobile.html",
-      textOutput(compilation.outputs, "screens/details.mobile.html") ?? "",
+      "mockups/details/index.mobile.html",
+      textOutput(compilation.outputs, "details/index.mobile.html") ?? "",
     ],
     [
-      "mockups/screens/details.desktop.html",
-      textOutput(compilation.outputs, "screens/details.desktop.html") ?? "",
+      "mockups/details/index.desktop.html",
+      textOutput(compilation.outputs, "details/index.desktop.html") ?? "",
     ],
     [
-      "mockups/screens/old-screen.mobile.html",
+      "mockups/old-screen/index.mobile.html",
       "<html><body>Old mobile</body></html>",
     ],
     [
-      "mockups/screens/old-screen.desktop.html",
+      "mockups/old-screen/index.desktop.html",
       "<html><body>Old desktop</body></html>",
     ],
   ]);
@@ -120,15 +120,16 @@ test("Review classifies added, removed, and unchanged routes independently", asy
     "HEAD",
   );
   assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "home")?.state,
+    artifact.result.screens.find((screen) => screen.path === "home")?.state,
     "added",
   );
   assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "old-screen")?.state,
+    artifact.result.screens.find((screen) => screen.path === "old-screen")
+      ?.state,
     "removed",
   );
   assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "details")?.state,
+    artifact.result.screens.find((screen) => screen.path === "details")?.state,
     "unchanged",
   );
 });

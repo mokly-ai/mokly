@@ -21,24 +21,28 @@ test("reserved configuration rejects only deliberate generated-directory targets
   const common = { mockupsDir: "mockups", repoRoot: "." };
   const invalid = [
     [
-      { entries: ["mockups/mokly-generated/**/*.tsx"] },
-      "entries must not select mokly-generated/: mockups/mokly-generated/**/*.tsx; narrow the entry glob to authored files",
-    ],
-    [
-      { entries: ["mockups/mokly-generated/styles/**/*.tsx"] },
-      "entries must not select mokly-generated/: mockups/mokly-generated/styles/**/*.tsx; narrow the entry glob to authored files",
-    ],
-    [
-      { entriesDir: "mockups/mokly-generated" },
-      "entriesDir must not select mokly-generated/: mockups/mokly-generated; choose a directory of authored entry modules",
-    ],
-    [
-      { entriesDir: "mockups/mokly-generated/children" },
-      "entriesDir must not select mokly-generated/: mockups/mokly-generated/children; choose a directory of authored entry modules",
+      { roots: [{ dir: ".", files: ["mockups/mokly-generated/**/*.tsx"] }] },
+      "roots[0].files must not select mokly-generated/: mockups/mokly-generated/**/*.tsx; narrow the file glob to authored files",
     ],
     [
       {
-        entriesDir: "entries",
+        roots: [
+          { dir: ".", files: ["mockups/mokly-generated/styles/**/*.tsx"] },
+        ],
+      },
+      "roots[0].files must not select mokly-generated/: mockups/mokly-generated/styles/**/*.tsx; narrow the file glob to authored files",
+    ],
+    [
+      { roots: [{ dir: "mockups/mokly-generated" }] },
+      "roots[0].dir must not select mokly-generated/: mockups/mokly-generated; choose a directory of authored entry modules",
+    ],
+    [
+      { roots: [{ dir: "mockups/mokly-generated/children" }] },
+      "roots[0].dir must not select mokly-generated/: mockups/mokly-generated/children; choose a directory of authored entry modules",
+    ],
+    [
+      {
+        roots: [{ dir: "entries" }],
         stylesheets: [
           { match: "**", stylesheets: ["mokly-generated/styles/a.css"] },
         ],
@@ -47,7 +51,7 @@ test("reserved configuration rejects only deliberate generated-directory targets
     ],
     [
       {
-        entriesDir: "entries",
+        roots: [{ dir: "entries" }],
         stylesheets: [
           {
             match: "**",
@@ -60,7 +64,7 @@ test("reserved configuration rejects only deliberate generated-directory targets
     ],
     [
       {
-        entriesDir: "entries",
+        roots: [{ dir: "entries" }],
         stylesheets: [
           {
             match: "**",
@@ -72,22 +76,28 @@ test("reserved configuration rejects only deliberate generated-directory targets
       "stylesheets[0].darkStylesheets must not reference mokly-generated/: mokly-generated/styles/a.css; link imported CSS through the renderer instead",
     ],
     [
-      { entriesDir: "entries", review: { outDir: "mockups/mokly-generated" } },
+      {
+        roots: [{ dir: "entries" }],
+        review: { outDir: "mockups/mokly-generated" },
+      },
       "review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory",
     ],
     [
       {
-        entriesDir: "entries",
+        roots: [{ dir: "entries" }],
         review: { outDir: "mockups/mokly-generated/reviews" },
       },
       "review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory",
     ],
     [
-      { entriesDir: "entries", publicExclude: ["mokly-generated/**"] },
+      { roots: [{ dir: "entries" }], publicExclude: ["mokly-generated/**"] },
       "publicExclude must not start with mokly-generated/: mokly-generated/**; narrow the exclusion to consumer-owned paths",
     ],
     [
-      { entriesDir: "entries", publicExclude: ["{public,mokly-generated}/**"] },
+      {
+        roots: [{ dir: "entries" }],
+        publicExclude: ["{public,mokly-generated}/**"],
+      },
       "publicExclude must not start with mokly-generated/: {public,mokly-generated}/**; narrow the exclusion to consumer-owned paths",
     ],
   ] as const;
@@ -106,7 +116,7 @@ test("reserved configuration rejects only deliberate generated-directory targets
   ])
     assert.deepEqual(
       resolveConfig(
-        { ...common, entriesDir: "entries", publicExclude },
+        { ...common, roots: [{ dir: "entries" }], publicExclude },
         fixture.configPath,
       ).publicExclude.slice(-1),
       publicExclude,
@@ -134,7 +144,7 @@ test("broad entry glob skips generated tree while discovering co-located entries
   );
   await fs.writeFile(
     fixture.configPath,
-    'export default { entries: ["mockups/**/*.mockup.tsx"], mockupsDir: "mockups", repoRoot: ".", review: { outDir: ".review" } };\n',
+    'export default { roots: [{ dir: ".", files: ["mockups/**/*.mockup.tsx"] }], mockupsDir: "mockups", repoRoot: ".", review: { outDir: ".review" } };\n',
   );
   assert.deepEqual((await loadConfig(fixture.root)).entryModules, [
     path.join(fixture.mockupsDir, "actual.mockup.tsx"),
@@ -223,20 +233,20 @@ test("configured paths cannot alias the reserved directory", async (t) => {
   const common = { repoRoot: ".", mockupsDir: "mockups" };
   for (const [value, message] of [
     [
-      { entriesDir: "alias" },
-      "entriesDir must not select mokly-generated/: alias; choose a directory of authored entry modules",
+      { roots: [{ dir: "alias" }] },
+      "roots[0].dir must not select mokly-generated/: alias; choose a directory of authored entry modules",
     ],
     [
-      { entries: ["alias/**/*.tsx"] },
-      "entries must not select mokly-generated/: alias/**/*.tsx; narrow the entry glob to authored files",
+      { roots: [{ dir: ".", files: ["alias/**/*.tsx"] }] },
+      "roots[0].files must not select mokly-generated/: alias/**/*.tsx; narrow the file glob to authored files",
     ],
     [
-      { entriesDir: "entries", review: { outDir: "alias" } },
+      { roots: [{ dir: "entries" }], review: { outDir: "alias" } },
       "review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory",
     ],
     [
       {
-        entriesDir: "entries",
+        roots: [{ dir: "entries" }],
         stylesheets: [{ match: "**", stylesheets: ["alias.css"] }],
       },
       "stylesheets[0].stylesheets must not reference mokly-generated/: alias.css; link imported CSS through the renderer instead",

@@ -17,7 +17,7 @@ test("export reserves one writer, restores failed installs, and cleans its stage
   await fs.promises.mkdir(output);
   await fs.promises.writeFile(path.join(output, "index.html"), "Previous");
   await writeOwnershipMarker(output);
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from.endsWith("/stage"))
@@ -47,7 +47,7 @@ test("failed rollback retains the previous site and reservation for recovery", a
   context.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from === output) return fs.promises.rename(from, to);
@@ -64,7 +64,7 @@ test("cleanup failures accurately identify an installed site and retained backup
   context.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rmdir: async () => {
       throw new Error("injected cleanup failure");
@@ -92,7 +92,7 @@ test("cancellation during replacement restores the previous output", async (cont
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
   const controller = new AbortController();
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       await fs.promises.rename(from, to);
@@ -124,7 +124,7 @@ test("failed cancellation rollback is recovery, not cancellation", async (contex
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
   const controller = new AbortController();
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from === transaction.backup)
@@ -152,7 +152,7 @@ test("cancellation without previous output keeps its install wrapper marked", as
   const output = path.join(fixture.root, "site");
   const abort = new Error("injected stage cancellation");
   abort.name = "AbortError";
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from === transaction.stage) throw abort;
@@ -181,7 +181,7 @@ test("backup cleanup failure outranks a later cancellation", async (context) => 
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
   const controller = new AbortController();
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       await fs.promises.rename(from, to);

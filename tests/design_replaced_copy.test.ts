@@ -26,8 +26,7 @@ test("no design entry renders copy a protocol replaced", async () => {
   const { outputs } = await designCatalogue;
   const designs = [...outputs].filter(
     ([route]) =>
-      (route.startsWith("screens/design-") ||
-        route.startsWith("components/design-ui-")) &&
+      (route.startsWith("design/") || route.startsWith("design/library/")) &&
       route.endsWith(".html"),
   );
   assert.ok(designs.length > 0);

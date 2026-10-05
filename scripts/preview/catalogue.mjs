@@ -27,7 +27,7 @@ import { copyPublicFiles } from "../../dist/publication/resources.js";
 import { prepareReviewRepository } from "../../dist/review/prepare.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 
-import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
+import { stagePreviewArtifact } from "./artifact.mjs";
 import { publicationSnapshot } from "./baseline.mjs";
 import { captureAssets, capturePage, writeText } from "./capture.mjs";
 import {
@@ -40,20 +40,19 @@ import { capturePublicationInputs } from "./inputs.mjs";
 
 /** Capture already-built output; the supported npm command builds before this boundary. */
 export async function buildPreview(config, output, options = {}) {
-  const ownership = previewOwnership(config);
   const capability = publicationOptions(options);
   assertSafeOutput(output, config.repoRoot);
   const contextRoot = path.join(config.repoRoot, ".context");
   const destination = resolveExportOutput(config, output, contextRoot);
   try {
-    await assertExportOwnership(destination, ownership);
+    await assertExportOwnership(destination);
   } catch (cause) {
     throw new Error(
       `refusing to replace unowned preview directory: ${output}. ${errorMessage(cause)}`,
       { cause },
     );
   }
-  const transaction = await ExportTransaction.open(destination, ownership);
+  const transaction = await ExportTransaction.open(destination);
   try {
     await withExportCleanup(
       async () => {
@@ -122,8 +121,8 @@ export async function buildPreview(config, output, options = {}) {
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
-            const route = viewHref(entry.kind, entry.id);
-            const name = route.slice(1);
+            const route = viewHref(entry.path);
+            const name = `${route.slice(1)}index.html`;
             await capturePage(server.url, route, stage, name);
             capturedShells.add(name);
           }
@@ -165,7 +164,7 @@ export async function buildPreview(config, output, options = {}) {
             : incompatible
               ? "unavailable"
               : "disabled",
-          changedIds: changes?.changedIds,
+          changedEntries: changes?.changedEntries,
           evidence: snapshot.componentChanges,
           comparison: comparison?.result,
           comparisonUrl: comparison

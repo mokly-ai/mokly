@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedFile } from "../build/generated_file.js";
+import { loadConsumerGraph } from "../build/load_graph.js";
 import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -26,4 +27,18 @@ export function acceptedGeneratedStatic(
     }
   }
   return files;
+}
+
+/** Resolve the accepted stylesheet inventory once when starting a server. */
+export async function initialGeneratedStatic(
+  config: ResolvedConfig,
+  runtime?: ComponentRuntime,
+): Promise<ReadonlyMap<string, GeneratedFile>> {
+  const expected =
+    !runtime &&
+    config.generatedOutput === "committed" &&
+    fs.existsSync(path.join(config.mockupsDir, GENERATED_DIRECTORY))
+      ? new Set((await loadConsumerGraph(config, false)).styleOutputs.keys())
+      : new Set<string>();
+  return acceptedGeneratedStatic(config, runtime, expected);
 }

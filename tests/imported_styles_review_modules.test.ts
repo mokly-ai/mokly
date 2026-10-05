@@ -71,7 +71,7 @@ test("an unrelated on-demand view is valid when another entry uses module image-
   );
   await fs.writeFile(
     path.join(fixture.entriesDir, "other.mockup.ts"),
-    'import classes from "./hero.module.css"; export const mockups = classes.hero ? [] : undefined;',
+    'import classes from "./hero.module.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Other", description: "Module stylesheet root", dependencies: [], relatedDocs: [], render: () => `<html><body class="${classes.hero}">Other</body></html>` });',
   );
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   assert.ok(
@@ -81,7 +81,7 @@ test("an unrelated on-demand view is valid when another entry uses module image-
   );
   assert.match(
     new DocumentCompiler(runtime, runtimeGraph(runtime)).render(
-      "screens/home.mobile.html",
+      "home/index.mobile.html",
     ).html,
     /home/i,
   );

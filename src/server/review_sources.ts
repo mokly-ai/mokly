@@ -19,7 +19,7 @@ export function selectedReviewSource(
   manifest: CatalogueMetadata,
   changes: ComponentChangeSnapshot | undefined,
 ): SelectedReviewSource | undefined {
-  if (manifest.schemaVersion !== 7 || !changes?.comparison || !changes.result)
+  if (manifest.schemaVersion !== 8 || !changes?.comparison || !changes.result)
     return;
   return {
     ...changes.comparison,
@@ -38,16 +38,22 @@ export function removedPagePreviewSource(
   const removedEntries = removedManifestEntries(
     catalogue.manifest,
     changes.baseline,
+    changes.pairing?.moves,
   );
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    movedEntries:
+      changes.pairing?.moves.map(({ path, previousPath }) => ({
+        path,
+        previousPath,
+      })) ?? [],
     baseline: changes.baseline,
     baseCommit: changes.comparison.baseCommit,
     baseRef: changes.comparison.baseRef,
-    changedIds: [
+    changedEntries: [
       ...new Set([
-        ...(changes.changedIds ?? []),
-        ...removedEntries.map(({ entry }) => entry.id),
+        ...(changes.changedEntries ?? []),
+        ...removedEntries.map(({ entry }) => entry.path),
       ]),
     ].sort(),
     removedEntries,
@@ -63,14 +69,14 @@ type LivePublicInput = Omit<
 export function livePublicInput(
   catalogue: Catalogue,
   changesStatus: CatalogueProjectionInput["changesStatus"],
-  changedIds: readonly string[] | undefined,
+  changedEntries: readonly string[] | undefined,
   evidence: ComponentChangeSnapshot | undefined,
   comparison: PublicComparison | undefined,
 ): LivePublicInput {
   return {
     catalogue,
     changesStatus,
-    changedIds,
+    changedEntries,
     evidence,
     comparison: comparison?.result,
     comparisonUrl: comparison?.path ?? null,
@@ -90,14 +96,14 @@ function servedScreenPreviews(
       screen.after === undefined &&
       screen.views.length > 0 &&
       screen.views.every((view) => view.state === "removed")
-        ? [screen.id]
+        ? [screen.path]
         : [],
     ),
   );
   return new Map(
     catalogue.removedEntries.flatMap(({ entry }) =>
-      entry.kind === "screen" && complete.has(entry.id)
-        ? [[entry.id, { kind: "screen" as const }]]
+      entry.kind === "screen" && complete.has(entry.path)
+        ? [[entry.path, { kind: "screen" as const }]]
         : [],
     ),
   );

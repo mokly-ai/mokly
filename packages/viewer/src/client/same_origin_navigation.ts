@@ -35,7 +35,10 @@ export function classifyFrameActivation(
   if (target.kind === "invalid") return undefined;
   const modified = candidate.metaKey || candidate.ctrlKey || candidate.shiftKey;
   return {
-    ...destination,
+    screenPath: destination.path,
+    ...(destination.fragment === undefined
+      ? {}
+      : { fragment: destination.fragment }),
     target,
     activation:
       candidate.eventType === "auxclick"

@@ -51,7 +51,9 @@ test("scoped bootstraps for every entry shape round-trip canonical bytes", () =>
 });
 
 test("the live reader accepts only exact entry scope", () => {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   const view = target(screen);
   const complete = { catalogue: model, context, view };
   const scoped = JSON.parse(scopedBytes(view));
@@ -88,7 +90,9 @@ test("the live state reader leaves static external references unchanged", () => 
 });
 
 test("public catalogue reading still rejects shell-only omitted usage", () => {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   const value = JSON.parse(scopedBytes(target(screen)));
   assert.throws(
     () => readCatalogue(value.catalogue),
@@ -98,7 +102,7 @@ test("public catalogue reading still rejects shell-only omitted usage", () => {
 
 test("scoped reader rejects omitted usage on the selected entry", () => {
   const value = screenBootstrapValue();
-  value.catalogue.screens[0].views[0].usage = { status: "omitted" };
+  value.catalogue.screens[1].views[0].usage = { status: "omitted" };
   assert.throws(
     () => readScopedShellBootstrap(value),
     /in-scope usage cannot be omitted/i,
@@ -136,13 +140,13 @@ test("scoped reader rejects missing and evidence-carrying omitted usage", () => 
 test("scoped reader retains hierarchy, axis, relationship and snapshot checks", () => {
   const mutations = [
     (value: ReturnType<typeof screenBootstrapValue>) => {
-      value.catalogue.tree.pages = [];
+      value.catalogue.tree = [];
     },
     (value: ReturnType<typeof screenBootstrapValue>) => {
       value.catalogue.screens[0].views.pop();
     },
     (value: ReturnType<typeof screenBootstrapValue>) => {
-      value.catalogue.screens[1].navPath = ["Wrong"];
+      value.catalogue.screens[1].path = "wrong/home";
     },
     (value: ReturnType<typeof screenBootstrapValue>) => {
       value.catalogue.removedEntries[1].snapshotId =
@@ -158,9 +162,11 @@ test("scoped reader retains hierarchy, axis, relationship and snapshot checks", 
 
 test("scoped reader rejects unknown targets and complete live bootstraps", () => {
   const unknown = screenBootstrapValue();
-  unknown.view.entryId = "not-present";
+  unknown.view.entryPath = "not-present";
   assert.throws(() => readScopedShellBootstrap(unknown), /invalid.*target/i);
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   assert.throws(
     () =>
       readScopedShellBootstrap({
@@ -172,25 +178,25 @@ test("scoped reader rejects unknown targets and complete live bootstraps", () =>
   );
 });
 
-test("the canonical public v3 fixture bytes remain unchanged", () => {
+test("the canonical public v4 fixture bytes remain unchanged", () => {
   const bytes = fs.readFileSync(
     new URL(
-      "../../../docs/protocol/fixtures/catalogue-v3.json",
+      "../../../docs/protocol/fixtures/catalogue-v4.json",
       import.meta.url,
     ),
   );
-  assert.equal(bytes.byteLength, 9_506);
+  assert.equal(bytes.byteLength, 12_418);
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "3266711eeece53579204bcec65e9e3106bd6028a8483b67124bcc53d7a3ce5ad",
+    "0105ff635e68cc0ed00ed84d5aafdddb638cd834c7fb416cf9738c1b06f8eafc",
   );
   assert.doesNotThrow(() => readCatalogue(JSON.parse(bytes.toString("utf8"))));
 });
 
-function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
+function target(entry: Pick<CatalogueRecord, "path" | "kind">) {
   return {
     kind: "target" as const,
-    entryId: entry.id,
+    entryPath: entry.path,
     entryKind: entry.kind,
   };
 }
@@ -204,14 +210,16 @@ function scopedBytes(view: ShellBootstrapView): string {
 }
 
 function screenBootstrapValue() {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   return JSON.parse(scopedBytes(target(screen)));
 }
 
 function firstVariant(): CatalogueComponentVariant {
   return model.components.find(
     (entry): entry is CatalogueComponentVariant =>
-      "variantOf" in entry && entry.variantOf === "action",
+      "variantOf" in entry && entry.variantOf === "components/action",
   )!;
 }
 
@@ -222,6 +230,6 @@ function shellVariant(value: {
   }>;
 }) {
   return value.components.find(
-    (entry) => "variantOf" in entry && entry.variantOf === "action",
+    (entry) => "variantOf" in entry && entry.variantOf === "components/action",
   )!;
 }

@@ -5,7 +5,8 @@
 The repository preview builder publishes current content by default; an option
 adds a pinned comparison. [Optional Published Changes](../../plans/optional-published-changes.md)
 records verification, and [removed previews](./mokly-removed-previews.md) owns
-packaged history. The npm CLI is unchanged.
+packaged history. The npm CLI is unchanged. Shell and preview file names use
+the [path-derived artifact layout](./mokly-artifact-paths.md).
 
 ## Publication Option
 
@@ -87,11 +88,12 @@ The destination must retain its captured identity until installation; an unowned
 replacement is preserved, including one introduced during capture. Retain the
 writer reservation, OS-enforced non-replacing moves, and safe backup recovery
 defined by the [export recovery contract](./mokly-export-recovery.md).
-Only the repository adapter may migrate the prior preview ownership marker.
-Migration retains valid public routes beneath build-directory names such as
-`target` and `node_modules`, while private/source names remain disallowed.
+The repository adapter also rejects prior preview markers as replacement proof
+under the [current ownership rule](./mokly-export-safety.md).
+The [generated inventory rule](./mokly-export-public-files.md#generated-inventory)
+keeps exact generated routes public while private/source names stay denied.
 Its owned reservation namespace remains after cleanup, with no active locks.
-Each entry's shell is written once at its derived `view/<route>`; current-only
+Each entry's shell is written once at `view/<path>/index.html`; current-only
 shell metadata explicitly sets `comparisonUrl: null` and never requests a
 development comparison endpoint.
 
@@ -108,8 +110,9 @@ Copy eligible public file and directory aliases as regular files at their
 logical routes. Every copied target must also stay inside the real `mockupsDir`
 and pass the shared source/internal-metadata policy. Apply generated-artifact
 and staging/destination exclusions to both identities. After copying, validate
-the presence of every current page and light/dark screen fragment named by the
-manifest, independently of the enumerated file list. Validate every exported
+the presence of every current page, document, and light/dark screen view
+derived from the manifest's paths, independently of the enumerated file list.
+Validate every exported
 HTML/CSS resource reference against confined regular files in
 the staged static tree, including transitive references. An unavailable resource,
 including a reference through a skipped cycle or excluded alias, fails before

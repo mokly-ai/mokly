@@ -22,15 +22,17 @@ test("derived Changes and selected comparisons use compiled source when generate
     "HEAD",
     await prepareReviewRepository(fixture.config, "HEAD"),
   );
-  assert.deepEqual(changes.changedIds, ["home", "tour"]);
+  assert.deepEqual(changes.changedEntries, ["home", "tour"]);
+  assert.equal(changes.schemaVersion, 2);
+  assert.deepEqual(changes.movedEntries, []);
   const snapshot = changes.componentChanges!;
   assert.ok(snapshot.comparison);
   assert.ok(snapshot.comparison.headOutputs);
   const { compileCatalogue } = await import("../dist/build/compile.js");
   const current = await compileCatalogue(fixture.config);
-  await fs.mkdir(path.join(fixture.mockupsDir, "screens"), { recursive: true });
+  await fs.mkdir(path.join(fixture.mockupsDir, "home"), { recursive: true });
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+    path.join(fixture.mockupsDir, "home/index.mobile.html"),
     "wrong local bytes",
   );
   const comparison = await new RepositorySelectedReview(
@@ -42,15 +44,15 @@ test("derived Changes and selected comparisons use compiled source when generate
       after: current.manifest,
       result: snapshot.result!,
     },
-    { id: "home" },
+    { path: "home" },
     new AbortController().signal,
   );
   assert.match(
-    String(comparison.files.get("snapshots/after/screens/home.mobile.html")),
+    String(comparison.files.get("snapshots/after/home/index.mobile.html")),
     /Source-only change/,
   );
   assert.doesNotMatch(
-    String(comparison.files.get("snapshots/before/screens/home.mobile.html")),
+    String(comparison.files.get("snapshots/before/home/index.mobile.html")),
     /Source-only change/,
   );
 });

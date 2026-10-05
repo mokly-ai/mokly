@@ -71,7 +71,7 @@ interface ViewReview {
 }
 ```
 
-Every [review result v4](./mokly-changes-serving.md#comparison-engine) view record
+Every [review result v5](./mokly-changes-serving.md#comparison-engine) view record
 carries these fields. Results without them remain valid and mean the analysis
 did not run.
 

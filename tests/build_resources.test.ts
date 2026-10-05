@@ -68,7 +68,7 @@ async function configureRenderer(
 ): Promise<void> {
   await fs.promises.writeFile(
     configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", renderer: "renderer.ts", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", renderer: "renderer.ts", repoRoot: "." };\n',
   );
   await writeRenderer(root, "<main>Ready</main>");
 }

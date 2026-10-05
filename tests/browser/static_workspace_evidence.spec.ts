@@ -32,7 +32,7 @@ test.beforeAll(async () => {
   );
   await fs.cp(fixture.output, site, { recursive: true });
   actionPage = await fs.readFile(
-    path.join(site, "view/components/action.html"),
+    path.join(site, "view/action/index.html"),
     "utf8",
   );
   server = await serveStaticFiles(site);
@@ -47,17 +47,36 @@ test.afterAll(async () => {
 test("static navigation retains the destination's route-specific evidence", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await expectHydratedDocument(page);
   await expectAffectedHome(page);
 
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await retainHydratedDocument(page);
-  await page.locator('a[data-route="components/action.html"]').click();
-  await expect(page).toHaveURL(`${server.url}/view/components/action.html`);
+  await page.locator('a[data-route="action/index.html"]').click();
+  await expect(page).toHaveURL(`${server.url}/view/action/`);
   await expectRetainedDocument(page);
   await expectAffectedHome(page);
 });
+
+for (const suffix of ["", "/", "/index.html"])
+  test(`static destination evidence accepts host URL form ${suffix || "extensionless"}`, async ({
+    page,
+  }) => {
+    await page.goto(`${server.url}/view/home/`);
+    await retainHydratedDocument(page);
+    if (suffix !== "/")
+      await page.route("**/view/action/", async (route) => {
+        await route.fulfill({
+          status: 302,
+          headers: { location: `/view/action${suffix}` },
+        });
+      });
+    await page.locator('a[data-route="action/index.html"]').click();
+    await expect(page).toHaveURL(`${server.url}/view/action/`);
+    await expectRetainedDocument(page);
+    await expectAffectedHome(page);
+  });
 
 test("static route evidence cannot cross a rapid Back and Forward replacement", async ({
   page,
@@ -71,7 +90,7 @@ test("static route evidence cannot cross a rapid Back and Forward replacement", 
   const firstFinished = new Promise<void>((resolve) => {
     finishFirst = resolve;
   });
-  await page.route("**/view/components/action.html", async (route) => {
+  await page.route("**/view/action/", async (route) => {
     reads++;
     if (reads === 1) await gate;
     try {
@@ -83,22 +102,22 @@ test("static route evidence cannot cross a rapid Back and Forward replacement", 
     }
   });
 
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await retainHydratedDocument(page);
-  await page.locator('a[data-route="components/action.html"]').click();
-  await expect(page).toHaveURL(`${server.url}/view/components/action.html`);
+  await page.locator('a[data-route="action/index.html"]').click();
+  await expect(page).toHaveURL(`${server.url}/view/action/`);
   await expectRetainedDocument(page);
   await expect.poll(() => reads).toBe(1);
 
   const back = page.goBack();
-  await expect(page).toHaveURL(`${server.url}/view/screens/home.html`);
+  await expect(page).toHaveURL(`${server.url}/view/home/`);
   await expectRetainedDocument(page);
   release();
   await Promise.all([back, firstFinished]);
   await expectRelatedAction(page);
 
   await page.goForward();
-  await expect(page).toHaveURL(`${server.url}/view/components/action.html`);
+  await expect(page).toHaveURL(`${server.url}/view/action/`);
   await expectRetainedDocument(page);
   await expectAffectedHome(page);
   expect(reads).toBe(2);
@@ -116,7 +135,7 @@ for (const [boundary, corrupt] of [
     const responseServed = new Promise<void>((resolve) => {
       served = resolve;
     });
-    await page.route("**/view/components/action.html", async (route) => {
+    await page.route("**/view/action/", async (route) => {
       await route.fulfill({
         body: corrupt(actionPage),
         contentType: "text/html",
@@ -124,10 +143,10 @@ for (const [boundary, corrupt] of [
       served();
     });
 
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/home/`);
     await retainHydratedDocument(page);
-    await page.locator('a[data-route="components/action.html"]').click();
-    await expect(page).toHaveURL(`${server.url}/view/components/action.html`);
+    await page.locator('a[data-route="action/index.html"]').click();
+    await expect(page).toHaveURL(`${server.url}/view/action/`);
     await expectRetainedDocument(page);
     await responseServed;
     await page.evaluate(

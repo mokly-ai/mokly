@@ -29,7 +29,7 @@ test(
       validEntrySource(),
       {
         extraConfig:
-          'stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }], watch: { debounceMs: 0 },',
+          'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }], watch: { debounceMs: 0 },',
       },
       async ({ mockupsDir }) => {
         await fs.writeFile(
@@ -72,10 +72,10 @@ test(
           `${file} must invalidate its comparison`,
         );
         const result = (await fresh.json()) as ReviewResult;
-        const view = result.screens.find((screen) => screen.id === "home")
+        const view = result.screens.find((screen) => screen.path === "home")
           ?.views[0];
         assert.ok(view);
-        const afterPath = `snapshots/after/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`;
+        const afterPath = `snapshots/after/${viewRoute("home", view.viewport, view.colorScheme)}`;
         const asset = await fetch(
           new URL(`../${file}`, new URL(afterPath, fresh.url)),
         );

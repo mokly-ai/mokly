@@ -33,11 +33,11 @@ for (const mode of ["committed", "derived"] as const) {
       assert.deepEqual(
         artifact.result.screens
           .filter((screen) => screen.state === "changed")
-          .map((screen) => screen.id),
+          .map((screen) => screen.path),
         ["home"],
       );
-      assert.equal(live.changedIds?.includes("home"), true);
-      assert.equal(live.changedIds?.includes("details"), false);
+      assert.equal(live.changedEntries?.includes("home"), true);
+      assert.equal(live.changedEntries?.includes("details"), false);
       assert.ok(
         !artifact.result.sharedImpact.includes(
           `entries/${path.basename(fixture.cssPath)}`,
@@ -61,15 +61,16 @@ for (const mode of ["committed", "derived"] as const) {
       "HEAD",
     );
     assert.equal(
-      artifact.result.screens.find((screen) => screen.id === "home")?.state,
+      artifact.result.screens.find((screen) => screen.path === "home")?.state,
       "changed",
     );
     assert.equal(
-      artifact.result.screens.find((screen) => screen.id === "details")?.state,
+      artifact.result.screens.find((screen) => screen.path === "details")
+        ?.state,
       "changed",
     );
     assert.equal(
-      artifact.result.screens.find((screen) => screen.id === "secondary")
+      artifact.result.screens.find((screen) => screen.path === "secondary")
         ?.state,
       "unchanged",
     );
@@ -80,9 +81,9 @@ for (const mode of ["committed", "derived"] as const) {
       fixture.repository,
       mode === "committed" ? compilation.manifest : undefined,
     );
-    assert.equal(live.changedIds.includes("home"), true);
-    assert.equal(live.changedIds.includes("details"), true);
-    assert.equal(live.changedIds.includes("secondary"), false);
+    assert.equal(live.changedEntries.includes("home"), true);
+    assert.equal(live.changedEntries.includes("details"), true);
+    assert.equal(live.changedEntries.includes("secondary"), false);
     assert.ok(live.componentChanges?.comparison);
     assert.ok(
       !live.componentChanges.comparison.changedPaths.includes(
@@ -104,7 +105,7 @@ for (const mode of ["committed", "derived"] as const) {
       "HEAD",
     );
     assert.equal(
-      artifact.result.screens.find((screen) => screen.id === "home")?.state,
+      artifact.result.screens.find((screen) => screen.path === "home")?.state,
       "changed",
     );
   });

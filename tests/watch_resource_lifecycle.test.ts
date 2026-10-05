@@ -21,7 +21,7 @@ test("unmatched stylesheet rules do not require unused resource files", async (c
     ...fixture.config,
     stylesheets: [
       ...fixture.config.stylesheets,
-      { match: "screens/absent.html", stylesheets: ["missing.css"] },
+      { match: "absent/index.html", stylesheets: ["missing.css"] },
     ],
   };
   const compilation = await compileCatalogue(config);
@@ -65,7 +65,7 @@ test("failed output discards resource candidates and successful adoption removes
   assert.equal(oldWatcher.ignore?.(next), true);
   assert.equal(
     oldWatcher.ignore?.(
-      path.join(fixture.mockupsDir, "screens/home.desktop.html"),
+      path.join(fixture.mockupsDir, "home/index.desktop.html"),
     ),
     true,
   );

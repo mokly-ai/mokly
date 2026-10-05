@@ -50,7 +50,7 @@ export function checkCompilation(
   const unclaimedGuidance =
     unclaimed.length === 0
       ? ""
-      : "\nUnclaimed generated files are not changed by build; delete them or restore the source under a configured entry glob.";
+      : "\nUnclaimed generated files are not changed by build; delete them or restore the source under a configured root file glob.";
   throw new MoklyError(
     "build-invalid",
     `committed output does not match source; run mokly build:\n${groups.join("\n")}${unclaimedGuidance}`,

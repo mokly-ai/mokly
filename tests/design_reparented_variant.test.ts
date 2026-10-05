@@ -40,7 +40,7 @@ const common = {
   colorSchemes: ["light"] as const,
   declaredDependencies: [],
   description: "Fixture",
-  navPath: [],
+
   relatedDocs: [],
   sourcePath: "fixture.mockup.tsx",
 };
@@ -48,10 +48,10 @@ const common = {
 function screen(id: string, title: string, variantOf?: string): ManifestScreen {
   return {
     ...common,
-    id,
+    path: id,
     title,
     kind: "screen",
-    useCaseIds: [],
+    useCasePaths: [],
     ...(variantOf === undefined ? {} : { variantOf }),
   };
 }
@@ -78,38 +78,36 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
   const entries: ManifestEntry[] = [
     {
       ...screen("workspace", "Workspace"),
-      navPath: ["Example", "Screens"],
     },
     {
       ...screen("welcome", "Welcome", "workspace"),
-      navPath: ["Example", "Screens"],
     },
   ];
-  const { hierarchy, issues } = analyzeHierarchy(entries);
-  assert.deepEqual(issues, []);
-  const [pages] = buildNavSections(hierarchy, [
+  const { hierarchy } = analyzeHierarchy(entries);
+  const [specs] = buildNavSections(hierarchy, [
     {
       entryId: "welcome-error",
       entryKind: "screen",
       key: "removed:welcome-error",
       kind: "leaf",
       label: "Save failed · Removed",
-      variantOf: "welcome",
+      title: "Save failed",
+      parentId: "welcome",
     },
   ]);
-  assert.ok(pages);
-  assert.equal(pages.id, "pages");
+  assert.ok(specs);
+  assert.equal(specs.id, "specs");
   const context: ShellContext = {
     base: "",
-    changedIds: ["welcome-error"],
+    changedEntries: ["welcome-error"],
     changesStatus: "ready",
     updateVersion: 0,
   };
-  const expected = visibleRows(pages.children, context);
+  const expected = visibleRows(specs.children, context);
   assert.deepEqual(expected, ["Save failed · Removed"]);
 
   const { document } = await designDocument(
-    "design-browse-variant-reparented",
+    "design/browse/variants/variant-reparented",
     "desktop",
   );
   assert.deepEqual(rowLabels(document), expected);
@@ -119,7 +117,9 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
     (row) => rowLabel(row) === "Save failed · Removed",
   );
   assert.equal(attribute(removed!, "class"), "mbk-nav-row active");
-  assert.deepEqual(filterTargets(document), [["All", "design-browse-home"]]);
+  assert.deepEqual(filterTargets(document), [
+    ["All", "design/browse/views/home"],
+  ]);
   assert.match(
     textContent(document),
     /this removed state stays as one flat Changes row instead of nesting a second variant level/,
@@ -139,7 +139,7 @@ test("component mockup rows and glyph match the runtime Components branch", asyn
       publicShellContext(catalogue, { base: "", updateVersion: 0 }),
     ),
   );
-  const mockup = await designDocument("design-component-overview", "desktop");
+  const mockup = await designDocument("design/components/overview", "desktop");
   const section = (document: typeof runtime) => {
     const found = byClass(document, "mbk-nav-section").find(
       (candidate) => attribute(candidate, "data-nav-section") === "components",
@@ -150,24 +150,25 @@ test("component mockup rows and glyph match the runtime Components branch", asyn
   const runtimeSection = section(runtime);
   const mockupSection = section(mockup.document);
   const ids = new Set([
-    "example-action",
-    "example-action-default",
-    "example-action-disabled",
-    "example-action-secondary",
-    "example-toolbar",
-    "example-toolbar-default",
+    "example/components/action",
+    "example/components/action/default",
+    "example/components/action/disabled",
+    "example/components/action/secondary",
+    "example/components/toolbar",
+    "example/components/toolbar/default",
   ]);
   const runtimeLabels = byClass(runtimeSection, "mbk-nav-row")
     .filter(
       (row) =>
-        rowLabel(row) === "Components" ||
+        ["Example", "Components"].includes(rowLabel(row)) ||
         ids.has(attribute(row, "data-entry-id") ?? ""),
     )
     .map(rowLabel);
-  assert.deepEqual(runtimeLabels, rowLabels(mockupSection).slice(0, 7));
+  assert.deepEqual(runtimeLabels, rowLabels(mockupSection).slice(0, 8));
 
   const runtimeVariant = byClass(runtimeSection, "mbk-nav-row").find(
-    (row) => attribute(row, "data-entry-id") === "example-action-default",
+    (row) =>
+      attribute(row, "data-entry-id") === "example/components/action/default",
   );
   assert.ok(runtimeVariant);
   const runtimeWrapper = byClass(runtimeVariant, "mbk-nav-ico")[0];

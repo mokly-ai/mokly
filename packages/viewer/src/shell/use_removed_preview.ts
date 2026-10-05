@@ -52,6 +52,13 @@ function selectedAddresses(
   colorScheme: "dark" | "light",
 ): readonly string[] {
   if (loaded.content.kind === "page") return [loaded.content.url];
+  if (loaded.content.kind === "document")
+    return [
+      (
+        loaded.content.views.find((view) => view.colorScheme === colorScheme) ??
+        loaded.content.views[0]!
+      ).url,
+    ];
   const viewports =
     viewport === "both"
       ? (["mobile", "desktop"] as const)

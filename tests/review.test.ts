@@ -16,7 +16,7 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV7,
+  ManifestV8,
 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
@@ -41,7 +41,7 @@ test("dark views compare and classify against a pre-dark base", async (context) 
     "HEAD",
   );
 
-  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  const home = artifact.result.screens.find((screen) => screen.path === "home");
   assert.ok(home);
   assert.deepEqual(
     home.views.map(({ colorScheme, state, viewport }) => ({
@@ -59,8 +59,8 @@ test("dark views compare and classify against a pre-dark base", async (context) 
   const reviewJson = JSON.parse(
     renderReviewArtifact(artifact).get("review.json") as string,
   ) as ReviewResult;
-  assert.equal(reviewJson.schemaVersion, 4);
-  const jsonHome = reviewJson.screens.find((screen) => screen.id === "home");
+  assert.equal(reviewJson.schemaVersion, 5);
+  const jsonHome = reviewJson.screens.find((screen) => screen.path === "home");
   assert.ok(jsonHome);
   assert.deepEqual(
     jsonHome.views.map(({ colorScheme, ignoredIds, state, viewport }) => ({
@@ -123,7 +123,7 @@ test("removing dark classifies dark views removed", async (context) => {
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: { outDir: ".review", sharedImpact: ["notes.md"] }
@@ -140,7 +140,7 @@ export default defineConfig({
     "HEAD",
   );
 
-  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  const home = artifact.result.screens.find((screen) => screen.path === "home");
   assert.ok(home);
   assert.deepEqual(
     home.views.map(({ colorScheme, state, viewport }) => ({
@@ -221,7 +221,7 @@ function fakeGit(
 }
 
 function filesForCompilation(
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   compilation: Compilation,
 ): Map<string, GeneratedFile> {
   const files = new Map<string, GeneratedFile>([
@@ -234,7 +234,7 @@ function filesForCompilation(
   return files;
 }
 
-function withoutDarkFragments(manifest: ManifestV7): ManifestV7 {
+function withoutDarkFragments(manifest: ManifestV8): ManifestV8 {
   return {
     ...manifest,
     entries: manifest.entries.map((entry) => {
@@ -260,7 +260,7 @@ function withHomeIgnoredRegions(
   ids: readonly string[] = ["nav"],
 ): Compilation {
   const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   if (home?.kind !== "screen") throw new Error("missing home screen");
   const outputs = new Map(compilation.outputs);

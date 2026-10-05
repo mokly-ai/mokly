@@ -3,9 +3,9 @@ import path from "node:path";
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
+import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
 import {
-  extractCssReferences,
   extractHtmlReferences,
   type HtmlReferenceOptions,
 } from "../html_references.js";
@@ -31,14 +31,15 @@ export function referencedRoutes(
   return [
     ...new Set(
       references.flatMap((reference) => {
-        const resolved = resolveReference(sourceRoute, reference);
+        const resolved = resolveResourceReference(sourceRoute, reference);
         return resolved ? [resolved] : [];
       }),
     ),
   ].sort();
 }
 
-function resolveReference(
+/** Resolve one reference with the same confinement used by resource traversal. */
+export function resolveResourceReference(
   sourceRoute: string,
   rawReference: string,
 ): string | undefined {

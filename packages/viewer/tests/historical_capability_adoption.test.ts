@@ -20,7 +20,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -34,14 +34,14 @@ test("new evidence adopts before making a replaced historical snapshot unavailab
   if (historical.entry.kind !== "page") assert.fail("Expected removed page");
   const selection = {
     ...defaultSelection,
-    screenId: historical.entry.id,
+    screenPath: historical.entry.path,
     snapshotId: historical.snapshotId,
   };
   const current = viewerCatalogue(model);
   const route = routeFromUrl(
     current,
     new URL(
-      `https://catalogue.test${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
+      `https://catalogue.test${viewHref(historical.entry.path)}?snapshot=${historical.snapshotId}`,
     ),
   );
   assert.equal(route.view.kind, "target");

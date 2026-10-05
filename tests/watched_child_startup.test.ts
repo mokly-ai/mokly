@@ -100,9 +100,7 @@ async function waitForMessage(
 
 async function waitForRuntime(url: string): Promise<string> {
   for (let attempt = 0; attempt < 100; attempt += 1) {
-    const html = await (
-      await fetch(`${url}/view/components/action.html`)
-    ).text();
+    const html = await (await fetch(`${url}/view/action/`)).text();
     if (html.includes('data-mokly-update-version="2"')) return html;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }

@@ -27,17 +27,24 @@ Worker failures retain their diagnostic as a server-only detail, logged to stder
 by the HTTP boundary. Responses keep the generic preview failure message and
 never include resource paths, exclusion globs, or other diagnostic details.
 
+Private runtime IPC includes the accepted output route/orphan snapshot. Props
+uses the parent-validated snapshot and performs no independent output-tree scan;
+rendering never holds the repository writer lock.
+
 `transient.ts` uses Build's stylesheet selection, renderer, compatibility/link
 transformation, ownership, range, prop, per-view metadata and resource checks.
 It retains one `DocumentCompiler` per generation instead of cloning and validating
-the full catalogue for each keystroke. Existing
+the full catalogue for each keystroke. Accepted comparison pairs travel in the
+private worker envelope for generation-bound diagnostics; they never become
+consumer props or a public request field. Existing
 public resources are copied into the edited document's immutable memory bundle.
 The pending generation supplies linked CSS and referenced opaque asset bytes
 to the Props-render bundle. Reserved generated resources come only from that
 generation's retained outputs:
 a stale stylesheet or asset on disk cannot satisfy a transient preview link.
 The capture keeps font/image bytes opaque and parses only stylesheet text for
-referenced resources.
+referenced resources. The URL tokenizer is shared with Build and comparison
+normalisation through `src/css_references.ts`.
 Generated inline styles remain part of its HTML. No generated file, manifest,
 watch event, Review artifact, or export inventory is written by this service.
 

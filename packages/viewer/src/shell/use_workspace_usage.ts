@@ -49,7 +49,7 @@ export function useWorkspaceUsage({
   const viewKey = views
     .map(
       (view) =>
-        `${view.variantId ?? ""}/${view.viewport}/${view.colorScheme}/${view.path}`,
+        `${view.variantPath ?? ""}/${view.viewport}/${view.colorScheme}/${view.path}`,
     )
     .join("|");
   useEffect(() => {

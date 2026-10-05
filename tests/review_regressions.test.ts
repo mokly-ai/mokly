@@ -34,7 +34,7 @@ test("compilation rejects malformed Review-ignore output", async (context) => {
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entriesDir: "entries", mockupsDir: "mockups", renderer: "renderer.ts", repoRoot: "." };
+    `export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", renderer: "renderer.ts", repoRoot: "." };
 `,
   );
   const config = await loadConfig(fixture.root);
@@ -54,7 +54,7 @@ test("Review validates malformed markers on added and removed panes", async (con
     "<html><body><!--mokly-review-ignore:start:nav--><nav>Menu</nav></body></html>";
   const emptyBase = manifest([]);
   const addedOutputs = new Map(compilation.outputs);
-  addedOutputs.set("screens/home.mobile.html", malformed);
+  addedOutputs.set("home/index.mobile.html", malformed);
 
   await assert.rejects(
     () =>
@@ -70,18 +70,18 @@ test("Review validates malformed markers on added and removed panes", async (con
   );
 
   const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   assert.ok(home?.kind === "screen");
   const removed = {
     ...home,
-    id: "removed",
-    useCaseIds: [],
+    path: "removed",
+    useCasePaths: [],
   };
   const removedFiles = new Map([
     ["mockups/mokly-manifest.json", JSON.stringify(manifest([removed]))],
-    ["mockups/screens/removed.mobile.html", malformed],
-    ["mockups/screens/removed.desktop.html", "<html><body>Old</body></html>"],
+    ["mockups/removed/index.mobile.html", malformed],
+    ["mockups/removed/index.desktop.html", "<html><body>Old</body></html>"],
   ]);
 
   await assert.rejects(
@@ -205,7 +205,8 @@ function manifest(entries: readonly ManifestScreen[]) {
   return {
     entries,
     generatedBy: "mokly",
-    schemaVersion: 7,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: [...new Set(entries.map((entry) => entry.sourcePath))].sort(),
   };
 }

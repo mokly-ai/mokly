@@ -151,16 +151,14 @@ test("bodies use headings, comments, and fenced code within the contract", () =>
   }
 });
 
-test("the initial corpus has no links and future destinations are bounded", () => {
+test("guide links use only bounded destinations", () => {
   for (const guide of GUIDES) {
     const prose = withoutFencedCode(guide.body).replace(
       /<!--[\s\S]*?-->/gu,
       "",
     );
-    assert.deepEqual(
-      [...prose.matchAll(/!?\[[^\]]*\]\(([^\s)]+)[^)]*\)/gu)],
-      [],
-    );
+    for (const match of prose.matchAll(/!?\[[^\]]*\]\(([^\s)]+)[^)]*\)/gu))
+      assert.ok(allowedLink(match[1] ?? ""), `${guide.id}: ${match[1]}`);
   }
   for (const destination of [
     "/docs/authoring/screens/",

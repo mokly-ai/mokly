@@ -18,17 +18,22 @@ import {
   styleOutcomes,
 } from "./workspace_style_evidence.js";
 
-/** Comparison facts for the current entry and optional loaded comparison. */
+/**
+ * Comparison facts for the current entry and optional loaded comparison. A
+ * moved entry names the path its earlier side comes from.
+ */
 export function WorkspaceEvidence({
   data,
   loaded,
-  variantId,
+  previousPath,
+  variantPath,
 }: {
   data: WorkspaceData;
   loaded?: ReviewResult;
-  variantId?: string;
+  previousPath?: string;
+  variantPath?: string;
 }) {
-  const evidence = workspaceComparisonEvidence(data, variantId, loaded);
+  const evidence = workspaceComparisonEvidence(data, variantPath, loaded);
   const wording = entryWording(data.entry.kind);
   const hidden = data.status === undefined && !evidence.comparison;
   const reasonPaths = retainedPaths(evidence.reasons);
@@ -41,7 +46,7 @@ export function WorkspaceEvidence({
     : [];
   const variant =
     evidence.comparison && "variants" in evidence.comparison
-      ? evidence.comparison.variants.find((item) => item.id === variantId)
+      ? evidence.comparison.variants.find((item) => item.path === variantPath)
       : undefined;
   return (
     <section
@@ -53,16 +58,21 @@ export function WorkspaceEvidence({
         <>
           <h3>Comparison details</h3>
           <p>Compared with the branch point on {data.base}.</p>
+          {previousPath ? (
+            <p>
+              The previous version is at{" "}
+              <code className="mbk-code">{previousPath}</code>, where it was
+              before the move.
+            </p>
+          ) : null}
           {data.relatedComponents.map((component) => (
-            <p key={component.id}>
+            <p key={component.path}>
               Changed component:{" "}
-              <a href={viewHref("component", component.id)}>
-                {component.title}
-              </a>
+              <a href={viewHref(component.path)}>{component.title}</a>
             </p>
           ))}
           {data.inputChanges
-            .filter((item) => item.variantId === variantId)
+            .filter((item) => item.variantPath === variantPath)
             .map((change) => (
               <Fragment
                 key={`${change.instanceId}/${change.viewport}/${change.colorScheme}`}
@@ -155,7 +165,7 @@ function Reason({ reason }: { reason: EntryChangeReason }) {
   return (
     <p>
       {reason.kind === "screen"
-        ? `A screen in this flow changed: ${reason.id}`
+        ? `A screen in this flow changed: ${reason.screenPath}`
         : labels[reason.kind]}
     </p>
   );
@@ -175,6 +185,6 @@ function reasonKey(reason: EntryChangeReason): string {
   return reason.kind === "dependency"
     ? `${reason.kind}/${reason.path}`
     : reason.kind === "screen"
-      ? `${reason.kind}/${reason.id}`
+      ? `${reason.kind}/${reason.screenPath}`
       : reason.kind;
 }

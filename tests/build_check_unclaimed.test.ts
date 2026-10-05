@@ -16,7 +16,7 @@ test("committed check separates orphan and unclaimed generated files", async (co
   context.after(() => removeFixture(fixture));
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entries: ["**/*.mockup.{ts,tsx}"], generatedOutput: "committed", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: ".", files: ["**/*.mockup.{ts,tsx}"] }], generatedOutput: "committed", mockupsDir: "mockups", repoRoot: "." };\n',
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
@@ -49,7 +49,7 @@ test("committed check separates orphan and unclaimed generated files", async (co
       );
       assert.match(
         error.message,
-        /delete them or restore the source under a configured entry glob/i,
+        /delete them or restore the source under a configured root file glob/i,
       );
       const unclaimed = error.message.split("unclaimed generated files:")[1];
       assert.ok(unclaimed);

@@ -8,7 +8,7 @@ import type {
 } from "../catalogue/scoped_types.js";
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { entryRoute } from "../navigation/routes.js";
+import { entryRoute, documentRoute } from "../navigation/routes.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { useMountedShellFrame } from "./frame_mount_hook.js";
@@ -18,6 +18,7 @@ import {
 } from "./frame_registry.js";
 import { useFrameSource } from "./frame_source_hook.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { documentLightOnly, LightOnlyBand } from "./scheme_fallback.js";
 import {
   framePath,
   frameSource,
@@ -37,7 +38,7 @@ export function StageFrame({
   hasDarkFragments,
   previewViews,
   stepIndex,
-  variantId,
+  variantPath,
   views,
   viewport,
 }: {
@@ -47,7 +48,7 @@ export function StageFrame({
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
   stepIndex?: number;
-  variantId?: string;
+  variantPath?: string;
   views: readonly ShellCatalogueView[];
   viewport: "desktop" | "mobile";
 }) {
@@ -62,11 +63,16 @@ export function StageFrame({
   );
   const previewLight = generatedView(
     previewViews,
-    variantId,
+    variantPath,
     viewport,
     "light",
   );
-  const previewDark = generatedView(previewViews, variantId, viewport, "dark");
+  const previewDark = generatedView(
+    previewViews,
+    variantPath,
+    viewport,
+    "dark",
+  );
   const selected = selection.colorScheme === "dark" ? (dark ?? light) : light;
   const preview =
     selection.colorScheme === "dark"
@@ -80,15 +86,15 @@ export function StageFrame({
   const previewAdapter = useMemo(temporaryPreviewAdapter, []);
   const identity = useMemo<ShellFrameIdentity>(
     () => ({
-      entryId: entry.id,
+      entryPath: entry.path,
       viewport,
       ...(preview || selected
         ? { colorScheme: preview?.colorScheme ?? selected!.colorScheme }
         : {}),
       ...(stepIndex === undefined ? {} : { stepIndex }),
-      ...(variantId ? { variantId } : {}),
+      ...(variantPath ? { variantPath } : {}),
     }),
-    [entry.id, preview, selected, stepIndex, variantId, viewport],
+    [entry.path, preview, selected, stepIndex, variantPath, viewport],
   );
   const mounted = useMountedShellFrame({
     ...(temporary ? { adapter: previewAdapter } : {}),
@@ -137,7 +143,7 @@ export function StageFrame({
     <PhoneFrame>{frame}</PhoneFrame>
   ) : (
     <BrowserFrame
-      address={entry.address ?? entryRoute("screen", entry.id)}
+      address={entry.address ?? entryRoute(entry.path)}
       frameKey={frameIdentityKey(identity)}
     >
       {frame}
@@ -177,16 +183,27 @@ export function StageFrame({
 export function DocumentStageFrame({
   entry,
   fragment,
+  hasDarkFragments,
 }: {
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" }>;
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" | "document" }>;
   fragment?: string;
+  hasDarkFragments: boolean;
 }) {
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
-  const source = framePath(`static/${entryRoute("page", entry.id)}`, fragment);
+  const selection = useContext(DisplaySelection);
+  const scheme =
+    entry.kind === "document" &&
+    entry.colorSchemes.includes(selection.colorScheme)
+      ? selection.colorScheme
+      : "light";
+  const source = framePath(
+    `static/${documentRoute(entry.path, scheme)}`,
+    fragment,
+  );
   const identity = useMemo<ShellFrameIdentity>(
-    () => ({ entryId: entry.id }),
-    [entry.id],
+    () => ({ entryPath: entry.path }),
+    [entry.path],
   );
   const mounted = useMountedShellFrame({
     enabled: store?.interactive ?? false,
@@ -201,31 +218,50 @@ export function DocumentStageFrame({
     Boolean(store?.interactive && registry),
   );
   return (
-    <div
-      className="mbk-stage-embed"
-      data-mokly-scroll="embed"
-      data-preview-color-scheme="light"
-    >
-      {source ? (
-        <iframe
-          aria-busy={mounted.status === "loading" ? true : undefined}
-          className="mbk-frag"
-          data-mokly-fragment-frame=""
-          data-mokly-frame-state={mounted.status}
-          ref={mounted.frameRef}
-          sandbox="allow-same-origin"
-          src={initialSource}
-          title={entry.title}
-        />
-      ) : (
-        <p className="mbk-empty">This preview is unavailable.</p>
-      )}
-      {mounted.status === "error" ? (
-        <p className="mbk-frame-error" role="status">
-          This preview could not be loaded.
-        </p>
-      ) : null}
-    </div>
+    <>
+      {documentLightOnly(entry, hasDarkFragments) ? <LightOnlyBand /> : null}
+      <div
+        className="mbk-stage-embed"
+        data-mokly-scroll="embed"
+        data-preview-color-scheme={scheme}
+      >
+        {source ? (
+          <iframe
+            aria-busy={mounted.status === "loading" ? true : undefined}
+            className="mbk-frag"
+            data-mokly-fragment-frame=""
+            data-mokly-frame-state={mounted.status}
+            data-fragment-light={
+              entry.kind === "document"
+                ? framePath(
+                    `static/${documentRoute(entry.path, "light")}`,
+                    fragment,
+                  )
+                : undefined
+            }
+            data-fragment-dark={
+              entry.kind === "document" && entry.colorSchemes.includes("dark")
+                ? framePath(
+                    `static/${documentRoute(entry.path, "dark")}`,
+                    fragment,
+                  )
+                : undefined
+            }
+            ref={mounted.frameRef}
+            sandbox="allow-same-origin"
+            src={initialSource}
+            title={entry.title}
+          />
+        ) : (
+          <p className="mbk-empty">This preview is unavailable.</p>
+        )}
+        {mounted.status === "error" ? (
+          <p className="mbk-frame-error" role="status">
+            This preview could not be loaded.
+          </p>
+        ) : null}
+      </div>
+    </>
   );
 }
 
@@ -248,8 +284,8 @@ function FrameLabel({
 
 function frameIdentityKey(identity: ShellFrameIdentity): string {
   return JSON.stringify([
-    identity.entryId,
-    identity.variantId,
+    identity.entryPath,
+    identity.variantPath,
     identity.stepIndex,
     identity.viewport,
   ]);

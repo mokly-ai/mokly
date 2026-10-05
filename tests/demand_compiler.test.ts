@@ -54,7 +54,7 @@ test("demand links reject a generated orphan even while its old file exists", as
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   assert.throws(
-    () => compiler.render("screens/home.desktop.html"),
+    () => compiler.render("home/index.desktop.html"),
     /missing target/,
   );
 });

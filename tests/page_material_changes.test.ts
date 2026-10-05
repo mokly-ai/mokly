@@ -7,7 +7,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { readBaseManifest } from "../dist/review/base_manifest.js";
 import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
@@ -19,7 +19,7 @@ const source =
   validEntrySource() +
   `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "A document", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
+mockups.push(definePage({ path: "handbook", title: "Handbook", description: "A document", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
 `;
 
 for (const change of [
@@ -60,7 +60,7 @@ for (const change of [
       await fixture.build();
     }
     assert.deepEqual(
-      await computeChangedIds(
+      await computeChangedPaths(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -70,7 +70,7 @@ for (const change of [
   });
 }
 
-test("v7 page resource evidence uses the merged changed-path set", async (context) => {
+test("v8 page resource evidence uses the merged changed-path set", async (context) => {
   const fixture = await changedFixture(
     context,
     source,
@@ -103,7 +103,7 @@ test("v7 page resource evidence uses the merged changed-path set", async (contex
       commit,
       asChangeEvidence(["mockups/document.css"]),
     ),
-    ["mockups/pages/handbook.html"],
+    ["mockups/handbook/index.html"],
   );
 });
 
@@ -123,7 +123,7 @@ test("Changes cannot treat a historical authoring input as a deleted public reso
   await fs.writeFile(fixture.entryPath, validEntrySource());
   await fixture.build();
   await fs.rm(path.join(fixture.mockupsDir, "helper.js"));
-  const fragment = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const fragment = path.join(fixture.mockupsDir, "home/index.mobile.html");
   await fs.writeFile(
     fragment,
     (await fs.readFile(fragment, "utf8")).replace(
@@ -132,7 +132,7 @@ test("Changes cannot treat a historical authoring input as a deleted public reso
     ),
   );
   assert.equal(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

@@ -2,79 +2,132 @@ import { expect, test } from "@playwright/test";
 
 import { readDisclosureStorage } from "./disclosure_storage.js";
 
-test("stored obsolete collection keys do not close current folders", async ({
+const earlierVersions = {
+  "mokly:nav-disclosure:v3": JSON.stringify({
+    "section:pages": false,
+    "folder:pages:example": false,
+    "folder:pages:example/screens": true,
+    "section:components": false,
+    "folder:components:example": false,
+    "variants:example/screens/welcome": true,
+  }),
+  "mokly:nav-disclosure:v2": JSON.stringify([
+    "collection:example",
+    "collection:pages:example",
+    "collection:components:example",
+    "legacy:example",
+  ]),
+};
+
+test("earlier storage versions naming current folders are never read", async ({
   page,
 }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "mokly:nav-disclosure:v2",
-      JSON.stringify([
-        "collection:Example",
-        "collection:pages:Example",
-        "collection:components:Example",
-        "legacy:Example",
-      ]),
-    );
-  });
-  await page.goto("/view/user-flows/example-tour.html");
-  const pages = page.locator('[data-nav-section="pages"]');
+  await page.addInitScript((values) => {
+    if (window !== window.top) return;
+    for (const [key, value] of Object.entries(values))
+      localStorage.setItem(key, value);
+  }, earlierVersions);
+  await page.goto("/");
+  const specs = page.locator('[data-nav-section="specs"]');
+  await expect(specs).toHaveAttribute("open", "");
   await expect(
-    pages.locator('[data-nav-folder="folder:Example"]'),
+    specs.locator('[data-nav-folder="folder:example"]'),
   ).toHaveAttribute("open", "");
   await expect(
-    pages.locator('[data-nav-folder="folder:Example/Screens"]'),
+    specs.locator('[data-nav-folder="folder:example/screens"]'),
   ).not.toHaveAttribute("open", "");
+  const components = page.locator('[data-nav-section="components"]');
+  await expect(components).toHaveAttribute("open", "");
+  await expect(
+    components.locator('[data-nav-disclosure="folder:components:example"]'),
+  ).toHaveAttribute("open", "");
+  await expect(
+    page.locator(
+      '[data-nav-variants-toggle][data-nav-variants-label="Welcome"]',
+    ),
+  ).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.locator('[data-nav-disclosure="variants:example/screens/welcome"]'),
+  ).toHaveAttribute("hidden", "");
 });
 
-test("a mixed v2 list does not open normally closed folders on upgrade", async ({
+test("saving v4 leaves earlier storage versions untouched", async ({
   page,
 }) => {
-  await page.addInitScript(() => {
+  await page.addInitScript((values) => {
     if (window !== window.top) return;
-    localStorage.setItem(
-      "mokly:nav-disclosure:v2",
-      JSON.stringify([
-        "collection:pages:Example/Screens",
-        "section:pages",
-        "variants:pages:example-welcome",
-      ]),
-    );
-  });
-  await page.goto("/view/user-flows/example-tour.html");
-  await expect(
-    page.locator('[data-nav-folder="folder:Example/Screens"]'),
-  ).not.toHaveAttribute("open", "");
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    for (const [key, value] of Object.entries(values))
+      localStorage.setItem(key, value);
+  }, earlierVersions);
+  await page.goto("/view/example/tour/");
   await expect
     .poll(() => readDisclosureStorage(page))
     .toMatchObject({
-      "folder:pages:Example": true,
-      "folder:pages:Example/Screens": false,
-      "section:pages": true,
+      "folder:specs:example": true,
+      "folder:specs:example/screens": false,
+      "section:specs": true,
       "section:components": true,
     });
-  expect(
-    await page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
-  ).toBeNull();
+  const stored = await page.evaluate(() =>
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith("mokly:nav-disclosure:"))
+      .sort(),
+  );
+  expect(stored).toEqual([
+    "mokly:nav-disclosure:v2",
+    "mokly:nav-disclosure:v3",
+    "mokly:nav-disclosure:v4",
+  ]);
+  for (const [key, value] of Object.entries(earlierVersions))
+    expect(await page.evaluate((name) => localStorage.getItem(name), key)).toBe(
+      value,
+    );
+});
+
+test("a saved v4 section choice closes only that section", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (window !== window.top) return;
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem(
+      "mokly:nav-disclosure:v4",
+      JSON.stringify({ "section:specs": false }),
+    );
+  });
+  await page.goto("/");
+  await expect(page.locator('[data-nav-section="specs"]')).not.toHaveAttribute(
+    "open",
+    "",
+  );
+  await expect(page.locator('[data-nav-section="components"]')).toHaveAttribute(
+    "open",
+    "",
+  );
 });
 
 test("folder disclosures persist across reload without closing the same path in another section", async ({
   page,
 }) => {
   await page.goto("/");
-  const pagesFolder = page.locator(
-    '[data-nav-section="pages"] [data-nav-folder="folder:Example"]',
+  const specsFolder = page.locator(
+    '[data-nav-section="specs"] [data-nav-folder="folder:example"]',
   );
   const componentsFolder = page.locator(
-    '[data-nav-section="components"] [data-nav-folder="folder:Example"]',
+    '[data-nav-section="components"] [data-nav-folder="folder:example"]',
   );
-  await expect(pagesFolder).toHaveAttribute("open", "");
+  await expect(specsFolder).toHaveAttribute("open", "");
   await expect(componentsFolder).toHaveAttribute("open", "");
-  await pagesFolder.locator(":scope > summary").click();
-  await expect(pagesFolder).not.toHaveAttribute("open", "");
+  await specsFolder.locator(":scope > summary").click();
+  await expect(specsFolder).not.toHaveAttribute("open", "");
   await expect
     .poll(() => readDisclosureStorage(page))
-    .toMatchObject({ "folder:pages:Example": false });
+    .toMatchObject({
+      "folder:specs:example": false,
+      "folder:components:example": true,
+    });
   await page.reload();
-  await expect(pagesFolder).not.toHaveAttribute("open", "");
+  await expect(specsFolder).not.toHaveAttribute("open", "");
   await expect(componentsFolder).toHaveAttribute("open", "");
 });

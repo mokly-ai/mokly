@@ -136,7 +136,7 @@ A failed watched action preserves last-good output and renders:
 
 ```text
   12:05:31  ✖ entries/home.mockup.tsx
-            Link target "missing-screen" does not exist in the catalogue.
+            entries/home.mockup.tsx export default: link target missing-screen does not exist
             The last good catalogue is still being served.
 ```
 

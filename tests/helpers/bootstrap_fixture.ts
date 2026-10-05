@@ -124,7 +124,7 @@ export async function bootstrapFixture(
       '{"schemaVersion":1,"endpoint":"https://example.com","marker":[],"cases":[]}\n',
     "docs/protocol/mokly-frame-adapter.md": "# Frame protocol test fixture\n",
     "docs/protocol/mokly-catalogue.md": "# Catalogue protocol test fixture\n",
-    "docs/protocol/fixtures/catalogue-v3.json": '{"schemaVersion":1}\n',
+    "docs/protocol/fixtures/catalogue-v4.json": '{"schemaVersion":1}\n',
     LICENSE: "MIT\n",
     "CHANGELOG.md": "# Test release\n",
     "source.txt": "reviewed source\n",

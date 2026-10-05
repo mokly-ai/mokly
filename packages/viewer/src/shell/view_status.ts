@@ -11,7 +11,7 @@ export interface ViewState {
   state: ReviewState;
 }
 
-/** Per-view states keyed by screen id or component saved-variant id. */
+/** Per-view states keyed by screen or saved-component-variant path. */
 export type ViewStatesBySelection = Readonly<
   Record<string, readonly ViewState[]>
 >;

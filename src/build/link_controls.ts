@@ -1,7 +1,6 @@
 /** Adapt explicitly marked React controls before catalogue-link resolution. */
 
-import { parseLogicalTarget } from "@mokly/viewer/data";
-
+import { parseAuthoredLink } from "./authored_links.js";
 import {
   assertNoChildLinkMarkers,
   parseControlMetadata,
@@ -82,7 +81,7 @@ export function adaptLinkControls(html: string, route: string): string {
         throw controlError(route, "has malformed or inert template markers");
       }
       if (marker.name === `${CHILD_MARKER}start`) {
-        if (open || !parseLogicalTarget(marker.value))
+        if (open || !parseAuthoredLink(marker.value))
           throw controlError(route, "has nested or invalid start markers");
         open = { ancestors, node, target: marker.value };
       } else if (marker.name === `${CHILD_MARKER}end`) {

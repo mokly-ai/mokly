@@ -24,7 +24,11 @@ export function renderReviewArtifact(
     "review.json",
     `${canonicalJson(artifact.result, 2)}\n`,
   );
-  addArtifactFile(files, "summary.md", summaryMarkdown(artifact.result));
+  addArtifactFile(
+    files,
+    "summary.md",
+    summaryMarkdown(artifact.result, artifact.pairing),
+  );
   addArtifactFile(
     files,
     ".mokly-review-artifact",
@@ -34,13 +38,19 @@ export function renderReviewArtifact(
 }
 
 /** Create a concise deterministic CI summary. */
-export function summaryMarkdown(result: ReviewResult): string {
+export function summaryMarkdown(
+  result: ReviewResult,
+  pairing?: ReviewArtifact["pairing"],
+): string {
   const outputChanges = result.screens.filter(hasOutputChange).length;
   const impactEvidence = result.screens.filter(
     (screen) => screen.sharedImpact.length > 0,
   ).length;
   const impactOnly = result.screens.filter(isImpactOnly).length;
   const counts = new Map<string, number>();
+  const moved =
+    pairing?.moves.length ??
+    result.changes.filter((entry) => entry.previousPath !== undefined).length;
   for (const screen of result.screens)
     counts.set(screen.state, (counts.get(screen.state) ?? 0) + 1);
   const lines = [
@@ -52,14 +62,14 @@ export function summaryMarkdown(result: ReviewResult): string {
     "",
     "Output changes count screens with changed documents or retained resource evidence, once per screen across all viewports and color schemes; catalogue Changes also considers metadata and flows. Impact evidence is counted independently; impact-only screens have no output change and can also be ignored-only.",
     "",
-    `Changes: ${result.changes.length}; components: ${result.components.length}; affected consumers: ${result.affectedConsumers.length}.`,
+    `Changes: ${result.changes.length}; moved: ${moved}; components: ${result.components.length}; affected consumers: ${result.affectedConsumers.length}.`,
   ];
   if (result.changes.length > 0)
     lines.push(
       "",
       ...result.changes.map(
         (change) =>
-          `- ${change.kind}: ${markdownText((change.after ?? change.before)!.title)} (${change.reasons.map((reason) => reason.kind).join(", ")})`,
+          `- ${change.kind}: ${markdownText((change.after ?? change.before)!.title)} (${[...(change.previousPath ? ["moved"] : []), ...change.reasons.map((reason) => reason.kind)].join(", ")})`,
       ),
     );
   if (result.sharedImpact.length > 0)
@@ -67,6 +77,14 @@ export function summaryMarkdown(result: ReviewResult): string {
       "",
       "Shared-impact paths:",
       ...result.sharedImpact.map((item) => `- ${markdownCode(item)}`),
+    );
+  if (pairing?.diagnostics.length)
+    lines.push(
+      "",
+      "Move diagnostics:",
+      ...pairing.diagnostics.map(
+        (diagnostic) => `- ${markdownText(diagnostic)}`,
+      ),
     );
   return `${lines.join("\n")}\n`;
 }

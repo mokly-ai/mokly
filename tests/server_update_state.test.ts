@@ -17,10 +17,11 @@ test("published updates replace or clear changed-route shell state", async (cont
   const server = await startCatalogueServer(config, {
     base: "main",
     snapshot: await loadCatalogueSnapshot(config, async () => ({
-      schemaVersion: 1,
+      movedEntries: [],
+      schemaVersion: 2,
       baseRef: "main",
       baseCommit: "a".repeat(40),
-      changedIds: ["home"],
+      changedEntries: ["home"],
       removedEntries: [],
     })),
     port: 0,
@@ -33,10 +34,10 @@ test("published updates replace or clear changed-route shell state", async (cont
   assert.match(initial, /class="mbk-nav-filter-count">1</);
   assert.match(
     initial,
-    /data-changed="true"[^>]+data-route="screens\/home\.html"/,
+    /data-changed="true"[^>]+data-route="home\/index\.html"/,
   );
 
-  server.publishUpdate({ kind: "evidence", changedIds: [], version: 2 });
+  server.publishUpdate({ kind: "evidence", changedEntries: [], version: 2 });
   const noChanges = await (await fetch(server.url)).text();
   assert.match(noChanges, /data-mokly-update-version="2"/);
   assert.match(noChanges, /data-mokly-content-version="1"/);
@@ -44,19 +45,19 @@ test("published updates replace or clear changed-route shell state", async (cont
   assert.doesNotMatch(noChanges, /data-changed="true"/);
 
   server.publishUpdate({
-    changedIds: ["details"],
+    changedEntries: ["details"],
     version: 2,
   });
   const stale = await (await fetch(server.url)).text();
   assert.match(stale, /class="mbk-nav-filter-count">0</);
   assert.doesNotMatch(stale, /data-changed="true"/);
 
-  server.publishUpdate({ changedIds: null, version: 3 });
+  server.publishUpdate({ changedEntries: null, version: 3 });
   const unavailable = await (await fetch(server.url)).text();
   assert.match(unavailable, /data-changes-status="unavailable"/);
   assert.match(unavailable, /data-filter="changed"/);
   assert.match(unavailable, /data-mokly-content-version="3"/);
-  server.publishUpdate({ kind: "evidence", changedIds: [], version: 4 });
+  server.publishUpdate({ kind: "evidence", changedEntries: [], version: 4 });
   assert.match(
     await (await fetch(server.url)).text(),
     /data-mokly-content-version="3"/,

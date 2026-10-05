@@ -7,7 +7,7 @@ interface DocumentRange {
 export interface AuthenticatedRanges {
   doc: Document;
   ranges: ReadonlyMap<string, readonly Range[]>;
-  byId: ReadonlyMap<string, Range>;
+  byPath: ReadonlyMap<string, Range>;
 }
 
 /** Authenticate every pair and its physical parent before exposing any range. */
@@ -18,7 +18,7 @@ export function authenticateDocumentRanges(
   const walker = doc.createTreeWalker(doc, 128);
   const stack: { id: string; node: Node }[] = [];
   const ranges = new Map<string, Range[]>();
-  const byId = new Map<string, Range>();
+  const byPath = new Map<string, Range>();
   const lookup = new Map(records.map((record) => [record.id, record]));
   let next = 0;
   let node: Node | null;
@@ -42,11 +42,11 @@ export function authenticateDocumentRanges(
       const range = doc.createRange();
       range.setStartAfter(start.node);
       range.setEndBefore(node);
-      byId.set(record.id, range);
+      byPath.set(record.id, range);
       if (record.key)
         ranges.set(record.key, [...(ranges.get(record.key) ?? []), range]);
     }
   }
   if (stack.length || next !== records.length) return;
-  return { doc, ranges, byId };
+  return { doc, ranges, byPath };
 }

@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Implemented: Serve uses a serialize-once scoped model and strict reader; static
-delivery validates captured pages and keeps the public catalogue v3 and
+delivery validates captured pages and keeps the public catalogue v4 and
 application-owned `MoklyViewer` sources complete.
 
 ## Purpose And Boundary
@@ -23,7 +23,7 @@ inventories never enter it.
   finalized deployment catalogue before hydration.
 
 Both forms retain the existing view discriminants: home, missing, or target. A
-target records its entry id and kind plus an optional opaque snapshot identity.
+target records its `entryPath` and kind plus an optional opaque snapshot identity.
 Resolving that identity against the bootstrap catalogue binds it to the exact
 current or historical record; any selected snapshot must match that record.
 Context retains the base, revisions, comparison and preview state, optional
@@ -34,7 +34,7 @@ context determine scope; no serialized list of permitted usage is trusted.
 
 The live projection retains the complete catalogue index needed to render the
 shell: identity, deployment and revision fields, Changes state, comparison URL,
-folder trees, entries, removed records, navigation paths, controls, props,
+folder trees, entries, removed records, folder paths, controls, props,
 comparison selections, and every view axis. Component variants remain flat
 entries with `variantOf`. The projection changes only each view's `usage` value.
 
@@ -47,8 +47,7 @@ type ShellCatalogueUsage = CatalogueUsage | { status: "omitted" };
 
 `omitted` means that valid usage may exist but is outside this page's entry
 scope. It never means empty, unavailable, or unrecorded. An omitted view keeps
-its axes and comparison state; its document path remains derivable from kind,
-id, viewport, and scheme. No instances, slots, or ranges are serialized with it.
+its axes and comparison state; its document path remains derivable from path, viewport, and scheme. No instances, slots, or ranges are serialized with it.
 
 Derive the exact retained scope from the bootstrap's own resolved view:
 
@@ -73,14 +72,14 @@ in-scope use-case step may change it.
 
 ## Readers And Validation
 
-The public `readCatalogue` boundary accepts only complete catalogue v3. It
+The public `readCatalogue` boundary accepts only complete catalogue v4. It
 rejects `omitted` at any current or historical screen/component view. The
 public types, schema version, canonical serializer, and
-`docs/protocol/fixtures/catalogue-v3.json` bytes do not change.
+`docs/protocol/fixtures/catalogue-v4.json` bytes do not change.
 
 The live reader validates context and view fields, parses the shell catalogue
 with ordinary value, hierarchy, snapshot, and reference checks, resolves entry
-id/kind and any snapshot, then derives scope from that record. Every in-scope
+path and validates kind and any snapshot, then derives scope from that record. Every in-scope
 view must carry real usage and every other view exactly `omitted`; retained
 ready records still receive full instance, slot, range, props, key, and
 ownership validation.
@@ -132,7 +131,7 @@ descriptor may begin Ready on direct load; the shell must not insert a Loading
 flash before adopting that descriptor.
 
 Ready in a live shell always means private evidence bound to the current
-request: the same entry id and the same source revision. The initial descriptor
+request: the same entry path and the same source revision. The initial descriptor
 workspace seeds only the first request's binding. After the entry or source
 changes, the shell never falls back to that page-lifetime copy. Returning to
 the first entry after visiting another one is therefore Loading, then Ready or
@@ -162,7 +161,7 @@ fails, complete index data still lets those frames load and navigate normally;
 any usage left omitted is treated as pending and cannot enable inspection or
 produce a partial cross-route list.
 
-The candidate must pass the live-capability entry id, location, base, catalogue
+The candidate must pass the live-capability entry path, location, base, catalogue
 identity, content/evidence revision, update version, preview/renderer
 generation, token, snapshot, and cancellation fences. Its private workspace
 must identify the current entry's exact screen or component. On acceptance,
@@ -236,7 +235,7 @@ Acceptance requires:
   missing, and every selected removed entry kind;
 - rejection of leaked, missing, misplaced, malformed, and public-catalogue
   `omitted` usage;
-- canonical scoped-bootstrap round trips and unchanged public v3 fixture bytes;
+- canonical scoped-bootstrap round trips and unchanged public v4 fixture bytes;
 - server/hydration serializer call counts of one/zero after initial creation;
 - no hydration mismatch in development React and no iframe remount on usage
   adoption;

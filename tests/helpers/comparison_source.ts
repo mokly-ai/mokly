@@ -5,10 +5,10 @@ export function comparisonEntrySource(changed: boolean): string {
 import React from "react";
 const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
 export const mockups = [
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "home", title: "Home", description: "Home screen", useCaseIds: [],
+  defineScreen({ ...metadata, path: "home", title: "Home", description: "Home screen", useCasePaths: [],
     mobile: <main><h1>${changed ? "Current" : "Previous"} home</h1><a id="snapshot-link" href="mock:details" target="_top">Details</a></main>,
     desktop: <main><h1>${changed ? "Current" : "Previous"} home</h1><a id="snapshot-link" href="mock:details" target="_top">Details</a></main> }),
-  defineScreen({ ...metadata, navPath: ["Fixture"], colorSchemes: ["light"], id: "details", title: "Details", description: "Details screen", useCaseIds: [], mobile: <main>Details</main>, desktop: <main>Details</main> }),
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "${third}", title: "${third === "added" ? "Added" : "Removed"}", description: "One-sided screen", useCaseIds: [], mobile: <main>${third}</main>, desktop: <main>${third}</main> })
+  defineScreen({ ...metadata, colorSchemes: ["light"], path: "details", title: "Details", description: "Details screen", useCasePaths: [], mobile: <main>Details</main>, desktop: <main>Details</main> }),
+  defineScreen({ ...metadata, path: "${third}", title: "${third === "added" ? "Added" : "Removed"}", description: "One-sided screen", useCasePaths: [], mobile: <main>${third}</main>, desktop: <main>${third}</main> })
 ];`;
 }

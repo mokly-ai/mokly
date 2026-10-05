@@ -30,7 +30,7 @@ function countClass(html: string, className: string): number {
 test("no design artboard depicts a scheme control", async () => {
   const { manifest, outputs } = await designCatalogue;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
+    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;
       assert.equal(countClass(html, "ce-theme-control"), 0, route);
@@ -42,12 +42,12 @@ test("no design artboard depicts a scheme control", async () => {
 test("retained Welcome variants follow the single Appearance setting", async () => {
   const { manifest, outputs } = await designCatalogue;
   for (const [id, darkDevice] of [
-    ["design-browse-dark-scheme", true],
-    ["design-browse-light-only", false],
+    ["design/browse/views/screen/dark-scheme", true],
+    ["design/browse/views/screen/light-only", false],
   ] as const) {
-    const entry = manifest.entries.find((candidate) => candidate.id === id);
+    const entry = manifest.entries.find((candidate) => candidate.path === id);
     assert.ok(entry?.kind === "screen", id);
-    assert.equal(entry.variantOf, "design-browse-screen", id);
+    assert.equal(entry.variantOf, "design/browse/views/screen", id);
     assert.ok(
       entry.colorSchemes.includes("dark"),
       `${id}: dark artboard missing`,
@@ -55,12 +55,9 @@ test("retained Welcome variants follow the single Appearance setting", async () 
     for (const viewport of ["mobile", "desktop"] as const) {
       const light = textOutput(
         outputs,
-        viewRoute("screen", entry.id, viewport, "light"),
+        viewRoute(entry.path, viewport, "light"),
       );
-      const dark = textOutput(
-        outputs,
-        viewRoute("screen", entry.id, viewport, "dark"),
-      );
+      const dark = textOutput(outputs, viewRoute(entry.path, viewport, "dark"));
       assert.ok(light && dark, `${id}/${viewport}: both schemes generated`);
       assert.equal(appearanceOf(light), "light", `${id}/${viewport}`);
       assert.equal(appearanceOf(dark), "dark", `${id}/${viewport}`);
@@ -70,7 +67,9 @@ test("retained Welcome variants follow the single Appearance setting", async () 
     }
   }
   assert.equal(
-    manifest.entries.find((entry) => entry.id === "design-review-dark-scheme"),
+    manifest.entries.find(
+      (entry) => entry.path === "design-review-dark-scheme",
+    ),
     undefined,
   );
 });
@@ -79,7 +78,7 @@ test("every artboard with a top bar draws one Appearance control", async () => {
   const { manifest, outputs } = await designCatalogue;
   let checked = 0;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
+    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;
       if (countClass(html, "mbk-topbar") === 0) continue;
@@ -93,8 +92,8 @@ test("every artboard with a top bar draws one Appearance control", async () => {
 test("the depicted Appearance control names the scheme it rendered for", async () => {
   const { manifest, outputs } = await designCatalogue;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
-    if (entry.id === "design-appearance-auto") continue;
+    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
+    if (entry.path === "design/browse/appearance/states/auto") continue;
     for (const scheme of entry.colorSchemes) {
       const routes: string[] = generatedViews(entry)
         .filter((view) => view.colorScheme === scheme)

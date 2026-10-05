@@ -73,7 +73,7 @@ test("a static export aligns stacks, mirrors Side by side and stays read-only", 
 }) => {
   await openComparison(
     page,
-    `${site.url}/view/screens/tall.html`,
+    `${site.url}/view/tall/`,
     "desktop",
     "Overlay",
     "static",
@@ -121,7 +121,7 @@ test("a pane document that cannot be presented fails and recovers with Try again
   page,
 }) => {
   let failing = true;
-  await page.route("**/snapshots/after/screens/tall.desktop.html", (route) =>
+  await page.route("**/snapshots/after/tall/index.desktop.html", (route) =>
     failing
       ? route.fulfill({ status: 404, contentType: "text/plain", body: "gone" })
       : route.continue(),

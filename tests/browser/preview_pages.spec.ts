@@ -23,7 +23,7 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
-    await page.goto(`${preview.url}/view/pages/removed-document`);
+    await page.goto(`${preview.url}/view/documents/removed-document/`);
     await expect(page.locator(".mbk-screen-head h2")).toHaveText(
       "Former handbook",
     );
@@ -49,12 +49,14 @@ for (const width of [390, 1280]) {
       await page
         .getByRole("button", { name: "Open catalogue navigation" })
         .click();
-    const removed = page.locator('[data-entry-id="removed-document"]');
+    const removed = page.locator(
+      '[data-entry-id="documents/removed-document"]',
+    );
     await expect(removed).toBeHidden();
     await page.locator('[data-filter="changed"]').click();
     await expect(removed).toBeVisible();
     await expect(
-      page.locator('[data-nav-folder="folder:Documents"]'),
+      page.locator('[data-nav-folder="folder:documents"]'),
     ).toHaveCount(0);
     expect(
       await removed.evaluate(
@@ -64,7 +66,7 @@ for (const width of [390, 1280]) {
     await page.locator('[data-filter="all"]').click();
     await expect(removed).toBeHidden();
     await expect(page.locator('[data-entry-id="removed"]')).toBeVisible();
-    await page.goto(`${preview.url}/view/pages/handbook?fragment=overview`);
+    await page.goto(`${preview.url}/view/handbook/?fragment=overview`);
     await expect(
       page.frameLocator(".mbk-stage-embed iframe").locator("#overview"),
     ).toBeVisible();
@@ -75,6 +77,15 @@ for (const width of [390, 1280]) {
     await expect(
       page.frameLocator(".mbk-stage-embed iframe").locator("#overview"),
     ).toBeVisible();
+    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
+    await page
+      .frameLocator(".mbk-stage-embed iframe")
+      .getByRole("link", { name: "Home", exact: true })
+      .click();
+    await expect(page.locator(".mbk-screen-head h2")).toHaveText("Home");
     expect(requests.filter((url) => /\/__mokly\/events\//.test(url))).toEqual(
       [],
     );
@@ -82,7 +93,7 @@ for (const width of [390, 1280]) {
       requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
     ).toEqual([]);
     expect(
-      requests.filter((url) => /\/pages\/removed-document\.json$/.test(url)),
+      requests.filter((url) => /\/removed-document\/index\.json$/.test(url)),
     ).toHaveLength(1);
   });
 }

@@ -117,16 +117,16 @@ test("publish uploads changed content and identity-stamped shells after an entry
   );
   assert.equal(stderr, "");
   const snapshots = requested.filter((name) =>
-    name.includes("/snapshots/after/screens/home."),
+    name.includes("/snapshots/after/home/index."),
   );
   assert.equal(snapshots.length, 2);
   const identityStamped = [
     "404.html",
     "__mokly/catalogue.json",
     "index.html",
-    "view/screens/details.html",
-    "view/screens/home.html",
-    "view/user-flows/tour.html",
+    "view/details/index.html",
+    "view/home/index.html",
+    "view/tour/index.html",
   ];
   const allStamped = second.ownership.files
     .map(({ path }) => path)
@@ -143,8 +143,8 @@ test("publish uploads changed content and identity-stamped shells after an entry
     requested,
     [
       ...identityStamped,
-      "static/screens/home.desktop.html",
-      "static/screens/home.mobile.html",
+      "static/home/index.desktop.html",
+      "static/home/index.mobile.html",
       ...snapshots,
     ].sort(),
   );

@@ -8,23 +8,27 @@ import { isInside, projectRealPath, resolveInside } from "./paths.js";
 import { requireString } from "./rules.js";
 
 interface ReviewOutBoundary {
-  /** Directories holding resolved entry modules, or the entriesDir shorthand. */
+  /** Directories holding resolved entry modules, . */
   entryRoots?: readonly string[];
   /** Resolved entry modules when discovery has already run. */
   entryModules?: readonly string[];
-  /** Shorthand directory before discovery has resolved any module. */
-  entriesDir?: string;
+  resolvedFiles?: readonly string[];
+  protectedFiles?: readonly string[];
   mockupsDir: string;
   repoRoot: string;
 }
 
 /** Directories that hold authored entry modules for a boundary check. */
 function entryRootsOf(boundary: ReviewOutBoundary): string[] {
-  if (boundary.entriesDir) return [boundary.entriesDir];
   return [
     ...new Set([
       ...(boundary.entryRoots ?? []),
-      ...(boundary.entryModules ?? []).map((module) => path.dirname(module)),
+      ...(
+        boundary.protectedFiles ??
+        boundary.resolvedFiles ??
+        boundary.entryModules ??
+        []
+      ).map((module) => path.dirname(module)),
     ]),
   ];
 }
@@ -59,19 +63,20 @@ export function requireDirectory(value: string, label: string): void {
   }
 }
 
-/** Reject a shorthand source root whose ownership cannot be distinguished from output. */
+/** Reject a source root whose ownership cannot be distinguished from output. */
 export function validateSourceRoots(
   repoRoot: string,
-  entriesDir: string | undefined,
+  sourceRoot: string | undefined,
   mockupsDir: string,
+  label = "roots[].dir",
 ): void {
   const realMockups = requireRealInside(repoRoot, mockupsDir, "mockupsDir");
-  if (entriesDir === undefined) return;
-  const realEntries = requireRealInside(repoRoot, entriesDir, "entriesDir");
-  if (entriesDir === mockupsDir || realEntries === realMockups)
+  if (sourceRoot === undefined) return;
+  const realEntries = requireRealInside(repoRoot, sourceRoot, label);
+  if (sourceRoot === mockupsDir || realEntries === realMockups)
     throw new MoklyError(
       "config-invalid",
-      "authored source directories must not equal mockupsDir",
+      `${label} must not equal mockupsDir`,
     );
 }
 

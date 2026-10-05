@@ -37,7 +37,7 @@ test("screen-only live view states use real material attribution without snapsho
     comparisonUrl: null,
     revision: { content: 1, evidence: 1 },
   });
-  const home = model.screens.find((entry) => entry.id === "home")!;
+  const home = model.screens.find((entry) => entry.path === "home")!;
   assert.deepEqual(home.changes, {
     status: "ready",
     kind: "changed",
@@ -71,11 +71,11 @@ test("removing a variant retains its parent relationship and folder path", async
   assert.equal(changes.removedEntries.length, 1);
   const removed = changes.removedEntries[0];
   assert.ok(removed?.entry.kind === "screen");
-  assert.equal(removed.entry.id, "home-empty");
+  assert.equal(removed.entry.path, "home/empty");
   assert.equal(removed.entry.variantOf, "home");
-  assert.deepEqual(removed.entry.navPath, ["Fixture"]);
-  assert.ok(changes.changedIds.includes(removed.entry.id));
-  assert.equal(changes.changedIds.includes("home"), false);
+  assert.deepEqual(removed.folderTitles, []);
+  assert.ok(changes.changedEntries.includes(removed.entry.path));
+  assert.equal(changes.changedEntries.includes("home"), false);
 });
 
 test("removing a parent and variant retains one removed screen for each", async (t) => {
@@ -97,17 +97,17 @@ test("removing a parent and variant retains one removed screen for each", async 
 
   assert.deepEqual(
     changes.removedEntries.map(({ entry }) => [
-      entry.id,
+      entry.path,
       entry.kind === "screen" ? entry.variantOf : undefined,
     ]),
     [
       ["home", undefined],
-      ["home-empty", "home"],
+      ["home/empty", "home"],
     ],
   );
   assert.deepEqual(
-    changes.changedIds.filter((id) => id.startsWith("home")),
-    ["home", "home-empty"],
+    changes.changedEntries.filter((id) => id.startsWith("home")),
+    ["home", "home/empty"],
   );
 });
 
@@ -130,23 +130,23 @@ test("a committed baseline places a removed variant under its parent row", async
 
   const context = publicShellContext(catalogue, {
     base: "main",
-    changedIds: changes.changedIds,
+    changedEntries: changes.changedEntries,
     updateVersion: 1,
   });
   const html = homePage(catalogue, context);
 
   assert.match(
     html,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="screens\/home-empty\.html"/,
+    /<div class="mbk-nav-variants" data-nav-disclosure="variants:home"[^>]*id="mb-nav-variants-specs-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="home\/empty\/index\.html"/,
   );
   assert.match(html, /Home empty · Removed<span class="mbk-nav-changed-text"/);
   assert.match(html, /<span class="mbk-nav-filter-count">1<\/span>/);
   assert.doesNotMatch(
     html,
-    /data-changed="true"[^>]*data-route="screens\/home\.html"/,
+    /data-changed="true"[^>]*data-route="home\/index\.html"/,
   );
   assert.match(
     html,
-    /data-changed="true"[^>]*data-route="screens\/home-empty\.html"/,
+    /data-changed="true"[^>]*data-route="home\/empty\/index\.html"/,
   );
 });

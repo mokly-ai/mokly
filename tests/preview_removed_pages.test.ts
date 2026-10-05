@@ -46,11 +46,12 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
     ),
   );
   const page = model.removedEntries.find(
-    ({ entry }) => entry.id === "removed-page",
+    ({ entry }) =>
+      entry.path === "fixture/deleted-archive/deleted-section/removed-page",
   );
   assert.ok(page?.preview?.kind === "page");
-  await assertPublishedPagePreview(output, page.preview);
-  assert.deepEqual(page.entry.navPath, [
+  await assertPublishedPagePreview(output, page.preview, page.entry.path);
+  assert.deepEqual(page.folderTitles, [
     "Fixture",
     "Deleted archive",
     "Deleted section",
@@ -61,7 +62,7 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
         path.join(
           output,
           path.posix.dirname(model.comparisonUrl!),
-          "pages/removed-page.json",
+          "previews/fixture/deleted-archive/deleted-section/removed-page/index.json",
         ),
         "utf8",
       ),
@@ -73,7 +74,7 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
     path.join(
       output,
       generation,
-      `snapshots/before/${entryRoute("page", preview.id)}`,
+      `snapshots/before/${entryRoute(preview.path)}`,
     ),
     "utf8",
   );
@@ -92,14 +93,17 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
     ),
   );
   const desktop = review.screens
-    .find(({ id }) => id === "removed-screen")
+    .find(
+      ({ path }) =>
+        path === "fixture/deleted-archive/deleted-section/removed-screen",
+    )
     ?.views.find(({ viewport }) => viewport === "desktop");
   assert.ok(desktop);
   const screenDocument = await fs.readFile(
     path.join(
       output,
       generation,
-      `snapshots/before/${viewRoute("screen", "removed-screen", desktop.viewport, desktop.colorScheme)}`,
+      `snapshots/before/${viewRoute("fixture/deleted-archive/deleted-section/removed-screen", desktop.viewport, desktop.colorScheme)}`,
     ),
     "utf8",
   );

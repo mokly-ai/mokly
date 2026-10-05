@@ -17,6 +17,8 @@ export const designLibrary = [
       "unavailable",
       "variants",
       "changed-variants",
+      "folder-screen",
+      "changed-member",
     ],
   ],
   ["chrome", "screen-header", ["screen", "component", "changed", "removed"]],

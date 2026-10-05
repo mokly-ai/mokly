@@ -33,7 +33,8 @@ and is not converted to a baseline history error.
    zero-based command index, argv, exit code or signal, and the last 40 output
    lines.
 5. Locate `<source>/<mockupsDir>` using the current config's repository-relative
-   `mockupsDir`. Apply the same v7 compatibility gate as committed baselines.
+   `mockupsDir`. Apply the same v8
+   [compatibility gate](./mokly-baseline-compatibility.md) as committed baselines.
    Missing or malformed output fails as `baseline-output-invalid`; recognized
    earlier output is cached as a completed but incompatible base so commands do
    not rerun on every classification. Moving `mockupsDir` between base and head
@@ -64,7 +65,7 @@ whose release removes an empty `.mokly-cache/`. Creating a cache entry
 therefore restarts its ancestor walk, at most five times, when a parent
 disappears. The cache is package owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
-and never a valid `mockupsDir`, entry glob root, resolved entry module,
+and never a valid `mockupsDir`, root, resolved entry module or document,
 `review.outDir`, or export destination. Consumers add `.mokly-cache/` to their ignore file; derived
 `check` also fails when Git tracks anything under it.
 

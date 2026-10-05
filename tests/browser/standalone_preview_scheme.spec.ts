@@ -34,7 +34,10 @@ test.afterAll(async () => {
 async function expectLightPreviews(page: Page): Promise<void> {
   for (const viewport of ["mobile", "desktop"]) {
     const frame = page.locator(`[data-workspace-frame="${viewport}"]`);
-    await expectFrameSource(frame, new RegExp(`home\\.${viewport}\\.html$`));
+    await expectFrameSource(
+      frame,
+      new RegExp(`home/index\\.${viewport}\\.html$`),
+    );
     await expect(frame).toHaveCSS("color-scheme", "light");
     await expect(frame).toHaveCSS("background-color", "rgb(255, 255, 255)");
     const input = frame.contentFrame().getByLabel("Date");
@@ -71,9 +74,7 @@ for (const width of [390, 1280]) {
     await page.emulateMedia({ colorScheme: null });
     const errors = captureBrowserErrors(page);
     const gate = await delayHydration(page, developmentBundle);
-    const navigation = page.goto(
-      `${site.url}/view/screens/home.html?scheme=dark`,
-    );
+    const navigation = page.goto(`${site.url}/view/home/?scheme=dark`);
     try {
       await gate.requested;
       await expectLightPreviews(page);

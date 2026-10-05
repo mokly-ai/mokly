@@ -22,10 +22,12 @@ const hrefs = (html: string): string[] =>
 
 test("renderer and exporting entry links follow configured order across nested and dark views", async (t) => {
   const fixture = await createFixture(
-    validEntrySource().replace(
-      'navPath: ["Fixture"]',
-      'navPath: ["Fixture", "Nested"]',
-    ),
+    validEntrySource()
+      .replaceAll('"home"', '"account/home"')
+      .replaceAll('"details"', '"account/details"')
+      .replaceAll('"tour"', '"account/tour"')
+      .replaceAll("mock:home", "mock:account/home")
+      .replaceAll("mock:details", "mock:account/details"),
     {
       extraConfig:
         'renderer: "renderer.tsx", colorSchemes: ["light", "dark"], stylesheets: [{ match: "**", stylesheets: ["shared.css"], darkStylesheets: ["night.css"] }],',
@@ -48,19 +50,19 @@ test("renderer and exporting entry links follow configured order across nested a
   );
   await fs.appendFile(fixture.entryPath, '\nimport "./entry.css";');
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  const route = "screens/home.mobile.dark.html";
+  const route = "account/home/index.mobile.dark.html";
   assert.deepEqual(hrefs(textOutput(compiled.outputs, route)!), [
-    "../shared.css",
-    "../night.css",
-    "../mokly-generated/styles/renderer.tsx.css",
-    "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
+    "../../shared.css",
+    "../../night.css",
+    "../../mokly-generated/styles/renderer.tsx.css",
+    "../../mokly-generated/styles/entries/fixture.mockup.tsx.css",
   ]);
   assert.deepEqual(
-    hrefs(textOutput(compiled.outputs, "screens/home.desktop.html")!),
+    hrefs(textOutput(compiled.outputs, "account/home/index.desktop.html")!),
     [
-      "../shared.css",
-      "../mokly-generated/styles/renderer.tsx.css",
-      "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
+      "../../shared.css",
+      "../../mokly-generated/styles/renderer.tsx.css",
+      "../../mokly-generated/styles/entries/fixture.mockup.tsx.css",
     ],
   );
 });
@@ -85,13 +87,14 @@ test("a re-exported helper screen links its exporting entry's stylesheet", async
     'export { mockups } from "./helper"; import "./one.css";',
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  const html = textOutput(compiled.outputs, "screens/home.mobile.html")!;
+  const html = textOutput(compiled.outputs, "home/index.mobile.html")!;
   assert.match(html, /source-base64=/);
   assert.deepEqual(hrefs(html), [
     "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
   ]);
   assert.equal(
-    compiled.manifest.entries.find((entry) => entry.id === "home")?.sourcePath,
+    compiled.manifest.entries.find((entry) => entry.path === "home")
+      ?.sourcePath,
     "entries/helper.tsx",
   );
   assert.ok(!JSON.stringify(compiled.manifest).includes("entryRoot"));
@@ -114,8 +117,7 @@ test("a helper-registered component links the entry stylesheet in saved variants
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   const routes = [...compiled.outputs.keys()].filter(
-    (route) =>
-      route.startsWith("components/action-") && route.endsWith(".html"),
+    (route) => route.startsWith("action/") && route.endsWith(".html"),
   );
   assert.ok(routes.length >= 4, routes.join(", "));
   for (const route of routes)
@@ -137,15 +139,15 @@ test("each exporting entry links its own CSS while a page receives no automatic 
   await fs.writeFile(
     path.join(fixture.entriesDir, "second.mockup.tsx"),
     `import "./second.css"; import React from "react"; import { defineScreen, definePage } from "@mokly/mokly";
-    export const mockups = [defineScreen({ id: "second", title: "Second", description: "Second screen", route: "screens/second.html", dependencies: [], relatedDocs: [], mobile: <p>Second</p>, desktop: <p>Second</p>, useCaseIds: [] }), definePage({ id: "paper", title: "Paper", description: "A page", route: "paper.html", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><head></head><body>Paper</body></html>" })];`,
+    export const mockups = [defineScreen({ path: "second", title: "Second", description: "Second screen", dependencies: [], relatedDocs: [], mobile: <p>Second</p>, desktop: <p>Second</p>, useCasePaths: [] }), definePage({ path: "paper", title: "Paper", description: "A page", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><head></head><body>Paper</body></html>" })];`,
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   assert.deepEqual(
-    hrefs(textOutput(compiled.outputs, "screens/home.mobile.html")!),
+    hrefs(textOutput(compiled.outputs, "home/index.mobile.html")!),
     ["../mokly-generated/styles/entries/fixture.mockup.tsx.css"],
   );
   assert.deepEqual(
-    hrefs(textOutput(compiled.outputs, "screens/second.mobile.html")!),
+    hrefs(textOutput(compiled.outputs, "second/index.mobile.html")!),
     ["../mokly-generated/styles/entries/second.mockup.tsx.css"],
   );
   assert.ok(
@@ -154,7 +156,7 @@ test("each exporting entry links its own CSS while a page receives no automatic 
     ),
   );
   assert.deepEqual(
-    hrefs(textOutput(compiled.outputs, "pages/paper.html")!),
+    hrefs(textOutput(compiled.outputs, "paper/index.html")!),
     [],
   );
 });

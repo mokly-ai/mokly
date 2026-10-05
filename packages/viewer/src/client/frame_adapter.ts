@@ -23,7 +23,7 @@ export type NavigationTarget =
   | { kind: "self" | "top" | "parent" | "blank" }
   | { kind: "named"; name: string };
 export interface FrameNavigation {
-  id: string;
+  screenPath: string;
   fragment?: string;
   target: NavigationTarget;
   activation: "primary" | "modified" | "middle";

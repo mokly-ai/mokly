@@ -43,7 +43,7 @@ status (older payloads omit it). A selected Changes filter survives pending or
 unavailable states and their completion rather than switching to All to reveal an
 unchanged current preview. Explicit navigation still reveals its destination.
 
-Navigation follows the [path contract](./mokly-nav-paths.md); recovery uses the
+Navigation follows the [path contract](./mokly-paths.md); recovery uses the
 [disclosure persistence contract](./mokly-disclosure-persistence.md)
 for current keys, values, and incompatible snapshot handling.
 

@@ -21,7 +21,7 @@ import {
 
 import {
   shellContextWithViewerEvidence,
-  viewerCapabilityEntryId,
+  viewerCapabilityEntryPath,
 } from "./capability_adoption.js";
 import {
   commitViewerEvidence,
@@ -71,7 +71,8 @@ export function useViewerCapabilityStore(input: {
     catalogue: input.catalogue,
     ...(initialRequest ? { routeEvidence: initialRequest } : {}),
     ...(initialRequest ? { source: initialRequest.source } : {}),
-    ...(initialRequest && initialWorkspace?.entry.id === initialRequest.entryId
+    ...(initialRequest &&
+    initialWorkspace?.entry.path === initialRequest.entryPath
       ? { workspace: { request: initialRequest, value: initialWorkspace } }
       : {}),
   }));
@@ -80,13 +81,13 @@ export function useViewerCapabilityStore(input: {
   snapshotRef.current = snapshot;
   recoveryRef.current = input.captureRecovery;
 
-  const entryId = viewerCapabilityEntryId(input.state.route);
+  const entryPath = viewerCapabilityEntryPath(input.state.route);
   const request = useMemo(
     () =>
       snapshot.source
-        ? viewerCapabilityRequest(snapshot.source, entryId)
+        ? viewerCapabilityRequest(snapshot.source, entryPath)
         : undefined,
-    [entryId, snapshot.source],
+    [entryPath, snapshot.source],
   );
   const workspace =
     request && sameRequest(snapshot.workspace?.request, request)
@@ -114,13 +115,13 @@ export function useViewerCapabilityStore(input: {
         adoptEvidence(revision) {
           if (controller.signal.aborted) return true;
           const current = snapshotRef.current;
-          const currentEntryId = viewerCapabilityEntryId(
+          const currentEntryPath = viewerCapabilityEntryPath(
             input.stateRef.current.route,
           );
           if (
             !current.source ||
             !viewerCapabilitySourceEquals(current.source, request.source) ||
-            currentEntryId !== request.entryId
+            currentEntryPath !== request.entryPath
           )
             return true;
           const commit = commitViewerEvidence(
@@ -267,7 +268,7 @@ function currentRequestOwns(
   return Boolean(
     snapshot.source &&
     viewerCapabilitySourceEquals(snapshot.source, request.source) &&
-    viewerCapabilityEntryId(state.route) === request.entryId,
+    viewerCapabilityEntryPath(state.route) === request.entryPath,
   );
 }
 
@@ -276,7 +277,7 @@ function capabilityRequest(
   state: ShellState,
 ): ViewerCapabilityRequest | undefined {
   return source
-    ? viewerCapabilityRequest(source, viewerCapabilityEntryId(state.route))
+    ? viewerCapabilityRequest(source, viewerCapabilityEntryPath(state.route))
     : undefined;
 }
 
@@ -286,7 +287,7 @@ function sameRequest(
 ): boolean {
   return (
     left !== undefined &&
-    left.entryId === right.entryId &&
+    left.entryPath === right.entryPath &&
     viewerCapabilitySourceEquals(left.source, right.source)
   );
 }

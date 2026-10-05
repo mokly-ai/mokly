@@ -9,6 +9,7 @@ import {
   type AuthenticatedRanges,
 } from "./document_ranges.js";
 import { localFrameAccess } from "./same_origin_access.js";
+import { normalizedHtmlPath } from "./same_origin_identity.js";
 
 export interface ComponentBounds {
   key: string;
@@ -34,11 +35,11 @@ export function authenticateRanges(
       location.origin !== parent.defaultView?.location.origin
     )
       return;
-    const actual = decodeURIComponent(location.pathname).replace(/\.html$/, "");
+    const actual = normalizedHtmlPath(decodeURIComponent(location.pathname));
     const expected = path.startsWith("/__mokly/components/renders/")
       ? path
       : `/static/${path}`;
-    if (actual !== expected.replace(/\.html$/, "")) return;
+    if (actual !== normalizedHtmlPath(expected)) return;
     return authenticateDocumentRanges(
       doc,
       usage.ranges.map((range) => ({

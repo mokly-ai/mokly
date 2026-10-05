@@ -47,7 +47,7 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
     status: "Changed",
     change: {
       kind: "screen",
-      after: { id: "home", route: "screens/home.html", title: "Home" },
+      after: { path: "home", title: "Home" },
       reasons: [
         { kind: "material" },
         {
@@ -59,8 +59,7 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
     },
     comparison: {
       dependencies: [],
-      id: "home",
-      route: "screens/home.html",
+      path: "home",
       sharedImpact: [SHARED],
       state: "changed",
       title: "Home",
@@ -90,7 +89,7 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
     components: [],
     comparisonEligible: true,
     comparisons: true,
-    entry: { id: "home", kind: "screen", route: "screens/home.html" },
+    entry: { path: "home", kind: "screen", route: "home/index.html" },
     inputChanges: [],
     relatedComponents: [],
     usedBy: [],
@@ -135,14 +134,14 @@ test("the terminal line names the screen or the saved view it compared", () => {
 
   const screen = renderEvidence({
     ...unmodified,
-    entry: { id: "home", kind: "screen", route: "screens/home.html" },
+    entry: { path: "home", kind: "screen", route: "home/index.html" },
   } as unknown as WorkspaceData);
   assert.match(screen, /<p>No changes to this screen\.<\/p><\/section>$/);
 
   const component = renderEvidence(
     {
       ...unmodified,
-      entry: { id: "badge", kind: "component", route: "components/badge.html" },
+      entry: { path: "badge", kind: "component", route: "badge/index.html" },
     } as unknown as WorkspaceData,
     "default",
   );
@@ -228,8 +227,8 @@ function renderKindEvidence(
 ): string {
   const address =
     kind === "component"
-      ? { id: "action", route: "components/action.html", title: "Action" }
-      : { id: "home", route: "screens/home.html", title: "Home" };
+      ? { path: "action", title: "Action" }
+      : { path: "home", title: "Home" };
   const view = {
     colorScheme: "light",
     ignoredIds: [],
@@ -251,7 +250,7 @@ function renderKindEvidence(
       ? {
           variants: [
             {
-              id: "default",
+              path: "action/default",
               title: "Default",
               state: "changed",
               views: [view],
@@ -278,15 +277,15 @@ function renderKindEvidence(
       variants: [],
       views: [],
     } as unknown as WorkspaceData,
-    kind === "component" ? "default" : undefined,
+    kind === "component" ? "action/default" : undefined,
   );
 }
 
-function renderEvidence(data: WorkspaceData, variantId?: string): string {
+function renderEvidence(data: WorkspaceData, variantPath?: string): string {
   return renderToStaticMarkup(
     createElement(WorkspaceEvidence, {
       data,
-      ...(variantId ? { variantId } : {}),
+      ...(variantPath ? { variantPath } : {}),
     }),
   );
 }

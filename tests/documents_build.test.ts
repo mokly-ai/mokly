@@ -1,0 +1,265 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import test from "node:test";
+
+import { compileCatalogue } from "../dist/build/compile.js";
+import {
+  componentRuntime,
+  runtimeGraph,
+} from "../dist/build/component_runtime.js";
+import { DocumentCompiler } from "../dist/build/document_compiler.js";
+import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
+import { loadConsumerGraph } from "../dist/build/load_graph.js";
+import { generatedSource } from "../dist/build/ownership.js";
+import { writeCompilation } from "../dist/build/transaction.js";
+import { projectCatalogue } from "../dist/catalogue/projection.js";
+import { loadConfig } from "../dist/config/load.js";
+import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+
+import { pageSource, pathFixture } from "./helpers/path_fixture.js";
+
+const svg =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="18" fill="green"/></svg>';
+
+test("renaming the config retains exact resource ownership for resolved document sources", async (t) => {
+  const fixture = await pathFixture({
+    "specs/guide.md": "# Guide\n\n![Logo](logo.svg)",
+    "specs/logo.svg": svg,
+  });
+  t.after(fixture.remove);
+  const config = await fixture.config();
+  await writeCompilation(await fixture.compile(), config);
+  await fs.rename(
+    path.join(fixture.root, "mokly.config.ts"),
+    path.join(fixture.root, "custom.config.ts"),
+  );
+  const renamed = await loadConfig(fixture.root, "custom.config.ts");
+  await writeCompilation(await compileCatalogue(renamed), renamed);
+  assert.equal(
+    await fs.readFile(path.join(fixture.root, "generated/logo.svg"), "utf8"),
+    svg,
+  );
+});
+
+test("document-only roots emit manifest, tree, resources and both schemes", async (t) => {
+  const fixture = await pathFixture(
+    {
+      "specs/example/README.md":
+        "# Example\n\n[Start](getting-started.notes.md#start)\n\n![Logo](logo.svg)",
+      "specs/example/getting-started.notes.md":
+        '---\ndescription: Start here\ntags: ["guide"]\n---\n# Start\n\n[Overview](README.md)\n\n[Section](#section)\n\n## Section',
+      "specs/example/logo.svg": svg,
+    },
+    '{mockupsDir:"generated", roots:[{dir:"specs"}], colorSchemes:["light","dark"]}',
+  );
+  t.after(fixture.remove);
+  const compilation = await fixture.compile();
+  const { manifest, outputs } = compilation;
+  assert.equal(createCatalogue(manifest).hasDarkFragments, true);
+  assert.equal(
+    createCatalogue({ ...manifest, entries: [] }, [
+      { entry: manifest.entries[0]!, folderTitles: [] },
+    ]).hasDarkFragments,
+    true,
+  );
+  assert.equal(manifest.schemaVersion, 8);
+  assert.deepEqual(
+    manifest.entries.map((e) => [e.path, e.kind]),
+    [
+      ["example", "document"],
+      ["example/getting-started", "document"],
+    ],
+  );
+  const overview = manifest.entries[0]!;
+  assert.equal(overview.description, "");
+  assert.deepEqual(overview.declaredDependencies, []);
+  assert.deepEqual(overview.relatedDocs, []);
+  assert.ok(overview.kind === "document");
+  assert.deepEqual(overview.resources, ["specs/example/logo.svg"]);
+  assert.ok(manifest.sourceFiles.includes("specs/example/logo.svg"));
+  assert.equal(Buffer.from(outputs.get("example/logo.svg")!).toString(), svg);
+  for (const scheme of ["light", "dark"]) {
+    const route = `example/index${scheme === "dark" ? ".dark" : ""}.html`;
+    const html = outputs.get(route) as string;
+    assert.equal(generatedSource(html), "specs/example/README.md");
+    assert.ok(
+      html.includes(`<html lang="en" style="color-scheme: ${scheme}">`),
+    );
+    assert.ok(html.includes('data-mokly-link="example/getting-started#start"'));
+    assert.ok(!html.includes("<script"));
+  }
+  const model = projectCatalogue({
+    catalogue: createCatalogue(manifest),
+    configPath: "mokly.config.ts",
+    changesStatus: "disabled",
+    comparisonUrl: null,
+    revision: { content: 0, evidence: 0 },
+  });
+  assert.equal(model.schemaVersion, 4);
+  assert.equal(model.documents.length, 2);
+  assert.deepEqual(readCatalogue(model), model);
+  assert.deepEqual(model.tree[0], {
+    kind: "folder",
+    path: "example",
+    title: "Example",
+    index: "example",
+    children: [
+      { kind: "entry", path: "example" },
+      { kind: "entry", path: "example/getting-started" },
+    ],
+  });
+  const runtime = componentRuntime(compilation);
+  const replay = new DocumentCompiler(runtime, runtimeGraph(runtime));
+  assert.equal(
+    replay.render("example/index.dark.html").html,
+    outputs.get("example/index.dark.html"),
+  );
+  const inventory = await loadConsumerGraph(await fixture.config(), false);
+  assert.deepEqual(inventory.sourceFiles, manifest.sourceFiles);
+  const live = await prepareLiveRuntime(await fixture.config());
+  assert.equal(
+    new DocumentCompiler(live, runtimeGraph(live)).render(
+      "example/index.dark.html",
+    ).html,
+    outputs.get("example/index.dark.html"),
+  );
+});
+
+test("titles use front matter, first heading of any level, then first-dot filename", async (t) => {
+  const fixture = await pathFixture({
+    "specs/first.md": "---\ntitle: Chosen title\n---\n# Body title",
+    "specs/second.md": "Text\n\n### *Third* level\n\n# Later",
+    "specs/getting_started.notes.md": "No heading here.",
+    "specs/---.md": "No heading here.",
+  });
+  t.after(fixture.remove);
+  assert.deepEqual(
+    (await fixture.compile()).manifest.entries.map((e) => [e.path, e.title]),
+    [
+      ["---", "---"],
+      ["first", "Chosen title"],
+      ["getting_started", "Getting started"],
+      ["second", "Third level"],
+    ],
+  );
+});
+
+test("document discovery applies root prefixes, transparent folders, exclusions and exact index names", async (t) => {
+  const fixture = await pathFixture(
+    {
+      "specs/_folder.json": '{"exclude":["drafts/**"]}',
+      "specs/__notes__/README.md": "# Guide",
+      "specs/__notes__/index.draft.md": "# Draft index",
+      "specs/__notes__/next/readme.md": "# Next",
+      "specs/drafts/invalid name.md": "---\ninvalid metadata\n---",
+    },
+    '{mockupsDir:"generated",roots:[{dir:"specs",path:"Guide",transparent:["__notes__"]}]}',
+  );
+  t.after(fixture.remove);
+  const { manifest } = await fixture.compile();
+  assert.deepEqual(
+    manifest.entries.map((entry) => entry.path),
+    ["Guide", "Guide/index", "Guide/next"],
+  );
+  assert.ok(manifest.sourceFiles.includes("specs/drafts/invalid name.md"));
+});
+
+test("documents and imported screen CSS retain independent rendering and link delivery", async (t) => {
+  const fixture = await pathFixture({
+    "specs/guide.md": "# Guide\n\n[Screen](mock:screen#target)",
+    "specs/screen.mockup.tsx":
+      'import "./screen.css"; import {defineScreen} from "@mokly/mokly"; export default defineScreen({ title:"Screen",description:"A styled screen",dependencies:[],relatedDocs:[],mobile:<h1 id="target">Mobile</h1>,desktop:<h1 id="target">Desktop</h1> });',
+    "specs/screen.css": "h1 { color: green; }",
+  });
+  t.after(fixture.remove);
+  const { outputs } = await fixture.compile();
+  assert.ok(outputs.has("mokly-generated/styles/specs/screen.mockup.tsx.css"));
+  const html = outputs.get("guide/index.html") as string;
+  assert.ok(html.includes('href="../screen/index.desktop.html#target"'));
+  assert.ok(!html.includes('rel="stylesheet"'));
+});
+
+test("declared index paths retain logical bases while file links use repository locations", async (t) => {
+  const fixture = await pathFixture({
+    "specs/Bad Folder/README.md":
+      "---\npath: account/billing\n---\n# Billing\n\n[Logical](mock:./invoice) [File](invoice.v2.md)",
+    "specs/Bad Folder/invoice.v2.md":
+      "---\npath: account/billing/invoice\n---\n# Invoice",
+  });
+  t.after(fixture.remove);
+  const html = (await fixture.compile()).outputs.get(
+    "account/billing/index.html",
+  ) as string;
+  assert.equal(
+    (html.match(/data-mokly-link="account\/billing\/invoice"/g) ?? []).length,
+    2,
+  );
+});
+
+test("relatedDocs resolves discovered documents and retains other repository labels", async (t) => {
+  const fixture = await pathFixture({
+    "specs/guide.md": "# Guide",
+    "notes.md": "Not discovered",
+    "specs/page.mockup.ts": pageSource(
+      'relatedDocs:["specs/guide.md", "notes.md"],',
+    ),
+  });
+  t.after(fixture.remove);
+  const { manifest } = await fixture.compile();
+  const model = projectCatalogue({
+    catalogue: createCatalogue(manifest),
+    configPath: "mokly.config.ts",
+    changesStatus: "disabled",
+    comparisonUrl: null,
+    revision: { content: 0, evidence: 0 },
+  });
+  assert.deepEqual(model.pages[0]!.details.relatedDocs, [
+    "mock:guide",
+    "notes.md",
+  ]);
+  assert.deepEqual(readCatalogue(model), model);
+  const invalid = structuredClone(model);
+  invalid.pages[0]!.details.relatedDocs = ["mock:missing"];
+  assert.throws(
+    () => readCatalogue(invalid),
+    /related document must name a current document/,
+  );
+});
+
+test("copied resources have transactional replacement and orphan ownership", async (t) => {
+  const fixture = await pathFixture({
+    "specs/guide.md": "# Guide\n\n![Logo](logo.svg)",
+    "specs/logo.svg": svg,
+    "specs/other.md": "# Other",
+  });
+  t.after(fixture.remove);
+  const config = await fixture.config();
+  await writeCompilation(await fixture.compile(), config);
+  await fixture.write("specs/logo.svg", svg.replace("green", "blue"));
+  await writeCompilation(await fixture.compile(), config);
+  assert.ok(
+    (
+      await fs.readFile(path.join(fixture.root, "generated/logo.svg"), "utf8")
+    ).includes("blue"),
+  );
+  await fs.rm(path.join(fixture.root, "specs/guide.md"));
+  await writeCompilation(await fixture.compile(), config);
+  await assert.rejects(fs.stat(path.join(fixture.root, "generated/logo.svg")), {
+    code: "ENOENT",
+  });
+  await assert.rejects(fs.stat(path.join(fixture.root, "generated/guide")), {
+    code: "ENOENT",
+  });
+  await fixture.write("specs/guide.md", "# Guide\n\n![Logo](logo.svg)");
+  await fixture.write("generated/logo.svg", "User-owned file");
+  await assert.rejects(
+    writeCompilation(await fixture.compile(), config),
+    /refusing to overwrite unowned file: logo.svg/,
+  );
+  assert.equal(
+    await fs.readFile(path.join(fixture.root, "generated/logo.svg"), "utf8"),
+    "User-owned file",
+  );
+});

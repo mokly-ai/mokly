@@ -55,7 +55,7 @@ export function workspaceHighlightLabels(
       )
         return [];
       const component = data.components.find(
-        (item) => item.id === instance.componentId,
+        (item) => item.path === instance.componentId,
       );
       return [
         {

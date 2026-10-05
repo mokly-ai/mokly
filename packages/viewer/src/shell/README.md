@@ -1,5 +1,47 @@
 # Shared Browse shell
 
+`metadata.ts` carries accepted move evidence privately. `comparison_selection.ts`
+uses each side's original path for snapshot URLs, including moved variants.
+`catalogue.ts` keeps each paired current entry's branch-point path in
+`previousPaths`: Serve and export pass the accepted pairs to `createCatalogue`,
+and the public viewer reads `previousPath` from the read model. No shell module
+reads those pairs, follows a `variantOf`, or case-folds a path itself:
+reference and parent resolution follow the
+[branch-point lookup contract](../../../../docs/protocol/mokly-branch-point-lookup.md)
+through one lookup.
+`nav_moves.ts`
+records that path on each row; under Changes a moved row reads
+`<label> · Moved` in place of the changed mark, and under All it carries the
+mark only when `materialChangedEntries` lists it. Details add a `Moved from`
+row after Source, and the comparison details name the previous path as the
+earlier side. A pure move is in Changes without changing, so workspace
+statuses count material changes only and keep it Unmodified: the public
+projection sets `materialEntries` from each entry's `changes.kind`, and server
+pages read `componentChanges.changedEntries`. The same lookup contract owns
+counterparts for workspace inputs, variants and nested component instances.
+
+`catalogue_branch_point.ts` implements that pure lookup beside `createCatalogue`.
+`branchPoints(catalogue)` is its one construction point: it indexes a catalogue
+generation on first use and returns the same lookup for that catalogue object
+afterwards. `resolve` requires an explicit before/after side and kind.
+`counterpart(current, baseline?)` gives the original baseline identity, and
+`baselineEntry(current, baseline)` the inventory entry at that identity.
+`parent` gives an eligible parent of a resolved variant or a stored title
+without a link, and `parentOf` locates a current entry or removed record first.
+`removedVariants(parent)` lists the removed variants whose parent resolves to
+that entry, in record order. `previousPath` gives only accepted move pairs.
+Results retain current entries or complete removed records. The baseline
+inventory is supplied per call from `componentChanges.baseline`; it adds
+same-path and case-only counterparts, while pairs alone prove moved
+counterparts, so the embedded viewer never needs one. Usage links, the variant
+bar, supplied-input pairing, removed tree rows, workspace keys, breadcrumbs,
+details and the public workspace all use it.
+[`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
+fails when a shell or viewer module outside the lookup reads `previousPaths`,
+follows a `variantOf`, or case-folds a path. The shared Git cases in
+[`branch_point_fixture.ts`](../../../../tests/helpers/branch_point_fixture.ts)
+are also accepted by the browser branch hosts.
+
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document
 envelope used through `@mokly/viewer/server`, and the same tree is hydrated in
@@ -10,44 +52,72 @@ defines the tree and its state model; the
 Serve, export and the public viewer converged on this tree.
 
 `nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
-native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their
-entry-kind glyph, and a screen or component's variants as a container the row's chevron
-button discloses, because a row cannot be both a link and a `<summary>`. A
-deleted variant whose non-variant parent survives joins that container as a
-Removed row. `nav_tree.ts` records actual attachment before removing the row
-from flat fallback, so a former parent that is now a variant cannot make its
-historical child disappear and every removed entry remains represented once.
-Current section nodes use the shared folder-first comparator; flat removed
-rows use the combined ordering in the
+native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
+carrying their entry-kind glyph, and a screen or component's variants as a
+container the row's chevron button discloses, because a row cannot be both a
+link and a `<summary>`. `nav_tree.ts` lists a folder's own document, page, or
+use case as the folder's first child row, labelled `Overview` when its title
+is the folder's title, and renders a folder whose own page is a screen or
+component as that entry's row, whose container holds the variants and then
+the folder's other members. A deleted variant joins the container of the
+current parent the lookup resolves, including a moved or case-renamed parent,
+as a Removed row. `nav_removed_variants.ts` records actual attachment before
+removing the row from flat fallback, so a former parent that is now a variant
+or another kind cannot make its historical child disappear and every removed
+entry remains represented once. A removed page or document is a flat row
+that only Changes shows; All and search hide it. Current section nodes use the
+shared folder-first comparator; flat removed rows use the combined ordering in
+the
 [variant navigation contract](../../../../docs/protocol/mokly-variant-navigation.md).
-Components and Pages keep independent
-section roots even when they reuse the same folder labels.
+Specs and Components keep independent section roots even when they reuse the
+same folder paths. `filterHierarchy` orders each section again by the rows it
+shows, applying the `order` each folder node carries, so a screen or component
+that is its folder's own page sorts as a folder row in the other section.
+`search_query.ts` implements the single [search rule](../../../../docs/protocol/mokly-folders.md#titles),
+using resolved titles from `registry/folder_titles.ts`. Row visibility,
+Changes activation and route reveals all use that shared query and row, and
+`nav_rows.tsx` counts each folder's child rows with the same visibility.
+`home_summary.ts` builds the home summary from a type-checked label for every
+entry kind. The [shell layout contract](../../../../docs/protocol/mokly-shell-design.md#layout)
+owns both rules.
+`crumbs.ts` derives breadcrumbs from the same tree: a folder with its own page
+links to it, a visible folder without one becomes a button that
+`nav_reveal.ts` resolves to the disclosures exposing that folder, and the
+store's `revealFolder` opens them, clears only a hiding filter, opens the
+drawer at narrow widths, and asks `nav_scroll.ts` to focus the folder row.
+An embedded reveal proposes the cleared query as a whole; `nav_scroll.ts`
+keeps the reveal pending until the host commits a selection that shows the
+row, and gives up when a commit leaves it hidden.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
-fixed prefixes, never splitting on `:` inside a label. It rejects empty path
-segments and ignores obsolete collection and legacy keys on restore.
-`disclosure_storage.ts` owns the v3 map codec and both storage key names;
-early capture, hydration, the shell store, and watched-reload recovery share
-its validation so renamed keys never override current server defaults. The
-first v3 write removes the obsolete v2 closed list.
+fixed prefixes and complete paths; display labels never enter a key. It rejects
+empty path segments and every earlier key form on restore.
+`disclosure_storage.ts` owns the v4 map codec and its storage key; early
+capture, hydration, the shell store, and watched-reload recovery share its
+validation. Earlier storage versions are never read, translated, or removed.
 `routes.ts` resolves URL paths to current or retained manifest entries;
 `target.ts` wraps a found entry as a route target without an extra routing
-filter. The [path contract](../../../../docs/protocol/mokly-nav-paths.md)
+filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
 owns the shared folder ordering and identity used by this shell.
 `nav_changed.ts` names the changed mark's class, attribute and wording, so the
 server row and each React store update use the same presentation contract;
 `css_nav_changed.ts` draws the mark from `data-changed` and
 `data-changed-variants` alone. `nav_model.ts` applies search and Changes
 visibility to parents and their variant children. `changes_activation.ts`
-owns Changes-filter activation for both standalone and embedded shells: an
-aggregate-only parent selects its first visible changed variant, and a changed
+owns Changes-filter activation for both standalone and embedded shells under
+the [lookup's consumer rule](../../../../docs/protocol/mokly-branch-point-lookup.md#consumers): an
+unmodified container row selects its first visible changed tree entry, walking
+the rows `catalogueNavSections` built in the order its list shows them, so a
+removed variant attached under a moved member is reachable, and a changed
 destination selects its first changed view only when the current selection is
 not already a changed entry. Later navigation within Changes keeps the sticky
-view axes; aggregate-parent redirection still applies. The shared typed query
+view axes; container redirection still applies. The shared typed query
 parser applies each valid viewport or scheme independently and ignores invalid
 or repeated values; the embedded host and standalone router consume the same
 route result. `details_rows.tsx` owns the inspector's
-metadata rows, including links between a screen and its variants and the
-`Changed views` row.
+metadata rows, including links between a screen and its variants, the
+`Changed views` row, and Related docs links. A related doc links to its
+document when it is a public `mock:<path>` reference or, in Serve and export,
+the source path of a current document; a removed entry keeps plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
 axes that name a view, their canonical order and reader label, and the rule
@@ -60,7 +130,7 @@ state, so navigation and controlled-host updates cannot leave stale indicators.
 `workspace_views_data.ts` derives the changed views themselves, preferring a
 ready comparison result and falling back to the lightweight screen-view
 evidence a screen-only catalogue records. Workspace data keys those lists by
-component variant entry id or screen entry id, so every reader must
+component variant path or screen path, so every reader must
 select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
 the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
@@ -76,6 +146,12 @@ change and passes the effective scheme to controls and comparison presentation.
 `use_comparison.ts` is the single owner of comparison mode: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
+`views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
+resolves, so a removed variant of a moved or case-renamed parent opens in its
+siblings' workspace and keeps their mode. The mode owner also includes the
+evidence revision. Serve currently republishes evidence for each on-demand
+comparison document, so the first navigation after a new comparison resets the
+mode for any sibling.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
@@ -84,8 +160,8 @@ selectors and shell-root `.mbk` selectors to the embedding scope without
 rewriting class names. Standalone Serve/export retain their original CSS and
 font delivery paths.
 
-`catalogue.ts` owns pure display indexing. Its `byId` index contains current and
-removed entries whose ids are unique across both sets; an explicit snapshot
+`catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
+removed entries whose paths are unique across both sets; an explicit snapshot
 selects its exact removed record. Baseline repository access remains in the
 CLI's `src/server/baseline_catalogue.ts`.
 `store.tsx` and the focused `store_*` modules own standalone route/history,
@@ -100,21 +176,21 @@ events from visible sessions in the owning `frame_registry.tsx`. An unavailable
 frame destination changes only an uncontrolled or standalone display;
 controlled viewers report the frame error and wait for host-owned selection.
 
-Static route parsing accepts a provider-normalized extensionless path only when
-the shared parser derives a kind and id that `byId` contains. Historical
+Static route parsing accepts the canonical slash, extensionless, and
+`index.html` forms; the shared parser resolves each path through `byPath`. Historical
 resolution binds that route to its published snapshot; an explicit query must
 match, while an inferred identity is canonicalized into the URL. Static
 delivery v3 carries only the page's canonical path, comparison URL, and
 deployment identity; entry destinations come from the shared route helpers.
 
 Authenticated frame navigation stays logical until `frame_event_router.tsx`
-resolves its id through `byId` and derives the canonical URL with `viewHref`.
+resolves its path through `byPath` and derives the canonical URL with `viewHref`.
 Primary, modified, middle, and named-target activations therefore share the
-same `/view/` destination. An unknown id installs the missing view only for
+same `/view/` destination. An unknown path installs the missing view only for
 standalone/uncontrolled shells and is recoverable by any later selection;
 controlled viewers emit an error and keep their display.
-Search matches authored ids, titles, and tags only. Details omits derived route
-and generated-path rows because the address bar and id chip already identify
+Details omits derived route
+and generated-path rows because the address bar and path chip already identify
 the entry.
 
 Snapshot selection is route-owned state as well as public selection state. One
@@ -188,7 +264,7 @@ frame internals. `component_controls.tsx` owns cancellable temporary prop edits;
 the focused `workspace_*` components render evidence, usage, instances and
 supplied props. `inspector.tsx` and `inspector_resize.ts` own the tab and sheet
 interaction. Each shell root owns one `frame_registry.tsx` instance, so frame
-identity, readiness, validated usage revisions and disposal cannot cross an
+path-keyed identity, readiness, validated usage revisions and disposal cannot cross an
 independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and
 `frame_session_usage.ts` adopts changed usage. A mount reports ready in the same
 step as its last usage-revision check, so usage adopted during mounting always
@@ -210,7 +286,7 @@ defines usage scope, strict readers, serialization and capture invariants.
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups
 and the button-controlled entry-variant lists as the same persisted state.
-Folder identities follow the [navigation path contract](../../../../docs/protocol/mokly-nav-paths.md#order-and-keys),
+Folder identities follow the [folder contract](../../../../docs/protocol/mokly-folders.md#order),
 and persisted values and watched-reload recovery follow the
 [disclosure persistence contract](../../../../docs/protocol/mokly-disclosure-persistence.md).
 A newer native disclosure activation then wins over that stored value. The
@@ -237,6 +313,11 @@ through navigation and browser history. Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues. Startup
 updates this frame value before changing a fragment source.
+`scheme_fallback.tsx` decides when a document keeps its light file under Dark
+in a catalogue with a dark axis. A current document then gets a band above its
+pane, and a removed one a suffix on `Showing previous version`; both carry the
+`Light only` note, which the stylesheet shows only under Dark, so server and
+hydrated markup agree.
 `css_preview_scheme.ts` owns every preview surface background and iframe
 color scheme. Transparent content therefore keeps its selected Light or Dark
 base in screen, page, component, historical and comparison frames, independently
@@ -343,3 +424,9 @@ recomputes that metadata from the active preview selection immediately after
 hydration. The early appearance script already selected the preview files;
 this metadata handoff preserves those frames and avoids rebuilding the shell
 when stored Dark appearance differs from the server's initial Light evidence.
+
+Markdown documents use `DocumentStageFrame` and the plain manifest embed with
+scheme-specific routes. `previews.tsx` and `use_removed_preview.ts` select the
+historical document's scheme through the same page preview lifecycle. Documents
+have no viewport or usage axis. The standalone envelope accepts their entry kind
+so route-scoped bootstraps hydrate and logical links reach the parent shell.

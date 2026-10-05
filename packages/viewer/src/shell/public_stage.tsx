@@ -22,19 +22,23 @@ export function PublicStage({
   fragment,
   hasDarkFragments,
   previewViews,
-  variantId,
+  variantPath,
 }: {
   catalogue: ShellCatalogueReadModel;
   entry: ShellCatalogueRoutedEntry;
   fragment?: string;
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
-  variantId?: string;
+  variantPath?: string;
 }) {
   const selection = useContext(DisplaySelection);
-  if (entry.kind === "page")
+  if (entry.kind === "page" || entry.kind === "document")
     return (
-      <DocumentStageFrame entry={entry} {...(fragment ? { fragment } : {})} />
+      <DocumentStageFrame
+        entry={entry}
+        hasDarkFragments={hasDarkFragments}
+        {...(fragment ? { fragment } : {})}
+      />
     );
   if (entry.kind === "use-case")
     return (
@@ -49,17 +53,17 @@ export function PublicStage({
     entry.kind === "component"
       ? (("variantOf" in entry
           ? [entry]
-          : catalogueComponentVariants(catalogue, entry.id)
-        ).find((variant) => variant.id === variantId) ??
+          : catalogueComponentVariants(catalogue, entry.path)
+        ).find((variant) => variant.path === variantPath) ??
         ("variantOf" in entry
           ? entry
-          : catalogueComponentVariants(catalogue, entry.id)[0]))
+          : catalogueComponentVariants(catalogue, entry.path)[0]))
       : undefined;
   const views =
     entry.kind === "component"
       ? (selectedVariant?.views ?? [])
       : (entry as ShellCatalogueScreen).views;
-  const effectiveVariant = selectedVariant?.id;
+  const effectiveVariant = selectedVariant?.path;
   const frameEntry = selectedVariant ?? entry;
   return (
     <div
@@ -67,19 +71,19 @@ export function PublicStage({
       data-mokly-scroll="stage"
       data-mokly-stage=""
       data-viewport={selection.viewport}
-      key={`${entry.id}:${effectiveVariant ?? ""}`}
+      key={`${entry.path}:${effectiveVariant ?? ""}`}
     >
       {VIEWPORTS.map((viewport) => (
         <StageFrame
           entry={frameEntry}
           hasDarkFragments={hasDarkFragments}
-          key={`${entry.id}:${effectiveVariant ?? ""}:${viewport}`}
+          key={`${entry.path}:${effectiveVariant ?? ""}:${viewport}`}
           views={views}
           viewport={viewport}
           {...(entry.kind === "component" && previewViews
             ? { previewViews }
             : {})}
-          {...(effectiveVariant ? { variantId: effectiveVariant } : {})}
+          {...(effectiveVariant ? { variantPath: effectiveVariant } : {})}
           {...(fragment ? { fragment } : {})}
         />
       ))}
@@ -103,20 +107,17 @@ function UseCaseFlow({
       <div className="flow-track">
         {entry.steps.map((step, index) => {
           const screen = catalogue.screens.find(
-            (candidate) => candidate.id === step.screenId,
+            (candidate) => candidate.path === step.screenPath,
           );
           return (
-            <section className="flow-step" key={`${step.screenId}-${index}`}>
+            <section className="flow-step" key={`${step.screenPath}-${index}`}>
               <div className="flow-step-head">
                 <span className="flow-step-num">{index + 1}</span>
                 <div>
-                  <h3>{step.title ?? screen?.title ?? step.screenId}</h3>
+                  <h3>{step.title ?? screen?.title ?? step.screenPath}</h3>
                   <p>{step.description ?? screen?.details.description}</p>
                   {screen ? (
-                    <a
-                      className="flow-step-link"
-                      href={viewHref("screen", screen.id)}
-                    >
+                    <a className="flow-step-link" href={viewHref(screen.path)}>
                       This screen in the catalogue: {screen.title} →
                     </a>
                   ) : null}
@@ -127,7 +128,7 @@ function UseCaseFlow({
                   entry={screen}
                   flow
                   hasDarkFragments={hasDarkFragments}
-                  key={`${screen.id}:${index}`}
+                  key={`${screen.path}:${index}`}
                   stepIndex={index}
                   views={screen.views}
                   viewport="desktop"

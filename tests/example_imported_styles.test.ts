@@ -14,7 +14,7 @@ import {
 import { textOutput } from "./helpers/generated_text.js";
 
 const stylesheetRoute =
-  "mokly-generated/styles/examples/basic/entries/catalogue.mockup.tsx.css";
+  "mokly-generated/styles/examples/basic/specs/example/screens/welcome.mockup.ts.css";
 const imageRoute =
   "mokly-generated/assets/examples/basic/src/components/workspace-note/signal.png";
 
@@ -37,7 +37,7 @@ test("example Welcome delivers scoped CSS, Tailwind utilities, prefixes and a bi
   );
 
   const welcome = manifest.entries.find(
-    (entry) => entry.id === "example-welcome",
+    (entry) => entry.path === "example/screens/welcome",
   );
   assert.ok(
     welcome?.kind === "screen" && welcome.colorSchemes.includes("dark"),

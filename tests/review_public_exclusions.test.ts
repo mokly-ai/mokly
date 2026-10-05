@@ -27,7 +27,8 @@ test("historical v7 resources use active exclusions relative to the baseline roo
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = {
-    schemaVersion: 7,
+    schemaVersion: 8 as const,
+    folders: [],
     generatedBy: "mokly",
     entries: [],
     sourceFiles: ["old-output/source.json"],
