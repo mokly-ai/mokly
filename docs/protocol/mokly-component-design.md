@@ -17,22 +17,19 @@ The stacked component comparisons depict the implemented
 [comparison pane contract](./mokly-comparison-panes.md): the explorer holds a
 saved variant's two versions in one bordered frame whose viewport scrolls both
 as one. Their comparison bands also depict the implemented Scroll together
-switch of the
-[Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
+switch of the [Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
 The path-derived files, the Specs section, and the component paths in Details
-below are the approved contract. These designs depict the kind-filtered
-sections and component paths, and the catalogue uses paths. The runtime renders
-the same Specs section.
-The Loading and recovery child gallery depicts entry-scoped Usage loading,
-inspection waiting, and retryable delivery failure.
+below are the approved contract. These designs depict the kind-filtered sections
+and component paths, and the catalogue uses paths. The runtime renders the same
+Specs section. The Loading and recovery child gallery depicts entry-scoped Usage
+loading, inspection waiting, and retryable delivery failure.
 
 ## Owning Catalogue
 
 Source lives under `examples/basic/specs/design/components/`; generated
 artboards live under `examples/basic/generated/<path>/` as their path-derived
-`index.<viewport>.html` views. The existing
-Pages → Design → Component explorer folder reaches every
-screen.
+`index.<viewport>.html` views. The existing Pages → Design → Component
+explorer folder reaches every screen.
 The canonical `overview` screen shows a component page, followed by links to the
 owning child pages outside the artboard. The original Pages, Inspection, and States child folders are gallery
 indexes, each with at most five direct owning screens; inspection also links a nested
@@ -68,16 +65,16 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design/components/states/removed-consumer`                 | Former consumer's previous version behind a Removed badge |
 | `design/components/states/additions/added`                  | Added Badge current preview without comparison controls   |
 | `design/components/states/shared-impact/shared-impact`      | Unmodified Action with shared-file evidence in Details    |
-
-| `design/components/states/loading/usage-loading` | Component Usage waiting for private entry evidence |
-| `design/components/states/loading/inspection-loading` | Screen inspection waiting for displayed-view usage |
-| `design/components/states/loading/usage-failed` | Usage read failure with a Try again action |
+| `design/components/states/moved-variants/removed-parent`    | Removed top-level component whose variants moved          |
+| `design/components/states/loading/usage-loading`            | Component Usage waiting for private entry evidence        |
+| `design/components/states/loading/inspection-loading`       | Screen inspection waiting for displayed-view usage        |
+| `design/components/states/loading/usage-failed`             | Usage read failure with a Try again action                |
 
 The Loading and recovery folder sits below Empty and change states and contains
 exactly these three states. Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md): its standalone views are
 `<path>/index.mobile.html` and `<path>/index.desktop.html`, and gallery
-membership is the entry's folder. All thirty-nine component
+membership is the entry's folder. All forty component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
@@ -153,17 +150,17 @@ mobile/desktop × light/dark. A component-only appearance edit produces exactly
 one Changes row, Action; Welcome and Details appear under Affected screens.
 An independent Welcome label edit adds Welcome, making two Changes rows.
 The removed-state scenario also retains the former Farewell consumer and links
-it to its Removed state, which
-[removed previews](./mokly-removed-previews.md) fill with its previous version:
+it to its Removed state, which [removed previews](./mokly-removed-previews.md)
+fill with its previous version:
 the “Showing previous version” label, the historical frame for the selected
 viewport, and no comparison band. The catalogue-wide Appearance selector remains
 the only theme control, while the historical frame stays Light because that is
 the only scheme captured for the view. Its stage carries no escape link,
 because the catalogue navigation keeps Action's affected list one step away.
-Farewell is independently removed, so that
-scenario's Changes rows include the removed Compact entry and Farewell. The
-Removed Compact variant entry keeps its before/current comparison and explicit
-missing current side; Farewell has no comparison band.
+Farewell is independently removed, so that scenario's Changes rows include the
+removed Compact entry and Farewell. The Removed Compact variant entry keeps its
+before/current comparison and explicit missing current side; Farewell has no
+comparison band.
 
 Because every variant is its own entry, the depicted Changes counts include
 one row per changed or removed variant, the parent row carries the aggregate
@@ -183,6 +180,9 @@ It also links the Loading and recovery child gallery. That gallery shows
 unavailable-metadata copy.
 Its Shared impact child gallery shows an unchanged Action component opened from
 All, with a changed-file list in Details and no comparison band or Changes entry.
+Its Moved variants child gallery shows a removed top-level Link button whose two
+variants moved to Action and Toolbar: no variant bar or comparison band, links to
+both variants on its stage, and no `Location` row in Details.
 Comparison evidence appears only in the Details panel. Its typed fixture records
 show output/variant changes, paired prop values, and related changed components;
 they do not generate visual-analysis prose or a separate banner. See the
@@ -222,7 +222,7 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, scoped to the component design
 entries' generated documents.
-Route-scoped stylesheet matching links them only from the thirty-nine component design routes;
+Route-scoped stylesheet matching links them only from the forty component design routes;
 Changes follows those rendered resources. Shared metadata supplies dependency
 lists to each definition. Controls extends that list with its own stylesheet,
 scoped to eleven entries with a matching watch rule. Keep those stylesheets out

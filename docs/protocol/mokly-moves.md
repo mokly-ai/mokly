@@ -192,8 +192,10 @@ removed variant stays with its baseline parent. A removed parent can therefore
 have an empty historical variant group after all its variants pair elsewhere.
 The complete and scoped catalogue readers accept that removed parent with zero
 variants and retain its removal row; they must not restore the moved variants
-under it or omit the parent. Current component parents still require at least
-one current variant, and current variants still require a current parent.
+under it or omit the parent. Its page
+[lists where they went](./mokly-component-workspace-design.md#comparison-availability).
+Current component parents still require at least one current variant, and
+current variants still require a current parent.
 Affected-consumer evidence keeps each side's context and chain paths. Its
 canonical consumer and changed-component identity use the accepted current path.
 

@@ -238,9 +238,8 @@ scrollable region scrolls internally:
   separators; a folder crumb opens the folder's own page when one exists and
   otherwise expands that folder in the tree) and a title row: 19px heading plus
   a monospace path button showing the entry's path as written, with no `#`
-  prefix. The button uses the
-  standard pointer cursor, moves down 1px with an inset shadow while pressed,
-  and copies the path without navigating.
+  prefix. The button uses the standard pointer cursor, moves down 1px with an
+  inset shadow while pressed, and copies the path without navigating.
   A selected screen places one right-aligned group of icon controls here:
   Mobile/Desktop/Both dropdown and component highlighting when applicable.
   Tooltips name each action. The head band carries no scheme control; the
@@ -259,11 +258,10 @@ scrollable region scrolls internally:
   and mobile uses a full-workspace-width rounded bottom sheet with an iOS-style
   grabber. The footer owns that sheet's surface and shadow while its dock owns
   placement and height. Only panel content scrolls within the bounded workspace.
-  Details contains a two-column
-  body (`1.35fr / 1fr`) with description and
+  Details contains a two-column body (`1.35fr / 1fr`) with description and
   `Why this screen —` rationale on the left and uppercase-labelled metadata
-  rows (Source, Moved from, Schemes, Changed views, Tags, Related docs,
-  Dependencies, Used by) on the right. Paths render as monospace chips; use
+  rows (Source, Moved from, Schemes, Changed views, Location, Tags, Related
+  docs, Dependencies, Used by) on the right. Paths render as monospace chips; use
   cases render as pill chips with the flow icon; a related doc that is itself a
   catalogue document links to its entry; the Schemes row is plain text
   naming the schemes the screen renders in (`light, dark`). The Changed views
@@ -279,6 +277,8 @@ Details has no Generated or Route row: every file derives from the entry's
 path, and the address bar already shows the shell URL. A moved entry's Details
 add a `Moved from` row holding its previous path, the `Moved` label its Changes
 row carries, and its comparison details name that path as the earlier side. A
+removed entry inside a folder adds a `Location` row with its baseline folder
+titles, such as `Example › Screens`; one outside every folder has no such row. A
 document's Details show its description, tags, and Markdown source file; a
 component's Details add the shown entry's path above its source.
 

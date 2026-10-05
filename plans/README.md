@@ -2,6 +2,13 @@
 
 ## Active
 
+- [Removed Entry States And Closed Folder Counts](./removed-entry-states-and-folder-counts.md)
+  — the design-first group of the path identity review follow-up: a removed
+  component whose variants all moved lists where they went instead of an
+  empty variant bar, `Location` appears only for a removed entry that was in
+  a folder, and the mockups derive every folder count from written rows.
+  Created 2026-10-05.
+
 - [Path Identity, Spec Tree, And Markdown Documents](./path-identity.md) —
   replace `id` and `navPath` with one file-derived path per entry, add
   Markdown documents, detect moves, rename Pages to Specs, and make folder

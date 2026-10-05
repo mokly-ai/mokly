@@ -145,8 +145,11 @@ the tag picker use current entries.
 The removed page or document view shows the baseline document from the same
 snapshot, under the [removed previews](./mokly-removed-previews.md) contract.
 Its details show the baseline title, path, description, tags, dependencies,
-related docs, and folder titles. Historical titles are informational text,
-not folder nodes or links that pretend the old hierarchy still exists.
+related docs, and folder titles. The folder titles fill the `Location` row of
+the [Details inspector](./mokly-shell-design.md#layout), which every removed
+entry shows only when it was inside a folder. Historical titles are
+informational text, not folder nodes or links that pretend the old hierarchy
+still exists.
 Changing a surviving folder's title does not rewrite the baseline titles.
 Keep the view available at `/view/<path>/` even when All is selected.
 

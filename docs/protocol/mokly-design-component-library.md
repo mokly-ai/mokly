@@ -43,7 +43,7 @@ to depict a different setting, as the `auto-appearance` sample does.
 | inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                                                               |
 | preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                                                      |
 | preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                                                      |
-| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                                                         |
+| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`, `moved-variants`                                                                                       |
 | preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                                                             |
 
 Fixtures for each variant come from the corresponding existing screen state,
@@ -77,7 +77,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
    `folder/screen/component/flow/page/document/variant`, depth, optional
-   count/open/destination, changed mark, moved flag, and variant-list state; a variant row
+   open/destination, changed mark, moved flag, and variant-list state; a variant row
    requires `variantParentKind: "screen" | "component"`, and `contents` marks a
    folder's own screen whose list also holds the folder's members after its
    variants and names its disclosure for the contents; selected destination,
@@ -96,7 +96,12 @@ Controls below use text, boolean, number and primitive enum selections only.
    both reserve the count slot with a spinner and replace selected Changes rows
    with their own message; only preparing adds a secondary detail line beneath
    its title. Unavailable keeps the tabs with a dash and one plain message for
-   every failure. Counts and rows come from the same fixture scenario. Responsive uses the original desktop
+   every failure. Counts and rows come from the same fixture scenario. A row
+   record has no count: the component counts a folder's immediate child rows
+   in each section, as the shell does. Authors write every row in a folder,
+   and a closed folder keeps its count but draws none of its rows. A folder
+   with no rows in a section is not drawn there. A design test requires a
+   count on every folder row in every artboard. Responsive uses the original desktop
    sidebar/mobile drawer; the drawer variant explicitly depicts the drawer.
 3. **Screen header:** title, breadcrumb records, optional path chip,
    optional `unmodified/added/changed/removed` status, explicit comparison
@@ -164,8 +169,9 @@ Controls below use text, boolean, number and primitive enum selections only.
     optional missing message and `children` slot. Controls: label, state and
     optional message. Missing state hides the content slot and uses the existing
     explicit missing pane; comparison-grid layout remains caller-owned.
-14. **Empty state:** title, body, optional code, action label and destination.
-    Controls: title, body and action label. Retain the existing canonical recovery
+14. **Empty state:** title, body, optional code, action label and destination,
+    and an optional list of entry links, each a label with an optional
+    destination. Controls: title, body and action label. Retain the existing canonical recovery
     links and non-interactive cases rather than adding library-specific navigation.
 15. **Flow step:** positive step number, title, description, owning screen path
     and `children` slot containing the reused screen preview. Controls: number,

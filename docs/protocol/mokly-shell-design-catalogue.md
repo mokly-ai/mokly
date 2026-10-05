@@ -30,12 +30,17 @@ navigation, breadcrumbs, path chips, and Details agree across screens:
   `Show contents of Profile`, whose list holds its `Unverified email` variant
   and then the folder's `Notifications` and `Security` screens. Canonical All
   states keep that list closed.
+- `Design` holds the closed `Browse shell` and `Changes` folders. Their three
+  and two screens are written in the fixture but not drawn, so each closed
+  folder shows the count of its written rows, as the shell does.
 - Components lists the same `Example` folder above its `Components` library,
   so a folder holding both kinds appears in each section with only that
   section's children.
 - Path chips show paths such as `example/screens/welcome`. Component Details
   add the shown entry's path, a document's Details name its Markdown source,
   and a moved entry's Details add a `Moved from` row with its previous path.
+  A removed entry's Details add a `Location` row with its baseline folder
+  titles, such as `Example › Screens` for a removed screen.
 
 ## Depicted Branches
 

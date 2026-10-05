@@ -126,6 +126,23 @@ Parent status and variant status are distinct. Removing Compact from Action
 makes Compact its own Removed component variant entry, comparable with an
 explicit missing current side, while Action's status describes the parent
 only; Farewell is a Removed screen with no comparison controls.
+
+A removed component parent keeps its variant bar while it has a removed
+variant. That variant's comparison band stays, and the stage reads
+`This component was removed` above `Select a comparison to see the previous
+version.` The parent's moved variants appear only at their new places.
+A removed parent whose variants all moved to other components has no variant
+row. It then draws no variant bar and no comparison band; an empty bar is
+never drawn. Its stage reads `This component was removed` above
+`Its variants moved to new places.`, or `Its variant moved to a new place.`
+for one, then one link per [moved variant](./mokly-branch-point-lookup.md#moved-variants).
+Each link reads `<parent title> › <variant title>` with current titles, in
+the lookup's order, and opens that variant at its new place, where its own
+history stays. So the stage never says that no previous version exists. If
+other entries took the paths of all its former variants, only the heading
+remains.
+The `design/components/states/moved-variants/removed-parent` artboard depicts
+a top-level Link button whose two variants moved to Action and Toolbar.
 The `design/components/pages/variants` mockup depicts the inverse boundary: the
 selected Disabled variant entry is Unmodified and ineligible, so no comparison
 band appears, even though a sibling variant changed.

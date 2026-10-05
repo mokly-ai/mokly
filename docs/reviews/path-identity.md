@@ -732,3 +732,21 @@ reading the code. Nothing was changed during the review.
    Milestone 16. **Options:** **A)** label both runs, name the full gate as
    the evidence for those four specs, and call it "item 9"; **B)** do
    nothing. **Recommended: A.**
+
+## Approved Design Follow-up
+
+On 2026-10-05, after pull request #131 merged, the user approved option A for
+second-review findings 7, 12 and 13, as one design-first group. Findings 7 and
+12 form one item: design both removed-entry states first, then hide an empty
+variant bar, say where the variants went, and show `Location` only for a
+removed entry that was inside a folder. The stage must not say that no
+previous version exists, because the previous versions are with the moved
+variants. Finding 13 adds a design test that requires a count on every folder
+row. The [plan](../../plans/removed-entry-states-and-folder-counts.md)
+delivers them:
+
+| Finding | Approved option                                                       | Milestones    |
+| ------- | --------------------------------------------------------------------- | ------------- |
+| 7       | A: design the state, hide the empty bar, and list the moved variants  | 1, 2, 3 and 4 |
+| 12      | A: design the state, and show `Location` only inside a folder         | 1, 2 and 4    |
+| 13      | A: write every row of a folder, count them in the helper, and test it | 1 and 2       |

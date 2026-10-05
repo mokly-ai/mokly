@@ -87,11 +87,24 @@ screen or component variant requires it. Removed non-variants must omit it.
 The [read model](./mokly-catalogue.md#projection-and-privacy) owns wire
 validation. A surviving parent's new title never changes this stored title.
 
+## Moved Variants
+
+A variant's path is its parent's path plus its slug, so a paired variant's
+parent at the branch point is its previous path without the last segment.
+The moved variants of a parent identity are the current variants of its
+kind whose accepted pair names a previous path under that parent, compared
+under case folding, in manifest entry order. A case-only rename is not a
+pair, so it never appears. The list never includes removed records.
+A removed parent uses this list to say where its variants went; the
+[component workspace design](./mokly-component-workspace-design.md#comparison-availability)
+owns that presentation.
+
 ## Consumers
 
 All shells use this lookup for affected-consumer destinations, the variant
 bar, Before and Current props, supplied-input pairing, removed-variant tree
-attachment, component workspace keys, and parent breadcrumbs. A workspace
+attachment, a removed parent's moved variants, component workspace keys, and
+parent breadcrumbs. A workspace
 key uses the resolved eligible parent's identity. It must not use the old
 `variantOf` of a removed child when that parent moved or changed letter case.
 
@@ -106,7 +119,8 @@ under [navigation](./mokly-navigation.md#active-catalogue-visibility) and
 
 Pure tests cover each resolution step, kind isolation, current-side lookup,
 case folding, counterpart absence, previous-path absence for case-only
-renames, parent role checks, and the pair/current-path invariant.
+renames, parent role checks, moved variants of several former parents in
+manifest order, and the pair/current-path invariant.
 Both complete and scoped readers reject a removed variant without a
 nonempty `parentTitle`, and reject that field on a removed non-variant.
 
@@ -122,13 +136,17 @@ tests:
    sibling. No stylesheet changes occur in this case.
 5. A document takes a removed component's path. Its removed variants retain
    their former parent's title without linking to the document.
+6. A top-level component is deleted after its two variants move to two other
+   components. Its page lists both at their new places and has no variant
+   bar, comparison band or `Location` row.
 
 Assert pairs, `previousPath`, removed titles and agreement between both
 readers. Run the same cases through Serve, export and the embedded viewer at
 desktop and mobile widths. Assert usage link targets and destination titles,
 props where baseline usage exists, removed rows, retained comparison mode,
-Changes activation order, and crumb text and links. HTTP success alone is
-not sufficient. The moved-consumer case must export successfully.
+Changes activation order, crumb text and links, and moved-variant links.
+HTTP success alone is not sufficient. The moved-consumer case must export
+successfully.
 
 ## Related Docs
 
