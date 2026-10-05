@@ -31,7 +31,7 @@
   producer, requires complete stored recovery, aligns snapshot-id rules, and
   checks all changed documents. Its full gate passes with 3,773 unit tests and
   970 browser cases. Its final review reported 8 new findings without changes
-  (58–65: 1 medium, 7 low).
+  (58–65: 1 medium, 7 low); low performance finding 66 was added later.
   Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.

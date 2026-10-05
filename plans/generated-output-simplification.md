@@ -2609,6 +2609,17 @@ Findings 10, 17, 37, 45, 46, 49, 52, 54, 56 and 57 remain open. Findings 35,
 earlier findings recorded in Milestone 15 keep their status. Main had not
 moved. Every finding awaits the user's decision.
 
+Finding 66 (low, performance) was added after the review at the user's
+request. A CPU profile of `mokly check` on the example catalogue (436
+documents, about 10.4 s of compile time) attributes about 1.3 s to repeated
+checks that decide whether an authored file may be public. About 1.0 s comes
+from configured stylesheets during rendering (`src/build/render.ts:202`, the
+same code as on `main`), and about 0.3 s from the link walk
+(`src/build/html_links.ts`). Each check calls the file system and keeps no
+result, although the example has only about 30 authored files. The
+recommendation is to decide each file once per compile and reuse the result,
+in the same module as the shared list builder that finding 14 recommends.
+
 ## Post-merge follow-up (non-blocking)
 
 - Parked: replace archive extraction with Git worktrees in a cache outside
