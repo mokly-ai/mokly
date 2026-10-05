@@ -12,7 +12,7 @@ import {
   repositoryRoot,
 } from "./helpers/fixture.js";
 
-const input = { entriesDir: "entries", mockupsDir: "mockups" };
+const input = { roots: [{ dir: "entries" }], mockupsDir: "mockups" };
 
 test("the example configures historical build tooling", async () => {
   const configPath = path.join(
@@ -29,7 +29,7 @@ test("the example configures historical build tooling", async () => {
   assert.deepEqual(
     resolveConfig(
       {
-        entriesDir: "entries",
+        roots: [{ dir: "specs" }],
         mockupsDir: "generated",
         repoRoot: "../..",
         review: { baselineBuild: recipe },
@@ -51,7 +51,7 @@ test("baseline build defaults to exact argv without an output mode", async (t) =
   const configPath = path.join(fixture.root, "config", "catalogue.ts");
   const nested = resolveConfig(
     {
-      entriesDir: "../entries",
+      roots: [{ dir: "../entries" }],
       mockupsDir: "../mockups",
       repoRoot: "..",
     },

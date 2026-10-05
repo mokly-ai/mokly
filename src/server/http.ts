@@ -5,18 +5,15 @@ import { createCatalogue } from "@mokly/viewer/server";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timeAsync, timeSync } from "../diagnostics/timings.js";
+import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import { parseManifest } from "../registry/manifest.js";
+import { includeMovedEntries } from "../review/moves/entries.js";
 
-import { catalogueAtBaseline } from "./baseline_catalogue.js";
+import { catalogueWithChanges } from "./baseline_catalogue.js";
 import { catalogueSnapshotForConfig } from "./catalogue_snapshot.js";
 import { advanceCatalogueState } from "./catalogue_update.js";
-import {
-  loadBrowserClientModules,
-  loadBrowserNavigationModules,
-  loadShellFontAssets,
-} from "./client_modules.js";
+import { loadServeBrowserAssets } from "./client_modules.js";
 import { ComponentChangeCache } from "./component_change_cache.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
@@ -29,6 +26,7 @@ import type { RunningServer, ServerOptions } from "./http_types.js";
 import { listenOnAvailablePort } from "./ports.js";
 import { LivePublicCatalogue } from "./public_catalogue.js";
 import type { PublicComparison } from "./public_review.js";
+import { RenderMoveTargets } from "./render_moves.js";
 import { ReviewRoutes } from "./review_routes.js";
 import {
   livePublicInput,
@@ -54,13 +52,15 @@ export async function startCatalogueServer(
     options.generatedOutputs ??
     snapshot.outputs ??
     acceptedGeneratedStatic(options.componentRuntime);
+  const movedLinks = new RenderMoveTargets();
   let controls = options.componentRuntime
-    ? new ComponentRenderService(options.componentRuntime)
+    ? new ComponentRenderService(options.componentRuntime, movedLinks.read)
     : undefined;
   const activity = new ForegroundActivity(options.onForeground ?? (() => {}));
   const createDocuments = (runtime: ComponentRuntime) =>
-    runtime.manifest.schemaVersion === "live-index-1"
+    runtime.manifest.schemaVersion === "live-index-2"
       ? new DocumentService(runtime, activity.channel(), {
+          moveTargets: movedLinks.read,
           onDocument: (document) => {
             if (document.assetClosure)
               assetClosure = new Set([
@@ -89,13 +89,8 @@ export async function startCatalogueServer(
   let documents = options.componentRuntime
     ? createDocuments(options.componentRuntime)
     : undefined;
-  const clientModules = timeSync("server.client-modules", () =>
-    loadBrowserClientModules(),
-  );
-  const navigationModules = timeSync("server.navigation-modules", () =>
-    loadBrowserNavigationModules(),
-  );
-  const fontAssets = timeSync("server.fonts", () => loadShellFontAssets());
+  const { clientModules, navigationModules, fontAssets } =
+    loadServeBrowserAssets();
   const streams = new Set<ServerResponse>();
   const reviewRoutes = options.review
     ? new ReviewRoutes(
@@ -123,13 +118,20 @@ export async function startCatalogueServer(
         )
       : undefined);
   let activeCatalogue = componentChanges
-    ? catalogueAtBaseline(manifest, componentChanges.baseline)
+    ? catalogueWithChanges(manifest, componentChanges)
     : catalogue;
-  let changedIds =
-    changes?.changedIds ?? options.changedIds ?? componentChanges?.changedIds;
+  let changedEntries =
+    changes?.changedEntries ??
+    options.changedEntries ??
+    componentChanges?.changedEntries;
+  changedEntries = includeMovedEntries(
+    changedEntries,
+    componentChanges?.pairing?.moves,
+  );
   let changesStatus: ChangesStatus =
     options.changesStatus ??
-    (changedIds || componentChanges ? "ready" : "unavailable");
+    (changedEntries || componentChanges ? "ready" : "unavailable");
+  movedLinks.accept(controls, componentChanges, changesStatus);
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
   let publicComparison: PublicComparison | undefined;
@@ -151,11 +153,11 @@ export async function startCatalogueServer(
     livePublicInput(
       activeCatalogue,
       publicChangesStatus(
-        changedIds,
+        changedEntries,
         componentChanges !== undefined,
         changesStatus,
       ),
-      changedIds,
+      changedEntries,
       componentChanges,
       comparison,
     );
@@ -171,7 +173,7 @@ export async function startCatalogueServer(
       assets: { clientModules, fontAssets, navigationModules },
       acceptedGenerated: () => acceptedGenerated,
       assetClosure: () => assetClosure,
-      changedIds: () => changedIds,
+      changedEntries: () => changedEntries,
       changesStatus: () => changesStatus,
       componentChanges: () => componentChanges,
       config,
@@ -199,17 +201,17 @@ export async function startCatalogueServer(
   return {
     completeCatalogue(complete, generation): boolean {
       if (controls?.capability().generation !== generation) return false;
-      const validatedManifest = parseManifest(complete);
+      parseManifest(complete);
       const nextCatalogue = createCatalogue(complete);
       const nextActive = componentChanges
-        ? catalogueAtBaseline(complete, componentChanges.baseline)
+        ? catalogueWithChanges(complete, componentChanges)
         : nextCatalogue;
       publicCatalogue.publish(
         { ...publicInput(), catalogue: nextActive },
         contentVersion,
       );
       manifest = complete;
-      assetClosure = new Set(validatedManifest.assetClosure);
+      assetClosure = new Set(complete.assetClosure);
       catalogue = nextCatalogue;
       activeCatalogue = nextActive;
       return true;
@@ -223,6 +225,7 @@ export async function startCatalogueServer(
     },
     port: address.port,
     replaceComponentRuntime(runtime): void {
+      movedLinks.clear();
       acceptedGenerated = acceptedGeneratedStatic(runtime);
       publicCatalogue.clearUsage();
       assetClosure = new Set(
@@ -230,13 +233,13 @@ export async function startCatalogueServer(
       );
       void documents?.close();
       documents = createDocuments(runtime);
-      if (runtime.manifest.schemaVersion === "live-index-1") {
+      if (runtime.manifest.schemaVersion === "live-index-2") {
         manifest = runtime.manifest;
         catalogue = createCatalogue(manifest);
         activeCatalogue = catalogue;
       }
       if (controls) controls.replace(runtime);
-      else controls = new ComponentRenderService(runtime);
+      else controls = new ComponentRenderService(runtime, movedLinks.read);
     },
     publishUpdate(update = {}): void {
       if (update.assetClosure) assetClosure = new Set(update.assetClosure);
@@ -244,7 +247,7 @@ export async function startCatalogueServer(
         {
           catalogue,
           activeCatalogue,
-          changedIds,
+          changedEntries,
           componentChanges,
           changesStatus,
           updateVersion,
@@ -257,11 +260,11 @@ export async function startCatalogueServer(
         livePublicInput(
           next.activeCatalogue,
           publicChangesStatus(
-            next.changedIds,
+            next.changedEntries,
             next.componentChanges !== undefined,
             next.changesStatus,
           ),
-          next.changedIds,
+          next.changedEntries,
           next.componentChanges,
           undefined,
         ),
@@ -270,12 +273,15 @@ export async function startCatalogueServer(
       );
       ({
         activeCatalogue,
-        changedIds,
+        changedEntries,
         componentChanges,
         changesStatus,
         updateVersion,
         contentVersion,
       } = next);
+      if (Object.hasOwn(update, "componentChanges"))
+        movedLinks.accept(controls, componentChanges, changesStatus);
+      else if (changesStatus !== "ready") movedLinks.clear();
       reviewRoutes?.invalidate();
       publicComparison = undefined;
       const payload = `event: update\ndata: ${updateVersion}\n\n`;

@@ -1,8 +1,6 @@
 /** Watch the same checked public closure that the compiler publishes. */
 import path from "node:path";
 
-import { entryRoute, generatedViews } from "@mokly/viewer/data";
-
 import type { Compilation } from "../build/compile.js";
 import {
   buildPublicClosure,
@@ -13,6 +11,8 @@ import { PendingGeneratedFiles } from "../build/pending_generated.js";
 import { manifestResourceSeeds } from "../build/resource_seeds.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueMetadata } from "../registry/catalogue_index.js";
+import { generatedDocumentRoutes } from "../registry/generated_documents.js";
+import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import {
   configuredStylesheetPaths,
@@ -43,16 +43,13 @@ export async function discoverWatchResources(
         : [],
     ),
   );
-  const routes =
-    compilation.manifest?.entries.flatMap((entry) =>
-      entry.kind === "page"
-        ? [entryRoute("page", entry.id)]
-        : generatedViews(entry).map(({ path }) => path),
-    ) ?? [];
+  const routes = compilation.manifest
+    ? generatedDocumentRoutes(compilation.manifest.entries)
+    : [];
   const pending = new PendingGeneratedFiles(
     new Map(
       [...compilation.outputs].filter(
-        ([name]) => name.startsWith("styles/") || name.startsWith("assets/"),
+        ([name]) => name !== MANIFEST_NAME && !/\.html?$/i.test(name),
       ),
     ),
     routes,
@@ -64,7 +61,7 @@ export async function discoverWatchResources(
     {
       pending,
       parsed: new Map(),
-      onDemand: compilation.manifest?.schemaVersion === "live-index-1",
+      onDemand: compilation.manifest?.schemaVersion === "live-index-2",
       watch: true,
     },
     compilation.resourceSeeds ??

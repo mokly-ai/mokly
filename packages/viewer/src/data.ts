@@ -2,8 +2,13 @@ export type { StaticDeliveryParseResult } from "./navigation/delivery.js";
 export { parseStaticDelivery } from "./navigation/delivery.js";
 export type { StaticDelivery } from "./navigation/delivery.js";
 export {
-  isCatalogueId,
-  isEntryId,
+  isPathSegment,
+  firstPathCaseCollision,
+  isSafeRepositoryPath,
+  isKebabCase,
+  isLinkPath,
+  resolveLinkPath,
+  isEntryPath,
   isLogicalFragment,
   isWindowsDeviceName,
   parseLogicalTarget,
@@ -105,26 +110,25 @@ export { resolveInstance } from "./components/resolve_instance.js";
 export type { InstanceResolution } from "./components/resolve_instance.js";
 export {
   entryRoute,
-  pagePreviewMetadataPath,
+  previewMetadataPath,
   parseViewHref,
   providerNormalizedHtmlPath,
-  snapshotPagePath,
+  snapshotDocumentPath,
   snapshotResourcePath,
   snapshotSidePath,
   snapshotViewPath,
-  unavailableViewHref,
+  documentRoute,
   viewHref,
   viewRoute,
 } from "./navigation/routes.js";
 export type {
   EntryRouteKind,
   SnapshotSide,
-  ViewHrefIdentity,
   ViewRouteKind,
 } from "./navigation/routes.js";
 export type {
   ReviewEntryAddress,
-  ScreenReviewV4,
+  ScreenReviewV6,
   ReviewVariantAddress,
   ComponentVariantReview,
   ComponentReview,
@@ -133,7 +137,7 @@ export type {
   ComponentUsageContext,
   AffectedUsageEvidence,
   AffectedConsumer,
-  ReviewResultV4,
+  ReviewResultV6,
 } from "./review/component_types.js";
 export { affectedConsumerOrderKey } from "./review/order.js";
 export type {
@@ -159,12 +163,7 @@ export { isStylesheetPath } from "./review/css/stylesheet_path.js";
 export { VIEWPORTS, effectiveColorSchemes } from "./registry/views.js";
 export type { ArtifactView } from "./registry/views.js";
 export { analyzeHierarchy } from "./registry/hierarchy.js";
-export {
-  compareNavigationNodes,
-  navPathKey,
-  navConflictKey,
-  validNavLabel,
-} from "./registry/nav_paths.js";
+export { compareNavigationNodes } from "./registry/nav_paths.js";
 export type {
   HierarchyEntry,
   CatalogueHierarchy,
@@ -175,8 +174,10 @@ export type {
   ManifestEntryBase,
   ManifestScreen,
   ManifestPage,
+  ManifestDocument,
+  ManifestFolder,
   ManifestEntry,
-  ManifestV8,
+  ManifestV9,
   Manifest,
   HistoricalManifestEntry,
   HistoricalManifestScreen,
@@ -207,7 +208,6 @@ export {
   isSafeCatalogueRoute,
   isPortableUrlPath,
   encodeUrlPath,
-  isSafeRepositoryPath,
 } from "./data/paths.js";
 
 export { MoklyVersionError } from "./catalogue/version_error.js";

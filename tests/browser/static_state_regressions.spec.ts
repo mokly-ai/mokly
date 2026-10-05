@@ -47,7 +47,7 @@ test.beforeAll(async () => {
     },
   });
   server = await serveStaticFiles(installed);
-  await assertServedShellMarker(server.url, "/view/components/action.html");
+  await assertServedShellMarker(server.url, "/view/action/");
 });
 
 test.afterAll(async () => {
@@ -67,24 +67,22 @@ test.beforeEach(async () => {
 test("a static direct URL restores its variant and fragment after refresh", async ({
   page,
 }) => {
-  const url = `${server.url}/view/components/action-disabled.html?fragment=${fragment}`;
+  const url = `${server.url}/view/action/disabled/?fragment=${fragment}`;
   await page.goto(url);
-  await expectStaticComponentQuery(page, "action-disabled");
+  await expectStaticComponentQuery(page, "action/disabled");
 
   await page.reload();
-  await expectStaticComponentQuery(page, "action-disabled");
+  await expectStaticComponentQuery(page, "action/disabled");
 });
 
 test("a static component route retains its initial fragment through refresh", async ({
   page,
 }) => {
-  await page.goto(
-    `${server.url}/view/components/action.html?fragment=${fragment}`,
-  );
-  await expectStaticComponentQuery(page, "action-default");
+  await page.goto(`${server.url}/view/action/?fragment=${fragment}`);
+  await expectStaticComponentQuery(page, "action/default");
 
   await page.reload();
-  await expectStaticComponentQuery(page, "action-default");
+  await expectStaticComponentQuery(page, "action/default");
 });
 
 for (const failure of ["missing", "different deployment"] as const)
@@ -100,24 +98,21 @@ for (const failure of ["missing", "different deployment"] as const)
       else await route.fulfill({ json: stale });
     });
 
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/home/`);
     await expect.poll(() => requests).toBe(1);
     await expect(page.locator("html")).not.toHaveAttribute(
       "data-mokly-hydrated",
       "",
     );
-    const action = page.locator('a[data-route="components/action.html"]');
-    await expect(action).toHaveAttribute(
-      "href",
-      "/view/components/action.html",
-    );
+    const action = page.locator('a[data-route="action/index.html"]');
+    await expect(action).toHaveAttribute("href", "/view/action/");
     await page
       .locator("html")
       .evaluate((root) => root.setAttribute("data-original-page", "true"));
 
     await action.click();
 
-    await expect(page).toHaveURL(`${server.url}/view/components/action.html`);
+    await expect(page).toHaveURL(`${server.url}/view/action/`);
     await expect(page.locator("#mb-main h2")).toHaveText("Action");
     await expect(page.locator("html")).not.toHaveAttribute(
       "data-original-page",
@@ -139,7 +134,7 @@ test("an explicit hydration retry can recover after the shared catalogue returns
     if (requests === 1) await route.abort();
     else await route.continue();
   });
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await expect.poll(() => requests).toBe(1);
   await expect(page.locator("html")).not.toHaveAttribute(
     "data-mokly-hydrated",
@@ -161,8 +156,8 @@ test("an explicit hydration retry can recover after the shared catalogue returns
 test("Back validates the static deployment before installing history", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
-  await page.locator('a[data-route="components/action.html"]').click();
+  await page.goto(`${server.url}/view/home/`);
+  await page.locator('a[data-route="action/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("Action");
   await page
     .locator("html")
@@ -181,8 +176,8 @@ test("Back validates the static deployment before installing history", async ({
 test("Forward validates the static deployment before installing history", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
-  await page.locator('a[data-route="components/action.html"]').click();
+  await page.goto(`${server.url}/view/home/`);
+  await page.locator('a[data-route="action/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("Action");
   await page.goBack();
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
@@ -203,8 +198,8 @@ test("Forward validates the static deployment before installing history", async 
 test("a newer history action cancels superseded deployment validation", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
-  await page.locator('a[data-route="components/action.html"]').click();
+  await page.goto(`${server.url}/view/home/`);
+  await page.locator('a[data-route="action/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("Action");
   await page
     .locator("html")
@@ -248,7 +243,7 @@ test("a newer history action cancels superseded deployment validation", async ({
   await firstFinished;
   await Promise.all([back, forward]);
 
-  await expect(page).toHaveURL(`${server.url}/view/components/action.html`);
+  await expect(page).toHaveURL(`${server.url}/view/action/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Action");
   await expect(page.locator("html")).toHaveAttribute(
     "data-history-owner",
@@ -260,7 +255,7 @@ async function expectStaticComponentQuery(
   page: Page,
   variant: string,
 ): Promise<void> {
-  const title = variant === "action-disabled" ? "Disabled" : "Default";
+  const title = variant === "action/disabled" ? "Disabled" : "Default";
   await expect(
     page
       .getByRole("navigation", { name: "Saved variants" })
@@ -269,7 +264,7 @@ async function expectStaticComponentQuery(
   for (const viewport of ["mobile", "desktop"])
     await expectFrameSource(
       page.locator(`iframe[data-workspace-frame="${viewport}"]`),
-      new RegExp(`${variant}\\.${viewport}\\.html#${fragment}$`),
+      new RegExp(`${variant}/index\\.${viewport}\\.html#${fragment}$`),
     );
 }
 

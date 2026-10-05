@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
 
 import {
+  documentRequests,
+  historical,
+  previewFrame,
+  settlement,
+  stage,
+} from "./removed_preview_assertions.js";
+import {
   startServedPreviews,
   type RemovedPreviewHost,
 } from "./removed_preview_fixture.js";
-import {
-  stage,
-  previewFrame,
-  historical,
-  settlement,
-  documentRequests,
-} from "./removed_preview_observers.js";
 
 let host: RemovedPreviewHost;
 
@@ -18,6 +18,7 @@ test.beforeAll(async () => {
   test.setTimeout(240_000);
   host = await startServedPreviews();
 });
+
 test.afterAll(async () => {
   await host?.close();
 });
@@ -27,7 +28,7 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(`${host.url}/view/pages/removed-page.html`);
+    await page.goto(`${host.url}/view/removed-page/`);
     await expect(page.locator(".mbk-previous")).toHaveText(
       "Showing previous version",
     );
@@ -50,7 +51,7 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(`${host.url}/view/screens/removed-screen.html`);
+    await page.goto(`${host.url}/view/removed-screen/`);
     await expect(page.locator(".mbk-previous")).toHaveText(
       "Showing previous version",
     );
@@ -75,7 +76,7 @@ for (const width of [390, 1280]) {
 }
 
 test("a previous version reads but never acts", async ({ page }) => {
-  await page.goto(`${host.url}/view/pages/removed-page.html`);
+  await page.goto(`${host.url}/view/removed-page/`);
   const preview = page.frameLocator(previewFrame);
   await expect(preview.locator("h1")).toHaveText("Previous page");
   const address = page.url();
@@ -142,7 +143,7 @@ test("a previous version reads but never acts", async ({ page }) => {
 test("Space scrolls a previous version while a link holds focus", async ({
   page,
 }) => {
-  await page.goto(`${host.url}/view/pages/removed-page.html`);
+  await page.goto(`${host.url}/view/removed-page/`);
   const preview = page.frameLocator(previewFrame);
   await expect(preview.locator("h1")).toHaveText("Previous page");
   const address = page.url();
@@ -164,7 +165,7 @@ test("Space scrolls a previous version while a link holds focus", async ({
 test("a later frame navigation restores the accepted presentation", async ({
   page,
 }) => {
-  await page.goto(`${host.url}/view/pages/removed-page.html`);
+  await page.goto(`${host.url}/view/removed-page/`);
   const frame = page.locator(previewFrame);
   await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
     "Previous page",
@@ -174,7 +175,7 @@ test("a later frame navigation restores the accepted presentation", async ({
   await frame.evaluate((element) => {
     const preview = element as HTMLIFrameElement;
     if (preview.contentWindow)
-      preview.contentWindow.location.href = "/view/screens/current.html";
+      preview.contentWindow.location.href = "/view/current/";
   });
   await expect(page.frameLocator(previewFrame).locator("h1")).toHaveText(
     "Previous page",
@@ -194,7 +195,7 @@ test("a preview that cannot be loaded offers another attempt", async ({
       await route.fulfill({ status: 503, body: "{}" });
     },
   );
-  await page.goto(`${host.url}/view/pages/removed-page.html`);
+  await page.goto(`${host.url}/view/removed-page/`);
   await expect(page.locator(`${stage} h2`)).toHaveText(
     "Previous version unavailable",
   );
@@ -203,7 +204,7 @@ test("a preview that cannot be loaded offers another attempt", async ({
   );
   await page.locator('[data-filter="changed"]').click();
   await expect(
-    page.locator('a[data-route="screens/removed-screen.html"]'),
+    page.locator('a[data-route="removed-screen/index.html"]'),
   ).toBeVisible();
   fail = false;
   await page.locator("[data-mokly-preview-retry]").click();
@@ -229,13 +230,13 @@ test("navigation fences a late response and keeps history usable", async ({
     },
   );
   const settled = settlement(page, "review.json?page=");
-  await page.goto(`${host.url}/view/screens/current.html`);
+  await page.goto(`${host.url}/view/current/`);
   await page.locator('[data-filter="changed"]').click();
-  await page.locator('a[data-route="pages/removed-page.html"]').click();
+  await page.locator('a[data-route="removed-page/index.html"]').click();
   await expect(page.locator(".mbk-preview-status")).toHaveText(
     "Loading previous version…",
   );
-  await page.locator('a[data-route="screens/removed-screen.html"]').click();
+  await page.locator('a[data-route="removed-screen/index.html"]').click();
   const desktop = page.frameLocator(`${stage} .mbk-frame-desktop iframe`);
   await expect(desktop.locator("h1")).toHaveText("Previous desktop screen");
   release();
@@ -255,7 +256,7 @@ test("browsing current entries requests no historical bytes", async ({
 }) => {
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
-  await page.goto(`${host.url}/view/screens/current.html`);
+  await page.goto(`${host.url}/view/current/`);
   await expect(page.locator("[data-workspace-status]")).toBeVisible();
   await page.locator('[data-filter="changed"]').click();
   await page.locator('[data-filter="all"]').click();
@@ -274,7 +275,7 @@ test.describe("without its browser client", () => {
   test("a served stage never claims a request is in flight", async ({
     page,
   }) => {
-    await page.goto(`${host.url}/view/pages/removed-page.html`);
+    await page.goto(`${host.url}/view/removed-page/`);
     await expect(page.locator(".mbk-previous")).toHaveText(
       "Showing previous version",
     );

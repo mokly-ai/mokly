@@ -1,6 +1,5 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
-import {} from "@mokly/viewer/data";
-import type { ManifestV8, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV9, ArtifactView } from "@mokly/viewer/data";
 
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
@@ -12,6 +11,7 @@ import {
   gitBlobHash,
   RepositoryObjectFormatReader,
 } from "../registry/blob_hash.js";
+import { generatedDocumentRoutes } from "../registry/generated_documents.js";
 import {
   createManifest,
   MANIFEST_NAME,
@@ -32,6 +32,11 @@ import { validateHtmlLinks } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
+import {
+  captureOutputSnapshot,
+  assertSnapshotRoutes,
+  type OutputSnapshot,
+} from "./output_snapshot.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
@@ -39,37 +44,61 @@ import { componentResourceSeeds } from "./resource_seeds.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
-  manifest: ManifestV8;
+  manifest: ManifestV9;
   outputs: ReadonlyMap<string, GeneratedFile>;
   /** Repository-relative inputs of delivered CSS and asset routes. */
   deliveredStyleSources: readonly string[];
+  /** Accepted authored Markdown bodies, keyed by repository source path. */
+  documentMarkdown?: ReadonlyMap<string, string>;
 }
 
 /** Compile all expected bytes without mutating consumer output. */
 export async function compileCatalogue(
   config: ResolvedConfig,
-  accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
+  accepted?: {
+    graph: LoadedGraph;
+    checkpoint: () => Promise<void>;
+    outputSnapshot: OutputSnapshot;
+  },
+  signal?: AbortSignal,
 ): Promise<Compilation> {
-  return timeAsync("compile", () => compileMeasured(config, accepted));
+  return timeAsync("compile", () => compileMeasured(config, accepted, signal));
 }
 
 async function compileMeasured(
   config: ResolvedConfig,
-  accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
+  accepted?: {
+    graph: LoadedGraph;
+    checkpoint: () => Promise<void>;
+    outputSnapshot: OutputSnapshot;
+  },
+  signal?: AbortSignal,
 ): Promise<Compilation> {
   const graph = accepted?.graph ?? (await loadConsumerGraph(config));
   config = {
     ...config,
+    ...graph.discovery,
     entryModules: graph.entrySources,
     sourceFiles: graph.sourceFiles,
   };
   const registry = timeSync("registry.prepare", () =>
-    prepareRegistry(graph.definitions, config),
+    prepareRegistry(graph.definitions, config, graph.documents),
+  );
+  validateGeneratedOutputPaths(
+    [
+      MANIFEST_NAME,
+      ...generatedDocumentRoutes(
+        createManifest(registry.entries, graph.sourceFiles, config.colorSchemes)
+          .entries,
+      ),
+      ...graph.styleOutputs.keys(),
+    ],
+    config,
   );
   timingCounts("catalogue", () => ({
     entries: registry.entries.length,
     ...Object.fromEntries(
-      ["screen", "component", "use-case", "page"].map((kind) => [
+      ["screen", "component", "use-case", "page", "document"].map((kind) => [
         kind,
         registry.entries.filter((entry) => entry.kind === kind).length,
       ]),
@@ -140,6 +169,7 @@ async function compileMeasured(
       graph.sourceFiles,
       config.colorSchemes,
       componentViews,
+      registry.folders,
     ),
   );
   timeSync("components.validate-resources", () =>
@@ -161,7 +191,7 @@ async function compileMeasured(
   const blobHashAlgorithm = new RepositoryObjectFormatReader().format(
     config.repoRoot,
   );
-  const manifest: ManifestV8 = {
+  const manifest: ManifestV9 = {
     ...draftManifest,
     assetClosure,
     blobHashAlgorithm,
@@ -171,12 +201,16 @@ async function compileMeasured(
         path,
         blobHash: gitBlobHash(generatedBytes(content), blobHashAlgorithm),
       })),
-    schemaVersion: 8,
+    schemaVersion: 9,
   };
   timeSync("manifest.validate", () => parseManifest(manifest));
   timeSync("manifest.serialize", () =>
     compilationOutputs.set(MANIFEST_NAME, serializeManifest(manifest)),
   );
+  const outputSnapshot =
+    accepted?.outputSnapshot ??
+    (await captureOutputSnapshot(compilationOutputs.keys(), config, signal));
+  assertSnapshotRoutes(outputSnapshot, compilationOutputs.keys());
   timeSync("output.paths", () =>
     validateGeneratedOutputPaths(compilationOutputs.keys(), config),
   );
@@ -184,8 +218,16 @@ async function compileMeasured(
     manifest,
     outputs: compilationOutputs,
     deliveredStyleSources: graph.deliveredStyleSources,
+    documentMarkdown: new Map(
+      (graph.documents ?? []).map((entry) => [
+        entry.sourceRelativePath,
+        entry.markdown,
+      ]),
+    ),
   };
-  timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
+  timeSync("runtime.retain", () =>
+    rememberRuntime(compilation, graph, config, outputSnapshot),
+  );
   timingCounts("output", () => ({
     files: compilationOutputs.size,
     views: fragmentViews.size,

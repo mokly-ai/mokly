@@ -11,7 +11,7 @@ order: 4
 npx mokly build
 ```
 
-Build validates your entries, renders every screen and writes the result
+Build validates your entries, renders every screen, page and Markdown document and writes the result
 under `<mockupsDir>/mokly-generated/`: documents, `mokly-manifest.json`,
 compiled CSS in `styles/` and copied assets in `assets/`. Writes are transactional, so a failed build leaves the
 previous output in place.
@@ -19,7 +19,7 @@ previous output in place.
 ## Ignore the output, or commit it
 
 Choose with Git, not a config option. To keep generated output local, add
-`/docs/mockups/mokly-generated/` and `/.mokly-cache/` to `.gitignore`; Check
+`/specs/generated/mokly-generated/` and `/.mokly-cache/` to `.gitignore`; Check
 validates sources but ignores local generated files. To commit output, track
 every file under `mokly-generated/` and commit them after Build. Check then
 compares the entire tree, reporting missing, stale or extra files. Partial
@@ -31,6 +31,11 @@ commit without inspecting head tracking.
 Use `npx mokly build --watch` to update the tree after every successful
 compilation while editing. Plain `serve` and `export` do not write it; use
 `serve --build` if browsing should also update generated files.
+
+A build fails, naming the file and the fix, when two files derive the same
+path, when a file name contains a character that cannot be part of a path,
+when a module exports no definition, or when a link names a path that does
+not exist.
 
 ## Validate without writing
 

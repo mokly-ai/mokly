@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-The fast path and its strict-v8 baseline boundary are implemented.
+The fast path is implemented over the strict path-keyed manifest-v9 baseline boundary.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by
@@ -24,7 +24,7 @@ because those views do not repeat range validation.
 
 Apply these steps in order:
 
-1. Retain v8 component markers on both sides and apply paired manual-ignore
+1. Retain v9 component markers on both sides and apply paired manual-ignore
    normalization. If documents differ outside paired ignored regions, take the
    complete path. Marker-stripped equality is insufficient because marker
    positions participate in ownership projection.
@@ -38,7 +38,7 @@ Apply these steps in order:
    manual-ignore normalization. If the documents differ, take the complete
    path. Discover both closures independently.
 4. When either usage record has instances, styles, or entry-owned slots,
-   compute the complete comparison's ownership projection, including v8 range
+   compute the complete comparison's ownership projection, including v9 range
    validation and root-specific ownership. Require equal projected HTML and
    discover resources independently on both sides with the same exclusions.
 5. If an actual or projected resource is a changed Git path, take the complete
@@ -76,6 +76,6 @@ one classification never repeats discovery for the same document and policy or
 retains a complete document as a map key.
 
 Added and removed views do not use the paired decision. Before normalizing the
-one-sided v8 document, validate every recorded component range. A malformed
+one-sided v9 document, validate every recorded component range. A malformed
 ownership tree fails with `$document` validation instead of becoming an
 ordinary addition or removal.

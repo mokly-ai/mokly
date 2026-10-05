@@ -11,7 +11,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
     "utf8",
   );
   const model = JSON.parse(json);
-  assert.equal(model.schemaVersion, 4);
+  assert.equal(model.schemaVersion, 5);
   assert.equal(Object.hasOwn(model, "generatedPathPrefix"), false);
   assert.match(model.identity.id, /^[a-f0-9]{64}$/);
   assert.match(model.deploymentId, /^[a-f0-9]{64}$/);
@@ -32,12 +32,13 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
   const entries = [
     ...model.screens,
     ...model.pages,
+    ...model.documents,
     ...model.useCases,
     ...model.components,
   ];
   assert.ok(entries.length > 0);
   for (const entry of entries) {
-    const shell = path.join(root, "view", entryRoute(entry.kind, entry.id));
+    const shell = path.join(root, "view", entryRoute(entry.path));
     assert.ok((await fs.stat(shell)).isFile(), shell);
     const views = "views" in entry ? entry.views : [];
     for (const view of views) {
@@ -45,7 +46,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
         root,
         "static",
         GENERATED_DIRECTORY,
-        viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme),
+        viewRoute(entry.path, view.viewport, view.colorScheme),
       );
       assert.ok((await fs.stat(file)).isFile(), file);
     }

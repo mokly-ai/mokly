@@ -34,7 +34,7 @@ can select an existing fixture. `dev:large` serves until Ctrl-C.
 `benchmark:large` launches Chrome, starts a fresh server and measures command start
 to searchable navigation with a real selected preview visible. It verifies record
 count, both viewports/themes, a successful Action label Props edit and a whole page.
-Then it waits for complete Changes and verifies zero changed ids for the
+Then it waits for complete Changes and verifies zero changed entries for the
 unrelated stylesheet rule. It repeats with a new server and browser context for
 a warm restart. Zero stylesheets or a zero share also yield zero Changes.
 JSON records separate listening, usable startup, Props, cached delivery and Changes
@@ -74,8 +74,10 @@ no five-second budget. To smoke-test faster, add matching
 
 Defaults are 30 areas, 40 screens per area, and 12 records per screen. Each area
 adds two registered components with three saved variants, a page and one flow
-per ten screens. The default therefore has 1,410 routed entries and 5,550
-documents plus the manifest. Folder paths group entries without additional records.
+per ten screens. The default therefore has 1,590 routed entries and 5,550
+documents plus the manifest. Each area contains Components and Flows folders, plus Screens with one Activity group
+folder per ten screens. The guide stays directly under its area. Paths provide this
+hierarchy without extra entries.
 Each screen and component variant renders in mobile/desktop and light/dark.
 Flows reuse the canonical screens rather than adding documents. Shared panels
 contain nested actions and caller-owned slots; screens also invoke repeated
@@ -91,7 +93,7 @@ are additional to the configured shared-sheet count.
 
 `--areas`, `--screens` and `--rows` take positive integers; screens must be at
 least two per area. To reproduce a source edit, change an entry module in the
-printed directory, or its shared `entries/screens.tsx`, then observe rebuild
+printed directory, or its shared `src/screens.tsx`, then observe rebuild
 and Changes timings. To compare repeated startups, reuse the printed config
 path instead of generating a new baseline every time.
 

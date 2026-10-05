@@ -20,15 +20,15 @@ import { MemoryBaselineFileSystem } from "./baseline_memory.js";
 
 export const baselineCommit = "a".repeat(40);
 export const baselineManifest = {
-  schemaVersion: 8,
+  schemaVersion: 9 as const,
+  folders: [],
   generatedBy: "mokly",
   entries: [
     {
       kind: "page",
-      id: "page",
+      path: "page",
       title: "Page",
       description: "Baseline page",
-      navPath: [],
       relatedDocs: [],
       declaredDependencies: [],
       sourcePath: "catalogue.txt",
@@ -39,7 +39,7 @@ export const baselineManifest = {
   blobHashAlgorithm: "sha1",
   generatedFiles: [
     {
-      path: "pages/page.html",
+      path: "page/index.html",
       blobHash: gitBlobHash(Buffer.from("<html>Baseline</html>"), "sha1"),
     },
   ],
@@ -110,13 +110,13 @@ export function baselineFixture() {
         };
       await fs.mkdir(path.join(request.cwd, "mockups"));
       await fs.mkdir(path.join(request.cwd, "mockups/mokly-generated"));
-      await fs.mkdir(path.join(request.cwd, "mockups/mokly-generated/pages"));
+      await fs.mkdir(path.join(request.cwd, "mockups/mokly-generated/page"));
       await fs.write(
         path.join(request.cwd, "mockups/mokly-generated/mokly-manifest.json"),
         Buffer.from(JSON.stringify(baselineManifest)),
       );
       await fs.write(
-        path.join(request.cwd, "mockups/mokly-generated/pages/page.html"),
+        path.join(request.cwd, "mockups/mokly-generated/page/index.html"),
         Buffer.from("<html>Baseline</html>"),
       );
       return success;

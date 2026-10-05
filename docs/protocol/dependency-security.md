@@ -183,6 +183,26 @@ The current maintenance choices are:
   adds Node 24. Native binaries must remain installed; the Node package does not
   automatically fall back to WASM. See the
   [release platform contract](./npm-release.md#continuous-integration).
+- [`marked`](https://github.com/markedjs/marked) 18.0.14 is the production
+  CommonMark/GFM parser for Markdown documents. It is MIT licensed, pure
+  JavaScript, ESM compatible, and has no runtime dependencies. Its typed token
+  renderers support destination rewriting, escaped raw HTML, heading anchors
+  and fenced-code language classes without plugins. Front matter uses Mokly's
+  small pure grammar parser, not a YAML dependency. Both workspace and packed
+  consumer checks exercise the installed parser. Adding it leaves the existing
+  13 development-tree findings from GHSA-vfj7-8cjw-p6xm unchanged; it adds no
+  advisory. npm changed its downgrade suggestions to `fixAvailable: false`
+  for ten existing records; the affected versions, paths and advisory are unchanged.
+  The live audit remains mandatory. Marked adds no advisory; the only exception
+  is the reviewed Braces record above.
+- [`es-module-lexer`](https://github.com/guybedford/es-module-lexer) 3.0.2 is
+  the production parser for export's package-owned JavaScript import references.
+  Its MIT-licensed minimal ESM build decodes static and literal dynamic specifiers
+  without executing the scanned code. It has no runtime dependencies. Its inline
+  WebAssembly initializes synchronously on first use in Node, so export validation
+  keeps its synchronous API. The smaller JavaScript-only grammar avoids unneeded
+  TypeScript analysis. Workspace and packed-consumer checks exercise it; it adds
+  no advisory or exception to the reviewed Braces record above.
 
 ## Required Evidence
 

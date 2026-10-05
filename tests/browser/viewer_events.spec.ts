@@ -41,14 +41,14 @@ test("frame links and saved variants emit only committed navigation", async ({
   );
   expect(events).toEqual([
     expect.objectContaining({
-      screenId: "action",
+      screenPath: "action",
       navigation: {
-        id: "action",
+        screenPath: "action",
         target: { kind: "self" },
         activation: "primary",
       },
     }),
-    { screenId: "action-disabled" },
+    { screenPath: "action/disabled" },
   ]);
 });
 
@@ -72,7 +72,7 @@ test("an uncontrolled frame miss can be replaced by its committed selection", as
   ).toBeVisible();
 
   await page.evaluate(() =>
-    window.viewerHarness.get("one").ref.current.select({ screenId: "home" }),
+    window.viewerHarness.get("one").ref.current.select({ screenPath: "home" }),
   );
   await expect(
     page.getByRole("heading", { name: "Home", exact: true }),
@@ -123,7 +123,7 @@ test("Escape and navigation end active picks exactly once", async ({
   await page.evaluate(async () => {
     const host = window.viewerHarness.get("one");
     await host.ref.current.startPick();
-    host.ref.current.select({ screenId: "action" });
+    host.ref.current.select({ screenPath: "action" });
     host.ref.current.cancelPick();
   });
   expect(
@@ -144,27 +144,24 @@ test("flow events preserve the screen key and identify the owning step", async (
     const catalogue = structuredClone(
       host.props.catalogue,
     ) as CatalogueReadModel;
-    catalogue.screens[0]!.useCaseIds = ["tour"];
+    catalogue.screens[0]!.useCasePaths = ["tour"];
     catalogue.useCases = [
       {
         kind: "use-case",
-        id: "tour",
-        navPath: [],
+        path: "tour",
+
         title: "Tour",
         tags: [],
         details: catalogue.screens[0]!.details,
         changes: { status: "disabled" },
-        steps: [{ screenId: "home" }, { screenId: "home" }],
+        steps: [{ screenPath: "home" }, { screenPath: "home" }],
       },
     ];
-    catalogue.tree.pages = [
-      ...catalogue.tree.pages,
-      { kind: "entry", id: "tour" },
-    ];
+    catalogue.tree = [...catalogue.tree, { kind: "entry", path: "tour" }];
     host.props = {
       ...host.props,
       catalogue,
-      defaultSelection: { screenId: "tour", viewport: "desktop" },
+      defaultSelection: { screenPath: "tour", viewport: "desktop" },
     } as MoklyViewerProps;
     host.render();
   });
@@ -190,11 +187,11 @@ test("flow events preserve the screen key and identify the owning step", async (
     .toEqual(
       expect.objectContaining({
         instance: expect.objectContaining({
-          screenId: "home",
+          screenPath: "home",
           viewport: "desktop",
           stepIndex: 1,
         }),
-        frame: { entryId: "tour", stepIndex: 1 },
+        frame: { entryPath: "tour", stepIndex: 1 },
       }),
     );
 });
@@ -272,7 +269,7 @@ test("accepted controlled state and host Back/Forward do not echo proposals", as
     const host = window.viewerHarness.get("one");
     host.setSelection({
       ...host.props.selection!,
-      screenId: "home",
+      screenPath: "home",
     } as ViewerSelection);
   });
   await expect(

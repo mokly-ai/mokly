@@ -22,12 +22,7 @@ export function manifestResourceSeeds(
       ? (entry.componentViews ?? []).flatMap((view) =>
           view.resources.map(({ path }) => ({
             path,
-            sourceRoute: viewRoute(
-              entry.kind,
-              entry.id,
-              view.viewport,
-              view.colorScheme,
-            ),
+            sourceRoute: viewRoute(entry.path, view.viewport, view.colorScheme),
           })),
         )
       : [],

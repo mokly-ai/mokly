@@ -32,7 +32,7 @@ test("CSS Modules export a default class map and matching named binding", async 
   const compiled = await compileFixture(fixture);
   const css = compiled.outputs.get(entryStyle) as string;
   const classes = (
-    compiled.outputs.get("screens/home.mobile.html") as string
+    compiled.outputs.get("home/index.mobile.html") as string
   ).match(/class="([^"]+)"/)?.[1];
   assert.ok(classes, "CSS Modules class map must be used by the component");
   assert.match(classes.split(" ")[0]!, /_card$/);
@@ -54,7 +54,7 @@ test("CSS Modules keep strict-mode reserved names only on the default export", a
     '\nimport styles, { valid } from "./reserved.module.css";',
   );
   const compiled = await compileFixture(fixture);
-  const html = compiled.outputs.get("screens/home.mobile.html") as string;
+  const html = compiled.outputs.get("home/index.mobile.html") as string;
   const css = compiled.outputs.get(entryStyle) as string;
   const value = html.match(/class="([^"]+)"/)?.[1];
   assert.ok(value);
@@ -84,7 +84,7 @@ test("Build retains plugin selector-list output and exported local names", async
       `.${scoped.exports.wrap} .${scoped.exports.x} .${scoped.exports.y}`,
     ),
   );
-  const html = compiled.outputs.get("screens/home.mobile.html") as string;
+  const html = compiled.outputs.get("home/index.mobile.html") as string;
   for (const name of ["wrap", "x", "y"] as const)
     assert.ok(html.includes(`class="${scoped.exports[name]}"`));
 });
@@ -103,7 +103,7 @@ test("adding an unrelated same-basename CSS Module does not rename existing clas
     '\nimport styles from "./card.module.css";',
   );
   const before = (await compileFixture(fixture)).outputs.get(
-    "screens/home.mobile.html",
+    "home/index.mobile.html",
   ) as string;
   await fs.mkdir(path.join(fixture.entriesDir, "other"));
   await fs.writeFile(
@@ -112,10 +112,10 @@ test("adding an unrelated same-basename CSS Module does not rename existing clas
   );
   await fs.writeFile(
     path.join(fixture.entriesDir, "new.mockup.ts"),
-    'import "./other/card.module.css"; export const mockups = [];',
+    'import "./other/card.module.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Supplement", description: "Additional stylesheet root", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Supplement</body></html>" });',
   );
   const after = (await compileFixture(fixture)).outputs.get(
-    "screens/home.mobile.html",
+    "home/index.mobile.html",
   ) as string;
   assert.equal(before, after);
 });

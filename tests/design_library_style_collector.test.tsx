@@ -7,8 +7,8 @@ import {
   DesignStyleCollector,
   DesignStyles,
   useDesignStyle,
-} from "../examples/basic/entries/design/library/style_context.js";
-import type { LibraryStyle } from "../examples/basic/entries/design/library/style_files.js";
+} from "../examples/basic/specs/design/library/style_context.js";
+import type { LibraryStyle } from "../examples/basic/specs/design/library/style_files.js";
 
 const configured = [
   "../../../design.css",

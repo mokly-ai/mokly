@@ -12,28 +12,28 @@ import type { RemovedPreviewData } from "../packages/viewer/dist/shell/previews.
 
 const GENERATION = "b".repeat(64);
 const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/review.json`;
-const BASE = "https://catalogue.test/view/archive/removed.html";
+const BASE = "https://catalogue.test/view/archive/removed/";
 
 const delivery: StaticDelivery = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   deploymentId: "c".repeat(64),
-  canonicalPath: "/view/archive/removed.html",
+  canonicalPath: "/view/archive/removed/",
   comparisonUrl: COMPARISON,
 };
 
 const removedPage: RemovedPreviewData = {
-  id: "removed-page",
+  path: "removed-page",
   kind: "page",
   title: "Removed page",
 };
 
 const removedScreen: RemovedPreviewData = {
-  id: "removed-screen",
+  path: "removed-screen",
   kind: "screen",
   title: "Removed screen",
 };
 
-const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/pages/removed-page.json`;
+const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/removed-page/index.json`;
 
 test("development stages request the stable selected endpoint", () => {
   assert.equal(
@@ -42,7 +42,7 @@ test("development stages request the stable selected endpoint", () => {
   );
   assert.equal(
     previewEndpoint(removedScreen, undefined, BASE, true)?.endpoint.href,
-    "https://catalogue.test/mokly-viewer/diffs/review.json?id=removed-screen&refresh=1",
+    "https://catalogue.test/mokly-viewer/diffs/review.json?path=removed-screen&refresh=1",
   );
 });
 
@@ -137,12 +137,12 @@ test("the documented embedded fetch set advertises comparison snapshots", () => 
   const model = {
     comparisonUrl: COMPARISON.slice(1),
     removedEntries: [
-      { entry: { id: "removed-screen" }, preview: { kind: "screen" } },
+      { entry: { path: "removed-screen" }, preview: { kind: "screen" } },
       {
-        entry: { id: "removed-page" },
+        entry: { path: "removed-page" },
         preview: { kind: "page" },
       },
-      { entry: { id: "tour" } },
+      { entry: { path: "tour" } },
     ],
   } as unknown as CatalogueReadModel;
   assert.deepEqual(advertisedPreviewPaths(model), {

@@ -23,8 +23,8 @@ npx mokly export --out .context/mokly-site
 ## What it produces
 
 Export compiles without writing generated files to your catalogue, then
-packages generated views, CSS and assets under `static/mokly-generated/`,
-referenced authored assets under `static/`, one shell per entry under `view/`,
+packages generated views, Markdown documents, CSS and assets under `static/mokly-generated/`,
+referenced authored assets under `static/`, one shell per entry at `view/<path>/index.html`,
 and available Git comparisons under `mokly-viewer/`.
 It does not copy unrelated files or upload anything.
 

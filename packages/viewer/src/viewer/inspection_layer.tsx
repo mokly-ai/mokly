@@ -201,7 +201,7 @@ function inspectionLabels(
       const left = rectangle.left + (box.x + frame.clientLeft) * scaleX;
       const top = rectangle.top + (box.y + frame.clientTop) * scaleY;
       const component = model.components.find(
-        (item) => item.id === instance.componentId,
+        (item) => item.path === instance.componentId,
       );
       return [
         {

@@ -6,18 +6,24 @@ The consumer CLI, shared engine, and repository preview reuse artifact
 validation, [static delivery](./mokly-export-delivery.md), and one transaction.
 Serve/export share the viewer's server-rendered, hydrated React shell; consumer
 and comparison frames remain static. Build and comparison contracts stay
-authoritative.
+authoritative. Exports use path identity and nested artifact directories.
 
 ## Scope
 
-Imported CSS capture uses accepted in-memory stylesheet and opaque asset bytes
-under the [unified output contract](./mokly-unified-output.md).
+Current files, comparisons and removed previews follow the exact
+[generated inventory rule](./mokly-export-public-files.md#generated-inventory),
+including entries named like build directories. Imported CSS capture uses
+accepted in-memory stylesheet and opaque asset bytes under the
+[unified output contract](./mokly-unified-output.md). Private stylesheet and
+PostCSS inputs never enter the static inventory. Validate decoded relative links
+to scoped npm assets against accepted routes; copied scoped-package assets are
+generated public output. Export never walks the generated tree on disk.
 
 An installed consumer can create a complete static Mokly catalogue using
-their existing config, entries, renderer, and assets. The resulting directory
-contains Browse navigation, screens, use cases, whole-document pages, and the existing
-on-demand comparison experience. Hosting it requires no Mokly process,
-consumer source tree, Node.js, or Git on the serving machine.
+their existing config, roots, renderer, and assets. The resulting directory
+contains Browse navigation, screens, use cases, pages, Markdown documents, and
+the existing on-demand comparison experience. Hosting it requires no Mokly
+process, consumer source tree, Node.js, or Git on the serving machine.
 
 Mokly owns artifact generation. Consumers own deployment, credentials,
 domains, access control, and host configuration. Export performs no upload,
@@ -85,17 +91,17 @@ Ignored-only edits, source moves, and dependency/shared-impact evidence alone
 do not add entries, except the owned and exact declared paths of [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 Retain that evidence in comparisons, and do not derive the navigation filter by counting materially changed comparison screens.
 
-Comparisons use [review result v4](./mokly-changes-serving.md#comparison-engine) for
+Comparisons use [review result v6](./mokly-changes-serving.md#comparison-engine) for
 every catalogue. It retains all existing states, shared/dependency impact,
 ignored regions, both viewports and all effective color schemes; see the
 [supported format matrix](./README.md#supported-formats). Removed screens,
-pages, components and variants retain their baseline context; current and
-removed records never share an id. Pages have no visual comparisons. An id
-absent from a side's manifest follows the
-existing added/removed rules. A declared but
-missing baseline document, invalid manifest, or unavailable resource fails;
-none becomes an invented empty baseline. Empty registries retain the normal
-build error; export does not weaken registry validation to create an empty site.
+pages, documents, components and variants retain their baseline context; current
+and removed records never share a path within a kind. Pages and documents have
+no visual comparisons. A path absent from one side follows the added/removed
+rules unless the [move contract](./mokly-moves.md) pairs it. A declared but
+missing baseline document, invalid manifest, or unavailable resource fails; none
+becomes an invented empty baseline. Empty registries retain the normal build
+error; export does not weaken registry validation to create an empty site.
 
 Comparisons use private temporary storage, independent of `review.outDir` and
 any running development server. Exclude the final export directory, its

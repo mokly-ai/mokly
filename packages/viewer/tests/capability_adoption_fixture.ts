@@ -13,7 +13,7 @@ const fixtureModel = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",
@@ -28,9 +28,9 @@ export const model: CatalogueReadModel = {
 
 export function evidenceRevision(
   value: CatalogueReadModel,
-  changedIds: readonly string[],
+  changedEntries: readonly string[],
 ): CatalogueReadModel {
-  const changed = new Set(changedIds);
+  const changed = new Set(changedEntries);
   return {
     ...value,
     revision: { ...value.revision, evidence: value.revision.evidence + 1 },
@@ -38,8 +38,8 @@ export function evidenceRevision(
       ...entry,
       changes: {
         status: "ready" as const,
-        kind: changed.has(entry.id) ? "changed" : "unmodified",
-        included: changed.has(entry.id),
+        kind: changed.has(entry.path) ? "changed" : "unmodified",
+        included: changed.has(entry.path),
       },
     })),
   };
@@ -64,15 +64,15 @@ export function viewerRevision(
   route: ReturnType<typeof routeFromUrl>,
 ): ViewerEvidenceRevision {
   const next = viewerCatalogue(value);
-  const entryId =
-    route.view.kind === "target" ? route.view.target.entry.id : undefined;
-  const entry = entryId ? catalogueRouteEntry(next, entryId) : undefined;
+  const entryPath =
+    route.view.kind === "target" ? route.view.target.entry.path : undefined;
+  const entry = entryPath ? catalogueRouteEntry(next, entryPath) : undefined;
   const workspace =
     entry &&
     (entry.kind === "screen" ||
       (entry.kind === "component" && !("variantOf" in entry)))
       ? {
-          ...publicWorkspace(value, entry),
+          ...publicWorkspace(next, value, entry),
           base: current.base,
         }
       : undefined;

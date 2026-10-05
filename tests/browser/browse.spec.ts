@@ -1,16 +1,17 @@
 import { expect, test } from "@playwright/test";
 
 import {
-  welcomeRow,
   detailsRow,
-  tourRow,
-  markPage,
   hasMarker,
+  markPage,
   openScreensGroup,
+  tourRow,
+  welcomeRow,
+  workspaceRoute,
 } from "./browse_assertions.js";
 
 test("durable links load complete server-rendered views", async ({ page }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "sandbox",
@@ -22,31 +23,31 @@ test("durable links load complete server-rendered views", async ({ page }) => {
   );
 });
 
-test("catalogue separates pages and components into collapsible sections", async ({
+test("catalogue separates specs and components into collapsible sections", async ({
   page,
 }) => {
   await page.goto("/");
-  const pages = page.locator('[data-nav-section="pages"]');
+  const specs = page.locator('[data-nav-section="specs"]');
   const components = page.locator('[data-nav-section="components"]');
-  await expect(pages.locator(":scope > summary")).toHaveText("Pages");
+  await expect(specs.locator(":scope > summary")).toHaveText("Specs");
   await expect(components.locator(":scope > summary")).toHaveText("Components");
-  await expect(pages).toHaveAttribute("open", "");
+  await expect(specs).toHaveAttribute("open", "");
   await expect(components).toHaveAttribute("open", "");
-  await expect(pages.locator('[data-entry-kind="component"]')).toHaveCount(0);
+  await expect(specs.locator('[data-entry-kind="component"]')).toHaveCount(0);
   await expect(
     components.locator(':not([data-entry-kind="component"])[data-nav-row]'),
   ).toHaveCount(0);
-  expect(await pages.locator("[data-nav-row]").count()).toBeGreaterThan(0);
+  expect(await specs.locator("[data-nav-row]").count()).toBeGreaterThan(0);
   expect(await components.locator("[data-nav-row]").count()).toBeGreaterThan(0);
 
   await components.locator(":scope > summary").click();
   await expect(components).not.toHaveAttribute("open", "");
   await page.reload();
-  await expect(pages).toHaveAttribute("open", "");
+  await expect(specs).toHaveAttribute("open", "");
   await expect(components).not.toHaveAttribute("open", "");
 
   await page.getByRole("button", { name: "Collapse all" }).click();
-  await expect(pages).not.toHaveAttribute("open", "");
+  await expect(specs).not.toHaveAttribute("open", "");
   await expect(components).not.toHaveAttribute("open", "");
 });
 
@@ -57,7 +58,7 @@ test("progressive navigation swaps the main view without reloads", async ({
   await markPage(page);
   await openScreensGroup(page);
   await page.click(welcomeRow);
-  await expect(page).toHaveURL(/\/view\/screens\/example-welcome\.html$/);
+  await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   expect(await hasMarker(page)).toBe(true);
   await expect(page.locator(welcomeRow)).toHaveAttribute(
@@ -70,7 +71,7 @@ test("progressive navigation swaps the main view without reloads", async ({
   await expect(page.locator("#mb-status")).toContainText("Welcome");
 
   await page.click(detailsRow);
-  await expect(page).toHaveURL(/details\.html$/);
+  await expect(page).toHaveURL(/details\/$/);
   await page.goBack();
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await page.goForward();
@@ -81,10 +82,10 @@ test("progressive navigation swaps the main view without reloads", async ({
 test("breadcrumbs track hierarchy through progressive history", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   const crumbs = page.getByLabel("Catalogue location");
   await expect(crumbs).toHaveText("Example›Screens");
-  await expect(crumbs.locator("a")).toHaveCount(0);
+  await expect(crumbs.locator("a")).toHaveAttribute("href", "/view/example/");
 
   await page.click(tourRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Example tour");
@@ -97,7 +98,7 @@ test("breadcrumbs track hierarchy through progressive history", async ({
 
 test("Back and Forward restore each route's stage scroll", async ({ page }) => {
   await page.setViewportSize({ height: 500, width: 1_280 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await page.click(detailsRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   const destinationScroll = await page.evaluate(() => {
@@ -146,5 +147,43 @@ test("search state is retained across in-shell navigation", async ({
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator("[data-mokly-search]")).toHaveValue("welcome");
   await expect(page.locator(detailsRow)).toBeHidden();
+  expect(await hasMarker(page)).toBe(true);
+});
+
+test("overlapping navigations are latest-wins", async ({ page }) => {
+  await page.goto("/");
+  await markPage(page);
+  await openScreensGroup(page);
+  await page.route("**/view/example/screens/welcome/", async (route) => {
+    if (route.request().resourceType() !== "fetch") return route.continue();
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    return route.continue();
+  });
+  await page.click(welcomeRow);
+  await page.click(detailsRow);
+  await expect(page.locator("#mb-main h2")).toHaveText("Details");
+  await expect(page).toHaveURL(/details\/$/);
+  await page.waitForTimeout(900);
+  await expect(page.locator("#mb-main h2")).toHaveText("Details");
+  expect(await hasMarker(page)).toBe(true);
+});
+
+test("failed route evidence keeps public navigation and rejects the previous owner", async ({
+  page,
+}) => {
+  await page.goto("/view/example/screens/details/");
+  await markPage(page);
+  await expect.poll(() => workspaceRoute(page)).toBe("example/screens/details");
+  let fetches = 0;
+  await page.route("**/view/example/screens/welcome/", (route) =>
+    route.request().resourceType() === "fetch"
+      ? ((fetches += 1), route.abort())
+      : route.continue(),
+  );
+  await page.click(welcomeRow);
+  await expect(page).toHaveURL(/welcome\/$/);
+  await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
+  await expect.poll(() => fetches).toBe(1);
+  await expect.poll(() => workspaceRoute(page)).toBe("example/screens/welcome");
   expect(await hasMarker(page)).toBe(true);
 });

@@ -21,8 +21,8 @@ npx mokly check
 ## What it validates
 
 Check compiles the catalogue and calculates the same bytes `build` would
-write, without writing them. It validates your entries, the links between
-them and the resources they reference.
+write, without writing them. It validates your entries and documents, the
+paths they derive, the links between them and the resources they reference.
 
 When Git indexes the complete `<mockupsDir>/mokly-generated/` tree, Check reports
 missing, stale and extra local files. Run `mokly build` and commit the full

@@ -165,7 +165,7 @@ export class CachedBaselineBuilder implements BaselineBuilder {
             await this.fs.remove(layout.source);
             assertBaselineActive(request.signal);
             const marker: CompletionMarker = {
-              schemaVersion: 1,
+              schemaVersion: 2,
               commit: request.commit,
               finishedAt: new Date(this.clock.now()).toISOString(),
               commands: request.commands.map((argv) => [...argv]),

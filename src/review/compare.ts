@@ -17,6 +17,7 @@ import { reviewChangedPaths } from "./changed_paths.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { compareComponentCatalogue } from "./component_compare.js";
 import { importedChangedPaths } from "./imported_changes.js";
+import { readMoveMarkdown } from "./moves/markdown_sources.js";
 import type { ReadOnlyReviewRepository } from "./repository.js";
 
 export interface CompareReviewOptions {
@@ -81,5 +82,14 @@ export async function compareReview(
     baseCommit,
     baseRef,
     options.useFastPath,
+    await readMoveMarkdown(
+      baseManifest,
+      compilation.manifest,
+      config,
+      git.sourceReader ?? git.reader,
+      baseCommit,
+      compilation.documentMarkdown,
+    ),
+    git.sourceReader ?? git.reader,
   );
 }

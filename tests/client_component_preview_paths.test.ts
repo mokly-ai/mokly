@@ -15,7 +15,7 @@ const capability = {
 };
 const request: ComponentRenderRequest = {
   componentId: "action",
-  variantId: "action-default",
+  variantPath: "action/default",
   pageId: "action",
   viewport: "desktop",
   colorScheme: "light",
@@ -25,13 +25,13 @@ const request: ComponentRenderRequest = {
 const view: GeneratedComponentView = {
   viewport: "desktop",
   colorScheme: "light",
-  path: "components/action-default.desktop.html",
+  path: "action/default/index.desktop.html",
 };
 const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
 const preview: ComponentRenderSuccess = {
   generation: capability.generation,
   renderId,
-  previewUrl: `/mokly-viewer/components/renders/${renderId}/mokly-generated/components/action-default.desktop.html`,
+  previewUrl: `/mokly-viewer/components/renders/${renderId}/mokly-generated/action/default/index.desktop.html`,
   props: { label: ["string", "Purchase"] },
   view: {
     viewport: "desktop",
@@ -67,9 +67,9 @@ test("temporary preview transport accepts the generated layout and confines each
   assert.deepEqual(await send(), preview);
   for (const changed of [
     {
-      previewUrl: `/mokly-viewer/components/renders/${renderId}/components/action-default.desktop.html`,
+      previewUrl: `/mokly-viewer/components/renders/${renderId}/action/default/index.desktop.html`,
     },
-    { previewUrl: preview.previewUrl.replace("action-default", "other") },
+    { previewUrl: preview.previewUrl.replace("action/default", "other") },
     {
       previewUrl: preview.previewUrl.replace(
         renderId,

@@ -5,7 +5,8 @@
 The repository preview builder publishes current content by default; an option
 adds a pinned comparison. [Optional Published Changes](../../plans/optional-published-changes.md)
 records verification, and [removed previews](./mokly-removed-previews.md) owns
-packaged history. The npm CLI is unchanged.
+packaged history. The npm CLI is unchanged. Shell and preview file names use
+the [path-derived artifact layout](./mokly-artifact-paths.md).
 
 ## Publication Option
 
@@ -90,8 +91,10 @@ replacement is preserved, including one introduced during capture. Retain the
 writer reservation, OS-enforced non-replacing moves, and safe backup recovery
 defined by the [export recovery contract](./mokly-export-recovery.md).
 The repository adapter has the same current-marker ownership requirement.
+The [generated inventory rule](./mokly-export-public-files.md#generated-inventory)
+keeps exact generated routes public while protected source names stay denied.
 Its owned reservation namespace remains after cleanup, with no active locks.
-Each entry's shell is written once at its derived `view/<route>`; current-only
+Each entry's shell is written once at `view/<path>/index.html`; current-only
 shell metadata explicitly sets `comparisonUrl: null` and never requests a
 development comparison endpoint.
 
@@ -110,7 +113,7 @@ never publish a directory merely because it is under `mockupsDir`. Each
 selected closure file must be a confined regular file outside `mokly-generated/`,
 not a symlink or protected input; apply staging/destination exclusions to
 both logical and resolved identities. Validate the presence of every current
-page and light/dark screen fragment named by the manifest. Validate every
+page, document and light/dark screen view named by the manifest. Validate every
 exported HTML/CSS resource reference against confined regular files in the
 staged static tree, including transitive references. An unavailable resource
 fails before installation and preserves the previous artifact. Repository

@@ -18,11 +18,14 @@ for (const viewport of ["mobile", "desktop"]) {
   test(`real Firna ${viewport} controls retain styling and navigate in Browse`, async ({
     page,
   }) => {
-    await page.goto(`${controls.url}/view/screens/home.html`);
+    await page.goto(`${controls.url}/view/home/`);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     const link = frame.getByTestId("continue");
     await expect(link).toHaveJSProperty("tagName", "A");
-    await expect(link).toHaveAttribute("href", `./details.${viewport}.html`);
+    await expect(link).toHaveAttribute(
+      "href",
+      `../details/index.${viewport}.html`,
+    );
     const styles = await frame.locator("body").evaluate((body) => {
       const read = (id: string) => {
         const element = body.querySelector(`[data-testid="${id}"]`)!;
@@ -62,14 +65,14 @@ for (const viewport of ["mobile", "desktop"]) {
         .evaluate(() => "__consumerScriptRan" in window),
     ).toBe(false);
     await link.click();
-    await expect(page).toHaveURL(/\/view\/screens\/details\.html$/);
+    await expect(page).toHaveURL(/\/view\/details\/$/);
   });
 }
 
 test("child links provide keyboard focus and activation despite component outline resets", async ({
   page,
 }) => {
-  await page.goto(`${controls.url}/view/screens/home.html`);
+  await page.goto(`${controls.url}/view/home/`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   const link = frame.locator("#outline-reset");
   await frame.getByTestId("continue").focus();
@@ -79,13 +82,13 @@ test("child links provide keyboard focus and activation despite component outlin
   await expect(link).toHaveCSS("outline-style", "solid");
   await expect(link).toHaveCSS("outline-width", "2px");
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/view\/screens\/details\.html$/);
+  await expect(page).toHaveURL(/\/view\/details\/$/);
 });
 
 test("disabled, busy, and handler-less Firna controls stay inactive", async ({
   page,
 }) => {
-  await page.goto(`${controls.url}/view/screens/home.html`);
+  await page.goto(`${controls.url}/view/home/`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   for (const id of ["disabled", "busy", "no-handler"]) {
     const button = frame.getByTestId(id);
@@ -93,17 +96,17 @@ test("disabled, busy, and handler-less Firna controls stay inactive", async ({
     await expect(button).not.toHaveAttribute("data-mokly-link");
     await button.dispatchEvent("click");
   }
-  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+  await expect(page).toHaveURL(/\/view\/home\/$/);
 });
 
 test("adapted controls navigate from use-case frames", async ({ page }) => {
-  await page.goto(`${controls.url}/view/user-flows/tour.html`);
+  await page.goto(`${controls.url}/view/tour/`);
   await page
     .frameLocator(".mbk-flow-screen iframe")
     .first()
     .getByTestId("continue")
     .click();
-  await expect(page).toHaveURL(/\/view\/screens\/details\.html$/);
+  await expect(page).toHaveURL(/\/view\/details\/$/);
 });
 
 test("generated controls remain native links in standalone and Review snapshots", async ({
@@ -115,9 +118,9 @@ test("generated controls remain native links in standalone and Review snapshots"
     path.join(controls.reviewDir, "snapshots/before/mokly-generated"),
   ]) {
     await page.goto(
-      pathToFileURL(path.join(root, "screens/home.mobile.html")).href,
+      pathToFileURL(path.join(root, "home/index.mobile.html")).href,
     );
     await page.getByTestId("continue").click();
-    await expect(page).toHaveURL(/\/screens\/details\.mobile\.html$/);
+    await expect(page).toHaveURL(/\/details\/index\.mobile\.html$/);
   }
 });

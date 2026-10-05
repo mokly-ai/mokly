@@ -23,15 +23,23 @@ test("per-glob validation follows declaration order", async (context) => {
     path.join(reviewOut, "denied.mockup.tsx"),
     validEntrySource(),
   );
-  const denied = ".review/**/*.mockup.tsx";
-  const empty = "missing/**/*.mockup.tsx";
+  const denied = {
+    dir: path.join(fixture.root, ".review"),
+    files: ["**/*.mockup.tsx"],
+    transparent: [],
+  };
+  const empty = {
+    dir: path.join(fixture.root, "missing"),
+    files: ["**/*.mockup.tsx"],
+    transparent: [],
+  };
   const direct = {
     ...config,
     review: { ...config.review, outDir: reviewOut },
   };
 
   assert.throws(
-    () => discoverEntryModules({ ...direct, entryGlobs: [denied, empty] }),
+    () => discoverEntryModules({ ...direct, roots: [denied, empty] }),
     {
       code: "config-invalid",
       message:
@@ -39,11 +47,10 @@ test("per-glob validation follows declaration order", async (context) => {
     },
   );
   assert.throws(
-    () => discoverEntryModules({ ...direct, entryGlobs: [empty, denied] }),
+    () => discoverEntryModules({ ...direct, roots: [empty, denied] }),
     {
       code: "config-invalid",
-      message:
-        /entries glob matches no module: missing\/\*\*\/\*\.mockup\.tsx; not searched: missing$/,
+      message: /root matches no file: missing; not searched: missing$/,
     },
   );
 });
@@ -77,7 +84,18 @@ test("shared root projection precedes per-glob validation", async (context) => {
     () =>
       discoverEntryModules({
         ...config,
-        entryGlobs: [".review/**/*.mockup.tsx", "later/**/*.mockup.tsx"],
+        roots: [
+          {
+            dir: path.resolve(config.repoRoot, ".review"),
+            files: ["**/*.mockup.tsx"],
+            transparent: [],
+          },
+          {
+            dir: path.resolve(config.repoRoot, "later"),
+            files: ["**/*.mockup.tsx"],
+            transparent: [],
+          },
+        ],
         review: { ...config.review, outDir: reviewOut },
       }),
     {
@@ -113,7 +131,13 @@ test("overlapping globs validate accepted and vanished candidates once", async (
   assert.deepEqual(
     discoverEntryModules({
       ...config,
-      entryGlobs: ["entries/**/*.mockup.tsx", "entries/*.mockup.tsx"],
+      roots: [
+        {
+          dir: path.resolve(config.repoRoot, "entries"),
+          files: ["**/*.mockup.tsx", "*.mockup.tsx"],
+          transparent: [],
+        },
+      ],
     }),
     [surviving],
   );
@@ -135,15 +159,14 @@ test("cache roots fail config while direct discovery distinguishes races", async
     () =>
       resolveConfig(
         {
-          entries: [".mokly-cache/*.mockup.tsx"],
+          roots: [{ dir: ".mokly-cache", files: ["*.mockup.tsx"] }],
           mockupsDir: "mockups",
         },
         fixture.configPath,
       ),
     {
       code: "config-invalid",
-      message:
-        /entries glob must stay inside repoRoot and outside \.mokly-cache/,
+      message: /roots\[0\].dir must not be inside \.mokly-cache/,
     },
   );
 
@@ -162,12 +185,18 @@ test("cache roots fail config while direct discovery distinguishes races", async
     () =>
       discoverEntryModules({
         ...config,
-        entryGlobs: [".mokly-cache/vanished.mockup.tsx"],
+        roots: [
+          {
+            dir: path.resolve(config.repoRoot, ".mokly-cache"),
+            files: ["vanished.mockup.tsx"],
+            transparent: [],
+          },
+        ],
       }),
     {
       code: "config-invalid",
       message:
-        /entries glob matches no module: \.mokly-cache\/vanished\.mockup\.tsx; not searched: \.mokly-cache\/vanished\.mockup\.tsx$/,
+        /root matches no file: \.mokly-cache; not searched: \.mokly-cache\/vanished\.mockup\.tsx$/,
     },
   );
   assert.equal(vanishedChecks, 1);
@@ -175,7 +204,13 @@ test("cache roots fail config while direct discovery distinguishes races", async
     () =>
       discoverEntryModules({
         ...config,
-        entryGlobs: [".mokly-cache/surviving.mockup.tsx"],
+        roots: [
+          {
+            dir: path.resolve(config.repoRoot, ".mokly-cache"),
+            files: ["surviving.mockup.tsx"],
+            transparent: [],
+          },
+        ],
       }),
     {
       code: "config-invalid",

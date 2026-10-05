@@ -26,7 +26,7 @@ for (const source of [validEntrySource(), componentEntrySource()]) {
     t.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
     const runtime = await prepareLiveRuntime(config);
-    assert.equal(runtime.manifest.schemaVersion, "live-index-1");
+    assert.equal(runtime.manifest.schemaVersion, "live-index-2");
     assert.deepEqual(runtime.outputs, []);
     assert.throws(() => parseManifest(runtime.manifest), {
       code: "manifest-invalid",
@@ -56,7 +56,7 @@ test("demand links reject an unknown generated route even when a local file exis
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   assert.throws(
-    () => compiler.render("screens/home.desktop.html"),
+    () => compiler.render("home/index.desktop.html"),
     /missing target/,
   );
 });

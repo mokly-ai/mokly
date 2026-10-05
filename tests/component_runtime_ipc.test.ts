@@ -10,14 +10,21 @@ function startup(generatedDir: unknown): object {
     type: "component-runtime-startup",
     config: {
       configPath: "/repo/mokly.config.ts",
-      entryGlobs: ["entries/**/*.mockup.{ts,tsx}"],
+      roots: [
+        {
+          dir: "/repo/entries",
+          files: ["**/*.mockup.{ts,tsx}"],
+          transparent: [],
+        },
+      ],
       mockupsDir: "/repo/mockups",
       generatedDir,
       repoRoot: "/repo",
     },
     manifest: currentManifest({
       entries: [],
-      schemaVersion: 8,
+      folders: [],
+      schemaVersion: 9,
       sourceFiles: [],
     }),
   };

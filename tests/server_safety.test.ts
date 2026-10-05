@@ -21,9 +21,7 @@ test("Browse frames sandbox generated scripts away from the shell", async (conte
   });
   fixture.beforeRemove(() => server.close());
 
-  const html = await (
-    await fetch(`${server.url}/view/screens/home.html`)
-  ).text();
+  const html = await (await fetch(`${server.url}/view/home/`)).text();
 
   assert.match(html, /<iframe[^>]+sandbox="allow-same-origin"/);
   for (const capability of [
@@ -47,7 +45,7 @@ test("static serving rejects symlinks into nested authored source roots", async 
   await fs.promises.rename(fixture.entryPath, nestedEntry);
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "mockups/src/entries", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "mockups/src/entries" }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
   const exposed = path.join(fixture.mockupsDir, "exposed.tsx");
   await fs.promises.symlink("src/entries/fixture.mockup.tsx", exposed);

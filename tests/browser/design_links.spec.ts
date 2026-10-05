@@ -15,23 +15,21 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/screens/design-browse-home.html");
+    await page.goto("/view/design/browse/views/home/");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     await frame.locator(".mbk-empty-link").click();
-    await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-screen\.html$/,
-    );
+    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
     const details = frame.locator(".mbk-shot-link:visible").first();
     await frame.locator(".mbk-brand").focus();
     await tabTo(page, details);
     await expect(details).toHaveCSS("outline-style", "solid");
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-details-screen\.html$/,
+      /\/view\/design\/browse\/views\/details-screen\/$/,
     );
     const row = page.locator(
-      'a[data-nav-row][data-route="screens/design-browse-details-screen.html"]',
+      'a[data-nav-row][data-route="design/browse/views/details-screen/index.html"]',
     );
     await expect(row).toHaveAttribute("aria-current", "page");
     await expect(row).toBeVisible();
@@ -40,15 +38,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
       viewport,
     );
     await page.goBack();
-    await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-screen\.html$/,
-    );
+    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
     await page.goForward();
     await expect(row).toHaveAttribute("aria-current", "page");
     await frame.locator(".mbk-shot-link:visible").first().click();
-    await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-screen\.html$/,
-    );
+    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
     await expect(frame.locator("script")).toHaveCount(1);
     await expect(frame.locator("script")).toHaveAttribute(
       "src",
@@ -68,66 +62,62 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/screens/design-browse-screen.html");
+    await page.goto("/view/design/browse/views/screen/");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     await frame.locator(".mbk-shot-link:visible").first().click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-details-screen\.html$/,
+      /\/view\/design\/browse\/views\/details-screen\/$/,
     );
     await frame.locator(".mbk-shot-link:visible").first().click();
-    await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-screen\.html$/,
-    );
+    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-picker\.html$/,
+      /\/view\/design\/browse\/views\/screen\/tag-picker\/$/,
     );
     await frame
       .getByRole("group", { name: "Tags", exact: true })
       .getByRole("link", { name: "forms", exact: true })
       .click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-forms\.html$/,
+      /\/view\/design\/browse\/views\/screen\/tag-forms\/$/,
     );
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-filter\.html$/,
+      /\/view\/design\/browse\/states\/tag-filter\/$/,
     );
     await frame
       .getByRole("group", { name: "Tags", exact: true })
       .getByRole("link", { name: "forms", exact: true })
       .click();
-    await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-screen\.html$/,
-    );
-    await page.goto("/view/screens/design-changes-current.html");
+    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
+    await page.goto("/view/design/changes/diff-controls/current/");
     await frame
       .getByRole("group", { name: "Comparison mode" })
       .getByRole("link", { name: "Side by side" })
       .click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-review-changed\.html$/,
+      /\/view\/design\/changes\/outcomes\/changed\/$/,
     );
     await frame
       .getByRole("group", { name: "Comparison mode" })
       .getByRole("link", { name: "Overlay" })
       .click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-changes-overlay\.html$/,
+      /\/view\/design\/changes\/diff-controls\/overlay\/$/,
     );
     await frame
       .getByRole("group", { name: "Comparison mode" })
       .getByRole("link", { name: "Current" })
       .click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-changes-current\.html$/,
+      /\/view\/design\/changes\/diff-controls\/current\/$/,
     );
-    await page.goto("/view/screens/design-browse-use-case.html");
+    await page.goto("/view/design/browse/views/use-case/");
     await frame.locator(".flow-step-link").nth(1).click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-details-screen\.html$/,
+      /\/view\/design\/browse\/views\/details-screen\/$/,
     );
   });
 }
@@ -135,23 +125,19 @@ for (const viewport of ["mobile", "desktop"] as const) {
 test("narrow design menu and drawer close return through canonical home", async ({
   page,
 }) => {
-  await page.goto("/view/screens/design-browse-home.html");
+  await page.goto("/view/design/browse/views/home/");
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   await frame.getByRole("link", { name: "Open catalogue navigation" }).click();
-  await expect(page).toHaveURL(
-    /\/view\/screens\/design-browse-navigation\.html$/,
-  );
+  await expect(page).toHaveURL(/\/view\/design\/browse\/states\/navigation\/$/);
   await frame.getByRole("link", { name: "Close catalogue navigation" }).click();
-  await expect(page).toHaveURL(/\/view\/screens\/design-browse-home\.html$/);
+  await expect(page).toHaveURL(/\/view\/design\/browse\/views\/home\/$/);
   await frame.getByRole("link", { name: "Open catalogue navigation" }).click();
-  await expect(page).toHaveURL(
-    /\/view\/screens\/design-browse-navigation\.html$/,
-  );
+  await expect(page).toHaveURL(/\/view\/design\/browse\/states\/navigation\/$/);
   await frame
     .locator(".mbk-nav-row")
     .filter({ hasText: /^Details$/ })
     .click();
   await expect(page).toHaveURL(
-    /\/view\/screens\/design-browse-details-screen\.html$/,
+    /\/view\/design\/browse\/views\/details-screen\/$/,
   );
 });

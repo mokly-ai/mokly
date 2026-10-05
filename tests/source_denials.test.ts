@@ -38,10 +38,10 @@ test("source policy identifies entries, reserved names, listed inputs and genera
     sourceFiles: ["mockups/helper.html"],
   };
   for (const [name, reason] of [
-    ["source-alias/page.html", { kind: "entries" }],
+    ["source-alias/fixture.mockup.tsx", { kind: "entries" }],
     ["page.source.html", { kind: "reserved" }],
     ["helper.html", { kind: "listed" }],
-    ["mokly-generated/screens/home.html", { kind: "generated" }],
+    ["mokly-generated/home/index.html", { kind: "generated" }],
   ] as const) {
     assert.deepEqual(
       isAuthoringSource(path.join(config.mockupsDir, name), config),
@@ -96,11 +96,11 @@ test("generated routes stay confined while authored names remain independent", a
   );
   const config = {
     ...(await loadConfig(fixture.root)),
-    sourceFiles: ["mockups/helper.html"],
+    sourceFiles: ["mockups/listed/index.html"],
   };
   for (const [route, cause] of [
     ["../page.html", /generated route is unsafe/],
-    ["page.source.html", /reserved source basename/],
+    ["page.source.html", /generated route is unsafe/],
   ] as const) {
     assert.throws(
       () => validateGeneratedOutputPaths([route], config),
@@ -113,7 +113,11 @@ test("generated routes stay confined while authored names remain independent", a
   }
   assert.doesNotThrow(() =>
     validateGeneratedOutputPaths(
-      ["helper.html", "metadata.html", "source-alias/page.html"],
+      [
+        "helper/index.html",
+        "metadata/index.html",
+        "source-alias/page/index.html",
+      ],
       config,
     ),
   );

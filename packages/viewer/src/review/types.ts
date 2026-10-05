@@ -1,6 +1,7 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { ManifestEntry } from "../registry/types.js";
 
-import type { ReviewResultV4 } from "./component_types.js";
+import type { ReviewResultV6 } from "./component_types.js";
 
 /** Text or binary bytes retained in one static Review artifact. */
 export type ReviewArtifactContent = string | Uint8Array;
@@ -48,14 +49,14 @@ export type ViewResourceEvidence = Pick<
 
 /** Screen-only resource evidence retained by live classification. */
 export interface ScreenResourceEvidence {
-  id: string;
+  path: string;
   views: readonly ViewResourceEvidence[];
 }
 
 /** One stable screen identity comparison. */
 export interface ScreenReview {
   dependencies: readonly string[];
-  id: string;
+  path: string;
   sharedImpact: readonly string[];
   state: ReviewState;
   title: string;
@@ -66,7 +67,16 @@ export interface ScreenReview {
 export interface ReviewArtifact {
   files: ReadonlyMap<string, ReviewArtifactContent>;
   result: ReviewResult;
+  /** Typed comparison metadata; documents and pages add no visual result records. */
+  pairing?: {
+    moves: readonly {
+      kind: ManifestEntry["kind"];
+      path: string;
+      previousPath: string;
+    }[];
+    diagnostics: readonly string[];
+  };
 }
 
 /** The only accepted comparison payload. */
-export type ReviewResult = ReviewResultV4;
+export type ReviewResult = ReviewResultV6;

@@ -5,15 +5,100 @@ import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 
 import {
+  darkTokenSelectors,
+  flatCss,
+  occurrences,
+} from "./helpers/shell_assertions.js";
+import {
   context,
   darkManifest,
-  flatCss,
+  embeddedPage,
   homePage,
   manifest,
   notFoundPage,
-  occurrences,
-} from "./shell_fixture.js";
-import { embeddedPage, routePage } from "./shell_fixture_2.js";
+  routePage,
+} from "./helpers/shell_fixture.js";
+
+test("dark scheme paints device screens and leaves the chrome light", () => {
+  const css = flatCss(SHELL_CSS);
+  const scope = '[data-preview-color-scheme="dark"] ';
+
+  assert.ok(
+    css.includes(
+      `${scope}.phone-screen { background: var(--mbk-dark-screen-bg); }`,
+    ),
+  );
+  assert.ok(
+    css.includes(
+      `${scope}.phone-screen::after { content: ""; position: absolute; ` +
+        "inset: 0; border-radius: inherit; " +
+        "box-shadow: inset 0 0 0 1px color-mix(in srgb, " +
+        "var(--mbk-dark-screen-ink) 12%, var(--mbk-dark-screen-bg)); " +
+        "pointer-events: none; }",
+    ),
+  );
+  assert.ok(
+    css.includes(
+      `${scope}.phone-status { color: var(--mbk-dark-screen-ink); }`,
+    ),
+  );
+  assert.ok(
+    css.includes(
+      `${scope}.phone-home { background: color-mix(in srgb, ` +
+        "var(--mbk-dark-screen-ink) 40%, transparent); }",
+    ),
+  );
+  assert.ok(
+    css.includes(
+      `${scope}.browser-viewport { background: var(--mbk-dark-screen-bg); }`,
+    ),
+  );
+  assert.match(
+    css,
+    /\[data-preview-color-scheme="dark"\] \.mbk-frag \{[^}]*background: var\(--mbk-dark-screen-bg\);/,
+  );
+
+  const selectors = darkTokenSelectors(SHELL_CSS).map(flatCss);
+  assert.equal(selectors.length, 7);
+  for (const selector of selectors)
+    assert.ok(selector.startsWith(scope), selector);
+  assert.ok(
+    css.includes(
+      `${scope}.mb-pane-doc { background-color: var(--mbk-dark-screen-bg); }`,
+    ),
+  );
+
+  assert.match(
+    SHELL_CSS,
+    /\.phone-screen \{[^}]*background: var\(--mbk-screen-bg\);/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.phone-status \{[^}]*color: var\(--mbk-screen-ink\);/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.phone-home \{[^}]*background: var\(--mbk-device-home\);/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.browser-viewport \{[^}]*background: var\(--mbk-screen-bg\);/,
+  );
+});
+
+test("frame labels note a light-only screen only under a dark selection", () => {
+  const css = flatCss(SHELL_CSS);
+  assert.ok(
+    css.includes(".mbk-frame-scheme-note { display: none; font-weight: 500; }"),
+  );
+  assert.ok(
+    css.includes(
+      'body[data-mokly-color-scheme="dark"] ' +
+        ".mbk-frame-wrap[data-color-scheme-fallback] " +
+        ".mbk-frame-scheme-note { display: inline; }",
+    ),
+  );
+});
 
 test("one scheme switch instance shows per side of the breakpoint", () => {
   const css = flatCss(SHELL_CSS);
@@ -81,8 +166,8 @@ test("standalone documents offer Appearance instead of preview switches", () => 
   }
   for (const html of [
     notFoundPage("view/unknown.html", light, context),
-    routePage(dark, "screens/welcome.html"),
-    routePage(dark, "user-flows/tour.html"),
+    routePage(dark, "example/screens/welcome/index.html"),
+    routePage(dark, "example/tour/index.html"),
   ])
     assert.equal(occurrences(html, "data-mokly-appearance-select"), 1);
 });

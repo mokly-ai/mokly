@@ -21,13 +21,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
     }) => {
       if (viewport === "mobile" && scheme === "dark")
         await page.route(
-          "**/static/mokly-generated/screens/example-welcome.mobile.dark.html",
+          "**/static/mokly-generated/example/screens/welcome/index.mobile.dark.html",
           async (route) => {
             await setTimeout(500);
             await route.continue();
           },
         );
-      await page.goto("/view/screens/example-welcome.html");
+      await page.goto("/view/example/screens/welcome/");
       await chooseViewport(page, viewport);
       if (scheme === "dark") await chooseScheme(page, "dark");
       const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
@@ -35,7 +35,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expectFrameLoaded(
         frameElement,
         new RegExp(
-          `/static/mokly-generated/screens/example-welcome\\.${suffix.replaceAll(".", "\\.")}$`,
+          `/static/mokly-generated/example/screens/welcome/index\\.${suffix.replaceAll(".", "\\.")}$`,
         ),
       );
       const frame = frameElement.contentFrame();
@@ -50,25 +50,25 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expect(next).toHaveCSS("outline-width", "2px");
       await page.keyboard.press("Enter");
       await expect(page).toHaveURL(
-        /\/view\/screens\/example-details\.html\?fragment=details$/,
+        /\/view\/example\/screens\/details\/\?fragment=details$/,
       );
       await expectFrameSource(
         page.locator(`.mbk-frame-${viewport} iframe`),
         new RegExp(
-          `example-details\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
+          `example/screens/details/index\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
         ),
       );
       await frame
         .locator('a[data-mokly-link-control="button"]')
         .filter({ hasText: "Return to welcome" })
         .click();
-      await expect(page).toHaveURL(/\/view\/screens\/example-welcome\.html$/);
+      await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
 
       await page.goto(
         pathToFileURL(
           path.join(
             repositoryRoot,
-            `examples/basic/mokly-generated/screens/example-welcome.${suffix}`,
+            `examples/basic/mokly-generated/example/screens/welcome/index.${suffix}`,
           ),
         ).href,
       );
@@ -77,7 +77,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         .click();
       await expect(page).toHaveURL(
         new RegExp(
-          `/screens/example-details\\.${suffix.replaceAll(".", "\\.")}#details$`,
+          `/example/screens/details/index\\.${suffix.replaceAll(".", "\\.")}#details$`,
         ),
       );
       const back = page
@@ -90,7 +90,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await page.keyboard.press("Enter");
       await expect(page).toHaveURL(
         new RegExp(
-          `/screens/example-welcome\\.${suffix.replaceAll(".", "\\.")}$`,
+          `/example/screens/welcome/index\\.${suffix.replaceAll(".", "\\.")}$`,
         ),
       );
     });
@@ -102,7 +102,7 @@ test("the real example tour reuses the styled buttons in both owning screens", a
 }) => {
   for (const scheme of ["light", "dark"] as const) {
     for (const step of [0, 1]) {
-      await page.goto("/view/user-flows/example-tour.html");
+      await page.goto("/view/example/tour/");
       await chooseScheme(page, scheme);
       const frame = page.frameLocator(".mbk-flow-screen iframe").nth(step);
       const button = frame
@@ -115,8 +115,8 @@ test("the real example tour reuses the styled buttons in both owning screens", a
       }
       await expect(page).toHaveURL(
         step === 0
-          ? /\/view\/screens\/example-details\.html\?fragment=details$/
-          : /\/view\/screens\/example-welcome\.html$/,
+          ? /\/view\/example\/screens\/details\/\?fragment=details$/
+          : /\/view\/example\/screens\/welcome\/$/,
       );
     }
   }

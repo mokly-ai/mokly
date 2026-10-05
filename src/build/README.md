@@ -1,9 +1,21 @@
-# Catalogue Compilation
+# Catalogue compilation
 
-This internal module loads consumer definitions, renders every configured view,
-validates the complete catalogue and produces deterministic HTML and manifest v8.
-The supported external interface is `mokly build` and `mokly check`; Serve,
-export and local prop controls reuse the same consumer graph and validators.
+Build and Check load consumer definitions, validate their paths and relationships,
+render the selected views, and produce deterministic HTML and manifest v9. Serve,
+export, publication and local component controls share the same graph and validators.
+Final Markdown documents also pass `documents/safety.ts` after logical links and
+final HTML composition. This independent parse5 allowlist rejects unsafe body
+markup while preserving the owned template and later delivery instrumentation.
+
+Completed compilations retain private document Markdown bodies for move
+similarity. They travel with the accepted generation, never with manifest or
+public catalogue JSON. Resource discovery and comparison share the CSS URL
+tokenizer in `src/css_references.ts`.
+
+`move_targets.ts` accepts current authored hints for initial link diagnostics.
+Later document renders can receive accepted comparison pairs tied to that runtime
+generation. A known prior target produces `moved-link-target`; links never follow
+it automatically. Build and Check do not infer moves from incomplete output.
 
 Imported CSS follows the [delivery contract](../../docs/protocol/mokly-imported-styles.md).
 `load_graph.ts` now collects each configured renderer and entry root's CSS
@@ -91,25 +103,37 @@ CSS Modules mutation checklist:
   whole-tree transaction. Plain Serve, export and publication read memory.
   Existing generated trees cannot contain symlinks or special files at a writer
   or tracked-check boundary. No command checks Git-ignore committability.
+  Imported CSS requires a portable module path even when an entry overrides
+  its identity with `path`; the diagnostic names that module under the
+  [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
 
 ## Consumer Graph
 
-`config/entry_discovery.ts` resolves the configured `entries` globs, or the
-`entriesDir` shorthand, into one sorted set of matched modules when the
-configuration loads and again here at the start of each compilation. The glob
-defines the entry shape with no suffix filter; `entriesDir` expands to the
-recommended `<dir>/**/*.mockup.{ts,tsx}` convention.
+`config/entry_discovery.ts` walks configured roots once per compilation. Each
+matched file has one root owner; overlapping root directories are allowed when
+their matched file sets are disjoint. The result includes executable modules,
+matched Markdown inputs, and directory folder records. `documents/load.ts` parses
+file definitions and their confined resources before registry preparation. These
+inputs remain protected and watched. Candidate discovery
+returns a new inventory and cannot mutate an accepted runtime after a failed build.
 
-Before walking, discovery projects the repository and every distinct glob root
-once per pass. A shared-root failure is therefore reported before any per-glob
-module denial, even when the failed root belongs to a later glob. Review output
-is projected once with a lexical fallback. Walks then run in declared glob
-order. They validate a candidate when it is first encountered, while an
-accepted candidate still counts for each overlapping glob. A denied candidate
-under an earlier glob precedes a later zero-match failure; reversing those globs
-reverses that diagnostic precedence. Each glob must retain a module so another
-valid glob cannot hide a typo or omission.
+`load_graph.ts` bundles executable modules, their imported helpers and the renderer
+in one consumer React graph. React and React
+DOM resolve from consumer package roots, including npx installations. The graph
+stays in memory and retains its complete private source inventory.
 
+`consumer_entry.ts` collects branded default and named exports, one array level,
+and component registrations. Aliases of one object within a module register once;
+exporting the same object from two entry modules is an error. Definitions retain
+attribution to the module that created them, while identity always derives from
+the discovered module that exports them. Source attribution drives ownership and
+Changes evidence; it never changes the path or default slug.
+
+Authoring metadata crosses the consumer-bundle boundary through `Symbol.for`
+markers in `authoring/markers.ts`. Registry preparation derives paths, resolves
+variant parents and link bases, validates both folder carriers, and snapshots
+component schemas and saved data before rendering. Unknown component variant
+fields are reported after the parent's final path is known.
 Walks skip `review.outDir`, `mockupsDir/mokly-generated/`, and denied directory trees. Directories that vanish
 or are replaced mid-walk (`ENOENT` or `ENOTDIR`) are skipped and listed with
 denied paths in zero-match diagnostics. Other read or projection errors fail
@@ -175,50 +199,38 @@ compares raw bytes; Review, export, and Serve's controls previews
 preserve them without UTF-8 round trips. The compiler now emits CSS as text
 and generated image/font assets as opaque bytes, alongside textual documents.
 
-Automatic JSX uses esbuild's `jsxDev` location arguments. `consumer_resolution.ts`
-resolves `react/jsx-dev-runtime` to a private shim exporting the consumer's
-`Fragment` and a `jsxDEV` function. The shim forwards to the consumer's
-`react/jsx-runtime` `jsx` or `jsxs`, preserving the supplied key and static/dynamic
-children. No import of React's `react/jsx-dev-runtime` reaches the consumer
-bundle, and the generated markup stays unchanged.
+Automatic JSX uses esbuild's development-location arguments through the private
+`jsx_dev_runtime.ts` shim, forwarding to the consumer's normal JSX runtime. Only
+registered component wrappers receive source metadata; it never enters rendered
+attributes, material keys or instance keys. The default local instance name is the
+last segment of the component's resolved path, including for index components.
 
-Only `defineComponent` wrappers receive invocation metadata. `component_source.ts`
-resolves bundler filenames relative to the configuration directory, checks both
-lexical and symlink confinement to `repoRoot`, and emits repository-relative
-POSIX paths with positive, 1-based line and column. Absolute bundler filenames
-inside the root are converted to relative paths; serialized absolute paths,
-escapes, backslashes and invalid coordinates are rejected. Missing invocation
-information is omitted. Ordinary components and intrinsic elements receive no
-added prop. The wrapper strips the reserved `__moklySource` field before calling
-consumer code; the collector retains it only as optional manifest metadata.
+## Documents and links
 
-`consumer_entry.ts` attributes definitions to their owning modules and exposes
-the public authoring API, including `resolveInstance`. Every repository-owned
-importer of `@mokly/mokly` receives the attributed facade; installed packages
-under `node_modules` and Mokly's own runtime receive the plain API. Registry
-checks run outside the consumer bundle, so CLI-read authoring markers use
-`Symbol.for` in `src/authoring/markers.ts` instead of private `Symbol()` or class
-identity; both variant forbidden-field metadata and nested authored-path facts
-must survive the boundary. `MoklyError` carries a `Symbol.for` brand and
-`isMoklyError` checks that brand, a known code, and the unprefixed detail. The
-facade adds the source module; `load_graph.ts` reconstructs branded errors as
-CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
-bundling errors. `src/registry/manifest_validation.ts` applies the strict v8
-baseline boundary before comparison. `mock_links.ts` rewrites id links while
-`mock_link_routes.ts` resolves the identity-derived target artifact and relative
-destination. `document_links.ts` adapts child controls and resolves portable
-links for full builds and on-demand documents. A use case without a screen
-as its first step is an invalid registry invariant. Registry
-validation accepts attributed sources only from resolved entries or the source
-inventory. The plain first-line marker is not an ownership proof. The v8
-manifest inventories every generated file and exact byte hash; only its
-`mokly-generated/` tree is replaceable. Authored closure assets remain in place.
+Every entry owns `<path>/index.html` as its logical route. Pages and documents
+write that file; documents also write `index.dark.html` when dark is enabled;
+screens and component variants write `index.<viewport>[.dark].html` beside it.
+Flow and component parent documents are assembled by the shell.
+
+`mock_links.ts` resolves complete paths, relative paths and definition references,
+then writes portable relative links and complete-path Browse markers. Ordinary
+entries use their parent folder; index entries use their own folder; variants
+use their parent's base. Flow references share this rule. Final validation
+checks fragments, control metadata and referenced HTML/CSS/resources.
+
+`output_snapshot.ts` copies, validates and freezes each accepted generation's
+route set in memory. Demand, Props and background workers reuse this proof and
+reject undeclared routes. Capture never reads output or takes its write lock.
+`output_collisions.ts` checks the candidate portable file namespace, including
+case-folded and file-directory collisions. `transaction.ts` holds the writer
+lock for complete generated-tree replacement and rollback. Only Build,
+`build --watch` and `serve --build` write; all other consumers use memory.
 
 ## Development
 
 ```sh
 npm run build
-node --import tsx --test --test-concurrency=2 tests/component_*.test.ts
+node --import tsx --test tests/path_*.test.ts tests/entry_exports.test.ts
 npm run example:build
 npm run example:check
 cargo xtask check
@@ -232,10 +244,14 @@ memory without writing local output; `build --watch` and `serve --build` write
 only after successful complete compilations.
 
 - `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
-  compilation using the same validation boundary.
-- `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
-  graph, discovered through `config/entry_discovery.ts`, and its module
-  resolution.
+  compilation with shared validation.
+- `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: consumer graph,
+  exports and dependency resolution.
+- `source_inventory.ts`, `output_paths.ts`, `output_snapshot.ts`: source protection and
+  accepted in-memory route boundaries. `transaction_tree.ts` stages and replaces
+  the complete generated tree and restores its backup if installation fails.
+- `authored_links.ts`, `mock_links.ts`, `logical_records.ts`: link identity,
+  portable rewriting and transformation invariants.
 - `pending_generated.ts`, `html_links.ts`, `styles/links.ts`: generation-local
   resource lookup and relative encoded stylesheet delivery for every view.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
@@ -272,3 +288,11 @@ Markdown documents and moves inside one generated tree. It introduces manifest
 v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands
 acquire the output lock. The integration plan records verification and scope.
+
+The retained graph and consumer bundle carry parsed Markdown definitions. The
+existing non-HTML `styleOutputs` inventory also carries copied document assets;
+worker replay uses these accepted bytes without rereading source files. Copied resources join the exact generated inventory.
+
+Document inputs join the graph input set before the CSS pass. A nested source
+root can share an image between Markdown and imported CSS without making an
+unrelated public asset private. Both aliases retain source protection.

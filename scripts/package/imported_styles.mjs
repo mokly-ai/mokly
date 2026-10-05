@@ -69,10 +69,7 @@ export async function smokeImportedStylesConsumer(context) {
   );
   assert.match(
     await fs.readFile(
-      path.join(
-        root,
-        "mockups/mokly-generated/screens/packed-home.desktop.html",
-      ),
+      path.join(root, "mockups/mokly-generated/packed-home/index.desktop.html"),
       "utf8",
     ),
     /\.\.\/styles\/entries\/catalogue\.mockup\.tsx\.css/u,

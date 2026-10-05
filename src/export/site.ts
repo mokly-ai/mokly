@@ -28,8 +28,9 @@ import {
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { staticRemovedPreviews } from "../publication/removed_previews.js";
-import { changedManifestIds } from "../registry/changed_ids.js";
+import { changedManifestPaths } from "../registry/changed_paths.js";
 import { removedManifestEntries } from "../registry/changes.js";
+import { baselineResourceConfig } from "../review/base_manifest.js";
 import {
   loadBrowserClientModules,
   loadBrowserNavigationModules,
@@ -71,10 +72,18 @@ export function assembleExport(
 } {
   const removedSnapshots =
     changesStatus === "ready"
-      ? removedManifestEntries(compilation.manifest, baseline)
+      ? removedManifestEntries(
+          compilation.manifest,
+          baseline,
+          comparison?.pairing?.moves,
+        )
       : [];
   const removed = removedSnapshots.map(({ entry }) => entry);
-  const catalogue = createCatalogue(compilation.manifest, removedSnapshots);
+  const catalogue = createCatalogue(
+    compilation.manifest,
+    removedSnapshots,
+    changesStatus === "ready" ? (comparison?.pairing?.moves ?? []) : [],
+  );
   const entries = [...compilation.manifest.entries, ...removed];
   const comparisonFiles = new Map(comparison?.files);
   if (comparison) parseReviewResult(comparison.result);
@@ -91,7 +100,7 @@ export function assembleExport(
     comparisonFiles,
   );
   const parsedDelivery = parseStaticDelivery({
-    schemaVersion: 4,
+    schemaVersion: 5,
     deploymentId: STAGED_DEPLOYMENT_ID,
     canonicalPath: "/",
     comparisonUrl: comparison ? `/${prefix}/review.json` : null,
@@ -105,57 +114,73 @@ export function assembleExport(
     inventory.add(name, html);
     shells.set(name, descriptor);
   };
-  const resourceDenial = exportResourceDenial(
+  const beforeDenial = exportResourceDenial(
+    baselineResourceConfig(config, baseline),
+    false,
+    new Set(baseline.generatedFiles.map((file) => file.path)),
+  );
+  const afterDenial = exportResourceDenial(
     config,
     false,
-    new Set(
-      [...compilation.manifest.generatedFiles, ...baseline.generatedFiles].map(
-        (file) => file.path,
-      ),
-    ),
+    new Set(compilation.manifest.generatedFiles.map((file) => file.path)),
   );
   for (const [name, bytes] of comparisonFiles) {
     const resource = snapshotResourceRoute(name);
-    const denial = resource ? resourceDenial(resource) : undefined;
+    const denial = resource
+      ? (name.startsWith(snapshotSidePath("before"))
+          ? beforeDenial
+          : afterDenial)(resource)
+      : undefined;
     if (denial)
       throw exportError(
         `Comparison contains a private export resource: ${name} (${denial})`,
       );
     inventory.add(`${prefix}/${name}`, bytes);
   }
-  const materialIds = changedManifestIds(
+  const materialIds = changedManifestPaths(
     compilation.manifest,
     baseline,
     config,
     contentChanges,
+    comparison?.pairing?.moves,
   );
   const pageIds = new Set(
     compilation.manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.id] : [],
+      entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
     ),
   );
   const changes = comparison
     ? [
         ...comparison.result.changes.map(
-          (item) => (item.after ?? item.before)!.id,
+          (item) => (item.after ?? item.before)!.path,
         ),
         ...materialIds.filter((id) => pageIds.has(id)),
+        ...(comparison.pairing?.moves.map((move) => move.path) ?? []),
       ]
     : materialIds;
   const context: ShellContext = {
     base: comparison?.result.baseRef ?? "",
     ...(changesStatus === "ready" && comparison
       ? {
-          changedIds: [
-            ...new Set([...changes, ...removed.map((entry) => entry.id)]),
+          changedEntries: [
+            ...new Set([...changes, ...removed.map((entry) => entry.path)]),
           ],
           comparisons: true,
           componentChanges: {
             baseline,
             result: comparison.result,
+            ...(comparison.pairing ? { pairing: comparison.pairing } : {}),
+            changedEntries: [
+              ...new Set([
+                ...comparison.result.changes
+                  .filter((entry) => entry.reasons.length > 0)
+                  .map((entry) => (entry.after ?? entry.before)!.path),
+                ...materialIds.filter((id) => pageIds.has(id)),
+              ]),
+            ].sort(),
             screenEvidence: comparison.result.screens
-              .map(({ id, views }) => ({
-                id,
+              .map(({ path, views }) => ({
+                path,
                 views: views
                   .filter(
                     (view) =>
@@ -176,8 +201,8 @@ export function assembleExport(
                   ),
               }))
               .filter((screen) => screen.views.length > 0),
-            screenViews: comparison.result.screens.map(({ id, views }) => ({
-              id,
+            screenViews: comparison.result.screens.map(({ path, views }) => ({
+              path,
               views: views.map(({ viewport, colorScheme, state }) => ({
                 viewport,
                 colorScheme,
@@ -194,7 +219,7 @@ export function assembleExport(
     configPath: toPosixPath(path.relative(config.repoRoot, config.configPath)),
     catalogue,
     changesStatus,
-    changedIds: context.changedIds,
+    changedEntries: context.changedEntries,
     evidence: context.componentChanges,
     comparison: comparison?.result,
     comparisonUrl: delivery.comparisonUrl?.slice(1) ?? null,
@@ -214,12 +239,12 @@ export function assembleExport(
     notFoundDelivery,
   );
   for (const entry of entries) {
-    const route = entryRoute(entry.kind, entry.id);
-    const canonicalPath = viewHref(entry.kind, entry.id);
+    const route = entryRoute(entry.path);
+    const canonicalPath = viewHref(entry.path);
     const descriptor = { ...delivery, canonicalPath };
     const html = viewPage(entry, catalogue, {
       ...context,
-      activeId: entry.id,
+      activeId: entry.path,
       delivery: descriptor,
     });
     addShell(`view/${route}`, html, descriptor);

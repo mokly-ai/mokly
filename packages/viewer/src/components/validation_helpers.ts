@@ -1,4 +1,4 @@
-import { isSafeRepositoryPath } from "../data/paths.js";
+import { isSafeRepositoryPath } from "../navigation/logical.js";
 
 import { invalidData } from "./data.js";
 

@@ -4,9 +4,7 @@ import type { ComponentViewRecord, ComponentWireProps } from "@mokly/viewer";
 import {
   generatedResourcePath,
   generatedResourceRoute,
-  entryRoute,
   ComponentRenderError,
-  generatedViews,
 } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 
@@ -19,6 +17,7 @@ import { isGeneratedRoute } from "../../build/styles/routes.js";
 import { PublicFilePolicy } from "../../config/public_policy.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import type { CatalogueMetadata } from "../../registry/catalogue_index.js";
+import { generatedDocumentRoutes } from "../../registry/generated_documents.js";
 import { referencedRoutes } from "../../review/asset_references.js";
 import { contentType } from "../respond.js";
 
@@ -43,12 +42,7 @@ export function captureRenderBundle(
   readGenerated?: (route: string) => GeneratedFile | undefined,
 ): ReadonlyMap<string, RenderFile> {
   const catalogue = createCatalogue(manifest);
-  const generatedRoutes = new Set(
-    manifest.entries.flatMap((entry) => [
-      ...(entry.kind === "page" ? [entryRoute("page", entry.id)] : []),
-      ...generatedViews(entry).map((view) => view.path),
-    ]),
-  );
+  const generatedRoutes = new Set(generatedDocumentRoutes(manifest.entries));
   const files = new Map<string, RenderFile>();
   const policy = new PublicFilePolicy(config);
   const pending = [generatedResourcePath(route)];

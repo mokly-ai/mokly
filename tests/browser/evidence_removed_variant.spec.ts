@@ -6,10 +6,10 @@ import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { screenVariantEntrySource } from "../helpers/screen_variant_fixture.js";
 
-const ROUTE = "screens/home-empty.html";
+const ROUTE = "home/empty/index.html";
 const ROW = `a[data-nav-row][data-route="${ROUTE}"]`;
-const LIST = '[data-nav-disclosure="variants:pages:home"]';
-const HOME = 'a[data-nav-row][data-route="screens/home.html"]';
+const LIST = '[data-nav-disclosure="variants:home"]';
+const HOME = 'a[data-nav-row][data-route="home/index.html"]';
 
 test("a background baseline places a removed variant under its parent", async ({
   page,
@@ -25,23 +25,23 @@ test("a background baseline places a removed variant under its parent", async ({
     const current = fixture.compilation.manifest;
     const publish = (
       entries: (typeof baseline)["entries"],
-      changedIds: string[],
+      changedEntries: string[],
     ) =>
       fixture.server.publishUpdate({
         kind: "evidence",
         changesStatus: "ready",
-        changedIds,
+        changedEntries,
         componentChanges: {
           baseline: { ...baseline, entries },
-          changedIds,
+          changedEntries,
         },
       });
 
-    await page.goto(`${fixture.server.url}/view/screens/home.html`);
+    await page.goto(`${fixture.server.url}/view/home/`);
     await expect(page.locator(ROW)).toHaveCount(0);
     await expect(page.locator(LIST)).toHaveCount(0);
 
-    publish(baseline.entries, ["home-empty"]);
+    publish(baseline.entries, ["home/empty"]);
 
     await expect(page.locator(`${LIST} ${ROW}`)).toHaveCount(1);
     await expect(page.locator(HOME)).toHaveAttribute("aria-current", "page");
@@ -62,13 +62,13 @@ test("a background baseline places a removed variant under its parent", async ({
     await expect(page.locator(ROW)).toBeVisible();
     await expect(page.locator(HOME)).toBeVisible();
     await expect(
-      page.locator('a[data-nav-row][data-route="screens/details.html"]'),
+      page.locator('a[data-nav-row][data-route="details/index.html"]'),
     ).toBeHidden();
 
     await page.fill("[data-mokly-search]", "");
     const retained = await page.locator(ROW).elementHandle();
 
-    publish(baseline.entries, ["home-empty"]);
+    publish(baseline.entries, ["home/empty"]);
 
     expect(await retained!.evaluate((row) => row.isConnected)).toBe(true);
     await expect(page.locator(ROW)).toHaveCount(1);

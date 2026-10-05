@@ -19,7 +19,7 @@ for (const [removed, guidance] of [
     assert.throws(
       () =>
         resolveConfig(
-          { entriesDir: "entries", mockupsDir: "mockups", [removed]: [] },
+          { roots: [{ dir: "entries" }], mockupsDir: "mockups", [removed]: [] },
           fixture.configPath,
         ),
       (error: unknown) =>

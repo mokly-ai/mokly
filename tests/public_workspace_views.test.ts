@@ -3,8 +3,8 @@ import test from "node:test";
 
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { removedManifestEntries } from "../dist/registry/changes.js";
-import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
+import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
@@ -32,35 +32,35 @@ test("public workspace keeps each saved variant's changed views", () => {
     revision: { content: 0, evidence: 1 },
   });
   const catalogue = viewerCatalogue(model);
-  const entry = catalogue.byId.get(component.id);
+  const entry = catalogue.byPath.get(component.path);
   assert.equal(entry?.kind, "component");
   assert.ok(entry?.kind === "component" && !("variantOf" in entry));
   if (entry?.kind !== "component" || "variantOf" in entry)
     throw new Error("Missing component parent");
 
   const data = workspaceData(catalogue, { base: "", updateVersion: 1 }, entry);
-  assert.deepEqual(data.changedViews["badge-default"], []);
-  assert.deepEqual(data.changedViews["badge-second"], [
+  assert.deepEqual(data.changedViews["badge/default"], []);
+  assert.deepEqual(data.changedViews["badge/second"], [
     { viewport: "mobile", colorScheme: "dark" },
     { viewport: "desktop", colorScheme: "dark" },
   ]);
-  assert.deepEqual(data.changedViews["badge-removed"], [
+  assert.deepEqual(data.changedViews["badge/removed"], [
     { viewport: "mobile", colorScheme: "light" },
     { viewport: "mobile", colorScheme: "dark" },
     { viewport: "desktop", colorScheme: "light" },
     { viewport: "desktop", colorScheme: "dark" },
   ]);
   assert.ok(
-    data.viewStates["badge-default"]?.every(
+    data.viewStates["badge/default"]?.every(
       ({ state }) => state === "unchanged",
     ),
   );
   assert.deepEqual(
-    data.viewStates["badge-second"]?.map(({ state }) => state),
+    data.viewStates["badge/second"]?.map(({ state }) => state),
     ["unchanged", "changed", "unchanged", "changed"],
   );
   assert.ok(
-    data.viewStates["badge-removed"]?.every(({ state }) => state === "removed"),
+    data.viewStates["badge/removed"]?.every(({ state }) => state === "removed"),
   );
 });
 
@@ -69,21 +69,22 @@ test("public workspace derives a screen's ready per-view states", () => {
     colorSchemes: ["light"] as const,
     declaredDependencies: [],
     description: "Welcome screen",
-    id: "welcome",
+    path: "welcome",
     kind: "screen" as const,
-    navPath: [],
+
     relatedDocs: [],
     sourcePath: "entries/welcome.mockup.tsx",
     title: "Welcome",
-    useCaseIds: [],
+    useCasePaths: [],
   };
-  const manifest: ManifestV8 = currentManifest({
+  const manifest: ManifestV9 = currentManifest({
     entries: [screen],
+    folders: [],
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 9,
     sourceFiles: [screen.sourcePath],
   });
-  const result: ReviewResultV4 = {
+  const result: ReviewResultV6 = {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
     baseRef: "main",
@@ -91,13 +92,13 @@ test("public workspace derives a screen's ready per-view states", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 4,
+    schemaVersion: 6 as const,
     screens: [
       {
-        after: { id: screen.id, title: screen.title },
-        before: { id: screen.id, title: screen.title },
+        after: { path: screen.path, title: screen.title },
+        before: { path: screen.path, title: screen.title },
         dependencies: [],
-        id: screen.id,
+        path: screen.path,
         sharedImpact: [],
         state: "changed",
         title: screen.title,
@@ -128,7 +129,7 @@ test("public workspace derives a screen's ready per-view states", () => {
     revision: { content: 0, evidence: 1 },
   });
   const catalogue = viewerCatalogue(model);
-  const entry = catalogue.byId.get(screen.id);
+  const entry = catalogue.byPath.get(screen.path);
   assert.equal(entry?.kind, "screen");
   assert.ok(entry?.kind === "screen");
 

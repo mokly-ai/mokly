@@ -40,13 +40,16 @@ for (const transport of ["same-origin", "postMessage"] as const) {
           const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
           frame.dataset["moklyGeneratedPrefix"] = "mokly-generated";
           (window as unknown as FrameTestWindow).mounted =
-            await sameOriginAdapter().mount(frame, {
-              url: new URL(
-                "/static/mokly-generated/screens/home.mobile.html",
-                location.origin,
-              ),
-              usage: { status: "ready", ...usage },
-            });
+            await sameOriginAdapter().mount(
+              document.querySelector<HTMLIFrameElement>("#frame")!,
+              {
+                url: new URL(
+                  "/static/mokly-generated/home/index.mobile.html",
+                  location.origin,
+                ),
+                usage: { status: "ready", ...usage },
+              },
+            );
         }, JSON.stringify(fixture.usage));
       }
       const child = page
@@ -54,7 +57,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
         .find((frame) =>
           frame
             .url()
-            .includes("/static/mokly-generated/screens/home.mobile.html"),
+            .includes("/static/mokly-generated/home/index.mobile.html"),
         )!;
       const expected = await child.evaluate((layout) => {
         const outer = document.querySelector<HTMLElement>("#outer")!;
@@ -108,7 +111,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
             )) as typeof LocalAdapter;
             return localInspection(
               document.querySelector<HTMLIFrameElement>("#frame")!,
-              "screens/home.mobile.html",
+              "home/index.mobile.html",
               JSON.parse(usageJson) as ComponentViewRecord,
             )!.measure(new Set([key]));
           },

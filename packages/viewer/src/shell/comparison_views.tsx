@@ -97,11 +97,7 @@ function ComparisonSection({
   };
   const before = pane("before");
   const after = pane("after");
-  const chrome = comparisonChrome(
-    component,
-    viewport,
-    entryRoute(entryKind, entryId),
-  );
+  const chrome = comparisonChrome(component, viewport, entryRoute(entryId));
   return (
     <section
       className={`mbk-diff-view mbk-diff-${viewport}`}

@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
+import { writeCompilation } from "../dist/build/transaction.js";
 import { exportCatalogue } from "../dist/export/run.js";
 import { publishCatalogue } from "../dist/publish/run.js";
 import { NodeGitCommandRunner } from "../dist/review/git.js";
@@ -18,13 +20,32 @@ test("the example export and reconstructed publication use portable path segment
   );
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const config = await createCommittedExampleBaseline(root, "static-example");
-  const entry = path.join(root, "examples/basic/entries/catalogue.mockup.tsx");
+  const entry = path.join(
+    root,
+    "examples/basic/specs/example/archived.mockup.ts",
+  );
   await fs.writeFile(
     entry,
-    (await fs.readFile(entry, "utf8"))
-      .replaceAll("example-handbook", "example-manual")
-      .replace(/ {4}variants: \[[\s\S]*?\n {4}\],/u, "    variants: [],"),
+    `import { definePage, defineScreen } from "@mokly/mokly";
+export const entries = [
+  definePage({ path: "example/archived", title: "Archived", description: "Archived guide", dependencies: [], relatedDocs: [], render: () => "<html><body>Archived guide</body></html>" }),
+  defineScreen({ path: "example/archived-screen", title: "Archived screen", description: "Previous screen", dependencies: [], relatedDocs: [], mobile: "Previous mobile", desktop: "Previous desktop" }),
+];`,
   );
+  await writeCompilation(await compileCatalogue(config), config);
+  const git = new NodeGitCommandRunner(root);
+  await git.run(["add", "-A"]);
+  await git.run(["add", "-f", "examples/basic/mokly-generated"]);
+  await git.run([
+    "-c",
+    "core.hooksPath=/dev/null",
+    "-c",
+    "commit.gpgsign=false",
+    "commit",
+    "-qm",
+    "test: record archived namespace fixture",
+  ]);
+  await fs.rm(entry);
   const receiver = await startFakeReceiver(t);
   await publishCatalogue(
     config,
@@ -67,7 +88,7 @@ test("the example export and reconstructed publication use portable path segment
     assert.ok(paths.includes("mokly-viewer/catalogue.json"));
     assert.ok(
       paths.some((name) =>
-        /mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/pages\/example-handbook\.json$/u.test(
+        /mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/previews\/example\/archived\/index\.json$/u.test(
           name,
         ),
       ),
@@ -75,7 +96,7 @@ test("the example export and reconstructed publication use portable path segment
     assert.ok(
       paths.some((name) =>
         name.includes(
-          "snapshots/before/mokly-generated/screens/example-welcome-empty.",
+          "snapshots/before/mokly-generated/example/archived-screen/index.",
         ),
       ),
     );

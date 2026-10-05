@@ -4,8 +4,8 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { changedManifestIds } from "../dist/registry/changed_ids.js";
-import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
+import { changedManifestPaths } from "../dist/registry/changed_paths.js";
+import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
 
 import {
   createFixture,
@@ -13,7 +13,7 @@ import {
   reparentedEntrySource,
 } from "./helpers/fixture.js";
 
-test("changing a navPath marks its screen and referencing use case", async (context) => {
+test("changing a path marks its screen and referencing use case", async (context) => {
   const fixture = await createFixture(reparentedEntrySource("screens"));
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -24,13 +24,13 @@ test("changing a navPath marks its screen and referencing use case", async (cont
   );
   const manifest = await compileManifest(config);
 
-  assert.deepEqual(changedManifestIds(manifest, baseManifest, config, []), [
-    "home",
-    "tour",
+  assert.deepEqual(changedManifestPaths(manifest, baseManifest, config, []), [
+    "fixture/archive/home",
+    "fixture/archive/tour",
   ]);
 });
 
-test("changing a folder label marks its routed descendants", async (context) => {
+test("changing a folder label changes presentation without changing entry metadata", async (context) => {
   const fixture = await createFixture(reparentedEntrySource("screens"));
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -41,15 +41,14 @@ test("changing a folder label marks its routed descendants", async (context) => 
   );
   const manifest = await compileManifest(config);
 
-  assert.deepEqual(changedManifestIds(manifest, baseManifest, config, []), [
-    "details",
-    "home",
-    "tour",
-  ]);
+  assert.deepEqual(
+    changedManifestPaths(manifest, baseManifest, config, []),
+    [],
+  );
 });
 
 async function compileManifest(
   config: Awaited<ReturnType<typeof loadConfig>>,
-): Promise<ManifestV8> {
+): Promise<ManifestV9> {
   return (await compileCatalogue(config)).manifest;
 }

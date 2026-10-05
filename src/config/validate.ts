@@ -6,8 +6,7 @@ import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
-import { discoverEntryModules } from "./entry_discovery.js";
-import { resolveEntryGlobs } from "./entry_globs.js";
+import { discoverEntries } from "./entry_discovery.js";
 import { baselineBuildCommands } from "./generated_output.js";
 import { resolveModuleResolution } from "./module_resolution.js";
 import {
@@ -27,6 +26,7 @@ import {
   isReservedConfiguredPath,
   validateStylesheetAliases,
 } from "./reserved_paths.js";
+import { resolveRoots } from "./roots.js";
 import {
   requireString,
   validateColorSchemes,
@@ -68,6 +68,25 @@ export function resolveConfig(
   for (const { key, guidance } of REMOVED_CONFIG_KEYS)
     if (Object.hasOwn(value, key))
       throw new MoklyError("config-invalid", `${key} was removed; ${guidance}`);
+  for (const key of Object.keys(value))
+    if (
+      ![
+        "roots",
+        "mockupsDir",
+        "repoRoot",
+        "colorSchemes",
+        "renderer",
+        "postcss",
+        "moduleResolution",
+        "stylesheets",
+        "review",
+        "watch",
+      ].includes(key)
+    )
+      throw new MoklyError(
+        "config-invalid",
+        `unknown configuration field: ${key}`,
+      );
   const input = value as unknown as MoklyConfig;
   requireString(input.mockupsDir, "mockupsDir");
   if (input.repoRoot !== undefined) requireString(input.repoRoot, "repoRoot");
@@ -75,20 +94,13 @@ export function resolveConfig(
   const repoRoot = path.resolve(configDir, input.repoRoot ?? ".");
   requireDirectory(repoRoot, "repoRoot");
   const baselineBuild = baselineBuildCommands(input, repoRoot, configPath);
-  const entryGlobs = resolveEntryGlobs(
-    input,
-    repoRoot,
-    configDir,
-    path.resolve(configDir, input.mockupsDir),
-  );
-  const entriesDir = entryGlobs.entriesDir;
   const mockupsDir = resolveInside(
     repoRoot,
     configDir,
     input.mockupsDir,
     "mockupsDir",
   );
-  if (entriesDir !== undefined) requireDirectory(entriesDir, "entriesDir");
+  const roots = resolveRoots(input.roots, repoRoot, configDir, mockupsDir);
   if (fs.existsSync(mockupsDir)) requireDirectory(mockupsDir, "mockupsDir");
   if (isBaselineCachePath(mockupsDir, repoRoot))
     throw new MoklyError(
@@ -108,18 +120,19 @@ export function resolveConfig(
     repoRoot,
     configDir,
   );
+  for (const [index, root] of roots.entries()) {
+    validateSourceRoots(repoRoot, root.dir, mockupsDir, `roots[${index}].dir`);
+    rejectGeneratedInput(root.dir, generatedDir, `roots[${index}].dir`);
+  }
   for (const [label, candidate] of [
-    ["entriesDir", entriesDir],
     ["renderer", renderer],
     ["postcss", postcss],
     ...moduleResolution.packageRoots.map((root, index) => [
       `moduleResolution.packageRoots[${index}]`,
       root,
     ]),
-  ] as const) {
+  ] as const)
     if (candidate) rejectGeneratedInput(candidate, generatedDir, label);
-  }
-  validateSourceRoots(repoRoot, entriesDir, mockupsDir);
   const colorSchemes = validateColorSchemes(input.colorSchemes);
   const stylesheets = validateStylesheets(input.stylesheets ?? []);
   validateStylesheetAliases(stylesheets, mockupsDir);
@@ -153,7 +166,7 @@ export function resolveConfig(
       `review.outDir must not be at or inside ${GENERATED_DIRECTORY}/; choose a separate artifact directory`,
     );
   validateReviewOut(reviewOut, {
-    entryRoots: entriesDir ? [entriesDir] : [],
+    entryRoots: [],
     mockupsDir,
     repoRoot,
   });
@@ -161,8 +174,7 @@ export function resolveConfig(
     generatedDir,
     colorSchemes,
     configPath,
-    entryGlobs: entryGlobs.globs,
-    ...(entriesDir ? { entriesDir } : {}),
+    roots,
     mockupsDir,
     moduleResolution,
     ...(renderer ? { renderer } : {}),
@@ -183,11 +195,8 @@ export function resolveConfig(
       rules: watchRules,
     },
   };
-  const discovered = {
-    ...resolved,
-    entryModules: discoverEntryModules(resolved),
-  };
-  for (const candidate of discovered.entryModules)
+  const discovered = { ...resolved, ...discoverEntries(resolved) };
+  for (const candidate of discovered.resolvedFiles)
     rejectGeneratedInput(candidate, generatedDir, "entry source");
   validateReviewOut(reviewOut, discovered);
   return discovered;

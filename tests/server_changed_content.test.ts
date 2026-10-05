@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { serve } from "../dist/server/serve.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
@@ -24,7 +24,7 @@ test("Changes excludes ignored-only edits while comparisons retain their evidenc
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -44,7 +44,7 @@ test("Changes excludes ignored-only edits while comparisons retain their evidenc
     await fetch(`${running.url}/mokly-viewer/diffs/review.json`)
   ).json()) as ReviewResult;
   assert.equal(
-    result.screens.find((s) => s.id === "home")?.state,
+    result.screens.find((s) => s.path === "home")?.state,
     "ignored-only",
   );
   assert.ok(result.ignoredImpact.some((region) => region.id === "nav"));
@@ -60,7 +60,7 @@ test("Changes keeps real content edits alongside ignored-region edits", async (t
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -73,7 +73,7 @@ test("dependency-only edits retain evidence without generating a review list", a
   const fixture = await changedFixture(t);
   await fs.writeFile(path.join(fixture.root, "notes.md"), "# Edited notes\n");
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -91,7 +91,7 @@ test("dependency-only edits retain evidence without generating a review list", a
   const result = (await (
     await fetch(`${running.url}/mokly-viewer/diffs/review.json`)
   ).json()) as ReviewResult;
-  const home = result.screens.find((s) => s.id === "home");
+  const home = result.screens.find((s) => s.path === "home");
   assert.equal(home?.state, "unchanged");
   assert.ok(home?.sharedImpact.includes("notes.md"));
 });
@@ -102,12 +102,12 @@ test("Changes ignores a stale generated dark view when the source is unchanged",
   });
   const file = path.join(
     fixture.config.generatedDir,
-    "screens/home.mobile.dark.html",
+    "home/index.mobile.dark.html",
   );
   const document = await fs.readFile(file, "utf8");
   await fs.writeFile(file, document.replaceAll(">Details<", ">Dark details<"));
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -128,7 +128,7 @@ test("Changes keeps material keys inside otherwise ignored shared chrome", async
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -145,7 +145,7 @@ test("moving a source module preserves an unchanged review list", async (t) => {
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -169,7 +169,7 @@ test("invalid baseline ignore markers leave the filter unavailable", async (t) =
   const fixture = await changedFixture(t);
   const fragment = path.join(
     fixture.config.generatedDir,
-    "screens/home.mobile.html",
+    "home/index.mobile.html",
   );
   const original = await fs.readFile(fragment, "utf8");
   await fs.writeFile(
@@ -180,7 +180,7 @@ test("invalid baseline ignore markers leave the filter unavailable", async (t) =
   fixture.git("commit", "-qm", "test: invalid baseline");
   await fixture.build();
   assert.equal(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -192,7 +192,7 @@ test("invalid baseline ignore markers leave the filter unavailable", async (t) =
 test("embedding an ignored-only screen does not reintroduce it through resource impact", async (t) => {
   const source = ignoredSource.replaceAll(
     ">Detail</main>",
-    '><iframe src="home.mobile.html" title="Embedded home" /></main>',
+    '><iframe src="../home/index.mobile.html" title="Embedded home" /></main>',
   );
   const fixture = await changedFixture(t, source);
   await fs.writeFile(
@@ -201,7 +201,7 @@ test("embedding an ignored-only screen does not reintroduce it through resource 
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

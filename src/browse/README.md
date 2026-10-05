@@ -36,3 +36,6 @@ See [navigation](../../docs/protocol/mokly-navigation.md),
 [frame inspection](../../docs/protocol/mokly-frame-adapter.md),
 [inspector implementation](../../packages/viewer/src/inspector/README.md), and
 [export assembly](../export/README.md).
+
+Markdown documents authenticate by source header in each supported scheme. Their
+logical links use the same portable targets and parent navigation as pages.

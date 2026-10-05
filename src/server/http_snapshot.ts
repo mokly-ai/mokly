@@ -13,7 +13,7 @@ export async function initialHttpSnapshot(
   options: ServerOptions,
 ): Promise<CatalogueSnapshot> {
   if (options.snapshot) return options.snapshot;
-  if (options.manifest?.schemaVersion === "live-index-1")
+  if (options.manifest?.schemaVersion === "live-index-2")
     return loadLiveCatalogueSnapshot(config, options.manifest);
   const base =
     options.manifest ||

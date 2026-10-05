@@ -15,26 +15,28 @@ const id = "removed-page";
 const page = {
   declaredDependencies: [],
   description: "Removed page",
-  id,
+  path: id,
   kind: "page" as const,
-  navPath: [],
+
   relatedDocs: [],
   sourcePath: "entries/removed.mockup.tsx",
   tags: [],
   title: "Removed page",
 };
 const source: RemovedPagePreviewSource = {
+  movedEntries: [],
   baseline: currentManifest({
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 9,
+    folders: [],
     sourceFiles: [page.sourcePath],
   }),
   baseCommit: "a".repeat(40),
   baseRef: "main",
-  changedIds: [id],
-  removedEntries: [{ entry: page }],
-  schemaVersion: 1,
+  changedEntries: [id],
+  removedEntries: [{ folderTitles: [], entry: page }],
+  schemaVersion: 3,
 };
 
 async function start(
@@ -82,15 +84,15 @@ function artifact(selected: string, bytes = 16) {
   return {
     files: new Map([
       [
-        `snapshots/before/mokly-generated/pages/${selected}.html`,
+        `snapshots/before/mokly-generated/${selected}/index.html`,
         Buffer.alloc(bytes, selected),
       ],
     ]),
     preview: {
-      schemaVersion: 2 as const,
+      schemaVersion: 3 as const,
       baseCommit: source.baseCommit,
       baseRef: source.baseRef,
-      id: selected,
+      path: selected,
     },
   };
 }
@@ -109,7 +111,7 @@ test("page generations enforce shared admission and deadlines", async (t) => {
           signal.addEventListener("abort", () => resolve(), { once: true }),
         );
         signal.throwIfAborted();
-        return artifact(selection.id);
+        return artifact(selection.path);
       },
     },
     {
@@ -135,7 +137,7 @@ test("page generations enforce shared artifact and retained-capacity bounds", as
     t,
     {
       async generate(_source, selection) {
-        return artifact(selection.id, 700);
+        return artifact(selection.path, 700);
       },
     },
     {
@@ -154,7 +156,7 @@ test("page generations enforce shared artifact and retained-capacity bounds", as
     t,
     {
       async generate(_source, selection) {
-        return artifact(selection.id, 1_100);
+        return artifact(selection.path, 1_100);
       },
     },
     {

@@ -30,13 +30,13 @@ for (const boundary of ["catalogue", "delivery", "bootstrap"] as const) {
       await route.fulfill({ json: { ...json, schemaVersion: 3 } });
     });
     if (boundary !== "catalogue")
-      await page.route("**/view/screens/home.html", async (route) => {
+      await page.route("**/view/home/index.html", async (route) => {
         const response = await route.fetch();
         let body = await response.text();
         body =
           boundary === "delivery"
             ? body.replace(
-                "&quot;schemaVersion&quot;:4",
+                "&quot;schemaVersion&quot;:5",
                 "&quot;schemaVersion&quot;:3",
               )
             : body.replace(
@@ -46,7 +46,7 @@ for (const boundary of ["catalogue", "delivery", "bootstrap"] as const) {
               );
         await route.fulfill({ response, body });
       });
-    await page.goto(`${site.url}/view/screens/home.html`);
+    await page.goto(`${site.url}/view/home/index.html`);
     await expect(page.getByRole("alert")).toHaveText(message);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     await expect(page.locator("html")).not.toHaveAttribute(
@@ -59,7 +59,7 @@ for (const boundary of ["catalogue", "delivery", "bootstrap"] as const) {
       ),
     ).toBe(true);
     await expect(
-      page.locator('a[data-route="screens/details.html"]').first(),
-    ).toHaveAttribute("href", /\/view\/screens\/details\.html/u);
+      page.locator('a[data-route="details/index.html"]').first(),
+    ).toHaveAttribute("href", /\/view\/details\//u);
   });
 }

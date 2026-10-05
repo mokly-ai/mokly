@@ -4,11 +4,9 @@ import { generatedResourceRoute } from "@mokly/viewer/data";
 
 import type { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { extractCssReferences } from "../css_references.js";
 import { htmlResource, type ParsedResource } from "../html_link_validation.js";
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../html_references.js";
+import { extractHtmlReferences } from "../html_references.js";
 
 import type { PendingGeneratedFiles } from "./pending_generated.js";
 import { validateImageSetStrings } from "./styles/image_set.js";

@@ -51,10 +51,12 @@ test("scoped bootstraps for every entry shape round-trip canonical bytes", () =>
 });
 
 test("the live reader accepts only exact entry scope", () => {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   const view = target(screen);
   const complete = {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     catalogue: model,
     context,
     view,
@@ -80,7 +82,7 @@ test("the live reader accepts only exact entry scope", () => {
 
 test("the live state reader leaves static external references unchanged", () => {
   const external = {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     catalogue: {
       identity: model.identity.id,
       kind: "external",
@@ -94,7 +96,9 @@ test("the live state reader leaves static external references unchanged", () => 
 });
 
 test("public catalogue reading still rejects shell-only omitted usage", () => {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   const value = JSON.parse(scopedBytes(target(screen)));
   assert.throws(
     () => readCatalogue(value.catalogue),
@@ -104,7 +108,7 @@ test("public catalogue reading still rejects shell-only omitted usage", () => {
 
 test("scoped reader rejects omitted usage on the selected entry", () => {
   const value = screenBootstrapValue();
-  value.catalogue.screens[0].views[0].usage = { status: "omitted" };
+  value.catalogue.screens[1].views[0].usage = { status: "omitted" };
   assert.throws(
     () => readScopedShellBootstrap(value),
     /in-scope usage cannot be omitted/i,
@@ -142,13 +146,13 @@ test("scoped reader rejects missing and evidence-carrying omitted usage", () => 
 test("scoped reader retains hierarchy, axis, relationship and snapshot checks", () => {
   const mutations = [
     (value: ReturnType<typeof screenBootstrapValue>) => {
-      value.catalogue.tree.pages = [];
+      value.catalogue.tree = [];
     },
     (value: ReturnType<typeof screenBootstrapValue>) => {
       value.catalogue.screens[0].views.pop();
     },
     (value: ReturnType<typeof screenBootstrapValue>) => {
-      value.catalogue.screens[1].navPath = ["Wrong"];
+      value.catalogue.screens[1].path = "wrong/home";
     },
     (value: ReturnType<typeof screenBootstrapValue>) => {
       value.catalogue.removedEntries[1].snapshotId =
@@ -164,13 +168,15 @@ test("scoped reader retains hierarchy, axis, relationship and snapshot checks", 
 
 test("scoped reader rejects unknown targets and complete live bootstraps", () => {
   const unknown = screenBootstrapValue();
-  unknown.view.entryId = "not-present";
+  unknown.view.entryPath = "not-present";
   assert.throws(() => readScopedShellBootstrap(unknown), /invalid.*target/i);
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   assert.throws(
     () =>
       readScopedShellBootstrap({
-        schemaVersion: 1 as const,
+        schemaVersion: 2 as const,
         catalogue: model,
         context,
         view: target(screen),
@@ -179,32 +185,32 @@ test("scoped reader rejects unknown targets and complete live bootstraps", () =>
   );
 });
 
-test("the canonical public v4 fixture bytes remain stable", () => {
+test("the canonical public v5 fixture bytes remain unchanged", () => {
   const bytes = fs.readFileSync(
     new URL(
-      "../../../docs/protocol/fixtures/catalogue-v4.json",
+      "../../../docs/protocol/fixtures/catalogue-v5.json",
       import.meta.url,
     ),
   );
-  assert.equal(bytes.byteLength, 9509);
+  assert.equal(bytes.byteLength, 12421);
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "7f87d120f10680daf884242853a7ddc897508e7b3486990be358eebe96ab87ad",
+    "b73f7134f4c686e28e900f2bdb332876f461fe8f90b73b61b218e9e836db2d33",
   );
   assert.doesNotThrow(() => readCatalogue(JSON.parse(bytes.toString("utf8"))));
 });
 
-function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
+function target(entry: Pick<CatalogueRecord, "path" | "kind">) {
   return {
     kind: "target" as const,
-    entryId: entry.id,
+    entryPath: entry.path,
     entryKind: entry.kind,
   };
 }
 
 function scopedBytes(view: ShellBootstrapView): string {
   return serializeShellBootstrap({
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogue: projectScopedCatalogue(model, view),
     context,
     view,
@@ -212,14 +218,16 @@ function scopedBytes(view: ShellBootstrapView): string {
 }
 
 function screenBootstrapValue() {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   return JSON.parse(scopedBytes(target(screen)));
 }
 
 function firstVariant(): CatalogueComponentVariant {
   return model.components.find(
     (entry): entry is CatalogueComponentVariant =>
-      "variantOf" in entry && entry.variantOf === "action",
+      "variantOf" in entry && entry.variantOf === "components/action",
   )!;
 }
 
@@ -230,6 +238,6 @@ function shellVariant(value: {
   }>;
 }) {
   return value.components.find(
-    (entry) => "variantOf" in entry && entry.variantOf === "action",
+    (entry) => "variantOf" in entry && entry.variantOf === "components/action",
   )!;
 }

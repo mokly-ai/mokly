@@ -10,7 +10,7 @@ adapters live in [the viewer package](../../packages/viewer/README.md). The
 
 `react_host.ts` validates the private descriptor before hydrating.
 `react_capabilities.ts` composes route evidence, update and on-demand rendering
-capabilities. `react_capability_updates.ts` and `react_update_controller.ts` own
+capabilities with `entryPath` request identity. `react_capability_updates.ts` and `react_update_controller.ts` own
 the event stream, latest-wins evidence refresh, reload recovery and cancellation.
 Each route or live-evidence page contributes a validated public bootstrap and a
 complete private workspace for screen and component routes. The centralized

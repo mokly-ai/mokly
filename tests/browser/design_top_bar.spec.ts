@@ -8,16 +8,16 @@ import { repositoryRoot } from "../helpers/fixture.js";
 const directory = path.join(repositoryRoot, "examples/basic/mokly-generated");
 
 const pickerDesigns = [
-  "screens/design-browse-tag-picker",
-  "screens/design-browse-tag-filter",
-  "screens/design-browse-tag-forms",
-  "screens/design-browse-tag-onboarding-picker",
+  "design/browse/views/screen/tag-picker",
+  "design/browse/states/tag-filter",
+  "design/browse/views/screen/tag-forms",
+  "design/browse/views/screen/tag-onboarding-picker",
 ];
 
 const barDesigns = [
-  ["screens/design-browse-screen", 440],
-  ["screens/design-appearance-auto", 366],
-  ["screens/design-appearance-overview", 366],
+  ["design/browse/views/screen", 440],
+  ["design/browse/appearance/states/auto", 366],
+  ["design/browse/appearance/overview", 366],
 ] as const;
 
 for (const viewport of ["desktop", "mobile"] as const) {
@@ -28,7 +28,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       pathToFileURL(
         path.join(
           directory,
-          `screens/design-browse-changed-views.${viewport}.html`,
+          `design/browse/variants/changed-views/index.${viewport}.html`,
         ),
       ).href,
     );
@@ -52,7 +52,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
     );
     for (const route of pickerDesigns) {
       await page.goto(
-        pathToFileURL(path.join(directory, `${route}.${viewport}.html`)).href,
+        pathToFileURL(path.join(directory, `${route}/index.${viewport}.html`))
+          .href,
       );
       const panel = page.locator(".mbk-tag-picker");
       if ((await panel.count()) === 0) continue;
@@ -74,7 +75,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
     for (const [route, width] of barDesigns) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(
-        pathToFileURL(path.join(directory, `${route}.${viewport}.html`)).href,
+        pathToFileURL(path.join(directory, `${route}/index.${viewport}.html`))
+          .href,
       );
       const search = page.locator(".mbk-search").first();
       const box = (await search.boundingBox())!;

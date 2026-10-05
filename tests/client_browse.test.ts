@@ -14,14 +14,18 @@ import {
 
 test("shell route resolution accepts catalogue routes and rejects other paths", () => {
   const catalogue = viewerCatalogue(catalogueModel());
-  for (const path of ["/", "/view/screens/home.html", "/view/screens/home"])
+  for (const path of [
+    "/",
+    "/view/product/browse/home/",
+    "/view/product/browse/home",
+  ])
     assert.notEqual(
       routeFromUrl(catalogue, new URL(path, "https://example.test")).view.kind,
       "missing",
       path,
     );
   for (const path of [
-    "/static/mokly-generated/screens/home.html",
+    "/static/mokly-generated/product/browse/home/index.html",
     "/review",
     "/id/home",
     "/id/home/index.html",
@@ -48,74 +52,74 @@ test("shell link interception leaves native and external activations alone", () 
   const cases: readonly ShellLinkCase[] = [
     {
       name: "catalogue view",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       eligible: true,
     },
     { name: "catalogue home", href: "/", eligible: true },
     { name: "catalogue id", href: "/id/details", eligible: false },
     {
       name: "explicit self target",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       target: "_self",
       eligible: true,
     },
     {
       name: "default-prevented activation",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       event: { defaultPrevented: true },
       eligible: false,
     },
     {
       name: "middle click",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       event: { button: 1 },
       eligible: false,
     },
     {
       name: "Meta activation",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       event: { metaKey: true },
       eligible: false,
     },
     {
       name: "Control activation",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       event: { ctrlKey: true },
       eligible: false,
     },
     {
       name: "Shift activation",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       event: { shiftKey: true },
       eligible: false,
     },
     {
       name: "Alt activation",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       event: { altKey: true },
       eligible: false,
     },
     {
       name: "download",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       download: true,
       eligible: false,
     },
     {
       name: "new context",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       target: "_blank",
       eligible: false,
     },
     {
       name: "named context",
-      href: "/view/screens/details.html",
+      href: "/view/product/browse/details/",
       target: "review",
       eligible: false,
     },
     {
       name: "external origin",
-      href: "https://elsewhere.test/view/screens/details.html",
+      href: "https://elsewhere.test/view/product/browse/details/",
       eligible: false,
     },
     {
@@ -183,46 +187,50 @@ test("recovery parses its tag query into the selected chips", () => {
   assert.deepEqual(state.selection.tags, ["forms"]);
 });
 
-test("recovery matches stable disclosure keys and ignores label paths", () => {
+test("recovery matches current disclosure keys and ignores earlier forms of their paths", () => {
+  const stored = {
+    "/product": true,
+    "collection:product": true,
+    "folder:pages:product": true,
+    "folder:specs:product": false,
+    "/components": false,
+    "collection:components:components": false,
+    "folder:pages:components": false,
+  };
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        disclosures: {
-          "/Same title": false,
-          "collection:Product": false,
-          "folder:pages:Product": false,
-        },
-        filterBaselineDisclosures: {
-          "/Same title": false,
-          "collection:Product": false,
-          "folder:pages:Product": false,
-        },
+        disclosures: stored,
+        filterBaselineDisclosures: stored,
       }),
     },
   });
-  assert.equal(state.disclosures["folder:pages:Product"], false);
-  assert.equal(state.disclosures["folder:components:Product"], true);
-  assert.equal(state.filterBaseline?.["folder:pages:Product"], false);
-  assert.equal(Object.hasOwn(state.disclosures, "/Same title"), false);
+  assert.equal(state.disclosures["folder:specs:product"], false);
+  assert.equal(state.disclosures["folder:components:components"], true);
+  assert.equal(state.filterBaseline?.["folder:specs:product"], false);
+  assert.equal(state.filterBaseline?.["folder:components:components"], true);
+  for (const key of ["/product", "folder:pages:product", "/components"])
+    assert.equal(Object.hasOwn(state.disclosures, key), false, key);
 });
 
 function darkCatalogue(): CatalogueReadModel {
   const model = catalogueModel();
   const screen = model.screens[0]!;
-  const darkViews = screen.views.map((view) => ({
-    ...view,
-    colorScheme: "dark" as const,
-  }));
   return {
     ...model,
-    screens: [
-      {
-        ...screen,
-        colorSchemes: ["light", "dark"],
-        views: [...screen.views, ...darkViews],
-      },
-    ],
+    screens: model.screens.map((entry) =>
+      entry.path === screen.path
+        ? {
+            ...entry,
+            colorSchemes: ["light", "dark"],
+            views: entry.views.flatMap((view) => [
+              view,
+              { ...view, colorScheme: "dark" as const },
+            ]),
+          }
+        : entry,
+    ),
   };
 }
 
@@ -274,7 +282,7 @@ function shellAnchor(
 
 function shellLocation(): Location {
   return {
-    href: "https://example.test/view/screens/welcome.html?mode=default",
+    href: "https://example.test/view/welcome/?mode=default",
     origin: "https://example.test",
   } as Location;
 }

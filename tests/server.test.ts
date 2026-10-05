@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
 import fs from "node:fs";
 import { Agent } from "node:http";
 import path from "node:path";
@@ -10,12 +9,8 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
-import {
-  createFixture,
-  removeFixture,
-  repositoryRoot,
-} from "./helpers/fixture.js";
-import { nodeRequest, outputUrl, readEvent } from "./server_fixture.js";
+import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { nodeRequest, readEvent } from "./helpers/server_http.js";
 
 test("server validates before bind and supports safe no-watch routes on port zero", async (context) => {
   const fixture = await createFixture();
@@ -28,7 +23,7 @@ test("server validates before bind and supports safe no-watch routes on port zer
       manifest: {} as never,
     });
     fixture.beforeRemove(() => invalid.close());
-  }, /manifest must contain an entries array/);
+  }, /expected Mokly manifest schema version 9/);
   const compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
   const server = await startCatalogueServer(config, {
@@ -52,16 +47,10 @@ test("server validates before bind and supports safe no-watch routes on port zer
   });
   assert.equal(removedAlias.status, 404);
   assert.match(await removedAlias.text(), /Item not found/);
+  assert.equal((await fetch(`${server.url}/view/home/`)).status, 200);
   assert.equal(
-    (await fetch(`${server.url}/view/screens/home.html`)).status,
-    200,
-  );
-  assert.equal(
-    (
-      await fetch(
-        `${server.url}/static/mokly-generated/screens/home.mobile.html`,
-      )
-    ).status,
+    (await fetch(`${server.url}/static/mokly-generated/home/index.mobile.html`))
+      .status,
     200,
   );
   assert.equal(
@@ -146,11 +135,11 @@ test("malformed manifest identities fail before server readiness", async (contex
   const manifest = JSON.parse(
     await fs.promises.readFile(manifestPath, "utf8"),
   ) as {
-    entries: Array<{ id: string; kind: string }>;
+    entries: Array<{ path: string; kind: string }>;
   };
   const screen = manifest.entries.find((entry) => entry.kind === "screen");
   assert.ok(screen);
-  screen.id = "../outside";
+  screen.path = "../outside";
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
   await assert.rejects(async () => {
     const invalid = await startCatalogueServer(config, {
@@ -159,7 +148,7 @@ test("malformed manifest identities fail before server readiness", async (contex
       manifest: manifest as never,
     });
     fixture.beforeRemove(() => invalid.close());
-  }, /invalid manifest id/);
+  }, /invalid manifest path/);
 });
 
 test("manifest relationships retain their required entry kinds", async (context) => {
@@ -175,17 +164,17 @@ test("manifest relationships retain their required entry kinds", async (context)
     await fs.promises.readFile(manifestPath, "utf8"),
   ) as {
     entries: Array<{
-      id: string;
+      path: string;
       kind: string;
-      steps?: Array<{ screenId: string }>;
-      useCaseIds?: string[];
+      steps?: Array<{ screenPath: string }>;
+      useCasePaths?: string[];
     }>;
   };
   const useCase = manifest.entries.find((entry) => entry.kind === "use-case");
   assert.ok(useCase?.steps?.[0]);
-  useCase.steps = [{ screenId: "fixture" }];
+  useCase.steps = [{ screenPath: "fixture" }];
   for (const entry of manifest.entries) {
-    if (entry.kind === "screen") entry.useCaseIds = [];
+    if (entry.kind === "screen") entry.useCasePaths = [];
   }
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
   await assert.rejects(async () => {
@@ -196,50 +185,4 @@ test("manifest relationships retain their required entry kinds", async (context)
     });
     fixture.beforeRemove(() => invalid.close());
   }, /step target is not a screen/);
-});
-
-test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const child = spawn(
-    process.execPath,
-    [
-      path.join(repositoryRoot, "dist/cli/bin.js"),
-      "serve",
-      "--config",
-      fixture.configPath,
-      "--port",
-      "0",
-      "--no-watch",
-    ],
-    { cwd: fixture.root, stdio: ["ignore", "pipe", "pipe"] },
-  );
-  context.after(() => {
-    if (!child.killed) child.kill("SIGTERM");
-  });
-  const url = await outputUrl(child.stdout);
-  assert.equal((await fetch(url)).status, 200);
-  assert.match(
-    await (
-      await fetch(`${url}/static/mokly-generated/screens/home.desktop.html`)
-    ).text(),
-    /id="home"/,
-  );
-  assert.equal(
-    fs.existsSync(
-      path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
-    ),
-    false,
-  );
-  child.kill("SIGTERM");
-  const code = await new Promise<number | null>((resolve) =>
-    child.once("exit", resolve),
-  );
-  assert.equal(code, 0);
-  assert.equal(
-    fs.existsSync(
-      path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
-    ),
-    false,
-  );
 });

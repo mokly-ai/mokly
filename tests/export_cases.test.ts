@@ -30,7 +30,7 @@ test("a clean HEAD matching origin/main exports only unmodified screens", async 
   assert.ok(review.screens.length > 0);
   assert.ok(review.screens.every((screen) => screen.state === "unchanged"));
   const home = await fs.promises.readFile(
-    path.join(fixture.output, "view/screens/home.html"),
+    path.join(fixture.output, "view/home/index.html"),
     "utf8",
   );
   assert.match(home, /Unmodified/);
@@ -50,7 +50,7 @@ test("an empty registry retains normal build validation and the previous site", 
   );
   await assert.rejects(
     exportCatalogue(fixture.config, { outDir: "site" }),
-    /empty-registry/,
+    /empty-module/,
   );
   assert.deepEqual(
     await fs.promises.readFile(path.join(fixture.output, "index.html")),
@@ -79,11 +79,11 @@ test("ignored-only and shared-impact evidence does not fill exported Changes", a
     ),
   ) as ReviewResult;
   assert.equal(
-    review.screens.find((screen) => screen.id === "home")?.state,
+    review.screens.find((screen) => screen.path === "home")?.state,
     "ignored-only",
   );
   assert.equal(
-    review.screens.find((screen) => screen.id === "details")?.state,
+    review.screens.find((screen) => screen.path === "details")?.state,
     "unchanged",
   );
   assert.deepEqual(review.sharedImpact, ["notes.md"]);
@@ -104,7 +104,7 @@ test("renamed screens keep one derived route without an alias", async (context) 
   );
   await exportCatalogue(fixture.config, { outDir: "site" });
   const current = await fs.promises.readFile(
-    path.join(fixture.output, "view/screens/home.html"),
+    path.join(fixture.output, "view/home/index.html"),
     "utf8",
   );
   assert.match(documentText(current), /Renamed home/);
@@ -115,7 +115,7 @@ test("renamed screens keep one derived route without an alias", async (context) 
 test("missing baseline documents and absent history fail before installing output", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
-  await fixture.git("rm", "mockups/mokly-generated/screens/home.mobile.html");
+  await fixture.git("rm", "mockups/mokly-generated/home/index.mobile.html");
   await fixture.git("commit", "-qm", "test: missing baseline document");
   const config = {
     ...fixture.config,

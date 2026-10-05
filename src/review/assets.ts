@@ -13,6 +13,7 @@ import {
   publicPathLocation,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { isDocumentResource } from "../documents/resource_paths.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import { assetError, assertPublicStaticRoute } from "./asset_paths.js";
@@ -147,7 +148,8 @@ export class GitReviewAssetReader implements ReviewAssetReader {
     if (route.startsWith(`${GENERATED_DIRECTORY}/`)) {
       if (
         !this.publicRoutes?.has(route) &&
-        !isValidGeneratedRoute(route.slice(GENERATED_DIRECTORY.length + 1))
+        !isValidGeneratedRoute(route.slice(GENERATED_DIRECTORY.length + 1)) &&
+        !isDocumentResource(route)
       )
         throw assetError(route, "not an accepted generated resource");
     } else assertPublicStaticRoute(route, this.config);
@@ -218,6 +220,7 @@ export class GitReviewAssetReader implements ReviewAssetReader {
       }
       return [{ repoPath: this.repoPath(route), route }];
     });
+    if (requested.length === 0) return files;
     try {
       const repoPaths = requested.map(({ repoPath }) => repoPath);
       const gitFiles = this.git.readFiles

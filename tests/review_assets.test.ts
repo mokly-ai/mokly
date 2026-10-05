@@ -28,7 +28,7 @@ test("Review rejects non-portable base resource URLs", async () => {
     "//cdn.example.invalid/styles.css",
     "file:///tmp/styles.css",
   ]) {
-    const route = "screens/home.mobile.html";
+    const route = "home/index.mobile.html";
     const files = new Map([
       [
         `snapshots/before/${route}`,
@@ -68,7 +68,7 @@ test("Review copies local stylesheet dependencies for both snapshots", async (co
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: { outDir: ".review" },
@@ -124,7 +124,7 @@ test("Review rejects base dependencies beneath authored source roots", async (co
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  entriesDir: "mockups/src/entries",
+  roots: [{ dir: "mockups/src/entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: { outDir: ".review" }
@@ -133,10 +133,7 @@ export default defineConfig({
   );
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const baseFragment = path.join(
-    config.generatedDir,
-    "screens/home.mobile.html",
-  );
+  const baseFragment = path.join(config.generatedDir, "home/index.mobile.html");
   await fs.promises.writeFile(
     baseFragment,
     (await fs.promises.readFile(baseFragment, "utf8")).replace(
@@ -172,10 +169,7 @@ test("Review rejects non-regular base dependency blobs", async (context) => {
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const baseFragment = path.join(
-    config.generatedDir,
-    "screens/home.mobile.html",
-  );
+  const baseFragment = path.join(config.generatedDir, "home/index.mobile.html");
   await fs.promises.symlink(
     "../notes.md",
     path.join(fixture.mockupsDir, "linked.css"),
@@ -191,7 +185,7 @@ test("Review rejects non-regular base dependency blobs", async (context) => {
   const baseline = JSON.parse(await fs.promises.readFile(manifestPath, "utf8"));
   baseline.assetClosure = ["linked.css"];
   baseline.generatedFiles.find(
-    (file: { path: string }) => file.path === "screens/home.mobile.html",
+    (file: { path: string }) => file.path === "home/index.mobile.html",
   ).blobHash = gitBlobHash(
     await fs.promises.readFile(baseFragment),
     baseline.blobHashAlgorithm,
@@ -225,7 +219,7 @@ test("Review rejects a base pane stored as a Git symlink", async (context) => {
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const fragment = path.join(config.generatedDir, "screens/home.mobile.html");
+  const fragment = path.join(config.generatedDir, "home/index.mobile.html");
   await fs.promises.rm(fragment);
   await fs.promises.symlink("../../../notes.md", fragment);
   await git(fixture.root, ["init", "-q"]);

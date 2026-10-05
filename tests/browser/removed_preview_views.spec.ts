@@ -23,14 +23,14 @@ const stage = "[data-mokly-preview]";
 test("Dark shows the previous dark views a screen was captured in", async ({
   page,
 }) => {
-  await page.goto(`${host.url}/view/screens/removed-dark.html`);
+  await page.goto(`${host.url}/view/removed-dark/`);
   await chooseViewport(page, "desktop");
   await chooseScheme(page, "dark");
   await expect(
     page.locator(`${stage} .mbk-frame-desktop iframe`),
   ).toHaveAttribute(
     "data-mokly-preview-source",
-    /\/screens\/removed-dark\.desktop\.dark\.html$/,
+    /\/removed-dark\/index\.desktop\.dark\.html$/,
   );
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
@@ -44,7 +44,7 @@ test("Dark shows the previous dark views a screen was captured in", async ({
 test("Dark falls back to the light views a screen kept only", async ({
   page,
 }) => {
-  await page.goto(`${host.url}/view/screens/removed-screen.html`);
+  await page.goto(`${host.url}/view/removed-screen/`);
   await chooseViewport(page, "desktop");
   await chooseScheme(page, "dark");
   await expect(
@@ -57,7 +57,7 @@ test("Dark falls back to the light views a screen kept only", async ({
     page.locator(`${stage} .mbk-frame-desktop iframe`),
   ).toHaveAttribute(
     "data-mokly-preview-source",
-    /\/screens\/removed-screen\.desktop\.html$/,
+    /\/removed-screen\/index\.desktop\.html$/,
   );
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
@@ -82,7 +82,7 @@ for (const change of ["scheme", "viewport"] as const)
         if (response.url().includes("/snapshots/") && !response.ok())
           failed.push(response.url());
       });
-      await page.goto(`${host.url}/view/screens/removed-screen.html`);
+      await page.goto(`${host.url}/view/removed-screen/`);
       await chooseViewport(page, "desktop");
       const desktop = page.locator(`${stage} .mbk-frame-desktop iframe`);
       await expect(
@@ -115,7 +115,7 @@ for (const change of ["scheme", "viewport"] as const)
         expired!,
       );
       expect(
-        selections.map((url) => url.searchParams.get("id")).filter(Boolean),
+        selections.map((url) => url.searchParams.get("path")).filter(Boolean),
       ).toEqual(["removed-screen", "removed-screen"]);
       expect(selections.some((url) => url.searchParams.has("refresh"))).toBe(
         false,

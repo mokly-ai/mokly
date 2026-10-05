@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -20,7 +20,7 @@ for (const kind of ["screen", "page"]) {
               body: `<img src="../../${route}" alt="Logo" />`,
             })
           : validEntrySource() +
-            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => '<html><body><img src="../../${route}" alt="Logo"/></body></html>' }));`;
+            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ path: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => '<html><body><img src="../../${route}" alt="Logo"/></body></html>' }));`;
       const fixture = await changedFixture(
         context,
         source,
@@ -80,7 +80,7 @@ test("unreferenced aliases remain private and outside Changes", async (context) 
     '<svg width="96"/>',
   );
   assert.deepEqual(
-    await computeChangedIds(
+    await computeChangedPaths(
       fixture.config,
       "HEAD",
       await prepareReviewRepository(fixture.config, "HEAD"),

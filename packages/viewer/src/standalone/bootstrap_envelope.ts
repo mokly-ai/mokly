@@ -5,7 +5,7 @@ import {
   parseStaticDelivery,
   type StaticDelivery,
 } from "../navigation/delivery.js";
-import { isEntryId, isLogicalFragment } from "../navigation/logical.js";
+import { isEntryPath, isLogicalFragment } from "../navigation/logical.js";
 import type { EntryRouteKind } from "../navigation/routes.js";
 import type { ViewerTheme } from "../viewer/types.js";
 
@@ -15,7 +15,7 @@ export type BootstrapView =
   | { kind: "missing"; requested: string }
   | {
       kind: "target";
-      entryId: string;
+      entryPath: string;
       entryKind: EntryRouteKind;
       snapshotId?: string;
     };
@@ -34,7 +34,7 @@ export interface BootstrapContext {
 
 /** Common envelope accepted by canonical standalone bootstrap serialization. */
 export interface ShellBootstrapEnvelope<Catalogue> {
-  schemaVersion: 1;
+  schemaVersion: 2;
   catalogue: Catalogue;
   context: BootstrapContext;
   view: BootstrapView;
@@ -44,16 +44,16 @@ export interface ShellBootstrapEnvelope<Catalogue> {
 export function readShellBootstrapEnvelope(
   value: unknown,
 ): ShellBootstrapEnvelope<unknown> {
-  if (!isRecord(value) || value.schemaVersion !== 1)
+  if (!isRecord(value) || value.schemaVersion !== 2)
     throw new MoklyVersionError(
       "bootstrap",
       isRecord(value) ? value.schemaVersion : undefined,
-      1,
+      2,
     );
   if (!isRecord(value.context) || !isRecord(value.view))
     throw new Error("Invalid shell hydration state.");
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogue: value.catalogue,
     context: readContext(value.context),
     view: readView(value.view),
@@ -89,7 +89,7 @@ function readContext(value: Record<string, unknown>): BootstrapContext {
       ? undefined
       : parseStaticDelivery(value["delivery"]);
   if (parsedDelivery?.kind === "unsupported-version")
-    throw new MoklyVersionError("delivery", parsedDelivery.version, 4);
+    throw new MoklyVersionError("delivery", parsedDelivery.version, 5);
   if (parsedDelivery?.kind === "invalid")
     throw new Error("Invalid shell delivery metadata.");
   const delivery = parsedDelivery?.value;
@@ -111,16 +111,16 @@ function readView(value: Record<string, unknown>): BootstrapView {
     return { kind: "missing", requested: value["requested"] };
   if (
     value["kind"] === "target" &&
-    isEntryId(value["entryId"]) &&
+    isEntryPath(value["entryPath"]) &&
     (value["snapshotId"] === undefined ||
       isHistoricalSnapshotId(value["snapshotId"])) &&
-    ["component", "page", "screen", "use-case"].includes(
+    ["component", "document", "page", "screen", "use-case"].includes(
       String(value["entryKind"]),
     )
   )
     return {
       kind: "target",
-      entryId: value["entryId"],
+      entryPath: value["entryPath"],
       entryKind: value["entryKind"] as EntryRouteKind,
       ...(value["snapshotId"] === undefined
         ? {}

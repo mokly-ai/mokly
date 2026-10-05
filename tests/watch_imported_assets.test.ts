@@ -40,7 +40,7 @@ test(
     });
     try {
       const before = readManifest(fixture.config).entries.find(
-        (entry) => entry.id === "home",
+        (entry) => entry.path === "home",
       )?.title;
       const previousVersion = version(
         await waitForClassifiedCount(running.url, 0),
@@ -52,7 +52,7 @@ test(
       await waitForUpdate(running.url, previousVersion);
       const html = await waitForClassifiedCount(running.url, 2);
       const after = readManifest(fixture.config).entries.find(
-        (entry) => entry.id === "home",
+        (entry) => entry.path === "home",
       )?.title;
       assert.ok(after);
       assert.notEqual(after, before);

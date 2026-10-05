@@ -8,7 +8,7 @@ import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
-import { extractCssReferences } from "../dist/html_references.js";
+import { extractCssReferences } from "../dist/css_references.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -32,15 +32,15 @@ test("multiple on-demand views parse CSS only once per generation", async (t) =>
   } satisfies ConstructorParameters<typeof DocumentCompiler>[2];
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime), seams);
   for (const route of [
-    "screens/home.mobile.html",
-    "screens/home.desktop.html",
-    "screens/home.mobile.html",
+    "home/index.mobile.html",
+    "home/index.desktop.html",
+    "home/index.mobile.html",
   ]) {
     assert.match(compiler.render(route).html, /\.\.\/styles\//);
   }
   assert.equal(cssParses, 1);
   const next = new DocumentCompiler(runtime, runtimeGraph(runtime), seams);
-  assert.match(next.render("screens/home.mobile.html").html, /\.\.\/styles\//);
+  assert.match(next.render("home/index.mobile.html").html, /\.\.\/styles\//);
   assert.equal(cssParses, 2);
 });
 
@@ -59,7 +59,7 @@ test("pending CSS and assets validate without reading stale reserved disk files"
   await fs.writeFile(physical, Buffer.from([255, 0]));
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   assert.match(
-    compiler.render("screens/home.mobile.html").html,
+    compiler.render("home/index.mobile.html").html,
     /\.\.\/styles\//,
   );
   const missingRuntime = {
@@ -71,7 +71,7 @@ test("pending CSS and assets validate without reading stale reserved disk files"
   assert.throws(
     () =>
       new DocumentCompiler(missingRuntime, runtimeGraph(missingRuntime)).render(
-        "screens/home.mobile.html",
+        "home/index.mobile.html",
       ),
     /missing target.*image\.png/,
   );
@@ -206,7 +206,7 @@ test("pending stylesheet delivery omits reserved disk orphans", async (t) => {
   await fs.mkdir(path.dirname(stale), { recursive: true });
   await fs.writeFile(stale, "stale");
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  const html = compiled.outputs.get("screens/home.mobile.html") as string;
+  const html = compiled.outputs.get("home/index.mobile.html") as string;
   assert.match(html, /styles\/entries\/fixture\.mockup\.tsx\.css/);
   assert.doesNotMatch(html, /styles\/old\.css/);
 });

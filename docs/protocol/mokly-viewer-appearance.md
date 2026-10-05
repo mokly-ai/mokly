@@ -10,14 +10,15 @@ every document, the classic `appearance-startup.js` asset that restores the
 appearance before the first paint, and the documented precedence over the
 `scheme` pin, the stored override and the server-supplied initial theme. The
 standalone scheme switches and the workspace Dark preview button are gone from
-standalone documents; an embedded root keeps its own preview control.
+standalone documents; an embedded root keeps its own preview control. Markdown
+documents follow the approved [document contract](./mokly-documents.md) below
+and arrive with the [path identity plan](../../plans/path-identity.md).
 
 One package-owned semantic palette carries the recorded swatches and their
-three Light corrections, in
-[mokly-viewer-palette.md](./mokly-viewer-palette.md). The appearance mockups
-are delivered: every appearance entry renders in both schemes, the depicted top
-bar component owns the one Appearance control, and a separate head-band scheme
-depictions are gone.
+three Light corrections, in [mokly-viewer-palette.md](./mokly-viewer-palette.md).
+The appearance mockups are delivered: every appearance entry renders in both
+schemes, the depicted top bar component owns the one Appearance control, and
+separate head-band scheme depictions are gone.
 
 The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the work.
 
@@ -41,10 +42,11 @@ Auto is the default in both contexts.
 In standalone Browse the effective preview scheme equals the effective
 appearance. Dark shows each screen's dark fragments where they exist, so the
 catalogue, its device screens, component samples and comparisons change
-together. A screen with no dark render keeps its light frames and the existing
-fallback caption when the catalogue has dark fragments elsewhere; a catalogue
-with no dark fragments shows light previews with no captions under a dark
-interface. That light-only preview fallback does not change the document's
+together; a Markdown document, rendered once per scheme with no viewport axis,
+opens its dark render. A screen with no dark render keeps its light frames and
+the existing fallback caption when the catalogue has dark fragments elsewhere; a
+catalogue with no dark fragments shows light previews with no captions under a
+dark interface. That light-only preview fallback does not change the document's
 effective Dark appearance: React hydrates from the scheme already applied to
 the body while its preview selection independently normalizes to the available
 Light files. The standalone top bar, head band and component workspace carry
@@ -87,7 +89,7 @@ untyped JavaScript resolve to Auto; they do not invalidate the catalogue.
 <MoklyViewer
   catalogue={catalogueUrl}
   theme="dark"
-  defaultSelection={{ screenId: null, colorScheme: "dark" }}
+  defaultSelection={{ screenPath: null, colorScheme: "dark" }}
 />
 ```
 
@@ -122,9 +124,9 @@ Serve and exported Browse expose one compact native selector labelled
 top bar. It is the only scheme control in a standalone document: it replaces
 the top-bar and head-band `Light | Dark` preview switch and the component
 workspace's Dark mode button, and it is present even when the catalogue has no
-dark fragments. It remains reachable on home, pages, flows, empty and
-unavailable routes, and at narrow widths, and preserves catalogue search and
-menu access.
+dark fragments. It remains reachable on home, pages, documents, flows, empty
+and unavailable routes, and at narrow widths, and preserves catalogue search
+and menu access.
 
 Choosing a value applies the interface appearance and the effective preview
 scheme together: the document's scheme mark, every screen and flow frame's
@@ -165,10 +167,9 @@ system changes update both owners through the same callback. Once the bridge
 installs that callback, only React's frame adapters navigate preview documents;
 the startup controller no longer assigns their sources. Appearance changes must
 not add iframe history entries or consume catalogue Back/Forward actions.
-Installation is
-idempotent; the final handle release removes both the system-theme listener
-and every bound selector listener so a later installation cannot duplicate
-callbacks or storage writes.
+Installation is idempotent; the final handle release removes both the
+system-theme listener and every bound selector listener so a later installation
+cannot duplicate callbacks or storage writes.
 Persisted `pagehide` events keep the controller alive for the browser's
 back-forward cache, and persisted `pageshow` refreshes the restored document;
 a final non-persisted `pagehide` disposes it and removes its lifecycle
@@ -263,8 +264,8 @@ color. Switching interface appearance alone must preserve the pixels of a
 transparent preview, including its loading surface and comparison base.
 
 Set each managed iframe's CSS `color-scheme` to its effective preview scheme
-before loading it, including page/component/flow and comparison frames. For
-documents without a scheme axis, retain the existing Light context. Frame
+before loading it, including page, document, component, flow and comparison
+frames; a page has no scheme axis and keeps the existing Light context. Frame
 wrappers record the selected file's scheme independently of the outer document
 and of fallback captions; iframe context, device-screen styling and comparison
 bases read that per-frame value. The classic startup updates it before swapping
@@ -286,7 +287,7 @@ difference result.
 
 ## Mockup Contract
 
-The owning catalogue is `examples/basic/entries/design`, generated under
+The owning catalogue is `examples/basic/specs/design`, generated under
 `examples/basic/mokly-generated/design`; use its registered shared components and
 existing screen compositions. Appearance screens and their affected shared
 component samples publish Light and Dark fragments for both viewports through
@@ -316,35 +317,34 @@ fallback caption in the Dark render, because that is a fact about the screen.
 Device-screen tokens stay independent of the interface palette.
 
 A linked Appearance section sits under Browse, with matching source directories
-under `examples/basic/entries/design/browse/appearance/`. Each design page
-names a canonical screen; other screens can share its `navPath`. The folder
-itself has no route or owning screen. Folders below are the `navPath` labels
-under `Design › Mokly design › Browse shell`.
+under `examples/basic/specs/design/browse/appearance/`. Each design page
+names a canonical screen; other screens can share its folder. The folder
+itself has no page of its own. Folders below are the resolved folder titles
+under `Design › Browse shell`.
 
-| Folder                              | Owning screens                                                                                        |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Appearance                          | `design-appearance-overview`: the canonical interface around a selected screen, all light or all dark |
-| Appearance › Appearance states      | Auto selector, light-only screen fallback                                                             |
-| Appearance › Panels and comparisons | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference            |
-| Appearance › Status and recovery    | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow                        |
+| Folder                              | Owning screens                                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Appearance                          | `design/browse/appearance/overview`: the canonical interface around a selected screen, all light or all dark |
+| Appearance › Appearance states      | Auto selector, light-only screen, current document, and removed document fallbacks                           |
+| Appearance › Panels and comparisons | Props validation, selected-instance inspector, navigation drawer, Side by side, Difference                   |
+| Appearance › Status and recovery    | Home/empty, catalogue loading, error/retry, Changes unavailable, use-case flow                               |
 
 The catalogue groups the overview and its three nested families; artboards
 carry no navigation footer. Each screen has its own mobile and desktop
 component and reuses the registered shared components. Do not inline duplicate
 screen markup. Keep no more than five owning screen definitions per page. The
-exact ids are listed in the
-[shell design inventory](./mokly-shell-design.md#design-mockups). The
+exact entries are listed in the
+[shell design inventory](./mokly-shell-design-inventory.md). The
 branch-only `light-preview` and `dark-preview` scenarios are removed by the
-single-control correction. `design-review-dark-scheme` is removed; `design-review-changed` renders in
-both schemes and subsumes its comparison state. The existing
-`design-browse-dark-scheme` and `design-browse-light-only` ids remain as
-Welcome variants with generated Light and Dark artboards. Their content now
-follows the one Appearance selector, as do `design-browse-screen` and
-`design-browse-details-screen`; none depicts a separate preview-scheme control.
-`controls/view-controls` carries no scheme control, and the design catalogue
-authors no scheme link pairs. Update
-inventories, style ownership and example documentation, and keep notes outside
-the screens.
+single-control correction. `design-review-dark-scheme` is removed;
+`design/changes/outcomes/changed` renders in both schemes and subsumes its comparison
+state. The existing `design/browse/views/screen/dark-scheme` and `design/browse/views/screen/light-only`
+entries remain as Welcome variants with generated Light and Dark artboards.
+Their content now follows the one Appearance selector, as do `design/browse/views/screen`
+and `design/browse/views/details-screen`; none depicts a separate preview-scheme
+control. `controls/view-controls` carries no scheme control, and the design
+catalogue authors no scheme link pairs. Update inventories, style ownership and
+example documentation, and keep notes outside the screens.
 
 ## Required Verification
 

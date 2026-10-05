@@ -21,7 +21,7 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
     if (request.url().includes("/mokly-viewer/diffs/"))
       comparisonRequests.push(request.url());
   });
-  await page.goto(`${fixture.url}/view/screens/home.html`);
+  await page.goto(`${fixture.url}/view/home/`);
   await page.locator('[data-filter="changed"]').click();
   await chooseViewport(page, "desktop");
   const nav = page.locator("[data-mokly-nav]");
@@ -56,7 +56,7 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
       .toBeCloseTo(296, 0);
   }
   await page.locator('[data-filter="all"]').click();
-  await page.locator('[data-route="screens/details.html"]').click();
+  await page.locator('[data-route="details/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect
     .poll(async () => (await nav.boundingBox())?.width)

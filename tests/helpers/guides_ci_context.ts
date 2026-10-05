@@ -29,6 +29,7 @@ export const terminal = [
 export const verification = [
   read("docs/protocol/ci-verification.md"),
   read("docs/protocol/ci-suite-evidence.md"),
+  read("docs/protocol/ci-test-repository-inputs.md"),
 ]
   .join("\n")
   .replace(/\s+/gu, " ");

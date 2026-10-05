@@ -24,16 +24,16 @@ test("removed page captures its complete historical closure from manifest v8", a
     fixture.reader,
   ).generate(
     fixture.source,
-    { kind: "page", id: "guide" },
+    { kind: "page", path: "guide" },
     new AbortController().signal,
   );
   const files = renderRemovedPagePreviewArtifact(artifact);
 
   assert.deepEqual(artifact.preview, {
-    schemaVersion: 2,
+    schemaVersion: 3,
     baseRef: "main",
     baseCommit: PAGE_COMMIT,
-    id: "guide",
+    path: "guide",
   });
   assert.deepEqual(
     parseRemovedPagePreview(JSON.parse(String(files.get("preview.json")))),
@@ -73,7 +73,7 @@ test("removed page capture rejects missing documents and every missing dependenc
         baselineReader(files),
       ).generate(
         fixture.source,
-        { kind: "page", id: "guide" },
+        { kind: "page", path: "guide" },
         new AbortController().signal,
       ),
       /Snapshot file is missing/,
@@ -87,7 +87,7 @@ test("removed page capture rejects a selection outside the accepted removal snap
   await assert.rejects(
     new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
       fixture.source,
-      { kind: "page", id: "missing" },
+      { kind: "page", path: "missing" },
       new AbortController().signal,
     ),
     /selected view has no comparison/,
@@ -98,7 +98,7 @@ test("removed page capture rejects a selection outside the accepted removal snap
         ...fixture.source,
         baseline: { ...fixture.baseline, entries: [] } as HistoricalManifest,
       },
-      { kind: "page", id: "guide" },
+      { kind: "page", path: "guide" },
       new AbortController().signal,
     ),
     /removed page does not match the pinned baseline/,
@@ -120,7 +120,7 @@ for (const [name, reference, message] of [
     await assert.rejects(
       new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
         fixture.source,
-        { kind: "page", id: "guide" },
+        { kind: "page", path: "guide" },
         new AbortController().signal,
       ),
       message,
@@ -166,7 +166,7 @@ test("removed page capture denies symlinks, metadata, and authored sources", asy
         baselineReader(files),
       ).generate(
         { ...fixture.source, baseline },
-        { kind: "page", id: "guide" },
+        { kind: "page", path: "guide" },
         new AbortController().signal,
       ),
       denied,
@@ -184,7 +184,7 @@ test("removed page capture applies the selected artifact byte limit", async (t) 
   await assert.rejects(
     new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
       fixture.source,
-      { kind: "page", id: "guide" },
+      { kind: "page", path: "guide" },
       new AbortController().signal,
     ),
     /exceeds 64 MiB/,
@@ -193,16 +193,17 @@ test("removed page capture applies the selected artifact byte limit", async (t) 
 
 test("preview reader strictly validates metadata and document identity", () => {
   const valid = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     baseRef: "main",
     baseCommit: PAGE_COMMIT,
-    id: "guide",
+    path: "guide",
   };
   assert.deepEqual(parseRemovedPagePreview(valid), valid);
   for (const value of [
+    { ...valid, schemaVersion: 2 },
     { ...valid, schemaVersion: 1 },
     { ...valid, baseCommit: "invalid" },
-    { ...valid, id: "../guide" },
+    { ...valid, path: "../guide" },
     { ...valid, extra: path.resolve("private") },
   ])
     assert.throws(() => parseRemovedPagePreview(value));

@@ -37,9 +37,12 @@ function harness(query: string) {
             textContent: JSON.stringify({
               ranges: [],
               links: [
-                { id: "screen", target: { kind: "top" } },
-                { id: "screen", target: { kind: "parent" } },
-                { id: "screen", target: { kind: "named", name: "preview" } },
+                { screenPath: "screen", target: { kind: "top" } },
+                { screenPath: "screen", target: { kind: "parent" } },
+                {
+                  screenPath: "screen",
+                  target: { kind: "named", name: "preview" },
+                },
               ],
             }),
           },
@@ -168,7 +171,7 @@ test("before a valid handshake only the bounded message listener exists", () => 
     encodeMessage(nonce, { type: "list", requestId: 1 }),
     JSON.stringify({
       channel: "mokly-inspector",
-      version: 1,
+      version: 2,
       nonce,
       type: "hello",
       extra: true,

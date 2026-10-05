@@ -83,7 +83,7 @@ test("accepted generation stays classifiable after a newer CSS-importing entry a
     commit,
     acceptedGenerationFromCompilation(compilation),
   );
-  assert.deepEqual(snapshot.changedIds, []);
+  assert.deepEqual(snapshot.changedEntries, []);
 });
 
 test("catalogue freshness shares one inventory graph with Git-blob Changes", async (context) => {

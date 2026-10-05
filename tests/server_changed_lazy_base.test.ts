@@ -25,14 +25,14 @@ import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 for (const resource of ["image.svg", "unused.css", "shared.css"])
-  test(`live ${resource} changes compare both memory and baseline documents once`, async (t) => {
+  test(`live ${resource} changes read base documents only for CSS consumers`, async (t) => {
     const fixture = await cssAttributionFixture(t, false, {
       prepare: async ({ configPath }) => {
         await fs.writeFile(
           configPath,
           (await fs.readFile(configPath, "utf8")).replace(
             'match: "**/*.html"',
-            'match: "screens/home.html"',
+            'match: "home/index.html"',
           ),
         );
       },
@@ -66,26 +66,23 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
       ),
     );
     const documents = reads.filter((route) => route.endsWith(".html"));
-    assert.deepEqual(documents.sort(), [
-      "mockups/mokly-generated/screens/details.desktop.dark.html",
-      "mockups/mokly-generated/screens/details.desktop.html",
-      "mockups/mokly-generated/screens/details.mobile.dark.html",
-      "mockups/mokly-generated/screens/details.mobile.html",
-      "mockups/mokly-generated/screens/home.desktop.dark.html",
-      "mockups/mokly-generated/screens/home.desktop.html",
-      "mockups/mokly-generated/screens/home.mobile.dark.html",
-      "mockups/mokly-generated/screens/home.mobile.html",
-    ]);
     assert.deepEqual(
-      [...new Set(reads.filter((route) => !route.endsWith(".html")))].sort(),
-      ["mockups/font.woff2", "mockups/image.svg", "mockups/shared.css"],
+      documents.sort(),
+      resource === "shared.css"
+        ? [
+            "mockups/mokly-generated/home/index.desktop.dark.html",
+            "mockups/mokly-generated/home/index.desktop.html",
+            "mockups/mokly-generated/home/index.mobile.dark.html",
+            "mockups/mokly-generated/home/index.mobile.html",
+          ]
+        : [],
     );
   });
 
 test("non-CSS evidence compares the supplied baseline resources", async (t) => {
   const fixture = await cssAttributionFixture(t, false);
   const document = await fs.readFile(
-    path.join(fixture.config.generatedDir, "screens/home.mobile.html"),
+    path.join(fixture.config.generatedDir, "home/index.mobile.html"),
     "utf8",
   );
   const reads: string[] = [];
@@ -103,8 +100,8 @@ test("non-CSS evidence compares the supplied baseline resources", async (t) => {
     undefined,
   );
   assert.deepEqual(
-    await graph.compare("mokly-generated/screens/home.mobile.html", document, {
-      path: "mokly-generated/screens/home.mobile.html",
+    await graph.compare("mokly-generated/home/index.mobile.html", document, {
+      path: "mokly-generated/home/index.mobile.html",
       html: document,
     }),
     {
@@ -132,7 +129,12 @@ test("deleted stylesheet resources still retain their consumers", async (t) => {
   );
   assert.ok(
     result.changedPaths.includes(
-      "mockups/mokly-generated/screens/home.mobile.html",
+      "mockups/mokly-generated/home/index.mobile.html",
+    ),
+  );
+  assert.ok(
+    result.changedPaths.includes(
+      "mockups/mokly-generated/home/index.mobile.html",
     ),
   );
   assert.equal(
@@ -181,10 +183,10 @@ test("changed documents retain a removed image without any stylesheet in the dif
   for (const viewport of ["mobile", "desktop"])
     assert.ok(
       result.changedPaths.includes(
-        `mockups/mokly-generated/screens/home.${viewport}.html`,
+        `mockups/mokly-generated/home/index.${viewport}.html`,
       ),
     );
-  const consumer = result.screens.find((screen) => screen.id === "home");
+  const consumer = result.screens.find((screen) => screen.path === "home");
   assert.equal(consumer?.views.length, 2);
   for (const view of consumer!.views)
     assert.deepEqual(view.reasons, [

@@ -19,15 +19,14 @@ All paths in the compiled output map and `generatedFiles` are relative to
 <mockupsDir>/
   mokly-generated/
     mokly-manifest.json
-    pages/<id>.html
-    screens/<id>.<viewport>[.dark].html
-    components/<id>.<viewport>[.dark].html
+    <path>/index[.<viewport>][.dark].html
+    <copied Markdown resources at their derived paths>
     styles/<repository-relative renderer or entry module path>.css
     assets/<repository-relative CSS asset path>
   <authored closure files at their existing catalogue-relative paths>
 ```
 
-Preserve kind/id route derivation and variant identities. A logical
+Preserve file-derived entry paths, folder records and parent/variant paths. A logical
 entry route need not have a generated HTML file: component parents and use
 cases remain shell routes. The manifest inventory records actual files only.
 Keep the module extension before `.css`: `src/home.mockup.tsx` produces
@@ -46,7 +45,7 @@ outside this tree through both lexical and physical aliases. Broad entry globs
 skip it; explicit inputs inside it fail the existing `config-invalid` setting
 diagnostic. Stylesheet rules stay catalogue-relative and cannot target this
 child. Entry modules may sit below `mockupsDir` as protected authored sources,
-but `entriesDir` must not equal `mockupsDir`, including through a real-path
+but a configured root must not equal `mockupsDir`, including through a real-path
 alias. Preserve the current `config-invalid` error:
 `authored source directories must not equal mockupsDir`. Do not restore
 `publicExclude`. Imported CSS keeps public-source privacy checks.
@@ -54,8 +53,8 @@ alias. Preserve the current `config-invalid` error:
 Reserve `styles` and `assets` as the first segment of any generated HTML page
 or fragment route, including supplied internal routes and future route kinds.
 Compare the segment case-insensitively, consistent with output collision
-checks. `styles/a.html` and `ASSETS/a.html` fail; `pages/styles.html` and
-`styles.html` do not match a reserved segment. Reject before rendering or
+checks. `styles/a/index.html` and `ASSETS/a/index.html` fail;
+`reports/styles/index.html` does not match a reserved segment. Reject before rendering or
 writing, even if no CSS exists. Use `build-invalid` with this exact body:
 
 ```text
@@ -64,16 +63,14 @@ generated HTML route uses reserved first segment <segment>: <route>; styles and 
 
 Substitute the original segment spelling and generated-root-relative route,
 without quotes. Existing invalid-route checks run first. Check reserved
-segments next, then duplicate/case-folded/file-directory collisions. Current
-identity helpers cannot produce these prefixes; test the lower-level route
-boundary too. This does not add an authored `route` option. Only v8 baselines
+segments next, then duplicate/case-folded/file-directory collisions. Path-derived entries can reach these prefixes; test both compilation and the
+lower-level route boundary. This does not add an authored `route` option. Only v9 baselines
 reach a content reader; there is no earlier route model to adapt.
 
-Generated HTML derives from kind/id and
-starts with `pages/`, `screens/` or `components/`. The outer delivery prefix is
-not part of those routes; an id may still contain the text `mokly-generated`.
-The helper's construction guarantees the first segment, not a generic path
-grammar or a new substring check. Shell-only use cases are not generated HTML.
+Generated HTML uses the path-derived document and view names in
+[artifact paths](./mokly-artifact-paths.md). A component variant includes its
+parent path and its own slug. Shell-only use cases have no generated HTML.
+Markdown documents have one file per enabled scheme and copied resources.
 
 ## One Reference Rule
 
@@ -103,7 +100,7 @@ An input CSS file or asset outside `mockupsDir` can be copied by the imported
 CSS pipeline into the generated set; its original source path stays private
 and never enters `assetClosure`. Direct links outside `mockupsDir` stay invalid.
 
-For a view at `mokly-generated/screens/home.mobile.html`, the entry CSS href
+For a view at `mokly-generated/home/index.mobile.html`, the entry CSS href
 is `../styles/src/home.mockup.tsx.css`; a catalogue-root `styles.css` href is
 `../../styles.css`. From `styles/src/home.mockup.tsx.css`, a copied
 `assets/src/logo.png` uses `../../assets/src/logo.png`. No generated href adds
@@ -195,27 +192,27 @@ under the [manifest contract](./mokly-generated-manifest.md). Do not inspect
 the current index or require head disk equality. Reuse accepted outputs and
 the retained delivered-source map instead of rescanning a newer consumer graph.
 
-Compare resource membership on both v8 sides using each side's own descriptor.
+Compare resource membership on both v9 sides using each side's own descriptor.
 Use generated-relative stylesheet/asset keys and separate catalogue-relative
 authored closure keys, including when catalogue roots move. Do not normalize
-older layouts into v8. A pre-v8 manifest selected inside the generated tree or found after the base's
+older layouts into v9. A pre-v9 manifest selected inside the generated tree or found after the base's
 own build produces the typed earlier-baseline unavailable outcome. Committed
 root-level metadata cannot suppress a rebuild; invalid caches rebuild.
 Feed changed compiled CSS to rule-aware attribution; its private CSS source
 is dependency evidence, not a second public stylesheet. Preserve the
 delivered-source suppression, shared-impact fallbacks, removed-resource rules,
-component fast paths and generation consistency. Pre-v8 baselines do not
+component fast paths and generation consistency. Pre-v9 baselines do not
 produce a one-time stylesheet Changes jump because their content is not read.
 
 Acceptance covers CSS/Modules/PostCSS regressions and the
 tracking, transaction, baseline and closure tests. Add reserved-route rejection,
 raw binary inventory hashes, no stale-disk fallback, all three styled delivery
-surfaces, watcher success/failure, output-independent PostCSS scans, and v8
+surfaces, watcher success/failure, output-independent PostCSS scans, and v9
 comparisons across moved catalogue roots. Test the exact unavailable outcome
-for every pre-v8 base instead of accepting a v7-to-v8 content comparison.
+for every pre-v9 base instead of accepting a v7-to-v9 content comparison.
 
 The approved [path/output integration](./mokly-path-output-integration.md)
-supersedes the current kind/id layout at integration. Its
+defines the current path-derived layout. Its
 [format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
 review v6 and all other boundaries. Only v9 baseline content is readable after
 that integration; the earlier-version product outcome remains unchanged.

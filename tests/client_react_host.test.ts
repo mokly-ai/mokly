@@ -9,7 +9,7 @@ import {
 } from "../dist/client/react_host.js";
 
 const descriptor = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   source: {
     base: "origin/main",
     catalogueId: "a".repeat(64),

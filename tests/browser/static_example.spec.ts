@@ -13,7 +13,7 @@ import { acquireSharedExample } from "../helpers/shared_example.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseViewport, expectFrameSource } from "./workspace_actions.js";
 
 let prepared: PreparedExample;
 let output: string;
@@ -38,10 +38,7 @@ test.beforeAll(async () => {
       { operationUnderTest: false, expectWarmBaseline: true },
     );
     server = await serveStaticFiles(output);
-    await assertServedShellMarker(
-      server.url,
-      "/view/screens/example-welcome.html",
-    );
+    await assertServedShellMarker(server.url, "/view/example/screens/welcome/");
   } catch (error) {
     await server?.close();
     await prepared.close();
@@ -63,10 +60,10 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(
-      `${server.url}/view/screens/example-welcome.html?fragment=welcome`,
+      `${server.url}/view/example/screens/welcome/?fragment=welcome`,
     );
     await expect(page).toHaveURL(
-      `${server.url}/view/screens/example-welcome.html?fragment=welcome`,
+      `${server.url}/view/example/screens/welcome/?fragment=welcome`,
     );
     await chooseViewport(page, width === 390 ? "mobile" : "desktop");
     await expect(page.locator("[data-workspace-status]")).toHaveText(
@@ -97,18 +94,18 @@ test("the exported example discloses a screen's variants without a server", asyn
   page,
 }) => {
   const list = page.locator(
-    '[data-nav-disclosure="variants:pages:example-welcome"]',
+    '[data-nav-disclosure="variants:example/screens/welcome"]',
   );
   const toggle = page
     .locator(".mbk-nav-leaf", {
-      has: page.locator('a[data-entry-id="example-welcome"]'),
+      has: page.locator('a[data-entry-id="example/screens/welcome"]'),
     })
     .locator("[data-nav-variants-toggle]");
   const variantRow = page.locator(
-    'a[data-nav-row][data-route="screens/example-welcome-empty.html"]',
+    'a[data-nav-row][data-route="example/screens/welcome/empty/index.html"]',
   );
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/screens/example-details.html`);
+  await page.goto(`${server.url}/view/example/screens/details/`);
   await expect(list).toBeHidden();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
@@ -118,13 +115,37 @@ test("the exported example discloses a screen's variants without a server", asyn
 
   await variantRow.click();
   await expect(page).toHaveURL(
-    `${server.url}/view/screens/example-welcome-empty.html`,
+    `${server.url}/view/example/screens/welcome/empty/`,
   );
   await expect(page.locator("#mb-main h2")).toHaveText(
     "Welcome, empty workspace",
   );
   await expect(variantRow).toHaveAttribute("aria-current", "page");
-  await expect(page.getByLabel("Catalogue location").locator("a")).toHaveText(
+  await expect(page.getByLabel("Catalogue location").locator("a")).toHaveText([
+    "Example",
     "Welcome",
+  ]);
+});
+
+test("the exported example opens a Markdown document from each URL form", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const frame = page.locator(".mbk-stage-embed iframe");
+  for (const form of ["/", "", "/index.html"]) {
+    await page.goto(`${server.url}/view/example/workspace-guide${form}`);
+    await expect(page).toHaveURL(`${server.url}/view/example/workspace-guide/`);
+    await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
+    await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
+    await expect(
+      page
+        .frameLocator(".mbk-stage-embed iframe")
+        .getByRole("heading", { name: "Workspace guide", exact: true }),
+    ).toBeVisible();
+  }
+  await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+  await expectFrameSource(
+    frame,
+    `${server.url}/static/mokly-generated/example/workspace-guide/index.dark.html`,
   );
 });

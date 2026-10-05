@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in `@mokly/viewer` by the completed
-[viewer library plan](../../plans/mokly-viewer-library.md). Local
-Serve/export keep today's same-origin sandbox and visible behavior. Only an
-explicit cross-origin host uses the new inspector transport. Host marker
-consumption and the trailing geometry refresh are implemented by the
-[comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
-wire protocol remains unchanged.
+Implemented in `@mokly/viewer`. Local Serve/export retain the same-origin
+sandbox and visible behavior; explicit cross-origin hosts use inspector
+transport. Host markers and trailing geometry refresh are implemented. Navigation
+messages name entries by `screenPath`. Same-origin frame identity accepts an
+`index.html` page at its containing directory with or without a trailing slash,
+and other HTML files without their final `.html`, while retaining origin and
+query identity.
 Historical pages and screens use the viewer-owned presentation defined by the
 [removed previews contract](./mokly-removed-previews.md). Neither adapter mounts
 those frames or enters an inspection handshake; the viewer presents a
@@ -39,7 +39,7 @@ type NavigationTarget =
   | { kind: "self" | "top" | "parent" | "blank" }
   | { kind: "named"; name: string };
 interface FrameNavigation {
-  id: string;
+  screenPath: string;
   fragment?: string;
   target: NavigationTarget;
   activation: "primary" | "modified" | "middle";
@@ -86,12 +86,11 @@ Mount validation follows [generated delivery](./mokly-generated-delivery.md#fram
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount navigates with iframe history replacement semantics; the
 React shell retains its initial portable `src` after an adapter takes ownership.
-A ready same-origin document may be reused only after mount-scoped
-authentication accepts it. A superseded same-origin load may arrive during
-that handoff; it cannot fail or be adopted by the current mount, which remains
-pending for the exact assigned resource. A load, view/scheme swap or disposal
-invalidates the old session and its pending work; responses from it never update
-a new mount.
+A ready same-origin document may be reused only after mount-scoped authentication
+accepts it. A superseded same-origin load may arrive during that handoff; it
+cannot fail or be adopted by the current mount, which remains pending for the
+exact assigned resource. A load, view/scheme swap or disposal invalidates the
+old session and its pending work; responses from it never update a new mount.
 The React shell supplies `onEvent` before calling `mount`. A conforming adapter
 records that receiver before it starts replacing an already-visible document.
 Passing the same callback to `MountedFrame.subscribe` adopts this mount-time
@@ -289,7 +288,7 @@ At most 16 requests are pending.
 
 Every message is a JSON string of at most 262,144 UTF-8 bytes; reject nonstrings
 or oversized strings before JSON parsing. The exact envelope is
-`{ channel: "mokly-inspector", version: 1, nonce, type, ...fields }`.
+`{ channel: "mokly-inspector", version: 2, nonce, type, ...fields }`.
 All objects must be plain JSON objects with exactly the fields for their
 discriminant; reject unknown keys recursively, unsupported versions/types,
 duplicates in key/range arrays, invalid numbers and broken references. Do not
@@ -333,12 +332,12 @@ regions; off requires an empty list. Every requested/returned key and range must
 belong to that mount's validated usage. Never silently truncate lists or boxes;
 limit overflow reports unavailable inspection via `limit`, leaving content usable.
 
-Navigation ids are kebab-case, at most 256 ASCII characters; optional fragments
-use the [logical fragment grammar](./mokly-navigation.md), at most 256 characters.
-Named targets use its target grammar and the same limit; all other target
-objects contain only `kind`. Navigation contains no URL, href, label or HTML.
-The inspector classifies only authenticated immediate native-link activations;
-the host revalidates ids against its catalogue and resolves canonical routes.
+Navigation paths follow the [path grammar](./mokly-paths.md), at most 256 ASCII
+characters; fragments use the [logical fragment grammar](./mokly-navigation.md),
+at most 256 characters. Named targets use its target grammar and the same limit;
+all other target objects contain only `kind`. Navigation contains no URL, href,
+label or HTML. The inspector classifies only authenticated immediate native-link
+activations; the host revalidates paths against its catalogue and resolves URLs.
 Primary versus modified/middle activation preserves the existing target rules.
 The host owns navigation/new-context actions, using `noopener`; the inspector
 never navigates a top window. Ordinary unmarked/download/external links stay

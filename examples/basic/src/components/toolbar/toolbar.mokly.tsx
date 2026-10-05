@@ -8,10 +8,10 @@ const dependency = "examples/basic/example-components.css";
 const implementation = "examples/basic/src/components/toolbar/toolbar.tsx";
 
 export const toolbar = defineComponent({
-  id: "example-toolbar",
+  slug: "index",
   title: "Toolbar",
   description: "A composed toolbar with caller-supplied content.",
-  navPath: ["Example", "Components"],
+
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],
   relatedDocs: ["examples/basic/README.md"],
@@ -46,7 +46,7 @@ export const toolbar = defineComponent({
   ),
   variants: [
     {
-      id: "example-toolbar-default",
+      slug: "default",
       title: "Default",
       props: {
         title: "Workspace actions",

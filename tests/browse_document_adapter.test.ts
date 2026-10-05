@@ -31,7 +31,7 @@ test("Browse authenticates markers while preserving live navigation attributes",
         <a href="mock:details" target=" invalid">Invalid</a>
         <a download href="mock:details" target="_top">Download</a>
         <a href="https://example.test/" target="_top">External</a>
-        <a href="./details.mobile.html" target="_parent">Relative</a>
+        <a href="../details/index.mobile.html" target="_parent">Relative</a>
         <span id="local-target" />
         <a href="#local-target" target="NamedFrame">Hash</a>
         <map name="targets"><area href="mock:details" target="_parent" /></map>
@@ -44,7 +44,7 @@ test("Browse authenticates markers while preserving live navigation attributes",
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const route = "screens/home.mobile.html";
+  const route = "home/index.mobile.html";
   const original = textOutput(compilation.outputs, route) ?? "";
   const adapted = adaptBrowseDocument(
     original,
@@ -54,11 +54,11 @@ test("Browse authenticates markers while preserving live navigation attributes",
 
   assert.match(
     adapted,
-    /href="\.\/details\.mobile\.html" data-mokly-link="details" data-mokly-target="InheritedFrame" data-mokly-inspector-link="0">Inherited/,
+    /href="\.\.\/details\/index\.mobile\.html" data-mokly-link="details" data-mokly-target="InheritedFrame" data-mokly-inspector-link="0">Inherited/,
   );
   assert.match(
     adapted,
-    /href="\.\/details\.mobile\.html" target="" data-mokly-link="details" data-mokly-inspector-link="1">Own self/,
+    /href="\.\.\/details\/index\.mobile\.html" target="" data-mokly-link="details" data-mokly-inspector-link="1">Own self/,
   );
   assert.match(
     adapted,
@@ -76,13 +76,16 @@ test("Browse authenticates markers while preserving live navigation attributes",
   assert.doesNotMatch(adapted, /target=" invalid"[^>]+data-mokly-link/);
   assert.match(
     adapted,
-    /download="" href="\.\/details\.mobile\.html" target="_top">Download/,
+    /download="" href="\.\.\/details\/index\.mobile\.html" target="_top">Download/,
   );
   assert.doesNotMatch(
     adapted,
     /target="_top"[^>]+data-mokly-link[^>]*>Download/,
   );
-  assert.match(adapted, /data-nav-href="\.\/details\.mobile\.html">Metadata/);
+  assert.match(
+    adapted,
+    /data-nav-href="\.\.\/details\/index\.mobile\.html">Metadata/,
+  );
   assert.doesNotMatch(adapted, /data-mokly-target="spoof"/);
   assert.match(
     adapted,
@@ -90,16 +93,16 @@ test("Browse authenticates markers while preserving live navigation attributes",
   );
   assert.match(
     adapted,
-    /href="\.\/details\.mobile\.html" target="_parent">Relative/,
+    /href="\.\.\/details\/index\.mobile\.html" target="_parent">Relative/,
   );
   assert.match(adapted, /href="#local-target" target="NamedFrame">Hash/);
   assert.match(
     adapted,
-    /<area href="\.\/details\.mobile\.html" target="_parent"[^>]+data-mokly-target="_parent"/,
+    /<area href="\.\.\/details\/index\.mobile\.html" target="_parent"[^>]+data-mokly-target="_parent"/,
   );
   assert.match(
     adapted,
-    /<a href="\.\/details\.mobile\.html" target="_blank"[^>]+data-mokly-target="_blank" data-mokly-inspector-link="3"><text>SVG/,
+    /<a href="\.\.\/details\/index\.mobile\.html" target="_blank"[^>]+data-mokly-target="_blank" data-mokly-inspector-link="3"><text>SVG/,
   );
   assert.match(adapted, /<base target="InheritedFrame"/);
   assert.match(adapted, /<form target="_top"><button formTarget="_parent"/);
@@ -112,7 +115,7 @@ test("Browse strips reserved metadata from unowned HTML", () => {
       entries: [],
       generatedBy: "mokly",
       sourceFiles: [],
-      schemaVersion: 8,
+      schemaVersion: 9,
     }),
   );
   const original = `<!doctype html><html><body><a data-mokly-link="home" DATA-MOKLY-LINK="details" data-mokly-target="_top" DATA-MOKLY-TARGET="_blank" href="./home.html">Home</a></body></html>`;
@@ -127,7 +130,7 @@ test("Browse rejects duplicate reserved metadata in trusted HTML", async (contex
   context.after(() => removeFixture(fixture));
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);
-  const route = "screens/home.mobile.html";
+  const route = "home/index.mobile.html";
   const original = textOutput(compilation.outputs, route) ?? "";
   const mutations = [
     original.replace(
@@ -153,7 +156,7 @@ test("Browse treats the generated notice as text, but rejects broken navigation 
   context.after(() => removeFixture(fixture));
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);
-  const route = "screens/home.mobile.html";
+  const route = "home/index.mobile.html";
   const original = textOutput(compilation.outputs, route) ?? "";
   for (const notice of [
     "",
@@ -169,7 +172,10 @@ test("Browse treats the generated notice as text, but rejects broken navigation 
     );
   const mutations = [
     original.replace('data-mokly-link="details"', 'data-mokly-link="missing"'),
-    original.replace("./details.mobile.html", "./home.mobile.html"),
+    original.replace(
+      "../details/index.mobile.html",
+      "../home/index.mobile.html",
+    ),
     original.replace("<head>", '<head><base href="https://example.test/">'),
   ];
 
@@ -185,7 +191,7 @@ test("Browse accepts and removes CRLF generated notices", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const route = "screens/home.mobile.html";
+  const route = "home/index.mobile.html";
   const original = textOutput(compilation.outputs, route) ?? "";
   const crlfHeader = original.replace("\n", "\r\n");
 
@@ -214,7 +220,7 @@ test("Browse authenticates generated legacy links from their manifest owner", as
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries",  mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "entries" }],  mockupsDir: "mockups", repoRoot: "." };\n',
   );
   await registerFixturePage(
     fixture,
@@ -229,22 +235,22 @@ test("Browse authenticates generated legacy links from their manifest owner", as
     "legacy/compact.mobile.source.ts",
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const original = textOutput(compilation.outputs, "pages/notice.html") ?? "";
+  const original = textOutput(compilation.outputs, "notice/index.html") ?? "";
   const adapted = adaptBrowseDocument(
     original,
-    "pages/notice.html",
+    "notice/index.html",
     createCatalogue(compilation.manifest),
   );
 
-  assert.match(adapted, /href="\.\.\/screens\/details\.desktop\.html"/);
+  assert.match(adapted, /href="\.\.\/details\/index\.desktop\.html"/);
   assert.match(adapted, /data-mokly-link="details"/);
 
-  const mobileRoute = "pages/compact.html";
+  const mobileRoute = "compact/index.html";
   const mobile = adaptBrowseDocument(
     textOutput(compilation.outputs, mobileRoute) ?? "",
     mobileRoute,
     createCatalogue(compilation.manifest),
   );
-  assert.match(mobile, /href="\.\.\/screens\/details\.desktop\.html"/);
+  assert.match(mobile, /href="\.\.\/details\/index\.desktop\.html"/);
   assert.match(mobile, /data-mokly-link="details"/);
 });

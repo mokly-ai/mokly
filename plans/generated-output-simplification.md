@@ -3120,23 +3120,945 @@ captured tip. Commit and explicit push finish this milestone before merging.
 
 ## Milestone 22: Merge `main` and apply the combined design
 
-- [ ] Merge `origin/main` once under `AGENTS.md` "Mainline Feature
+- [x] Merge `origin/main` once under `AGENTS.md` "Mainline Feature
       Preservation": resolve conflicts path by path, confirm that the merge
       commit has exactly two parents, review `git show --remerge-diff` for every
       listed path, and check deletions against `main`. If `main` moves again
       during this milestone, do not merge again; report the new tip.
-- [ ] Apply the combined design from Milestone 21 to the merged code, including
+- [x] Apply the combined design from Milestone 21 to the merged code, including
       the new format numbers.
-- [ ] Keep every `main` test title and assertion except the approved removals,
+- [x] Keep every `main` test title and assertion except the approved removals,
       and list each removal in the commit body.
-- [ ] Smoke-test `build`, `check`, Serve and export with Markdown documents,
+- [x] Smoke-test `build`, `check`, Serve and export with Markdown documents,
       folders and a moved entry. Changes against a base built by `main`'s #131
       code must give the earlier-version line, and
       `npm run preview:build -- --include-changes --base origin/main` must
       succeed with Changes unavailable.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit; push.
+
+### Integration preservation record
+
+The merge has source parent `80724073b55d4440969432e0c0ea20f91b63dfaa`
+and incoming parent `c4138a0b9578448d81ce2a2868bd7ec47f5a88c6`. Its captured
+merge base remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`. A later fetch
+found main at `781da7ae3261e6694a5ef5608a91f3e34061f6d0`: #132 keeps lock
+directories on release, and #133 closes plans and removes their index. These
+commits are not included. No second merge or rebase ran. Preservation evidence
+uses the captured incoming parent, not the advanced remote tip.
+
+The implementation combines main's path, folder, Markdown, move and branch-point
+features with the generated tree and checked closure. All format writers and
+readers use the combined inventory. The private route snapshot is copied,
+validated and frozen in memory; only `writeCompilation` takes the output lock.
+Main's folder/root glob validation survives in `config/relative_globs.ts` after
+removing the publicExclude-specific API and defaults.
+
+Markdown copied resources now enter the generated inventory, retained worker
+outputs, watch closure, comparison capture and moved-resource aliases. Main's
+final Markdown safety check moved out of the removed transformer and remains
+mandatory after logical-link rewriting. Its security tests retain every unsafe
+markup case using the final validator directly. Root and folder tests retain
+main's strict source discovery and path rules.
+
+Integration forced these small changes in pending review areas. Screen-only
+classification again reads only the required baseline documents (54 A). Current
+and historical v9 inventory hashes detect generated edits without head tracking;
+whole-document pages and Markdown retain targeted material comparison. Markdown resource
+counterparts absent from the historical inventory return absence without reading
+an unlisted file (the document part of 62 A). No full side-reader redesign is
+included. Main's imported-CSS move normalization now uses catalogue-relative
+generated paths. Frame inspection uses the reverse current-document helper;
+this repairs the merge without implementing the later shared-helper UI work.
+Findings 17 and 52 remain untouched: roots retain main's equality rejection and
+the existing CSS-class/URL-constant coupling stays. No old entriesDir API returns.
+
+The following path lists record intentional conflict resolutions. Every hunk,
+its two inputs, final text and reason is retained in
+`.context/milestone-22-merge/resolution-records.json`. The Git remerge diff is the
+committed, reproducible source for those hunks. One-sided format/namespace edits
+follow the same approved contracts; main's other code and assertions stay.
+
+Compilation, configuration and manifest:
+
+- `src/config/types.ts`: Keep main roots/path API; retain branch generatedDir and no output modes (1 A, unified-tree decision).
+- `src/config/validate.ts`: Preserve strict main roots/unknown-field/discovery checks; preserve approved removed-key errors and generated-tree input protection; no mode or transformer restoration.
+- `src/config/entry_discovery.ts`: Keep main root-owned discovery and extracted helpers; move generated-tree protection into those helpers rather than retain obsolete glob walk.
+- `src/config/reserved_paths.ts`: Keep main root-pattern expansion and shared branch directory constant.
+- `src/build/output_paths.ts`: Keep exact branch inventory/hash validation and whole-tree safety; accept main copied document resource kinds. Remove disk collision/ownership scans under snapshot B; retain source/reserved/collision constraints.
+- `src/build/source_inventory.ts`: Keep main pre-discovery root source protection and folder records; preserve generated-tree privacy and shared exported predicate.
+- `src/build/consumer_entry.ts`: Keep branded exports and flattened definitions; omit only approved removed transformer export (M16 item4).
+- `src/build/compile.ts`: Preserve main documents/folders/source bodies and accepted runtime route set; retain branch closure/hash inventory and full-tree bytes. Remove only header-owner map and transformer/disk snapshot behavior (M16, snapshot B).
+- `src/build/document_compiler.ts`: Preserve main document targets and move evidence, branch resource closure/policy, and accepted route validation; remove orphan snapshot seam and header validation only (snapshot B, ownership removal).
+- `src/build/load_graph.ts`: Preserve Markdown discovery, copying and complete source inventory. Remove output-folder inspection and transformer-only CSS paths under snapshot B/M16 item4.
+- `src/build/logical_records.ts`: Preserve Markdown scheme anchors; omit only unused transformer validation location type.
+- `src/build/check.ts`: Retain index-selected exact whole-generated-tree check; unclaimed/orphan header categories are removed under unified ownership decisions.
+- `src/build/transaction.ts`: Retain atomic whole-tree replacement under one writer lock; mixed-tree per-file backup/prune/ownership scans removed under unified tree and snapshot B.
+- `src/registry/manifest.ts`: Combine path/folder metadata with post-compilation closure/inventory; read only canonical generated manifest.
+- `src/registry/manifest_validation.ts`: Preserve path/folder/case/relationship validation with branch metadata-only live boundary and complete inventory validation; versions advance separately under2A.
+- `src/registry/catalogue_index.ts`: Keep main folders and shared metadata-only validation; no fake generated inventory for live index.
+- `src/build/html_links.ts`: Preserve shared closure resolver including relative reference validation; main CSS extractor remains at its new owner.
+
+Baselines, comparisons and move evidence:
+
+- `src/baseline/manifest.ts`: Retain per-commit generated-tree descriptor and current-only content gate. Older canonical envelopes only decide incompatibility after own rebuild; no earlier filename fallback (M16 items1-3).
+- `src/baseline/cache_layout.ts`: Keep strict complete-current cache with stored layout/root; invalid earlier entries rebuild, exact settings mismatch stays intact (M16 correction1).
+- `src/review/base_manifest.ts`: Keep baseline own-source policy without executing current roots; retain branch descriptor addressing and discard unused flat join helper.
+- `src/review/component_affected.ts`: Keep move-aware affected consumers and generated-tree view addressing.
+- `src/review/component_classification_entries.ts`: Keep main extracted pairing helper instead of obsolete branch entryViews; retained prefetch uses generated-tree views.
+- `src/review/component_classification_sources.ts`: Preserve main move-classification setup and extracted context; branch byte-comparison policy is integrated into that context, not duplicated.
+- `src/review/component_compare.ts`: Keep move source reader/classification and snapshot dependency capture.
+- `src/review/component_result_sources.ts`: Keep main grouped move/counterpart source validation and generated-tree views.
+- `src/review/component_view.ts`: Preserve move-aware resource identity and normalization; always compare bytes under approved removal of mode opt-outs (M16 item12).
+- `src/review/component_view_fast_path.ts`: Preserve main moved-resource normalization and branch independent before-side byte discovery (M16 item12).
+- `src/review/page_preview.ts`: Preserve removed Markdown schemes and PDF/asset references; use shared generated prefix for actual baseline reads.
+- `src/review/repository.ts`: Retain branch pinned descriptor and main independent committed Markdown source reader for similarity.
+- `src/review/resource_comparison.ts`: Preserve move equivalence without the removed compareBytes mode flag.
+- `src/review/selection_types.ts`: Adopt path-aware review result; combined version advance follows2A.
+- `src/server/changed_content.ts`: Preserve path/move and document resource pairing; keep always-on byte comparison and inventory-backed baseline reads. No mode opt-out under M16 item12.
+- `src/server/changed_document_pairs.ts`: Preserve main page/document/view pair selection by path and moves; generated-root addressing is applied to resulting files.
+- `src/server/changed_resources.ts`: Keep document resources and move identities; baseline/current bytes always participate under M16 item12.
+
+Delivery, lifecycle, scripts and example assets:
+
+- `src/components/manifest_validation.ts`: Keep main folder/usage validation and branch generated inventory fields.
+- `src/catalogue/projection.ts`: Preserve main dependency union including Markdown resources. This resolves approved62A naturally; no display-manifest fallback is retained.
+- `src/server/catalogue_snapshot.ts`: Keep in-memory default compilation; preserve moved-entry evidence and folder-aware catalogue creation.
+- `src/server/controls/runtime_ipc.ts`: Keep private route-snapshot validation; remove only publicExclude reader under prior approval.
+- `src/server/update_messages.ts`: Combine path/move update validation with pinned baseline descriptor/selection and checked asset closure; preserve all IPC guards.
+- `src/export/public_files.ts`: Capture all generated including Markdown bytes from memory plus checked authored closure; remove only broad/disk/mode capture under unified-tree decision.
+- `src/export/resource_policy.ts`: Keep shared per-compile privacy and main exact realpath package-root export error; no old manifest-name, publicExclude or transformer branches.
+- `src/export/inputs.ts`: Preserve input-stability recompile and source checks without reader lock or disk generated capture (snapshot B).
+- `src/export/run.ts`: Preserve export/publication orchestration while using memory; no generated writes or reader lock (unified-tree, snapshot B).
+- `src/export/site.ts`: Preserve main separate before/after privacy with each side actual generated inventory; keep Markdown and move capture. No cross-side union grants.
+- `src/export/references.ts`: Preserve main ES-module lexer reference validation; retain shared namespace and closure URL resolution.
+- `src/html_references.ts`: Preserve extracted main CSS scanner and branch shared confined relative-path parser.
+- `src/publication/resources.ts`: Keep document scheme routes and copy only accepted generated/closure bytes under current namespace.
+- `src/publication/removed_previews.ts`: Keep path-addressed removed document/page previews with current public namespace.
+- `src/server/generated_static.ts`: Keep accepted in-memory bytes; remove disk/mode initial-generated loader only, under unified output and snapshot B.
+- `src/server/static_routes.ts`: Serve every accepted generated route including Markdown copies inside generated tree; retain safe authored closure reads. Disk static fallback removed under approved policy.
+- `src/server/http.ts`: Combine checked in-memory HTTP assets with main move targets and path-keyed evidence; no disk static loader or output writes.
+- `src/server/controls/transient_assets.ts`: Preserve main resource extraction including Markdown/schema-aware paths, using the shared no-follow public-file policy.
+- `src/server/selected_review_routes.ts`: Preserve main strict query-key selection; adapt only namespace under decision30.
+- `src/cli/reporter/plain.ts`: Retain writer summary for opt-in output commands; remaining notice/stdout work stays deferred.
+- `src/server/component_changes.ts`: Preserve path-keyed component result API; combined version advance follows2A.
+- `.gitignore`: Ignore the complete unified generated tree; incoming tracked authored assets stay outside it.
+- `examples/basic/mokly.config.ts`: Keep every main stylesheet, with authored assets at the branch public root.
+- `scripts/preview/artifact.mjs`: Milestone 16 removes legacy preview ownership marker.
+- `scripts/preview/catalogue.mjs`: Retain publication baseline preparation without writes.
+- `scripts/package/catalogue.mjs`: Retain public-shape assertion and use path-identity routes in generated tree.
+- `scripts/package/viewer.mjs`: Retain main path-based viewer selection and current namespace.
+- `scripts/package/imported_styles.mjs`: Path routes inside unified generated tree.
+- `scripts/preview/inputs.d.mts`: Keep optional accepted in-memory compilation input.
+- `scripts/package/consumer_cases/themed.mjs`: Retain themed packed assertions with path identity and unified tree.
+- `scripts/package/consumer_cases/juno.mjs`: Keep packed Juno view path under generated root.
+- `scripts/package/consumer_cases/esm.mjs`: Keep packed ESM path routes under generated root.
+- `examples/basic/design-library/chrome/screen-header.css`: Keep path label styling and formatting.
+
+Viewer path and format consumers:
+
+- `packages/viewer/src/registry/types.ts`: Combine main path/document/folder schema with generated inventory; one version9 follows2A.
+- `packages/viewer/src/catalogue/reader.ts`: Preserve typed version error, strict required snapshot ids and main removed-entry/move validation. Remove only approved snapshot-id inference.
+- `packages/viewer/src/client/component_geometry.ts`: Preserve main provider-normalized geometry checks while applying generated/viewer prefixes. Shared helper consolidation remains pending.
+- `packages/viewer/src/client/same_origin_adapter.ts`: Preserve main normalized readiness comparison and branch fixed generated prefix.
+- `packages/viewer/src/navigation/routes.ts`: Preserve path-derived screen and document snapshots inside unified generated subtree; remove obsolete id-only page helper under incoming API break.
+- `packages/viewer/src/previews/request.ts`: Keep split main page/document preview loading with current namespace.
+- `packages/viewer/src/shell/component_stage.tsx`: Retain path-based variant scheme views and unified generated URLs.
+- `packages/viewer/src/shell/disclosure_storage.ts`: Keep main path-keyed disclosure v4 and current-only storage behavior.
+- `packages/viewer/src/shell/metadata.ts`: Keep folders, removed baseline folder titles and required removed-parent title.
+- `packages/viewer/src/shell/stage_frame.tsx`: Keep Markdown scheme selection and generated prefix.
+- `packages/viewer/src/shell/stage_sources.ts`: Keep path/view identity under unified generated prefix.
+- `packages/viewer/src/shell/stages.tsx`: Preserve document scheme fallback and shared frame source construction.
+- `packages/viewer/src/viewer/projection.ts`: Preserve path/document/move display metadata using explicit live index rather than an incomplete persisted manifest.
+
+Contracts, guides and READMEs:
+
+- `AGENTS.md`: Keep path-identity specs source and unified generated destination.
+- `README.md`: Keep path-based quick start and Overview guidance; combine Git tracking and v9 inventory rules.
+- `docs/architecture/build-pipeline.md`: Preserve root/Markdown rendering and pure validation; remove approved modes, transformer and header authority.
+- `docs/architecture/package-boundary.md`: Keep Markdown and canonical path URLs; remove transformer and legacy preview authority.
+- `docs/guides/authoring/config.md`: Use roots and current public types; preserve closure and export-only package-root rules.
+- `docs/guides/authoring/screens.md`: Keep path examples and collisions; relocate generated views.
+- `docs/guides/authoring/viewports-and-color-schemes.md`: Use root-default config.
+- `docs/guides/catalogue/export-and-host.md`: Retain directory shell routes and memory-only export.
+- `docs/guides/cli/build.md`: Keep Markdown/component output facts in whole-tree transaction; Git alone selects check behavior.
+- `docs/guides/cli/check.md`: Keep complete generated-tree checks without ownership/modes.
+- `docs/guides/cli/export.md`: Keep memory-only export with all main document/path output.
+- `docs/guides/cli/options-and-exit-status.md`: Preserve both serve --build and main --open.
+- `docs/guides/start/build.md`: Keep path validation errors and branch tracking/writer model.
+- `docs/guides/start/configure.md`: Use incoming roots while preserving closure confinement.
+- `docs/guides/start/your-first-screen.md`: Keep path moves and movedFrom authoring; generated destination changes.
+- `examples/basic/README.md`: Keep current example source/layout and Markdown stylesheet guidance.
+- `plans/README.md`: Preserve both active plans and their historical outcomes.
+- `docs/protocol/README.md`: Keep path/folder/move protocol index and combined versions.
+- `docs/protocol/mokly-artifact-paths.md`: Keep document preview helpers and wrap generated snapshot routes.
+- `docs/protocol/mokly-authoring.md`: Keep all path/definition-relative authoring; remove compatibility and orphan authority.
+- `docs/protocol/mokly-baseline-compatibility.md`: Keep generated-location selection and rebuild-time earlier detection; no old manifest names.
+- `docs/protocol/mokly-baseline-storage.md`: Keep historical root discovery, strict current cache and check-only index reads.
+- `docs/protocol/mokly-catalogue.md`: Preserve main split serialization/fetch contracts and path-based public model; generated URLs gain prefix.
+- `docs/protocol/mokly-changes-serving.md`: Keep extracted comparison-serving contract and move pairing.
+- `docs/protocol/mokly-changes.md`: Keep move resource normalization and use current generated marker only.
+- `docs/protocol/mokly-component-controls.md`: Keep path-based control identities in current namespace.
+- `docs/protocol/mokly-component-design.md`: Keep source and path-based artboards in generated tree.
+- `docs/protocol/mokly-component-manifest.md`: Keep every new manifest field and branch inventories; current ManifestEntry has one shape.
+- `docs/protocol/mokly-component-review-fast-path.md`: Keep path-keyed fast path and current version gate.
+- `docs/protocol/mokly-component-usage-records.md`: Keep path-valued componentId usage contract.
+- `docs/protocol/mokly-components.md`: Use current schema links without stale numbers.
+- `docs/protocol/mokly-configuration-discovery.md`: Keep root discovery boundaries and removed publicExclude check.
+- `docs/protocol/mokly-configuration-imported-styles.md`: Preserve unified root reservation using roots API.
+- `docs/protocol/mokly-configuration.md`: Keep roots and strict config fields; preserve removed-key errors and export-only equality guard.
+- `docs/protocol/mokly-derived-baselines.md`: Retain per-commit rebuild selection, strict current cache and original handoff lifecycle; remove mode duplicate.
+- `docs/protocol/mokly-design-components.md`: Keep current-only controls in present tense.
+- `docs/protocol/mokly-disclosure-persistence.md`: Use main path storage key without any migration.
+- `docs/protocol/mokly-export-browser.md`: Preserve ownership/upload formats and bump changed payloads.
+- `docs/protocol/mokly-export-delivery.md`: Keep canonical directory URLs with current viewer namespace and format.
+- `docs/protocol/mokly-export-public-files.md`: Keep memory capture and shared closure; retain main document/variant validation coverage.
+- `docs/protocol/mokly-export-recovery.md`: Keep current ownership wording.
+- `docs/protocol/mokly-export-safety.md`: Approved legacy reservation and preview ownership removal.
+- `docs/protocol/mokly-export.md`: Preserve scoped-asset behavior and generated inventory without modes.
+- `docs/protocol/mokly-imported-styles-assets.md`: Path identity inside generated tree preserves relative CSS links.
+- `docs/protocol/mokly-imported-styles-errors.md`: Keep main nonportable module diagnostic; remove only mode/exclusion/transformer diagnostics.
+- `docs/protocol/mokly-imported-styles.md`: Keep output-independent compilation and current module-path diagnostic; use roots discovery.
+- `docs/protocol/mokly-live-evidence.md`: Per-commit preparation with path-keyed evidence.
+- `docs/protocol/mokly-navigation.md`: Keep folders and path navigation; validate final links without transformer or ownership header.
+- `docs/protocol/mokly-on-demand.md`: Retain document demand renders in generated namespace.
+- `docs/protocol/mokly-package.md`: Preserve path/Markdown public API and root layouts; publicExclude remains removed.
+- `docs/protocol/mokly-pages.md`: Keep path pages and unified transaction; canonical manifest schema has its own contract.
+- `docs/protocol/mokly-publication.md`: Keep closure-only publication and exact generated route admission.
+- `docs/protocol/mokly-removed-preview-acceptance.md`: Preserve removed Markdown and move acceptance without modes.
+- `docs/protocol/mokly-removed-previews.md`: Preserve path/doc previews and generated historical routes in current namespace.
+- `docs/protocol/mokly-rendering-generated.md`: Replace header authority with plain marker and v9 generated inventory; retain document output.
+- `docs/protocol/mokly-rendering.md`: Remove approved compatibility transformer API.
+- `docs/protocol/mokly-runtime.md`: Preserve path/document runtime and branch writer, closure and frame trust rules.
+- `docs/protocol/mokly-selected-comparisons.md`: Keep path query parser and document selections in current namespace.
+- `docs/protocol/mokly-shell-bootstrap.md`: Versioned bootstrap preserves scoped/full boundary with path model.
+- `docs/protocol/mokly-shell-design.md`: Preserve main split design inventory and source relocation.
+- `docs/protocol/mokly-source-protection.md`: Preserve live unmatched-root protections and Markdown resource privacy; retain checked closure instead of exclusions/headers.
+- `docs/protocol/mokly-upload.md`: Keep independent upload shape version.
+- `docs/protocol/mokly-variants.md`: Keep parent-path variant meaning.
+- `docs/protocol/mokly-viewer-appearance.md`: Keep appearance and source relocation without stale history wording.
+- `docs/protocol/mokly-viewer.md`: Retain extracted SSR contract and all host boundaries.
+- `docs/protocol/mokly-watch.md`: Root-based watch retains branch prefix ignore and opt-in writer rules.
+- `docs/protocol/npm-preview-deployments.md`: Current ownership only; no old-preview marker adoption.
+- `docs/protocol/npm-release-notes.md`: Keep incoming commit note and all branch breaking changes with combined versions.
+- `src/build/README.md`: Keep Markdown/move graph, candidate checks and source protection; replace disk snapshot and ownership transaction under decision B.
+- `src/baseline/README.md`: Keep strict current cache, moved roots and earlier outcome without caching.
+- `src/catalogue/README.md`: Preserve every path/document/move projection and require explicit snapshot identity.
+- `src/export/README.md`: Keep lexer validation and all closure/privacy facts; preserve historical document resources without modes.
+- `src/publication/README.md`: Preserve both closure policy and document packaging facts.
+- `src/review/README.md`: Keep always-on resource bytes and path/move/document comparison facts.
+- `src/server/README.md`: Keep live root protection/document changes and shared closure; writer-only locks.
+- `src/server/controls/README.md`: Preserve IPC route membership with no reader lock or transformer.
+- `packages/viewer/README.md`: Preserve removed variants, path selection and explicit ids; retain both links.
+- `packages/viewer/src/shell/README.md`: Keep path disclosure v4 and required recovery fields.
+
+Unit, package and verification tests:
+
+- `packages/viewer/tests/appearance_changed_views.test.tsx`: Retain complete synthetic inventory helper and incoming path screen.
+- `packages/viewer/tests/comparison_documents.test.ts`: Keep comparisons with path identity inside unified tree.
+- `packages/viewer/tests/component_workspace.test.tsx`: Incoming split keeps workspace-view tests in component_workspace_views; retain control/usage URL coverage here.
+- `packages/viewer/tests/frame_hook_harness.tsx`: Frame tests use current path routes.
+- `packages/viewer/tests/highlight_request.test.ts`: Highlight view path under unified tree.
+- `packages/viewer/tests/historical_baseline.test.tsx`: Keep literal version typing; version bump follows.
+- `packages/viewer/tests/routes.test.ts`: Preserve all main path/document/provider validation with generated prefix; old kind/id test replaced by approved path API.
+- `packages/viewer/tests/scoped_bootstrap.test.ts`: Retain main byte-stability assertion; regenerate fixture checksum for approved format bump.
+- `packages/viewer/tests/server.test.tsx`: Keep shared SSR helpers and incoming split variant test in server_entry_views.
+- `packages/viewer/tests/shell_state.test.ts`: Incoming shell_host_routing split preserves both host route tests and path API.
+- `tests/authoring.test.tsx`: Keep incoming path/device-name test; move main setup into existing fixture split.
+- `tests/baseline_compatibility.test.ts`: Reject every earlier canonical format, not obsolete-name sentinels.
+- `tests/baseline_integration.test.ts`: Keep historical-command fixture with combined manifest and paths.
+- `tests/baseline_platform.test.ts`: Keep closure cache platform fixture in generated tree.
+- `tests/browse_document_adapter.test.ts`: Retain synthetic complete current manifest helper.
+- `tests/build.test.ts`: Keep indexed whole-tree checks with path-derived views.
+- `tests/build_attribution.test.ts`: Keep main changedManifestPaths API and actual generated location.
+- `tests/build_generated_directory.test.ts`: Preserve main exact module-path error.
+- `tests/build_gitignore_generated.test.ts`: Approved mode/committability removal; retain no-index writer test.
+- `tests/build_imported_styles.test.ts`: Keep module diagnostic and CSS relative links within tree.
+- `tests/build_imported_styles_alias.test.ts`: Keep imported alias evidence with path view.
+- `tests/build_imported_styles_links.test.ts`: Keep CSS ordering/link roots and all second-entry assertions; plain marker only.
+- `tests/build_imported_styles_resources.test.ts`: Decision B removes orphan scan seam while retaining CSS parse-once and stale-output tests; rename mixed-purpose title.
+- `tests/build_links.test.ts`: Keep standalone authored CSS relative to generated page.
+- `tests/build_mainline_navigation.test.ts`: Keep navigation and stylesheet assertions with generated root.
+- `tests/build_ownership.test.ts`: Approved header machinery removal keeps plain-marker source safety; obsolete parser-only tests are removed.
+- `tests/helpers/baseline_fixture.ts`: Keep folder records in baseline fixture.
+- `tests/helpers/component_review_fixture.ts`: Keep historical descriptor and generated namespace while retaining main source input map.
+- `tests/helpers/derived_fixture.ts`: Use roots API and optional fixture config with no modes.
+- `tests/helpers/example_baseline.ts`: Keep prepare-once shared fixture; integrate incoming focused profiles in their existing helper module.
+- `tests/helpers/example_sources.ts`: Whole generated tree is ignored; keep authored examples and outside imported assets.
+- `tests/helpers/fixture.ts`: Default fixture uses roots without removed output mode.
+- `tests/helpers/published_preview.ts`: Keep path-based removed preview assertion.
+- `tests/helpers/react_capability_environment.ts`: Keep required recovery status and Specs disclosure path.
+- `tests/helpers/removed_delivery_fixture.ts`: Keep nested removed paths and portable authored asset links.
+- `tests/helpers/removed_page_preview_fixture.ts`: Keep complete hash-inventory fixture rather than incoming unchecked manifest cast.
+- `tests/helpers/removed_preview_fixture.ts`: Keep current paths and authored download depth.
+- `tests/helpers/review_css_schema.ts`: Keep comparison resources in generated snapshot namespace.
+- `tests/helpers/workspace_views_data_fixture.ts`: Keep path-based workspace data and complete fixture manifests.
+- `tests/fixtures/consumers/nodenext/api.tsx`: Keep new public folder/root types; remove transformer and replaced nested API.
+- `tests/fixtures/large/area.tsx`: Keep large fixture path references and authored asset depth.
+- `tests/fixtures/large/generate.ts`: Large fixture uses path roots and no modes.
+- `tests/fixtures/large/screens.tsx`: Generated root adds one relative segment for authored assets.
+- `tests/catalogue_comparison.test.ts`: Retain path selection and evidence-update API.
+- `tests/catalogue_history.test.ts`: Keep component path history in current namespace.
+- `tests/catalogue_history_conflicts.test.ts`: Retain async readiness before cross-kind history assertions.
+- `tests/catalogue_nav_paths_reader.test.ts`: Preserve main stricter path tree rejection cases and extracted matcher.
+- `tests/catalogue_server.test.ts`: Keep private retained-view route path identity.
+- `tests/catalogue_watch.test.ts`: Keep broad watch root without modes.
+- `tests/changes.test.ts`: Keep path-keyed Changes and snapshot addresses.
+- `tests/changes_activation.test.ts`: Keep complete manifest helper with path entries.
+- `tests/changes_asset_aliases.test.ts`: Retain checked closure alias rejection under unified public-file policy, with path pages.
+- `tests/changes_css_delivery.test.ts`: Keep selected path CSS comparison.
+- `tests/client_browse.test.ts`: Keep current Browse document path.
+- `tests/client_preview_fragment.test.ts`: Keep extra incoming Details fetch assertion and path fragments.
+- `tests/client_removed_preview_requests.test.ts`: Keep incoming preview renewal/split helper and historical generated paths.
+- `tests/client_removed_previews.test.ts`: Keep document preview metadata paths and path query grammar.
+- `tests/client_snapshot_presentations.test.ts`: Keep confinement-invalid cases and generated snapshot files.
+- `tests/combined_changes.test.ts`: Keep page embedding in unified static tree.
+- `tests/component_build.test.ts`: Use path-keyed manifest.
+- `tests/component_changes.test.ts`: Keep component comparison snapshot path.
+- `tests/component_controls_forwarding.test.ts`: Keep path shell and generated view forwarding.
+- `tests/component_export.test.ts`: Keep removed component path views.
+- `tests/component_fast_path_equivalence.test.ts`: Retain shared closure fixture for byte resource changes; generated depth is applied to body links.
+- `tests/component_fast_path_resources.test.ts`: Preserve path-formatting assertions with always-on byte reads; rename output-mode titles under original decision.
+- `tests/component_manifest.test.ts`: Unknown newer rejection uses 99, not new current format.
+- `tests/component_protocol_docs.test.ts`: Approved new format numbers update schema contract title/assertions.
+- `tests/component_render_diagnostics.test.ts`: Retain protected-source diagnostic instead of removed name-only exclusion.
+- `tests/component_review_fixture_contract.test.ts`: Keep complete synthetic manifest helper.
+- `tests/component_runtime_ipc.test.ts`: Keep IPC roots and generatedDir; current manifest has full inventory.
+- `tests/component_server_classification.test.ts`: Keep path server classification and no-work view reads.
+- `tests/config_generated_directory.test.ts`: Preserve removed publicExclude guard and root config.
+- `tests/config_generated_routes.test.ts`: Keep main reserved path/override tests and branch unified tree test.
+- `tests/config_public_exclusions.test.ts`: Approved publicExclude removal retains removed-option diagnostics; glob validation for roots/folders stays covered separately.
+- `tests/demand_props.test.ts`: Keep logical page target and temporary prop links in current namespace.
+- `tests/demand_safety.test.ts`: Keep metadata request path identity.
+- `tests/derived_build.test.ts`: Keep tracking-only Check tests at path-based generated output.
+- `tests/derived_changes.test.ts`: Keep source-only comparisons independent of stale disk.
+- `tests/derived_child_repository.test.ts`: Keep historical reader handoff and generated pane addresses.
+- `tests/derived_config.test.ts`: Approved output modes removed; baseline recipe is valid independently.
+- `tests/derived_css_attribution.test.ts`: Keep per-component CSS evidence paths with explicit configured closure resources.
+- `tests/derived_export.test.ts`: Keep memory-only export/stale-disk assertions in unified tree.
+- `tests/derived_resources.test.ts`: Retain always-on byte resource comparison with one explicitly referenced closure asset.
+- `tests/derived_serve.test.ts`: Keep per-commit Serve history, removed documents and stale disk independence.
+- `tests/derived_serve_status.test.ts`: Keep preparing lifecycle with path view request.
+- `tests/design_library_attribution.test.ts`: Keep attribution test with new source path and no output mode.
+- `tests/entry_attribution.test.ts`: Approved source-header ownership test removal; runtime inventory validation stays.
+- `tests/example_imported_styles.test.ts`: Use verified current Welcome stylesheet and retained outside-root image.
+- `tests/export_cases.test.ts`: Keep partial baseline reconstruction input.
+- `tests/export_changes.test.ts`: Keep current read-only repository preparation and path output variable.
+- `tests/export_current_derived.test.ts`: Keep current-only memory capture under held output lock.
+- `tests/export_deployment.test.ts`: Keep deployment inventory in current namespace.
+- `tests/export_engine.test.ts`: Keep exact shell directory and static generated inventory.
+- `tests/export_migration.test.ts`: Retain all main current-marker refusal/no-mutation assertions.
+- `tests/export_pages.test.ts`: Keep path-based exported page.
+- `tests/export_references.test.ts`: Keep real 64-hex generation fixture and current namespace.
+- `tests/export_resource_policy.test.ts`: Capture memory closure, not tampered disk; package-denial coverage stays.
+- `tests/export_source_inventory.test.ts`: Keep manifest privacy and source-safe page export.
+- `tests/export_watch.test.ts`: Keep owned export ignore paths.
+- `tests/generated_output_lock_waits.test.ts`: Decision B keeps Serve-close writer cancellation; only explicit serve --build invokes output store.
+- `tests/hierarchy.test.ts`: Keep main path/folder hierarchy replacing old label/id schema tests.
+- `tests/historical_snapshot_identity.test.ts`: Retain complete inventory helper and explicit historical identities.
+- `tests/html_css_references.test.ts`: Retain extracted CSS parser and branch local-URL tests.
+- `tests/id_keyed_wire_formats.test.ts`: Keep path wire format and earlier-version rejection with explicit complete helper.
+- `tests/inspector_publication.test.ts`: Keep published inspector placement.
+- `tests/manifest_files.test.ts`: Keep deterministic path manifest and whole-tree dark-file removal instead of orphan scanning.
+- `tests/manifest_variants.test.ts`: Keep path variant records, resolved helper and required usage in complete inventory fixtures.
+- `tests/nav_sections.test.ts`: Retain synthetic manifest envelope and incoming folders.
+- `tests/nav_tree.test.ts`: Keep incoming shared path-tree fixture and structured crumbs.
+- `tests/nav_tree_removed_variants.test.ts`: Keep path folder records in removed navigation fixture.
+- `tests/output_safety.test.ts`: Decision B replaces mixed-layout collision/header checks; preserve source and symlink confinement tests in separate generated tree.
+- `tests/page_material_changes.test.ts`: Retain compiled reader source-privacy checks; ignore stale disk bytes.
+- `tests/post_message_adapter.test.ts`: Keep invalid encoded-fragment rejection in current namespace.
+- `tests/preview.test.ts`: Preserve provider-normalized path URLs and static generated frames.
+- `tests/preview_capture_html_paths.test.ts`: Keep main canonical directory anchor and current script namespace.
+- `tests/preview_comparisons.test.ts`: Keep all path comparison and renamed title/no-id-redirect assertions.
+- `tests/preview_legacy_routes.test.ts`: Keep literal authored paths in generated output.
+- `tests/preview_removed_pages.test.ts`: Keep path-based removed documents and screens.
+- `tests/private_metadata.test.ts`: Keep generated-tree write boundary symlink rejection; obsolete manifest-name sentinel removed by M16.
+- `tests/protocol_doc_sizes.test.ts`: Use incoming lower reviewed caps; do not raise any cap.
+- `tests/public_exclusions.test.ts`: Approved publicExclude/name-only rejection removal retains source privacy and generated paths.
+- `tests/public_review_retention.test.ts`: Keep complete synthetic baseline/current fixtures.
+- `tests/public_workspace_views.test.ts`: Keep path workspace evidence and complete inventory.
+- `tests/publication_baseline.test.ts`: Keep historical generated baseline path.
+- `tests/publication_snapshot.test.ts`: Retain accepted in-memory publication and disk-unchanged proof.
+- `tests/publish_derived.test.ts`: Keep upload snapshots for rebuilt per-commit history.
+- `tests/publish_receiver_delta.test.ts`: Keep delta accounting for path-based generated views.
+- `tests/publish_run.test.ts`: Use main split publish fixture; validation tests kept in publish_run_validation.
+- `tests/removed_preview_delivery.test.ts`: Keep main path/document preview assertions; publication test remains in removed_preview_publication split.
+- `tests/removed_preview_shell.test.ts`: Keep complete helper envelope.
+- `tests/removed_screen_previews.test.ts`: Keep path views, exact missing-byte error and checked historical authored closure.
+- `tests/review.test.ts`: Keep existing split comparison helper; adapt its path data instead of duplicating incoming in-file functions.
+- `tests/review_artifact_ui.test.ts`: Keep snapshot bytes and allowlisted UI artifact assertions.
+- `tests/review_assets.test.ts`: Keep confined baseline asset/source tests using roots and generated directory.
+- `tests/review_basics.test.ts`: Keep complete synthetic baseline inventory and path screens.
+- `tests/review_public_exclusions.test.ts`: Keep closure policy fixture rather than old exclusion-based baseline.
+- `tests/review_regressions.test.ts`: Keep malformed historical document and path baseline metadata.
+- `tests/review_safety.test.ts`: Keep all snapshot confinement and manifest helper assertions.
+- `tests/serve_on_demand.test.ts`: Keep demand renderer and failed-candidate behavior on path URLs.
+- `tests/serve_removed_previews.test.ts`: Keep removed document and screen preview lifecycle.
+- `tests/serve_transient_imported_styles.test.ts`: Approved output modes collapse duplicate transient tests; keep GET/HEAD/binary/scoped-asset assertions.
+- `tests/server.test.ts`: Keep incoming lifecycle split; supplied-manifest validation stays independent of disk.
+- `tests/server_changed.test.ts`: Use path changes with existing per-commit repository and generated tree.
+- `tests/server_changed_assets.test.ts`: Keep prepared per-commit repository helper.
+- `tests/server_changed_content.test.ts`: Keep current-memory and path content comparison fixtures.
+- `tests/server_changed_hierarchy.test.ts`: Keep main changed-path API.
+- `tests/server_changed_lazy_base.test.ts`: Preserve main targeted base-read assertions and path evidence while integrating side byte readers.
+- `tests/server_changed_manifest.test.ts`: Keep path identity mapping from generated evidence.
+- `tests/server_changed_resource_validation.test.ts`: Keep compiled current reader and protected historical resource errors.
+- `tests/server_navigation.test.ts`: Keep path navigation; plain Serve ignores modified disk per approved writer-independent rule.
+- `tests/server_removed_preview_lifecycle.test.ts`: Keep main split helper and private page path lifecycle.
+- `tests/server_removed_preview_limits.test.ts`: Keep moved-entry source and complete synthetic baseline with preview bounds.
+- `tests/server_removed_preview_routes.test.ts`: Keep path-based request routing and generation snapshot addresses.
+- `tests/server_route_scoped_bootstrap.test.ts`: Read example unified manifest.
+- `tests/server_selected_review.test.ts`: Keep selected scope and immutable retained comparison tests; disk tampering cannot change accepted memory generation.
+- `tests/server_selected_review_lifecycle.test.ts`: Keep snapshot folders and path query lifecycle.
+- `tests/source_denials.test.ts`: Decision B removes mixed-layout ownership denials; whole-tree confinement and protected source causes stay.
+- `tests/source_inventory.test.ts`: Keep source inventory exclusion of generated views.
+- `tests/static_delivery.test.ts`: Keep canonical path shell and current comparison namespace.
+- `tests/variant_validation.test.ts`: Keep branded export collection and path variant diagnostics.
+- `tests/viewer_catalogue_variants.test.ts`: Keep public model folder fixture.
+- `tests/watch_classification.test.ts`: Keep folder records in watch classification fixtures.
+- `tests/watch_resource_lifecycle.test.ts`: Keep authored resource lifecycle beside generated view.
+- `tests/watch_resources.test.ts`: Keep watched resource snapshot test with path routes.
+- `tests/shell.test.ts`: Preserve incoming split: screen/flow assertions are in shell_frames and metadata tests in shell_metadata.
+- `tests/shell_appearance.test.ts`: Preserve main appearance assertions and path fixture; no duplicate style tests.
+- `tests/shell_chrome.test.ts`: Preserve main path chrome; missing/filter tests are in shell.test and styles in shell_styles.
+- `tests/shell_frames.test.ts`: Retain every main screen/flow frame assertion with generated prefix; metadata tests stay in shell_metadata.
+- `tests/shell_styles.test.ts`: Preserve main path-chip style assertions; appearance tests remain in shell_appearance.
+
+Browser fixtures and assertions:
+
+- `tests/browser/browse.spec.ts`: Keep incoming path navigation tests here; remove duplicates in search-details split.
+- `tests/browser/browse_assertions.ts`: Use path-valued selectors, folder keys and workspace identity.
+- `tests/browser/browse_disclosures.spec.ts`: Keep v4 persistence and no migration/deletion assertions.
+- `tests/browser/browse_layout.spec.ts`: Keep main path layout; expansion test is retained in browse_chrome.
+- `tests/browser/browse_navigation.spec.ts`: Keep path-based dark navigation with generated prefix.
+- `tests/browser/browse_navigation_hydration_handoff.spec.ts`: Keep delayed frame handoff assertions in current namespace.
+- `tests/browser/browse_navigation_security.spec.ts`: Retain incoming fixture setup and path-based security visits.
+- `tests/browser/browse_search_details.spec.ts`: Keep path search and moved duplicate navigation tests in browse.spec.
+- `tests/browser/catalogue_fetch.spec.ts`: Keep catalogue/ref fetch assertions with current resource paths.
+- `tests/browser/comparison_alignment.spec.ts`: Keep before/after pane alignment paths.
+- `tests/browser/comparison_alignment_hosts.spec.ts`: Keep pane failure/retry coverage.
+- `tests/browser/comparison_design.spec.ts`: Keep path-based design screenshot source.
+- `tests/browser/comparison_expiry.spec.ts`: Keep path-based selected comparison expiry.
+- `tests/browser/component_design_fixture.ts`: Use shared generated-root and incoming entryPath.
+- `tests/browser/component_design_navigation.spec.ts`: Keep design navigation frames inside generated root.
+- `tests/browser/component_explorer_inspection.spec.ts`: Keep main fixture API and path-based component inspection.
+- `tests/browser/component_explorer_runtime.spec.ts`: Keep main real Changes fixture and path-based variants.
+- `tests/browser/component_explorer_runtime_fixture.ts`: Keep main readCatalogueChanges and served-review provider with accepted in-memory output.
+- `tests/browser/component_fragments.spec.ts`: Standalone path view reads generated output.
+- `tests/browser/design_library_export.spec.ts`: Retain prepare-once rebuilt cache and main path-based design fixture.
+- `tests/browser/design_library_runtime.spec.ts`: Keep source path privacy and canonical generated manifest privacy.
+- `tests/browser/design_portable.spec.ts`: Keep portable path-based design files.
+- `tests/browser/example_links.spec.ts`: Keep exact dark frame and standalone links with current paths.
+- `tests/browser/frame_adapter.spec.ts`: Keep path-based inspector frame URL.
+- `tests/browser/frame_adapter_fixture.ts`: Keep exact handoff and unowned authored link at correct depth.
+- `tests/browser/frame_adapter_security.spec.ts`: Keep inert scripts and component navigation checks.
+- `tests/browser/frame_clipping.spec.ts`: Keep incoming frame locator and clipping coverage.
+- `tests/browser/frame_readiness.spec.ts`: Retain frame readiness fixture.
+- `tests/browser/navigation_fixture.ts`: Keep nested authored document plus path-based logical links at unified-tree depth.
+- `tests/browser/pages.spec.ts`: Keep page fragment navigation.
+- `tests/browser/phone_chrome.spec.ts`: Keep path-based component design artboard.
+- `tests/browser/preview_design_links.spec.ts`: Keep static provider-normalized design links.
+- `tests/browser/preview_pages.spec.ts`: Retain main ready-frame Home link and no-events assertions.
+- `tests/browser/removed_previews.spec.ts`: Keep removed path retry in current namespace.
+- `tests/browser/removed_previews_static.spec.ts`: Keep static omitted-preview metadata tests.
+- `tests/browser/review.spec.ts`: Keep path-based comparison mockups.
+- `tests/browser/same_origin_adapter.spec.ts`: Keep adapter identity tests in generated namespace.
+- `tests/browser/same_origin_identity.spec.ts`: Keep all delayed/mismatched/current frame identity assertions.
+- `tests/browser/same_origin_reconnect.spec.ts`: Keep reconnect identity tests.
+- `tests/browser/standalone_appearance.spec.ts`: Retain branch setup helper and main path identities; precedence tests stay in incoming split.
+- `tests/browser/standalone_appearance_loading.spec.ts`: Keep dark appearance load fixture path.
+- `tests/browser/static_example.spec.ts`: Retain prepare-once shared rebuilt cache and main example identity.
+- `tests/browser/viewer.spec.ts`: Keep public viewer current frame path.
+- `tests/browser/viewer_variants.spec.ts`: Keep main component-variant scenarios; screen scenario remains in viewer_screen_variants and branch duplicate component file will be consolidated.
+- `tests/browser/watch.spec.ts`: Keep watched path identity and generated prefix.
+
+### Removed main files
+
+- `docs/protocol/mokly-link-transform-validation.md` — 16 item 4 (transformer removal).
+- `docs/protocol/mokly-public-exclusions.md` — 19 publicExclude removal.
+- `src/build/committable_output.ts` — 16 item 7 (committability removal).
+- `src/build/discovery.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
+- `src/build/output_directories.ts` — 3/9/11 whole-tree replacement and snapshot decision B; only the removed per-file transaction used its empty-directory pruning and restoration.
+- `src/build/ownership.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
+- `src/build/previous_ownership.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
+- `src/build/styles/lightning.ts` — 16 item 4 (transformer removal).
+- `src/build/styles/transformer_inventory.ts` — 16 item 4 (transformer removal).
+- `src/build/tracked_ownership.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
+- `src/compatibility/transform.ts` — 16 item 4 (transformer removal).
+- `src/compatibility/types.ts` — 16 item 4 (transformer removal).
+- `src/export/generated_inventory.ts` — 9/11 compiled output and 19/20 checked closure; in-memory capture replaces disk-parent traversal, and per-side v9 inventories retain exact historical membership directly.
+- `tests/build_check_unclaimed.test.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
+- `tests/compatibility.test.ts` — 16 item 4 (transformer removal).
+- `tests/compatibility_link_controls.test.ts` — 16 item 4 (transformer removal).
+- `tests/compatibility_navigation.test.ts` — 16 item 4 (transformer removal).
+
+`src/config/public_exclusions.ts` is renamed to `src/config/relative_globs.ts`;
+its root/folder grammar remains, while its removed public option and defaults do
+not. Main's example authored assets move from `examples/basic/generated/` to
+`examples/basic/`; their source declarations stay under main's `specs/` layout.
+The current fixture is `catalogue-v5.json`; v4 remains rejection-only test data.
+Branch-only duplicate test splits are consolidated into main's path-based splits.
+No additional main file is removed.
+
+### Removed or renamed main test titles
+
+These are exact static title expressions from the incoming tip. A title absent
+from this list remains somewhere in the merged test tree, including moved
+splits. A removed mode/transformer/header assertion is authorized below; each
+mixed-purpose test retains its other assertions. The final audit reruns before
+push. Dynamic title expressions retain their source interpolation in this list.
+
+Combined-format decision 2 A (and prior format decisions):
+
+- `packages/viewer/tests/scoped_bootstrap.test.ts`: the canonical public v4 fixture bytes remain unchanged
+- `tests/catalogue_projection.test.ts`: public v4 fixture conforms and compatible readers ignore additive fields
+- `tests/component_historical_ranges.test.ts`: baseline v7 ranges retain original offsets and validation
+- `tests/component_protocol_docs.test.ts`: manifest v8 and review v5 share path identity
+- `tests/component_source_manifest.test.ts`: v7 source metadata round-trips deterministically and accepts its absence
+- `tests/id_keyed_wire_formats.test.ts`: manifest v8 carries paths and configuration but no derived artifact names
+- `tests/static_delivery.test.ts`: delivery v3 accepts only same-origin canonical and comparison paths
+- `tests/baseline_compatibility.test.ts`: a v9 baseline stays invalid and never uses earlier-version copy
+- `tests/baseline_compatibility.test.ts`: Serve reports v9 through its ordinary safe diagnostic
+- `tests/baseline_compatibility.test.ts`: a controlled v8 baseline still produces Changes
+
+16 current-only readers, cache, ownership and identity removals:
+
+- `tests/baseline_cache.test.ts`: an earlier manifest sentinel is retained for the compatibility gate
+- `tests/baseline_cache.test.ts`: the oldest manifest sentinel is cached without parsing its contents
+- `tests/baseline_cache.test.ts`: invalid cache markers are partial entries and cannot hide corrupt manifests
+- `tests/export_reservations.test.ts`: legacy hashed reservations must be explicitly recovered
+- `tests/historical_snapshot_identity.test.ts`: reader safely derives older generation-backed identities
+- `tests/private_metadata.test.ts`: a stale historical-manifest alias does not prevent ordinary public resources
+- `tests/private_metadata.test.ts`: an earlier manifest name is only an incompatibility sentinel
+
+16 item 4: remove transformer; keep mixed-purpose validation:
+
+- `tests/build_imported_styles_alias.test.ts`: transformer-only legacy CSS does not reject deliverable CSS syntax
+- `tests/build_imported_styles_alias.test.ts`: transformer-only legacy CSS is inventoried without strict parsing
+- `tests/build_imported_styles_graph.test.ts`: transformer-only CSS and its nested assets are private, not delivered
+- `tests/build_link_controls.test.ts`: custom and legacy renderers adapt controls before compatibility checks
+- `tests/compatibility.test.ts`: configured transforms rewrite document links using path-keyed logical routes
+- `tests/compatibility.test.ts`: compatibility transforms reuse the logical route index for each view
+- `tests/compatibility.test.ts`: configured compatibility transformers are typed complete-document functions
+- `tests/compatibility.test.ts`: compatibility output fails closed on unresolved navigation links
+- `tests/compatibility.test.ts`: compatibility routes exclude generated files pending orphan removal
+- `tests/compatibility_link_controls.test.ts`: compatibility transforms cannot introduce or alter owned control metadata
+- `tests/compatibility_link_controls.test.ts`: compatibility cannot add control metadata to a document without child links
+- `tests/compatibility_link_controls.test.ts`: compatibility preserves generated metadata while allowing harmless edits and literal names
+- `tests/compatibility_navigation.test.ts`: compatibility transforms preserve complete logical-link records
+- `tests/compatibility_navigation.test.ts`: compatibility transforms cannot duplicate reserved Browse metadata
+- `tests/compatibility_navigation.test.ts`: compatibility transforms preserve every generated ownership header
+- `tests/compatibility_navigation.test.ts`: compatibility transforms may retain ownership with CRLF
+- `tests/compatibility_navigation.test.ts`: identity transforms preserve metadata-only native links
+- `tests/compatibility_navigation.test.ts`: compatibility transforms cannot add base URLs to activatable documents
+- `tests/compatibility_navigation.test.ts`: compatibility transforms cannot remove an anchor from one target view
+- `tests/component_build_edges.test.ts`: `compatibility rejects ${name}`
+- `tests/documents_links.test.ts`: logical links to entries use the same final fragment and transformer checks
+- `tests/imported_styles_workspace_package.test.ts`: transformer-only workspace-package CSS inventories a linked image
+- `tests/path_identity_review.test.ts`: transformer path routes have no inherited keys
+
+3/4/9/11 unified tree and ownership removal; snapshot decision B:
+
+- `tests/browse_document_adapter.test.ts`: Browse fails closed when trusted ownership or marker bytes diverge
+- `tests/browse_document_adapter.test.ts`: Browse accepts CRLF generated ownership headers
+- `tests/build_check_unclaimed.test.ts`: committed check separates orphan and unclaimed generated files
+- `tests/build_check_unclaimed.test.ts`: committed check tolerates a generated file removed before its header is read
+- `tests/build_imported_styles_resources.test.ts`: multiple on-demand views adopt retained orphans and parse CSS only once per generation
+- `tests/build_imported_styles_resources.test.ts`: compatibility route discovery includes pending styles and omits reserved disk orphans
+- `tests/build_links.test.ts`: link validation rejects generated targets pending orphan removal
+- `tests/build_mainline_navigation.test.ts`: writer refuses to overwrite an unowned route
+- `tests/build_ownership.test.ts`: ownership headers encode every comment-unsafe source path
+- `tests/build_ownership.test.ts`: ownership parsing rejects plain headers including comment-safe sources
+- `tests/build_ownership.test.ts`: ownership parsing rejects both former Mokabook header formats
+- `tests/build_ownership.test.ts`: catalogue output safely owns a comment-unsafe entry filename
+- `tests/component_build_edges.test.ts`: saved variants share transactional orphan protection
+- `tests/component_rendering.test.ts`: component style ownership rebases through generated headers while preserving rendered CSS
+- `tests/demand_compiler.test.ts`: demand links reject a generated orphan even while its old file exists
+- `tests/derived_build.test.ts`: indexed ownership checking accepts only Git's defined no-match status
+- `tests/entry_attribution.test.ts`: ownership trusts resolved, inventoried, and glob-matched sources
+- `tests/export_generated_inventory.test.ts`: an ownership header alone never grants export traversal through a private build directory
+- `tests/manifest_files.test.ts`: disabling dark orphans committed dark fragments
+- `tests/output_safety.test.ts`: generated ownership belongs only to configured source roots
+- `tests/output_safety.test.ts`: writer rejects crafted output inside nested authored roots
+- `tests/output_safety.test.ts`: build rejects generated routes through authored-root symlinks
+- `tests/ownership_earlier_formats.test.ts`: `earlier ${format} output grants no ownership at any HTML consumer`
+- `tests/source_inventory.test.ts`: failed page builds and source collisions preserve the previous inventory and bytes
+
+3/9/11 memory output and referenced closure; 16/19 approved review decisions:
+
+- `tests/build_binary_outputs.test.ts`: Serve sends raw public binary bytes without decoding
+- `tests/changes_asset_aliases.test.ts`: `${kind} Changes follows a stable ${alias} alias to its edited target`
+- `tests/changes_asset_aliases.test.ts`: ignored alias resources remain outside Changes after target edits
+- `tests/component_build.test.ts`: v7 retains only explicit dependency declarations
+- `tests/component_fast_path_counts.test.ts`: `zero-change ${generatedOutput} classification discovers each required side once`
+- `tests/component_fast_path_template.test.ts`: `${templateCase.name} caller slots use complete ${generatedOutput} comparison`
+- `tests/component_render_diagnostics.test.ts`: preview-resource exclusions reach stderr without exposing the cause in HTTP
+- `tests/config_generated_directory.test.ts`: Build reports reserved symlinks before inventorying another reserved source
+- `tests/config_generated_routes.test.ts`: v8 views and pages stay outside the reserved generated tree
+- `tests/documents_public_links.test.ts`: public stylesheet and ordinary-file links remain public through repeated Build and export
+- `tests/export_generated_inventory.test.ts`: exact generated membership preserves source, metadata and exclusion boundaries
+- `tests/export_pre_installation_cancellation.test.ts`: generated-output write failures remain unmarked after cancellation
+- `tests/export_resource_policy.test.ts`: baseline package resources cannot bypass current public-file exclusions
+- `tests/export_resource_policy.test.ts`: export resource policy excludes defaults and consumer globs while retaining public names
+- `tests/guides_authoring.test.ts`: the generated-output guides agree with the runtime default
+- `tests/manifest_combined.test.ts`: v7 combines pages and component usage at both manifest boundaries
+- `tests/output_safety.test.ts`: build rejects an output that would overwrite an imported source document
+- `tests/preview_aliases.test.ts`: `preview rejects colliding ${source} aliases before replacing an existing site`
+- `tests/publication_asset_aliases.test.ts`: `publication materializes safe file and directory aliases (changes: ${includeChanges})`
+- `tests/publication_input_confinement.test.ts`: publication rejects an escaping manifest before reading its bytes
+- `tests/publication_snapshot.test.ts`: `publication includes a rebuild before its initial fingerprint in every surface (changes: ${includeChanges})`
+- `tests/publication_snapshot.test.ts`: a manifest change after its snapshot read aborts default publication and preserves the previous artifact
+- `tests/serve_snapshot.test.ts`: server startup rejects invalid current metadata before querying history
+- `tests/server_changed_assets.test.ts`: Changes includes a removed resource referenced by an unchanged screen
+- `tests/server_changed_content.test.ts`: Changes includes a dark-only material edit
+- `tests/server_changed_lazy_base.test.ts`: non-CSS evidence does not traverse a supplied base resource graph
+- `tests/server_changed_resource_validation.test.ts`: Changes retains a legitimate deleted resource directory
+- `tests/watch_resource_lifecycle.test.ts`: failed output discards resource candidates and successful adoption removes old inputs
+
+19 decisions 5 A/36/37 A and 20: checked public closure; remove publicExclude:
+
+- `tests/build_generated_directory.test.ts`: generated routes collide with consumer exclusions including defaults
+- `tests/build_imported_styles_assets.test.ts`: generated CSS routes matching public exclusion are rejected
+- `tests/component_runtime_ipc.test.ts`: runtime startup preserves resolved public exclusions without duplicating defaults
+- `tests/component_runtime_ipc.test.ts`: `runtime startup rejects ${label} and waits for valid public exclusions`
+- `tests/config_public_exclusions.test.ts`: `publicExclude prepends defaults without mutating ${JSON.stringify(extra)}`
+- `tests/config_public_exclusions.test.ts`: `publicExclude rejects unsafe item ${JSON.stringify(item)}`
+- `tests/config_public_exclusions.test.ts`: `publicExclude rejects non-array ${JSON.stringify(value)}`
+- `tests/config_public_exclusions.test.ts`: `publicExclude retains config-invalid for a non-JSON ${typeof invalid} item`
+- `tests/export_resource_policy.test.ts`: export omits public-looking aliases of excluded resources
+- `tests/export_source_inventory.test.ts`: `export omits excluded files without extending source inventory (Changes ${includeChanges})`
+- `tests/export_source_inventory.test.ts`: repository preview omits public exclusions while retaining ordinary assets
+- `tests/public_exclusions.test.ts`: Serve GET and HEAD and Review deny public exclusions while ordinary assets remain public
+- `tests/public_exclusions.test.ts`: source policy matches both aliases and projects missing children relative to the mockups root
+- `tests/public_exclusions.test.ts`: `build rejects excluded generated route ${route} before writing`
+- `tests/public_exclusions.test.ts`: build rejects an excluded public resource with its referring route
+- `tests/public_exclusions.test.ts`: an excluded imported JSON file remains an authoring input and rebuilds
+- `tests/public_exclusions.test.ts`: canonical builder metadata remains writable when excluded from public reads
+- `tests/public_exclusions.test.ts`: public exclusions preserve explicit watch actions
+- `tests/resource_denials.test.ts`: export comparison reports its excluded snapshot resource and matched glob
+- `tests/review_public_exclusions.test.ts`: historical v7 resources use active exclusions relative to the baseline root
+- `tests/source_denials.test.ts`: `listed inputs take precedence over public exclusions in ${aliases} mode`
+- `tests/source_denials.test.ts`: source policy identifies entries, reserved names, listed inputs and matched exclusion globs
+- `tests/source_denials.test.ts`: generated-route denials retain source causes through canonical output aliases
+- `tests/source_inventory_cache.test.ts`: manifest classification reuses the source index across validation, ownership and spread configs
+
+Original output-mode removal; 9/11 Git tracking and per-commit baselines; 16 item 12:
+
+- `tests/build_gitignore_generated.test.ts`: committed Build and Check reject ignored generated assets before writing
+- `tests/build_gitignore_generated.test.ts`: committed output identifies ignored mockups ancestors
+- `tests/build_gitignore_generated.test.ts`: committed output honors nested negations and tracked files
+- `tests/build_gitignore_generated.test.ts`: committed output suggests exact negations for HTML and manifest routes
+- `tests/build_gitignore_generated.test.ts`: committed fixtures inside a parent Git tree retain existing behavior
+- `tests/build_postcss_dependencies.test.ts`: explicit generated output fails in both modes before public file validation
+- `tests/build_postcss_dependencies.test.ts`: committed directory dependency rejects generated CSS before public files; derived skips generated
+- `tests/build_postcss_privacy.test.ts`: a symlink alias cannot hide a directory scan of generated output
+- `tests/changes_imported_styles.test.ts`: `${mode} ${kind} imported CSS narrows shared-impact evidence to matching views`
+- `tests/changes_imported_styles.test.ts`: `${mode} changed generated font affects every view linking its stylesheet`
+- `tests/changes_imported_styles.test.ts`: `${mode} baseline predating imported CSS reports a one-time jump`
+- `tests/changes_imported_styles.test.ts`: committed Changes ignores syntactically valid stray generated output
+- `tests/component_fast_path_projected_resources.test.ts`: `select-hidden ${resourceCase.name} agrees in ${generatedOutput} mode`
+- `tests/component_fast_path_projected_resources.test.ts`: `instance projection exposes a sibling hidden by unclosed ${context} HTML in ${generatedOutput} mode`
+- `tests/component_fast_path_resources.test.ts`: `source-only formatting preserves component artifact paths in ${generatedOutput} mode`
+- `tests/component_fast_path_template.test.ts`: `${selectCase.name} resources agree in ${generatedOutput} mode`
+- `tests/component_material_reader.test.ts`: fall-through views reuse actual discovery in derived mode
+- `tests/config_git.test.ts`: nested roots fail before preparation, pinned reads, classification or derived tracking
+- `tests/config_git.test.ts`: build in either mode and committed check work outside a Git repository
+- `tests/derived_build.test.ts`: derived check lists every tracked generated or cache path with ignore guidance
+- `tests/derived_build.test.ts`: derived check rejects retired generated routes from the index even when their local files are absent
+- `tests/derived_config.test.ts`: the example rebuilds derived baselines with its own package tooling
+- `tests/derived_config.test.ts`: generated output defaults to derived and derives exact default argv
+- `tests/derived_config.test.ts`: generated output rejects unknown modes and malformed or committed commands
+- `tests/derived_config.test.ts`: only derived output may be absent and its projected root stays confined
+- `tests/derived_config.test.ts`: derived missing roots still report dangling links and file ancestors as config errors
+- `tests/export_imported_changes_membership.test.ts`: `${mode} ${kind} exported and published Changes match live rule attribution`
+- `tests/export_imported_styles.test.ts`: `${mode} export retains generated asset routes containing dist and target`
+- `tests/export_imported_styles.test.ts`: `${mode} export captures scoped CSS assets without shipping private inputs`
+- `tests/export_imported_styles.test.ts`: derived public capture never adopts stray reserved files from disk
+- `tests/imported_styles_accepted_changes.test.ts`: accepted committed classification does not rerun PostCSS
+- `tests/imported_styles_accepted_changes.test.ts`: catalogue freshness shares one inventory graph with committed Changes
+- `tests/imported_styles_low_contract.test.ts`: derived Check gives one directory ignore rule for tracked reserved routes
+- `tests/imported_styles_low_delivery.test.ts`: `${mode} generated assets have specific types in static, on-demand and transient delivery`
+- `tests/publication_imported_styles.test.ts`: `${mode} publication captures generated CSS and scoped binary assets without private inputs`
+- `tests/publish_compile_cancellation.test.ts`: `${mode} publish cancels when esbuild exits before the signal listener runs`
+- `tests/publish_imported_binary_snapshots.test.ts`: `${mode} publish retains exact scoped binary bytes on both snapshot sides`
+- `tests/publish_pre_installation_cancellation.test.ts`: `${mode} publish cancels during ${phase}`
+- `tests/removed_screen_previews.test.ts`: `removed screen selected capture retains every historical view in ${mode} mode`
+- `tests/removed_screen_previews.test.ts`: `component-aware removed screen stays before-only in ${mode} mode`
+- `tests/serve_imported_styles.test.ts`: `accepted ${mode} generated bytes are served without consulting stale disk`
+- `tests/serve_imported_styles.test.ts`: `${mode} ${watch ? "watched" : "no-watch"} Serve returns accepted scoped bytes`
+- `tests/serve_transient_imported_styles.test.ts`: `${mode} transient HTTP delivers scoped CSS assets from memory for GET and HEAD`
+
+Snapshot decision B; whole-tree replacement (3/9/11):
+
+- `tests/generated_output_lock_waits.test.ts`: export cancellation stops its wait for the writer lock
+- `tests/generated_output_lock_waits.test.ts`: export waits for another writer, then completes
+- `tests/generated_output_lock_waits.test.ts`: the export input recheck waits for a writer that is replacing generated assets
+- `tests/output_snapshot_concurrency.test.ts`: `compile snapshots wait for another process pruning ${previous}`
+- `tests/output_snapshot_validation.test.ts`: render callbacks run after output snapshot lock release
+- `tests/output_snapshot_validation.test.ts`: a surviving unowned collision still fails at generation acceptance
+- `tests/path_collision_inventory.test.ts`: demand output collision inventory is scanned once and renewed for each generation
+- `tests/path_output_collisions.test.ts`: build rejects a case-folded public file against a generated directory
+- `tests/path_ownership_moves.test.ts`: `moving an exporting module and its helper preserves ownership: declared path ${declared}`
+- `tests/path_ownership_moves.test.ts`: prior manifest proof is exact, config-scoped and invalidated when metadata changes
+- `tests/path_transaction_regressions.test.ts`: unchanged output directories survive replacement without directory watch events
+- `tests/path_transaction_regressions.test.ts`: final reserved-directory pruning runs while the output lock remains held
+
+### Validation and smoke progress
+
+The first full unit integration run that reached the complete inventory ran
+`npm test`: 4,355 tests, 4,214 passed, 141 failed, zero skipped/cancelled, in
+1,559,882.291 ms. Exact failure output is retained in
+`.context/milestone-22-merge/unit-5.log` and `unit-5-failures.json`. Most failures
+were old fixture paths, old format expectations or removed transformer setup.
+Focused repair runs passed 219/220, then 53/59, then 66/73 as remaining fixture
+issues were isolated; later focused runs passed all 17 and all 23 tests.
+The immutable-route and whole-tree transaction run passed all 12 tests.
+
+New pre-fix regressions failed with `Missing expected rejection.` for callbacks
+that ran before reserved-route validation, and `read entries before version gate`
+for an unsupported manifest. Both now pass. Preserved main tests also exposed
+`missing target ../diagram.svg`, `not an accepted generated resource`, and
+CSS views incorrectly receiving Changes. The fixes retain Markdown copied bytes
+in watching, map moved resources in the generated namespace, and apply CSS rule
+attribution to in-memory byte changes. The checkpoint remerge audit found that the branch's two-batch assertion had
+replaced main's one-batch test. Main's three exact assertions are restored
+(including its greater-than-200-view check); inventory hashes avoid unnecessary
+baseline bodies. This restoration follows 57 B and mainline preservation. No timeout or source-size cap was increased.
+
+Documentation validation passes all 13 Markdown/link/size/history/guide checks.
+The clean build and full type check pass. Example Check reports
+`Mokly output is valid and untracked (472 files).` The initial browser run failed
+in global setup with `mockupsDir must be a non-empty string`; shared preparation
+now replaces the roots block once. Subsequent browser integration is in progress.
+Its frame-inspection failure exposed use of the forward path helper where the
+reverse helper is required. The fixed call retains main's normalization.
+
+The smoke fixture runs Build, tracked Check, Serve and export. Its v9 committed
+base also contains a stale root-level v7 manifest. Serve reports ready Changes
+and retains `previousPath: "home"` for `account/home`. The styled URL is
+`http://127.0.0.1:33505/view/account/home/`, with background
+`rgb(224, 240, 232)`. Markdown, a folder Overview and its PDF return successfully;
+the private generated manifest returns 404. Static export loads catalogue v5 at
+`http://127.0.0.1:38849/mokly-viewer/catalogue.json` and the same styled screen.
+Its root names are `.mokly-export-artifact`, `404.html`, `index.html`,
+`mokly-viewer`, `static`, `view`; the optional marker is the only segment with a
+leading `.`, `_`, `#` or `~`. Both smoke servers and its browser closed.
+Screenshots, command receipts and results are in
+`.context/milestone-22-merge/smoke/`. Initial smoke fixture errors (an unused
+folder and an unborn fixture HEAD) were corrected before the passing run.
+
+A local merge checkpoint is permitted by the user. It is required for tests
+whose example server compares against checkout HEAD: the pre-merge HEAD writes
+v8 and correctly gives unavailable Changes to v9 readers. The checkpoint stays
+local until the complete full gate and mandatory preview against origin/main
+pass. Immediately after committing it, verify exactly two parents and review
+every path in its remerge diff; amend before any push if content was lost.
+
+### Two-parent checkpoint review
+
+Checkpoint `464b3ceefaf8ac70ae77783cbd2a8999f679873d` has exactly two parents:
+`80724073` and `c4138a0b`. `git show --remerge-diff --stat` lists 740 paths.
+Every path was read with `git show --remerge-diff --format= <checkpoint> -- <path>`;
+complete patches and SHA-256 receipts are under `.context/milestone-22-merge/remerge/`
+and `remerge-review.json`. One blobless-clone read failed with
+`fatal: remote error: upload-pack: not our ref 8031ade4c1b69effb09e05f9e9ca9f2056bca214`;
+the required retry succeeded. No parent-count or deletion check failed.
+
+The review checked original conflict choices, one-sided source changes,
+namespace/version fixtures, relocated examples, and deleted main files. The
+assertion-count audit found six reductions in otherwise retained test titles.
+The output-ownership, document collision, output-mode, authored-tree and
+unreferenced HTTP cases match their recorded approvals. The sixth was a lost
+main performance assertion in `tests/design_library_attribution.test.ts`:
+main requires one view batch, its exact view count, and more than 200 views.
+All three main assertions are restored. The branch's two-batch expectation is
+removed; current inventory hashes preserve the incoming targeted baseline reads.
+This is a restoration under 57 B and the mainline preservation rule. The
+checkpoint is amended before push. No other main assertion was removed outside
+the approved scopes. The audit is a merge-preservation check, not the final
+implementation review owned by the orchestrator.
+
+### Final gate evidence
+
+The first final-gate attempt passed `npm run format:check` (31.915 s),
+`npm run lint` (24.436 s) and `npm run typecheck` (43.907 s). `npm test`
+then failed after 1,521.747 s: 4,353 tests, 4,351 passed, two failed, zero
+skipped or cancelled. The two existing regression failures were:
+
+```text
+the served manifest's source path links its current document
+Error [ERR_TEST_FAILURE]: Cannot read properties of undefined (reading 'flatMap')
+
+material Changes can use captured documents without reading current file bytes
+Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ []
+- [
+-   'mockups/mokly-generated/home/index.mobile.html'
+- ]
+```
+
+The document fixture now supplies its required `resources` array. Public change
+evidence retains generated document paths while it still excludes both private
+manifest locations and protected authored inputs. Both tests keep their original
+assertions. Full failure output and command receipts are in
+`.context/milestone-22-merge/gate-first-unit.log` and
+`gate-first-receipts.json`. No current-manifest helper, limit or skip changed.
+
+The preflight source-size check reported:
+
+```text
+Source file-length audit failed:
+src/server/component_changes.ts: 303 lines (limit 300)
+```
+
+Its four shared snapshot/classifier interfaces now live in
+`src/server/component_change_types.ts`. Consumers import those types from their
+owner. The repository implementation and every test assertion stay unchanged.
+This is a module split to meet the existing cap, not a removed main API or test.
+The source-size check then passed all 1,153 scoped files. The focused command
+`npm run build && node --import tsx --test packages/viewer/tests/document_details.test.tsx tests/export_changes.test.ts tests/baseline_reader.test.ts tests/design_library_attribution.test.ts`
+passed all 52 tests in 743,543.575 ms, with zero skips or cancellations.
+This includes both repaired regressions and main's exact one-batch assertions.
+
+The second complete unit run passed 4,352 of 4,353 tests in 1,662.138 s,
+with zero skips or cancellations. Its only failure was a disk-poll race:
+
+```text
+serve --build writes only complete compilations (watch=true)
+Error [ERR_TEST_FAILURE]: ENOENT: no such file or directory, open '/home/vercel-sandbox/mokly/.context/mokly-test-GFC3Ax/mockups/mokly-generated/home/index.mobile.html'
+```
+
+The two-rename transaction can briefly remove the destination name. The test
+now retries only `ENOENT` while polling and asserts against the bytes returned
+by the successful poll. Other read errors still fail immediately. Its title,
+assertions and 30-second test limit remain. No writer or reader-lock behavior
+changes. The complete failure and receipts are in `gate-second-unit.log` and
+`gate-second-receipts.json` under the same evidence directory.
+`node --import tsx --test tests/derived_serve.test.ts` then passed all seven
+tests in 11,825.214 ms. The source-size audit still passes. The next full gate
+runs the browser suite before the unit suite to expose any remaining browser
+integration failures before repeating the long unit run; all seven required
+commands remain in the gate.
+
+The third gate passed format, lint, type checking, all 1,114 browser cases
+(2,406.587 s), all 4,353 unit cases (1,498.345 s), and Example Check
+(10.998 s). Both test suites had zero failures or skips. Cargo then stopped at
+the internal-export ratchet:
+
+```text
+Unused internal export ratchet failed:
+- new unused internal export: src/build/output_directories.ts#OutputDirectories
+- new unused internal export: src/export/generated_inventory.ts#generatedParentDirectories
+- new unused internal export: src/export/generated_inventory.ts#historicalGeneratedPaths
+```
+
+`git grep` against `c4138a0b` proves that `OutputDirectories` served only the
+replaced per-file transaction. The two export helpers served disk traversal and
+the old derived historical membership. No current caller exists. Delete both
+modules under the approvals in the main-file list above. Current capture still
+uses accepted bytes, and `site.ts` passes each side's exact v9 inventory to the
+shared resource policy. No behavior or test assertion changes. This is forced
+merge cleanup, not the broader pending unused-member work. The main-file removal
+count is now 17; the removed/renamed main title count remains 171.
+The Build README removes the obsolete helper and transformer descriptions. The
+export README names the current delivery v5. The ratchet baseline and audit
+policy are unchanged. `gate-first-cargo.log` retains the exact failure;
+`gate-third-receipts.json` retains all seven command receipts. Cargo's dependency
+audit passed with main's existing braces exception and its 2026-11-03 expiry.
+
+The clean Cargo retry passed repository checks, all 15 Rust tests, declarations,
+Example Check and package inspection. Its packed-consumer smoke found a remaining
+flat fixture path:
+
+```text
+Error: ENOENT: no such file or directory, open '/home/vercel-sandbox/mokly/.context/package-smoke-ndQjtP/esm-consumer/mockups/guides/markdown/index.html'
+```
+
+`scripts/package/documents.mjs` now inspects generated Markdown and copied
+resources below `mokly-generated/`, including the export's `static/` prefix.
+`scripts/package/consumer_cases/esm.mjs` uses that prefix for its Serve document
+request. `scripts/package/export.mjs` and `scripts/package/components.mjs`
+expect review v6. These are layout/version fixture updates under 1 A and 2 A;
+every Markdown safety, byte-equality, component, ownership and strict audit
+assertion stays. `gate-second-cargo.log` and `gate-fourth-receipts.json` retain
+the failure and timing (195.714 s). No runtime source or audit policy changes.
+The focused command `npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts`
+then passed: `Both packed packages passed all six consumer scenarios.`
+The complete Cargo gate is rerun after these fixture repairs.
+
+`npm run preview:build -- --include-changes --base origin/main` succeeded
+against the captured incoming v8 main commit. It printed the exact earlier
+version line once. The exported catalogue is v5, Changes is unavailable,
+`comparisonUrl` is null, and no incompatible completion entry exists.
+`preview-main-stable.log` and `preview-main-evidence.json` record the result.
+An earlier attempt detected changed inputs while fixtures were still being
+edited; the stable run retained the normal input-consistency checks.
+
+### Completed validation and final amendment
+
+All seven required commands pass under Node 22.14.0. The final Cargo run also
+checks the final source after the two unused-module removals and packed-fixture
+repairs. The dependency exception record and strict packed audits stay unchanged.
+
+| Command                                                                              | Result                                                                                              |   Seconds |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | --------: |
+| `npm run format:check`                                                               | Pass                                                                                                |    32.900 |
+| `npm run lint`                                                                       | Pass                                                                                                |    24.903 |
+| `npm run typecheck`                                                                  | Pass                                                                                                |    45.685 |
+| `npm run test:browser -- --output .context/milestone-22-merge/final-browser-results` | 1,114 passed                                                                                        | 2,406.587 |
+| `npm test`                                                                           | 4,353 passed; no skips/cancellations                                                                | 1,498.345 |
+| `npm run example:check`                                                              | Valid, untracked; 472 files                                                                         |    10.998 |
+| `cargo xtask check`                                                                  | Pass; audit, ratchets, 15 Rust tests, all six packed consumers, strict unit/browser/hydration gates | 4,967.512 |
+
+Cargo repeats the complete final-source unit suite (4,353), browser suite (851)
+and separate hydration suite (263). All pass with no skips or cancellations.
+`gate-receipts.json` and `gate-*.log` hold exact commands, times and output.
+Both smoke screenshots were visually checked. Every fixture server and browser
+closed through its normal teardown. No generated output enters the branch.
+
+The final amendment retains exactly the captured two parents. Its mandatory
+remerge review compares every listed path with the reviewed checkpoint and
+checks all final edits. The final main-file list has 17 approved removals, and
+all 171 removed/renamed incoming test-title expressions are listed above and in
+the commit body. The five remaining assertion-count reductions are the approved
+ownership, mixed-layout, output-mode and closure replacements. The one-batch
+assertions from main stay exact. No timeout, cap, skip or audit rule changed.
+
+The additional classification split changes only type imports in:
+
+- `src/server/component_changes.ts`
+- `src/server/component_change_types.ts`
+- `src/catalogue/projection_input.ts`
+- `src/server/http_types.ts`
+- `src/server/changed.ts`
+- `src/server/serve.ts`
+- `src/server/component_change_cache.ts`
+- `src/server/supervisor.ts`
+- `src/server/catalogue_update.ts`
+- `src/server/render_moves.ts`
+- `src/server/watch_classification.ts`
+- `src/server/http_routes.ts`
+- `src/server/baseline_catalogue.ts`
+- `src/server/update_messages.ts`
+- `src/server/watched_background.ts`
+- `src/server/catalogue_snapshot.ts`
+- `src/server/review_sources.ts`
+- `src/server/classification_result.ts`
+- `src/server/demand/generation.ts`
+- `tests/changes_loading_lifecycle.test.ts`
+- `tests/watch_classification.test.ts`
+- `tests/watch_startup.test.ts`
+
+The late browser expectation changes keep their assertions: generated snapshot
+paths in `tests/browser/moved_comparison_cases.ts`, generated frame requests in
+`standalone_appearance_precedence.spec.ts`, catalogue v5 in
+`viewer_namespace_embedded.spec.ts`, and delivery v5/path shell links in
+`viewer_namespace_versions.spec.ts`. The document fixture and Serve polling
+repairs are described with their failing evidence above. No other main behavior
+is removed. The latest fetch still names `781da7ae`; it is not merged.
 
 ## Milestone 23: Verify the merge and re-plan the review fixes
 

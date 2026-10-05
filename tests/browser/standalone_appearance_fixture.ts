@@ -22,7 +22,7 @@ export const mobileFrame = ".mbk-frame-mobile iframe";
 
 export const desktopFrame = ".mbk-frame-desktop iframe";
 
-export const screen = "/view/screens/example-welcome.html";
+export const screen = "/view/example/screens/welcome/";
 
 export /** The appearance the document actually settled on, root mark and all. */
 async function appearance(page: Page): Promise<{

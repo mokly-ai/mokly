@@ -2,8 +2,8 @@ import type {
   ManifestComponent,
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
-import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV4 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ManifestV9 } from "../../packages/viewer/dist/registry/types.js";
+import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 
 import { currentManifest } from "./current_manifest.js";
@@ -14,9 +14,9 @@ function variant(id: string, title: string): ManifestComponentVariant {
     componentViews: [],
     declaredDependencies: [],
     description: `${title} badge`,
-    id,
+    path: id,
     kind: "component",
-    navPath: [],
+
     props: {},
     relatedDocs: [],
     sourcePath: "entries/badge.mockup.tsx",
@@ -26,18 +26,18 @@ function variant(id: string, title: string): ManifestComponentVariant {
   };
 }
 
-export const DEFAULT_VARIANT = variant("badge-default", "Default");
-export const SECOND_VARIANT = variant("badge-second", "Second");
-export const REMOVED_VARIANT = variant("badge-removed", "Removed");
+export const DEFAULT_VARIANT = variant("badge/default", "Default");
+export const SECOND_VARIANT = variant("badge/second", "Second");
+export const REMOVED_VARIANT = variant("badge/removed", "Removed");
 
 export const component: ManifestComponent = {
   colorSchemes: ["light", "dark"],
   controls: {},
   declaredDependencies: [],
   description: "Badge component",
-  id: "badge",
+  path: "badge",
   kind: "component",
-  navPath: [],
+
   ownedDependencies: [],
   propSchema: { kind: "object", properties: {} },
   relatedDocs: [],
@@ -46,14 +46,15 @@ export const component: ManifestComponent = {
   title: "Badge",
 };
 
-export const componentManifest: ManifestV8 = currentManifest({
+export const componentManifest: ManifestV9 = currentManifest({
   entries: [component, DEFAULT_VARIANT, SECOND_VARIANT],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
+  folders: [],
   sourceFiles: [component.sourcePath],
 });
 
-export const componentBaseline: ManifestV8 = {
+export const componentBaseline: ManifestV9 = {
   ...componentManifest,
   entries: [component, DEFAULT_VARIANT, SECOND_VARIANT, REMOVED_VARIANT],
 };
@@ -62,24 +63,25 @@ export const screen = {
   colorSchemes: ["light", "dark"],
   declaredDependencies: [],
   description: "Landing screen",
-  id: "welcome",
+  path: "welcome",
   kind: "screen",
-  navPath: [],
+
   relatedDocs: [],
   sourcePath: "entries/fixture.mockup.tsx",
   title: "Welcome",
-  useCaseIds: [],
+  useCasePaths: [],
 } as const;
 
-export const screenManifest: ManifestV8 = currentManifest({
+export const screenManifest: ManifestV9 = currentManifest({
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
+  folders: [],
   sourceFiles: [screen.sourcePath],
 });
 
 /** A v3 comparison whose only material difference is in dark renders. */
-export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV4 {
+export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV6 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -88,13 +90,13 @@ export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV4 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 4,
+    schemaVersion: 6 as const,
     screens: [
       {
-        after: { id: screen.id, title: screen.title },
-        before: { id: screen.id, title: screen.title },
+        after: { path: screen.path, title: screen.title },
+        before: { path: screen.path, title: screen.title },
         dependencies: [],
-        id: screen.id,
+        path: screen.path,
         sharedImpact: [],
         state,
         title: screen.title,
@@ -125,7 +127,7 @@ function views(
   ]);
 }
 
-export function componentVariantResult(): ReviewResultV4 {
+export function componentVariantResult(): ReviewResultV6 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -134,10 +136,10 @@ export function componentVariantResult(): ReviewResultV4 {
     changes: [],
     components: [
       {
-        after: { id: component.id, title: component.title },
-        before: { id: component.id, title: component.title },
+        after: { path: component.path, title: component.title },
+        before: { path: component.path, title: component.title },
         dependencies: [],
-        id: component.id,
+        path: component.path,
         sharedImpact: [],
         state: "changed",
         title: component.title,
@@ -145,7 +147,7 @@ export function componentVariantResult(): ReviewResultV4 {
           {
             after: variantAddress(DEFAULT_VARIANT),
             before: variantAddress(DEFAULT_VARIANT),
-            id: DEFAULT_VARIANT.id,
+            path: DEFAULT_VARIANT.path,
             state: "unchanged",
             title: DEFAULT_VARIANT.title,
             views: views("unchanged"),
@@ -153,14 +155,14 @@ export function componentVariantResult(): ReviewResultV4 {
           {
             after: variantAddress(SECOND_VARIANT),
             before: variantAddress(SECOND_VARIANT),
-            id: SECOND_VARIANT.id,
+            path: SECOND_VARIANT.path,
             state: "changed",
             title: SECOND_VARIANT.title,
             views: views("changed"),
           },
           {
             before: variantAddress(REMOVED_VARIANT),
-            id: REMOVED_VARIANT.id,
+            path: REMOVED_VARIANT.path,
             state: "removed",
             title: REMOVED_VARIANT.title,
             views: views("removed", "removed"),
@@ -169,7 +171,7 @@ export function componentVariantResult(): ReviewResultV4 {
       },
     ],
     ignoredImpact: [],
-    schemaVersion: 4,
+    schemaVersion: 6 as const,
     screens: [],
     sharedImpact: [],
   };
@@ -177,7 +179,7 @@ export function componentVariantResult(): ReviewResultV4 {
 
 function variantAddress(variant: ManifestComponentVariant) {
   return {
-    id: variant.id,
+    path: variant.path,
     title: variant.title,
     props: variant.props,
     suppliedSlots: variant.suppliedSlots,

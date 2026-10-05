@@ -8,7 +8,7 @@ import type {
 import type {
   ManifestEntry,
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { reconcileDisclosures } from "../packages/viewer/dist/shell/disclosure_storage.js";
@@ -27,11 +27,11 @@ import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_
 import { currentManifest } from "./helpers/current_manifest.js";
 import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
-test("page and component sections preserve only their relevant hierarchy", () => {
+test("Specs and Components sections preserve only their relevant hierarchy", () => {
   const catalogue = createCatalogue(
     manifest([
-      screen("welcome", "Welcome", ["Product", "Screens"]),
-      component("action", "Action", ["Product", "Library"]),
+      screen("Product/Screens/welcome", "Welcome"),
+      component("Product/Library/action", "Action"),
     ]),
   );
 
@@ -40,7 +40,7 @@ test("page and component sections preserve only their relevant hierarchy", () =>
   assert.deepEqual(
     sections.map(({ id, key, label }) => [id, key, label]),
     [
-      ["pages", "section:pages", "Pages"],
+      ["specs", "section:specs", "Specs"],
       ["components", "section:components", "Components"],
     ],
   );
@@ -69,100 +69,105 @@ test("page and component sections preserve only their relevant hierarchy", () =>
 });
 
 test("screen variant leaves follow manifest order", () => {
-  const parent = screen("welcome", "Welcome", ["Screens"]);
+  const parent = screen("Screens/welcome", "Welcome");
   const zeta = {
-    ...screen("welcome-zeta", "Welcome zeta", ["Screens"]),
-    variantOf: parent.id,
+    ...screen("Screens/welcome-zeta", "Welcome zeta"),
+    variantOf: parent.path,
   };
   const alpha = {
-    ...screen("welcome-alpha", "Welcome alpha", ["Screens"]),
-    variantOf: parent.id,
+    ...screen("Screens/welcome-alpha", "Welcome alpha"),
+    variantOf: parent.path,
   };
   const catalogue = createCatalogue(manifest([parent, zeta, alpha]));
 
-  const pages = buildNavSections(catalogue.hierarchy).find(
-    ({ id }) => id === "pages",
+  const specs = buildNavSections(catalogue.hierarchy).find(
+    ({ id }) => id === "specs",
   );
-  assert.ok(pages);
+  assert.ok(specs);
   const parentLeaf = leaf(
-    group(pages.children, "folder:Screens").children,
+    group(specs.children, "folder:Screens").children,
     parent.title,
   );
   assert.deepEqual(
     parentLeaf.variants?.map(({ entryId }) => entryId),
-    [zeta.id, alpha.id],
+    [zeta.path, alpha.path],
   );
 });
 
-test("page and component section disclosures persist independently", () => {
-  const pagesClosed = fixtureShellState({
+test("Specs and Components section disclosures persist independently", () => {
+  const specsClosed = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery({ "section:pages": false }) },
+    initial: { recovery: recovery({ "section:specs": false }) },
   });
-  assert.equal(pagesClosed.disclosures["section:pages"], false);
-  assert.equal(pagesClosed.disclosures["section:components"], true);
+  assert.equal(specsClosed.disclosures["section:specs"], false);
+  assert.equal(specsClosed.disclosures["section:components"], true);
 
   const componentsClosed = fixtureShellState({
     href: "https://example.test/",
     initial: { recovery: recovery({ "section:components": false }) },
   });
-  assert.equal(componentsClosed.disclosures["section:pages"], true);
+  assert.equal(componentsClosed.disclosures["section:specs"], true);
   assert.equal(componentsClosed.disclosures["section:components"], false);
 });
 
-test("folder identities preserve colons and remain section-local", () => {
+test("folder identities use paths and remain section-local", () => {
   const catalogue = createCatalogue(
     manifest([
-      screen("a", "A", ["Design: System", "Browse"]),
-      component("b", "B", ["Design: System", "Browse"]),
+      screen("design-system/Browse/a", "A"),
+      component("design-system/Browse/b", "B"),
     ]),
   );
   const sections = buildNavSections(catalogue.hierarchy);
   for (const section of sections) {
-    const parent = group(section.children, "folder:Design: System");
+    const parent = group(section.children, "folder:design-system");
     assert.equal(
-      group(parent.children, "folder:Design: System/Browse").label,
+      group(parent.children, "folder:design-system/Browse").label,
       "Browse",
     );
   }
   const defaults = defaultDisclosures(sections, undefined);
-  assert.deepEqual(disclosurePath(sections, "a"), [
-    "section:pages",
-    "folder:pages:Design: System",
-    "folder:pages:Design: System/Browse",
+  assert.deepEqual(disclosurePath(sections, "design-system/Browse/a"), [
+    "section:specs",
+    "folder:specs:design-system",
+    "folder:specs:design-system/Browse",
   ]);
-  assert.equal(defaults["folder:pages:Design: System/Browse"], false);
-  assert.equal(defaults["folder:components:Design: System/Browse"], false);
+  assert.equal(defaults["folder:specs:design-system/Browse"], false);
+  assert.equal(defaults["folder:components:design-system/Browse"], false);
   assert.deepEqual(
     reconcileDisclosures(
       defaults,
-      { "folder:pages:Design: System": false },
+      { "folder:specs:design-system": false },
       "default",
     ),
-    { ...defaults, "folder:pages:Design: System": false },
+    { ...defaults, "folder:specs:design-system": false },
   );
-  const pagesClosed = fixtureShellState({
+  const specsClosed = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery({ "folder:pages:Product": false }) },
+    initial: { recovery: recovery({ "folder:specs:product": false }) },
   });
-  assert.equal(pagesClosed.disclosures["folder:pages:Product"], false);
-  assert.equal(pagesClosed.disclosures["folder:components:Product"], true);
+  assert.equal(specsClosed.disclosures["folder:specs:product"], false);
+  assert.equal(specsClosed.disclosures["folder:components:components"], true);
 });
 
-test("obsolete sectioned and pre-section collection keys never close folders", () => {
+test("earlier key forms naming current folder paths are never read or translated", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        "collection:pages:Product": false,
-        "collection:components:Product": false,
-        "collection:Product": false,
-        "legacy:Product": false,
+        "section:pages": false,
+        "folder:pages:product": false,
+        "collection:pages:product": false,
+        "collection:components:components": false,
+        "collection:product": false,
+        "legacy:product": false,
       }),
     },
   });
-  assert.equal(state.disclosures["folder:pages:Product"], true);
-  assert.equal(state.disclosures["folder:components:Product"], true);
+  assert.equal(state.disclosures["section:specs"], true);
+  assert.equal(state.disclosures["folder:specs:product"], true);
+  assert.equal(state.disclosures["folder:components:components"], true);
+  for (const key of ["section:pages", "folder:pages:product"])
+    assert.equal(Object.hasOwn(state.disclosures, key), false, key);
 });
 
 test("unknown disclosure keys never create unknown disclosure state", () => {
@@ -172,8 +177,8 @@ test("unknown disclosure keys never create unknown disclosure state", () => {
       recovery: recovery({ "/Product": false, "section:other": false }),
     },
   });
-  assert.equal(state.disclosures["folder:pages:Product"], true);
-  assert.equal(state.disclosures["folder:components:Product"], true);
+  assert.equal(state.disclosures["folder:specs:product"], true);
+  assert.equal(state.disclosures["folder:components:components"], true);
   assert.equal(Object.hasOwn(state.disclosures, "section:other"), false);
 });
 
@@ -193,38 +198,28 @@ function leaf(nodes: readonly NavNode[], label: string): NavLeafNode {
   return match;
 }
 
-function screen(
-  id: string,
-  title: string,
-  navPath: readonly string[] = [],
-): ManifestScreen {
+function screen(id: string, title: string): ManifestScreen {
   return {
     colorSchemes: ["light"],
     declaredDependencies: [],
     description: `${title} screen`,
-    id,
+    path: id,
     kind: "screen",
-    navPath,
     relatedDocs: [],
     sourcePath: `entries/${id}.tsx`,
     title,
-    useCaseIds: [],
+    useCasePaths: [],
   };
 }
 
-function component(
-  id: string,
-  title: string,
-  navPath: readonly string[] = [],
-): ManifestComponent {
+function component(id: string, title: string): ManifestComponent {
   return {
     colorSchemes: ["light"],
     controls: {},
     declaredDependencies: [],
     description: `${title} component`,
-    id,
+    path: id,
     kind: "component",
-    navPath,
     ownedDependencies: [],
     propSchema: { kind: "object", properties: {} },
     relatedDocs: [],
@@ -234,7 +229,7 @@ function component(
   };
 }
 
-function manifest(entries: readonly ManifestEntry[]): ManifestV8 {
+function manifest(entries: readonly ManifestEntry[]): ManifestV9 {
   return currentManifest({
     entries: entries.flatMap((entry) => [
       {
@@ -246,7 +241,8 @@ function manifest(entries: readonly ManifestEntry[]): ManifestV8 {
         : []),
     ]),
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 9 as const,
+    folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
@@ -254,21 +250,21 @@ function manifest(entries: readonly ManifestEntry[]): ManifestV8 {
 }
 
 function componentVariant(parent: ManifestComponent): ManifestComponentVariant {
-  const id = `${parent.id}-default`;
+  const id = `${parent.path}/default`;
   return {
     colorSchemes: parent.colorSchemes,
     componentViews: [],
     declaredDependencies: [],
     description: parent.description,
-    id,
+    path: id,
     kind: "component",
-    navPath: parent.navPath,
+
     props: {},
     relatedDocs: parent.relatedDocs,
     sourcePath: parent.sourcePath,
     suppliedSlots: [],
     title: "Default",
-    variantOf: parent.id,
+    variantOf: parent.path,
   };
 }
 

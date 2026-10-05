@@ -8,7 +8,7 @@ import type {
 } from "../client/frame_adapter.js";
 
 export interface ViewerSelection {
-  screenId: string | null;
+  screenPath: string | null;
   /** Exact removed record; absent selects current or uniquely identified history. */
   snapshotId?: string | undefined;
   view: "all" | "changes";
@@ -23,7 +23,7 @@ export type CatalogueFetcher = (context: {
 export type CatalogueSource =
   CatalogueReadModel | string | URL | CatalogueFetcher;
 export interface InstanceRef {
-  screenId: string;
+  screenPath: string;
   /** Required for a flow occurrence; absent for a standalone screen or component. */
   stepIndex?: number;
   viewport: "mobile" | "desktop";
@@ -33,7 +33,7 @@ export interface InstanceRef {
 export interface InstanceEvent {
   instance: InstanceRef | null;
   boxes: readonly Box[];
-  frame: { entryId: string; stepIndex?: number };
+  frame: { entryPath: string; stepIndex?: number };
 }
 export interface ViewerMarker {
   id: string;
@@ -46,7 +46,7 @@ export interface MarkerState {
   status: MarkerStatus;
 }
 export interface ScreenNavigateEvent {
-  screenId: string;
+  screenPath: string;
   /** Present exactly when the committed destination is historical content. */
   snapshotId?: string;
   fragment?: string;

@@ -53,13 +53,13 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     }
     await route.continue();
   });
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/fixture/screens/home/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   const screens = page.locator(
-    'details[data-nav-folder="folder:Fixture/Screens"]',
+    'details[data-nav-folder="folder:fixture/screens"]',
   );
   const archive = page.locator(
-    'details[data-nav-folder="folder:Fixture/Archive"]',
+    'details[data-nav-folder="folder:fixture/archive"]',
   );
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
@@ -72,7 +72,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await chooseScheme(page, "dark");
   await expectFrameSource(
     page.locator(".mbk-frame-mobile iframe"),
-    /screens\/home\.mobile\.dark\.html$/,
+    /home\/index\.mobile\.dark\.html$/,
   );
   const details = page.locator("[data-workspace-inspector]");
   await expect(details).not.toHaveAttribute("data-open", "true");
@@ -85,7 +85,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await fs.promises.writeFile(
     server.fixture.entryPath,
     reparentedEntrySource("screens", {
-      body: '<a href="mock:details">Details</a><p data-watch-version="2">Reloaded</p>',
+      body: '<a href="mock:fixture/screens/details">Details</a><p data-watch-version="2">Reloaded</p>',
     }),
   );
   await expect
@@ -94,7 +94,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
         return (
           await (
             await fetch(
-              `${server.url}/static/mokly-generated/screens/home.mobile.html`,
+              `${server.url}/static/mokly-generated/fixture/screens/home/index.mobile.html`,
             )
           ).text()
         ).includes('data-watch-version="2"');
@@ -121,7 +121,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   );
   await expectFrameSource(
     page.locator(".mbk-frame-mobile iframe"),
-    /screens\/home\.mobile\.dark\.html$/,
+    /home\/index\.mobile\.dark\.html$/,
   );
   // The reload recovers the appearance itself, not just the frames it picks.
   await expect(page.locator("html")).toHaveAttribute(
@@ -144,9 +144,9 @@ test("watched serve rebuilds and reloads after an authored change", async ({
 test("watched reload reopens collapsed active route ancestry", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/fixture/screens/home/`);
   const screens = page.locator(
-    'details[data-nav-folder="folder:Fixture/Screens"]',
+    'details[data-nav-folder="folder:fixture/screens"]',
   );
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
@@ -159,7 +159,7 @@ test("watched reload reopens collapsed active route ancestry", async ({
   await fs.promises.writeFile(
     server.fixture.entryPath,
     reparentedEntrySource("screens", {
-      body: '<a href="mock:details">Details</a><p data-watch-version="3">Active route</p>',
+      body: '<a href="mock:fixture/screens/details">Details</a><p data-watch-version="3">Active route</p>',
     }),
   );
 

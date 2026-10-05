@@ -10,9 +10,9 @@ import {
 } from "../packages/viewer/dist/shell/delivery.js";
 
 const descriptor = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   deploymentId: "a".repeat(64),
-  canonicalPath: "/view/screens/home.html",
+  canonicalPath: "/view/home/",
   comparisonUrl: `/mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
 };
 
@@ -42,10 +42,11 @@ test("delivery canonical paths round trip through the shared entry route grammar
   for (const canonicalPath of [
     "/",
     "/404.html",
-    "/view/components/action.html",
-    "/view/pages/guide.html",
-    "/view/screens/home.html",
-    "/view/user-flows/tour.html",
+    "/view/action/",
+    "/view/guide/",
+    "/view/home/",
+    "/view/Home/",
+    "/view/tour/",
   ])
     assert.equal(
       parseStaticDelivery({ ...descriptor, canonicalPath }).kind,
@@ -55,9 +56,8 @@ test("delivery canonical paths round trip through the shared entry route grammar
   for (const canonicalPath of [
     "/view/screens/nested/home.html",
     "/view/unknown/home.html",
-    "/view/screens/con.html",
+    "/view/con/",
     "/view/screens/home",
-    "/view/screens/Home.html",
   ])
     assert.deepEqual(
       parseStaticDelivery({ ...descriptor, canonicalPath }),
@@ -92,7 +92,7 @@ test("different deployment identities never validate the current route", async (
   const catalogue = readCatalogue(
     JSON.parse(
       fs.readFileSync(
-        new URL("../docs/protocol/fixtures/catalogue-v4.json", import.meta.url),
+        new URL("../docs/protocol/fixtures/catalogue-v5.json", import.meta.url),
         "utf8",
       ),
     ),
@@ -106,7 +106,7 @@ test("different deployment identities never validate the current route", async (
         assert.equal(init?.credentials, "omit");
         return Response.json({ ...catalogue, deploymentId });
       },
-      location: { href: "https://example.test/view/screens/home.html" },
+      location: { href: "https://example.test/view/home/" },
     }) as unknown as Window & typeof globalThis;
   assert.equal(
     await currentDeploymentMatches(

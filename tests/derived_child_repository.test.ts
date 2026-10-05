@@ -106,12 +106,12 @@ test("derived HTTP child rejects an unprepared unselected comparison without bui
       const result = parseReviewResult(await response.json());
       assert.equal(result.baseCommit, commit);
       const view = result.screens
-        .find((screen) => screen.id === "home")!
+        .find((screen) => screen.path === "home")!
         .views.find((view) => view.viewport === "mobile")!;
       const before = await (
         await fetch(
           new URL(
-            `snapshots/before/mokly-generated/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+            `snapshots/before/mokly-generated/${viewRoute("home", view.viewport, view.colorScheme)}`,
             response.url,
           ),
         )
@@ -121,7 +121,7 @@ test("derived HTTP child rejects an unprepared unselected comparison without bui
         await (
           await fetch(
             new URL(
-              `snapshots/after/mokly-generated/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+              `snapshots/after/mokly-generated/${viewRoute("home", view.viewport, view.colorScheme)}`,
               response.url,
             ),
           )

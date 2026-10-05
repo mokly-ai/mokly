@@ -111,7 +111,7 @@ async function generateExport(
       });
     const compilation = await withPreInstallationCancellation(
       options.signal,
-      () => compileCatalogue(config),
+      () => compileCatalogue(config, undefined, options.signal),
     );
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
@@ -162,6 +162,9 @@ async function generateExport(
             {
               evidence: pinnedEvidence(prepared.commit, changed),
               reader: prepared.reader,
+              ...(prepared.sourceReader
+                ? { sourceReader: prepared.sourceReader }
+                : {}),
             },
             base,
             transaction.stage,
@@ -169,6 +172,8 @@ async function generateExport(
             exclusions,
             { changeEvidence },
           );
+          for (const diagnostic of comparison.pairing?.diagnostics ?? [])
+            options.diagnostic?.(diagnostic);
           contentChanges = await changedContentPaths(
             compilation.manifest,
             baseline,
@@ -178,19 +183,26 @@ async function generateExport(
             changeEvidence,
             assetReader,
             hasRegisteredComponents(compilation.manifest) ? "pages" : "all",
+            { ...(comparison.pairing ? { pairing: comparison.pairing } : {}) },
           );
           const removedEntries = removedManifestEntries(
             compilation.manifest,
             baseline,
+            comparison.pairing?.moves,
           );
           const pagePreviews = await captureRemovedPagePreviews(
             new RepositoryRemovedPagePreview(config, prepared.reader),
             {
-              schemaVersion: 1,
+              schemaVersion: 3,
+              movedEntries:
+                comparison.pairing?.moves.map(({ path, previousPath }) => ({
+                  path,
+                  previousPath,
+                })) ?? [],
               baseline,
               baseCommit: comparison.result.baseCommit,
               baseRef: comparison.result.baseRef,
-              changedIds: removedEntries.map(({ entry }) => entry.id),
+              changedEntries: removedEntries.map(({ entry }) => entry.path),
               removedEntries,
             },
             options.signal ?? new AbortController().signal,

@@ -28,7 +28,7 @@ test("canonical and display catalogue producers retain their current dependency 
   t.after(() => removeFixture(fixture));
   await fs.writeFile(
     path.join(fixture.entriesDir, "component.mockup.tsx"),
-    componentEntrySource().replace('id: "home"', 'id: "component-host"'),
+    componentEntrySource().replace('path: "home"', 'path: "component-host"'),
   );
   await fs.writeFile(
     path.join(fixture.entriesDir, "page.ts"),
@@ -37,7 +37,7 @@ test("canonical and display catalogue producers retain their current dependency 
   await registerFixturePage(
     fixture,
     "document",
-    "pages/document.html",
+    "document/index.html",
     "entries/page.ts",
   );
   const config = await loadConfig(fixture.root);
@@ -59,9 +59,9 @@ test("canonical and display catalogue producers retain their current dependency 
     async () => {},
   );
   for (const [label, manifest] of [
-    ["v8 build", compilation.manifest],
+    ["v9 build", compilation.manifest],
     [
-      "v8 JSON",
+      "v9 JSON",
       parseManifest(JSON.parse(serializeManifest(compilation.manifest))),
     ],
     ["live index", live.manifest],
@@ -90,16 +90,16 @@ test("canonical and display catalogue producers retain their current dependency 
       ...model.components,
     ];
     const display = viewerCatalogue(model);
-    assert.equal(display.manifest.schemaVersion, "live-index-1");
+    assert.equal(display.manifest.schemaVersion, "live-index-2");
     for (const entry of display.manifest.entries) {
       assert.equal(
         Object.hasOwn(entry, "dependencies"),
         true,
-        label + ": display " + entry.id,
+        label + ": display " + entry.path,
       );
       assert.deepEqual(
         (entry as { dependencies?: unknown }).dependencies,
-        published.find((record) => record.id === entry.id)?.details
+        published.find((record) => record.path === entry.path)?.details
           .dependencies,
       );
     }
@@ -122,24 +122,24 @@ test("canonical and display catalogue producers retain their current dependency 
         ...displayed.pages,
         ...displayed.useCases,
         ...displayed.components,
-      ].map((entry) => [entry.id, entry.details.dependencies]),
-      published.map((entry) => [entry.id, entry.details.dependencies]),
+      ].map((entry) => [entry.path, entry.details.dependencies]),
+      published.map((entry) => [entry.path, entry.details.dependencies]),
     );
     for (const entry of manifest.entries) {
       assert.equal(
         Object.hasOwn(entry, "dependencies"),
         false,
-        label + ": " + entry.id,
+        label + ": " + entry.path,
       );
       assert.ok(
         Array.isArray(entry.declaredDependencies),
-        label + ": " + entry.id,
+        label + ": " + entry.path,
       );
       assert.deepEqual(
-        published.find((record) => record.id === entry.id)?.details
+        published.find((record) => record.path === entry.path)?.details
           .dependencies,
         [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort(),
-        label + ": " + entry.id,
+        label + ": " + entry.path,
       );
     }
     t.diagnostic(

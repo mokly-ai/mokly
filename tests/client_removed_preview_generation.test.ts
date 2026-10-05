@@ -7,7 +7,7 @@ import {
   COMPARISON,
   GENERATION,
   respond,
-} from "./client_removed_preview_requests_fixture.js";
+} from "./helpers/removed_preview_requests.js";
 
 test("a generation that resolved elsewhere is not reused", async () => {
   const loaded = {

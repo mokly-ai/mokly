@@ -37,9 +37,9 @@ test("non-identity metadata cannot split one screen id's view evidence", async (
     changedPaths: [resource],
     config,
   });
-  const paired = result.screens.find((entry) => entry.id === "a")!;
-  assert.equal(paired.before?.id, "a");
-  assert.equal(paired.after?.id, "a");
+  const paired = result.screens.find((entry) => entry.path === "a")!;
+  assert.equal(paired.before?.path, "a");
+  assert.equal(paired.after?.path, "a");
   assert.equal(result.screens.length, 1);
   assert.ok(
     paired.views.some((view) =>
@@ -50,7 +50,7 @@ test("non-identity metadata cannot split one screen id's view evidence", async (
     result.changes.some(
       (entry) =>
         entry.kind === "screen" &&
-        entry.after?.id === "a" &&
+        entry.after?.path === "a" &&
         entry.reasons.some(
           (reason) => reason.kind === "dependency" && reason.path === resource,
         ),
@@ -58,16 +58,22 @@ test("non-identity metadata cannot split one screen id's view evidence", async (
   );
 });
 
-test("classification drops a baseline entry whose id changed kind", async (t) => {
+test("a path reused by another kind retains both accepted same-kind moves", async (t) => {
   const beforeSource = componentEntrySource();
   const fixture = await componentReviewFixture(
     t,
     (value) =>
       value
-        .replace('id: "action", title: "Action"', 'id: "home", title: "Action"')
-        .replace('id: "home", title: "Home"', 'id: "new-home", title: "Home"')
-        .replaceAll('"action-default"', '"home-default"')
-        .replaceAll('"action-disabled"', '"home-disabled"')
+        .replace(
+          'path: "action", title: "Action"',
+          'path: "home", title: "Action"',
+        )
+        .replace(
+          'path: "home", title: "Home"',
+          'path: "new-home", title: "Home"',
+        )
+        .replaceAll('"action/default"', '"home-default"')
+        .replaceAll('"action/disabled"', '"home-disabled"')
         .replaceAll('to="action"', 'to="home"'),
     beforeSource,
   );
@@ -80,7 +86,7 @@ test("classification drops a baseline entry whose id changed kind", async (t) =>
     config: fixture.config,
   });
   const reused = classified.result.changes.filter(
-    (entry) => (entry.after ?? entry.before)?.id === "home",
+    (entry) => (entry.after ?? entry.before)?.path === "home",
   );
 
   assert.deepEqual(
@@ -89,7 +95,18 @@ test("classification drops a baseline entry whose id changed kind", async (t) =>
       Boolean(entry.before),
       Boolean(entry.after),
     ]),
-    [["component", false, true]],
+    [["component", true, true]],
+  );
+  assert.equal(reused[0]!.previousPath, "action");
+  const movedScreen = classified.result.screens.find(
+    (entry) => entry.path === "new-home",
+  )!;
+  assert.equal(movedScreen.previousPath, "home");
+  assert.equal(movedScreen.before?.path, "home");
+  assert.ok(
+    !classified.result.changes.some((entry) =>
+      entry.reasons.some((reason) => reason.kind === "removed"),
+    ),
   );
   assert.deepEqual(parseReviewResult(classified.result), classified.result);
 });
@@ -101,5 +118,5 @@ function source(screens: readonly string[]): string {
 }
 
 function screen(id: string, title: string, body: string): string {
-  return `defineScreen({ ...metadata, id: "${id}", title: "${title}", description: "A screen", navPath: ["Fixture"], mobile: <main>${body}</main>, desktop: <main>${body}</main> })`;
+  return `defineScreen({ ...metadata, path: "${id}", title: "${title}", description: "A screen", mobile: <main>${body}</main>, desktop: <main>${body}</main> })`;
 }

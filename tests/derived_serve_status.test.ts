@@ -88,10 +88,7 @@ test(
         preparing,
         /class="mbk-nav-spinner" role="status" aria-label="Preparing comparison"/,
       );
-      assert.equal(
-        (await fetch(`${running.url}/view/screens/home.html`)).status,
-        200,
-      );
+      assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
       const builds = builder.builds.length;
       const preview = await fetch(
         `${running.url}/mokly-viewer/diffs/review.json?page=removed`,
@@ -185,10 +182,7 @@ test(
         "unavailable",
       ]);
       assert.ok(logged.some((line) => line.includes(reason)));
-      assert.equal(
-        (await fetch(`${running.url}/view/screens/home.html`)).status,
-        200,
-      );
+      assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
       const builds = builder.builds.length;
       const preview = await fetch(
         `${running.url}/mokly-viewer/diffs/review.json?page=removed`,
@@ -266,7 +260,7 @@ test(
       await waitFor(async () => {
         const document = await (
           await fetch(
-            `${running.url}/static/mokly-generated/screens/home.mobile.html`,
+            `${running.url}/static/mokly-generated/home/index.mobile.html`,
           )
         ).text();
         return document.includes("Freshly edited preview")

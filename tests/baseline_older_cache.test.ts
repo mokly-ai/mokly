@@ -14,7 +14,7 @@ for (const format of ["flat-v7", "generated-v6"] as const) {
     fs.reads.length = 0;
     const result = await builder.build(request);
     assert.equal(result.cacheHit, false);
-    assert.equal(result.marker.manifestVersion, 8);
+    assert.equal(result.marker.manifestVersion, 9);
     assert.ok(calls.length > commands);
     assert.equal(fs.reads.includes(manifest), false);
     assert.ok(await fs.stat(layout.marker));

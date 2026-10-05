@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { defineScreen, defineUseCase } from "../dist/authoring/definitions.js";
 import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
@@ -20,6 +21,7 @@ import {
   currentManifest,
 } from "./helpers/current_manifest.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { resolvedEntry } from "./helpers/resolved.js";
 test("current filesystem reads reject an earlier-name manifest sentinel", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
@@ -47,7 +49,7 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
     JSON.stringify(legacy),
   );
 
-  assert.throws(() => readManifest(config), /schema version 8/);
+  assert.throws(() => readManifest(config), /schema version 9/);
 });
 
 test("manifest loading rejects stored routes", async (context) => {
@@ -100,18 +102,19 @@ test("light-only manifests remain deterministic without variant metadata", () =>
           declaredDependencies: [],
           colorSchemes: ["light"],
           description: "A screen",
-          id: "a",
+          path: "a",
           kind: "screen",
-          navPath: [],
+
           relatedDocs: [],
           sourcePath: "entries/a.mockup.tsx",
           title: "A",
-          useCaseIds: [],
+          useCasePaths: [],
         },
       ],
       generatedBy: "mokly",
       sourceFiles: ["entries/a.mockup.tsx"],
-      schemaVersion: 8,
+      schemaVersion: 9 as const,
+      folders: [],
     }),
   );
 
@@ -129,7 +132,7 @@ test("manifest serializes declared tags and omits absent ones", () => {
       [
         resolvedScreen("a", {
           tags: ["onboarding", "forms"],
-          useCaseIds: ["tour", "untagged-tour"],
+          useCasePaths: ["tour", "untagged-tour"],
         }),
         resolvedScreen("b", { tags: [] }),
         resolvedScreen("c"),
@@ -143,7 +146,7 @@ test("manifest serializes declared tags and omits absent ones", () => {
   const entries = parseManifest(JSON.parse(serialized)).entries;
 
   assert.deepEqual(
-    entries.map((entry) => [entry.id, Object.hasOwn(entry, "tags")]),
+    entries.map((entry) => [entry.path, Object.hasOwn(entry, "tags")]),
     [
       ["a", true],
       ["b", false],
@@ -167,15 +170,15 @@ test("disabling dark removes obsolete generated fragments on rebuild", async (co
 
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };\n',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
   const lightConfig = await loadConfig(fixture.root);
   const lightCompilation = await compileCatalogue(lightConfig);
   const extra = [
-    "screens/details.desktop.dark.html",
-    "screens/details.mobile.dark.html",
-    "screens/home.desktop.dark.html",
-    "screens/home.mobile.dark.html",
+    "details/index.desktop.dark.html",
+    "details/index.mobile.dark.html",
+    "home/index.desktop.dark.html",
+    "home/index.mobile.dark.html",
   ];
   assert.throws(
     () => checkCompilation(lightCompilation, lightConfig),
@@ -208,40 +211,38 @@ function resolvedUseCase(
   tags?: readonly string[],
   id = "tour",
 ): ResolvedRegistryEntry {
-  return {
-    __viaDefine: true,
-    dependencies: [],
-    description: "A journey",
-    id,
-    kind: "use-case",
-    navPath: [],
-    relatedDocs: [],
-    sourcePath: `/repo/entries/${id}.mockup.tsx`,
-    sourceRelativePath: `entries/${id}.mockup.tsx`,
-    steps: [{ screenId: "a" }],
-    ...(tags ? { tags } : {}),
-    title: "Tour",
-  };
+  return resolvedEntry(
+    defineUseCase({
+      dependencies: [],
+      description: "A journey",
+      path: id,
+
+      relatedDocs: [],
+      steps: [{ screenPath: "a" }],
+      ...(tags ? { tags } : {}),
+      title: "Tour",
+    }),
+    `entries/${id}.mockup.tsx`,
+  );
 }
 
 function resolvedScreen(
   id = "a",
-  options: { tags?: readonly string[]; useCaseIds?: readonly string[] } = {},
+  options: { tags?: readonly string[]; useCasePaths?: readonly string[] } = {},
 ): ResolvedRegistryEntry {
-  return {
-    __viaDefine: true,
-    dependencies: [],
-    description: "A screen",
-    desktop: null,
-    id,
-    kind: "screen",
-    navPath: [],
-    mobile: null,
-    relatedDocs: [],
-    sourcePath: `/repo/entries/${id}.mockup.tsx`,
-    sourceRelativePath: `entries/${id}.mockup.tsx`,
-    ...(options.tags ? { tags: options.tags } : {}),
-    title: id.toUpperCase(),
-    useCaseIds: options.useCaseIds ?? [],
-  };
+  return resolvedEntry(
+    defineScreen({
+      slug: id,
+      dependencies: [],
+      description: "A screen",
+      desktop: null,
+      path: id,
+      mobile: null,
+      relatedDocs: [],
+      ...(options.tags ? { tags: options.tags } : {}),
+      title: id.toUpperCase(),
+      useCasePaths: options.useCasePaths ?? [],
+    }),
+    `entries/${id}.mockup.tsx`,
+  );
 }

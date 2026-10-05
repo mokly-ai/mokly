@@ -68,7 +68,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
   for (const route of [
     "/",
     "/?filter=changes&search=removed",
-    "/view/screens/current.html",
+    "/view/current/",
     "/mokly-viewer/catalogue.json",
   ])
     assert.equal((await fetch(`${server.url}${route}`)).status, 200, route);
@@ -82,7 +82,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
   assert.ok(beforeCapture.removedEntries.every((entry) => !entry.preview));
 
   const screenResponse = await fetch(
-    `${server.url}/mokly-viewer/diffs/review.json?id=removed-screen`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=fixture/deleted-archive/deleted-section/removed-screen`,
   );
   assert.equal(screenResponse.status, 200, await screenResponse.clone().text());
   const screen = parseReviewResult(await screenResponse.json()).screens[0]!;
@@ -93,7 +93,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
     await (
       await fetch(
         new URL(
-          `snapshots/before/mokly-generated/${viewRoute("screen", screen.id, firstView.viewport, firstView.colorScheme)}`,
+          `snapshots/before/mokly-generated/${viewRoute(screen.path, firstView.viewport, firstView.colorScheme)}`,
           screenResponse.url,
         ),
       )
@@ -103,7 +103,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
   assert.equal(screenCaptures, 1);
 
   const pageResponse = await fetch(
-    `${server.url}/mokly-viewer/diffs/review.json?page=removed-page`,
+    `${server.url}/mokly-viewer/diffs/review.json?page=fixture/deleted-archive/deleted-section/removed-page`,
   );
   assert.equal(pageResponse.status, 200, await pageResponse.clone().text());
   const preview = parseRemovedPagePreview(await pageResponse.json());
@@ -112,7 +112,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
     await (
       await fetch(
         new URL(
-          `snapshots/before/mokly-generated/${entryRoute("page", preview.id)}`,
+          `snapshots/before/mokly-generated/${entryRoute(preview.path)}`,
           pageResponse.url,
         ),
       )

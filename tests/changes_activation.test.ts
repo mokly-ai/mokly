@@ -4,7 +4,7 @@ import test from "node:test";
 import { viewHref } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
@@ -19,33 +19,34 @@ type CurrentManifestScreen = ManifestScreen & {
   declaredDependencies: readonly string[];
 };
 
-const parent = screen("welcome", "Welcome", "screens/welcome.html");
+const parent = screen("welcome", "Welcome", "welcome/index.html");
 const empty = {
-  ...screen("welcome-empty", "Empty workspace", "screens/welcome-empty.html"),
-  variantOf: parent.id,
+  ...screen("welcome/empty", "Empty workspace", "welcome/empty/index.html"),
+  variantOf: parent.path,
 };
 const failure = {
-  ...screen("welcome-failure", "Failure", "screens/welcome-failure.html"),
+  ...screen("welcome-failure", "Failure", "welcome-failure/index.html"),
   tags: ["errors"],
-  variantOf: parent.id,
+  variantOf: parent.path,
 };
-const manifest: ManifestV8 = currentManifest({
+const manifest: ManifestV9 = currentManifest({
   entries: [parent, empty, failure],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
+  folders: [],
   sourceFiles: [parent.sourcePath],
 });
 const catalogue = createCatalogue(manifest);
 const context: ShellContext = {
-  activeId: parent.id,
+  activeId: parent.path,
   base: "main",
-  changedIds: [empty.id, failure.id],
+  changedEntries: [empty.path, failure.path],
   changesStatus: "ready",
   componentChanges: {
     baseline: manifest,
     screenViews: [
       {
-        id: empty.id,
+        path: empty.path,
         views: [
           {
             colorScheme: "light",
@@ -55,7 +56,7 @@ const context: ShellContext = {
         ],
       },
       {
-        id: failure.id,
+        path: failure.path,
         views: [
           {
             colorScheme: "dark",
@@ -77,7 +78,7 @@ test("an aggregate parent opens its first visible changed variant and view", () 
     route(parent),
   );
 
-  assert.equal(target(activated).id, failure.id);
+  assert.equal(target(activated).path, failure.path);
   assert.equal(activated.viewport, "desktop");
   assert.equal(activated.colorScheme, "dark");
 });
@@ -86,11 +87,11 @@ test("a changed row opens its own first changed view", () => {
   const activated = changesActivation(
     catalogue,
     context,
-    { ...defaultSelection, screenId: parent.id, view: "changes" },
+    { ...defaultSelection, screenPath: parent.path, view: "changes" },
     route(empty),
   );
 
-  assert.equal(target(activated).id, empty.id);
+  assert.equal(target(activated).path, empty.path);
   assert.equal(activated.viewport, "mobile");
   assert.equal(activated.colorScheme, "light");
 });
@@ -102,14 +103,14 @@ test("navigation within Changes keeps the sticky view axes", () => {
     {
       ...defaultSelection,
       colorScheme: "light",
-      screenId: empty.id,
+      screenPath: empty.path,
       view: "changes",
       viewport: "both",
     },
     route(failure),
   );
 
-  assert.equal(target(activated).id, failure.id);
+  assert.equal(target(activated).path, failure.path);
   assert.equal(activated.viewport, undefined);
   assert.equal(activated.colorScheme, undefined);
 });
@@ -121,7 +122,7 @@ test("navigation within Changes still redirects an aggregate parent", () => {
     {
       ...defaultSelection,
       colorScheme: "light",
-      screenId: empty.id,
+      screenPath: empty.path,
       search: "failure",
       view: "changes",
       viewport: "both",
@@ -129,7 +130,7 @@ test("navigation within Changes still redirects an aggregate parent", () => {
     route(parent),
   );
 
-  assert.equal(target(activated).id, failure.id);
+  assert.equal(target(activated).path, failure.path);
   assert.equal(activated.viewport, undefined);
   assert.equal(activated.colorScheme, undefined);
 });
@@ -142,7 +143,7 @@ test("an explicit axis prevents automatic view selection", () => {
     { ...route(parent), viewport: "mobile" },
   );
 
-  assert.equal(target(activated).id, failure.id);
+  assert.equal(target(activated).path, failure.path);
   assert.equal(activated.viewport, "mobile");
   assert.equal(activated.colorScheme, undefined);
 });
@@ -151,7 +152,7 @@ test("only a valid explicit axis suppresses first-changed-view landing", () => {
   const partial = routeFromUrl(
     catalogue,
     new URL(
-      `https://example.test${viewHref("screen", parent.id)}?viewport=invalid&scheme=light`,
+      `https://example.test${viewHref(parent.path)}?viewport=invalid&scheme=light`,
     ),
   );
   const partialActivation = changesActivation(
@@ -160,14 +161,14 @@ test("only a valid explicit axis suppresses first-changed-view landing", () => {
     { ...defaultSelection, view: "changes", search: "failure" },
     partial,
   );
-  assert.equal(target(partialActivation).id, failure.id);
+  assert.equal(target(partialActivation).path, failure.path);
   assert.equal(partialActivation.viewport, undefined);
   assert.equal(partialActivation.colorScheme, "light");
 
   const invalid = routeFromUrl(
     catalogue,
     new URL(
-      `https://example.test${viewHref("screen", parent.id)}?viewport=mobile&viewport=desktop&scheme=invalid`,
+      `https://example.test${viewHref(parent.path)}?viewport=mobile&viewport=desktop&scheme=invalid`,
     ),
   );
   const automatic = changesActivation(
@@ -176,7 +177,7 @@ test("only a valid explicit axis suppresses first-changed-view landing", () => {
     { ...defaultSelection, view: "changes", search: "failure" },
     invalid,
   );
-  assert.equal(target(automatic).id, failure.id);
+  assert.equal(target(automatic).path, failure.path);
   assert.equal(automatic.viewport, "desktop");
   assert.equal(automatic.colorScheme, "dark");
 });
@@ -210,13 +211,13 @@ function screen(
     colorSchemes: ["light"],
     declaredDependencies: [],
     description: title,
-    id,
+    path: id,
     kind: "screen",
-    navPath: [],
+
     relatedDocs: [],
     sourcePath: "entries/welcome.mockup.tsx",
     tags: [],
     title,
-    useCaseIds: [],
+    useCasePaths: [],
   };
 }

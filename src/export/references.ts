@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { parse } from "es-module-lexer/minimal";
+
 import {
   VIEWER_DIRECTORY,
   isSafeRepositoryPath,
@@ -7,13 +9,13 @@ import {
 } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
+import { extractCssReferences } from "../css_references.js";
 import {
   fragmentViolation,
   htmlResource,
   type ResourceReference,
 } from "../html_link_validation.js";
 import {
-  extractCssReferences,
   extractHtmlReferences,
   resolveLocalReferencePath,
 } from "../html_references.js";
@@ -22,7 +24,9 @@ import { classifyResourceUrl } from "../resource_url.js";
 import { exportError } from "./error.js";
 import { ExportPathIndex } from "./path_index.js";
 
-const SNAPSHOT_MARKER = `/${path.posix.dirname(snapshotSidePath("before"))}/`;
+const COMPARISON_SNAPSHOT = new RegExp(
+  `^${VIEWER_DIRECTORY}/diffs/generations/[a-f0-9]{64}/(?:${snapshotSidePath("before")}|${snapshotSidePath("after")})`,
+);
 
 /** Prove every local document/resource/module request has an exported target. */
 export function validateExportReferences(
@@ -64,7 +68,7 @@ export function validateExportReferences(
     if (extension === ".html" || extension === ".htm") {
       references.push(
         ...(documents.get(name)?.references ?? []).filter(
-          (item) => !item.checkFragment || !name.includes(SNAPSHOT_MARKER),
+          (item) => !item.checkFragment || !COMPARISON_SNAPSHOT.test(name),
         ),
       );
     } else if (extension === ".css")
@@ -74,12 +78,8 @@ export function validateExportReferences(
           checkFragment: false,
         })),
       );
-    else if (extension === ".js" && name.startsWith(`${VIEWER_DIRECTORY}/`)) {
-      for (const match of content.matchAll(
-        /\b(?:from|import)\s*["']([^"']+)["']/g,
-      ))
-        references.push({ value: match[1] ?? "", checkFragment: false });
-    }
+    else if (extension === ".js" && name.startsWith(`${VIEWER_DIRECTORY}/`))
+      references.push(...moduleReferences(name, content));
     for (const reference of references) {
       const target = referenceTarget(name, reference.value);
       if (target === undefined) continue;
@@ -99,6 +99,23 @@ export function validateExportReferences(
       if (violation)
         throw exportError(`Export link is invalid: ${name} -> ${violation}`);
     }
+  }
+}
+
+function moduleReferences(
+  source: string,
+  content: string,
+): ResourceReference[] {
+  try {
+    const [imports] = parse(content, source);
+    return imports.flatMap(({ n }) =>
+      n === undefined ? [] : [{ value: n, checkFragment: false }],
+    );
+  } catch (error) {
+    throw exportError(
+      `Could not read export module references: ${source}`,
+      error,
+    );
   }
 }
 

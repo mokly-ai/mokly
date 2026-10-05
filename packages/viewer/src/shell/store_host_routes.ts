@@ -32,18 +32,18 @@ export function hostRoute(
   selection: ViewerSelection,
   fragment?: string,
 ): ShellRoute {
-  const entry = selection.screenId
+  const entry = selection.screenPath
     ? catalogueSelectionEntry(
         catalogue,
-        selection.screenId,
+        selection.screenPath,
         selection.snapshotId,
       )
     : undefined;
   const view = entry
     ? { kind: "target" as const, target: { kind: "entry" as const, entry } }
-    : selection.screenId === null
+    : selection.screenPath === null
       ? { kind: "home" as const }
-      : { kind: "missing" as const, requested: selection.screenId };
+      : { kind: "missing" as const, requested: selection.screenPath };
   return {
     view,
     ...(selection.snapshotId ? { snapshot: selection.snapshotId } : {}),
@@ -81,7 +81,7 @@ export function withHostRoute(
 ): ShellState {
   const path =
     route.view.kind === "target"
-      ? disclosurePath(sections, route.view.target.entry.id)
+      ? disclosurePath(sections, route.view.target.entry.path)
       : [];
   return {
     ...state,
@@ -107,16 +107,16 @@ export function announceNavigation(
   pending: PendingNavigation | undefined,
 ): void {
   const entry =
-    typeof selection.screenId === "string"
+    typeof selection.screenPath === "string"
       ? resolveCatalogueSelection(
           environment.model,
-          selection.screenId,
+          selection.screenPath,
           selection.snapshotId,
         )?.entry
       : undefined;
   if (!entry) return;
   environment.events().onScreenNavigate?.({
-    screenId: entry.id,
+    screenPath: entry.path,
     ...(selection.snapshotId ? { snapshotId: selection.snapshotId } : {}),
     ...(fragment ? { fragment } : {}),
     ...(pending?.navigation ? { navigation: pending.navigation } : {}),

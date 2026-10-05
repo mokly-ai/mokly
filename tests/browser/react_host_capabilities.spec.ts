@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { expectedConsoleNotice } from "./console_notices.js";
 import { startStaticFixture } from "./static_fixture.js";
 
 let exported: Awaited<ReturnType<typeof startStaticFixture>>;
@@ -18,7 +19,7 @@ test("live host waits for explicit capabilities and repeated bootstrap stays sin
   const errors = captureErrors(page);
   await countHydrations(page);
   const gate = await delayHost(page);
-  await page.goto("/view/screens/example-welcome.html", {
+  await page.goto("/view/example/screens/welcome/", {
     waitUntil: "commit",
   });
   await gate.requested;
@@ -50,7 +51,7 @@ test("export auto-hydrates once without live capabilities", async ({
 }) => {
   const errors = captureErrors(page);
   await countHydrations(page);
-  await page.goto(new URL("/view/screens/home.html", exported.url).href);
+  await page.goto(new URL("/view/home/", exported.url).href);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
   await expect(page.locator("html")).not.toHaveAttribute(
     "data-mokly-host-capabilities",
@@ -109,11 +110,8 @@ async function delayHost(page: Page): Promise<{
 function captureErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() !== "error") return;
-    const sandboxDiagnostic =
-      message.text().includes("document's frame is sandboxed") &&
-      message.text().startsWith("Blocked script execution in");
-    if (!sandboxDiagnostic) errors.push(message.text());
+    if (message.type() === "error" && !expectedConsoleNotice(message))
+      errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;

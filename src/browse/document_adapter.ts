@@ -144,7 +144,13 @@ export function adaptBrowseDocument(
       continue;
     }
     const serializedTarget = serializeBrowsingTarget(target);
-    const identity = { ...destination, target };
+    const identity = {
+      screenPath: destination.path,
+      ...(destination.fragment === undefined
+        ? {}
+        : { fragment: destination.fragment }),
+      target,
+    };
     let index = links.findIndex(
       (link) => JSON.stringify(link) === JSON.stringify(identity),
     );

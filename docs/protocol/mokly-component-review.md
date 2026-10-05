@@ -2,38 +2,41 @@
 
 ## Delivery Status
 
-The producer, source validator, artifact publisher, exporter, and browser decoder
-implement this component-aware Review schema v4 for [change attribution](./mokly-component-changes.md).
-`ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
-base [Changes contract](./mokly-changes.md) and
-[named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
-from the [component manifest](./mokly-component-manifest.md). Version 4,
-defined by the [id-derived routes plan](../../plans/id-derived-routes.md),
-addresses screens, components, variants, and views by entry id and view axes
-and stores no artifact path.
+The producer, source validator, artifact publisher, exporter, and browser
+decoder implement this path-keyed component-aware schema v5 for
+[change attribution](./mokly-component-changes.md). `ReviewResult`,
+`ScreenReview`, `ViewReview`, and `ReviewState` refer to the base
+[Changes contract](./mokly-changes.md) and
+[named result interfaces](../../packages/viewer/src/review/types.ts).
+Manifest/usage types come from the
+[component manifest](./mokly-component-manifest.md). Version 5 addresses
+screens, components, variants, and views by entry path and view axes, carries
+`previousPath` for paired moves, and stores no artifact path.
 
 ## Normative Result
 
 ```ts
 interface ReviewEntryAddress {
-  id: string;
+  path: string;
   title: string;
 }
 
 interface ReviewEntrySides {
   before?: ReviewEntryAddress;
   after?: ReviewEntryAddress;
+  previousPath?: string;
 }
 
-interface ScreenReviewV4 extends ScreenReview, ReviewEntrySides {}
+interface ScreenReviewV6 extends ScreenReview, ReviewEntrySides {}
 
 type ReviewVariantAddress = Pick<
   ManifestComponentVariant,
-  "id" | "title" | "description" | "props" | "suppliedSlots"
+  "path" | "title" | "description" | "props" | "suppliedSlots"
 >;
 
 interface ComponentVariantReview {
-  id: string;
+  path: string;
+  previousPath?: string;
   title: string;
   before?: ReviewVariantAddress;
   after?: ReviewVariantAddress;
@@ -59,7 +62,7 @@ type EntryChangeReason =
         selectors: readonly string[];
       };
     }
-  | { kind: "screen"; id: string };
+  | { kind: "screen"; screenPath: string };
 
 interface ChangedEntry extends ReviewEntrySides {
   kind: "screen" | "component" | "use-case";
@@ -76,7 +79,7 @@ type ComponentUsageContext =
   | {
       kind: "component";
       entry: ReviewEntryAddress;
-      variantId: string;
+      variantPath: string;
       viewport: Viewport;
       colorScheme: ColorScheme;
     };
@@ -92,16 +95,17 @@ interface AffectedUsageEvidence {
 
 interface AffectedConsumer {
   changedComponentId: string;
-  consumer: { kind: "screen"; id: string } | { kind: "component"; id: string };
+  consumer:
+    { kind: "screen"; path: string } | { kind: "component"; path: string };
   evidence: readonly AffectedUsageEvidence[];
 }
 
-interface ReviewResultV4 extends Omit<
+interface ReviewResultV6 extends Omit<
   ReviewResult,
   "schemaVersion" | "screens"
 > {
-  schemaVersion: 4;
-  screens: readonly ScreenReviewV4[];
+  schemaVersion: 6;
+  screens: readonly ScreenReviewV6[];
   components: readonly ComponentReview[];
   changes: readonly ChangedEntry[];
   affectedConsumers: readonly AffectedConsumer[];
@@ -109,20 +113,24 @@ interface ReviewResultV4 extends Omit<
 ```
 
 Every side-bearing record has at least one side, copied from the corresponding
-validated branch-point/current manifest. Top-level id/title conveniences match
-`after ?? before`. Screens, components, and variants of both kinds pair by
-entry id: a `ComponentVariantReview` and a `ReviewVariantAddress` name the
-variant entry's global id, and a component usage context's `variantId` is that
-same entry id. Title edits remain metadata changes; removed
-components/variants retain their former names.
+validated branch-point/current manifest. Top-level path/title conveniences
+match `after ?? before`. Screens, components, and variants of both kinds pair
+by entry path, then the [move contract](./mokly-moves.md) pairs the remaining
+removed and added entries of one kind; `previousPath` is the paired baseline
+entry's path, present exactly on such records, which carry both sides. A
+`ComponentVariantReview` and a `ReviewVariantAddress` name the variant entry's
+path, and a component usage context's `variantPath` is that same path.
+`componentId` and `changedComponentId` keep their names and hold the parent
+component's path, the only identity a component has. Title edits remain
+metadata changes; removed components/variants retain their former names.
 
 Each screen result contains the union of its available before/after views.
 Component variants contain their own view unions. A view is addressed by its
 `viewport` and `colorScheme`; the result stores no artifact path. A side's
-snapshot file is `snapshots/<side>/<view route>` under the generation
-directory, where the view route derives from the entry's kind, id, viewport,
-and scheme under the
-[derived route rule](./mokly-authoring.md#derived-routes). Added/removed views
+snapshot file is `snapshotViewPath(side, path, viewport, colorScheme)` under
+the generation directory, from the
+[artifact path contract](./mokly-artifact-paths.md), where the before side of
+a paired entry uses its `previousPath`. Added/removed views
 have the existing explicit missing-side states, which are the only record of a
 missing side. Aggregate states retain the current precedence: changed, added,
 removed, ignored-only, unchanged. A metadata/dependency-only entry can have
@@ -140,12 +148,12 @@ All current/base screens appear in `screens`, including affected-only screens.
 Neither array is the Changes filter. `changes` is its sole membership source;
 its length is the Changes count, with no duplicate entry records. A changed
 component variant is its own `ChangedEntry` of kind `component`, addressed by
-the variant entry id, exactly as a screen variant is its own screen row.
+the variant entry path, exactly as a screen variant is its own screen row.
 Usages and ancestor folders do not add rows/counts.
 
 ## Reasons And Secondary Evidence
 
-Changed entries have nonempty, duplicate-free reasons. Added/removed reasons
+Changed entries have duplicate-free reasons, empty only for a paired pure move. Added/removed reasons
 require the corresponding missing side; metadata compares the explicit entry
 projection, including a parent's schema/controls and a variant entry's props
 and supplied slots. Material means a
@@ -162,7 +170,7 @@ stylesheet reason may carry the
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
 stylesheet paths in analysis scope, a view carries `material: true` exactly
 when its normalized documents differ, and a view's `excludedResources` paths must be in
-`changedPaths` and never coincide with that view's dependency reasons. A screen reason is allowed only on a use case and
+`changedPaths` and never coincide with that view's dependency reasons. A screen reason names a step's `screenPath`, is allowed only on a use case, and
 must reference a directly changed screen actually used on at least one side.
 Use cases also retain their own metadata/dependency reasons. One screen with
 only affected component evidence cannot produce a use-case screen reason.
@@ -186,17 +194,17 @@ it. The [CSS contract](./mokly-css-attribution.md) defines selector requirements
 globs and declarations cannot override an excluded in-scope stylesheet.
 
 Each affected record groups one changed component and one canonical consumer.
-Its component id must appear in `changes` with kind component, and evidence
-must be nonempty.
+Its `changedComponentId` must name a component that appears in `changes` with
+kind component, and evidence must be nonempty.
 Build its evidence from the union of baseline/current actual usage, deduplicating
 identical evidence. A consumer may also be directly changed. Self-impact is not
 listed. A component is listed as affected only through an actual usage path, not
 because it happens to share a directory or dependency declaration.
 
 Every `via` is a nonempty caller-ownership chain from the consumer to the changed
-component; its last component id equals `changedComponentId`. Each instance key
+component; its last `componentId`, mapped through accepted pairs, equals `changedComponentId`. Each instance key
 must exist in the referenced side/context's manifest usage, with its stated
-component id and a valid ownership edge to the next occurrence. Direct screen
+`componentId` and a valid ownership edge to the next occurrence. Direct screen
 use has one element. A component consumer either owns the context entry or is
 an earlier instance on that chain within a screen/another component's context.
 The evidence's full context remains available to open that actual usage; never
@@ -204,12 +212,13 @@ invent a saved variant for a screen-supplied prop combination.
 
 Use input ownership, not physical slot placement, to determine these edges. A
 screen-supplied child in a container slot remains a direct screen dependency.
-For removed consumers the before-side address and usage supply the link target.
+The [branch-point lookup](./mokly-branch-point-lookup.md#reference-sides) resolves
+each evidence destination from its own side; stored evidence paths never change.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
 Result-level `sharedImpact` remains every changed path matching a configured
-`review.sharedImpact` glob. For each v4 screen or component record, entry
+`review.sharedImpact` glob. For each v5 screen or component record, entry
 `sharedImpact` is the sorted, duplicate-free union of:
 
 1. Every matched changed path that is not a stylesheet, regardless of owner.

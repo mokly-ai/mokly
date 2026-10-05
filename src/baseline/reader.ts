@@ -26,7 +26,7 @@ export class RebuiltBaselineReader implements BaselineReader {
     readonly catalogue: BaselineCatalogue = baselineCatalogue(
       commit,
       mockupsPath || ".",
-      "generated-v8",
+      "generated-v9",
     ),
   ) {}
 

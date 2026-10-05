@@ -9,7 +9,7 @@ test("evidence fetched for a previous route cannot replace the destination", asy
   const { server } = fixture;
   let release = () => {};
   try {
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/fixture/screens/home/`);
     await page
       .locator("html")
       .evaluate((root) => root.setAttribute("data-test-retained", "true"));
@@ -20,7 +20,7 @@ test("evidence fetched for a previous route cannot replace the destination", asy
     const held = new Promise<void>((resolve) => {
       release = resolve;
     });
-    await page.route("**/view/screens/home.html", async (route) => {
+    await page.route("**/view/fixture/screens/home/", async (route) => {
       const response = await route.fetch();
       captured();
       await held;
@@ -28,12 +28,14 @@ test("evidence fetched for a previous route cannot replace the destination", asy
     });
     server.publishUpdate({
       kind: "evidence",
-      changedIds: ["details"],
+      changedEntries: ["fixture/screens/details"],
       changesStatus: "ready",
     });
     await ready;
-    await page.locator('a[data-route="screens/details.html"]').click();
-    await expect(page).toHaveURL(`${server.url}/view/screens/details.html`);
+    await page
+      .locator('a[data-route="fixture/screens/details/index.html"]')
+      .click();
+    await expect(page).toHaveURL(`${server.url}/view/fixture/screens/details/`);
     release();
     await page.unrouteAll({ behavior: "wait" });
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
@@ -58,7 +60,7 @@ test("an older evidence response cannot overwrite the latest result", async ({
   const { server } = fixture;
   let release = () => {};
   try {
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/fixture/screens/home/`);
     await page
       .locator("html")
       .evaluate((root) => root.setAttribute("data-test-retained", "true"));
@@ -70,7 +72,7 @@ test("an older evidence response cannot overwrite the latest result", async ({
       release = resolve;
     });
     let first = true;
-    await page.route("**/view/screens/home.html", async (route) => {
+    await page.route("**/view/fixture/screens/home/", async (route) => {
       if (!first) return route.continue();
       first = false;
       const response = await route.fetch();
@@ -80,13 +82,13 @@ test("an older evidence response cannot overwrite the latest result", async ({
     });
     server.publishUpdate({
       kind: "evidence",
-      changedIds: ["home"],
+      changedEntries: ["fixture/screens/home"],
       changesStatus: "ready",
     });
     await ready;
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [],
+      changedEntries: [],
       changesStatus: "ready",
     });
     await expect(page.locator("html")).toHaveAttribute(
@@ -114,7 +116,7 @@ test("navigation and evidence responses converge on the current destination", as
   const { server } = fixture;
   let release = () => {};
   try {
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/fixture/screens/home/`);
     await page
       .locator("html")
       .evaluate((root) => root.setAttribute("data-test-retained", "true"));
@@ -125,21 +127,23 @@ test("navigation and evidence responses converge on the current destination", as
     const ready = new Promise<void>((resolve) => {
       captured = resolve;
     });
-    await page.route("**/view/screens/details.html", async (route) => {
+    await page.route("**/view/fixture/screens/details/", async (route) => {
       const response = await route.fetch();
       captured();
       await held;
       await route.fulfill({ response });
     });
-    await page.locator('a[data-route="screens/details.html"]').click();
+    await page
+      .locator('a[data-route="fixture/screens/details/index.html"]')
+      .click();
     await ready;
     server.publishUpdate({
       kind: "evidence",
-      changedIds: ["details"],
+      changedEntries: ["fixture/screens/details"],
       changesStatus: "ready",
     });
     release();
-    await expect(page).toHaveURL(`${server.url}/view/screens/details.html`);
+    await expect(page).toHaveURL(`${server.url}/view/fixture/screens/details/`);
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
     await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
     await expect(page.locator("html")).toHaveAttribute(
@@ -147,7 +151,7 @@ test("navigation and evidence responses converge on the current destination", as
       "true",
     );
     await expect(
-      page.locator('a[data-route="screens/details.html"]'),
+      page.locator('a[data-route="fixture/screens/details/index.html"]'),
     ).toHaveAttribute("aria-current", "page");
   } finally {
     release();
@@ -175,7 +179,7 @@ test("reconnecting to newer evidence keeps the page, while missed content change
       await held;
       await route.continue();
     });
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/fixture/screens/home/`);
     await ready;
     await page
       .locator("html")
@@ -183,7 +187,7 @@ test("reconnecting to newer evidence keeps the page, while missed content change
     await page.locator("[data-mokly-search]").fill("tour");
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [],
+      changedEntries: [],
       changesStatus: "ready",
     });
     release();
@@ -196,7 +200,7 @@ test("reconnecting to newer evidence keeps the page, while missed content change
     server.publishUpdate();
     server.publishUpdate({
       kind: "evidence",
-      changedIds: [],
+      changedEntries: [],
       changesStatus: "ready",
     });
     await expect(page.locator("html")).toHaveAttribute(

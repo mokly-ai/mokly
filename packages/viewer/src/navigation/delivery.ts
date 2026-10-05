@@ -4,7 +4,7 @@ import { parseViewHref, viewHref } from "./routes.js";
 
 /** Trusted shell metadata needed to serve a catalogue from ordinary files. */
 export interface StaticDelivery {
-  schemaVersion: 4;
+  schemaVersion: 5;
   deploymentId: string;
   canonicalPath: string;
   /** Null explicitly disables comparisons for a current-only publication. */
@@ -15,9 +15,7 @@ export interface StaticDelivery {
 function isCanonicalViewPath(value: unknown): value is string {
   if (typeof value !== "string") return false;
   const identity = parseViewHref(value);
-  return (
-    identity !== undefined && viewHref(identity.kind, identity.id) === value
-  );
+  return identity !== undefined && viewHref(identity) === value;
 }
 
 /** Classify untrusted metadata without crossing a browser error boundary. */
@@ -32,7 +30,7 @@ export function parseStaticDelivery(value: unknown): StaticDeliveryParseResult {
       value &&
       typeof value === "object" &&
       "schemaVersion" in value &&
-      value.schemaVersion !== 4
+      value.schemaVersion !== 5
     )
       return { kind: "unsupported-version", version: value.schemaVersion };
     const parsed = parseCurrentDelivery(value);
@@ -48,7 +46,7 @@ function parseCurrentDelivery(value: unknown): StaticDelivery | undefined {
     typeof value !== "object" ||
     Object.keys(value).length !== 4 ||
     !("schemaVersion" in value) ||
-    value.schemaVersion !== 4 ||
+    value.schemaVersion !== 5 ||
     !("deploymentId" in value) ||
     typeof value.deploymentId !== "string" ||
     !/^[a-f0-9]{64}$/.test(value.deploymentId) ||
@@ -71,7 +69,7 @@ function parseCurrentDelivery(value: unknown): StaticDelivery | undefined {
   )
     return undefined;
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     deploymentId: value.deploymentId,
     canonicalPath: value.canonicalPath as string,
     comparisonUrl: value.comparisonUrl,

@@ -38,7 +38,7 @@ test.beforeAll(async () => {
   expect(after.comparisonUrl).toBe(before.comparisonUrl);
   expect(after.deploymentId).not.toBe(before.deploymentId);
   server = await serveStaticFiles(isolated);
-  await assertServedShellMarker(server.url, "/view/screens/home.html");
+  await assertServedShellMarker(server.url, "/view/home/");
 });
 
 test.afterAll(async () => {
@@ -50,19 +50,19 @@ test.afterAll(async () => {
 test("an old tab reloads for a new deployment even when comparisons did not change", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await page
     .locator("html")
     .evaluate((root) => root.setAttribute("data-test-old-tab", "retained"));
-  await page.locator('a[data-route="screens/details.html"]').click();
+  await page.locator('a[data-route="details/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect(page.locator("html")).toHaveAttribute(
     "data-test-old-tab",
     "retained",
   );
   await fs.cp(fixture.output, isolated, { recursive: true });
-  await page.locator('a[data-route="screens/home.html"]').click();
-  await expect(page).toHaveURL(`${server.url}/view/screens/home.html`);
+  await page.locator('a[data-route="home/index.html"]').click();
+  await expect(page).toHaveURL(`${server.url}/view/home/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await expect(page.locator("html")).not.toHaveAttribute(
     "data-test-old-tab",

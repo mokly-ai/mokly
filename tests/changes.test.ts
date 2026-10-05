@@ -9,7 +9,7 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { parseArguments } from "../dist/cli/arguments.js";
 import { HELP } from "../dist/cli/help.js";
 import { loadConfig } from "../dist/config/load.js";
-import { changedManifestIds } from "../dist/registry/changed_ids.js";
+import { changedManifestPaths } from "../dist/registry/changed_paths.js";
 import { serve } from "../dist/server/serve.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
@@ -38,7 +38,7 @@ test("shared inputs require rendered impact to include screens in Changes", asyn
     review: { ...config.review, sharedImpact: ["theme/**"] },
   };
   assert.deepEqual(
-    changedManifestIds(manifest, manifest, withShared, ["theme/colors.css"]),
+    changedManifestPaths(manifest, manifest, withShared, ["theme/colors.css"]),
     [],
   );
 });
@@ -49,24 +49,26 @@ test("changing only a screen variant parent marks its id changed", async (t) => 
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
   const parent = manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   assert.ok(parent?.kind === "screen");
   const variant = {
     ...structuredClone(parent),
-    id: "home-empty",
-    useCaseIds: [],
+    path: "home/empty",
+    useCasePaths: [],
     variantOf: "home",
   };
   const base = { ...manifest, entries: [...manifest.entries, variant] };
   const current = {
     ...base,
     entries: base.entries.map((entry) =>
-      entry.id === variant.id ? { ...entry, variantOf: "details" } : entry,
+      entry.path === variant.path ? { ...entry, variantOf: "details" } : entry,
     ),
   };
 
-  assert.deepEqual(changedManifestIds(current, base, config, []), [variant.id]);
+  assert.deepEqual(changedManifestPaths(current, base, config, []), [
+    variant.path,
+  ]);
 });
 
 test("a material variant edit marks only the variant route", async (t) => {
@@ -75,15 +77,15 @@ test("a material variant edit marks only the variant route", async (t) => {
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
   const variant = manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home-empty",
+    (entry) => entry.kind === "screen" && entry.path === "home/empty",
   );
   assert.ok(variant?.kind === "screen");
 
   assert.deepEqual(
-    changedManifestIds(manifest, manifest, config, [
-      `mockups/mokly-generated/${viewRoute("screen", variant.id, "mobile", "light")}`,
+    changedManifestPaths(manifest, manifest, config, [
+      `mockups/mokly-generated/${viewRoute(variant.path, "mobile", "light")}`,
     ]),
-    [variant.id],
+    [variant.path],
   );
 });
 
@@ -93,30 +95,30 @@ test("renaming a parent title marks its variant through the parent projection", 
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
   const parent = manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   const variant = manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home-empty",
+    (entry) => entry.kind === "screen" && entry.path === "home/empty",
   );
   assert.ok(parent?.kind === "screen");
   assert.ok(variant?.kind === "screen");
   const current = {
     ...manifest,
     entries: manifest.entries.map((entry) =>
-      entry.id === parent.id ? { ...entry, title: "Renamed home" } : entry,
+      entry.path === parent.path ? { ...entry, title: "Renamed home" } : entry,
     ),
   };
 
-  assert.deepEqual(changedManifestIds(current, manifest, config, []), [
-    parent.id,
-    variant.id,
+  assert.deepEqual(changedManifestPaths(current, manifest, config, []), [
+    parent.path,
+    variant.path,
   ]);
 });
 
 for (const changed of ["parent", "variant"] as const)
   test(`use-case route propagation follows the exact changed screen: ${changed}`, async (t) => {
     const fixture = await createFixture(
-      screenVariantEntrySource({ flowScreenId: "home-empty" }),
+      screenVariantEntrySource({ flowScreenId: "home/empty" }),
     );
     t.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
@@ -124,15 +126,15 @@ for (const changed of ["parent", "variant"] as const)
     const screen = manifest.entries.find(
       (entry) =>
         entry.kind === "screen" &&
-        entry.id === (changed === "variant" ? "home-empty" : "home"),
+        entry.path === (changed === "variant" ? "home/empty" : "home"),
     );
     assert.ok(screen?.kind === "screen");
 
     assert.deepEqual(
-      changedManifestIds(manifest, manifest, config, [
-        `mockups/mokly-generated/${viewRoute("screen", screen.id, "mobile", "light")}`,
+      changedManifestPaths(manifest, manifest, config, [
+        `mockups/mokly-generated/${viewRoute(screen.path, "mobile", "light")}`,
       ]),
-      changed === "variant" ? [screen.id, "variant-flow"] : [screen.id],
+      changed === "variant" ? [screen.path, "variant-flow"] : [screen.path],
     );
   });
 
@@ -151,9 +153,7 @@ test("Changes keeps screen comparisons lazy and has no separate Review route", a
   const running = await serve(config, { base: "HEAD", port: 0, watch: false });
   try {
     await waitForClassifiedCount(running.url, 0);
-    const page = await (
-      await fetch(`${running.url}/view/screens/home.html`)
-    ).text();
+    const page = await (await fetch(`${running.url}/view/home/`)).text();
     assert.doesNotMatch(page, /href="\/review"|Mokly modes/);
     assert.match(page, /Changes/);
     assert.match(page, /data-diff-mode="current"/);
@@ -167,7 +167,7 @@ test("Changes keeps screen comparisons lazy and has no separate Review route", a
     assert.equal(response.status, 200);
     const comparison = (await response.json()) as ReviewResult;
     assert.equal(
-      comparison.screens.find((screen) => screen.id === "home")?.state,
+      comparison.screens.find((screen) => screen.path === "home")?.state,
       "unchanged",
     );
     assert.equal(
@@ -179,7 +179,7 @@ test("Changes keeps screen comparisons lazy and has no separate Review route", a
     const screen = comparison.screens[0]!;
     const snapshot = await fetch(
       new URL(
-        `snapshots/before/mokly-generated/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`,
+        `snapshots/before/mokly-generated/${viewRoute(screen.path, view.viewport, view.colorScheme)}`,
         response.url,
       ),
     );

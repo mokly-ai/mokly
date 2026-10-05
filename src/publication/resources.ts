@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   GENERATED_DIRECTORY,
   entryRoute,
+  documentRoute,
   generatedViews,
 } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
@@ -67,9 +68,11 @@ export async function copyPublicFiles(
 /** Require current documents independently of the filesystem enumeration result. */
 function catalogueDocuments(catalogue: Catalogue): readonly string[] {
   return catalogue.manifest.entries.flatMap((entry) =>
-    entry.kind === "page"
-      ? [entryRoute("page", entry.id)]
-      : generatedViews(entry).map((view) => view.path),
+    entry.kind === "document"
+      ? entry.colorSchemes.map((scheme) => documentRoute(entry.path, scheme))
+      : entry.kind === "page"
+        ? [entryRoute(entry.path)]
+        : generatedViews(entry).map((view) => view.path),
   );
 }
 

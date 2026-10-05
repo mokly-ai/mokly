@@ -25,10 +25,11 @@ test("historical v8 resources enforce their closure at the baseline root", async
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = {
-    schemaVersion: 8,
+    schemaVersion: 9,
     assetClosure: permittedNames,
     generatedFiles: [],
     blobHashAlgorithm: "sha1",
+    folders: [],
     generatedBy: "mokly",
     entries: [],
     sourceFiles: ["old-output/source.json"],

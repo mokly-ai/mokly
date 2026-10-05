@@ -28,7 +28,7 @@ test("a published renamed screen keeps one derived route without an id redirect"
   );
   assert.doesNotMatch(redirects, /^\/id\//m);
   const current = await fs.promises.readFile(
-    path.join(fixture.output, "view/screens/home.html"),
+    path.join(fixture.output, "view/home/index.html"),
     "utf8",
   );
   assert.match(documentText(current), /Renamed home/);

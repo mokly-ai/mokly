@@ -14,7 +14,7 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
 const pageSource = `import { definePage } from "@mokly/mokly";
-export const mockups = [definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => "<html><body>Handbook</body></html>" })];`;
+export const mockups = [definePage({ path: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => "<html><body>Handbook</body></html>" })];`;
 
 test("v8 combines pages and component usage at both manifest boundaries", async (t) => {
   const fixture = await createFixture(componentEntrySource());
@@ -24,14 +24,14 @@ test("v8 combines pages and component usage at both manifest boundaries", async 
   const current = parseManifest(compilation.manifest);
   const historical = parseHistoricalManifest(compilation.manifest);
   assert.deepEqual(historical, current);
-  assert.equal(current.schemaVersion, 8);
+  assert.equal(current.schemaVersion, 9);
   assert.ok(current.sourceFiles.includes("entries/handbook.mockup.ts"));
   assert.ok(current.entries.some((entry) => entry.kind === "page"));
   assert.ok(current.entries.some((entry) => entry.kind === "component"));
   const screen = current.entries.find((entry) => entry.kind === "screen");
   assert.ok(screen?.componentViews?.every((view) => view.instances.length > 0));
   assert.match(
-    textOutput(compilation.outputs, "pages/handbook.html") ?? "",
+    textOutput(compilation.outputs, "handbook/index.html") ?? "",
     /Handbook/,
   );
 });

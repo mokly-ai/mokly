@@ -1,5 +1,10 @@
 # Imported CSS Delivery
 
+Path identity integration preserves every CSS-delivery feature with roots, slugs,
+manifest v8, read model v4 and nested entry artifacts. See
+[Milestone 3A](./path-identity.md#milestone-3a-integrate-main). Completed integration
+records below retain the versions and API names used by their historical commits.
+
 ## Status
 
 Complete: implementation PR #125 merged as `ff376d7` on 2026-10-02.
@@ -115,7 +120,7 @@ the same inventory.
 1. **Reserved generated directory.** All output from this feature lives under
    `<mockupsDir>/mokly-generated/`. Mokly owns every file below it. The
    directory is package-owned in the same way the manifest file is: configured
-   entry-glob static prefixes, `entriesDir`, `stylesheets` paths,
+   root file-pattern static prefixes, `roots[].dir`, `stylesheets` paths,
    `review.outDir`, inventoried sources, and consumer-authored public files
    must not be inside it; discovery skips it for broad entry globs. Reject
    `publicExclude` only when a brace-expanded alternative starts with literal
@@ -335,7 +340,7 @@ Resolve review findings without reopening Milestone 1 or changing product code.
 - [x] Define the literal-first-segment, brace-expanded `publicExclude` check
       and Build-time exclusion collision against all generated routes (including
       defaults); give both cases exact diagnostics.
-- [x] Make entry-glob prefix, broad discovery skip, co-located `entriesDir`,
+- [x] Make root file-pattern prefix, broad discovery skip, co-located roots,
       and equal-to/inside `review.outDir` rules unambiguous.
 - [x] Allow an npm `@scope` asset segment after `node_modules`; confirm
       esbuild's CSS URL, URL encoding, Serve decode and export resolution.
@@ -398,11 +403,11 @@ it.
       and Build-time collisions against all exclusions, including defaults,
       with the catalogued diagnostic and tests.
 - [x] Clarify co-located `entries` globs versus the existing rejection of
-      `entriesDir === mockupsDir`; keep other protocol and README references
+      `roots[].dir === mockupsDir`; keep other protocol and README references
       consistent with the implemented boundary.
 - [x] Reject reserved `stylesheets` paths in `src/config/rules.ts`, static
       `entries` prefixes in `src/config/entry_globs.ts`, an equal-or-inside
-      `entriesDir`/`review.outDir`, and brace-expanded first-segment
+      `roots[].dir`/`review.outDir`, and brace-expanded first-segment
       `publicExclude` in `src/config/public_exclusions.ts`. Skip the reserved
       directory during broad entry discovery; check generated stylesheet/asset
       routes against **all** public exclusions (including defaults) in

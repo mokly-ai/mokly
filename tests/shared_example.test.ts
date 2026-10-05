@@ -109,7 +109,7 @@ test("a copied cache is revalidated against its actual generated inventory", asy
     await fs.appendFile(
       path.join(
         output,
-        "examples/basic/mokly-generated/screens/home.mobile.html",
+        "examples/basic/mokly-generated/home/index.mobile.html",
       ),
       "changed bytes",
     );

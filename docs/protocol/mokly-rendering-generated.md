@@ -3,27 +3,30 @@
 Continuation of [Mokly Rendering And Generated Output](./mokly-rendering.md).
 The [artifact path contract](./mokly-artifact-paths.md) owns exact routes,
 and the [component manifest contract](./mokly-component-manifest.md) owns
-component-specific v8 records.
+component-specific v9 records.
 
 ## Generated Contract
 
 `mokly build` writes deterministic screen/component views, complete page
-documents, and `mokly-manifest.json` beneath `<mockupsDir>/mokly-generated/`. The
+documents, Markdown documents, and `mokly-manifest.json` beneath
+`<mockupsDir>/mokly-generated/`. Each entry has its own path directory. The
 [artifact path contract](./mokly-artifact-paths.md) owns every exact name.
 Component parents have no views, and dark views exist only for entries whose
-effective schemes include dark.
+effective schemes include dark. A [Markdown document](./mokly-documents.md) is
+rendered by Mokly itself, never by the consumer renderer, as one light document
+and one dark document when the catalogue enables dark.
 
-Screen, use-case, and component routes are durable identifiers and do not imply
-a composed HTML file. A screen's fragments are bare product renders with required head
-content but without Mokly shell chrome. Navigation folders generate no page.
-Light fragments remain canonical and unsuffixed. Turning dark off makes the
-previous dark documents extra files: tracked `check` reports them and `build`
-replaces the whole generated tree.
+Screen, use-case, and component parent entry routes (`<path>/index.html`) are
+durable identifiers and do not imply a written file. A screen's views are bare
+product renders with required head content but without Mokly shell chrome. A
+folder generates no page of its own; its index entry is its page. Light views
+remain canonical and carry no `.dark` infix. Turning dark off makes the
+previous dark documents extra files: tracked `check` reports them and `build` replaces the whole tree.
 
 Manifest source paths are repository-relative; derived routes are relative to
 `mokly-generated/` and are not stored in entries. The manifest includes every entry, source
 input, relationship, related doc, and declared dependency needed by Browse and
-Review; every view and document path derives from an entry's kind and id. It is
+Review; every view and document path derives from an entry's path. It is
 stable across operating systems and independent of absolute checkout paths.
 Repository paths are canonical POSIX paths with no empty, dot, parent, drive,
 or backslash segments; generated manifests are self-validated before writing.
@@ -33,77 +36,63 @@ marker. It does not establish ownership. The whole generated tree is disposable;
 authored closure assets stay outside it. The [unified output contract](./mokly-unified-output.md)
 defines the inventory, reserved styles/assets routes and reference policy.
 
-All catalogues emit [manifest v8](./mokly-component-manifest.md), including
-pages, source inventory, component variant entries and per-view
-invocation/ownership records. Current and baseline readers accept only v8;
+All catalogues emit [manifest v9](./mokly-component-manifest.md), including
+pages, documents, folder records, source inventory, component variant entries and per-view
+invocation/ownership records. Current and baseline readers accept only v9;
 earlier output follows [baseline compatibility](./mokly-baseline-compatibility.md).
-Version 8 stores no route, view path, or other value derivable from identity and
+Version 9 stores no route, view path, or other value derivable from path, kind, and
 configuration. The common shape is:
 
 ```ts
-interface ManifestV8 {
-  schemaVersion: 8;
+interface ManifestV9 {
+  schemaVersion: 9;
   generatedBy: "mokly";
-  entries: readonly ManifestEntry[];
+  entries: readonly ManifestEntryV8[];
+  folders: readonly ManifestFolder[];
   sourceFiles: readonly string[];
   assetClosure: readonly string[];
   generatedFiles: readonly { path: string; blobHash: string }[];
   blobHashAlgorithm: "sha1" | "sha256";
 }
 
-interface CommonEntry {
-  id: string;
-  kind: "screen" | "use-case" | "page" | "component";
+interface ManifestEntryBase {
+  path: string;
+  kind: "screen" | "page" | "document" | "use-case" | "component";
   title: string;
   description: string;
   rationale?: string;
-  navPath: readonly string[];
-  sourcePath: string;
+  movedFrom?: string;
   relatedDocs: readonly string[];
+  sourcePath: string;
   declaredDependencies: readonly string[];
   tags?: readonly string[];
 }
-
-type ManifestEntry =
-  | ManifestComponent // See the component manifest contract for the parent shape.
-  | ManifestComponentVariant // The variant entry shape lives there too.
-  | (CommonEntry & { kind: "page" })
-  | (CommonEntry & {
-      kind: "screen";
-      address?: string;
-      colorSchemes: readonly ColorScheme[];
-      componentViews: readonly ComponentViewRecord[];
-      variantOf?: string; // Present exactly on variant screens.
-      useCaseIds: readonly string[];
-    })
-  | (CommonEntry & {
-      kind: "use-case";
-      steps: readonly {
-        screenId: string;
-        title?: string;
-        description?: string;
-      }[];
-    });
 ```
 
-Entries sort by kind name in UTF-16 order (`component`, `page`, `screen`,
-`use-case`) and then id, with a parent's variants directly after it in authored
-order; source inputs, dependencies, and generated files sort lexically.
-Optional properties are omitted, not emitted as `null`.
-`navPath` is required on every v8 entry; its derivation and meaning follow
-the [navigation path contract](./mokly-nav-paths.md).
+The per-kind entry shapes, including `variantOf`, `useCasePaths`, step
+`screenPath`, document `colorSchemes` and `resources`, and the folder record
+shape are defined by the [manifest contract](./mokly-component-manifest.md).
+
+Entries sort by kind name in UTF-16 order (`component`, `document`, `page`,
+`screen`, `use-case`) and then path, with a parent's variants directly after it
+in authored order; source inputs, dependencies, and generated files sort
+lexically. Optional properties are omitted, not emitted as `null`. `path` is
+required on every entry; its derivation follows the
+[path contract](./mokly-paths.md#derivation), and folder titles and order
+follow the [folder contract](./mokly-folders.md#order).
 `colorSchemes` is the entry's effective, sorted, light-first scheme set; a
 screen or component variant has dark views exactly when that set includes dark.
-Its `.mobile.dark.html` and `.desktop.dark.html` view routes derive from the
-entry's kind and id, are not stored, and participate in the same safe-route and
-collision validation as light fragments.
+Its `index.mobile.dark.html` and `index.desktop.dark.html` views derive from
+the entry's path, are not stored, and participate in the same safe-path and
+collision validation as light views.
 `tags` carries the authored classification list, in authored order and never
 sorted, and is written only for an entry that declares a non-empty one; an
 absent or empty declaration is omitted, so an untagged catalogue serializes
 exactly as it did before the field existed.
 `sourcePath`, related docs, and declared dependencies use repo-relative POSIX
-paths. An entry's complete dependency set is the union of `sourcePath` and
-`declaredDependencies`; readers derive it, and the manifest does not store it.
+paths. An entry's complete dependency set is the union of `sourcePath`,
+`declaredDependencies`, and a document's `resources`; readers derive it, and
+the manifest does not store it.
 Declared dependencies retain the file-or-directory-root matching semantics of
 the authoring API.
 
@@ -132,6 +121,21 @@ this writer lock. Cancellation stops a Build or opted-in Serve wait; it does not
 interrupt a tree transaction already underway. Cache paths remain private and
 cannot create watch feedback or Changes evidence.
 
+Compile-time collision, ownership and target-realpath checks use a short hold of
+this same lock. Build captures the snapshot after rendering; live Serve captures
+it while accepting the metadata generation. The snapshot contains validated
+output routes and owned orphan routes, never rendered bytes. Demand, Props and
+background workers reuse that accepted snapshot instead of caching a tree read
+mid-transaction. Writers still revalidate the live tree under their own lock.
+No consumer render, import or compatibility callback runs under the snapshot
+lock. Export cancellation also cancels an initial or recheck snapshot wait.
+
+Other read-only path probes can overlap a writer. A disappearing ordinary
+ancestor restarts path projection at most five times; a dangling symlink and
+other filesystem errors still fail. A vanished directory is absent from an
+output walk, and an internal manifest that disappears during alias comparison
+is absent from that comparison; lexical metadata protection remains in force.
+
 ## Imported CSS Output
 
 Imported CSS adds deterministic routes under `mokly-generated/`:
@@ -143,8 +147,8 @@ Imported CSS adds deterministic routes under `mokly-generated/`:
 
 Every regular file in the reserved tree is owned output and is removed as an
 orphan when it is absent from the next accepted compilation. Authored CSS
-sources remain private. Manifest v8 inventories these files by exact Git blob hashes; entry routes
-still derive from identity.
+sources remain private. Manifest v9 inventories these files by exact Git blob hashes; entry routes
+still derive from path and kind.
 
 Resolve generated stylesheet links from the complete view path so screens,
 component variants and pages reach their public CSS and assets. Configured

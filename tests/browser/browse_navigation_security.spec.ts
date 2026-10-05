@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 import {
-  expectDestination,
   startSuite,
   stopSuite,
   suiteState,
 } from "./browse_navigation_security_fixture.js";
+import { expectDestination } from "./navigation_destination.js";
 
 test.beforeAll(startSuite);
 
@@ -43,7 +43,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
     { label: "named", selector: "#named-link" },
   ]) {
     await test.step(activation.label, async () => {
-      await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
+      await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
       const opened = page.context().waitForEvent("page");
       await page
         .frameLocator(".mbk-frame-mobile iframe")
@@ -56,16 +56,16 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
         });
       const popup = await opened;
       await expect(popup).toHaveURL(
-        /\/view\/screens\/details\.html\?fragment=section$/,
+        /\/view\/fixture\/nested\/details\/\?fragment=section$/,
       );
       expect(await popup.evaluate(() => window.opener)).toBeNull();
       await popup.close();
-      await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+      await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
     });
   }
 
   await test.step("Control-click", async () => {
-    await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
+    await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
     await page.evaluate(() => {
       const shell = window as typeof window & {
         __moklyOpenCalls?: unknown[][];
@@ -89,13 +89,17 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
         ),
       )
       .toEqual([
-        ["/view/screens/details.html?fragment=section", "_blank", "noopener"],
+        [
+          "/view/fixture/nested/details/?fragment=section",
+          "_blank",
+          "noopener",
+        ],
       ]);
-    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
   });
 
   await test.step("named target is opened at its canonical view URL", async () => {
-    await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
+    await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
     await page.evaluate(() => {
       const shell = window as typeof window & {
         __moklyOpenCalls?: unknown[][];
@@ -120,7 +124,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
       )
       .toEqual([
         [
-          "/view/screens/details.html?fragment=section",
+          "/view/fixture/nested/details/?fragment=section",
           "DetailsFrame",
           "noopener",
         ],
@@ -128,7 +132,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
   });
 
   for (const selector of ["#top-link", "#parent-link"]) {
-    await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
+    await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
     await page
       .frameLocator(".mbk-frame-mobile iframe")
       .locator(selector)
@@ -140,7 +144,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
 test("sandboxed direct and nested content cannot escape or invoke parent enhancement", async ({
   page,
 }) => {
-  await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
+  await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "sandbox",

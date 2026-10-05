@@ -50,6 +50,8 @@ process handles the write; failed compiles leave the last-good tree intact.
 
 ## What you can do there
 
-Browse the catalogue by folder, search it, switch viewport and color
-scheme, open the details of a screen and compare a changed screen with its
-base. The Catalogue section describes each of those.
+Every entry has the address `/view/<path>/`, so the screen at
+`specs/account/account-home.mockup.tsx` opens at
+`/view/account/account-home/`. Browse the catalogue by folder, search it,
+switch viewport and color scheme, open the details of a screen and compare a
+changed screen with its base. The Catalogue section describes each of those.

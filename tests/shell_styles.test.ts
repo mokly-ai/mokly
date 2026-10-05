@@ -3,8 +3,52 @@ import test from "node:test";
 
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
 
-import { flatCss } from "./shell_fixture.js";
-import { darkTokenSelectors } from "./shell_fixture_2.js";
+import { flatCss } from "./helpers/shell_assertions.js";
+
+test("shell stylesheet stays aligned with the design contract", () => {
+  assert.match(SHELL_CSS, /--_mokly-private-accent-default: #4f7864/);
+  assert.match(SHELL_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
+  assert.match(SHELL_CSS, /--mbk-dark-screen-bg: #121514/);
+  assert.match(SHELL_CSS, /--mbk-dark-screen-ink: #eef1ef/);
+  assert.match(SHELL_CSS, /color-scheme: light/);
+  assert.match(SHELL_CSS, /width: 390px/);
+  assert.match(SHELL_CSS, /max-width: 1180px/);
+  assert.match(SHELL_CSS, /max-width: 56\.25rem/);
+  assert.match(SHELL_CSS, /width: var\(--mbk-nav-width, 248px\)/);
+  assert.match(
+    SHELL_CSS,
+    /\.mbk-nav-section-head \{[^}]*text-transform: uppercase;[^}]*cursor: pointer;/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.mbk-nav-section\[open\][^{]*\.mbk-nav-section-chevron \{[^}]*transform: rotate\(90deg\);/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.mbk-nav\[data-resize-ready\] \.mbk-nav-resize \{[\s\S]*display: block;/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /@media \(max-width: 56\.25rem\) \{[\s\S]*\.mbk-nav-resize \{[\s\S]*display: none;/,
+  );
+  assert.match(
+    SHELL_CSS,
+    /\.phone-status \{[\s\S]*flex: 0 0 44px;[\s\S]*padding: 14px 28px 0;/,
+  );
+  assert.match(SHELL_CSS, /\.phone-screen \{[\s\S]*flex-direction: column;/);
+  assert.match(
+    SHELL_CSS,
+    /\.phone-screen \.mbk-frag \{[\s\S]*border-radius: 0 0 36px 36px;/,
+  );
+
+  assert.match(SHELL_CSS, /prefers-reduced-motion/);
+  assert.match(SHELL_CSS, /InterVariable\.woff2/);
+  assert.match(SHELL_CSS, /\.mbk-pathchip \{[\s\S]*cursor: pointer;/);
+  assert.match(
+    SHELL_CSS,
+    /\.mbk-pathchip:active \{[\s\S]*transform: translateY\(1px\);/,
+  );
+});
 
 test("both split dividers share one grip affordance", () => {
   const css = flatCss(SHELL_CSS);
@@ -143,87 +187,6 @@ test("the tag picker drops from the field and sheets under the bar", () => {
     css.includes(
       ".mbk-tag-picker { top: calc(100% + 1px); right: 0; left: 0; " +
         "border-top: 0; border-radius: 0 0 12px 12px; }",
-    ),
-  );
-});
-
-test("dark scheme paints device screens and leaves the chrome light", () => {
-  const css = flatCss(SHELL_CSS);
-  const scope = '[data-preview-color-scheme="dark"] ';
-
-  assert.ok(
-    css.includes(
-      `${scope}.phone-screen { background: var(--mbk-dark-screen-bg); }`,
-    ),
-  );
-  assert.ok(
-    css.includes(
-      `${scope}.phone-screen::after { content: ""; position: absolute; ` +
-        "inset: 0; border-radius: inherit; " +
-        "box-shadow: inset 0 0 0 1px color-mix(in srgb, " +
-        "var(--mbk-dark-screen-ink) 12%, var(--mbk-dark-screen-bg)); " +
-        "pointer-events: none; }",
-    ),
-  );
-  assert.ok(
-    css.includes(
-      `${scope}.phone-status { color: var(--mbk-dark-screen-ink); }`,
-    ),
-  );
-  assert.ok(
-    css.includes(
-      `${scope}.phone-home { background: color-mix(in srgb, ` +
-        "var(--mbk-dark-screen-ink) 40%, transparent); }",
-    ),
-  );
-  assert.ok(
-    css.includes(
-      `${scope}.browser-viewport { background: var(--mbk-dark-screen-bg); }`,
-    ),
-  );
-  assert.match(
-    css,
-    /\[data-preview-color-scheme="dark"\] \.mbk-frag \{[^}]*background: var\(--mbk-dark-screen-bg\);/,
-  );
-
-  const selectors = darkTokenSelectors(SHELL_CSS).map(flatCss);
-  assert.equal(selectors.length, 7);
-  for (const selector of selectors)
-    assert.ok(selector.startsWith(scope), selector);
-  assert.ok(
-    css.includes(
-      `${scope}.mb-pane-doc { background-color: var(--mbk-dark-screen-bg); }`,
-    ),
-  );
-
-  assert.match(
-    SHELL_CSS,
-    /\.phone-screen \{[^}]*background: var\(--mbk-screen-bg\);/,
-  );
-  assert.match(
-    SHELL_CSS,
-    /\.phone-status \{[^}]*color: var\(--mbk-screen-ink\);/,
-  );
-  assert.match(
-    SHELL_CSS,
-    /\.phone-home \{[^}]*background: var\(--mbk-device-home\);/,
-  );
-  assert.match(
-    SHELL_CSS,
-    /\.browser-viewport \{[^}]*background: var\(--mbk-screen-bg\);/,
-  );
-});
-
-test("frame labels note a light-only screen only under a dark selection", () => {
-  const css = flatCss(SHELL_CSS);
-  assert.ok(
-    css.includes(".mbk-frame-scheme-note { display: none; font-weight: 500; }"),
-  );
-  assert.ok(
-    css.includes(
-      'body[data-mokly-color-scheme="dark"] ' +
-        ".mbk-frame-wrap[data-color-scheme-fallback] " +
-        ".mbk-frame-scheme-note { display: inline; }",
     ),
   );
 });

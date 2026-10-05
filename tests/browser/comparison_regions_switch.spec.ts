@@ -96,7 +96,7 @@ function band(page: Page) {
 
 async function open(page: Page, width: number): Promise<void> {
   await page.setViewportSize({ width, height: 1000 });
-  await page.goto(`${fixture.url}/view/screens/shell.html`);
+  await page.goto(`${fixture.url}/view/shell/`);
   await chooseViewport(page, "desktop");
 }
 

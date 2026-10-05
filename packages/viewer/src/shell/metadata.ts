@@ -1,21 +1,29 @@
 import type {
   HistoricalManifest,
   HistoricalManifestEntry,
-  ManifestV8,
+  ManifestV9,
 } from "../registry/types.js";
-import type { ReviewResultV4 } from "../review/component_types.js";
-import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
+import type { ReviewResultV6 } from "../review/component_types.js";
+import type {
+  ReviewArtifact,
+  ScreenResourceEvidence,
+  ViewReview,
+} from "../review/types.js";
 
 export type CatalogueMetadata =
-  | ManifestV8
+  | ManifestV9
   | {
-      schemaVersion: "live-index-1";
-      entries: ManifestV8["entries"];
+      schemaVersion: "live-index-2";
+      entries: ManifestV9["entries"];
+      folders: ManifestV9["folders"];
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };
 export interface RemovedEntrySnapshot {
-  entry: HistoricalManifestEntry | ManifestV8["entries"][number];
+  entry: HistoricalManifestEntry | ManifestV9["entries"][number];
+  folderTitles: readonly string[];
+  /** Baseline parent title, present exactly for a removed variant. */
+  parentTitle?: string;
   snapshotId?: string;
 }
 /**
@@ -24,12 +32,15 @@ export interface RemovedEntrySnapshot {
  * it without depending on the build.
  */
 export interface ScreenViewChanges {
-  id: string;
+  path: string;
   views: readonly Pick<ViewReview, "colorScheme" | "state" | "viewport">[];
 }
 export interface ShellEvidence {
   baseline: HistoricalManifest;
-  result?: ReviewResultV4;
+  /** Actual material/metadata changes, independent of pure-move membership. */
+  changedEntries?: readonly string[];
+  pairing?: NonNullable<ReviewArtifact["pairing"]>;
+  result?: ReviewResultV6;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
 }

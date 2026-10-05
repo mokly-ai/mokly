@@ -30,7 +30,7 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
         url: new URL(
-          "/static/mokly-generated/screens/home.mobile.html",
+          "/static/mokly-generated/home/index.mobile.html",
           location.origin,
         ),
         usage: {
@@ -111,7 +111,7 @@ test("valid local logical navigation works without instance usage", async ({
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
         url: new URL(
-          "/static/mokly-generated/screens/home.mobile.html",
+          "/static/mokly-generated/home/index.mobile.html",
           location.origin,
         ),
         usage: { status: "unavailable" },
@@ -198,7 +198,8 @@ test("temporary previews authenticate masks and preserve logical navigation", as
       page.evaluate(() =>
         (window as unknown as FrameTestWindow).frameEvents.some(
           (event) =>
-            event.type === "navigation" && event.navigation.id === "action",
+            event.type === "navigation" &&
+            event.navigation.screenPath === "action",
         ),
       ),
     )

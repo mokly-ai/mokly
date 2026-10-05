@@ -13,12 +13,12 @@ import type { ReactCapabilityEnvironment } from "../../dist/client/react_capabil
 
 export const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
   ),
 );
 
 export const descriptor: ViewerCapabilityDescriptor = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   source: {
     base: "origin/main",
     catalogueId: catalogue.identity.id,
@@ -37,7 +37,7 @@ export const descriptor: ViewerCapabilityDescriptor = {
 
 export function currentRequest(): ViewerCapabilityRequest {
   return {
-    entryId: descriptor.workspace!.entry.id,
+    entryPath: descriptor.workspace!.entry.path,
     source: descriptor.source,
   };
 }
@@ -52,13 +52,13 @@ export function actions() {
 export function shellRecovery() {
   return {
     changesStatus: "ready" as const,
-    disclosures: { "folder:pages:fixture": false },
+    disclosures: { "folder:specs:fixture": false },
     colorScheme: "dark" as const,
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineDisclosures: { "folder:pages:fixture": false },
+    filterBaselineDisclosures: { "folder:specs:fixture": false },
     navScroll: 18,
-    query: "home",
+    query: "product/browse/home",
     regionScrolls: { stage: 42 },
     view: "changes" as const,
     viewport: "mobile" as const,
@@ -116,7 +116,7 @@ export class FakeEnvironment implements ReactCapabilityEnvironment {
   readonly responses: Response[] = [];
   readonly storage = new FakeStorage();
   readonly location = {
-    href: `http://localhost${viewHref("component", "action")}`,
+    href: `http://localhost${viewHref("components/action")}`,
     reloads: 0,
     reload() {
       this.reloads += 1;
@@ -155,14 +155,17 @@ export class FakeEnvironment implements ReactCapabilityEnvironment {
   private shellBootstrap() {
     const source = this.descriptor.source;
     const pathname = new URL(this.location.href).pathname;
-    const identity = this.descriptor.workspace?.entry
-      ? {
-          id: this.descriptor.workspace.entry.id,
-          kind: this.descriptor.workspace.entry.kind,
-        }
-      : parseViewHref(pathname);
+    const entryPath = parseViewHref(pathname);
+    const identity =
+      this.descriptor.workspace?.entry ??
+      [
+        ...catalogue.screens,
+        ...catalogue.pages,
+        ...catalogue.useCases,
+        ...catalogue.components,
+      ].find((entry) => entry.path === entryPath);
     return {
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       catalogue: this.publicCatalogue,
       context: {
         base: source.base,
@@ -176,7 +179,7 @@ export class FakeEnvironment implements ReactCapabilityEnvironment {
       view: identity
         ? {
             kind: "target",
-            entryId: identity.id,
+            entryPath: identity.path,
             entryKind: identity.kind,
           }
         : { kind: "home" },
@@ -185,10 +188,10 @@ export class FakeEnvironment implements ReactCapabilityEnvironment {
 }
 
 export function workspaceEvidence(
-  id = catalogue.components[0]!.id,
+  id = catalogue.components[0]!.path,
 ): WorkspaceData {
   const entry = [...catalogue.screens, ...catalogue.components].find(
-    (candidate) => candidate.id === id,
+    (candidate) => candidate.path === id,
   );
   if (!entry) throw new Error("Unknown workspace fixture route.");
   return {

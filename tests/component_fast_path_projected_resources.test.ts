@@ -158,7 +158,7 @@ for (const direction of ["added", "removed"] as const)
       optimized.changes.some(
         (change) =>
           change.kind === "screen" &&
-          change.after?.id === "home" &&
+          change.after?.path === "home" &&
           change.reasons.some((reason) => reason.kind === "material"),
       ),
     );
@@ -207,7 +207,7 @@ for (const context of ["select", "template"] as const)
         optimized.changes.some(
           (change) =>
             change.kind === "screen" &&
-            change.after?.id === "home" &&
+            change.after?.path === "home" &&
             change.reasons.some((reason) =>
               evidenceKind === "git"
                 ? reason.kind === "dependency" &&

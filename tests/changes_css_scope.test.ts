@@ -39,11 +39,14 @@ for (const components of [false, true])
     assert.equal(
       analysisOwnsStylesheet("mockups/src/private.css", {
         ...fixture.config,
-        entriesDir: path.join(fixture.mockupsDir, "src"),
+        sourceFiles: [
+          ...(fixture.config.sourceFiles ?? []),
+          "mockups/src/private.css",
+        ],
       }),
       false,
     );
-    assert.equal(result.schemaVersion, 4);
+    assert.equal(result.schemaVersion, 6);
     assert.deepEqual(result.sharedImpact, [tokenPath]);
     for (const screen of result.screens) {
       assert.deepEqual(screen.sharedImpact, [tokenPath]);

@@ -12,7 +12,7 @@ import { documentText } from "./helpers/html.js";
 function pageSource(title = "Handbook"): string {
   return `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: ${JSON.stringify(title)}, description: "Catalogue guidance", dependencies: [], navPath: ["Library"], relatedDocs: [], render: () => '<!doctype html><html><body><h1 id="start">Handbook</h1><a href="mock:home">Home</a></body></html>' }));`;
+mockups.push(definePage({ path: "library/handbook", title: ${JSON.stringify(title)}, description: "Catalogue guidance", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><body><h1 id="start">Handbook</h1><a href="mock:home">Home</a></body></html>' }));`;
 }
 
 test("consumer export builds unified pages and preserves a removed page's baseline context", async (context) => {
@@ -23,25 +23,25 @@ test("consumer export builds unified pages and preserves a removed page's baseli
     fs.readFile(path.join(fixture.output, name), "utf8");
   await assert.rejects(fs.access(path.join(fixture.output, "id")));
   assert.match(
-    await read("static/mokly-generated/pages/handbook.html"),
+    await read("static/mokly-generated/library/handbook/index.html"),
     /data-mokly-link="home"/,
   );
   assert.doesNotMatch(
-    await read("view/pages/handbook.html"),
+    await read("view/library/handbook/index.html"),
     /data-diff-screen|data-viewport-option/,
   );
   await fs.writeFile(fixture.entryPath, validEntrySource());
   await exportCatalogue(fixture.config, { outDir: "site" });
   assert.match(
-    documentText(await read("view/pages/handbook.html")),
+    documentText(await read("view/library/handbook/index.html")),
     /Showing previous version/,
   );
   assert.match(
-    await read("view/pages/handbook.html"),
+    await read("view/library/handbook/index.html"),
     /Catalogue location[^>]*>.*Library/,
   );
   assert.doesNotMatch(
-    await read("view/pages/handbook.html"),
+    await read("view/library/handbook/index.html"),
     /<iframe|data-diff-screen/,
   );
   assert.match(await read("index.html"), /data-removed-page=""/);
@@ -58,7 +58,7 @@ test("renamed pages retain one derived route without a static alias", async (con
   await exportCatalogue(fixture.config, { outDir: "site" });
   await assert.rejects(fs.access(path.join(fixture.output, "id")));
   const current = await fs.readFile(
-    path.join(fixture.output, "view/pages/handbook.html"),
+    path.join(fixture.output, "view/library/handbook/index.html"),
     "utf8",
   );
   assert.doesNotMatch(documentText(current), /Showing previous version/);

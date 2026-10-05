@@ -3,18 +3,20 @@
 ## Delivery Status
 
 Delivered inventory for [design component adoption](./mokly-design-components.md).
-Source paths below are relative to `examples/basic/entries/design/` and identify
+Source paths below are relative to `examples/basic/specs/design/` and identify
 the original composition points, which now delegate to registered implementations
 in `library/{group}/{slug}.view.tsx`. Saved pages and consuming artboards share
-those implementations.
+those implementations and use path identity. The navigation designs include
+the `document` row kind, browse-only folders, and `Overview`; runtime delivery
+is tracked by the [path identity plan](../../plans/path-identity.md).
 
 ## Components And Saved Examples
 
-Each row defines parent `design-ui-{slug}` and global variant entries under the
-[variant contract](./mokly-variants.md). Paths follow the
-[artifact contract](./mokly-artifact-paths.md); the first listed variant is the
-default shown by the parent page. Variant ids are
-`design-ui-{slug}-{name}`, using the table's kebab-case name.
+Each row defines parent `design-ui-{slug}` and its variant entries under the
+[variant contract](./mokly-variants.md). Each variant's slug is the table's
+kebab-case name, so its path is the parent's path plus that name, and every
+file name follows the [artifact contract](./mokly-artifact-paths.md); the first
+listed variant is the default shown by the parent page.
 
 Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
@@ -25,24 +27,24 @@ from its render context rather than pinning them in its fixture, so the top
 bar's samples name the scheme they rendered for; a fixture sets such a prop only
 to depict a different setting, as the `auto-appearance` sample does.
 
-| Group / slug                  | Existing implementation                                             | Variant names                                                                                              |
-| ----------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                        |
-| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants` |
-| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                |
-| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                         |
-| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`, `side-by-side-apart`                                   |
-| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                           |
-| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                 |
-| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                                                          |
-| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                                                |
-| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                                                               |
-| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                                                           |
-| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                            |
-| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                   |
-| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                   |
-| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                      |
-| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                          |
+| Group / slug                  | Existing implementation                                             | Variant names                                                                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                                                           |
+| chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants`, `folder-screen`, `changed-member` |
+| chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                                                   |
+| chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                                                            |
+| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`, `side-by-side-apart`                                                                      |
+| controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                                                              |
+| controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                                                    |
+| controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                                                                                             |
+| controls / change-status      | `components/parts/comparison_details.tsx: ChangeStatusBadge`        | `unmodified`, `added`, `changed`, `removed`                                                                                                   |
+| inspector / inspector         | `parts/details.tsx`, `components/parts/inspector.tsx`               | `details`, `props`, `closed`                                                                                                                  |
+| inspector / metadata-row      | `parts/metadata_row.tsx: MetaRow`, shared details/prop rows         | `text`, `code`, `linked`, `tags`                                                                                                              |
+| inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                                                               |
+| preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                                                      |
+| preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                                                      |
+| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                                                         |
+| preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                                                             |
 
 Fixtures for each variant come from the corresponding existing screen state,
 assembled into complete explicit props at declaration time, apart from the
@@ -57,7 +59,7 @@ viewport presentation is supported. Comparison-mode segments remain.
 Use literal object schemas and the existing validator/codec. Lists are typed
 arrays of plain records; optional means omitted, distinct from an empty value.
 Numbers are finite, counts/depth are nonnegative integers and flow numbers start
-at one. Logical destinations are existing catalogue ids from the design-link
+at one. Logical destinations are existing catalogue paths from the design-link
 contract, never raw URLs or guessed labels. Existing resource/prop budgets apply.
 Controls below use text, boolean, number and primitive enum selections only.
 
@@ -74,9 +76,11 @@ Controls below use text, boolean, number and primitive enum selections only.
    Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
-   `folder/screen/component/flow/page/variant`, depth, optional
-   count/open/destination, changed mark, and variant-list state; a variant row
-   requires `variantParentKind: "screen" | "component"`; selected destination,
+   `folder/screen/component/flow/page/document/variant`, depth, optional
+   count/open/destination, changed mark, moved flag, and variant-list state; a variant row
+   requires `variantParentKind: "screen" | "component"`, and `contents` marks a
+   folder's own screen whose list also holds the folder's members after its
+   variants and names its disclosure for the contents; selected destination,
    All/Changes state, changed count and presentation
    `responsive/drawer`, and optional Changes availability
    `ready/pending/preparing/unavailable`.
@@ -86,13 +90,15 @@ Controls below use text, boolean, number and primitive enum selections only.
    screen and component variants remain distinct and muted. A parent carrying a variant list adds a trailing 16px
    chevron disclosure button with its own expanded state and accessible name;
    the row link is unchanged. The changed mark is a trailing dot, never an edge or
-   rail. Pending and preparing
+   rail. A moved row's label ends in `· Moved` and, like a Removed row, it takes
+   no changed mark; its disclosure keeps the entry's own title as its name. The
+   sections are `Specs` and `Components`, one tree filtered by kind. Pending and preparing
    both reserve the count slot with a spinner and replace selected Changes rows
    with their own message; only preparing adds a secondary detail line beneath
    its title. Unavailable keeps the tabs with a dash and one plain message for
    every failure. Counts and rows come from the same fixture scenario. Responsive uses the original desktop
    sidebar/mobile drawer; the drawer variant explicitly depicts the drawer.
-3. **Screen header:** title, breadcrumb records, optional entry-id chip,
+3. **Screen header:** title, breadcrumb records, optional path chip,
    optional `unmodified/added/changed/removed` status, explicit comparison
    eligibility/mode, the Scroll together state and destinations. An `actions`
    slot holds caller controls. Controls: title and optional status. Compose the
@@ -161,7 +167,7 @@ Controls below use text, boolean, number and primitive enum selections only.
 14. **Empty state:** title, body, optional code, action label and destination.
     Controls: title, body and action label. Retain the existing canonical recovery
     links and non-interactive cases rather than adding library-specific navigation.
-15. **Flow step:** positive step number, title, description, owning screen id
+15. **Flow step:** positive step number, title, description, owning screen path
     and `children` slot containing the reused screen preview. Controls: number,
     title and description. References still point to the standalone owning
     screen, and flows never become the original home of screen markup.

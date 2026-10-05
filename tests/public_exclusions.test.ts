@@ -80,12 +80,12 @@ test("source protection recognizes reserved files and aliases", async (context) 
 
 test("generated routes may have names formerly reserved by the public directory policy", async (context) => {
   const fixture = await createFixture(
-    `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "internal-page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
+    `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ path: "internal-page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
   );
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   assert.ok(
-    (await compileCatalogue(config)).outputs.has("pages/internal-page.html"),
+    (await compileCatalogue(config)).outputs.has("internal-page/index.html"),
   );
 });
 
@@ -103,7 +103,7 @@ test("a reference to protected authored HTML fails with its referring route", as
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
     (error: Error) => {
-      assert.match(error.message, /screens\/home/);
+      assert.match(error.message, /home\/index/);
       assert.match(error.message, /private.source.html/);
       return true;
     },
@@ -134,7 +134,7 @@ test("an imported JSON input remains watched, not public by directory membership
   );
   assert.equal(
     (await compileCatalogue(config)).manifest.entries.find(
-      (entry) => entry.id === "home",
+      (entry) => entry.path === "home",
     )?.title,
     "After",
   );

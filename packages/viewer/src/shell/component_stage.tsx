@@ -29,30 +29,26 @@ export function ComponentStage({
       {(["mobile", "desktop"] as const).map((viewport) => {
         const previewLight = generatedView(
           previewViews,
-          variant.id,
+          variant.path,
           viewport,
           "light",
         );
         const previewDark = generatedView(
           previewViews,
-          variant.id,
+          variant.path,
           viewport,
           "dark",
         );
         const light = previewLight
-          ? generatedFrameSource(previewLight, undefined, undefined)
+          ? generatedFrameSource(previewLight)
           : framePath(
-              currentDocumentPath(
-                viewRoute("component", variant.id, viewport, "light"),
-              ),
+              currentDocumentPath(viewRoute(variant.path, viewport, "light")),
             );
         const dark = previewDark
           ? generatedFrameSource(previewDark, undefined, undefined)
           : variant.colorSchemes.includes("dark")
             ? framePath(
-                currentDocumentPath(
-                  viewRoute("component", variant.id, viewport, "dark"),
-                ),
+                currentDocumentPath(viewRoute(variant.path, viewport, "dark")),
               )
             : undefined;
         return (

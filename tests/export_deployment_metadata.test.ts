@@ -14,7 +14,7 @@ const alterations: Record<string, (html: string) => string> = {
   malformed: (html) =>
     html.replace(/data-mokly-delivery="[^"]+"/, 'data-mokly-delivery="{}"'),
   unsupported: (html) =>
-    html.replace("&quot;schemaVersion&quot;:4", "&quot;schemaVersion&quot;:3"),
+    html.replace("&quot;schemaVersion&quot;:5", "&quot;schemaVersion&quot;:3"),
   canonical: (html) =>
     html.replace(
       "&quot;canonicalPath&quot;:&quot;/&quot;",

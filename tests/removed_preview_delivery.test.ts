@@ -20,13 +20,13 @@ import { exportCatalogue } from "../dist/export/run.js";
 import { bundleUpload } from "../dist/publish/bundle.js";
 
 import {
+  archiveNames,
+  readArtifact,
+} from "./helpers/removed_delivery_archive.js";
+import {
   createRemovedDeliveryFixture,
   REMOVED_BASELINE_IMAGE_BYTES,
 } from "./helpers/removed_delivery_fixture.js";
-import {
-  archiveNames,
-  readArtifact,
-} from "./removed_preview_delivery_fixture.js";
 
 test("Changes export packages removed previews into every delivery boundary", async (t) => {
   const fixture = await createRemovedDeliveryFixture();
@@ -51,29 +51,37 @@ test("Changes export packages removed previews into every delivery boundary", as
     ),
   );
   const page = model.removedEntries.find(
-    ({ entry }) => entry.id === "removed-page",
+    ({ entry }) =>
+      entry.path === "fixture/deleted-archive/deleted-section/removed-page",
   );
   const screen = model.removedEntries.find(
-    ({ entry }) => entry.id === "removed-screen",
+    ({ entry }) =>
+      entry.path === "fixture/deleted-archive/deleted-section/removed-screen",
   );
   assert.deepEqual(screen?.preview, { kind: "screen" });
   assert.ok(page?.preview?.kind === "page");
   for (const removed of [page, screen])
-    assert.deepEqual(removed?.entry.navPath, [
+    assert.deepEqual(removed?.folderTitles, [
       "Fixture",
       "Deleted archive",
       "Deleted section",
     ]);
   assert.notEqual(fixture.baseCommit, fixture.branchEditCommit);
   const generationRoot = path.posix.dirname(model.comparisonUrl!);
-  const pagePath = `${generationRoot}/pages/removed-page.json`;
-  assert.equal(pagePath, `${generationRoot}/pages/removed-page.json`);
+  const pagePath = `${generationRoot}/previews/fixture/deleted-archive/deleted-section/removed-page/index.json`;
+  assert.equal(
+    pagePath,
+    `${generationRoot}/previews/fixture/deleted-archive/deleted-section/removed-page/index.json`,
+  );
   const preview = parseRemovedPagePreview(
     JSON.parse(await fs.readFile(path.join(fixture.output, pagePath), "utf8")),
   );
   assert.equal(preview.baseCommit, fixture.baseCommit);
-  assert.equal(preview.id, "removed-page");
-  const pageDocument = `snapshots/before/mokly-generated/${entryRoute("page", preview.id)}`;
+  assert.equal(
+    preview.path,
+    "fixture/deleted-archive/deleted-section/removed-page",
+  );
+  const pageDocument = `snapshots/before/mokly-generated/${entryRoute(preview.path)}`;
   const document = await fs.readFile(
     path.join(fixture.output, generationRoot, pageDocument),
     "utf8",
@@ -82,7 +90,7 @@ test("Changes export packages removed previews into every delivery boundary", as
   assert.doesNotMatch(document, /Branch edit/);
   for (const name of [
     pagePath,
-    `${generationRoot}/snapshots/before/mokly-generated/pages/removed-page.html`,
+    `${generationRoot}/snapshots/before/mokly-generated/fixture/deleted-archive/deleted-section/removed-page/index.html`,
     `${generationRoot}/snapshots/before/assets/page.css`,
     `${generationRoot}/snapshots/before/assets/nested.css`,
     `${generationRoot}/snapshots/before/assets/past.png`,
@@ -118,14 +126,17 @@ test("Changes export packages removed previews into every delivery boundary", as
     ),
   );
   const desktop = review.screens
-    .find(({ id }) => id === "removed-screen")
+    .find(
+      ({ path }) =>
+        path === "fixture/deleted-archive/deleted-section/removed-screen",
+    )
     ?.views.find(({ viewport }) => viewport === "desktop");
   assert.ok(desktop);
   const screenDocument = await fs.readFile(
     path.join(
       fixture.output,
       generationRoot,
-      `snapshots/before/mokly-generated/${viewRoute("screen", "removed-screen", desktop.viewport, desktop.colorScheme)}`,
+      `snapshots/before/mokly-generated/${viewRoute("fixture/deleted-archive/deleted-section/removed-screen", desktop.viewport, desktop.colorScheme)}`,
     ),
     "utf8",
   );

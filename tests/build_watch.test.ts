@@ -56,7 +56,7 @@ test(
     );
     const home = path.join(
       fixture.mockupsDir,
-      "mokly-generated/screens/home.mobile.html",
+      "mokly-generated/home/index.mobile.html",
     );
     const output = () => `${stdout}\n${stderr}`;
     try {

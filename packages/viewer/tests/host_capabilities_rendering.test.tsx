@@ -28,7 +28,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const { publicModel: _publicModel, ...privateDisplay } = display;
   const view = viewerView(display, {
     ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
+    screenPath: catalogue.components[0]!.path,
   });
   const liveContext = {
     base: source.base,
@@ -64,7 +64,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   assert.equal(view.kind, "target");
   if (view.kind !== "target")
     throw new Error("Expected a target fixture view.");
-  assert.equal(descriptor.workspace.entry.id, view.target.entry.id);
+  assert.equal(descriptor.workspace.entry.path, view.target.entry.path);
   assert.equal(descriptor.workspace.base, source.base);
   assert.equal("renderCapability" in descriptor.workspace, false);
   for (const leaked of [{ token }, { renderCapability: { generation, token } }])
@@ -77,7 +77,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const exported = renderHydratedShellPage(view, {
     base: source.base,
     delivery: {
-      schemaVersion: 4,
+      schemaVersion: 5,
       deploymentId,
       canonicalPath: "/",
       comparisonUrl: null,
@@ -96,7 +96,7 @@ test("server rendering serializes each embedded state exactly once", async () =>
   const { publicModel: _publicModel, ...privateDisplay } = display;
   const view = viewerView(display, {
     ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
+    screenPath: catalogue.components[0]!.path,
   });
   const session = new Session();
   session.connect();
@@ -137,14 +137,14 @@ test("static shell, workspace and deployment derive from the complete model", ()
   const { publicModel: _publicModel, ...privateDisplay } = display;
   const view = viewerView(display, {
     ...defaultSelection,
-    screenId: catalogue.components[0]!.id,
+    screenPath: catalogue.components[0]!.path,
   });
   const deploymentId = "d".repeat(64);
   const publicModel = { ...catalogue, deploymentId };
   const delivery = {
-    schemaVersion: 4 as const,
+    schemaVersion: 5 as const,
     deploymentId,
-    canonicalPath: "/view/components/action.html",
+    canonicalPath: "/view/components/action/",
     comparisonUrl: null,
   };
   const context = {
@@ -181,6 +181,8 @@ test("static shell, workspace and deployment derive from the complete model", ()
     throw new Error("Expected a current component route.");
   assert.deepEqual(
     JSON.parse(workspaceJson),
-    workspaceData(privateDisplay, context, view.target.entry),
+    JSON.parse(
+      JSON.stringify(workspaceData(privateDisplay, context, view.target.entry)),
+    ),
   );
 });

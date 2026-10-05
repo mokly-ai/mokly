@@ -63,7 +63,7 @@ export async function completedBaseline(
     await validateBuiltInventory(
       fs,
       layout.output,
-      { descriptor, manifest, version: 8 },
+      { descriptor, manifest, version: 9 },
       request.signal,
     );
     for (const asset of manifest.assetClosure) {

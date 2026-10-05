@@ -6,7 +6,7 @@ export function screensSource(count: number, label: string): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
 export const mockups = Array.from({ length: ${count} }, (_, index) =>
-  defineScreen({ id: \`screen-\${index}\`, title: \`Screen \${index}\`, description: "Generated screen", navPath: ["Fixture"], dependencies: [], relatedDocs: [], desktop: <main>${label} {index}</main>, mobile: <main>${label} {index}</main> }),
+  defineScreen({ path: \`fixture/nested/screen-\${index}\`, title: \`Screen \${index}\`, description: "Generated screen", dependencies: [], relatedDocs: [], desktop: <main>${label} {index}</main>, mobile: <main>${label} {index}</main> }),
 );
 `;
 }

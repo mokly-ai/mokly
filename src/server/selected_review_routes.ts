@@ -78,9 +78,7 @@ export class SelectedReviewRoutes {
   ): Promise<boolean> {
     const stable =
       url.pathname === `/${VIEWER_DIRECTORY}/diffs/review.json` &&
-      ["id", "page", "route", "variant"].some((name) =>
-        url.searchParams.has(name),
-      );
+      [...url.searchParams.keys()].some((name) => name !== "refresh");
     if (!stable && !url.pathname.startsWith(PREFIX)) return false;
     try {
       if (stable) {

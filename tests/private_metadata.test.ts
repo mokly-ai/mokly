@@ -57,7 +57,7 @@ test("a pending manifest is not a public resource on the first build", async (co
   await assert.rejects(compileCatalogue(await loadConfig(fixture.root)), {
     code: "build-invalid",
     message:
-      "[mokly/build-invalid] document links and resources are invalid:\n- mokly-generated/screens/home.desktop.html: protected target ../mokly-manifest.json: targets internal catalogue metadata\n- mokly-generated/screens/home.mobile.html: protected target ../mokly-manifest.json: targets internal catalogue metadata",
+      "[mokly/build-invalid] document links and resources are invalid:\n- mokly-generated/home/index.desktop.html: protected target ../mokly-manifest.json: targets internal catalogue metadata\n- mokly-generated/home/index.mobile.html: protected target ../mokly-manifest.json: targets internal catalogue metadata",
   });
   assert.equal(
     fs.existsSync(
@@ -73,7 +73,7 @@ test("generated page routes cannot overwrite a manifest through an alias", async
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
-  const fragment = path.join(config.generatedDir, "screens/home.mobile.html");
+  const fragment = path.join(config.generatedDir, "home/index.mobile.html");
   await fs.promises.rm(fragment);
   await fs.promises.symlink("../mokly-manifest.json", fragment);
   await assert.rejects(
@@ -150,7 +150,7 @@ for (const route of metadataRoutes) {
       );
       await assert.rejects(
         compileCatalogue(config),
-        /screens\/home.*(?:private|protected|missing target)/,
+        /home\/index.*(?:private|protected|missing target)/,
         body,
       );
     }

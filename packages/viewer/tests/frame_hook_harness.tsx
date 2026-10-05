@@ -96,7 +96,7 @@ export function installFrameHookHarness(): void {
       const host = requiredHost(id);
       host.documentIdentity++;
       if (kind === "source")
-        host.source = `/static/mokly-generated/screens/frame-hook-${host.documentIdentity}.html`;
+        host.source = `/static/mokly-generated/frame-hook-${host.documentIdentity}/index.html`;
       renderHost(host);
     },
     remove: (id) => {
@@ -170,7 +170,7 @@ export function installFrameHookHarness(): void {
         pendingUpdates: [],
         registry: undefined,
         root: createRoot(element),
-        source: "/static/mokly-generated/screens/frame-hook.html",
+        source: "/static/mokly-generated/frame-hook/index.html",
         status: "unavailable",
         strict: options.strict ?? false,
         supportsUsageUpdates: options.supportsUsageUpdates ?? true,
@@ -217,7 +217,7 @@ function HookFrame({ host, usage }: { host: HookHost; usage: CatalogueUsage }) {
   const mounted = useMountedShellFrame({
     enabled: true,
     identity: {
-      entryId: `frame-hook-${host.documentIdentity}`,
+      entryPath: `frame-hook-${host.documentIdentity}`,
     },
     onEvent: () => undefined,
     source: host.source,

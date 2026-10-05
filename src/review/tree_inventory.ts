@@ -1,4 +1,4 @@
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import type { BaselineCatalogue } from "../baseline/catalogue.js";
 import { MoklyError } from "../errors.js";
@@ -52,7 +52,7 @@ export function treeEntryKind(
 export function incompleteGeneratedInventory(
   tree: ReadonlyMap<string, TreeEntry>,
   descriptor: BaselineCatalogue,
-  manifest: ManifestV8,
+  manifest: ManifestV9,
 ):
   | {
       reason: "missing" | "mismatched blob hashes" | "extra files";

@@ -23,7 +23,7 @@ test(
       validEntrySource(),
       {
         extraConfig:
-          'stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }], watch: { debounceMs: 0 },',
+          'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }], watch: { debounceMs: 0 },',
       },
       async ({ mockupsDir }) => {
         await fs.writeFile(
@@ -116,8 +116,8 @@ test(
       await edit(
         fixture.configPath,
         configSource.replace(
-          "  entriesDir:",
-          '  stylesheets: [{ match: "screens/home.html", stylesheets: ["home.css"] }],\n  entriesDir:',
+          "  roots:",
+          '  stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }],\n  roots:',
         ),
       );
       await edit(

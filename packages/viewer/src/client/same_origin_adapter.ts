@@ -1,5 +1,6 @@
 import {
   VIEWER_DIRECTORY,
+  currentDocumentPath,
   currentDocumentRoute,
 } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
@@ -16,6 +17,7 @@ import {
   installLocalHighlight,
   type HighlightFrame,
 } from "./same_origin_highlight.js";
+import { normalizedHtmlPath } from "./same_origin_identity.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
 
 /** Current-document capability used by the synchronous, SSR-enhanced local shell. */
@@ -62,7 +64,8 @@ export function localFrameReady(
   return (
     localFrameAccess(frame).document()?.readyState === "complete" &&
     pathname !== undefined &&
-    currentDocumentRoute(pathname) === path
+    normalizedHtmlPath(decodeURIComponent(pathname)) ===
+      normalizedHtmlPath(`/${currentDocumentPath(path)}`)
   );
 }
 

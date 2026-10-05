@@ -106,7 +106,7 @@ export async function prepareRemovedPreviewEntrypoint(
     configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  entriesDir: "../../entries",
+  roots: [{ dir: "../../entries" }],
   mockupsDir: "../../mockups",
   repoRoot: "../..",
   review: { outDir: ".review", sharedImpact: [] }
@@ -180,12 +180,12 @@ export function removedDeliverySource(
 import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { description: "Fixture", dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "current", title: "Current", mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCaseIds: [] }),
+  defineScreen({ ...metadata, path: "current", title: "Current", mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCasePaths: [] }),
   ${
     current
       ? ""
-      : `defineScreen({ ...metadata, navPath: ["Fixture", "Deleted archive", "Deleted section"], id: "removed-screen", title: "Removed screen", mobile: <main>${prefix} mobile screen</main>, desktop: <main>${prefix} desktop screen</main>, useCaseIds: [] }),
-  definePage({ ...metadata, navPath: ["Fixture", "Deleted archive", "Deleted section"], id: "removed-page", title: "Removed page", render: () => '<!doctype html><html><head><link rel="stylesheet" href="../../assets/page.css"></head><body><main>${prefix} page</main><img src="../../assets/past.png"></body></html>' }),`
+      : `defineScreen({ ...metadata, path: "fixture/deleted-archive/deleted-section/removed-screen", title: "Removed screen", mobile: <main>${prefix} mobile screen</main>, desktop: <main>${prefix} desktop screen</main>, useCasePaths: [] }),
+  definePage({ ...metadata, path: "fixture/deleted-archive/deleted-section/removed-page", title: "Removed page", render: () => '<!doctype html><html><head><link rel="stylesheet" href="../../../../../assets/page.css"></head><body><main>${prefix} page</main><img src="../../../../../assets/past.png"></body></html>' }),`
   }
 ];`;
 }

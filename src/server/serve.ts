@@ -9,10 +9,8 @@ import {
 import { FileSystemConfigLoader, type ConfigLoader } from "../config/load.js";
 import type { ResolvedConfig } from "../config/types.js";
 
-import {
-  RepositoryCatalogueChangeClassifier,
-  type CatalogueChangeClassifier,
-} from "./component_changes.js";
+import type { CatalogueChangeClassifier } from "./component_change_types.js";
+import { RepositoryCatalogueChangeClassifier } from "./component_changes.js";
 import { configuredServedReview } from "./configured_review.js";
 import { BackgroundGeneration } from "./demand/generation.js";
 import {
@@ -103,11 +101,11 @@ export async function serve(
       (snapshot) => {
         const duration = Date.now() - changesStartedAt;
         if (snapshot)
-          reporter.changesReady(snapshot.changedIds?.length ?? 0, duration);
+          reporter.changesReady(snapshot.changedEntries?.length ?? 0, duration);
         else reporter.changesUnavailable(duration);
         server.publishUpdate({
           kind: "evidence",
-          changedIds: snapshot?.changedIds ?? null,
+          changedEntries: snapshot?.changedEntries ?? null,
           componentChanges: snapshot ?? null,
           changesStatus: snapshot ? "ready" : "unavailable",
         });

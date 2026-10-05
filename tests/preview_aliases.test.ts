@@ -89,7 +89,7 @@ test("preview captures compiled output without restoring local generated files",
   assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
   assert.match(
     await fs.promises.readFile(
-      path.join(output, "static/mokly-generated/screens/home.mobile.html"),
+      path.join(output, "static/mokly-generated/home/index.mobile.html"),
       "utf8",
     ),
     /id="home-mobile"/,
@@ -99,7 +99,7 @@ test("preview captures compiled output without restoring local generated files",
 test("preview serves compiled bytes instead of stale local generated output", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
-  const route = "screens/home.mobile.html";
+  const route = "home/index.mobile.html";
   await fs.promises.writeFile(
     path.join(fixture.config.generatedDir, route),
     "<!doctype html><html><body>Stale local output</body></html>",

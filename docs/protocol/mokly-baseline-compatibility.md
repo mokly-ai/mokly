@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Implemented as recorded in the
-[id-derived routes plan](../../plans/id-derived-routes.md).
+Current and historical readers accept manifest v9. Earlier baselines use the
+established Changes-unavailable outcome without conversion.
 
 This contract owns the version gate between a current catalogue and the Git
 comparison base used by Serve, export, and publication. Baseline storage and
@@ -12,21 +12,22 @@ rebuilding are defined by [Derived Baselines](./mokly-derived-baselines.md).
 ## Compatible Baseline
 
 A comparison base is compatible only when its output contains the canonical
-`mokly-generated/mokly-manifest.json` and that manifest is a valid schema-v8 manifest. The
-historical boundary applies the same v8 shape, relationship, path, and source
+`mokly-generated/mokly-manifest.json` and that manifest is a valid schema-v9 manifest. The
+historical boundary applies the same v9 shape, relationship, path, and source
 inventory validation as the current manifest reader. It reads baseline bytes
 but never executes baseline source through the current Mokly package.
 
 The boundary does not translate earlier schemas. Every accepted entry and
-artifact already has the identity-derived layout in
-the [artifact path contract](./mokly-artifact-paths.md).
+artifact already has the path-derived layout in the
+[artifact path contract](./mokly-artifact-paths.md), and the
+[move contract](./mokly-moves.md) pairs its entries with the current ones.
 
 ## Incompatible Earlier Baseline
 
 At the selected generated location, a canonical manifest with an integer
-`schemaVersion` below `8` is incompatible earlier output. A committed
+`schemaVersion` below `9` is incompatible earlier output. A committed
 root-level manifest does not decide selection: a missing generated manifest
-selects a rebuild. After that build, canonical root-level output below v8
+selects a rebuild. After that build, canonical root-level output below v9
 produces this same outcome without a flat-layout reader or cache entry.
 Only `mokly-manifest.json` is recognized.
 
@@ -58,7 +59,7 @@ restores Changes without restarting Serve.
 The graceful branch above is only for recognized earlier output. An integer
 `schemaVersion` above `8` is an unsupported newer baseline and follows the
 invalid-baseline path. Invalid JSON, a non-object root, a missing or non-integer
-version, or a schema-v8 file that fails validation follows the same path.
+version, or a schema-v9 file that fails validation follows the same path.
 Absence of the canonical generated manifest at the requested root selects a rebuild with that commit's own recipe under the [manifest selection contract](./mokly-generated-manifest.md#selection-cache-and-resource-addressing). None of these cases
 falls back or becomes a successful empty comparison.
 
@@ -77,11 +78,11 @@ installed output; they do not parse or convert an incompatible baseline.
 
 ## Verification
 
-Coverage must prove that a valid v8 base compares normally and that a lower
+Coverage must prove that a valid v9 base compares normally and that a lower
 version in the selected generated location or rebuilt root-level output produces the command outcomes and single line
 above. A newer-version base must make Serve report Changes unavailable with its
-normal safe diagnostic and make explicit capture fail. Malformed v8, missing
+normal safe diagnostic and make explicit capture fail. Malformed v9, missing
 history, current-manifest failure, output cleanup, and rollback remain separate
-cases. The [v8 gate](./mokly-generated-manifest.md) defines committed-envelope
+cases. The [v9 gate](./mokly-generated-manifest.md) defines committed-envelope
 selection from the generated subtree, rejection after the base's own build,
-partial-cache rebuilding, and moved-root v8 inventory verification.
+partial-cache rebuilding, and moved-root v9 inventory verification.

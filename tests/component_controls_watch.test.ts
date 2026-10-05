@@ -27,9 +27,7 @@ test(
     fixture.beforeRemove(() => server.close());
     const capabilities = async () => {
       for (let attempt = 0; attempt < 200; attempt += 1) {
-        const html = await (
-          await fetch(`${server.url}/view/components/action.html`)
-        ).text();
+        const html = await (await fetch(`${server.url}/view/action/`)).text();
         const capability = settledRenderCapability(html);
         if (capability) return capability;
         await delay(25);
@@ -49,7 +47,7 @@ test(
         },
         body: JSON.stringify({
           componentId: "action",
-          variantId: "action-default",
+          variantPath: "action/default",
           viewport: "desktop",
           colorScheme: "light",
           generation: capability.generation,
@@ -61,7 +59,8 @@ test(
       `${config.generatedDir}/mokly-manifest.json`,
       "utf8",
     );
-    assert.equal((await render(first, "Edited")).status, 200);
+    const edited = await render(first, "Edited");
+    assert.equal(edited.status, 200, await edited.text());
     await delay(150);
     assert.deepEqual(await capabilities(), first);
     assert.equal(

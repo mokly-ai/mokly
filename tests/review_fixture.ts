@@ -9,7 +9,7 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/dist/registry/types.js";
 
 import { textOutput } from "./helpers/generated_text.js";
@@ -47,7 +47,7 @@ export function fakeGit(
 }
 
 export function filesForCompilation(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   compilation: Compilation,
 ): Map<string, GeneratedFile> {
   const files = new Map<string, GeneratedFile>([
@@ -63,7 +63,7 @@ export function filesForCompilation(
   return files;
 }
 
-export function withoutDarkFragments(manifest: ManifestV8): ManifestV8 {
+export function withoutDarkFragments(manifest: ManifestV9): ManifestV9 {
   return {
     ...manifest,
     generatedFiles: manifest.generatedFiles.filter(
@@ -92,7 +92,7 @@ export function withHomeIgnoredRegions(
   ids: readonly string[] = ["nav"],
 ): Compilation {
   const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   if (home?.kind !== "screen") throw new Error("missing home screen");
   const outputs = new Map(compilation.outputs);

@@ -27,7 +27,7 @@ export async function smokeJunoFixture(context) {
   const fragment = await fs.promises.readFile(
     path.join(
       root,
-      "site/mockups/mokly-generated/screens/workspace-overview.mobile.html",
+      "site/mockups/mokly-generated/workspace-overview/index.mobile.html",
     ),
     "utf8",
   );
@@ -43,6 +43,6 @@ export async function smokeJunoFixture(context) {
     "HEAD",
   ]);
   await inspectConsumerExport(root, "tools/published", "HEAD", [
-    "view/screens/workspace-overview.html",
+    "view/workspace-overview/index.html",
   ]);
 }

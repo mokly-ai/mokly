@@ -36,7 +36,7 @@ test("an unowned same-origin document gains no navigation privilege during hando
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
         url: new URL(
-          "/static/mokly-generated/screens/home.mobile.html",
+          "/static/mokly-generated/home/index.mobile.html",
           location.origin,
         ),
         usage: { status: "unavailable" },
@@ -57,7 +57,7 @@ test("an unowned same-origin document gains no navigation privilege during hando
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/mokly-generated/screens/home.mobile.html",
+    "**/static/mokly-generated/home/index.mobile.html",
     async (route) => {
       reportRequest();
       await requestReleased;
@@ -76,7 +76,7 @@ test("an unowned same-origin document gains no navigation privilege during hando
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
           url: new URL(
-            "/static/mokly-generated/screens/home.mobile.html",
+            "/static/mokly-generated/home/index.mobile.html",
             location.origin,
           ),
           usage: { status: "unavailable" },
@@ -136,7 +136,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
         url: new URL(
-          "/static/mokly-generated/screens/home.mobile.html",
+          "/static/mokly-generated/home/index.mobile.html",
           location.origin,
         ),
         usage: { status: "unavailable" },
@@ -154,7 +154,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/mokly-generated/screens/home.mobile.html?handoff=exact",
+    "**/static/mokly-generated/home/index.mobile.html?handoff=exact",
     async (route) => {
       matchingRequests++;
       if (matchingRequests === 1) {
@@ -175,7 +175,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
         .locator("#frame")
         .evaluate((element: HTMLIFrameElement) =>
           element.contentDocument?.URL.endsWith(
-            "/static/mokly-generated/screens/home.mobile.html?handoff=exact",
+            "/static/mokly-generated/home/index.mobile.html?handoff=exact",
           ),
         ),
     )
@@ -192,7 +192,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
           url: new URL(
-            "/static/mokly-generated/screens/home.mobile.html?handoff=exact",
+            "/static/mokly-generated/home/index.mobile.html?handoff=exact",
             location.origin,
           ),
           usage: { status: "unavailable" },

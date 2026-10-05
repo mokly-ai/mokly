@@ -2,14 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { expectFrameSource } from "./workspace_actions.js";
 
-const welcome = "/view/screens/example-welcome.html";
-const details = "/view/screens/example-details.html";
+const welcome = "/view/example/screens/welcome/";
+const details = "/view/example/screens/details/";
 const select = "[data-mokly-appearance-select]";
 
 async function navigate(page: Page, route: string): Promise<void> {
   const url = new URL(route, page.url());
   const row = page.locator(
-    `a[data-nav-row][data-route="${url.pathname.slice(6)}"]`,
+    `a[data-nav-row][data-route="${url.pathname.slice(6)}index.html"]`,
   );
   await row.evaluate((link, href) => link.setAttribute("href", href), route);
   await row.click();
@@ -33,7 +33,7 @@ async function expectAppearance(
     const frame = page.locator(`[data-workspace-frame="${viewport}"]`);
     await expectFrameSource(
       frame,
-      new RegExp(`${entry}\\.${viewport}${suffix}\\.html$`),
+      new RegExp(`${entry}/index\\.${viewport}${suffix}\\.html$`),
     );
   }
 }
@@ -57,10 +57,10 @@ for (const choice of ["light", "auto"] as const) {
     await navigate(page, `${details}?scheme=dark`);
     await expectAppearance(page, choice, "light");
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp("welcome.html\\?scheme=dark$"));
+    await expect(page).toHaveURL(new RegExp("welcome/\\?scheme=dark$"));
     await expectAppearance(page, choice, "light");
     await page.goForward();
-    await expect(page).toHaveURL(new RegExp("details.html\\?scheme=dark$"));
+    await expect(page).toHaveURL(new RegExp("details/\\?scheme=dark$"));
     await expectAppearance(page, choice, "light");
     await expect(page.locator("html")).toHaveAttribute(
       "data-history-probe",
@@ -72,7 +72,7 @@ for (const choice of ["light", "auto"] as const) {
       await expectAppearance(page, "auto", "dark");
       expect(await page.evaluate(() => history.length)).toBe(historyLength);
       await page.goBack();
-      await expect(page).toHaveURL(new RegExp("welcome.html\\?scheme=dark$"));
+      await expect(page).toHaveURL(new RegExp("welcome/\\?scheme=dark$"));
       await expectAppearance(page, "auto", "dark");
     }
   });
@@ -88,13 +88,13 @@ test("in-shell pins update the whole appearance without saving a preference", as
   await navigate(page, welcome);
   await expectAppearance(page, "dark");
   await page.goBack();
-  await expect(page).toHaveURL(new RegExp("details.html\\?scheme=dark$"));
+  await expect(page).toHaveURL(new RegExp("details/\\?scheme=dark$"));
   await expectAppearance(page, "dark");
   await page.goBack();
-  await expect(page).toHaveURL(new RegExp("welcome.html\\?scheme=light$"));
+  await expect(page).toHaveURL(new RegExp("welcome/\\?scheme=light$"));
   await expectAppearance(page, "light");
   await page.goForward();
-  await expect(page).toHaveURL(new RegExp("details.html\\?scheme=dark$"));
+  await expect(page).toHaveURL(new RegExp("details/\\?scheme=dark$"));
   await expectAppearance(page, "dark");
   expect(
     await page.evaluate(() => localStorage.getItem("mokly:theme")),

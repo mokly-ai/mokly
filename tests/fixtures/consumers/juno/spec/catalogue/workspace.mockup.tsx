@@ -8,15 +8,16 @@ const metadata = {
   dependencies: ["spec/ui/workspace-panel.tsx"],
   description: "A Juno-shaped fixture with unrelated repository roots.",
   relatedDocs: ["spec/workspace.md"],
-  useCaseIds: [],
+  useCasePaths: [],
 };
 
 export const mockups = [
   defineScreen({
+    slug: "workspace-overview",
     ...metadata,
-    navPath: ["Workspace"],
+
     desktop: <WorkspacePanel layout="wide" />,
-    id: "workspace-overview",
+    path: "workspace-overview",
     mobile: <WorkspacePanel layout="compact" />,
     title: "Workspace overview",
   }),

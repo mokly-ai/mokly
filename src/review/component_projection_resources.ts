@@ -45,6 +45,7 @@ export function prepareComponentProjection(
     root,
     baseRanges,
     headRanges,
+    context.links?.(before.path, after.path),
   );
   return {
     ...(baseRanges ? { baseRanges } : {}),

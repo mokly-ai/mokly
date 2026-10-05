@@ -63,8 +63,8 @@ test("ordinary publication needs no Git and omits review and watch artifacts", a
   );
   for (const file of [
     "index.html",
-    "view/screens/home.html",
-    "view/user-flows/tour.html",
+    "view/home/index.html",
+    "view/tour/index.html",
     "404.html",
   ]) {
     const html = await fs.promises.readFile(path.join(output, file), "utf8");

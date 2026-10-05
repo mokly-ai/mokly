@@ -5,7 +5,7 @@ import type { Compilation } from "../dist/build/compile.js";
 import type { GeneratedOutputStore } from "../dist/build/output_store.js";
 import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
-import type { CatalogueChangeClassifier } from "../dist/server/component_changes.js";
+import type { CatalogueChangeClassifier } from "../dist/server/component_change_types.js";
 import type { CatalogueServerFactory } from "../dist/server/factory.js";
 import type {
   RunningServer,
@@ -75,7 +75,7 @@ test("watched startup does not await repository classification", async (context)
     async read(_config, manifest) {
       events.push("classification:start");
       await pending;
-      return { baseline: manifest, changedIds: ["home"] };
+      return { baseline: manifest, changedEntries: ["home"] };
     },
   };
   const running = await serve(

@@ -33,7 +33,7 @@ const messages: MessageBody[] = [
   {
     type: "navigation",
     navigation: {
-      id: "details",
+      screenPath: "details",
       fragment: "Section:1",
       target: { kind: "named", name: "Report.1" },
       activation: "middle",
@@ -46,7 +46,7 @@ const messages: MessageBody[] = [
 ];
 const wire = (body: object) => ({
   channel: "mokly-inspector",
-  version: 1,
+  version: 2,
   nonce,
   ...body,
 });
@@ -58,7 +58,7 @@ for (const body of messages)
       { extra: true },
       { nonce: "f".repeat(32) },
       { channel: "other" },
-      { version: 2 },
+      { version: 3 },
       { nonce: "INVALID" },
       { type: "unknown" },
     ])
@@ -171,12 +171,12 @@ test("inspector enforces key/range/box totals without truncation", () => {
 
 test("navigation permits bounded logical metadata only", () => {
   const base = {
-    id: "screen",
+    screenPath: "screen",
     target: { kind: "self" },
     activation: "primary",
   };
   for (const mutation of [
-    { id: "a".repeat(257) },
+    { screenPath: "a".repeat(257) },
     { fragment: "#section" },
     { fragment: "a".repeat(257) },
     { target: { kind: "self", name: "other" } },

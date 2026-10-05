@@ -40,7 +40,7 @@ test("an unrelated mokly-generated source folder remains discoverable", async (t
   await fs.mkdir(path.join(fixture.entriesDir, "mokly-generated"));
   await fs.writeFile(
     path.join(fixture.entriesDir, "mokly-generated/extra.mockup.tsx"),
-    'import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "extra", title: "Extra", description: "Extra", dependencies: [], relatedDocs: [], render: () => "<html><body>Extra</body></html>" })];',
+    'import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ path: "extra", title: "Extra", description: "Extra", dependencies: [], relatedDocs: [], render: () => "<html><body>Extra</body></html>" })];',
   );
   const config = await loadConfig(fixture.root);
   assert.ok(
@@ -49,7 +49,7 @@ test("an unrelated mokly-generated source folder remains discoverable", async (t
     ),
   );
   const compiled = await compileCatalogue(config);
-  assert.ok(compiled.manifest.entries.some((entry) => entry.id === "extra"));
+  assert.ok(compiled.manifest.entries.some((entry) => entry.path === "extra"));
 });
 
 test("static delivery classifies invalid and unsupported versions without throwing", () => {
@@ -59,7 +59,7 @@ test("static delivery classifies invalid and unsupported versions without throwi
     version: 3,
   });
   const value = {
-    schemaVersion: 4,
+    schemaVersion: 5,
     deploymentId: "a".repeat(64),
     canonicalPath: "/",
     comparisonUrl: null,

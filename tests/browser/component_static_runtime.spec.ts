@@ -34,10 +34,7 @@ test.beforeAll(async () => {
     );
     await fs.cp(fixture.output, directory, { recursive: true });
     site = await serveStaticFiles(directory);
-    await assertServedShellMarker(
-      site.url,
-      "/view/components/action-disabled.html",
-    );
+    await assertServedShellMarker(site.url, "/view/action/disabled/");
   } finally {
     await fixture.close();
   }
@@ -62,7 +59,7 @@ for (const viewport of ["desktop", "mobile"] as const)
         ? { width: 1280, height: 900 }
         : { width: 390, height: 844 },
     );
-    await page.goto(`${site.url}/view/components/action-disabled.html`);
+    await page.goto(`${site.url}/view/action/disabled/`);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     await expect(page.locator('[data-prop-control="label"]')).toBeDisabled();
     await expect(page.locator('[data-prop-control="disabled"]')).toBeChecked();
@@ -94,7 +91,7 @@ for (const viewport of ["desktop", "mobile"] as const)
       page.locator("[data-diff-stage] iframe").last(),
     ).toHaveAttribute(
       PANE_SOURCE,
-      new RegExp(`disabled\\.${viewport}\\.dark\\.html$`),
+      new RegExp(`disabled/index\\.${viewport}\\.dark\\.html$`),
     );
     await page.getByRole("button", { name: "Current", exact: true }).click();
     await page.getByRole("tab", { name: "Usage", exact: true }).click();

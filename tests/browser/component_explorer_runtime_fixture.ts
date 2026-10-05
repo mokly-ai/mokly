@@ -1,20 +1,13 @@
-import path from "node:path";
-
-import { renderReviewArtifact } from "../../dist/review/artifact.js";
-import { compareReview } from "../../dist/review/compare.js";
-import { writeReviewArtifact } from "../../dist/review/write.js";
+import { readCatalogueChanges } from "../../dist/server/component_changes.js";
+import { configuredServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
-export const suiteState = {
-  server: undefined! as RunningServer,
-};
-
-export const cleanup: (() => Promise<void>)[] = [];
-
-export const startSuite = async () => {
+export async function startComponentExplorer(
+  cleanup: (() => Promise<void>)[],
+): Promise<RunningServer> {
   const fixture = await componentReviewFixture(
     {
       after: (fn) => {
@@ -28,50 +21,42 @@ export const startSuite = async () => {
           '<button className="revised" data-viewport=',
         )
         .replace(
-          '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }]',
-          '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }, { id: "action-new", title: "New", props: { label: "New" } }]',
+          '{ slug: "disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }]',
+          '{ slug: "disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }, { slug: "new", title: "New", props: { label: "New" } }]',
         ),
     componentEntrySource({
-      body: '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink><MockLink to="action-disabled">Open Disabled Action</MockLink>',
+      body: '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink><MockLink to="action/disabled">Open Disabled Action</MockLink>',
     }).replace(
-      '{ id: "action-disabled", title: "Disabled", props:',
-      '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props:',
+      '{ slug: "disabled", title: "Disabled", props:',
+      '{ slug: "disabled", title: "Disabled", description: "The saved action is unavailable.", props:',
     ),
   );
-  const compared = await compareReview(
-    fixture.after,
+
+  const changes = await readCatalogueChanges(
     fixture.config,
-    fixture.git,
+    fixture.after.manifest,
     "main",
+    fixture.git,
+    "a".repeat(40),
   );
-  if (compared.result.schemaVersion !== 4)
-    throw new Error("Expected component result");
-  const result = compared.result;
-  suiteState.server = await startCatalogueServer(fixture.config, {
+
+  if (!changes.result) throw new Error("Expected component result");
+
+  const result = changes.result;
+
+  const server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
     generatedOutputs: fixture.after.outputs,
-    componentChanges: { baseline: fixture.before.manifest, result },
-    changedIds: result.components.flatMap((component) =>
+    componentChanges: changes,
+    changedEntries: result.components.flatMap((component) =>
       component.variants
         .filter((variant) => variant.state !== "unchanged")
-        .map((variant) => variant.id),
+        .map((variant) => variant.path),
     ),
-    review: {
-      base: "main",
-      outDir: path.join(fixture.root, ".review"),
-      generate: async () => {
-        await writeReviewArtifact(
-          renderReviewArtifact(compared),
-          path.join(fixture.root, ".review"),
-          fixture.config,
-        );
-      },
-    },
+    review: configuredServedReview(fixture.config, "main", fixture.git),
   });
-  fixture.beforeRemove(() => suiteState.server.close());
-};
 
-export const stopSuite = async () => {
-  for (const dispose of cleanup.splice(0).reverse()) await dispose();
-};
+  fixture.beforeRemove(() => server.close());
+  return server;
+}

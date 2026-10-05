@@ -79,11 +79,11 @@ test("postMessage mount validates origins, sandbox, nonce and history replacemen
       code: "origin",
     });
   for (const url of [
-    "https://app.test/static/mokly-generated/screen.html",
-    "https://wrong.test/static/mokly-generated/screen.html",
+    "https://app.test/static/mokly-generated/screen/index.html",
+    "https://wrong.test/static/mokly-generated/screen/index.html",
     "https://frames.test/mokly-viewer/diffs/screen.html",
     "data:text/html,test",
-    "https://frames.test/static/mokly-generated/screen.html#1bad",
+    "https://frames.test/static/mokly-generated/screen/index.html#bad%20fragment",
   ])
     await assert.rejects(
       postMessageAdapter({ frameOrigin: "https://frames.test" }).mount(

@@ -33,7 +33,7 @@ export function comparisonGeneration(
 export function historicalSnapshotId(
   catalogueIdentity: string,
   source: HistoricalSnapshotSource,
-  entry: { id: string; kind: string },
+  entry: { path: string; kind: string },
 ): string {
   if (!HASH_64.test(catalogueIdentity))
     invalidData("$catalogue", "invalid catalogue identity");
@@ -44,12 +44,12 @@ export function historicalSnapshotId(
     invalidData("$catalogue", "invalid historical source identity");
   return sha256(
     JSON.stringify([
-      "mokly-historical-snapshot-v2",
+      "mokly-historical-snapshot-v3",
       catalogueIdentity,
       source.kind,
       source.identity,
       entry.kind,
-      entry.id,
+      entry.path,
     ]),
   );
 }

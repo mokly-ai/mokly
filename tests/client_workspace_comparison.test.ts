@@ -4,7 +4,7 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
@@ -89,7 +89,7 @@ test("historical v2 loaded evidence remains available when classification has no
 test("loaded comparisons for another screen cannot add evidence to the selected workspace", () => {
   const data = workspace();
   const loaded = comparison();
-  loaded.screens = [{ ...loaded.screens[0]!, id: "other" }];
+  loaded.screens = [{ ...loaded.screens[0]!, path: "other" }];
   assert.doesNotMatch(renderEvidence(data, loaded), /mockups\/logo.svg/);
 });
 
@@ -148,10 +148,10 @@ function componentComparison(
   sharedImpact: string[],
   reasonPath?: string,
   excludedCss?: string,
-): ReviewResultV4 {
-  const address = { id: "home", title: "Home" };
+): ReviewResultV6 {
+  const address = { path: "home", title: "Home" };
   return {
-    schemaVersion: 4,
+    schemaVersion: 6 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -197,9 +197,9 @@ function componentComparison(
   };
 }
 
-function comparison(): ReviewResultV4 {
+function comparison(): ReviewResultV6 {
   return {
-    schemaVersion: 4,
+    schemaVersion: 6 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -211,9 +211,9 @@ function comparison(): ReviewResultV4 {
     ignoredImpact: [],
     screens: [
       {
-        before: { id: "home", title: "Home" },
-        after: { id: "home", title: "Home" },
-        id: "home",
+        before: { path: "home", title: "Home" },
+        after: { path: "home", title: "Home" },
+        path: "home",
         title: "Home",
         state: "changed",
         dependencies: [],
@@ -245,14 +245,14 @@ function workspace(): WorkspaceData {
     entry: {
       colorSchemes: ["light"],
       declaredDependencies: [],
-      id: "home",
+      path: "home",
       kind: "screen",
       title: "Home",
       description: "Home",
       relatedDocs: [],
-      navPath: [],
+
       sourcePath: "entries/home.mockup.tsx",
-      useCaseIds: [],
+      useCasePaths: [],
     },
     components: [],
     views: [],

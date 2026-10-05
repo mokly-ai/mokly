@@ -53,5 +53,12 @@ export function baselineResourceConfig(
   config: ResolvedConfig,
   manifest: HistoricalManifest,
 ): ResolvedConfig {
-  return { ...config, sourceFiles: manifest.sourceFiles };
+  return {
+    ...config,
+    roots: [],
+    entryModules: [],
+    resolvedFiles: [],
+    protectedFiles: [],
+    sourceFiles: manifest.sourceFiles,
+  };
 }

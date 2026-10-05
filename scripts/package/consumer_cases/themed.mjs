@@ -29,14 +29,14 @@ export async function smokeThemedConsumer(context) {
   const appFragment = await fs.promises.readFile(
     path.join(
       root,
-      "docs/mockups/mokly-generated/screens/themed-dashboard.desktop.html",
+      "docs/mockups/mokly-generated/themed-dashboard/index.desktop.html",
     ),
     "utf8",
   );
   const campaignFragment = await fs.promises.readFile(
     path.join(
       root,
-      "docs/mockups/mokly-generated/screens/themed-campaign.desktop.html",
+      "docs/mockups/mokly-generated/themed-campaign/index.desktop.html",
     ),
     "utf8",
   );
@@ -51,7 +51,7 @@ export async function smokeThemedConsumer(context) {
   assert.match(campaignFragment, /href="\.\.\/\.\.\/marketing\.css"/);
   assert.equal(
     fs.existsSync(
-      path.join(root, "docs/mockups/mokly-generated/pages/themed-notice.html"),
+      path.join(root, "docs/mockups/mokly-generated/themed-notice/index.html"),
     ),
     true,
   );
@@ -61,10 +61,10 @@ export async function smokeThemedConsumer(context) {
       "utf8",
     ),
   );
-  assert.equal(pageManifest.schemaVersion, 8);
+  assert.equal(pageManifest.schemaVersion, 9);
   assert.ok(
     pageManifest.entries.some(
-      (entry) => entry.id === "themed-notice" && entry.kind === "page",
+      (entry) => entry.path === "themed-notice" && entry.kind === "page",
     ),
   );
   assert.ok(
@@ -90,8 +90,8 @@ export async function smokeThemedConsumer(context) {
   assert.ok(review.screens.every((screen) => screen.sharedImpact.length === 1));
   await runBin(root, ["export", "--out", "published"]);
   await inspectConsumerExport(root, "published", "HEAD", [
-    "view/pages/themed-notice.html",
-    "static/mokly-generated/screens/themed-dashboard.desktop.html",
+    "view/themed-notice/index.html",
+    "static/mokly-generated/themed-dashboard/index.desktop.html",
   ]);
   await smokeRegisteredComponents(context, root, true);
 }

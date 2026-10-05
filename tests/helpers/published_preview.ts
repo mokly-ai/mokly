@@ -10,9 +10,10 @@ import { readPreviewDescriptor } from "../../packages/viewer/dist/previews/descr
 export async function assertPublishedPagePreview(
   output: string,
   published: { kind: "page" },
+  entryPath: string,
 ): Promise<void> {
   const shell = await fs.readFile(
-    path.join(output, "view/pages/removed-page.html"),
+    path.join(output, `view/${entryPath}/index.html`),
     "utf8",
   );
   const raw = /data-mokly-preview="([^"]*)"/.exec(shell)?.[1];
@@ -30,17 +31,17 @@ export async function assertPublishedPagePreview(
     await fs.readFile(path.join(output, "mokly-viewer/catalogue.json"), "utf8"),
   ) as { comparisonUrl: string };
   const generation = path.posix.dirname(catalogue.comparisonUrl);
-  const previewPath = `${generation}/pages/removed-page.json`;
+  const previewPath = `${generation}/previews/${entryPath}/index.json`;
   const preview = parseRemovedPagePreview(
     JSON.parse(await fs.readFile(path.join(output, previewPath), "utf8")),
   );
-  assert.equal(preview.id, "removed-page");
+  assert.equal(preview.path, entryPath);
   assert.match(
     await fs.readFile(
       path.join(
         output,
         generation,
-        "snapshots/before/mokly-generated/pages/removed-page.html",
+        `snapshots/before/mokly-generated/${entryPath}/index.html`,
       ),
       "utf8",
     ),

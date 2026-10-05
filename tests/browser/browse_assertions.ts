@@ -1,16 +1,15 @@
 import { expect, type Page } from "@playwright/test";
 
 export const welcomeRow =
-  'a[data-nav-row][data-route="screens/example-welcome.html"]';
+  'a[data-nav-row][data-route="example/screens/welcome/index.html"]';
 
 export const detailsRow =
-  'a[data-nav-row][data-route="screens/example-details.html"]';
+  'a[data-nav-row][data-route="example/screens/details/index.html"]';
 
 export const designHomeRow =
-  'a[data-nav-row][data-route="screens/design-browse-home.html"]';
+  'a[data-nav-row][data-route="design/browse/views/home/index.html"]';
 
-export const tourRow =
-  'a[data-nav-row][data-route="user-flows/example-tour.html"]';
+export const tourRow = 'a[data-nav-row][data-route="example/tour/index.html"]';
 
 export const appearance = ".mbk-topbar [data-mokly-appearance-control]";
 
@@ -49,7 +48,7 @@ export function hasMarker(page: Page): Promise<boolean> {
  */
 export async function openScreensGroup(page: Page): Promise<void> {
   const group = page.locator(
-    'details[data-nav-folder="folder:Example/Screens"]',
+    'details[data-nav-folder="folder:example/screens"]',
   );
   if ((await group.getAttribute("open")) === null) {
     await group.locator("summary").click();
@@ -107,5 +106,5 @@ export function overlayStyle(
 export async function workspaceRoute(page: Page): Promise<string | undefined> {
   const state = await page.locator("script[data-workspace-data]").textContent();
   if (!state) return;
-  return (JSON.parse(state) as { entry?: { id?: string } }).entry?.id;
+  return (JSON.parse(state) as { entry?: { path?: string } }).entry?.path;
 }

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { extractCssReferences } from "../dist/css_references.js";
 import {
-  extractCssReferences,
   extractHtmlReferences,
   resolveLocalReferencePath,
 } from "../dist/html_references.js";
@@ -39,14 +39,14 @@ for (const [source, expected] of [
 test("local references resolve from the generated document's actual directory", () => {
   assert.deepEqual(
     resolveLocalReferencePath(
-      "mokly-generated/screens/home.mobile.html",
+      "mokly-generated/home/index.mobile.html",
       "../../styles.css?theme=dark#header",
     ),
     { kind: "resolved", path: "styles.css" },
   );
   assert.deepEqual(
     resolveLocalReferencePath(
-      "mokly-generated/screens/home.html",
+      "mokly-generated/home/index.html",
       "../../../secret.css",
     ),
     { kind: "escape" },

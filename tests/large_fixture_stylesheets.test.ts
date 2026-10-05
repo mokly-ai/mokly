@@ -125,7 +125,8 @@ export async function prepareDerivedToolchain(_repository, root) {
           "utf8",
         );
         const linked =
-          entry.kind === "screen" && entry.id !== "area-1-screen-3";
+          entry.kind === "screen" &&
+          entry.path !== "area-1/screens/activity-group-1/screen-3";
         for (const id of [1, 2])
           assert.equal(html.includes(`assets/shared-${id}.css`), linked);
         assert.ok(!html.includes("scale-unrelated-rule"));
@@ -136,8 +137,8 @@ export async function prepareDerivedToolchain(_repository, root) {
       "main",
       committedReviewRepository(config),
     );
-    assert.deepEqual(snapshot.changedIds, []);
-    assert.equal(snapshot.changedIds?.length, expectedStylesheetChanges);
+    assert.deepEqual(snapshot.changedEntries, []);
+    assert.equal(snapshot.changedEntries?.length, expectedStylesheetChanges);
     const result = snapshot.componentChanges?.result;
     assert.ok(result);
     assert.deepEqual(result.changedPaths, [changedPath]);
@@ -146,7 +147,7 @@ export async function prepareDerivedToolchain(_repository, root) {
       for (const view of screen.views)
         assert.deepEqual(
           view.excludedResources,
-          screen.id === "area-1-screen-3"
+          screen.path === "area-1/screens/activity-group-1/screen-3"
             ? undefined
             : [{ path: changedPath, reason: "no-matching-rule" }],
         );

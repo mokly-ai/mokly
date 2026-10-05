@@ -36,7 +36,7 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
   );
   await fs.writeFile(
     path.join(root, "mokly.config.ts"),
-    'export default { entriesDir: "entries", mockupsDir: "generated/catalogue" };\n',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "generated/catalogue" };\n',
   );
   await fs.writeFile(path.join(root, ".gitignore"), ".mokly-cache/\n");
   await fs.writeFile(path.join(root, "baseline-build.cjs"), buildScript);
@@ -97,7 +97,7 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
   assert.match(
     await reader.readFile(
       request.commit,
-      "generated/catalogue/mokly-generated/pages/page.html",
+      "generated/catalogue/mokly-generated/page/index.html",
     ),
     /Historical page/,
   );
@@ -220,12 +220,12 @@ if (mode === "wait") {
   fs.mkdirSync(root, { recursive: true });
   const sourcePath = "entries/page.mockup.tsx";
   fs.writeFileSync(root + "/mokly-manifest.json", JSON.stringify({
-    schemaVersion: 8, generatedBy: "mokly", sourceFiles: ["catalogue.json", sourcePath, "mokly.config.ts"],
-    assetClosure: [], blobHashAlgorithm: "sha1", generatedFiles: [{ path: "pages/page.html", blobHash: require("node:crypto").createHash("sha1").update("blob " + Buffer.byteLength("<!doctype html><html><body>Historical page</body></html>") + "\\0").update("<!doctype html><html><body>Historical page</body></html>").digest("hex") }],
-    entries: [{ id: "page", kind: "page", title: "Historical page", description: "A tiny consumer catalogue", navPath: [], sourcePath, relatedDocs: [], declaredDependencies: [] }]
+    schemaVersion: 9, folders: [], generatedBy: "mokly", sourceFiles: ["catalogue.json", sourcePath, "mokly.config.ts"],
+    assetClosure: [], blobHashAlgorithm: "sha1", generatedFiles: [{ path: "page/index.html", blobHash: require("node:crypto").createHash("sha1").update("blob " + Buffer.byteLength("<!doctype html><html><body>Historical page</body></html>") + "\\0").update("<!doctype html><html><body>Historical page</body></html>").digest("hex") }],
+    entries: [{ path: "page", kind: "page", title: "Historical page", description: "A tiny consumer catalogue", sourcePath, relatedDocs: [], declaredDependencies: [] }]
   }));
-  fs.mkdirSync(root + "/pages", { recursive: true });
-  fs.writeFileSync(root + "/pages/page.html", "<!doctype html><html><body>Historical page</body></html>");
-  if (mode === "output-link") fs.symlinkSync("pages/page.html", root + "/alias.html");
+  fs.mkdirSync(root + "/page", { recursive: true });
+  fs.writeFileSync(root + "/page/index.html", "<!doctype html><html><body>Historical page</body></html>");
+  if (mode === "output-link") fs.symlinkSync("page/index.html", root + "/alias.html");
 }
 `;

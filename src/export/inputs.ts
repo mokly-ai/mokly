@@ -90,7 +90,7 @@ export async function assertInputsUnchanged(
 ): Promise<void> {
   signal?.throwIfAborted();
   const freshConfig = await loadConfig(config.repoRoot, config.configPath);
-  const fresh = await compileCatalogue(freshConfig);
+  const fresh = await compileCatalogue(freshConfig, undefined, signal);
   freshConfig.sourceFiles = fresh.manifest.sourceFiles;
   const publicNow = await capturePublicFiles(
     freshConfig,

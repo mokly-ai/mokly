@@ -39,9 +39,11 @@ export interface BaselineReader {
 export class CommittedRepository implements ReadOnlyReviewRepository {
   readonly evidence: GitRepositoryEvidence;
   readonly reader: CommittedBaselineReader;
+  readonly sourceReader: CommittedBaselineReader;
   constructor(runner: GitCommandRunner) {
     this.evidence = new GitRepositoryEvidence(runner);
     this.reader = new CommittedBaselineReader(runner);
+    this.sourceReader = this.reader;
   }
 }
 

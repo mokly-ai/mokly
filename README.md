@@ -44,13 +44,13 @@ rendering context.
 
 - **Use real product UI.** Screens are React nodes composed from the same
   components, providers, styles, and assets as the product.
-- **See the whole product in one place.** Path-based folders, search, tags,
-  mobile and desktop views, color schemes, pages, components, screen and
-  component variants, and user flows share one catalogue. Variants remain
-  grouped beneath their parent while keeping their own stable ids and routes.
+- **See the whole product in one place.** Folders that mirror your spec tree,
+  search, tags, mobile and desktop views, color schemes, pages, Markdown documents, components, screen and component variants, and user flows share
+  one catalogue. Variants remain grouped beneath their parent while keeping
+  their own path and address.
 - **Review outcomes, not file lists.** The Changes view compares rendered
   screens and their reachable resources with the branch point of your Git base,
-  while removed screens and pages retain a read-only previous version.
+  while removed screens, pages and documents retain a read-only previous version.
 - **Inspect reusable components.** Register typed props, variants, slots, and
   local controls, then see where each component is used.
 - **Keep delivery simple.** A catalogue can be exported as static files and
@@ -79,16 +79,19 @@ Create `mokly.config.ts` in your repository root:
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
-  entriesDir: "docs/mockups/entries",
-  mockupsDir: "docs/mockups",
+  mockupsDir: "specs/generated",
 });
 ```
 
-Paths are relative to the config file. `entriesDir` is shorthand for the
-recommended `<folder>/**/*.mockup.{ts,tsx}` pattern. To co-locate definitions
-with product code, configure repository-relative `entries` globs such as
-`["src/**/*.mockup.{ts,tsx}"]` instead; set exactly one of `entries` or
-`entriesDir`, and ensure every configured glob matches an entry module.
+Paths are relative to the config file. Mokly reads the `specs` directory
+beside the config by default: every `.mockup.ts` or `.mockup.tsx` file in it
+is an entry module and every `.md` file is a document. A file's location
+in that tree is its place in the catalogue. List `roots` to read other
+directories, such as a component library with
+`{ dir: "packages/ui/src", path: "components" }`. The co-located alternative
+uses `{ dir: "src/features", transparent: ["__mockups__"] }`, so
+`src/features/checkout/__mockups__/summary.mockup.tsx` becomes
+`checkout/summary`. Every root must match at least one file.
 
 The default renderer is deliberately neutral; point `renderer` at your own
 module when screens need product theme providers, custom document markup, or
@@ -97,51 +100,69 @@ React Native Web style collection. See the
 
 ### 3. Add a screen
 
-Create `docs/mockups/entries/account.mockup.tsx`:
+Create `specs/account/account-home.mockup.tsx`:
 
 ```tsx
 import { defineScreen } from "@mokly/mokly";
 
-export const mockups = [
-  defineScreen({
-    id: "account-home",
-    title: "Account home",
-    description: "The account landing screen.",
-    navPath: ["Account"],
-    mobile: <main>Account on mobile</main>,
-    desktop: <main>Account on desktop</main>,
-    dependencies: [],
-    relatedDocs: [],
-    useCaseIds: [],
-  }),
-];
+export default defineScreen({
+  title: "Account home",
+  description: "The account landing screen.",
+  mobile: <main>Account on mobile</main>,
+  desktop: <main>Account on desktop</main>,
+  dependencies: [],
+  relatedDocs: [],
+});
 ```
 
 Replace the example `<main>` nodes with your product components, then list their
 source files or directories in `dependencies`. An entry file ends in
-`.mockup.ts` or `.mockup.tsx` and exports a `mockups` array. Mokly derives every
-route from the id: this screen lives at `screens/account-home.html`, with one
-generated view per viewport and color scheme beside it.
+`.mockup.ts` or `.mockup.tsx` and exports its definitions from any export,
+default or named. Mokly derives everything else from the file's place: this
+screen is `account/account-home`, it lives at `/view/account/account-home/`,
+and its views are written under `mockupsDir` as
+`account/account-home/index.mobile.html` and `index.desktop.html`, one file
+per viewport and color scheme. Serve exposes them below `/static/`; export
+writes them below `static/`. The `account`
+directory is a folder in the catalogue; a `_folder.json` file or a
+`defineFolder` export gives it a title and an order.
 
 Keep generated output local by ignoring its dedicated directory and cache:
 
 ```gitignore
 .mokly-cache/
-/docs/mockups/mokly-generated/
+/specs/generated/mokly-generated/
 ```
 
 `build` writes only under `docs/mockups/mokly-generated/`; referenced authored
 assets stay under `docs/mockups/` and are served and exported in place. To
 commit generated output instead, commit every generated file. `check`
 compares compiled output only when the generated tree is indexed; a partial
-index fails with both remedies. A committed baseline's v8 inventory must
+index fails with both remedies. A committed baseline's v9 inventory must
 match its Git blobs; otherwise the baseline is rebuilt.
 Build and Serve do not inspect head tracking: a new route builds successfully,
 and `check` then lists it under `untracked:` until staged. Only `check` rejects
 an indexed `.mokly-cache/` path.
-Current output uses manifest v8. The manifest records the referenced asset closure and Git blob-hash
+Current output uses manifest v9. The manifest records the referenced asset closure and Git blob-hash
 inventory. Earlier baseline formats make Changes unavailable under
 [baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
+
+Add `specs/account/README.md` to give Account its own Overview row:
+
+```markdown
+# Account
+
+Manage account details and billing.
+
+[Open account home](mock:./account-home)
+```
+
+Folder rows expand without changing the content area. The Overview row opens
+the document at `/view/account/`. Specs contains screens, pages, documents and
+flows; Components contains registered components.
+
+For an existing catalogue, follow the
+[path identity migration note](./docs/protocol/npm-release-notes.md#breaking-path-identity-release-note).
 
 ### 4. Open the catalogue
 
@@ -193,15 +214,16 @@ Detailed command references:
 Mokly's public API is declarative. Definitions describe what belongs in a
 catalogue; your React tree still owns what each screen looks like.
 
-| Concept          | Use it for                                               | Guide                                                               |
-| ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------- |
-| Screens          | Product states, view renders, and full-screen variants   | [Screens](./docs/guides/authoring/screens.md)                       |
-| Folders and tags | Navigation paths and searchable vocabulary               | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
-| Components       | Typed props, variants, controls, and usage inspection    | [Components](./docs/guides/authoring/components.md)                 |
-| Use-case flows   | Ordered journeys composed from existing screens          | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
-| Pages            | Existing complete HTML documents without device variants | [Pages](./docs/guides/authoring/pages.md)                           |
-| Styles           | Imported CSS, modules, assets and optional PostCSS       | [Styles](./docs/guides/authoring/styles.md)                         |
-| `MockLink`       | Portable links between catalogue entries                 | [Links](./docs/guides/authoring/links.md)                           |
+| Concept          | Use it for                                                                                | Guide                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Screens          | Product states, view renders, and full-screen variants                                    | [Screens](./docs/guides/authoring/screens.md)                       |
+| Folders and tags | Folders from file paths, titles and order from `_folder.json` or `defineFolder`, and tags | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
+| Components       | Typed props, variants, controls, and usage inspection                                     | [Components](./docs/guides/authoring/components.md)                 |
+| Use-case flows   | Ordered journeys composed from existing screens                                           | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
+| Pages            | Existing complete HTML documents without device variants                                  | [Pages and documents](./docs/guides/authoring/pages.md)             |
+| Documents        | Markdown files rendered as catalogue documents, including a folder's README               | [Pages and documents](./docs/guides/authoring/pages.md)             |
+| `MockLink`       | Portable links between catalogue entries by path                                          | [Links](./docs/guides/authoring/links.md)                           |
+| Styles           | Imported CSS, modules, assets and optional PostCSS                                        | [Styles](./docs/guides/authoring/styles.md)                         |
 
 A custom renderer is the integration boundary for product providers, themes,
 stylesheets, fonts, and full-document markup. Mokly resolves React from the
@@ -226,9 +248,13 @@ evidence keeps known unchanged views marked Unmodified without offering a
 comparison. A light-only screen or component variant uses its effective Light
 view for status and marks even while Dark stays selected for the rest of the
 catalogue. Missing per-view evidence preserves the selected entry's existing
-comparison eligibility. Removed screens and pages load their read-only
+comparison eligibility. Removed screens, pages and documents load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
-point.
+point. Changes pairs a moved entry with its earlier version when the evidence
+is unique, labels its row Moved, and names the previous path in Details. Use
+`movedFrom` to declare the previous path when needed. Pure moves stay included
+without counting as output changes; see the
+[move contract](./docs/protocol/mokly-moves.md).
 
 Read [how Changes works](./docs/guides/catalogue/changes.md), then export a
 standalone site:
@@ -238,7 +264,7 @@ npx --no-install mokly export --out .context/mokly-site
 ```
 
 The export contains the catalogue, its assets, navigation, available Git
-comparisons, and previous versions for removed screens and pages. Serve the
+comparisons, and previous versions for removed screens, pages and documents. Serve the
 directory at the root of an HTTP(S) origin. The
 [export and hosting guide](./docs/guides/catalogue/export-and-host.md) covers
 the required headers and deployment model.
@@ -269,6 +295,7 @@ appearance with any preview scheme. See the
 - [Browsing the catalogue](./docs/guides/catalogue/browse.md)
 - [Configuration reference](./docs/guides/authoring/config.md)
 - [Protocol and specification index](./docs/protocol/README.md)
+- [Paths, roots, and identity](./docs/protocol/mokly-paths.md)
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
 - [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
 - [Variants](./docs/protocol/mokly-variants.md)
@@ -348,10 +375,10 @@ review rules, and the temporary Braces exception.
 - [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
   identity-derived logical-link targets and portable artifact URLs.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
-  — manifest-v8 component-entry validation.
-- [`src/registry/changed_ids.ts`](./src/registry/changed_ids.ts) and
+  — manifest-v9 component-entry validation.
+- [`src/registry/changed_paths.ts`](./src/registry/changed_paths.ts) and
   [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
-  identity-keyed change membership and the strict baseline-v8 boundary.
+  identity-keyed change membership and the strict baseline-v9 boundary.
 - [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
   [`src/server/classification_result.ts`](./src/server/classification_result.ts)
   — the typed earlier-baseline outcome from admission through Serve.

@@ -71,9 +71,7 @@ for (const hostname of ["127.0.0.1", "localhost"])
         throw new Error("No proxy port");
       expect(String(address.port)).not.toBe(upstream.port);
       const host = `${hostname}:${address.port}`;
-      const navigation = await page.goto(
-        `http://${host}/view/components/action.html`,
-      );
+      const navigation = await page.goto(`http://${host}/view/action/`);
       expect(navigation?.status()).toBe(200);
       await page
         .getByLabel("Viewport", { exact: true })

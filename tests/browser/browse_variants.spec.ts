@@ -7,13 +7,17 @@ import {
 
 let navigation: NavigationFixture;
 
-const LIST = '[data-nav-disclosure="variants:pages:home"]';
+const LIST = '[data-nav-disclosure="variants:fixture/nested/home"]';
 const TOGGLE = "[data-nav-variants-toggle]";
-const HOME_ROW = 'a[data-nav-row][data-route="screens/home.html"]';
-const EMPTY_ROW = 'a[data-nav-row][data-route="screens/home-empty.html"]';
-const ERROR_ROW = 'a[data-nav-row][data-route="screens/home-error.html"]';
-const GONE_ROW = 'a[data-nav-row][data-route="screens/home-gone.html"]';
-const DETAILS_ROW = 'a[data-nav-row][data-route="screens/details.html"]';
+const HOME_ROW = 'a[data-nav-row][data-route="fixture/nested/home/index.html"]';
+const EMPTY_ROW =
+  'a[data-nav-row][data-route="fixture/nested/home/empty/index.html"]';
+const ERROR_ROW =
+  'a[data-nav-row][data-route="fixture/nested/home/error/index.html"]';
+const GONE_ROW =
+  'a[data-nav-row][data-route="fixture/nested/home/gone/index.html"]';
+const DETAILS_ROW =
+  'a[data-nav-row][data-route="fixture/nested/details/index.html"]';
 
 /** The trailing changed dot the stylesheet draws, or `none` when unmarked. */
 async function changedDot(
@@ -53,7 +57,7 @@ test.afterAll(async () => {
 
 /** Open the catalogue at a route whose variant list starts closed. */
 async function openDetails(page: Page): Promise<void> {
-  await page.goto(`${navigation.url}/view/screens/details.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/details/`);
   await expect(page.locator(LIST)).toBeHidden();
   await expect(page.locator(TOGGLE)).toHaveAttribute("aria-expanded", "false");
 }
@@ -74,7 +78,7 @@ test("the variant disclosure opens, navigates, and returns through history", asy
   await expect(page.locator(ERROR_ROW)).toBeVisible();
 
   await page.click(EMPTY_ROW);
-  await expect(page).toHaveURL(/\/view\/screens\/home-empty\.html$/);
+  await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/empty\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Empty workspace");
   await expect(page.locator(EMPTY_ROW)).toHaveAttribute("aria-current", "page");
   await expect(page.locator(HOME_ROW)).not.toHaveAttribute(
@@ -84,16 +88,16 @@ test("the variant disclosure opens, navigates, and returns through history", asy
   await expect(page.locator(LIST)).toBeVisible();
   const crumbLink = page.getByLabel("Catalogue location").locator("a");
   await expect(crumbLink).toHaveText("Home");
-  await expect(crumbLink).toHaveAttribute("href", "/view/screens/home.html");
+  await expect(crumbLink).toHaveAttribute("href", "/view/fixture/nested/home/");
 
   await page.goBack();
-  await expect(page).toHaveURL(/\/view\/screens\/details\.html$/);
+  await expect(page).toHaveURL(/\/view\/fixture\/nested\/details\/$/);
   await page.goForward();
-  await expect(page).toHaveURL(/\/view\/screens\/home-empty\.html$/);
+  await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/empty\/$/);
   await expect(page.locator(EMPTY_ROW)).toHaveAttribute("aria-current", "page");
 
   await crumbLink.click();
-  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+  await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
   await expect(page.locator(HOME_ROW)).toHaveAttribute("aria-current", "page");
   await expect(page.locator(LIST)).toBeVisible();
 });
@@ -101,14 +105,14 @@ test("the variant disclosure opens, navigates, and returns through history", asy
 test("Collapse all closes a variant list and reload restores the choice", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home-empty.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/empty/`);
   await expect(page.locator(LIST)).toBeVisible();
 
   await page.getByRole("button", { name: "Collapse all" }).click();
   await expect(page.locator(LIST)).toBeHidden();
   await expect(page.locator(TOGGLE)).toHaveAttribute("aria-expanded", "false");
 
-  await page.goto(`${navigation.url}/view/screens/details.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/details/`);
   await expect(page.locator(LIST)).toBeHidden();
 
   await page.click(TOGGLE);
@@ -129,7 +133,7 @@ test("search through a variant title keeps its parent row visible", async ({
   await expect(page.locator(HOME_ROW)).toBeVisible();
   await expect(page.locator(LIST)).toBeVisible();
   await expect(
-    page.locator('a[data-nav-row][data-route="screens/extra.html"]'),
+    page.locator('a[data-nav-row][data-route="other/extra/index.html"]'),
   ).toBeHidden();
 
   await page.fill("[data-mokly-search]", "extra");
@@ -145,7 +149,7 @@ test("search through a variant title keeps its parent row visible", async ({
 test("the Changes filter shows a changed variant under its marked parent", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/details.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/details/`);
   await page.click('[data-filter="changed"]');
 
   await expect(page.locator(ERROR_ROW)).toBeVisible();
@@ -160,7 +164,7 @@ test("the Changes filter shows a changed variant under its marked parent", async
 test("Changes opens the first changed variant of an unmodified parent", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/details.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/details/`);
   await page.click('[data-filter="changed"]');
 
   await expect(page.locator(HOME_ROW)).not.toHaveAttribute(
@@ -174,7 +178,7 @@ test("Changes opens the first changed variant of an unmodified parent", async ({
 
   await page.click(HOME_ROW);
 
-  await expect(page).toHaveURL(/\/view\/screens\/home-error\.html$/);
+  await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/error\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Save failed");
   await expect(page.locator(ERROR_ROW)).toHaveAttribute("aria-current", "page");
   await expect(page.locator('[data-filter="changed"]')).toHaveAttribute(
@@ -186,7 +190,7 @@ test("Changes opens the first changed variant of an unmodified parent", async ({
 test("the changed mark draws one trailing dot the reader can hear", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/details.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/details/`);
   await page.click('[data-filter="changed"]');
   const dot = {
     color: "rgb(79, 120, 100)",
@@ -218,7 +222,7 @@ test("the changed mark draws one trailing dot the reader can hear", async ({
 test("a removed variant keeps a Removed row under its surviving parent", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/details.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/details/`);
   await expect(page.locator(GONE_ROW)).toBeHidden();
 
   await page.click('[data-filter="changed"]');
@@ -231,14 +235,14 @@ test("a removed variant keeps a Removed row under its surviving parent", async (
 
   await page.click(GONE_ROW);
 
-  await expect(page).toHaveURL(/\/view\/screens\/home-gone\.html$/);
+  await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/gone\/$/);
   await expect(page.locator(".mbk-screen-head h2")).toHaveText(
     "Workspace deleted",
   );
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
   const crumbLink = page.getByLabel("Catalogue location").locator("a");
   await expect(crumbLink).toHaveText("Home");
-  await expect(crumbLink).toHaveAttribute("href", "/view/screens/home.html");
+  await expect(crumbLink).toHaveAttribute("href", "/view/fixture/nested/home/");
 
   await page.click('[data-filter="all"]');
 

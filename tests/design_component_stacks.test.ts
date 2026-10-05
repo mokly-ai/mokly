@@ -13,16 +13,16 @@ import {
 
 /** Component designs that stack both versions inside one bordered frame. */
 const STACKED = [
-  ["design-component-overlay", "overlay", "ce-action"],
-  ["design-component-difference", "difference", "ce-action"],
-  ["design-component-overlay-tall", "overlay", "ce-checklist"],
+  ["design/components/pages/stacked/overlay", "overlay", "ce-action"],
+  ["design/components/pages/stacked/difference", "difference", "ce-action"],
+  ["design/components/pages/stacked/overlay-tall", "overlay", "ce-checklist"],
 ] as const;
 
 /** Component designs that keep one bordered frame per version. */
 const SIDE_BY_SIDE = [
-  ["design-component-comparison", 2],
-  ["design-component-controls-comparison", 2],
-  ["design-component-removed", 1],
+  ["design/components/pages/comparison", 2],
+  ["design/components/controls/states/comparison", 2],
+  ["design/components/states/removed", 1],
 ] as const;
 
 test("component Overlay and Difference hold both versions in one bordered frame", async () => {
@@ -72,7 +72,7 @@ test("component Overlay and Difference hold both versions in one bordered frame"
             [1, 0],
             `${where}: the Before version sits below the Current one`,
           );
-        const tall = id === "design-component-overlay-tall";
+        const tall = id === "design/components/pages/stacked/overlay-tall";
         assert.equal(
           attribute(scroller, "data-scrolled") !== undefined,
           tall,
@@ -89,14 +89,17 @@ test("component Overlay and Difference hold both versions in one bordered frame"
 });
 
 test("component stacks keep the comparison screen's caption and inspector", async () => {
-  const [side] = await renders("design-component-comparison");
+  const [side] = await renders("design/components/pages/comparison");
   const expected = new Map(
     previews(side!.document).map(([viewport, preview]) => [
       viewport,
       comparison(preview, viewport).caption,
     ]),
   );
-  for (const id of ["design-component-overlay", "design-component-difference"])
+  for (const id of [
+    "design/components/pages/stacked/overlay",
+    "design/components/pages/stacked/difference",
+  ])
     for (const { document, route } of await renders(id)) {
       assert.equal(openPanel(document), openPanel(side!.document), route);
       for (const [viewport, preview] of previews(document))
@@ -132,7 +135,7 @@ test("Side by side keeps one bordered frame per component version", async () => 
 
 test("the tall Checklist rewords one step and keeps every other one", async () => {
   for (const { document, route } of await renders(
-    "design-component-overlay-tall",
+    "design/components/pages/stacked/overlay-tall",
   ))
     for (const [viewport, preview] of previews(document)) {
       const where = `${route} ${viewport}`;

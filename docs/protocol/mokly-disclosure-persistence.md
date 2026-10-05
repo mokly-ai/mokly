@@ -1,20 +1,44 @@
 # Navigation Disclosure Persistence
 
-This contract owns navigation disclosure storage, defaults, restoration, and
-reconciliation. The [navigation path contract](./mokly-nav-paths.md#order-and-keys)
-owns disclosure key formats and prefix-only parsing. The [runtime](./mokly-runtime.md)
-owns Browse interaction; the [watch contract](./mokly-watch.md) owns the reload
-lifecycle.
+This contract owns navigation disclosure keys, storage, defaults, restoration,
+and reconciliation. Tree structure, folder rows, and sibling order come from
+the [folder contract](./mokly-folders.md#order). The
+[runtime](./mokly-runtime.md) owns Browse interaction; the
+[watch contract](./mokly-watch.md) owns the reload lifecycle.
 
 ## Delivery Status
 
-The v3 storage format, early activation capture, active-route reveal,
-filtered-recovery fallback, and in-place reconciliation are implemented.
+The v4 storage format, the Specs and Components keys, early activation capture,
+active-route reveal, breadcrumb folder reveal, filtered-recovery fallback, and
+in-place reconciliation are implemented.
+
+## Keys
+
+Every disclosure in the current navigation has exactly one key:
+
+| Disclosure                | Key                       |
+| ------------------------- | ------------------------- |
+| The Specs section         | `section:specs`           |
+| The Components section    | `section:components`      |
+| A folder row in a section | `folder:<section>:<path>` |
+| An entry's variant list   | `variants:<path>`         |
+
+`<section>` is `specs` or `components`. A folder that holds both kinds appears
+in both sections with its own children in each, so its two rows have distinct
+keys and independent state. An entry belongs to exactly one section, so its
+variant list key carries none. `<path>` is the folder's or entry's path under
+the [path contract](./mokly-paths.md); it may contain `_`, uppercase letters,
+and digits but never `:`, so a key is parsed by its fixed prefix and the rest
+is the path. A folder whose own page is a screen or component renders as that
+entry's row under the [folder row rules](./mokly-folders.md#rows-and-clicks),
+so its only disclosure is that entry's `variants:<path>` list, which holds the
+variants and then the folder's other members.
 
 ## Storage And Defaults
 
-Store a JSON object at the `localStorage` key `mokly:nav-disclosure:v3`, mapping
-each current disclosure key to `true` (open) or `false` (closed). Save **every**
+Store a JSON object at the `localStorage` key `mokly:nav-disclosure:v4`, mapping
+each current disclosure key to `true` (open) or `false` (closed). Earlier
+storage keys are never read, translated, or removed. Save **every**
 disclosure in the current navigation, not only user-toggled ones, so a removed
 or renamed folder disappears from the next saved map. Do not write while
 search or the Changes filter constrains the tree. A failed or unavailable
@@ -22,20 +46,23 @@ storage write does not discard the current in-memory choice.
 
 The server default opens each present section and each top-level folder. A
 deeper folder is open only if it contains the active route. A parent entry's
-variant list is open when the active route is that parent **or** one of its
-variants; other variant lists are closed. The active-route reveal opens the
-destination's section, folder ancestors, and parent variant list on every
-navigation, overriding any stored closed values for those keys. Unrelated
-stored values are preserved.
+variant list is open when the active route is that parent, one of its
+variants, or within a folder member the list holds; other variant lists are
+closed. The active-route reveal opens the destination's section, folder
+ancestors, and every variant list on its path on every navigation, overriding
+any stored closed values for those keys. Unrelated stored values are
+preserved. A breadcrumb folder reveal opens the folder's section, ancestors,
+enclosing variant lists, and the folder itself, and saves the result like a
+user toggle when no filter is active.
 
 ## Restore And Reconcile
 
 Restore by enumerating the current navigation's disclosure keys. For each key,
 keep its valid stored boolean value when present; otherwise use the fallback
-below. Ignore stored keys that are absent from the current navigation, including
-obsolete `collection:` (sectioned and pre-section forms) and `legacy:` keys,
-without migration. Ignore a stored value that is not a JSON object as a whole;
-ignore invalid keys and non-boolean values individually.
+below. Ignore stored keys that are absent from the current navigation, without
+migration; there is no list of former key forms. Ignore a stored value that
+is not a JSON object as a whole; ignore invalid keys and non-boolean values
+individually.
 
 | Source of values                                                         | Fallback for a current key missing from the map |
 | ------------------------------------------------------------------------ | ----------------------------------------------- |
@@ -72,7 +99,7 @@ Reject a snapshot containing `closedFolderKeys`,
 baseline without active filtering is invalid. The recovery parser remains
 strict for its other fields as defined by the [watch contract](./mokly-watch.md).
 
-Read and write only the current v3 disclosure key. Do not inspect, migrate or
+Read and write only the current v4 disclosure key. Do not inspect, migrate or
 remove keys from previous versions. Any change to the persisted disclosure key format or
 value shape requires a new storage version. Ignore older versions rather than
 partially interpreting them.

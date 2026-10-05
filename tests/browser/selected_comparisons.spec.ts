@@ -33,7 +33,7 @@ test("live Difference requests the active screen and keeps real before/current p
     const url = new URL(request.url());
     if (url.pathname === "/mokly-viewer/diffs/review.json") requests.push(url);
   });
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await chooseViewport(page, "desktop");
   expect(requests).toEqual([]);
   await page.getByRole("button", { name: "Difference", exact: true }).click();
@@ -44,7 +44,7 @@ test("live Difference requests the active screen and keeps real before/current p
     page.frameLocator(".mb-pane--after iframe").locator("main"),
   ).toContainText("Updated screen");
   expect(requests).toHaveLength(1);
-  expect(requests[0]!.searchParams.get("id")).toBe("home");
+  expect(requests[0]!.searchParams.get("path")).toBe("home");
   expect(requests[0]!.searchParams.size).toBe(1);
   await expect(page.locator(".mb-panes")).toHaveAttribute(
     "data-compare-mode",
@@ -72,10 +72,10 @@ test("saved variant selection and refresh keep the selected comparison scope", a
     const url = new URL(request.url());
     if (url.pathname === "/mokly-viewer/diffs/review.json") requests.push(url);
   });
-  await page.goto(`${server.url}/view/components/action.html`);
+  await page.goto(`${server.url}/view/action/`);
   await chooseViewport(page, "mobile");
   await chooseVariant(page, "Disabled");
-  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
   await loadComparison(page, "Overlay");
   await expect(
     page
@@ -90,17 +90,17 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   await loadComparison(page, "Refresh comparison");
   expect(requests).toHaveLength(2);
   for (const [index, request] of requests.entries()) {
-    expect(request.searchParams.get("id")).toBe("action-disabled");
+    expect(request.searchParams.get("path")).toBe("action/disabled");
     expect(request.searchParams.size).toBe(index === 0 ? 1 : 2);
   }
   expect(requests[1]!.searchParams.get("refresh")).toBe("1");
   await chooseVariant(page, "Default");
-  await expect(page).toHaveURL(/\/view\/components\/action-default\.html$/);
+  await expect(page).toHaveURL(/\/view\/action\/default\/$/);
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
   await expect(
     page
       .frameLocator(".mb-pane--after iframe")
       .getByRole("button", { name: "Proceed", exact: true }),
   ).toBeEnabled();
-  expect(requests.at(-1)!.searchParams.get("id")).toBe("action-default");
+  expect(requests.at(-1)!.searchParams.get("path")).toBe("action/default");
 });

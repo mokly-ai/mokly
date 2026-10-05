@@ -10,7 +10,7 @@ import { repositoryRoot } from "./fixture.js";
 
 const execute = promisify(execFile);
 
-/** Small source-only repository using the actual v8 builder for isolation tests. */
+/** Small source-only repository using the actual v9 builder for isolation tests. */
 export async function createMiniExample(root: string) {
   const basic = path.join(root, "examples/basic");
   await fs.mkdir(path.join(basic, "entries"), { recursive: true });
@@ -32,12 +32,12 @@ export async function createMiniExample(root: string) {
     path.join(root, EXAMPLE_CONFIG_PATH),
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({ repoRoot: "../..", mockupsDir: ".",
-entries: ["examples/basic/entries/*.mockup.ts"], review: { baselineBuild: ${JSON.stringify(commands)} } });\n`,
+roots: [{ dir: "entries", files: ["*.mockup.ts"] }], review: { baselineBuild: ${JSON.stringify(commands)} } });\n`,
   );
   await fs.writeFile(
     path.join(basic, "entries/home.mockup.ts"),
     `import { defineScreen } from "@mokly/mokly";
-export const mockups = [defineScreen({ id: "home", title: "Home", description: "Real test fixture",
+export const mockups = [defineScreen({ path: "home", title: "Home", description: "Real test fixture",
 dependencies: [], relatedDocs: [], mobile: "<!doctype html><html><body><main>Home</main></body></html>",
 desktop: "<!doctype html><html><body><main>Home</main></body></html>" })];\n`,
   );

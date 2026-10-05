@@ -6,6 +6,7 @@ import {
   type GeneratedFile,
   type TransferredGeneratedFile,
 } from "../../build/generated_file.js";
+import { isOutputSnapshot } from "../../build/output_snapshot.js";
 import type { ResolvedConfig } from "../../config/types.js";
 
 /** Accepted configuration and manifest transferred before watched readiness. */
@@ -18,6 +19,7 @@ export interface RuntimeStartupMessage {
 /** Heavy retained fields not already supplied in the startup message. */
 export type TransferredComponentRuntime = Pick<
   ComponentRuntime,
+  | "outputSnapshot"
   | "bundle"
   | "generation"
   | "outputs"
@@ -50,6 +52,10 @@ export function componentRuntimeMessage(
 ): RuntimeMessage {
   return {
     runtime: {
+      outputSnapshot: Object.freeze({
+        schemaVersion: 1,
+        routes: Object.freeze([...runtime.outputSnapshot.routes]),
+      }),
       bundle: runtime.bundle,
       generation: runtime.generation,
       outputs: runtime.outputs.map(
@@ -145,8 +151,15 @@ function parseRuntimeStartupMessage(
   if (
     !config ||
     typeof config.configPath !== "string" ||
-    !Array.isArray(config.entryGlobs) ||
-    !config.entryGlobs.every((glob) => typeof glob === "string") ||
+    !Array.isArray(config.roots) ||
+    !config.roots.every(
+      (root) =>
+        root &&
+        typeof root.dir === "string" &&
+        Array.isArray(root.files) &&
+        root.files.every((glob: unknown) => typeof glob === "string") &&
+        Array.isArray(root.transparent),
+    ) ||
     (config.entryModules !== undefined &&
       (!Array.isArray(config.entryModules) ||
         !config.entryModules.every((module) => typeof module === "string"))) ||
@@ -155,8 +168,8 @@ function parseRuntimeStartupMessage(
     typeof config.generatedDir !== "string" ||
     !manifest ||
     !Array.isArray(manifest.entries) ||
-    (manifest.schemaVersion !== 8 &&
-      manifest.schemaVersion !== "live-index-1") ||
+    (manifest.schemaVersion !== 9 &&
+      manifest.schemaVersion !== "live-index-2") ||
     !Array.isArray(manifest.sourceFiles)
   )
     return;
@@ -178,6 +191,7 @@ export function parseRuntimeMessage(
   const version = "version" in value ? value.version : undefined;
   if (
     !runtime ||
+    !isOutputSnapshot(runtime.outputSnapshot) ||
     typeof runtime.generation !== "string" ||
     typeof runtime.bundle?.code !== "string" ||
     !Array.isArray(runtime.outputs) ||
@@ -207,6 +221,10 @@ export function parseRuntimeMessage(
   return {
     type: "component-runtime",
     runtime: {
+      outputSnapshot: Object.freeze({
+        schemaVersion: 1,
+        routes: Object.freeze([...runtime.outputSnapshot.routes]),
+      }),
       bundle: runtime.bundle,
       generation: runtime.generation,
       outputs,

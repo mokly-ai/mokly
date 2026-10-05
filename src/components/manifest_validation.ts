@@ -8,7 +8,7 @@ import {
 import { validateDependencyDeclarations } from "./dependency_validation.js";
 import { validateVariantAgainstParent } from "./manifest_entry_validation.js";
 
-/** Validate every v8 per-view record against the complete component set. */
+/** Validate every v9 per-view record against the complete component set. */
 export function validateManifestComponentUsage(manifest: {
   entries: readonly Record<string, unknown>[];
   schemaVersion: number;
@@ -19,6 +19,7 @@ export function validateManifestComponentUsage(manifest: {
       "schemaVersion",
       "generatedBy",
       "entries",
+      "folders",
       "sourceFiles",
       "assetClosure",
       "blobHashAlgorithm",
@@ -29,7 +30,12 @@ export function validateManifestComponentUsage(manifest: {
   const components = new Map<string, ManifestComponent>(
     manifest.entries.flatMap((entry) =>
       entry.kind === "component" && typeof entry.variantOf !== "string"
-        ? [[entry.id as string, entry as unknown as ManifestComponent] as const]
+        ? [
+            [
+              entry.path as string,
+              entry as unknown as ManifestComponent,
+            ] as const,
+          ]
         : [],
     ),
   );
@@ -41,11 +47,11 @@ export function validateManifestComponentUsage(manifest: {
           entry.componentViews,
           (entry.colorSchemes as string[]).includes("dark"),
           components,
-          String(entry.id),
+          String(entry.path),
         );
       else if (entry.componentViews !== undefined)
         invalidData(
-          String(entry.id),
+          String(entry.path),
           "component usage requires registered components",
         );
       continue;
@@ -59,8 +65,8 @@ export function validateManifestComponentUsage(manifest: {
       entry.componentViews,
       (entry.colorSchemes as string[]).includes("dark"),
       components,
-      String(entry.id),
-      parent.id,
+      String(entry.path),
+      parent.path,
     );
   }
 }

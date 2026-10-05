@@ -19,13 +19,13 @@ test("complete alias captures do not renew unused generation retention", async (
     changedPaths: [],
     headDigests: {},
     before: currentManifest({
-      schemaVersion: 8,
+      schemaVersion: 9,
       generatedBy: "mokly",
       sourceFiles: [],
       entries: [],
     }),
     after: currentManifest({
-      schemaVersion: 8,
+      schemaVersion: 9,
       generatedBy: "mokly",
       sourceFiles: [],
       entries: [],
@@ -38,7 +38,7 @@ test("complete alias captures do not renew unused generation retention", async (
       changes: [],
       components: [],
       ignoredImpact: [],
-      schemaVersion: 4,
+      schemaVersion: 6 as const,
       screens: [],
       sharedImpact: [],
     },
@@ -56,7 +56,7 @@ test("complete alias captures do not renew unused generation retention", async (
       await fs.writeFile(
         path.join(outDir, "review.json"),
         JSON.stringify({
-          schemaVersion: 4,
+          schemaVersion: 6 as const,
           baseCommit: source.baseCommit,
           baseRef: source.baseRef,
           changedPaths: [`capture-${generation++}.txt`],

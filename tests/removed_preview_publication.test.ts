@@ -44,16 +44,17 @@ test("repository publication packages previews and default replacement removes t
     ),
   );
   const page = withChanges.removedEntries.find(
-    ({ entry }) => entry.id === "removed-page",
+    ({ entry }) =>
+      entry.path === "fixture/deleted-archive/deleted-section/removed-page",
   );
   assert.ok(page?.preview?.kind === "page");
-  await assertPublishedPagePreview(output, page.preview);
+  await assertPublishedPagePreview(output, page.preview, page.entry.path);
   await fs.access(path.join(output, "mokly-viewer/client/react-shell.js"));
   await fs.access(
     path.join(
       output,
       path.posix.dirname(withChanges.comparisonUrl!),
-      "pages/removed-page.json",
+      "previews/fixture/deleted-archive/deleted-section/removed-page/index.json",
     ),
   );
   await fs.access(

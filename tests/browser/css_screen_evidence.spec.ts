@@ -48,7 +48,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a screen the changed styles reach names them in Details", async ({
       page,
     }) => {
-      await page.goto(`${matched.url}/view/screens/home.html`);
+      await page.goto(`${matched.url}/view/home/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
@@ -85,7 +85,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a change that can reach anything says so without naming a status", async ({
       page,
     }) => {
-      await page.goto(`${unresolved.url}/view/screens/home.html`);
+      await page.goto(`${unresolved.url}/view/home/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
@@ -110,7 +110,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a change with no style to name says so and lists nothing", async ({
       page,
     }) => {
-      await page.goto(`${unnamed.url}/view/screens/home.html`);
+      await page.goto(`${unnamed.url}/view/home/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
@@ -137,7 +137,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("an excluded screen stays out of Changes and explains why", async ({
       page,
     }) => {
-      await page.goto(`${matched.url}/view/screens/details.html`);
+      await page.goto(`${matched.url}/view/details/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
@@ -174,13 +174,13 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await openCatalogue(page, name);
       await page.locator('[data-filter="changed"]').click();
       await expect(
-        page.locator('[data-route="screens/home.html"]'),
+        page.locator('[data-route="home/index.html"]'),
       ).toBeVisible();
       await expect(
-        page.locator('[data-route="screens/compact.html"]'),
+        page.locator('[data-route="compact/index.html"]'),
       ).toBeVisible();
       await expect(
-        page.locator('[data-route="screens/details.html"]'),
+        page.locator('[data-route="details/index.html"]'),
       ).toBeHidden();
       await expect(page.locator(".mbk-nav-scroll")).not.toContainText(".auth");
       await expect(page.locator(".mbk-nav-scroll")).not.toContainText(
@@ -192,7 +192,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       for (const fixture of [matched, unresolved]) {
-        await page.goto(`${fixture.url}/view/screens/home.html`);
+        await page.goto(`${fixture.url}/view/home/`);
         await expect(await openComparison(page)).toHaveText([
           `Mobile · ${STYLE_HEADING}`,
           `Desktop · ${STYLE_HEADING}`,
@@ -206,7 +206,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a released viewport reads as unchanged beside a retained one", async ({
       page,
     }) => {
-      await page.goto(`${matched.url}/view/screens/compact.html`);
+      await page.goto(`${matched.url}/view/compact/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
@@ -236,7 +236,7 @@ test.describe("screen-only evidence and its loaded comparison", () => {
       if (new URL(request.url()).pathname.endsWith("/review.json"))
         comparisonRequests++;
     });
-    await page.goto(`${matched.url}/view/screens/home.html`);
+    await page.goto(`${matched.url}/view/home/`);
     const evidence = await openEvidence(page);
     await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);
     expect(comparisonRequests).toBe(0);
@@ -251,7 +251,7 @@ test.describe("screen-only evidence and its loaded comparison", () => {
       .getByRole("button", { name: "Side by side", exact: true })
       .click();
     expect(parseReviewResult(await (await response).json()).schemaVersion).toBe(
-      4,
+      6,
     );
     await expect(page.locator(".mbk-diff-view").first()).toBeVisible();
     await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);

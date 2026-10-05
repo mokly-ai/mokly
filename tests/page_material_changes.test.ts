@@ -7,7 +7,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { readBaseManifest } from "../dist/review/base_manifest.js";
 import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 
 import { changedFixture, retainedChanges } from "./helpers/changed_fixture.js";
@@ -20,7 +20,7 @@ const source =
   validEntrySource() +
   `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "A document", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
+mockups.push(definePage({ path: "handbook", title: "Handbook", description: "A document", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
 `;
 
 for (const change of [
@@ -61,7 +61,7 @@ for (const change of [
       await fixture.build();
     }
     assert.deepEqual(
-      await computeChangedIds(
+      await computeChangedPaths(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -105,7 +105,7 @@ test("v8 page resource evidence uses the merged changed-path set", async (contex
       asChangeEvidence(["mockups/document.css"]),
       new CompiledReviewAssetReader(fixture.config, current.outputs),
     ),
-    ["mockups/mokly-generated/pages/handbook.html"],
+    ["mockups/mokly-generated/handbook/index.html"],
   );
 });
 

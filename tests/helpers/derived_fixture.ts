@@ -24,7 +24,7 @@ export async function derivedFixture(
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  entriesDir: "entries", mockupsDir: "mockups",
+  roots: [{ dir: "entries" }], mockupsDir: "mockups",
   ${extraConfig}
   review: { outDir: ".review", sharedImpact: ["**"], baselineBuild: [["node", "baseline.mjs"]] }
 });\n`,

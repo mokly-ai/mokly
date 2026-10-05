@@ -5,6 +5,9 @@
 Live evidence updates and bounded affected-usage deduplication are implemented.
 Deduplication verification is recorded in the
 [dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
+The path-named link fields below are the approved contract; the current
+implementation still carries `entryId` until the
+[path identity plan](../../plans/path-identity.md) delivers them.
 Adoption of the current entry's scoped bootstrap with its complete private
 workspace when applicable, exact-scoped Serve responses, and rejection of
 complete live catalogues are implemented.
@@ -53,11 +56,12 @@ scroll state.
 Update the count/status, changed-entry attributes and baseline-only rows from
 the same snapshot. Retained removed rows keep their identity; additions/removals
 follow the canonical server order after the current tree. Existing rules for
-removed screens/components in All and removed pages only in Changes still apply.
+removed screens/components in All and removed pages and documents only in
+Changes still apply.
 Changes preparing, loading and empty/unavailable states use the existing
 sidebar design; `preparing` precedes loading only in
 [a per-commit rebuild](./mokly-derived-baselines.md). A status-only evidence update
-carries no changed ids or snapshot, so entering and leaving `preparing` replaces the
+carries no changed paths or snapshot, so entering and leaving `preparing` replaces the
 count slot and the selected-Changes sidebar without touching the tree, the
 current documents, or the focused control. The tree stays `aria-busy` while
 either working state is selected.
@@ -120,11 +124,11 @@ rules.
 The shared served/published workspace deduplicates Affected usage links after
 projecting the selected component's affected-consumer evidence. Two links are
 duplicates exactly when `JSON.stringify` of each complete link matches. Every
-field participates: `entryId`, `entryKind`, `title`, `viewport`, `colorScheme`,
-`instanceKey`, `direct`, `removed`, and `comparisonEligible`; future fields do
-too. A component variant uses its own global `entryId`; no route or saved-
-variant field exists. Preserve object field order and omission semantics rather
-than an id-only, instance-only, or sorted/subset key.
+field participates: `entryPath`, `entryKind`, `title`, `viewport`,
+`colorScheme`, `instanceKey`, `direct`, `removed`, and `comparisonEligible`;
+future fields do too. A component variant uses its own `entryPath`; no route or
+saved-variant field exists. Preserve object field order and omission semantics
+rather than a path-only, instance-only, or sorted/subset key.
 
 Keep the first occurrence in evidence order: affected-consumer record order,
 then each record's evidence order. Do not sort the result or merge distinct

@@ -17,13 +17,13 @@ for (const delivery of ["Serve", "export"] as const) {
   test(`${delivery} keeps authored HTML separate from an identical generated-relative name`, async (t) => {
     const fixture = await createFixture(
       validEntrySource({
-        body: '<iframe src="../../screens/home.mobile.html" title="Authored" />',
+        body: '<iframe src="../../home/index.mobile.html" title="Authored" />',
       }),
     );
     t.after(() => removeFixture(fixture));
-    await fs.mkdir(path.join(fixture.mockupsDir, "screens"));
+    await fs.mkdir(path.join(fixture.mockupsDir, "home"));
     await fs.writeFile(
-      path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+      path.join(fixture.mockupsDir, "home/index.mobile.html"),
       '<!doctype html><html><body><a href="https://example.test/" data-mokly-link="details">External</a></body></html>',
     );
     const config = await loadConfig(fixture.root);
@@ -35,7 +35,7 @@ for (const delivery of ["Serve", "export"] as const) {
       });
       fixture.beforeRemove(() => server.close());
       const response = await fetch(
-        `${server.url}/static/screens/home.mobile.html`,
+        `${server.url}/static/home/index.mobile.html`,
       );
       assert.equal(response.status, 200);
       html = await response.text();
@@ -45,7 +45,7 @@ for (const delivery of ["Serve", "export"] as const) {
         noChanges: true,
       });
       html = await fs.readFile(
-        path.join(result.outDir, "static/screens/home.mobile.html"),
+        path.join(result.outDir, "static/home/index.mobile.html"),
         "utf8",
       );
     }

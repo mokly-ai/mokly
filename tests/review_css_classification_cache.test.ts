@@ -43,7 +43,7 @@ test("component classification reads base CSS in batches and parses shared sourc
     evidence,
     reader: new ObservedGit(
       runner,
-      baselineCatalogue(commit, "mockups", "generated-v8"),
+      baselineCatalogue(commit, "mockups", "generated-v9"),
     ),
   };
   const compilation = await compileCatalogue(fixture.config);

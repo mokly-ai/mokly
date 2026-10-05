@@ -37,7 +37,7 @@ test("focused preview preparation preserves generated output and serves fresh pu
 }) => {
   expect(after).toBe(before);
   expect(preview.freshness.outputWasAbsent).toBe(true);
-  await page.goto(`${preview.url}/view/screens/example-welcome`);
+  await page.goto(`${preview.url}/view/example/screens/welcome/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
 });
 

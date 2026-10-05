@@ -26,8 +26,8 @@ is rejected at config validation because it emits an undelivered sibling
 stylesheet; rename the input to `.css` or use a JavaScript-safe loader.
 
 `<mockupsDir>/mokly-generated/` is reserved for generated HTML, the private
-manifest, compiled stylesheets and copied binary assets. An `entries` glob cannot have a static prefix inside it;
-`entriesDir` and `review.outDir` cannot equal or be inside it, and broad
+manifest, compiled stylesheets and copied binary assets. A root directory or `roots[].files` static prefix cannot select it;
+`review.outDir` cannot equal or be inside it, and broad
 entry discovery skips it. Local configured stylesheet paths and authored
 inputs cannot live there, including through symlink aliases. `publicExclude`
 is removed; supplying it fails configuration validation. Authored public CSS

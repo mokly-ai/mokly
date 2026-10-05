@@ -35,7 +35,7 @@ auto-hydrates.
 
 The descriptor contains:
 
-- schema version `1`;
+- schema version `2`;
 - the base ref, catalogue identity, content and evidence revisions, update
   version, optional on-demand preview generation, and optional temporary
   renderer generation;
@@ -137,7 +137,7 @@ so the fetched page is the authoritative atomic pair for that route. Mixed
 public/private revisions, changed content or catalogue identity, and older
 sources are rejected.
 
-Pages, flows, home and missing routes have no workspace result. A route or
+Pages, documents, flows, home and missing routes have no workspace result. A route or
 source replacement cancels the request and obsolete results are ignored.
 The public read model commits navigation before this metadata request starts;
 holding, failing or aborting the request cannot delay the URL and main-view

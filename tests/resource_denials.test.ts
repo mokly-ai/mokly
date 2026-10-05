@@ -29,7 +29,7 @@ const baseline: BaselineReader = {
 };
 
 for (const [name, cause] of [
-  ["private/theme.css", /resolved entry module.*entries/],
+  ["private/theme.css", /source file matched by roots/],
   ["theme.source.html", /reserved source basename/],
   ["helper.css", /authoring input.*sourceFiles/],
   ["mokly-generated/README.css", /generated (?:output|resource)/],
@@ -43,11 +43,11 @@ for (const [name, cause] of [
     await fs.writeFile(path.join(fixture.mockupsDir, name), "private");
     const config = {
       ...(await loadConfig(fixture.root)),
-      entriesDir,
+      protectedFiles: [path.join(entriesDir, "theme.css")],
       sourceFiles: ["mockups/helper.css"],
       stylesheets: [{ match: "**", stylesheets: [name] }],
     };
-    const route = "screens/home.mobile.html";
+    const route = "home/index.mobile.html";
     const view: ComponentViewRecord = {
       viewport: "mobile",
       colorScheme: "light",
@@ -107,7 +107,7 @@ test("export comparison rejects protected source files in a snapshot", async (t)
             changedPaths: [],
             ignoredImpact: [],
             screens: [],
-            schemaVersion: 4,
+            schemaVersion: 6 as const,
             sharedImpact: [],
             components: [],
             changes: [],
@@ -136,7 +136,7 @@ test("unresolvable resource aliases retain typed errors and the referring route"
     ...(await loadConfig(fixture.root)),
     stylesheets: [{ match: "**", stylesheets: ["alias.css"] }],
   };
-  const route = "screens/home.mobile.html";
+  const route = "home/index.mobile.html";
   const view: ComponentViewRecord = {
     viewport: "mobile",
     colorScheme: "light",

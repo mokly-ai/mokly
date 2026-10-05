@@ -30,7 +30,7 @@ test("derived check accepts missing or stale local output and tracked authored p
   );
   await store.write(fixture.baseline, fixture.config);
   await fs.writeFile(
-    path.join(fixture.config.generatedDir, "screens/home.mobile.html"),
+    path.join(fixture.config.generatedDir, "home/index.mobile.html"),
     "locally edited output",
   );
   await store.check(await compileCatalogue(fixture.config), fixture.config);
@@ -50,7 +50,7 @@ test("check guards indexed cache paths and reports mixed generated paths", async
     "cache",
   );
   const tracked = [
-    "mockups/mokly-generated/screens/home.mobile.html",
+    "mockups/mokly-generated/home/index.mobile.html",
     `mockups/mokly-generated/${MANIFEST_NAME}`,
     ".mokly-cache/forced.txt",
   ];
@@ -82,22 +82,25 @@ test("check rejects indexed stray output but ignores indexed authored files", as
   const fixture = await derivedFixture(t);
   const store = new FileSystemGeneratedOutputStore();
   await store.write(fixture.baseline, fixture.config);
-  const retired = "mockups/mokly-generated/screens/retired.mobile.html";
+  const retired = "mockups/mokly-generated/retired/index.mobile.html";
+  await fs.mkdir(path.dirname(path.join(fixture.root, retired)), {
+    recursive: true,
+  });
   await fs.rename(
-    path.join(fixture.config.generatedDir, "screens/home.mobile.html"),
+    path.join(fixture.root, "mockups/mokly-generated/home/index.mobile.html"),
     path.join(fixture.root, retired),
   );
   await fixture.git("add", "-f", "--", retired);
   await fs.rm(path.join(fixture.root, retired));
   await assert.rejects(
     () => store.check(fixture.baseline, fixture.config),
-    /generated output is partly tracked by Git:[\s\S]*retired.mobile.html/,
+    /generated output is partly tracked by Git:[\s\S]*retired\/index.mobile.html/,
   );
   await fixture.git("rm", "--cached", "--", retired);
   const guide = "mockups/guide.html";
   await fs.writeFile(
     path.join(fixture.root, guide),
-    `<!doctype html>\n${textOutput(fixture.baseline.outputs, "screens/home.mobile.html")}`,
+    `<!doctype html>\n${textOutput(fixture.baseline.outputs, "home/index.mobile.html")}`,
   );
   await fixture.git("add", "-f", "--", guide);
   await fs.rm(path.join(fixture.root, guide));

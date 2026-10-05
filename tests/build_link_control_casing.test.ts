@@ -31,8 +31,7 @@ test("custom renderer casing cannot bypass child adaptation", async (context) =>
 export default input => '<html><body>' + renderToStaticMarkup(input.node).replaceAll('data-mokly-link-child-', 'DATA-MOKLY-LINK-CHILD-') + '</body></html>';`,
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const html =
-    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
+  const html = textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
   assert.match(html, /<a id="continue"/);
   assert.match(html, /data-mokly-link-control="button"/);
   assert.doesNotMatch(html, /data-mokly-link-child-/i);

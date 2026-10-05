@@ -20,7 +20,7 @@ import { documentText } from "./helpers/html.js";
 
 const page = `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Guide</body></html>" }));
+mockups.push(definePage({ path: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Guide</body></html>" }));
 `;
 
 test("no-watch startup retains removed metadata from its single Changes calculation", async (context) => {
@@ -49,7 +49,7 @@ test("no-watch startup retains removed metadata from its single Changes calculat
   fixture.beforeRemove(() => running.close());
   await classified;
   const home = await (await fetch(running.url)).text();
-  const removed = await fetch(`${running.url}/view/pages/guide.html`);
+  const removed = await fetch(`${running.url}/view/guide/`);
   assert.equal(removed.status, 200);
   assert.match(documentText(await removed.text()), /Showing previous version/);
   assert.match(home, /data-removed-page=""/);
@@ -84,10 +84,7 @@ test("unavailable startup Changes leaves a complete current catalogue without re
   assert.match(home, /data-entry-id="home"/);
   assert.match(home, /data-changes-status="unavailable"/);
   assert.doesNotMatch(home, /data-removed-page/);
-  assert.equal(
-    (await fetch(`${running.url}/view/pages/guide.html`)).status,
-    404,
-  );
+  assert.equal((await fetch(`${running.url}/view/guide/`)).status, 404);
   assert.equal(calls, 1);
 });
 
@@ -189,18 +186,13 @@ test("a no-watch component catalogue reuses its resolved ownership evidence", as
   });
   fixture.beforeRemove(() => running.close());
   await classified;
-  const component = await (
-    await fetch(`${running.url}/view/components/action.html`)
-  ).text();
+  const component = await (await fetch(`${running.url}/view/action/`)).text();
   assert.match(component, /data-workspace-data/);
   assert.match(component, /"status":"Changed"/);
   assert.match(
     component,
-    /data-changed="true"[^>]*data-route="components\/action.html"/,
+    /data-changed="true"[^>]*data-route="action\/index.html"/,
   );
-  assert.equal(
-    (await fetch(`${running.url}/view/pages/guide.html`)).status,
-    200,
-  );
+  assert.equal((await fetch(`${running.url}/view/guide/`)).status, 200);
   assert.equal(calls, 1);
 });

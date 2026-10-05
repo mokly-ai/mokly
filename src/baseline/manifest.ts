@@ -22,7 +22,7 @@ import type { BaselineFileSystem } from "./types.js";
 export interface HistoricalCatalogue {
   readonly descriptor: BaselineCatalogue;
   readonly manifest: HistoricalManifest;
-  readonly version: 8;
+  readonly version: 9;
 }
 
 export type CatalogueProbe =
@@ -58,16 +58,16 @@ export async function historicalCatalogueAt(
       ).toString("utf8"),
     );
     const version = manifestEnvelopeVersion(value);
-    if (version < 8) return { root: relative, version, incompatible: true };
+    if (version < 9) return { root: relative, version, incompatible: true };
     const manifest = parseHistoricalManifest(value);
     if (filename !== `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`)
       throw new Error(
-        `Historical v8 manifest must be in the generated directory: ${repoPath}`,
+        `Historical v9 manifest must be in the generated directory: ${repoPath}`,
       );
     return {
       descriptor: baselineCatalogue(commit, relative),
       manifest,
-      version: 8,
+      version: 9,
     };
   }
 }

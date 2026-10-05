@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import type {
-  RegistryDefinition,
+  EntryDefinition,
   ResolvedRegistryEntry,
   ScreenDefinition,
   ScreenInput,
@@ -19,10 +19,15 @@ export const sourceRelativePath = "tests/authoring.test.tsx";
 export const validationConfig: ResolvedConfig = {
   colorSchemes: ["light"],
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
-  entriesDir: path.join(repositoryRoot, "tests"),
-  entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
-  mockupsDir: path.join(repositoryRoot, "mockups"),
+  roots: [
+    {
+      dir: path.join(repositoryRoot, "tests"),
+      files: ["**/*.test.tsx"],
+      transparent: [],
+    },
+  ],
   generatedDir: path.join(repositoryRoot, "mockups/mokly-generated"),
+  mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
   review: { base: "main", outDir: ".review", sharedImpact: [] },
@@ -32,10 +37,11 @@ export const validationConfig: ResolvedConfig = {
 };
 
 export const screenBase = {
+  slug: "tagged-screen",
   dependencies: [],
   description: "Tagged screen",
   desktop: "Desktop",
-  id: "tagged-screen",
+  path: "tagged-screen",
   mobile: "Mobile",
   relatedDocs: [],
   title: "Tagged screen",
@@ -44,12 +50,11 @@ export const screenBase = {
 export const useCaseBase: UseCaseInput = {
   dependencies: [],
   description: "Tagged journey",
-  id: "tagged-journey",
+  path: "tagged-journey",
   relatedDocs: [],
-  steps: [{ screenId: "tagged-screen" }],
+  steps: [{ screenPath: "tagged-screen" }],
   title: "Tagged journey",
 };
-
 export function tagViolations(tags: unknown): RegistryViolation[] {
   const input = { ...screenBase, tags } as ScreenInput;
   return validateEntry(
@@ -67,14 +72,17 @@ export function tagProblem(
   message: string,
   id = "tagged-screen",
 ): RegistryViolation {
-  return { code: "invalid-tags", id, message, sourceRelativePath };
+  return { code: "invalid-tags", path: id, message, sourceRelativePath };
 }
 
-export function resolved(
-  definition: RegistryDefinition,
-): ResolvedRegistryEntry {
+export function resolved(definition: EntryDefinition): ResolvedRegistryEntry {
   return {
     ...definition,
+    path: definition.path!,
+    slug: definition.slug ?? definition.path!,
+    index: false,
+    linkBase: "",
+    location: sourceRelativePath,
     sourcePath: path.join(repositoryRoot, sourceRelativePath),
     sourceRelativePath,
   };

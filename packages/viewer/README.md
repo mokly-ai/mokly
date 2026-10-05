@@ -33,7 +33,7 @@ collaboration UI.
 
 ## Why Mokly Viewer
 
-- **A complete catalogue experience.** Render pages, screens, component
+- **A complete catalogue experience.** Render Markdown documents, pages, screens, component
   variants and user flows with search, tags, responsive previews, color
   schemes, Changes filtering, inspection, and Overlay, Difference and Side by
   side comparisons whose pages and paired scrolling panels move together by
@@ -161,57 +161,93 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 
 ### Selection
 
-`screenId` names one catalogue entry. Screen and component variants use their
-own global entry IDs, just like parents, pages and flows; there is no separate
-variant selection field. The component variant bar navigates between those
-entry IDs, so controlled hosts receive ordinary `screenId` proposals. A
-component variant page keeps the parent component title as its heading while
-the ID chip, status, URL, and Details describe the selected variant entry.
+Markdown documents use the existing whole-page frame and the selected Light or
+Dark scheme. They have no viewport or usage axis. Removed documents load their
+historical scheme from the advertised preview generation. In catalogue v5, a
+related-doc match uses `mock:<path>`; source labels remain repository-relative.
+
+`screenPath` names one catalogue entry by its path, such as
+`checkout/overview`. Screen and component variants use their own paths, the
+parent's path plus their slug, just like parents, pages, documents and flows;
+there is no separate variant selection field. The component variant bar
+navigates between those paths, so controlled hosts receive ordinary
+`screenPath` proposals. A component variant page keeps the parent component
+title as its heading while the path chip, status, URL, and Details describe
+the selected variant entry. The shell URL of every entry is `/view/<path>/`.
 
 Use `defaultSelection` for an uncontrolled viewer:
 
 ```tsx
-<MoklyViewer
-  viewerId="product-catalogue"
-  catalogue={catalogueUrl}
-  defaultSelection={{ screenId: "checkout", viewport: "desktop" }}
-/>
+import { MoklyViewer } from "@mokly/viewer";
+
+export function Catalogue({ catalogueUrl }: { catalogueUrl: string }) {
+  return (
+    <MoklyViewer
+      viewerId="product-catalogue"
+      catalogue={catalogueUrl}
+      defaultSelection={{
+        screenPath: "checkout/overview",
+        viewport: "desktop",
+      }}
+    />
+  );
+}
 ```
 
 Use `selection` with `onSelectionChange` when application state owns the active
 screen and filters:
 
 ```tsx
-const [selection, setSelection] = useState<ViewerSelection>({
-  screenId: null,
-  view: "all",
-  viewport: "both",
-  colorScheme: "light",
-  search: "",
-  tags: [],
-});
+import { useState } from "react";
+import { MoklyViewer, type ViewerSelection } from "@mokly/viewer";
 
-<MoklyViewer
-  viewerId="product-catalogue"
-  catalogue={catalogueUrl}
-  selection={selection}
-  onSelectionChange={setSelection}
-/>;
+export function ControlledCatalogue({
+  catalogueUrl,
+}: {
+  catalogueUrl: string;
+}) {
+  const [selection, setSelection] = useState<ViewerSelection>({
+    screenPath: null,
+    view: "all",
+    viewport: "both",
+    colorScheme: "light",
+    search: "",
+    tags: [],
+  });
+
+  return (
+    <MoklyViewer
+      viewerId="product-catalogue"
+      catalogue={catalogueUrl}
+      selection={selection}
+      onSelectionChange={setSelection}
+    />
+  );
+}
 ```
 
 Controlled changes are proposals until the host passes the new selection back.
 Do not provide `defaultSelection` in controlled mode, and remount the viewer if
 you need to change modes.
 
-Removed entries advertise an optional opaque `snapshotId`. Supply it with the
-stable `screenId` to select that exact historical record. When `comparisonUrl`
-is non-null, every removed entry must supply this id. The reader never derives
-a missing id. The viewer carries it
-through controlled proposals, navigation events and axis/filter changes. An
-id-only selection of a removed record normalizes to its published identity;
-stale or unknown snapshots render unavailable. Readers reject a catalogue in
-which current and removed records share an id. Live evidence may update an
-explicit snapshot in place and makes a replaced identity unavailable.
+A removed component parent may have no remaining variants when they all moved
+to another parent. It keeps its removal record; current parents still require
+at least one current variant.
+
+Every removed variant carries `parentTitle`, its parent's title at the branch
+point. Public and scoped readers require this field and reject it on removed
+non-variants. The unreleased read model uses v5.
+
+Current paired entries carry `previousPath`; comparisons select the original
+before-side path. Removed entries advertise an optional opaque `snapshotId`. Supply it with the
+removed entry's `screenPath` to select that exact historical record. The viewer
+requires it whenever `comparisonUrl` is non-null; the reader never derives
+a missing id. It carries it through controlled proposals, navigation events and axis/filter
+changes. A path-only selection of a removed record normalizes to its published
+identity; stale or unknown snapshots render unavailable. Readers reject a
+catalogue in which a current and a removed record share a path. Live evidence
+may update an explicit snapshot in place and makes a replaced identity
+unavailable.
 
 Shell links may name `viewport` and `scheme` independently. Exactly one valid
 value for an axis applies in the same selection proposal; invalid or repeated
@@ -223,6 +259,17 @@ Dark selection and Light-only label, while status, change marks, and
 comparisons use the effective Light view. If ready evidence does not cover
 every shown view, the Viewer preserves the selected entry's published status
 and comparison eligibility independently.
+
+The embedded viewer's public catalogue has no branch-point usage data. Details
+therefore shows no Before and Current input changes, whether an entry moved or
+stayed at the same path. Serve and export shells carry that data and show those
+input changes.
+
+Every shell resolves branch-point references through one lookup per catalogue
+generation. A removed variant joins its moved or case-renamed parent in the
+tree, the variant bar and Changes activation, and opens in that parent's
+workspace. When its former parent's path now names another kind, its
+breadcrumb shows the stored `parentTitle` as plain text.
 
 ### Host integration
 
@@ -244,15 +291,16 @@ frame sessions.
 
 ### Component instance references
 
-Instance events return an `InstanceRef` scoped to a screen, component variant
+Instance events carry `frame: { entryPath, stepIndex? }` and an `InstanceRef`
+scoped to a screen, component variant
 or flow step, viewport, color scheme and stable component key. Persist that
 value to reconnect external data such as a review comment. `resolveInstance`
 compares a saved component record with its corresponding current record from a
 newer catalogue without fetching preview evidence.
 
-`InstanceRef.screenId` is the owning entry's id, including for a component
+`InstanceRef.screenPath` is the owning entry's path, including for a component
 variant; the shape has no `variantId`. `onScreenNavigate` reports
-`{ screenId, snapshotId?, fragment?, navigation? }`, with no route or variant
+`{ screenPath, snapshotId?, fragment?, navigation? }`, with no route or variant
 id. Under the [viewer event contract](../../docs/protocol/mokly-viewer.md#package-and-props),
 `snapshotId` is present when the committed historical record publishes an
 opaque identity and is absent when that record has no published identity.
@@ -320,16 +368,19 @@ import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
 
 `@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
-`viewRoute`, `viewHref`, `snapshotViewPath`, `snapshotPagePath`, and
-`pagePreviewMetadataPath`, plus `snapshotSidePath` and `snapshotResourcePath`
-for snapshot roots and their confined resources. `parseViewHref` reads
-canonical and provider-normalized `/view/` paths back into identity;
-`providerNormalizedHtmlPath` and `unavailableViewHref` own the browser forms.
+`viewRoute`, `documentRoute`, `viewHref`, `parseViewHref`,
+`snapshotViewPath`, `snapshotDocumentPath`, `snapshotSidePath`,
+`snapshotResourcePath`, and `previewMetadataPath`. Entry helpers take a path;
+`snapshotSidePath` takes a side, and `snapshotResourcePath` takes a side and
+resource path. `viewHref` returns the canonical `/view/<path>/` URL and `parseViewHref` reads
+the canonical, extensionless, and `index.html` forms of that URL back into a
+path, while `providerNormalizedHtmlPath` owns the forms a static host serves.
 The complete naming contract is
-[identity-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).
-`isEntryId` adds portable Windows filename rules
-to the broader `isCatalogueId` grammar used by tags and logical links;
-`isWindowsDeviceName` exposes that filename check directly.
+[path-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).
+`isEntryPath` validates complete paths, `isPathSegment` validates one segment,
+and `isKebabCase` retains the separate grammar for tags and Review-ignore ids.
+`firstPathCaseCollision` checks entry and folder-prefix spelling across a path set.
+`isWindowsDeviceName` exposes the device-name check applied to path segments.
 
 ## Server Rendering
 
@@ -345,7 +396,7 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
     viewerId: "product-catalogue",
     catalogue: readCatalogue(json),
     baseUrl: artifactOrigin,
-    defaultSelection: { screenId: null },
+    defaultSelection: { screenPath: null },
   });
 }
 ```
@@ -396,7 +447,7 @@ Serve and export keep these origin-local preferences in `localStorage`:
 | Key                                | Choice                            |
 | ---------------------------------- | --------------------------------- |
 | `mokly:theme`                      | Explicit Light or Dark appearance |
-| `mokly:nav-disclosure:v3`          | Open catalogue groups             |
+| `mokly:nav-disclosure:v4`          | Open catalogue groups             |
 | `mokly:details-disclosure`         | Details open or closed            |
 | `mokly:navigation-width:v1`        | Navigation split width            |
 | `mokly:comparison-scroll-together` | `on` or `off`; missing means on   |
@@ -517,17 +568,26 @@ is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-
 
 - [`src/viewer`](./src/viewer) — React lifecycle, selection, host integration
   and instance operations
+- [`src/viewer/host_bridge.tsx`](./src/viewer/host_bridge.tsx) and
+  [`src/viewer/host_bridge_highlight.ts`](./src/viewer/host_bridge_highlight.ts) —
+  the stable public handle and its highlight request, geometry and cancellation
+  ownership
 - [`src/shell`](./src/shell) — shared catalogue shell and scoped styles
-- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy_conflicts.ts`](./src/registry/hierarchy_conflicts.ts) — shared folder keys, labels, sibling order and source-attributed path conflicts
+- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy.ts`](./src/registry/hierarchy.ts) — shared folder keys, labels, sibling order, the shared path tree, and each section's order
 - [`src/client`](./src/client) — frame adapters, transport and geometry
 - [`src/catalogue`](./src/catalogue) — public catalogue types and validation
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared entry,
   view, snapshot, preview, shell-URL, and browser-path derivation
 - [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
   ordering shared by review producers and readers
+- [`src/shell/catalogue_branch_point.ts`](./src/shell/catalogue_branch_point.ts) —
+  the one branch-point lookup per catalogue generation, reached through
+  `branchPoints`
 - [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
   [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
-  routed workspace identity and sibling component-variant entries
+  routed workspace identity and key, and sibling component-variant entries
+- [`src/viewer/public_variants.ts`](./src/viewer/public_variants.ts) — the
+  public parent and variant records the lookup resolves for a workspace
 - [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
   [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts), and
   [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the single comparison-mode
@@ -549,7 +609,9 @@ is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-
   [`src/standalone/bootstrap_validation.ts`](./src/standalone/bootstrap_validation.ts)
   — standalone hydration projection, wire shape, and validation
 - [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime
-- [`tests`](./tests) — package-level conformance tests
+- [`tests`](./tests) — package-level conformance tests; the retained-evidence
+  harness keeps setup in `evidence_harness.tsx` and frame rendering in
+  `evidence_runtime.tsx`
 
 ### Related Docs
 
@@ -557,6 +619,7 @@ is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
 - [Generated document delivery](../../docs/protocol/mokly-generated-delivery.md)
+- [Paths, roots, and identity](../../docs/protocol/mokly-paths.md)
 - [Standalone shell bootstrap](../../docs/protocol/mokly-shell-bootstrap.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)

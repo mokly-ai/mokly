@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 
 import {
-  folder,
   defineConfig,
-  defineRoot,
+  defineFolder,
+  type FolderInput,
+  type FolderDefinition,
+  type RootConfig,
   definePage,
-  page,
   defineScreen,
   defineUseCase,
   MockLink,
@@ -13,13 +14,9 @@ import {
   ReviewIgnore,
   ReviewIgnoreScope,
   reviewMaterialKey,
-  screen,
-  type NestedFolderMarker,
-  type NestedFolderInput,
   type EntryInput,
   type PageInput,
   type PageDefinition,
-  type NestedPageInput,
   type ModuleLoader,
   type ModuleResolutionConfig,
   type MoklyConfig,
@@ -27,7 +24,6 @@ import {
   type Renderer,
   type RenderInput,
   type ReviewConfig,
-  type RootInput,
   type ScreenDefinition,
   type ScreenInput,
   type ScreenVariantInput,
@@ -42,7 +38,7 @@ import {
 } from "@mokly/mokly";
 
 const config: MoklyConfig = defineConfig({
-  entriesDir: "entries",
+  roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
 });
 const node: ReactNode = (
@@ -69,31 +65,26 @@ const invalidChildProps = (
   </MockLink>
 );
 const documentPage: PageInput = {
-  id: "typed-page",
+  path: "typed-page",
   title: "Page",
   description: "Page",
   dependencies: [],
   relatedDocs: [],
   render: () => "<html><body>Page</body></html>",
 };
-const nestedPage: NestedPageInput = {
-  id: "nested-page",
-  title: "Page",
-  description: "Page",
-  render: documentPage.render,
-};
 const typedVariant: ScreenVariantInput = {
+  slug: "empty",
   description: "Typed empty state",
   desktop: <main>Empty</main>,
-  id: "typed-screen-empty",
   mobile: <main>Empty</main>,
   title: "Typed screen, empty",
 };
 const screenInputBase = {
+  slug: "typed-return-boundary",
   dependencies: [],
   description: "Typed return boundary",
   desktop: node,
-  id: "typed-return-boundary",
+  path: "typed-return-boundary",
   mobile: node,
   relatedDocs: [],
   title: "Typed return boundary",
@@ -170,10 +161,11 @@ const unionDefinitions: ScreenDefinition | readonly ScreenDefinition[] =
 // @ts-expect-error A union input retains both possible return shapes.
 const unsafeUnion: ScreenDefinition = defineThroughGeneric(unionInput);
 const variantDefinitions: readonly ScreenDefinition[] = defineScreen({
+  slug: "typed-variant-parent",
   dependencies: [],
   description: "Typed variant parent",
   desktop: node,
-  id: "typed-variant-parent",
+  path: "typed-variant-parent",
   mobile: node,
   relatedDocs: [],
   title: "Typed variant parent",
@@ -182,27 +174,25 @@ const variantDefinitions: readonly ScreenDefinition[] = defineScreen({
 const definitions: RegistryDefinition[] = [
   definePage(documentPage),
   defineScreen({
+    slug: "typed-screen",
     dependencies: [],
     description: "Type declaration fixture",
     desktop: node,
-    id: "typed-screen",
+    path: "typed-screen",
     mobile: <ReviewIgnore id="typed-ignore">{node}</ReviewIgnore>,
     relatedDocs: [],
     title: "Typed screen",
-    useCaseIds: [],
+    useCasePaths: [],
   }),
   ...variantDefinitions,
 ];
 
 void [
-  page(nestedPage),
-  folder,
-  defineRoot,
+  defineFolder({ path: "account", title: "Account" }),
   defineUseCase,
   mockLink,
   ReviewIgnoreScope,
   reviewMaterialKey,
-  screen,
   typedLink,
   childLink,
   invalidChildLink,
@@ -233,18 +223,17 @@ void [
 ];
 
 type PublicTypes =
-  | NestedFolderMarker
-  | NestedFolderInput
+  | FolderInput
+  | FolderDefinition
+  | RootConfig
   | EntryInput
   | PageInput
   | PageDefinition
-  | NestedPageInput
   | ModuleLoader
   | ModuleResolutionConfig
   | RegistryDefinition
   | RenderInput
   | ReviewConfig
-  | RootInput
   | ScreenDefinition
   | ScreenInput
   | ScreenVariantInput

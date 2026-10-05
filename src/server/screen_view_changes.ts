@@ -3,36 +3,46 @@ import path from "node:path";
 import { GENERATED_DIRECTORY, generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifest,
-  ManifestV8,
+  ManifestV9,
   ViewReview,
 } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import type { EntryMove } from "../review/moves/types.js";
 
 export interface ScreenViewChanges {
-  id: string;
+  path: string;
   views: readonly Pick<ViewReview, "viewport" | "colorScheme" | "state">[];
 }
 
 /** Retain the completed material pass's per-view decisions without generating comparisons. */
 export function screenViewChanges(
-  current: ManifestV8,
+  current: ManifestV9,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   materialPaths: readonly string[],
+  moves: readonly EntryMove[] = [],
 ): ScreenViewChanges[] {
   const changed = new Set(materialPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
+  const moved = new Map(
+    moves
+      .filter((move) => move.kind === "screen")
+      .map((move) => [move.previousPath.toLowerCase(), move.path]),
+  );
   const before = new Map(
     baseline.entries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.id, entry]),
+      .map((entry) => [
+        (moved.get(entry.path.toLowerCase()) ?? entry.path).toLowerCase(),
+        entry,
+      ]),
   );
   const after = new Map(
     current.entries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.id, entry]),
+      .map((entry) => [entry.path.toLowerCase(), entry]),
   );
   return [...new Set([...before.keys(), ...after.keys()])].sort().map((id) => {
     const previous = before.get(id),
@@ -69,6 +79,6 @@ export function screenViewChanges(
         ];
       }),
     );
-    return { id, views };
+    return { path: (current ?? previous)!.path, views };
   });
 }

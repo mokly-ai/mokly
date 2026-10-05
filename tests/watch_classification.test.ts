@@ -5,7 +5,7 @@ import type { ResolvedConfig } from "../dist/config/types.js";
 import type {
   CatalogueChangeClassifier,
   ComponentChangeSnapshot,
-} from "../dist/server/component_changes.js";
+} from "../dist/server/component_change_types.js";
 import { WatchClassification } from "../dist/server/watch_classification.js";
 
 import { currentManifest } from "./helpers/current_manifest.js";
@@ -69,7 +69,8 @@ function snapshot(id: string): ComponentChangeSnapshot {
     baseline: currentManifest({
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 8,
+      schemaVersion: 9 as const,
+      folders: [],
       sourceFiles: [`${id}.html`],
     }),
   };
@@ -79,7 +80,8 @@ function manifest() {
   return currentManifest({
     entries: [],
     generatedBy: "mokly" as const,
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
+    folders: [],
     sourceFiles: [],
   });
 }

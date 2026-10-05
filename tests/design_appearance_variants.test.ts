@@ -5,7 +5,7 @@ import { parse } from "parse5";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { DUAL_SCHEME_SAMPLES } from "../examples/basic/entries/design/library/metadata.js";
+import { DUAL_SCHEME_SAMPLES } from "../examples/basic/specs/design/library/metadata.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import { AppearanceSelect } from "../packages/viewer/dist/shell/appearance.js";
 
@@ -19,7 +19,7 @@ import { textOutput } from "./helpers/generated_text.js";
 
 /** Registered samples whose appearance is the subject of the sample itself. */
 const dualSchemeComponents = [...DUAL_SCHEME_SAMPLES].map(
-  (slug) => `design-ui-${slug}`,
+  (slug) => `design/library/chrome/${slug}`,
 );
 const previewScreens = [
   "design-appearance-overview",
@@ -46,14 +46,15 @@ test("appearance screens publish both schemes for both viewports", async () => {
   const { manifest } = await designCatalogue;
   const screens = manifest.entries.filter(
     (entry) =>
-      entry.kind === "screen" && entry.id.startsWith("design-appearance-"),
+      entry.kind === "screen" &&
+      entry.path.startsWith("design/browse/appearance/"),
   );
   assert.ok(screens.length > 0, "the appearance section exists");
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
     assert.ok(
       entry.colorSchemes.includes("dark"),
-      `${entry.id} has no dark fragment, so the preview toggle cannot switch it`,
+      `${entry.path} has no dark fragment, so the preview toggle cannot switch it`,
     );
     assert.deepEqual(entry.colorSchemes, ["light", "dark"]);
   }
@@ -63,24 +64,25 @@ test("each generated appearance variant draws the scheme it was rendered for", a
   const { manifest, outputs } = await designCatalogue;
   const screens = manifest.entries.filter(
     (entry) =>
-      entry.kind === "screen" && entry.id.startsWith("design-appearance-"),
+      entry.kind === "screen" &&
+      entry.path.startsWith("design/browse/appearance/"),
   );
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
     for (const viewport of ["mobile", "desktop"] as const) {
       const light = textOutput(
         outputs,
-        viewRoute("screen", entry.id, viewport, "light"),
+        viewRoute(entry.path, viewport, "light"),
       );
-      assert.ok(light, `${entry.id} ${viewport} light output`);
-      assert.equal(appearanceOf(light), "light", `${entry.id} ${viewport}`);
+      assert.ok(light, `${entry.path} ${viewport} light output`);
+      assert.equal(appearanceOf(light), "light", `${entry.path} ${viewport}`);
       const darkRoute: string | undefined = entry.colorSchemes.includes("dark")
-        ? viewRoute("screen", entry.id, viewport, "dark")
+        ? viewRoute(entry.path, viewport, "dark")
         : undefined;
-      assert.ok(darkRoute, `${entry.id} ${viewport} dark route`);
+      assert.ok(darkRoute, `${entry.path} ${viewport} dark route`);
       const dark = textOutput(outputs, darkRoute);
-      assert.ok(dark, `${entry.id} ${viewport} dark output`);
-      assert.equal(appearanceOf(dark), "dark", `${entry.id} ${viewport}`);
+      assert.ok(dark, `${entry.path} ${viewport} dark output`);
+      assert.equal(appearanceOf(dark), "dark", `${entry.path} ${viewport}`);
     }
   }
 });
@@ -88,20 +90,20 @@ test("each generated appearance variant draws the scheme it was rendered for", a
 test("the appearance-related registered samples render in both schemes", async () => {
   const { manifest, outputs } = await designCatalogue;
   for (const id of dualSchemeComponents) {
-    const entry = manifest.entries.find((entry) => entry.id === id);
+    const entry = manifest.entries.find((entry) => entry.path === id);
     assert.ok(entry?.kind === "component", id);
     for (const variant of componentVariants(manifest, id)) {
       assert.ok(
         variant.colorSchemes.includes("dark"),
-        `${id}/${variant.id} has no dark sample`,
+        `${id}/${variant.path} has no dark sample`,
       );
       for (const viewport of ["mobile", "desktop"] as const) {
         const dark = textOutput(
           outputs,
-          viewRoute("component", variant.id, viewport, "dark"),
+          viewRoute(variant.path, viewport, "dark"),
         );
-        assert.ok(dark, `${id}/${variant.id} ${viewport}`);
-        assert.equal(appearanceOf(dark), "dark", `${id}/${variant.id}`);
+        assert.ok(dark, `${id}/${variant.path} ${viewport}`);
+        assert.equal(appearanceOf(dark), "dark", `${id}/${variant.path}`);
       }
     }
   }
@@ -113,16 +115,14 @@ async function appearanceFragments(): Promise<
 > {
   const { manifest, outputs } = await designCatalogue;
   return manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.id.startsWith("design-appearance-")
+    entry.kind === "screen" &&
+    entry.path.startsWith("design/browse/appearance/")
       ? (["mobile", "desktop"] as const).flatMap((viewport) =>
           (["light", "dark"] as const).map((scheme) => ({
-            id: entry.id,
+            id: entry.path,
             scheme,
             viewport,
-            html: textOutput(
-              outputs,
-              viewRoute("screen", entry.id, viewport, scheme),
-            )!,
+            html: textOutput(outputs, viewRoute(entry.path, viewport, scheme))!,
           })),
         )
       : [],
@@ -153,7 +153,7 @@ function appearanceDataAttributes(html: string): string[] {
 
 test("the depicted and shipped Appearance controls share their data contract", async () => {
   const depicted = (await appearanceFragments()).find(
-    (view) => view.id === "design-appearance-overview",
+    (view) => view.id === "design/browse/appearance/overview",
   );
   assert.ok(depicted);
   assert.deepEqual(
@@ -195,7 +195,7 @@ test("the Appearance selector reads Auto, or the scheme it rendered for", async 
     assert.ok(selector, view.id);
     assert.equal(
       attribute(selector, "data-appearance-value"),
-      view.id === "design-appearance-auto" ? "auto" : view.scheme,
+      view.id === "design/browse/appearance/states/auto" ? "auto" : view.scheme,
       `${view.id} ${view.viewport} ${view.scheme}`,
     );
   }
@@ -213,7 +213,7 @@ test("depicted previews follow the artboard's scheme", async () => {
 
 test("the light-only subject keeps light frames and names its fallback under Dark", async () => {
   for (const view of await appearanceFragments()) {
-    if (view.id !== "design-appearance-light-only") continue;
+    if (view.id !== "design/browse/appearance/states/light-only") continue;
     const where = `${view.viewport} ${view.scheme}`;
     assert.equal(
       countClass(view.html, "mbk-screen-dark"),
@@ -235,7 +235,7 @@ test("the removed fixed-theme scenarios are gone", async () => {
     "design-appearance-dark-preview",
   ])
     assert.equal(
-      manifest.entries.find((entry) => entry.id === id),
+      manifest.entries.find((entry) => entry.path === id),
       undefined,
       id,
     );
@@ -243,15 +243,15 @@ test("the removed fixed-theme scenarios are gone", async () => {
 
 /** Canonical screens that replaced the removed head-band scheme depictions. */
 const consolidatedScreens = [
-  ["design-browse-screen", true],
-  ["design-browse-details-screen", false],
-  ["design-review-changed", true],
+  ["design/browse/views/screen", true],
+  ["design/browse/views/details-screen", false],
+  ["design/changes/outcomes/changed", true],
 ] as const;
 
 test("the canonical scheme screens render in both schemes", async () => {
   const { manifest, outputs } = await designCatalogue;
   for (const [id, hasDarkRender] of consolidatedScreens) {
-    const entry = manifest.entries.find((entry) => entry.id === id);
+    const entry = manifest.entries.find((entry) => entry.path === id);
     assert.ok(entry?.kind === "screen", id);
     assert.ok(
       entry.colorSchemes.includes("dark"),
@@ -260,11 +260,11 @@ test("the canonical scheme screens render in both schemes", async () => {
     for (const viewport of ["mobile", "desktop"] as const) {
       const light: string = textOutput(
         outputs,
-        viewRoute("screen", entry.id, viewport, "light"),
+        viewRoute(entry.path, viewport, "light"),
       )!;
       const dark: string = textOutput(
         outputs,
-        viewRoute("screen", entry.id, viewport, "dark"),
+        viewRoute(entry.path, viewport, "dark"),
       )!;
       assert.equal(appearanceOf(light), "light", `${id} ${viewport}`);
       assert.equal(appearanceOf(dark), "dark", `${id} ${viewport}`);

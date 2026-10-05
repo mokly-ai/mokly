@@ -1,52 +1,21 @@
-import { providerNormalizedHtmlPath } from "../navigation/routes.js";
+import { parseViewHref, viewHref } from "../navigation/routes.js";
 
-import { routeHref } from "./routes.js";
 import type { routeFromUrl } from "./routes.js";
 
-/** Pin an inferred historical route before later catalogue evidence can change. */
-export function canonicalHistoricalUrl(
+/** Normalize every accepted entry URL and pin inferred historical identity. */
+export function canonicalRouteUrl(
   url: URL,
   route: ReturnType<typeof routeFromUrl>,
-  providerNormalized: boolean,
 ): URL {
+  const path = parseViewHref(url.pathname);
+  if (path === undefined) return url;
+  const canonical = new URL(url);
+  canonical.pathname = viewHref(path);
   if (
-    route.view.kind !== "target" ||
-    !route.snapshot ||
-    url.searchParams.has("snapshot")
+    route.view.kind === "target" &&
+    route.snapshot &&
+    !canonical.searchParams.has("snapshot")
   )
-    return url;
-  return new URL(
-    browserRouteHref(
-      routeHref(
-        route.view.target.entry.kind,
-        route.view.target.entry.id,
-        route.fragment,
-        route,
-      ),
-      providerNormalized,
-    ),
-    url,
-  );
-}
-
-/** Detect a provider-normalized extensionless deployment route. */
-export function isProviderNormalizedRoute(
-  pathname: string,
-  canonicalPath: string | undefined,
-): boolean {
-  return (
-    canonicalPath !== undefined &&
-    pathname === providerNormalizedHtmlPath(canonicalPath)
-  );
-}
-
-/** Match generated links to an extensionless hosting-provider route. */
-export function browserRouteHref(
-  href: string,
-  providerNormalized: boolean,
-): string {
-  if (!providerNormalized) return href;
-  const url = new URL(href, "https://mokly.invalid");
-  const pathname = providerNormalizedHtmlPath(url.pathname);
-  return pathname === undefined ? href : `${pathname}${url.search}${url.hash}`;
+    canonical.searchParams.set("snapshot", route.snapshot);
+  return canonical.href === url.href ? url : canonical;
 }

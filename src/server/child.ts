@@ -26,7 +26,7 @@ export async function runServerChild(
   manifest?: ComponentRuntime["manifest"],
 ): Promise<void> {
   const initial =
-    retainedRuntime && manifest?.schemaVersion === "live-index-1"
+    retainedRuntime && manifest?.schemaVersion === "live-index-2"
       ? await receiveRequestedRuntime()
       : undefined;
   if (initial?.version) updateVersion = initial.version;
@@ -123,8 +123,8 @@ function waitForChildShutdown(
           ...(update.kind ? { kind: update.kind } : {}),
           changesStatus:
             update.changesStatus ??
-            (update.changedIds === null ? "pending" : "ready"),
-          changedIds: update.changedIds,
+            (update.changedEntries === null ? "pending" : "ready"),
+          changedEntries: update.changedEntries,
           componentChanges: update.componentChanges,
           ...(update.assetClosure ? { assetClosure: update.assetClosure } : {}),
           version: update.version,

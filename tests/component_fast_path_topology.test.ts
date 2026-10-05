@@ -11,7 +11,7 @@ import {
 } from "../dist/diagnostics/timings.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
-import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   assertFastPathEquivalent,
@@ -125,9 +125,9 @@ function reviewFixture(
   };
 }
 
-function reasonKinds(result: ReviewResultV4, id: string) {
+function reasonKinds(result: ReviewResultV6, id: string) {
   const change = result.changes.find(
-    (entry) => (entry.after ?? entry.before)?.id === id,
+    (entry) => (entry.after ?? entry.before)?.path === id,
   );
   assert.ok(change);
   return change.reasons.map((reason) => reason.kind);

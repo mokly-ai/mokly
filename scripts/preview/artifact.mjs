@@ -4,7 +4,6 @@ import path from "node:path";
 import {
   VIEWER_DIRECTORY,
   parseStaticDelivery,
-  parseViewHref,
   providerNormalizedHtmlPath,
   viewHref,
 } from "@mokly/viewer/data";
@@ -31,13 +30,13 @@ export async function stagePreviewArtifact(
   const files = new Map();
   for (const name of (await ownedEntries(stage)).files)
     files.set(name, await fs.promises.readFile(path.join(stage, name)));
-  const currentIds = new Set(manifest.entries.map((entry) => entry.id));
+  const currentPaths = new Set(manifest.entries.map((entry) => entry.path));
   const entries = [
     ...manifest.entries,
-    ...removed.filter((entry) => !currentIds.has(entry.id)),
+    ...removed.filter((entry) => !currentPaths.has(entry.path)),
   ];
   const parsedDelivery = parseStaticDelivery({
-    schemaVersion: 4,
+    schemaVersion: 5,
     deploymentId: STAGED_DEPLOYMENT_ID,
     canonicalPath: "/",
     comparisonUrl: comparison ? `/${comparison.directory}/review.json` : null,
@@ -71,18 +70,14 @@ export async function stagePreviewArtifact(
   addShell("index.html", "/");
   addShell("404.html", "/404.html");
   for (const entry of entries) {
-    const canonicalPath = viewHref(entry.kind, entry.id);
-    addShell(canonicalPath.slice(1), canonicalPath);
+    const canonicalPath = viewHref(entry.path);
+    addShell(`${canonicalPath.slice(1)}index.html`, canonicalPath);
   }
   const aliases = new Map();
   for (const [name, bytes] of files) {
     const pathname = `/${name}`;
-    const identity = parseViewHref(pathname);
-    const canonicalView =
-      identity !== undefined &&
-      viewHref(identity.kind, identity.id) === pathname;
     const normalized = providerNormalizedHtmlPath(pathname);
-    if ((canonicalView || name.startsWith("static/")) && normalized)
+    if (name.startsWith("static/") && normalized && !normalized.endsWith("/"))
       aliases.set(normalized.slice(1), name);
     if (
       name.endsWith(".html") &&

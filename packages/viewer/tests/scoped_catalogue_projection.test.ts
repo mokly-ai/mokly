@@ -19,9 +19,13 @@ const context = {
 };
 
 test("projection retains real route usage and omits every other view", () => {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   const projected = projectScopedCatalogue(model, target(screen));
-  const projectedScreen = projected.screens.find(({ id }) => id === screen.id)!;
+  const projectedScreen = projected.screens.find(
+    ({ path: id }) => id === screen.path,
+  )!;
   assert.deepEqual(
     projectedScreen.views.map(({ usage }) => usage),
     screen.views.map(({ usage }) => usage),
@@ -33,7 +37,9 @@ test("projection retains real route usage and omits every other view", () => {
 });
 
 test("synthetic screen bytes ignore another entry's usage", () => {
-  const screen = model.screens.find(({ id }) => id === "home")!;
+  const screen = model.screens.find(
+    ({ path: id }) => id === "product/browse/home",
+  )!;
   const changed = structuredClone(model);
   const changedVariant = changed.components.find(
     (entry) => "variantOf" in entry,
@@ -56,7 +62,7 @@ test("synthetic screen bytes ignore another entry's usage", () => {
 
 test("synthetic component bytes ignore another entry's usage", () => {
   const component = model.components.find(
-    (entry) => entry.id === "action" && !("variantOf" in entry),
+    (entry) => entry.path === "components/action" && !("variantOf" in entry),
   )!;
   const changed = structuredClone(model);
   changed.screens[0]!.views[0]!.usage = { status: "unavailable" };
@@ -75,17 +81,17 @@ function scopedBytes(
   view: ShellBootstrapView,
 ): string {
   return serializeShellBootstrap({
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogue: projectScopedCatalogue(catalogue, view),
     context,
     view,
   });
 }
 
-function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
+function target(entry: Pick<CatalogueRecord, "path" | "kind">) {
   return {
     kind: "target" as const,
-    entryId: entry.id,
+    entryPath: entry.path,
     entryKind: entry.kind,
   };
 }

@@ -277,7 +277,7 @@ Per repository rules, mockups land before UI implementation:
   the dark device-chrome tokens (phone screen surface, status-band ink,
   browser viewport surface), and the `LIGHT ONLY` frame-label state. The
   shell tokens themselves stay light-only.
-- The design catalogue in `examples/basic/entries/design/` adds approved
+- The design catalogue in `examples/basic/specs/design/` adds approved
   screens (mobile and desktop variants each): a Browse screen view with dark
   selected (now `design/browse/views/screen.variants/dark-scheme.html`) and a Review compare
   page with the scheme control (`design/review/outcomes/dark-scheme.html`).

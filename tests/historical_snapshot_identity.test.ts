@@ -7,9 +7,9 @@ import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import type {
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/src/registry/types.js";
-import type { ReviewResultV4 } from "../packages/viewer/src/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/src/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import {
   displayEntry,
@@ -29,16 +29,16 @@ type CurrentManifestScreen = ManifestScreen & {
 const BASELINE_A = "a".repeat(40);
 const BASELINE_B = "b".repeat(40);
 const GENERATION = "c".repeat(64);
-const oldScreen = screen("removed-screen", "Old screen", "screens/old.html");
+const oldScreen = screen("removed-screen", "Old screen", "old/index.html");
 const currentScreen = screen(
   "current-screen",
   "Current screen",
-  "screens/current-screen.html",
+  "current-screen/index.html",
 );
 const baseline = manifest([oldScreen]);
 const current = currentManifest({
   ...manifest([currentScreen]),
-  schemaVersion: 8 as const,
+  schemaVersion: 9 as const,
 });
 
 test("projection publishes stable per-record identity before comparison generation", () => {
@@ -93,10 +93,10 @@ test("reader requires published snapshot ids when a generation exists", () => {
   assert.equal(identityLess.removedEntries[0]?.snapshotId, undefined);
   assert.equal(
     resolveCatalogueEntry(identityLess, {
-      id: oldScreen.id,
+      path: oldScreen.path,
       kind: oldScreen.kind,
-    })?.entry.id,
-    oldScreen.id,
+    })?.entry.path,
+    oldScreen.path,
   );
 });
 
@@ -118,7 +118,7 @@ test("reader rejects malformed and duplicate published identities", () => {
 
 test("reader rejects current and removed records sharing an id", () => {
   const fixture = readCatalogue(
-    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v4.json")),
+    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v5.json")),
   );
   const current = fixture.screens[0]!;
   const removed = {
@@ -142,12 +142,12 @@ test("historical workspace resolution owns the old identity and Removed status",
     assert.fail("Expected a historical screen");
   const displayed = displayEntry(historical.entry);
   if (displayed.kind !== "screen") assert.fail("Expected a displayed screen");
-  const workspace = publicWorkspace(model, displayed);
+  const workspace = publicWorkspace(catalogue, model, displayed);
 
-  const selected = catalogue.byId.get(currentScreen.id);
+  const selected = catalogue.byPath.get(currentScreen.path);
   assert.ok(selected);
-  assert.equal(selected.id, currentScreen.id);
-  assert.equal(workspace.entry.id, oldScreen.id);
+  assert.equal(selected.path, currentScreen.path);
+  assert.equal(workspace.entry.path, oldScreen.path);
   assert.equal(workspace.entry.title, oldScreen.title);
   assert.equal(workspace.removed, true);
   assert.equal(workspace.status, "Removed");
@@ -173,7 +173,7 @@ function projectionInput(commit: string | undefined) {
   return {
     catalogue: createCatalogue(current, removedEntries),
     changesStatus: "ready" as const,
-    changedIds: removedEntries.map(({ entry }) => entry.id),
+    changedEntries: removedEntries.map(({ entry }) => entry.path),
     configPath: "mokly.config.ts",
     comparisonUrl: null,
     ...(commit
@@ -197,7 +197,7 @@ function snapshot(model: CatalogueReadModel): string {
   return model.removedEntries[0]?.snapshotId ?? "";
 }
 
-function review(baseCommit: string): ReviewResultV4 {
+function review(baseCommit: string): ReviewResultV6 {
   return {
     affectedConsumers: [],
     baseCommit,
@@ -206,17 +206,18 @@ function review(baseCommit: string): ReviewResultV4 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 4,
+    schemaVersion: 6 as const,
     screens: [],
     sharedImpact: [],
   };
 }
 
-function manifest(entries: readonly CurrentManifestScreen[]): ManifestV8 {
+function manifest(entries: readonly CurrentManifestScreen[]): ManifestV9 {
   return currentManifest({
     entries,
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 9,
+    folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
@@ -232,13 +233,13 @@ function screen(
     colorSchemes: ["light"],
     declaredDependencies: [],
     description: `${title} description`,
-    id,
+    path: id,
     kind: "screen",
-    navPath: [],
+
     relatedDocs: [],
     sourcePath: `entries/${id}.mockup.tsx`,
     title,
-    useCaseIds: [],
+    useCasePaths: [],
   };
 }
 

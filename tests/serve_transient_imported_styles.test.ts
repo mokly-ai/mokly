@@ -30,7 +30,7 @@ test(`transient HTTP delivers scoped CSS assets from memory for GET and HEAD`, a
   await fs.writeFile(source, original);
   const config = await loadConfig(fixture.root);
   const compiled = await compileCatalogue(config);
-  const route = "screens/home.mobile.html";
+  const route = "home/index.mobile.html";
   const service = new ComponentRenderService(componentRuntime(compiled));
   fixture.beforeRemove(() => service.close());
   const rendered = service.store.put(

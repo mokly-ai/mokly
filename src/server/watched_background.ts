@@ -6,7 +6,7 @@ import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { ResolvedConfig } from "../config/types.js";
 
-import type { CatalogueChangeClassifier } from "./component_changes.js";
+import type { CatalogueChangeClassifier } from "./component_change_types.js";
 import { BackgroundGeneration } from "./demand/generation.js";
 import type { ServeReporter } from "./reporter.js";
 import type { ResourceWatcher } from "./resource_watcher.js";
@@ -67,12 +67,12 @@ export class WatchedBackground {
         const duration = Date.now() - this.changesStartedAt;
         if (snapshot)
           options.reporter.changesReady(
-            snapshot.changedIds?.length ?? 0,
+            snapshot.changedEntries?.length ?? 0,
             duration,
           );
         else options.reporter.changesUnavailable(duration);
         options.running.notifyUpdate(
-          snapshot?.changedIds,
+          snapshot?.changedEntries,
           snapshot,
           snapshot ? "ready" : "unavailable",
           "evidence",

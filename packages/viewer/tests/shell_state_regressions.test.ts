@@ -23,7 +23,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",
@@ -33,14 +33,14 @@ const model = readCatalogue(
 const catalogue = viewerCatalogue(model);
 const route = routeFromUrl(
   catalogue,
-  new URL("https://example.test/view/screens/home.html"),
+  new URL("https://example.test/view/product/browse/home/"),
 );
 const context = {
   ...viewerContext(model, defaultSelection),
-  activeId: "home",
+  activeId: "product/browse/home",
 };
 const sections = catalogueNavSections(catalogue);
-const activePath = disclosurePath(sections, "home");
+const activePath = disclosurePath(sections, "product/browse/home");
 const defaults = createInitialShellState(
   catalogue,
   context,
@@ -134,18 +134,18 @@ test("reload recovery keeps route and snapshot identity synchronized", () => {
   const historicalRoute = routeFromUrl(
     catalogue,
     new URL(
-      `https://example.test${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
+      `https://example.test${viewHref(historical.entry.path)}?snapshot=${historical.snapshotId}`,
     ),
   );
   const historicalSelection = selectionForRoute(
-    { ...defaultSelection, screenId: "home" },
+    { ...defaultSelection, screenPath: "product/browse/home" },
     historicalRoute,
   );
-  assert.equal(historicalSelection.screenId, historical.entry.id);
+  assert.equal(historicalSelection.screenPath, historical.entry.path);
   assert.equal(historicalSelection.snapshotId, historical.snapshotId);
 
   const currentSelection = selectionForRoute(historicalSelection, route);
-  assert.equal(currentSelection.screenId, "home");
+  assert.equal(currentSelection.screenPath, "product/browse/home");
   assert.equal(currentSelection.snapshotId, undefined);
 });
 
@@ -155,7 +155,7 @@ test("runtime context projects only the route's active snapshot", () => {
   const historicalRoute = routeFromUrl(
     catalogue,
     new URL(
-      `https://example.test${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
+      `https://example.test${viewHref(historical.entry.path)}?snapshot=${historical.snapshotId}`,
     ),
   );
   const state = recoveredState();

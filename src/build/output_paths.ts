@@ -1,17 +1,23 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { GENERATED_DIRECTORY, isSafeCatalogueRoute } from "@mokly/viewer/data";
+import {
+  GENERATED_DIRECTORY,
+  isSafeCatalogueRoute,
+  isSafeRepositoryPath,
+} from "@mokly/viewer/data";
 
 import { isInside, projectRealPath } from "../config/paths.js";
 import { isInternalCatalogueFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { isDocumentResource } from "../documents/resource_paths.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { gitBlobHash } from "../registry/blob_hash.js";
 import { MANIFEST_NAME, serializeManifest } from "../registry/manifest.js";
 
 import type { Compilation } from "./compile.js";
 import { generatedBytes } from "./generated_file.js";
+import { validateOutputCollisions } from "./output_collisions.js";
 import { isReservedSource } from "./source_inventory.js";
 import { isValidGeneratedRoute } from "./styles/routes.js";
 
@@ -53,12 +59,15 @@ export function validateGeneratedOutputPaths(
   routes: Iterable<string>,
   config: ResolvedConfig,
 ): void {
+  const outputRoutes = [...routes];
+  validateOutputCollisions(outputRoutes);
   const realMockupsRoot = validateGeneratedRoot(config);
-  for (const route of routes) {
+  for (const route of outputRoutes) {
     if (
       route !== MANIFEST_NAME &&
       !isSafeCatalogueRoute(route) &&
-      !isValidGeneratedRoute(route)
+      !isValidGeneratedRoute(route) &&
+      !(isSafeRepositoryPath(route) && isDocumentResource(route))
     ) {
       throw new MoklyError(
         "build-invalid",

@@ -28,7 +28,7 @@ test.afterAll(async () => {
 async function expireSnapshots(page: Page, snapshot: string): Promise<void> {
   now += 120_001;
   const pruning = await page.request.get(
-    `${server.url}/mokly-viewer/diffs/review.json?id=action-default`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=action/default`,
   );
   expect(pruning.ok()).toBe(true);
   expect((await page.request.get(snapshot)).status()).toBe(404);
@@ -49,7 +49,7 @@ for (const change of ["theme", "viewport"] as const)
       if (response.url().includes("/snapshots/") && !response.ok())
         failedPanes.push(response.url());
     });
-    await page.goto(`${server.url}/view/screens/home.html`);
+    await page.goto(`${server.url}/view/home/`);
     await chooseViewport(page, "desktop");
     await chooseScheme(page, "light");
     await loadComparison(page, "Overlay");
@@ -88,7 +88,7 @@ for (const change of ["theme", "viewport"] as const)
       "difference",
     );
     expect(requests).toHaveLength(2);
-    expect(requests[1]!.searchParams.get("id")).toBe("home");
+    expect(requests[1]!.searchParams.get("path")).toBe("home");
     expect(requests[1]!.searchParams.has("refresh")).toBe(false);
     expect(failedPanes).toEqual([]);
   });
@@ -99,7 +99,7 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
     const url = new URL(request.url());
     if (url.pathname === "/mokly-viewer/diffs/review.json") requests.push(url);
   });
-  await page.goto(`${server.url}/view/components/action-disabled.html`);
+  await page.goto(`${server.url}/view/action/disabled/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   await expect(
@@ -124,6 +124,6 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
       .getByRole("button", { name: "Proceed", exact: true }),
   ).toBeDisabled();
   expect(requests).toHaveLength(2);
-  expect(requests[1]!.searchParams.get("id")).toBe("action-disabled");
+  expect(requests[1]!.searchParams.get("path")).toBe("action/disabled");
   expect(requests[1]!.searchParams.size).toBe(1);
 });

@@ -22,7 +22,7 @@ const manifest = parseManifest(
   ),
 );
 const fixtureRoutes = [
-  ...new Set(manifest.entries.map((entry) => entryRoute(entry.kind, entry.id))),
+  ...new Set(manifest.entries.map((entry) => entryRoute(entry.path))),
 ];
 expect(fixtureRoutes.length).toBeGreaterThan(80);
 

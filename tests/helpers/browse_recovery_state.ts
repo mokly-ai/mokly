@@ -5,11 +5,11 @@ export function browseState(): BrowseRecoveryState {
   return {
     changesStatus: "ready",
     changedOnly: true,
-    disclosures: { "folder:pages:fixture": false },
+    disclosures: { "folder:specs:fixture": false },
     colorScheme: "dark",
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineDisclosures: { "folder:pages:fixture": false },
+    filterBaselineDisclosures: { "folder:specs:fixture": false },
     navScroll: 18,
     query: "home",
     regionScrolls: { flow: 8, stage: 42 },

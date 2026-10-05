@@ -15,11 +15,11 @@ import {
   isEarlierBaselineClassification,
   isInvalidBaselineClassification,
 } from "../classification_result.js";
-import {
-  RepositoryCatalogueChangeClassifier,
-  type CatalogueChangeClassifier,
-  type ComponentChangeSnapshot,
-} from "../component_changes.js";
+import type {
+  CatalogueChangeClassifier,
+  ComponentChangeSnapshot,
+} from "../component_change_types.js";
+import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
 import { PlainServeReporter } from "../reporter.js";
 import type {
   PreparedResourceWatch,
@@ -168,8 +168,12 @@ export class BackgroundGeneration {
             this.options.diagnostic?.(new Error(classification.diagnostic));
           if (snapshot)
             timingCounts("changes.publish", () => ({
-              changedIds: snapshot.changedIds?.length ?? 0,
+              changedEntries: snapshot.changedEntries?.length ?? 0,
             }));
+          for (const diagnostic of snapshot?.pairing?.diagnostics ?? []) {
+            if (this.options.diagnostic) this.options.diagnostic(diagnostic);
+            else new PlainServeReporter().runtimeDiagnostic(diagnostic);
+          }
           this.classified(snapshot);
         }
       } catch (error) {

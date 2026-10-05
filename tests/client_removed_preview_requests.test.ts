@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { requestPreview } from "../packages/viewer/dist/previews/request.js";
-import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   COMPARISON,
@@ -13,7 +13,7 @@ import {
   respond,
   review,
   snapshotId,
-} from "./client_removed_preview_requests_fixture.js";
+} from "./helpers/removed_preview_requests.js";
 
 test("a screen preview renders only its captured previous views", async () => {
   const generation = `https://catalogue.test${COMPARISON}`;
@@ -51,12 +51,12 @@ test("a screen preview renders only its captured previous views", async () => {
       {
         colorScheme: "light",
         viewport: "mobile",
-        url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/screens/removed-screen.mobile.html`,
+        url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/removed-screen/index.mobile.html`,
       },
       {
         colorScheme: "light",
         viewport: "desktop",
-        url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/screens/removed-screen.desktop.html`,
+        url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/removed-screen/index.desktop.html`,
       },
     ],
   });
@@ -97,7 +97,7 @@ test("a reused or stale generation is treated as unavailable", async () => {
   );
   await assert.rejects(
     requestPreview(
-      { ...removedScreen, id: "other" },
+      { ...removedScreen, path: "other" },
       { endpoint: new URL(generation) },
       missing.win,
       AbortSignal.timeout(5_000),
@@ -113,7 +113,7 @@ test("a historical response must belong to the selected baseline", async () => {
     catalogueIdentity: "c".repeat(64),
     snapshotId: snapshotId("baseline", "a".repeat(40), removedScreen),
   };
-  const views: ReviewResultV4["screens"][number]["views"] = [
+  const views: ReviewResultV6["screens"][number]["views"] = [
     {
       viewport: "mobile",
       colorScheme: "light",
@@ -148,7 +148,7 @@ test("a generation-backed selection accepts only its immutable generation", asyn
     catalogueIdentity: "c".repeat(64),
     snapshotId: snapshotId("generation", GENERATION, removedScreen),
   };
-  const views: ReviewResultV4["screens"][number]["views"] = [
+  const views: ReviewResultV6["screens"][number]["views"] = [
     {
       viewport: "mobile",
       colorScheme: "light",
@@ -178,10 +178,10 @@ test("a page response cannot replace its selected baseline or generation", async
     snapshotId: snapshotId("baseline", "a".repeat(40), removedPage),
   };
   const payload = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     baseRef: "origin/main",
     baseCommit: "d".repeat(40),
-    id: removedPage.id,
+    path: removedPage.path,
   };
   const endpoint = new URL(`https://catalogue.test/${pagePath}`);
   const generation = new URL(`https://catalogue.test${COMPARISON}`);
@@ -217,10 +217,10 @@ test("a page response cannot replace its selected baseline or generation", async
 test("a page preview must describe the entry that asked for it", async () => {
   const url = `https://catalogue.test/${pagePath}`;
   const payload = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     baseRef: "origin/main",
     baseCommit: "a".repeat(40),
-    id: "removed-page",
+    path: "removed-page",
   };
   const matching = respond(payload, url);
   const request = {
@@ -235,12 +235,12 @@ test("a page preview must describe the entry that asked for it", async () => {
   );
   assert.deepEqual(loaded.content, {
     kind: "page",
-    url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/pages/removed-page.html`,
+    url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/removed-page/index.html`,
   });
   const other = respond(
     {
       ...payload,
-      id: "other",
+      path: "other",
     },
     url,
   );

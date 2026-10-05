@@ -7,6 +7,11 @@ re-serialising that embedded state on every render. The public
 after deployment-identity normalization; viewer client files and the identity
 derived from them may change.
 
+Path identity integration retains the scope and serialization rules with `entryPath`
+and read model v4; the implementation work is tracked in
+[Milestone 3A](./path-identity.md#milestone-3a-integrate-main). Historical measurements
+below describe their original commits.
+
 ## Problem
 
 Each Serve page embeds `<script data-mokly-shell-bootstrap>`, built by
@@ -62,7 +67,7 @@ A prototype that keeps only the current route's usage measured 360–445 KB and
 
 ## Decisions
 
-1. **Public catalogue v1 is unchanged.** `__mokly/catalogue.json` stays
+1. **Public catalogue v4 is unchanged.** `__mokly/catalogue.json` stays
    complete. Embedded viewers, upload and ownership inventories, the v1 fixture
    and the conformance tests keep their bytes. Static exports keep their compact
    external bootstraps that reference the shared catalogue.
@@ -127,7 +132,7 @@ A prototype that keeps only the current route's usage measured 360–445 KB and
   `catalogue.json` once per full page load (about 0.5 s of script time for the
   example). A lean deployment index or a validated-catalogue cache is a
   separate follow-up.
-- No change to embedded `MoklyViewer` sources, catalogue v1, upload v1,
+- No change to embedded `MoklyViewer` sources, catalogue v4, upload v1,
   ownership v1, review v2/v3 or delivery descriptor v2.
 - No change to test sharding or to the routes the hydration spec covers.
 

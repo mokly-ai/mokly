@@ -55,7 +55,7 @@ test("both graphs retain raw and tree-shaken inputs while public resources stay 
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'import { settings } from "./mockups/settings.ts"; export default { ...settings, entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };',
+    'import { settings } from "./mockups/settings.ts"; export default { ...settings, roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };',
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
@@ -107,7 +107,7 @@ test("both graphs retain raw and tree-shaken inputs while public resources stay 
   for (const route of [
     "public.svg",
     "public.css",
-    "mokly-generated/screens/home.desktop.html",
+    "mokly-generated/home/index.desktop.html",
   ])
     assert.equal(
       (await fetch(`${server.url}/static/${route}`)).status,
@@ -159,17 +159,17 @@ test("a page route can share an authored filename without overwriting its source
   const good = await compileCatalogue(config);
   await writeCompilation(good, config);
   const inventory = config.sourceFiles;
-  const source = path.join(fixture.mockupsDir, "pages/document.html");
+  const source = path.join(fixture.mockupsDir, "document/index.html");
   const bytes = "<html><body>Protected source</body></html>";
   await fs.promises.mkdir(path.dirname(source), { recursive: true });
   await fs.promises.writeFile(source, bytes);
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "entries", mockupsDir: "mockups", repoRoot: ".", moduleResolution: { loaders: { ".html": "text" } } };',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", moduleResolution: { loaders: { ".html": "text" } } };',
   );
   await fs.promises.writeFile(
     fixture.entryPath,
-    'import { definePage } from "@mokly/mokly"; import html from "../mockups/pages/document.html"; export const mockups = [definePage({ id: "document", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => html })];',
+    'import { definePage } from "@mokly/mokly"; import html from "../mockups/document/index.html"; export const mockups = [definePage({ path: "document", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => html })];',
   );
   const next = await loadConfig(fixture.root);
   const generated = await compileCatalogue(next);
@@ -178,7 +178,7 @@ test("a page route can share an authored filename without overwriting its source
   assert.equal(await fs.promises.readFile(source, "utf8"), bytes);
   assert.match(
     await fs.promises.readFile(
-      path.join(next.generatedDir, "pages/document.html"),
+      path.join(next.generatedDir, "document/index.html"),
       "utf8",
     ),
     /Protected source/,

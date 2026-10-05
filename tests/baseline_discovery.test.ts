@@ -10,8 +10,9 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const historicalManifest = JSON.stringify({
   entries: [],
+  folders: [],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
   assetClosure: [],
   blobHashAlgorithm: "sha1",
   generatedFiles: [],
@@ -51,13 +52,13 @@ test("historical discovery prefers the requested root and otherwise requires one
   await manifest("other/output");
   await assert.rejects(
     discover(),
-    /candidates: old\/generated \(generated-v8\), other\/output \(generated-v8\)/,
+    /candidates: old\/generated \(generated-v9\), other\/output \(generated-v9\)/,
   );
   await manifest("mockups");
   assert.equal((await discover()).descriptor.catalogueRoot, "mockups");
 });
 
-test("an invalid v8 manifest is not rediscovered as a legacy child", async (context) => {
+test("an invalid v9 manifest is not rediscovered as a legacy child", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const directory = path.join(fixture.root, "old/mokly-generated");

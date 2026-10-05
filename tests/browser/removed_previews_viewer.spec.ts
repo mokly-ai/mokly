@@ -37,7 +37,7 @@ for (const adapter of ["same-origin", "cross"]) {
       "Previous page",
     );
     await page
-      .locator('#viewer a[data-route="screens/removed-screen.html"]')
+      .locator('#viewer a[data-route="removed-screen/index.html"]')
       .click();
     await expect(
       page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
@@ -60,14 +60,14 @@ for (const adapter of ["same-origin", "cross"]) {
             fixture: {
               catalogue: {
                 removedEntries: {
-                  entry: { id: string };
+                  entry: { path: string };
                   snapshotId?: string;
                 }[];
               };
             };
           }
         ).fixture.catalogue.removedEntries.find(
-          ({ entry }) => entry.id === "removed-screen",
+          ({ entry }) => entry.path === "removed-screen",
         )?.snapshotId,
     );
     expect(snapshotId).toBeDefined();
@@ -82,7 +82,7 @@ for (const adapter of ["same-origin", "cross"]) {
       ),
     ).toEqual([
       {
-        screenId: "removed-screen",
+        screenPath: "removed-screen",
         snapshotId,
       },
     ]);
@@ -137,7 +137,7 @@ test("a cross-origin frame navigation restores the presentation", async ({
     const preview = element as HTMLIFrameElement;
     if (preview.contentWindow)
       preview.contentWindow.location.href = destination;
-  }, `${host.frameOrigin}/view/screens/current.html`);
+  }, `${host.frameOrigin}/view/current/`);
   await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
     "Previous page",
   );
@@ -194,14 +194,15 @@ test("a viewer selection change fences the previous request", async ({
     release = resolve;
   });
   let handled = false;
-  await page.route("**/pages/removed-page.json", async (route) => {
+  await page.route("**/previews/removed-page/index.json", async (route) => {
     await held;
     await route.continue().catch(() => undefined);
     handled = true;
   });
   let settled = false;
   const settle = (request: { url(): string }): void => {
-    if (request.url().includes("/pages/removed-page.json")) settled = true;
+    if (request.url().includes("/previews/removed-page/index.json"))
+      settled = true;
   };
   page.on("requestfinished", settle);
   page.on("requestfailed", settle);
@@ -210,7 +211,7 @@ test("a viewer selection change fences the previous request", async ({
     "Loading previous version…",
   );
   await page
-    .locator('#viewer a[data-route="screens/removed-screen.html"]')
+    .locator('#viewer a[data-route="removed-screen/index.html"]')
     .click();
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),

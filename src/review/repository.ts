@@ -27,6 +27,8 @@ export interface ReadOnlyReviewRepository {
   readonly evidence: RepositoryEvidence;
   readonly reader: BaselineReader;
   readonly descriptor?: BaselineCatalogue;
+  /** Committed authoring bytes; distinct from rebuilt public baseline output. */
+  readonly sourceReader?: BaselineReader;
 }
 
 /** Only the parent preparation boundary chooses which historical reader to open. */
@@ -49,6 +51,7 @@ export function readOnlyRepositoryForCommit(
   const evidence = new GitRepositoryEvidence(runner);
   return {
     ...(descriptor ? { descriptor } : {}),
+    sourceReader: new CommittedBaselineReader(runner),
     evidence: {
       mergeBase: async () => commit,
       changedPaths: (baseCommit, excluded) =>
@@ -77,7 +80,7 @@ export function baselineReaderForCommit(
   descriptor: BaselineCatalogue = baselineCatalogue(
     commit,
     toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".",
-    "generated-v8",
+    "generated-v9",
   ),
 ): BaselineReader {
   return selection === "rebuild"

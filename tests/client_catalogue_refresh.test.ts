@@ -15,7 +15,7 @@ import { createReactUpdateCapability } from "../dist/client/react_capability_upd
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
   ),
 );
 
@@ -58,7 +58,7 @@ function descriptor(
   evidenceRevision: number,
 ): ViewerCapabilityDescriptor {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: {
       base: "origin/main",
       catalogueId: catalogue.identity.id,
@@ -70,7 +70,7 @@ function descriptor(
 }
 
 function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
-  return { entryId: null, source: value.source };
+  return { entryPath: null, source: value.source };
 }
 
 class FakeSource {
@@ -109,7 +109,7 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
   readonly source = new FakeSource();
   readonly storage = new FakeStorage();
   readonly location = {
-    href: "http://localhost/view/screens/home.html",
+    href: "http://localhost/view/product/browse/home/",
     reloads: 0,
     reload() {
       this.reloads += 1;
@@ -157,7 +157,7 @@ function shellBootstrap(
   model: unknown,
 ) {
   return {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     catalogue: model,
     context: {
       base: descriptor.source.base,

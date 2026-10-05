@@ -2,7 +2,7 @@
 
 import {
   VIEWER_DIRECTORY,
-  currentDocumentRoute,
+  currentDocumentPath,
 } from "../catalogue/delivery_paths.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { clipNode } from "../inspector/clipping.js";
@@ -14,6 +14,7 @@ import {
   type AuthenticatedRanges,
 } from "./document_ranges.js";
 import { localFrameAccess } from "./same_origin_access.js";
+import { normalizedHtmlPath } from "./same_origin_identity.js";
 
 export interface ComponentBounds {
   key: string;
@@ -39,10 +40,11 @@ export function authenticateRanges(
       location.origin !== parent.defaultView?.location.origin
     )
       return;
-    const actual = path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)
-      ? decodeURIComponent(location.pathname)
-      : currentDocumentRoute(location.pathname);
-    if (actual !== path) return;
+    const actual = normalizedHtmlPath(decodeURIComponent(location.pathname));
+    const expected = path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)
+      ? path
+      : `/${currentDocumentPath(path)}`;
+    if (actual !== normalizedHtmlPath(expected)) return;
     return authenticateDocumentRanges(
       doc,
       usage.ranges.map((range) => ({

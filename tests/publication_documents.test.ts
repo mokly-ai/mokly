@@ -11,7 +11,7 @@ import { validEntrySource } from "./helpers/fixture.js";
 function pageSource(id = "handbook"): string {
   return `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: ${JSON.stringify(id)}, title: "Handbook",
+mockups.push(definePage({ path: ${JSON.stringify(id)}, title: "Handbook",
   description: "Catalogue guidance", dependencies: [], relatedDocs: [],
   render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
 }
@@ -27,9 +27,9 @@ for (const includeChanges of [false, true]) {
       const output = path.join(fixture.root, ".context/published");
       await buildPreview(fixture.config, output, options);
       for (const document of [
-        `pages/${id}.html`,
-        "screens/home.mobile.html",
-        "screens/home.desktop.html",
+        `${id}/index.html`,
+        "home/index.mobile.html",
+        "home/index.desktop.html",
       ])
         assert.equal(
           fs.existsSync(path.join(output, "static/mokly-generated", document)),
@@ -38,7 +38,7 @@ for (const includeChanges of [false, true]) {
         );
       assert.match(
         await fs.promises.readFile(
-          path.join(output, "view/pages", `${id}.html`),
+          path.join(output, "view", id, "index.html"),
           "utf8",
         ),
         /Handbook/,
@@ -46,7 +46,7 @@ for (const includeChanges of [false, true]) {
     });
   }
 
-  for (const route of ["pages/handbook.html", "screens/home.desktop.html"]) {
+  for (const route of ["handbook/index.html", "home/index.desktop.html"]) {
     test(`publication requires the exported ${route} even if enumeration omits it (changes: ${includeChanges})`, async (context) => {
       const fixture = await changedFixture(context, pageSource());
       const output = path.join(fixture.root, ".context/published");

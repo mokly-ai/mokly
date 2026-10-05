@@ -1,5 +1,6 @@
 /** Validation for route-scoped workspace data embedded in shell documents. */
 
+import { isEntryPath } from "../navigation/logical.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
 
 /** Identity fields that bind workspace evidence to one accepted shell source. */
@@ -27,7 +28,7 @@ export function readViewerWorkspace(
   ];
   if (
     (entry["kind"] !== "screen" && entry["kind"] !== "component") ||
-    typeof entry["id"] !== "string" ||
+    !isEntryPath(entry["path"]) ||
     typeof value["base"] !== "string" ||
     typeof value["comparisons"] !== "boolean" ||
     typeof value["comparisonEligible"] !== "boolean" ||

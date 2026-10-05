@@ -38,11 +38,8 @@ export default input => ({html: '<html><body>' + renderToStaticMarkup(input.node
   });
   fixture.beforeRemove(() => server.close());
   assert.equal(
-    (
-      await fetch(
-        server.url + "/static/mokly-generated/screens/home.mobile.html",
-      )
-    ).status,
+    (await fetch(server.url + "/static/mokly-generated/home/index.mobile.html"))
+      .status,
     200,
   );
   assert.equal((await fetch(server.url + "/static/widget.css")).status, 200);

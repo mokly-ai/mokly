@@ -12,17 +12,16 @@ const screens = JSON.parse(
     "utf8",
   ),
 ) as {
-  id: string;
-  fragments: Record<"mobile" | "desktop", string>;
+  path: string;
 }[];
 const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
 const fileUrl = (file: string) =>
   pathToFileURL(path.join(generated, file)).href;
 const withoutInspector = new Set([
-  "design-browse-home",
-  "design-browse-missing-route",
-  "design-browse-navigation",
-  "design-browse-use-case",
+  "design/browse/views/home",
+  "design/browse/states/missing-route",
+  "design/browse/states/navigation",
+  "design/browse/views/use-case",
 ]);
 
 for (const viewport of ["desktop", "mobile"] as const) {
@@ -39,18 +38,18 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const screen of screens) {
-        await page.goto(fileUrl(screen.fragments[viewport]));
+        await page.goto(fileUrl(`${screen.path}/index.${viewport}.html`));
         await expect(page.locator(".mbk-details-bar")).toHaveCount(0);
         await expect(
           page.getByRole("group", {
             name: /^(Viewport|Preview color scheme)$/,
           }),
         ).toHaveCount(0);
-        if (withoutInspector.has(screen.id)) continue;
-        await expect(page.locator(".ce-inspector"), screen.id).toHaveCount(1);
+        if (withoutInspector.has(screen.path)) continue;
+        await expect(page.locator(".ce-inspector"), screen.path).toHaveCount(1);
         await expect(
           page.getByRole("toolbar", { name: "Preview options" }),
-          screen.id,
+          screen.path,
         ).toHaveCount(1);
         await expect(page.locator(".mbk-topbar .ce-view-controls")).toHaveCount(
           0,
@@ -61,12 +60,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
             .selectOption(selection);
           await expect(
             page.locator(".ce-preview-view:visible"),
-            screen.id,
+            screen.path,
           ).toHaveCount(selection === "both" ? 2 : 1);
         }
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth),
-          screen.id,
+          screen.path,
         ).toBeLessThanOrEqual(viewport === "mobile" ? 390 : 1440);
       }
     });
@@ -74,7 +73,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("Browse viewport selection and footer opening stay inside the fixed shell", async ({
       page,
     }) => {
-      await page.goto(fileUrl(`screens/design-browse-screen.${viewport}.html`));
+      await page.goto(
+        fileUrl(`design/browse/views/screen/index.${viewport}.html`),
+      );
       const header = page.locator(".mbk-screen-head");
       const initialHeader = await header.boundingBox();
       const options = page.getByLabel("Preview viewport", { exact: true });
@@ -123,7 +124,7 @@ test("Both keeps full-size phone and desktop previews from overlapping", async (
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(fileUrl("screens/design-browse-screen.desktop.html"));
+  await page.goto(fileUrl("design/browse/views/screen/index.desktop.html"));
   const phone = (await page.locator(".phone-frame").boundingBox())!;
   const desktop = (await page.locator(".browser-frame").boundingBox())!;
   expect(
@@ -133,7 +134,7 @@ test("Both keeps full-size phone and desktop previews from overlapping", async (
 
 test("Browse footer resizes through its centered divider", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(fileUrl("screens/design-browse-screen.desktop.html"));
+  await page.goto(fileUrl("design/browse/views/screen/index.desktop.html"));
   await page.getByRole("button", { name: "Details", exact: true }).click();
   const panel = page.locator(".ce-inspector");
   const before = (await panel.boundingBox())!;

@@ -1,12 +1,14 @@
-/** Generated-file and authored-closure validation for the v8 manifest envelope. */
+/** Generated-file and authored-closure validation for the v9 manifest envelope. */
 import {
   GENERATED_DIRECTORY,
+  documentRoute,
   entryRoute,
   generatedViews,
   isSafeCatalogueRoute,
 } from "@mokly/viewer/data";
 
 import { isValidGeneratedRoute } from "../build/styles/routes.js";
+import { documentResourceRoute } from "../documents/resource_paths.js";
 import { MoklyError } from "../errors.js";
 
 import type { ManifestMetadata } from "./manifest.js";
@@ -35,6 +37,16 @@ export function validateManifestInventory(
   if (!Array.isArray(inventory))
     failure("generatedFiles must be sorted and unique");
   const routes: string[] = [];
+  const documentResources = new Set(
+    metadata.entries.flatMap((entry) =>
+      entry.kind === "document"
+        ? entry.resources.flatMap((resource) => {
+            const route = documentResourceRoute(entry, resource);
+            return route ? [route] : [];
+          })
+        : [],
+    ),
+  );
   const hashes = new RegExp(`^[0-9a-f]{${algorithm === "sha1" ? 40 : 64}}$`);
   for (const item of inventory) {
     if (
@@ -44,7 +56,11 @@ export function validateManifestInventory(
       typeof item.blobHash !== "string"
     )
       failure("invalid generatedFiles entry");
-    if (!isSafeCatalogueRoute(item.path) && !isValidGeneratedRoute(item.path))
+    if (
+      !isSafeCatalogueRoute(item.path) &&
+      !isValidGeneratedRoute(item.path) &&
+      !documentResources.has(item.path)
+    )
       failure(`invalid generatedFiles.path: ${item.path}`);
     if (!hashes.test(item.blobHash))
       failure(`invalid blob hash for ${item.path}`);
@@ -67,8 +83,12 @@ export function validateManifestInventory(
   const expected = metadata.entries
     .flatMap((entry) =>
       entry.kind === "page"
-        ? [entryRoute("page", entry.id)]
-        : generatedViews(entry).map((view) => view.path),
+        ? [entryRoute(entry.path)]
+        : entry.kind === "document"
+          ? entry.colorSchemes.map((scheme) =>
+              documentRoute(entry.path, scheme),
+            )
+          : generatedViews(entry).map((view) => view.path),
     )
     .sort();
   const actual = routes.filter((route) => route.endsWith(".html"));
@@ -76,6 +96,9 @@ export function validateManifestInventory(
     failure(
       "generatedFiles must include exactly the generated document routes",
     );
+  for (const route of documentResources)
+    if (!routes.includes(route))
+      failure(`generatedFiles is missing document resource: ${route}`);
 }
 
 function sortedUnique(values: readonly string[]): boolean {

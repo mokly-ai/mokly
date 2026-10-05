@@ -44,10 +44,9 @@ async function coLocatedFixture(): Promise<TestFixture> {
 import { defineComponent } from "@mokly/mokly";
 import { Button } from "./button.js";
 ${metadata}
-export const button = defineComponent({ ...metadata, id: "button", title: "Button", description: "A co-located button", route: "components/button.html",
-  propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
+export const button = defineComponent({ ...metadata, path: "button", title: "Button", description: "A co-located button", propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <Button label={props.label} />,
-  variants: [{ id: "button-default", title: "Default", props: { label: "Continue" } }] });
+  variants: [{ slug: "default",  title: "Default", props: { label: "Continue" } }] });
 `,
   );
   await write(
@@ -57,12 +56,12 @@ export const button = defineComponent({ ...metadata, id: "button", title: "Butto
 import { defineScreen } from "@mokly/mokly";
 import { button } from "./button.mokly.js";
 ${metadata}
-export const mockups = [button.entries, defineScreen({ ...metadata, useCaseIds: [], id: "button-demo", title: "Button demo", description: "Uses the button", route: "screens/button-demo.html", mobile: <main><button.Component label="Go" /></main>, desktop: <main><button.Component label="Go" /></main> })];
+export const mockups = [...button.entries, defineScreen({ ...metadata, useCasePaths: [], path: "button-demo", title: "Button demo", description: "Uses the button", mobile: <main><button.Component label="Go" /></main>, desktop: <main><button.Component label="Go" /></main> })];
 `,
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { entries: ["entries/**/*.mockup.{ts,tsx}", "src/**/*.mockup.{ts,tsx}"], mockupsDir: "mockups", repoRoot: ".", review: { outDir: ".review" } };\n`,
+    `export default { roots: [{ dir: "entries", files: ["**/*.mockup.{ts,tsx}"] }, { dir: "src", files: ["**/*.mockup.{ts,tsx}"] }], mockupsDir: "mockups", repoRoot: ".", review: { outDir: ".review" } };\n`,
   );
   return fixture;
 }
@@ -73,12 +72,12 @@ test("a component defined in a helper beside its implementation is attributed to
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const button = compilation.manifest.entries.find(
-    (entry) => entry.id === "button",
+    (entry) => entry.path === "button",
   );
   assert.equal(button?.sourcePath, "src/components/button/button.mokly.tsx");
   assert.deepEqual(button?.declaredDependencies, ["notes.md"]);
   const demo = compilation.manifest.entries.find(
-    (entry) => entry.id === "button-demo",
+    (entry) => entry.path === "button-demo",
   );
   assert.equal(demo?.sourcePath, "src/components/button/button.mockup.tsx");
   assert.ok(
@@ -104,7 +103,7 @@ test("a screen defined in a helper that no entries glob matches is still attribu
     "lib/screens.ts",
     `import { defineScreen } from "@mokly/mokly";
 ${metadata}
-export const late = defineScreen({ ...metadata, useCaseIds: [], id: "late", title: "Late", description: "Defined in a helper", route: "screens/late.html", mobile: "Late", desktop: "Late" });
+export const late = defineScreen({ ...metadata, useCasePaths: [], path: "late", title: "Late", description: "Defined in a helper", mobile: "Late", desktop: "Late" });
 `,
   );
   await fs.promises.appendFile(
@@ -113,7 +112,7 @@ export const late = defineScreen({ ...metadata, useCaseIds: [], id: "late", titl
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const late = compilation.manifest.entries.find(
-    (entry) => entry.id === "late",
+    (entry) => entry.path === "late",
   );
   assert.equal(late?.sourcePath, "lib/screens.ts");
   assert.ok(compilation.manifest.sourceFiles.includes("lib/screens.ts"));
@@ -131,7 +130,7 @@ test("a definition created by an installed package is rejected as unattributed",
     fixture,
     "node_modules/@acme/mokups/index.js",
     `import { defineScreen } from "@mokly/mokly";
-export const packaged = defineScreen({ dependencies: [], relatedDocs: [], useCaseIds: [], id: "packaged", title: "Packaged", description: "Defined by a package", route: "screens/packaged.html", mobile: "Packaged", desktop: "Packaged" });
+export const packaged = defineScreen({ dependencies: [], relatedDocs: [], useCasePaths: [], path: "packaged", title: "Packaged", description: "Defined by a package", mobile: "Packaged", desktop: "Packaged" });
 `,
   );
   await fs.promises.appendFile(
@@ -194,32 +193,38 @@ test("watch rebuilds for a new co-located entry module and export refuses its di
     assert.throws(() => resolveExportOutput(resolved, output), output);
 });
 
-test("runtime startup rejects a message without entry globs", async () => {
+test("runtime startup rejects missing or invalid resolved roots", async () => {
   const received = receiveComponentRuntimeStartup();
   const valid = {
     type: "component-runtime-startup",
     config: {
       configPath: "/repo/mokly.config.ts",
-      entryGlobs: ["src/**/*.mockup.{ts,tsx}"],
+      roots: [
+        { dir: "/repo/src", files: ["**/*.mockup.{ts,tsx}"], transparent: [] },
+      ],
       mockupsDir: "/repo/generated",
       generatedDir: "/repo/generated/mokly-generated",
       repoRoot: "/repo",
     },
     manifest: currentManifest({
       entries: [],
-      schemaVersion: 8,
+      folders: [],
+      schemaVersion: 9,
       sourceFiles: [],
     }),
   };
   process.emit("message", {
     ...valid,
-    config: { ...valid.config, entryGlobs: undefined, entriesDir: "/repo/e" },
+    config: { ...valid.config, roots: undefined },
   });
   process.emit("message", {
     ...valid,
-    config: { ...valid.config, entryGlobs: ["ok", 1] },
+    config: {
+      ...valid.config,
+      roots: [{ dir: "/repo/src", files: ["ok", 1], transparent: [] }],
+    },
   });
   process.emit("message", valid);
   const { config } = await received;
-  assert.deepEqual(config.entryGlobs, ["src/**/*.mockup.{ts,tsx}"]);
+  assert.deepEqual(config.roots, valid.config.roots);
 });

@@ -11,11 +11,11 @@ export function cssSchemaFiles(): Map<string, string> {
         [
           [`snapshots/${side}/shared.css`, ".auth { color: red; }"],
           [
-            `snapshots/${side}/mokly-generated/screens/auth.mobile.html`,
+            `snapshots/${side}/mokly-generated/auth/index.mobile.html`,
             `<!doctype html><link rel="stylesheet" href="../../shared.css"><button class="auth">${side === "before" ? "Sign in" : "Continue"}</button>`,
           ],
           [
-            `snapshots/${side}/mokly-generated/screens/auth.desktop.html`,
+            `snapshots/${side}/mokly-generated/auth/index.desktop.html`,
             '<!doctype html><link rel="stylesheet" href="../../shared.css"><p>Guide</p>',
           ],
         ] as [string, string][],
@@ -25,7 +25,7 @@ export function cssSchemaFiles(): Map<string, string> {
 
 /** Shared server/browser schema fixture uses the identity-only v4 result. */
 export function cssSchemaFixture(_version: 4 = 4): ReviewResult {
-  const address = { id: "auth", title: "Sign in" };
+  const address = { path: "auth", title: "Sign in" };
   const views: ViewReview[] = [
     {
       viewport: "mobile",
@@ -67,7 +67,7 @@ export function cssSchemaFixture(_version: 4 = 4): ReviewResult {
   };
   return {
     ...common,
-    schemaVersion: 4,
+    schemaVersion: 6 as const,
     screens: [{ ...screen, before: address, after: address }],
     components: [],
     affectedConsumers: [],

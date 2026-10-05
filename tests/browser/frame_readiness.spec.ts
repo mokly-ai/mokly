@@ -46,7 +46,7 @@ for (const cross of [false, true]) {
             document.querySelector<HTMLIFrameElement>("#frame")!,
             {
               url: new URL(
-                "/static/mokly-generated/screens/home.mobile.html",
+                "/static/mokly-generated/home/index.mobile.html",
                 cross ? origin : location.origin,
               ),
               usage: { status },

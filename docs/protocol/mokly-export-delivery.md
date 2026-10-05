@@ -2,8 +2,10 @@
 
 ## Delivery Status
 
-Implemented for [consumer export](./mokly-export.md). Catalogue v4, delivery v4
-and bootstrap v1 share one shell per entry; provider normalization is an adapter concern.
+Implemented portable serving for [consumer export](./mokly-export.md), with
+Cloudflare normalization confined to its repository adapter. Public catalogue,
+viewer, inspector, and [removed previews](./mokly-removed-previews.md) share
+delivery descriptor v5 and one path-derived `/view/<path>/` shell page per entry.
 
 ## Hosting Contract
 
@@ -36,7 +38,7 @@ For cross-origin catalogue and viewer consumers, public fetch paths are
 cookies, authorization headers or credentials are used; clients fetch with
 `credentials: "omit"`. CORS is unnecessary for same-origin reads. Existing
 revalidation and comparison no-store policies apply; see the
-[catalogue fetch rules](./mokly-catalogue.md#serve-and-fetch-rules).
+[catalogue fetch rules](./mokly-catalogue-fetch.md#serve-and-fetch-rules).
 Removed-preview and comparison HTML beneath an advertised generation's
 `snapshots/before/` and `snapshots/after/` trees is fetched and validated by
 the viewer rather than loaded as a frame URL. It needs the same CORS and
@@ -54,44 +56,43 @@ removed previews and comparison panes use viewer-owned, script-disabled
 
 ## Artifact Routes
 
-Paths below are relative to the export directory. Every route derives from
-its entry's kind and id under the
-[derived route rule](./mokly-authoring.md#derived-routes) and is encoded once
-when written into URLs.
+Paths below are relative to the export directory. Every file name derives from
+its entry's path under the [artifact path contract](./mokly-artifact-paths.md)
+and keeps the authored case of each segment when written into URLs.
 
 | Path                               | Meaning                                                               |
 | ---------------------------------- | --------------------------------------------------------------------- |
 | `index.html`                       | Full catalogue home                                                   |
-| `view/<route>`                     | Full shell for current and removed entries                            |
-| `static/<public-path>`             | Adapted current fragments and public consumer resources               |
+| `view/<path>/index.html`           | Full shell for current and removed entries, served at `/view/<path>/` |
+| `static/<public-path>`             | Adapted current views, documents, and public consumer resources       |
 | `mokly-viewer/`                    | Required shell CSS, fonts, browser modules, and comparison generation |
-| `mokly-viewer/catalogue.json`      | Public catalogue read model v4                                        |
+| `mokly-viewer/catalogue.json`      | Public catalogue read model v5                                        |
 | `mokly-viewer/client/inspector.js` | Inert cross-origin frame inspector                                    |
 | `404.html`                         | Existing catalogue not-found view                                     |
 | `.mokly-export-artifact`           | Public-safe versioned ownership inventory with per-file digests       |
 
-Catalogue routes retain their validated `.html` suffixes; additional public
-`.htm` documents retain their filenames too. Do not
-apply the preview script's Cloudflare-specific extension stripping. Generated
-resource references must address actual exported files. Hosts that normalize
-HTML URLs remain compatible provided their redirects preserve the query and
-resolve to the same page; Cloudflare tests protect this existing deployment.
+Shell documents are `index.html` files, so `/view/<path>/` needs no rewrite;
+`static/` views and documents keep their validated `.html` suffixes, and public
+`.htm` documents keep their filenames. Do not apply the preview script's
+Cloudflare-specific extension stripping. Generated resource references must
+address actual exported files. Hosts that normalize HTML URLs stay compatible
+when their redirects preserve the query and resolve to the same page.
 
-Folders derived from `navPath` are not new routed pages. Include use cases
-and registered whole-document pages. Empty registries remain invalid under the existing
-build contract; exporting one preserves the previous artifact. Missing views
-remain explicit in added/removed comparison data; never synthesize content.
-The shell keeps Added entries in Current without exposing comparison modes.
-Removed screens likewise show a Removed badge without comparison modes, opening
-the packaged baseline views the shell resolves from that descriptor under
-[removed previews](./mokly-removed-previews.md). Removed
+Folders are not routed pages; an index entry is its folder's page. Include use
+cases, whole-document pages, and Markdown documents. Empty registries remain
+invalid under the existing build contract; exporting one preserves the previous
+artifact. Missing views remain explicit in added/removed comparison data; never
+synthesize content. The shell keeps Added entries in Current without exposing
+comparison modes. Removed screens likewise show a Removed badge without
+comparison modes, opening the packaged baseline views the shell resolves from
+that descriptor under [removed previews](./mokly-removed-previews.md). Removed
 component variants remain eligible for comparison.
 
 Every manifest, generated, copied, and adapter-added path enters a single
 collision-checked inventory, including file/directory prefix collisions.
 Reject incompatible duplicate paths, aliases, or reserved paths before
 installation. Shared byte-identical resources may be deduplicated. Current and
-removed entries cannot share an id under the Changes contract.
+removed entries cannot share a path within a kind under the Changes contract.
 
 Adapter aliases enter the same case-folded path namespace as files, including
 the final ownership marker. Each alias is a safe relative, file-like route
@@ -105,47 +106,44 @@ ordinary consumer exports retain their real `.html` routes.
 
 ## Static Navigation
 
-Embed a typed, versioned static-delivery descriptor in shell-owned metadata,
-not consumer documents. It supplies the canonical path of the current page and
-the generation-specific comparison URL. Validate it against the catalogue while
-exporting and at the client boundary. All targets must stay same-origin under
-the expected Mokly prefixes. Consumer markup cannot supply or override this
+Embed a typed, versioned static-delivery descriptor in shell-owned metadata, not
+consumer documents. It supplies the canonical path of the current page and the
+generation-specific comparison URL. Validate it against the catalogue while
+exporting and at the client boundary. All targets must stay same-origin under the
+expected Mokly prefixes. Consumer markup cannot supply or override this
 descriptor; serialize it safely in HTML. The root `html` element carries
-`data-mokly-static=""` and an escaped `data-mokly-delivery` JSON attribute
-with exactly `schemaVersion: 4`, `canonicalPath`, `comparisonUrl`, and
-`deploymentId`. `canonicalPath` is `/`, `/404.html`, or the page's own
-`/view/<route>`. Static mode with missing, malformed, or other-version
-metadata fails closed instead of requesting a development endpoint. Both
-identity values use 64 lowercase SHA-256 hex characters. Repository previews
-without Changes explicitly set `comparisonUrl: null`; deployment identity
-remains required. Null disables comparison requests and never falls back to a
-development endpoint. Consumer CLI exports always include their validated
-generation URL when Changes is ready; an incompatible base uses null. The
-descriptor carries no id-to-route map: the shell derives
-every URL from kind and id through the shared path module.
+`data-mokly-static=""` and an escaped `data-mokly-delivery` JSON attribute with
+exactly `schemaVersion: 5`, `canonicalPath`, `comparisonUrl`, and `deploymentId`.
+`canonicalPath` is `/`, `/404.html`, or the page's own `/view/<path>/`. Static
+mode with missing, malformed, or other-version metadata fails closed instead of
+requesting a development endpoint. Both identity values use 64 lowercase SHA-256
+hex characters. Repository previews without Changes explicitly set
+`comparisonUrl: null`; deployment identity remains required. Null disables
+comparison requests and never falls back to a development endpoint. Consumer CLI
+exports always include their validated generation URL when Changes is ready; an
+incompatible base uses null. The descriptor carries no path-to-file map: the shell
+derives every URL from the entry's path through the shared path module.
 
-Static frame-link enhancement resolves a validated logical id through the
-catalogue read model to its canonical `/view/<route>` URL before fetching or
-opening a browsing context; development Browse resolves the same way. This
-applies to primary/keyboard clicks, modifier clicks, middle-clicks, and named
-targets. Do not follow a JS redirect document inside a fetch and mistake it for
-a page. There is no `/id/<id>` alias page or redirect in either delivery; the
-canonical `/view/<route>` URL is stable because nothing but the id can move it.
+Static frame-link enhancement uses the same canonical path and activation
+rules as [Browse navigation](./mokly-navigation.md#browse-presentation).
+Canonical `/view/<path>/` pages need no alias or redirect. A fetched redirect
+document cannot stand in for the real shell page.
 
 Every shell page embeds consistent shell metadata. In-shell navigation, reload,
 Back/Forward, new tabs, and browser-normalized response URLs retain the same
-entry identity and existing scroll/disclosure behavior. Unknown ids are
+entry identity and existing scroll/disclosure behavior. Unknown paths are
 unavailable; the shell renders only entries present in its catalogue read
 model and never invents a catch-all route.
 
-Provider-normalized `/view/<kind-prefix>/<id>` is the extensionless form of
-canonical `/view/<kind-prefix>/<id>.html`. The shared helper and parser in the
-[artifact path contract](./mokly-artifact-paths.md) resolve its id to a current
-or removed entry. A removed entry needs no query when its id is unique; if a
-`snapshot` is present, it must match the published record. Unknown, stale, and
-mismatched identities remain unavailable.
+A host serving `view/<path>/index.html` for `/view/<path>`, `/view/<path>/`, or
+`/view/<path>/index.html` needs no adapter: `parseViewHref` in the
+[artifact path contract](./mokly-artifact-paths.md) accepts all three forms and
+`providerNormalizedHtmlPath` names the form a host serves. The shell resolves
+the path to a current or removed entry; a removed entry needs no query when its
+path is unique, and a present `snapshot` must match the published record.
+Unknown, stale, and mismatched identities remain unavailable.
 
-An exported page embeds a compact shell bootstrap containing its route, shell
+An exported page embeds a compact shell bootstrap containing its path, shell
 context, catalogue identity, and content/evidence revisions. It references the
 single owned `/mokly-viewer/catalogue.json`; it does not repeat the catalogue read
 model in every HTML document. Before hydration, the standalone entry first
@@ -166,17 +164,18 @@ stored state and hydrates without a mismatch. Static destination-page evidence
 resolves the compact destination bootstrap against the already installed
 catalogue after deployment fencing; it does not issue another catalogue fetch.
 
-Each exported workspace page embeds scoped evidence as inert JSON. After
-navigation, React may read the destination shell page to recover evidence intentionally
+Each exported screen and component page also embeds its path-scoped workspace
+evidence as inert JSON. After an in-shell route transition, React may read the
+destination's canonical shell page to recover evidence that is intentionally
 absent from the public catalogue, including affected consumers, related
 components, supplied-input changes, and resource evidence. This read never
 swaps or executes fetched markup. Accept only one shell bootstrap and one
-workspace payload from a successful same-origin response whose final `.html`
-or provider-normalized extensionless path identifies the requested route. The
+workspace payload from a successful same-origin response whose final path is
+an accepted `/view/<path>/` form identifying the requested entry. The
 root delivery descriptor must retain the mounted deployment and comparison
 URL; the bootstrap must retain the catalogue identity, revisions, base, and
-exact destination route; and the workspace entry must match that route's id
-and kind. Abort the read when navigation replaces the route. A rejected,
+exact destination path; and the workspace entry must match that path and
+kind. Abort the read when navigation replaces the path. A rejected,
 failed, or obsolete read leaves the already-committed public workspace in
 place and never falls back to a live endpoint.
 
@@ -209,22 +208,21 @@ its stable endpoint; the repository's Cloudflare adapter keeps its stable
 redirect for compatibility.
 
 Current remains the default after navigation/reload. Browsing, Changes filtering,
-and scheme/viewport switches do not request comparison JSON or snapshot files.
-An export with Changes carries the same per-view states as Serve, so its shell
-marks hidden changed views and lists them in Details without fetching that JSON.
-Added entries retain their current preview without comparison modes. Removed
-screens and pages retain no comparison modes; selecting one requests the
-packaged previous version delivered under
-[removed previews](./mokly-removed-previews.md). Side by side,
-Overlay, and Difference retain the existing UI and missing-current state for
-Removed component variants. Refresh/retry reload the same exported generation; only
-another export and deployment produces new comparison content. An open tab
-retains its loaded deployment's descriptor; reload the page to adopt a newer deployment. In-shell
-navigation encountering a different deployment identity performs a full page load rather
-than mixing its new route with the old catalogue navigation. Hosts may
-retain prior generations for old tabs; if they remove them, the existing
-comparison failure state applies until page reload. Cancellation and failure
-keep the catalogue usable and cannot replace a different screen.
+and scheme/viewport switches do not request comparison JSON or snapshot files. An
+export with Changes carries the same per-view states as Serve, so its shell marks
+hidden changed views and lists them in Details without fetching that JSON. Added
+entries retain their current preview without comparison modes. Removed screens and
+pages retain no comparison modes; selecting one requests the packaged previous
+version delivered under [removed previews](./mokly-removed-previews.md). Side by
+side, Overlay, and Difference retain the existing UI and missing-current state for
+Removed component variants. Refresh/retry reload the same exported generation;
+only another export and deployment produces new comparison content. An open tab
+retains its loaded deployment's descriptor; reload the page to adopt a newer
+deployment. In-shell navigation encountering a different deployment identity
+performs a full page load rather than mixing its new route with the old catalogue
+navigation. Hosts may retain prior generations for old tabs; if they remove them,
+the existing comparison failure state applies until page reload. Cancellation and
+failure keep the catalogue usable and cannot replace a different screen.
 
 Exclude the watcher entrypoint, event stream connections, and all Node/server
 modules. The browser graph must be complete without unused server dependencies.

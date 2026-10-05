@@ -48,7 +48,9 @@ export async function benchmark(repository, fixture) {
         );
         const url = match[1];
         const readinessMs = Math.round(performance.now() - beginning);
-        await page.goto(url + "/view/screens/area-1-screen-1.html");
+        await page.goto(
+          url + "/view/area-1/screens/activity-group-1/screen-1/",
+        );
         const desktop = page.frameLocator('[data-workspace-frame="desktop"]');
         await expect(desktop.locator("h1")).toHaveText("Activity 1");
         await expect(desktop.locator('[role="row"]')).toHaveCount(
@@ -56,7 +58,9 @@ export async function benchmark(repository, fixture) {
         );
         await page.getByRole("searchbox").fill("activity 2");
         await expect(
-          page.locator('[data-entry-id="area-1-screen-1"]'),
+          page.locator(
+            '[data-entry-id="area-1/screens/activity-group-1/screen-1"]',
+          ),
         ).toBeHidden();
         const usableMs = Math.round(performance.now() - beginning);
         await page.getByRole("searchbox").fill("");
@@ -81,7 +85,7 @@ export async function benchmark(repository, fixture) {
             await expect(frame.locator("h1")).toHaveText("Activity 1");
           }
         }
-        await page.goto(url + "/view/components/area-1-action.html");
+        await page.goto(url + "/view/area-1/components/action/");
         await page
           .getByLabel("Viewport", { exact: true })
           .selectOption("desktop");
@@ -98,13 +102,14 @@ export async function benchmark(repository, fixture) {
         const propsMs = Math.round(performance.now() - edited);
         const cached = performance.now();
         const response = await fetch(
-          url + "/static/screens/area-1-screen-1.desktop.html",
+          url +
+            "/static/area-1/screens/activity-group-1/screen-1/index.desktop.html",
         );
         if (!response.ok)
           throw new Error(`Cached preview: HTTP ${response.status}`);
         const bytes = (await response.arrayBuffer()).byteLength;
         const cachedPreviewMs = Math.round(performance.now() - cached);
-        await page.goto(url + "/view/pages/area-1-guide.html");
+        await page.goto(url + "/view/area-1/guide/");
         await expect(
           page
             .frameLocator(".mbk-stage-embed iframe")
@@ -123,16 +128,16 @@ export async function benchmark(repository, fixture) {
         );
         await waitForBrowseChanges(url);
         const classified = await (await fetch(url)).text();
-        const changedIds = expectedStylesheetChanges;
+        const changedEntries = expectedStylesheetChanges;
         expect(classified).toContain(
-          `class="mbk-nav-filter-count">${changedIds}<`,
+          `class="mbk-nav-filter-count">${changedEntries}<`,
         );
         const changesReadyMs = Math.round(performance.now() - beginning);
         expect(errors).toEqual([]);
         const baseline = rebuilt
           ? baselineMeasurement(running.timings, beginning, state === "warm")
           : {};
-        runs.push({ ...measured, changesReadyMs, changedIds, ...baseline });
+        runs.push({ ...measured, changesReadyMs, changedEntries, ...baseline });
         if (usableMs >= 5000)
           throw new Error(
             `${state} usable startup exceeded 5 seconds: ${usableMs}ms`,

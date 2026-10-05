@@ -1,4 +1,4 @@
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedFile } from "../build/generated_file.js";
@@ -7,7 +7,7 @@ import type { CatalogueSnapshot } from "./catalogue_snapshot.js";
 import type {
   ComponentChangeSource,
   ComponentChangeSnapshot,
-} from "./component_changes.js";
+} from "./component_change_types.js";
 import type { ServedReview } from "./configured_review.js";
 import type { PreviewObservation } from "./demand/observation.js";
 import type { CatalogueUpdate, ChangesStatus } from "./update_messages.js";
@@ -24,7 +24,7 @@ export interface ServerOptions {
   /** Reuse a validated startup or publication generation without rereading metadata. */
   snapshot?: CatalogueSnapshot;
   componentRuntime?: ComponentRuntime;
-  changedIds?: readonly string[];
+  changedEntries?: readonly string[];
   /** Precomputed component and screen evidence for the immutable generation. */
   componentChanges?: ComponentChangeSnapshot;
   componentChangeSource?: ComponentChangeSource;
@@ -41,7 +41,7 @@ export interface ServerOptions {
 
 /** Running server lifecycle and update-stream boundary. */
 export interface RunningServer {
-  completeCatalogue?(manifest: ManifestV8, generation: string): boolean;
+  completeCatalogue?(manifest: ManifestV9, generation: string): boolean;
   close(): Promise<void>;
   publishUpdate(update?: CatalogueUpdate): void;
   replaceComponentRuntime(runtime: ComponentRuntime): void;

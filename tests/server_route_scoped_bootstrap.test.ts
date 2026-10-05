@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import type { CatalogueReadModel } from "@mokly/viewer";
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 import {
   readScopedShellBootstrap,
   resolveCatalogueUsageScope,
@@ -16,21 +16,24 @@ import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { homePage, notFoundPage, viewPage } from "../dist/server/pages.js";
 
 const LIMIT = 1_048_576;
-type RoutedManifestEntry = ManifestV8["entries"][number];
+type RoutedManifestEntry = ManifestV9["entries"][number];
 const manifest = JSON.parse(
   fs.readFileSync("examples/basic/mokly-generated/mokly-manifest.json", "utf8"),
-) as ManifestV8;
+) as ManifestV9;
 const sourceRemoved = manifest.entries.find(
-  (entry) => entry.kind === "screen" && entry.id === "example-welcome",
+  (entry) =>
+    entry.kind === "screen" && entry.path === "example/screens/welcome",
 );
 if (!sourceRemoved || sourceRemoved.kind !== "screen")
   throw new Error("Missing real historical fixture source.");
 const removed = {
   ...structuredClone(sourceRemoved),
-  id: "historical-example-welcome",
+  path: "historical-example-welcome",
   title: "Historical Welcome",
 };
-const privateCatalogue = createCatalogue(manifest, [{ entry: removed }]);
+const privateCatalogue = createCatalogue(manifest, [
+  { folderTitles: [], entry: removed },
+]);
 const model = projectCatalogue({
   catalogue: privateCatalogue,
   changesStatus: "ready",
@@ -52,7 +55,7 @@ test("every real Serve entry emits a strict bootstrap below 1 MiB", () => {
     ["missing", notFoundPage("missing", privateCatalogue, context)],
     ...routedEntries().map(
       (entry) =>
-        [entry.id, viewPage(entry, privateCatalogue, context)] as const,
+        [entry.path, viewPage(entry, privateCatalogue, context)] as const,
     ),
   ] as const;
   for (const [entryId, html] of pages) {
@@ -69,15 +72,15 @@ test("every real Serve entry emits a strict bootstrap below 1 MiB", () => {
 test("real entry bootstraps ignore another entry's usage", () => {
   const cases: readonly [string, RoutedManifestEntry | undefined][] = [
     ["home", undefined],
-    ["example-welcome", entry("example-welcome")],
-    ["example-action", entry("example-action")],
-    ["example-tour", entry("example-tour")],
-    ["example-handbook", entry("example-handbook")],
-    [removed.id, removed],
+    ["example/screens/welcome", entry("example/screens/welcome")],
+    ["example/components/action", entry("example/components/action")],
+    ["example/tour", entry("example/tour")],
+    ["example/getting-started", entry("example/getting-started")],
+    [removed.path, removed],
   ];
   for (const [name, selected] of cases) {
     const target: CatalogueUsageScopeTarget = selected
-      ? { kind: "target", entryId: selected.id, entryKind: selected.kind }
+      ? { kind: "target", entryPath: selected.path, entryKind: selected.kind }
       : { kind: "home" };
     const changed = withOtherUsageChanged(model, target);
     const originalHtml = selected
@@ -100,7 +103,7 @@ function routedEntries(): RoutedManifestEntry[] {
 }
 
 function entry(id: string): RoutedManifestEntry {
-  const found = routedEntries().find((candidate) => candidate.id === id);
+  const found = routedEntries().find((candidate) => candidate.path === id);
   if (!found) throw new Error(`Missing real entry ${id}.`);
   return found;
 }
@@ -130,17 +133,17 @@ function withOtherUsageChanged(
 function usageViews(catalogue: CatalogueReadModel) {
   return [
     ...catalogue.screens.flatMap((screen) =>
-      screen.views.map((view) => ({ entryId: screen.id, view })),
+      screen.views.map((view) => ({ entryId: screen.path, view })),
     ),
     ...catalogue.components.flatMap((component) =>
       "variantOf" in component
-        ? component.views.map((view) => ({ entryId: component.id, view }))
+        ? component.views.map((view) => ({ entryId: component.path, view }))
         : [],
     ),
     ...catalogue.removedEntries.flatMap(({ entry }) =>
       entry.kind === "screen" ||
       (entry.kind === "component" && "variantOf" in entry)
-        ? entry.views.map((view) => ({ entryId: entry.id, view }))
+        ? entry.views.map((view) => ({ entryId: entry.path, view }))
         : [],
     ),
   ];

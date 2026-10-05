@@ -7,11 +7,10 @@ import { promisify } from "node:util";
 
 import { parseArguments } from "../dist/cli/arguments.js";
 import {
-  defineRoot,
-  folder,
+  defineFolder,
+  defineScreen,
   mockLink,
   reviewMaterialKey,
-  screen,
 } from "../dist/index.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
@@ -30,9 +29,9 @@ test("public helpers retain stable authoring semantics", () => {
     "account-home#billing-section",
     "account-home%23billing-section",
     "mock:account-home",
-    "AccountHome",
+    "account.home",
   ]) {
-    assert.throws(() => mockLink(invalid), /expected kebab-case/);
+    assert.throws(() => mockLink(invalid), /expected a complete path/);
   }
   assert.throws(() => mockLink("account-home", "#billing"), /fragment/);
   assert.throws(() => mockLink("account-home", "billing section"), /fragment/);
@@ -40,58 +39,30 @@ test("public helpers retain stable authoring semantics", () => {
     reviewMaterialKey({ beta: 2, alpha: 1 }),
     reviewMaterialKey({ alpha: 1, beta: 2 }),
   );
-  const definitions = defineRoot({
-    children: [
-      folder({
-        children: [
-          screen({
-            description: "Nested screen",
-            desktop: "desktop",
-            id: "nested-screen",
-            mobile: "mobile",
-            title: "Screen",
-          }),
-        ],
-        title: "Group",
-      }),
-    ],
+  const screen = defineScreen({
+    slug: "invoice",
+    path: "account/invoice",
+    title: "Invoice",
+    description: "An invoice",
+    dependencies: [],
+    relatedDocs: [],
+    mobile: "Invoice",
+    desktop: "Invoice",
   });
-  assert.deepEqual(
-    definitions.map((entry) => entry.id),
-    ["nested-screen"],
-  );
+  assert.equal(entryRoute(screen.path!), "account/invoice/index.html");
   assert.equal(
-    definitions[0]?.kind === "screen"
-      ? entryRoute(definitions[0].kind, definitions[0].id)
-      : "",
-    "screens/nested-screen.html",
+    defineFolder({ path: "account", title: "My account" }).path,
+    "account",
   );
-  assert.deepEqual(definitions[0]?.navPath, ["Group"]);
-
-  const rooted = defineRoot({
-    children: [
-      screen({
-        description: "Rooted screen",
-        desktop: "desktop",
-        id: "rooted-screen",
-        mobile: "mobile",
-        title: "Rooted screen",
-      }),
-    ],
-    navPath: ["Visible root"],
-  });
-  assert.deepEqual(
-    rooted.map(({ id }) => id),
-    ["rooted-screen"],
-  );
-  assert.deepEqual(rooted[0]?.navPath, ["Visible root"]);
+  assert.equal(mockLink("./invoice"), "mock:./invoice");
+  assert.equal(mockLink("Account/Invoice"), "mock:Account/Invoice");
 });
 
 test("public link helpers reject non-string runtime values", () => {
   for (const invalid of [null, true, 42, ["account-home"]]) {
     assert.throws(
       () => mockLink(invalid as never),
-      /expected kebab-case/,
+      /expected a complete path/,
       String(invalid),
     );
   }

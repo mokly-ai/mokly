@@ -4,21 +4,21 @@ import path from "node:path";
 
 import type {
   HistoricalManifest,
-  ManifestV8,
+  ManifestV9,
   ScreenResourceEvidence,
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
 
-import { isAuthoringSource } from "../build/source_inventory.js";
-import { isInside, toPosixPath } from "../config/paths.js";
+import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
+import { documentResourceIndex } from "../documents/resource_references.js";
 import { MoklyError } from "../errors.js";
-import { MANIFEST_NAME } from "../registry/manifest.js";
 import {
   GitReviewAssetReader,
   FileSystemReviewAssetReader,
   type OptionalReviewAssetReader,
+  type ReviewAssetReader,
 } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
 import type { ChangeEvidence } from "../review/change_evidence.js";
@@ -27,8 +27,19 @@ import {
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "../review/ignore.js";
+import { catalogueLinkNormalizer } from "../review/moves/links.js";
+import {
+  readMoveResources,
+  type MoveResources,
+} from "../review/moves/resources.js";
+import type { MovePairing } from "../review/moves/types.js";
 
-import { documentPairs, type DocumentPair } from "./changed_document_pairs.js";
+import {
+  publicChangedRoutes,
+  documentPairs,
+  markChangedDocumentBytes,
+  type DocumentPair,
+} from "./changed_document_pairs.js";
 import { ChangedResourceGraph } from "./changed_resources.js";
 
 /** Material membership and per-view resource evidence from one traversal. */
@@ -37,12 +48,19 @@ export interface ChangedContent {
   screens: readonly ScreenResourceEvidence[];
 }
 
+/** Reuse the comparison's accepted pairing and retained baseline reads. */
+export interface ChangedContentComparison {
+  pairing?: MovePairing;
+  beforeReader?: ReviewAssetReader;
+  resources?: MoveResources;
+}
+
 /**
  * Find material document/resource changes using an accepted captured reader.
  * Exclude authoring paths lexically so retargeted public aliases still reach validation.
  */
 export async function changedContentPaths(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -52,6 +70,7 @@ export async function changedContentPaths(
     config,
   ),
   documents: "all" | "pages" = "all",
+  comparison?: ChangedContentComparison,
 ): Promise<readonly string[]> {
   return (
     await classifyChangedContent(
@@ -63,13 +82,14 @@ export async function changedContentPaths(
       changedPaths,
       headReader,
       documents,
+      comparison,
     )
   ).changedPaths;
 }
 
 /** Preserve resource evidence from the v2 membership pass without repeating analysis. */
 export async function classifyChangedContent(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -79,35 +99,44 @@ export async function classifyChangedContent(
     config,
   ),
   documents: "all" | "pages" = "all",
+  comparison?: ChangedContentComparison,
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
-  const generatedPaths = new Set(
-    [...manifest.generatedFiles, ...baseline.generatedFiles].map((file) =>
-      path.resolve(config.generatedDir, file.path),
-    ),
-  );
-  const publicChanges = new Set(
-    changedPaths.flatMap((changed) => {
-      const candidate = path.resolve(config.repoRoot, changed);
-      if (
-        !isInside(config.mockupsDir, candidate) ||
-        (!generatedPaths.has(candidate) &&
-          isAuthoringSource(candidate, config, "exclusions") !== undefined)
-      )
-        return [];
-      const route = toPosixPath(path.relative(config.mockupsDir, candidate));
-      return route === MANIFEST_NAME ? [] : [route];
-    }),
-  );
-  const pairs = documentPairs(manifest, baseline, publicChanges, documents);
-  for (const pair of pairs) pair.changed = true;
-  const baseReader = new GitReviewAssetReader(
-    baselineResourceConfig(config, baseline),
-    git,
-    commit,
-    prefix,
+  const publicChanges = publicChangedRoutes(changedPaths, config);
+  const moves = comparison?.pairing?.moves ?? [];
+  const pairs = documentPairs(
+    manifest,
     baseline,
+    publicChanges,
+    documents,
+    moves,
+  );
+  markChangedDocumentBytes(pairs, manifest, baseline);
+  const baseReader =
+    comparison?.beforeReader ??
+    new GitReviewAssetReader(
+      baselineResourceConfig(config, baseline),
+      git,
+      commit,
+      prefix,
+      baseline,
+    );
+  const identities =
+    comparison?.resources ??
+    (
+      await readMoveResources(
+        baseline.entries,
+        manifest.entries,
+        baseReader,
+        headReader,
+      )
+    ).paired(baseline.entries, manifest.entries, moves);
+  const links = catalogueLinkNormalizer(
+    baseline.entries,
+    manifest.entries,
+    moves,
+    identities,
   );
   const result = new Set<string>();
   const normalizedDocuments = new Map<string, string>();
@@ -122,7 +151,14 @@ export async function classifyChangedContent(
   ) => {
     if (!batch.length) return;
     const bases = await timeAsync("review.base-documents", () =>
-      baseReader.readMany(batch.map((pair) => pair.base)),
+      baseReader.readMany
+        ? baseReader.readMany(batch.map((pair) => pair.base))
+        : Promise.all(
+            batch.map(
+              async (pair) =>
+                [pair.base, await baseReader.read(pair.base)] as const,
+            ),
+          ).then((entries) => new Map(entries)),
     );
     for (const pair of batch) {
       const base = bases.get(pair.base);
@@ -135,9 +171,20 @@ export async function classifyChangedContent(
       const after =
         headDocuments.get(pair.head) ??
         Buffer.from(await headReader.read(pair.head)).toString("utf8");
-      const normalized = normalizeReviewPair(before, after, pair.head);
-      normalizedDocuments.set(pair.head, normalized.head);
-      normalizedBases.set(pair.head, normalized.base);
+      const normalized = normalizeReviewPair(
+        before,
+        after,
+        pair.context,
+        links(pair.base, pair.head),
+      );
+      normalizedDocuments.set(
+        pair.head,
+        normalized.resourceHead ?? normalized.head,
+      );
+      normalizedBases.set(
+        pair.head,
+        normalized.resourceBase ?? normalized.base,
+      );
       if (normalized.base !== normalized.head) {
         result.add(repoPath(pair.head));
         publicChanges.add(pair.head);
@@ -155,6 +202,11 @@ export async function classifyChangedContent(
     publicChanges,
     normalizedDocuments,
     undefined,
+    {
+      before: documentResourceIndex(baseline.entries),
+      after: documentResourceIndex(manifest.entries),
+    },
+    identities,
   );
   await timeAsync("review.compare-screens", async () => {
     for (let offset = 0; offset < pairs.length; offset += 32) {
@@ -233,6 +285,6 @@ export async function classifyChangedContent(
     changedPaths: [...result].sort(),
     screens: [...screens.keys()]
       .sort()
-      .map((id) => ({ id, views: screens.get(id)! })),
+      .map((path) => ({ path, views: screens.get(path)! })),
   };
 }

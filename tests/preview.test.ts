@@ -25,7 +25,7 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   );
   context.after(() => fs.promises.rm(root, { force: true, recursive: true }));
   const config = await createCommittedExampleBaseline(root, "static-example");
-  const entry = path.join(root, "examples/basic/entries/catalogue.mockup.tsx");
+  const entry = path.join(root, "examples/basic/specs/catalogue.tsx");
   const source = await fs.promises.readFile(entry, "utf8");
   const current = source.replace(
     '<Badge tone="primary">Example</Badge>',
@@ -45,45 +45,57 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(index, /data-mokly-filter/);
   assert.match(index, /\/mokly-viewer\/client\/react-shell\.js/);
   assert.doesNotMatch(index, /\/mokly-viewer\/client\/browser\.js/);
-  assert.match(index, /href="\/view\/screens\/example-welcome"/);
-  assert.doesNotMatch(index, /href="\/view\/screens\/example-welcome\.html"/);
+  assert.match(index, /href="\/view\/example\/screens\/welcome\/"/);
+  assert.doesNotMatch(
+    index,
+    /href="\/view\/example\/screens\/welcome\/index\.html"/,
+  );
   const catalogue = JSON.parse(
     await read(output, "mokly-viewer/catalogue.json"),
   ) as PublishedCatalogue;
-  const changedIds = [
+  const changedEntries = [
     ...catalogue.components,
     ...catalogue.pages,
     ...catalogue.screens,
     ...catalogue.useCases,
   ]
     .filter((entry) => entry.changes.included)
-    .map((entry) => entry.id)
+    .map((entry) => entry.path)
     .sort();
-  assert.deepEqual(changedIds, ["example-tour", "example-welcome"]);
-  const changedCount = changedIds.length;
+  assert.deepEqual(changedEntries, ["example/screens/welcome", "example/tour"]);
+  const changedCount = changedEntries.length;
   assert.equal(changedCount, 2);
   const filterCount = /class="mbk-nav-filter-count">(\d+)</u.exec(index);
   assert.ok(filterCount);
   assert.equal(Number(filterCount[1]), changedCount);
-  assert.match(navigationRow(index, "example-welcome"), /data-changed="true"/u);
+  assert.match(
+    navigationRow(index, "example/screens/welcome"),
+    /data-changed="true"/u,
+  );
   assert.doesNotMatch(
-    navigationRow(index, "example-details"),
+    navigationRow(index, "example/screens/details"),
     /data-changed=/u,
   );
-  assert.deepEqual(publishedScreen(catalogue, "example-welcome").changes, {
-    included: true,
-    kind: "changed",
-    status: "ready",
-  });
-  assert.deepEqual(publishedScreen(catalogue, "example-details").changes, {
-    included: false,
-    kind: "unmodified",
-    status: "ready",
-  });
-  const welcome = await read(output, "view/screens/example-welcome.html");
+  assert.deepEqual(
+    publishedScreen(catalogue, "example/screens/welcome").changes,
+    {
+      included: true,
+      kind: "changed",
+      status: "ready",
+    },
+  );
+  assert.deepEqual(
+    publishedScreen(catalogue, "example/screens/details").changes,
+    {
+      included: false,
+      kind: "unmodified",
+      status: "ready",
+    },
+  );
+  const welcome = await read(output, "view/example/screens/welcome/index.html");
   for (const [name, html] of [
     ["index.html", index],
-    ["view/screens/example-welcome.html", welcome],
+    ["view/example/screens/welcome/index.html", welcome],
     ["404.html", await read(output, "404.html")],
   ] as const) {
     const state = html.match(
@@ -97,7 +109,7 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     );
   }
   assert.match(welcome, /Welcome · Mokly/);
-  assert.match(welcome, /data-diff-screen="example-welcome"/);
+  assert.match(welcome, /data-diff-screen="example\/screens\/welcome"/);
   assert.match(
     welcome,
     /class="mbk-entry-status" data-status="Changed" data-workspace-status="">Changed<\/span>/u,
@@ -118,38 +130,38 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.ok(frame);
   assert.equal(
     frame[1],
-    "/static/mokly-generated/screens/example-welcome.mobile",
+    "/static/mokly-generated/example/screens/welcome/index.mobile",
   );
   assert.equal(frame[2], frame[1]);
   assert.match(
     welcome,
-    /data-fragment-dark="\/static\/mokly-generated\/screens\/example-welcome\.mobile\.dark"/,
+    /data-fragment-dark="\/static\/mokly-generated\/example\/screens\/welcome\/index\.mobile\.dark"/,
   );
   assert.match(
     welcome,
-    /src="\/static\/mokly-generated\/screens\/example-welcome\.desktop"/,
+    /src="\/static\/mokly-generated\/example\/screens\/welcome\/index\.desktop"/,
   );
   assert.doesNotMatch(
     welcome,
-    /src="\/static\/mokly-generated\/screens\/example-welcome\.desktop\.html"/,
+    /src="\/static\/mokly-generated\/example\/screens\/welcome\/index\.desktop\.html"/,
   );
   assert.doesNotMatch(welcome, /data-fragment-(?:light|dark)="[^"]+\.html"/);
   assert.match(
     await read(
       output,
-      "static/mokly-generated/screens/example-welcome.desktop.html",
+      "static/mokly-generated/example/screens/welcome/index.desktop.html",
     ),
     /Welcome to Mokly/,
   );
   assert.match(
     await read(
       output,
-      "static/mokly-generated/screens/example-welcome.desktop.dark.html",
+      "static/mokly-generated/example/screens/welcome/index.desktop.dark.html",
     ),
     /data-color-scheme="dark"/,
   );
   assert.match(
-    await read(output, "view/screens/example-details.html"),
+    await read(output, "view/example/screens/details/index.html"),
     /class="mbk-entry-status" data-status="Unmodified" data-workspace-status="">Unmodified<\/span>/u,
   );
   assert.match(await read(output, "mokly-viewer/shell.css"), /--mbk-/);
@@ -247,7 +259,7 @@ interface PublishedEntry {
     readonly kind: string;
     readonly status: string;
   };
-  readonly id: string;
+  readonly path: string;
 }
 
 interface PublishedCatalogue {
@@ -270,7 +282,7 @@ function publishedScreen(
   catalogue: PublishedCatalogue,
   id: string,
 ): PublishedEntry {
-  const screen = catalogue.screens.find((entry) => entry.id === id);
+  const screen = catalogue.screens.find((entry) => entry.path === id);
   assert.ok(screen, `missing published screen ${id}`);
   return screen;
 }

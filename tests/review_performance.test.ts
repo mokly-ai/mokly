@@ -46,13 +46,13 @@ test("Review batches base viewport reads", async (context) => {
   let individualReads = 0;
   let batchedPathCount = 0;
   const git: ReadOnlyReviewRepository = {
-    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v8"),
+    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v9"),
     evidence: {
       changedPaths: async () => [],
       mergeBase: async () => "a".repeat(40),
     },
     reader: {
-      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v8"),
+      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v9"),
       fileExists: async (_commit, repoPath) => files.has(repoPath),
       fileKind: async (_commit, repoPath) =>
         files.has(repoPath) ? "regular" : "missing",
@@ -199,10 +199,10 @@ test("Git bounds zero-byte blob batches by object count", async () => {
 
 test("Comparison metadata has no per-screen HTML or navigation copies", () => {
   const screens = Array.from({ length: 40 }, (_, index) => ({
-    after: { id: `screen-${index}`, title: `Screen ${index}` },
-    before: { id: `screen-${index}`, title: `Screen ${index}` },
+    after: { path: `screen-${index}`, title: `Screen ${index}` },
+    before: { path: `screen-${index}`, title: `Screen ${index}` },
     dependencies: [],
-    id: `screen-${index}`,
+    path: `screen-${index}`,
     sharedImpact: [],
     state: "changed" as const,
     title: `Screen ${index}`,
@@ -215,14 +215,14 @@ test("Comparison metadata has no per-screen HTML or navigation copies", () => {
       },
     ],
   })).sort((left, right) =>
-    left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
   );
   const result: ReviewResult = {
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 4,
+    schemaVersion: 6 as const,
     screens,
     sharedImpact: [],
     components: [],

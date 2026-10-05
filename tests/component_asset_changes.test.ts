@@ -7,7 +7,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
@@ -18,12 +18,12 @@ for (const exact of [false, true])
     const source = componentEntrySource()
       .replace('dependencies: ["notes.md"]', 'dependencies: ["shared"]')
       .replace(
-        'id: "action",',
-        'id: "action", ownedDependencies: ["shared/button.ts"], dependencies: ["shared/button.ts"],',
+        'path: "action",',
+        'path: "action", ownedDependencies: ["shared/button.ts"], dependencies: ["shared/button.ts"],',
       )
       .replace(
-        'id: "home",',
-        `id: "home", ${exact ? 'dependencies: ["shared/button.ts"],' : ""}`,
+        'path: "home",',
+        `path: "home", ${exact ? 'dependencies: ["shared/button.ts"],' : ""}`,
       );
     const fixture = await createFixture(source);
     t.after(() => removeFixture(fixture));
@@ -44,15 +44,15 @@ for (const exact of [false, true])
     await writeCompilation(before, config);
     const git = componentGit(before, ["shared/button.ts"]);
     const { result } = await compareReview(before, config, git, "main");
-    assert.equal(result.schemaVersion, 4);
-    if (result.schemaVersion !== 4) return;
+    assert.equal(result.schemaVersion, 6);
+    if (result.schemaVersion !== 6) return;
     const expected = exact ? ["action", "home"] : ["action"];
     assert.deepEqual(
-      result.changes.map((entry) => entry.after!.id),
+      result.changes.map((entry) => entry.after!.path),
       expected,
     );
     assert.deepEqual(
-      await computeChangedIds(config, "main", git),
+      await computeChangedPaths(config, "main", git),
       [...expected].sort(),
     );
     assert.ok(
@@ -68,10 +68,10 @@ for (const ownership of ["dependency", "renderer", "unowned"] as const)
         '<button className="action" data-viewport=',
       )
       .replace(
-        'id: "action",',
+        'path: "action",',
         ownership === "dependency"
-          ? 'id: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],'
-          : 'id: "action",',
+          ? 'path: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],'
+          : 'path: "action",',
       );
     const fixture = await createFixture(source, {
       extraConfig:
@@ -106,18 +106,18 @@ for (const ownership of ["dependency", "renderer", "unowned"] as const)
     await writeCompilation(after, config);
     const git = componentGit(baseline, ["mockups/action.css"]);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 4);
-    if (artifact.result.schemaVersion !== 4) return;
+    assert.equal(artifact.result.schemaVersion, 6);
+    if (artifact.result.schemaVersion !== 6) return;
     const expected =
       ownership === "unowned"
-        ? ["action-default", "action-disabled", "pane-default", "home"]
+        ? ["action/default", "action/disabled", "pane/default", "home"]
         : ["action"];
     assert.deepEqual(
-      artifact.result.changes.map((entry) => entry.after!.id),
+      artifact.result.changes.map((entry) => entry.after!.path),
       expected,
     );
     assert.deepEqual(
-      await computeChangedIds(config, "main", git),
+      await computeChangedPaths(config, "main", git),
       [...expected].sort(),
     );
     assert.equal(
@@ -154,10 +154,10 @@ for (const owned of [false, true])
     await writeCompilation(after, config);
     const git = componentGit(before, ["renderer.tsx"]);
     const { result } = await compareReview(after, config, git, "main");
-    assert.equal(result.schemaVersion, 4);
-    if (result.schemaVersion !== 4) return;
+    assert.equal(result.schemaVersion, 6);
+    if (result.schemaVersion !== 6) return;
     assert.deepEqual(
-      result.changes.map((entry) => entry.after!.id),
+      result.changes.map((entry) => entry.after!.path),
       owned ? ["action"] : ["action", "pane", "home"],
     );
   });

@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestScreen, ManifestV8 } from "../src/registry/types.js";
+import type { ManifestScreen, ManifestV9 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellInitialState } from "../src/shell/store_state.js";
 import { StandaloneShellDocument } from "../src/standalone/document.js";
@@ -13,18 +13,19 @@ const screen = {
   colorSchemes: ["light", "dark"],
   declaredDependencies: [],
   description: "Welcome screen",
-  id: "welcome",
+  path: "welcome",
   kind: "screen",
-  navPath: [],
+
   relatedDocs: [],
   sourcePath: "entries/welcome.mockup.tsx",
   title: "Welcome",
-  useCaseIds: [],
+  useCasePaths: [],
 } satisfies ManifestScreen;
-const manifest: ManifestV8 = currentManifest({
+const manifest: ManifestV9 = currentManifest({
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
+  folders: [],
   sourceFiles: [screen.sourcePath],
 });
 
@@ -39,12 +40,12 @@ function render(colorScheme: "light" | "dark", home = false): string {
         base: "main",
         updateVersion: 1,
         changesStatus: "ready",
-        changedIds: [screen.id],
+        changedEntries: [screen.path],
         componentChanges: {
           baseline: manifest,
           screenViews: [
             {
-              id: screen.id,
+              path: screen.path,
               views: [
                 { viewport: "mobile", colorScheme: "dark", state: "changed" },
               ],

@@ -1,83 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
-import {
-  clearTagTerm,
-  parseSearchQuery,
-  queryConstrains,
-  rowMatchesQuery,
-  setTagTerm,
-} from "../packages/viewer/dist/shell/search_query.js";
 import {
   defaultSelection,
   revealSelection,
 } from "../packages/viewer/dist/viewer/selection.js";
 
-import { catalogueModel } from "./helpers/viewer_catalogue.js";
-
-const welcome = {
-  id: "welcome",
-  tags: ["forms", "onboarding"],
-  text: "Welcome",
-};
-const details = {
-  id: "details",
-  tags: ["forms"],
-  text: "Details",
-};
-const glossary = {
-  id: "glossary",
-  tags: [],
-  text: "Glossary",
-};
-const transferReady = {
-  id: "transactions-list-transfer-ready",
-  tags: ["operations"],
-  text: "Ready to transfer",
-};
-
-function selectionModel(detailsChanged: boolean): CatalogueReadModel {
-  const model = catalogueModel();
-  const template = model.screens[0]!;
-  const changes = (included: boolean) => ({
-    included,
-    kind: included ? ("changed" as const) : ("unmodified" as const),
-    status: "ready" as const,
-  });
-  return {
-    ...model,
-    screens: [
-      {
-        ...template,
-        changes: changes(false),
-        id: "welcome",
-        tags: welcome.tags,
-        title: welcome.text,
-      },
-      {
-        ...template,
-        changes: changes(detailsChanged),
-        id: "details",
-        tags: details.tags,
-        title: details.text,
-      },
-    ],
-  };
-}
+import {
+  noTitles,
+  selectionModel,
+} from "./helpers/navigation_state_fixture.js";
 
 test("active-row selection clears only constraints that hide it", () => {
   const unchanged = selectionModel(false);
   assert.deepEqual(
-    revealSelection(unchanged, {
+    revealSelection(unchanged, noTitles, {
       ...defaultSelection,
-      screenId: "details",
+      screenPath: "product/browse/details",
       search: "welcome",
       view: "changes",
     }),
     {
       ...defaultSelection,
-      screenId: "details",
+      screenPath: "product/browse/details",
       search: "",
       view: "all",
     },
@@ -85,17 +30,17 @@ test("active-row selection clears only constraints that hide it", () => {
   const changed = selectionModel(true);
   const matching = {
     ...defaultSelection,
-    screenId: "details",
+    screenPath: "product/browse/details",
     search: "details",
     view: "changes" as const,
   };
-  assert.deepEqual(revealSelection(changed, matching), matching);
+  assert.deepEqual(revealSelection(changed, noTitles, matching), matching);
   const derivedRouteOnly = {
     ...defaultSelection,
-    screenId: "details",
+    screenPath: "product/browse/details",
     search: "screens/details",
   };
-  assert.deepEqual(revealSelection(unchanged, derivedRouteOnly), {
+  assert.deepEqual(revealSelection(unchanged, noTitles, derivedRouteOnly), {
     ...derivedRouteOnly,
     search: "",
   });
@@ -104,201 +49,36 @@ test("active-row selection clears only constraints that hide it", () => {
 test("a tag term clears the query only for a row that lacks the tag", () => {
   const model = selectionModel(false);
   const selected = (
-    screenId: string,
+    screenPath: string,
     search: string,
     tags: readonly string[],
   ) =>
-    revealSelection(model, {
+    revealSelection(model, noTitles, {
       ...defaultSelection,
-      screenId,
+      screenPath,
       search,
       tags,
     });
   assert.deepEqual(selected("welcome", "", ["onboarding"]), {
     ...defaultSelection,
-    screenId: "welcome",
+    screenPath: "welcome",
     tags: ["onboarding"],
   });
-  assert.deepEqual(selected("details", "", ["onboarding"]), {
+  assert.deepEqual(selected("product/browse/details", "", ["onboarding"]), {
     ...defaultSelection,
-    screenId: "details",
+    screenPath: "product/browse/details",
   });
-  assert.deepEqual(selected("details", "details", ["forms"]), {
+  assert.deepEqual(
+    selected("product/browse/details", "product/browse/details", ["forms"]),
+    {
+      ...defaultSelection,
+      screenPath: "product/browse/details",
+      search: "product/browse/details",
+      tags: ["forms"],
+    },
+  );
+  assert.deepEqual(selected("product/browse/details", "welcome", ["forms"]), {
     ...defaultSelection,
-    screenId: "details",
-    search: "details",
-    tags: ["forms"],
+    screenPath: "product/browse/details",
   });
-  assert.deepEqual(selected("details", "welcome", ["forms"]), {
-    ...defaultSelection,
-    screenId: "details",
-  });
-});
-
-test("only text or tag terms constrain which rows stay visible", () => {
-  assert.equal(queryConstrains(parseSearchQuery("")), false);
-  assert.equal(queryConstrains(parseSearchQuery("   ")), false);
-  assert.equal(queryConstrains(parseSearchQuery("tag:forms")), true);
-  assert.equal(queryConstrains(parseSearchQuery("welcome")), true);
-  assert.equal(queryConstrains(parseSearchQuery("tag:forms welcome")), true);
-});
-
-test("search queries split tag terms from free text in any order", () => {
-  assert.deepEqual(parseSearchQuery(""), { freeText: "", tags: [] });
-  assert.deepEqual(parseSearchQuery("welcome screen"), {
-    freeText: "welcome screen",
-    tags: [],
-  });
-  assert.deepEqual(parseSearchQuery("tag:forms welcome"), {
-    freeText: "welcome",
-    tags: ["forms"],
-  });
-  assert.deepEqual(parseSearchQuery("welcome tag:forms"), {
-    freeText: "welcome",
-    tags: ["forms"],
-  });
-  assert.deepEqual(parseSearchQuery("tag:forms tag:onboarding"), {
-    freeText: "",
-    tags: ["forms", "onboarding"],
-  });
-});
-
-test("search query parsing lowercases tags and collapses whitespace", () => {
-  assert.deepEqual(parseSearchQuery("  TAG:Forms   Welcome  Screen  "), {
-    freeText: "Welcome Screen",
-    tags: ["forms"],
-  });
-  assert.deepEqual(parseSearchQuery("Tag:ONBOARDING"), {
-    freeText: "",
-    tags: ["onboarding"],
-  });
-  assert.deepEqual(parseSearchQuery("welcome\ttag:forms\nscreen"), {
-    freeText: "welcome screen",
-    tags: ["forms"],
-  });
-});
-
-test("a tag prefix without a value stays free text verbatim", () => {
-  assert.deepEqual(parseSearchQuery("tag: welcome"), {
-    freeText: "tag: welcome",
-    tags: [],
-  });
-  assert.deepEqual(parseSearchQuery("TAG:"), { freeText: "TAG:", tags: [] });
-});
-
-test("rows match only when every tag term is declared on the row", () => {
-  assert.equal(rowMatchesQuery(parseSearchQuery(""), glossary), true);
-  assert.equal(rowMatchesQuery(parseSearchQuery("tag:forms"), welcome), true);
-  assert.equal(rowMatchesQuery(parseSearchQuery("tag:forms"), details), true);
-  assert.equal(rowMatchesQuery(parseSearchQuery("tag:forms"), glossary), false);
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("tag:forms tag:onboarding"), welcome),
-    true,
-  );
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("tag:forms tag:onboarding"), details),
-    false,
-  );
-});
-
-test("row tags lowercase defensively though authoring can never emit them", () => {
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("TAG:Forms"), {
-      id: "legacy",
-      tags: ["Forms"],
-      text: "Legacy",
-    }),
-    true,
-  );
-});
-
-test("an unmatched tag term hides a row free text alone would match", () => {
-  assert.equal(rowMatchesQuery(parseSearchQuery("details"), details), true);
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("tag:onboarding details"), details),
-    false,
-  );
-});
-
-test("free text matches row id, title, or tags regardless of term order", () => {
-  assert.equal(rowMatchesQuery(parseSearchQuery("WELCOME"), welcome), true);
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("screens/welcome"), welcome),
-    false,
-  );
-  assert.equal(rowMatchesQuery(parseSearchQuery("glossary"), welcome), false);
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("welcome screen"), welcome),
-    false,
-  );
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("tag:forms welcome"), welcome),
-    true,
-  );
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("welcome tag:forms"), welcome),
-    true,
-  );
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("tag:forms welcome"), details),
-    false,
-  );
-});
-
-test("free text matches a structured page id", () => {
-  assert.equal(
-    rowMatchesQuery(
-      parseSearchQuery("transactions-list-transfer-ready"),
-      transferReady,
-    ),
-    true,
-  );
-  assert.equal(
-    rowMatchesQuery(parseSearchQuery("TRANSACTIONS-LIST-TRANSFER-READY"), {
-      ...transferReady,
-      text: "Unrelated title",
-    }),
-    true,
-  );
-});
-
-test("setting a tag term keeps free text and leaves exactly one tag", () => {
-  assert.equal(
-    setTagTerm("tag:onboarding welcome", "forms"),
-    "welcome tag:forms",
-  );
-  assert.equal(setTagTerm("", "forms"), "tag:forms");
-  assert.equal(setTagTerm("   ", "forms"), "tag:forms");
-  assert.equal(setTagTerm("welcome", "forms"), "welcome tag:forms");
-  assert.equal(setTagTerm("welcome", "Forms"), "welcome tag:forms");
-  assert.equal(setTagTerm("tag:forms", "forms"), "tag:forms");
-  assert.equal(
-    setTagTerm("  TAG:Onboarding  Welcome   Screen tag:forms ", "onboarding"),
-    "Welcome Screen tag:onboarding",
-  );
-});
-
-test("clearing a tag term removes only that tag term", () => {
-  assert.equal(clearTagTerm("welcome tag:forms", "forms"), "welcome");
-  assert.equal(
-    clearTagTerm("tag:onboarding welcome tag:forms", "forms"),
-    "tag:onboarding welcome",
-  );
-  assert.equal(
-    clearTagTerm("  welcome   TAG:Forms  details ", "forms"),
-    "welcome details",
-  );
-  assert.equal(
-    clearTagTerm("welcome tag:forms", "onboarding"),
-    "welcome tag:forms",
-  );
-  assert.equal(
-    clearTagTerm("welcome tag:forms-wide", "forms"),
-    "welcome tag:forms-wide",
-  );
-  assert.equal(clearTagTerm("tag:forms", "forms"), "");
-  assert.equal(
-    clearTagTerm(setTagTerm("welcome", "forms"), "forms"),
-    "welcome",
-  );
 });

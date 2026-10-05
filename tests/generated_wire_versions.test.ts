@@ -11,7 +11,7 @@ test("the legacy v3 catalogue gate rejects v4 before any entry or path read", ()
   assert.throws(
     () =>
       legacyCatalogueGate({
-        schemaVersion: 4,
+        schemaVersion: 5,
         get screens(): never {
           throw new Error("Unexpected entry read");
         },
@@ -24,9 +24,9 @@ test("the legacy v3 catalogue gate rejects v4 before any entry or path read", ()
 });
 
 for (const [boundary, supported, read] of [
-  ["catalogue", 4, readCatalogue],
-  ["delivery", 4, parseStaticDelivery],
-  ["bootstrap", 1, readLiveShellBootstrapState],
+  ["catalogue", 5, readCatalogue],
+  ["delivery", 5, parseStaticDelivery],
+  ["bootstrap", 2, readLiveShellBootstrapState],
 ] as const) {
   test(`${boundary} rejects unsupported versions before consuming payload fields`, () => {
     for (const version of [

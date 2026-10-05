@@ -15,7 +15,7 @@ import {
 export const instanceKey = "a".repeat(64);
 export const frameView: FrameMount = {
   url: new URL(
-    "https://frames.test/static/mokly-generated/screen.html?revision=2#section",
+    "https://frames.test/static/mokly-generated/screen/index.html?revision=2#section",
   ),
   usage: {
     status: "ready",

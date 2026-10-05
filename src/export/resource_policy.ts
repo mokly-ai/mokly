@@ -8,8 +8,9 @@ import { exportError } from "./error.js";
 export function exportResourcePolicy(
   config: ResolvedConfig,
   resolveAliases = true,
+  generated?: ReadonlySet<string>,
 ): (name: string) => boolean {
-  const denial = exportResourceDenial(config, resolveAliases);
+  const denial = exportResourceDenial(config, resolveAliases, generated);
   return (name) => denial(name) === undefined;
 }
 

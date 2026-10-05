@@ -1,6 +1,9 @@
 import { invalidData, record } from "../components/data.js";
-import { isSafeRepositoryPath } from "../data/paths.js";
-import { isCatalogueId } from "../navigation/logical.js";
+import {
+  isEntryPath,
+  isKebabCase,
+  isSafeRepositoryPath,
+} from "../navigation/logical.js";
 
 import { VIEWER_DIRECTORY } from "./delivery_paths.js";
 
@@ -39,8 +42,8 @@ export function choice<T extends string>(
     invalidData("$catalogue", "unsupported discriminant");
   return value as T;
 }
-export function id(value: unknown): string {
-  if (!isCatalogueId(value)) invalidData("$catalogue", "invalid entry id");
+export function entryPath(value: unknown): string {
+  if (!isEntryPath(value)) invalidData("$catalogue", "invalid entry path");
   return value;
 }
 export function hash(value: unknown): string {
@@ -68,6 +71,7 @@ export function comparisonPath(value: unknown): string | null {
 }
 export function relatedDoc(value: unknown): string {
   const result = text(value);
+  if (result.startsWith("mock:") && isEntryPath(result.slice(5))) return result;
   if (/^https?:\/\//.test(result)) {
     const url = new URL(result);
     if (url.username || url.password)
@@ -82,4 +86,10 @@ export function unique(values: readonly string[]): void {
 }
 export function lexical(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
+}
+
+/** Validate classification tags separately from entry identity. */
+export function tag(value: unknown): string {
+  if (!isKebabCase(value)) invalidData("$catalogue", "invalid tag");
+  return value;
 }

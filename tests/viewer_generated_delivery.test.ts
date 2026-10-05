@@ -11,7 +11,7 @@ import { MoklyVersionError } from "../packages/viewer/dist/catalogue/version_err
 
 const fixture = JSON.parse(
   fs.readFileSync(
-    new URL("../docs/protocol/fixtures/catalogue-v4.json", import.meta.url),
+    new URL("../docs/protocol/fixtures/catalogue-v5.json", import.meta.url),
     "utf8",
   ),
 );
@@ -19,20 +19,20 @@ const fixture = JSON.parse(
 test("current catalogues require the generated layout and reject earlier versions", () => {
   const catalogue = readCatalogue(fixture);
   assert.equal(Object.hasOwn(catalogue, "generatedPathPrefix"), false);
-  for (const schemaVersion of [1, 2, 3])
+  for (const schemaVersion of [1, 2, 3, 4])
     assert.throws(
       () => readCatalogue({ ...fixture, schemaVersion }),
       (error: unknown) =>
-        error instanceof MoklyVersionError && error.supported === 4,
+        error instanceof MoklyVersionError && error.supported === 5,
     );
-  const route = "screens/home.mobile.html";
+  const route = "home/index.mobile.html";
   assert.equal(currentDocumentPath(route), `static/mokly-generated/${route}`);
   assert.equal(currentDocumentPath(route), `static/mokly-generated/${route}`);
   assert.equal(currentDocumentRoute(`/static/mokly-generated/${route}`), route);
   assert.equal(currentDocumentRoute(`/static/mokly-generated/${route}`), route);
   for (const pathname of [
     `/static/${route}`,
-    "/static/mokly-generated/../screens/home.mobile.html",
+    "/static/mokly-generated/../home/index.mobile.html",
     "/static/mokly-generated/screens%2Fhome.mobile.html",
   ]) {
     assert.equal(currentDocumentRoute(pathname), undefined);

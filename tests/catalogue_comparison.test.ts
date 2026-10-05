@@ -32,7 +32,7 @@ test("Serve pins only a matching complete comparison and immutable reads never r
   const initial = await read();
   assert.equal(initial.comparisonUrl, null);
   const selected = await fetch(
-    `${server.url}/mokly-viewer/diffs/review.json?id=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=home`,
   );
   assert.equal(selected.status, 200);
   assert.equal(
@@ -101,7 +101,7 @@ test("a complete comparison finishing after an accepted update cannot pin stale 
     redirect: "manual",
   });
   await started.promise;
-  server.publishUpdate({ kind: "evidence", changedIds: [], version: 2 });
+  server.publishUpdate({ kind: "evidence", changedEntries: [], version: 2 });
   const url = `${server.url}/mokly-viewer/catalogue.json`;
   const accepted = await (await fetch(url)).text();
   resume.resolve();

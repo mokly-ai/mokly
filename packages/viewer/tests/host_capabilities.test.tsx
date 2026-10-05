@@ -40,12 +40,12 @@ test("the provider exposes live capabilities and export-style omission", () => {
     },
   } satisfies ViewerHostCapabilities;
   const workspace = {
-    entry: { id: "action" },
+    entry: { path: "components/action" },
   } as unknown as WorkspaceData;
   const Probe = () => (
     <span>
       {useViewerCapabilities()?.source.catalogueId ?? "export"}:
-      {useViewerInitialWorkspace()?.entry.id ?? "none"}
+      {useViewerInitialWorkspace()?.entry.path ?? "none"}
     </span>
   );
   assert.equal(
@@ -57,13 +57,14 @@ test("the provider exposes live capabilities and export-style omission", () => {
         <Probe />
       </ViewerCapabilityBoundary>,
     ),
-    `<span>${catalogue.identity.id}:action</span>`,
+    `<span>${catalogue.identity.id}:components/action</span>`,
   );
   assert.equal(renderToStaticMarkup(<Probe />), "<span>export:none</span>");
 });
 
 test("a request scope cancels work when its source or entry changes", () => {
   const initial = viewerCapabilityRequest(source, "button");
+  assert.deepEqual(initial, { entryPath: "button", source });
   const scope = new ViewerCapabilityScope(initial);
   const first = scope.signal;
   assert.equal(scope.replace(initial), first);
@@ -121,7 +122,10 @@ test("evidence adoption fences source identity and monotonic revisions", () => {
   assert.equal(
     readViewerEvidenceRevision(
       source,
-      viewerCapabilityRequest({ ...source, base: "release" }, request.entryId),
+      viewerCapabilityRequest(
+        { ...source, base: "release" },
+        request.entryPath,
+      ),
       nextSource,
       next,
     ),

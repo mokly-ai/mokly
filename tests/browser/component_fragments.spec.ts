@@ -46,7 +46,7 @@ test("saved component variants render through standalone portable links in every
       const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
       const url = (route: string) =>
         pathToFileURL(path.join(generatedDir, route)).href;
-      await page.goto(url(`screens/home.${suffix}`));
+      await page.goto(url(`home/index.${suffix}`));
       await expect(
         page.getByRole("button", { name: "Slot action", exact: true }),
       ).toBeVisible();
@@ -54,11 +54,11 @@ test("saved component variants render through standalone portable links in every
         page.getByRole("button", { name: "Inside", exact: true }),
       ).toBeVisible();
       await page.getByRole("link", { name: "Open Action" }).click();
-      await expect(page).toHaveURL(url(`components/action-default.${suffix}`));
+      await expect(page).toHaveURL(url(`action/default/index.${suffix}`));
       await expect(
         page.getByRole("button", { name: "Continue" }),
       ).toHaveAttribute("data-viewport", viewport);
-      await page.goto(url(`components/action-disabled.${suffix}`));
+      await page.goto(url(`action/disabled/index.${suffix}`));
       await expect(
         page.getByRole("button", { name: "Continue" }),
       ).toBeDisabled();
@@ -66,5 +66,5 @@ test("saved component variants render through standalone portable links in every
         path: testInfo.outputPath(`action-${viewport}-${scheme}.png`),
       });
     }
-  expect(compilation.manifest.schemaVersion).toBe(8);
+  expect(compilation.manifest.schemaVersion).toBe(9);
 });

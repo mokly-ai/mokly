@@ -16,16 +16,16 @@ import {
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
   ),
 );
 const view = {
   kind: "target" as const,
-  entryId: catalogue.screens[0]!.id,
+  entryPath: catalogue.screens[0]!.path,
   entryKind: catalogue.screens[0]!.kind,
 };
 const bootstrap = {
-  schemaVersion: 1 as const,
+  schemaVersion: 2 as const,
   catalogue: projectScopedCatalogue(catalogue, view),
   context: {
     base: "origin/main",
@@ -39,7 +39,7 @@ const published = readCapturedShellCatalogue(catalogue);
 
 test("capture externalizes one exact scoped projection", () => {
   const externalized = externalizeCapturedShell(
-    "view/screens/home.html",
+    "view/home/",
     shell(bootstrap),
     published,
   );
@@ -64,12 +64,7 @@ test("capture rejects one extra out-of-scope usage record", () => {
     completeVariant.views[0]!.usage,
   );
   assert.throws(
-    () =>
-      externalizeCapturedShell(
-        "view/screens/home.html",
-        shell(leaked),
-        published,
-      ),
+    () => externalizeCapturedShell("view/home/", shell(leaked), published),
     /Invalid captured shell bootstrap|does not match the published model/,
   );
 });

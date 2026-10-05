@@ -1,49 +1,40 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { analyzeHierarchy, navPathKey } from "@mokly/viewer/data";
-
-import { defineScreen } from "../dist/index.js";
-import { parseManifest } from "../dist/registry/manifest.js";
-
-import { fixtureManifest } from "./helpers/current_manifest.js";
+import { analyzeHierarchy, projectTree } from "@mokly/viewer/data";
 
 const entry = (
-  id: string,
+  path: string,
   kind: string,
   title: string,
-  navPath: unknown,
   variantOf?: string,
-) => ({ id, kind, title, navPath, ...(variantOf ? { variantOf } : {}) });
+) => ({ path, kind, title, ...(variantOf ? { variantOf } : {}) });
 
-test("section folders merge identical labels, order folders first, and retain authored variants", () => {
+test("one path tree splits mixed folders by kind and retains authored variants", () => {
   const entries = [
-    entry("a", "screen", "Alpha", ["Design", "Browse"]),
-    entry("z", "screen", "Zed", ["Design"]),
-    entry("component", "component", "Button", ["Design"]),
-    entry("b", "page", "Beta", ["Design", "Browse"]),
-    entry("variant-b", "screen", "Second", ["Design", "Browse"], "a"),
-    entry("variant-a", "screen", "First", ["Design", "Browse"], "a"),
+    entry("design/browse/a", "screen", "Alpha"),
+    entry("design/z", "screen", "Zed"),
+    entry("design/button", "component", "Button"),
+    entry("design/browse/b", "page", "Beta"),
+    entry("design/browse/a/second", "screen", "Second", "design/browse/a"),
+    entry("design/browse/a/first", "screen", "First", "design/browse/a"),
   ];
-  const { hierarchy, issues } = analyzeHierarchy(entries);
-  assert.deepEqual(issues, []);
-  assert.equal(navPathKey(["Design", "Browse"]), "Design/Browse");
-  assert.deepEqual(hierarchy.ancestorsById.get("a"), ["Design", "Browse"]);
-  assert.deepEqual(hierarchy.ancestorsById.get("component"), ["Design"]);
+  const { hierarchy } = analyzeHierarchy(entries);
+  assert.deepEqual(hierarchy.ancestorsByPath.get("design/browse/a"), [
+    "Design",
+    "Browse",
+  ]);
   assert.deepEqual(
-    hierarchy.variantsById.get("a")?.map(({ id }) => id),
-    ["variant-b", "variant-a"],
+    hierarchy.variantsByPath.get("design/browse/a")?.map(({ path }) => path),
+    ["design/browse/a/second", "design/browse/a/first"],
   );
-  assert.equal(hierarchy.variantParentById.get("variant-a"), entries[0]);
-  assert.deepEqual(
-    hierarchy.roots.pages.map(({ label }) => label),
-    ["Design"],
+  assert.equal(
+    hierarchy.variantParentByPath.get("design/browse/a/first"),
+    entries[0],
   );
-  assert.deepEqual(
-    hierarchy.roots.components.map(({ label }) => label),
-    ["Design"],
-  );
-  const design = hierarchy.roots.pages[0];
+  for (const section of [hierarchy.roots.specs, hierarchy.roots.components])
+    assert.equal(section[0]?.key, "design");
+  const design = hierarchy.roots.specs[0];
   assert.equal(design?.kind, "folder");
   if (design?.kind !== "folder") return;
   assert.deepEqual(
@@ -57,168 +48,84 @@ test("section folders merge identical labels, order folders first, and retain au
       browse.children.map(({ label }) => label),
       ["Alpha", "Beta"],
     );
+  const full = projectTree(hierarchy);
+  assert.equal(full[0]?.children?.length, 3);
 });
 
-test("case, whitespace, and leaf/folder conflicts are scoped to one section", () => {
-  const caseConflict = analyzeHierarchy([
-    entry("a", "screen", "A", ["Design"]),
-    entry("b", "screen", "B", ["design"]),
-  ]);
-  assert.equal(caseConflict.issues[0]?.code, "nav-path-conflict");
-  const whitespace = analyzeHierarchy([
-    entry("a", "screen", "A", ["Two Words"]),
-    entry("b", "screen", "B", ["TwoWords"]),
-  ]);
-  assert.equal(whitespace.issues[0]?.code, "nav-path-conflict");
-  const leaf = analyzeHierarchy([
-    entry("a", "screen", "Settings", []),
-    entry("b", "screen", "B", ["settings"]),
-  ]);
-  assert.match(
-    leaf.issues[0]?.message ?? "",
-    /append the folder label.*navPath/,
-  );
-  assert.deepEqual(
-    analyzeHierarchy([
-      entry("a", "screen", "A", ["Design"]),
-      entry("b", "component", "B", ["design"]),
-    ]).issues,
-    [],
-  );
-});
-
-test("folder-versus-leaf conflicts always name and attach to the leaf regardless of order", () => {
-  const leaf = entry("leaf", "screen", "Settings", []);
-  const folderMember = entry("member", "page", "Nested", ["settings"]);
-  const issues = [
-    analyzeHierarchy([leaf, folderMember]).issues,
-    analyzeHierarchy([folderMember, leaf]).issues,
-  ].map((found) =>
-    found.map(({ code, entry: owner, message }) => ({
-      code,
-      id: owner.id,
-      message,
-    })),
-  );
-  assert.deepEqual(issues[0], issues[1]);
-  const conflicts = issues[0]!;
-  assert.deepEqual(
-    conflicts.map(({ id }) => id),
-    ["leaf"],
-  );
-  assert.match(conflicts[0]!.message, /leaf.*Settings.*settings.*navPath/);
-});
-
-test("folder spelling conflicts report once per spelling and source in either input order", () => {
-  const established = ["first", "second", "third", "fourth"].map((id) => ({
-    ...entry(id, "screen", id, ["A", "Packed ESM"]),
-    sourceRelativePath: "entries/established.mockup.tsx",
-  }));
-  const culprit = {
-    ...entry("culprit", "screen", "Culprit", ["A", "packed  esm"]),
-    sourceRelativePath: "entries/culprit.mockup.tsx",
-  };
-  const reports = [
-    analyzeHierarchy([...established, culprit]).issues,
-    analyzeHierarchy([culprit, ...established.toReversed()]).issues,
-  ].map((issues) =>
-    issues.map(({ code, entry: owner, message }) => ({
-      code,
-      id: owner.id,
-      source: owner.sourceRelativePath,
-      message,
-    })),
-  );
-  assert.deepEqual(reports[0], reports[1]);
-  assert.deepEqual(
-    reports[0]?.map(({ id, source }) => [id, source]),
-    [
-      ["first", "entries/established.mockup.tsx"],
-      ["culprit", "entries/culprit.mockup.tsx"],
-    ],
-  );
-  for (const issue of reports[0] ?? []) {
-    assert.equal(issue.code, "nav-path-conflict");
-    assert.match(issue.message, /Packed ESM.*packed {2}esm.*under Pages › A/);
-  }
-});
-
-test("top-level folder conflicts name the Pages section rather than an empty path", () => {
-  const issues = analyzeHierarchy([
-    entry("first", "screen", "First", ["Design"]),
-    entry("second", "screen", "Second", ["design"]),
-  ]).issues;
-  assert.equal(issues.length, 2);
-  for (const issue of issues)
-    assert.match(issue.message, /Design.*design.*at the top of Pages/);
-});
-
-test("each spelling and source is named when several spellings collide", () => {
+test("display labels may repeat without changing paths or causing identity conflicts", () => {
   const entries = [
-    {
-      ...entry("first", "screen", "First", ["Packed ESM"]),
-      sourceRelativePath: "entries/first.mockup.tsx",
-    },
-    {
-      ...entry("second", "screen", "Second", ["packed  esm"]),
-      sourceRelativePath: "entries/second.mockup.tsx",
-    },
-    {
-      ...entry("third", "screen", "Third", ["PACKED ESM"]),
-      sourceRelativePath: "entries/third.mockup.tsx",
-    },
+    entry("one/a", "page", "Settings"),
+    entry("two/a", "page", "Settings"),
+    entry("settings/b", "page", "Nested"),
   ];
-  const issues = analyzeHierarchy(entries).issues;
+  const records = ["one", "two"].map((path) => ({
+    path,
+    title: "The same title",
+    sourcePath: "specs/folders.mockup.ts",
+  }));
+  const hierarchy = analyzeHierarchy(entries, records).hierarchy;
   assert.deepEqual(
-    issues.map(({ entry: owner }) => owner.id),
-    ["third", "first", "second"],
+    hierarchy.tree.map((node) => node.key),
+    ["settings", "one", "two"],
   );
-  for (const issue of issues)
-    assert.match(
-      issue.message,
-      /"PACKED ESM".*"Packed ESM".*"packed {2}esm".*at the top of Pages/,
-    );
+  assert.equal(hierarchy.byPath.size, 3);
 });
 
-test("current labels report every invalid segment, and duplicates remain separate leaves", () => {
-  const result = analyzeHierarchy([
-    entry("invalid", "screen", "Invalid", ["", " A", "A/ B", 23]),
-    entry("first", "screen", "Shared", []),
-    entry("second", "screen", "Shared", []),
+test("folder index pages are first and screen indexes retain ordinary members", () => {
+  const entries = [
+    entry("account", "page", "Account"),
+    entry("account/invoice", "screen", "Invoice"),
+    entry("account/invoice/overdue", "screen", "Overdue", "account/invoice"),
+    entry("account/invoice/history/item", "page", "Item"),
+  ];
+  const tree = projectTree(analyzeHierarchy(entries).hierarchy);
+  assert.deepEqual(tree, [
+    {
+      kind: "folder",
+      path: "account",
+      title: "Account",
+      index: "account",
+      children: [
+        { kind: "entry", path: "account" },
+        {
+          kind: "entry",
+          path: "account/invoice",
+          children: [
+            { kind: "entry", path: "account/invoice/overdue" },
+            {
+              kind: "folder",
+              path: "account/invoice/history",
+              title: "History",
+              children: [
+                { kind: "entry", path: "account/invoice/history/item" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   ]);
-  assert.deepEqual(
-    result.issues.map(({ code }) => code),
-    Array(4).fill("invalid-nav-path"),
-  );
-  for (let index = 0; index < 4; index++)
-    assert.match(result.issues[index]!.message, new RegExp(`index ${index}`));
-  assert.deepEqual(
-    result.hierarchy.roots.pages.map(({ kind }) => kind),
-    ["entry", "entry"],
-  );
 });
 
-test("manifest v8 preserves navigation paths", () => {
-  const screen = defineScreen({
-    id: "home",
-    title: "Home",
-    description: "Home",
-    mobile: "Mobile",
-    desktop: "Desktop",
-    dependencies: [],
-    relatedDocs: [],
-    navPath: ["Design"],
-  });
-  const manifest = fixtureManifest(
+test("folder order places unnamed children at ellipsis and defaults to appending them", () => {
+  const entries = [
+    entry("group/a", "page", "Alpha"),
+    entry("group/b", "page", "Beta"),
+    entry("group/sub/item", "page", "Item"),
+  ];
+  for (const [order, expected] of [
+    [["b"], ["group/b", "group/sub", "group/a"]],
     [
-      {
-        ...screen,
-        sourceRelativePath: "entries/home.mockup.tsx",
-        sourcePath: "/repo/entries/home.mockup.tsx",
-      },
+      ["b", "...", "sub"],
+      ["group/b", "group/a", "group/sub"],
     ],
-    [],
-    ["light"],
-  );
-  assert.equal(parseManifest(manifest).schemaVersion, 8);
+  ] as const) {
+    const folder = analyzeHierarchy(entries, [
+      { path: "group", order, sourcePath: "specs/group/_folder.json" },
+    ]).hierarchy.tree[0];
+    assert.deepEqual(
+      folder?.children?.map((node) => node.key),
+      expected,
+    );
+  }
 });

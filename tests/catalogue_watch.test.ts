@@ -160,7 +160,7 @@ test(
       (model) => model.changesStatus === "ready",
     );
     assert.equal(initial.comparisonUrl, null);
-    const home = initial.screens.find((screen) => screen.id === "home")!;
+    const home = initial.screens.find((screen) => screen.path === "home")!;
     assert.ok(home.views.every((view) => view.usage.status === "ready"));
     const nextSource = source.replaceAll('label="Finish"', 'label="Updated"');
     await fs.writeFile(fixture.entryPath, nextSource);
@@ -173,7 +173,7 @@ test(
     assert.ok(updated.revision.evidence > initial.revision.evidence);
     assert.notEqual(updated.deploymentId, initial.deploymentId);
     assert.deepEqual(
-      updated.screens.find((screen) => screen.id === "home")!.changes,
+      updated.screens.find((screen) => screen.path === "home")!.changes,
       {
         status: "ready",
         kind: "changed",
@@ -205,7 +205,7 @@ test(
     await fs.writeFile(
       fixture.configPath,
       `export default {
-  entries: ["**/*.mockup.{ts,tsx}"],
+  roots: [{ dir: ".", files: ["**/*.mockup.{ts,tsx}"] }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: { outDir: ".review", sharedImpact: ["notes.md"] },
@@ -233,22 +233,22 @@ export const mockups = [defineScreen({
   dependencies: [],
   description: "Newly discovered card",
   desktop: "Card",
-  id: "new-card",
+  path: "new-card",
   mobile: "Card",
   relatedDocs: [],
-  route: "screens/new-card.html",
   title: "New card",
-  useCaseIds: []
-})];\n`,
+  useCasePaths: []
+})];
+`,
     );
 
     const updated = await waitForCatalogue(
       running.url,
       (model) =>
         model.revision.content > initial.revision.content &&
-        model.screens.some((screen) => screen.id === "new-card"),
+        model.screens.some((screen) => screen.path === "new-card"),
     );
-    assert.ok(updated.screens.some((screen) => screen.id === "new-card"));
+    assert.ok(updated.screens.some((screen) => screen.path === "new-card"));
   },
 );
 

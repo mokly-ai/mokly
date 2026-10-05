@@ -40,7 +40,7 @@ test.afterAll(async () => {
 test("component geometry clips nested overflow and preserves multiple roots and null instances", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/home/`);
   await expect(
     page.getByRole("button", { name: "Highlight components", exact: true }),
   ).toBeEnabled();

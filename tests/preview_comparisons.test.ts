@@ -31,7 +31,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   assert.ok(jsonPath);
   const result: ReviewResult = JSON.parse(await read(jsonPath));
   assert.deepEqual(
-    result.screens.map((screen) => [screen.id, screen.state]),
+    result.screens.map((screen) => [screen.path, screen.state]),
     [
       ["added", "added"],
       ["details", "changed"],
@@ -41,12 +41,12 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   );
   const generation = path.dirname(jsonPath);
   for (const screen of result.screens) {
-    const route = entryRoute("screen", screen.id);
+    const route = entryRoute(screen.path);
     const page = await read(`view/${route}`);
     if (screen.state === "removed") {
       assert.ok(page.includes("Showing previous version"));
       assert.ok(!page.includes("data-diff-screen="));
-    } else assert.ok(page.includes(`data-diff-screen="${screen.id}"`));
+    } else assert.ok(page.includes(`data-diff-screen="${screen.path}"`));
     for (const view of screen.views) {
       for (const side of ["before", "after"] as const) {
         if (
@@ -54,20 +54,20 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
           (side === "after" && view.state === "removed")
         )
           continue;
-        const snapshot = `snapshots/${side}/mokly-generated/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`;
+        const snapshot = `snapshots/${side}/mokly-generated/${viewRoute(screen.path, view.viewport, view.colorScheme)}`;
         assert.match(await read(`${generation}/${snapshot}`), /<main/);
       }
     }
   }
   assert.match(
     await read(
-      `${generation}/snapshots/before/mokly-generated/screens/home.desktop.html`,
+      `${generation}/snapshots/before/mokly-generated/home/index.desktop.html`,
     ),
     /Previous home/,
   );
   assert.match(
     await read(
-      `${generation}/snapshots/after/mokly-generated/screens/home.desktop.html`,
+      `${generation}/snapshots/after/mokly-generated/home/index.desktop.html`,
     ),
     /Current home/,
   );
@@ -93,7 +93,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   ) as {
     identity: { id: string };
     removedEntries: readonly {
-      entry: { id: string };
+      entry: { path: string };
       snapshotId?: string;
     }[];
     revision: { content: number; evidence: number };
@@ -115,7 +115,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     revision: publicCatalogue.revision,
   });
   const removed = publicCatalogue.removedEntries.find(
-    ({ entry }) => entry.id === "removed",
+    ({ entry }) => entry.path === "removed",
   );
   assert.match(removed?.snapshotId ?? "", /^[a-f0-9]{64}$/);
   assert.ok(
@@ -124,32 +124,32 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
       (element) =>
         element.tagName === "a" &&
         attribute(element, "href") ===
-          `/view/screens/removed?snapshot=${removed?.snapshotId}`,
+          `/view/removed/?snapshot=${removed?.snapshotId}`,
     ).length > 0,
   );
   assert.match(
     index,
-    /data-entry-id="removed"[^>]*data-route="screens\/removed.html"/,
+    /data-entry-id="removed"[^>]*data-route="removed\/index.html"/,
   );
   assert.match(
-    documentText(await read("view/screens/removed.html")),
+    documentText(await read("view/removed/index.html")),
     /Showing previous version/,
   );
   assert.doesNotMatch(redirects, /^\/id\//m);
   assert.match(await read("_headers"), /Cache-Control: no-store/);
   assert.match(
-    documentText(await read("view/pages/removed-document.html")),
+    documentText(await read("view/documents/removed-document/index.html")),
     /Showing previous version/,
   );
   assert.doesNotMatch(
-    await read("view/pages/removed-document.html"),
+    await read("view/documents/removed-document/index.html"),
     /data-diff-screen|data-nav-folder="folder:documents"/,
   );
   for (const file of [
     "index.html",
-    "view/pages/handbook.html",
-    "view/screens/removed.html",
-    "view/pages/removed-document.html",
+    "view/handbook/index.html",
+    "view/removed/index.html",
+    "view/documents/removed-document/index.html",
     "404.html",
   ])
     assert.doesNotMatch(await read(file), /client\/browser\.js|EventSource/);
@@ -260,8 +260,8 @@ test("capture mutation aborts atomically and default replacement removes old rev
     { cwd: repositoryRoot },
   );
   for (const file of [
-    "view/pages/removed-document.html",
-    "view/screens/removed.html",
+    "view/documents/removed-document/index.html",
+    "view/removed/index.html",
     "mokly-viewer/diffs",
     "static/archived-review/private-snapshot.html",
     "_headers",
@@ -272,6 +272,6 @@ test("capture mutation aborts atomically and default replacement removes old rev
     /data-filter|removed-document/,
   );
   assert.ok(
-    fs.existsSync(path.join(fixture.output, "view/pages/handbook.html")),
+    fs.existsSync(path.join(fixture.output, "view/handbook/index.html")),
   );
 });

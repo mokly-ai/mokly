@@ -3,19 +3,21 @@
 // by home and missing routes. All embedded consumer documents are sandboxed
 // without script permission.
 
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
 
 import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { entryRoute } from "../navigation/routes.js";
+import { entryRoute, documentRoute } from "../navigation/routes.js";
+import { DisplaySelection } from "../viewer/display_context.js";
 import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { ComponentStage } from "./component_stage.js";
 import { FramesStage, UseCaseFlowStage } from "./manifest_stages.js";
 import { PublicStage } from "./public_stage.js";
+import { documentLightOnly, LightOnlyBand } from "./scheme_fallback.js";
 import { framePath } from "./stage_sources.js";
 import type { RouteTarget } from "./target.js";
 
@@ -27,6 +29,8 @@ function EmbedStage(props: {
   route: string;
   title: string;
   fragment?: string;
+  lightRoute?: string;
+  darkRoute?: string;
 }) {
   return (
     <div className="mbk-stage-embed" data-mokly-scroll="embed">
@@ -34,6 +38,16 @@ function EmbedStage(props: {
         className="mbk-frag"
         sandbox="allow-same-origin"
         data-mokly-fragment-frame=""
+        data-fragment-light={
+          props.lightRoute
+            ? fragmentSrc(props.lightRoute, props.fragment)
+            : undefined
+        }
+        data-fragment-dark={
+          props.darkRoute
+            ? fragmentSrc(props.darkRoute, props.fragment)
+            : undefined
+        }
         src={fragmentSrc(props.route, props.fragment)}
         title={props.title}
       />
@@ -57,12 +71,15 @@ export function TargetStage(props: {
   fragment?: string;
   previewViews?: readonly GeneratedComponentView[];
   target: RouteTarget;
-  variantId?: string | undefined;
+  variantPath?: string | undefined;
 }) {
+  const selection = useContext(DisplaySelection);
   const entry = props.target.entry;
   const model = props.catalogue.publicModel;
   if (model) {
-    const current = routedEntries(model).find((item) => item.id === entry.id)!;
+    const current = routedEntries(model).find(
+      (item) => item.path === entry.path,
+    )!;
     return (
       <PublicStage
         catalogue={model}
@@ -70,32 +87,54 @@ export function TargetStage(props: {
         hasDarkFragments={props.catalogue.hasDarkFragments}
         {...(props.fragment ? { fragment: props.fragment } : {})}
         {...(props.previewViews ? { previewViews: props.previewViews } : {})}
-        {...(props.variantId ? { variantId: props.variantId } : {})}
+        {...(props.variantPath ? { variantPath: props.variantPath } : {})}
       />
     );
   }
-  if (entry.kind === "page")
+  if (entry.kind === "page" || entry.kind === "document")
     return (
-      <EmbedStage
-        route={entryRoute("page", entry.id)}
-        title={entry.title}
-        {...(props.fragment ? { fragment: props.fragment } : {})}
-      />
+      <>
+        {documentLightOnly(entry, props.catalogue.hasDarkFragments) ? (
+          <LightOnlyBand />
+        ) : null}
+        <EmbedStage
+          route={
+            entry.kind === "page"
+              ? entryRoute(entry.path)
+              : documentRoute(
+                  entry.path,
+                  entry.colorSchemes.includes(selection.colorScheme)
+                    ? selection.colorScheme
+                    : "light",
+                )
+          }
+          title={entry.title}
+          {...(entry.kind === "document"
+            ? {
+                lightRoute: documentRoute(entry.path, "light"),
+                ...(entry.colorSchemes.includes("dark")
+                  ? { darkRoute: documentRoute(entry.path, "dark") }
+                  : {}),
+              }
+            : {})}
+          {...(props.fragment ? { fragment: props.fragment } : {})}
+        />
+      </>
     );
   if (entry.kind === "component") {
     const parent = isManifestComponentVariant(entry)
-      ? props.catalogue.byId.get(entry.variantOf)
+      ? props.catalogue.hierarchy.variantParentByPath.get(entry.path)
       : entry;
     if (parent?.kind !== "component" || isManifestComponentVariant(parent))
       return <EmptyStage heading="Component unavailable">{null}</EmptyStage>;
     const variants = (
-      props.catalogue.hierarchy.variantsById.get(parent.id) ?? []
+      props.catalogue.hierarchy.variantsByPath.get(parent.path) ?? []
     ).filter(
       (candidate): candidate is ManifestComponentVariant =>
         candidate.kind === "component" && isManifestComponentVariant(candidate),
     );
     const variant =
-      variants.find((item) => item.id === props.variantId) ?? variants[0]!;
+      variants.find((item) => item.path === props.variantPath) ?? variants[0]!;
     return (
       <ComponentStage
         title={parent.title}

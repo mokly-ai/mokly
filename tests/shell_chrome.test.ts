@@ -11,15 +11,17 @@ import {
   textContent,
 } from "./helpers/html.js";
 import {
-  context,
+  assertAttributes,
   flatCss,
+  requiredElement,
+} from "./helpers/shell_assertions.js";
+import {
+  context,
   homePage,
   manifest,
-  notFoundPage,
   untaggedManifest,
   viewPage,
-} from "./shell_fixture.js";
-import { assertAttributes, requiredElement } from "./shell_fixture_2.js";
+} from "./helpers/shell_fixture.js";
 
 test("the search field carries a tag control over a closed picker", () => {
   const html = homePage(createCatalogue(manifest), context);
@@ -147,11 +149,11 @@ test("the search field leads with a legible search icon, not a glyph", () => {
 
 test("the browser bar draws copy and expand icons, not tiny glyphs", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byId.get("welcome");
+  const entry = catalogue.byPath.get("example/screens/welcome");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeId: "welcome",
+    activeId: "example/screens/welcome",
   });
   for (const glyph of ["⧉", "⤢", "⤡"]) {
     assert.equal(html.includes(glyph), false);
@@ -178,78 +180,5 @@ test("the browser bar draws copy and expand icons, not tiny glyphs", () => {
   assert.match(
     SHELL_CSS,
     /\.browser-frame\.is-expanded \.browser-expand \.i-collapse \{\s*display: inline-flex;/,
-  );
-});
-
-test("missing routes keep the catalogue shell", () => {
-  const catalogue = createCatalogue(manifest);
-  const missing = notFoundPage("view/unknown.html", catalogue, context);
-  assert.match(missing, /Item not found/);
-  assert.match(missing, /choose another item from the navigation/);
-  assert.match(missing, /If this item was just added/);
-  assert.match(missing, /aria-label="Catalogue"/);
-});
-
-test("filter renders in the nav only when changed routes are known", () => {
-  const catalogue = createCatalogue(manifest);
-  const withFilter = homePage(catalogue, {
-    ...context,
-    changedIds: ["welcome"],
-  });
-  assert.match(withFilter, /data-mokly-filter/);
-  assert.match(withFilter, /class="mbk-nav-filter-count">1</);
-  const withNoChanges = homePage(catalogue, {
-    ...context,
-    changedIds: [],
-  });
-  assert.match(withNoChanges, /data-mokly-filter/);
-  assert.match(withNoChanges, /class="mbk-nav-filter-count">0</);
-  const withoutFilter = homePage(catalogue, context);
-  assert.equal(withoutFilter.includes("data-mokly-filter"), false);
-  assert.match(withoutFilter, /data-mokly-search/);
-});
-
-test("shell stylesheet stays aligned with the design contract", () => {
-  assert.match(SHELL_CSS, /--_mokly-private-accent-default: #4f7864/);
-  assert.match(SHELL_CSS, /--mb-added: var\(--mbk-accent-deep\)/);
-  assert.match(SHELL_CSS, /--mbk-dark-screen-bg: #121514/);
-  assert.match(SHELL_CSS, /--mbk-dark-screen-ink: #eef1ef/);
-  assert.match(SHELL_CSS, /color-scheme: light/);
-  assert.match(SHELL_CSS, /width: 390px/);
-  assert.match(SHELL_CSS, /max-width: 1180px/);
-  assert.match(SHELL_CSS, /max-width: 56\.25rem/);
-  assert.match(SHELL_CSS, /width: var\(--mbk-nav-width, 248px\)/);
-  assert.match(
-    SHELL_CSS,
-    /\.mbk-nav-section-head \{[^}]*text-transform: uppercase;[^}]*cursor: pointer;/,
-  );
-  assert.match(
-    SHELL_CSS,
-    /\.mbk-nav-section\[open\][^{]*\.mbk-nav-section-chevron \{[^}]*transform: rotate\(90deg\);/,
-  );
-  assert.match(
-    SHELL_CSS,
-    /\.mbk-nav\[data-resize-ready\] \.mbk-nav-resize \{[\s\S]*display: block;/,
-  );
-  assert.match(
-    SHELL_CSS,
-    /@media \(max-width: 56\.25rem\) \{[\s\S]*\.mbk-nav-resize \{[\s\S]*display: none;/,
-  );
-  assert.match(
-    SHELL_CSS,
-    /\.phone-status \{[\s\S]*flex: 0 0 44px;[\s\S]*padding: 14px 28px 0;/,
-  );
-  assert.match(SHELL_CSS, /\.phone-screen \{[\s\S]*flex-direction: column;/);
-  assert.match(
-    SHELL_CSS,
-    /\.phone-screen \.mbk-frag \{[\s\S]*border-radius: 0 0 36px 36px;/,
-  );
-
-  assert.match(SHELL_CSS, /prefers-reduced-motion/);
-  assert.match(SHELL_CSS, /InterVariable\.woff2/);
-  assert.match(SHELL_CSS, /\.mbk-idchip \{[\s\S]*cursor: pointer;/);
-  assert.match(
-    SHELL_CSS,
-    /\.mbk-idchip:active \{[\s\S]*transform: translateY\(1px\);/,
   );
 });

@@ -55,7 +55,7 @@ for (const source of ["object", "fetcher", "url"] as const)
         code: "version",
         message,
         details:
-          "Unsupported Mokly catalogue version 3; this viewer supports version 4.",
+          "Unsupported Mokly catalogue version 3; this viewer supports version 5.",
       },
     ]);
     await expect(page.locator("#one iframe")).toHaveCount(0);

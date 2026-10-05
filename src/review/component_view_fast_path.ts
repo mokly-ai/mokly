@@ -34,13 +34,19 @@ export async function compareUnchangedComponentView(
   root?: string,
 ): Promise<UnchangedComponentAttempt> {
   if (before.path !== after.path) return {};
-  const retained = normalizeReviewPair(base, head, after.path);
+  const links = context.links?.(before.path, after.path);
+  const retained = normalizeReviewPair(base, head, after.path, links);
   if (retained.base !== retained.head) return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
 
   const strippedBase = stripMarkers(base, before.usage);
   const strippedHead = stripComponentMarkers(head);
-  const actual = normalizeReviewPair(strippedBase, strippedHead, after.path);
+  const actual = normalizeReviewPair(
+    strippedBase,
+    strippedHead,
+    after.path,
+    links,
+  );
   if (actual.base !== actual.head) return {};
 
   const hasOwnershipEdits = [before.usage, after.usage].some(
@@ -61,17 +67,17 @@ export async function compareUnchangedComponentView(
 
   const afterResources = await context.afterReader.resources(
     after.path,
-    actual.head,
+    actual.resourceHead ?? actual.head,
   );
   const beforeResources = await context.beforeReader.resources(
     before.path,
-    actual.base,
+    actual.resourceBase ?? actual.base,
   );
   const projectedAfterResources =
     projected && excluded
       ? await context.afterReader.resources(
           after.path,
-          projected.after,
+          projected.resourceAfter ?? projected.after,
           excluded,
         )
       : new Set<string>();
@@ -79,7 +85,7 @@ export async function compareUnchangedComponentView(
     projected && excluded
       ? await context.beforeReader.resources(
           before.path,
-          projected.before,
+          projected.resourceBefore ?? projected.before,
           excluded,
         )
       : projectedAfterResources;
@@ -100,6 +106,7 @@ export async function compareUnchangedComponentView(
         afterResources,
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     ).size > 0
   )
@@ -111,6 +118,7 @@ export async function compareUnchangedComponentView(
         projectedAfterResources,
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     ).size > 0
   )
@@ -122,8 +130,8 @@ export async function compareUnchangedComponentView(
     ...(signals.structure ? [{ kind: "structure" as const }] : []),
   ];
   const rawEqual =
-    normalizeSingleDocument(strippedBase, after.path) ===
-    normalizeSingleDocument(strippedHead, after.path);
+    normalizeSingleDocument(strippedBase, after.path, links?.before) ===
+    normalizeSingleDocument(strippedHead, after.path, links?.after);
   return {
     ...(prepared ? { prepared } : {}),
     comparison: {

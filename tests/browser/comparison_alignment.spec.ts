@@ -34,7 +34,7 @@ test.afterAll(async () => {
   await fixture?.close();
 });
 
-const tall = () => `${fixture.url}/view/screens/tall.html`;
+const tall = () => `${fixture.url}/view/tall/`;
 
 async function expectPresentedFrames(section: Locator): Promise<void> {
   for (const side of ["before", "after"] as const) {
@@ -46,7 +46,7 @@ async function expectPresentedFrames(section: Locator): Promise<void> {
     await expect(frame).toHaveAttribute(
       "data-mokly-preview-source",
       new RegExp(
-        `/snapshots/${side}/mokly-generated/screens/tall\\.desktop\\.html$`,
+        `/snapshots/${side}/mokly-generated/tall/index\\.desktop\\.html$`,
       ),
     );
     await expect(frame).not.toHaveAttribute("src", /.*/);
@@ -119,7 +119,7 @@ test("a component comparison scrolls inside its bordered frame", async ({
 }) => {
   await openComparison(
     page,
-    `${fixture.url}/view/components/checklist-long.html`,
+    `${fixture.url}/view/checklist/long/`,
     "desktop",
     "Overlay",
   );
@@ -133,7 +133,7 @@ test("a component comparison scrolls inside its bordered frame", async ({
 test("a shorter document stays aligned past its own end", async ({ page }) => {
   await openComparison(
     page,
-    `${fixture.url}/view/screens/short.html`,
+    `${fixture.url}/view/short/`,
     "desktop",
     "Overlay",
   );
@@ -235,7 +235,7 @@ test("an inner scroll region scrolls every version while the page stays", async 
 }) => {
   await openComparison(
     page,
-    `${fixture.url}/view/screens/inner.html`,
+    `${fixture.url}/view/inner/`,
     "desktop",
     "Overlay",
   );

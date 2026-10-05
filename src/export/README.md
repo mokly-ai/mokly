@@ -5,13 +5,25 @@ hosting. Consumers use `mokly export --out <path>`, not a JavaScript deep import
 The separate `mokly publish` command uploads through the
 [public upload boundary](../publish/README.md); export itself performs no upload.
 
+Initial and final input-check compilation capture output-validation evidence
+under a short writer-lock hold. Their pending waits obey export cancellation.
+Rendering stays outside the lock; capture and installation retain their existing
+separate writer-lock boundaries.
+
 `run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
 independent `BaselineReader`, compiles in memory and captures the authored closure,
 constructs one typed authored-plus-generated `ChangeEvidence` shared by Review
 and material Changes classification, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
-assemble one shell page per entry at `view/<route>`, package assets, and
-immutable comparisons.
+assemble one shell page per entry at `view/<path>/index.html`, package assets, and
+immutable comparisons. Snapshot and preview names derive from entry paths
+under the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md).
+Review and catalogue classification share one accepted move pairing. Paired
+current entries carry prior paths and never produce removed previews. Capture
+uses the original baseline paths, including component and screen variants.
+Accepted move diagnostics pass through the command's terminal reporter before
+publication removes summary files. Baseline source reads for Markdown similarity
+remain separate from rebuilt public-output reads; neither enters the exported site.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback
@@ -26,8 +38,8 @@ catalogue change snapshots. A removed variant retains its baseline parent
 relationship; removal preserves ancestor context without introducing visual
 comparisons.
 Changes-enabled delivery captures every removed page from the same pinned
-baseline before installation. `pagePreviewMetadataPath(id)` names its typed
-metadata beside `review.json`; `snapshotPagePath(id)` names its document, and
+baseline before installation. `previewMetadataPath(path)` names its typed
+metadata beside `review.json`; `snapshotDocumentPath("before", path, "light")` names its document, and
 the local closure shares the snapshot tree with screen comparisons. Removed
 page and screen descriptors are emitted only for a complete generation. These
 files enter comparison identity before the generation path is chosen, then the
@@ -44,14 +56,14 @@ asset reader and merged evidence as comparisons, preserving Serve's
 material-output/resource Changes
 membership without reading a different current-file snapshot.
 For screen-only catalogues, `site.ts` projects per-view resource evidence from
-the unified v4 comparison into shell workspace data. Details can show matched,
+the unified v6 comparison into shell workspace data. Details can show matched,
 unresolved, and excluded stylesheets in Current without fetching comparison
 JSON, and no extra classification pass is needed for this projection.
 The projection omits views without retained or excluded resources and drops
 screens whose evidence slice is empty. Comparison JSON separately retains all
 view states and the material-change flag.
 
-Review result v4 is the only comparison result: a catalogue without
+Review result v6 is the only comparison result: a catalogue without
 registered components emits the same shape with empty component arrays.
 Snapshot roots and resources use `snapshotSidePath` and
 `snapshotResourcePath`; all builders are exported from `@mokly/viewer/data` and owned by the
@@ -96,7 +108,7 @@ outputs remain covered by the compilation comparison.
 The ownership marker and adapter-declared publication metadata are excluded
 from the identity hash; both remain in the ownership inventory, and the marker
 is added last from every finalized file.
-Descriptor version 4 carries `deploymentId`, `canonicalPath`, and
+Descriptor version 5 carries `deploymentId`, `canonicalPath`, and
 `comparisonUrl` so clients reload across incompatible deployments; it carries
 no id-to-route map. Comparison generation URLs retain their separate content
 identity.
@@ -159,7 +171,12 @@ platform dependencies when installing the package.
 `inventory.ts` and `references.ts` use
 `path_index.ts` for one case-folded file/alias collision policy, including
 directory prefixes and the final ownership marker. Reference validation also
-proves local resource closure. `ignored.ts` keeps schema 3 owned outputs and
+proves local resource closure. It uses `es-module-lexer/minimal` for package-owned
+JavaScript static imports, re-exports and literal dynamic imports. The lexer
+decodes string escapes and ignores prose, comments and `import.meta`; computed
+expressions are not evaluated. Every returned specifier uses the existing URL
+and inventory checks, and a lexer failure names the script and aborts export.
+`ignored.ts` keeps schema 3 owned outputs and
 transactions out of broad Watch rules. It caches parsed ownership by file
 identity and timestamps as bounded path/prefix sets, revalidating with one
 metadata read per lookup. Every marker that is not a valid v3 marker proves
@@ -172,14 +189,14 @@ states: ordinary publications omit the tabs, while opt-in Changes publications
 render completed counts or the explicit earlier-baseline unavailable state.
 Current-only static delivery explicitly
 disables comparison requests while retaining canonical `/view/<route>`
-navigation resolved by entry id.
+navigation resolved by entry path.
 It also declares its stricter `.context` output root; the same shared path
 validator enforces that scope at preflight and before installation.
 
 `reservation.ts` uses filesystem-native per-output directory names under an
 owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Only the current reservation namespace controls writer admission.
-Export captures only compiled `mokly-generated/` files and the v8
+Export captures only compiled `mokly-generated/` files and the v9
 `assetClosure`. Reference validation, Review and content-change classification
 use the same confined closure. Comparison copies also pass the same lexical
 consumer-package and source policy. Manifest and cache privacy is unconditional.
@@ -187,6 +204,8 @@ A protected closure reference fails with its referring route; unreferenced
 HTTP paths return 404. Build and export share HTML anchor validation through
 `html_link_validation.ts`. Watch ignores `mokly-generated/` by prefix and
 observes referenced authored assets in place.
+
+Historical policy uses each side's own generated and source inventory.
 
 `backup.ts` revalidates captured output and centralizes safe restoration and
 allowlisted, non-recursive cleanup. `operations.ts` is the injectable filesystem
@@ -237,3 +256,7 @@ Markdown documents and moves inside one generated tree. It introduces manifest
 v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands
 acquire the output lock. The integration plan records verification and scope.
+
+Markdown documents join current shell and static inventories in each scheme.
+Their copied resources remain byte-exact. Removed documents use page preview
+metadata and capture every historical scheme and its full resource closure.

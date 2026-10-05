@@ -3,6 +3,7 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   GENERATED_DIRECTORY,
   entryRoute,
+  documentRoute,
   isManifestComponentVariant,
   validateComponentViewRecord,
   generatedViews,
@@ -14,13 +15,12 @@ import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { PublicFilePolicy } from "../config/public_policy.js";
+import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../html_references.js";
+import { extractHtmlReferences } from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
+import type { EntryMove } from "../review/moves/types.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
@@ -34,7 +34,12 @@ import {
 import type { LoadedGraph } from "./load_graph.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
+import {
+  moveTargetsForGeneration,
+  type AcceptedMoveTargets,
+} from "./move_targets.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
+import { assertSnapshotRoutes } from "./output_snapshot.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import { componentResourceSeeds } from "./resource_seeds.js";
@@ -67,6 +72,7 @@ const defaultValidationSeams: DocumentValidationSeams = {
 export class DocumentCompiler {
   readonly entries: readonly ResolvedRegistryEntry[];
   readonly routes = new Map<string, DocumentTarget>();
+  private moves: readonly EntryMove[] = [];
   private readonly byId: ReadonlyMap<string, ResolvedRegistryEntry>;
   private readonly components;
   private readonly prepared = new DocumentCache<PreparedDocument>(
@@ -85,26 +91,38 @@ export class DocumentCompiler {
     private readonly graph: LoadedGraph,
     seams: DocumentValidationSeams = defaultValidationSeams,
   ) {
-    const registry = prepareRegistry(graph.definitions, runtime.config);
+    validateGeneratedOutputPaths(runtime.outputSnapshot.routes, runtime.config);
+    const registry = prepareRegistry(
+      graph.definitions,
+      runtime.config,
+      graph.documents,
+    );
     this.entries = registry.entries;
-    this.byId = registry.byId;
+    this.byId = registry.byPath;
     this.components = new Map(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "component" && !isManifestComponentVariant(entry)
-          ? [[entry.id, entry] as const]
+          ? [[entry.path, entry] as const]
           : [],
       ),
     );
     for (const entry of runtime.manifest.entries) {
+      if (entry.kind === "document")
+        for (const colorScheme of entry.colorSchemes)
+          this.routes.set(documentRoute(entry.path, colorScheme), {
+            entryId: entry.path,
+            viewport: "desktop",
+            colorScheme,
+          });
       if (entry.kind === "page")
-        this.routes.set(entryRoute("page", entry.id), {
-          entryId: entry.id,
+        this.routes.set(entryRoute(entry.path), {
+          entryId: entry.path,
           viewport: "desktop",
           colorScheme: "light",
         });
       for (const view of generatedViews(entry))
         this.routes.set(view.path, {
-          entryId: entry.id,
+          entryId: entry.path,
           viewport: view.viewport,
           colorScheme: view.colorScheme,
         });
@@ -115,6 +133,7 @@ export class DocumentCompiler {
       (route) => (this.activeRead?.(route) ?? this.prepare(route)).html,
       seams.parseCss,
     );
+    assertSnapshotRoutes(runtime.outputSnapshot, this.pending.routes());
     this.links = {
       pending: this.pending,
       parsed: new Map(),
@@ -127,7 +146,9 @@ export class DocumentCompiler {
   render(
     route: string,
     componentProps?: Readonly<Record<string, unknown>>,
+    moveTargets?: AcceptedMoveTargets,
   ): CompiledDocument {
+    this.moves = moveTargetsForGeneration(moveTargets, this.runtime.generation);
     const document = componentProps
       ? this.prepare(route, componentProps)
       : this.prepare(route);
@@ -197,7 +218,6 @@ export class DocumentCompiler {
         `unknown generated document: ${route}`,
       );
     const config = this.runtime.config;
-    validateGeneratedOutputPaths([route], config);
     const views = new Map<string, ArtifactView>();
     const componentViews = new Map<string, ComponentViewRecord>();
     const outputs = renderFragments(
@@ -226,6 +246,7 @@ export class DocumentCompiler {
       config,
       views,
       this.byId,
+      this.moves,
     );
     const html = outputs.get(route)!;
     const entry = this.byId.get(target.entryId)!;

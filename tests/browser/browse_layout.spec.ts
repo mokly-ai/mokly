@@ -1,41 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 import {
-  welcomeRow,
-  detailsRow,
-  openScreensGroup,
   computedStyle,
+  openScreensGroup,
+  welcomeRow,
 } from "./browse_assertions.js";
-
-test("the browser frame expands to an overlay and collapses again", async ({
-  page,
-}) => {
-  await page.goto("/view/screens/example-welcome.html");
-  await page.click(".browser-expand");
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-  expect(
-    await page.evaluate(() =>
-      document.body.classList.contains("frame-expanded"),
-    ),
-  ).toBe(true);
-  await expect(page.locator(".browser-expand")).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
-  await page.click(".browser-expand");
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-  await page.mouse.click(8, 300);
-  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
-  expect(
-    await page.evaluate(() =>
-      document.body.classList.contains("frame-expanded"),
-    ),
-  ).toBe(false);
-  await page.click(detailsRow);
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
-});
 
 test("desktop catalogue navigation resizes and remembers its width", async ({
   page,
@@ -174,10 +143,10 @@ test("the shell works without JavaScript", async ({ baseURL, browser }) => {
   const page = await context.newPage();
   await page.goto("/");
   await page
-    .locator('details[data-nav-folder="folder:Example/Screens"] summary')
+    .locator('details[data-nav-folder="folder:example/screens"] summary')
     .click();
   await page.click(welcomeRow);
-  await expect(page).toHaveURL(/welcome\.html$/);
+  await expect(page).toHaveURL(/welcome\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator(".mbk-frame-mobile")).toBeVisible();
   await expect(page.locator(".mbk-frame-desktop")).toBeVisible();

@@ -28,7 +28,7 @@ test.beforeAll(async () => {
     await validateWarmExample(config, prepared.commit);
     const file = path.join(
       root,
-      "examples/basic/entries/design/library/controls/tag-chip.view.tsx",
+      "examples/basic/specs/design/library/controls/tag-chip.view.tsx",
     );
     const source = await fs.readFile(file, "utf8");
     expect(source).toContain("{label}");
@@ -47,7 +47,7 @@ test.beforeAll(async () => {
     site = await serveStaticFiles(output);
     await assertServedShellMarker(
       site.url,
-      "/view/components/design-ui-top-bar-search.html",
+      "/view/design/library/chrome/top-bar/search/",
     );
   } catch (error) {
     await site?.close();
@@ -74,9 +74,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     page.on("response", (response) => {
       if (response.status() >= 400) failures.push(response.url());
     });
-    await page.goto(
-      `${site.url}/view/components/design-ui-top-bar-search.html`,
-    );
+    await page.goto(`${site.url}/view/design/library/chrome/top-bar/search/`);
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     await expect(page.getByLabel("Query", { exact: true })).toBeDisabled();
@@ -85,15 +83,15 @@ for (const viewport of ["desktop", "mobile"] as const)
     await chooseVariant(page, "Tag picker");
     await expect(frame.locator(".mbk-tag-picker")).toBeVisible();
     await expect(frame.locator(".mbk-chip").first()).toContainText("revised");
-    await page.goto(`${site.url}/view/components/design-ui-tag-chip.html`);
+    await page.goto(`${site.url}/view/design/library/controls/tag-chip/`);
     await expect(
       page.locator(
-        '[data-nav-row][data-route="components/design-ui-tag-chip.html"]',
+        '[data-nav-row][data-route="design/library/controls/tag-chip/index.html"]',
       ),
     ).toHaveAttribute("data-changed", "true");
     await expect(
       page.locator(
-        '[data-nav-row][data-route="screens/design-browse-tag-picker.html"]',
+        '[data-nav-row][data-route="design/browse/views/screen/tag-picker/index.html"]',
       ),
     ).not.toHaveAttribute("data-changed", "true");
     await page.getByRole("tab", { name: "Usage", exact: true }).click();

@@ -2,19 +2,25 @@
 
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
-Screen and Review-ignore behavior remains below.
+Screen and Review-ignore behavior remains below. Pairing uses kind and path,
+then the move signals; review result v6 carries `previousPath` on paired moves.
+Documents use the page material rules. The viewer presents paired entries under
+the [move contract](./mokly-moves.md).
 
 The catalogue's All / Changes filter narrows one navigation tree. There is no
 Review tab, report, or `mokly review`; `--out` belongs only to static `export`.
 
-[Pages](./mokly-pages.md) participate in Changes and removed-entry states,
-while comparison controls remain exclusive to changed screens and eligible
-component variants. Each [variant](./mokly-variants.md) is an entry of its
-parent's kind with its own route, row, count, views, and comparison; only its
-navigation placement under the parent is variant-specific. The
+[Pages](./mokly-pages.md) and [documents](./mokly-documents.md) participate in
+Changes and removed-entry states, while comparison controls remain exclusive
+to changed screens and eligible component variants. Each
+[variant](./mokly-variants.md) is an entry of its parent's kind with its own
+path, row, count, views, and comparison; only its navigation placement under
+the parent is variant-specific. The
 [shared catalogue snapshot](./mokly-catalogue-changes.md) supplies metadata
-independently of screen results; removed pages are flat Changes-only rows with
-baseline ancestry. Review reads follow the [source policy](./mokly-source-protection.md).
+independently of screen results; removed pages and documents are flat
+Changes-only rows with baseline folder titles, and an entry the
+[move contract](./mokly-moves.md) pairs with its baseline keeps one row
+labelled Moved. Review reads follow the [source policy](./mokly-source-protection.md).
 
 Opt into [Published Changes](./mokly-publication.md) with
 `npm run preview:build -- --include-changes`; default publication omits Changes,
@@ -23,8 +29,9 @@ baseline admission and pairing/order fixes run in Serve, export, and publish.
 
 ## Changes membership
 
-Changes is a review list of added/removed screens and pages, material document changes,
-reviewable entry metadata changes, and user flows that embed those screens.
+Changes is a review list of added, removed, and moved screens, pages, and
+documents, material document changes, reviewable entry metadata changes, and
+user flows that embed those screens.
 A new or edited flow is included independently. Source edits, source moves,
 dependency declaration edits, and shared-impact matches alone do not add
 otherwise unchanged entries. Dependency and shared-impact evidence remains in
@@ -32,11 +39,12 @@ comparison details, accessible for every screen from All. Component-owned and
 exact declared paths follow [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 
 Each variant of either kind is projected independently. Its metadata projection
-contains `variantOf`, its parent's `{ id, title }`, and its copied `navPath`.
-Changing `variantOf`, its `navPath`, or the parent title therefore marks the
-variant changed, while a material or metadata change confined to the variant
-never adds the parent. A flow is propagated only when its `screenId` step names
-the exact changed screen, including a variant.
+contains `variantOf` and its parent's title. Changing the parent title
+therefore marks the variant changed, while a material or metadata change
+confined to the variant never adds the parent; a parent that moves carries its
+variants with it under the [move contract](./mokly-moves.md). A flow is
+propagated only when its `screenPath` step names the exact changed screen,
+including a variant.
 
 Before marking an existing fragment, compare its branch-point and in-memory
 documents with the same paired ignore normalization and material-key rules as
@@ -44,11 +52,17 @@ the comparison engine. Ignored-only changes are excluded from Changes; real
 content changes, material-key changes, and one-sided ignored-region adoption
 with changed content remain eligible. Both viewports and every available color
 scheme participate. Metadata includes address, titles, descriptions,
-rationale, tags, related-doc links, flow steps and memberships, view structure,
-and `navPath`; it excludes source locations and dependencies.
-Plain generated markers and recognized historical first lines are excluded from
-comparison, so a
-source move alone stays unchanged. Stored snapshots retain the original headers.
+rationale, tags, related-doc links, flow steps and memberships, and view
+structure; it excludes folder titles, source locations, and dependencies.
+The plain generated marker are excluded from document comparison, so a
+source move alone stays unchanged. Resource URLs compare by their resolved route;
+accepted source moves map generated styles/assets and copied document resources
+under the [move normalisation rule](./mokly-moves.md#normalisation). Equal mapped
+resource bytes do not add material, dependency or shared-impact reasons. CSS URL
+spellings use that same map; real resource edits retain normal attribution.
+Inventoried owned sources relocated with their defining module compare by
+logical path and confined bytes; only byte-identical moves lose dependency
+reasons. Stored snapshots retain the original markers, paths and resource URLs.
 
 Changes to local resources referenced by a fragment also keep that screen in
 Changes. Follow CSS imports, CSS URLs, and embedded-document resources
@@ -60,9 +74,9 @@ Unreferenced public files never add entries through a broad shared-impact glob.
 Every reachable existing resource is validated, including images and fonts;
 finding a changed resource does not skip its CSS/HTML references or later graph
 edges. Added screens, newly available views, and existing material fragment
-changes do not bypass resource validation. Whole-document pages use these same
-rules for their single generated document and its rendered resources; they do
-not gain screen comparison controls or viewport variants.
+changes do not bypass resource validation. Pages and documents use these same
+rules for their generated documents and rendered resources; they do not gain
+screen comparison controls or viewport variants.
 For public file and directory aliases, compare changed Git paths against both
 the referenced route and its validated physical path relative to the real
 `mockupsDir`. Editing a target marks its consumers even when the alias itself
@@ -100,15 +114,15 @@ kept or excluded resource evidence.
 The shell receives this per-view resource evidence for screen-only catalogues
 as well as component catalogues, including in Current before snapshots exist.
 Live screen-only classification retains its analysis as `screenEvidence`, keyed
-by entry id; the workspace selects its `resourceEvidence` slice without a
-second analysis pass. Static exports select that slice from their packaged v4
+by entry path; the workspace selects its `resourceEvidence` slice without a
+second analysis pass. Static exports select that slice from their packaged v5
 comparison. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
 exclusions, shared-impact, and ignored-content details without duplicate cards.
 See [CSS evidence presentation](./mokly-css-evidence-presentation.md).
 
 Classification reads baseline files without writing snapshots or a comparison;
-per-commit selection uses verified Git blobs or a completed rebuilt v8 cache. Baseline reads are batched, shared
+per-commit selection uses verified Git blobs or a completed rebuilt v9 cache. Baseline reads are batched, shared
 resource edges are cached, and cycles terminate. Apart from verified deletions,
 an unavailable or invalid input makes Changes unavailable while preserving the
 tabs and access through All in live Serve.
@@ -200,7 +214,8 @@ selection is not itself a changed entry, activating a changed row while the
 Changes filter is selected opens that destination's first changed view instead
 of the sticky selection, unless the URL names a viewport or scheme. Once a
 changed entry is selected, later row activations keep the sticky axes while an
-aggregate parent still redirects to its first visible changed variant. A direct
+unmodified container row still redirects to its first visible changed variant
+or member under [variant navigation](./mokly-variant-navigation.md#changes-rows). A direct
 URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
 selection.
 These marks and the `Changed views` row apply in exports with Changes as well as

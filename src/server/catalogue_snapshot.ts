@@ -1,4 +1,4 @@
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 import { createCatalogue, type Catalogue } from "@mokly/viewer/server";
 
 import { compileCatalogue } from "../build/compile.js";
@@ -28,7 +28,7 @@ import {
   computeCatalogueChanges,
   type ResolvedCatalogueChanges,
 } from "./changed.js";
-import type { ComponentChangeSnapshot } from "./component_changes.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 
 const configIdentity = Symbol("validated catalogue config");
 
@@ -45,10 +45,10 @@ export interface CatalogueSnapshot {
 export async function loadCatalogueSnapshot(
   config: ResolvedConfig,
   resolveChanges?: (
-    manifest: ManifestV8,
+    manifest: ManifestV9,
     accepted: AcceptedGeneration,
   ) => Promise<ResolvedCatalogueChanges | undefined>,
-  manifest?: ManifestV8,
+  manifest?: ManifestV9,
 ): Promise<CatalogueSnapshot> {
   const supplied = manifest !== undefined;
   const compilation = manifest
@@ -81,7 +81,11 @@ export async function loadCatalogueSnapshot(
     [configIdentity]: config,
     ...(compilation ? { outputs: compilation.outputs } : {}),
     catalogue: timeSync("catalogue.index", () =>
-      createCatalogue(acceptedManifest, changes?.removedEntries),
+      createCatalogue(
+        acceptedManifest,
+        changes?.removedEntries,
+        changes?.movedEntries,
+      ),
     ),
     ...(changes ? { changes } : {}),
     ...(changes?.componentChanges
@@ -104,7 +108,7 @@ export async function loadLiveCatalogueSnapshot(
 export function loadServedCatalogueSnapshot(
   config: ResolvedConfig,
   base?: string,
-  manifest?: ManifestV8,
+  manifest?: ManifestV9,
   repository?: () => ReadOnlyReviewRepository,
 ): Promise<CatalogueSnapshot> {
   return loadCatalogueSnapshot(

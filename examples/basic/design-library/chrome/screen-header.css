@@ -36,7 +36,7 @@
   margin: 0;
 }
 
-.mbk-idchip {
+.mbk-pathchip {
   background: var(--chrome-bg);
   border: 1px solid var(--chrome-border);
   border-radius: 6px;
@@ -48,7 +48,7 @@
   white-space: nowrap;
 }
 
-.mbk-idchip:active {
+.mbk-pathchip:active {
   background: var(--chrome-border);
   border-color: var(--chrome-border-strong);
   box-shadow: var(--chrome-shadow-press);

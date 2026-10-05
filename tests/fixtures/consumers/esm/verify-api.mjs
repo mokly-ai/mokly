@@ -9,16 +9,13 @@ const expected = [
   "ReviewIgnoreScope",
   "defineComponent",
   "defineConfig",
+  "defineFolder",
   "definePage",
-  "defineRoot",
   "defineScreen",
   "defineUseCase",
-  "folder",
   "mockLink",
-  "page",
   "resolveInstance",
   "reviewMaterialKey",
-  "screen",
 ];
 
 assert.deepEqual(Object.keys(api).sort(), expected);
@@ -27,7 +24,10 @@ assert.equal(
   api.mockLink("packed-home", "packed-section"),
   "mock:packed-home#packed-section",
 );
-assert.throws(() => api.mockLink("packed-home#packed-section"), /kebab-case/);
+assert.throws(
+  () => api.mockLink("packed-home#packed-section"),
+  /complete path/,
+);
 
 const instance = {
   key: createHash("sha256")

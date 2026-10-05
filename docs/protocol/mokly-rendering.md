@@ -1,10 +1,14 @@
 # Mokly Rendering And Generated Output Contract
 
-This implemented contract expands the [package contract](./mokly-package.md)
-for the [authoring API](./mokly-authoring.md) and
+This contract expands the [package contract](./mokly-package.md) for the
+[authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md) and the
 [referenced closure](./mokly-generated-output.md#closure-urls-and-publication).
+
+Rendering and the generated-output lifecycle use path-derived file names and
+manifest v9. Mokly renders discovered Markdown definitions under the
+[document contract](./mokly-documents.md); source Markdown stays private.
 
 ## Rendering Boundary
 
@@ -59,8 +63,9 @@ material stays conservative. The [component contract](./mokly-components.md)
 and [attribution contract](./mokly-component-changes.md) define validation. Mokly
 serializes Review-ignore markers, adapts opt-in `MockLink asChild` controls,
 and rewrites every complete
-`mock:<id>[#fragment]` value found in `href` or `data-nav-href` after this
-function returns, including when one element has both attributes. The rewrite
+`mock:<path>[#fragment]` value, complete or relative, found in `href` or
+`data-nav-href` after this function returns, including when one element has
+both attributes. The rewrite
 is element-aware and applies to complete page output: logical `href` is valid only on
 native HTML/SVG links, every other owner fails the build, documents with an
 activatable logical link reject `<base href>`. Final rendered documents
@@ -86,8 +91,8 @@ operating-system temporary directory or npx cache.
 ## Stylesheet Selection
 
 Stylesheet rules are ordered, declarative consumer configuration. Their globs
-match the entry's catalogue route (`<prefix>/<id>.html`) before viewport
-fragments are derived, so one exact screen-route rule applies to both viewports
+match the entry's logical route (`<path>/index.html`) before viewport views
+are derived, so one exact entry-route rule applies to both viewports
 and every enabled scheme. Shared
 stylesheets come first, followed by the matching scheme-specific list.
 Generated fragment links are relative to the fragment route and URL-encoded by
@@ -103,6 +108,6 @@ explicitly.
 
 ## Generated Contract
 
-The deterministic generated views, manifest v8 shape, CSS/assets and ownership
+The deterministic generated views, manifest v9 shape, CSS/assets and ownership
 rules are defined in the linked [Generated Rendering Contract](./mokly-rendering-generated.md).
 Exact identity-derived routes follow [Artifact Paths](./mokly-artifact-paths.md).

@@ -14,7 +14,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("component tabs distinguish leaves from nested components", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("controls/overview", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/controls/controls", viewport),
+      );
       const inspector = page.getByRole("region", {
         name: "Inspector",
         exact: true,
@@ -22,7 +24,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await expect(inspector.locator('[data-panel="components"]')).toHaveCount(
         0,
       );
-      await page.goto(componentDesignUrl("pages/toolbar", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/pages/toolbar", viewport),
+      );
       await inspector
         .getByRole("button", { name: "Nested components", exact: true })
         .click();
@@ -32,7 +36,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
           exact: true,
         }),
       ).toContainText("Action");
-      await page.goto(componentDesignUrl("states/empty", viewport));
+      await page.goto(
+        componentDesignUrl("design/components/states/empty", viewport),
+      );
       await expect(
         inspector.getByRole("button", { name: "Components", exact: true }),
       ).toBeVisible();
@@ -41,7 +47,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("grouped view controls change the previews and retain edited fields", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("controls/editing/edited", viewport));
+      await page.goto(
+        componentDesignUrl(
+          "design/components/controls/editing/edited",
+          viewport,
+        ),
+      );
       const toolbar = page.getByRole("toolbar", { name: "Preview options" });
       const mode = toolbar.getByRole("combobox", { name: "Preview viewport" });
       const label = page.getByRole("textbox", { name: "label", exact: true });
@@ -76,7 +87,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("single-component highlighting fills the screen and remains selectable", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("inspection/consumer", viewport));
+      await page.goto(
+        componentDesignUrl(
+          "design/components/inspection/inspection-consumer",
+          viewport,
+        ),
+      );
       await page.getByRole("switch", { name: "Highlight components" }).check();
       const preview = page.locator(".ce-preview-view:visible");
       const content = await preview.locator(".ce-other-example").boundingBox();
@@ -91,7 +107,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         .getByRole("link", { name: "Inspect Action, Continue" })
         .click({ timeout: 3000 });
       await expect(page).toHaveURL(
-        componentDesignUrl("inspection/consumer", viewport),
+        componentDesignUrl(
+          "design/components/inspection/inspection-consumer",
+          viewport,
+        ),
       );
       await expect(
         page.getByRole("region", { name: "Selected instance" }),
@@ -102,9 +121,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const route of [
-        "overview",
-        "controls/editing/unset",
-        "states/empty",
+        "design/components/overview",
+        "design/components/controls/editing/unset",
+        "design/components/states/empty",
       ]) {
         await page.goto(componentDesignUrl(route, viewport));
         await expect(
@@ -115,7 +134,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         );
       }
       await page.goto(
-        componentDesignUrl("controls/states/comparison", viewport),
+        componentDesignUrl(
+          "design/components/controls/states/comparison",
+          viewport,
+        ),
       );
       await expect(
         page.getByRole("group", { name: "Comparison mode" }),
@@ -128,7 +150,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("inspector resizing and scrolling keep the shell and tabs in place", async ({
       page,
     }) => {
-      await page.goto(componentDesignUrl("controls/editing/edited", viewport));
+      await page.goto(
+        componentDesignUrl(
+          "design/components/controls/editing/edited",
+          viewport,
+        ),
+      );
       const pane = page.locator(".ce-preview-pane");
       const inspector = page.locator(".ce-inspector");
       const heading = await page.locator(".mbk-screen-head").boundingBox();
@@ -188,7 +215,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
 test("view controls and highlighting work inside sandboxed Browse frames", async ({
   page,
 }) => {
-  await page.goto("/view/screens/design-component-inspection-details.html");
+  await page.goto("/view/design/components/inspection/inspection-details/");
   const frame = page.frameLocator(".mbk-frame-desktop iframe");
   const toolbar = frame.getByRole("toolbar", { name: "Preview options" });
   await toolbar

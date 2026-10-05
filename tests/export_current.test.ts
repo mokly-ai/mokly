@@ -38,7 +38,7 @@ test("current-only exports skip Git and capture exactly the installed finalized 
     /data-filter="changed"|live_updates.js/,
   );
   assert.match(
-    files.get("view/screens/home.html")!.toString(),
+    files.get("view/home/index.html")!.toString(),
     /&quot;comparisonUrl&quot;:null/,
   );
 });

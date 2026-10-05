@@ -29,14 +29,14 @@ test("consumer export omits unused reserved templates without treating them as p
   assert.equal(files.has("static/unused.source.html"), false);
   assert.equal(files.has("static/mokly-manifest.json"), false);
   assert.equal(files.has("static/mokly-generated/mokly-manifest.json"), false);
-  assert.equal(files.has("view/screens/home.html"), true);
+  assert.equal(files.has("view/home/index.html"), true);
 });
 
 test("consumer export keeps imported document templates private while publishing their registered page", async (context) => {
   const source = `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
 import template from "../mockups/private-template.html";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Guidance", dependencies: [], relatedDocs: [], render: () => template }));`;
+mockups.push(definePage({ path: "handbook", title: "Handbook", description: "Guidance", dependencies: [], relatedDocs: [], render: () => template }));`;
   const fixture = await changedFixture(
     context,
     source,
@@ -57,7 +57,7 @@ mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Guida
   const files = await directoryFiles(result.outDir);
   assert.equal(files.has("static/private-template.html"), false);
   assert.match(
-    files.get("static/mokly-generated/pages/handbook.html")!.toString(),
+    files.get("static/mokly-generated/handbook/index.html")!.toString(),
     /<h1>Handbook<\/h1>/,
   );
 });

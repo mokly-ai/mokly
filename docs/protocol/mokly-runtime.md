@@ -1,21 +1,15 @@
 # Mokly Build And Browse Runtime
 
 [Whole-document pages](./mokly-pages.md) share the same path-derived folder
-hierarchy as screens and flows. Current and baseline output use manifest v8
+hierarchy as screens and flows. Current and baseline output use manifest v9
 under the [compatibility contract](./mokly-baseline-compatibility.md).
 
 ## Source Of Truth
 
-Consumer-authored registry modules and imported render helpers are the source of
-truth. Build writes fragments, page HTML, and manifest v8 only into the
-catalogue's `mokly-generated/` child. The Git index determines whether output is
-tracked; [per-commit baseline selection](./mokly-derived-baselines.md) reads
-complete Git blobs or rebuilds an absent/incomplete historical output.
-Browsing and comparisons consume the same rendered documents and definitions;
-neither may introduce a second screen renderer or catalogue. This repository's
-basic example tracks authored CSS and ignores `mokly-generated/`; only an explicit
-Build generates its local HTML and manifest. See the
-[generated-output contract](./mokly-generated-output.md) for the complete layout.
+Authored entry modules, Markdown and imported helpers define the catalogue.
+Build writes the whole `mokly-generated/` tree. Serve and comparisons consume
+the accepted generation without another renderer. Git tracking and per-commit
+baselines follow [generated output](./mokly-generated-output.md).
 
 ## Delivery Status
 
@@ -29,6 +23,8 @@ Canonical outer navigation from links inside fragment frames, request-visible
 fragment transport, manifest-bound preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
+Path identity, manifest v9, Markdown documents, and move detection are
+implemented.
 
 Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The
 public catalogue, optional frame transport, and package extraction are
@@ -63,12 +59,14 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 `mokly build` performs this transaction:
 
 1. Load and validate config.
-2. Discover and bundle all entry, renderer, and imported helper modules.
-3. Validate registry metadata, relationships, derived routes, and output
+2. Walk the configured roots; bundle entry, renderer, and imported
+   helper modules and read Markdown documents and folder records.
+3. Validate registry metadata, relationships, derived paths, and output
    collisions.
-4. Render screen fragments and registered whole-document pages in deterministic order.
-5. Resolve id links and validate document links and anchors.
-6. Build the version 8 manifest, asset closure, generated-file inventory and
+4. Render screen views, whole-document pages, and Markdown documents in
+   deterministic order.
+5. Resolve path links and validate document links and anchors.
+6. Build the version 9 manifest, asset closure, generated-file inventory and
    resolved source inventory; validate closure and hrefs from `mokly-generated/`.
 7. Stage the entire `mokly-generated/` tree before changing the last-good output.
 8. Replace that tree transactionally; restore it on failure.
@@ -94,11 +92,11 @@ can be staged. It
 fails for:
 
 - invalid config or registry metadata;
-- duplicate ids, or a derived route or view that collides with another
-  generated or public file;
-- forbidden nested paths or empty folders, plus
-  [path violations](./mokly-nav-paths.md#labels-and-diagnostics), missing
-  use-case screens, or reciprocal memberships;
+- duplicate or case-colliding paths, or a derived view or document that
+  collides with another generated or public file;
+- [path](./mokly-paths.md#diagnostics), [folder](./mokly-folders.md#diagnostics),
+  and [entry module](./mokly-entry-modules.md#diagnostics) violations, unknown
+  or moved link targets, missing use-case screens, or reciprocal memberships;
 - unresolved `mock:` links, raw document links, local HTML/CSS resources, or
   anchors;
 - missing stylesheets and declared dependencies;
@@ -127,18 +125,19 @@ static delivery metadata, and lazy immutable comparisons are defined by
 No server or watcher is started for export; served behavior below is unchanged.
 
 Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v8
+source graphs before binding. Full-manifest consumers still require validated v9
 output and a current source inventory. These scans never render pages or rewrite
 output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
 worker isolation and generation-local caches. Browse exposes:
 
 - `/` for the catalogue home;
-- `/view/<route>` for screens, components, use cases, and registered
-  whole-document pages, where the route derives from the entry's kind and id
-  under the [derived route rule](./mokly-authoring.md#derived-routes);
-- `/static/<path>` for generated fragments, document pages, and consumer assets,
-  always delivered with `Cache-Control: no-store` because watched rebuilds
-  replace bytes at stable URLs;
+- `/view/<path>/` for every current or removed entry, where the path is the
+  entry's identity under the [path contract](./mokly-paths.md#urls);
+  `/view/<path>` and `/view/<path>/index.html` answer with the same shell;
+- `/static/<file>` for generated views, page and Markdown documents and copied
+  resources under `mokly-generated/`, plus referenced authored assets, always delivered with
+  `Cache-Control: no-store` because watched rebuilds replace bytes at stable
+  URLs;
 - `/mokly-viewer/diffs/review.json` for explicitly requested comparisons, with
   redirects to immutable generations and snapshot files beneath the same prefix;
 - package-owned client and update endpoints under `/mokly-viewer/`.
@@ -163,19 +162,20 @@ All ordinary routes support GET and HEAD. HEAD returns the same status and
 headers without a body, including not-found and fragment-validation errors. A HEAD request to the update endpoint completes without opening or
 registering an event stream.
 
-Folders are navigation groups, not destinations. Unknown ids and routes
-return a not-found main view while keeping catalogue navigation available.
+Folder rows browse without navigating; `/view/<folder>/` opens the folder's
+own page when one exists. Unknown paths return a not-found main view while
+keeping catalogue navigation available.
 Static path handling rejects traversal and does not expose repository files
 outside configured public roots. The shared relative-path decoder rejects
 malformed encoding, absolute and empty paths, dot segments, and forward or
 backslash separators introduced by decoding one original URL segment before
 any filesystem resolution.
 
-Browse caches [section trees](./mokly-nav-paths.md#sections-and-path-derivation)
-from validated manifest v8 paths.
-The serve-mode `live-index-1` retains that literal `schemaVersion` but carries
-the v8 four-kind entry shape and authored `navPath` (with unrendered
-usage metadata omitted), validated through the v8 metadata schema.
+Browse projects one [catalogue tree](./mokly-catalogue.md#tree) from validated
+manifest v9 paths and folder records and splits it into the Components and
+Specs sections. The serve-mode `live-index-2` retains that literal
+`schemaVersion` but carries the v9 entry shape and folder records (with
+unrendered usage metadata omitted), validated through the v9 metadata schema.
 
 ## Browse Shell
 
@@ -192,9 +192,9 @@ context outside the public catalogue; export supplies none.
 The package owns a neutral, responsive Mokly shell: a top bar with brand,
 search with its tag picker; a catalogue navigation
 column with a `Collapse all` control, an All/Changes filter, nested disclosure
-groups with folder/screen/page/flow icons and indent guides; an accessible
+groups with folder/screen/page/document/flow icons and indent guides; an accessible
 desktop split separator that resizes the navigation within the design bounds
-and remembers the served-origin preference; linked breadcrumbs with an id
+and remembers the served-origin preference; linked breadcrumbs with a path
 chip; viewport and appearance controls; realistic phone and browser device
 chrome; a per-frame expand-to-overlay toggle; and a collapsible details
 inspector. Current and comparison views share the same navigation and saved
@@ -227,8 +227,10 @@ Route attribution compares each current manifest entry with its base entry and
 matches material fragment changes and changes to rendered local resources.
 Component membership follows [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 Screen-only catalogues follow [Changes membership](./mokly-changes.md#changes-membership).
-Entry comparison projects reviewable metadata; a `navPath` difference marks
-the entry changed under the [Changes rule](./mokly-changes.md#changes-membership).
+Entry comparison projects reviewable metadata; a title or description
+difference marks the entry changed under the
+[Changes rule](./mokly-changes.md#changes-membership), while a changed path is
+a move the [move contract](./mokly-moves.md) pairs with its baseline entry.
 The projection excludes source locations and dependency declarations; changes
 to those implementation details remain secondary comparison evidence. Fragment
 comparison applies the same paired ignore rules and material keys as screen
@@ -243,7 +245,7 @@ fragments is affected too and remains visible in the changed-only filter.
 
 A screen embeds its generated mobile and desktop fragments inside package-owned
 device frames. A use case renders ordered steps that reference those same
-fragments and link back to their standalone screens. A page embeds its complete generated document without viewport or comparison
+fragments and link back to their standalone screens. A page or Markdown document embeds its complete generated document without viewport or comparison
 controls. The details inspector may show description, rationale,
 source and fragment paths including dark renders, the schemes a screen renders
 in, the tags the entry declares, related docs, dependencies, use cases, and
@@ -272,25 +274,23 @@ Comparison panes keep byte-unmodified files and no script permission.
 
 Stored disclosure rules are in the [persistence contract](./mokly-disclosure-persistence.md).
 
-The [variant contract](./mokly-variants.md) adds
-`variants:<section>:<parent id>` for the variant list a screen or component
-row discloses,
-persisted, restored, and collapsed beside the folder keys. That list is a
-container rather than a `<details>`, because the row beside it is a link and
+The [variant navigation contract](./mokly-variant-navigation.md) adds
+`variants:<parent path>` for the variant list a screen or component row
+discloses, persisted, restored, and collapsed beside the folder keys. That list
+is a container rather than a `<details>`, because the row beside it is a link and
 cannot also be a summary; its `hidden` state and its button's `aria-expanded`
-carry the same disclosure the folder keys carry, and the button's
-accessible name follows the state. When search or the Changes filter hides a
-parent row, it hides the entire leaf container, so no disclosure button remains
-visible or focusable without its row; the container reappears with the row. A
-parent row whose list holds a changed variant carries `data-changed-variants`,
-the aggregate mark that keeps the group visible under the Changes filter
-without claiming the parent itself changed.
-The stylesheet draws that attribute and `data-changed` as the same trailing
-dot, and reveals the row's visually hidden change wording to assistive
-technology, so a background evidence refresh moves the mark by toggling the
-attributes alone. A Removed row is never marked. Activating a parent row that
-carries only the aggregate mark while the Changes filter is selected navigates
-to the first changed variant row its list still shows.
+carry the same disclosure the folder keys carry, and the button's accessible name
+follows the state. When search or the Changes filter hides a parent row, it hides
+the entire leaf container, so no disclosure button remains visible or focusable
+without its row; the container reappears with the row. A parent row whose list
+holds a changed variant carries `data-changed-variants`, the aggregate mark that
+keeps the group visible under the Changes filter without claiming the parent
+itself changed. The stylesheet draws that attribute and `data-changed` as the
+same trailing dot, and reveals the row's visually hidden change wording to
+assistive technology, so a background evidence refresh moves the mark by toggling
+the attributes alone. A Removed row is never marked. Activating a parent row that
+carries only the aggregate mark while the Changes filter is selected navigates to
+the first changed variant row its list still shows.
 
 Per-view change evidence drives the status beside the title and the comparison
 band, so both describe the shown view rather than the entry-wide result. With
@@ -316,16 +316,17 @@ The marks and row point to the changed views when the shown view is Unmodified.
 A light-only catalogue has no scheme control or scheme mark. For a component
 page, this evidence describes the variant entry whose views it shows.
 
-Opening a changed row while the Changes filter is selected lands on the first
-changed view instead of the sticky selection. Arriving from the filter is an
-explicit signal rather than a guess: activating the row records one
-session-scoped intent naming the destination, and the destination workspace
-reads and clears that intent as it installs, landing only when the intent names
-the page being installed. A URL that names `viewport` or `scheme` is an
-explicit request and wins outright. Because the intent is consumed once, a
-direct URL, an All-filter activation, Back, Forward, and a reload all keep the
-sticky selection. A light-only catalogue clamps the requested scheme to light,
-so it never lands on dark.
+Opening a changed row while the Changes filter is selected lands on the
+first changed view instead of the sticky selection. Arriving from the
+filter is an explicit signal rather than a guess: activating the row
+records one session-scoped intent naming the destination, and the
+destination workspace reads and clears that intent as it installs,
+landing only when the intent names the page being installed. A URL that
+names `viewport` or `scheme` is an explicit request and wins outright.
+Because the intent is consumed once, a direct URL, an All-filter
+activation, Back, Forward, and a reload all keep the sticky selection. A
+light-only catalogue clamps the requested scheme to light, so it never
+lands on dark.
 
 Every standalone document carries one Appearance selector in the top bar —
 Auto, Light and Dark — at both widths and on every route, including home,
@@ -341,72 +342,62 @@ and names the fallback in its frame label (`MOBILE — LIGHT ONLY`); a use-case
 step, which has no label, simply stays light. A wholly light-only catalogue
 shows no fallback labels because no dark axis exists.
 
-Browse is server rendered first and hydrated. The server output is the
-complete shell with real anchors, so direct URLs, refresh, missing routes, and
+Browse is server rendered first and hydrated. The server output is the complete
+shell with real anchors, so direct URLs, refresh, missing routes, and
 JavaScript-disabled use remain functional before and without hydration. For an
 eligible unmodified same-origin Browse link, the hydrated shell renders the
 destination from the catalogue read model instead of loading a document, and
 updates URL, title, active row, focus, and history; it never fetches shell HTML
-to swap into the page.
-Logical links activated inside a consumer frame navigate that same outer route
-model rather than replacing only the iframe document. The shell opens the active
-row's ancestor folders, conditionally clears a search or Changes filter
-that would hide it, and scrolls it into view. The complete target,
-portable-link, safe-degradation,
-sandbox, fragment, and active-tree behavior is defined by the
-[catalogue navigation contract](./mokly-navigation.md).
-Search, disclosure, filters, and catalogue scroll remain mounted. A search
-value splits into whitespace-separated terms: every `tag:<tag>` term
-(case-insensitive) keeps only rows whose entry declares that tag, and the
-remaining words rejoin into one phrase that must appear in a row's authored ID,
-title, or tags. A row survives only when every tag term and
-that one phrase match, so tags compose with free text and with the All/Changes filter, and a term
-nothing matches hides those rows and the groups they empty. Selecting a tag chip enters
-`tag:<tag>` in the search field, replacing any tag term already entered;
-selecting the chip whose tag is entered clears that term. Chips are buttons that
-report the entered tag through `aria-pressed`, and they keep that mark through
-in-shell navigation and watched reloads. The search field's tag control opens
-and closes a panel of every tag the catalogue declares: opening moves focus to
-the entered tag's chip, else to the first, and the chip row carries one tab stop
-that ArrowLeft and ArrowRight rove and wrap at both ends, Home and End send to
-its ends, and Enter or Space activates. Choosing a chip there also closes the
-panel and returns focus to the control. An open panel answers Escape before an
-expanded frame does, closing the panel and returning focus to the control
-without changing the query, while a click outside closes it and leaves focus
-where the click put it, returning focus to the control only when the closing
-panel still holds it. The panel is ephemeral: nothing reopens it after a
-watched reload or a restored session. Each user edit to search or the
-All/Changes filter opens groups to reveal its current matches.
-Disclosure restoration and reconciliation follow the
+to swap into the page. Logical links activated inside a consumer frame navigate
+that same outer route model rather than replacing only the iframe document. The
+shell opens the active row's ancestor folders, conditionally clears a search or
+Changes filter that would hide it, and scrolls it into view. The complete target,
+portable-link, safe-degradation, sandbox, fragment, and active-tree behavior is
+defined by the [catalogue navigation contract](./mokly-navigation.md). Search,
+disclosure, filters, and catalogue scroll remain mounted. Matching follows the
+single [search rule](./mokly-folders.md#titles); filters hide groups left empty.
+Selecting a tag chip enters `tag:<tag>` in the search field,
+replacing any tag term already entered; selecting the chip whose tag is entered
+clears that term. Chips are buttons that report the entered tag through
+`aria-pressed`, and they keep that mark through in-shell navigation and watched
+reloads. The search field's tag control opens and closes a panel of every tag the
+catalogue declares: opening moves focus to the entered tag's chip, else to the
+first, and the chip row carries one tab stop that ArrowLeft and ArrowRight rove
+and wrap at both ends, Home and End send to its ends, and Enter or Space
+activates. Choosing a chip there also closes the panel and returns focus to the
+control. An open panel answers Escape before an expanded frame does, closing the
+panel and returning focus to the control without changing the query, while a
+click outside closes it and leaves focus where the click put it, returning focus
+to the control only when the closing panel still holds it. The panel is
+ephemeral: nothing reopens it after a watched reload or a restored session. Each
+user edit to search or the All/Changes filter opens groups to reveal its current
+matches. Disclosure restoration and reconciliation follow the
 [persistence contract](./mokly-disclosure-persistence.md), including filtered
 watched reloads. Clearing all filtering restores the earlier disclosure state,
-but a destination path opened by navigation stays open. Navigation groups and
-the details inspector retain explicit disclosure choices across in-shell navigation,
-durable navigation, and browser reloads for that origin. Unavailable or
-malformed browser storage leaves the server-rendered default intact; the latest
-choice still survives in-shell navigation when writes fail. A native disclosure
-toggled before hydration completes is captured by the pre-hydration script and
-wins over the stored preference for that load. The browser-frame
-expand toggle overlays one frame at a time and collapses on Escape, on an
-outside click, and on route navigation. Clicking a screen or use-case ID chip
-labelled `#<id>` copies the unprefixed ID without navigating. Clicking a frame
-address copies it to the clipboard.
+but a destination path opened by navigation stays open. Navigation groups and the
+details inspector retain explicit disclosure choices across in-shell navigation,
+durable navigation, and browser reloads for that origin. Unavailable or malformed
+browser storage leaves the server-rendered default intact; the latest choice
+still survives in-shell navigation when writes fail. A native disclosure toggled
+before hydration completes is captured by the pre-hydration script and wins over
+the stored preference for that load. The browser-frame expand toggle overlays one
+frame at a time and collapses on Escape, on an outside click, and on route
+navigation. Clicking a screen or use-case path chip copies the entry's path
+without navigating. Clicking a frame address copies it to the clipboard.
 
 The shell scrolls inside its stage, flow, and embed regions rather than the
 document. Back and Forward restore the matching route and that history entry's
-latest per-region scroll positions. Scroll persistence is limited to one
-leading update per animation frame, and route-change focus never overrides the
-restored positions. Overlapping requests are latest-wins. Download,
-external, hash-only, metadata-only, and unmarked links retain their existing
-frame-owned behavior. Trusted parent code owns primary and new-context
-navigation for a marked catalogue link inside a Browse frame when the shell
-is hydrated.
-There is no native outer-navigation fallback; an unhydrated or failed shell
-keeps the portable link frame-owned and the sandbox prevents direct or nested
-content from replacing the shell. Served Browse applies a request-visible
-logical fragment during server rendering. In the static deployed preview the
-hydrated shell renders it into each current and light/dark swap source so
-scheme changes retain the anchor.
+latest per-region scroll positions. Scroll persistence is limited to one leading
+update per animation frame, and route-change focus never overrides the restored
+positions. Overlapping requests are latest-wins. Download, external, hash-only,
+metadata-only, and unmarked links retain their existing frame-owned behavior.
+Trusted parent code owns primary and new-context navigation for a marked catalogue
+link inside a Browse frame when the shell is hydrated. There is no native
+outer-navigation fallback; an unhydrated or failed shell keeps the portable link
+frame-owned and the sandbox prevents direct or nested content from replacing the
+shell. Served Browse applies a request-visible logical fragment during server
+rendering. In the static deployed preview the hydrated shell renders it into each
+current and light/dark swap source so scheme changes retain the anchor.
 
 The shell meets keyboard, focus, reduced-motion, contrast, semantics, and status
 announcement requirements. Mobile and desktop shell variants are specified by

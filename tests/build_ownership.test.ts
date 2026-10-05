@@ -22,7 +22,7 @@ for (const basename of ["a-->b", "a--b", "a<b", "a>b"])
       path.join(fixture.entriesDir, `${basename}.mockup.tsx`),
     );
     const compilation = await compileCatalogue(await loadConfig(fixture.root));
-    const output = textOutput(compilation.outputs, "screens/home.mobile.html")!;
+    const output = textOutput(compilation.outputs, "home/index.mobile.html")!;
     assert.ok(output.startsWith(GENERATED_MARKER));
     assert.equal(output.slice(0, output.indexOf("\n") + 1), GENERATED_MARKER);
     assert.doesNotMatch(output, /source-base64=/);

@@ -5,28 +5,15 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const designIds: Readonly<Record<string, string>> = {
-  "browse/views/home": "design-browse-home",
-  "browse/views/screen": "design-browse-screen",
-  "browse/views/details-screen": "design-browse-details-screen",
-  "browse/views/screen.variants/onboarding": "design-browse-tag-onboarding",
-  "browse/views/screen.variants/onboarding-picker":
-    "design-browse-tag-onboarding-picker",
-  "browse/views/use-case": "design-browse-use-case",
-  "review/controls/current": "design-changes-current",
-  "review/outcomes/removed": "design-review-removed",
-  "review/impact/empty": "design-review-empty",
-};
-const design = (route: string, viewport: string) => {
-  const id = designIds[route];
-  if (!id) throw new Error(`Unknown design route: ${route}`);
-  return pathToFileURL(
+const design = (entryPath: string, viewport: string) =>
+  pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/mokly-generated/screens/${id}.${viewport}.html`,
+      "examples/basic/mokly-generated",
+      entryPath,
+      `index.${viewport}.html`,
     ),
   ).href;
-};
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: portable design links work without Browse enhancement`, async ({
@@ -40,12 +27,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
           : { width: 1440, height: 1000 },
     });
     const page = await context.newPage();
-    await page.goto(design("browse/views/home", viewport));
+    await page.goto(design("design/browse/views/home", viewport));
     await page.locator(".mbk-empty-link").click();
-    await expect(page).toHaveURL(design("browse/views/screen", viewport));
+    await expect(page).toHaveURL(
+      design("design/browse/views/screen", viewport),
+    );
     await page.locator(".mbk-shot-link:visible").first().click();
     await expect(page).toHaveURL(
-      design("browse/views/details-screen", viewport),
+      design("design/browse/views/details-screen", viewport),
     );
     await page.locator(".mbk-shot-link:visible").first().click();
     await page.locator(".mbk-search-tag").click();
@@ -54,20 +43,20 @@ for (const viewport of ["mobile", "desktop"] as const) {
       .getByRole("link", { name: "onboarding", exact: true })
       .click();
     await expect(page).toHaveURL(
-      design("browse/views/screen.variants/onboarding", viewport),
+      design("design/browse/views/screen/tag-onboarding", viewport),
     );
     await page.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      design("browse/views/screen.variants/onboarding-picker", viewport),
+      design("design/browse/views/screen/tag-onboarding-picker", viewport),
     );
     await page.getByRole("link", { name: "Close tag picker" }).click();
     await expect(page).toHaveURL(
-      design("browse/views/screen.variants/onboarding", viewport),
+      design("design/browse/views/screen/tag-onboarding", viewport),
     );
-    await page.goto(design("browse/views/use-case", viewport));
+    await page.goto(design("design/browse/views/use-case", viewport));
     await page.locator(".flow-step-link").nth(1).click();
     await expect(page).toHaveURL(
-      design("browse/views/details-screen", viewport),
+      design("design/browse/views/details-screen", viewport),
     );
     await context.close();
   });
@@ -80,8 +69,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ? { width: 390, height: 1000 }
         : { width: 1440, height: 1000 },
     );
-    await page.goto(design("browse/views/screen", viewport));
-    await page.goto(design("review/controls/current", viewport));
+    await page.goto(design("design/browse/views/screen", viewport));
+    await page.goto(design("design/changes/diff-controls/current", viewport));
     const toolbar = page.getByRole("group", { name: "Comparison mode" });
     const current = toolbar.getByText("Current", { exact: true });
     const side = toolbar.getByRole("link", { name: "Side by side" });
@@ -89,7 +78,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     const sideBounds = await side.boundingBox();
     expect(currentBounds?.height).toBe(sideBounds?.height);
     expect((sideBounds?.width ?? 0) > 70).toBe(true);
-    await page.goto(design("browse/views/screen", viewport));
+    await page.goto(design("design/browse/views/screen", viewport));
     if (viewport === "desktop") {
       const row = page.locator(".mbk-nav-row.active");
       await expect(row).toHaveCSS("display", "flex");
@@ -97,9 +86,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
       const bounds = await row.boundingBox();
       expect(bounds?.width).toBeGreaterThan(180);
       await row.click({ position: { x: (bounds?.width ?? 200) - 5, y: 12 } });
-      await expect(page).toHaveURL(design("browse/views/screen", viewport));
+      await expect(page).toHaveURL(
+        design("design/browse/views/screen", viewport),
+      );
     }
-    await page.goto(design("browse/views/screen", `${viewport}.dark`));
+    await page.goto(design("design/browse/views/screen", `${viewport}.dark`));
     const link = page.locator(".mbk-shot-link:visible").first();
     await link.focus();
     await expect(link).toHaveCSS("outline-style", "solid");
@@ -108,11 +99,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
       path: `.context/design-dark-focus-${viewport}.png`,
       fullPage: true,
     });
-    for (const route of ["review/outcomes/removed", "review/impact/empty"]) {
+    for (const route of [
+      "design/changes/outcomes/removed",
+      "design/changes/impact/empty",
+    ]) {
       await page.goto(design(route, viewport));
       await expect(page.locator(".mbk-cmp-toolbar a")).toHaveCount(0);
       for (const control of await page
-        .locator(".mbk-idchip, .mbk-search-tag")
+        .locator(".mbk-pathchip, .mbk-search-tag")
         .all())
         await expect(control).not.toHaveAttribute("tabindex");
     }

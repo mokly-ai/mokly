@@ -19,11 +19,11 @@ export function WorkspaceVariantBar({
       {data.variants.map((candidate) => (
         <a
           aria-current={candidate === variant ? "page" : undefined}
-          data-workspace-variant={candidate.value.id}
-          href={`${viewHref("component", candidate.value.id)}${
+          data-workspace-variant={candidate.value.path}
+          href={`${viewHref(candidate.value.path)}${
             candidate.snapshotId ? `?snapshot=${candidate.snapshotId}` : ""
           }`}
-          key={candidate.value.id}
+          key={candidate.value.path}
         >
           {candidate.value.title}
           {candidate.removed ? " · Removed" : ""}

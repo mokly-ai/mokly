@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { extractCssReferences } from "../dist/html_references.js";
+import { extractCssReferences } from "../dist/css_references.js";
 import { classifyResourceUrl } from "../dist/resource_url.js";
 
 import { removeFixture } from "./helpers/fixture.js";

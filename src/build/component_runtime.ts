@@ -1,7 +1,7 @@
 /** The last successfully compiled consumer graph, passed to Serve only in memory. */
 import { randomBytes } from "node:crypto";
 
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueIndex } from "../registry/catalogue_index.js";
@@ -15,12 +15,14 @@ import {
 } from "./consumer_bundle.js";
 import type { GeneratedFile } from "./generated_file.js";
 import type { LoadedGraph } from "./load_graph.js";
+import type { OutputSnapshot } from "./output_snapshot.js";
 
 export interface ComponentRuntime {
+  outputSnapshot: OutputSnapshot;
   bundle: ConsumerBundle;
   config: ResolvedConfig;
   generation: string;
-  manifest: ManifestV8 | CatalogueIndex;
+  manifest: ManifestV9 | CatalogueIndex;
   outputs: readonly (readonly [string, GeneratedFile])[];
   stylesheetRoutes: readonly (readonly [string, string])[];
   styleOutputs: readonly (readonly [string, GeneratedFile])[];
@@ -28,19 +30,21 @@ export interface ComponentRuntime {
 }
 const runtimes = new WeakMap<Compilation, ComponentRuntime>();
 const accepted = new WeakMap<
-  ManifestV8,
+  ManifestV9,
   { compilation: Compilation; config: string }
 >();
 export function rememberRuntime(
   compilation: Compilation,
   graph: LoadedGraph,
   config: ResolvedConfig,
+  outputSnapshot: OutputSnapshot,
 ): void {
   accepted.set(compilation.manifest, {
     compilation,
     config: configKey(config),
   });
   runtimes.set(compilation, {
+    outputSnapshot,
     bundle: consumerBundle(graph),
     config,
     generation: randomBytes(16).toString("hex"),
@@ -59,6 +63,7 @@ export function runtimeGraph(runtime: ComponentRuntime): LoadedGraph {
   return {
     ...evaluateBundle(runtime.bundle),
     entrySources: runtime.bundle.entrySources,
+    documents: runtime.bundle.documents ?? [],
     sourceFiles: runtime.config.sourceFiles ?? [],
     stylesheetRoutes: new Map(runtime.stylesheetRoutes),
     styleOutputs: new Map(runtime.styleOutputs),
@@ -73,7 +78,7 @@ export function componentRuntime(compilation: Compilation): ComponentRuntime {
 
 /** Reuse the exact accepted bytes when a snapshot receives its producer's manifest. */
 export function compilationForManifest(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   config: ResolvedConfig,
 ): Compilation | undefined {
   const found = accepted.get(manifest);

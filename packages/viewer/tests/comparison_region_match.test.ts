@@ -80,8 +80,8 @@ test("a duplicated or one-sided name falls through to a unique id", () => {
   });
   region(after, "div", { "data-mokly-scroll": "list" });
   region(after, "div", { "data-mokly-scroll": "list" });
-  const byId = region(after, "div", { id: "x" });
-  assert.equal(pair(source, before, after), asElement(byId));
+  const byPath = region(after, "div", { id: "x" });
+  assert.equal(pair(source, before, after), asElement(byPath));
 
   const lonely = new FakeRegionDocument();
   const one = region(lonely, "div", { "data-mokly-scroll": "only", id: "y" });

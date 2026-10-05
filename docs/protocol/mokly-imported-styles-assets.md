@@ -60,7 +60,7 @@ decodes both forms. The complete stylesheet route obeys the usual rule.
 scheme-specific paths, then configured renderer stylesheet if present, then
 entry stylesheet if present; generated links exist even without a configured
 rule. Resolve/encode local paths relative to each fragment route, e.g. from
-`mokly-generated/screens/home.mobile.html` to
+`mokly-generated/home/index.mobile.html` to
 `mokly-generated/styles/src/home.mockup.tsx.css` is
 `../styles/src/home.mockup.tsx.css`. Same order for dark,
 component variants and saved viewports. The consumer renderer decides whether
@@ -69,10 +69,11 @@ or automatic link; they still cause an entry stylesheet to be generated and
 can link it themselves with a relative URL. Pending generated routes are
 valid link/resource targets before the transaction writes them.
 
-The owning entry root is the **resolved entry module whose `mockups` or
-default export yielded the definition** (including re-exports and flattened
-nested definitions), not the module where its `define*` call ran. Record it
-in memory during graph evaluation and propagate it through registry preparation
+The owning entry root is the **discovered entry module whose default or named
+export contributed the definition**, per the
+[entry-module contract](./mokly-entry-modules.md). It is independent of the module
+where its `define*` call ran. Record it in memory during export collection and
+propagate it through registry preparation
 without adding a manifest field. Two entries may import the same helper but
 link their own independent entry bundles.
 
@@ -133,6 +134,6 @@ including binary assets, and keep imported sources private. Generated linked
 stylesheets are public resources analyzed by
 [CSS change attribution](./mokly-css-attribution.md); their original private
 CSS inputs are dependency evidence, not independently analyzed public sheets.
-Both comparison sides use v8. Earlier output at the selected generated location
+Both comparison sides use v9. Earlier output at the selected generated location
 or after the base's own rebuild returns [Changes unavailable](./mokly-baseline-compatibility.md), with no old
 resource reader or one-time cross-layout stylesheet comparison.

@@ -4,12 +4,17 @@ import {
 } from "../catalogue/entry_selection.js";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
-import { parseSearchQuery, rowMatchesQuery } from "../shell/search_query.js";
+import type { FolderTitleLookup } from "../registry/folder_titles.js";
+import {
+  parseSearchQuery,
+  rowMatchesQuery,
+  searchRow,
+} from "../shell/search_query.js";
 
 import type { ViewerSelection } from "./types.js";
 
 export const defaultSelection: ViewerSelection = {
-  screenId: null,
+  screenPath: null,
   view: "all",
   viewport: "both",
   colorScheme: "light",
@@ -17,7 +22,7 @@ export const defaultSelection: ViewerSelection = {
   tags: [],
 };
 const selectionKeys = new Set([
-  "screenId",
+  "screenPath",
   "snapshotId",
   "view",
   "viewport",
@@ -31,17 +36,17 @@ export function normalizeSelection(
   value: ViewerSelection,
 ): ViewerSelection {
   const resolved =
-    typeof value?.screenId === "string"
-      ? resolveCatalogueSelection(model, value.screenId, value.snapshotId)
+    typeof value?.screenPath === "string"
+      ? resolveCatalogueSelection(model, value.screenPath, value.snapshotId)
       : undefined;
   const entry = resolved?.entry;
   if (
     !value ||
     !Object.keys(value).every((key) => selectionKeys.has(key)) ||
-    !(value.screenId === null || typeof value.screenId === "string") ||
+    !(value.screenPath === null || typeof value.screenPath === "string") ||
     !(
       value.snapshotId === undefined ||
-      (isHistoricalSnapshotId(value.snapshotId) && value.screenId !== null)
+      (isHistoricalSnapshotId(value.snapshotId) && value.screenPath !== null)
     ) ||
     (value.snapshotId !== undefined && entry === undefined) ||
     !["all", "changes"].includes(value.view) ||
@@ -57,7 +62,7 @@ export function normalizeSelection(
     throw new Error("The requested catalogue selection is unavailable.");
   const query = parseSearchQuery(value.search);
   return {
-    screenId: value.screenId,
+    screenPath: value.screenPath,
     ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     view: value.view,
     viewport: value.viewport,
@@ -73,7 +78,7 @@ export function normalizeSelection(
 }
 export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
   return (
-    a.screenId === b.screenId &&
+    a.screenPath === b.screenPath &&
     a.snapshotId === b.snapshotId &&
     a.view === b.view &&
     a.viewport === b.viewport &&
@@ -86,11 +91,12 @@ export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
 /** Merge one public proposal and normalize route-owned entry identity. */
 export function mergeSelection(
   model: ShellCatalogueReadModel,
+  folderTitles: FolderTitleLookup,
   current: ViewerSelection,
   partial: Partial<ViewerSelection>,
 ): ViewerSelection {
   const candidate: ViewerSelection = { ...current, ...partial };
-  const screenSupplied = Object.hasOwn(partial, "screenId");
+  const screenSupplied = Object.hasOwn(partial, "screenPath");
   const snapshotSupplied = Object.hasOwn(partial, "snapshotId");
   if (
     (screenSupplied && !snapshotSupplied) ||
@@ -99,7 +105,7 @@ export function mergeSelection(
     delete candidate.snapshotId;
   const next = normalizeSelection(model, candidate);
   return screenSupplied || snapshotSupplied
-    ? revealSelection(model, next)
+    ? revealSelection(model, folderTitles, next)
     : next;
 }
 export function selectionQuery(value: ViewerSelection): string {
@@ -113,24 +119,25 @@ export function routedEntries(model: ShellCatalogueReadModel) {
     ...model.removedEntries.map(({ entry }) => entry),
   ];
 }
-/** Route activation clears only constraints hiding its actual destination. */
+/**
+ * Route activation clears only constraints hiding its actual destination.
+ * `folderTitles` names the folders at or above an entry, as the navigation
+ * rows do, so a query that matches the destination's folder title is kept.
+ */
 export function revealSelection(
   model: ShellCatalogueReadModel,
+  folderTitles: FolderTitleLookup,
   value: ViewerSelection,
 ): ViewerSelection {
   const entry =
-    typeof value.screenId === "string"
-      ? resolveCatalogueSelection(model, value.screenId, value.snapshotId)
+    typeof value.screenPath === "string"
+      ? resolveCatalogueSelection(model, value.screenPath, value.snapshotId)
           ?.entry
       : undefined;
   if (!entry) return value;
   const matches = rowMatchesQuery(
     { freeText: value.search, tags: value.tags },
-    {
-      id: entry.id,
-      tags: entry.tags,
-      text: entry.title,
-    },
+    searchRow(entry, folderTitles(entry.path)),
   );
   return {
     ...value,

@@ -4,7 +4,7 @@
 
 The `mokly-viewer/` namespace and its version gates are implemented in
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
-Delivery uses catalogue v4, delivery v4, bootstrap v1, ownership v3 and upload v2.
+Delivery uses catalogue v5, delivery v5, bootstrap v2, ownership v3 and upload v2.
 Content-delta uploads and Plan v1 remain unchanged. The current Cloud service
 must support those versions and paths before accepting a publication.
 
@@ -63,30 +63,33 @@ removed; hosts must not rewrite it to the new catalogue.
 Versions identify meaning before readers interpret any paths. The supported versions
 are:
 
-| Boundary                            | Writer | Reader policy                                                               |
-| ----------------------------------- | ------ | --------------------------------------------------------------------------- |
-| Private source manifest             | 8      | Read current and baseline v8 only; older baselines yield incompatibility    |
-| Public complete or scoped catalogue | 4      | Accept 4 only; reject 1–3 and unknown versions before entry/path validation |
-| Static delivery descriptor          | 4      | Accept 4 only with its four required fields                                 |
-| Shell bootstrap envelope            | 1      | Require root `schemaVersion: 1`; reject absent/other versions               |
-| Export ownership marker             | 3      | Accept 3 only for new uploads and local export replacement                  |
-| Upload metadata envelope            | 2      | Use the strict upload fields and current comparison namespace               |
-| Plan response                       | 1      | Unchanged content-delta exchange                                            |
-| Comparison result                   | 4      | Identity-derived snapshot schema                                            |
+| Boundary                            | Writer | Reader policy                                      |
+| ----------------------------------- | ------ | -------------------------------------------------- |
+| Private source manifest             | 9      | Accept 9; earlier output makes Changes unavailable |
+| Public complete or scoped catalogue | 5      | Accept 5 before entry/path validation              |
+| Static delivery descriptor          | 5      | Accept 5 with four required fields                 |
+| Shell bootstrap envelope            | 2      | Require root version 2                             |
+| Export ownership marker             | 3      | Accept 3 for upload and replacement                |
+| Upload metadata envelope            | 2      | Strict current fields and namespace                |
+| Plan response                       | 1      | Content-delta exchange                             |
+| Comparison result                   | 6      | Current path-addressed snapshots                   |
 
-Catalogue v4, delivery v4 and bootstrap v1 identify the unified layout.
+The [combined version inventory](./mokly-format-versions.md) also defines
+private IPC, inspector, preview and cache formats. Unknown versions fail closed.
+
+Catalogue v5, delivery v5 and bootstrap v2 identify the unified layout.
 Only the current `mokly-viewer/` namespace is accepted. Upload v2 and ownership
 v3 require that namespace even for current-only artifacts. Strict version gates
 apply before reading paths; unsupported versions never authorize a content read.
-A v3 catalogue reader cannot interpret a v4 model.
+A v4 catalogue reader cannot interpret a v5 model.
 
-Catalogue v4 retains identity-only entries. It contains no layout-prefix field,
+Catalogue v5 retains identity-only entries. It contains no layout-prefix field,
 per-entry routes, `documentPath` or `fragmentPath`. Derive current files from
-kind/id/viewport/scheme and `GENERATED_DIRECTORY`. The schema version is 4. Public models remain
+path/viewport/scheme and `GENERATED_DIRECTORY`. The schema version is 5. Public models remain
 complete; `omitted` usage is permitted only in the strictly scoped live reader.
-Bootstrap v1 requires its root version field and validates its scope;
+Bootstrap v2 requires its root version field and validates its scope;
 its external reference
-is exactly `/mokly-viewer/catalogue.json`. Static descriptor v4 keeps
+is exactly `/mokly-viewer/catalogue.json`. Static descriptor v5 keeps
 `canonicalPath`, `comparisonUrl`, `deploymentId`, and `schemaVersion`; only
 the pinned comparison namespace is valid. Catalogue comparison paths are
 root-relative without `/`; descriptor URLs include `/`.
@@ -116,7 +119,7 @@ mutation with `[mokly/export-invalid] Invalid export ownership inventory: <outpu
 Missing ownership and unsafe filesystem entries retain separate errors.
 The marker remains required for upload and local recovery.
 
-An independently hosted older viewer given catalogue v4 must reject its
+An independently hosted older viewer given catalogue v5 must reject its
 unsupported version before deriving `/static/` URLs or reading entry fields.
 strict v3 reader already rejects a non-3 version. The updated viewer
 must expose a typed version failure that a host can distinguish from malformed
@@ -154,7 +157,7 @@ rejected delivery, bootstrap or catalogue. Existing server markup and links rema
 
 There is no automatic conversion of older public artifacts. They keep their
 original bundled viewer at their original deployment, or are re-exported.
-The separate private baseline boundary also reads only v8. Older manifest
+The separate private baseline boundary also reads only v9. Older manifest
 envelopes are checked solely to produce the approved earlier-baseline outcome;
 they cannot authorize content reads or a mixed public artifact.
 Mokly Cloud must update upload validation, stored path lookup, catalogue fetch
@@ -188,7 +191,7 @@ current-only and Changes-enabled uploads, new readers rejecting old/unknown
 versions before path use, and an old strict catalogue reader rejecting v4.
 The ownership-v3 fixtures retain v2 digest coverage and explicit
 unsupported-v2 cases; preserve Plan v1 retry, keep-first, delta and cancellation
-tests. Update installed-package fixtures for catalogue v4, ownership v3 and
+tests. Update installed-package fixtures for catalogue v5, ownership v3 and
 upload v2. No source or private manifest enters any artifact.
 
 Smoke-test Serve, a plain static-server export with the optional marker removed,
@@ -202,7 +205,7 @@ Changes-enabled example artifacts so `generations/`, removed previews and
 binary CSS resources are covered. Stop every server after testing.
 
 The approved [path/output integration](./mokly-path-output-integration.md)
-supersedes the current kind/id layout at integration. Its
+defines the current path-derived layout. Its
 [format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
 review v6 and all other boundaries. Only v9 baseline content is readable after
 that integration; the earlier-version product outcome remains unchanged.

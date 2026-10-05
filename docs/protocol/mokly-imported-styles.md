@@ -10,7 +10,7 @@ Custom renderers must emit the supplied stylesheet links; pages link CSS
 themselves. This contract extends
 [configuration](./mokly-configuration.md),
 [rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
-without changing manifest v8. [Exact diagnostics](./mokly-imported-styles-errors.md)
+without changing manifest v9. [Exact diagnostics](./mokly-imported-styles-errors.md)
 are normative.
 
 ## Routes And Ownership
@@ -18,13 +18,12 @@ are normative.
 `<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Its output map uses
 `styles/<repository-relative root module path>.css` and
 `assets/<repository-relative asset path>`, relative to that generated root.
-Pages, screen/component views and the private v8 manifest share the same tree.
+Pages, screen/component views and the private v9 manifest share the same tree.
 Preserve the module extension before `.css`: `src/home.mockup.tsx` becomes
 `styles/src/home.mockup.tsx.css`. Identical asset routes from multiple roots
 must carry identical bytes; disagreeing bytes fail Build. Sources stay private.
 The [unified layout](./mokly-unified-output.md#one-owned-tree) reserves `styles`
-and `assets` as the first segment of generated HTML routes. Kind/id-derived
-HTML routes start with `pages/`, `screens/` or `components/`; the generated
+and `assets` as the first segment of generated HTML routes. Path-derived HTML routes use `<path>/index[.<axes>].html`; the generated
 root prefix is not part of those routes.
 
 Only a writer or tracked Check inspects the existing generated tree. Its root
@@ -36,13 +35,21 @@ untracked Check do not inspect old output. No Git-ignore committability check
 remains; [tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
 apply equally to generated CSS, assets, HTML and the manifest.
 
-Reject explicit `entries` static prefixes, `entriesDir`, renderer,
+Reject root directories and `roots[].files` static prefixes, renderer,
 package roots, PostCSS inputs, local `stylesheets` and `review.outDir` that
 violate the generated-tree boundary, including physical aliases. Discovery
 skips this tree; broad entry globs remain valid. Entry modules below
-`mockupsDir` remain protected sources, but `entriesDir === mockupsDir` is
+`mockupsDir` remain protected sources, but a root directory equal to `mockupsDir` is
 invalid. `publicExclude` is removed. Other authored files become public only
 through the validated [asset closure](./mokly-generated-output.md#closure-urls-and-publication).
+
+Generated route segments allow a leading letter, digit, underscore or hyphen;
+subsequent characters may also include dot and tilde. Device-name stems and
+trailing dots remain invalid. A nonportable module file or directory name cannot
+produce a stylesheet route, even when an entry declares a valid `path`. Build
+fails with `cannot deliver imported CSS for {module}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`,
+where `{module}` is repository-relative. Entry identity and CSS delivery routes
+have distinct inputs; the override changes only entry identity.
 
 ## Roots, Collection And Deduplication
 
@@ -53,8 +60,8 @@ consumer roots. Metafile input and output keys
 are relative to esbuild's real working directory even when the configured
 repository root is a symlink; map all keys back to the logical root before
 ordering roots or recording sources. When no renderer or entry reaches CSS, skip the
-stylesheet pass entirely. A CSS-only entry still has an entry root even if it
-registers no view. Two entries sharing CSS each emit it in their own bundle.
+stylesheet pass entirely. A module that exports only a folder record still has a CSS delivery root even
+though it registers no view. Every entry module must export a definition. Two entries sharing CSS each emit it in their own bundle.
 After the JavaScript graph build and before CSS bundling or graph inventory,
 validate each delivery root's direct CSS imports against `repoRoot`. Read the
 metafile edge's original specifier and importing module, including extensionless

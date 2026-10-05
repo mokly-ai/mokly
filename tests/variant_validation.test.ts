@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type {
-  ResolvedRegistryEntry,
-  ScreenVariantInput,
-} from "../dist/authoring/types.js";
+import {
+  __attributeDefinition,
+  defineScreen,
+} from "../dist/authoring/definitions.js";
+import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
+import { defineComponent } from "../dist/components/definition.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
+import { collectModuleExports } from "../dist/registry/export_collection.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
 
 import {
@@ -18,31 +21,26 @@ import {
   sourceRelativePath,
   variant,
   variantDefinitions,
-} from "./variant_validation_fixture.js";
+} from "./helpers/variant_validation.js";
 
 test("variant authoring rejects only the retained forbidden fields", () => {
-  for (const field of ["variants", "navPath"] as const) {
+  for (const field of ["variants", "variantOf"] as const) {
     const input = {
-      ...variant(`welcome-${field}`),
+      ...variant(field),
       [field]: [],
     };
     assertViolation(
       allViolations(screenDefinitions([input])),
-      "invalid-variants",
-      `welcome-${field}`,
+      field === "variants" ? "invalid-variants" : "invalid-field",
+      `welcome/${field}`,
     );
   }
 
-  const legacy = {
-    ...variant("welcome-legacy"),
-    route: "screens/custom.html",
-    slug: "custom",
-  } as unknown as ScreenVariantInput;
-  const definitions = screenDefinitions([legacy]);
-  assert.equal(Object.hasOwn(definitions[1] ?? {}, "route"), false);
-  assert.equal(
-    allViolations(definitions).some(({ code }) => code === "invalid-variants"),
-    false,
+  const unknown = { ...variant("unknown"), route: "custom/index.html" };
+  assertViolation(
+    allViolations(screenDefinitions([unknown])),
+    "invalid-field",
+    "welcome/unknown",
   );
 });
 
@@ -54,21 +52,21 @@ for (const kind of ["screen", "component"] as const) {
     assertViolation(
       allViolations([parent, unknown]),
       "invalid-variant-of",
-      child.id,
+      child.path,
     );
     const nested = {
       ...child,
-      id: `${parent.id}-nested`,
-      variantOf: child.id,
+      path: `${parent.path}-nested`,
+      variantOf: child.path,
     } as ResolvedRegistryEntry;
     assertViolation(
       allViolations([parent, child, nested]),
       "invalid-variant-of",
-      nested.id,
+      nested.path,
     );
     const wrongParent = {
       ...invalidNonScreen("page"),
-      id: "page-parent",
+      path: "page-parent",
     } as ResolvedRegistryEntry;
     const childOfPage = {
       ...child,
@@ -77,26 +75,57 @@ for (const kind of ["screen", "component"] as const) {
     assertViolation(
       allViolations([wrongParent, childOfPage]),
       "invalid-variant-of",
-      child.id,
+      child.path,
     );
   });
 
-  test(`${kind} variants retain their parent's navigation path`, () => {
-    const [parent, child] = variantDefinitions(kind);
-    assert.ok(parent && child);
-    const moved = { ...child, navPath: ["Elsewhere"] };
-    assertViolation(
-      allViolations([parent, moved]),
-      "invalid-variants",
-      child.id,
+  test(`${kind} variant paths are the parent path followed by their slug`, () => {
+    const common = {
+      path: "account/invoice",
+      title: "Invoice",
+      description: "Invoice",
+      dependencies: [],
+      relatedDocs: [],
+    };
+    const authored =
+      kind === "screen"
+        ? defineScreen({
+            ...common,
+            mobile: "Invoice",
+            desktop: "Invoice",
+            variants: [variant("index")],
+          })
+        : defineComponent({
+            ...common,
+            propSchema: { kind: "object", properties: {} },
+            render: () => null,
+            variants: [{ slug: "index", title: "Index", props: {} }],
+          }).entries;
+    const entries = prepareRegistry(
+      collectModuleExports(
+        { default: __attributeDefinition(authored, sourceRelativePath) },
+        sourceRelativePath,
+      ),
+      config,
+    ).entries;
+    assert.deepEqual(
+      entries.map((entry) => entry.path),
+      ["account/invoice", "account/invoice/index"],
     );
+    const child = entries[1]!;
+    assert.equal(
+      "variantOf" in child ? child.variantOf : undefined,
+      "account/invoice",
+    );
+    assert.equal(child.index, false);
+    assert.deepEqual(allViolations(entries), []);
   });
 }
 
 test("component parents require at least one variant", () => {
   const [parent] = variantDefinitions("component");
   assert.ok(parent);
-  assertViolation(allViolations([parent]), "invalid-variants", parent.id);
+  assertViolation(allViolations([parent]), "invalid-variants", parent.path);
 });
 
 for (const [field, value] of [
@@ -109,7 +138,14 @@ for (const [field, value] of [
     const [parent, child] = variantDefinitions("component");
     assert.ok(parent && child);
     assert.throws(
-      () => prepareRegistry([parent, { ...child, [field]: value }], config),
+      () =>
+        prepareRegistry(
+          collectModuleExports(
+            { default: [parent, Object.assign(child, { [field]: value })] },
+            sourceRelativePath,
+          ),
+          config,
+        ),
       new RegExp(`must inherit ${field}`),
     );
   });
@@ -118,7 +154,7 @@ test("non-screen entries reject variant fields even when undefined", () => {
   for (const kind of ["page", "use-case", "component"] as const) {
     const violations = validateEntry(invalidNonScreen(kind), config);
     assert.equal(
-      violations.filter(({ code }) => code === "invalid-variants").length,
+      violations.filter(({ code }) => code === "invalid-field").length,
       kind === "component" ? 1 : 2,
       kind,
     );
@@ -131,14 +167,27 @@ test("non-screen entries reject variant fields even when undefined", () => {
 });
 
 test("omitted variant use-case membership does not inherit from its parent", () => {
-  const prepared = prepareRegistry(flowWithVariant(), config);
+  const prepared = prepareRegistry(
+    collectModuleExports({ default: flowWithVariant() }, sourceRelativePath),
+    config,
+  );
 
   assert.equal(prepared.entries.length, 3);
 });
 
 test("declared variant use-case membership remains reciprocal", () => {
-  assert.throws(() => prepareRegistry(flowWithVariant(["tour"]), config), {
-    code: "build-invalid",
-    message: /\[missing-step\].*welcome-empty/,
-  });
+  assert.throws(
+    () =>
+      prepareRegistry(
+        collectModuleExports(
+          { default: flowWithVariant(["tour"]) },
+          sourceRelativePath,
+        ),
+        config,
+      ),
+    {
+      code: "build-invalid",
+      message: /\[missing-step\].*welcome\/empty/,
+    },
+  );
 });

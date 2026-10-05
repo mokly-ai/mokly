@@ -23,7 +23,7 @@ for (const kind of ["current", "temporary"] as const) {
     await page.goto(fixture.host.url);
     const path =
       kind === "current"
-        ? "/static/mokly-generated/screens/home.mobile.html"
+        ? "/static/mokly-generated/home/index.mobile.html"
         : fixture.temporaryPath;
     let requests = 0;
     let release = () => {};
@@ -147,7 +147,7 @@ for (const kind of ["current", "temporary"] as const) {
         kind,
         path:
           kind === "current"
-            ? "/static/mokly-generated/screens/home.mobile.html"
+            ? "/static/mokly-generated/home/index.mobile.html"
             : fixture.temporaryPath,
         usageJson: JSON.stringify(fixture.usage),
       },

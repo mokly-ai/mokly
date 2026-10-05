@@ -46,7 +46,7 @@ export function resolveShellBootstrap(
     throw new Error("The deployed catalogue does not match the page.");
   validateTarget(catalogue, state.view);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogue,
     context: state.context,
     view: state.view,
@@ -67,7 +67,7 @@ function validateTarget(
     view.kind === "target" &&
     !resolveCatalogueEntry(
       catalogue,
-      { id: view.entryId, kind: view.entryKind },
+      { path: view.entryPath, kind: view.entryKind },
       view.snapshotId,
     )
   )

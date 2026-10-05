@@ -48,21 +48,15 @@ for (const watch of [false, true]) {
           parseReviewResult(await unselected.json()).baseCommit,
           fixture.commit,
         );
-        await fs.mkdir(
-          path.join(fixture.mockupsDir, "mokly-generated/screens"),
-          {
-            recursive: true,
-          },
-        );
+        await fs.mkdir(path.join(fixture.mockupsDir, "mokly-generated/home"), {
+          recursive: true,
+        });
         await fs.writeFile(
-          path.join(
-            fixture.mockupsDir,
-            "mokly-generated/screens/home.mobile.html",
-          ),
+          path.join(fixture.config.generatedDir, "home/index.mobile.html"),
           "wrong local bytes",
         );
         const response = await fetch(
-          `${running.url}/mokly-viewer/diffs/review.json?id=home`,
+          `${running.url}/mokly-viewer/diffs/review.json?path=home`,
         );
         assert.equal(response.status, 200, await response.clone().text());
         const result = parseReviewResult(await response.json());
@@ -74,7 +68,7 @@ for (const watch of [false, true]) {
           await (
             await fetch(
               new URL(
-                `snapshots/after/mokly-generated/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+                `snapshots/after/mokly-generated/${viewRoute("home", view.viewport, view.colorScheme)}`,
                 response.url,
               ),
             )
@@ -85,7 +79,7 @@ for (const watch of [false, true]) {
           await (
             await fetch(
               new URL(
-                `snapshots/before/mokly-generated/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+                `snapshots/before/mokly-generated/${viewRoute("home", view.viewport, view.colorScheme)}`,
                 response.url,
               ),
             )
@@ -118,24 +112,21 @@ for (const watch of [false, true]) {
       try {
         const file = path.join(
           fixture.mockupsDir,
-          "mokly-generated/screens/home.mobile.html",
+          "mokly-generated/home/index.mobile.html",
         );
-        await waitFor(async () =>
-          fs.readFile(file, "utf8").catch(() => undefined),
-        );
-        const initial = await fs.readFile(file, "utf8");
+        const initial = await waitFor(() => readOutput(file));
         if (watch) {
           await fs.writeFile(
             fixture.entryPath,
             validEntrySource({ body: "Watched successful build" }),
           );
-          await waitFor(async () => {
-            const current = await fs.readFile(file, "utf8");
-            return current.includes("Watched successful build")
+          const updated = await waitFor(async () => {
+            const current = await readOutput(file);
+            return current?.includes("Watched successful build")
               ? current
               : undefined;
           });
-          assert.notEqual(await fs.readFile(file, "utf8"), initial);
+          assert.notEqual(updated, initial);
         }
       } finally {
         await running.close();
@@ -170,17 +161,20 @@ test(
         throw new Error("HTTP must never rebuild a baseline");
       });
       const response = await fetch(
-        `${running.url}/mokly-viewer/diffs/review.json?page=removed-page`,
+        `${running.url}/mokly-viewer/diffs/review.json?page=fixture/deleted-archive/deleted-section/removed-page`,
       );
       assert.equal(response.status, 200, await response.clone().text());
       const preview = parseRemovedPagePreview(await response.json());
       assert.equal(preview.baseCommit, fixture.commit);
-      assert.equal(preview.id, "removed-page");
+      assert.equal(
+        preview.path,
+        "fixture/deleted-archive/deleted-section/removed-page",
+      );
       assert.match(
         await (
           await fetch(
             new URL(
-              `snapshots/before/mokly-generated/${entryRoute("page", preview.id)}`,
+              `snapshots/before/mokly-generated/${entryRoute(preview.path)}`,
               response.url,
             ),
           )
@@ -265,15 +259,21 @@ test(
         html,
         /baseline-command-failed|process\.exit|\.mokly-cache/,
       );
-      assert.equal(
-        (await fetch(`${running.url}/view/screens/home.html`)).status,
-        200,
-      );
+      assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
     } finally {
       await running.close();
     }
   },
 );
+
+async function readOutput(file: string): Promise<string | undefined> {
+  try {
+    return await fs.readFile(file, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    throw error;
+  }
+}
 
 async function waitFor<T>(read: () => Promise<T | undefined>): Promise<T> {
   for (let attempt = 0; attempt < 200; attempt++) {

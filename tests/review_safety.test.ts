@@ -45,7 +45,7 @@ test("Review artifact paths are collision-free for distinct valid routes", async
     currentManifest({
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 8,
+      schemaVersion: 9,
       sourceFiles: [],
     }),
   );
@@ -77,7 +77,7 @@ test("Review artifact paths are collision-free for distinct valid routes", async
     "HEAD",
   );
   const afterPaths = [...artifact.files.keys()].filter((name) =>
-    name.startsWith("snapshots/after/mokly-generated/screens/"),
+    name.startsWith("snapshots/after/"),
   );
 
   assert.equal(afterPaths.length, 4);
@@ -89,7 +89,7 @@ test("one-sided material-signal adoption compares real children", () => {
   const base = ignored("nav", "<nav>Same</nav>");
   const head = `${ignored("nav", "<nav>Same</nav>")}<!--mokly-review-material:nav:${key}-->`;
 
-  const normalized = normalizeReviewPair(base, head, "screens/home.html");
+  const normalized = normalizeReviewPair(base, head, "home/index.html");
 
   assert.equal(normalized.base, normalized.head);
   assert.deepEqual(normalized.ignoredIds, []);
@@ -99,7 +99,7 @@ test("different material keys remain part of Review classification", () => {
   const base = `${ignored("nav", "<nav>Same</nav>")}<!--mokly-review-material:nav:${"a".repeat(64)}-->`;
   const head = `${ignored("nav", "<nav>Same</nav>")}<!--mokly-review-material:nav:${"b".repeat(64)}-->`;
 
-  const normalized = normalizeReviewPair(base, head, "screens/home.html");
+  const normalized = normalizeReviewPair(base, head, "home/index.html");
 
   assert.notEqual(normalized.base, normalized.head);
 });
@@ -108,11 +108,11 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
   const artifact: ReviewArtifact = {
     files: new Map([
       [
-        "snapshots/before/mokly-generated/screens/home.mobile.html",
+        "snapshots/before/mokly-generated/home/index.mobile.html",
         "<html></html>",
       ],
       [
-        "snapshots/after/mokly-generated/screens/home.mobile.html",
+        "snapshots/after/mokly-generated/home/index.mobile.html",
         "<html></html>",
       ],
     ]),
@@ -121,13 +121,13 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
       baseRef: "HEAD",
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 4,
+      schemaVersion: 6 as const,
       screens: [
         {
-          after: { id: "home", title: "Home" },
-          before: { id: "home", title: "Home" },
+          after: { path: "home", title: "Home" },
+          before: { path: "home", title: "Home" },
           dependencies: [],
-          id: "home",
+          path: "home",
           sharedImpact: [],
           state: "changed",
           title: "Home",
@@ -151,7 +151,7 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
   assert.equal(files.has("index.html"), false);
   assert.equal(files.has("review-navigation.js"), false);
   assert.equal(
-    files.get("snapshots/before/mokly-generated/screens/home.mobile.html"),
+    files.get("snapshots/before/mokly-generated/home/index.mobile.html"),
     "<html></html>",
   );
 });
@@ -165,7 +165,7 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
     currentManifest({
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 8,
+      schemaVersion: 9,
       sourceFiles: [],
     }),
   );
@@ -188,19 +188,16 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
     },
     "HEAD",
   );
-  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  const home = artifact.result.screens.find((screen) => screen.path === "home");
   const view = home?.views.find(
     (view) => view.viewport === "mobile" && view.colorScheme === "light",
   );
   assert.ok(view);
-  const afterPath = "snapshots/after/mokly-generated/screens/home.mobile.html";
+  const afterPath = "snapshots/after/mokly-generated/home/index.mobile.html";
   const pane = String(artifact.files.get(afterPath));
 
-  assert.equal(
-    pane,
-    textOutput(compilation.outputs, "screens/home.mobile.html"),
-  );
-  assert.match(pane, /href="\.\/details\.mobile\.html"/);
+  assert.equal(pane, textOutput(compilation.outputs, "home/index.mobile.html"));
+  assert.match(pane, /href="\.\.\/details\/index\.mobile\.html"/);
   assert.match(pane, /data-mokly-link="details"/);
   assert.doesNotMatch(pane, /data-mokly-target/);
 });
@@ -208,10 +205,10 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
 function collidingRouteSource(): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCaseIds: [] };
+const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCasePaths: [] };
 export const mockups = [
-  defineScreen({ ...metadata, description: "Dot route", desktop: <main>Dot</main>, id: "dot-route", mobile: <main>Dot</main>, route: "screens/a.b.html", title: "Dot" }),
-  defineScreen({ ...metadata, description: "Hyphen route", desktop: <main>Hyphen</main>, id: "hyphen-route", mobile: <main>Hyphen</main>, route: "screens/a-b.html", title: "Hyphen" })
+  defineScreen({ ...metadata, description: "Dot route", desktop: <main>Dot</main>, path: "dot-route", mobile: <main>Dot</main>, title: "Dot" }),
+  defineScreen({ ...metadata, description: "Hyphen route", desktop: <main>Hyphen</main>, path: "hyphen-route", mobile: <main>Hyphen</main>, title: "Hyphen" })
 ];
 `;
 }

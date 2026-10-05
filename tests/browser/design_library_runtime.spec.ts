@@ -17,7 +17,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 1280, height: 900 },
     );
     const paths = [
-      "entries/design/library/chrome/top-bar.tsx",
+      "specs/design/library/chrome/top-bar.tsx",
       "mokly-generated/mokly-manifest.json",
     ];
     const contents = () =>
@@ -30,10 +30,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ),
       );
     const before = await contents();
-    await page.goto("/view/components/design-ui-top-bar.html");
+    // Compare the Search variant with its own saved status before temporary edits.
+    await page.goto("/view/design/library/chrome/top-bar/search/");
     await chooseViewport(page, viewport);
     const status = page.locator("[data-workspace-status]");
-    const parentStatus = await status.innerText();
+    await expect(status).toHaveText(/^(Changed|Unmodified)$/);
+    const savedStatus = await status.innerText();
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
@@ -53,10 +55,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await expect(status).toHaveText(parentStatus);
+    await expect(status).toHaveText(savedStatus);
     await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(status).toHaveText("Unmodified");
+    await expect(status).toHaveText(savedStatus);
     expect(await contents()).toEqual(before);
   });
 
@@ -68,7 +70,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1280, height: 900 },
     );
-    await page.goto("/view/screens/design-browse-tag-picker.html");
+    await page.goto("/view/design/browse/views/screen/tag-picker/");
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Components", exact: true }).click();
     if (viewport === "mobile")
@@ -111,7 +113,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await page
       .getByRole("link", { name: "Open component", exact: true })
       .click();
-    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
+    await expect(page).toHaveURL(
+      /\/view\/design\/library\/controls\/tag-chip\//,
+    );
     await page.getByRole("tab", { name: "Usage", exact: true }).click();
     const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
     await usage
@@ -119,13 +123,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .first()
       .click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-picker.html/,
+      /\/view\/design\/browse\/views\/screen\/tag-picker\//,
     );
     await page.goBack();
-    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
+    await expect(page).toHaveURL(
+      /\/view\/design\/library\/controls\/tag-chip\//,
+    );
     await page.goForward();
     await expect(page).toHaveURL(
-      /\/view\/screens\/design-browse-tag-picker.html/,
+      /\/view\/design\/browse\/views\/screen\/tag-picker\//,
     );
   });
 }

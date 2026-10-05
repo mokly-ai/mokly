@@ -103,12 +103,7 @@ test("each recorded range in every screen/variant view has exactly one matched p
           : [];
     for (const target of targets)
       for (const view of target.componentViews ?? []) {
-        const route = viewRoute(
-          target.kind,
-          target.id,
-          view.viewport,
-          view.colorScheme,
-        );
+        const route = viewRoute(target.path, view.viewport, view.colorScheme);
         assertMarkers(textOutput(compilation.outputs, route)!, view);
         count++;
       }

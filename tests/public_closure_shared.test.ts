@@ -86,11 +86,8 @@ test("on-demand previews include authored navigation closure before full complet
   });
   fixture.beforeRemove(() => server.close());
   assert.equal(
-    (
-      await fetch(
-        server.url + "/static/mokly-generated/screens/home.mobile.html",
-      )
-    ).status,
+    (await fetch(server.url + "/static/mokly-generated/home/index.mobile.html"))
+      .status,
     200,
   );
   assert.equal((await fetch(server.url + "/static/guide.html")).status, 200);
@@ -109,7 +106,7 @@ test("renderer resource seeds cannot bypass the shared public-file policy", asyn
   assert.throws(
     () =>
       validateHtmlLinks(
-        new Map([["pages/home.html", "<p>Home</p>"]]),
+        new Map([["home/index.html", "<p>Home</p>"]]),
         config,
         undefined,
         [".private/key.css"],

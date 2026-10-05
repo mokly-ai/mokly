@@ -1,21 +1,19 @@
 import { expect, test } from "@playwright/test";
 
 import {
-  welcomeRow,
-  detailsRow,
-  tourRow,
-  formsChip,
   accentFill,
-  markPage,
-  hasMarker,
-  openScreensGroup,
   computedStyle,
-  workspaceRoute,
+  detailsRow,
+  formsChip,
+  hasMarker,
+  markPage,
+  tourRow,
+  welcomeRow,
 } from "./browse_assertions.js";
 
-test("search matches authored page ids", async ({ page }) => {
+test("search matches authored entry paths", async ({ page }) => {
   await page.goto("/");
-  await page.fill("[data-mokly-search]", "example-details");
+  await page.fill("[data-mokly-search]", "example/screens/details");
 
   await expect(page.locator(detailsRow)).toBeVisible();
   await expect(page.locator(welcomeRow)).toBeHidden();
@@ -24,7 +22,7 @@ test("search matches authored page ids", async ({ page }) => {
 
 test("details starts collapsed and remembers disclosure", async ({ page }) => {
   const details = page.locator("[data-workspace-inspector]");
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(details).not.toHaveAttribute("data-open", "true");
   await page.getByRole("tab", { name: "Details", exact: true }).click();
   await expect(details).toHaveAttribute("data-open", "true");
@@ -39,9 +37,9 @@ test("details starts collapsed and remembers disclosure", async ({ page }) => {
     document
       .querySelector<HTMLElement>('[data-inspector-tab="details"]')
       ?.click();
-    window.location.assign("/view/screens/example-welcome.html");
+    window.location.assign("/view/example/screens/welcome/");
   });
-  await page.waitForURL(/\/view\/screens\/example-welcome\.html$/);
+  await page.waitForURL(/\/view\/example\/screens\/welcome\/$/);
   await expect(details).not.toHaveAttribute("data-open", "true");
 });
 
@@ -49,7 +47,7 @@ test("searching opens groups and clearing restores their disclosure", async ({
   page,
 }) => {
   await page.goto("/");
-  const screensGroup = 'details[data-nav-folder="folder:Example/Screens"]';
+  const screensGroup = 'details[data-nav-folder="folder:example/screens"]';
   await page.evaluate((selector) => {
     document.querySelector<HTMLDetailsElement>(selector)!.open = false;
   }, screensGroup);
@@ -76,7 +74,7 @@ test("searching opens groups and clearing restores their disclosure", async ({
 test("details tag chips enter, keep, and clear their term", async ({
   page,
 }) => {
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expect(page.locator(tourRow)).toBeVisible();
   await markPage(page);
 
@@ -100,43 +98,5 @@ test("details tag chips enter, keep, and clear their term", async ({
   await expect(page.locator("[data-mokly-search]")).toHaveValue("");
   await expect(page.locator(formsChip)).not.toHaveClass(/active/);
   await expect(page.locator(tourRow)).toBeVisible();
-  expect(await hasMarker(page)).toBe(true);
-});
-
-test("overlapping navigations are latest-wins", async ({ page }) => {
-  await page.goto("/");
-  await markPage(page);
-  await openScreensGroup(page);
-  await page.route("**/view/screens/example-welcome.html", async (route) => {
-    if (route.request().resourceType() !== "fetch") return route.continue();
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    return route.continue();
-  });
-  await page.click(welcomeRow);
-  await page.click(detailsRow);
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
-  await expect(page).toHaveURL(/details\.html$/);
-  await page.waitForTimeout(900);
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
-  expect(await hasMarker(page)).toBe(true);
-});
-
-test("failed route evidence keeps public navigation and rejects the previous owner", async ({
-  page,
-}) => {
-  await page.goto("/view/screens/example-details.html");
-  await markPage(page);
-  await expect.poll(() => workspaceRoute(page)).toBe("example-details");
-  let fetches = 0;
-  await page.route("**/view/screens/example-welcome.html", (route) =>
-    route.request().resourceType() === "fetch"
-      ? ((fetches += 1), route.abort())
-      : route.continue(),
-  );
-  await page.click(welcomeRow);
-  await expect(page).toHaveURL(/welcome\.html$/);
-  await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-  await expect.poll(() => fetches).toBe(1);
-  await expect.poll(() => workspaceRoute(page)).toBe("example-welcome");
   expect(await hasMarker(page)).toBe(true);
 });

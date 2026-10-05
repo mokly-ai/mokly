@@ -176,9 +176,9 @@ test("ownership parsing classifies limits and rejects prefix collisions", () => 
     );
   assert.deepEqual(
     parseExportOwnership(
-      JSON.stringify({ schemaVersion: 4, files: [{ path: 1 }] }),
+      JSON.stringify({ schemaVersion: 5, files: [{ path: 1 }] }),
     ),
-    { kind: "unsupported-version", version: 4 },
+    { kind: "unsupported-version", version: 5 },
   );
 });
 

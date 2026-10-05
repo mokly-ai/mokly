@@ -18,7 +18,7 @@ import { currentManifest } from "./current_manifest.js";
 import { createFixture, removeFixture } from "./fixture.js";
 
 export const PAGE_COMMIT = "b".repeat(40);
-export const PAGE_ROUTE = "mokly-generated/pages/guide.html";
+export const PAGE_ROUTE = "mokly-generated/guide/index.html";
 
 interface BaselineFile {
   bytes?: Uint8Array;
@@ -32,9 +32,9 @@ export async function removedPagePreviewFixture(t: TestContext) {
   const page: HistoricalManifestPage = {
     declaredDependencies: [],
     description: "Historical guide",
-    id: "guide",
+    path: "guide",
     kind: "page",
-    navPath: ["Archive"],
+
     relatedDocs: ["docs/guide.md"],
     sourcePath: "entries/guide.mockup.tsx",
     tags: ["guide"],
@@ -65,7 +65,7 @@ export async function removedPagePreviewFixture(t: TestContext) {
   const metadata = currentManifest({
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 9,
     sourceFiles: ["entries/guide.mockup.tsx"],
   });
   const baseline: HistoricalManifest = {
@@ -85,12 +85,13 @@ export async function removedPagePreviewFixture(t: TestContext) {
   const batches: string[][] = [];
   const reader = baselineReader(files, batches);
   const source = {
+    movedEntries: [],
     baseline,
     baseCommit: PAGE_COMMIT,
     baseRef: "main",
-    changedIds: [page.id],
-    removedEntries: [{ entry: page }],
-    schemaVersion: 1 as const,
+    changedEntries: [page.path],
+    removedEntries: [{ entry: page, folderTitles: [] }],
+    schemaVersion: 3 as const,
   };
   return { ...fixture, batches, baseline, config, files, page, reader, source };
 }

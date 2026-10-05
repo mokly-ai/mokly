@@ -7,6 +7,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import {
   acquireOutputLock,
   assertOutputLockHeld,
+  type OutputLock,
 } from "../dist/build/output_lock.js";
 import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
 import { writeCompilation } from "../dist/build/transaction.js";
@@ -46,34 +47,46 @@ test(
     const fixture = await createFixture();
     context.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
-    const holder = await acquireOutputLock(config.repoRoot);
-    context.after(() => holder.release());
+    let holder: OutputLock | undefined;
+    context.after(() => holder?.release());
     const store = new FileSystemGeneratedOutputStore();
     const failures: unknown[] = [];
-    const started = observeLockWait(() =>
-      serve(
-        config,
-        { port: 0, watch: false, build: true },
-        {
-          reporter: new PlainServeReporter(() => {}),
-          outputStore: {
-            check: (compilation, candidate) =>
-              store.check(compilation, candidate),
-            write: (compilation, candidate, signal) =>
-              store.write(compilation, candidate, signal).catch((error) => {
-                failures.push(error);
-                throw error;
-              }),
+    let waiting: ReturnType<typeof observeLockWait<void>> | undefined;
+    let began = () => {};
+    const writeStarted = new Promise<void>((resolve) => {
+      began = resolve;
+    });
+    const running = await serve(
+      config,
+      { port: 0, watch: false, build: true },
+      {
+        reporter: new PlainServeReporter(() => {}),
+        outputStore: {
+          check: (compilation, candidate) =>
+            store.check(compilation, candidate),
+          write: async (compilation, candidate, signal) => {
+            holder = await acquireOutputLock(config.repoRoot);
+            waiting = observeLockWait(() =>
+              store.write(compilation, candidate, signal),
+            );
+            began();
+            return waiting.result.catch((error) => {
+              failures.push(error);
+              throw error;
+            });
           },
         },
-      ),
+      },
     );
-    const running = await started.result;
-    await started.reached;
-    await running.close();
+    let closing: Promise<void> | undefined;
+    const close = () => (closing ??= running.close());
+    fixture.beforeRemove(close);
+    await writeStarted;
+    await waiting!.reached;
+    await close();
     assert.equal(failures.length, 1);
     assert.ok(isCancellation(failures[0]));
-    assertOutputLockHeld(holder, config.repoRoot);
+    assertOutputLockHeld(holder!, config.repoRoot);
   },
 );
 

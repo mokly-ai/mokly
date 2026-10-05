@@ -20,7 +20,7 @@ test("unmatched stylesheet rules do not require unused resource files", async (c
     ...fixture.config,
     stylesheets: [
       ...fixture.config.stylesheets,
-      { match: "screens/absent.html", stylesheets: ["missing.css"] },
+      { match: "absent/index.html", stylesheets: ["missing.css"] },
     ],
   };
   const compilation = await compileCatalogue(config);
@@ -64,7 +64,7 @@ test("discarded resource candidates preserve old inputs until adoption", async (
   assert.equal(oldWatcher.ignore?.(next), true);
   assert.equal(
     oldWatcher.ignore?.(
-      path.join(fixture.generatedDir, "screens/home.desktop.html"),
+      path.join(fixture.generatedDir, "home/index.desktop.html"),
     ),
     true,
   );

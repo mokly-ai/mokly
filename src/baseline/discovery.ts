@@ -79,7 +79,7 @@ export async function discoverHistoricalCatalogue(
       .map((candidate) =>
         "incompatible" in candidate
           ? `${candidate.root} (incompatible-earlier)`
-          : `${candidate.descriptor.catalogueRoot} (generated-v8)`,
+          : `${candidate.descriptor.catalogueRoot} (generated-v9)`,
       )
       .sort();
     throw new BaselineError(
@@ -92,7 +92,7 @@ export async function discoverHistoricalCatalogue(
   return selected;
 }
 
-/** Ensure historical compilation really populated its v8 inventory before harvesting. */
+/** Ensure historical compilation really populated its v9 inventory before harvesting. */
 export async function validateBuiltInventory(
   fs: BaselineFileSystem,
   extraction: string,

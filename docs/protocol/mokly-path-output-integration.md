@@ -4,7 +4,7 @@
 
 This is the approved integration target tracked by
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
-The current implementation uses kind/id entries. Integration replaces those
+The implementation uses file-derived paths. Integration replaced the earlier
 identities with file-derived paths and adopts the
 [combined format versions](./mokly-format-versions.md). The incoming contracts
 named `mokly-paths.md`, `mokly-folders.md`, `mokly-documents.md`,

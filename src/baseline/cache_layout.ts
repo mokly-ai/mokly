@@ -12,13 +12,13 @@ export const MAX_MARKER_BYTES = 1024 * 1024;
 
 /** Written only after output adoption and removal of the source extraction. */
 export interface CompletionMarker {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly commit: string;
   readonly finishedAt: string;
   readonly commands: readonly (readonly string[])[];
-  readonly manifestVersion: 8;
+  readonly manifestVersion: 9;
   readonly historicalCatalogueRoot: string;
-  readonly layout: "generated-v8";
+  readonly layout: "generated-v9";
 }
 
 export interface CacheLayout {
@@ -85,13 +85,13 @@ export function parseCompletionMarker(
   if (!value || typeof value !== "object") return;
   const marker = value as Partial<CompletionMarker>;
   if (
-    marker.schemaVersion !== 1 ||
+    marker.schemaVersion !== 2 ||
     marker.commit !== commit ||
     typeof marker.finishedAt !== "string" ||
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
-    marker.manifestVersion !== 8 ||
-    marker.layout !== "generated-v8" ||
+    marker.manifestVersion !== 9 ||
+    marker.layout !== "generated-v9" ||
     typeof marker.historicalCatalogueRoot !== "string" ||
     (marker.historicalCatalogueRoot !== "." &&
       !isSafeRepositoryPath(marker.historicalCatalogueRoot))

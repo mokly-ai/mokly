@@ -5,35 +5,21 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const designIds: Readonly<Record<string, string>> = {
-  "browse/views/use-case": "design-browse-use-case",
-  "review/outcomes/changed": "design-review-changed",
-  "review/outcomes/added": "design-review-added",
-  "review/outcomes/removed": "design-review-removed",
-  "review/outcomes/difference": "design-review-difference",
-  "review/impact/shared-impact": "design-review-shared-impact",
-  "review/impact/ignored-only": "design-review-ignored-only",
-  "review/outcomes/previous-version/no-captured-view":
-    "design-review-removed-no-view",
-  "review/impact/empty": "design-review-empty",
-};
-const design = (route: string): string => {
-  const match = /^(.*)\.(mobile|desktop)\.html$/u.exec(route);
-  const id = match && designIds[match[1] ?? ""];
-  if (!match || !id) throw new Error(`Unknown comparison design: ${route}`);
-  return pathToFileURL(
+const design = (entryPath: string, viewport: string): string =>
+  pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/mokly-generated/screens/${id}.${match[2]}.html`,
+      "examples/basic/mokly-generated",
+      entryPath,
+      `index.${viewport}.html`,
     ),
   ).href;
-};
 
 test("flow designs keep comparisons on the owning screens", async ({
   page,
 }) => {
   for (const viewport of ["desktop", "mobile"]) {
-    await page.goto(design(`browse/views/use-case.${viewport}.html`));
+    await page.goto(design("design/browse/views/use-case", viewport));
     await expect(
       page.getByRole("group", { name: "Comparison mode" }),
     ).toHaveCount(0);
@@ -53,7 +39,7 @@ test("comparison designs use screen context instead of report chrome", async ({
     "impact/ignored-only",
   ]) {
     for (const viewport of ["desktop", "mobile"]) {
-      await page.goto(design(`review/${route}.${viewport}.html`));
+      await page.goto(design(`design/changes/${route}`, viewport));
       await expect(
         page.locator(".mbk-title-row .mbk-status, .mbk-review-summary"),
       ).toHaveCount(0);
@@ -116,9 +102,7 @@ test("a viewport with no previous view names the one that still opens", async ({
 }) => {
   for (const viewport of ["desktop", "mobile"]) {
     await page.goto(
-      design(
-        `review/outcomes/previous-version/no-captured-view.${viewport}.html`,
-      ),
+      design("design/changes/outcomes/previous-version/no-view", viewport),
     );
     await expect(page.locator("[data-change-status]")).toHaveText("Removed");
     await expect(page.locator(".mbk-previous")).toHaveText(
@@ -151,7 +135,7 @@ test("empty Changes designs retain the selected current screen", async ({
   page,
 }) => {
   for (const viewport of ["desktop", "mobile"]) {
-    await page.goto(design(`review/impact/empty.${viewport}.html`));
+    await page.goto(design("design/changes/impact/empty", viewport));
     await expect(page.locator(".mbk-screen-head h2")).toHaveText("Welcome");
     await expect(
       page.getByRole("group", { name: "Comparison mode" }),

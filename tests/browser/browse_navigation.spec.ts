@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { expectDestination } from "./navigation_destination.js";
 import {
   startNavigationFixture,
   type NavigationFixture,
@@ -46,7 +47,7 @@ async function actAndWaitForFrameLoad(
 test("MockLink navigation reveals the destination and preserves shell state", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await chooseViewport(page, "mobile");
   // Changing the appearance reloads the frame, which is what this exercises.
   await actAndWaitForFrameLoad(page, ".mbk-frame-mobile iframe", () =>
@@ -56,14 +57,14 @@ test("MockLink navigation reveals the destination and preserves shell state", as
   if ((await detailsPanel.getAttribute("data-open")) === "true") {
     await page.getByRole("tab", { name: "Details", exact: true }).click();
   }
-  const other = page.locator('details[data-nav-folder="folder:Other"]');
+  const other = page.locator('details[data-nav-folder="folder:other"]');
   await other.evaluate((element: HTMLDetailsElement) => {
     element.open = true;
   });
   await page.fill("[data-mokly-search]", "home");
   await page.click('[data-filter="changed"]');
   const detailsRow = page.locator(
-    'a[data-nav-row][data-route="screens/details.html"]',
+    'a[data-nav-row][data-route="fixture/nested/details/index.html"]',
   );
   await expect(detailsRow).toBeHidden();
   await page
@@ -72,7 +73,7 @@ test("MockLink navigation reveals the destination and preserves shell state", as
     .click();
 
   await expect(page).toHaveURL(
-    /\/view\/screens\/details\.html\?fragment=section$/,
+    /\/view\/fixture\/nested\/details\/\?fragment=section$/,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect(page.locator(".mbk-crumbs")).toContainText("Nested");
@@ -100,7 +101,7 @@ test("MockLink navigation reveals the destination and preserves shell state", as
   );
   await expectFrameSource(
     page.locator(".mbk-frame-mobile iframe"),
-    /details\.mobile\.dark\.html#section$/,
+    /details\/index\.mobile\.dark\.html#section$/,
   );
 
   await page.goBack();
@@ -112,7 +113,7 @@ test("MockLink navigation reveals the destination and preserves shell state", as
 test("keyboard navigation retains constraints that already show the destination", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await page.fill("[data-mokly-search]", "details");
   await page
     .frameLocator(".mbk-frame-mobile iframe")
@@ -127,21 +128,25 @@ test("keyboard navigation retains constraints that already show the destination"
     "true",
   );
   await expect(
-    page.locator('a[data-nav-row][data-route="screens/details.html"]'),
+    page.locator(
+      'a[data-nav-row][data-route="fixture/nested/details/index.html"]',
+    ),
   ).toHaveAttribute("aria-current", "page");
 });
 
 test("Changed navigation preserves collapsed unrelated groups", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await page.click('[data-filter="changed"]');
-  const other = page.locator('details[data-nav-folder="folder:Other"]');
+  const other = page.locator('details[data-nav-folder="folder:other"]');
   await expect(other).toHaveAttribute("open", "");
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
 
-  await page.click('a[data-nav-row][data-route="user-flows/tour.html"]');
+  await page.click(
+    'a[data-nav-row][data-route="fixture/nested/tour/index.html"]',
+  );
 
   await expect(page.locator("#mb-main h2")).toHaveText("Tour");
   await expect(page.locator('[data-filter="changed"]')).toHaveAttribute(
@@ -154,9 +159,9 @@ test("Changed navigation preserves collapsed unrelated groups", async ({
 test("editing an active filter reveals newly matching groups", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await page.click('[data-filter="changed"]');
-  const other = page.locator('details[data-nav-folder="folder:Other"]');
+  const other = page.locator('details[data-nav-folder="folder:other"]');
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
 
@@ -164,26 +169,26 @@ test("editing an active filter reveals newly matching groups", async ({
 
   await expect(other).toHaveAttribute("open", "");
   await expect(
-    page.locator('a[data-nav-row][data-route="screens/extra.html"]'),
+    page.locator('a[data-nav-row][data-route="other/extra/index.html"]'),
   ).toBeVisible();
 });
 
 test("clearing filtering keeps the destination folder open", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
-  const other = page.locator('details[data-nav-folder="folder:Other"]');
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
+  const other = page.locator('details[data-nav-folder="folder:other"]');
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
   await page.click('[data-filter="changed"]');
 
-  await page.click('a[data-nav-row][data-route="screens/extra.html"]');
+  await page.click('a[data-nav-row][data-route="other/extra/index.html"]');
   await expect(page.locator("#mb-main h2")).toHaveText("Extra");
   await page.click('[data-filter="all"]');
 
   await expect(other).toHaveAttribute("open", "");
   await expect(
-    page.locator('a[data-nav-row][data-route="screens/extra.html"]'),
+    page.locator('a[data-nav-row][data-route="other/extra/index.html"]'),
   ).toHaveAttribute("aria-current", "page");
 });
 
@@ -194,7 +199,7 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
   await navigateFrom(page, ".mbk-frame-mobile iframe", "#area-link", true);
   await navigateFrom(page, ".mbk-frame-mobile iframe", "#svg-link");
 
-  await page.goto(`${navigation.url}/view/user-flows/tour.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/tour/`);
   await expect(page.locator(".mbk-flow-screen iframe").first()).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",
@@ -206,7 +211,7 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
     .click();
   await expectDestination(page);
 
-  await page.goto(`${navigation.url}/view/pages/guide.html`);
+  await page.goto(`${navigation.url}/view/guide/`);
   await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",
@@ -230,7 +235,7 @@ test("logical activation stays host-owned during a frame source handoff", async 
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/mokly-generated/screens/home.mobile.dark.html",
+    "**/static/mokly-generated/fixture/nested/home/index.mobile.dark.html",
     async (route) => {
       reportRequest();
       await requestReleased;
@@ -239,7 +244,7 @@ test("logical activation stays host-owned during a frame source handoff", async 
   );
 
   try {
-    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await page.goto(`${navigation.url}/view/fixture/nested/home/`);
     await chooseViewport(page, "mobile");
     await chooseScheme(page, "dark");
     await requestStarted;
@@ -258,7 +263,7 @@ test("logical activation stays host-owned during a frame source handoff", async 
 
     await expectDestination(page);
     await page.goBack();
-    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
   } finally {
     releaseRequest();
@@ -271,7 +276,7 @@ async function navigateFrom(
   linkSelector: string,
   dispatch = false,
 ): Promise<void> {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await expect(page.locator(frameSelector)).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",
@@ -287,11 +292,4 @@ async function navigateFrom(
     await link.click();
   }
   await expectDestination(page);
-}
-
-async function expectDestination(page: Page): Promise<void> {
-  await expect(page).toHaveURL(
-    /\/view\/screens\/details\.html\?fragment=section$/,
-  );
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
 }

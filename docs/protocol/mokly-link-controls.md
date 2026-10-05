@@ -11,7 +11,7 @@ Implemented. Verification and delivery are tracked by the
 explicitly adapts one rendered control into a catalogue link:
 
 ```tsx
-<MockLink asChild to="return-overview">
+<MockLink asChild to="account/overview">
   <Button tone="primary" onPress={noop}>
     Continue
   </Button>
@@ -24,7 +24,8 @@ still owns the component, theme, and styles. A component that requires an
 handler nor executes one in the browser.
 
 Child mode accepts only `asChild`, `to`, `fragment`, and one React element as
-`children`. Put classes, styles, ids, accessibility labels, `target`, and other
+`children`; `to` takes the complete path, relative path, or definition
+reference forms of the [authoring contract](./mokly-authoring.md#links). Put classes, styles, ids, accessibility labels, `target`, and other
 attributes on that child. Fragments, text, arrays, missing children, and extra
 wrapper props fail rather than silently losing props. The existing target and
 fragment grammars apply in both modes. A component may render one HTML `a`,

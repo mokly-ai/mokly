@@ -48,7 +48,7 @@ test(
     assert.equal(
       (
         await fetch(
-          running.url + "/static/mokly-generated/screens/home.mobile.html",
+          running.url + "/static/mokly-generated/home/index.mobile.html",
         )
       ).status,
       200,

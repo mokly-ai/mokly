@@ -28,6 +28,7 @@ takes no value. There are no silent positional arguments.
 | `--watch`                            | `serve`, `build`             | Watch inputs; default for Serve                                |
 | `--no-watch`                         | `serve`                      | Serve one deterministic snapshot                               |
 | `--build`                            | `serve`                      | Write `mokly-generated/` after successful compilation          |
+| `--open`                             | `serve`                      | Open the catalogue in your default browser                     |
 | `--base <ref>`                       | `serve`, `export`, `publish` | Git base ref used to find the branch point                     |
 | `--out <path>`                       | `export`, `publish`          | Config-relative output directory                               |
 | `--endpoint <url>`                   | `publish`                    | The service's plan URL, or `MOKLY_ENDPOINT`                    |
