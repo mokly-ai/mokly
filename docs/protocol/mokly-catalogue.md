@@ -230,9 +230,9 @@ non-string `parentTitle` on variants, and its presence on non-variants. Parent
 resolution follows the [branch-point lookup](./mokly-branch-point-lookup.md).
 The optional `preview` field is the additive descriptor defined by
 [removed previews](./mokly-removed-previews.md); readers tolerate its absence.
-Missing baseline usage is unavailable. Projection rejects dangling component
-references. Proven empty usage is ready with empty arrays,
-never inferred from a failed or incomplete render.
+Missing baseline usage is unavailable. Projection omits a removed view's usage
+when it names an unpublished component and marks it unavailable. Ready empty
+arrays require proven empty usage, never a failed or incomplete render.
 
 `comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,
 pinned to this content's evidence. Resolve snapshots against that JSON response

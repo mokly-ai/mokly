@@ -11,8 +11,9 @@ those fixes and end with a new review. Milestones 9–12 are complete. Milestone
 13 is complete, including a second fresh review with fifteen findings in the
 [review record](../docs/reviews/path-identity.md#second-review). On 2026-10-04
 the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. Milestones 14, 15
-and 16 are complete; integration and the new review remain in Milestone 17. The other ten
-findings await the user's decision.
+and 16 are complete. Milestone 17 integration, verification and CLI/browser
+smoke are complete; only its fresh review remains for the orchestrator. The
+other ten findings await the user's decision.
 This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
@@ -2394,8 +2395,7 @@ Move every shell consumer to the shared lookup, with a failing test first for
 each finding. Then assert the rendered UI of the shared fixture set in every
 host.
 
-Status: Implementation complete. The full gate is blocked on the Milestone 16
-machine; see the last TODO.
+Status: Complete. Milestone 17 passed the full gate on the integrated head.
 
 - [x] Finding 1 (option A): build affected-consumer links from the lookup. A
       `before`-side evidence links to the current entry that its path resolves
@@ -2467,7 +2467,7 @@ machine; see the last TODO.
   - [x] the Changes activation order;
   - [x] each crumb's text, and its link when it has one.
 - [x] Update the shell README and the viewer README.
-- [ ] Run the unmodified `cargo xtask check`. Then commit and push. The
+- [x] Run the unmodified `cargo xtask check`. Then commit and push. The
       branch is committed and pushed, but the unmodified gate did not pass on
       the Milestone 16 machine, which ran about twice as slowly as on
       2026-10-04 morning. Every stage passed except three checks that also
@@ -2477,37 +2477,102 @@ machine; see the last TODO.
       `ordinaryPreview` fixture setup in `preview_design_links.spec.ts` and
       `preview_navigation.spec.ts`, and the `moved_hydration.spec.ts` export
       case for `billing/invoice/paid` (base fails two of four runs). Run the
-      unmodified gate on a healthy machine before integration.
+      unmodified gate on a healthy machine before integration. This gate is
+      now complete: Milestone 17 ran it with HEAD at `3aff9c03`, containing
+      `3aff9c03` unchanged, plus only its documented projection correction
+      and progress records. The second complete run passed all checks:
+      4,214 unit, 844 browser and 261 hydration tests. Its first run hit only
+      the known export `billing/invoice/paid` sandbox-console failure.
+      Logs: `.context/m17-gate-1.log` and `.context/m17-gate-2.log`.
 
 ## Milestone 17: Branch-point verification and review
 
 Verify the combined work, smoke-test each case, and assign a fresh review. The
 implementation agent does not run that review.
 
-Status: Not started.
+Status: Integration, verification and smoke complete. The final review remains
+assigned to fresh reviewers after the push.
 
-- [ ] Bring Milestone 16 into the feature branch. Fast-forward when the
+- [x] Bring Milestone 16 into the feature branch. Fast-forward when the
       feature branch has not moved; otherwise merge under the merge rules in
       `AGENTS.md`. If `origin/main` has new additions, merge them under the
       same rules.
-- [ ] Correct the projection sentence that Milestone 14 changed in
+- [x] Correct the projection sentence that Milestone 14 changed in
       `mokly-catalogue.md`. It says that projection rejects dangling component
       references. The code does not reject them: when a removed entry's
       usage names a component that the model does not publish, projection
       omits that usage, so the view's usage is unavailable. State that rule,
       and add a projection test if none covers it.
-- [ ] Run the full verification, including the unmodified `cargo xtask check`.
-- [ ] Smoke-test each fixture case with the CLI, `serve --base main` and
+- [x] Run the full verification, including the unmodified `cargo xtask check`.
+- [x] Smoke-test each fixture case with the CLI, `serve --base main` and
       `export --base main`. In a browser at 1280px and 390px, follow every
       usage link, open each removed variant, and check the crumbs, the props,
       and the Changes order.
-- [ ] Record the outcome of findings 1, 6, 8, 9, and 11 in
+- [x] Record the outcome of findings 1, 6, 8, 9, and 11 in
       `docs/reviews/path-identity.md`. Update this plan's status and
       `plans/README.md`.
-- [ ] Commit and push.
+- [x] Commit and push.
 - [ ] After the push, the orchestrator assigns fresh reviewers to use
       `docs/implementation-review-prompt.md` against the complete diff from
       `origin/main` and report findings without changing the implementation.
+
+Integration: fast-forwarded from `612c0032` through `5127f9b5` to
+`3aff9c03`. There were no conflicts or merge commit. Main remains `800fe9f8`;
+`.context/main-additions-17.txt` is empty.
+
+The projection contract now states the implemented unavailable-usage rule.
+`tests/catalogue_history_conflicts.test.ts` already asserts it for removed
+screens and component variants in both Serve and export. It also proves that
+restoring the dangling usage makes the reader reject the model.
+
+Verification ran with HEAD at `3aff9c03` and only the projection contract,
+its README and progress records changed. The implementation from `3aff9c03`
+is unchanged. The first complete `cargo xtask check` passed 4,214 unit and
+844 browser tests, but hydration passed 260 of 261: the export
+`billing/invoice/paid` case logged `Blocked script execution in 'about:srcdoc'`.
+The second complete, unmodified gate passed all 4,214 unit, 844 browser and
+261 hydration tests. No tests, time limits or console filters changed; no test
+was skipped and neither run enabled retries. The 30 shared browser cases pass.
+
+Both runs passed the 2,500 ms PostCSS budget (1,516.5 ms, then 1,485.4 ms).
+Both passed the 300 s ordinaryPreview setup; its export phase took
+238,422.68 ms, then 253,704.68 ms. The six packed-consumer scenarios, build,
+type checks, 472-file example build/check, dependency audit, formatting,
+lint, repository ratchets, Rust formatting, Clippy, 15 Rust tests and both
+file-length audits passed. The source audit covered 1,609 files; the Rust
+audit covered 9. Main's reviewed Braces exception is unchanged.
+
+CLI smoke used real `build`, `check`, `serve --base main --no-watch --port 0`
+and `export --base main --out site` commands. A plain static server served
+the exported files. Each scratch repository committed its baseline on main
+before applying the shared head edits. Browser checks ran at 1280px and 390px.
+
+| Fixture           | Serve and export result at both widths                                                                                                                                                                                                                                                    |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `moved-consumers` | Followed all 8 rendered usage links per host/width, 32 in total. Both used-by and affected links reached Status or Receipt with the expected heading. Badge's affected links use `library/archive/status/default` and `shop/archive/receipt`. Export succeeded.                           |
+| `moved-parent`    | Primary shows Before `Continue` and Current `Submit`. Removed Secondary shows `Cancel`, the baseline Library crumb and a link to the moved Action parent. Side by side stays selected in export. Changes plus `secondary` search makes the Library index open `library/action/secondary`. |
+| `moved-variant`   | Receiver Primary shows Before `Continue` and Current `Submit`, with Receiver's crumb and variant bar. Donor retains Spare with `Later`.                                                                                                                                                   |
+| `case-renames`    | Receipt opens at `shop/receipt`. Action Primary retains Before `Continue` and Current `Submit`. Removed Secondary shows `Cancel` and links its crumb to lowercase `library/action`. Export retains Side by side. Changes reaches `library/Action/secondary`. No stylesheet was edited.    |
+| `reused-parent`   | The removed Default shows `Saved action`. Library and former Action crumbs are plain text. The variant has one flat Removed row. The current document opens separately as Action guide.                                                                                                   |
+
+All 20 case/host/width combinations passed, with no browser page errors or
+HTTP 500s. Serve mode-reset behavior remains as recorded under finding 8;
+export mode retention is asserted without preparing comparisons. Scratch
+runner corrections were limited to its loading wait and bundling browser
+callbacks without tsx name helpers. No product code changed. Sources,
+artifacts, CLI logs, `smoke-results.json` and screenshots remain under
+`.context/m17/`, outside the feature diff. Gate logs are
+`.context/m17-gate-1.log` and `.context/m17-gate-2.log`.
+
+The review record now lists the outcomes and covering tests for findings
+1, 6, 8, 9 and 11. It records the remaining Serve reset and the other three
+new items for the user's decision. No unapproved finding was addressed.
+The plan stays Active until its pull request merges. The final review TODO
+is intentionally unticked; the implementation agent did not run it.
+
+No file was deleted in this milestone. All 18 main-relative deletions are
+the previously approved path identity replacements; they are listed with
+reasons in the close-out commit body.
 
 ## Post-merge follow-up (non-blocking)
 

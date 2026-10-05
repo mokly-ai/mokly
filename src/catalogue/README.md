@@ -51,8 +51,9 @@ descriptors remain absent. Changes-enabled consumer export and repository
 publication supply both screen descriptors and removed-page paths after their
 historical closures are packaged. Evidence replacement publishes the pointer,
 descriptors and removed-entry snapshot atomically. Current-only delivery supplies
-none of them. Projection checks the retained component set once for screens and
-removed variants; readers remain strict.
+none of them. When a removed screen or variant uses a component absent from the
+published model, projection omits that usage and marks it unavailable. Readers
+still reject dangling references in supplied usage.
 
 `@mokly/viewer` owns the public types and `readCatalogue`; its value/reference
 validators reject unsupported versions, malformed known fields, private evidence,

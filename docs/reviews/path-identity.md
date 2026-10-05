@@ -449,3 +449,49 @@ renames, a path that another kind reuses, and the former parent's title. The
 | 11      | A: store the former parent's title in the removed record             | 14 (contract), 15, 16 |
 
 Findings 2, 3, 4, 5, 7, 10, 12, 13, 14, and 15 await the user's decision.
+
+#### Outcomes
+
+The approved branch-point lookup fixes are integrated at `3aff9c03`.
+Contracts landed in `c7db0791`; the lookup, former-parent title and shared
+Git fixtures landed in `612c0032`; shell consumers landed in `3aff9c03`.
+Milestone 17 verified that combined code without changing it.
+
+| Finding | Outcome and implementation commit                                                                                                                                                                                            | Covering tests                                                                                                                                                                                                                                                                                                    |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1       | Fixed in `612c0032` and `3aff9c03`: each usage evidence resolves on its own side. The moved receipt and component consumer export and link to their current paths.                                                           | [`branch_point_fixture_data.test.ts`](../../tests/branch_point_fixture_data.test.ts), [`branch_point_workspace.test.ts`](../../tests/branch_point_workspace.test.ts), [`branch_point_inputs.test.ts`](../../tests/branch_point_inputs.test.ts); the `moved-consumers` browser case.                               |
+| 6       | Fixed in `612c0032` and `3aff9c03`: variant bars, saved props, supplied inputs and removed rows use one lookup for moves between parents and case-only renames.                                                              | [`branch_point_inputs.test.ts`](../../tests/branch_point_inputs.test.ts), [`branch_point_workspace.test.ts`](../../tests/branch_point_workspace.test.ts), [`branch_point_navigation.test.ts`](../../tests/branch_point_navigation.test.ts); the `moved-parent`, `moved-variant` and `case-renames` browser cases. |
+| 8       | Fixed in `3aff9c03`: the component workspace key uses the resolved parent. Export retains Side by side when a removed sibling opens after a parent move or case-only rename. The separate Serve behavior below remains open. | [`branch_point_workspace_key.test.ts`](../../tests/branch_point_workspace_key.test.ts), [`branch_point_parents.test.ts`](../../tests/branch_point_parents.test.ts); the `moved-parent` and `case-renames` browser cases and the real CLI export smoke.                                                            |
+| 9       | Fixed in `3aff9c03`: Changes activation traverses the built navigation tree. The Library container reaches the moved member's removed variant.                                                                               | [`branch_point_navigation.test.ts`](../../tests/branch_point_navigation.test.ts), [`branch_point_guard.test.ts`](../../tests/branch_point_guard.test.ts); the `moved-parent` browser case and CLI smoke.                                                                                                          |
+| 11      | Fixed in `612c0032` and `3aff9c03`: every removed variant retains its baseline `parentTitle`. When a document reuses the parent's path, the crumb shows that title as plain text.                                            | [`catalogue_parent_title.test.ts`](../../tests/catalogue_parent_title.test.ts), [`branch_point_navigation.test.ts`](../../tests/branch_point_navigation.test.ts), [`branch_point_parents.test.ts`](../../tests/branch_point_parents.test.ts); the `reused-parent` browser case.                                   |
+
+The shared browser checks are
+[`branch_point_serve.spec.ts`](../../tests/browser/branch_point_serve.spec.ts),
+[`branch_point_export.spec.ts`](../../tests/browser/branch_point_export.spec.ts)
+and [`branch_point_viewer.spec.ts`](../../tests/browser/branch_point_viewer.spec.ts).
+All 30 cases pass. The guard prevents shell and viewer consumers from adding
+another path mapping outside the shared lookup.
+
+**Remaining Serve behavior for finding 8:** Serve still resets the comparison
+mode on the first navigation after any new on-demand comparison, siblings
+included. Each comparison document raises the evidence revision. This also
+happens on main and awaits the user's decision. The shared Serve browser
+suite prepares comparisons before it checks mode retention. Milestone 17
+changed neither that behavior nor the tests. The fixed time budgets, the
+hydration console flake and case-only renames in `catalogueComponentVariants`
+also remain outside this approved work, as do the ten unapproved findings.
+
+The unmodified full gate passed on the second complete run: 4,214 unit tests,
+844 browser tests and 261 hydration tests. The first complete run passed all
+checks except the known export `billing/invoice/paid` hydration case, which
+logged `Blocked script execution in 'about:srcdoc'`. The repeat passed with
+no skips, filters, retries or code changes. Logs are
+`.context/m17-gate-1.log` and `.context/m17-gate-2.log`.
+
+Real CLI smoke used five scratch Git repositories and `serve --base main`
+and `export --base main`. All 20 case/host/width combinations passed at
+1280px and 390px. All 32 rendered usage links reached the expected page and
+title. Removed variants retained crumbs and props, export retained Side by
+side across sibling navigation, and Changes reached the removed member.
+No browser page error or HTTP 500 occurred. Scratch sources, logs, results
+and screenshots stay in `.context/m17/`, outside the feature diff.
