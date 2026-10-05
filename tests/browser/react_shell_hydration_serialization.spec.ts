@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 import type { CDPSession, Page } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
+import { captureBrowserErrors } from "./console_notices.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   expectCleanHydration,
   expectNoBrowserErrors,
   installDevelopmentBundle,
@@ -21,7 +23,7 @@ interface PreciseCoverage {
 let developmentBundle: string;
 
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   developmentBundle = await buildDevelopmentBundle();
 });
 

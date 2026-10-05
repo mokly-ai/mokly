@@ -11,6 +11,7 @@ import { graphSourceFiles } from "../dist/build/source_inventory.js";
 import { orderedStyles } from "../dist/build/styles/order.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { countingMetafileMapper } from "./helpers/metafile_work.js";
 
 test("one metafile mapper keeps a symlinked working directory's logical paths", async (context) => {
   const fixture = await createFixture();
@@ -23,7 +24,7 @@ test("one metafile mapper keeps a symlinked working directory's logical paths", 
   assert.equal(mapper.path(mapper.key(logical)), logical);
 });
 
-test("large ordered CSS inventory stays within a fixed traversal budget", async (context) => {
+test("large ordered CSS inventory maps each path once", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const root = "entries/fixture.mockup.tsx";
@@ -46,15 +47,19 @@ test("large ordered CSS inventory stays within a fixed traversal budget", async 
     },
     outputs: {},
   };
+  const { counts, mapper } = countingMetafileMapper(fixture.root);
   const started = performance.now();
   const ordered = orderedStyles(
     metafile,
     path.join(fixture.root, root),
     fixture.root,
+    new Set(),
+    mapper,
   );
   const elapsed = performance.now() - started;
   assert.equal(ordered.length, files.length);
-  assert.ok(elapsed < 400, `10,000 graph edges took ${elapsed.toFixed(1)} ms`);
+  context.diagnostic(`10,000 graph edges took ${elapsed.toFixed(1)} ms`);
+  assert.deepEqual(counts, { keys: 1, paths: files.length });
 });
 
 test("large graph source inventory reuses one mapped working directory", async (context) => {
@@ -80,18 +85,17 @@ test("large graph source inventory reuses one mapped working directory", async (
     ),
     outputs: {},
   };
+  const { counts, mapper } = countingMetafileMapper(fixture.root);
   const started = performance.now();
   const inventory = graphSourceFiles(
     metafile,
     fixture.root,
     fixture.root,
     fixture.mockupsDir,
+    mapper,
   );
   const elapsed = performance.now() - started;
   context.diagnostic(`3,000 graph inputs: ${elapsed.toFixed(1)} ms`);
   assert.equal(inventory.length, files.length);
-  assert.ok(
-    elapsed < 2_500,
-    `3,000 graph inputs took ${elapsed.toFixed(1)} ms`,
-  );
+  assert.deepEqual(counts, { keys: 0, paths: files.length });
 });

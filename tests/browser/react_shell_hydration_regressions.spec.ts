@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+import { captureBrowserErrors } from "./console_notices.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   delayHydration,
   expectCleanHydration,
   expectNoBrowserErrors,

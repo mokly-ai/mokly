@@ -172,10 +172,9 @@ from different package versions.
   updates every summary of it in the same change.
 - Root tests validate structure, links, versions, copy, the CLI surface,
   configuration fields, public authoring exports, and the upload/CI contract.
-  A root test that checks that the search summaries in
+  A root test checks that the search summaries in
   `catalogue/search-and-filters.md` and `catalogue/browse.md` name every field
-  of the [search rule](./mokly-folders.md#titles) is an approved target of the
-  [path identity follow-up plan](../../plans/path-identity-follow-up.md).
+  of the [search rule](./mokly-folders.md#titles).
 
 ## Related Docs
 

@@ -1,5 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import { test } from "./ordinary_preview_fixture.js";
 import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
 import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
@@ -9,7 +11,7 @@ let preview: OwnedPreviewFixture;
 test.describe.configure({ timeout: 90_000 });
 
 test.beforeAll(async ({ ordinaryPreview }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(scaledTimeLimit(90_000));
   preview = ordinaryPreview;
 });
 

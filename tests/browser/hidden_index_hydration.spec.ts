@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
+import { captureBrowserErrors } from "./console_notices.js";
 import { readDisclosureStorage } from "./disclosure_storage.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   expectCleanHydration,
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";
@@ -27,7 +29,7 @@ let server: WatchedServe;
 let developmentBundle: string;
 
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   developmentBundle = await buildDevelopmentBundle();
   server = await startWatchedServe(source);
 });

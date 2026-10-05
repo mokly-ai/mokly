@@ -1,11 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
 import { startViewerPreviews } from "./removed_preview_fixture.js";
 
 let host: Awaited<ReturnType<typeof startViewerPreviews>>;
 
 test.beforeAll(async () => {
-  test.setTimeout(240_000);
+  test.setTimeout(scaledTimeLimit(240_000));
   host = await startViewerPreviews();
 });
 test.afterAll(async () => {

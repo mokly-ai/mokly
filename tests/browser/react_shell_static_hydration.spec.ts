@@ -3,9 +3,11 @@ import type { CDPSession } from "@playwright/test";
 
 import { readCatalogue } from "@mokly/viewer";
 
+import { scaledTimeLimit } from "../helpers/time_limits.js";
+
+import { captureBrowserErrors } from "./console_notices.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   expectCleanHydration,
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";
@@ -19,7 +21,7 @@ let exported: Awaited<ReturnType<typeof startStaticFixture>>;
 let historical: Awaited<ReturnType<typeof startHistoricalStaticFixture>>;
 
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   developmentBundle = await buildDevelopmentBundle();
   exported = await startStaticFixture();
   historical = await startHistoricalStaticFixture();

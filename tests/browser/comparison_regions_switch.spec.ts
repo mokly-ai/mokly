@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { comparisonRegionsFixture } from "../helpers/comparison_regions_fixture.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import { loadComparison } from "./comparison_actions.js";
 import { scrollTogether } from "./comparison_regions_helpers.js";
@@ -9,7 +10,7 @@ import { chooseViewport } from "./workspace_actions.js";
 let fixture: Awaited<ReturnType<typeof comparisonRegionsFixture>>;
 test.describe.configure({ timeout: 90_000 });
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   fixture = await comparisonRegionsFixture();
 });
 test.afterAll(async () => {

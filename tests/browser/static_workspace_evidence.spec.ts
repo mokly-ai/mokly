@@ -8,6 +8,7 @@ import { componentEntrySource } from "../helpers/component_fixture.js";
 import { createExportFixture } from "../helpers/export_fixture.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 let fixture: Awaited<ReturnType<typeof createExportFixture>>;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
@@ -16,7 +17,7 @@ let actionPage: string;
 const retainedDocumentAttribute = "data-static-evidence-document";
 
 test.beforeAll(async () => {
-  test.setTimeout(90_000);
+  test.setTimeout(scaledTimeLimit(90_000));
   const source = componentEntrySource();
   fixture = await createExportFixture(source);
   await fs.writeFile(

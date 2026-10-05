@@ -25,6 +25,7 @@ import {
 } from "../dist/server/watcher.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { scaledTimeLimit } from "./helpers/time_limits.js";
 import { version } from "./helpers/watched_catalogue.js";
 import { waitForBrowserReload } from "./helpers/watched_events.js";
 
@@ -56,14 +57,23 @@ test("Tailwind-shaped inventory uses one directory watch target and indexed requ
     { length: 3_000 },
     (_, index) => `sources/source-${index}.tsx`,
   );
+  let sourceReads = 0;
+  const inventory = new Proxy(sources, {
+    get(target, property, receiver) {
+      if (typeof property === "string" && /^\d+$/u.test(property))
+        sourceReads += 1;
+      return Reflect.get(target, property, receiver);
+    },
+  });
   const config = {
     ...(await loadConfig(fixture.root)),
-    sourceFiles: sources,
+    sourceFiles: inventory,
     postcssWatchDirectories: [{ directory: root, glob: "*.tsx" }],
   };
   const targets = watchTargets(config);
   assert.ok(targets.includes(root));
   assert.ok(targets.length < 20, `unexpected ${targets.length} watch roots`);
+  sourceReads = 0;
   const started = performance.now();
   for (const source of sources)
     assert.equal(
@@ -71,9 +81,11 @@ test("Tailwind-shaped inventory uses one directory watch target and indexed requ
       false,
     );
   const elapsed = performance.now() - started;
-  assert.ok(
-    elapsed < 1_500,
-    `3,000 indexed lookups took ${elapsed.toFixed(1)} ms`,
+  context.diagnostic(`3,000 indexed lookups took ${elapsed.toFixed(1)} ms`);
+  assert.equal(
+    sourceReads,
+    sources.length,
+    "required paths read the source inventory once",
   );
   assert.equal(
     classifyWatchPath(
@@ -133,7 +145,7 @@ test(
     await watcher.ready();
     const readiness = performance.now() - started;
     assert.ok(
-      readiness < 8_000,
+      readiness < scaledTimeLimit(8_000),
       `watcher readiness took ${readiness.toFixed(1)} ms`,
     );
     await fs.writeFile(path.join(root, "new.tsx"), "export default null");
@@ -212,7 +224,7 @@ export default { plugins: [{ postcssPlugin: "shape", Once(_root, { result }) {
     const readyMs = performance.now() - started;
     const initialWatcherCreates = sourceWatcherCreates;
     assert.ok(
-      readyMs < 12_000,
+      readyMs < scaledTimeLimit(12_000),
       `watched Serve readiness took ${readyMs.toFixed(1)} ms`,
     );
     const before = version(

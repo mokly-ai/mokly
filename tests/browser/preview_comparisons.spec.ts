@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import { expectPresentedPane, PANE_SOURCE } from "./comparison_actions.js";
 import { servePreviewFixture, type PreviewFixture } from "./preview_fixture.js";
@@ -11,7 +12,7 @@ let preview: PreviewFixture;
 
 test.describe.configure({ timeout: 90_000 });
 test.beforeAll(async () => {
-  test.setTimeout(90_000);
+  test.setTimeout(scaledTimeLimit(90_000));
   fixture = await createPreviewComparisonFixture();
   preview = await servePreviewFixture(fixture.output);
 });

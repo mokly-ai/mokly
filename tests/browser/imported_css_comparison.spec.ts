@@ -15,6 +15,7 @@ import {
   repositoryRoot,
 } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 import { waitForClassifiedCount } from "../helpers/watched_catalogue.js";
 
 let fixture: Awaited<ReturnType<typeof createFixture>>;
@@ -23,7 +24,7 @@ let staticSite: Awaited<ReturnType<typeof serveStaticFiles>>;
 let imageSize = 0;
 
 test.beforeAll(async () => {
-  test.setTimeout(240_000);
+  test.setTimeout(scaledTimeLimit(240_000));
   fixture = await createFixture(`import React from "react";
 import { defineScreen } from "@mokly/mokly";
 import classes from "./theme.module.css";

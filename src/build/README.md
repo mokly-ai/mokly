@@ -71,6 +71,9 @@ CSS Modules mutation checklist:
   watch matching additions and newly added subdirectories, but not deletions.
   They compile their globs once per report and cache ownership classifications
   during a load; expanded files already reported explicitly are checked once.
+  `styles/dependency_walk.ts` shares an optional work collaborator with the
+  inventory collector. Tests count sorts, root projections and glob compilations
+  through it. The default collaborator keeps the production operations.
   Inventory-only graph loads run the same plugins
   and collect the same dependencies. Generated output and public mockups files
   cannot enter that inventory; nested imports that a plugin reads from disk

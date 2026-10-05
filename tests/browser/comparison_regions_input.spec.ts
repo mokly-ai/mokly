@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { comparisonRegionsFixture } from "../helpers/comparison_regions_fixture.js";
+import { scaledTimeLimit } from "../helpers/time_limits.js";
 
 import {
   comparisonSection,
@@ -20,7 +21,7 @@ import {
 let fixture: Awaited<ReturnType<typeof comparisonRegionsFixture>>;
 test.describe.configure({ timeout: 90_000 });
 test.beforeAll(async () => {
-  test.setTimeout(120_000);
+  test.setTimeout(scaledTimeLimit(120_000));
   fixture = await comparisonRegionsFixture();
 });
 test.afterAll(async () => {

@@ -3,9 +3,9 @@ import { expect, test } from "@playwright/test";
 import { darkOnlyScreenViews } from "../helpers/changed_view_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
+import { captureBrowserErrors } from "./console_notices.js";
 import {
   buildDevelopmentBundle,
-  captureBrowserErrors,
   expectCleanHydration,
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";

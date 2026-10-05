@@ -1,13 +1,75 @@
 import assert from "node:assert/strict";
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import test from "node:test";
 
+import { repositoryRoot } from "./helpers/fixture.js";
 import {
   GUIDES,
   GUIDE_SECTIONS,
   guidesRoot,
   withoutFencedCode,
 } from "./helpers/guides.js";
+
+const SEARCH_FIELDS = new Map([
+  ["the entry path", /(?:entry's|own) path/u],
+  ["its authored title", /entry's title|own path, title/u],
+  ["an entry tag", /entry's tags|own path, title and tags/u],
+  [
+    "a resolved title of any folder at or above its path",
+    /title of a folder|titles of the folders/u,
+  ],
+]);
+
+function missingSearchFields(summary: string): string[] {
+  const prose = summary.replace(/\s+/gu, " ");
+  return [...SEARCH_FIELDS]
+    .filter(([, pattern]) => !pattern.test(prose))
+    .map(([field]) => field);
+}
+
+test("catalogue guide summaries name every field of the folder search contract", () => {
+  const contract = readFileSync(
+    path.join(repositoryRoot, "docs/protocol/mokly-folders.md"),
+    "utf8",
+  );
+  const fields = /one field: ([\s\S]*?)\. Empty free text/u
+    .exec(contract)?.[1]
+    ?.replace(/\s+/gu, " ")
+    .split(/, (?:or )?/u);
+  assert.deepEqual(
+    fields,
+    [...SEARCH_FIELDS.keys()],
+    "update the guide field check when the search contract changes",
+  );
+  for (const id of ["catalogue/search-and-filters", "catalogue/browse"]) {
+    const guide = GUIDES.find((entry) => entry.id === id);
+    assert.ok(guide, id);
+    assert.deepEqual(missingSearchFields(guide.body), [], id);
+  }
+});
+
+test("the guide field check rejects a missing summary or any missing search field", () => {
+  assert.equal(
+    missingSearchFields("See the navigation reference for the search rule.")
+      .length,
+    4,
+  );
+  const phrases = [
+    "entry's path",
+    "entry's title",
+    "entry's tags",
+    "title of a folder",
+  ];
+  assert.deepEqual(missingSearchFields(phrases.join("; ")), []);
+  for (let index = 0; index < phrases.length; index++)
+    assert.deepEqual(
+      missingSearchFields(
+        phrases.filter((_, position) => index !== position).join("; "),
+      ),
+      [[...SEARCH_FIELDS.keys()][index]],
+    );
+});
 
 const EXPECTED = [
   "start/install",

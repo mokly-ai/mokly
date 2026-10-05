@@ -11,6 +11,7 @@ import { serve } from "../dist/server/serve.js";
 import { controlsEntrySource } from "./helpers/component_controls_fixture.js";
 import { settledRenderCapability } from "./helpers/component_controls_state.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { scaledTimeLimit } from "./helpers/time_limits.js";
 
 test(
   "watched controls adopt only successful graphs and never publish edits or delay Browse",
@@ -76,7 +77,7 @@ test(
     const started = Date.now();
     assert.equal((await fetch(server.url)).status, 200);
     assert.ok(
-      Date.now() - started < 1000,
+      Date.now() - started < scaledTimeLimit(1000),
       "synchronous consumer rendering must not occupy the HTTP thread",
     );
     assert.equal((await hanging).status, 422);

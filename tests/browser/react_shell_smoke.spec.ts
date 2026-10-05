@@ -1,16 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { expectedConsoleNotice } from "./console_notices.js";
+import { captureBrowserErrors } from "./console_notices.js";
 
 test("the selected React shell hydrates its server-rendered document", async ({
   page,
 }) => {
-  const errors: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() === "error" && !expectedConsoleNotice(message))
-      errors.push(message.text());
-  });
-  page.on("pageerror", (error) => errors.push(error.message));
+  const errors = captureBrowserErrors(page);
 
   const response = await page.goto("/view/example/screens/welcome/");
   expect(response?.status()).toBe(200);

@@ -10,7 +10,10 @@ import { loadConfig } from "../../dist/config/load.js";
 
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
-import { ordinaryPreviewFixtureSource } from "./ordinary_preview_source.js";
+import {
+  configureOrdinaryPreview,
+  focusOrdinaryPreview,
+} from "./ordinary_preview_profile.js";
 
 const execute = promisify(execFile);
 
@@ -29,8 +32,14 @@ export async function createCommittedExampleBaseline(
 ) {
   await copyExampleRepository(root);
   await configureFocusedExample(root, profile);
-  const config = await loadConfig(root, "examples/basic/mokly.config.ts");
-  await writeCompilation(await compileCatalogue(config), config);
+  let config = await loadConfig(root, "examples/basic/mokly.config.ts");
+  let compilation = await compileCatalogue(config);
+  if (profile === "ordinary-preview") {
+    await focusOrdinaryPreview(root, compilation);
+    config = await loadConfig(root, "examples/basic/mokly.config.ts");
+    compilation = await compileCatalogue(config);
+  }
+  await writeCompilation(compilation, config);
   await initializeRepository(root, true);
   return config;
 }
@@ -129,33 +138,8 @@ async function configureFocusedExample(
       designLibraryFixtureSource,
     );
   }
-  if (profile === "ordinary-preview") {
-    const roots = [
-      { dir: "specs/example", path: "example" },
-      { dir: "src/components", path: "example/components" },
-      { dir: "specs/design/library", path: "design/library" },
-      { dir: "specs/design/browse/views", path: "design/browse/views" },
-      { dir: "specs/design/browse/pages", path: "design/browse/pages" },
-      { dir: "browser-fixtures" },
-    ];
-    config = config.replace(
-      / {2}roots: \[[\s\S]*?\n {2}\],/,
-      `  roots: ${JSON.stringify(roots)},`,
-    );
-    await fs.rm(
-      path.join(
-        root,
-        "examples/basic/specs/design/browse/pages/previous-version",
-      ),
-      { recursive: true },
-    );
-    const directory = path.join(root, "examples/basic/browser-fixtures");
-    await fs.mkdir(directory, { recursive: true });
-    await fs.writeFile(
-      path.join(directory, "destinations.mockup.tsx"),
-      ordinaryPreviewFixtureSource,
-    );
-  }
+  if (profile === "ordinary-preview")
+    config = await configureOrdinaryPreview(root, config);
   await fs.writeFile(configPath, config);
 }
 
