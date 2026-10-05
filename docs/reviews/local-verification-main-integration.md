@@ -38,8 +38,8 @@ same two parents. Later verification-record updates change Markdown only.
 
 Every path in the merge's remerge diff was inspected before pushing. No file
 was deleted relative to main. All five mainline design-attribution test bodies
-were preserved exactly across the split files. The required final review of the
-complete main-relative diff runs separately, after pushing.
+were preserved exactly across the split files. The complete main-relative diff was reviewed after pushing, using the
+[implementation review prompt](../implementation-review-prompt.md).
 
 ## Timing And Coverage Limits
 
@@ -54,3 +54,20 @@ The final gate's local evidence is under `.context/merge-main/full-check.log`,
 `full-check-result.json`, `reports/`, and `report-summary.json` in the same
 ignored directory. Earlier failed attempts are retained separately and are not
 counted as successful verification.
+
+## Post-push Review
+
+The review covered pushed head `e5483da6` against `800fe9f8`. No implementation
+changes were made during or in response to the review.
+
+1. **P2: Support file/folder replacements in verification snapshots.**
+   [Snapshot copying](../../scripts/verification/local-snapshot.mjs), line 121,
+   removes old files but leaves their parent directories. If a staged refactor
+   replaces a tracked directory with a file at the same path, the later
+   non-recursive `fs.rm` call rejects the leftover directory with `EISDIR`.
+   The complete check then stops before running tests for an otherwise valid
+   refactor. **A:** remove stale directories in this copy path only.
+   **B (recommended):** handle file/folder transitions in both inventory capture
+   and copying, with regression tests for staged and unstaged changes in both
+   directions. B also covers related transitions that a one-line removal change
+   would miss. This finding is left unchanged for the user's decision.

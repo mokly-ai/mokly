@@ -1,6 +1,7 @@
 # Local Verification Performance
 
-Status: main integration verified; delivery and final review pending.
+Status: main integration verified, pushed, and reviewed. One review finding remains
+for the user's decision; implementation is unchanged after review.
 Active until PR merge. Created
 2026-09-23 at the user's request. This plan improves the local complete gate;
 the existing [CI Performance](./ci-performance.md) plan owns the
@@ -172,6 +173,8 @@ review findings.
 
 ## Milestone 5: Integrate October Main Changes
 
+Status: completed.
+
 Summary: merge `origin/main` at `800fe9f8` from source tip `72fa0309` while
 preserving mainline features and the complete verification gate.
 
@@ -193,10 +196,10 @@ preserving mainline features and the complete verification gate.
       Remove the temporary serialization controls; retain native shard assignment.
 - [x] Run the complete `cargo xtask check` on the final merged source tree, plus
       relevant formatting, lint, type checks, builds, and smoke tests.
-- [ ] Inspect main-relative deletions, run `git add -A`, create a Conventional
+- [x] Inspect main-relative deletions, run `git add -A`, create a Conventional
       Commit merge, immediately verify its two parents, inspect every remerge-diff
       path, and push the current branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Report findings without changing the implementation.
 
 ### Integration Decisions
@@ -262,3 +265,7 @@ work. The resulting pure fast paths passed 29 focused boundary/inventory tests,
 32 ordinary contention cases (1.55–2.15 seconds for the benchmark), and 16 heavy
 contention cases including both preview builds (2.04 seconds for the benchmark).
 Public and CI unit entrypoints keep their original two-file concurrency.
+
+The post-push review found one P2 snapshot file/folder-transition issue. It remains
+unmodified for the user's decision; the [verification record](../docs/reviews/local-verification-main-integration.md#post-push-review)
+contains the impact, solution options, and recommendation.
