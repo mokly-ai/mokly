@@ -2,7 +2,9 @@
 
 Status: Active until its pull request merges. Created 2026-10-05 with the
 user's consent, as the design-first group of the path identity review
-follow-up.
+follow-up. Milestones 1–4 are complete and pushed. Milestone 5 verification is
+done except for the fixed fixture budget of third-review item 8, and the
+post-push review follows.
 
 **Goal:** Fix three Low findings from the
 [second path identity review](../docs/reviews/path-identity.md#second-review)
@@ -215,19 +217,39 @@ comparison band, the heading, the moved-variant links and Details without
 
 ## Milestone 5: Verification, commit, push and review
 
-Status: Not started.
+Status: In progress. Everything except the post-push review is done.
 
-- [ ] Run a real CLI smoke test in a scratch Git repository with
+- [x] Run a real CLI smoke test in a scratch Git repository with
       `serve --base main` and `export --base main` at desktop and mobile
-      widths.
-- [ ] Run `cargo xtask check`.
+      widths. A top-level Link button was deleted after its Quiet and Inline
+      variants moved to Action and Toolbar. In both hosts at 1280 and 390
+      pixels, its page has no variant bar or comparison band, reads
+      `Its variants moved to new places.`, links `Action › Quiet` and
+      `Toolbar › Inline`, and has no `Location` row. Props reads
+      `This component has no saved variants to edit.` Each link opens the
+      moved variant. The only console errors are Chrome's expected
+      blocked-script reports from the viewer's sandboxed `/static/` frames.
 - [x] Merge `origin/main` (#133). Main removed `plans/README.md` with the
       user's approval; take that deletion for the one conflict, and keep this
       plan's index note in its status paragraph. The remerge diff lists only
       that path, and the branch deletes no file from main.
-- [ ] Record the outcomes and covering tests in the review record, and
+- [x] Run `cargo xtask check`. The repository and package suites pass. The
+      first run stopped in the unit suite, where one fixed time budget (third
+      review item 8) failed: the PostCSS report test took 2,591.7 ms against
+      2,500 ms. The branch changes no file under `src/`, and in isolation
+      the test passed two of three runs. The unmodified second run passed
+      all 4,233 unit tests, and then 836 of 850 browser tests. The 14
+      failures share the `ordinaryPreview` fixture, whose fixed 300 s setup
+      limit (also item 8) this machine exceeds. With that limit raised
+      locally and not committed, the fixture export took 337 s and 304 s on
+      this branch and 296 s and 291 s on `origin/main`, and all 14 tests
+      passed on both. The gate stops at the browser suite, so
+      `cargo xtask check --suite hydration` ran separately and passed all 265
+      tests. Logs are in `.context/gate.log`, `.context/gate2.log`,
+      `.context/gate2-hydration.log` and `.context/preview-*.log`.
+- [x] Record the outcomes and covering tests in the review record, and
       update this plan's status paragraph.
-- [ ] Run `git add -A`, commit with Conventional Commits, and push the
+- [x] Run `git add -A`, commit with Conventional Commits, and push the
       branch.
 - [ ] After the push, a fresh reviewer uses
       `docs/implementation-review-prompt.md` against the complete diff from
