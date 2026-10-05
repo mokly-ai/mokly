@@ -1,6 +1,7 @@
 /** Capture one selection from the accepted catalogue without another exhaustive build. */
 import path from "node:path";
 
+import type { InsertedComponentStylesheet } from "@mokly/viewer";
 import {
   generatedViews,
   isManifestComponentVariant,
@@ -23,6 +24,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import { addArtifactFile } from "./artifact_files.js";
+import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
 import { copySnapshotDependencies, GitReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig } from "./base_manifest.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
@@ -99,6 +101,10 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
     const result = selectedComponentResult(source.result, selection);
     parseReviewResult(result);
     const files = new Map<string, ReviewArtifactContent>();
+    const insertedStylesheets = new Map<
+      string,
+      readonly InsertedComponentStylesheet[]
+    >();
     for (const side of ["before", "after"] as const) {
       const artifacts = selectedArtifacts(
         side === "before" ? source.before : source.after,
@@ -123,6 +129,10 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
             `Selected document is unavailable: ${artifact.route}`,
           );
         addArtifactFile(files, artifact.snapshot, content);
+        insertedStylesheets.set(
+          artifact.snapshot,
+          artifact.insertedStylesheets,
+        );
       }
       await copySnapshotDependencies(
         files,
@@ -133,7 +143,12 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       );
     }
     signal.throwIfAborted();
-    return { result, files };
+    const artifact: StylesheetReviewArtifact = {
+      result,
+      files,
+      insertedStylesheets,
+    };
+    return artifact;
   }
 }
 
@@ -153,6 +168,7 @@ function selectedArtifacts(
     return [];
   return generatedViews(entry).map((view) => ({
     route: view.path,
+    insertedStylesheets: view.usage?.insertedStylesheets ?? [],
     snapshot: snapshotViewPath(
       side,
       entry.kind,

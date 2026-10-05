@@ -4,27 +4,29 @@ import type {
   ViewReview,
   DependencyReason,
 } from "@mokly/viewer/data";
-import { canonicalJson, isStylesheetPath } from "@mokly/viewer/data";
+import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { stripMarkers } from "../components/comparison_material.js";
 import { changedComponentImplementations } from "../components/comparison_projection.js";
 import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
-import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
 
 import {
   prepareComponentProjection,
+  normalizeOneSidedView,
   type PreparedComponentComparison,
 } from "./component_projection_resources.js";
 import {
   ownedResourceReasons,
+  rootResourcesChanged,
   type OwnedResourceReason,
 } from "./component_resource_attribution.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { componentCssDocuments } from "./css/containment.js";
-import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
+import { normalizeReviewPair } from "./ignore.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
@@ -61,6 +63,16 @@ export async function compareComponentView(
     ? await context.beforeReader.text(before.path)
     : undefined;
   const head = after ? await context.afterReader.text(after.path) : undefined;
+  const baseStylesheets = insertedStylesheetResources(
+    base,
+    before?.usage,
+    selected.path,
+  );
+  const headStylesheets = insertedStylesheetResources(
+    head,
+    after?.usage,
+    selected.path,
+  );
   const view: ViewReview = {
     viewport: selected.viewport,
     colorScheme: selected.colorScheme,
@@ -73,8 +85,20 @@ export async function compareComponentView(
         ? normalizeOneSidedView(base, before!, root)
         : normalizeOneSidedView(head!, after!, root);
     const evidence = await context.resources.compare(
-      before ? { path: before.path, html: normalized.resource } : undefined,
-      after ? { path: after.path, html: normalized.resource } : undefined,
+      before
+        ? {
+            path: before.path,
+            html: normalized.resource,
+            insertedStylesheets: baseStylesheets,
+          }
+        : undefined,
+      after
+        ? {
+            path: after.path,
+            html: normalized.resource,
+            insertedStylesheets: headStylesheets,
+          }
+        : undefined,
       undefined,
       undefined,
       () => [
@@ -119,26 +143,10 @@ export async function compareComponentView(
   prepared ??= prepareComponentProjection(before!, after!, base, head, root);
   const { baseRanges, headRanges, projected, excluded } = prepared;
   const reasons: EntryChangeReason[] = [];
-  const rootOwnershipChanged = Boolean(
-    root &&
-    canonicalJson(
-      before!.usage?.resources
-        .filter(
-          (resource) =>
-            !isStylesheetPath(resource.path) &&
-            resource.componentIds.includes(root),
-        )
-        .map((resource) => resource.path) ?? [],
-    ) !==
-      canonicalJson(
-        after!.usage?.resources
-          .filter(
-            (resource) =>
-              !isStylesheetPath(resource.path) &&
-              resource.componentIds.includes(root),
-          )
-          .map((resource) => resource.path) ?? [],
-      ),
+  const rootOwnershipChanged = rootResourcesChanged(
+    before!.usage,
+    after!.usage,
+    root,
   );
   if (projected.before !== projected.after) reasons.push({ kind: "material" });
   if (rootOwnershipChanged) reasons.push({ kind: "material" });
@@ -174,8 +182,16 @@ export async function compareComponentView(
   );
   reasons.push(...(evidence.reasons ?? []));
   const actualEvidence = await context.resources.compare(
-    { path: before!.path, html: actualResource.base },
-    { path: after!.path, html: actualResource.head },
+    {
+      path: before!.path,
+      html: actualResource.base,
+      insertedStylesheets: baseStylesheets,
+    },
+    {
+      path: after!.path,
+      html: actualResource.head,
+      insertedStylesheets: headStylesheets,
+    },
     undefined,
     undefined,
     () => [
@@ -207,8 +223,18 @@ export async function compareComponentView(
     : new Set<string>();
   const actualByteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
-        await context.beforeReader.resources(before!.path, actualResource.base),
-        await context.afterReader.resources(after!.path, actualResource.head),
+        await context.beforeReader.resources(
+          before!.path,
+          actualResource.base,
+          undefined,
+          baseStylesheets,
+        ),
+        await context.afterReader.resources(
+          after!.path,
+          actualResource.head,
+          undefined,
+          headStylesheets,
+        ),
         context.beforeReader,
         context.afterReader,
       )
@@ -258,22 +284,5 @@ export async function compareComponentView(
             : "ignored-only",
     },
     reasons,
-  };
-}
-
-function normalizeOneSidedView(
-  html: string,
-  view: GeneratedComponentView,
-  root?: string,
-): { page: string; resource: string } {
-  const ranges = view.usage
-    ? validateComponentRanges(html, view.usage.ranges)
-    : undefined;
-  const compared = comparisonStylesheetMaterial(html, view.usage, root);
-  const material = stripMarkers(compared.html, compared.usage);
-  const original = stripMarkers(html, view.usage, ranges);
-  return {
-    page: normalizeSingleDocument(material, view.path),
-    resource: normalizeSingleDocument(original, view.path),
   };
 }

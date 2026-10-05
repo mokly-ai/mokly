@@ -3,7 +3,7 @@
 ## Delivery Status
 
 The shared finder, configured-only anchors, body-link reuse and inserted-link
-Review-ignore exception are planned for
+Review-ignore exception are implemented in
 [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
 
 ## Shared Finder
@@ -77,4 +77,6 @@ component and affect consumers even when its head anchor was ignored. Selector
 matching still uses the Review-ignore-normalized document: the exception does
 not restore ignored authored markup, styles or links. Page material separately
 removes the recorded links under the provenance contract. Template content and
-unmarked replacements receive no exception.
+unmarked replacements receive no exception. Complete and selected artifacts
+retain the same private spans until snapshot-resource validation finishes.
+This proof is not written into public comparison JSON or snapshot files.

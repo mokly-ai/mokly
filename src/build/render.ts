@@ -132,6 +132,7 @@ export function renderFragments(
               const output = graphRenderer(input, safeRenderer, components, {
                 route,
                 position: placement.position,
+                configuredHrefs: placement.configuredHrefs,
                 mockupsDir: config.mockupsDir,
               });
               rendered = output.html;
@@ -199,6 +200,7 @@ function addOutput(
 
 export interface StylesheetPlacement {
   hrefs: string[];
+  configuredHrefs: string[];
   position: number;
 }
 
@@ -235,12 +237,14 @@ export function stylesheetPlacementFor(
     }
     return stylesheetHref(viewPath, stylesheet);
   });
+  const configuredHrefs = [...local];
   for (const root of [config.renderer, entryRoot]) {
     const route = root && styles?.routes.get(root);
     if (route) local.push(stylesheetHref(viewPath, route));
   }
   return {
     hrefs: local,
+    configuredHrefs,
     position: rule?.componentPosition ?? rule?.stylesheets.length ?? 0,
   };
 }

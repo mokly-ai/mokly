@@ -6,6 +6,7 @@ import {
   type GeneratedComponentView,
 } from "@mokly/viewer/data";
 
+import { stripMarkers } from "../components/comparison_material.js";
 import {
   projectComponentPair,
   type ComponentProjection,
@@ -15,6 +16,8 @@ import {
   validateComponentRanges,
   type RenderedRange,
 } from "../components/ranges.js";
+
+import { normalizeSingleDocument } from "./ignore.js";
 
 /** Projection material prepared once and shared by fast and complete comparison. */
 export interface PreparedComponentComparison {
@@ -91,4 +94,22 @@ function suppressOwnedResource(
     canonicalJson(left.componentIds) === canonicalJson(right.componentIds) &&
     left.componentIds.every((id) => id !== root && paired.has(id)),
   );
+}
+
+/** Prepare one-sided page and resource material after validating original ranges. */
+export function normalizeOneSidedView(
+  html: string,
+  view: GeneratedComponentView,
+  root?: string,
+): { page: string; resource: string } {
+  const ranges = view.usage
+    ? validateComponentRanges(html, view.usage.ranges)
+    : undefined;
+  const compared = comparisonStylesheetMaterial(html, view.usage, root);
+  const material = stripMarkers(compared.html, compared.usage);
+  const original = stripMarkers(html, view.usage, ranges);
+  return {
+    page: normalizeSingleDocument(material, view.path),
+    resource: normalizeSingleDocument(original, view.path),
+  };
 }

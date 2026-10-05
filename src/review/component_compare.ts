@@ -3,17 +3,14 @@ import {
   isManifestComponentVariant,
   snapshotViewPath,
 } from "@mokly/viewer/data";
-import type {
-  Manifest,
-  ReviewArtifact,
-  ReviewArtifactContent,
-} from "@mokly/viewer/data";
+import type { Manifest, ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 
 import { addArtifactFile } from "./artifact_files.js";
+import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
 import {
   copySnapshotDependencies,
   type GitReviewAssetReader,
@@ -36,7 +33,7 @@ export async function compareComponentCatalogue(
   baseRef: string,
   useFastPath?: boolean,
   cssAnalysis?: CssResourceAnalysis,
-): Promise<ReviewArtifact> {
+): Promise<StylesheetReviewArtifact> {
   baseline = baselineForCurrentIdentities(baseline, compilation.manifest);
   const baseArtifacts = artifactViews(baseline);
   const headArtifacts = artifactViews(compilation.manifest);
@@ -100,7 +97,17 @@ export async function compareComponentCatalogue(
   await copySnapshotDependencies(files, "after", new Set(headPaths), (route) =>
     afterReader.read(route),
   );
-  return { result, files };
+  const insertedStylesheets = new Map([
+    ...baseArtifacts.map(
+      (artifact) =>
+        [artifact.snapshot.before, artifact.insertedStylesheets] as const,
+    ),
+    ...headArtifacts.map(
+      (artifact) =>
+        [artifact.snapshot.after, artifact.insertedStylesheets] as const,
+    ),
+  ]);
+  return { result, files, insertedStylesheets };
 }
 
 function artifactViews(manifest: Manifest) {
@@ -112,6 +119,7 @@ function artifactViews(manifest: Manifest) {
       return [];
     return generatedViews(entry).map((view) => ({
       route: view.path,
+      insertedStylesheets: view.usage?.insertedStylesheets ?? [],
       snapshot: {
         after: snapshotViewPath(
           "after",

@@ -12,6 +12,7 @@ import {
   type PreparedComponentComparison,
 } from "./component_projection_resources.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 import type {
   ComparedComponentView,
   ComponentViewContext,
@@ -74,9 +75,16 @@ export async function compareUnchangedComponentView(
   const afterResources = await context.afterReader.resources(
     after.path,
     actualResource.head,
+    undefined,
+    insertedStylesheetResources(head, after.usage, after.path),
   );
   const beforeResources = context.compareResourceBytes
-    ? await context.beforeReader.resources(before.path, actualResource.base)
+    ? await context.beforeReader.resources(
+        before.path,
+        actualResource.base,
+        undefined,
+        insertedStylesheetResources(base, before.usage, before.path),
+      )
     : afterResources;
   const projectedAfterResources =
     projected && excluded

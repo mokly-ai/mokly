@@ -12,7 +12,7 @@ element matching, rule identity, component membership and page reasons. The
 comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). These rules replace stylesheet
 owner attribution for every CSS delivery path.
 
-The inserted-link Review-ignore exception is planned for
+The inserted-link Review-ignore exception is implemented in
 [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
 
 ## Matched Elements

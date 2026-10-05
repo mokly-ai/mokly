@@ -44,6 +44,7 @@ export type ComponentGraphRenderer = (
   placement: {
     route: string;
     position: number;
+    configuredHrefs: readonly string[];
     mockupsDir: string;
   },
 ) => ComponentRenderOutput;
@@ -125,12 +126,12 @@ export const renderWithComponents: ComponentGraphRenderer = (
     placement.route,
     placement.mockupsDir,
     physicalPaths,
-    input.stylesheets,
+    placement.configuredHrefs,
   );
   const html = insertComponentStylesheets(
     serialized.html,
     placement.route,
-    input.stylesheets,
+    placement.configuredHrefs,
     placement.position,
     [...declarations]
       .filter(([physical]) => !rendererLinks.has(physical))

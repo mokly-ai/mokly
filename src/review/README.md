@@ -10,9 +10,9 @@ comparison details are implemented in Milestones 20 and 20B of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 Milestone 4 removed source-path comparison evidence. Milestone 23 removed
-historical marker translation. Milestone 28 will use recorded inserted-link
+historical marker translation. Milestone 28 uses recorded inserted-link
 spans inside Review-ignore for both comparison paths and the CSS rule scope.
-Milestone 29 will remove the unused one-sided `page` material from
+Milestone 29 will remove the unused one-sided `page` material used by
 `component_view.ts`, while keeping its range/span validation and resource work.
 
 ## Scope
@@ -35,9 +35,17 @@ unavailable, while explicit export and publish captures fail safely under the
 Component-aware page comparison excludes only proven Mokly-inserted declared
 stylesheet links, except a component page's root-owned links. It uses private
 final-document spans on both complete and unchanged-view fast paths; actual
-resource and CSS analysis still reads the final linked document. Renderer
-links reused for declarations remain page content.
-`component_projection_resources.ts` prepares the comparison-only copies,
+resource and CSS analysis still reads the final linked document.
+`component_stylesheet_resources.ts` reads inserted links from validated original
+spans and checks their recorded public paths. These paths supplement normalized
+author resource references on both comparison paths and in the CSS rule scope.
+CSS imports and referenced assets follow the usual graph.
+`artifact_stylesheets.ts` carries the same private spans from complete and
+selected captures to publication validation. It adds no public output field. Matching still uses
+the normalized document, so ignored author markup, links and inline styles stay
+ignored. Renderer links reused for declarations remain page content.
+`component_projection_resources.ts` prepares paired and one-sided
+comparison-only copies,
 while `component_view.ts` and `component_view_fast_path.ts` preserve the full
 documents for actual resource closure and CSS rule evidence. See the
 [stylesheet ownership contract](../../docs/protocol/mokly-component-stylesheet-ownership.md).

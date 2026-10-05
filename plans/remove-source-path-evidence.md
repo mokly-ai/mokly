@@ -12,8 +12,9 @@ change rule, which replaces second-review finding 1. Milestones 22 to 25, with
 baseline compatibility. Milestones 26 to 32 apply the user's 2026-10-05
 decisions on the fourth-review finding and on second-review findings 2 to 11.
 Milestone 26 is implemented, verified and pushed as docs only. Milestone 27 is
-implemented and verified as mockup work. Its local commit awaits the
-reviewer's push. Milestones 28 to 31 have not started.
+implemented, verified and pushed as mockup work. Milestone 28 is implemented
+and verified under the approved PostCSS timing retry rule. Its local commit
+awaits the reviewer's push. Milestones 29 to 31 have not started.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -2645,22 +2646,138 @@ Verification:
 
 ## Milestone 28: Fix component stylesheet links
 
-- [ ] Failure-first (1): with declared CSS, generated CSS from JavaScript
+- [x] Failure-first (1): with declared CSS, generated CSS from JavaScript
       imports and no configured link, Build and on-demand Serve put the
       component link at the end of head content, after the generated links.
       With configured links, placement is unchanged. Pass only configured
       hrefs as anchors.
-- [ ] Failure-first (8): with configured links inside a Review-ignore region,
+- [x] Failure-first (8): with configured links inside a Review-ignore region,
       an edit to a declared stylesheet changes the component and its
       consumers on the complete and fast comparison paths and in the CSS rule
       scope. The author's ignored content stays ignored. Find inserted links
       from their `insertedStylesheets` spans.
-- [ ] Failure-first (9): a renderer link to a declared stylesheet in `<body>`
+- [x] Failure-first (9): a renderer link to a declared stylesheet in `<body>`
       is reused, and Mokly inserts no second link. Content in `<template>`
       behaves as the contract defines. Replace the separate link scans with
       one shared finder.
-- [ ] Update the READMEs near the changed code. Run the focused tests and the
+- [x] Update the READMEs near the changed code. Run the focused tests and the
       complete unit suite at 100%.
+
+- [x] Run build, typecheck, lint, changed-file Prettier, the seven docs suites,
+      the exact complete unit command and the complete `cargo xtask check`.
+      Repeat the three probes. Inspect the diff and deletions against fetched
+      `origin/main`. Record the results and every new deletion. Make one local
+      Conventional Commit. The reviewer owns the push and later review.
+- [x] Keep comparison files below 300 lines by moving one-sided normalization
+      to the projection module. Retain its current `page` result; unused-code
+      removal stays in Milestone 29.
+
+- [x] Preserve inserted-link proof through complete and selected artifact
+      capture. Validate publication resources against the same spans without
+      adding public output fields. The delivery test failed first because
+      publication discarded this proof before checking resource reachability.
+
+Implementation notes:
+
+- `html_links.ts` supplies one active link finder with decoded attributes,
+  logical head/body scope and original UTF-16 locations. Placement uses only
+  configured head hrefs. The renderer keeps its complete list. Body links and
+  aliases keep their authored positions and prevent a second insertion.
+  Template content supplies no active links. Reserved attributes inside it
+  still undergo token validation and removal. A valid token moved into a
+  template gets no provenance span; an active body token keeps its span.
+- `stylesheet_spans.ts` validates recorded spans against active full links in
+  the original final HTML. `component_stylesheet_resources.ts` checks their
+  public paths and supplies resource starting points before Review-ignore.
+  Complete comparison, the fast path and the CSS rule scope use those paths,
+  including imports. Resource-cache identity includes the extra paths.
+  Selector matching still uses ignored-normalized markup. The author's ignored
+  links, inline styles and content stay ignored.
+- Complete and selected captures retain a private snapshot-path-to-span map
+  until artifact resource validation finishes. This keeps publication aligned
+  with comparison and export without adding public JSON or snapshot fields.
+  The delivery test found this required extra path after the initial fix.
+- One-sided normalization moves to `component_projection_resources.ts`.
+  The non-CSS root resource check moves to `component_resource_attribution.ts`.
+  Both keep their behavior. The unused one-sided `page` value remains for
+  Milestone 29. Every changed TypeScript file stays below 300 lines.
+
+Verification:
+
+- Failure-first: the initial 19 tests have 11 failures and eight passes.
+  Build and on-demand Serve put declared CSS before generated imports. Ignored
+  inserted links produce no component change or excluded-rule evidence. Body
+  links are duplicated, and a token moved into a template still gets a span.
+  The head-link case also checks body reuse directly and fails there. With the
+  fixes, all 19 pass. Configured placement and ignored author-link controls
+  pass before and after. Logs: `.context/m28/failure-first.log` and
+  `.context/m28/focused-new.log`.
+- The expanded tests cover raw and component Review-ignore, transitive CSS,
+  ignored selector matches, changed author markup and inline styles, body
+  aliases, template token validation, invalid recorded spans, and all delivery
+  paths. The publication test fails first with `resource evidence is not
+reachable: mockups/action.css`; retaining private span proof fixes it.
+  The final focused run passes all 230 tests. This milestone adds 35 tests.
+  The earlier delivery attempts also found test-fixture setup errors, which
+  are corrected. All commands and intermediate counts are in
+  `.context/m28/report.md`.
+- `npm run build`, `npm run typecheck`, `npm run lint` and changed-file
+  Prettier pass. The first code build needed one parse5 type correction; the
+  first lint run needed six import-order corrections. The seven requested docs
+  suites pass all 28 tests. The source-file-length audit passes for 743 files.
+- The exact complete unit command passes all 4,012 tests, with no failures,
+  skips, cancellations or TODOs:
+
+  ```sh
+  npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"
+  ```
+
+  Its unchanged PostCSS timing case passes at 2,372.2 ms.
+
+- The complete `cargo xtask check` passes the audit with main's existing
+  Braces exception, formatting, lint, source limits, all repository ratchets,
+  Rust formatting and clippy, all 15 Rust tests, build, typecheck, the
+  442-file example check and all six packed-consumer scenarios. Its unit
+  stage passes 4,011 of 4,012 tests. The only failure is the existing PostCSS
+  timing case, at 2,600.6 ms against the unchanged 2,500 ms limit. The command
+  exits 1 at that stage. No test is skipped, cancelled or marked TODO.
+- With no other tests or servers running,
+  `npx tsx --test tests/postcss_dependency_review.test.ts` fails six times at
+  2,781.4, 2,883.3, 2,670.1, 2,670.6, 2,803.5 and 2,811.8 ms. The seventh
+  attempt passes all three tests at 2,496.5 ms. The test and timed code are
+  unchanged. This is the user's approved timing-flake exception.
+  The remaining gate stages then run separately:
+  `cargo xtask check --suite browser` passes all 779 tests, and
+  `cargo xtask check --suite hydration` passes all 226 tests. Both exit 0,
+  with no failed, skipped or cancelled tests.
+- The three supplied probes are repeated unchanged. The generated-anchor
+  probe now fails its old bug assertion because the declared link follows
+  generated CSS. The raw and component ignore probes both report the same
+  changed Action entries and affected consumers as their controls. The body
+  probe reports one Action link, no inserted span, and matching reuse and
+  resource results. Its template-only result has no Action resource or span.
+  `node .context/m28/cascade-smoke.mjs` checks all 16 built views and runs
+  on-demand Serve in Chrome at 390 × 844 and 1440 × 1000. Both widths load
+  generated blue CSS first and compute the declared red color. No page error
+  occurs. The smoke server and browser close before full unit verification.
+- The first `git fetch origin main` finds `c4138a0b` (#131). The final fetch
+  finds `60d48370` (#133), which updates plan records and removes main's plan
+  index. Both are after this branch's merged main `800fe9f8`. This task does
+  not integrate either the identity/document changes or the plan changes. M28 deletes no file and adds no feature removal. The
+  current two-tree main diff lists three earlier approved removals and 419
+  upstream additions that were already absent at source tip `aa6b1214`.
+  Each path and reason is recorded in `.context/m28/deletion-audit.json`.
+  Main now also removes `src/registry/dependency_paths.ts`, so that fourth
+  earlier approved removal no longer appears in the current deletion list.
+  Against merged main `800fe9f8`, the four earlier approved removals and the
+  v3-to-v4 catalogue fixture rename remain. `git diff --check` and
+  `git diff --check origin/main` pass.
+- Dependencies, overrides, audit rules, the PostCSS timing test, example
+  sources, historical plans, review records and `CHANGELOG.md` are unchanged
+  by this milestone. Generated example output is not hand-edited or tracked.
+  Logs, exact commands and gate reports are under `.context/m28/`.
+  Delivery is one local Conventional Commit. The reviewer owns the push and
+  the later review. Milestone 29 has not started.
 
 ## Milestone 29: Fix Serve warnings and startup cleanup
 

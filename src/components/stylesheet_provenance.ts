@@ -1,4 +1,4 @@
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import type {
   ComponentViewRecord,
@@ -6,9 +6,9 @@ import type {
 } from "@mokly/viewer";
 
 import { MoklyError } from "../errors.js";
+import { parseHtmlLinks, stylesheetLink } from "../html_links.js";
 
 import type { LinkedComponentStylesheet } from "./render.js";
-import { stylesheetLink } from "./stylesheet_links.js";
 import { publicFileFromHref } from "./stylesheet_reuse.js";
 
 type Node = DefaultTreeAdapterMap["node"];
@@ -18,16 +18,22 @@ type Location = NonNullable<
 const ATTRIBUTE = "data-mokly-component-stylesheet";
 
 interface LinkedFile {
-  href: string;
+  active: boolean;
   physical: string;
   publicPath: string;
   location: Location;
-  token?: string;
-  attribute?: { startOffset: number; endOffset: number };
+  token: string;
+  attribute: { startOffset: number; endOffset: number };
 }
 
-function links(html: string, route: string, mockupsDir: string): LinkedFile[] {
+function markedLinks(
+  html: string,
+  route: string,
+  mockupsDir: string,
+): LinkedFile[] {
   const found: LinkedFile[] = [];
+  const { document, links } = parseHtmlLinks(html);
+  const active = new Set(links.map((link) => link.element));
   function visit(node: Node): void {
     if ("attrs" in node) {
       const token = node.attrs.find(
@@ -38,35 +44,30 @@ function links(html: string, route: string, mockupsDir: string): LinkedFile[] {
           "build-invalid",
           `${route}: invalid ${ATTRIBUTE} owner`,
         );
-      if (stylesheetLink(node) && node.sourceCodeLocation) {
+      if (token && stylesheetLink(node)) {
         const href = node.attrs.find(
           (attribute) => attribute.name === "href",
         )?.value;
         const file = href && publicFileFromHref(href, route, mockupsDir);
-        if (token && (!file || !node.sourceCodeLocation.attrs?.[ATTRIBUTE]))
+        if (!file || !node.sourceCodeLocation?.attrs?.[ATTRIBUTE])
           throw new MoklyError(
             "build-invalid",
             `${route}: invalid ${ATTRIBUTE} link`,
           );
-        if (file)
-          found.push({
-            href: href!,
-            physical: file.physicalPath,
-            publicPath: file.publicPath,
-            location: node.sourceCodeLocation,
-            ...(token
-              ? {
-                  token: token.value,
-                  attribute: node.sourceCodeLocation.attrs![ATTRIBUTE]!,
-                }
-              : {}),
-          });
+        found.push({
+          active: active.has(node),
+          physical: file.physicalPath,
+          publicPath: file.publicPath,
+          location: node.sourceCodeLocation,
+          token: token.value,
+          attribute: node.sourceCodeLocation.attrs[ATTRIBUTE]!,
+        });
       }
     }
     if ("childNodes" in node) for (const child of node.childNodes) visit(child);
     if ("content" in node) visit(node.content);
   }
-  visit(parse(html, { sourceCodeLocationInfo: true }));
+  visit(document);
   return found;
 }
 
@@ -80,27 +81,27 @@ export function finalizeComponentStylesheets(
   declarations: readonly LinkedComponentStylesheet[],
 ): { html: string; view: ComponentViewRecord } {
   const issued = new Map(
-    links(before, route, mockupsDir)
-      .filter((link) => link.token !== undefined)
-      .map((link) => [link.token!, link.physical]),
+    markedLinks(before, route, mockupsDir).map((link) => [
+      link.token,
+      link.physical,
+    ]),
   );
-  const finalLinks = links(final, route, mockupsDir);
-  const marked = finalLinks.filter((link) => link.token !== undefined);
+  const marked = markedLinks(final, route, mockupsDir);
   const seen = new Set<string>();
   for (const link of marked) {
     if (
-      !/^(0|[1-9][0-9]*)$/.test(link.token!) ||
-      seen.has(link.token!) ||
-      issued.get(link.token!) !== link.physical
+      !/^(0|[1-9][0-9]*)$/.test(link.token) ||
+      seen.has(link.token) ||
+      issued.get(link.token) !== link.physical
     )
       throw new MoklyError(
         "build-invalid",
         `${route}: ambiguous ${ATTRIBUTE} token`,
       );
-    seen.add(link.token!);
+    seen.add(link.token);
   }
   const removals = marked.map((link) => {
-    const attribute = link.attribute!;
+    const attribute = link.attribute;
     return {
       start:
         final[attribute.startOffset - 1] === " "
@@ -122,6 +123,7 @@ export function finalizeComponentStylesheets(
       0,
     );
   const insertedStylesheets: InsertedComponentStylesheet[] = marked
+    .filter((link) => link.active)
     .map((link) => {
       const declarer = declarations.find(
         (declaration) => declaration.physical === link.physical,

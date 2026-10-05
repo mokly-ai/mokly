@@ -4,7 +4,7 @@ import type {
   ComponentReview,
   DependencyReason,
 } from "@mokly/viewer/data";
-import { isStylesheetPath } from "@mokly/viewer/data";
+import { canonicalJson, isStylesheetPath } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
@@ -74,4 +74,22 @@ export function propagateOwnedResources(
         reasons: [reason],
       });
   }
+}
+
+/** Root resource declarations affect material only for non-stylesheet ownership. */
+export function rootResourcesChanged(
+  before: ComponentViewRecord | undefined,
+  after: ComponentViewRecord | undefined,
+  root: string | undefined,
+): boolean {
+  if (!root) return false;
+  const paths = (usage: ComponentViewRecord | undefined) =>
+    usage?.resources
+      .filter(
+        (resource) =>
+          !isStylesheetPath(resource.path) &&
+          resource.componentIds.includes(root),
+      )
+      .map((resource) => resource.path) ?? [];
+  return canonicalJson(paths(before)) !== canonicalJson(paths(after));
 }

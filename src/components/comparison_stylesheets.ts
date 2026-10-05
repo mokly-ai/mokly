@@ -1,8 +1,7 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 
-import { MoklyError } from "../errors.js";
-
 import { rebaseStyleOwnership } from "./style_ownership.js";
+import { insertedStylesheetSpans } from "./stylesheet_spans.js";
 
 /** Remove only proven Mokly-inserted links from one page's comparison copy. */
 export function comparisonStylesheetMaterial(
@@ -11,26 +10,8 @@ export function comparisonStylesheetMaterial(
   rootComponentId?: string,
 ): { html: string; usage: ComponentViewRecord | undefined } {
   if (!usage) return { html, usage };
-  const spans = usage.insertedStylesheets;
-  if (!Array.isArray(spans))
-    throw new MoklyError(
-      "review-invalid",
-      "component usage is missing inserted stylesheet provenance",
-    );
+  const spans = insertedStylesheetSpans(html, usage);
   if (!spans.length) return { html, usage };
-  let previousEnd = 0;
-  for (const span of spans) {
-    if (
-      span.startOffset < previousEnd ||
-      span.endOffset > html.length ||
-      !/^<link\b/i.test(html.slice(span.startOffset, span.endOffset))
-    )
-      throw new MoklyError(
-        "review-invalid",
-        "invalid inserted stylesheet span",
-      );
-    previousEnd = span.endOffset;
-  }
   const removed = spans.filter(
     (span) => !rootComponentId || !span.componentIds.includes(rootComponentId),
   );

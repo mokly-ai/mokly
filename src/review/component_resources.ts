@@ -187,13 +187,17 @@ export class ComponentMaterialReader {
     route: string,
     html: string,
     excluded?: ResourceExclusion,
+    insertedStylesheets: readonly string[] = [],
   ): Promise<ReadonlySet<string>> {
     let documents = this.viewResources.get(route);
     if (!documents) {
       documents = new Map();
       this.viewResources.set(route, documents);
     }
-    const digest = createHash("sha256").update(html).digest("base64url");
+    const digest = createHash("sha256")
+      .update(html)
+      .update(JSON.stringify(insertedStylesheets))
+      .digest("base64url");
     let cached = documents.get(digest);
     if (!cached) {
       cached = { filtered: new WeakMap() };
@@ -202,9 +206,12 @@ export class ComponentMaterialReader {
     const existing = excluded ? cached.filtered.get(excluded) : cached.all;
     if (existing) return existing;
     const resources = timeAsync("review.resource-graph", () => {
-      const seeds = referencedRoutes(route, html, {
-        resourceHints: false,
-      }).filter((path) => !excluded?.(path));
+      const seeds = [
+        ...referencedRoutes(route, html, {
+          resourceHints: false,
+        }),
+        ...insertedStylesheets,
+      ].filter((path) => !excluded?.(path));
       return this.graph.collect(seeds);
     });
     if (excluded) cached.filtered.set(excluded, resources);
@@ -213,11 +220,18 @@ export class ComponentMaterialReader {
   }
 
   /** CSS imports share a document; embedded HTML starts its own stylesheet scope. */
-  async stylesheets(route: string, html: string): Promise<ReadonlySet<string>> {
+  async stylesheets(
+    route: string,
+    html: string,
+    insertedStylesheets: readonly string[] = [],
+  ): Promise<ReadonlySet<string>> {
     const found = new Set<string>();
-    const pending = referencedRoutes(route, html, {
-      resourceHints: false,
-    }).filter(isStylesheetPath);
+    const pending = [
+      ...referencedRoutes(route, html, {
+        resourceHints: false,
+      }),
+      ...insertedStylesheets,
+    ].filter(isStylesheetPath);
     while (pending.length) {
       const stylesheet = pending.pop()!;
       if (found.has(stylesheet)) continue;

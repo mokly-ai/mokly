@@ -10,7 +10,7 @@ CSS owners and ignoring all renderer CSS owner records are implemented in [M19](
 The page evidence display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 Shared link discovery and the inserted-link exception to Review-ignore are
-planned for [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
+implemented in [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
 
 The [declaration and linking contract](./mokly-component-stylesheets.md) defines the stylesheet inputs and placement.
 

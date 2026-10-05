@@ -113,8 +113,11 @@
   evidence and ran the fourth review. Milestone 26 documents the 2026-10-05
   decisions. Milestone 27 depicts the excluded-only stylesheet state, splits
   the stylesheet evidence mockups into child pages and shares one Details card
-  between Excluded and Matched styles. Milestones 28 to 31 hold the approved
-  link, warning, test, type and navigation changes. The plan stays Active
+  between Excluded and Matched styles. Milestone 28 implements configured-only
+  anchors, shared link discovery, body-link reuse and inserted-link proof
+  through Review-ignore and publication. Verification passes with the approved
+  PostCSS timing retry. Milestones 29 to 31 hold the remaining warning, test,
+  type and navigation changes. The plan stays Active
   until its pull request merges. The reviewer owns the next push and review.
 - [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
   pages embed the catalogue index plus only their own entry's component usage

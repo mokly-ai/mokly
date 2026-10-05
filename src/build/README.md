@@ -9,7 +9,7 @@ Root output boundaries, independent stylesheet provenance and warnings for all
 CSS resource-owner records below are implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
-Configured-only placement and shared link discovery are planned for M28.
+Configured-only placement and shared link discovery are implemented in M28.
 Generation-scoped Serve warnings and removal of the unread
 `ComponentRuntime.warnings` field and its writers are planned for M29.
 The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
@@ -258,7 +258,8 @@ identities, or Changes projections.
 
 Registry preparation validates component-declared public CSS, deduplicates
 same-real-file declarations, and reuses configured links for declared CSS.
-`render.ts` keeps the shared-list marker position outside `RenderInput`, while
+`render.ts` keeps configured hrefs and the shared-list marker position outside
+`RenderInput`, while
 `components/render.tsx` inserts links beside the
 renderer-emitted configured links and records inserted-link provenance. Config
 bundles use the same namespaced `Symbol.for` marker as consumer bundles.
@@ -269,7 +270,10 @@ owns the complete `RenderInput.stylesheets` list and its order. Watched Serve
 attaches its inventory watcher before evaluation, then validates registration
 and extends the watch set with declared CSS before index preparation.
 Component stylesheet links use the nearest present configured link, or the end
-of head content when none exists. A transient marker survives a compatibility
+of head content when none exists, after generated imported CSS and other head
+content. The renderer still receives its complete stylesheet list. Build and
+on-demand Serve use this same placement input.
+A transient marker survives a compatibility
 transform on retained inserted links; Mokly removes it before writing output
 and records private final-document spans for comparison projection.
 `stylesheet_provenance.ts` keeps final inserted-link spans and declaring ids

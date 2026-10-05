@@ -6,6 +6,7 @@ import {
 } from "../build/warnings.js";
 import { localStylesheetHref } from "../config/stylesheet_hrefs.js";
 import { MoklyError } from "../errors.js";
+import { parseHtmlLinks } from "../html_links.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 const PROVENANCE_ATTRIBUTE = "data-mokly-component-stylesheet";
@@ -28,24 +29,6 @@ export function assertNoAuthoredStylesheetToken(
     if ("content" in node) visit(node.content);
   }
   visit(parse(html));
-}
-
-/** A stylesheet link may carry other rel tokens, including alternate. */
-export function stylesheetLink(
-  node: Node,
-): node is DefaultTreeAdapterMap["element"] {
-  return (
-    "tagName" in node &&
-    node.tagName === "link" &&
-    node.attrs.some(
-      (attribute) =>
-        attribute.name === "rel" &&
-        attribute.value
-          .toLowerCase()
-          .split(/[\t\n\f\r ]+/)
-          .includes("stylesheet"),
-    )
-  );
 }
 
 function headEndOffset(
@@ -86,38 +69,21 @@ export function insertComponentStylesheets(
   onWarning?: (warning: BuildWarning) => void,
 ): string {
   if (!declared.length) return html;
-  const document = parse(html, { sourceCodeLocationInfo: true });
-  let head: DefaultTreeAdapterMap["element"] | undefined;
-  const links: DefaultTreeAdapterMap["element"][] = [];
-  function findHead(node: Node): void {
-    if ("tagName" in node) {
-      if (node.tagName === "head") head = node;
-    }
-    if ("childNodes" in node) node.childNodes.forEach(findHead);
-  }
-  findHead(document);
+  const { document, head, links } = parseHtmlLinks(html);
   if (!head)
     throw new MoklyError(
       "build-invalid",
       `${route}: cannot insert component stylesheets: missing <head>`,
     );
-  function findLinks(node: Node): void {
-    if ("tagName" in node) {
-      if (stylesheetLink(node)) links.push(node);
-    }
-    if ("childNodes" in node) node.childNodes.forEach(findLinks);
-  }
-  findLinks(head);
   const anchors = configured.flatMap((href, index) => {
-    const match = links.find((link) =>
-      link.attrs.some(
-        (attribute) => attribute.name === "href" && attribute.value === href,
-      ),
+    const match = links.find(
+      (link) =>
+        link.scope === "head" &&
+        link.stylesheet &&
+        link.attributes.get("href") === href,
     );
     if (!match) onWarning?.(missingConfiguredStylesheetLink(route, href));
-    return match?.sourceCodeLocation
-      ? [{ index, location: match.sourceCodeLocation }]
-      : [];
+    return match?.location ? [{ index, location: match.location }] : [];
   });
   anchors.sort((left, right) => {
     const leftDistance =

@@ -1,11 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { parse, type DefaultTreeAdapterMap } from "parse5";
-
-import { stylesheetLink } from "./stylesheet_links.js";
-
-type Node = DefaultTreeAdapterMap["node"];
+import { parseHtmlLinks } from "../html_links.js";
 
 /** First renderer-authored public link for each declared real file. */
 export function rendererStylesheetPaths(
@@ -17,35 +13,23 @@ export function rendererStylesheetPaths(
 ): Map<string, string> {
   const first = new Map<string, string>();
   const preferred = new Map<string, { index: number; publicPath: string }>();
-  const document = parse(html);
-  function visit(node: Node, inHead: boolean): void {
-    const head = inHead || ("tagName" in node && node.tagName === "head");
-    if (head && stylesheetLink(node)) {
-      const href = node.attrs.find(
-        (attribute) => attribute.name === "href",
-      )?.value;
-      if (href) {
-        const file = publicFileFromHref(href, route, mockupsDir);
-        if (file && declaredPhysicalPaths.has(file.physicalPath))
-          if (!first.has(file.physicalPath))
-            first.set(file.physicalPath, file.publicPath);
-        const configuredIndex = configuredHrefs.indexOf(href);
-        if (
-          file &&
-          configuredIndex >= 0 &&
-          configuredIndex <
-            (preferred.get(file.physicalPath)?.index ?? Infinity)
-        )
-          preferred.set(file.physicalPath, {
-            index: configuredIndex,
-            publicPath: file.publicPath,
-          });
-      }
-    }
-    if ("childNodes" in node)
-      for (const child of node.childNodes) visit(child, head);
+  for (const link of parseHtmlLinks(html).links) {
+    if (!link.stylesheet) continue;
+    const href = link.attributes.get("href");
+    const file = href && publicFileFromHref(href, route, mockupsDir);
+    if (!file || !declaredPhysicalPaths.has(file.physicalPath)) continue;
+    if (!first.has(file.physicalPath))
+      first.set(file.physicalPath, file.publicPath);
+    const configuredIndex = configuredHrefs.indexOf(href!);
+    if (
+      configuredIndex >= 0 &&
+      configuredIndex < (preferred.get(file.physicalPath)?.index ?? Infinity)
+    )
+      preferred.set(file.physicalPath, {
+        index: configuredIndex,
+        publicPath: file.publicPath,
+      });
   }
-  visit(document, false);
   return new Map(
     [...first].map(([physical, publicPath]) => [
       physical,

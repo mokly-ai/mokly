@@ -7,7 +7,7 @@ and uniform rule attribution are implemented in [M19](../../plans/remove-source-
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 Configured-only placement anchors, shared link discovery, body-link reuse and
-Review-ignore-safe inserted-link discovery are planned for
+Review-ignore-safe inserted-link discovery are implemented in
 [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
 
 The [ownership and comparison contract](./mokly-component-stylesheet-ownership.md) defines final link provenance and evidence.

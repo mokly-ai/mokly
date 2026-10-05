@@ -12,8 +12,8 @@ is implemented in Milestone 23 of that plan.
 
 That plan delivered `stylesheets` in Milestone 3 and removed source-path inputs
 in Milestone 6. Milestone 11 groups declarations by real file and reuses
-renderer-authored links. Milestone 28 will restrict placement to configured
-anchors, share link discovery, reuse body links and recover inserted links from
+renderer-authored links. Milestone 28 restricts placement to configured
+anchors, shares link discovery, reuses body links and recovers inserted links from
 their spans inside Review-ignore regions. The
 [link-scope contract](../../docs/protocol/mokly-stylesheet-links.md) defines each step.
 
@@ -133,9 +133,16 @@ post-transform links determine which inserted spans remain.
 See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
 The [ownership and comparison contract](../../docs/protocol/mokly-component-stylesheet-ownership.md)
 defines final-link validation and private link provenance.
+`../html_links.ts` finds active head and body links with decoded attributes
+and source spans. Placement uses only configured head links. Reuse keeps body
+links in place. Template content supplies no active link, but reserved tokens
+inside templates still undergo validation and removal.
 `stylesheet_provenance.ts` strips transient tokens from final HTML, while
 `comparison_stylesheets.ts` removes only proven inserted links from review
-material. `build/renderer_resources.ts` discards CSS ownership assertions after public
+material. `stylesheet_spans.ts` validates each span against an active full link
+in the original final HTML. Review reads inserted resources before it removes
+links or ignored regions. Ignored author links and markup stay ignored.
+`build/renderer_resources.ts` discards CSS ownership assertions after public
 file checks and emits the stylesheet warning. `render.tsx` returns temporary
 link declarations separately from the private usage record. Build, Check, export, publish and Serve now report those warnings
 through the shared invocation sink.

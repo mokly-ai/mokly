@@ -6,11 +6,14 @@ export async function documentStylesheetScope(
     reader: ComponentMaterialReader;
     path: string;
     html: string;
+    insertedStylesheets?: readonly string[];
   }[],
   identity: (route: string) => string,
 ): Promise<ReadonlySet<string>> {
   const routes = await Promise.all(
-    documents.map(({ reader, path, html }) => reader.stylesheets(path, html)),
+    documents.map(({ reader, path, html, insertedStylesheets }) =>
+      reader.stylesheets(path, html, insertedStylesheets),
+    ),
   );
   return new Set(routes.flatMap((paths) => [...paths].map(identity)));
 }

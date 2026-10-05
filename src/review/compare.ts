@@ -1,11 +1,10 @@
 import path from "node:path";
 
-import type { ReviewArtifact } from "@mokly/viewer/data";
-
 import type { Compilation } from "../build/compile.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
+import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
@@ -37,7 +36,7 @@ export async function compareReview(
   assetReader: ReviewAssetReader = new FileSystemReviewAssetReader(config),
   changedPathExclusions: readonly string[] = [],
   options: CompareReviewOptions = {},
-): Promise<ReviewArtifact> {
+): Promise<StylesheetReviewArtifact> {
   const baseCommit = await git.evidence.mergeBase(baseRef, "HEAD");
   const baseManifest = await readBaseManifest(git.reader, baseCommit, config);
   const authoredPaths = options.changeEvidence

@@ -19,6 +19,7 @@ import {
 export interface ResourceDocument {
   path: string;
   html: string;
+  insertedStylesheets?: readonly string[];
 }
 
 /** Shared resource discovery and rule attribution for both result versions. */
@@ -49,10 +50,20 @@ export class ResourceComparison {
     cssDocuments?: () => readonly ResourceMatchingPair[],
   ): Promise<ResourceEvidence> {
     const bases = before
-      ? await this.before.resources(before.path, before.html, excluded)
+      ? await this.before.resources(
+          before.path,
+          before.html,
+          excluded,
+          before.insertedStylesheets,
+        )
       : new Set<string>();
     const heads = after
-      ? await this.after.resources(after.path, after.html, excluded)
+      ? await this.after.resources(
+          after.path,
+          after.html,
+          excluded,
+          after.insertedStylesheets,
+        )
       : new Set<string>();
     const resources: ChangedResource[] = [];
     const discovered = [...new Set([...bases, ...heads])];
