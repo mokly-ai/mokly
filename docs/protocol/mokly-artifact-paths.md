@@ -84,6 +84,11 @@ function snapshotDocumentPath(
 function snapshotSidePath(side: SnapshotSide): string;
 function snapshotResourcePath(side: SnapshotSide, route: string): string;
 function previewMetadataPath(path: string): string;
+function reviewSnapshotViewPath(
+  side: SnapshotSide,
+  record: { before?: { path: string }; after?: { path: string } },
+  view: { viewport: "mobile" | "desktop"; colorScheme: "light" | "dark" },
+): string;
 ```
 
 `snapshotViewPath` returns `snapshots/<side>/<viewRoute(...)>`.
@@ -95,6 +100,22 @@ the directory prefix `snapshots/<side>/`, including its trailing slash.
 segments, backslashes, colons, and NUL. `previewMetadataPath` returns
 `previews/<path>/index.json` within the comparison generation. Each function
 validates its typed axes and its path before composing a relative POSIX path.
+
+`reviewSnapshotViewPath` names one side's document for a screen or
+component-variant record of the
+[review result](./mokly-component-review.md#normative-result). It returns
+`snapshotViewPath(side, record[side].path, view.viewport, view.colorScheme)`.
+It reads only that side's own address, never `previousPath` or the record's
+top-level `path`, and it fails when the record has no address for that side.
+After a case-only rename (`Billing` to `billing`), the before side keeps the
+baseline spelling `Billing`. Capture writes each side under the path of the
+manifest entry that the side's address copies, so both names agree. The view's
+state decides which sides exist: `added` has no before side, and `removed` has
+no after side. Every consumer that names a review record's snapshot document
+calls this helper: the resource-evidence check, selected capture, the
+[content-addressed alias](./mokly-catalogue-fetch.md#serve-and-fetch-rules)
+check, shell comparison panes, removed screen previews, and package export
+checks.
 
 Review production, selected capture, packaging, export checks, shell comparison
 frames, previous-version requests, snapshot presentation roots, and public

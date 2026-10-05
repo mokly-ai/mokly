@@ -196,9 +196,8 @@ Development hydration registers one browser test per unique generated catalogue
 route at discovery time, plus the home and missing-route cases. Each route keeps
 the normal test deadline and error assertions; catalogue growth cannot exhaust a
 shared route-loop deadline. Unit coverage checks that browser discovery includes
-every generated route exactly once. Browser error assertions accept only Chrome's
-report that a viewer-owned sandboxed frame (`/static/`, a temporary render, or
-`about:srcdoc`) blocked a script, as `tests/browser/console_notices.ts` defines.
+every generated route exactly once. Browser error assertions and test time
+limits follow [Test Time Limits And Console Checks](./ci-verification-test-rules.md).
 
 Each runner records the commit SHA, runtime, suite, optional shard, complete
 discovered file inventory, assigned file inventory, observed executed files,

@@ -35,17 +35,21 @@ Breadcrumbs above an entry are the titles of its folders, and the entry's
 path sits beside its title as a chip you can copy, so the name to use in a
 link is always in front of you. A breadcrumb folder opens the folder's page
 when it has one; otherwise it opens the folder in the tree, bringing up the
-navigation drawer on a narrow screen. A link inside a screen opens its
-destination's canonical page, carries its fragment and reveals it in the tree.
+navigation drawer on a narrow screen. When that folder is hidden, or sits
+inside a hidden folder, the breadcrumb is plain text instead. A link inside a
+screen opens its destination's canonical page, carries its fragment and
+reveals it in the tree.
 
 ## Variants
 
 A screen or registered component that declares variants shows a chevron on its
 row. Opening it lists each variant beneath the parent, and choosing one opens
 that variant as its own page with the parent's name in the breadcrumbs, which
-links back to it. Search uses the [navigation reference](/docs/reference/navigation/)
-matching rule and keeps its parent
-in view. The details of a parent list its variants, and the details of a
+links back to it. Search matches a variant by its own path, title and tags,
+and by the titles of the folders that hold it, and keeps its parent in view.
+[Search and filters](/docs/catalogue/search-and-filters/) explains the
+matching, and the [navigation reference](/docs/reference/navigation/) links to
+the exact rule. The details of a parent list its variants, and the details of a
 variant name the parent it belongs to. Whether a list is open is remembered as
 you move between entries and reload, and Collapse all closes it with everything
 else.

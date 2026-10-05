@@ -51,15 +51,15 @@ its axes and comparison state; its document path remains derivable from path, vi
 
 Derive the exact retained scope from the bootstrap's own resolved view:
 
-| Bootstrap view                                | Usage that must be retained                                     |
-| --------------------------------------------- | --------------------------------------------------------------- |
-| Current screen, including a screen variant    | Every view of that selected screen                              |
-| Current component parent or component variant | Every variant view belonging to that component parent           |
-| Current use case                              | Every view of each screen named by its steps                    |
-| Selected removed screen                       | Every view on that exact historical record                      |
-| Selected removed component parent or variant  | Every retained variant view belonging to that historical parent |
-| Selected removed page or use case             | None; those records own no view usage                           |
-| Current page, home, or missing entry          | None                                                            |
+| Bootstrap view                                | Usage that must be retained                                                                                                                                                               |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Current screen, including a screen variant    | Every view of that selected screen                                                                                                                                                        |
+| Current component parent or component variant | Every current and removed variant view of that parent under the [branch-point lookup](./mokly-branch-point-lookup.md#consumers)                                                           |
+| Current use case                              | Every view of each screen named by its steps                                                                                                                                              |
+| Selected removed screen                       | Every view on that exact historical record                                                                                                                                                |
+| Selected removed component parent or variant  | Every current and removed variant view of the parent that the [branch-point lookup](./mokly-branch-point-lookup.md#consumers) resolves; only its own views when it has no eligible parent |
+| Selected removed page or use case             | None; those records own no view usage                                                                                                                                                     |
+| Current page, home, or missing entry          | None                                                                                                                                                                                      |
 
 Duplicate use-case steps do not duplicate data. In-scope views preserve their
 real `ready`, `pending`, or `unavailable` value byte-for-byte. Every other

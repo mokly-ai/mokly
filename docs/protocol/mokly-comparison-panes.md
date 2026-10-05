@@ -46,10 +46,12 @@ pinned `comparisonUrl`. The GET carries the comparison's abort signal and uses
 the comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
 
-Review v5 supplies only entry identity, view axes, and state. The viewer derives
-each side's `snapshots/<side>/<viewRoute(...)>` address from the entry's path,
-`previousPath` on a [moved](./mokly-moves.md) entry's before side; no entry route
-or snapshot path travels in comparison JSON.
+Review v5 supplies only entry identity, side addresses, view axes, and state.
+The viewer derives each side's `snapshots/<side>/<viewRoute(...)>` address from
+that side's own address through `reviewSnapshotViewPath` in the
+[artifact path contract](./mokly-artifact-paths.md#comparison-and-preview-paths),
+so a [moved](./mokly-moves.md) or case-renamed entry's before side uses
+`before.path`. No entry route or snapshot path travels in comparison JSON.
 
 Acceptance, parsing, and transformation follow the
 [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle)

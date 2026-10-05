@@ -35,10 +35,20 @@ the generation queue, retaining superseded snapshots briefly for in-flight
 requests and draining active work before shutdown.
 
 Published catalogues retain the same All / Changes navigation and screen controls.
-Publishing generates one validated Git comparison in a private staging directory,
-then packages its JSON and complete before/after snapshot trees under the resolved
-generation path. Static shell metadata addresses that generation directly; the
-repository adapter also retains the stable JSON redirect. The same client
+Publishing generates one Git comparison in a private staging directory, then
+packages its JSON and complete before/after snapshot trees under the resolved
+generation path. Consumer export and repository publication both validate that
+comparison against its two source manifests during classification, decode it
+with the [v5 result reader](./mokly-component-review-validation.md), and
+validate the staged artifact's references. Consumer export also checks each
+comparison file against the
+[export resource policy](./mokly-export-public-files.md#public-files-and-package-boundary).
+Repository publication with `--include-changes` captures Serve's complete
+comparison from its capture server, so its comparison has also passed the
+[resource-evidence check](./mokly-changes-serving.md#comparison-engine). Only
+that complete comparison runs this check; consumer export and selected
+comparisons do not. Static shell metadata addresses that generation directly;
+the repository adapter also retains the stable JSON redirect. The same client
 resolves relative snapshot and resource URLs without a live server.
 Snapshot HTTP responses disable caching and MIME sniffing. Diagnostic summaries
 and internal ownership markers are not published.

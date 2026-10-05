@@ -5,12 +5,16 @@ tags. Entry arrays sort by kind and path in UTF-16 order, yielding `component`,
 `document`, `page`, `screen`, `use-case`; a parent's variants instead follow it
 in authored order before the next entry. Navigation, the details `Variants`
 row, and public-tree entry children use that same sibling order. Build
-`removedEntries` from current and baseline entries. A removed parent appears at
-its kind/path position, immediately followed by its removed variants in
-baseline authored order; variants of a surviving parent occupy that current
-parent's position in the same order. Only a variant without an eligible current
-or removed parent falls back to kind-then-path order. Instances/slots sort by
-key and ranges by DOM start order. Tree siblings follow the
+`removedEntries` from current and baseline entries. Resolve each removed
+variant's parent through the
+[branch-point lookup](./mokly-branch-point-lookup.md#variant-parents), so a
+parent that moved or changed only letter case still owns its removed
+variants. A removed parent appears at its kind/path position, immediately
+followed by its removed variants in baseline authored order; removed variants
+of a current parent occupy that parent's position in the same order. Only a
+variant without an eligible current or removed parent falls back to
+kind-then-path order. Instances/slots sort by key and ranges by DOM start
+order. Tree siblings follow the
 [folder order rule](./mokly-folders.md#order); entry-node variant children
 retain authored order. Emit required empties, omit absent optionals, use
 two-space indentation and a final LF. Identical inputs produce identical bytes

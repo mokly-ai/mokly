@@ -283,9 +283,9 @@ discloses, persisted, restored, and collapsed beside the folder keys. That list
 is a container rather than a `<details>`, because the row beside it is a link and
 cannot also be a summary; its `hidden` state and its button's `aria-expanded`
 carry the same disclosure the folder keys carry, and the button's accessible name
-follows the state. When search or the Changes filter hides a parent row, it hides
-the entire leaf container, so no disclosure button remains visible or focusable
-without its row; the container reappears with the row. A parent row whose list
+follows the state. A filter that hides a parent row hides its whole leaf
+container until the row shows again. A list keeps its saved value under a
+filter and has no button without a visible row. A parent row whose list
 holds a changed variant carries `data-changed-variants`, the aggregate mark that
 keeps the group visible under the Changes filter without claiming the parent
 itself changed. The stylesheet draws that attribute and `data-changed` as the

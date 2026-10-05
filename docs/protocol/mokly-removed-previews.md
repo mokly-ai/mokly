@@ -82,7 +82,9 @@ resources; the selected endpoint accepts a before-only entry, and
 Changes-enabled exports package those files under the generation root. The
 shell requests the selected comparison exactly as for a changed screen, using
 the stable endpoint in development and `comparisonUrl` in static delivery, then
-renders each `removed` view from `snapshotViewPath("before", ...)`.
+renders each `removed` view from its record's before side, named by
+`reviewSnapshotViewPath` in the
+[artifact path contract](./mokly-artifact-paths.md#comparison-and-preview-paths).
 Only views whose `state` is `removed` render; a response whose views carry an
 `after` side for that entry is a stale or reused generation and is treated as
 unavailable.
@@ -175,7 +177,7 @@ key, not an authorization capability, and grants no access to preview bytes.
 
 `preview.kind: "screen"` states that the removed screen's comparison `before`
 views are its preview; the viewer derives them from `comparisonUrl` with
-`snapshotViewPath`. `preview.kind: "page"` and `preview.kind: "document"`
+`reviewSnapshotViewPath`. `preview.kind: "page"` and `preview.kind: "document"`
 state that the entry's metadata uses `previewMetadataPath(path)` inside the
 same generation directory as `comparisonUrl`, so the viewer derives that
 location from the generation and the entry's path. Serve leaves `preview`

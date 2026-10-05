@@ -62,11 +62,11 @@ under the [variant contract](./mokly-variants.md). The variant bar navigates by
 path in authored order, so URLs and Back/Forward need no query parameter;
 the parent page shows the first variant.
 
-Comparison modes apply to the shown variant and view axes. Sibling-mode
-retention, read-only Props, disabled highlighting, and response fencing follow
-[variant navigation](./mokly-variant-navigation.md). A removed component
+Comparison modes apply to the shown variant and view axes. The selected mode,
+read-only Props, disabled highlighting, and response fencing follow the
+[mode lifetime rule](./mokly-variant-navigation.md#comparison-mode-lifetime),
+which also sets the initial mode of a fresh page load. A removed component
 variant remains eligible with a missing current side; Added stays in Current.
-Fresh page loads start in Current in served and published catalogues.
 
 Only expose comparison modes when the shown status is Changed or when a
 component variant entry's shown status is Removed. A known selection shows

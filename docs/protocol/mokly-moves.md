@@ -93,12 +93,15 @@ Resource references compare by their resolved mockups-relative route, with query
 and fragment retained. Relative spelling and directory depth are not material.
 During candidate matching, generated styles, assets and copied document resources
 at different routes can use equal content digests; same-route resources keep
-route identity. CSS digests resolve their URL tokens recursively. Accepted entry
-moves map root-module stylesheet routes and assets under corresponding source
-directories. Document resources map by their source-relative reference. Re-exporting entry roots use the corresponding accepted view's generated
-references: pair unique equal digests, or its sole removed and added resource of
-the same generated kind. Accept only unique aliases present in the retained
-sets, and scope HTML rewriting to the paired current view's references.
+route identity. CSS digests resolve their URL tokens recursively. Pairing reads
+the resources of move candidates, entries whose defining module changed, and
+paired views whose documents reference different generated routes. Each paired
+view pairs its one-sided generated stylesheets and assets by unique equal
+digest, or as its sole removed and added resource of one kind. Stylesheet routes
+pair only this way, never from `sourcePath`. A defining-module move also maps
+generated assets under corresponding source directories; document resources map
+by their source-relative reference. Accept only unique aliases present in the
+retained sets, and scope HTML rewriting to the paired current view's references.
 Compare the mapped bytes as well; CSS compares bytes after resolving its URLs
 through the same resource map. Equal moved resources suppress current generated
 dependency and shared-impact evidence. A different image or stylesheet remains
@@ -168,8 +171,8 @@ without adding it to `output changes`. The paired baseline entry is not
 removed: no removed record, removed preview, or removed row is produced for it.
 A paired entry's comparison, previous version, and per-view evidence use the
 paired baseline entry's documents as the before side. The
-[branch-point lookup](./mokly-branch-point-lookup.md) owns shell reference,
-counterpart and parent resolution, including supplied-input pairing.
+[branch-point lookup](./mokly-branch-point-lookup.md) owns reference,
+counterpart, parent, usage-name and input-pairing resolution in all layers.
 
 Review v5 continues to contain screen, component and use-case records only.
 Each moved record carries `previousPath`; a pure move has an explicit empty
@@ -234,6 +237,8 @@ CSS, linked screens/flows/component users moving together, permanent ambiguity,
 linear full-comparison counts for unique material, and Serve/export diagnostics.
 Run move fixtures through review, both catalogue readers, Serve and export;
 include deleting a component after its last variant moves to another parent.
+Cover screen and component-variant stylesheet routes that move while paths stay,
+with live Changes timed: exporting modules, folder `index` files and renderers.
 
 ## Related Docs
 

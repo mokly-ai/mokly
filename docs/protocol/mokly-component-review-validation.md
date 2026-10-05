@@ -31,7 +31,14 @@ Source validation receives the same accepted pairs as classification. It require
 exact `previousPath` coverage, both original side addresses, and one Changes
 record for every moved screen, component, variant or use case. Readers reject
 case-only previous paths, duplicate historical identities, and any paired
-historical identity also advertised as removed. Catalogue readers additionally
+historical identity also advertised as removed. Readers also reject a
+`previousPath` that a current entry of the same kind uses, compared with case
+folding; another kind may reuse that path. In a review result, the current
+entries are the records with an `after` side. Kinds follow the
+[branch-point identity rule](./mokly-branch-point-lookup.md#scope): component
+parents and variants share kind `component`. A reader validates move records
+before it resolves evidence references through the
+[branch-point lookup](./mokly-branch-point-lookup.md#consumers). Catalogue readers additionally
 require ready, included, unmodified-or-changed current records for prior paths.
 Empty entry reasons are valid only for a paired move. Page and document moves
 remain catalogue evidence under the [move contract](./mokly-moves.md#result).

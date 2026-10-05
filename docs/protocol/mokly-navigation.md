@@ -11,6 +11,8 @@ and uncontrolled unknown-destination handling is implemented. Path-addressed
 links and `/view/<path>/` URLs are implemented, as are the Specs and Components
 sections, browse-only folder rows, `Overview` rows, and the breadcrumb folder
 links and reveals of the [folder contract](./mokly-folders.md#rows-and-clicks).
+The [path identity follow-up plan](../../plans/path-identity-follow-up.md)
+delivers the filtered list rule and the plain-text folder crumbs below.
 
 ## Scope
 
@@ -27,10 +29,10 @@ Folders follow the [folder contract](./mokly-folders.md#rows-and-clicks): a
 folder row only expands or collapses and is never a destination; an entry row
 navigates; a folder's own page is its first child row, labelled with its title
 or `Overview`, or, for a screen or component index, the folder renders as that
-entry's row; and a breadcrumb folder segment opens the folder page when one
-exists and otherwise expands the folder. Empty folders have no row.
-Every row uses the single [search rule](./mokly-folders.md#titles). Changes
-activation uses the built tree under the [branch-point lookup](./mokly-branch-point-lookup.md#consumers).
+entry's row; and a breadcrumb folder segment opens the folder page, reveals a
+folder row that All without search shows, or is plain text. Empty folders have
+no row. Every row uses the single [search rule](./mokly-folders.md#titles).
+Changes activation uses the built tree under the [branch-point lookup](./mokly-branch-point-lookup.md#consumers).
 
 ## Component Navigation
 
@@ -248,8 +250,7 @@ navigation and its normal history restoration.
 
 In every delivery the shell resolves that trusted path through its catalogue
 read model to the exact `/view/<path>/` URL before rendering or opening any
-context; there is no alias page or redirect. See
-[Static export delivery](./mokly-export-delivery.md).
+context; there is no alias page or redirect. See [Static export delivery](./mokly-export-delivery.md).
 
 For a frame path that names no current or removed entry, standalone and
 uncontrolled shells show the shared missing destination and any later selection
@@ -309,12 +310,11 @@ To establish the invariant, Browse must:
 1. remove `aria-current` from every other row;
 2. open each ancestor `[data-nav-disclosure]` of the active row, including
    its Specs or Components section and, for an entry with variants or one of
-   its variants, the parent
-   row's variant list defined by the
-   [variant contract](./mokly-variants.md). That list is a
-   container rather than a `<details>`, so opening it clears its `hidden`
-   state and presses its disclosure button instead of setting `open`;
-3. preserve unrelated folder disclosures;
+   its variants, the parent row's variant list defined by the
+   [variant contract](./mokly-variants.md). That list is a container rather
+   than a `<details>`, so opening it clears its `hidden` state and presses its
+   disclosure button instead of setting `open`;
+3. preserve unrelated folder and list disclosures;
 4. clear a search query only when it would hide the destination;
 5. switch Changes to All only when the destination is not changed;
 6. reapply navigation visibility after those adjustments; and
@@ -325,19 +325,19 @@ screen. Its tree retains the opened destination path for the next time it is
 opened. A user may collapse the active path afterward; the next route change
 re-establishes the invariant.
 
-Each user edit to search or the All/Changes filter opens groups to reveal the
-rows matching the updated constraints. Reapplying the same active constraints
-during a route change or watched-reload restoration must instead preserve
-groups the user subsequently collapsed; only the destination row's ancestor
-path may be reopened. Clearing every filtering constraint restores the
-disclosure state captured before filtering began, except that an ancestor
-opened for the navigated destination remains open so the active row stays
-visible.
+Each user edit to search or the All/Changes filter opens every section, folder
+row and [list](./mokly-variant-navigation.md#list-state) to reveal the rows
+matching the updated constraints. Reapplying the same active constraints during
+a route change or watched-reload restoration must instead preserve sections,
+folder rows and lists the user subsequently collapsed; only the destination
+row's ancestor path may be reopened. Clearing every filtering constraint
+restores the disclosure state captured before filtering began, except that an
+ancestor opened for the navigated destination remains open so the active row
+stays visible.
 
 Enhanced navigation preserves the selected viewport, color scheme, and details
 disclosure. It collapses an expanded frame before installing the destination.
 Filters and search remain unchanged when the destination is already visible.
-
 Destination queries for the view axes and removed-entry snapshots follow the
 [shell destination contract](./mokly-shell-destinations.md).
 

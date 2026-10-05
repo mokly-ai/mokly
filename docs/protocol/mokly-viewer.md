@@ -182,8 +182,8 @@ pending route intents propose `{ screenPath, snapshotId }` atomically. The
 component workspace's variant bar links to the parent's sibling variant
 entries, proposing `select({ screenPath })` for the chosen variant; in controlled
 mode it changes only after the host supplies that selection back. Comparison
-mode behavior across siblings follows
-[variant navigation](./mokly-variant-navigation.md). A committed selection
+mode behavior across siblings follows the
+[comparison mode lifetime](./mokly-variant-navigation.md#comparison-mode-lifetime). A committed selection
 replaces frames and announces `onScreenNavigate` once under the event identity
 rule above. Switching control mode requires remounting.
 Never mutate supplied objects/arrays.

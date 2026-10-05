@@ -141,13 +141,22 @@ axes instead of kind and id, `screenPath` wherever a step names a screen,
 optional `previousPath` on an entry the [move contract](./mokly-moves.md)
 paired, and documents classified like pages: neither kind has a record here,
 and the [catalogue change snapshot](./mokly-catalogue-changes.md) classifies
-both. The result stores no route or artifact path. Snapshot paths come from
-`snapshotViewPath`, using `previousPath` for the before side of a paired
-entry; a side the view's state lacks (`added` has no `before`, `removed` has
-no `after`) has no document. Component catalogues add component, variant,
-use-case, and affected-consumer records addressed by entry path, defined by
-the [component comparison schema](./mokly-component-review.md). Readers accept
-only version 5.
+both. The result stores no route or artifact path. Component catalogues add
+component, variant, use-case, and affected-consumer records addressed by entry
+path, defined by the [component comparison schema](./mokly-component-review.md).
+Readers accept only version 5.
+
+Screen and component-variant records carry the `before` and `after` side
+addresses of the [component comparison schema](./mokly-component-review.md#normative-result).
+A side's snapshot document comes from that side's own recorded path:
+`before.path` for the before side and `after.path` for the after side, named
+by `reviewSnapshotViewPath` in the
+[artifact path contract](./mokly-artifact-paths.md#comparison-and-preview-paths).
+Never derive it from `previousPath ?? path`: a case-only rename (`Billing` to
+`billing`) has no `previousPath`, and its before snapshot keeps the baseline
+spelling. Complete and selected capture write each side under its own entry's
+path and spelling. A side the view's state lacks (`added` has no `before`,
+`removed` has no `after`) has no document.
 
 Every catalogue emits the complete `ReviewResultV5` shape defined by the
 [component comparison schema](./mokly-component-review.md), which extends the
@@ -160,6 +169,16 @@ Optional view `material`, `reasons`, and `excludedResources` implement
 exactly when the view's normalized documents differ. Empty optional lists are
 omitted; results without them mean the analysis did not run. Retained resource
 reasons make paired views changed, and summary counts follow these states.
+
+Serve's complete comparison runs a resource-evidence check before it writes its
+output. For every view that has `reasons` or `excludedResources`, the check
+reads each side document at that side's snapshot path. It follows the
+document's references through the snapshot resource graph, after paired ignore
+normalization and without resource hints. Every reached resource must be
+retained under the same side, and every evidence path must name a reached
+resource. Any failure fails the whole comparison. The
+[comparison serving contract](./mokly-comparison-serving.md#generation-and-serving)
+states which delivery paths run this check.
 
 The [review validation contract](./mokly-component-review-validation.md)
 exclusively owns every `review.json` array order. No timestamp or absolute

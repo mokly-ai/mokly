@@ -41,7 +41,11 @@ trailing dots remain invalid. A nonportable module file or directory name cannot
 produce a stylesheet route, even when an entry declares a valid `path`. Build
 fails with `cannot deliver imported CSS for {module}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`,
 where `{module}` is repository-relative. Entry identity and CSS delivery routes
-have distinct inputs; the override changes only entry identity.
+have distinct inputs; the override changes only entry identity. A stylesheet
+route derives from its delivery root, not from the entry's defining module
+(`sourcePath`). Moving the exporting module or the renderer can therefore
+change the route while the entry path stays; Changes pairs such a route only
+through [move resource pairing](./mokly-moves.md#normalisation).
 
 Reject root directories and `roots[].files` static prefixes, and `review.outDir`,
 at or inside the reserved tree, and local `stylesheets` (shared/light/dark) paths

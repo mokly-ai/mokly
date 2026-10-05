@@ -127,10 +127,11 @@ metadata changes; removed components/variants retain their former names.
 Each screen result contains the union of its available before/after views.
 Component variants contain their own view unions. A view is addressed by its
 `viewport` and `colorScheme`; the result stores no artifact path. A side's
-snapshot file is `snapshotViewPath(side, path, viewport, colorScheme)` under
-the generation directory, from the
-[artifact path contract](./mokly-artifact-paths.md), where the before side of
-a paired entry uses its `previousPath`. Added/removed views
+snapshot file is `reviewSnapshotViewPath(side, record, view)` under the
+generation directory, from the
+[artifact path contract](./mokly-artifact-paths.md#comparison-and-preview-paths).
+It uses that side's own address (`before.path` or `after.path`), never
+`previousPath ?? path`. Added/removed views
 have the existing explicit missing-side states, which are the only record of a
 missing side. Aggregate states retain the current precedence: changed, added,
 removed, ignored-only, unchanged. A metadata/dependency-only entry can have
@@ -202,7 +203,10 @@ listed. A component is listed as affected only through an actual usage path, not
 because it happens to share a directory or dependency declaration.
 
 Every `via` is a nonempty caller-ownership chain from the consumer to the changed
-component; its last `componentId`, mapped through accepted pairs, equals `changedComponentId`. Each instance key
+component. Each chain `componentId` is a usage component name on the evidence's
+side; the last one must resolve through the
+[branch-point lookup](./mokly-branch-point-lookup.md#usage-component-names) to
+`changedComponentId`. Each instance key
 must exist in the referenced side/context's manifest usage, with its stated
 `componentId` and a valid ownership edge to the next occurrence. Direct screen
 use has one element. A component consumer either owns the context entry or is

@@ -149,16 +149,15 @@ interface CatalogueComponentVariant extends CatalogueEntry {
 ```
 
 No record carries a route or file name. A reader uses the
-[artifact path contract](./mokly-artifact-paths.md): a current view is served
-at `static/<view route>`, a current page or document at
-`static/<document route>`, and the shell at `/view/<path>/`. Removed entries
-have no current files; their historical documents come only from their
-`preview` descriptor. `PublicPath` is an artifact-root-relative POSIX file path,
-without a leading slash, origin, query or hash; resolve it against the source's
-origin root, not the JSON directory or host app URL. A current component parent
-has no views; its page shows its first current variant. `previousPath` is
-present exactly on entries the
-[move contract](./mokly-moves.md) paired with a baseline entry.
+[artifact path contract](./mokly-artifact-paths.md): a current view is served at
+`static/<view route>`, a current page or document at `static/<document route>`,
+and the shell at `/view/<path>/`. Removed entries have no current files; their
+historical documents come only from their `preview` descriptor. `PublicPath` is
+an artifact-root-relative POSIX file path, without a leading slash, origin,
+query or hash; resolve it against the source's origin root, not the JSON
+directory or host app URL. A current component parent has no views; its page
+shows its first current variant. `previousPath` is present exactly on entries
+the [move contract](./mokly-moves.md) paired with a baseline entry.
 
 `identity.id` is lowercase SHA-256 of UTF-8 JSON, without LF, for
 `["mokly-catalogue-v1", repoRelativeConfigPath]`, scoped to the source origin.
@@ -202,36 +201,37 @@ spread a manifest, entry, or internal evidence object into public JSON.
   under the [document contract](./mokly-documents.md).
 
 Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`,
-`movedFrom`, folder `exclude` globs, resolved dependency evidence,
-changed-path inventories, source graphs, Git commands, private manifest
-envelopes, content digests for source inputs, style offsets
-(`startOffset`/`endOffset`), style/resource ownership tables, absolute
-filesystem paths, credentials, or render-capability tokens. No source bytes,
-HTML, runtime React values, or source maps belong in this JSON. This privacy
-rule applies recursively, including removed entries and extension fields.
-`snapshotId` is a one-way digest, never a public commit, manifest, or
-generation inventory. Reject private filesystem paths in path fields; display
-strings and props are data.
+`movedFrom`, folder `exclude` globs, resolved dependency evidence, changed-path
+inventories, source graphs, Git commands, private manifest envelopes, content
+digests for source inputs, style offsets (`startOffset`/`endOffset`),
+style/resource ownership tables, absolute filesystem paths, credentials, or
+render-capability tokens. No source bytes, HTML, runtime React values, or source
+maps belong in this JSON. This privacy rule applies recursively, including
+removed entries and extension fields. `snapshotId` is a one-way digest, never a
+public commit, manifest, or generation inventory. Reject private filesystem
+paths in path fields; display strings and props are data.
 
 Per-entry Changes comes from the existing entry attribution, not a count of
-visual comparisons. `included` is membership in Changes; affected consumers
-can have eligible comparisons while `included` is false, and a paired moved
-entry is included even when unmodified. Folder visibility aggregates
-descendants without extra counts. Unknown, preparing, pending and disabled
-states never imply unmodified or a zero count. The
+visual comparisons. `included` is membership in Changes; affected consumers can
+have eligible comparisons while `included` is false, and a paired moved entry is
+included even when unmodified. Folder visibility aggregates descendants without
+extra counts. Unknown, preparing, pending and disabled states never imply
+unmodified or a zero count. The
 [removal rule](./mokly-catalogue-changes.md#removal-selection-and-precedence)
-owns selection and path reuse. A removed record carries `folderTitles`, the baseline titles of its
-folders from the top level down, as display text for breadcrumbs. Each newly
-projected removed record carries an opaque `snapshotId` when real immutable
-identity is available, distinguishing baseline generations and catalogues. A
-removed variant carries `variantOf` and requires `parentTitle`, its baseline
-parent's nonempty title. Complete and scoped readers reject missing, empty or
-non-string `parentTitle` on variants, and its presence on non-variants. Parent
-resolution follows the [branch-point lookup](./mokly-branch-point-lookup.md).
-The optional `preview` field is the additive descriptor defined by
-[removed previews](./mokly-removed-previews.md); readers tolerate its absence.
-Missing baseline usage is unavailable. Projection omits a removed view's usage
-when it names an unpublished component and marks it unavailable. Ready empty
+owns selection and path reuse. A removed record carries `folderTitles`, the
+baseline titles of its folders from the top level down, as display text for
+breadcrumbs. Each newly projected removed record carries an opaque `snapshotId`
+when real immutable identity is available, distinguishing baseline generations
+and catalogues. A removed variant carries `variantOf` and requires
+`parentTitle`, its baseline parent's nonempty title. Complete and scoped readers
+reject missing, empty or non-string `parentTitle` on variants, and its presence
+on non-variants. The optional `preview` field is the additive descriptor defined
+by [removed previews](./mokly-removed-previews.md); readers tolerate its
+absence. Variant parents, usage component names and the readers' `previousPath`
+identity check follow the [branch-point lookup](./mokly-branch-point-lookup.md),
+which never rewrites a stored name. Missing baseline usage is unavailable.
+Projection omits a removed view's usage, and marks it unavailable, when a
+component name in it has no destination; readers reject such a name. Ready empty
 arrays require proven empty usage, never a failed or incomplete render.
 
 `comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,

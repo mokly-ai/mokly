@@ -165,8 +165,17 @@ from different package versions.
 - Write reader-facing outcomes and actions. Keep internal schema, pipeline,
   environment, and implementation vocabulary out of headline copy unless it is
   itself the documented public interface.
+- A guide may summarise a behaviour in reader terms. The protocol document that
+  owns the rule keeps the exact rule. The guide links to that owner, or, when
+  the cloud site does not publish the owner, to the published reference that
+  links to it. A summary never contradicts its rule, and a change to the rule
+  updates every summary of it in the same change.
 - Root tests validate structure, links, versions, copy, the CLI surface,
   configuration fields, public authoring exports, and the upload/CI contract.
+  A root test that checks that the search summaries in
+  `catalogue/search-and-filters.md` and `catalogue/browse.md` name every field
+  of the [search rule](./mokly-folders.md#titles) is an approved target of the
+  [path identity follow-up plan](../../plans/path-identity-follow-up.md).
 
 ## Related Docs
 

@@ -7,9 +7,25 @@ order: 2
 
 ## Search the tree
 
-Type in the search field to narrow the navigation tree. The
-[navigation reference](/docs/reference/navigation/) links to the shared search
-matching rule. A folder hidden by its folder record stays out of the results.
+Type in the search field to narrow the navigation tree. Mokly reads the words
+you type, apart from any `tag:` terms, as one phrase. It ignores letter case
+and extra spaces between words. An entry stays in the tree when the phrase
+appears in any of these:
+
+- the entry's path, such as `account/billing/invoice`;
+- the entry's title;
+- one of the entry's tags;
+- the title of a folder that holds the entry.
+
+A folder whose title matches therefore keeps every entry below it in view.
+Labels that the tree adds to a row, such as Overview or Removed, are not
+searched. Search also narrows Changes, and the Changes count stays the same.
+
+Under All, a folder hidden by its
+[folder record](/docs/authoring/collections-and-tags/) stays out of the tree
+and out of the search results. Changes still lists the changed entries inside
+it. The [navigation reference](/docs/reference/navigation/) links to the exact
+matching rule.
 
 ## Search by tag
 
@@ -18,6 +34,10 @@ A `tag:` term narrows the tree to the entries carrying that tag:
 ```text
 tag:forms
 ```
+
+The tag must equal one of the entry's own tags, ignoring letter case. With
+several `tag:` terms, an entry needs every one of the tags, and any other words
+must still match as described above.
 
 You rarely type it: the field has a tag picker that enters the term for you,
 and the tags listed in an entry's details are chips that do the same.

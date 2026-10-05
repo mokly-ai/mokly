@@ -32,8 +32,12 @@ reuses its packaged result without renewal requests.
 
 Repeated view or mode switches share pending work and apply the latest axes and
 mode when it completes. Navigating to a sibling component variant retains that
-mode, requests the sibling's own result, keeps Props and highlighting in their
-comparison states, and fences the previous response.
+mode under the
+[comparison mode lifetime](./mokly-variant-navigation.md#comparison-mode-lifetime).
+An eligible sibling requests its own result and keeps Props and highlighting in
+their comparison states; a sibling without changes shows Current. Navigation
+fences the previous response. Adopting a newer evidence revision renews a loaded
+live generation as above and keeps the mode.
 Current and navigation cancel both renewal and capture requests; late responses
 cannot replace the current view. Background [evidence updates](./mokly-live-evidence.md)
 also cancel pending comparisons, discard their cached selection and return an
@@ -64,10 +68,12 @@ comparison records.
 ## Capture and lifetime
 
 Capture every available view of the selection and only its transitive resource
-closure. Copy accepted v8 before/after documents byte-for-byte to paths from
-`snapshotViewPath` in the
-[artifact path contract](./mokly-artifact-paths.md); the before side of a paired
-moved entry is the paired baseline entry's views, named by `previousPath`.
+closure. Copy accepted v8 before/after documents byte-for-byte to each side's
+path from `reviewSnapshotViewPath` in the
+[artifact path contract](./mokly-artifact-paths.md#comparison-and-preview-paths):
+each side holds its own entry's views, named by that side's recorded path. The
+before side of a paired moved entry is the paired baseline entry, and the
+before side of a case-only rename keeps its baseline spelling.
 Baseline reads use the pinned
 Git commit and bounded batches of regular files. Current reads retain the public
 file and source-confinement rules. Resource hints not read by classification are

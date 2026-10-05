@@ -2,38 +2,15 @@
 
 ## Active
 
-- [Path Identity, Spec Tree, And Markdown Documents](./path-identity.md) —
-  replace `id` and `navPath` with one file-derived path per entry, add
-  Markdown documents, detect moves, rename Pages to Specs, and make folder
-  rows browse-only; manifest v8, read model v4, review result v5. Created
-  2026-10-02; contracts, shell mockups, identity core, main integration,
-  review fixes, Markdown documents and move detection with their review
-  fixes, viewer navigation and its review fixes, index entry mockups,
-  document typography parity, the light-only document, member landing view
-  and moved comparison wording mockups, the document presentation and
-  index-entry Changes rows, and the Moved presentation with its review fixes
-  are complete. Main and the final viewer branch are integrated through
-  Milestone 6I. Milestone 6J completes source file-length compliance with the
-  full gate passing. Milestone 8 guides, verification and Serve/static smoke
-  tests are complete. The fresh implementation review is complete. The user
-  approved a fix for each of its
-  [eight findings](../docs/reviews/path-identity.md); Milestones 9–13 deliver
-  them and end with a new review. Milestones 9–12 are complete and integrated
-  through Milestone 13. The unmodified full gate and fresh smoke checks pass;
-  all eight findings have recorded fixes and covering tests. A second fresh
-  review found [fifteen new findings](../docs/reviews/path-identity.md#second-review).
-  The user approved one shared branch-point lookup for five of them;
-  Milestones 14–16 are complete. Milestone 17 integrated the shell consumers
-  unchanged, passed the unmodified full gate (4,214 unit, 844 browser and 261
-  hydration tests) and passed all five CLI smoke cases in Serve and export at
-  desktop and mobile widths. The approved outcomes are recorded. A third
-  fresh review found [six findings](../docs/reviews/path-identity.md#third-review),
-  and Milestone 16 reported four more items. Milestone 18 fixes third-review
-  item 9, which failed the pull request's CI, with one shared browser
-  console rule; CI now passes, and its review found four Low findings. They,
-  the other items, and the ten undecided second-review findings await the
-  user's decision. The plan stays Active until its pull request
-  merges.
+- [Path Identity Follow-up](./path-identity-follow-up.md) — fix the open
+  review items of PR #131 that the user approved on 2026-10-05: one
+  branch-point lookup in every data layer and the shell, then distinct types
+  for branch-point and current paths; recorded snapshot and resource
+  locations in the comparison engine; list buttons and folder crumbs that
+  follow one visible-row rule; a comparison mode that survives new renders;
+  work-count time limits and one console rule in tests; and a search summary
+  in the guides. Item 3 waits for the user's decision, and items 8 and 12 are
+  skipped. Created 2026-10-05.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete
@@ -148,6 +125,13 @@
 
 ## Completed
 
+- [Path Identity, Spec Tree, And Markdown Documents](./path-identity.md) —
+  delivered in PR #131 (`c4138a0`): one file-derived path per entry instead
+  of `id` and `navPath`, Markdown documents, move detection, the Specs tree
+  and browse-only folder rows; manifest v8, read model v4 and review result
+  v5. The plan Status lists each milestone and review round. Open review
+  items, with the user's 2026-10-05 decisions, are owned by
+  [Path Identity Follow-up](./path-identity-follow-up.md).
 - [Imported CSS Delivery](./imported-css-delivery.md) — delivered in PR #125
   (`ff376d7`): imported CSS, CSS Modules, binary assets and optional consumer
   PostCSS ship through Build, Check, Serve, export, publication and Changes.

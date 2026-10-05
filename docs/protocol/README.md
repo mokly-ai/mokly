@@ -34,6 +34,7 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
+  - [Test time limits and console checks](./ci-verification-test-rules.md).
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
@@ -64,8 +65,9 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [Markdown documents](./mokly-documents.md) — discovered Markdown entries.
 - [Document rendering safety](./mokly-document-safety.md) — final HTML allowlist and script policy.
 - [Moves](./mokly-moves.md) — baseline pairing and `previousPath`.
-- [Branch-point entry lookup](./mokly-branch-point-lookup.md) — shared current,
-  historical, counterpart and variant-parent resolution.
+- [Branch-point entry lookup](./mokly-branch-point-lookup.md) — shared
+  reference, counterpart, variant-parent and usage-name resolution for every
+  layer, with typed branch-point references.
 - [Path-derived artifact paths](./mokly-artifact-paths.md)
 - [Rendering and generated output](./mokly-rendering.md)
   - [Generated rendering contract](./mokly-rendering-generated.md).

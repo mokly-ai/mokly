@@ -190,7 +190,11 @@ band beneath the heading. Added and Unmodified views retain their current
 preview without that band; removed screens show their
 [previous version](./mokly-removed-previews.md) without it. Affected-only
 consumers can compare actual rendered differences while staying outside
-Changes. Current is selected initially, including after navigation and reload.
+Changes. The
+[comparison mode lifetime](./mokly-variant-navigation.md#comparison-mode-lifetime)
+lists the only events that set the selected mode: a fresh load or navigation to
+another mode owner starts in Current unless an eligible deep link selects Side
+by side.
 Selecting Changes, opening a current screen, changing its viewport or color
 scheme in Current, and receiving a watched update do not generate comparison
 snapshots in development; opening a removed entry is the one selection that

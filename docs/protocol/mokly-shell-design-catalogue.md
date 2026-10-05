@@ -75,8 +75,8 @@ These transitions follow the [design links contract](./mokly-design-links.md):
 - In the Appearance designs, `Payment terms` opens
   `design/browse/appearance/states/light-only-current` instead, so a Dark
   artboard stays Dark. That state keeps the document's light page under a
-  quiet `Light only` band, and its All filter opens
-  `design/browse/appearance/overview`.
+  quiet `Light only` band. Its All filter is the active filter, and its
+  Changes filter opens `design/browse/appearance/workspaces/side-by-side`.
 
 The index entry states form one family:
 

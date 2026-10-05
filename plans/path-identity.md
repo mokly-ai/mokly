@@ -1,7 +1,9 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
-Status: Active until the pull request merges. Created 2026-10-02 with the
-user's consent. Milestones 1–7 and all lettered milestones through 7D are
+Status: Complete. PR #131 merged on 2026-10-05 as `c4138a0`. The open review
+items and the user's decisions on them are owned by
+[Path Identity Follow-up](./path-identity-follow-up.md). Created 2026-10-02
+with the user's consent. Milestones 1–7 and all lettered milestones through 7D are
 complete, including main integration, viewer integration and file-length
 compliance. Milestone 8 implementation, verification and the fresh
 implementation review are complete. On 2026-10-04 the user approved the
@@ -14,7 +16,7 @@ the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11
 are complete, including a third fresh review whose six findings, and four
 items found during Milestone 16, are in the
 [review record](../docs/reviews/path-identity.md#third-review). On 2026-10-05
-the user approved a shared console rule for third-review finding 9, which
+the user approved a shared console rule for item 9, found during Milestone 16, which
 failed the pull request's CI. Milestone 18 delivered it, and CI passes; its
 review found four Low findings. They, the other third-review items, and the ten
 undecided second-review findings await the user's decision.
@@ -2586,7 +2588,7 @@ reasons in the close-out commit body.
 
 ## Milestone 18: Sandboxed-frame console reports in browser checks
 
-Fix third-review finding 9, which failed the CI run for pull request #131.
+Fix item 9, found during Milestone 16, which failed the CI run for pull request #131.
 The previous-version frames contain no script. Playwright's trace recorder
 tries to run a script in each frame, and Chrome reports the block in the
 sandboxed `about:srcdoc` frames. The hydration helper accepted that report
@@ -2622,14 +2624,18 @@ decision.
       cause and the approved fix in the review record.
 - [x] Verify. The new test passes in both hosts. The `billing/invoice/paid`
       route passes 50 of 50 runs with tracing on. The full
-      `moved_hydration.spec.ts` (22 tests) and every chromium spec that uses
-      the changed helpers (36 tests) pass. Type checks, ESLint, and Prettier
-      pass. Logs are in `.context/m18/`.
+      `moved_hydration.spec.ts` (22 tests) and the 36 chromium tests of the
+      specs that use `console_notices.ts` directly or through `moved_rows.ts`
+      pass. Four more chromium specs use the changed hydration helper
+      (`browse_folder_rows`, `route_scoped_shell_routes`,
+      `standalone_appearance` and `standalone_preview_scheme`; 18 tests).
+      They passed in the local full gate and in CI run `37301313588`. Type
+      checks, ESLint, and Prettier pass. Logs are in `.context/m18/`.
 - [x] Run the unmodified `cargo xtask check`. On the orchestrator's machine
       it passed the repository checks, ratchets, Rust checks, package checks,
       all 4,216 unit tests, and every browser test except the 14 that share
       the `ordinaryPreview` fixture. That fixture exceeded its fixed 300 s
-      setup limit there, also when run alone (third-review item 8). It uses
+      setup limit there, also when run alone (item 8, found during Milestone 16). It uses
       no file that this milestone changes, and the pull request's first CI
       run passed it. The gate stops at that suite, so the full hydration
       suite ran separately and passed all 263 tests. The pull request's CI

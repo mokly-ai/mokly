@@ -12,7 +12,10 @@ Scoped public-bootstrap adoption, every-target route evidence, loading/failed
 Usage, exact-scoped emission and strict live reading are implemented by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 Only the separate static state form remains external and complete after
-resolution.
+resolution. Keeping the comparison mode across evidence adoption is the
+approved contract that the
+[path identity follow-up plan](../../plans/path-identity-follow-up.md)
+delivers.
 
 ## Boundary
 
@@ -133,9 +136,12 @@ keeps the existing public-workspace behavior.
 
 A route response may advance the evidence revision while retaining the update
 version. On-demand rendering can publish newer evidence without a watch event,
-so the fetched page is the authoritative atomic pair for that route. Mixed
-public/private revisions, changed content or catalogue identity, and older
-sources are rejected.
+so the fetched page is the authoritative atomic pair for that route. Adopting
+a newer evidence revision keeps the selected comparison mode, and a newer
+update version resets it, under the
+[mode lifetime rule](./mokly-variant-navigation.md#comparison-mode-lifetime).
+Mixed public/private revisions, changed content or catalogue identity, and
+older sources are rejected.
 
 Pages, documents, flows, home and missing routes have no workspace result. A route or
 source replacement cancels the request and obsolete results are ignored.

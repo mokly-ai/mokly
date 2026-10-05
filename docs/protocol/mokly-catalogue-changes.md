@@ -100,12 +100,13 @@ record, and a paired baseline entry yields one current entry carrying
 `removedEntries` share a case-folded path, and a current variant cannot carry a `removed`
 comparison state. Only records inside `removedEntries` are historical.
 
-Ordinary removed entries sort by kind then path. If a removed variant's parent
-survives, place the removed variant at the position its parent occupies in that
-ordering and retain the baseline's authored sibling order among removed
-variants. This is the same combined parent/variant projection the
-[catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions)
-defines.
+Ordinary removed entries sort by kind then path. If the
+[branch-point lookup](./mokly-branch-point-lookup.md#variant-parents) resolves a
+removed variant's parent to a current entry, including after a move or a
+case-only rename, place the removed variant at the position that parent
+occupies in that ordering and retain the baseline's authored sibling order
+among removed variants. This is the same combined parent/variant projection
+the [serialization contract](./mokly-catalogue-serialization.md) defines.
 
 A removed variant of either kind follows these same selection and precedence
 rules. Its relationship does not make it subordinate for selection: deleting

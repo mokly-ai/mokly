@@ -170,7 +170,9 @@ selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
 helpers shared by SSR and the live tree; `delivery.ts` validates static
 deployment continuity before a read-model route transition.
 `store_browser_actions.ts` owns DOM interaction and
-`store_browser_urls.ts` owns provider-normalized URL policy. Frame documents
+`store_browser_urls.ts` rewrites each accepted entry URL form to the canonical
+`/view/<path>/` URL and pins an inferred historical snapshot in the `snapshot`
+query. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
 events from visible sessions in the owning `frame_registry.tsx`. An unavailable
 frame destination changes only an uncontrolled or standalone display;

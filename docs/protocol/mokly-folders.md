@@ -4,7 +4,12 @@
 
 Folder records, title resolution, order, exclusions, path trees, the Specs
 and Components rows, the `Overview` row, entry rows for a folder's own screen
-or component, and breadcrumb links and folder reveals are implemented.
+or component, and breadcrumb links and folder reveals are implemented. The
+plain-text crumb for a folder that All without search does not show, and the
+immediate end of a reveal that no filter change can complete, are the approved
+contract that the
+[path identity follow-up plan](../../plans/path-identity-follow-up.md)
+delivers.
 
 A folder is a path with entries below it. It has no definition of its own, no
 status, and no Changes row. This contract owns the optional folder record that
@@ -170,26 +175,36 @@ A folder's own page renders by the kind of its index:
 
 A breadcrumb segment for a folder opens the folder's own page when one exists;
 for a screen or component index that page is the entry, so the segment shows
-and links to it. Otherwise the segment is a button that reveals the folder in
-the viewed entry's section without changing the content area. The reveal opens
-the section, every ancestor folder, any entry list the folder is listed in,
-and the folder itself, then moves focus to the folder row and scrolls it into
-the nearest visible part of the tree. It clears a search query, free text and
-tag terms together, that would hide the folder and switches Changes to All
-when no changed row lies inside; filters that leave the folder visible stay.
-When the query and Changes hide the folder only together, it clears the query
-and keeps Changes, then switches to All only if the folder is still hidden. An
-application-owned viewer proposes those filters to its host and moves focus
-once a committed selection shows the folder row; a commit that leaves the row
-hidden ends the reveal without moving focus. Below the responsive breakpoint
-it also opens the navigation drawer. Without active filtering the opened disclosures
-are saved like a user toggle under the
-[persistence contract](./mokly-disclosure-persistence.md#storage-and-defaults).
-A hidden folder without its own page has no row in All, so its segment is
-plain text, as are the baseline folder titles of a removed entry. The public
-read model emits these shapes directly under the
-[catalogue contract](./mokly-catalogue.md#tree) so the viewer applies no
-further rule. A variant's parent crumb uses the
+and links to it. A folder without its own page gets a reveal button only when
+All without search shows the folder's row in the viewed entry's section, by
+the same visibility rule as every navigation row. Otherwise its segment is
+plain text with no action, whatever filter is active. This covers a hidden
+folder, every folder below it, and a folder that All prunes because every row
+below it is hidden. The baseline folder titles of a removed entry are also
+plain text.
+
+The button reveals the folder in the viewed entry's section without changing
+the content area. The reveal opens the section, every ancestor folder, any
+entry list the folder is listed in, and the folder itself, then moves focus to
+the folder row and scrolls it into the nearest visible part of the tree. It
+clears a search query, free text and tag terms together, that would hide the
+folder and switches Changes to All when no changed row lies inside; filters
+that leave the folder visible stay. When the query and Changes hide the folder
+only together, it clears the query and keeps Changes, then switches to All
+only if the folder is still hidden. An application-owned viewer proposes those
+filters to its host and moves focus once a committed selection shows the
+folder row; a commit that leaves the row hidden ends the reveal without moving
+focus. Below the responsive breakpoint it also opens the navigation drawer.
+Without active filtering the opened disclosures are saved like a user toggle
+under the [persistence contract](./mokly-disclosure-persistence.md#storage-and-defaults).
+
+If neither the current filters nor any filter change above shows the folder
+row, the reveal ends at once. It keeps the search query and the All/Changes
+filter, changes no disclosure, leaves the drawer as it is, moves no focus, and
+leaves no pending reveal; an application-owned viewer proposes nothing to its
+host. The [catalogue tree](./mokly-catalogue.md#tree) carries the hidden flags
+and the removed records carry the baseline titles that these rules read. A
+variant's parent crumb uses the
 [branch-point lookup](./mokly-branch-point-lookup.md#variant-parents).
 
 ## Diagnostics
@@ -219,7 +234,10 @@ default comparator and `order` with and without `...` in each section, search
 through folder titles, hidden folders in tree and search but not in URLs or
 Changes, `exclude` before derivation, each row rule including the `Overview`
 label and the identical rows for the two variant layouts, breadcrumb
-behaviour, and the exact text of every diagnostic.
+behaviour, and the exact text of every diagnostic. Breadcrumb coverage
+includes plain text for a folder that holds only hidden folders, under All,
+search, and Changes, and a reveal that cannot complete and so keeps the
+search, the filter, and the drawer and leaves no pending reveal.
 
 ## Related Docs
 
