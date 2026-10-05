@@ -22,6 +22,9 @@ const CASES = [
   "moved-variant",
   "case-renames",
   "reused-parent",
+  "removed-screen-usage",
+  "removed-variant-order",
+  "new-parent-variant",
 ] as const satisfies readonly BranchPointCase[];
 
 /**

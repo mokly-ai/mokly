@@ -578,7 +578,7 @@ consumers.
   view, snapshot, preview, shell-URL, and browser-path derivation
 - [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
   ordering shared by review producers and readers
-- [`src/shell/catalogue_branch_point.ts`](./src/shell/catalogue_branch_point.ts) —
+- [`src/catalogue/branch_point.ts`](./src/catalogue/branch_point.ts) —
   the one branch-point lookup per catalogue generation, reached through
   `branchPoints`
 - [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and

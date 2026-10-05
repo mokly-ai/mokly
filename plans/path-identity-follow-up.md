@@ -126,16 +126,20 @@ step 1). Reject invalid move records at the reader (item 11). Complete.
 Tags: ui
 
 Use the lookup for usage labels and links in every host, and show nested
-input values for a variant that moved to a new component (items 1 and 10).
+input values for a variant that moved to a new component (items 1 and 10). Complete.
 
-- [ ] Component labels, the Props "Open component" link, Highlight labels
+- [x] Component labels, the Props "Open component" link, Highlight labels
       and the embedded "Used by" list resolve usage names through the lookup.
-- [ ] Remove the parent check in `workspace_input_changes.ts` for component
+- [x] Let a historical Components selection open its recorded, read-only
+      Props without requiring a current frame. Keep Highlight disabled.
+      Add regression tests and clarify the lookup contract.
+- [x] Remove the parent check in `workspace_input_changes.ts` for component
       pages, and keep it for screens.
-- [ ] Correct the lookup claims in `packages/viewer/src/shell/README.md`.
-- [ ] Add fixture cases 6 to 8 to the Serve, export and embedded viewer
+- [x] Correct the lookup claims in `packages/viewer/src/shell/README.md` and
+      the source link in `packages/viewer/README.md`.
+- [x] Add fixture cases 6 to 8 to the Serve, export and embedded viewer
       browser checks at desktop and mobile widths.
-- [ ] Run the related unit and browser tests, and smoke-test Serve and export
+- [x] Run the related unit and browser tests, and smoke-test Serve and export
       on a scratch Git repository.
 
 ## Milestone 5: Recorded locations in the comparison engine

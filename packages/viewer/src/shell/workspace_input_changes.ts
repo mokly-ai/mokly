@@ -39,15 +39,17 @@ export function inputChanges(
   baselineVariants: readonly ManifestComponentVariant[] = [],
 ): InputChange[] {
   const changes: InputChange[] = [];
-  if (!baseline) return changes;
+  if (entry.kind === "screen" && !baseline) return changes;
   const afterViews =
     entry.kind === "component"
       ? currentVariants.flatMap((variant) => generatedViews(variant))
       : generatedViews(entry);
   const beforeViews =
-    baseline.kind === "component"
+    entry.kind === "component"
       ? baselineVariants.flatMap((variant) => generatedViews(variant))
-      : generatedViews(baseline);
+      : baseline
+        ? generatedViews(baseline)
+        : [];
   const lookup = branchPoints(catalogue);
   const counterpart = (path: string) =>
     lookup.counterpart({ kind: "component", path }, inventory)?.path;
@@ -65,13 +67,13 @@ export function inputChanges(
     );
     for (const current of after.usage?.instances ?? []) {
       if (current.owner.kind !== "entry") continue;
-      const componentId = counterpart(current.componentId);
+      const baselineName = counterpart(current.componentId);
       const paired =
-        componentId === undefined
+        baselineName === undefined
           ? undefined
           : before?.usage?.instances.find(
               (item) =>
-                item.key === current.key && item.componentId === componentId,
+                item.key === current.key && item.componentId === baselineName,
             );
       if (
         !paired ||
@@ -81,7 +83,7 @@ export function inputChanges(
       changes.push({
         instanceId: current.id,
         title:
-          catalogue.byPath.get(current.componentId)?.title ??
+          lookup.usageComponent(current.componentId, "after")?.entry.title ??
           current.componentId,
         viewport: after.viewport,
         colorScheme: after.colorScheme,

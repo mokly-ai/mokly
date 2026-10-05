@@ -9,23 +9,18 @@ import type {
   ShellCatalogueVariant,
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
-import { catalogueHasOmittedUsage } from "../catalogue/usage_scope.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { generatedViews } from "../components/views.js";
 import type { ReviewState } from "../review/types.js";
 import type { Catalogue } from "../shell/catalogue.js";
 import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
 import type { ViewState, ViewStatesBySelection } from "../shell/view_status.js";
-import type {
-  EntryStatus,
-  UsageLink,
-  WorkspaceData,
-} from "../shell/workspace_data.js";
+import type { EntryStatus, WorkspaceData } from "../shell/workspace_data.js";
 import type { ChangedViewsBySelection } from "../shell/workspace_views_data.js";
 
 import { displayEntry } from "./projection.js";
+import { publicUsageLinks } from "./public_usage.js";
 import { publicParent, publicVariants } from "./public_variants.js";
-import { routedEntries } from "./selection.js";
 
 const statuses = {
   added: "Added",
@@ -171,34 +166,13 @@ export function publicWorkspace(
     : orphanVariant
       ? [original]
       : [];
-  const scoped = catalogueHasOmittedUsage(model);
   const viewUsagePending =
     original.kind === "screen"
       ? original.views.some((view) => view.usage.status === "omitted")
       : sourceVariants.some((variant) =>
           variant.views.some((view) => view.usage.status === "omitted"),
         );
-  const usedBy: UsageLink[] = [];
-  if (!scoped)
-    for (const owner of routedEntries(model)) {
-      if (owner.kind !== "screen" && owner.kind !== "component") continue;
-      for (const view of generatedViews(displayEntry(owner)))
-        for (const instance of view.usage?.instances ?? [])
-          if (instance.componentId === (component?.path ?? entry.path))
-            usedBy.push({
-              entryId: owner.path,
-              entryKind: owner.kind,
-              title: publicEntryTitle(catalogue, model, owner),
-              viewport: view.viewport,
-              colorScheme: view.colorScheme,
-              instanceKey: instance.key,
-              direct: instance.owner.kind === "entry",
-              removed: model.removedEntries.some(
-                (value) => value.entry === owner,
-              ),
-              comparisonEligible: false,
-            });
-    }
+  const usedBy = publicUsageLinks(catalogue, model, component ?? entry);
   const entryStatus = status(original);
   const variants =
     component || orphanVariant
@@ -276,14 +250,4 @@ export function publicWorkspace(
     ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
   };
-}
-
-function publicEntryTitle(
-  catalogue: Catalogue,
-  model: ShellCatalogueReadModel,
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "component" | "screen" }>,
-): string {
-  if (entry.kind !== "component" || !("variantOf" in entry)) return entry.title;
-  const parent = publicParent(catalogue, model, entry);
-  return parent ? `${parent.title} · ${entry.title}` : entry.title;
 }

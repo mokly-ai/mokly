@@ -79,6 +79,7 @@ test("an out-of-scope workspace shows the mockup's inspection waiting copy", () 
 
   const instances = renderToStaticMarkup(
     <WorkspaceInstances
+      catalogue={catalogue}
       activeViewport="desktop"
       data={data}
       onFocus={() => undefined}

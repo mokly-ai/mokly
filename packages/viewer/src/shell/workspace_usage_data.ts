@@ -80,7 +80,13 @@ export function usedByUsageLinks(
     if (owner.kind !== "screen" && owner.kind !== "component") return [];
     return generatedViews(owner).flatMap((view) =>
       orderedInstances(view.usage)
-        .filter((instance) => instance.componentId === evidenceEntry.path)
+        .filter(
+          (instance) =>
+            branchPoints(catalogue).usageComponent(
+              instance.componentId,
+              "after",
+            )?.entry.path === evidenceEntry.path,
+        )
         .map((instance) => ({
           entryId: owner.path,
           entryKind: owner.kind,

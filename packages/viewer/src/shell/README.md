@@ -4,9 +4,8 @@
 uses each side's original path for snapshot URLs, including moved variants.
 `catalogue.ts` keeps each paired current entry's branch-point path in
 `previousPaths`: Serve and export pass the accepted pairs to `createCatalogue`,
-and the public viewer reads `previousPath` from the read model. No shell module
-reads those pairs, follows a `variantOf`, or case-folds a path itself:
-reference and parent resolution follow the
+and the public viewer copies `previousPath` from the read model into those
+inputs. Consumers resolve branch-point references and parents through the
 [branch-point lookup contract](../../../../docs/protocol/mokly-branch-point-lookup.md)
 through one lookup.
 `nav_moves.ts`
@@ -20,7 +19,9 @@ projection sets `materialEntries` from each entry's `changes.kind`, and server
 pages read `componentChanges.changedEntries`. The same lookup contract owns
 counterparts for workspace inputs, variants and nested component instances.
 
-`catalogue_branch_point.ts` implements that pure lookup beside `createCatalogue`.
+`../catalogue/branch_point.ts` implements the pure lookup in the catalogue data
+layer. The server projection imports it from `@mokly/viewer/data`. Both
+catalogue readers and the review-result reader supply their own validated inputs.
 `branchPoints(catalogue)` is its one construction point: it indexes a catalogue
 generation on first use and returns the same lookup for that catalogue object
 afterwards. `resolve` requires an explicit before/after side and kind.
@@ -30,6 +31,15 @@ afterwards. `resolve` requires an explicit before/after side and kind.
 without a link, and `parentOf` locates a current entry or removed record first.
 `removedVariants(parent)` lists the removed variants whose parent resolves to
 that entry, in record order. `previousPath` gives only accepted move pairs.
+`usageComponent(name, side)` resolves an instance name to a component parent.
+Removed-record usage uses Before; current-record usage uses Current. The
+stored name stays unchanged. Component lists, Props and `Open component`,
+Highlight labels, and the embedded `Used by` list use that result's title and
+destination. A moved variant pairs nested inputs through its own counterpart,
+even when its current parent did not exist at the branch point. Screens still
+require their own counterpart.
+Historical Components selections open recorded, read-only Props without a
+current frame. Highlight remains disabled for those previews.
 Results retain current entries or complete removed records. The baseline
 inventory is supplied per call from `componentChanges.baseline`; it adds
 same-path and case-only counterparts, while pairs alone prove moved
@@ -37,8 +47,10 @@ counterparts, so the embedded viewer never needs one. Usage links, the variant
 bar, supplied-input pairing, removed tree rows, workspace keys, breadcrumbs,
 details and the public workspace all use it.
 [`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
-fails when a shell or viewer module outside the lookup reads `previousPaths`,
-follows a `variantOf`, or case-folds a path. The shared Git cases in
+checks the shell, embedded viewer, catalogue data helpers and server projection.
+It rejects direct branch-point mapping and usage-name matching outside the
+lookup. Reader validation checks stored strings first. The guard selects the
+same files with either path separator. The shared Git cases in
 [`branch_point_fixture.ts`](../../../../tests/helpers/branch_point_fixture.ts)
 are also accepted by the browser branch hosts.
 

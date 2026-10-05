@@ -55,10 +55,7 @@ function pathReceiver(node: ts.Expression): boolean {
 }
 
 /** Every branch-point mapping a module performs outside the lookup. */
-export function branchPointViolations(
-  source: ts.SourceFile,
-  usageNames = true,
-): string[] {
+export function branchPointViolations(source: ts.SourceFile): string[] {
   const violations: string[] = [];
   const report = (node: ts.Node, rule: string) => {
     const { line } = source.getLineAndCharacterOfPosition(node.getStart());
@@ -84,7 +81,6 @@ export function branchPointViolations(
     )
       report(node, "case-folds a path");
     if (
-      usageNames &&
       ts.isBinaryExpression(node) &&
       [
         ts.SyntaxKind.EqualsEqualsEqualsToken,
@@ -96,14 +92,23 @@ export function branchPointViolations(
       const usageName = (value: ts.Expression) =>
         (ts.isIdentifier(value) ? value.text : readName(value)) ===
         "componentId";
+      const pathOperand = (value: ts.Expression): boolean => {
+        if (ts.isParenthesizedExpression(value))
+          return pathOperand(value.expression);
+        if (
+          ts.isBinaryExpression(value) &&
+          value.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken
+        )
+          return pathOperand(value.left) || pathOperand(value.right);
+        return pathReceiver(value);
+      };
       if (
-        (usageName(node.left) && readName(node.right) === "path") ||
-        (usageName(node.right) && readName(node.left) === "path")
+        (usageName(node.left) && pathOperand(node.right)) ||
+        (usageName(node.right) && pathOperand(node.left))
       )
         report(node, "matches a usage component name outside the lookup");
     }
     if (
-      usageNames &&
       ts.isCallExpression(node) &&
       ts.isPropertyAccessExpression(node.expression) &&
       ["get", "has"].includes(node.expression.name.text) &&

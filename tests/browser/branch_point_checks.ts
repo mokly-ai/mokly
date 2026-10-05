@@ -10,6 +10,11 @@ import type { BranchPointCase } from "../helpers/branch_point_sources.js";
 
 import type { BranchHost, BranchHostKind } from "./branch_hosts.js";
 import {
+  newParentVariant,
+  removedScreenUsage,
+  removedVariantOrder,
+} from "./branch_point_follow_up_checks.js";
+import {
   activateRow,
   compareSideBySide,
   expectHead,
@@ -21,11 +26,6 @@ import {
   search,
   variantBar,
 } from "./branch_point_ui.js";
-
-type BrowserBranchPointCase = Exclude<
-  BranchPointCase,
-  "removed-screen-usage" | "removed-variant-order" | "new-parent-variant"
->;
 
 type Check = (
   page: Page,
@@ -225,7 +225,7 @@ const reusedParent: Check = async (page, host) => {
 
 /** The workspaces whose comparison mode a case carries between siblings. */
 export const BRANCH_POINT_COMPARED: Readonly<
-  Record<BrowserBranchPointCase, readonly string[]>
+  Record<BranchPointCase, readonly string[]>
 > = {
   "moved-consumers": [],
   "moved-parent": [
@@ -235,15 +235,19 @@ export const BRANCH_POINT_COMPARED: Readonly<
   "moved-variant": [],
   "case-renames": ["library/action/primary", "library/Action/secondary"],
   "reused-parent": [],
+  "removed-screen-usage": [],
+  "removed-variant-order": [],
+  "new-parent-variant": [],
 };
 
 /** Every case's checks, keyed by the shared fixture name. */
-export const BRANCH_POINT_CHECKS: Readonly<
-  Record<BrowserBranchPointCase, Check>
-> = {
+export const BRANCH_POINT_CHECKS: Readonly<Record<BranchPointCase, Check>> = {
   "moved-consumers": movedConsumers,
   "moved-parent": movedParent,
   "moved-variant": movedVariant,
   "case-renames": caseRenames,
   "reused-parent": reusedParent,
+  "removed-screen-usage": removedScreenUsage,
+  "removed-variant-order": removedVariantOrder,
+  "new-parent-variant": newParentVariant,
 };

@@ -28,8 +28,6 @@ test("catalogue consumers map branch-point identities only through the lookup", 
     violations.push(
       ...branchPointViolations(
         parse(file, await fs.readFile(path.join(repositoryRoot, file), "utf8")),
-        !file.startsWith("packages/viewer/src/shell/") &&
-          !file.startsWith("packages/viewer/src/viewer/"),
       ),
     );
   assert.deepEqual(violations, []);
@@ -63,6 +61,13 @@ test("the guard recognizes each prohibited mapping and its permitted forms", () 
   ]);
   assert.deepEqual(rules("baselinePath.toLowerCase();"), ["case-folds a path"]);
   assert.deepEqual(rules("instance.componentId === component.path;"), [
+    "matches a usage component name outside the lookup",
+  ]);
+  assert.deepEqual(
+    rules("instance.componentId === (component?.path ?? entry.path);"),
+    ["matches a usage component name outside the lookup"],
+  );
+  assert.deepEqual(rules("parent.previousPath === instance.componentId;"), [
     "matches a usage component name outside the lookup",
   ]);
   assert.deepEqual(rules("byPath.get(instance.componentId);"), [
