@@ -1,7 +1,8 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
-Status: Active until the pull request merges. Created 2026-10-02 with the
-user's consent. Milestones 1–7 and all lettered milestones through 7D are
+Status: Completed. [PR #131](https://github.com/mokly-ai/mokly/pull/131)
+merged on 2026-10-05. Created 2026-10-02 with the user's consent.
+Milestones 1–7 and all lettered milestones through 7D are
 complete, including main integration, viewer integration and file-length
 compliance. Milestone 8 implementation, verification and the fresh
 implementation review are complete. On 2026-10-04 the user approved the
@@ -22,7 +23,7 @@ This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
-listed as history.
+as completed history.
 
 **Goal:** Replace the two placement-and-identity fields on every entry, the
 global `id` and the `navPath` label list, with one path derived from the

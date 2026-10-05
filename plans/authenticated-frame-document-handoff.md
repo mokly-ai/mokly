@@ -1,5 +1,8 @@
 # Authenticated Frame Document Handoff
 
+Status: Completed. [PR #99](https://github.com/mokly-ai/mokly/pull/99)
+merged on 2026-09-21.
+
 Close the medium review finding recorded against Milestones 13 and 14 of the
 [React Browse Shell plan](./react-browse-shell.md#review-record): the
 same-origin adapter installs its provisional navigation receiver on any
@@ -126,7 +129,7 @@ the implementation has a complete contract, and record the plan.
       adapter paragraph in
       [`packages/viewer/src/client/README.md`](../packages/viewer/src/client/README.md)
       to describe the identity transfer and name the new module.
-- [x] Add this plan to the active list in [`plans/README.md`](./README.md)
+- [x] Add this plan to the active list in `plans/README.md`
       and note in the React Browse Shell review record that the Milestone 13
       and 14 finding is tracked here.
 - [x] Validate the changed Markdown with `npm run format:check` and review the

@@ -1,5 +1,9 @@
 # Route-Scoped Shell Bootstrap
 
+Status: Completed. [PR #120](https://github.com/mokly-ai/mokly/pull/120)
+merged on 2026-10-02. Two Low findings in the [review record](#review-record)
+remain deferred for the user's decision.
+
 Make every `mokly serve` page carry the catalogue index plus only the component
 usage its own route renders, instead of every screen's usage, and stop
 re-serialising that embedded state on every render. The public
@@ -185,7 +189,7 @@ completely before any code changes.
       [`src/client/README.md`](../src/client/README.md),
       [`src/server/README.md`](../src/server/README.md) and
       [`src/export/README.md`](../src/export/README.md).
-- [x] Add this plan to the active list in [`plans/README.md`](./README.md).
+- [x] Add this plan to the active list in `plans/README.md`.
 - [x] Validate the changed Markdown with `npm run format:check`, run
       `npm run prepare:verification` and the complete `npm run test:prepared`
       unit suite, and review the diff. Documentation-only work does not require

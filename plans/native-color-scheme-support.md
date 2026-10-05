@@ -1,5 +1,8 @@
 # Native Color Scheme (Dark Mode) Support
 
+Status: Completed. [PR #26](https://github.com/mokly-ai/mokly/pull/26)
+merged on 2026-08-07.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: use
 > superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use

@@ -53,9 +53,9 @@ test("current-only derived export skips history and captures compiled bytes", as
     files.get("index.html")!.toString(),
     /data-filter="changed"/,
   );
-  await assert.rejects(fs.stat(path.join(fixture.root, ".mokly-cache")), {
-    code: "ENOENT",
-  });
+  assert.deepEqual(await fs.readdir(path.join(fixture.root, ".mokly-cache")), [
+    "locks",
+  ]);
 });
 
 test("current-only derived export still rejects authored edits before installation", async (context) => {

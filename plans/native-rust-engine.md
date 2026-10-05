@@ -150,8 +150,8 @@ Define the complete native boundary before any code.
       `src/engine/` are added when those directories exist.
 - [x] Add the new document to `docs/protocol/README.md` and list the supported
       platforms in `docs/guides/start/install.md`.
-- [x] Add this plan to `plans/README.md` (done at creation) and keep its Status
-      current.
+- [x] Keep this plan's `Status:` paragraph current; there is no plans index
+      file.
 - [x] Record the 2026-10-05 measurements in `tests/fixtures/large/README.md`
       and point the diagnostic contract at them.
 - [x] Validate Prettier, links, anchors, protocol sizes, and the

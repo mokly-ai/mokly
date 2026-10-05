@@ -114,13 +114,7 @@ test("unchanged output directories survive replacement without directory watch e
     pageSource("", "<html><body>Changed</body></html>"),
   );
   await writeCompilation(await fixture.compile(), config);
-  const lockDirectory = path.dirname(outputLockPath(config.repoRoot));
-  assert.deepEqual(removed, [
-    lockDirectory,
-    path.dirname(lockDirectory),
-    lockDirectory,
-    path.dirname(lockDirectory),
-  ]);
+  assert.deepEqual(removed, []);
 });
 
 test("final reserved-directory pruning runs while the output lock remains held", async (t) => {

@@ -1,5 +1,10 @@
 # Derived Baselines
 
+Status: Completed. [PR #70](https://github.com/mokly-ai/mokly/pull/70)
+merged on 2026-09-15.
+[Derived Baseline Review Fixes](./derived-baseline-review-fixes.md) fixes
+three of its review findings; the rest await the user's decision.
+
 ## Summary
 
 Stop committing generated HTML and the generated manifest for catalogues that

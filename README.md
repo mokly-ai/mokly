@@ -297,7 +297,7 @@ platforms, the loader, and every operation.
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [Native engine contract](./docs/protocol/mokly-native-engine.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
-- [Implementation plans](./plans/README.md)
+- [Implementation plans](./plans/)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents

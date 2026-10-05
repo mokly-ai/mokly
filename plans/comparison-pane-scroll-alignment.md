@@ -1,5 +1,10 @@
 # Comparison Pane Scroll Alignment
 
+Status: Completed. [PR #121](https://github.com/mokly-ai/mokly/pull/121)
+merged on 2026-09-27. Milestone 7 shipped in that PR, but its post-push review
+was not recorded before the merge. Earlier review findings in the
+[review record](#review-record) await the user's decision.
+
 Overlay and Difference compare two versions of a screen by stacking the Before
 and Current snapshots on top of each other. Today each snapshot is its own
 scrollable iframe, so scrolling over the stack moves only the top layer and the
@@ -324,7 +329,7 @@ the following milestones have a complete contract, and register the plan.
       to describe the shared presentation loader and the aligned pane modules
       planned in Milestones 3 and 4.
 - [x] Add the new contract to the [protocol index](../docs/protocol/README.md)
-      and this plan to the active list in [`plans/README.md`](./README.md).
+      and this plan to the active list in `plans/README.md`.
 - [x] Validate the changed Markdown with `npm run format:check` and review the
       diff; documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
@@ -815,7 +820,8 @@ anchors to regions first, and prove both in the browser.
       region fixtures in `tests/helpers/comparison_repository.ts`, and give the
       embedded test entry `removed_preview_viewer_entry.tsx` a source
       replacement hook so the mount-scoped choice is proved across it.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+      Pushed as `5c372c6` and merged in PR #121.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the

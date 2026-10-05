@@ -1,9 +1,11 @@
 # Path-Only Evidence Stays Out Of Changes
 
-Status: Milestones 1–9 are complete and findings 3–6 are fixed; finding 2 is
+Status: Completed. [PR #123](https://github.com/mokly-ai/mokly/pull/123)
+merged on 2026-09-30. It replaced PR #118, which closed unmerged.
+Milestones 1–9 are complete and findings 3–6 are fixed; finding 2 is
 superseded by [Configurable Changes Listing](./configurable-changes-listing.md),
 Milestones 10–11 fixed findings 7 and 8, and findings 9–11 await the user's
-decision. The plan stays Active until PR #118 merges. Created
+decision. Created
 2026-09-25 with the user's consent (option B of
 finding 1 raised while reviewing the PR #118 preview). Implemented on the
 `calummoore/halifax-v2` branch alongside
