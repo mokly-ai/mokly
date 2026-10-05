@@ -275,6 +275,8 @@ cargo xtask check
   serializes every generated-output transaction across processes. Callers that
   must read the tree they wrote use `withOutputLock` with
   `writeLockedCompilation`; waiters reclaim only provably stopped holders.
+  Release removes only the lock file and keeps `.mokly-cache/locks/`, so it
+  never races another writer that is creating its lock there.
 
 See [paths](../../docs/protocol/mokly-paths.md),
 [entry modules](../../docs/protocol/mokly-entry-modules.md),
