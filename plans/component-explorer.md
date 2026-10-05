@@ -1,7 +1,8 @@
 # Component Explorer
 
-Status: completed; the design feedback and component runtime are implemented,
-verified, committed, pushed, and reviewed. Milestone 4h audited all 112 design
+Status: Completed. [PR #48](https://github.com/mokly-ai/mokly/pull/48)
+merged on 2026-09-10. The design feedback and component runtime are
+implemented, verified, committed, pushed, and reviewed. Milestone 4h audited all 112 design
 artboards and corrected the divider and comparison eligibility. The public API,
 saved pages, attribution, inspection, static export and local controls are
 delivered. Review follow-ups remain for the user's decision in the

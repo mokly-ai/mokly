@@ -1,5 +1,11 @@
 # Mokly Viewer Library
 
+Status: Completed. [PR #76](https://github.com/mokly-ai/mokly/pull/76)
+merged on 2026-09-16. Viewer 0.1.0 and CLI 0.10.0 are published.
+[Viewer Comment Anchoring](./viewer-comment-anchoring.md) fixes the Milestone 11
+P2 review finding. The published-package checks in the post-merge follow-up
+remain open.
+
 Extract Browse into a separately published `@mokly/viewer` React package that
 Mokly Cloud can mount around cross-origin screen frames, and promote the public
 contracts it depends on: component-instance identity, a versioned catalogue read

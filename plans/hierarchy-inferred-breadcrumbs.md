@@ -1,5 +1,10 @@
 # Hierarchy-Inferred Breadcrumbs
 
+Status: Completed. [PR #29](https://github.com/mokly-ai/mokly/pull/29)
+merged on 2026-08-25.
+[Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) later replaced its
+collection forest.
+
 **Goal:** Make collection membership the single source of truth for structured
 catalogue navigation and breadcrumbs, so Mokabook authors never provide a
 separate `navPath` that can drift from the hierarchy.

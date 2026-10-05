@@ -1,5 +1,9 @@
 # Review Fix Follow-ups
 
+Status: Completed. [PR #70](https://github.com/mokly-ai/mokly/pull/70)
+merged on 2026-09-15. The four findings of its review, recorded below, await
+the user's decision.
+
 ## Summary
 
 Address the four findings from the

@@ -1,5 +1,11 @@
 # React Browse Shell
 
+Status: Completed. [PR #95](https://github.com/mokly-ai/mokly/pull/95)
+merged on 2026-09-21. The Milestone 9 manual smoke test was not recorded
+before the merge. Milestone 12 fixes the Milestone 11 review finding, and
+[Authenticated Frame Document Handoff](./authenticated-frame-document-handoff.md)
+closes the Milestone 13 finding.
+
 Make Browse one hydrated React application. Today the shell TSX under
 `packages/viewer/src/shell` is rendered to strings on the server, and a
 separate vanilla runtime under `packages/viewer/src/client` owns every

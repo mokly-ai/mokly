@@ -1,5 +1,9 @@
 # Derived Baseline Review Fixes
 
+Status: Completed. [PR #70](https://github.com/mokly-ai/mokly/pull/70)
+merged on 2026-09-15. [Review Fix Follow-ups](./review-fix-followups.md)
+fixes the four findings of its review.
+
 ## Summary
 
 Address three findings from the
