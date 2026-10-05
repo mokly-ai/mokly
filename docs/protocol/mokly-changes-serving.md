@@ -91,6 +91,13 @@ disk and in artifacts; the viewer's script-disabled
 [presentation](./mokly-comparison-panes.md#presentation) applies only in
 memory.
 
+The pre-scan for changed generated references only selects move resources.
+It leaves invalid references to ordinary resource validation and keeps that
+validation's diagnostic order. It does not accept an invalid resource URL.
+Committed resource-only classification skips this pre-scan for a same-route
+view whose output path did not change. Derived and complete comparisons still
+inspect every paired view.
+
 `review.json` is the normative machine-readable result. Its screen records are:
 
 ```ts

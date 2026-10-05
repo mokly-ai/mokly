@@ -125,6 +125,7 @@ export type {
   SnapshotSide,
   ViewRouteKind,
 } from "./navigation/routes.js";
+export { reviewSnapshotViewPath } from "./navigation/review_snapshot.js";
 export type {
   ReviewEntryAddress,
   ScreenReviewV5,

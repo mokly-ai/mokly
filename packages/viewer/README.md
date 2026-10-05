@@ -369,7 +369,9 @@ automatically hydrates a matching standalone Mokly document.
 `@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
 `viewRoute`, `documentRoute`, `viewHref`, `parseViewHref`,
 `snapshotViewPath`, `snapshotDocumentPath`, `snapshotSidePath`,
-`snapshotResourcePath`, and `previewMetadataPath`. Entry helpers take a path;
+`snapshotResourcePath`, `reviewSnapshotViewPath`, and `previewMetadataPath`.
+`reviewSnapshotViewPath(side, record, view)` uses only that side's recorded entry
+path and fails if the side is missing. Entry helpers take a path;
 `snapshotSidePath` takes a side, and `snapshotResourcePath` takes a side and
 resource path. `viewHref` returns the canonical `/view/<path>/` URL and `parseViewHref` reads
 the canonical, extensionless, and `index.html` forms of that URL back into a
@@ -568,6 +570,9 @@ consumers.
 - [`src/catalogue`](./src/catalogue) — public catalogue types and validation
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared entry,
   view, snapshot, preview, shell-URL, and browser-path derivation
+- [`src/navigation/review_snapshot.ts`](./src/navigation/review_snapshot.ts) —
+  `reviewSnapshotViewPath` names a review document from its recorded side path,
+  including the baseline spelling after a case-only rename
 - [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
   ordering shared by review producers and readers
 - [`src/shell/catalogue_branch_point.ts`](./src/shell/catalogue_branch_point.ts) —

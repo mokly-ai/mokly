@@ -3,10 +3,10 @@ import type { ServerResponse } from "node:http";
 import path from "node:path";
 
 import {
-  generatedViews,
   parseReviewResult,
+  reviewSnapshotViewPath,
   snapshotSidePath,
-  snapshotViewPath,
+  viewRoute,
 } from "@mokly/viewer/data";
 import type { ReviewResult } from "@mokly/viewer/data";
 
@@ -55,21 +55,21 @@ export class PublicReviewAliases {
       result.baseRef !== source.baseRef
     )
       return;
-    for (const entry of source.after.entries) {
-      if (entry.kind !== "screen" && entry.kind !== "component") continue;
-      for (const view of generatedViews(entry)) {
-        const bytes = files.get(
-          snapshotViewPath(
-            "after",
-            entry.path,
-            view.viewport,
-            view.colorScheme,
-          ),
-        );
+    const records = [
+      ...result.screens,
+      ...result.components.flatMap((component) => component.variants),
+    ];
+    for (const record of records) {
+      if (!record.after) continue;
+      for (const view of record.views) {
+        if (view.state === "removed") continue;
+        const bytes = files.get(reviewSnapshotViewPath("after", record, view));
         if (
           !bytes ||
           createHash("sha256").update(bytes).digest("hex") !==
-            source.headDigests[view.path]
+            source.headDigests[
+              viewRoute(record.after.path, view.viewport, view.colorScheme)
+            ]
         )
           return;
       }

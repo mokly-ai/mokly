@@ -106,7 +106,9 @@ membership from visual comparisons or invent empty usage for unfinished views.
 Any classifier failure, including in a screen-only catalogue, is logged and
 publishes Changes unavailable; there is no secondary comparison fallback.
 `public_review.ts` adds content-addressed aliases for matching complete explicit
-comparisons, verifying snapshot bytes against accepted input digests. Selected
+comparisons, verifying snapshot bytes against accepted input digests. It walks
+review records with an after side and uses `reviewSnapshotViewPath` for each
+available after view. Selected
 comparisons leave the catalogue pointer null. Public aliases never regenerate or
 redirect to another generation; invalidation clears the pointer, and retained
 aliases continue to serve their original generation. These updates add no shell

@@ -1,39 +1,22 @@
 import {
   reviewInvalid,
+  reviewSnapshotViewPath,
   snapshotSidePath,
-  snapshotViewPath,
 } from "@mokly/viewer/data";
-import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
+import type { ReviewArtifact } from "@mokly/viewer/data";
 
 import { referencedRoutes } from "./asset_references.js";
 import { normalizeReviewPair } from "./ignore.js";
 
 /** Check graph-backed evidence against the actual retained snapshots before publication. */
 export function validateArtifactResources(artifact: ReviewArtifact): void {
-  const views: {
-    path: string;
-    previousPath?: string;
-    kind: "component" | "screen";
-    view: ViewReview;
-  }[] = [
+  const views = [
     ...artifact.result.screens.flatMap((screen) =>
-      screen.views.map((view) => ({
-        path: screen.path,
-        ...(screen.previousPath ? { previousPath: screen.previousPath } : {}),
-        kind: "screen" as const,
-        view,
-      })),
+      screen.views.map((view) => ({ record: screen, view })),
     ),
     ...artifact.result.components.flatMap((entry) =>
       entry.variants.flatMap((variant) =>
-        variant.views.map((view) => ({
-          path: variant.path,
-          ...(variant.previousPath
-            ? { previousPath: variant.previousPath }
-            : {}),
-          kind: "component" as const,
-          view,
-        })),
+        variant.views.map((view) => ({ record: variant, view })),
       ),
     ),
   ];
@@ -57,16 +40,11 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
     const beforePath =
       view.state === "added"
         ? undefined
-        : snapshotViewPath(
-            "before",
-            item.previousPath ?? item.path,
-            view.viewport,
-            view.colorScheme,
-          );
+        : reviewSnapshotViewPath("before", item.record, view);
     const afterPath =
       view.state === "removed"
         ? undefined
-        : snapshotViewPath("after", item.path, view.viewport, view.colorScheme);
+        : reviewSnapshotViewPath("after", item.record, view);
     const before = beforePath ? text(beforePath) : undefined;
     const after = afterPath ? text(afterPath) : undefined;
     const normalized = normalizeReviewPair(

@@ -18,8 +18,10 @@ and `previewMetadataPath(path)` for a page, confined to that comparison
 generation. Pages use the light `snapshotDocumentPath`; Markdown documents use
 each historical scheme. `content.ts` derives these paths, and selection loads
 only the requested document scheme, with a light fallback.
-Screen documents use `snapshotViewPath("before", ...)` only for views whose
-review state is `removed`; review v5 carries no stored before/after paths.
+Screen documents use `reviewSnapshotViewPath("before", record, view)` only for
+views whose review state is `removed`. Review v5 records each side's own entry
+path; it carries no snapshot file names. The helper uses the before address
+without substituting the current path or `previousPath`.
 Before accepting either kind, the request recomputes the selected historical
 identity from the metadata's baseline commit. A generation-backed selection
 must resolve from the immutable generation named by request and final response.

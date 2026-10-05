@@ -67,7 +67,7 @@ export async function inspectConsumerExport(
   const review = JSON.parse(await read(comparison));
   assert.equal(review.baseRef, base);
   assert.equal(review.schemaVersion, schemaVersion);
-  const { snapshotViewPath } = await import(
+  const { reviewSnapshotViewPath } = await import(
     pathToFileURL(path.join(root, "node_modules/@mokly/viewer/dist/data.js"))
       .href
   );
@@ -89,12 +89,7 @@ export async function inspectConsumerExport(
             ? ["before"]
             : ["before", "after"];
       for (const side of sides) {
-        const snapshot = snapshotViewPath(
-          side,
-          entry.path,
-          view.viewport,
-          view.colorScheme,
-        );
+        const snapshot = reviewSnapshotViewPath(side, entry, view);
         snapshotsChecked++;
         assert.ok(
           files.includes(

@@ -135,6 +135,7 @@ export async function classifyChangedContent(
         manifest.entries,
         baseReader,
         headReader,
+        derived ? undefined : publicChanges,
       )
     ).paired(baseline.entries, manifest.entries, moves);
   const links = catalogueLinkNormalizer(
