@@ -4,9 +4,9 @@ Status: Active. Implementation is complete, including the reference example,
 Static/Live parity and static-output regression coverage. Serve Rebuild Status
 Milestone 4 closes final review finding 1. Milestone 11 fixes finding 3
 (forwarded catalogue origins, option A). Milestone 12 integrates main's path
-identity and Markdown contracts. Awaiting a decision: finding 2 (`asChild`
-controls that ignore `onClick`) and the Milestone 11 review's Medium finding
-(IPv6 catalogue origins cannot frame Live). Close this plan when its PR merges.
+identity and Markdown contracts. Its post-push review records five open
+findings below, including the four earlier findings from this plan and Serve
+Rebuild Status. No review fixes are applied. Close this plan when its PR merges.
 
 ## Summary
 
@@ -885,7 +885,7 @@ has the same Origin rule, so prop edits fail there too.
       `frame-ancestors` entry and blocks both Live frames. Both reverse-proxy
       browser tests and 347 focused tests passed.
 
-## Milestone 12: Integrate main's path identity contract
+## Milestone 12: Integrate main's path identity contract — completed
 
 Merge `781da7ae3261e6694a5ef5608a91f3e34061f6d0` into source tip
 `4cecfa5a2c5312d3592cb5eac63a8aab98fce005`. The merge base is
@@ -928,11 +928,99 @@ two parents.
       packages pass all six consumer scenarios. Build and example checks pass
       with 524 generated files. The focused regressions and mobile/desktop
       Live smoke checks also pass. Generated output remains ignored.
-- [ ] Audit every resolution and main deletion; stage all authored files,
+- [x] Audit every resolution and main deletion; stage all authored files,
       commit with two parents, inspect every remerge-diff path and push.
-- [ ] Review after the push with `docs/implementation-review-prompt.md`
+      Merge `37ccdbcd930656a2018c49b6dd53e706d1735ce4` has exactly two
+      parents: `4cecfa5a` and `781da7ae`. All 247 remerge-diff paths were
+      inspected before the push. No main feature was lost. No file is deleted
+      relative to main. All authored files are tracked. The remote branch
+      `calummoore/denpasar-v4` was verified at the merge commit after the push.
+- [x] Review after the push with `docs/implementation-review-prompt.md`
       against `origin/main`. Report findings and recommendations without
       changing the implementation.
+      Reviewed `37ccdbcd` against `781da7ae` after the push. The review covered
+      the full branch diff of 449 paths, including Live, rebuild status,
+      source capture, server lifecycle, viewer state, examples, tests and docs.
+      The review confirmed four earlier findings and one new lifecycle finding.
+      Findings remain open for the user's decision. Only this review record
+      changes after the completed code checks.
+
+### Post-push review
+
+1. **Medium: Closing Serve leaves an active Live compilation running.**
+   [Live server close](../src/interactive/server.ts), line 143, closes the
+   listener and connections but does not close the bundle service. A controlled
+   compiler remained active after the real app and Live server had closed:
+   its abort signal was false and its preparation promise was still pending.
+   A programmatic caller can therefore finish shutdown while compiler work
+   still uses resources and retains the accepted source capture. A stalled
+   compiler can keep this work alive indefinitely.
+   Option A: give the generation and bundle services an explicit close method.
+   Abort both retained generations, drain their work, and reject late state
+   callbacks. Add a shutdown test with a pending compiler.
+   Option B: document that callers must wait for every compilation before
+   closing Serve. Recommend A. Lifecycle ownership belongs in the service;
+   a caller rule does not protect every shutdown or failure path.
+
+2. **Medium: Some child controls cannot navigate in Live.**
+   [MockLink child adapter](../src/authoring/links.tsx), line 126, adds only
+   an `onClick` prop to a child component. A child that does not forward that
+   prop renders a button with no navigation handler. The browser reproduction
+   mounted Live successfully. Clicking such a child emitted zero navigation
+   events; the equivalent native button emitted one. Without a change, controls
+   supported by the Static child adapter can stop navigating in Live.
+   Option A: add shared DOM-level child link handling and browser coverage for
+   children that ignore event props, including disabled controls.
+   Option B: require every consumer child to forward `onClick` and document
+   that narrower Live contract. Recommend A. It protects the existing public
+   child-control contract instead of fixing only the example control.
+
+3. **Medium: Accepted IPv6 catalogue origins cannot frame Live.**
+   [Origin validation](../src/http_origin.ts), line 21, accepts bracketed IPv6
+   addresses. [The Live frame policy](../src/interactive/server_router.ts),
+   line 225, inserts that value into `frame-ancestors`. Chrome rejected an
+   iframe from an accepted `http://[::1]:<port>` parent in the reproduction.
+   Without a change, users can start Serve with an accepted origin but cannot
+   use Live through it.
+   Option A: validate catalogue origins against the browser frame policy when
+   Live is enabled. Reject unsupported literal origins early and direct users
+   to a hostname. Add a real browser test at this boundary.
+   Option B: document the hostname workaround while keeping the current
+   accepted input range. Recommend A. A shared origin capability check and
+   browser regression protect all entry points; a string-format test is not
+   sufficient. Do not broaden the ancestor policy with a wildcard.
+
+4. **Medium: Repository-linked React packages block Live compilation.**
+   [The Live source guard](../src/interactive/source_resolution.ts), line 117,
+   rejects a repository file loaded outside the saved resolution namespace.
+   The React peer resolver runs before source capture and selects such files
+   directly. A fixture with `node_modules/react` linked to `packages/react`
+   accepted its Static runtime, then Live failed with `source-not-captured`
+   for `packages/react/jsx-runtime.js`. Without a change, this supported package
+   layout cannot use Live.
+   Option A: share the peer-ownership rule across React resolution, source
+   capture and the Live load guard. Keep one React instance and the documented
+   unpinned peer behavior. Add linked-peer tests for Node and browser builds.
+   Option B: reject repository-linked peers explicitly and document that limit.
+   Recommend A. A shared rule fixes the boundary mismatch without weakening
+   source protection for other linked repository packages.
+
+5. **Low: Error details retain absolute paths after field names.**
+   [Failure path rewriting](../src/server/rebuild_status_detail.ts), line 120,
+   tests a whole token for a leading path. Both `path=/private/example.ts` and
+   `path=file:///private/example.ts` pass through unchanged in the reproduction.
+   Without a change, the browser's error detail can expose machine paths that
+   the documented sanitizer must remove.
+   Option A: recognize path boundaries after field names and punctuation.
+   Add table-driven cases for POSIX paths, Windows paths and file URLs.
+   Option B: replace consumer failure detail with fixed product text.
+   Recommend A. A common path scanner preserves useful error details and
+   covers more formats than a special case for the text `path=`.
+
+The four earlier findings are items 2 to 5. Item 1 is new. The checked code
+remains unchanged. The full gate passed, but these focused review reproductions
+show gaps in the existing regression coverage. Browser reproductions used the
+installed Chrome on Linux; this review did not run Safari or a native Mac.
 
 ### Resolution record
 
