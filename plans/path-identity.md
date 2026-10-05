@@ -13,8 +13,10 @@ those fixes and end with a new review. Milestones 9–12 are complete. Milestone
 the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. Milestones 14–17
 are complete, including a third fresh review whose six findings, and four
 items found during Milestone 16, are in the
-[review record](../docs/reviews/path-identity.md#third-review). They and the
-other ten second-review findings await the user's decision.
+[review record](../docs/reviews/path-identity.md#third-review). On 2026-10-05
+the user approved a shared console rule for third-review finding 9, which
+failed the pull request's CI; Milestone 18 delivers it. The other third-review
+items and the ten undecided second-review findings await the user's decision.
 This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
@@ -2580,6 +2582,61 @@ is intentionally unticked; the implementation agent did not run it.
 No file was deleted in this milestone. All 18 main-relative deletions are
 the previously approved path identity replacements; they are listed with
 reasons in the close-out commit body.
+
+## Milestone 18: Sandboxed-frame console reports in browser checks
+
+Fix third-review finding 9, which failed the CI run for pull request #131.
+The previous-version frames contain no script. Playwright's trace recorder
+tries to run a script in each frame, and Chrome reports the block in the
+sandboxed `about:srcdoc` frames. The hydration helper accepted that report
+only from `/static/` frames. On 2026-10-05 the user approved one shared rule:
+the report from a viewer-owned sandboxed frame is expected, and every other
+console error stays a failure. The
+[review record](../docs/reviews/path-identity.md#approved-third-follow-up)
+has the evidence.
+
+Status: Implementation complete. The fresh review runs after the push.
+
+- [x] Write a failing test first.
+      `tests/browser/removed_preview_script_hydration.spec.ts` deletes a screen
+      whose render holds an inline script. In Serve and export, the removed
+      screen's previous version keeps the script in its sandboxed `srcdoc`
+      frame, the script does not run, and hydration must stay clean. Before
+      the fix, both cases failed on the blocked-script report. The real
+      `billing/invoice/paid` route failed 13 of 50 runs with tracing on.
+- [x] Add `tests/browser/console_notices.ts`, the one rule for Chrome's
+      blocked-script report from viewer-owned sandboxed frames: stage views
+      under `/static/`, temporary renders under `/__mokly/components/renders/`,
+      and `about:srcdoc` previous versions. Cover it with
+      `tests/console_notices.test.ts`.
+- [x] Use the rule in every browser check that fails on console errors: the
+      hydration helper, `react_host_capabilities.spec.ts` (which accepted every
+      sandbox report), `react_shell_smoke.spec.ts` (which accepted every error
+      from `/static/`), and `moved_rows.ts` (which accepted every message that
+      named a sandbox). `removed_previews_viewer.spec.ts` and
+      `viewer_hydration.spec.ts` read only CSP or hydration messages, so they
+      keep their own filters.
+- [x] State the rule in `docs/protocol/ci-verification.md`, and record the
+      cause and the approved fix in the review record.
+- [x] Verify. The new test passes in both hosts. The `billing/invoice/paid`
+      route passes 50 of 50 runs with tracing on. The full
+      `moved_hydration.spec.ts` (22 tests) and every chromium spec that uses
+      the changed helpers (36 tests) pass. Type checks, ESLint, and Prettier
+      pass. Logs are in `.context/m18/`.
+- [ ] Run the unmodified `cargo xtask check`. On the orchestrator's machine
+      it passed the repository checks, ratchets, Rust checks, package checks,
+      all 4,216 unit tests, and every browser test except the 14 that share
+      the `ordinaryPreview` fixture. That fixture exceeded its fixed 300 s
+      setup limit there, also when run alone (third-review item 8). It uses
+      no file that this milestone changes, and the pull request's first CI
+      run passed it. The gate stops at that suite, so the full hydration
+      suite ran separately and passed all 263 tests. The pull request's CI
+      run on the pushed commit is the complete check.
+- [ ] Commit and push.
+- [ ] After the push, a fresh reviewer uses
+      `docs/implementation-review-prompt.md` against the complete diff from
+      `origin/main`, focused on this milestone, and reports findings without
+      changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 

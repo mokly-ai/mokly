@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { expectedConsoleNotice } from "./console_notices.js";
 import { startStaticFixture } from "./static_fixture.js";
 
 let exported: Awaited<ReturnType<typeof startStaticFixture>>;
@@ -109,11 +110,8 @@ async function delayHost(page: Page): Promise<{
 function captureErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() !== "error") return;
-    const sandboxDiagnostic =
-      message.text().includes("document's frame is sandboxed") &&
-      message.text().startsWith("Blocked script execution in");
-    if (!sandboxDiagnostic) errors.push(message.text());
+    if (message.type() === "error" && !expectedConsoleNotice(message))
+      errors.push(message.text());
   });
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;

@@ -2,6 +2,8 @@
 
 import { expect, type Page } from "@playwright/test";
 
+import { expectedConsoleNotice } from "./console_notices.js";
+
 export const INVOICE = "account/billing/invoice";
 export const ACTION = "ui/action";
 
@@ -18,7 +20,7 @@ export function dot(page: Page, entry: string): Promise<string> {
 }
 
 /**
- * Console errors other than the sandboxed previews' blocked scripts and the
+ * Console errors other than the viewer's expected sandbox reports and the
  * embedded viewer's host page asking for a favicon it does not serve.
  */
 export function consoleErrors(page: Page): string[] {
@@ -26,7 +28,7 @@ export function consoleErrors(page: Page): string[] {
   page.on("console", (message) => {
     if (
       message.type() === "error" &&
-      !/sandboxed/u.test(message.text()) &&
+      !expectedConsoleNotice(message) &&
       !message.location().url.endsWith("/favicon.ico")
     )
       errors.push(message.text());

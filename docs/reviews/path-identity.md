@@ -661,3 +661,27 @@ references their own type; and extend the guard to those layers.
 The UI reviewer did not run the full suites, because their hosts bind ports
 outside its allowed range. The Codex reviewer ran them, and they passed. No
 test covers findings 1 to 6.
+
+### Approved Third Follow-up
+
+On 2026-10-05, the CI run for pull request #131 failed on finding 9. The
+orchestrator found the cause. The previous-version frames contain no script.
+Playwright records a trace for every test (`trace: "retain-on-failure"`), and
+its trace recorder tries to run a script in each frame. Chrome blocks that
+script in the sandboxed `about:srcdoc` frames and logs the report. The
+hydration helper accepted the report only from `/static/` frames. In 50 runs
+with tracing on, 23 failed; with tracing off, none failed. Option A above
+(remove scripts before framing) therefore cannot fix it.
+
+The user approved a new option: treat Chrome's report from the viewer's own
+sandboxed frames as expected, in one shared rule for every browser check, and
+keep every other console error a failure. The removed-preview contract
+disables scripts in those frames by design. The
+[plan](../../plans/path-identity.md) delivers this in Milestone 18.
+
+| Finding | Outcome                                                                                                                                                                                                                | Covering tests                                                                                                                                                                                                                                                                                                                                                                         |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 9       | Fixed in Milestone 18: [`console_notices.ts`](../../tests/browser/console_notices.ts) owns the rule. The hydration helper, `react_host_capabilities.spec.ts`, `react_shell_smoke.spec.ts`, and `moved_rows.ts` use it. | [`removed_preview_script_hydration.spec.ts`](../../tests/browser/removed_preview_script_hydration.spec.ts) (a removed screen whose previous version keeps a blocked script; it failed before the fix in both hosts), [`console_notices.test.ts`](../../tests/console_notices.test.ts), and 50 of 50 runs of the `billing/invoice/paid` route with tracing on (13 of 50 failed before). |
+
+The other findings of the third review, and the ten undecided second-review
+findings, still await the user's decision.
