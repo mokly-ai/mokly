@@ -1,9 +1,7 @@
 /** Resolve historical documents only inside the accepted preview generation. */
 import { encodeUrlPath } from "../data/paths.js";
-import {
-  snapshotDocumentPath,
-  snapshotViewPath,
-} from "../navigation/routes.js";
+import { reviewSnapshotViewPath } from "../navigation/review_snapshot.js";
+import { snapshotDocumentPath } from "../navigation/routes.js";
 import { parseRemovedPagePreview } from "../review/page_preview.js";
 import { parseReviewResult } from "../review/result_validation.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
@@ -35,14 +33,7 @@ export function screenContent(
           {
             colorScheme: view.colorScheme,
             url: new URL(
-              encodeUrlPath(
-                snapshotViewPath(
-                  "before",
-                  data.path,
-                  view.viewport,
-                  view.colorScheme,
-                ),
-              ),
+              encodeUrlPath(reviewSnapshotViewPath("before", screen, view)),
               base,
             ).href,
             viewport: view.viewport,

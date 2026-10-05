@@ -36,10 +36,6 @@ export function pairedResourceRoutes(
   for (const head of after) {
     const base = bases.get(moveIdentity(head));
     if (!base) continue;
-    offer(
-      `mokly-generated/styles/${base.sourcePath}.css`,
-      `mokly-generated/styles/${head.sourcePath}.css`,
-    );
     for (const view of moveDocuments(base)) {
       const other = moveDocuments(head).find(
         (candidate) => candidate.key === view.key,

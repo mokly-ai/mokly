@@ -11,9 +11,10 @@ import {
 } from "../asset_references.js";
 import type { ReviewAssetReader } from "../assets.js";
 
-import { moveDocuments } from "./content.js";
+import { moveResourceCandidates } from "./resource_candidates.js";
+import { historicalResourceRoutes } from "./resource_presence.js";
 import { pairedResourceRoutes } from "./resource_routes.js";
-import { moveIdentity, type EntryMove } from "./types.js";
+import type { EntryMove } from "./types.js";
 
 export type MoveSide = "before" | "after";
 
@@ -34,6 +35,7 @@ export class MoveResources {
       string,
       ReadonlySet<string>
     > = new Map(),
+    private readonly existingHeadRoutes: ReadonlySet<string> = new Set(),
   ) {
     this.before = resourceDigests(baseBytes);
     this.after = resourceDigests(headBytes);
@@ -75,6 +77,7 @@ export class MoveResources {
       ),
       this.baseViews,
       this.headViews,
+      this.existingHeadRoutes,
     );
   }
 
@@ -108,9 +111,12 @@ export class MoveResources {
   /** Only accepted, byte-equivalent moved routes suppress dependency and shared-impact paths. */
   unchangedPaths(prefix: string): ReadonlySet<string> {
     return new Set(
-      [...this.equal.values()].map((route) =>
-        prefix ? `${prefix}/${route}` : route,
-      ),
+      [...this.equal.values()]
+        .filter(
+          (route) =>
+            !this.existingHeadRoutes.has(route) && !this.baseBytes.has(route),
+        )
+        .map((route) => (prefix ? `${prefix}/${route}` : route)),
     );
   }
 
@@ -130,41 +136,43 @@ export class MoveResources {
   }
 }
 
-/** Read move-candidate generated resources once through the confined asset boundary. */
+/** Retain resources for moves and paired views with different generated references. */
 export async function readMoveResources(
   before: readonly ManifestEntry[],
   after: readonly ManifestEntry[],
   beforeReader: ReviewAssetReader,
   afterReader: ReviewAssetReader,
+  changedDocuments?: ReadonlySet<string>,
 ): Promise<MoveResources> {
-  const candidates = (
-    entries: readonly ManifestEntry[],
-    other: readonly ManifestEntry[],
-  ) => {
-    const existing = new Map(
-      other.map((entry) => [moveIdentity(entry), entry]),
-    );
-    return entries.filter(
-      (entry) =>
-        existing.get(moveIdentity(entry))?.sourcePath !== entry.sourcePath,
-    );
-  };
+  const candidates = await moveResourceCandidates(
+    before,
+    after,
+    beforeReader,
+    afterReader,
+    changedDocuments,
+  );
   const [base, head] = await Promise.all([
-    readSide(candidates(before, after), beforeReader),
-    readSide(candidates(after, before), afterReader),
+    readSide(candidates.before, beforeReader, candidates.beforeViews),
+    readSide(candidates.after, afterReader, candidates.afterViews),
   ]);
+  const existingHeadRoutes = await historicalResourceRoutes(
+    [...head.bytes.keys()],
+    beforeReader,
+  );
   return new MoveResources(
     base.bytes,
     head.bytes,
     undefined,
     base.views,
     head.views,
+    existingHeadRoutes,
   );
 }
 
 async function readSide(
   entries: readonly ManifestEntry[],
   reader: ReviewAssetReader,
+  documents: ReadonlySet<string>,
 ): Promise<{
   bytes: ReadonlyMap<string, Uint8Array>;
   views: ReadonlyMap<string, ReadonlySet<string>>;
@@ -176,13 +184,6 @@ async function readSide(
   const generated = (route: string) =>
     isValidGeneratedRoute(route) || copied.has(route);
   const pending = new Set(copied);
-  const documents = [
-    ...new Set(
-      entries.flatMap((entry) =>
-        moveDocuments(entry).map((view) => view.route),
-      ),
-    ),
-  ];
   const seeds = new Map<string, readonly string[]>();
   const children = new Map<string, readonly string[]>();
   for (const route of documents) {

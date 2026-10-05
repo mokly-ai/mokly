@@ -5,12 +5,14 @@ import {
   generatedViews,
   isManifestComponentVariant,
   parseReviewResult,
-  snapshotViewPath,
+  reviewSnapshotViewPath,
 } from "@mokly/viewer/data";
 import type {
+  ComponentVariantReview,
   Manifest,
   ReviewArtifact,
   ReviewArtifactContent,
+  ScreenReviewV5,
 } from "@mokly/viewer/data";
 
 import {
@@ -101,11 +103,10 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
     const entry = result.screens[0] ?? result.components[0]?.variants[0];
     const files = new Map<string, ReviewArtifactContent>();
     for (const side of ["before", "after"] as const) {
-      const path = entry?.[side]?.path;
-      const artifacts = path
+      const artifacts = entry
         ? selectedArtifacts(
             side === "before" ? source.before : source.after,
-            path,
+            entry,
             side,
           )
         : [];
@@ -143,12 +144,12 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
 
 function selectedArtifacts(
   manifest: Manifest,
-  id: string,
+  record: ScreenReviewV5 | ComponentVariantReview,
   side: "after" | "before",
 ) {
   const entry = manifest.entries.find(
     (candidate) =>
-      candidate.path === id &&
+      candidate.path === record[side]?.path &&
       (candidate.kind === "screen" ||
         (candidate.kind === "component" &&
           isManifestComponentVariant(candidate))),
@@ -157,11 +158,6 @@ function selectedArtifacts(
     return [];
   return generatedViews(entry).map((view) => ({
     route: view.path,
-    snapshot: snapshotViewPath(
-      side,
-      entry.path,
-      view.viewport,
-      view.colorScheme,
-    ),
+    snapshot: reviewSnapshotViewPath(side, record, view),
   }));
 }

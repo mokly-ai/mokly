@@ -140,25 +140,59 @@ input values for a variant that moved to a new component (items 1 and 10).
 
 ## Milestone 5: Recorded locations in the comparison engine
 
-Read recorded locations instead of rebuilding them (items 2 and 4).
+Read recorded locations instead of rebuilding them (items 2 and 4). Complete.
 
-- [ ] Add `reviewSnapshotViewPath(side, record, view)`. The resource-evidence
+- [x] Add `reviewSnapshotViewPath(side, record, view)`. The resource-evidence
       check, the selected comparison, the public review, removed previews
       and `scripts/package/export.mjs` use it. A guard test permits direct
       snapshot path construction for review records only in this helper.
-- [ ] Test case-only screen and variant renames with resource evidence in
+- [x] Test case-only screen and variant renames with resource evidence in
       Serve's complete comparison and in repository publication
       (`preview:build --include-changes`).
-- [ ] Read move resources for every paired view whose generated references
+- [x] Read move resources for every paired view whose generated references
       differ, and remove the stylesheet route guess from `sourcePath`. Keep
       the asset directory mapping.
-- [ ] Test an exporting-module move with a declared path, a file that becomes
+- [x] Test that unchanged generated references require no move-resource
+      reads, and that paired Markdown documents stay outside the visual-view
+      scan.
+- [x] Preserve ordinary resource-error order when the generated-reference
+      pre-scan sees an invalid URL. Add a regression test and clarify the
+      resource-validation contract.
+- [x] Keep same-route evidence when a generated alias destination existed
+      in the baseline, so another consumer's stylesheet edit stays visible.
+      Add a real Git regression fixture.
+- [x] Preserve committed resource-only classification's lazy baseline
+      reads with its changed document set. Keep derived and complete paired
+      view scans exhaustive.
+- [x] Test an exporting-module move with a declared path, a file that becomes
       a folder `index`, a renderer folder move, component variants, a
       stylesheet edit together with a route move, and live Changes. Measure
       the live Changes time before and after.
-- [ ] Update `src/review/moves/README.md`.
-- [ ] Run the related unit tests, type checks and lint, and smoke-test Serve
+- [x] Update `src/review/moves/README.md`.
+- [x] Run the related unit tests, type checks and lint, and smoke-test Serve
       and export.
+
+Timing evidence: the large fixture with 3 areas, 40 screens per area and 12
+rows has 159 entries and 555 documents. Three alternating fresh-process runs
+of the live Changes classifier gave a median of 13,946 ms before and
+12,453 ms after. Every run reported zero changed entries. Build and server
+startup are outside these measurements. Full-size single runs varied from
+107,614 to 161,747 ms after, versus 118,970 ms before; these are diagnostics,
+not a performance gate.
+
+Scoped checks: 420 unit tests, 86 Chromium tests and 24 hydration tests passed.
+Type checks, lint and formatting passed. Real CLI Serve and export smoke tests
+passed for case-only renames and stable-path exporting-module moves in scratch
+Git repositories. Repository publication with Changes passed for both cases.
+The shell comparison call stays on the guard's explicit Milestone 7 allowlist.
+
+Final gate: `cargo xtask check` passed with 4,246 unit tests, 844 Chromium tests
+and 263 hydration tests. No tests were skipped or cancelled. The first full
+run found resource-error-order and lazy-read regressions. The fixes passed a
+33-test recheck. Two export checks in that run failed because a concurrent
+rebuild replaced browser assets; the final run had no concurrent rebuilds.
+The full gate required a second run. The extra `src/server/changed_content.ts`
+caller argument preserves its existing lazy-read rule.
 
 ## Milestone 6: Navigation visibility rules
 

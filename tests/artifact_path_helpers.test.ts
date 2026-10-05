@@ -8,6 +8,14 @@ import ts from "typescript";
 const sharedPathModule = path.normalize(
   "packages/viewer/src/navigation/routes.ts",
 );
+const reviewPathModule = path.normalize(
+  "packages/viewer/src/navigation/review_snapshot.ts",
+);
+const manifestCaptureModule = path.normalize("src/review/component_compare.ts");
+const temporaryReviewPathAllowlist = new Set([
+  // Milestone 7 moves shell comparison selection to reviewSnapshotViewPath.
+  path.normalize("packages/viewer/src/shell/comparison_selection.ts"),
+]);
 const moduleExtensions = new Set([
   ".cjs",
   ".cts",
@@ -65,6 +73,92 @@ test("production modules use the shared comparison artifact path builders", asyn
   }
   assert.deepEqual(violations, []);
 });
+
+test("review-record snapshot consumers use reviewSnapshotViewPath", async () => {
+  const violations: string[] = [];
+  for (const file of await productionModules(".")) {
+    const normalized = path.normalize(file);
+    if (
+      normalized === sharedPathModule ||
+      normalized === reviewPathModule ||
+      temporaryReviewPathAllowlist.has(normalized)
+    )
+      continue;
+    violations.push(
+      ...directSnapshotCalls(file, await fs.readFile(file, "utf8")),
+    );
+  }
+  assert.deepEqual(violations, []);
+});
+
+test("the review snapshot guard recognizes import aliases and namespace calls", () => {
+  for (const source of [
+    "snapshotViewPath(side, record.path, view.viewport, view.colorScheme);",
+    "import { snapshotViewPath as build } from '@mokly/viewer/data'; build(side, record.path, view.viewport, view.colorScheme);",
+    "const { snapshotViewPath: build } = await import('@mokly/viewer/data'); build(side, record.path, view.viewport, view.colorScheme);",
+    "paths.snapshotViewPath(side, record.path, view.viewport, view.colorScheme);",
+    "paths['snapshotViewPath'](side, record.path, view.viewport, view.colorScheme);",
+  ])
+    assert.equal(directSnapshotCalls("consumer.ts", source).length, 1, source);
+  assert.deepEqual(
+    directSnapshotCalls(
+      "consumer.ts",
+      "reviewSnapshotViewPath(side, record, view);",
+    ),
+    [],
+  );
+});
+
+function directSnapshotCalls(file: string, source: string): string[] {
+  const syntax = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    scriptKind(file),
+  );
+  const names = new Set(["snapshotViewPath"]);
+  const collect = (node: ts.Node): void => {
+    if (
+      (ts.isImportSpecifier(node) || ts.isBindingElement(node)) &&
+      node.propertyName?.getText(syntax) === "snapshotViewPath" &&
+      ts.isIdentifier(node.name)
+    )
+      names.add(node.name.text);
+    ts.forEachChild(node, collect);
+  };
+  collect(syntax);
+  const violations: string[] = [];
+  const inspect = (node: ts.Node): void => {
+    if (ts.isCallExpression(node)) {
+      const expression = node.expression;
+      const name = ts.isPropertyAccessExpression(expression)
+        ? expression.name.text
+        : ts.isElementAccessExpression(expression) &&
+            ts.isStringLiteral(expression.argumentExpression)
+          ? expression.argumentExpression.text
+          : expression.getText(syntax);
+      if (names.has(name)) {
+        let owner: ts.Node | undefined = node.parent;
+        while (owner && !ts.isFunctionDeclaration(owner)) owner = owner.parent;
+        const manifestCapture =
+          path.normalize(file) === manifestCaptureModule &&
+          owner &&
+          ts.isFunctionDeclaration(owner) &&
+          owner.name?.text === "artifactViews";
+        if (!manifestCapture) {
+          const line = syntax.getLineAndCharacterOfPosition(
+            node.getStart(),
+          ).line;
+          violations.push(`${file}:${line + 1}`);
+        }
+      }
+    }
+    ts.forEachChild(node, inspect);
+  };
+  inspect(syntax);
+  return violations;
+}
 
 async function productionModules(directory: string): Promise<string[]> {
   const modules: string[] = [];
