@@ -2,19 +2,15 @@
 
 ## Status And Outcome
 
-Status: Milestones 1 to 24, including 19A, 20A, 20B, 23A and 23B, are
-implemented, verified and pushed. The branch was reviewed three times after
-the earlier deliveries. Milestones 9 to 11 fixed the review findings that the user
+Status: Milestones 1 to 25, including 19A, 20A, 20B, 23A and 23B, are
+implemented, verified and pushed. The branch was reviewed four times after the
+earlier deliveries. Milestones 9 to 11 fixed the review findings that the user
 chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
 decisions. Milestones 16 to 21 merge main 0.13.0 and apply the 2026-10-03 CSS
-change rule, which replaces the finding 1 rule; findings 2 to 11 await the
-user's decision. Milestones 22 to 25, with 23A and 23B, apply the user's 2026-10-04
-decisions on the third review and on baseline compatibility.
-Milestones 22 to 24, with 23A and 23B, are pushed through `de139ccb`.
-Milestone 25 verification is complete under the approved PostCSS timing retry.
-All required smoke cases pass at both widths. Part 1 records the evidence in
-one local documentation commit. The reviewer owns the push and the review
-after the push; both remain open.
+change rule, which replaces second-review finding 1. Milestones 22 to 25, with
+23A and 23B, apply the user's 2026-10-04 decisions on the third review and on
+baseline compatibility. Milestones 26 to 32 apply the user's 2026-10-05
+decisions on the fourth-review finding and on second-review findings 2 to 11.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -2359,6 +2355,192 @@ Verification evidence (2026-10-04, part 1):
   2026-11-03 UTC. Dependencies, overrides and audit rules are unchanged.
   Earlier unselected review findings remain open.
 
-Part 1 completes verification and records one local documentation commit.
-The combined commit-and-push TODO remains open until the reviewer pushes.
-The review TODO has not run. The plan remains active until the pull request merges.
+The reviewer pushed the verification commit and ran the review. Its outcome
+is recorded above. The plan remains active until the pull request merges.
+
+On 2026-10-05 the user decided the fourth-review finding and second-review
+findings 2 to 11. The numbers below are the ones the user saw on 2026-10-05:
+
+1. Generated CSS as placement anchors (fourth review): option A. Only
+   configured hrefs choose where Mokly inserts declared component stylesheet
+   links. The renderer still receives the complete `RenderInput.stylesheets`
+   list.
+2. Repeated warnings in watched Serve: option A. Each warning carries the build
+   generation that produced it. Watched Serve prints the warnings of the
+   current attempt once. A warning from an older generation never prints after
+   a newer attempt starts. This covers background compilation, its completion
+   and preview-process renders.
+3. The Excluded styles mockup: option A. Add a screen mockup for the
+   excluded-only state: the screen stays out of Changes, and its Details end
+   with "No changes to this screen." Split the Stylesheet evidence mockup page
+   into linked child pages, because it already has five screens. Give the
+   linked Excluded and Matched mockups one shared Details card that matches the
+   viewer. Remove the sentence that the product never shows, and fix the docs.
+4. Tests that do not protect their rules: option B. Fix each weak test and
+   show that each one fails when its rule is broken. Record each failing run in
+   this plan.
+5. The docs guard test: option B. Former version names, removed field names
+   and plan or milestone references are allowed only in Delivery Status
+   sections or on a short reviewed allow list. The test fails closed and reads
+   statements across line breaks.
+6. Stale docs: option B. Fix the remaining stale lines, and move every plan or
+   milestone reference in docs and READMEs into Delivery Status sections.
+7. TypeScript claims: option A. Add `sharedImpact?: never` to the review
+   configuration type, with a type test. State that an explicit `undefined` is
+   rejected only with `exactOptionalPropertyTypes`; otherwise the build
+   warning covers it.
+8. Review-ignore around inserted links: option A. Mokly finds the links that it
+   inserted from their recorded spans, also inside Review-ignore regions. The
+   author's own ignored content stays ignored.
+9. Link scans: option A. One shared link finder serves every step, and the
+   contract states which part of the document each step uses. A renderer link
+   to a declared stylesheet that resource discovery finds, including one in
+   `<body>`, is reused, so Mokly inserts no second link.
+10. Watchers after a failed Serve start: option A. Create the process
+    supervisor inside the cleanup block, with a test.
+11. Unused code: option A. Delete `ComponentRuntime.warnings` and the unused
+    one-sided page material.
+12. The branch name in exported catalogues: option B. The temporary view
+    during navigation uses the known branch name.
+
+The user gave no decision about the Unmodified badge on document pages, so it
+keeps the screen rule.
+
+## Milestone 26: Document the 2026-10-05 review decisions
+
+Docs only. Define the contract for Milestones 27 to 31.
+
+- [ ] Placement (1): state in `mokly-component-stylesheets.md` that only
+      configured hrefs are placement anchors. Generated renderer and entry
+      stylesheet links are not anchors, although `RenderInput.stylesheets`
+      contains them. With no configured link present, insert at the end of
+      logical head content, after the generated links.
+- [ ] Warnings (2): define generation-scoped warnings in the build warning,
+      Serve and watch contracts. Cover background compilation, its
+      completion, preview-process renders, failed and successful rebuilds, and
+      reconfiguration.
+- [ ] Links (8, 9): define one link finder and the document scope of each step
+      (placement, reuse, provenance and resource discovery). Reuse every
+      renderer link that resource discovery finds, including links in
+      `<body>`. Find Mokly-inserted links from their recorded spans, also
+      inside Review-ignore regions, while author content stays ignored.
+      Remove the stale "resource owner record" wording.
+- [ ] Types (7): correct the TypeScript statements in the build warning,
+      configuration and authoring contracts.
+- [ ] Exported navigation (12): define in the CSS evidence presentation and
+      shell contracts that the temporary view uses the known branch name.
+- [ ] Docs rule (5, 6): add the rule to `docs/protocol/README.md` that former
+      version names, removed field names and plan or milestone references
+      appear only in Delivery Status sections or on the reviewed allow list.
+      Fix the remaining stale lines: the design-links row for the Unnamed
+      styles All filter, the example README review-fix and watch wording, the
+      design library README neighbour wording, and the protocol index rule
+      that names the current plan. Move every plan or milestone reference in
+      docs and READMEs into Delivery Status sections.
+- [ ] Mark each code change as planned for its milestone. Validate the changed
+      Markdown and run the docs tests.
+
+## Milestone 27: Depict the excluded-only stylesheet state
+
+Tags: mockup
+
+- [ ] Add a screen mockup, mobile and desktop, for a screen whose only
+      stylesheet change is examined and excluded. The screen is not in
+      Changes, opens from All, offers no comparison, and its Details end with
+      "No changes to this screen." Make it reachable from the stylesheet
+      evidence mockups.
+- [ ] Split the Stylesheet evidence mockup page into linked child pages with
+      at most five screens each. The parent shows one canonical screen and
+      links to its children. Mirror the hierarchy in the source and generated
+      directories.
+- [ ] Give the linked Excluded and Matched mockups one shared Details card that
+      matches the viewer. Remove "Other changed styles keep Welcome in
+      Changes." and its test assertion. Add a test that the paired Details are
+      identical.
+- [ ] Update the design inventory, link, count and reachability tests and the
+      design docs, including the example README. Build and check the example,
+      run the design tests and smoke-test the changed screens at both widths.
+
+## Milestone 28: Fix component stylesheet links
+
+- [ ] Failure-first (1): with declared CSS, generated CSS from JavaScript
+      imports and no configured link, Build and on-demand Serve put the
+      component link at the end of head content, after the generated links.
+      With configured links, placement is unchanged. Pass only configured
+      hrefs as anchors.
+- [ ] Failure-first (8): with configured links inside a Review-ignore region,
+      an edit to a declared stylesheet changes the component and its
+      consumers on the complete and fast comparison paths and in the CSS rule
+      scope. The author's ignored content stays ignored. Find inserted links
+      from their `insertedStylesheets` spans.
+- [ ] Failure-first (9): a renderer link to a declared stylesheet in `<body>`
+      is reused, and Mokly inserts no second link. Content in `<template>`
+      behaves as the contract defines. Replace the separate link scans with
+      one shared finder.
+- [ ] Update the READMEs near the changed code. Run the focused tests and the
+      complete unit suite at 100%.
+
+## Milestone 29: Fix Serve warnings and startup cleanup
+
+- [ ] Failure-first (2): no older-generation warning prints after a failed
+      rebuild during background compilation, after a successful rebuild that
+      fixes the cause, or from a preview-process render after a rebuild
+      starts. Tag warnings with their generation in the background worker and
+      child messages, and remove the second add of `compilation.warnings`.
+- [ ] Failure-first (10): a process-supervisor factory that throws during
+      watched startup leaves no watcher open. Create the supervisor inside the
+      cleanup block.
+- [ ] (11) Delete `ComponentRuntime.warnings` and its writers, and the unused
+      one-sided `page` material in `src/review/component_view.ts`.
+- [ ] Update the READMEs near the changed code. Run the focused tests and the
+      complete unit suite at 100%.
+
+## Milestone 30: Strengthen tests, the docs guard and removed-field types
+
+- [ ] (4) Strengthen each weak test from the 2026-10-05 review, and record in
+      this plan a run where it fails against the broken rule:
+  - [ ] component-page link removal: a root link that a child also declares,
+        child-only links and reordered root links;
+  - [ ] `rel` tokens, with an element after the anchor and an asserted warning
+        list;
+  - [ ] the nearest-link distance with anchors that are not adjacent, and a
+        fallback test that checks the exact position;
+  - [ ] removed-field types: spread objects and the cases that depend on
+        `?: never`;
+  - [ ] Serve child warning forwarding with a warning that only the child
+        makes, and the warning sink's complete output;
+  - [ ] warnings on failing commands and on watched failed actions;
+  - [ ] the two checks that cannot fail, and tests whose names promise more
+        than they check;
+  - [ ] provenance tokens that a transformer strips, replaces or duplicates.
+- [ ] (5) Rewrite `tests/current_docs_contract.test.ts` to fail closed under the
+      2026-10-05 docs rule. Scan protocol docs, guides, READMEs and notes, and
+      read statements across line breaks. Show that it fails on the real
+      stale lines from the reviews.
+- [ ] (7) Add `sharedImpact?: never` to the review configuration type, with
+      `@ts-expect-error` cases in the NodeNext consumer fixture, including a
+      configuration with other review keys.
+- [ ] Run the focused tests and the complete unit suite at 100%.
+
+## Milestone 31: Keep the branch name in exported navigation
+
+Tags: ui
+
+- [ ] Failure-first viewer and browser tests: in an exported catalogue, the
+      temporary view during navigation shows "Compared with the branch point
+      on <name>." when the export knows the name. An embedded catalogue
+      without a name still shows no sentence. Pass the known name to the
+      public-data fallback.
+- [ ] Check that the viewer's excluded-only screen state matches the Milestone
+      27 mockup at both widths, and fix any difference in the viewer.
+- [ ] Run the viewer and browser tests, and smoke-test at both widths.
+
+## Milestone 32: Verify, deliver and review
+
+- [ ] Run `cargo xtask check` at 100%, inspect the diff and deletions against
+      `origin/main`, and record the evidence.
+- [ ] Run `git add -A`, commit with a Conventional Commit, and push the branch.
+- [ ] After the push, review the complete diff against `origin/main` using
+      `docs/implementation-review-prompt.md`. Report numbered findings with
+      severity, impact, lettered options and a recommendation, without
+      changing the implementation.
