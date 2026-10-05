@@ -1,5 +1,12 @@
 # Fingerprinted Material Measurements
 
+The [fixed-code remeasurement](./fingerprinted-materials-remeasurement.md)
+preserves 24 further samples of `14447151` against same-session M8 controls.
+Linked improves; cumulative style remains 9.2–10.4% slower. The supervisor has
+stopped the gate/push. The [200-view investigation](./fingerprinted-materials-route-investigation.md)
+records overlapping warmed probes, per-function costs and unresolved production
+attribution. The original `b11e51d0` measurements below remain unchanged.
+
 M9 has not improved end-to-end classification in this measurement set. The
 48 unprofiled classifications all return `ok` with exact expected membership,
 but default no-change cold is 10.4% slower than M8 and default linked-stylesheet
@@ -265,8 +272,9 @@ exceed the 73,520.37 / 75,738.78 ms contextual limits; style/no-change is
 ratio threshold. All measured heaps are below 1,024 MiB (maximum 369.94 MiB),
 and membership is exact. The separate startup budget still fails as recorded.
 No Decision, threshold or review finding was changed. The M9 measurement TODO is
-complete; the gate and push await the approved fixes' checkpoint and narrow
-remeasurement. Only report/plan Markdown validation ran at this reporting stop.
+complete; that reporting stop awaited the approved fixes' checkpoint and narrow
+remeasurement. The follow-up linked above records their completion and the
+remaining gate/push blocker. Only report/plan Markdown validation ran at this stop.
 
 Documentation validation: `npm exec --yes --package=node@24.19.0 -- npx prettier
 --check` passes for both reports, the fixture README and the plan. Relative-link

@@ -306,8 +306,13 @@ The [M9 fingerprint measurements](../../../docs/dev/fingerprinted-materials-meas
 retain all 48 same-host M8/M9 samples, work counts and delivery headroom.
 Classification regresses despite bounded material bytes. The accompanying
 [eight worker profiles and proposed scope](../../../docs/dev/fingerprinted-materials-profiles.md)
-separate added work from existing costs and timing variation. The gate and push
-await the approved [performance checkpoint](../../../docs/dev/fingerprinted-materials-performance-checkpoint.md) and narrow remeasurement.
+separate added work from existing costs and timing variation. The approved
+[performance checkpoint](../../../docs/dev/fingerprinted-materials-performance-checkpoint.md)
+is followed by [24 narrow remeasurement samples](../../../docs/dev/fingerprinted-materials-remeasurement.md):
+linked improves, while cumulative style remains 9.2–10.4% slower. The
+[200-view cost investigation](../../../docs/dev/fingerprinted-materials-route-investigation.md)
+retains enabled/disabled comparisons and profiles. Their warmed ranges overlap;
+the production regression remains unexplained, so the gate and push are stopped.
 
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),

@@ -1553,13 +1553,32 @@ comparison's text work no longer grows with the style sheet. See the
       records 1,805 targeted, 4,895 unit, 725 pinned-browser and 219 hydration
       passes, package/static passes, 27 caught mutations and unchanged RNW/design/
       replay/interleaving coverage. No authored files changed during verification.
-      Measurements and the combined gate/push await supervisor checkpoint review.
-- [ ] After that checkpoint's approval, remeasure narrowly against same-host
+      The supervisor approved `14447151`; narrow measurements and investigation
+      follow below. The combined gate/push remain blocked by the style regression.
+- [x] After that checkpoint's approval, remeasure narrowly against same-host
       M8 `5e5111dc`: default ABBA for no-change/linked and cumulative M8 then M9
       for style/linked, cold/warm. Preserve the `b11e51d0` results alongside the
       new results and spread. Record GC if exposed, otherwise profile default
       no-change cold on both trees after timing. If a shortcut cell remains
       clearly slower with non-overlapping ranges, report before the gate/push.
+      The [remeasurement](../docs/dev/fingerprinted-materials-remeasurement.md)
+      retains all 24 successful classifications, exact counts/membership and
+      restored fixture hashes. No cell is incomplete; startup exceeds five
+      seconds in 20 samples. Default ranges overlap and linked improves, but
+      cumulative style is still 9.2–10.4% slower. Two separate default profiles
+      retain the GC comparison. The supervisor explicitly stopped the gate/push.
+- [x] Discovered: capture the requested uncommitted 200-view differential with
+      prepared readers, warm-up, three repetitions in each of six alternating
+      M8/M9 processes per collection mode, and four separate CPU profiles.
+      The [route investigation](../docs/dev/fingerprinted-materials-route-investigation.md)
+      records per-view result/count checks, function costs, worker/heap/reader
+      controls and allocation samples. Warmed timings overlap; added diagnostic
+      byte counting is too small to explain the full-worker gap. No fix is made.
+- [ ] Discovered: obtain the supervisor's next scope decision on the remaining
+      production style-route regression. GC and existing composition/parsing
+      explain the slower retained-input profile's locations, but no causal M9
+      change or credible recovery estimate is established. Keep the gate and
+      push blocked; do not implement another optimization without approval.
 - [x] Update relevant READMEs and the contracts' Delivery Status for delivered
       fingerprints, preserve the 250-line protocol caps, and record the approved
       gap fix and M8 review findings.
