@@ -1665,11 +1665,86 @@ comparison's text work no longer grows with the style sheet. See the
 - [x] `git add -A`, commit with Conventional Commits, and push the branch
       under the brief's documented audit-blocker rule. No new deletions or
       hashed-template changes; the formal review remains delegated below.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+      Review complete; findings below are recorded for the user's decision.
+
+### Milestone 9 review findings
+
+Reported by the post-push review of commits `1a084753` through `9865774e`.
+Recorded for the user's decision.
+
+1. Medium. The complete-path fingerprint guard `unsafeStyleSources`
+   (`src/review/page_inline_material.ts:62`, `:127-141`) is redundant: it
+   reuses M8's source-only `styleNeedsFullValidation` guess, but resolved views
+   already check the exact canonical text the oracle appends (`:75-79`, plus
+   the seam guard), and skipped views reach normalization undecoded, with
+   literal markers already rejected by `sourceEditsIntersect` (`b11e51d0`).
+   Removing only that call in a compiled scratch copy kept every result and
+   error differential equal to the text oracle. That covered 651 M8-marker and
+   M9 guard/oracle tests, 96 seeded differentials and all 672 seeded catalogue
+   comparisons. Only tests that pin the guard firing failed: the scan counts
+   and the seeded `tag-pair` guarded-bytes expectation, whose results stayed
+   equal. Keeping it costs about 0.11 ms per side per complete-path view on a
+   96 KB sheet. It also brings M8 finding 1's exponential regex into the
+   fallback path (4 ms at 20 `/**/` after `<`, 16 ms at 22), and it needs the
+   `14447151` proof cache, its quick-check side effects, `reuseSourceSafety`
+   and three test files. Recommended: remove the condition, the proof cache
+   and its recording, and `reuseSourceSafety`. Amend
+   `mokly-page-analysis.md:220` and `mokly-material-work-counts.md:106-111`.
+   Rewrite `tag-pair` as "fingerprinted with oracle-equal results", and delete
+   or rewrite the scan-count tests. Also adopt a rule that removing any
+   admission guard must fail a result or error differential, never only a
+   call-count or guarded-bytes assertion. M8 finding 1 still needs its own fix
+   for the quick checks.
+2. Low. The core measurement report
+   (`fingerprinted-materials-core-measurements.md:9-12`, `:138-143`; plan
+   `:1641-1642`) reports complete-path linked cold +4.8% (+1,696 ms) without
+   decomposing it. M9's own buckets explain +303 ms of the gap: `inlineRuleMs`
+   rises from 124–152 to 355–395 ms and `hashMs` from 399–486 to 528–591 ms
+   in every sample, while normalization and projection fall. Code M9 did not
+   change explains more: `htmlParseMs` +452 ms and unattributed time +816 ms.
+   The warm cell is 2.2% faster, and the pure fast-path no-change cell shows
+   the same cold/warm pattern. So M9 is a small net cost on ordinary sheets,
+   about 0.08–0.13 ms per complete-path view on about 22 KB default pages,
+   and a 1.30 ms per view saving on about 125 KB cumulative pages. No report
+   or plan item records this. Recommended: a report addendum with the
+   per-bucket split and the no-change drift control, and a Milestone 9A or 10
+   item that measures complete-path cost per view against page size and
+   decides between a sheet-size threshold for text materials and explicit
+   acceptance of the cost. Also adopt a reporting rule: split any cell-level
+   regression into changed-code buckets and unchanged or unattributed time
+   before naming a cause.
+3. Low. The fixture-digest rule (`tests/fixtures/large/README.md:348-350`;
+   the M2 digest `5bd77afc…` at `:90-91`) is not enforced.
+   `tests/large_template_identity.test.ts` only compares a freshly prepared
+   identity with the current templates, and both change together, so an edit
+   to a hashed template file (for example a typo fix in
+   `benchmark-contract.md`) silently invalidates the shared M8/M9 fixtures and
+   the Decision 13 reference. Nobody finds out until acceptance.
+   Recommended: a unit test that compares
+   `templateDigest(tests/fixtures/large)` with the recorded Milestone 2
+   digest and explains the consequences when it fails.
+4. Low. The 250-line protocol caps were met by compressing unrelated contract
+   text into long lines (`mokly-timings.md:12,24,49,121,164,249`;
+   `mokly-page-analysis.md:7,217`, at up to 199 characters). Normative wording
+   was also weakened: the stage-share rule no longer names
+   `review.inline-style-analysis` and `review.css-analysis`, and "Graph work
+   for watcher inventory and source-freshness validation is deliberately
+   visible" became "freshness graph work remain visible". Recommended: restore
+   the wording, move a self-contained section into its own document, and add
+   a maximum-line-length check (outside tables and link lines) to
+   `tests/protocol_doc_sizes.test.ts`, with a ratchet for existing long lines.
+5. Low. A ticked M9 item (plan `:1648-1651`) still says the CLI timing
+   envelope assertion requires the nine new counters and the bounded-seam
+   invariant. `8da4d1a9` moved those counters to the opt-in
+   `review.material-work` record and restored `tests/helpers/timing_events.ts`
+   to M8's field list, so the item reads as current but is not.
+   Recommended: annotate it as superseded by `8da4d1a9` and point to the
+   `material_work_*` tests.
 
 ## Milestone 9A: Residual Sheet Cost Checkpoint
 
