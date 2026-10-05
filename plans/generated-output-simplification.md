@@ -2431,7 +2431,7 @@ Candidates 3–6 remain outside this step. The user owns the final review.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check` after these code changes; record exact outcomes.
 - [x] `git add -A`; commit with Conventional Commits; push.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       using `docs/implementation-review-prompt.md`; report numbered findings
       with severities and recommendations without changing the implementation.
 
@@ -2577,6 +2577,37 @@ passes. The final main fetch remains
 `800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge occurs.
 Branch checks precede the Conventional Commit and explicit branch push.
 The final implementation-review TODO remains for the orchestrator.
+
+### Final review outcome
+
+Five parallel reviewers checked the pushed tip `497445c1` against
+`origin/main` at `800fe9f8` with `docs/implementation-review-prompt.md`. They
+covered baselines and caches; the build and configuration; export and
+preview; the viewer and catalogue; and tests, documents and mainline
+preservation. Each claim was reproduced with a scratch script or verified in
+the code. No unapproved removal from `main` was found: the 13 deleted `main`
+files and every missing `main` test title are approved. The review reported 8
+new findings, numbered 58 to 65, without changes: 1 medium and 7 low.
+
+- Medium (58): a component `<style>` element in `<body>` together with
+  `MockLink asChild` breaks Build and Serve, also on `main`. Style ownership
+  pairs `<style>` elements by position, and the link adapter adds its own
+  stylesheet in `<head>`. The removal deleted the only test that reached this
+  check.
+- Low (59–65): retention can remove a cache entry that another process is
+  about to lock; a stale tracked v7 manifest still blocks a comparison after
+  the catalogue folder moves; export refusals do not name the folder, so
+  publish and preview folders from earlier releases block without a remedy;
+  the kept `dependencies` branch (item 13) is reached only by a test; dead code,
+  test lines and lint paths remain from the removal; documents still describe
+  removed items; and some kept tests and plan rows overstate their coverage.
+
+Findings 13, 19, 24, 38, 43 and 47 are fixed. Findings 36 and 44 are fixed
+apart from findings 60 and 61. Findings 3, 25, 27, 42, 48 and 53 changed form.
+Findings 10, 17, 37, 45, 46, 49, 52, 54, 56 and 57 remain open. Findings 35,
+39–41, 50, 51 and 55 are in code that Milestones 16–18 did not change, and the
+earlier findings recorded in Milestone 15 keep their status. Main had not
+moved. Every finding awaits the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
