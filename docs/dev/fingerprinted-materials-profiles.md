@@ -6,7 +6,8 @@ style reverses direction under profiling, and cumulative linked is nearly equal.
 The [measurement report](./fingerprinted-materials-measurements.md) retains every
 unprofiled result, including the regressions. No profile replaces a timing sample.
 The supervisor requested this report and a stop before the gate/push; the proposed
-fixes below are not implemented or approved.
+fixes below were subsequently approved (option A for all three); see the
+[performance checkpoint](./fingerprinted-materials-performance-checkpoint.md).
 
 ## Capture And Attribution
 
@@ -189,7 +190,7 @@ show that the total +6,250.23 ms cold regression cannot simply be assigned to
 those guard/material buckets. HTML/reference work and the uninstrumented remainder
 also increased. No claim of noise-free causation or recovered performance is made.
 
-## Proposed Fixes — Supervisor Decision Required
+## Proposed Scope From These Profiles
 
 1. **Low: eager fingerprint bookkeeping reaches fast/style views.** A (recommended):
    retain eager original validation, but derive material ids/signals and the extra
@@ -239,6 +240,7 @@ style here, with added diagnostic-cache complexity; it is not the initial priori
 
 The larger unprofiled slowdown remains only partly explained. Controlled repeat
 measurements after a narrowly scoped change are needed to attribute any GC gain
-and remaining variance. No gate or push was attempted after measurement; the
-supervisor will choose the scope. No M8 review finding or comparison semantics
-were changed, and the formal M9 review remains pending.
+and remaining variance. No gate or push was attempted at this reporting stop.
+The subsequent approval is recorded in the linked checkpoint; the original
+measurements and estimates above remain intact. No M8 review finding or comparison
+semantics changed, and the formal M9 review remains pending.

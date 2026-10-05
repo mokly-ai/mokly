@@ -15,18 +15,22 @@ import {
 import { hasFingerprintSeam } from "./page_fingerprint_guard.js";
 import type { PageAnalysisPair } from "./page_pair.js";
 import { isPageResourceReference } from "./page_reference_records.js";
-import { allSkippedOccurrencesEligible } from "./skipped_style_occurrences.js";
 import { styleNeedsFullValidation } from "./style_source_safety.js";
+
+interface MaterialOptions {
+  fingerprints: boolean;
+  reuseSourceSafety: boolean;
+}
 
 export function pageInlineMaterials(
   analysis: InlineAttributionResult | undefined,
   base: string,
   head: string,
-  fingerprints: boolean,
+  options: MaterialOptions,
   pages?: PageAnalysisPair,
 ): { before: InlineMaterialReplacements; after: InlineMaterialReplacements } {
   return documentWorkSync("inlineRuleMs", () =>
-    prepareMaterials(analysis, base, head, fingerprints, pages),
+    prepareMaterials(analysis, base, head, options, pages),
   );
 }
 
@@ -34,7 +38,7 @@ function prepareMaterials(
   analysis: InlineAttributionResult | undefined,
   base: string,
   head: string,
-  fingerprints: boolean,
+  options: MaterialOptions,
   pages?: PageAnalysisPair,
 ): { before: InlineMaterialReplacements; after: InlineMaterialReplacements } {
   const empty = {
@@ -48,7 +52,7 @@ function prepareMaterials(
       }
     : { before: empty, after: empty };
   if (
-    !fingerprints ||
+    !options.fingerprints ||
     !pages ||
     !analysis ||
     (analysis.status === "skipped" &&
@@ -57,15 +61,19 @@ function prepareMaterials(
     analysis.status === "unresolved" ||
     base.includes("mokly-inline-") ||
     head.includes("mokly-inline-") ||
-    [...analysis.beforeSpans, ...analysis.afterSpans].some(
-      styleNeedsFullValidation,
-    ) ||
+    unsafeStyleSources(analysis, pages, options.reuseSourceSafety) ||
     skippedSourceReferences(analysis, pages) ||
     (analysis.status === "skipped" &&
       (pages.beforeAnalysis.sourceEditsIntersect(analysis.beforeSpans) ||
         pages.afterAnalysis.sourceEditsIntersect(analysis.afterSpans) ||
-        !allSkippedOccurrencesEligible(base, analysis.beforeSpans) ||
-        !allSkippedOccurrencesEligible(head, analysis.afterSpans))) ||
+        !pages.fingerprintProofs.occurrencesEligible(
+          "before",
+          analysis.beforeSpans,
+        ) ||
+        !pages.fingerprintProofs.occurrencesEligible(
+          "after",
+          analysis.afterSpans,
+        ))) ||
     [text.before, text.after].some((side) =>
       [side.actual, side.projected].some(({ appendix }) =>
         appendix.includes("<!--mokly-"),
@@ -116,6 +124,22 @@ function prepareMaterials(
   const result = { before: side("before"), after: side("after") };
   timingDocumentWork()?.fingerprintedView();
   return result;
+}
+
+function unsafeStyleSources(
+  analysis: InlineAttributionResult,
+  pages: PageAnalysisPair,
+  reuse: boolean,
+): boolean {
+  if (
+    reuse &&
+    analysis.status === "skipped" &&
+    pages.hasStyleSafetyProof(analysis.beforeSpans, analysis.afterSpans)
+  )
+    return false;
+  return [...analysis.beforeSpans, ...analysis.afterSpans].some(
+    styleNeedsFullValidation,
+  );
 }
 
 function skippedSourceReferences(

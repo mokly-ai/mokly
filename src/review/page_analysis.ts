@@ -19,8 +19,11 @@ import { documentWorkSync } from "../diagnostics/timings.js";
 
 import { setDocumentSubjectFilter } from "./css/document_subjects.js";
 import { inlineStyleSpan, type InlineStyleSpan } from "./css/inline_styles.js";
-import { reviewIgnoreMetadata, type ReviewIgnoreRegion } from "./ignore.js";
-import { MaterialMarkerOffsets } from "./material_marker_offsets.js";
+import {
+  parseReviewDocument,
+  reviewMaterialSignals,
+  type ReviewIgnoreRegion,
+} from "./ignore.js";
 import { parsePageDocument } from "./page_parser.js";
 import {
   deriveMaterialReferences,
@@ -31,10 +34,10 @@ import { pageSubjectFilter } from "./page_subjects.js";
 
 export class PageAnalysis {
   readonly regions: readonly ReviewIgnoreRegion[];
-  readonly materialIds: ReadonlySet<string>;
-  readonly materialSignals: readonly (SourceSpan & { id: string })[];
-  readonly componentMarkers: readonly SourceSpan[];
-  private fingerprintMarkers?: MaterialMarkerOffsets;
+  private ids?: ReadonlySet<string>;
+  private signals?: readonly (SourceSpan & { id: string })[];
+  private components?: readonly SourceSpan[];
+  private readonly originalMaterials?: ReadonlyMap<string, string>;
   readonly headerEnd: number;
   readonly document: DefaultTreeAdapterMap["document"];
   readonly ranges: readonly RenderedRange[];
@@ -47,10 +50,11 @@ export class PageAnalysis {
     readonly route: string,
     readonly usage?: ComponentViewRecord,
   ) {
-    const ignored = reviewIgnoreMetadata(source, route);
-    this.regions = ignored.regions;
-    this.materialIds = ignored.materialIds;
-    this.materialSignals = ignored.signals;
+    {
+      const { regions, materials } = parseReviewDocument(source, route);
+      this.regions = [...regions.values()];
+      if (materials.size) this.originalMaterials = materials;
+    }
     this.headerEnd = generatedSource(source) ? source.indexOf("\n") + 1 : 0;
     this.document = parsePageDocument("pageAnalysis", source);
     this.ranges = usage
@@ -92,21 +96,14 @@ export class PageAnalysis {
       },
     );
     this.styles = styles.sort((left, right) => left.start - right.start);
-    const markers = [
+    this.removedMarkers = [
       ...source.matchAll(
         /<!--mokly-component:(?:start|end):r-[0-9]+-->|<!--mokly-review-ignore:[\s\S]*?-->/g,
       ),
-    ];
-    this.removedMarkers = markers.map((match) => ({
+    ].map((match) => ({
       start: match.index,
       end: match.index + match[0].length,
     }));
-    this.componentMarkers = markers
-      .filter((match) => match[0].startsWith("<!--mokly-component:"))
-      .map((match) => ({
-        start: match.index,
-        end: match.index + match[0].length,
-      }));
     if (this.headerEnd)
       this.removedMarkers = [
         { start: 0, end: this.headerEnd },
@@ -114,11 +111,19 @@ export class PageAnalysis {
       ];
   }
 
-  /** Fingerprint-only metadata is lazy, shared, and never built by shortcut paths. */
-  get markerOffsets(): MaterialMarkerOffsets {
-    return (this.fingerprintMarkers ??= documentWorkSync(
-      "normalizationMs",
-      () => new MaterialMarkerOffsets(this.source),
+  get materialIds(): ReadonlySet<string> {
+    return (this.ids ??= new Set(this.originalMaterials?.keys()));
+  }
+
+  get materialSignals(): readonly (SourceSpan & { id: string })[] {
+    return (this.signals ??= this.originalMaterials
+      ? reviewMaterialSignals(this.source)
+      : []);
+  }
+
+  get componentMarkers(): readonly SourceSpan[] {
+    return (this.components ??= this.removedMarkers.filter(({ start }) =>
+      this.source.startsWith("<!--mokly-component:", start),
     ));
   }
 

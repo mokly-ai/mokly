@@ -12,7 +12,7 @@ import {
 import type { PageAnalysis } from "./page_analysis.js";
 import { pageMaterialRecipes } from "./page_material_recipes.js";
 import type { PageAnalysisPair } from "./page_pair.js";
-import { StyleSeamOffsets } from "./style_seam_offsets.js";
+import type { StyleSeamOffsets } from "./style_seam_offsets.js";
 
 export function hasFingerprintSeam(
   pages: PageAnalysisPair,
@@ -32,19 +32,23 @@ function inspectRecipes(
   const recipes = pageMaterialRecipes(pages, inline);
   const styleOffsets = new Map<PageAnalysis, StyleSeamOffsets>();
   // Inserts are complete tokens/wrappers; skipped materials have no style appendix.
-  const inspect = (page: PageAnalysis, recipe: MaterialRecipe) => {
+  const inspect = (
+    side: "before" | "after",
+    page: PageAnalysis,
+    recipe: MaterialRecipe,
+  ) => {
     if (skipped && !styleOffsets.has(page))
       styleOffsets.set(
         page,
-        new StyleSeamOffsets(
-          page.source,
-          page.inlineStyles(pages.pairedIgnoreIds).map(({ source }) => source),
+        pages.fingerprintProofs.styleOffsets(
+          side,
+          page.inlineStyles(pages.pairedIgnoreIds),
         ),
       );
     return fingerprintAtSeam(
       page.source,
       recipe,
-      page.markerOffsets,
+      pages.fingerprintProofs.markerOffsets(side),
       styleOffsets.get(page),
     );
   };
@@ -55,12 +59,12 @@ function inspectRecipes(
     );
     const head = normalizationPieces(pages.afterAnalysis, recipes.after[kind]);
     if (!base || !head) return true;
-    for (const [page, pieces] of [
-      [pages.beforeAnalysis, base],
-      [pages.afterAnalysis, head],
+    for (const [side, page, pieces] of [
+      ["before", pages.beforeAnalysis, base],
+      ["after", pages.afterAnalysis, head],
     ] as const) {
-      if (inspect(page, pieces)) return true;
-      if (kind === "actual" && inspect(page, normalizedRecipe(pieces)))
+      if (inspect(side, page, pieces)) return true;
+      if (kind === "actual" && inspect(side, page, normalizedRecipe(pieces)))
         return true;
     }
     const before = normalizationIdentity(base);
@@ -86,6 +90,7 @@ function inspectRecipes(
       .sort();
     if (
       inspect(
+        "before",
         pages.beforeAnalysis,
         normalizedRecipe(
           base,
@@ -95,6 +100,7 @@ function inspectRecipes(
         ),
       ) ||
       inspect(
+        "after",
         pages.afterAnalysis,
         normalizedRecipe(
           head,

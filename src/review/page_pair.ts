@@ -2,9 +2,11 @@
 import type { GeneratedComponentView } from "@mokly/viewer/data";
 
 import type { PreparedInlineRules } from "./css/inline_preparation.js";
+import type { InlineStyleSpan } from "./css/inline_styles.js";
+import { FingerprintSourceProofs } from "./fingerprint_source_proofs.js";
 import {
   normalizeReviewPair,
-  reviewIgnoreMetadata,
+  parseReviewDocument,
   type NormalizedReviewPair,
 } from "./ignore.js";
 import { PageAnalysis } from "./page_analysis.js";
@@ -16,6 +18,8 @@ export class PageAnalysisPair {
   private normalized?: NormalizedReviewPair;
   private paired?: readonly string[];
   private exclusion?: (path: string) => boolean;
+  private proofs?: FingerprintSourceProofs;
+  private safeStyles?: readonly Pick<InlineStyleSpan, "source" | "text">[];
   constructor(
     readonly before: GeneratedComponentView,
     readonly after: GeneratedComponentView,
@@ -44,18 +48,51 @@ export class PageAnalysisPair {
       return (this.paired = this.afterAnalysis.regions
         .map(({ id }) => id)
         .sort());
-    const before =
-      this.base ?? reviewIgnoreMetadata(this.baseText, this.after.path);
+    const validated = this.base
+      ? undefined
+      : parseReviewDocument(this.baseText, this.after.path);
+    const before = this.base?.regions ?? [...validated!.regions.values()];
     const after = this.afterAnalysis;
     const headIds = new Set(after.regions.map(({ id }) => id));
-    return (this.paired = before.regions
-      .filter(
-        ({ id }) =>
-          headIds.has(id) &&
-          before.materialIds.has(id) === after.materialIds.has(id),
-      )
+    const common = before.filter(({ id }) => headIds.has(id));
+    if (!common.length) return (this.paired = []);
+    const beforeMaterials = this.base?.materialIds ?? validated!.materials;
+    const afterMaterials = after.materialIds;
+    return (this.paired = common
+      .filter(({ id }) => beforeMaterials.has(id) === afterMaterials.has(id))
       .map(({ id }) => id)
       .sort());
+  }
+
+  /** Complete-path proofs live only as long as this compared view. */
+  get fingerprintProofs(): FingerprintSourceProofs {
+    return (this.proofs ??= new FingerprintSourceProofs(
+      this.baseText,
+      this.headText,
+    ));
+  }
+
+  rememberStyleSafety(spans: readonly InlineStyleSpan[]): void {
+    this.safeStyles = spans.map(({ source, text }) => ({ source, text }));
+  }
+
+  hasStyleSafetyProof(
+    before: readonly InlineStyleSpan[],
+    after: readonly InlineStyleSpan[],
+  ): boolean {
+    const proved = this.safeStyles;
+    return (
+      proved !== undefined &&
+      [before, after].every(
+        (spans) =>
+          spans.length === proved.length &&
+          spans.every(
+            (span, index) =>
+              span.source === proved[index]!.source &&
+              span.text === proved[index]!.text,
+          ),
+      )
+    );
   }
 
   get normalization(): NormalizedReviewPair {

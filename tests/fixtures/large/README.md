@@ -307,7 +307,7 @@ retain all 48 same-host M8/M9 samples, work counts and delivery headroom.
 Classification regresses despite bounded material bytes. The accompanying
 [eight worker profiles and proposed scope](../../../docs/dev/fingerprinted-materials-profiles.md)
 separate added work from existing costs and timing variation. The gate and push
-are held for the supervisor's scope decision; no proposed fix is implemented.
+await the approved [performance checkpoint](../../../docs/dev/fingerprinted-materials-performance-checkpoint.md) and narrow remeasurement.
 
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),

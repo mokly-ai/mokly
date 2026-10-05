@@ -60,6 +60,34 @@ Catalogue replay must agree with the original same-mode outcome, not just with
 another replay, and pin coverage. Name any independently confirmed pre-existing
 path divergence excluded from that replay; an exclusion is not a passed pair.
 
+## Source Proof Reuse
+
+Original flat validation stays eager, including region pairing and material-signal
+errors. Reuse its validated signal keys; derive the material-id set, signal spans
+and component-marker inventory only on demand. A regions-only caller derives no
+signal inventory. Settled identical/non-identical quick checks and the style route
+request no fingerprint-only data and add no source-safety scan.
+
+Proof caches belong to one compared view and are allocated only for complete-path
+work. Marker indexes share exact original source text. Style indexes additionally
+require the same ordered skipped outer sources. Occurrence results additionally
+require identical eligible start/end positions; equal text with different eligible
+copies cannot share a result. Snapshot keys and never retain this cache across views.
+All existing bounded seam checks and their counts still run for each recipe.
+
+A successful quick source-safety check may record its ordered outer-source/content
+inputs only when that quick attempt falls through. Skipped analysis may reuse it
+only when both sides' exact ordered guard inputs match and both `useFastPath` and
+`useStylePath` remain enabled. Missing proofs, either disabled switch and resolved
+analyses run the existing guard. The guard's rules and the style route are unchanged.
+Settled shortcuts allocate no proof snapshot; caching never adds a shortcut scan.
+
+Test per-view shortcut paths with signals outside styles, eager error equality,
+source/index/occurrence sharing and different eligibility. Count source guard scans
+across all switch settings and missing/changed proofs. Keep the text oracles, seeded
+catalogue/seam/occurrence proofs and guard mutations; caching cannot admit a view
+that the uncached guards reject.
+
 ## Skipped Style Equality
 
 In-place fingerprints must not distinguish an eligible style from identical text

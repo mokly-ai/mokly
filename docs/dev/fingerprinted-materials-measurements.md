@@ -9,9 +9,10 @@ cumulative markup is about 4% slower and linked is 7.6% slower cold / 1.0% warm.
 The material byte bound is delivered, but that alone is not a wall-time win.
 The [worker profile report](./fingerprinted-materials-profiles.md) identifies
 avoidable M9 work, separates existing validation/composition from additions,
-and proposes scoped fixes with savings estimates. The supervisor requested a
-stop before `cargo xtask check` and push while deciding that scope. No proposed
-fix, recorded review finding, contract, or production code was changed here.
+and proposes scoped fixes with savings estimates. This report preserves the
+pre-fix measurements. The supervisor subsequently approved all three option-A
+fixes for a separate [checkpoint](./fingerprinted-materials-performance-checkpoint.md)
+and narrow remeasurement before the gate/push. No recorded review finding is approved.
 
 ## Provenance And Method
 
@@ -264,8 +265,8 @@ exceed the 73,520.37 / 75,738.78 ms contextual limits; style/no-change is
 ratio threshold. All measured heaps are below 1,024 MiB (maximum 369.94 MiB),
 and membership is exact. The separate startup budget still fails as recorded.
 No Decision, threshold or review finding was changed. The M9 measurement TODO is
-complete; the gate, push and formal review remain pending the supervisor's scope
-choice. Only report/plan Markdown validation is run after these measurements.
+complete; the gate and push await the approved fixes' checkpoint and narrow
+remeasurement. Only report/plan Markdown validation ran at this reporting stop.
 
 Documentation validation: `npm exec --yes --package=node@24.19.0 -- npx prettier
 --check` passes for both reports, the fixture README and the plan. Relative-link

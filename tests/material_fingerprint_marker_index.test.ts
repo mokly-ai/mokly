@@ -1,15 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { FingerprintSourceProofs } from "../dist/review/fingerprint_source_proofs.js";
 import { MaterialMarkerOffsets } from "../dist/review/material_marker_offsets.js";
-import { PageAnalysis } from "../dist/review/page_analysis.js";
 
 test("one side reuses its marker-offset index across every material recipe", () => {
-  const page = new PageAnalysis(
-    '<style>.entry{padding:1px}</style><main class="entry">body</main>',
-    "test",
+  const source =
+    '<style>.entry{padding:1px}</style><main class="entry">body</main>';
+  const proofs = new FingerprintSourceProofs(source, source);
+  assert.strictEqual(
+    proofs.markerOffsets("before"),
+    proofs.markerOffsets("before"),
   );
-  assert.strictEqual(page.markerOffsets, page.markerOffsets);
 });
 
 test("offset queries use only kept openers and complete closes", () => {

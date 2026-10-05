@@ -137,7 +137,11 @@ export function prepareComponentProjection(
     analysis,
     base,
     head,
-    context.useMaterialFingerprints !== false,
+    {
+      fingerprints: context.useMaterialFingerprints !== false,
+      reuseSourceSafety:
+        context.useFastPath !== false && context.useStylePath !== false,
+    },
     pages,
   );
   const analyzedProjection = pages

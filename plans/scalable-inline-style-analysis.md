@@ -1540,11 +1540,26 @@ comparison's text work no longer grows with the style sheet. See the
       separates self/inclusive per-view costs, existing validation/composition,
       sheet-proportional work and shortcut overhead. It preserves reversed/nearly
       equal profiled ratios rather than replacing unprofiled samples.
-- [ ] Discovered: obtain the supervisor's scope decision on the profiling
-      proposals and complete any approved work before the final gate and push.
-      No fix or recorded review finding is approved by the measurement report.
-      The supervisor's profiling addendum explicitly holds the gate and push;
-      only documentation is committed at this stop.
+- [x] Discovered: obtain the supervisor's scope decision on the profiling
+      proposals. The supervisor approved option A for all three: lazy bookkeeping,
+      view-local identical-source proofs and exact source-safety proof reuse.
+      No other recorded review finding is approved.
+- [x] Discovered: implement those three fixes test-first, preserving eager
+      validation, every oracle/mutation/seeded proof, source-safety rules and the
+      style route. Prove shortcut inventory/scan bounds and different-eligibility
+      cache separation. Run targeted, full unit, pinned browser/hydration and
+      static checks; commit the code checkpoint locally and stop for review.
+      The [performance checkpoint](../docs/dev/fingerprinted-materials-performance-checkpoint.md)
+      records 1,805 targeted, 4,895 unit, 725 pinned-browser and 219 hydration
+      passes, package/static passes, 27 caught mutations and unchanged RNW/design/
+      replay/interleaving coverage. No authored files changed during verification.
+      Measurements and the combined gate/push await supervisor checkpoint review.
+- [ ] After that checkpoint's approval, remeasure narrowly against same-host
+      M8 `5e5111dc`: default ABBA for no-change/linked and cumulative M8 then M9
+      for style/linked, cold/warm. Preserve the `b11e51d0` results alongside the
+      new results and spread. Record GC if exposed, otherwise profile default
+      no-change cold on both trees after timing. If a shortcut cell remains
+      clearly slower with non-overlapping ranges, report before the gate/push.
 - [x] Update relevant READMEs and the contracts' Delivery Status for delivered
       fingerprints, preserve the 250-line protocol caps, and record the approved
       gap fix and M8 review findings.

@@ -18,7 +18,10 @@ import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view.js";
-import { sameInlineOuterSources } from "./css/inline_styles.js";
+import {
+  sameInlineOuterSources,
+  type InlineStyleSpan,
+} from "./css/inline_styles.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import type { PageAnalysisPair } from "./page_pair.js";
 import { identicalPageQuickCheck } from "./page_quick_check.js";
@@ -53,6 +56,7 @@ export async function compareUnchangedComponentView(
     pages?.normalization ?? normalizeReviewPair(base, head, after.path);
   if (retained.base !== retained.head) return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
+  let safeStyles: readonly InlineStyleSpan[] | undefined;
   if (pages) {
     const paired = pages.pairedIgnoreIds;
     const baseStyles = pages.beforeAnalysis.inlineStyles(paired);
@@ -64,7 +68,21 @@ export async function compareUnchangedComponentView(
         side.hasDroppedStyleReferences(paired)
       )
         return {};
+    safeStyles = headStyles;
   }
+  const fallback = (
+    prepared?: PreparedComponentComparison,
+  ): UnchangedComponentAttempt => {
+    if (
+      pages &&
+      safeStyles &&
+      context.useMaterialFingerprints !== false &&
+      context.useFastPath !== false &&
+      context.useStylePath !== false
+    )
+      pages.rememberStyleSafety(safeStyles);
+    return prepared && !pages ? { prepared } : {};
+  };
 
   const strippedBase = stripMarkers(
     base,
@@ -75,7 +93,7 @@ export async function compareUnchangedComponentView(
   const actual =
     pages?.normalize(strippedBase, strippedHead) ??
     normalizeReviewPair(strippedBase, strippedHead, after.path);
-  if (actual.base !== actual.head) return {};
+  if (actual.base !== actual.head) return fallback();
 
   const hasOwnershipEdits = [before.usage, after.usage].some(
     (usage) =>
@@ -115,9 +133,8 @@ export async function compareUnchangedComponentView(
       materialRecipe(head, empty),
       pages.pairedIgnoreIds,
     );
-  const fallback = (): UnchangedComponentAttempt =>
-    prepared && !pages ? { prepared } : {};
-  if (projected && projected.before !== projected.after) return fallback();
+  if (projected && projected.before !== projected.after)
+    return fallback(prepared);
 
   const afterResources = await context.afterReader.resources(
     after.path,
@@ -133,7 +150,7 @@ export async function compareUnchangedComponentView(
         actualBefore,
       )
     : afterResources;
-  if (!beforeResources) return fallback();
+  if (!beforeResources) return fallback(prepared);
   const projectedAfterResources =
     projected && excluded
       ? await context.afterReader.resources(
@@ -152,7 +169,7 @@ export async function compareUnchangedComponentView(
           prepared?.references?.before,
         )
       : projectedAfterResources;
-  if (!projectedBeforeResources) return fallback();
+  if (!projectedBeforeResources) return fallback(prepared);
   const resources = new Set([
     ...beforeResources,
     ...afterResources,
@@ -162,7 +179,7 @@ export async function compareUnchangedComponentView(
   const repoPath = (route: string) =>
     context.prefix ? `${context.prefix}/${route}` : route;
   if ([...resources].some((route) => context.changed.has(repoPath(route))))
-    return fallback();
+    return fallback(prepared);
   if (
     context.compareResourceBytes &&
     (
@@ -174,7 +191,7 @@ export async function compareUnchangedComponentView(
       )
     ).size > 0
   )
-    return fallback();
+    return fallback(prepared);
   if (
     context.compareResourceBytes &&
     (
@@ -186,7 +203,7 @@ export async function compareUnchangedComponentView(
       )
     ).size > 0
   )
-    return fallback();
+    return fallback(prepared);
 
   const signals = componentUsageSignals(before.usage, after.usage);
   const reasons = [

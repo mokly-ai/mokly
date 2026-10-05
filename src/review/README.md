@@ -334,8 +334,8 @@ Key code:
   composed normally. `stylePath` counts only settled views.
 - `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
   validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
-  The pair derives ignore pairing from validated region/material ids, lazily
-  caches raw normalization and retains one stable projected exclusion policy.
+  Original validation stays eager; fingerprint inventories derive lazily. The
+  pair caches normalization and keeps a stable projected exclusion policy.
 - `page_parser.ts`, `page_source_locations.ts`, `page_subjects.ts`: the one
   default-tree parse captures adopted attribute/clone provenance from parse5's
   own tokens. Empty parser-created elements use their creating token's offset
@@ -356,10 +356,10 @@ Key code:
 - `page_fingerprint_guard.ts`, `material_normalization_recipe.ts` and
   `fingerprint_seams.ts`: inspect delivered recipe joins, including marker/ignore
   normalization and caller copies. Windows read at most 12 UTF-16 units on each
-  side; `material_marker_offsets.ts` indexes openers/closes once per used side,
-  lazily. Created/completed reserved markers keep text on both sides, including
-  opener names joined from fragments. Recipe admission/rendering share
-  `page_material_recipes.ts`; shortcut paths build no fingerprint index.
+  side; `fingerprint_source_proofs.ts` shares exact-source indexes and eligible
+  occurrence proofs within one view. Created/completed markers keep text. Admission
+  and rendering share `page_material_recipes.ts`; shortcuts build no fingerprint data.
+  Skipped complete views reuse matching source-safety proofs only after quick fallback.
 - `skipped_style_occurrences.ts` checks every exact skipped-source occurrence
   against eligible starts. `style_seam_offsets.ts` also rejects potential copies
   assembled by rewrites, aligning indexed prefixes with the same source's ending

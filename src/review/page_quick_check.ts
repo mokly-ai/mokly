@@ -18,12 +18,21 @@ export async function identicalPageQuickCheck(
 ): Promise<ComparedComponentView | undefined> {
   const head = pages.afterAnalysis;
   const paired = pages.pairedIgnoreIds;
+  const styles = head.inlineStyles(paired);
   if (
-    head.inlineStyles(paired).some(styleNeedsFullValidation) ||
+    styles.some(styleNeedsFullValidation) ||
     head.hasDroppedStyleReferences(paired)
   )
     return;
-  if (!(await unchangedPageResources(context, pages))) return;
+  if (!(await unchangedPageResources(context, pages))) {
+    if (
+      context.useMaterialFingerprints !== false &&
+      context.useFastPath !== false &&
+      context.useStylePath !== false
+    )
+      pages.rememberStyleSafety(styles);
+    return;
+  }
   const signals = componentUsageSignals(pages.before.usage, pages.after.usage);
   return {
     comparisonPath: "fast",

@@ -214,12 +214,12 @@ Also reject a seam inside an unclosed `<!--mokly-review-` or
 `<!--mokly-component:` opener, including an opener name completed by a join.
 Use per-side opener/close offsets. Inserts are closed by construction: appendix
 comments, placeholders, contract tokens and wrappers are complete markers/tags.
-Index originals once per used side, lazily; quick/style routes do no indexing.
+Use lazy [view-local proofs](./mokly-material-work-counts.md#source-proof-reuse); shortcuts build no fingerprint inventories/indexes.
 Seam work never scans sheet-sized pieces or constructs materials. Include actual
 single-document and actual/projected pair normalization; unprovable structure keeps text/errors.
 Existing M8 source guards and `<!--mokly-` in canonical appendices keep text too;
 canonical markers must reach normalization unchanged. Those checked appendices
-need no additional index scan. No fingerprint appears on a guarded view.
+need no index scan. No fingerprint appears on a guarded view.
 
 Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
 

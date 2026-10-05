@@ -51,8 +51,8 @@ export function normalizeReviewPair(
   return documentWorkSync("normalizationMs", () => {
     timingDocumentWork()?.normalization(baseHtml);
     timingDocumentWork()?.normalization(headHtml);
-    const base = parseDocument(baseHtml, route);
-    const head = parseDocument(headHtml, route);
+    const base = parseReviewDocument(baseHtml, route);
+    const head = parseReviewDocument(headHtml, route);
     const paired = new Set(
       [...base.regions.keys()].filter((id) => head.regions.has(id)),
     );
@@ -96,11 +96,15 @@ export function normalizeReviewPair(
 export function normalizeSingleDocument(html: string, route: string): string {
   return documentWorkSync("normalizationMs", () => {
     timingDocumentWork()?.normalization(html);
-    return render(parseDocument(html, route), new Set());
+    return render(parseReviewDocument(html, route), new Set());
   });
 }
 
-function parseDocument(content: string, route: string): ParsedDocument {
+/** Eager flat validation; callers can reuse its material keys without deriving inventories. */
+export function parseReviewDocument(
+  content: string,
+  route: string,
+): ParsedDocument {
   const offset = generatedSource(content) ? content.indexOf("\n") + 1 : 0;
   content = content.slice(offset);
   const materials = parseMaterials(content, route);
@@ -173,37 +177,22 @@ export interface ReviewIgnoreRegion {
   end: number;
 }
 
-export interface ReviewIgnoreMetadata {
-  regions: readonly ReviewIgnoreRegion[];
-  materialIds: ReadonlySet<string>;
-  signals: readonly { id: string; start: number; end: number }[];
-}
-
-/** Validate original flat regions/signals without constructing normalized materials. */
-export function reviewIgnoreMetadata(
-  source: string,
-  route: string,
-): ReviewIgnoreMetadata {
-  const parsed = parseDocument(source, route);
-  const offset = generatedSource(source) ? source.indexOf("\n") + 1 : 0;
-  return {
-    regions: [...parsed.regions.values()],
-    materialIds: new Set(parsed.materials.keys()),
-    signals: parsed.materials.size
-      ? [...source.slice(offset).matchAll(MATERIAL_SCAN)].map((match) => ({
-          id: match[0].match(MATERIAL)![1]!,
-          start: offset + match.index,
-          end: offset + match.index + match[0].length,
-        }))
-      : [],
-  };
-}
-
 export function reviewIgnoreRegions(
   source: string,
   route: string,
 ): readonly ReviewIgnoreRegion[] {
-  return reviewIgnoreMetadata(source, route).regions;
+  return [...parseReviewDocument(source, route).regions.values()];
+}
+
+/** Derive signal spans only when a consumer needs them, after original validation. */
+export function reviewMaterialSignals(
+  source: string,
+): readonly { id: string; start: number; end: number }[] {
+  return [...source.matchAll(MATERIAL_SCAN)].map((match) => ({
+    id: match[0].match(MATERIAL)![1]!,
+    start: match.index,
+    end: match.index + match[0].length,
+  }));
 }
 
 /** Source spans of material signals, after the caller validates the marker syntax. */
