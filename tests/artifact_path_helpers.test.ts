@@ -12,10 +12,6 @@ const reviewPathModule = path.normalize(
   "packages/viewer/src/navigation/review_snapshot.ts",
 );
 const manifestCaptureModule = path.normalize("src/review/component_compare.ts");
-const temporaryReviewPathAllowlist = new Set([
-  // Milestone 7 moves shell comparison selection to reviewSnapshotViewPath.
-  path.normalize("packages/viewer/src/shell/comparison_selection.ts"),
-]);
 const moduleExtensions = new Set([
   ".cjs",
   ".cts",
@@ -78,11 +74,7 @@ test("review-record snapshot consumers use reviewSnapshotViewPath", async () => 
   const violations: string[] = [];
   for (const file of await productionModules(".")) {
     const normalized = path.normalize(file);
-    if (
-      normalized === sharedPathModule ||
-      normalized === reviewPathModule ||
-      temporaryReviewPathAllowlist.has(normalized)
-    )
+    if (normalized === sharedPathModule || normalized === reviewPathModule)
       continue;
     violations.push(
       ...directSnapshotCalls(file, await fs.readFile(file, "utf8")),

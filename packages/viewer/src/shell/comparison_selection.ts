@@ -1,6 +1,7 @@
 /** Pure selection of the views and pane documents one comparison shows. */
 
-import { snapshotViewPath, type ViewRouteKind } from "../navigation/routes.js";
+import { reviewSnapshotViewPath } from "../navigation/review_snapshot.js";
+import type { ViewRouteKind } from "../navigation/routes.js";
 import type { ViewReview } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
@@ -35,14 +36,14 @@ function comparisonEntry(
     .find((candidate) => candidate.path === id);
 }
 
-/** Resolve a derived snapshot path beneath its comparison's generation. */
+/** Resolve a side's recorded snapshot path beneath its comparison's generation. */
 function snapshotUrl(
   base: string,
   side: "after" | "before",
-  id: string,
+  record: { before?: { path: string }; after?: { path: string } },
   view: ViewReview,
 ): string {
-  const source = snapshotViewPath(side, id, view.viewport, view.colorScheme);
+  const source = reviewSnapshotViewPath(side, record, view);
   return new URL(source.split("/").map(encodeURIComponent).join("/"), base)
     .href;
 }
@@ -73,29 +74,19 @@ export function selectedComparisonViews(
           candidate.viewport === viewport && candidate.colorScheme === "light",
       );
     if (!view) return [];
-    const before = view.state !== "added";
-    const after = view.state !== "removed";
+    const before = view.state !== "added" && entry.before !== undefined;
+    const after = view.state !== "removed" && entry.after !== undefined;
     return [
       {
         documents: {
           ...(before
             ? {
-                before: snapshotUrl(
-                  loaded.url,
-                  "before",
-                  entry.before?.path ?? id,
-                  view,
-                ),
+                before: snapshotUrl(loaded.url, "before", entry, view),
               }
             : {}),
           ...(after
             ? {
-                after: snapshotUrl(
-                  loaded.url,
-                  "after",
-                  entry.after?.path ?? id,
-                  view,
-                ),
+                after: snapshotUrl(loaded.url, "after", entry, view),
               }
             : {}),
         },

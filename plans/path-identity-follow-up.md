@@ -237,8 +237,10 @@ Keep the selected comparison mode until a listed reset event (item 6).
 - [x] A view or sibling without changes shows Current, keeps the selected
       mode, and the next eligible view or sibling applies it. A live update
       resets to Current.
-- [ ] Use `reviewSnapshotViewPath` in the shell comparison selection.
-      The orchestrator completes this item after the milestone branches merge.
+- [x] Use `reviewSnapshotViewPath` in the shell comparison selection.
+      The orchestrator completed this item after the milestone branches
+      merged, and removed the temporary guard exception for
+      `comparison_selection.ts`.
 - [x] Wait for the resolved requested view before adopting the initial mode.
       Test a Dark URL whose hydration presentation first describes Light.
 - [x] Add a Serve test that opens a newly rendered entry without a warm-up
