@@ -27,6 +27,23 @@ export default defineComponent({title:'${title}',description:'A control',depende
 const primary = "{slug:'primary',title:'Primary',props:{label:'Continue'}}";
 const initial = "{slug:'default',title:'Default',props:{label:'Save'}}";
 
+/**
+ * The removed parent's page lists its moved variant at its new place, with no
+ * empty variant bar, comparison instruction or Location row.
+ */
+function assertRemovedParentPage(html: string, boundary: string): void {
+  assert.doesNotMatch(html, /aria-label="Saved variants"/u, boundary);
+  assert.doesNotMatch(html, /Select a comparison/u, boundary);
+  assert.doesNotMatch(html, /Location/u, boundary);
+  assert.match(html, /<h2>This component was removed<\/h2>/u, boundary);
+  assert.match(html, /<p>Its variant moved to a new place\.<\/p>/u, boundary);
+  assert.match(
+    html,
+    /data-moved-variant="new\/primary" href="[^"]*view\/new\/primary\/">New › Primary<\/a>/u,
+    boundary,
+  );
+}
+
 for (const boundary of ["reader", "Serve", "export"])
   test(`a removed component with its last variant moved passes ${boundary}`, async (t) => {
     const fixture = await pathFixture(
@@ -126,6 +143,10 @@ for (const boundary of ["reader", "Serve", "export"])
             200,
             route,
           );
+        assertRemovedParentPage(
+          await (await fetch(`${server.url}/view/old/`)).text(),
+          boundary,
+        );
         const model = readCatalogue(
           await (await fetch(`${server.url}/__mokly/catalogue.json`)).json(),
         );
@@ -154,10 +175,12 @@ for (const boundary of ["reader", "Serve", "export"])
         model.components.find((e) => e.path === "new/primary")?.previousPath,
         "old/primary",
       );
-      assert.ok(
-        (
-          await fs.stat(path.join(fixture.root, "site/view/old/index.html"))
-        ).isFile(),
+      assertRemovedParentPage(
+        await fs.readFile(
+          path.join(fixture.root, "site/view/old/index.html"),
+          "utf8",
+        ),
+        boundary,
       );
     }
   });

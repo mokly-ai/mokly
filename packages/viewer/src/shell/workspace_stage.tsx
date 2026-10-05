@@ -7,8 +7,13 @@ import type { ShellContext } from "./context.js";
 import { TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import type { WorkspaceData } from "./workspace_data.js";
+import { MovedVariantsStage } from "./workspace_moved_variants.js";
 
-/** Render only an available current preview; comparisons stay independently usable. */
+/**
+ * Render only an available current preview; comparisons stay independently
+ * usable. A removed component without a variant row has nothing to compare,
+ * so its stage lists where its variants moved.
+ */
 export function WorkspaceStage({
   catalogue,
   context,
@@ -26,6 +31,8 @@ export function WorkspaceStage({
   variantPath?: string;
   variantRemoved: boolean;
 }) {
+  if (data.removed && data.entry.kind === "component" && !data.variants.length)
+    return <MovedVariantsStage catalogue={catalogue} entry={data.entry} />;
   if (data.removed)
     return (
       <div className="mbk-empty" data-mokly-stage="" data-viewport="both">

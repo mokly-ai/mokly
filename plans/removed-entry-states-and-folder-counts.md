@@ -181,27 +181,37 @@ Tags: ui
 
 Implement the designed states in the shared shell.
 
-Status: Not started.
+Status: Complete.
 
-- [ ] Add shared case `departed-variants` to the branch-point fixture set,
+- [x] Add shared case `departed-variants` to the branch-point fixture set,
       with its pairs, its removed record and its lookup result in
       `tests/branch_point_fixture_data.test.ts`. It moved here from
       Milestone 3 because its browser checks need the new presentation.
-- [ ] Write failing shell tests first: a removed parent with moved variants
+- [x] Write failing shell tests first: a removed parent with moved variants
       renders no variant bar, the new copy and the links in the served and
       public shells; a removed parent with a removed variant keeps its bar
       and instruction; a top-level removed entry has no `Location` row, and
       a removed entry in a folder keeps it.
-- [ ] Hide an empty variant bar in `workspace_variant_bar.tsx`.
-- [ ] Render the moved-variant stage, and add its styles.
-- [ ] Show `Location` in `details.tsx` only when the folder titles are not
+- [x] Hide an empty variant bar in `workspace_variant_bar.tsx`.
+- [x] Render the moved-variant stage, and add its styles.
+- [x] Show `Location` in `details.tsx` only when the folder titles are not
       empty.
-- [ ] Show `This component has no saved variants to edit.` in Props when a
+- [x] Show `This component has no saved variants to edit.` in Props when a
       page has no variant row.
-- [ ] Add the `departed-variants` browser checks for Serve, export and the
+- [x] Add the `departed-variants` browser checks for Serve, export and the
       embedded viewer at desktop and mobile widths, and extend
       `move_removed_parent_delivery.test.ts` to read the rendered page.
-- [ ] Compare the product with the mockups at both widths.
+- [x] Compare the product with the mockups at both widths.
+
+Verification: the new shell test failed on the empty variant bar before the
+fix, and the extended delivery test failed in Serve and export. With the fix,
+both shell tests, all three delivery boundaries, the removed-preview shell
+tests and the guard pass. The `departed-variants` case passes in Serve,
+export and the embedded viewer at 1280 and 390 pixels (6 of 6), and all six
+fixture-data cases pass. Type checks, ESLint and Prettier pass. The product
+page matches the mockup's structure at both widths: no variant bar or
+comparison band, the heading, the moved-variant links and Details without
+`Location`.
 
 ## Milestone 5: Verification, commit, push and review
 

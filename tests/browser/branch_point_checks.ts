@@ -218,6 +218,35 @@ const reusedParent: Check = async (page, host) => {
   ).toHaveCount(0);
 };
 
+/** A removed parent's stage lists its moved variants, which open in place. */
+const departedVariants: Check = async (page, host, kind) => {
+  await openEntry(page, host, "link-button");
+  await expectHead(page, "Link button", []);
+  await expect(page.locator("nav[aria-label='Saved variants']")).toHaveCount(0);
+  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+  const stage = page.locator("[data-workspace-moved-variants]");
+  await expect(stage.locator("h2")).toHaveText("This component was removed");
+  await expect(stage.locator("p")).toHaveText(
+    "Its variants moved to new places.",
+  );
+  await expect(stage.locator("a")).toHaveText([
+    "Action › quiet",
+    "Toolbar › inline",
+  ]);
+  const details = page.locator("[data-inspector-panel=details]");
+  await inspectorTab(page, "Details");
+  await expect(details).toContainText("Sourcespecs/link-button.mockup.tsx");
+  await expect(details).not.toContainText("Location");
+  await stage.locator("a").first().click();
+  await expectRouted(page, kind, "library/action/quiet");
+  await expectHead(page, "Action", [
+    "Library [button]",
+    "Action -> /view/library/action/",
+  ]);
+  await inspectorTab(page, "Details");
+  await expect(details).toContainText("Moved fromlink-button/quiet");
+};
+
 /** The workspaces whose comparison mode a case carries between siblings. */
 export const BRANCH_POINT_COMPARED: Readonly<
   Record<BranchPointCase, readonly string[]>
@@ -230,6 +259,7 @@ export const BRANCH_POINT_COMPARED: Readonly<
   "moved-variant": [],
   "case-renames": ["library/action/primary", "library/Action/secondary"],
   "reused-parent": [],
+  "departed-variants": [],
 };
 
 /** Every case's checks, keyed by the shared fixture name. */
@@ -239,4 +269,5 @@ export const BRANCH_POINT_CHECKS: Readonly<Record<BranchPointCase, Check>> = {
   "moved-variant": movedVariant,
   "case-renames": caseRenames,
   "reused-parent": reusedParent,
+  "departed-variants": departedVariants,
 };

@@ -71,7 +71,7 @@ export function EntryDetailsBody(props: {
         {entry.kind === "screen" || entry.kind === "component" ? (
           <ChangedViewsRow views={props.changedViews ?? []} />
         ) : null}
-        {removed ? (
+        {removed && removed.folderTitles.length > 0 ? (
           <MetaRow label="Location">{removed.folderTitles.join(" › ")}</MetaRow>
         ) : null}
         <VariantOfChip catalogue={props.catalogue} entry={entry} />

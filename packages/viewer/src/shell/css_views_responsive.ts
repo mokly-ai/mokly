@@ -113,6 +113,20 @@ body[data-mokly-color-scheme="dark"]
   font-weight: 600;
 }
 
+.mbk-empty-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mbk-empty-links .mbk-empty-link {
+  margin-top: 0;
+}
+
 .mbk-frag {
   display: block;
   width: 100%;

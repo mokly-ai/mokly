@@ -47,6 +47,14 @@ const cases = [
     pairs: [],
     removed: [["library/action/default", "Action"]],
   },
+  {
+    name: "departed-variants",
+    pairs: [
+      ["component", "library/action/quiet", "link-button/quiet"],
+      ["component", "library/toolbar/inline", "link-button/inline"],
+    ],
+    removed: [["link-button", undefined]],
+  },
 ] as const;
 
 for (const expected of cases) {
@@ -197,6 +205,18 @@ for (const expected of cases) {
         expected.name === "moved-parent"
           ? "library/archive/action"
           : "library/action",
+      );
+    }
+    if (expected.name === "departed-variants") {
+      assert.deepEqual(catalogue.removedEntries[0]?.folderTitles, []);
+      assert.deepEqual(
+        lookup
+          .movedVariants({ kind: "component", path: "link-button" })
+          .map(({ path, title }) => [path, title]),
+        [
+          ["library/action/quiet", "quiet"],
+          ["library/toolbar/inline", "inline"],
+        ],
       );
     }
     if (expected.name === "reused-parent") {

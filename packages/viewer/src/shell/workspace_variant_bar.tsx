@@ -4,7 +4,10 @@ import { viewHref } from "../navigation/routes.js";
 
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
-/** Link sibling variant entries without creating a second route identity. */
+/**
+ * Link sibling variant entries without creating a second route identity. A
+ * removed parent whose variants all moved has no row, so it draws no bar.
+ */
 export function WorkspaceVariantBar({
   data,
   variant,
@@ -12,7 +15,7 @@ export function WorkspaceVariantBar({
   data: WorkspaceData;
   variant?: WorkspaceVariant;
 }) {
-  if (!data.component) return null;
+  if (!data.component || data.variants.length === 0) return null;
   return (
     <nav aria-label="Saved variants" className="mbk-selection-bar">
       <span>Variant</span>

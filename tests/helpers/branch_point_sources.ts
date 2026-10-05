@@ -5,7 +5,8 @@ export type BranchPointCase =
   | "moved-parent"
   | "moved-variant"
   | "case-renames"
-  | "reused-parent";
+  | "reused-parent"
+  | "departed-variants";
 
 interface BranchPointSources {
   before: Readonly<Record<string, string>>;
@@ -144,7 +145,51 @@ function caseRenames(): BranchPointSources {
   };
 }
 
-/** Each case stays clear of the ten unapproved second-review findings. */
+/**
+ * A top-level component is deleted after its two variants move to two other
+ * components, each declaring the path it moved from.
+ */
+function departedVariants(): BranchPointSources {
+  const library = (name: string, title: string, moved?: string) =>
+    moveComponentSource({
+      name,
+      title,
+      variants: [variant("default", title), ...(moved ? [moved] : [])].join(
+        ",",
+      ),
+    });
+  return {
+    before: {
+      "specs/link-button.mockup.tsx": moveComponentSource({
+        name: "linkButton",
+        title: "Link button",
+        variants: [variant("quiet", "Later"), variant("inline", "More")].join(
+          ",",
+        ),
+      }),
+      "specs/library/action.mockup.tsx": library("action", "Action"),
+      "specs/library/toolbar.mockup.tsx": library("toolbar", "Toolbar"),
+    },
+    head: {
+      "specs/link-button.mockup.tsx": null,
+      "specs/library/action.mockup.tsx": library(
+        "action",
+        "Action",
+        variant("quiet", "Later", "link-button/quiet"),
+      ),
+      "specs/library/toolbar.mockup.tsx": library(
+        "toolbar",
+        "Toolbar",
+        variant("inline", "More", "link-button/inline"),
+      ),
+    },
+  };
+}
+
+/**
+ * Cases 1 to 5 stay clear of the second-review findings that were not
+ * approved with the lookup; case 6 depicts the approved removed-parent state.
+ */
 export function branchPointSources(name: BranchPointCase): BranchPointSources {
   switch (name) {
     case "moved-consumers":
@@ -164,5 +209,7 @@ export function branchPointSources(name: BranchPointCase): BranchPointSources {
             "# Action guide\n\nChoose a clear label for each action.\n",
         },
       };
+    case "departed-variants":
+      return departedVariants();
   }
 }

@@ -22,6 +22,7 @@ const CASES: readonly BranchPointCase[] = [
   "moved-variant",
   "case-renames",
   "reused-parent",
+  "departed-variants",
 ];
 
 /**

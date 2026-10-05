@@ -45,6 +45,8 @@ export function controlsUnavailable(
   comparing: boolean,
   live: boolean,
 ): string | undefined {
+  if (!variant && data.variants.length === 0)
+    return "This component has no saved variants to edit.";
   if (!variant || variant.removed)
     return "Choose an available saved variant to edit props.";
   if (comparing)
