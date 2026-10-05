@@ -5,7 +5,10 @@ import path from "node:path";
 import { expect, test as base } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
-import { timeFixturePhase } from "../helpers/fixture_timing.js";
+import {
+  PREVIEW_BUILD_SETUP_TIMEOUT_MS,
+  timeFixturePhase,
+} from "../helpers/fixture_timing.js";
 
 import { startPreviewFixture } from "./preview_fixture.js";
 import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
@@ -15,8 +18,6 @@ interface PreparedPreview {
   readonly after: string;
   readonly preview: OwnedPreviewFixture;
 }
-
-const PREVIEW_PREPARATION_SETUP_TIMEOUT_MS = 420_000;
 
 const test = base.extend<{ preparedPreview: PreparedPreview }>({
   preparedPreview: [
@@ -42,7 +43,7 @@ const test = base.extend<{ preparedPreview: PreparedPreview }>({
         );
       }
     },
-    { timeout: PREVIEW_PREPARATION_SETUP_TIMEOUT_MS },
+    { timeout: PREVIEW_BUILD_SETUP_TIMEOUT_MS },
   ],
 });
 
@@ -52,7 +53,7 @@ test("focused preview preparation preserves generated output and serves fresh pu
 }) => {
   expect(after).toBe(before);
   expect(preview.freshness.outputWasAbsent).toBe(true);
-  await page.goto(`${preview.url}/view/screens/example-welcome`);
+  await page.goto(`${preview.url}/view/example/screens/welcome/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
 });
 

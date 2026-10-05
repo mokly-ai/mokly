@@ -1,5 +1,8 @@
 # Package Documentation
 
+Status: Completed. [PR #82](https://github.com/mokly-ai/mokly/pull/82)
+merged on 2026-09-17.
+
 Ship Mokly's CLI documentation as plain Markdown in the published
 `@mokly/mokly` package so the private `mokly-cloud` repository can render the
 documentation for each installed release. This plan supersedes the unmerged

@@ -26,7 +26,7 @@ test("two entries share a stylesheet without deduplicating across roots", async 
   t.after(() => removeFixture(fixture));
   await fs.writeFile(
     path.join(fixture.entriesDir, "other.mockup.ts"),
-    'import "./fixture.css"; export const mockups = [];',
+    'import "./fixture.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Supplement", description: "Additional stylesheet root", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Supplement</body></html>" });',
   );
   const compiled = await compileFixture(fixture);
   const other = "mokly-generated/styles/entries/other.mockup.ts.css";
@@ -48,7 +48,7 @@ test("different entries emit independent stylesheets in one compilation", async 
   );
   await fs.writeFile(
     path.join(fixture.entriesDir, "second.mockup.ts"),
-    'import "./second.css"; export const mockups = [];',
+    'import "./second.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Supplement", description: "Additional stylesheet root", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Supplement</body></html>" });',
   );
   const compiled = await compileFixture(fixture);
   const first = compiled.outputs.get(entryStyle) as string;
@@ -70,7 +70,7 @@ test("a shared asset is emitted once even when two root stylesheets use it", asy
   );
   await fs.writeFile(
     path.join(fixture.entriesDir, "other.mockup.ts"),
-    'import "./fixture.css"; export const mockups = [];',
+    'import "./fixture.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Supplement", description: "Additional stylesheet root", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Supplement</body></html>" });',
   );
   const compiled = await compileFixture(fixture);
   assert.deepEqual(

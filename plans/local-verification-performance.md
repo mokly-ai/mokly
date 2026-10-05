@@ -1,12 +1,11 @@
 # Local Verification Performance
 
-Status: main integration verified, pushed, and reviewed. One review finding remains
-for the user's decision; implementation is unchanged after review.
-Active until PR merge. Created
-2026-09-23 at the user's request. This plan improves the local complete gate;
-the existing [CI Performance](./ci-performance.md) plan owns the
-already-delivered hosted fan-out. Plan creation changed no test or verification
-behavior.
+Status: Active. [PR #136](https://github.com/mokly-ai/mokly/pull/136) is open.
+The first main integration passed its checks and review. Its snapshot
+file/folder-transition finding remains for the user's decision. The next main
+integration is in progress. The user approved fixing the cold-preview failure
+before the final checks and push. Created 2026-09-23 at the user's request. The
+[CI Performance](./ci-performance.md) plan owns the delivered hosted fan-out.
 
 ## Outcome And Boundaries
 
@@ -55,7 +54,8 @@ used an older test inventory and must not be treated as a current local result.
 Summary: specify the complete behavior and acceptance measurements before
 changing tests or orchestration. The current gate remains functional.
 
-- [x] Register this separate active plan in [the plan index](./README.md).
+- [x] Register this separate active plan in the former plan index. Main later
+      replaced that index with each plan's own status paragraph.
 - [x] Update the CI verification protocol, splitting out a focused local-gate
       protocol if needed to keep protocol files short. Define audit-first
       sequencing, when independent gates may run concurrently, exact staged/
@@ -269,3 +269,34 @@ Public and CI unit entrypoints keep their original two-file concurrency.
 The post-push review found one P2 snapshot file/folder-transition issue. It remains
 unmodified for the user's decision; the [verification record](../docs/reviews/local-verification-main-integration.md#post-push-review)
 contains the impact, solution options, and recommendation.
+
+## Milestone 6: Integrate Path Identity Main Changes
+
+Summary: merge `origin/main` at `781da7ae` from source tip `e53dd431`.
+Preserve file-path identity, Markdown documents, lock-release fixes, and the
+complete local verification runner. Record each conflict decision in PR #136.
+
+- [x] Audit incoming changes and resolve the five conflicted paths. Keep main's
+      plan-index removal and convert this plan to its per-file status format.
+- [x] Preserve all five design-attribution test bodies across the split files.
+      Update the shared hydration inventory to main's path identity. Keep its
+      console-notice rule and the branch's fixture timing and route partitions.
+- [x] Preserve main's component-navigation regression and the branch's
+      deterministic context-switch assertion within the 300-line limit.
+- [x] Add failure-first coverage for slow same-origin document loads,
+      cancellation, and expiry. Separate the local resource-load deadline from
+      the cross-origin handshake deadline. Update the owning protocol and README.
+- [x] Give the ordinary preview fixture the existing seven-minute preview-build
+      setup budget. Its real export measured 288.3 seconds alone and timed out
+      twice under parallel load; retain all fixture work and UI deadlines.
+- [x] Cover cold HTML and stylesheet waits in the shared browser helpers.
+      Use the documented 30-second resource-load budget for frame-source checks;
+      keep other assertions and whole-test deadlines unchanged.
+- [ ] Run focused tests, builds, and the complete `cargo xtask check` gate on
+      the resolved merge tree. Record test counts and timing.
+- [ ] Inspect main-relative deletions, run `git add -A`, commit with a
+      Conventional Commit, check the two merge parents and every remerge-diff
+      path, update PR #136 with the integration decisions, and push the branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete diff against `origin/main`. Report findings without
+      changing the implementation.

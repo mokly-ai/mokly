@@ -15,13 +15,13 @@ export function screenInstance(
   viewport: "mobile" | "desktop",
   id: string,
 ): InstanceRef {
-  const screen = fixture.catalogue.screens.find(({ id }) => id === "home")!;
+  const screen = fixture.catalogue.screens.find(({ path }) => path === "home")!;
   const view = screen.views.find(
     (view) => view.viewport === viewport && view.colorScheme === "light",
   )!;
   if (view.usage.status !== "ready") throw new Error("Expected ready usage");
   return {
-    screenId: "home",
+    screenPath: "home",
     viewport,
     colorScheme: "light",
     key: view.usage.instances.find((instance) => instance.id === id)!.key,
@@ -30,18 +30,18 @@ export function screenInstance(
 
 export function variantInstance(fixture: MarkerFixture): InstanceRef {
   const component = fixture.catalogue.components.find(
-    ({ id }) => id === "pane",
+    ({ path }) => path === "pane",
   )!;
   const variant = catalogueComponentVariants(
     fixture.catalogue,
-    component.id,
-  ).find(({ id }) => id === "pane-second")!;
+    component.path,
+  ).find(({ path }) => path === "pane/second")!;
   const view = variant.views.find(
     (view) => view.viewport === "mobile" && view.colorScheme === "light",
   )!;
   if (view.usage.status !== "ready") throw new Error("Expected ready usage");
   return {
-    screenId: "pane-second",
+    screenPath: "pane/second",
     viewport: "mobile",
     colorScheme: "light",
     key: view.usage.instances.find(
@@ -64,7 +64,7 @@ export async function openMarkerViewer(
       window.viewerHarness.start(id, {
         cross,
         defaultSelection: {
-          screenId: "home",
+          screenPath: "home",
           viewport: "both",
           ...selection,
         },

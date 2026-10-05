@@ -13,21 +13,19 @@ export function componentEntrySource(
 import { defineComponent, defineScreen, MockLink, ReviewIgnore } from "@mokly/mokly";
 const metadata = { dependencies: ["notes.md"], relatedDocs: [] };
 const action = defineComponent({ ...metadata,
-  id: "action", title: "Action", description: "A shared action", navPath: ["Components"],
-  propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } }, disabled: { schema: { kind: "boolean" }, optional: true }, hidden: { schema: { kind: "boolean" }, optional: true } } },
+  path: "action", title: "Action", description: "A shared action", propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } }, disabled: { schema: { kind: "boolean" }, optional: true }, hidden: { schema: { kind: "boolean" }, optional: true } } },
   controls: { label: { kind: "text", maxLength: 80 }, disabled: { kind: "boolean" } },
   render: ${options.actionRender ?? "(props, context) => props.hidden ? null : <button data-viewport={context.viewport} disabled={props.disabled}>{props.label}</button>"},
-  variants: [{ id: "action-default", title: "Default", props: { label: "Continue" } }, { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }]
+  variants: [{ slug: "default", title: "Default", props: { label: "Continue" } }, { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }]
 });
 const pane = defineComponent({ ...metadata,
-  id: "pane", title: "Pane", description: "A caller-owned content slot", navPath: ["Components"],
-  propSchema: { kind: "object", properties: {} }, slots: ["children"],
+  path: "pane", title: "Pane", description: "A caller-owned content slot", propSchema: { kind: "object", properties: {} }, slots: ["children"],
   render: ${options.paneRender ?? '(props) => <section>{props.children}<action.Component label="Inside" /></section>'},
-  variants: ${options.paneVariants ?? '[{ id: "pane-default", title: "Default", props: { children: <strong>Saved content</strong> } }]'}
+  variants: ${options.paneVariants ?? '[{ slug: "default", title: "Default", props: { children: <strong>Saved content</strong> } }]'}
 });
 ${options.extra ?? ""}
 export const mockups = [
-  ${options.exports ?? "action.entries, pane.entries,"}
-  defineScreen({ ...metadata, id: "home", title: "Home", description: "A consuming screen", mobile: <main>${options.body ?? '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink>'}</main>, desktop: <main>${options.body ?? '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink>'}</main> })
+  ${options.exports ?? "...action.entries, ...pane.entries,"}
+  defineScreen({ ...metadata, path: "home", title: "Home", description: "A consuming screen", mobile: <main>${options.body ?? '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink>'}</main>, desktop: <main>${options.body ?? '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink>'}</main> })
 ];`;
 }

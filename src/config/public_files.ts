@@ -23,9 +23,15 @@ export function isInternalCatalogueFile(
   if (internal.includes(candidate)) return true;
   if (!resolveAliases) return false;
   const realCandidate = projectRealPath(candidate);
-  return internal.some(
-    (file) => fs.existsSync(file) && realCandidate === fs.realpathSync(file),
-  );
+  return internal.some((file) => {
+    if (!fs.existsSync(file)) return false;
+    try {
+      return realCandidate === fs.realpathSync(file);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+      throw error;
+    }
+  });
 }
 
 /** Shared denial policy; historical readers disable current filesystem aliases. */

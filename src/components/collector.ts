@@ -14,6 +14,8 @@ import {
   instanceKey,
 } from "@mokly/viewer/data";
 
+import { definitionPath } from "../authoring/identity.js";
+
 import { instanceInputs } from "./instance_structure.js";
 import type { ComponentDefinition, ComponentRenderContext } from "./types.js";
 
@@ -45,10 +47,13 @@ export class ComponentCollector {
     scope: OwnershipScope,
     source?: ComponentSourceLocation,
   ): ComponentInstanceRecord {
-    if (this.definitions.get(definition.id)?.render !== definition.render)
+    if (
+      this.definitions.get(definitionPath(definition))?.render !==
+      definition.render
+    )
       invalidData(
         this.label,
-        `component ${definition.id} is not exported in the registry`,
+        `component ${definitionPath(definition)} is not exported in the registry`,
       );
     const key = instanceKey(scope.owner, scope.slotKey, id);
     const orderScope = canonicalJson([
@@ -61,7 +66,7 @@ export class ComponentCollector {
     const instance: ComponentInstanceRecord = {
       key,
       id,
-      componentId: definition.id,
+      componentId: definitionPath(definition),
       owner: scope.owner,
       ...(scope.slotKey ? { slotKey: scope.slotKey } : {}),
       order,

@@ -67,7 +67,7 @@ for (const cross of [false, true])
     const action = page.getByRole("link", { name: "Action", exact: true });
     await action.evaluate((link) => {
       (link as HTMLAnchorElement).href =
-        "/view/components/action-disabled.html?fragment=details";
+        "/view/action/disabled/?fragment=details";
     });
     await action.click();
     await expect(
@@ -82,7 +82,7 @@ for (const cross of [false, true])
           .elementHandle();
         return (await element?.contentFrame())?.url();
       })
-      .toMatch(/disabled\.mobile\.html(?:\?[^#]*)?#details$/);
+      .toMatch(/disabled\/index\.mobile\.html(?:\?[^#]*)?#details$/);
     expect(
       await page.evaluate(() =>
         window.viewerHarness
@@ -92,7 +92,7 @@ for (const cross of [false, true])
       ),
     ).toEqual([
       {
-        screenId: "action-disabled",
+        screenPath: "action/disabled",
         fragment: "details",
       },
     ]);
@@ -120,11 +120,9 @@ test("host routing preserves unrelated links and blocks invalid historical links
     }, href);
 
   expect(await intercepted("/documentation/help.html")).toBe(false);
-  expect(
-    await intercepted(
-      `/view/components/action.html?snapshot=${"f".repeat(64)}`,
-    ),
-  ).toBe(true);
+  expect(await intercepted(`/view/action/?snapshot=${"f".repeat(64)}`)).toBe(
+    true,
+  );
   expect(
     await page.evaluate(() =>
       window.viewerHarness

@@ -10,49 +10,49 @@ test("real implementation and saved metadata edits have distinct impact", async 
       "chrome/top-bar.view.tsx",
       'className="mbk-topbar"',
       'className="mbk-topbar revised"',
-      "top-bar",
+      "chrome/top-bar",
       true,
     ],
     [
       "controls/tag-chip.view.tsx",
       "{label}",
       "{label} revised",
-      "tag-chip",
+      "controls/tag-chip",
       true,
     ],
     [
       "chrome/top-bar.tsx",
       'title: "Search"',
       'title: "Filtered search"',
-      "top-bar-search",
+      "chrome/top-bar/search",
       false,
     ],
     [
       "chrome/top-bar.tsx",
       'label: "Query"',
       'label: "Search text"',
-      "top-bar",
+      "chrome/top-bar",
       false,
     ],
     [
       "chrome/top-bar.tsx",
       'query: "tag:forms"',
       'query: "tag:onboarding"',
-      "top-bar-search",
+      "chrome/top-bar/search",
       false,
     ],
   ] as const)
     await t.test(`${file}: ${from}`, async () => {
       await fixture.reset();
       await fixture.edit(
-        `examples/basic/entries/design/library/${file}`,
+        `examples/basic/specs/design/library/${file}`,
         (source) => source.replace(from, to),
       );
       const after = await fixture.build();
       const result = await fixture.compare(after);
       assert.deepEqual(
-        result.changes.map((change) => (change.after ?? change.before)!.id),
-        [`design-ui-${id}`],
+        result.changes.map((change) => (change.after ?? change.before)!.path),
+        [`design/library/${id}`],
       );
       assert.equal(result.affectedConsumers.length > 0, affects);
     });

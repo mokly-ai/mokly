@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in `@mokly/viewer` by the completed
-[viewer library plan](../../plans/mokly-viewer-library.md). Local
-Serve/export keep today's same-origin sandbox and visible behavior. Only an
-explicit cross-origin host uses the new inspector transport. Host marker
-consumption and the trailing geometry refresh are implemented by the
-[comment anchoring plan](../../plans/viewer-comment-anchoring.md); the adapter
-wire protocol remains unchanged.
+Implemented in `@mokly/viewer`. Local Serve/export retain the same-origin
+sandbox and visible behavior; explicit cross-origin hosts use inspector
+transport. Host markers and trailing geometry refresh are implemented. Navigation
+messages name entries by `screenPath`. Same-origin frame identity accepts an
+`index.html` page at its containing directory with or without a trailing slash,
+and other HTML files without their final `.html`, while retaining origin and
+query identity.
 Historical pages and screens use the viewer-owned presentation defined by the
 [removed previews contract](./mokly-removed-previews.md). Neither adapter mounts
 those frames or enters an inspection handshake; the viewer presents a
@@ -39,7 +39,7 @@ type NavigationTarget =
   | { kind: "self" | "top" | "parent" | "blank" }
   | { kind: "named"; name: string };
 interface FrameNavigation {
-  id: string;
+  screenPath: string;
   fragment?: string;
   target: NavigationTarget;
   activation: "primary" | "modified" | "middle";
@@ -86,12 +86,11 @@ current `/static/` HTML paths, the configured origin and a valid logical hash.
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount navigates with iframe history replacement semantics; the
 React shell retains its initial portable `src` after an adapter takes ownership.
-A ready same-origin document may be reused only after mount-scoped
-authentication accepts it. A superseded same-origin load may arrive during
-that handoff; it cannot fail or be adopted by the current mount, which remains
-pending for the exact assigned resource. A load, view/scheme swap or disposal
-invalidates the old session and its pending work; responses from it never update
-a new mount.
+A ready same-origin document may be reused only after mount-scoped authentication
+accepts it. A superseded same-origin load may arrive during that handoff; it
+cannot fail or be adopted by the current mount, which remains pending for the
+exact assigned resource. A load, view/scheme swap or disposal invalidates the
+old session and its pending work; responses from it never update a new mount.
 The React shell supplies `onEvent` before calling `mount`. A conforming adapter
 records that receiver before it starts replacing an already-visible document.
 Passing the same callback to `MountedFrame.subscribe` adopts this mount-time
@@ -179,74 +178,10 @@ diagnostics are not extracted from consumer text.
 
 ## Same-Origin Implementation
 
-`sameOriginAdapter` confines `contentDocument` access to
-[`same_origin_access.ts`](../../packages/viewer/src/client/same_origin_access.ts)
-and the adapter-owned mount. Geometry, pointer inspection and presentation stay
-in their dedicated local modules. A loaded document must retain the exact
-origin, query and decoded resource path. A provider may canonicalize a final
-`.html` suffix to the otherwise identical extensionless path; no other path
-redirect is accepted. The URL fragment is client-only positioning rather than
-resource identity, so the adapter authenticates the document first and then
-applies a missing or changed validated fragment. An authenticated document
-reload renews every document-scoped listener and observer without replacing the
-outer frame session. Preserve ownership and range authentication, clipping,
-highlighting, scroll restoration and logical-link classification unchanged.
-Ready usage is required for instance inspection; absent usage does not disable
-valid navigation.
-
-When a same-origin replacement starts, the adapter transfers its mount-time
-navigation receiver before changing `location` only when the currently visible
-immediate document is the exact `Document` object that a previous same-origin
-mount authenticated for that frame. Object identity is the transfer key because
-scripts are disabled, so a document cannot change its resource identity, while
-every frame navigation commits a new document. Valid marked activations in that
-authenticated still-visible document therefore remain host-owned while the
-assigned resource loads. A document that no mount authenticated, including one
-the frame reached through its own native navigation, keeps portable native-link
-behavior until the replacement authenticates.
-
-The adapter records weak per-frame mount provenance and the last assigned
-resource, separately from the iframe's initial `src` attribute. On the first same-origin
-mount only, its immediate watcher may authenticate an already rendered
-document whose resource exactly matches the assignment; this is the explicit
-server-rendered hydration path. Every later mount captures the immediate
-pre-replacement `Document`. When that exact object was not previously
-authenticated for the frame, both the watcher and `load` handler exclude it
-from assigned-resource authentication even if its URL exactly equals the new
-assignment. Only a different replacement `Document` may then pass the resource
-check. A rejected starting document must trigger a fresh history-replacing
-navigation even when both its URL and the iframe's `src` equal the assignment;
-URL equality alone cannot justify reuse or waiting for a load that is not in
-progress. This decision is independent of document readiness: rejected starting
-documents and different assigned resources are replaced while loading or
-interactive as well as after completion. Changing the assigned resource also
-cancels any earlier navigation, even when the still-visible authenticated
-document already matches the new choice. A delayed superseded response must
-never overwrite the latest preview selection.
-
-Authenticated matching documents and the initial matching server-rendered
-document are reused without reloading; incomplete accepted documents wait only
-for their own load completion. Only the first mount may wait for a
-startup-assigned recorded fragment that has not committed yet. Frame and
-document provenance is weakly held and does not extend either object's lifetime.
-
-As soon as the new immediate `Document` becomes same-origin-accessible, the
-adapter independently authenticates its exact origin, decoded resource path and
-query, then moves the receiver before slower subresources can delay the iframe
-`load` event. The replacement watcher and `load` handler accept only this
-assigned-resource authentication; previously authenticated identity never lets
-a transferred document satisfy a new mount. Readiness installs inspection and
-geometry over the authenticated document. Unsubscribing or disposing removes
-the receiver, so an unenhanced document continues to use its portable native
-links.
-
-The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
-Historical [removed previews](./mokly-removed-previews.md) and
-[comparison panes](./mokly-comparison-panes.md) bypass this adapter as guarded,
-viewer-origin `srcdoc`; panes add only their documented scrolling behavior.
-Existing local memory previews retain their authenticated private transport.
-No inspector handshake, extra badge, pick control, or visible affordance appears
-locally. Panes gain no inspection, geometry, markers, or navigation messages.
+The [same-origin loading contract](./mokly-same-origin-loading.md) defines local
+resource authentication, document ownership, early navigation, the 30-second
+load deadline, and cleanup. Same-origin frames retain `allow-same-origin`
+without script permission; cross-origin handshake rules below stay separate.
 
 ## Cross-Origin Mount And Handshake
 
@@ -333,12 +268,12 @@ regions; off requires an empty list. Every requested/returned key and range must
 belong to that mount's validated usage. Never silently truncate lists or boxes;
 limit overflow reports unavailable inspection via `limit`, leaving content usable.
 
-Navigation ids are kebab-case, at most 256 ASCII characters; optional fragments
-use the [logical fragment grammar](./mokly-navigation.md), at most 256 characters.
-Named targets use its target grammar and the same limit; all other target
-objects contain only `kind`. Navigation contains no URL, href, label or HTML.
-The inspector classifies only authenticated immediate native-link activations;
-the host revalidates ids against its catalogue and resolves canonical routes.
+Navigation paths follow the [path grammar](./mokly-paths.md), at most 256 ASCII
+characters; fragments use the [logical fragment grammar](./mokly-navigation.md),
+at most 256 characters. Named targets use its target grammar and the same limit;
+all other target objects contain only `kind`. Navigation contains no URL, href,
+label or HTML. The inspector classifies only authenticated immediate native-link
+activations; the host revalidates paths against its catalogue and resolves URLs.
 Primary versus modified/middle activation preserves the existing target rules.
 The host owns navigation/new-context actions, using `noopener`; the inspector
 never navigates a top window. Ordinary unmarked/download/external links stay

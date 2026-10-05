@@ -28,14 +28,11 @@ function fragmentSources(
     return { dark: undefined, light: undefined };
   }
   const dark = screen.colorSchemes.includes("dark")
-    ? viewRoute("screen", screen.id, viewport, "dark")
+    ? viewRoute(screen.path, viewport, "dark")
     : undefined;
   return {
     dark: dark === undefined ? undefined : fragmentSrc(dark, fragment),
-    light: fragmentSrc(
-      viewRoute("screen", screen.id, viewport, "light"),
-      fragment,
-    ),
+    light: fragmentSrc(viewRoute(screen.path, viewport, "light"), fragment),
   };
 }
 
@@ -63,7 +60,7 @@ export function FramesStage(props: {
   screen: ManifestScreen;
 }) {
   const screen = props.screen;
-  const address = screen.address ?? entryRoute("screen", screen.id);
+  const address = screen.address ?? entryRoute(screen.path);
   const mobile = fragmentSources(
     screen,
     "mobile",
@@ -98,7 +95,7 @@ export function FramesStage(props: {
             data-fragment-light={mobile.light}
             sandbox="allow-same-origin"
             src={fragmentSrc(
-              viewRoute("screen", screen.id, "mobile", "light"),
+              viewRoute(screen.path, "mobile", "light"),
               props.fragment,
             )}
             title={`${screen.title} — mobile`}
@@ -110,7 +107,7 @@ export function FramesStage(props: {
         data-color-scheme-fallback={fallback ? "" : undefined}
       >
         <FrameLabel fallback={fallback} text="Desktop" />
-        <BrowserFrame address={address} frameKey={`${screen.id}:desktop`}>
+        <BrowserFrame address={address} frameKey={`${screen.path}:desktop`}>
           <iframe
             className="mbk-frag"
             data-mokly-fragment-frame=""
@@ -119,7 +116,7 @@ export function FramesStage(props: {
             data-fragment-light={desktop.light}
             sandbox="allow-same-origin"
             src={fragmentSrc(
-              viewRoute("screen", screen.id, "desktop", "light"),
+              viewRoute(screen.path, "desktop", "light"),
               props.fragment,
             )}
             title={`${screen.title} — desktop`}
@@ -150,8 +147,8 @@ function FlowScreen(props: {
       data-color-scheme-fallback={fallback ? "" : undefined}
     >
       <BrowserFrame
-        address={screen.address ?? entryRoute("screen", screen.id)}
-        frameKey={`${screen.id}:flow:${props.stepIndex}`}
+        address={screen.address ?? entryRoute(screen.path)}
+        frameKey={`${screen.path}:flow:${props.stepIndex}`}
       >
         <iframe
           className="mbk-frag"
@@ -160,7 +157,7 @@ function FlowScreen(props: {
           data-fragment-light={desktop.light}
           sandbox="allow-same-origin"
           src={fragmentSrc(
-            viewRoute("screen", screen.id, "desktop", "light"),
+            viewRoute(screen.path, "desktop", "light"),
             props.fragment,
           )}
           title={`${screen.title} — desktop`}
@@ -179,20 +176,17 @@ export function UseCaseFlowStage(props: {
     <div className="mbk-flow" data-mokly-scroll="flow">
       <div className="flow-track">
         {props.entry.steps.map((step, index) => {
-          const candidate = props.catalogue.byId.get(step.screenId);
+          const candidate = props.catalogue.byPath.get(step.screenPath);
           const screen = candidate?.kind === "screen" ? candidate : undefined;
           return (
-            <section className="flow-step" key={`${step.screenId}-${index}`}>
+            <section className="flow-step" key={`${step.screenPath}-${index}`}>
               <div className="flow-step-head">
                 <span className="flow-step-num">{index + 1}</span>
                 <div>
-                  <h3>{step.title ?? screen?.title ?? step.screenId}</h3>
+                  <h3>{step.title ?? screen?.title ?? step.screenPath}</h3>
                   <p>{step.description ?? screen?.description}</p>
                   {screen ? (
-                    <a
-                      className="flow-step-link"
-                      href={viewHref(screen.kind, screen.id)}
-                    >
+                    <a className="flow-step-link" href={viewHref(screen.path)}>
                       This screen in the catalogue: {screen.title} →
                     </a>
                   ) : null}

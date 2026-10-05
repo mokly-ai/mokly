@@ -29,9 +29,7 @@ test("preview-resource exclusions reach stderr without exposing the cause in HTT
     componentRuntime: componentRuntime(fixture.after),
   });
   fixture.beforeRemove(() => server.close());
-  const page = await (
-    await fetch(`${server.url}/view/components/action.html`)
-  ).text();
+  const page = await (await fetch(`${server.url}/view/action/`)).text();
   const renderCapability = renderCapabilityFromShell(page);
   assert.ok(renderCapability);
   const stderr: string[] = [];
@@ -48,7 +46,7 @@ test("preview-resource exclusions reach stderr without exposing the cause in HTT
     },
     body: JSON.stringify({
       componentId: "action",
-      variantId: "action-default",
+      variantPath: "action/default",
       viewport: "mobile",
       colorScheme: "light",
       generation: renderCapability.generation,
@@ -70,7 +68,7 @@ test("preview-resource exclusions reach stderr without exposing the cause in HTT
     stderr.some(
       (line) =>
         /README\.svg/.test(line) &&
-        /components\/action/.test(line) &&
+        /action\/default\/index/.test(line) &&
         /matches public exclusion.*\*\*\/README\.\*.*publicExclude/.test(
           line,
         ) &&

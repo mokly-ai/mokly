@@ -28,7 +28,7 @@ export async function smokeRegisteredComponents(
   const manifest = JSON.parse(
     await fs.readFile(path.join(root, output, "mokly-manifest.json"), "utf8"),
   );
-  assert.equal(manifest.schemaVersion, 7);
+  assert.equal(manifest.schemaVersion, 8);
   const componentEntries = manifest.entries.filter(
     (entry) => entry.kind === "component",
   );
@@ -41,7 +41,7 @@ export async function smokeRegisteredComponents(
     3,
   );
   const consumer = manifest.entries.find(
-    (entry) => entry.id === "packed-components",
+    (entry) => entry.path === "packed-components",
   );
   for (const view of consumer.componentViews) {
     assert.ok(view.instances.length > 0);
@@ -59,7 +59,7 @@ export async function smokeRegisteredComponents(
   );
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
     const page = await (
-      await fetch(`${url}/view/components/packed-action.html`)
+      await fetch(`${url}/view/packed-action/index.html`)
     ).text();
     const state = page.match(
       /<script[^>]*data-mokly-host-capability-state=""[^>]*>([^<]+)<\/script>/,
@@ -76,7 +76,7 @@ export async function smokeRegisteredComponents(
       },
       body: JSON.stringify({
         componentId: "packed-action",
-        variantId: "packed-action-default",
+        variantPath: "packed-action/default",
         viewport: "mobile",
         colorScheme: "light",
         generation: capability.generation,
@@ -99,12 +99,12 @@ export async function smokeRegisteredComponents(
     root,
     "published",
     "HEAD",
-    ["view/components/packed-action.html", "view/components/packed-panel.html"],
-    4,
+    ["view/packed-action/index.html", "view/packed-panel/index.html"],
+    5,
   );
   assert.equal(review.components.length, 2);
   const published = await fs.readFile(
-    path.join(root, "published/view/components/packed-action.html"),
+    path.join(root, "published/view/packed-action/index.html"),
     "utf8",
   );
   assert.doesNotMatch(published, /renderCapability/);

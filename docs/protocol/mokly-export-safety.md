@@ -18,8 +18,8 @@ satisfies all core repository/source protections; the transaction pins the real
 output location so retargeting cannot redirect installation.
 
 Output must neither contain nor be contained by `mockupsDir` or
-`review.outDir`, and must not contain any resolved entry module or the
-directory holding one. It must not contain inventoried authoring inputs, the
+`review.outDir`, and must not contain any resolved entry module or document,
+or the directory holding one. It must not contain inventoried authoring inputs, the
 config, renderer module, or a consumer package's `package.json`. Reject
 repository root, Git metadata, dependency directories, and package runtime
 directories as targets. These checks also apply when the requested directory
@@ -65,7 +65,8 @@ output basename; `stage/` and `backup/` remain inside that reservation. Old
 recovered. Confirm no writer is active, inspect any retained backup, and recover
 it before moving an abandoned reservation aside. Nothing is silently stolen.
 
-Do not accept the old `.mokly-preview-artifact` marker through the public
-command. The repository-only adapter may explicitly migrate a valid legacy
-preview at its known output path with the same backup/rollback guarantees;
-malformed markers and unrelated contents still fail.
+Neither consumer export nor the repository preview adapter accepts an earlier
+`.mokly-preview-artifact` as replacement authority, including for pre-derived
+`view/` paths. A nonempty output needs the current schema-2 marker and exact
+inventory. An earlier marker alone fails without changing the output; preserve
+authored files, delete the earlier output, and run the command again.

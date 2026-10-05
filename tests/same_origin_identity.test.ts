@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { recordedFrameResource } from "../packages/viewer/dist/client/same_origin_access.js";
+import { localFrameReady } from "../packages/viewer/dist/client/same_origin_adapter.js";
 import {
   assignedFrameResource,
   createMountAuthentication,
@@ -44,6 +46,42 @@ test("resource identity retains origin, path and query while excluding hash", ()
   assert.equal(normalizedHtmlPath("/static/screen.html"), "/static/screen");
   assert.equal(normalizedHtmlPath("/static/screen.htm"), "/static/screen.htm");
 });
+
+for (const suffix of ["/index.html", "/", ""]) {
+  test(`page frame authentication accepts the directory form ${suffix || "without slash"}`, () => {
+    const pathname = `/static/docs/guide${suffix}`;
+    const expected = new URL("https://app.test/static/docs/guide/index.html");
+    const fixture = fakeFrame();
+    fixture.attributes.set("src", pathname);
+    Object.assign(fixture.frame, {
+      dataset: { fragmentLight: expected.href },
+      contentDocument: { readyState: "complete" },
+      contentWindow: { location: { pathname } },
+    });
+    assert.equal(
+      sameFrameResource(`https://app.test${pathname}`, expected),
+      true,
+    );
+    assert.equal(assignedFrameResource(fixture.frame, expected), true);
+    assert.equal(
+      recordedFrameResource(fixture.frame, `https://app.test${pathname}`),
+      true,
+    );
+    assert.equal(localFrameReady(fixture.frame, "docs/guide/index.html"), true);
+    assert.equal(
+      sameFrameResource("https://app.test/static/docs/guide/index", expected),
+      false,
+    );
+    assert.equal(
+      sameFrameResource(`https://other.test${pathname}`, expected),
+      false,
+    );
+    assert.equal(
+      sameFrameResource(`https://app.test${pathname}?other=1`, expected),
+      false,
+    );
+  });
+}
 
 test("assigned frame resources resolve against the owner document", () => {
   const fixture = fakeFrame("https://app.test/catalogue/index.html");

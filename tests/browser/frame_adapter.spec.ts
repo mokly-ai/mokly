@@ -143,7 +143,8 @@ test("logical navigation is host-owned and restores native activation after unsu
       page.evaluate(() =>
         (window as unknown as FrameTestWindow).frameEvents.some(
           (event) =>
-            event.type === "navigation" && event.navigation.id === "action",
+            event.type === "navigation" &&
+            event.navigation.screenPath === "action",
         ),
       ),
     )
@@ -179,7 +180,7 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
       state.mounted = await postMessageAdapter({ frameOrigin: origin }).mount(
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
-          url: new URL("/static/screens/home.desktop.html", origin),
+          url: new URL("/static/home/index.desktop.html", origin),
           usage: { status: "ready", ...usage },
         },
       );

@@ -18,10 +18,10 @@ export function selectedVariant(
     return { comparisonEligible: data.comparisonEligible };
   const requested =
     data.entry.kind === "component" && isManifestComponentVariant(data.entry)
-      ? data.entry.id
+      ? data.entry.path
       : undefined;
   const variant = requested
-    ? data.variants.find((item) => item.value.id === requested)
+    ? data.variants.find((item) => item.value.path === requested)
     : data.variants[0];
   return variant
     ? { variant, comparisonEligible: variant.comparisonEligible }

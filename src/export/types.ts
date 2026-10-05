@@ -1,7 +1,5 @@
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
-import type { LegacyExportOwnership } from "./ownership.js";
-
 /** Immutable route information available before an adapter finishes staging. */
 export interface ExportRoutes {
   readonly outDir: string;
@@ -17,7 +15,6 @@ export interface ExportResult extends ExportRoutes {
 export interface ExportAdapter {
   /** Optional stricter config-relative root, pinned for this operation. */
   outputRoot?: string;
-  legacyOwnership?: LegacyExportOwnership;
   /** Root files added by transform that describe publication, not content. */
   publicationMetadata?: readonly string[];
   transform(

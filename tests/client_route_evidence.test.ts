@@ -18,15 +18,15 @@ import {
 test("route evidence loading fences revision, location, and cancellation", async () => {
   const environment = new FakeEnvironment();
   const entry = catalogue.screens[0]!;
-  const request = { ...currentRequest(), entryId: entry.id };
-  environment.location.href = `http://localhost${viewHref(entry.kind, entry.id)}`;
+  const request = { ...currentRequest(), entryPath: entry.path };
+  environment.location.href = `http://localhost${viewHref(entry.path)}`;
   environment.descriptor = {
     ...descriptor,
-    workspace: workspaceEvidence(entry.id),
+    workspace: workspaceEvidence(entry.path),
   };
   environment.publicCatalogue = projectScopedCatalogue(catalogue, {
     kind: "target",
-    entryId: entry.id,
+    entryPath: entry.path,
     entryKind: entry.kind,
   });
   environment.responses.push(htmlResponse(environment.location.href));
@@ -37,8 +37,8 @@ test("route evidence loading fences revision, location, and cancellation", async
         request,
         new AbortController().signal,
       )
-    )?.workspace?.entry.id,
-    entry.id,
+    )?.workspace?.entry.path,
+    entry.path,
   );
 
   environment.descriptor = {
@@ -56,7 +56,7 @@ test("route evidence loading fences revision, location, and cancellation", async
 
   environment.descriptor = {
     ...descriptor,
-    workspace: workspaceEvidence(entry.id),
+    workspace: workspaceEvidence(entry.path),
   };
   environment.responses.push(
     htmlResponse(environment.location.href, () => {
@@ -77,7 +77,7 @@ test("route evidence loading fences revision, location, and cancellation", async
     capabilities.evidence.loadRouteEvidence(request, aborted.signal),
   );
 
-  environment.location.href = `http://localhost${viewHref(entry.kind, entry.id)}`;
+  environment.location.href = `http://localhost${viewHref(entry.path)}`;
   environment.responses.push(
     htmlResponse(environment.location.href, undefined, false),
   );
@@ -108,17 +108,17 @@ test("route evidence atomically carries a newer public and private revision", as
   next.revision.evidence += 2;
   environment.publicCatalogue = projectScopedCatalogue(next, {
     kind: "target",
-    entryId: entry.id,
+    entryPath: entry.path,
     entryKind: entry.kind,
   });
-  environment.location.href = `http://localhost${viewHref(entry.kind, entry.id)}`;
+  environment.location.href = `http://localhost${viewHref(entry.path)}`;
   environment.descriptor = {
     ...descriptor,
     source: {
       ...descriptor.source,
       evidenceRevision: next.revision.evidence,
     },
-    workspace: workspaceEvidence(entry.id),
+    workspace: workspaceEvidence(entry.path),
   };
   environment.responses.push(htmlResponse(environment.location.href));
 
@@ -126,7 +126,7 @@ test("route evidence atomically carries a newer public and private revision", as
     descriptor,
     environment,
   ).evidence.loadRouteEvidence(
-    { ...currentRequest(), entryId: entry.id },
+    { ...currentRequest(), entryPath: entry.path },
     new AbortController().signal,
   );
 
@@ -134,14 +134,14 @@ test("route evidence atomically carries a newer public and private revision", as
   assert.equal(revision.source.updateVersion, descriptor.source.updateVersion);
   assert.equal(revision.source.evidenceRevision, next.revision.evidence);
   assert.equal(revision.catalogue.revision.evidence, next.revision.evidence);
-  assert.equal(revision.workspace?.entry.id, entry.id);
+  assert.equal(revision.workspace?.entry.path, entry.path);
 
   environment.publicCatalogue = projectScopedCatalogue(
     {
       ...next,
       revision: { ...next.revision, evidence: next.revision.evidence + 1 },
     },
-    { kind: "target", entryId: entry.id, entryKind: entry.kind },
+    { kind: "target", entryPath: entry.path, entryKind: entry.kind },
   );
   environment.responses.push(htmlResponse(environment.location.href));
   assert.equal(
@@ -149,7 +149,7 @@ test("route evidence atomically carries a newer public and private revision", as
       descriptor,
       environment,
     ).evidence.loadRouteEvidence(
-      { ...currentRequest(), entryId: entry.id },
+      { ...currentRequest(), entryPath: entry.path },
       new AbortController().signal,
     ),
     undefined,
@@ -159,12 +159,12 @@ test("route evidence atomically carries a newer public and private revision", as
 test("use-case and page route evidence require no private workspace", async () => {
   for (const entry of [catalogue.useCases[0]!, catalogue.pages[0]!]) {
     const environment = new FakeEnvironment();
-    environment.location.href = `http://localhost${viewHref(entry.kind, entry.id)}`;
+    environment.location.href = `http://localhost${viewHref(entry.path)}`;
     const { workspace: _workspace, ...withoutWorkspace } = descriptor;
     environment.descriptor = withoutWorkspace;
     environment.publicCatalogue = projectScopedCatalogue(catalogue, {
       kind: "target",
-      entryId: entry.id,
+      entryPath: entry.path,
       entryKind: entry.kind,
     });
     environment.responses.push(htmlResponse(environment.location.href));
@@ -172,11 +172,11 @@ test("use-case and page route evidence require no private workspace", async () =
       descriptor,
       environment,
     ).evidence.loadRouteEvidence(
-      { ...currentRequest(), entryId: entry.id },
+      { ...currentRequest(), entryPath: entry.path },
       new AbortController().signal,
     );
-    assert.ok(revision, entry.id);
-    assert.equal(revision.workspace, undefined, entry.id);
+    assert.ok(revision, entry.path);
+    assert.equal(revision.workspace, undefined, entry.path);
     assert.notEqual(revision.catalogue, environment.publicCatalogue);
   }
 });
@@ -196,9 +196,9 @@ test("workspace capabilities reject stale requests and bind initial evidence", (
   });
   assert.throws(() =>
     capabilities.onDemand!.loadWorkspace(
-      { ...currentRequest(), entryId: "elsewhere" },
+      { ...currentRequest(), entryPath: "elsewhere" },
       {
-        entry: { id: "action" },
+        entry: { path: "components/action" },
         previewGeneration: descriptor.source.previewGeneration,
       } as never,
       new AbortController().signal,
@@ -207,8 +207,8 @@ test("workspace capabilities reject stale requests and bind initial evidence", (
   );
   assert.equal(loads, 0);
   assert.equal(
-    capabilities.evidence.initialWorkspace(currentRequest())?.entry.id,
-    currentRequest().entryId,
+    capabilities.evidence.initialWorkspace(currentRequest())?.entry.path,
+    currentRequest().entryPath,
   );
   assert.throws(() =>
     capabilities.evidence.initialWorkspace({
@@ -219,7 +219,7 @@ test("workspace capabilities reject stale requests and bind initial evidence", (
   assert.throws(() =>
     capabilities.evidence.initialWorkspace({
       ...currentRequest(),
-      entryId: "elsewhere",
+      entryPath: "elsewhere",
     }),
   );
 });

@@ -9,20 +9,20 @@ import {
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: shared designs describe the complete catalogue`, async () => {
-    const home = await designDocument("design-browse-home", viewport);
+    const home = await designDocument("design/browse/views/home", viewport);
     assert.match(
       textContent(home.document),
       /choose an item from the navigation/,
     );
     const missing = await designDocument(
-      "design-browse-missing-route",
+      "design/browse/states/missing-route",
       viewport,
     );
     assert.match(textContent(missing.document), /Item not found/);
     for (const id of [
-      "design-browse-home",
-      "design-browse-missing-route",
-      "design-page-view",
+      "design/browse/views/home",
+      "design/browse/states/missing-route",
+      "design/browse/pages/view",
     ]) {
       const { document } = await designDocument(id, viewport);
       const search = byClass(document, "mbk-search")[0];

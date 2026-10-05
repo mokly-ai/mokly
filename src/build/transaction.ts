@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -8,7 +9,9 @@ import type { GitCommandRunner } from "../review/git.js";
 
 import { assertCommittableOutput } from "./committable_output.js";
 import type { Compilation } from "./compile.js";
+import { walkFiles } from "./discovery.js";
 import { generatedBytes } from "./generated_file.js";
+import { OutputDirectories } from "./output_directories.js";
 import {
   assertOutputLockHeld,
   withOutputLock,
@@ -74,9 +77,18 @@ async function writeMeasured(
   const orphan = timeSync("output.find-orphans", () =>
     pendingGeneratedOrphanRoutes(config, expected),
   );
-  const affected = [...new Set([...expected, ...orphan])].sort();
+  const expectedPaths = new Set(expected.map((route) => route.toLowerCase()));
+  const orphanPaths = new Set(orphan);
+  const affected = walkFiles(config.mockupsDir)
+    .map((file) => toPosixPath(path.relative(config.mockupsDir, file)))
+    .filter(
+      (route) =>
+        expectedPaths.has(route.toLowerCase()) || orphanPaths.has(route),
+    )
+    .sort();
   const backedUp: string[] = [];
   const installed: string[] = [];
+  const directories = new OutputDirectories(config.mockupsDir);
   try {
     await timeAsync("output.stage", async () => {
       for (const route of expected) {
@@ -98,17 +110,18 @@ async function writeMeasured(
         backedUp.push(route);
       }
     });
+    await directories.prune(backedUp, expected);
     await timeAsync("output.install", async () => {
       for (const route of expected) {
         const target = path.join(config.mockupsDir, route);
-        await fs.promises.mkdir(path.dirname(target), { recursive: true });
+        await directories.ensure(path.dirname(target));
         await fs.promises.rename(path.join(stageRoot, route), target);
         installed.push(route);
       }
     });
   } catch (error) {
     await timeAsync("output.rollback", () =>
-      rollback(config, backupRoot, installed, backedUp),
+      rollback(config, backupRoot, installed, backedUp, directories),
     );
     throw new MoklyError(
       "build-invalid",
@@ -149,10 +162,12 @@ async function rollback(
   backupRoot: string,
   installed: readonly string[],
   backedUp: readonly string[],
+  directories: OutputDirectories,
 ): Promise<void> {
   for (const route of [...installed].reverse()) {
     await fs.promises.rm(path.join(config.mockupsDir, route), { force: true });
   }
+  await directories.restore();
   for (const route of [...backedUp].reverse()) {
     const target = path.join(config.mockupsDir, route);
     await fs.promises.mkdir(path.dirname(target), { recursive: true });

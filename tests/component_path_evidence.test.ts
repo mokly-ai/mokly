@@ -54,7 +54,7 @@ test("exact unowned component and screen declarations keep only their own reason
     sharedGlobs: ["src/tokens/**"],
   });
 
-  assert.deepEqual(changedIds(result), ["action", "home", "journey"]);
+  assert.deepEqual(changedEntries(result), ["action", "home", "journey"]);
   assert.deepEqual(dependencyPaths(result, "action"), [actionPath]);
   assert.deepEqual(dependencyPaths(result, "home"), [homePath]);
   assert.deepEqual(dependencyPaths(result, "journey"), []);
@@ -63,7 +63,7 @@ test("exact unowned component and screen declarations keep only their own reason
       (item) =>
         item.changedComponentId === "action" &&
         item.consumer.kind === "screen" &&
-        item.consumer.id === "home",
+        item.consumer.path === "home",
     ),
   );
 });
@@ -85,10 +85,10 @@ for (const [name, ownerRoot, changed] of [
       sharedGlobs: ["src/tokens/**"],
     });
 
-    assert.deepEqual(changedIds(result), ["action"]);
+    assert.deepEqual(changedEntries(result), ["action"]);
     assert.deepEqual(dependencyPaths(result, "action"), [changed]);
     assert.deepEqual(
-      result.screens.find((entry) => entry.id === "home")?.sharedImpact,
+      result.screens.find((entry) => entry.path === "home")?.sharedImpact,
       [TOKEN],
     );
     assert.ok(
@@ -96,7 +96,7 @@ for (const [name, ownerRoot, changed] of [
         (item) =>
           item.changedComponentId === "action" &&
           item.consumer.kind === "screen" &&
-          item.consumer.id === "home",
+          item.consumer.path === "home",
       ),
     );
   });
@@ -113,7 +113,7 @@ test("an exact screen declaration stays independent even when a component owns t
     sharedGlobs: ["src/tokens/**"],
   });
 
-  assert.deepEqual(changedIds(result), ["action", "home", "journey"]);
+  assert.deepEqual(changedEntries(result), ["action", "home", "journey"]);
   assert.deepEqual(dependencyPaths(result, "home"), ["notes.md"]);
 });
 
@@ -131,10 +131,10 @@ test("an unowned registration module under a broad component glob lists nothing"
     assert.deepEqual(entry.sharedImpact, [changed]);
 });
 
-function changedIds(
+function changedEntries(
   result: Awaited<ReturnType<typeof pathEvidenceFixture>>["result"],
 ): string[] {
-  return result.changes.map((entry) => (entry.after ?? entry.before)!.id);
+  return result.changes.map((entry) => (entry.after ?? entry.before)!.path);
 }
 
 function dependencyPaths(
@@ -143,7 +143,7 @@ function dependencyPaths(
 ): string[] {
   return (
     result.changes
-      .find((entry) => (entry.after ?? entry.before)?.id === id)
+      .find((entry) => (entry.after ?? entry.before)?.path === id)
       ?.reasons.flatMap((reason) =>
         reason.kind === "dependency" ? [reason.path] : [],
       ) ?? []

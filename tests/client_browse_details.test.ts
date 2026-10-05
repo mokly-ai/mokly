@@ -20,7 +20,7 @@ test("details defaults follow the routed workspace when no preference exists", (
   assert.equal(fixtureShellState().detailsOpen, false);
   assert.equal(
     fixtureShellState({
-      href: "https://example.test/view/components/action.html",
+      href: "https://example.test/view/components/action/",
     }).detailsOpen,
     true,
   );

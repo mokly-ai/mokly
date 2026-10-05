@@ -19,15 +19,19 @@ saved variant's two versions in one bordered frame whose viewport scrolls both
 as one. Their comparison bands also depict the implemented Scroll together
 switch of the
 [Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
+The path-derived files, the Specs section, and the component paths in Details
+below are the approved contract. These designs depict the kind-filtered
+sections and component paths, and the catalogue uses paths. The runtime renders
+the same Specs section.
 The Loading and recovery child gallery depicts entry-scoped Usage loading,
 inspection waiting, and retryable delivery failure.
 
 ## Owning Catalogue
 
-Source lives under `examples/basic/entries/design/components/`; generated
-artboards live under `examples/basic/generated/screens/` at their derived
-`screens/<id>.<viewport>.html` paths. The existing
-Pages → Design → Mokly design → Component explorer folder reaches every
+Source lives under `examples/basic/specs/design/components/`; generated
+artboards live under `examples/basic/generated/<path>/` as their path-derived
+`index.<viewport>.html` views. The existing
+Pages → Design → Component explorer folder reaches every
 screen.
 The canonical `overview` screen shows a component page, followed by links to the
 owning child pages outside the artboard. The original Pages, Inspection, and States child folders are gallery
@@ -39,46 +43,47 @@ Published galleries with four, four, and two screens. The linked inspector and
 controls contracts own their additional entry inventories. Every screen has a separate
 mobile component and desktop component; there are no new user-flow pages.
 
-| Entry id                                    | State                                                     |
-| ------------------------------------------- | --------------------------------------------------------- |
-| `design-component-overview`                 | Action page, default variant, props, and Used by          |
-| `design-component-variants`                 | Disabled saved variant                                    |
-| `design-component-comparison`               | Saved variant before/current comparison                   |
-| `design-component-overlay`                  | Saved variant Overlay in one bordered frame               |
-| `design-component-difference`               | Saved variant Difference in one bordered frame            |
-| `design-component-overlay-tall`             | Component taller than its frame, part-way down in Overlay |
-| `design-component-affected`                 | One changed component and two affected screens            |
-| `design-component-toolbar`                  | Component consuming Action                                |
-| `design-component-help`                     | Invoked component with no visible region                  |
-| `design-component-inspection-details`       | Repeated instances and selected props                     |
-| `design-component-inspection-highlight`     | Outermost component cutouts                               |
-| `design-component-inspection-nested`        | Nested Action selected in the screen and Props            |
-| `design-component-inspection-direct-change` | Independent screen prop change; two Changes               |
-| `design-component-inspection-consumer`      | A second screen reached from Used by                      |
-| `design-component-inspection-toolbar`       | Selected container with its own props                     |
-| `design-component-inspection-help`          | Selected invisible instance                               |
-| `design-component-empty`                    | Validated empty usage                                     |
-| `design-component-unavailable`              | Missing inspection metadata                               |
-| `design-component-unused`                   | Saved component with no consumers                         |
-| `design-component-removed`                  | Removed saved variant and former consumer                 |
-| `design-component-removed-consumer`         | Former consumer's previous version behind a Removed badge |
-| `design-component-added`                    | Added Badge current preview without comparison controls   |
-| `design-component-shared-impact`            | Unmodified Action with shared-file evidence in Details    |
-| `design-component-usage-loading`            | Component Usage waiting for private entry evidence        |
-| `design-component-inspection-loading`       | Screen inspection waiting for displayed-view usage        |
-| `design-component-usage-failed`             | Usage read failure with a Try again action                |
+| Entry                                                       | State                                                     |
+| ----------------------------------------------------------- | --------------------------------------------------------- |
+| `design/components/overview`                                | Action page, default variant, props, and Used by          |
+| `design/components/pages/variants`                          | Disabled saved variant                                    |
+| `design/components/pages/comparison`                        | Saved variant before/current comparison                   |
+| `design/components/pages/stacked/overlay`                   | Saved variant Overlay in one bordered frame               |
+| `design/components/pages/stacked/difference`                | Saved variant Difference in one bordered frame            |
+| `design/components/pages/stacked/overlay-tall`              | Component taller than its frame, part-way down in Overlay |
+| `design/components/pages/affected`                          | One changed component and two affected screens            |
+| `design/components/pages/toolbar`                           | Component consuming Action                                |
+| `design/components/pages/help`                              | Invoked component with no visible region                  |
+| `design/components/inspection/inspection-details`           | Repeated instances and selected props                     |
+| `design/components/inspection/inspection-highlight`         | Outermost component cutouts                               |
+| `design/components/inspection/inspection-nested`            | Nested Action selected in the screen and Props            |
+| `design/components/inspection/inspection-direct-change`     | Independent screen prop change; two Changes               |
+| `design/components/inspection/inspection-consumer`          | A second screen reached from Used by                      |
+| `design/components/inspection/selection/inspection-toolbar` | Selected container with its own props                     |
+| `design/components/inspection/selection/inspection-help`    | Selected invisible instance                               |
+| `design/components/states/empty`                            | Validated empty usage                                     |
+| `design/components/states/unavailable`                      | Missing inspection metadata                               |
+| `design/components/states/unused`                           | Saved component with no consumers                         |
+| `design/components/states/removed`                          | Removed saved variant and former consumer                 |
+| `design/components/states/removed-consumer`                 | Former consumer's previous version behind a Removed badge |
+| `design/components/states/additions/added`                  | Added Badge current preview without comparison controls   |
+| `design/components/states/shared-impact/shared-impact`      | Unmodified Action with shared-file evidence in Details    |
 
-Each entry's route is `screens/<id>.html` under the
-[derived route rule](./mokly-authoring.md#derived-routes); its standalone views
-insert `.mobile` or `.desktop` before `.html`, and gallery membership is the
-entry's `navPath`. The Loading and recovery folder sits below Empty and change
-states and contains exactly the three states above. All thirty-nine component
+| `design/components/states/loading/usage-loading` | Component Usage waiting for private entry evidence |
+| `design/components/states/loading/inspection-loading` | Screen inspection waiting for displayed-view usage |
+| `design/components/states/loading/usage-failed` | Usage read failure with a Try again action |
+
+The Loading and recovery folder sits below Empty and change states and contains
+exactly these three states. Each entry's files derive from its path under the
+[artifact path contract](./mokly-artifact-paths.md): its standalone views are
+`<path>/index.mobile.html` and `<path>/index.desktop.html`, and gallery
+membership is the entry's folder. All thirty-nine component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
 bar like every other artboard's, sets it. Links use
-the existing logical-id navigation contract so they work both directly from
-disk and in Browse. State links demonstrate navigation between mockups; static
+the path-addressed [link contract](./mokly-authoring.md#links) so they work
+both directly from disk and in Browse. State links demonstrate navigation between mockups; static
 depictions of shell controls do not implement the separate runtime inspector.
 
 The shared shell retains the [existing design navigation](./mokly-design-links.md)
@@ -86,9 +91,9 @@ for brand, home breadcrumb, and the canonical mobile drawer. Component artboards
 select their own typed navigation state; they never inherit Welcome's tag,
 scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios. In Side by side, Overlay and Difference the band also draws the Scroll together switch, on, after the mode control and before Refresh, as the [shell design](./mokly-shell-design.md#in-place-comparisons) specifies; it toggles in place.
 Action's changed Default variant is one comparison family: its mode control
-links Current to `design-component-affected`, Side by side to
-`design-component-comparison`, and Overlay and Difference to
-`design-component-overlay` and `design-component-difference`, while the
+links Current to `design/components/pages/affected`, Side by side to
+`design/components/pages/comparison`, and Overlay and Difference to
+`design/components/pages/stacked/overlay` and `design/components/pages/stacked/difference`, while the
 selected mode stays a pressed button. Every other eligible depiction, including
 the tall Checklist, keeps all four modes as buttons. No mode control links into
 the Checklist, because it depicts another component; readers reach it beside
@@ -101,7 +106,12 @@ spans for unsupported controls.
 
 Reuse the existing top bar, split navigation tree, screen heading, comparison band,
 stage, and comparison controls, adding the shared icon inspector and compact view toolbar. Components use a small cube
-icon in the Components section and its authored Components folder. Desktop keeps the resizable navigation;
+icon in the Components section. Both sections are views of one tree, so the
+`Example` folder appears above `Screens` in Specs and above its `Components`
+library in Components, and component crumbs read `Example › Components`. The
+path chip and Details show the shown entry's path, such as
+`example/components/action/default`, with Details listing it above the source.
+Desktop keeps the resizable navigation;
 mobile keeps the compact header and adds short Screen/Components/Changes links
 above the heading so the relevant destinations and change count remain visible.
 
@@ -210,16 +220,13 @@ small gap above an intact rounded outline, shared by all three region layouts.
 ## Verification And Maintenance
 
 Use the real generator; never hand-edit generated HTML. Six shared component
-stylesheets are hand-authored public inputs, scoped to the
-`screens/design-component-*.html` documents.
+stylesheets are hand-authored public inputs, scoped to the component design
+entries' generated documents.
 Route-scoped stylesheet matching links them only from the thirty-nine component design routes;
-Changes follows those rendered resource references. The folder
-marker supplies inherited dependencies to its leaves for comparison evidence.
-The controls stylesheet is scoped further to its eleven owning entries, with a
-matching dependency and watch rule. Keep them out of the global
-`review.sharedImpact` list; watched stylesheet rules still reload their edits.
-Child folder dependency lists replace inherited lists; Controls explicitly
-spreads the shared stylesheet dependency set before adding its own stylesheet.
+Changes follows those rendered resources. Shared metadata supplies dependency
+lists to each definition. Controls extends that list with its own stylesheet,
+scoped to eleven entries with a matching watch rule. Keep those stylesheets out
+of global `review.sharedImpact`; watched rules still reload their edits.
 Shared fixtures and reusable screen parts live beside the owning screen modules.
 
 `tests/component_design_attribution.test.ts` exercises each component stylesheet

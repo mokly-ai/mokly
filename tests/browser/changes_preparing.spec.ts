@@ -29,7 +29,7 @@ for (const mobile of [false, true]) {
       );
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      await page.goto(`${server.url}/view/screens/home.html`);
+      await page.goto(`${server.url}/view/home/`);
       if (mobile) await page.locator("[data-mokly-menu]").click();
       const all = page.locator('[data-filter="all"]');
       const changes = page.locator('[data-filter="changed"]');
@@ -40,7 +40,7 @@ for (const mobile of [false, true]) {
         "Preparing comparison",
       );
       await expect(
-        page.locator('[data-nav-row][data-route="screens/home.html"]'),
+        page.locator('[data-nav-row][data-route="home/index.html"]'),
       ).toBeVisible();
       const initialFilter = await filter.boundingBox();
       const initialTree = await tree.boundingBox();
@@ -59,20 +59,20 @@ for (const mobile of [false, true]) {
       await all.click();
       await expect(status).toBeHidden();
       await expect(
-        page.locator('[data-nav-row][data-route="screens/home.html"]'),
+        page.locator('[data-nav-row][data-route="home/index.html"]'),
       ).toBeVisible();
       expect(await filter.boundingBox()).toEqual(initialFilter);
       expect(await tree.boundingBox()).toEqual(initialTree);
 
       await changes.click();
-      publish({ changedIds: null, changesStatus: "pending" });
+      publish({ changedEntries: null, changesStatus: "pending" });
       await expect(filter).toHaveAttribute("data-changes-status", "pending");
       await expect(status).toContainText("Checking for changes");
       await expect(status.locator(".mbk-nav-status-detail")).toHaveCount(0);
       await expect(changes).toHaveAttribute("aria-pressed", "true");
 
       publish({
-        changedIds: ["details"],
+        changedEntries: ["details"],
         changesStatus: "ready",
       });
       await expect(changes.locator(".mbk-nav-filter-count")).toHaveText("1");

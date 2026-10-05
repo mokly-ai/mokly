@@ -22,7 +22,7 @@ test("an incomplete ready state renders the retryable unavailable state", () => 
       createElement(ReadyPreview, {
         colorScheme: "light",
         data: {
-          id: "removed-page",
+          path: "removed-page",
           kind: "page",
           title: "Removed page",
         },

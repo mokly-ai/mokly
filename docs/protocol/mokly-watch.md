@@ -13,11 +13,13 @@ by generated output:
 - resolved entry modules, page/renderer/transformer imports, and every other
   inventoried source rebuild generated output, including imported bytes handled
   by asset loaders;
-- a created, renamed, or deleted regular file whose repository-relative path
-  matches an `entries` glob re-runs discovery before that rebuild, so the
-  resolved entry set follows the filesystem; the glob defines the complete
-  entry shape, and the stable prefix of every entry glob is a watched root for
-  this purpose;
+- a created, renamed, moved, or deleted regular file below a configured root
+  that matches one of its `files` globs, including a `.md` document and a
+  `_folder.json` folder record, re-runs discovery before that rebuild, so the
+  resolved file set follows the filesystem; a rename or move changes the
+  entry's path and is paired by the [move contract](./mokly-moves.md), never
+  treated as a silent orphan; a changed resource that a Markdown document
+  references rebuilds too, because Mokly copies it into generated output;
 - an input shared with shell metadata rebuilds before restarting the child;
 - configured stylesheets and referenced local CSS, fonts, images, and other
   resources used only through public URLs reload the browser without rebuilding;
@@ -37,24 +39,23 @@ by generated output:
   transaction trees are pruned from broad watches and classify as ignored;
 - additional inputs use the explicit action declared in config.
 
-An entry glob's stable prefix is a traversal waypoint, not an exemption for its
-whole subtree. A candidate that is an ancestor of, or equal to, the prefix is
-never pruned. Broad traversal evaluates descendants relative to the deepest
-containing prefix, while discovery and entry-candidate classification evaluate
-a matched file relative to the deepest root whose glob matches that file. Below
-that base, only directory segments are denied, so a regular file named `target`
-remains ordinary. The denied names are `.git`, `node_modules`, `.mokly-cache`, `dist`,
-`coverage`, `target`,
+A root directory is a traversal waypoint, not an exemption for its whole
+subtree. A candidate that is an ancestor of, or equal to, the root is never
+pruned. Broad traversal evaluates descendants relative to the deepest containing
+root, while discovery and file classification evaluate a matched file relative
+to the root whose glob matches it. Below that base, only directory segments are
+denied, so a regular file named `target` remains ordinary. The denied names are
+`.git`, `node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`,
 `test-results`, `playwright-report`, `.context`, and segments beginning with
 `.mokly-review-` or `.mokly-write-`. Baseline-cache, `review.outDir`,
 header-proven generated-output, and export-output rules still apply. Thus an
-explicit `dist/entries/**` root remains reachable, while `src/dist` and
-`src/node_modules` are pruned beneath a `src/**` root, and repository-root globs
-still prune top-level `.git` and `node_modules`. The discovery walk and broad
-watch traversal skip `review.outDir`; matching file events beneath it are
+explicit `dist/specs` root remains reachable, while `src/dist` and
+`src/node_modules` are pruned beneath a `src` root, and a root at the repository
+root still prunes top-level `.git` and `node_modules`. The discovery walk and
+broad watch traversal skip `review.outDir`; matching file events beneath it are
 ignored too.
 
-Broad traversal and entry classification check non-leaf segments first. A denied
+Broad traversal and file classification check non-leaf segments first. A denied
 leaf is pruned only when it is a directory. Directory status comes from supplied
 watcher stats, else from the event kind: `addDir` and `unlinkDir` are directories;
 `add`, `change`, and `unlink` are files. Only a `raw` rename fallback or a direct
@@ -81,19 +82,20 @@ directory scans, not inventoried files, configured modules or their ancestors.
 Classify logical and physical aliases by these distinct reasons before applying
 the required-input exception. Those package-owned output classifications take
 precedence over additional watch rules.
-A created path beneath a denied directory relative to its glob root, or beneath
+A created path beneath a denied directory relative to its root, or beneath
 `review.outDir`, is ignored because discovery cannot accept it. A file created
-under an entry glob root that no `entries` glob matches and that is not imported
+below a root that none of its `files` globs matches and that is not imported
 classifies like any other unrelated file. Package source under `node_modules` or
 an npx cache is never treated as consumer source. Development of Mokly itself
 uses repository tooling rather than a hidden consumer-specific self-reload path.
 
 Header-proven generated output is trusted only when its recorded owner is a
-resolved entry module, an inventoried source, or a repository-relative path
-matching a configured entry glob with dotfile matching enabled. As the
-glob-based trust branch, a repository-root glob trusts every path matching that
-glob and nothing else. A deleted or renamed entry remains trusted while its old
-path still matches, so its stale output is pruned as an orphan. Other
+resolved file, an inventoried source, or a repository-relative path below a
+configured root matching one of its `files` globs with dotfile matching
+enabled. A root at the repository root trusts every matching path and nothing
+else. A deleted, renamed, or moved file remains trusted while its old path
+still matches, so its stale output is pruned as an orphan while the
+[move contract](./mokly-moves.md) pairs the new path with its baseline. Other
 Mokly-headered HTML is unclaimed and remains untouched.
 
 Resource discovery follows the same portable HTML/CSS URL rules as Changes,
@@ -128,8 +130,8 @@ traversal. Active transaction trees and the initialized internal reservation
 namespace remain pruned. Unowned files still make subsequent export replacement
 fail; watch classification does not grant permission to overwrite them.
 
-The input graphs are resolved before the source/config watcher is constructed.
-It becomes ready before initial index preparation; import changes replace its watch
+The input graphs are resolved before the source/config watcher is constructed. It
+becomes ready before initial index preparation; import changes replace its watch
 set using the same readiness and recovery rules as configuration adoption.
 Build a generation-scoped index of exact required files and their ancestors
 once per accepted config/inventory. Ignore callbacks consult that index in
@@ -147,24 +149,24 @@ it is written. Discovery repeats after readiness to capture newly introduced
 references during watcher attachment. Notifications during generation and child
 startup are buffered. Each notification delivery is isolated: a classifier
 exception is reported once, that event is dropped, and later notifications keep
-flowing. A child receives the parent-validated catalogue, validates
-its source inventory, and binds before
-readiness. Initial startup tries a requested concrete port and then each higher
-port in order when the address is occupied; port `0` delegates selection to the
-operating system. The resolved port remains stable across child restarts, which
-bind strictly rather than changing the published URL. Exhausting the valid port
-range or encountering another bind error exits non-zero without leaking
-watchers. An unexpected child failure after readiness reports its diagnostic
-once, starts cleanup if the process remains alive, and enqueues a restart through
-the same serialized action queue used for authored changes. The supervisor
-retains ownership until terminal confirmation; a replacement cannot bypass an
-in-progress cleanup or contend with the failed child's still-bound port.
+flowing. A child receives the parent-validated catalogue, validates its source
+inventory, and binds before readiness. Initial startup tries a requested concrete
+port and then each higher port in order when the address is occupied; port `0`
+delegates selection to the operating system. The resolved port remains stable
+across child restarts, which bind strictly rather than changing the published URL.
+Exhausting the valid port range or encountering another bind error exits non-zero
+without leaking watchers. An unexpected child failure after readiness reports its
+diagnostic once, starts cleanup if the process remains alive, and enqueues a
+restart through the same serialized action queue used for authored changes. The
+supervisor retains ownership until terminal confirmation; a replacement cannot
+bypass an in-progress cleanup or contend with the failed child's still-bound port.
 
 The supervisor retains the five-minute readiness safety allowance for the child
 to receive the accepted config, live index and retained renderer, construct its
 catalogue and bind. The interactive performance target is under five seconds;
-the timeout is not an acceptable startup duration. Startup transfers no rendered
-HTML and avoids rereading the large manifest file. The child
+the timeout is not an acceptable startup duration. Startup transfers no complete
+rendered view files and avoids rereading the large manifest file. The retained
+graph includes parsed Markdown bodies for demand compilation in each scheme. The child
 still validates the transferred metadata and re-resolves the config and consumer
 input graphs to enforce source-inventory freshness before binding. These checks
 are visible separately with `--debug-timings`. Local controls are available at

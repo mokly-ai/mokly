@@ -1,5 +1,7 @@
 import type { ColorScheme } from "@mokly/viewer";
 
+import type { FolderRecord } from "../registry/folder_records.js";
+
 /** Filesystem changes understood by the watched development runtime. */
 export type WatchAction = "ignore" | "rebuild" | "reload" | "restart";
 
@@ -85,10 +87,8 @@ export interface MoklyConfig {
   generatedOutput?: "committed" | "derived";
   /** Color schemes rendered for screens; defaults to light only. */
   colorSchemes?: readonly ColorScheme[];
-  /** Repository-relative POSIX globs whose matched files are entry modules. */
-  entries?: readonly string[];
-  /** Config-relative shorthand for one `entries` glob covering a directory. */
-  entriesDir?: string;
+  /** Directories scanned for definitions; defaults to specs. */
+  roots?: readonly RootConfig[];
   /** Config-relative generated catalogue/output root. */
   mockupsDir: string;
   /** Additional private POSIX globs relative to mockupsDir; extends shipped defaults. */
@@ -123,12 +123,18 @@ export interface ResolvedConfig {
   sourceFiles?: readonly string[];
   /** Inputs to the separately bundled configuration graph. */
   configSourceFiles?: readonly string[];
-  /** Validated repository-relative entry globs in declaration order. */
-  entryGlobs: readonly string[];
-  /** Sorted absolute entry modules resolved from `entryGlobs` by discovery. */
+  /** Validated roots in authored order. */
+  roots: readonly ResolvedRoot[];
+  /** Sorted absolute files retained by discovery, including Markdown documents. */
+  resolvedFiles?: readonly string[];
+  /** Root-glob matches, including files excluded from entry discovery. */
+  protectedFiles?: readonly string[];
+  /** Exact root ownership from the same discovery pass, keyed by repo-relative file. */
+  rootByFile?: Readonly<Record<string, number>>;
+  /** Sorted absolute executable entry modules. */
   entryModules?: readonly string[];
-  /** Absolute shorthand directory when `entriesDir` supplied the single glob. */
-  entriesDir?: string;
+  /** Directory records retained by the same discovery pass. */
+  folderRecords?: readonly FolderRecord[];
   mockupsDir: string;
   /** Shipped defaults followed by validated consumer exclusions. */
   readonly publicExclude: readonly string[];
@@ -158,4 +164,19 @@ export interface ResolvedModuleResolutionConfig {
   mainFields?: readonly string[];
   packageRoots: readonly string[];
   resolveExtensions?: readonly string[];
+}
+
+/** One config-relative source tree and its path derivation rules. */
+export interface RootConfig {
+  dir: string;
+  files?: readonly string[];
+  path?: string;
+  transparent?: readonly string[];
+}
+/** One root with absolute directory and resolved defaults. */
+export interface ResolvedRoot {
+  dir: string;
+  files: readonly string[];
+  path?: string;
+  transparent: readonly string[];
 }

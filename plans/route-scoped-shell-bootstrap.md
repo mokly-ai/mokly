@@ -1,11 +1,20 @@
 # Route-Scoped Shell Bootstrap
 
+Status: Completed. [PR #120](https://github.com/mokly-ai/mokly/pull/120)
+merged on 2026-10-02. Two Low findings in the [review record](#review-record)
+remain deferred for the user's decision.
+
 Make every `mokly serve` page carry the catalogue index plus only the component
 usage its own route renders, instead of every screen's usage, and stop
 re-serialising that embedded state on every render. The public
 `__mokly/catalogue.json` stays unchanged. Static content stays byte-identical
 after deployment-identity normalization; viewer client files and the identity
 derived from them may change.
+
+Path identity integration retains the scope and serialization rules with `entryPath`
+and read model v4; the implementation work is tracked in
+[Milestone 3A](./path-identity.md#milestone-3a-integrate-main). Historical measurements
+below describe their original commits.
 
 ## Problem
 
@@ -62,7 +71,7 @@ A prototype that keeps only the current route's usage measured 360–445 KB and
 
 ## Decisions
 
-1. **Public catalogue v1 is unchanged.** `__mokly/catalogue.json` stays
+1. **Public catalogue v4 is unchanged.** `__mokly/catalogue.json` stays
    complete. Embedded viewers, upload and ownership inventories, the v1 fixture
    and the conformance tests keep their bytes. Static exports keep their compact
    external bootstraps that reference the shared catalogue.
@@ -127,7 +136,7 @@ A prototype that keeps only the current route's usage measured 360–445 KB and
   `catalogue.json` once per full page load (about 0.5 s of script time for the
   example). A lean deployment index or a validated-catalogue cache is a
   separate follow-up.
-- No change to embedded `MoklyViewer` sources, catalogue v1, upload v1,
+- No change to embedded `MoklyViewer` sources, catalogue v4, upload v1,
   ownership v1, review v2/v3 or delivery descriptor v2.
 - No change to test sharding or to the routes the hydration spec covers.
 
@@ -180,7 +189,7 @@ completely before any code changes.
       [`src/client/README.md`](../src/client/README.md),
       [`src/server/README.md`](../src/server/README.md) and
       [`src/export/README.md`](../src/export/README.md).
-- [x] Add this plan to the active list in [`plans/README.md`](./README.md).
+- [x] Add this plan to the active list in `plans/README.md`.
 - [x] Validate the changed Markdown with `npm run format:check`, run
       `npm run prepare:verification` and the complete `npm run test:prepared`
       unit suite, and review the diff. Documentation-only work does not require

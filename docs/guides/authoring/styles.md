@@ -144,7 +144,7 @@ npm install -D postcss tailwindcss @tailwindcss/postcss autoprefixer
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
-  entries: ["src/**/*.mockup.{ts,tsx}"],
+  roots: [{ dir: "src" }],
   mockupsDir: "docs/mockups/generated",
   postcss: "postcss.config.mjs",
 });

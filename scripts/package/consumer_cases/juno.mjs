@@ -25,7 +25,7 @@ export async function smokeJunoFixture(context) {
   await runBin(root, ["build", ...config]);
   await runBin(root, ["check", ...config]);
   const fragment = await fs.promises.readFile(
-    path.join(root, "site/mockups/screens/workspace-overview.mobile.html"),
+    path.join(root, "site/mockups/workspace-overview/index.mobile.html"),
     "utf8",
   );
   assert.match(fragment, /data-juno-layout="compact"/);
@@ -40,6 +40,6 @@ export async function smokeJunoFixture(context) {
     "HEAD",
   ]);
   await inspectConsumerExport(root, "tools/published", "HEAD", [
-    "view/screens/workspace-overview.html",
+    "view/workspace-overview/index.html",
   ]);
 }

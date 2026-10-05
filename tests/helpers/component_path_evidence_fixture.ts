@@ -5,7 +5,7 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { compareReview } from "../../dist/review/compare.js";
-import type { ReviewResultV4 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 
 import { componentEntrySource } from "./component_fixture.js";
 import { componentGit } from "./component_review_fixture.js";
@@ -31,10 +31,10 @@ export function pathCatalogueSource(
       'const metadata = { dependencies: ["notes.md"], relatedDocs: [] };',
       `const metadata = { dependencies: ${JSON.stringify(dependencies)}, relatedDocs: [] };`,
     )
-    .replace('id: "home",', 'id: "home", useCaseIds: ["journey"],')
+    .replace('path: "home",', 'path: "home", useCasePaths: ["journey"],')
     .replace(
       "\n];",
-      ',\n  defineUseCase({ ...metadata, id: "journey", title: "Journey", description: "A screen journey", navPath: ["Fixture"], steps: [{ screenId: "home" }] })\n];',
+      ',\n  defineUseCase({ ...metadata, path: "journey", title: "Journey", description: "A screen journey", steps: [{ screenPath: "home" }] })\n];',
     );
 }
 
@@ -45,7 +45,7 @@ export function withEntryPaths(
   dependencies: readonly string[],
   ownedDependencies: readonly string[] = [],
 ): string {
-  const marker = `id: "${id}",`;
+  const marker = `path: "${id}",`;
   if (!source.includes(marker)) throw new Error(`Missing fixture entry ${id}`);
   return source.replace(
     marker,
@@ -85,7 +85,7 @@ export async function pathEvidenceFixture(
     componentGit(before, options.changedPaths),
     "main",
   );
-  if (artifact.result.schemaVersion !== 4)
+  if (artifact.result.schemaVersion !== 5)
     throw new Error("Fixture requires a component review result");
-  return { before, after, config, result: artifact.result as ReviewResultV4 };
+  return { before, after, config, result: artifact.result as ReviewResultV5 };
 }

@@ -19,7 +19,7 @@ export function scopedCatalogueFixture(): CatalogueReadModel {
   const value = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -40,7 +40,7 @@ function addRemovedVariant(value: MutableCatalogue): void {
         "variantOf" in entry,
     )!,
   );
-  variant.id = "action-retired";
+  variant.path = "components/action/retired";
   variant.title = "Retired";
   variant.changes = { included: true, kind: "removed", status: "ready" };
   variant.comparison = {
@@ -49,7 +49,11 @@ function addRemovedVariant(value: MutableCatalogue): void {
     status: "ready",
   };
   value.removedEntries.push({
+    folderTitles: [],
     entry: variant,
+    parentTitle: value.components.find(
+      (entry) => entry.path === variant.variantOf,
+    )!.title,
     snapshotId: "c".repeat(64),
   });
 }
@@ -60,7 +64,7 @@ function addRemovedComponent(value: MutableCatalogue): void {
       (entry): entry is Mutable<CatalogueComponent> => !("variantOf" in entry),
     )!,
   );
-  parent.id = "removed-action";
+  parent.path = "removed-action";
   parent.title = "Removed action";
   parent.changes = { included: true, kind: "removed", status: "ready" };
   const sourceVariant = value.components.find(
@@ -68,9 +72,9 @@ function addRemovedComponent(value: MutableCatalogue): void {
       "variantOf" in entry,
   )!;
   const variant = structuredClone(sourceVariant);
-  variant.id = "removed-action-default";
+  variant.path = "removed-action/default";
   variant.title = "Default";
-  variant.variantOf = parent.id;
+  variant.variantOf = parent.path;
   variant.changes = { included: true, kind: "removed", status: "ready" };
   variant.comparison = {
     eligible: true,
@@ -78,17 +82,23 @@ function addRemovedComponent(value: MutableCatalogue): void {
     status: "ready",
   };
   value.removedEntries.push(
-    { entry: parent, snapshotId: "d".repeat(64) },
-    { entry: variant, snapshotId: "f".repeat(64) },
+    { folderTitles: [], entry: parent, snapshotId: "d".repeat(64) },
+    {
+      folderTitles: [],
+      entry: variant,
+      parentTitle: parent.title,
+      snapshotId: "f".repeat(64),
+    },
   );
 }
 
 function addRemovedUseCase(value: MutableCatalogue): void {
   const useCase = structuredClone(value.useCases[0]!);
-  useCase.id = "removed-tour";
+  useCase.path = "removed-tour";
   useCase.title = "Removed tour";
   useCase.changes = { included: true, kind: "removed", status: "ready" };
   value.removedEntries.push({
+    folderTitles: [],
     entry: useCase,
     snapshotId: "e".repeat(64),
   });

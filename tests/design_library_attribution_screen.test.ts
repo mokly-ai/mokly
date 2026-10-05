@@ -5,7 +5,7 @@ import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 
 test("real screen inputs, destinations, slots and ordered instances remain screen-owned", async (t) => {
   const fixture = await designLibraryFixture(t);
-  const file = "examples/basic/entries/design/browse/views/use-case.tsx";
+  const file = "examples/basic/specs/design/browse/views/use-case.tsx";
   for (const [label, change] of [
     [
       "title",
@@ -16,8 +16,8 @@ test("real screen inputs, destinations, slots and ordered instances remain scree
       "destination",
       (source: string) =>
         source.replace(
-          "screenId={DESTINATIONS.welcome}",
-          "screenId={DESTINATIONS.details}",
+          "screenPath={DESTINATIONS.welcome}",
+          "screenPath={DESTINATIONS.details}",
         ),
     ],
     [
@@ -47,8 +47,8 @@ test("real screen inputs, destinations, slots and ordered instances remain scree
       const after = await fixture.build();
       const result = await fixture.compare(after);
       assert.deepEqual(
-        result.changes.map((change) => (change.after ?? change.before)!.id),
-        ["design-browse-use-case"],
+        result.changes.map((change) => (change.after ?? change.before)!.path),
+        ["design/browse/views/use-case"],
       );
       assert.deepEqual(result.affectedConsumers, []);
     });

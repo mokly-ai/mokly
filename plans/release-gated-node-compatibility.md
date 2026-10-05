@@ -1,9 +1,10 @@
 # Release-Gated Node Compatibility
 
-## Status And Outcome
+Status: Completed. [PR #114](https://github.com/mokly-ai/mokly/pull/114)
+merged on 2026-09-22. Implementation, verification, push and review were
+complete before the merge.
 
-Status: implementation, verification, push and review complete. The pull
-request merge is the completion boundary; keep this plan active until then.
+## Status And Outcome
 
 Reduce recurring CI runner use without weakening the package release boundary.
 Ordinary pull requests and `main` pushes run the complete package, unit and

@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-Implemented for manifest v7, including strict admission of baseline-v7 usage
-records.
+Implemented for manifest v8, including strict admission of baseline usage
+records. `componentId` names a component parent by its path.
 
 This contract owns the per-view component instance, slot, range, style, and
-resource records stored by [manifest v7](./mokly-component-manifest.md).
+resource records stored by [manifest v8](./mokly-component-manifest.md).
 Stable instance-key behavior is defined separately by
 [Component Instance Identity](./mokly-instances.md).
 
@@ -74,7 +74,7 @@ interface ComponentViewRecord {
 ```
 
 References are local to one view except `componentId`, which names a registered
-component parent. An entry owner is the containing screen or component variant.
+component parent by its path. An entry owner is the containing screen or component variant.
 The component root rendered for its own variant is the entry owner and is not a
 used instance.
 
@@ -83,8 +83,8 @@ without a final LF. Their preimages are
 `["mokabook-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`
 and `["mokabook-slot-v1", instanceKey, name]`. Those domain strings are frozen
 protocol identifiers. Readers recompute keys and reject mismatches or
-conflicting duplicates. Keys are not paths, selectors, catalogue ids, or
-routes.
+conflicting duplicates. Keys are not entry paths, selectors, or file
+names.
 
 ## Ownership And Ordering
 

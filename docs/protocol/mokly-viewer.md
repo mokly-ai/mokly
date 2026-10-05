@@ -1,14 +1,8 @@
 # Embeddable Mokly Viewer
 
-## Delivery Status
-
-The [viewer library](../../plans/mokly-viewer-library.md), React shell, hosts,
-and multi-instance markers are implemented. One server-rendered/hydrated tree
-runs in Serve, export, and application-owned hosts; every selection names a
-global entry id. [Appearance](./mokly-viewer-appearance.md) and
-[removed previews](./mokly-removed-previews.md) retain their host-specific
-controls and shared presentation in that tree.
-Live Serve uses the strict [entry-scoped bootstrap](./mokly-shell-bootstrap.md).
+The [viewer library](../../plans/mokly-viewer-library.md) renders one React shell
+in Serve, export and embedded hosts. Serve uses the strict
+[entry-scoped bootstrap](./mokly-shell-bootstrap.md).
 
 ## Package And Props
 
@@ -30,8 +24,8 @@ import type { CatalogueReadModel } from "@mokly/viewer";
 import type { FrameAdapter, Box, FrameNavigation } from "@mokly/viewer";
 
 interface ViewerSelection {
-  /** Entry id: screen, page, use case, component, or variant; null is home. */
-  screenId: string | null;
+  /** Entry path of any kind, including a variant; null is home. */
+  screenPath: string | null;
   /** Exact removed record; absent for current content. */
   snapshotId?: string;
   view: "all" | "changes";
@@ -46,7 +40,7 @@ type CatalogueFetcher = (context: { signal: AbortSignal }) => Promise<{
 }>;
 type CatalogueSource = CatalogueReadModel | string | URL | CatalogueFetcher;
 interface InstanceRef {
-  screenId: string;
+  screenPath: string;
   stepIndex?: number;
   viewport: "mobile" | "desktop";
   colorScheme: "light" | "dark";
@@ -55,10 +49,10 @@ interface InstanceRef {
 interface InstanceEvent {
   instance: InstanceRef | null;
   boxes: readonly Box[];
-  frame: { entryId: string; stepIndex?: number };
+  frame: { entryPath: string; stepIndex?: number };
 }
 interface ScreenNavigateEvent {
-  screenId: string;
+  screenPath: string;
   snapshotId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
@@ -127,18 +121,18 @@ interface MoklyViewerProps {
 }
 ```
 
-`ScreenNavigateEvent` names the destination by `screenId`. Its `snapshotId` is
+`ScreenNavigateEvent` names the destination by `screenPath`. Its `snapshotId` is
 present when the committed historical record has an opaque identity published
 by the catalogue; it is absent for current content and historical records
 without one. The event has no `route`, `variantId`, or `kind`: hosts resolve the
-entry through the read model and use `viewHref(kind, id)` for its shell URL.
+entry through the read model and use `viewHref(path)` for its shell URL.
 
 For an object source, `baseUrl` is required and supplies its HTTP(S) artifact
 origin root. A URL/string source must be an absolute HTTP(S) catalogue URL;
 its validated final response URL establishes that root. A fetcher returns the
 same pair explicitly and must honor cancellation; `baseUrl` is invalid for URL
 or fetcher sources. Do not resolve artifact paths relative to the embedding app.
-Validate every source as [catalogue v3](./mokly-catalogue.md) before rendering.
+Validate every source as [catalogue v4](./mokly-catalogue.md) before rendering.
 Fetchers are host-supplied source transports, not permission for viewer telemetry.
 Fetch failure renders an explicit error/retry state and emits `onError`.
 Missing data is never replaced by examples or invented counts.
@@ -150,20 +144,21 @@ independent frames; it owns no global document state.
 
 ## Selection, Events And Imperative Use
 
-`screenId` names one catalogue entry id: a screen, page, use case, component,
-or a screen or component [variant](./mokly-variants.md); null selects home.
-Unknown ids show the existing not-found view with usable navigation. A variant
-of either kind is selected by its own id; selecting a component parent shows
-its first variant entry, and there is no separate variant selection field.
+`screenPath` names one catalogue entry path: a screen, page, document, use case,
+component, or a screen or component [variant](./mokly-variants.md); null selects
+home. A path with no current or removed entry shows the existing not-found view
+with usable navigation. A variant of either kind is selected by its own path;
+selecting a component parent shows its first variant entry, and there is no
+separate variant selection field.
 `view` selects the All/Changes **catalogue filter**, not a comparison mode.
 Logical fragments and comparison mode retain their existing route/runtime
 state.
 
 `snapshotId` is the optional opaque identity published beside a removed entry.
 With it, the pair must resolve exactly one removed record; an unknown, stale,
-or cross-catalogue identity is unavailable. An id-only selection of a removed
+or cross-catalogue identity is unavailable. A path-only selection of a removed
 record remains supported and normalizes to its published identity when present.
-Readers reject models where a current and removed record share an id. The same
+Readers reject models where a current and removed record share a path. The same
 rules apply to every kind retained in `removedEntries`.
 Evidence adoption can compare an explicit snapshot identity directly: a newer
 catalogue is adopted, and a replaced or missing selected record becomes
@@ -180,12 +175,12 @@ Controlled changes remain proposals until the host supplies them back; incoming
 props do not echo an event. Uncontrolled mode commits the next state itself.
 Invalid selection props, including invalid snapshots, render an unavailable state
 and emit one selection error; invalid imperative selections reject without
-committing. A partial selection that explicitly supplies `screenId` without
+committing. A partial selection that explicitly supplies `screenPath` without
 `snapshotId` returns to current content and clears a historical selection;
 viewport, scheme, filter, search and tag changes retain it. Shell links and
-pending route intents propose `{ screenId, snapshotId }` atomically. The
+pending route intents propose `{ screenPath, snapshotId }` atomically. The
 component workspace's variant bar links to the parent's sibling variant
-entries, proposing `select({ screenId })` for the chosen variant; in controlled
+entries, proposing `select({ screenPath })` for the chosen variant; in controlled
 mode it changes only after the host supplies that selection back. Comparison
 mode behavior across siblings follows
 [variant navigation](./mokly-variant-navigation.md). A committed selection
@@ -199,7 +194,7 @@ removed-variant adoption match Serve. Removed variants attach only to a current
 non-variant parent; otherwise each remains one flat fallback row, and every
 removed entry appears exactly once. A shell-link activation while `view` is
 `changes` proposes one atomic selection. An aggregate-only parent proposes its
-first visible changed variant's `screenId`. If the current selection is not
+first visible changed variant's `screenPath`. If the current selection is not
 itself a changed entry, a changed destination also proposes the first changed
 view's `viewport` and `colorScheme` from the public model's per-view comparison
 states, ordered mobile/light, mobile/dark, desktop/light, desktop/dark, unless
@@ -215,20 +210,18 @@ active. An imperative `select` call and supplied `defaultSelection` or
 `selection` props also keep their axes. Controlled mode emits the complete
 proposal and waits for the host to supply it back.
 
-Removed-entry `/view/<route>` URLs carry at most one validated
-`snapshot=<64-hex>` query, where the route derives from the removed entry's
-kind and id. Direct URLs, SSR/hydration and Back/Forward restore the exact
-record. The query stays through viewport, scheme and filter changes and is
-removed by navigation to current content. An id/snapshot mismatch is
+Removed-entry `/view/<path>/` URLs carry at most one validated
+`snapshot=<64-hex>` query. Direct URLs, SSR/hydration and Back/Forward restore
+the exact record. The query stays through viewport, scheme and filter changes
+and is removed by navigation to current content. A path/snapshot mismatch is
 unavailable. Titles, breadcrumbs, Details, status, active rows, preview lookup,
 and navigation events always use the resolved removed record. Removed screens
 expose only their read-only previous version, with no component picking,
 inspection, or comparison action.
 
-Free text and tags follow [Browse search](./mokly-runtime.md#browse-shell):
-parse case-insensitive `tag:` terms out of search into a deduplicated tag list,
-retain the remaining phrase as `search`, and require every tag plus that phrase.
-Normalization is deterministic; the visible input still displays those tags
+Free text and tags follow the single [search rule](./mokly-folders.md#titles).
+Public selection carries the normalized phrase as `search` and the deduplicated
+list as `tags`; the visible input still displays those tags
 as today's `tag:` terms. Navigation proposes any filter clearing needed to
 reveal its destination as one atomic selection update. Light-only views retain
 the existing fallback labels when Dark is selected; no fake dark view is made.
@@ -240,7 +233,7 @@ independently instead of deriving eligibility from the fallback status.
 
 Per-view resolution returns the shown status, comparison eligibility, and
 whether matching evidence produced them. Ready evidence applies only when its
-entry id matches the selected preview. Missing, pending, or nonmatching
+entry path matches the selected preview. Missing, pending, or nonmatching
 evidence may retain the entry-level displayed status, but it must preserve the
 entry's existing comparison eligibility rather than deriving new eligibility
 from that fallback status. Server rendering,
@@ -311,9 +304,17 @@ The viewer renders the existing [Browse shell](./mokly-runtime.md#browse-shell),
 [navigation](./mokly-navigation.md): catalogue trees and filters, route chrome,
 responsive frames and controls, comparisons, inspection and ordered flows. It
 retains existing accessibility, responsive and unavailable/loading/empty states;
-this API introduces no redesigned screen. Removed entries load their
+this API introduces no redesigned screen. Documents render in the
+complete-document frame, one document per scheme and no viewport axis
+([documents](./mokly-documents.md)); a moved entry reads `Moved` with its
+previous path in details ([moves](./mokly-moves.md)). Removed entries load their
 [previous version](./mokly-removed-previews.md) only from advertised catalogue
 paths.
+
+The embedded viewer's public catalogue has no branch-point usage data. Its
+Details show no input changes (Before and Current props), whether an entry
+moved or stayed at the same path. Serve and export shells include that data
+and show input changes.
 
 Slots are optional React-owned content containers. `topBarStart`/`topBarEnd`
 adjoin the existing top bar; `railStart`/`railEnd` adjoin the navigation rail.
@@ -382,11 +383,12 @@ Shell state is one store scoped to a mounted viewer:
 
 - **Route** is derived from the URL and is the only source of route truth:
   the entry, comparison selection and the validated `fragment` query. The
-  shared parser turns `/view/<route>` into kind and id, and the entry resolves
-  through the read model. Standalone modes own the document URL and history;
-  React hosts receive route changes through `onScreenNavigate` and own their
-  own URL.
-- **Selection** is the public `ViewerSelection`: entry id, All/Changes view,
+  shared parser turns `/view/<path>/`, `/view/<path>`, or
+  `/view/<path>/index.html` into a path; the entry and its kind resolve through
+  the read model, and standalone modes normalise history to the canonical form.
+  Standalone modes own the document URL and history; React hosts receive route
+  changes through `onScreenNavigate` and own their own URL.
+- **Selection** is the public `ViewerSelection`: entry path, All/Changes view,
   viewport, colour scheme, search phrase and tags. Standalone modes keep
   viewport, scheme and filters in memory across in-shell navigation.
 - **Disclosure** covers navigation groups, the details inspector, navigation
@@ -438,56 +440,9 @@ omission.
 
 ## SSR, Hydration And Host Independence
 
-The Node-only `@mokly/viewer/server` entry exports `renderViewer` for Serve and
-export. It synchronously accepts a validated object source, its base URL and
-initial selection/slots, plus a required stable `viewerId`, and returns the
-server-rendered shell tree as HTML;
-URL/fetcher sources and browser handles/effects are not accepted during SSR.
-`viewerId` contains 1–64 ASCII letters, digits, hyphens or underscores, starts
-with a letter or digit, and is unique among viewer roots in the host document.
-The host passes the identical value to `renderViewer` and `MoklyViewer` when it
-hydrates that output. Package-owned DOM IDs and fragment/ARIA references are
-prefixed through a boundary-preserving encoding of this value: distinct valid
-viewer IDs cannot collide even when one contains text used by a dynamic local
-control ID. The exact generated DOM ID bytes are internal. Host slot descendants
-remain untouched. Thus two independently rendered viewers can be safely
-composed and hydrated in one document without relying on React's per-render
-identifier sequence.
-CLI-owned context supplies the existing route, live capabilities or static
-delivery descriptor through its server integration. That context already
-contains accepted data; it bypasses public-source decoding. Serve validates
-each serialized public revision once and shares it across shell requests;
-asset delivery never decodes the catalogue. The browser graph never imports
-this entry.
-
-First paint is real: the server output is the complete shell with real anchors
-for every route, so direct URLs, refresh and JavaScript-disabled use show the
-correct screen before any script runs. Serve and export then load
-the documented standalone hydration entry, which bundles React and hydrates
-that tree in place. React hosts render `MoklyViewer` with their own React and
-hydrate it the same way. **Exported catalogues ship React and hydrate**; the
-former rule that exported browsers contain no React is withdrawn so that one
-shell implementation serves every delivery mode. An SSR-only unhydrated export
-remains possible because first paint does not depend on hydration, but it is
-not a supported mode.
-
-One exception stands: the in-frame inspector script defined by the
-[frame adapter contract](./mokly-frame-adapter.md) stays a React-free IIFE
-under its 9,216-byte budget. It runs inside consumer documents, not the shell,
-and no shell dependency may enter it.
-
-The viewer knows no cloud tenant, auth, comment model, deployment provider or
-host route layout. Marker content is host-owned; hosts own surrounding product
-UI and data. Viewer network
-activity is limited to its configured source and validated public resources or
-pinned comparisons from it: historical `before` documents for a removed entry,
-plus permitted `before` and `after` pane documents when a
-comparison is selected; it adds no analytics, discovery, remote fonts, or
-background comparison requests. Existing authored external fragment resources retain
-export's resource policy. Serve owns its existing private update/control
-transport outside this public fetch boundary. No cookies or ambient credentials
-are read/written, and no `window.top` access occurs. Embedding never commandeers
-an ancestor router; standalone Serve/export retain their current URL lifecycle.
+Server rendering, `viewerId`, hydration in every delivery mode, the React-free
+inspector exception, and the viewer's host-independence and network boundary
+are defined by [viewer SSR and hydration](./mokly-viewer-ssr.md).
 
 Acceptance includes all props, slots, events, handle methods, controlled-state
 round trips, multiple independent mounts, SSR/client lifecycle cleanup,

@@ -6,6 +6,7 @@ import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 import {
   entryRoute,
+  documentRoute,
   effectiveColorSchemes,
   viewRoute,
   VIEWPORTS,
@@ -24,6 +25,7 @@ import {
   publicFileFailureReason,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { documentTemplate } from "../documents/template.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
@@ -53,15 +55,29 @@ export function renderFragments(
     (entry): entry is ComponentDefinition & ResolvedRegistryEntry =>
       entry.kind === "component" && !isComponentVariantDefinition(entry),
   );
-  const componentById = new Map(components.map((entry) => [entry.id, entry]));
+  const componentById = new Map(components.map((entry) => [entry.path, entry]));
   const ordered = [
     ...entries.filter((entry) => entry.kind !== "page"),
     ...entries.filter((entry) => entry.kind === "page"),
   ];
   for (const entry of ordered) {
-    if (selection && selection.entryId !== entry.id) continue;
+    if (selection && selection.entryId !== entry.path) continue;
+    if (entry.kind === "document") {
+      for (const colorScheme of config.colorSchemes) {
+        if (selection && selection.colorScheme !== colorScheme) continue;
+        const route = documentRoute(entry.path, colorScheme);
+        addOutput(
+          outputs,
+          route,
+          generatedHeader(entry.sourceRelativePath) +
+            documentTemplate(entry.title, entry.body, colorScheme),
+        );
+        fragmentViews.set(route, { colorScheme, viewport: "desktop" });
+      }
+      continue;
+    }
     if (entry.kind === "page") {
-      const route = entryRoute("page", entry.id);
+      const route = entryRoute(entry.path);
       addOutput(outputs, route, renderPage(entry));
       fragmentViews.set(route, {
         colorScheme: "light",
@@ -86,9 +102,9 @@ export function renderFragments(
               selection.colorScheme !== colorScheme)
           )
             continue;
-          const route = viewRoute(entry.kind, entry.id, viewport, colorScheme);
+          const route = viewRoute(entry.path, viewport, colorScheme);
           const stylesheets = stylesheetsFor(
-            entryRoute(entry.kind, entry.id),
+            entryRoute(entry.path),
             route,
             colorScheme,
             config,
@@ -102,7 +118,7 @@ export function renderFragments(
                 ? componentInputs(
                     componentById.get(entry.variantOf)!,
                     entry.props,
-                    `${entry.variantOf} / ${entry.id}`,
+                    `${entry.variantOf} / ${entry.path}`,
                   ).data
                 : undefined;
             const input = {
@@ -138,14 +154,14 @@ export function renderFragments(
           } catch (error) {
             throw new MoklyError(
               "build-invalid",
-              `renderer failed for ${entry.id} (${viewport}, ${colorScheme}): ${errorMessage(error)}`,
+              `renderer failed for ${entry.path} (${viewport}, ${colorScheme}): ${errorMessage(error)}`,
               { cause: error },
             );
           }
           if (typeof rendered !== "string" || !/<html[\s>]/i.test(rendered)) {
             throw new MoklyError(
               "build-invalid",
-              `renderer must return a complete HTML document for ${entry.id} (${viewport}, ${colorScheme})`,
+              `renderer must return a complete HTML document for ${entry.path} (${viewport}, ${colorScheme})`,
             );
           }
           addOutput(

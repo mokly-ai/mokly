@@ -190,7 +190,7 @@ export function selectionForRoute(
   selection: ViewerSelection,
   route: ShellRoute,
 ): ViewerSelection {
-  const next = { ...selection, screenId: routeScreenId(route) };
+  const next = { ...selection, screenPath: routeScreenId(route) };
   if (route.snapshot) next.snapshotId = route.snapshot;
   else delete next.snapshotId;
   return next;
@@ -210,7 +210,7 @@ export function currentContext(
   } = context;
   const activeId =
     state.route.view.kind === "target"
-      ? state.route.view.target.entry.id
+      ? state.route.view.target.entry.path
       : undefined;
   return {
     ...stable,

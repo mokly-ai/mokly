@@ -1,5 +1,8 @@
 # Tag Filtering
 
+Status: Completed. [PR #37](https://github.com/mokly-ai/mokly/pull/37)
+merged on 2026-09-08.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: use
 > superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use

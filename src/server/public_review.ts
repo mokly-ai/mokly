@@ -61,8 +61,7 @@ export class PublicReviewAliases {
         const bytes = files.get(
           snapshotViewPath(
             "after",
-            entry.kind,
-            entry.id,
+            entry.path,
             view.viewport,
             view.colorScheme,
           ),

@@ -12,8 +12,8 @@ import {
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: page designs retain their own inspector, drawer, and document links`, async () => {
     const pairs = [
-      ["design-page-view", "design-page-details"],
-      ["design-page-details", "design-page-view"],
+      ["design/browse/pages/view", "design/browse/pages/details"],
+      ["design/browse/pages/details", "design/browse/pages/view"],
     ] as const;
     for (const [id, target] of pairs) {
       const { document } = await designDocument(id, viewport);
@@ -31,44 +31,50 @@ for (const viewport of ["mobile", "desktop"] as const) {
       );
       assert.equal(
         attribute(welcome[0]!, "data-mokly-link"),
-        "design-browse-screen",
+        "design/browse/views/screen",
       );
       assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0);
     }
     const { document } = await designDocument(
-      "design-page-navigation",
+      "design/browse/pages/navigation",
       viewport,
     );
     const pageRow = byClass(document, "mbk-nav-row").find(
       (node) => textContent(node).trim() === "Getting started",
     );
     assert.ok(pageRow);
-    assert.equal(attribute(pageRow, "data-mokly-link"), "design-page-view");
+    assert.equal(
+      attribute(pageRow, "data-mokly-link"),
+      "design/browse/pages/view",
+    );
     if (viewport === "mobile") {
-      const current = await designDocument("design-page-view", viewport);
+      const current = await designDocument(
+        "design/browse/pages/view",
+        viewport,
+      );
       assert.equal(
         attribute(
           byClass(current.document, "mbk-menu-btn")[0]!,
           "data-mokly-link",
         ),
-        "design-page-navigation",
+        "design/browse/pages/navigation",
       );
       assert.equal(
         attribute(byClass(document, "mbk-menu-btn")[0]!, "data-mokly-link"),
-        "design-page-view",
+        "design/browse/pages/view",
       );
     }
   });
 
   test(`${viewport}: publication designs preserve their capability and supported comparison destinations`, async () => {
     const current = await designDocument(
-      "design-publication-catalogue",
+      "design/browse/publication/catalogue",
       viewport,
     );
     assert.equal(byClass(current.document, "mbk-nav-filter").length, 0);
     assert.equal(byClass(current.document, "mbk-cmp-toolbar").length, 0);
     const changes = await designDocument(
-      "design-publication-changes",
+      "design/browse/publication/changes",
       viewport,
     );
     assert.equal(
@@ -82,7 +88,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     assert.equal(
       attribute(overlay[0]!, "data-mokly-link"),
-      "design-changes-overlay",
+      "design/changes/diff-controls/overlay",
     );
   });
 }

@@ -16,8 +16,8 @@ test("removed screens and saved variants retain baseline context with null curre
   const source = componentEntrySource({
     body: '<action.Component label="Child" />',
   }).replace(
-    'id: "home", title: "Home",',
-    'id: "home", navPath: ["Components"], title: "Home",',
+    'path: "home", title: "Home",',
+    'path: "components/home", title: "Home",',
   );
   const fixture = await componentReviewFixture(
     t,
@@ -26,7 +26,7 @@ test("removed screens and saved variants retain baseline context with null curre
         .slice(0, value.indexOf("  defineScreen("))
         .concat("];")
         .replace(
-          ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+          ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
           "",
         ),
     source,
@@ -47,13 +47,15 @@ test("removed screens and saved variants retain baseline context with null curre
     changesStatus: "ready",
     evidence,
     comparisonUrl: `__mokly/diffs/__generations/${previewGeneration}/review.json`,
-    removedPreviews: new Map([["home", { kind: "screen" as const }]]),
+    removedPreviews: new Map([
+      ["components/home", { kind: "screen" as const }],
+    ]),
     revision: { content: 0, evidence: 0 },
   });
   const removedRecord = model.removedEntries.find(
-    ({ entry }) => entry.id === "home",
+    ({ entry }) => entry.path === "components/home",
   )!;
-  assert.deepEqual(removedRecord.entry.navPath, ["Components"]);
+  assert.deepEqual(removedRecord.folderTitles, ["Components"]);
   const removed = removedRecord.entry;
   assert.deepEqual(removedRecord.preview, { kind: "screen" });
   assert.equal(removed.kind, "screen");
@@ -68,7 +70,7 @@ test("removed screens and saved variants retain baseline context with null curre
     });
   }
   const variant = model.removedEntries.find(
-    ({ entry }) => entry.id === "action-disabled",
+    ({ entry }) => entry.path === "action/disabled",
   )!.entry;
   assert.equal(variant.kind, "component");
   if (variant.kind !== "component" || !("variantOf" in variant))
@@ -84,10 +86,9 @@ test("removed screens and saved variants retain baseline context with null curre
 
 test("removed parents precede authored variants and the next sorted entry", async (t) => {
   const source = componentEntrySource({ body: "<p>Before</p>" })
-    .replace('id: "action-default"', 'id: "action-zulu"')
-    .replace('id: "action-disabled"', 'id: "action-alpha"')
-    .replace('id: "pane"', 'id: "action-middle"')
-    .replace('id: "pane-default"', 'id: "action-middle-default"');
+    .replace('slug: "default"', 'slug: "zulu"')
+    .replace('slug: "disabled"', 'slug: "alpha"')
+    .replace('path: "pane"', 'path: "action-middle"');
   const fixture = await componentReviewFixture(
     t,
     () => componentEntrySource({ body: "<p>After</p>", exports: "" }),
@@ -105,13 +106,13 @@ test("removed parents precede authored variants and the next sorted entry", asyn
     revision: { content: 0, evidence: 0 },
   });
 
-  const removedIds = model.removedEntries.map(({ entry }) => entry.id);
-  assert.deepEqual(removedIds, [
+  const removedPaths = model.removedEntries.map(({ entry }) => entry.path);
+  assert.deepEqual(removedPaths, [
     "action",
-    "action-zulu",
-    "action-alpha",
+    "action/zulu",
+    "action/alpha",
     "action-middle",
-    "action-middle-default",
+    "action-middle/default",
   ]);
   assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
 });

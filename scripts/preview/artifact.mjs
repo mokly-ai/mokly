@@ -3,13 +3,11 @@ import path from "node:path";
 
 import {
   parseStaticDelivery,
-  parseViewHref,
   providerNormalizedHtmlPath,
   viewHref,
 } from "@mokly/viewer/data";
 
 import { ownedEntries } from "../../dist/export/ownership.js";
-import { isExportPublicName } from "../../dist/export/resource_policy.js";
 import {
   markCapturedShell,
   STAGED_DEPLOYMENT_ID,
@@ -20,28 +18,11 @@ import { advertisePublicationShell } from "../../dist/publication/shell_previews
 import { comparisonMetadata } from "./comparisons.mjs";
 import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
 
-/** Only this repository adapter can adopt the previous preview marker. */
+/** Adapter metadata; replacement authority comes only from export schema 2. */
 const previewMarker = {
   marker: ".mokly-preview-artifact",
   contents: "schemaVersion=1\n",
 };
-
-/** Validate legacy preview names using the active config and historical path policy. */
-export const previewOwnership = (config) => ({
-  ...previewMarker,
-  accepts: (name) =>
-    ["index.html", "404.html", "_headers", "_redirects"].includes(name) ||
-    // Legacy markers may own pre-derived view paths at this migration boundary.
-    (name.startsWith("view/") && name.endsWith(".html")) ||
-    (name.startsWith("static/") &&
-      isExportPublicName(name.slice(7), config, {
-        allowBuildDirectories: true,
-        resolveAliases: false,
-      })) ||
-    /^__mokly\/(?:shell\.css|client\/[^/]+\.js|navigation\/[^/]+\.js|fonts\/[^/]+|diffs\/__generations\/[A-Za-z0-9-]+\/.+)$/.test(
-      name,
-    ),
-});
 
 /** Share the exporter's alias checks, ownership inventory, and deployment identity. */
 export async function stagePreviewArtifact(
@@ -54,10 +35,10 @@ export async function stagePreviewArtifact(
   const files = new Map();
   for (const name of (await ownedEntries(stage)).files)
     files.set(name, await fs.promises.readFile(path.join(stage, name)));
-  const currentIds = new Set(manifest.entries.map((entry) => entry.id));
+  const currentPaths = new Set(manifest.entries.map((entry) => entry.path));
   const entries = [
     ...manifest.entries,
-    ...removed.filter((entry) => !currentIds.has(entry.id)),
+    ...removed.filter((entry) => !currentPaths.has(entry.path)),
   ];
   const delivery = parseStaticDelivery({
     schemaVersion: 3,
@@ -92,18 +73,14 @@ export async function stagePreviewArtifact(
   addShell("index.html", "/");
   addShell("404.html", "/404.html");
   for (const entry of entries) {
-    const canonicalPath = viewHref(entry.kind, entry.id);
-    addShell(canonicalPath.slice(1), canonicalPath);
+    const canonicalPath = viewHref(entry.path);
+    addShell(`${canonicalPath.slice(1)}index.html`, canonicalPath);
   }
   const aliases = new Map();
   for (const [name, bytes] of files) {
     const pathname = `/${name}`;
-    const identity = parseViewHref(pathname);
-    const canonicalView =
-      identity !== undefined &&
-      viewHref(identity.kind, identity.id) === pathname;
     const normalized = providerNormalizedHtmlPath(pathname);
-    if ((canonicalView || name.startsWith("static/")) && normalized)
+    if (name.startsWith("static/") && normalized && !normalized.endsWith("/"))
       aliases.set(normalized.slice(1), name);
     if (name.endsWith(".html") && !name.startsWith("__mokly/diffs/"))
       files.set(

@@ -5,7 +5,7 @@ import {
   parseStaticDelivery,
   type StaticDelivery,
 } from "../navigation/delivery.js";
-import { isEntryId, isLogicalFragment } from "../navigation/logical.js";
+import { isEntryPath, isLogicalFragment } from "../navigation/logical.js";
 import type { EntryRouteKind } from "../navigation/routes.js";
 import type { ViewerTheme } from "../viewer/types.js";
 
@@ -15,7 +15,7 @@ export type BootstrapView =
   | { kind: "missing"; requested: string }
   | {
       kind: "target";
-      entryId: string;
+      entryPath: string;
       entryKind: EntryRouteKind;
       snapshotId?: string;
     };
@@ -100,16 +100,16 @@ function readView(value: Record<string, unknown>): BootstrapView {
     return { kind: "missing", requested: value["requested"] };
   if (
     value["kind"] === "target" &&
-    isEntryId(value["entryId"]) &&
+    isEntryPath(value["entryPath"]) &&
     (value["snapshotId"] === undefined ||
       isHistoricalSnapshotId(value["snapshotId"])) &&
-    ["component", "page", "screen", "use-case"].includes(
+    ["component", "document", "page", "screen", "use-case"].includes(
       String(value["entryKind"]),
     )
   )
     return {
       kind: "target",
-      entryId: value["entryId"],
+      entryPath: value["entryPath"],
       entryKind: value["entryKind"] as EntryRouteKind,
       ...(value["snapshotId"] === undefined
         ? {}

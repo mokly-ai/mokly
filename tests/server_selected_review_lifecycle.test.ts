@@ -14,13 +14,15 @@ const source: SelectedReviewSource = {
   before: {
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 7,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: [],
   },
   after: {
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 7,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: [],
   },
   baseCommit: "a".repeat(40),
@@ -35,7 +37,7 @@ const source: SelectedReviewSource = {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 4,
+    schemaVersion: 5 as const,
     screens: [],
     sharedImpact: [],
   },
@@ -57,7 +59,7 @@ function artifact(route: string): ReviewArtifact {
       baseRef: source.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 4,
+      schemaVersion: 5 as const,
       screens: [],
       sharedImpact: [],
       components: [],
@@ -96,7 +98,7 @@ async function start(
     routes,
     request: (id: string, refresh = false) =>
       fetch(
-        `http://127.0.0.1:${address.port}/__mokly/diffs/review.json?id=${encodeURIComponent(id)}${refresh ? "&refresh=1" : ""}`,
+        `http://127.0.0.1:${address.port}/__mokly/diffs/review.json?path=${encodeURIComponent(id)}${refresh ? "&refresh=1" : ""}`,
       ),
   };
 }
@@ -108,12 +110,12 @@ test("selected comparisons coalesce matching requests and serialize different ro
   const calls: string[] = [];
   const server = await start(t, {
     async generate(_source, selection) {
-      calls.push(selection.id);
+      calls.push(selection.path);
       if (calls.length === 1) {
         arrived.release();
         await release.promise;
       }
-      return artifact(selection.id);
+      return artifact(selection.path);
     },
   });
   const first = server.request("first");
@@ -161,7 +163,7 @@ for (const action of ["invalidate", "close"] as const)
           );
           await drained.promise;
         }
-        return artifact(selection.id);
+        return artifact(selection.path);
       },
     });
     const pending = server.request("first");
@@ -189,7 +191,7 @@ test("selected snapshot failures do not poison the queue or overwrite retained p
   const server = await start(t, {
     async generate(_source, selection) {
       if (++attempts === 2) throw new Error("Failed capture");
-      return artifact(selection.id);
+      return artifact(selection.path);
     },
   });
   const first = await server.request("first");
@@ -210,8 +212,8 @@ test("HEAD renews selected snapshots without capture and expired selections can 
   const calls: string[] = [];
   const server = await start(t, {
     async generate(_source, selection) {
-      calls.push(selection.id);
-      return artifact(selection.id);
+      calls.push(selection.path);
+      return artifact(selection.path);
     },
   });
   const first = await server.request("first");

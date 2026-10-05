@@ -1,13 +1,14 @@
 # Co-Located Entry Discovery Follow-up
 
-Status: implemented, verified, pushed, and reviewed on 2026-09-22;
-[PR #111](https://github.com/mokly-ai/mokly/pull/111) awaits merge. Created at the user's request to close
+Status: Completed. [PR #111](https://github.com/mokly-ai/mokly/pull/111)
+merged on 2026-09-22. It was implemented, verified, pushed, and reviewed
+the same day. Created at the user's request to close
 [Co-Located Entry Discovery](./co-located-entry-discovery.md) for
 [PR #101](https://github.com/mokly-ai/mokly/pull/101). All work here belongs in a
 separate PR. The user requested a plan audit before delegating the fixes to
 Codex 5.6 Sol with max reasoning and an independent supervising check.
-Keep this plan active until its PR merges; component-adoption work and the
-published-release smoke remain outside this implementation.
+Component-adoption work and the published-release smoke remain outside this
+implementation.
 
 ## Scope And Contracts
 

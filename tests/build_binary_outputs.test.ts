@@ -31,7 +31,7 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { screenView } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-const route = "screens/home.mobile.html";
+const route = "home/index.mobile.html";
 const assetRoute = "assets/binary.png";
 const rawBytes = Uint8Array.from([0x00, 0xff, 0x80, 0x61]);
 
@@ -193,7 +193,7 @@ test("props render captures linked CSS and binary assets from the accepted gener
   const result = await service.render(
     {
       componentId: "action",
-      variantId: "action-default",
+      variantPath: "action/default",
       viewport: "desktop",
       colorScheme: "light",
       generation: runtime.generation,

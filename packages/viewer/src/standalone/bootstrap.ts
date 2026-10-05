@@ -64,7 +64,7 @@ export function shellBootstrap(
       view.kind === "target"
         ? {
             kind: "target",
-            entryId: view.target.entry.id,
+            entryPath: view.target.entry.path,
             entryKind: view.target.entry.kind,
             ...(context.snapshotId === undefined
               ? {}
@@ -103,19 +103,23 @@ export function shellBootstrapProps(
       ? resolveCatalogueEntry(
           bootstrap.catalogue,
           {
-            id: bootstrap.view.entryId,
+            path: bootstrap.view.entryPath,
             kind: bootstrap.view.entryKind,
           },
           bootstrap.view.snapshotId,
         )
       : undefined;
   const selectedEntry = selected
-    ? catalogueSelectionEntry(catalogue, selected.entry.id, selected.snapshotId)
+    ? catalogueSelectionEntry(
+        catalogue,
+        selected.entry.path,
+        selected.snapshotId,
+      )
     : undefined;
-  const selectedId = selectedEntry?.id ?? null;
+  const selectedId = selectedEntry?.path ?? null;
   const selection = {
     ...defaultSelection,
-    screenId: selectedId,
+    screenPath: selectedId,
     ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
   };
   const projected = viewerContext(bootstrap.catalogue, selection);
@@ -141,7 +145,7 @@ export function shellBootstrapProps(
       ? {}
       : { theme: bootstrap.context.theme }),
     ...(bootstrap.view.kind === "target"
-      ? { activeId: bootstrap.view.entryId }
+      ? { activeId: bootstrap.view.entryPath }
       : {}),
   };
   const view: ShellView =
@@ -151,7 +155,7 @@ export function shellBootstrapProps(
         ? bootstrap.view
         : targetView(
             catalogue,
-            bootstrap.view.entryId,
+            bootstrap.view.entryPath,
             bootstrap.view.entryKind,
             bootstrap.view.snapshotId,
           );

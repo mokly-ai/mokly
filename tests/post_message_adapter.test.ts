@@ -83,7 +83,7 @@ test("postMessage mount validates origins, sandbox, nonce and history replacemen
     "https://wrong.test/static/screen.html",
     "https://frames.test/__mokly/diffs/screen.html",
     "data:text/html,test",
-    "https://frames.test/static/screen.html#1bad",
+    "https://frames.test/static/screen.html#bad%20fragment",
   ])
     await assert.rejects(
       postMessageAdapter({ frameOrigin: "https://frames.test" }).mount(

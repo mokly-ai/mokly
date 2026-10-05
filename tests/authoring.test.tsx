@@ -6,7 +6,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
-  RegistryDefinition,
+  EntryDefinition,
   ResolvedRegistryEntry,
   ScreenDefinition,
   ScreenInput,
@@ -15,7 +15,6 @@ import type {
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import {
-  defineRoot,
   defineComponent,
   definePage,
   defineScreen,
@@ -24,7 +23,6 @@ import {
   ReviewIgnore,
   ReviewIgnoreScope,
   reviewMaterialKey,
-  screen,
 } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
 import type { RegistryViolation } from "../dist/registry/prepared_types.js";
@@ -41,8 +39,13 @@ const validationConfig: ResolvedConfig = {
   colorSchemes: ["light"],
   compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
-  entriesDir: path.join(repositoryRoot, "tests"),
-  entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
+  roots: [
+    {
+      dir: path.join(repositoryRoot, "tests"),
+      files: ["**/*.test.tsx"],
+      transparent: [],
+    },
+  ],
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
@@ -53,10 +56,11 @@ const validationConfig: ResolvedConfig = {
 };
 
 const screenBase = {
+  slug: "tagged-screen",
   dependencies: [],
   description: "Tagged screen",
   desktop: "Desktop",
-  id: "tagged-screen",
+  path: "tagged-screen",
   mobile: "Mobile",
   relatedDocs: [],
   title: "Tagged screen",
@@ -65,9 +69,9 @@ const screenBase = {
 const useCaseBase: UseCaseInput = {
   dependencies: [],
   description: "Tagged journey",
-  id: "tagged-journey",
+  path: "tagged-journey",
   relatedDocs: [],
-  steps: [{ screenId: "tagged-screen" }],
+  steps: [{ screenPath: "tagged-screen" }],
   title: "Tagged journey",
 };
 
@@ -99,7 +103,7 @@ test("MockLink keeps fragment identity out of rendered package props", () => {
   assert.doesNotMatch(html, /fragment=/);
   assert.throws(
     () => renderToStaticMarkup(<MockLink to="details#billing">Bad</MockLink>),
-    /expected kebab-case/,
+    /expected a complete path/,
   );
 });
 
@@ -126,7 +130,7 @@ test("definitions keep identity while shared helpers derive every document", () 
   const pageDefinition = definePage({
     dependencies: [],
     description: "Account guide",
-    id: "account-guide",
+    path: "account-guide",
     relatedDocs: [],
     render: () => "<html><body>Guide</body></html>",
     title: "Account guide",
@@ -135,12 +139,19 @@ test("definitions keep identity while shared helpers derive every document", () 
   const componentDefinition = defineComponent({
     dependencies: [],
     description: "Action",
-    id: "action",
+    path: "action",
     propSchema: { kind: "object", properties: {} },
     relatedDocs: [],
     render: () => "Action",
     title: "Action",
-    variants: [{ id: "action-default", props: {}, title: "Default" }],
+    variants: [
+      {
+        slug: "default",
+
+        props: {},
+        title: "Default",
+      },
+    ],
   }).entries[0];
 
   for (const definition of [
@@ -150,43 +161,13 @@ test("definitions keep identity while shared helpers derive every document", () 
     componentDefinition,
   ])
     assert.equal(Object.hasOwn(definition, "route"), false);
+  assert.equal(entryRoute(screenDefinition.path!), "tagged-screen/index.html");
+  assert.equal(entryRoute(pageDefinition.path!), "account-guide/index.html");
   assert.equal(
-    entryRoute(screenDefinition.kind, screenDefinition.id),
-    "screens/tagged-screen.html",
+    entryRoute(useCaseDefinition.path!),
+    "tagged-journey/index.html",
   );
-  assert.equal(
-    entryRoute(pageDefinition.kind, pageDefinition.id),
-    "pages/account-guide.html",
-  );
-  assert.equal(
-    entryRoute(useCaseDefinition.kind, useCaseDefinition.id),
-    "user-flows/tagged-journey.html",
-  );
-  assert.equal(
-    entryRoute(componentDefinition.kind, componentDefinition.id),
-    "components/action.html",
-  );
-});
-
-test("nested screens retain colorSchemes through root flattening", () => {
-  const definitions = defineRoot({
-    children: [
-      screen({
-        colorSchemes: ["light"],
-        description: "Light-only nested screen",
-        desktop: <main>Desktop</main>,
-        id: "nested-screen",
-        mobile: <main>Mobile</main>,
-        title: "Nested screen",
-      }),
-    ],
-  });
-
-  const definition = definitions[0];
-  assert.equal(definition?.kind, "screen");
-  if (definition?.kind !== "screen") throw new Error("screen missing");
-  assert.deepEqual(definition.colorSchemes, ["light"]);
-  assert.equal(Object.hasOwn(definition, "route"), false);
+  assert.equal(entryRoute(componentDefinition.path!), "action/index.html");
 });
 
 test("defineScreen flattens declared variants after their parent", () => {
@@ -194,17 +175,19 @@ test("defineScreen flattens declared variants after their parent", () => {
     ...screenBase,
     variants: [
       {
+        slug: "empty",
         description: "Empty tagged screen",
         desktop: "Empty desktop",
-        id: "tagged-screen-empty",
+
         mobile: "Empty mobile",
         title: "Tagged screen, empty",
       },
     ],
   });
 
-  assert.equal(definitions[0]?.id, "tagged-screen");
-  assert.equal(definitions[1]?.id, "tagged-screen-empty");
+  assert.equal(definitions[0]?.path, "tagged-screen");
+  assert.equal(definitions[1]?.slug, "empty");
+  assert.equal(definitions[1]?.path, undefined);
 });
 
 test("define helpers keep authored tags on screens and use cases", () => {
@@ -216,34 +199,6 @@ test("define helpers keep authored tags on screens and use cases", () => {
 
   assert.deepEqual(definition.tags, ["forms", "onboarding"]);
   assert.deepEqual(useCase.tags, ["forms"]);
-});
-
-test("nested screens keep their own tags and inherit none", () => {
-  const [tagged, untagged] = defineRoot({
-    children: [
-      screen({
-        description: "Tagged nested screen",
-        desktop: "Desktop",
-        id: "tagged-nested",
-        mobile: "Mobile",
-        tags: ["forms"],
-        title: "Tagged nested",
-      }),
-      screen({
-        description: "Untagged nested screen",
-        desktop: "Desktop",
-        id: "untagged-nested",
-        mobile: "Mobile",
-        title: "Untagged nested",
-      }),
-    ],
-  });
-
-  if (tagged?.kind !== "screen" || untagged?.kind !== "screen") {
-    throw new Error("nested screens missing");
-  }
-  assert.deepEqual(tagged.tags, ["forms"]);
-  assert.equal("tags" in untagged, false);
 });
 
 test("entry validation rejects tags outside the catalogue-id grammar", () => {
@@ -291,19 +246,13 @@ test("empty tags are valid and equivalent to absent tags", () => {
   );
 });
 
-test("top-level entries default to an empty navigation path", () => {
-  const entry = defineScreen(screenBase);
-  assert.deepEqual(entry.navPath, []);
-  assert.deepEqual(validateEntry(resolved(entry), validationConfig), []);
-});
-
 test("entry validation rejects Windows device names without changing tag grammar", () => {
-  const definition = defineScreen({ ...screenBase, id: "con" });
+  const definition = defineScreen({ ...screenBase, path: "con" });
   assert.deepEqual(validateEntry(resolved(definition), validationConfig), [
     {
-      code: "invalid-id",
-      id: "con",
-      message: "id must be globally unique kebab-case",
+      code: "invalid-path",
+      path: "con",
+      message: "path must be a valid catalogue path",
       sourceRelativePath,
     },
   ]);
@@ -324,12 +273,17 @@ function useCaseTagViolations(tags: unknown): RegistryViolation[] {
 }
 
 function tagProblem(message: string, id = "tagged-screen"): RegistryViolation {
-  return { code: "invalid-tags", id, message, sourceRelativePath };
+  return { code: "invalid-tags", path: id, message, sourceRelativePath };
 }
 
-function resolved(definition: RegistryDefinition): ResolvedRegistryEntry {
+function resolved(definition: EntryDefinition): ResolvedRegistryEntry {
   return {
     ...definition,
+    path: definition.path!,
+    slug: definition.slug ?? definition.path!,
+    index: false,
+    linkBase: "",
+    location: sourceRelativePath,
     sourcePath: path.join(repositoryRoot, sourceRelativePath),
     sourceRelativePath,
   };

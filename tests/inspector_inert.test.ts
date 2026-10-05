@@ -37,9 +37,12 @@ function harness(query: string) {
             textContent: JSON.stringify({
               ranges: [],
               links: [
-                { id: "screen", target: { kind: "top" } },
-                { id: "screen", target: { kind: "parent" } },
-                { id: "screen", target: { kind: "named", name: "preview" } },
+                { screenPath: "screen", target: { kind: "top" } },
+                { screenPath: "screen", target: { kind: "parent" } },
+                {
+                  screenPath: "screen",
+                  target: { kind: "named", name: "preview" },
+                },
               ],
             }),
           },

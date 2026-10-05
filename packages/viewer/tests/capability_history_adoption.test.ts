@@ -18,18 +18,20 @@ import {
   model,
   viewerRevision,
 } from "./capability_adoption_fixture.js";
+import { withoutTreeEntries } from "./catalogue_fixture.js";
 
 test("live evidence retains unchanged identity-less historical metadata", () => {
   const screen = model.screens[0]!;
   const historical: CatalogueReadModel = {
     ...model,
     screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen }],
+    tree: withoutTreeEntries(model.tree, [screen.path]),
+    removedEntries: [{ folderTitles: [], entry: screen }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
+    new URL(`https://example.test${viewHref(screen.path)}`),
   );
   const source = capabilitySource(historical, 4);
   const unchanged: CatalogueReadModel = {
@@ -44,7 +46,7 @@ test("live evidence retains unchanged identity-less historical metadata", () => 
   assert.ok(next);
   const context = viewerContext(historical, {
     ...defaultSelection,
-    screenId: screen.id,
+    screenPath: screen.path,
   });
   const state = createInitialShellState(
     current,
@@ -68,12 +70,13 @@ test("live evidence rejects changed or removed identity-less history", () => {
   const historical: CatalogueReadModel = {
     ...model,
     screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen }],
+    tree: withoutTreeEntries(model.tree, [screen.path]),
+    removedEntries: [{ folderTitles: [], entry: screen }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
+    new URL(`https://example.test${viewHref(screen.path)}`),
   );
   const source = capabilitySource(historical, 4);
   const changed: CatalogueReadModel = {
@@ -82,7 +85,9 @@ test("live evidence rejects changed or removed identity-less history", () => {
       ...historical.revision,
       evidence: historical.revision.evidence + 1,
     },
-    removedEntries: [{ entry: { ...screen, title: "Earlier home" } }],
+    removedEntries: [
+      { folderTitles: [], entry: { ...screen, title: "Earlier home" } },
+    ],
   };
   const removed: CatalogueReadModel = {
     ...changed,
@@ -105,7 +110,7 @@ test("live evidence rejects private workspace removal drift", () => {
   const current = viewerCatalogue(model);
   const route = routeFromUrl(
     current,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const source = capabilitySource(model, 4);
   const nextModel = evidenceRevision(model, []);

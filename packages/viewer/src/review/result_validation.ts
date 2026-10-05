@@ -1,6 +1,6 @@
 import { canonicalJson } from "../components/data.js";
 
-import type { ReviewResultV4 } from "./component_types.js";
+import type { ReviewResultV5 } from "./component_types.js";
 import { affectedConsumerOrderKey } from "./order.js";
 import {
   requireEqual,
@@ -12,14 +12,16 @@ import {
   reviewString,
   reviewStrings,
 } from "./result_helpers.js";
+import { validateResultMoves } from "./result_moves.js";
 import {
   validateAffected,
   validateChangedEntry,
   validateReviewScreen,
 } from "./result_records.js";
+import { validateResultReferences } from "./result_references.js";
 import type { ReviewResult } from "./types.js";
 
-/** Decode the identity-only v4 result shared by every catalogue. */
+/** Decode the path-addressed v5 result shared by every catalogue. */
 export function parseReviewResult(value: unknown): ReviewResult {
   try {
     return validateResult(value);
@@ -35,7 +37,7 @@ function validateResult(value: unknown): ReviewResult {
     !value ||
     typeof value !== "object" ||
     !("schemaVersion" in value) ||
-    value.schemaVersion !== 4
+    value.schemaVersion !== 5
   )
     reviewInvalid("unsupported schemaVersion");
   const result = reviewObject(value, [
@@ -58,11 +60,11 @@ function validateResult(value: unknown): ReviewResult {
   const screens = reviewArray(result.screens).map((screen) =>
     validateReviewScreen(screen, false, changed),
   );
-  requireOrdered(screens, (screen) => String(screen.id));
+  requireOrdered(screens, (screen) => String(screen.path));
   const components = reviewArray(result.components).map((component) =>
     validateReviewScreen(component, true, changed),
   );
-  requireOrdered(components, (component) => String(component.id));
+  requireOrdered(components, (component) => String(component.path));
   const changes = reviewArray(result.changes).map((entry) =>
     validateChangedEntry(entry, changed),
   );
@@ -71,7 +73,7 @@ function validateResult(value: unknown): ReviewResult {
       string,
       unknown
     >;
-    return `${String(change.kind)}\u0000${String(preferred.id)}`;
+    return `${String(change.kind)}\u0000${String(preferred.path)}`;
   });
   const changeIds = new Set<string>();
   for (const change of changes) {
@@ -79,40 +81,54 @@ function validateResult(value: unknown): ReviewResult {
       string,
       unknown
     >;
-    const id = String(preferred.id);
-    if (changeIds.has(id)) reviewInvalid("duplicate Changes entry id");
+    const id = String(preferred.path);
+    if (changeIds.has(id)) reviewInvalid("duplicate Changes entry path");
     changeIds.add(id);
     if (change.kind === "use-case") continue;
     const record =
       change.kind === "screen"
-        ? screens.find((screen) => screen.id === id)
-        : components.find((component) => component.id === id);
+        ? screens.find((screen) => screen.path === id)
+        : components.find((component) => component.path === id);
     const variant =
       change.kind === "component" && !record
         ? components
             .flatMap(
               (component) => component.variants as Record<string, unknown>[],
             )
-            .find((candidate) => candidate.id === id)
+            .find((candidate) => candidate.path === id)
         : undefined;
     if (!record && !variant)
       reviewInvalid("changed entry has no result record");
     if (record)
       requireEqual(
-        { before: record.before, after: record.after },
-        { before: change.before, after: change.after },
+        {
+          before: record.before,
+          after: record.after,
+          previousPath: record.previousPath,
+        },
+        {
+          before: change.before,
+          after: change.after,
+          previousPath: change.previousPath,
+        },
       );
-    if (variant && (variant.title !== preferred.title || variant.id !== id))
+    if (variant && (variant.title !== preferred.title || variant.path !== id))
       reviewInvalid("changed variant address differs from its result");
+    if (variant)
+      requireEqual(
+        { previousPath: variant.previousPath },
+        { previousPath: change.previousPath },
+      );
   }
   const affected = reviewArray(result.affectedConsumers).map(validateAffected);
   requireOrdered(affected, (item) =>
     affectedConsumerOrderKey(
-      item as unknown as ReviewResultV4["affectedConsumers"][number],
+      item as unknown as ReviewResultV5["affectedConsumers"][number],
     ),
   );
   validateIgnoredImpact(result.ignoredImpact, screens);
-  validateResultReferences(value as ReviewResultV4);
+  validateResultReferences(value as ReviewResultV5);
+  validateResultMoves(value as ReviewResultV5);
   return value as ReviewResult;
 }
 
@@ -160,76 +176,4 @@ function validateIgnoredImpact(
     })
   )
     reviewInvalid("ignored impact does not match view evidence");
-}
-
-function validateResultReferences(result: ReviewResultV4): void {
-  const changed = new Set(
-    result.changes
-      .filter((entry) => entry.kind === "component")
-      .map((entry) => (entry.after ?? entry.before)!.id),
-  );
-  for (const affected of result.affectedConsumers) {
-    if (!changed.has(affected.changedComponentId))
-      reviewInvalid("affected evidence has no directly changed component");
-    for (const evidence of affected.evidence) {
-      const context = evidence.context;
-      const owner =
-        context.kind === "screen"
-          ? result.screens.find((screen) => screen.id === context.entry.id)
-          : result.components.find(
-              (component) => component.id === context.entry.id,
-            );
-      if (!owner?.[evidence.side])
-        reviewInvalid("affected context side is missing");
-      requireEqual(owner[evidence.side], context.entry);
-      const views =
-        context.kind === "screen" && "views" in owner
-          ? owner.views
-          : "variants" in owner && context.kind === "component"
-            ? owner.variants.find((variant) => variant.id === context.variantId)
-                ?.views
-            : undefined;
-      if (
-        !views?.some(
-          (view) =>
-            view.viewport === context.viewport &&
-            view.colorScheme === context.colorScheme &&
-            (view.state !== "added" || evidence.side === "after") &&
-            (view.state !== "removed" || evidence.side === "before"),
-        )
-      )
-        reviewInvalid("affected context view is missing");
-      if (
-        evidence.via.some(
-          (edge) =>
-            !result.components.some(
-              (component) => component.id === edge.componentId,
-            ),
-        )
-      )
-        reviewInvalid("unknown component in ownership chain");
-      if (
-        affected.consumer.kind === "screen"
-          ? context.kind !== "screen" ||
-            affected.consumer.id !== context.entry.id
-          : affected.consumer.id === affected.changedComponentId ||
-            (affected.consumer.id !== context.entry.id &&
-              !evidence.via
-                .slice(0, -1)
-                .some((edge) => edge.componentId === affected.consumer.id))
-      )
-        reviewInvalid("affected consumer does not own this chain");
-    }
-  }
-  for (const entry of result.changes)
-    for (const reason of entry.reasons)
-      if (
-        reason.kind === "screen" &&
-        !result.changes.some(
-          (screen) =>
-            screen.kind === "screen" &&
-            [screen.before?.id, screen.after?.id].includes(reason.id),
-        )
-      )
-        reviewInvalid("use-case reason names a screen without a direct change");
 }

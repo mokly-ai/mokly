@@ -1,5 +1,8 @@
 # CSS Change Attribution
 
+Status: Completed. [PR #72](https://github.com/mokly-ai/mokly/pull/72)
+merged on 2026-09-15.
+
 ## Status And Outcome
 
 Milestones 1 through 19 are complete, committed, and pushed. The first review

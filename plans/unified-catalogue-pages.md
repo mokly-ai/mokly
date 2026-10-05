@@ -1,5 +1,8 @@
 # Unified Catalogue Pages
 
+Status: Completed. [PR #54](https://github.com/mokly-ai/mokly/pull/54)
+merged on 2026-09-11.
+
 ## Status And Outcome
 
 Implementation, consumer rehearsal, validation, commit, push, and review are

@@ -72,8 +72,8 @@ test("active controls enforce loopback Host admission on ordinary catalogue rout
   const forwardedPort = Number(new URL(server.url).port) === 4173 ? 4174 : 4173;
   for (const route of [
     "/",
-    "/view/components/action.html",
-    "/static/components/action-default.mobile.html",
+    "/view/action/",
+    "/static/action/default/index.mobile.html",
   ]) {
     assert.equal(
       (
@@ -106,14 +106,12 @@ test("forwarded controls preserve POST authority and preview access rules", asyn
     componentRuntime: componentRuntime(fixture.after),
   });
   fixture.beforeRemove(() => server.close());
-  const page = await (
-    await fetch(`${server.url}/view/components/action.html`)
-  ).text();
+  const page = await (await fetch(`${server.url}/view/action/`)).text();
   const renderCapability = renderCapabilityFromShell(page);
   assert.ok(renderCapability);
   const body = JSON.stringify({
     componentId: "action",
-    variantId: "action-default",
+    variantPath: "action/default",
     viewport: "desktop",
     colorScheme: "light",
     generation: renderCapability.generation,

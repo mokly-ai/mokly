@@ -88,6 +88,11 @@
   padding: 8px 14px;
 }
 
+/* A previous version with no dark render names its fallback in the label. */
+.mbk-previous .mbk-frame-scheme-note {
+  font-weight: 500;
+}
+
 .mbk-preview-state {
   align-items: center;
   display: flex;

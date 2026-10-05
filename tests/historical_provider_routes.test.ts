@@ -10,7 +10,7 @@ import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
-      new URL("../docs/protocol/fixtures/catalogue-v3.json", import.meta.url),
+      new URL("../docs/protocol/fixtures/catalogue-v4.json", import.meta.url),
       "utf8",
     ),
   ),
@@ -22,18 +22,17 @@ const snapshotId = historical.snapshotId!;
 const catalogue = viewerCatalogue(fixture);
 
 test("provider-normalized history resolves the exact retained id", () => {
-  const href = viewHref(historical.entry.kind, historical.entry.id).replace(
-    /\.html$/,
-    "",
-  );
+  const href = viewHref(historical.entry.path).replace(/\.html$/, "");
   const resolved = routeFromUrl(
     catalogue,
     new URL(`https://catalogue.test${href}?snapshot=${snapshotId}`),
   );
   assert.equal(resolved.view.kind, "target");
   assert.equal(
-    resolved.view.kind === "target" ? resolved.view.target.entry.id : undefined,
-    historical.entry.id,
+    resolved.view.kind === "target"
+      ? resolved.view.target.entry.path
+      : undefined,
+    historical.entry.path,
   );
   assert.equal(
     resolved.view.kind === "target"
@@ -53,7 +52,7 @@ test("provider-normalized history resolves the exact retained id", () => {
 
 test("provider normalization does not loosen historical identity", () => {
   for (const url of [
-    `https://catalogue.test/view/pages/${historical.entry.id}?snapshot=${"e".repeat(64)}`,
+    `https://catalogue.test/view/pages/${historical.entry.path}?snapshot=${"e".repeat(64)}`,
     `https://catalogue.test/view/pages/missing?snapshot=${snapshotId}`,
   ])
     assert.equal(

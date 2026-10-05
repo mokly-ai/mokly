@@ -23,8 +23,8 @@ import type { ShellState } from "./store_state.js";
 import { toRouteTarget } from "./target.js";
 
 /** The logical entry whose private evidence belongs to the current shell route. */
-export function viewerCapabilityEntryId(route: ShellRoute): string | null {
-  return route.view.kind === "target" ? route.view.target.entry.id : null;
+export function viewerCapabilityEntryPath(route: ShellRoute): string | null {
+  return route.view.kind === "target" ? route.view.target.entry.path : null;
 }
 
 /** Convert a validated public/private revision into the shell catalogue model. */
@@ -36,7 +36,7 @@ export function adoptedViewerCatalogue(
 ): Catalogue | undefined {
   if (
     !viewerCapabilityRequestMatches(currentSource, {
-      entryId: viewerCapabilityEntryId(route),
+      entryPath: viewerCapabilityEntryPath(route),
       source: revision.source,
     })
   )
@@ -57,7 +57,7 @@ export function adoptedViewerCatalogue(
     route.view.kind === "target"
       ? catalogueRouteEntry(
           next,
-          route.view.target.entry.id,
+          route.view.target.entry.path,
           route.view.target.entry.kind,
         )
       : undefined;
@@ -67,10 +67,10 @@ export function adoptedViewerCatalogue(
   if (
     revision.workspace &&
     (!routed ||
-      revision.workspace.entry.id !== routed.id ||
+      revision.workspace.entry.path !== routed.path ||
       revision.workspace.entry.kind !== routed.kind ||
       revision.workspace.removed !==
-        !next.manifest.entries.some((entry) => entry.id === routed.id))
+        !next.manifest.entries.some((entry) => entry.path === routed.path))
   )
     return;
   return next;
@@ -87,26 +87,26 @@ export function shellStateWithViewerEvidence(
     const entry = route.snapshot
       ? catalogue.removedEntries.find(
           (record) =>
-            record.entry.id === previous.id &&
+            record.entry.path === previous.path &&
             record.entry.kind === previous.kind &&
             record.snapshotId === route.snapshot,
         )?.entry
-      : catalogue.byId.get(previous.id);
+      : catalogue.byPath.get(previous.path);
     const target = entry && toRouteTarget(entry);
     route =
-      target && entry.id === previous.id && entry.kind === previous.kind
+      target && entry.path === previous.path && entry.kind === previous.kind
         ? { ...route, view: { kind: "target", target } }
         : {
             ...route,
             view: {
               kind: "missing",
-              requested: entryRoute(previous.kind, previous.id),
+              requested: entryRoute(previous.path),
             },
           };
   }
   const sections = catalogueNavSections(catalogue);
   const activeId =
-    route.view.kind === "target" ? route.view.target.entry.id : undefined;
+    route.view.kind === "target" ? route.view.target.entry.path : undefined;
   const defaults = defaultDisclosures(sections, activeId);
   const disclosures = reconcileDisclosures(
     defaults,
@@ -138,7 +138,8 @@ export function shellContextWithViewerEvidence(
   if (!model) return context;
   const stable = { ...context };
   delete stable.activeId;
-  delete stable.changedIds;
+  delete stable.changedEntries;
+  delete stable.materialEntries;
   delete stable.changesStatus;
   delete stable.comparisons;
   delete stable.componentChanges;
@@ -184,15 +185,15 @@ function sameCurrentRoute(
   if (route.view.kind !== "target") return true;
   const previous = route.view.target.entry;
   const currentEntry = current.manifest.entries.find(
-    (entry) => entry.id === previous.id,
+    (entry) => entry.path === previous.path,
   );
   const nextEntry = next.manifest.entries.find(
-    (entry) => entry.id === previous.id,
+    (entry) => entry.path === previous.path,
   );
   if (!currentEntry) {
     if (route.snapshot !== undefined) return true;
-    const currentHistory = removedEntry(current.publicModel, previous.id);
-    const nextHistory = removedEntry(next.publicModel, previous.id);
+    const currentHistory = removedEntry(current.publicModel, previous.path);
+    const nextHistory = removedEntry(next.publicModel, previous.path);
     return (
       currentHistory !== undefined &&
       nextHistory !== undefined &&
@@ -201,9 +202,9 @@ function sameCurrentRoute(
   }
   if (
     !nextEntry ||
-    currentEntry.id !== previous.id ||
+    currentEntry.path !== previous.path ||
     currentEntry.kind !== previous.kind ||
-    nextEntry.id !== previous.id ||
+    nextEntry.path !== previous.path ||
     nextEntry.kind !== previous.kind
   )
     return false;
@@ -214,5 +215,5 @@ function removedEntry(
   catalogue: ShellCatalogueReadModel | undefined,
   id: string,
 ) {
-  return catalogue?.removedEntries.find((item) => item.entry.id === id);
+  return catalogue?.removedEntries.find((item) => item.entry.path === id);
 }

@@ -42,7 +42,7 @@ test("nested package payloads are excluded but ancestor package roots remain usa
   );
   const config = await loadConfig(fixture.root);
   const files = await capturePublicFiles(config);
-  assert.ok(files.has("screens/home.mobile.html"));
+  assert.ok(files.has("home/index.mobile.html"));
   assert.ok(
     ![...files.keys()].some((name) => name.startsWith("consumer-package/")),
   );
@@ -78,7 +78,7 @@ test("baseline package resources cannot bypass current public-file exclusions", 
     path.join(nested, "theme.css"),
     "body { color: red; }",
   );
-  const baseline = path.join(fixture.mockupsDir, "screens/home.mobile.html");
+  const baseline = path.join(fixture.mockupsDir, "home/index.mobile.html");
   await fs.promises.appendFile(
     baseline,
     '<link rel="stylesheet" href="../consumer-package/theme.css">',

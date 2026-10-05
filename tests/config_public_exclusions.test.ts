@@ -20,7 +20,7 @@ for (const extra of [undefined, [], ["internal/**", "internal/**"]]) {
     const input =
       extra === undefined ? {} : { publicExclude: Object.freeze(extra) };
     const config = resolveConfig(
-      { entriesDir: "entries", mockupsDir: "mockups", ...input },
+      { roots: [{ dir: "entries" }], mockupsDir: "mockups", ...input },
       fixture.configPath,
     );
     assert.deepEqual(config.publicExclude, [...defaults, ...(extra ?? [])]);
@@ -60,7 +60,7 @@ for (const item of [
       () =>
         resolveConfig(
           {
-            entriesDir: "entries",
+            roots: [{ dir: "entries" }],
             mockupsDir: "mockups",
             publicExclude: [item],
           },
@@ -83,7 +83,7 @@ for (const value of ["internal/**", null, {}]) {
       () =>
         resolveConfig(
           {
-            entriesDir: "entries",
+            roots: [{ dir: "entries" }],
             mockupsDir: "mockups",
             publicExclude: value,
           },
@@ -109,7 +109,7 @@ for (const invalid of [
       () =>
         resolveConfig(
           {
-            entriesDir: "entries",
+            roots: [{ dir: "entries" }],
             mockupsDir: "mockups",
             publicExclude: [invalid],
           },

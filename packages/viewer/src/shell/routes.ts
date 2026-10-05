@@ -3,7 +3,6 @@
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import { isLogicalFragment } from "../navigation/logical.js";
 import { parseViewHref, viewHref } from "../navigation/routes.js";
-import type { EntryRouteKind } from "../navigation/routes.js";
 import { parseViewAxes } from "../navigation/view_axes.js";
 
 import {
@@ -33,7 +32,7 @@ export function routeFromUrl(catalogue: Catalogue, url: URL): ShellRoute {
   const historical = entry
     ? catalogue.removedEntries.find(
         ({ entry: candidate }) =>
-          candidate.id === entry.id && candidate.kind === entry.kind,
+          candidate.path === entry.path && candidate.kind === entry.kind,
       )
     : undefined;
   const requestedSnapshot =
@@ -43,7 +42,7 @@ export function routeFromUrl(catalogue: Catalogue, url: URL): ShellRoute {
   const currentEntry = entry
     ? catalogue.manifest.entries.some(
         (candidate) =>
-          candidate.id === entry.id && candidate.kind === entry.kind,
+          candidate.path === entry.path && candidate.kind === entry.kind,
       )
     : false;
   const snapshot =
@@ -57,7 +56,7 @@ export function routeFromUrl(catalogue: Catalogue, url: URL): ShellRoute {
     : snapshots.length === 0;
   const selectedEntry =
     entry && snapshot
-      ? catalogueSelectionEntry(catalogue, entry.id, snapshot)
+      ? catalogueSelectionEntry(catalogue, entry.path, snapshot)
       : entry;
   const target =
     selectedEntry && validSnapshot ? toRouteTarget(selectedEntry) : undefined;
@@ -88,7 +87,6 @@ export function routeFromUrl(catalogue: Catalogue, url: URL): ShellRoute {
 
 /** Canonical URL for a validated catalogue entry and logical fragment. */
 export function routeHref(
-  kind: EntryRouteKind,
   id: string,
   fragment?: string,
   workspace: Pick<
@@ -96,7 +94,7 @@ export function routeHref(
     "colorScheme" | "comparison" | "instance" | "snapshot" | "viewport"
   > = {},
 ): string {
-  const url = new URL(viewHref(kind, id), "https://mokly.invalid");
+  const url = new URL(viewHref(id), "https://mokly.invalid");
   if (fragment) url.searchParams.set("fragment", fragment);
   if (workspace.viewport) url.searchParams.set("viewport", workspace.viewport);
   if (workspace.colorScheme)
@@ -115,7 +113,7 @@ export function routeDocumentKey(url: URL): string {
 
 /** Screen selection represented by a resolved route. */
 export function routeScreenId(route: ShellRoute): string | null {
-  return route.view.kind === "target" ? route.view.target.entry.id : null;
+  return route.view.kind === "target" ? route.view.target.entry.path : null;
 }
 
 function routeEntry(
@@ -123,9 +121,7 @@ function routeEntry(
   pathname: string,
 ): CatalogueManifestEntry | undefined {
   const identity = parseViewHref(pathname);
-  return identity
-    ? catalogueRouteEntry(catalogue, identity.id, identity.kind)
-    : undefined;
+  return identity ? catalogueRouteEntry(catalogue, identity) : undefined;
 }
 
 function decodePath(value: string): string | undefined {

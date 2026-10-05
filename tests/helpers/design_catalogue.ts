@@ -57,9 +57,9 @@ export async function designDocument(
   route: string;
 }> {
   const compilation = await designCatalogue;
-  const entry = compilation.manifest.entries.find((entry) => entry.id === id);
+  const entry = compilation.manifest.entries.find((entry) => entry.path === id);
   assert.ok(entry?.kind === "screen", `Missing screen ${id}`);
-  const route = viewRoute("screen", entry.id, viewport, "light");
+  const route = viewRoute(entry.path, viewport, "light");
   const html = textOutput(compilation.outputs, route);
   assert.ok(html, `Missing ${viewport} output for ${id}`);
   return { document: parse(html), entry, html, route };

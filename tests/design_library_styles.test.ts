@@ -12,22 +12,22 @@ import { textOutput } from "./helpers/generated_text.js";
 
 test("standalone variants emit only the exclusive child styles they actually render", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const entry = componentParent(manifest, "design-ui-top-bar");
-  const variants = componentVariants(manifest, entry.id);
+  const entry = componentParent(manifest, "design/library/chrome/top-bar");
+  const variants = componentVariants(manifest, entry.path);
   for (const viewport of ["mobile", "desktop"] as const) {
     const closedVariant = variants.find(
-      (variant) => variant.id === "design-ui-top-bar-default",
+      (variant) => variant.path === "design/library/chrome/top-bar/default",
     )!;
     const openedVariant = variants.find(
-      (variant) => variant.id === "design-ui-top-bar-tag-picker",
+      (variant) => variant.path === "design/library/chrome/top-bar/tag-picker",
     )!;
     const closed = textOutput(
       outputs,
-      viewRoute("component", closedVariant.id, viewport, "light"),
+      viewRoute(closedVariant.path, viewport, "light"),
     )!;
     const opened = textOutput(
       outputs,
-      viewRoute("component", openedVariant.id, viewport, "light"),
+      viewRoute(openedVariant.path, viewport, "light"),
     )!;
     assert.match(closed, /href="[^"]*design-library\/chrome\/top-bar\.css"/);
     assert.doesNotMatch(
@@ -40,9 +40,12 @@ test("standalone variants emit only the exclusive child styles they actually ren
     );
     assert.match(opened, /href="[^"]*design-library\/controls\/tag-chip\.css"/);
   }
-  const picker = componentParent(manifest, "design-ui-tag-picker");
-  const empty = componentVariants(manifest, picker.id).find(
-    (variant) => variant.id === "design-ui-tag-picker-empty",
+  const picker = componentParent(
+    manifest,
+    "design/library/controls/tag-picker",
+  );
+  const empty = componentVariants(manifest, picker.path).find(
+    (variant) => variant.path === "design/library/controls/tag-picker/empty",
   )!;
   for (const route of generatedViews(empty).map((view) => view.path))
     assert.doesNotMatch(
@@ -57,33 +60,33 @@ test("ownership includes implementation and CSS, while variants stay outside imp
     if (
       entry.kind !== "component" ||
       "variantOf" in entry ||
-      !entry.id.startsWith("design-ui-")
+      !entry.path.startsWith("design-ui-")
     )
       continue;
-    const slug = entry.id.slice("design-ui-".length);
+    const slug = entry.path.slice("design-ui-".length);
     assert.ok(
       entry.ownedDependencies.some((file) =>
         file.endsWith("/" + slug + ".css"),
       ),
-      entry.id,
+      entry.path,
     );
     assert.ok(
       entry.ownedDependencies.some((file) =>
         file.endsWith("/" + slug + ".view.tsx"),
       ),
-      entry.id,
+      entry.path,
     );
     assert.ok(
       !entry.declaredDependencies.some((file) =>
         file.endsWith("/" + slug + ".tsx"),
       ),
-      entry.id,
+      entry.path,
     );
     assert.ok(
       entry.ownedDependencies.every((file) =>
         entry.declaredDependencies.includes(file),
       ),
-      entry.id,
+      entry.path,
     );
   }
 });

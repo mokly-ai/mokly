@@ -1,5 +1,8 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
+/** Match the same-origin document-load contract without extending other assertions. */
+const FRAME_LOAD_TIMEOUT_MS = 30_000;
+
 /**
  * Choose an appearance. A standalone document has one Appearance control that
  * sets the interface and the previews together; an embedded root keeps its own
@@ -43,13 +46,15 @@ export async function expectFramePath(
   path: RegExp,
 ): Promise<void> {
   await expect
-    .poll(() =>
-      page
-        .locator(selector)
-        .evaluate(
-          (frame: HTMLIFrameElement) =>
-            frame.contentWindow?.location.href ?? "",
-        ),
+    .poll(
+      () =>
+        page
+          .locator(selector)
+          .evaluate(
+            (frame: HTMLIFrameElement) =>
+              frame.contentWindow?.location.href ?? "",
+          ),
+      { timeout: FRAME_LOAD_TIMEOUT_MS },
     )
     .toMatch(path);
 }
@@ -65,8 +70,12 @@ export async function expectFrameSource(
         return element.src;
       }
     });
-  if (typeof source === "string") await expect.poll(value).toBe(source);
-  else await expect.poll(value).toMatch(source);
+  if (typeof source === "string")
+    await expect.poll(value, { timeout: FRAME_LOAD_TIMEOUT_MS }).toBe(source);
+  else
+    await expect
+      .poll(value, { timeout: FRAME_LOAD_TIMEOUT_MS })
+      .toMatch(source);
 }
 
 /** Wait for the matching same-origin document and its blocking resources together. */
@@ -75,11 +84,13 @@ export async function expectFrameLoaded(
   source: RegExp | string,
 ): Promise<void> {
   await expect
-    .poll(() =>
-      frame.evaluate((element: HTMLIFrameElement) => {
-        const doc = element.contentDocument;
-        return doc ? { url: doc.URL, readyState: doc.readyState } : null;
-      }),
+    .poll(
+      () =>
+        frame.evaluate((element: HTMLIFrameElement) => {
+          const doc = element.contentDocument;
+          return doc ? { url: doc.URL, readyState: doc.readyState } : null;
+        }),
+      { timeout: FRAME_LOAD_TIMEOUT_MS },
     )
     .toEqual({
       url: typeof source === "string" ? source : expect.stringMatching(source),

@@ -88,16 +88,11 @@ function handleShellClick(
     void input.navigate(requested.href);
     return;
   }
-  const href = routeHref(
-    activated.view.target.entry.kind,
-    activated.view.target.entry.id,
-    activated.fragment,
-    {
-      ...(activated.comparison ? { comparison: activated.comparison } : {}),
-      ...(activated.instance ? { instance: activated.instance } : {}),
-      ...(activated.snapshot ? { snapshot: activated.snapshot } : {}),
-    },
-  );
+  const href = routeHref(activated.view.target.entry.path, activated.fragment, {
+    ...(activated.comparison ? { comparison: activated.comparison } : {}),
+    ...(activated.instance ? { instance: activated.instance } : {}),
+    ...(activated.snapshot ? { snapshot: activated.snapshot } : {}),
+  });
   void input.transition(new URL(href, requested), true, {}, activated);
 }
 

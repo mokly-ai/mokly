@@ -3,171 +3,231 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
+import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import { ComponentValidationError } from "../packages/viewer/src/components/data.js";
 
-interface Node {
-  kind: "folder" | "entry";
-  label?: string;
-  id?: string;
-  children?: Node[];
-}
-
-interface Entry {
-  id: string;
-  title: string;
-  navPath: string[];
-}
-
-interface Fixture {
-  tree: { pages: Node[]; components: Node[] };
-  screens: Entry[];
-  pages: Entry[];
-  useCases: Entry[];
-  removedEntries: Array<{ entry: Entry }>;
-}
+type Mutable<T> = T extends readonly (infer Item)[]
+  ? Mutable<Item>[]
+  : T extends object
+    ? { -readonly [Key in keyof T]: Mutable<T[Key]> }
+    : T;
+type Fixture = Mutable<CatalogueReadModel>;
+type Node = Fixture["tree"][number];
+const homePath = "product/browse/home";
+const variantPath = `${homePath}/empty`;
 
 async function fixture(): Promise<Fixture> {
   return JSON.parse(
-    await readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+    await readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   ) as Fixture;
 }
-
-function moveTourToSiblingFolder(value: Fixture, label: string): void {
-  const existing = value.tree.pages[0]!;
-  const tour = existing.children!.pop()!;
-  const sibling: Node = { kind: "folder", label, children: [tour] };
-  const folders = [existing, sibling].sort((left, right) =>
-    left.label!.localeCompare(right.label!, "en"),
-  );
-  value.tree.pages = [...folders, value.tree.pages[1]!];
-  value.useCases[0]!.navPath = [label];
+function find(nodes: readonly Node[], path: string): Node {
+  for (const node of nodes) {
+    if (node.path === path) return node;
+    if (node.children) {
+      const nested = findOptional(node.children, path);
+      if (nested) return nested;
+    }
+  }
+  throw new Error(`fixture node ${path} is missing`);
+}
+function findOptional(nodes: readonly Node[], path: string): Node | undefined {
+  for (const node of nodes) {
+    if (node.path === path) return node;
+    const nested = findOptional(node.children ?? [], path);
+    if (nested) return nested;
+  }
+  return undefined;
 }
 
-const cases: Array<{
+const invalid: readonly {
   name: string;
-  mutate: (value: Fixture) => void;
-  reason?: string;
-}> = [
+  reason: string;
+  mutate(value: Fixture): void;
+}[] = [
   {
-    name: "case-conflicting sibling folders",
-    mutate: (value) => {
-      moveTourToSiblingFolder(value, "product");
+    name: "case-conflicting folder paths",
+    reason: "duplicate tree folder",
+    mutate(value) {
+      const node = find(value.tree, "components");
+      value.tree.push({ ...structuredClone(node), path: "Components" });
     },
-    reason: "invalid navigation paths",
   },
-  {
-    name: "spacing-conflicting sibling folders",
-    mutate: (value) => {
-      moveTourToSiblingFolder(value, "Pro duct");
-    },
-    reason: "invalid navigation paths",
-  },
-  ...["", " Product", "Product/More"].map((label) => ({
-    name: `invalid current label ${JSON.stringify(label)}`,
-    mutate: (value: Fixture) => {
-      value.useCases[0]!.navPath = [label];
-      value.tree.pages[0]!.children!.pop();
-    },
+  ...["", "bad label", "with.dot", "../outside", "aux"].map((path) => ({
+    name: `invalid folder path ${JSON.stringify(path)}`,
     reason:
-      label === ""
-        ? "expected a nonempty navPath label"
-        : "invalid navigation paths",
+      path === ""
+        ? "expected nonempty text"
+        : path === "../outside"
+          ? "expected repository-relative path"
+          : "invalid entry path",
+    mutate(value: Fixture) {
+      find(value.tree, "product").path = path;
+    },
   })),
   {
-    name: "leaf title conflicts with a sibling folder",
-    mutate: (value) => {
-      value.pages[0]!.title = "Product";
-      value.tree.pages.pop();
+    name: "an empty folder",
+    reason: "tree folder cannot be empty",
+    mutate(value) {
+      find(value.tree, "product").children = [];
     },
-    reason: "invalid navigation paths",
   },
   {
-    name: "incorrect folder-before-leaf sibling order",
-    mutate: (value) => {
-      value.tree.pages.reverse();
+    name: "an unknown entry",
+    reason: "tree entry must name one unique current entry",
+    mutate(value) {
+      find(value.tree, "guide").path = "missing";
     },
-    reason: "tree must project the navigation paths",
   },
   {
-    name: "variant with a different path from its parent",
-    mutate: (value) => {
-      value.screens[1]!.navPath = ["Product"];
+    name: "a duplicated entry",
+    reason: "tree entry must name one unique current entry",
+    mutate(value) {
+      value.tree.push({ kind: "entry", path: "guide" });
     },
-    reason: "variant path must match parent",
   },
   {
-    name: "missing tree entry",
-    mutate: (value) => {
-      value.tree.pages[0]!.children!.pop();
-    },
-    reason: "tree must project the navigation paths",
-  },
-  {
-    name: "duplicated tree entry",
-    mutate: (value) => {
-      value.tree.pages[0]!.children!.push({ kind: "entry", id: "tour" });
-    },
-    reason: "tree must project the navigation paths",
-  },
-  {
-    name: "entry at the wrong path",
-    mutate: (value) => {
-      value.tree.pages[0]!.children!.splice(1, 0, value.tree.pages.pop()!);
-    },
-    reason: "tree must project the navigation paths",
-  },
-  {
-    name: "empty folder",
-    mutate: (value) => {
-      value.tree.pages.splice(1, 0, {
-        kind: "folder",
-        label: "Zzz",
-        children: [],
+    name: "an entry in the wrong folder",
+    reason: "tree child must be below its parent path",
+    mutate(value) {
+      find(value.tree, "product").children!.push({
+        kind: "entry",
+        path: "guide",
       });
     },
-    reason: "tree must project the navigation paths",
   },
   {
-    name: "missing section array",
-    mutate: (value) => {
-      Reflect.deleteProperty(value.tree, "components");
+    name: "a historical entry in the current tree",
+    reason: "tree entry must name one unique current entry",
+    mutate(value) {
+      find(value.tree, "product").children!.push({
+        kind: "entry",
+        path: value.removedEntries[0]!.entry.path,
+      });
     },
+  },
+  {
+    name: "an index that is not the folder's own first child",
+    reason: "folder index must be its first child page",
+    mutate(value) {
+      const node = find(value.tree, "product");
+      if (node.kind === "folder") node.index = "guide";
+    },
+  },
+  {
+    name: "a variant outside its parent",
+    reason: "variant must be below its parent entry",
+    mutate(value) {
+      Object.assign(find(value.tree, homePath), {
+        kind: "folder",
+        title: "Home",
+      });
+    },
+  },
+  {
+    name: "missing authored variants under a visible parent",
+    reason: "tree variants must retain authored order",
+    mutate(value) {
+      Reflect.deleteProperty(find(value.tree, homePath), "children");
+    },
+  },
+  {
+    name: "a variant with children",
+    reason: "variant cannot have children",
+    mutate(value) {
+      find(value.tree, variantPath).children = [];
+    },
+  },
+  {
+    name: "variants outside authored order",
+    reason: "tree variants must retain authored order",
+    mutate(value) {
+      const second = structuredClone(
+        value.screens.find((entry) => entry.path === variantPath)!,
+      );
+      second.path = `${homePath}/second`;
+      value.screens.push(second);
+      find(value.tree, homePath).children!.push({
+        kind: "entry",
+        path: second.path,
+      });
+      assert.doesNotThrow(() => readCatalogue(value));
+      find(value.tree, homePath).children!.reverse();
+    },
+  },
+  {
+    name: "a current entry missing from the tree",
+    reason: "tree must contain every current entry",
+    mutate(value) {
+      value.tree = value.tree.filter((node) => node.path !== "guide");
+    },
+  },
+  {
+    name: "removed Changes on a current entry",
+    reason: "current entry cannot have removed Changes",
+    mutate(value) {
+      Reflect.deleteProperty(value.screens[0]!, "previousPath");
+      value.screens[0]!.changes = {
+        status: "ready",
+        kind: "removed",
+        included: true,
+      };
+    },
+  },
+  {
+    name: "empty children on a page entry",
+    reason: "only grouped screen and component entries have children",
+    mutate(value) {
+      find(value.tree, "guide").children = [];
+    },
+  },
+  {
+    name: "missing historical folder titles",
     reason: "expected an array",
-  },
-  {
-    name: "historical removed labels need not follow current rules",
-    mutate: (value) => {
-      value.removedEntries[0]!.entry.navPath = ["a/b", " x"];
+    mutate(value) {
+      Reflect.deleteProperty(value.removedEntries[0]!, "folderTitles");
     },
-  },
-  {
-    name: "historical removed labels must be non-empty",
-    mutate: (value) => {
-      value.removedEntries[0]!.entry.navPath = [""];
-    },
-    reason: "expected a nonempty navPath label",
   },
 ];
-
-for (const { name, mutate, reason } of cases) {
-  test(`read model v3 ${reason === undefined ? "accepts" : "rejects"} ${name}`, async () => {
+for (const { name, reason, mutate } of invalid)
+  test(`read model v4 rejects ${name}`, async () => {
     const value = await fixture();
     mutate(value);
-    if (reason === undefined)
-      assert.equal(readCatalogue(value).schemaVersion, 3);
-    else
-      assert.throws(
-        () => readCatalogue(value),
-        (error: unknown) => {
-          assert.ok(error instanceof ComponentValidationError);
-          assert.equal(error.path, "$catalogue");
-          assert.equal(error.detail, reason);
-          assert.equal(
-            error.message,
-            `[mokly/components] $catalogue: ${reason}`,
-          );
-          return true;
-        },
-      );
+    assert.throws(() => readCatalogue(value), catalogueError(reason));
   });
+
+test("display titles may match folder titles and explicit tree order is authoritative", async () => {
+  const value = await fixture();
+  value.pages[0]!.title = "Product";
+  value.tree.reverse();
+  assert.deepEqual(readCatalogue(value).tree, value.tree);
+});
+
+test("variant paths must remain directly below their parent", async () => {
+  const value = await fixture();
+  const variant = value.screens.find((entry) => entry.path === variantPath)!;
+  variant.path = "examples/empty";
+  find(value.tree, variantPath).path = variant.path;
+  assert.throws(
+    () => readCatalogue(value),
+    catalogueError("variant path must be parent path plus one segment"),
+  );
+});
+
+test("hidden folders retain their entries in the tree", async () => {
+  const value = await fixture();
+  for (const node of value.tree) Object.assign(node, { hidden: true });
+  const parsed = readCatalogue(value);
+  assert.equal(parsed.screens.length, value.screens.length);
+  assert.deepEqual(parsed.tree, value.tree);
+});
+
+function catalogueError(reason: string): (error: unknown) => boolean {
+  return (error) => {
+    assert.ok(error instanceof ComponentValidationError);
+    assert.equal(error.path, "$catalogue");
+    assert.equal(error.detail, reason);
+    assert.equal(error.message, `[mokly/components] $catalogue: ${reason}`);
+    return true;
+  };
 }

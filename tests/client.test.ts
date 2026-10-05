@@ -30,7 +30,7 @@ test("live updates are latest-wins and recovery is consumed once", () => {
   assert.equal(location.reloads, 1);
   assert.deepEqual(controller.consumeRecovery(), {
     browse,
-    url: "http://127.0.0.1:4173/view/screens/home.html",
+    url: "http://127.0.0.1:4173/view/home/",
     version: 2,
   });
   assert.equal(controller.consumeRecovery(), undefined);
@@ -191,7 +191,7 @@ class FakeStorage implements RecoveryStorage {
 }
 
 class FakeLocation implements ReloadLocation {
-  href = "http://127.0.0.1:4173/view/screens/home.html";
+  href = "http://127.0.0.1:4173/view/home/";
   reloads = 0;
 
   reload(): void {

@@ -33,7 +33,7 @@ export async function handleCatalogueRequest(
   catalogue: Catalogue,
   config: ResolvedConfig,
   base: string,
-  currentChangedIds: () => readonly string[] | undefined,
+  currentChangedPaths: () => readonly string[] | undefined,
   streams: Set<ServerResponse>,
   assets: ServedAssets,
   currentVersion: () => number,
@@ -108,19 +108,19 @@ export async function handleCatalogueRequest(
       acceptedGenerated,
     );
   const changed =
-    componentChanges?.changedIds ??
+    componentChanges?.changedEntries ??
     (componentChanges?.result
       ? componentChanges.result.changes.map(
-          (entry) => (entry.after ?? entry.before)!.id,
+          (entry) => (entry.after ?? entry.before)!.path,
         )
-      : currentChangedIds());
+      : currentChangedPaths());
   const context = shellContext(
     base,
     changed
       ? [
           ...new Set([
             ...changed,
-            ...catalogue.removedEntries.map(({ entry }) => entry.id),
+            ...catalogue.removedEntries.map(({ entry }) => entry.path),
           ]),
         ]
       : undefined,

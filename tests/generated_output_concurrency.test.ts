@@ -31,6 +31,19 @@ async function assertTree(
     await treeFiles(fixture.mockupsDir),
     [...compilation.outputs.keys()].sort(),
   );
+  const screens = compilation.manifest.entries.filter(
+    (entry) => entry.kind === "screen",
+  );
+  assert.ok(
+    screens.every((entry) =>
+      compilation.outputs.has(`${entry.path}/index.mobile.html`),
+    ),
+  );
+  assert.deepEqual(
+    (await fs.readdir(path.join(fixture.mockupsDir, "fixture/nested"))).sort(),
+    screens.map((entry) => path.posix.basename(entry.path)).sort(),
+    "completed transactions prune every obsolete screen directory",
+  );
   for (const [route, content] of compilation.outputs)
     assert.deepEqual(
       await fs.readFile(path.join(fixture.mockupsDir, route)),

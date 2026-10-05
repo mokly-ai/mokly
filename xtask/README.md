@@ -81,6 +81,12 @@ prerequisite and explicitly shares that exact result with dependent jobs,
 keeping shard evidence consistent across runner caches. The single release
 publishing job independently resolves the latest Node 24.
 
+Preview preparation and ordinary publication fixtures share a seven-minute
+setup budget for their real build/export work. UI-state assertions and test
+deadlines stay unchanged. The local frame adapter and frame-load assertions
+allow 30 seconds for document resources, with delayed HTML/stylesheets,
+cancellation and expiry covered by browser regressions.
+
 Hydration coverage discovers a separate browser test for every example route, so
 adding screens does not consume one shared test deadline. The unsharded
 `hydration` suite runs those filename-selected specs separately from `browser`.

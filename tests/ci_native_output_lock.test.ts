@@ -26,9 +26,12 @@ test("native macOS and Windows jobs verify the generated-output writer lock", as
   const native = workflow.jobs.native;
   assert.ok(native.strategy.matrix.os.some((os) => os.includes("macos")));
   assert.ok(native.strategy.matrix.os.some((os) => os.includes("windows")));
-  assert.ok(
-    native.steps.some((step) =>
-      step.run?.includes("tests/generated_output_lock.test.ts"),
-    ),
-  );
+  for (const file of [
+    "tests/generated_output_lock.test.ts",
+    "tests/path_transaction_regressions.test.ts",
+  ])
+    assert.ok(
+      native.steps.some((step) => step.run?.includes(file)),
+      `native transaction coverage includes ${file}`,
+    );
 });

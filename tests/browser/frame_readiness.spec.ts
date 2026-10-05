@@ -46,7 +46,7 @@ for (const cross of [false, true]) {
             document.querySelector<HTMLIFrameElement>("#frame")!,
             {
               url: new URL(
-                "/static/screens/home.mobile.html",
+                "/static/home/index.mobile.html",
                 cross ? origin : location.origin,
               ),
               usage: { status },

@@ -20,7 +20,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -29,11 +29,11 @@ const fixture = readCatalogue(
 );
 
 /** Disclosure identity introduced only by the retained Removed variant. */
-export const variantKey = "variants:pages:home";
+export const variantKey = "variants:product/browse/home";
 
 function stripVariant(node: CatalogueNode): CatalogueNode {
-  if (node.kind === "entry" && node.id === "home")
-    return { kind: "entry", id: node.id };
+  if (node.kind === "entry" && node.path === "product/browse/home")
+    return { kind: "entry", path: node.path };
   if (node.kind === "folder")
     return { ...node, children: node.children.map(stripVariant) };
   return node;
@@ -45,10 +45,7 @@ export function baseModel(): CatalogueReadModel {
     ...fixture,
     screens: fixture.screens.filter((entry) => entry.variantOf === undefined),
     removedEntries: [],
-    tree: {
-      ...fixture.tree,
-      pages: fixture.tree.pages.map(stripVariant),
-    },
+    tree: fixture.tree.map(stripVariant),
   });
 }
 
@@ -57,19 +54,24 @@ export function withRemovedVariant(
   model: CatalogueReadModel,
   evidence: number,
 ): CatalogueReadModel {
-  const variant = fixture.screens.find((entry) => entry.variantOf === "home");
+  const variant = fixture.screens.find(
+    (entry) => entry.variantOf === "product/browse/home",
+  );
   assert.ok(variant);
   return readCatalogue({
     ...model,
     revision: { ...model.revision, evidence },
     removedEntries: [
       {
+        folderTitles: ["Product", "Browse"],
+        parentTitle: fixture.screens.find(
+          (entry) => entry.path === variant.variantOf,
+        )!.title,
         entry: {
           ...variant,
           changes: { status: "ready", kind: "removed", included: true },
           views: variant.views.map((view) => ({
             ...view,
-            fragmentPath: null,
           })),
         },
         snapshotId: "f".repeat(64),
@@ -102,7 +104,7 @@ export function revision(
     entry &&
     (entry.kind === "screen" ||
       (entry.kind === "component" && !("variantOf" in entry)))
-      ? { ...publicWorkspace(model, entry), base: previous.base }
+      ? { ...publicWorkspace(catalogue, model, entry), base: previous.base }
       : undefined;
   return {
     catalogue: model,
@@ -121,11 +123,11 @@ export function initialState(
   route: string,
 ): ShellState {
   const catalogue = viewerCatalogue(model);
-  const selected = route === "/" ? null : "home";
+  const selected = route === "/" ? null : "product/browse/home";
   const view = routeFromUrl(catalogue, new URL(`https://example.test${route}`));
   return createInitialShellState(
     catalogue,
-    viewerContext(model, { ...defaultSelection, screenId: selected }),
+    viewerContext(model, { ...defaultSelection, screenPath: selected }),
     view.view,
     undefined,
   );

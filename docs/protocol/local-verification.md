@@ -80,9 +80,15 @@ Keep at most two simultaneous unit files per runner,
 one Playwright worker per runner, zero browser retries, and all assertions. The
 real browser preview-build preparation has its own seven-minute fixture budget:
 one combined-tree run completed its build in 297 seconds and another exceeded
-the former five-minute setup deadline under four-worker contention. Its browser
-assertions retain the default test deadline; other full-catalogue setups retain
-five-minute budgets. No fixed file or test totals or filtered selections
+the former five-minute setup deadline under four-worker contention. The ordinary
+preview worker shares that seven-minute setup budget: its path-identity export
+measured 288.3 seconds alone and exceeded five minutes twice with another suite
+running. Keep its real build, publication freshness checks, and every UI
+assertion. Other full-catalogue setups retain five-minute budgets. These setup
+budgets do not extend a browser test or UI-state assertion deadline. Shared
+frame-source and loaded-document assertions use the local preview's 30-second
+resource-load budget; tests delay real HTML and stylesheets to prove these waits
+accept a valid cold load without changing its expected URL or loaded state. No fixed file or test totals or filtered selections
 represent a complete gate. The local aggregator reads only the nine reports from _this_
 invocation. Reuse the CI validators: all four shards per suite must have the
 same commit and Node runtime, complete independent discovery, nonempty disjoint

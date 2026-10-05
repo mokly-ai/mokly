@@ -8,6 +8,14 @@ owns watchers, background work and the supervised HTTP child. `http.ts` and
 mutable catalogue and evidence lifecycle.
 `component_change_cache.ts` coalesces accepted classification reads across
 the server's content generations.
+`render_moves.ts` binds accepted pairs to that renderer generation for saved and
+controlled preview diagnostics. Pending evidence, runtime replacement and
+unavailable Changes clear the map. Background classification shares one pairing
+with public catalogue projection, removals and selected comparison capture.
+Only accepted generations report ambiguity and unmatched `movedFrom` diagnostics
+through the terminal reporter; stale background results remain silent.
+Accepted document bodies also travel privately with background compilation so
+Markdown similarity never reads a newer filesystem generation.
 `watch_inventory.ts` refreshes exact watch inputs before watcher attachment.
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or
@@ -17,16 +25,18 @@ unfinished responses cannot keep shutdown waiting for the browser.
 boundaries that retain each stable prefix without exempting its ignored
 descendants. Discovery and watching share one denied-directory policy below the
 relevant glob root: traversal uses the deepest containing root, and entry-file
-classification uses the deepest matching root. The glob itself defines every
-entry-file shape that can trigger rediscovery. Traversal also skips
-`review.outDir`. Generated output, Review and cache outrank exact required
+classification uses the deepest matching root. Root `files` globs define entry shapes. Folder exclusions control entry collection; root matches, including new excluded
+files, remain protected source-watch candidates. Traversal also skips
+`review.outDir`. A denied leaf's directory status comes from watcher stats,
+else from its event kind, else from one stat that treats any error as a file.
+Generated output, Review and cache outrank exact required
 inputs; denied directory names only prune broad discovery and directory scans.
 Logical and physical aliases share these distinct reasons. A denied leaf's
 directory status comes from watcher stats, else its event kind, else one stat
 that treats any error as a file.
 `watch_index.ts` caches the exact required inputs and their ancestors once per
 accepted config. `watchTargets` drops individually covered files when an entry
-glob, PostCSS directory or watch-rule root already watches them, except
+root, PostCSS directory or watch-rule root already watches them, except
 required files below a skipped directory segment. Those remain explicit
 targets and their arrival replaces the watcher; ordinary covered files do not.
 Physical event paths
@@ -54,7 +64,7 @@ lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
-GET/HEAD `/__mokly/catalogue.json` returns the public v3
+GET/HEAD `/__mokly/catalogue.json` returns the public v4
 [read model](../catalogue/README.md) as complete JSON with
 `Cache-Control: no-store`; it never contains bootstrap-only omitted usage.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
@@ -64,10 +74,11 @@ evidence revisions advance independently. Failed candidates preserve the last
 snapshot, and superseded generations cannot replace it. `catalogue_update.ts`
 prepares updates before publication; `http_types.ts` owns the lifecycle types.
 
-Entry shells are served at canonical `/view/<kind-prefix>/<id>.html` and the
-matching provider-normalized `/view/<kind-prefix>/<id>` path; both return the
-same 200 shell when the identity exists, while generated links stay canonical.
-ID-alias paths receive the ordinary not-found shell and are never redirected.
+Entry shells use canonical `/view/<path>/` URLs. Extensionless `/view/<path>`
+and `/view/<path>/index.html` forms select the same entry; browser history is
+normalized without dropping its query or fragment. The
+[artifact path contract](../../docs/protocol/mokly-artifact-paths.md) defines
+all shell, generated document, view and snapshot names.
 
 Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
@@ -133,20 +144,20 @@ unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
 
-Both readers accept only manifest v7. Recognized earlier output follows the
+Both readers accept only manifest v8. Recognized earlier output follows the
 successful unavailable behavior and single terminal line in the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 `classification_result.ts` carries that expected typed outcome across the
 background worker without converting it into a generic classifier failure;
-unsupported newer or malformed v7 data keeps the normal safe diagnostic path.
+unsupported newer or malformed v8 data keeps the normal safe diagnostic path.
 
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison
 route fails with typed `review-invalid` ("The comparison is not prepared")
 until a derived reader is available. `selected_review_routes.ts` owns one
 bounded generation service for screen/component comparisons and removed-page
-previews. Pages use `review.json?page=<page-id>`, while screens and component
-variants use `review.json?id=<entry-id>`; each redirects to immutable metadata
+previews. Pages use `review.json?page=<page-path>`, while screens and component
+variants use `review.json?path=<entry-path>`; each redirects to immutable metadata
 and serves only its captured `snapshots/before/**` closure. Both selection kinds
 share coalescing, refresh, admission, timeout, byte, retention, epoch and
 shutdown bounds. `review_sources.ts` derives selections only from accepted
@@ -250,3 +261,18 @@ Serve startup is not subject to the worker-request timeout.
 
 See [review boundaries](../review/README.md), [baseline building](../baseline/README.md),
 and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.md).
+
+`generated_static.ts` resolves and snapshots the accepted CSS and asset inventory
+at startup. `config/root_membership.ts` owns file exclusions used by watch discovery;
+protection still covers excluded matches.
+
+Accepted runtimes carry the output route/orphan snapshot captured under the
+writer lock during generation preparation. Demand and background workers reuse
+that private proof instead of taking a filesystem snapshot during a write.
+
+Markdown documents use the page route and demand compiler, with one route per
+scheme. Their copied assets come from the accepted in-memory generation even
+before background writes complete. Source and resource edits rebuild together.
+
+Document Changes follows declared attachment links as well as rendered media.
+The shared resource graph uses normalized HTML so ignored regions remain excluded.
