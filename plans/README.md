@@ -2,6 +2,12 @@
 
 ## Active
 
+- [Native Rust Engine](./native-rust-engine.md) — load a Rust engine in the
+  Node process through napi-rs bindings, replace the `koffi` FFI bridge with
+  Rust platform primitives, publish per-platform packages, then move the
+  comparison engine to Rust phase by phase behind differential tests. Created
+  2026-10-05 after measuring the large fixture: comparison is the slowest
+  phase and exhausts memory in Serve and Export. Planned; not started.
 - [Path Identity, Spec Tree, And Markdown Documents](./path-identity.md) —
   replace `id` and `navPath` with one file-derived path per entry, add
   Markdown documents, detect moves, rename Pages to Specs, and make folder
