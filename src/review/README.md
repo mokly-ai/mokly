@@ -6,16 +6,22 @@ Removal of baseline compatibility below is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Uniform CSS classification and evidence fields below are implemented in Milestone 19;
-comparison details are planned for Milestone 20 of the
+comparison details are implemented in Milestones 20 and 20B of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+Milestone 4 removed source-path comparison evidence. Milestone 23 removed
+historical marker translation. Milestone 28 will use recorded inserted-link
+spans inside Review-ignore for both comparison paths and the CSS rule scope.
+Milestone 29 will remove the unused one-sided `page` material from
+`component_view.ts`, while keeping its range/span validation and resource work.
+
+## Scope
 
 This internal module compares current validated output with a historical
 baseline. The supported consumer interface remains the catalogue and CLI;
 these modules are not public package exports.
 
-Source-path comparison evidence is removed by Milestone 4 of
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
-unrendered source edits do not change catalogue membership or evidence.
+Unrendered source edits do not change catalogue membership or evidence.
 Rendered `styles` and non-CSS `resources` records retain ownership attribution.
 Stylesheet changes use kept own-page matches and outside/unresolved page evidence;
 no CSS owner record routes them.
@@ -23,8 +29,7 @@ Only canonical, valid manifest v8 input reaches comparison. Every
 catalogue uses the same public comparison v5 format.
 Baseline and current documents use the same marker grammar. Former-spelling
 comments and script text stay ordinary content; comparison never renames them.
-Milestone 23 of the source-path removal plan implements this rule. Missing
-recorded ranges fail normal validation: Serve keeps Browse usable with Changes
+Missing recorded ranges fail normal validation: Serve keeps Browse usable with Changes
 unavailable, while explicit export and publish captures fail safely under the
 [invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
 Component-aware page comparison excludes only proven Mokly-inserted declared

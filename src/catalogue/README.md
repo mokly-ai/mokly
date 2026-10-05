@@ -73,9 +73,8 @@ The [public fixture](../../docs/protocol/fixtures/catalogue-v4.json) ships in th
 npm package. Consumers need the documented JSON artifact, not a CLI deep import.
 The viewer package consumes this projection without importing the CLI.
 
-The [source-path removal plan](../../plans/remove-source-path-evidence.md)
-removes source-path evidence from the current manifest v8 and public v4 model.
-`details.dependencies` is absent, and the public reader rejects v1 to v3.
+The current manifest v8 and public v4 model contain no source-path evidence.
+The public reader rejects earlier catalogue formats.
 
 ```sh
 npm run build
@@ -86,3 +85,8 @@ npx playwright test tests/browser/catalogue_fetch.spec.ts
 See the [catalogue contract](../../docs/protocol/mokly-catalogue.md),
 [bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md),
 [export boundary](../export/README.md), and [Serve lifecycle](../server/README.md).
+
+## Delivery Status
+
+The [source-path removal plan](../../plans/remove-source-path-evidence.md)
+removed `details.dependencies` and retired the v1 to v3 public catalogue formats.

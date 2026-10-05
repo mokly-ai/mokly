@@ -1,5 +1,11 @@
 # Static catalogue export
 
+## Delivery Status
+
+The [plan index](../../plans/README.md) records delivery.
+
+## Scope
+
 This internal package module builds complete consumer sites for ordinary static
 hosting. Consumers use `mokly export --out <path>`, not a JavaScript deep import.
 The separate `mokly publish` command uploads through the
@@ -235,8 +241,7 @@ npm run package:smoke
 
 See the [export contract](../../docs/protocol/mokly-export.md),
 [static delivery contract](../../docs/protocol/mokly-export-delivery.md),
-[shell bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md), and
-[plan index](../../plans/README.md).
+[shell bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
 
 Registered components export through the same transactional delivery boundary.
 The manifest, variant entries and validated comparison evidence supply the

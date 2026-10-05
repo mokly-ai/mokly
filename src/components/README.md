@@ -10,17 +10,22 @@ The rule for comments with the former spelling in the
 [instance contract](../../docs/protocol/mokly-instances.md#rendered-boundaries)
 is implemented in Milestone 23 of that plan.
 
+That plan delivered `stylesheets` in Milestone 3 and removed source-path inputs
+in Milestone 6. Milestone 11 groups declarations by real file and reuses
+renderer-authored links. Milestone 28 will restrict placement to configured
+anchors, share link discovery, reuse body links and recover inserted links from
+their spans inside Review-ignore regions. The
+[link-scope contract](../../docs/protocol/mokly-stylesheet-links.md) defines each step.
+
+## Authoring
+
 Use `defineComponent` to give a shared React component its own catalogue page,
 variants, controls, and recorded usage in screens or other components.
 Callers render the returned `Component` and export its `entries` in `mockups`.
 Mokly renders that wrapper in the consumer's existing React/provider graph.
 
-The `stylesheets` input was delivered by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
-Milestone 3. Milestone 6 removed source-path inputs; current output uses
-manifest v8.
-Milestone 11 of that plan groups declarations by real file, merges all rendered
-declarers, and reuses renderer-authored links without exposing declarations through
+Current output uses manifest v8. Mokly groups declarations by real file, merges
+all rendered declarers, and reuses renderer-authored links without exposing declarations through
 `RenderInput.entry`. The first rendered declaration determines a new link's
 public path; a renderer-authored link keeps its own path and position.
 

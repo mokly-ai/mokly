@@ -3,6 +3,11 @@
 This document supplements [Static Export Delivery](./mokly-export-delivery.md)
 with the standalone browser inventory and deployment identity algorithm.
 
+## Delivery Status
+
+The [React Browse shell plan](../../plans/react-browse-shell.md) records the
+runtime replacement and its compatibility checks.
+
 ## Browser Modules
 
 The standalone browser inventory under `__mokly/client/` is the hydrated shell:
@@ -36,9 +41,7 @@ bytes are unchanged by hydration. Module changes alter deployment identity as
 required below, so the transition to the hydrated shell changes the identity
 of every export exactly once. An export from a changed workspace also records
 its new `changedPaths` in `review.json`, which changes that generation's hash;
-snapshot and comparison resource bytes remain unchanged. The
-[React Browse shell plan](../../plans/react-browse-shell.md) records the runtime
-replacement and its compatibility checks.
+snapshot and comparison resource bytes remain unchanged.
 
 ## Deployment Identity
 

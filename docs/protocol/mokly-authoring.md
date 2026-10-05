@@ -11,6 +11,9 @@ Other behavior below remains implemented.
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
+The matching configuration guard and stronger removed-field type tests are
+planned for [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
+
 ## Public Authoring API
 
 The root package export supplies typed, documented authoring helpers:
@@ -111,6 +114,14 @@ The [nested authoring contract](./mokly-nested-authoring.md) owns root/folder
 inputs, inheritance, flattening, and exact empty-tree and authored-`navPath`
 errors. The [navigation path contract](./mokly-nav-paths.md) owns label
 diagnostics, ordering, keys, and public-tree validation.
+
+All entry, root, folder and variant inputs reject removed `dependencies`
+values through `dependencies?: never`; component inputs also reject removed
+`ownedDependencies` values through `ownedDependencies?: never`. This includes
+spread objects. An explicit `undefined` is rejected only when the consumer
+enables `exactOptionalPropertyTypes`. Without it, runtime collection still
+warns on the present key and ignores it. No removed field inherits or supplies
+evidence. See [build warnings](./mokly-build-warnings.md).
 
 `defineScreen` and nested `screen` inputs may declare `colorSchemes`. When
 omitted, a screen inherits the catalogue set; `colorSchemes: ["light"]` is the

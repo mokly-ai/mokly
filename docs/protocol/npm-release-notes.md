@@ -1,6 +1,8 @@
 # npm Release Notes
 
-## Unreleased Breaking-Change Coverage
+## Delivery Status
+
+### Unreleased Breaking-Change Coverage
 
 Before a close-out commit, `npm-release-notes.md` must name every `feat!`
 commit returned by

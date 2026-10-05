@@ -5,6 +5,15 @@
 Removal of baseline compatibility below is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
+Generation-scoped warning delivery and supervisor-factory startup cleanup are
+planned for [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
+defines suppression as soon as a newer attempt starts, including when a failed
+attempt leaves the old child serving. Background completion must not replay
+`compilation.warnings`. The supervisor factory will run inside watcher cleanup.
+
+## Scope
+
 Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and

@@ -12,6 +12,9 @@ element matching, rule identity, component membership and page reasons. The
 comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). These rules replace stylesheet
 owner attribution for every CSS delivery path.
 
+The inserted-link Review-ignore exception is planned for
+[M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
+
 ## Matched Elements
 
 A page means one rendered document: a screen view, a saved component variant
@@ -31,8 +34,12 @@ normalization, before component-output projection. Preserve the map from each
 remaining element to the validated component ranges on that side. Removed
 ignored content contributes no element. One-sided adoption retains the existing
 paired policy; do not normalize either side again. A missing view has no tree.
-Keep Mokly-inserted links for resource discovery and rule matching. Their
-comparison-only removal still applies to document material.
+Recover Mokly-inserted links from validated `insertedStylesheets` spans for
+resource discovery and CSS rule scope, including inside paired Review-ignore.
+Use the same [link finder and scopes](./mokly-stylesheet-links.md) on complete
+and fast comparisons. Ignored authored markup still supplies no selector
+matches; its own links and styles stay ignored. Comparison-only removal of
+inserted links still applies to document material.
 
 For each resolved changed rule, find all elements that any of its selectors
 can match in either document, not just the first match. Reachability on either

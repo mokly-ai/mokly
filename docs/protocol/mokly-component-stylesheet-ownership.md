@@ -9,6 +9,9 @@ Link provenance and comparison exclusion are implemented. Removing derived
 CSS owners and ignoring all renderer CSS owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 The page evidence display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
+Shared link discovery and the inserted-link exception to Review-ignore are
+planned for [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
+
 The [declaration and linking contract](./mokly-component-stylesheets.md) defines the stylesheet inputs and placement.
 
 ## Provenance And Comparison Material
@@ -23,8 +26,9 @@ A transformer retaining an inserted link retains its token; removing or
 replacing the link may remove the token. An unmarked replacement, including
 the same href with its token stripped, is authored page content. Each token
 may survive exactly once, on a stylesheet link to its original real file;
-duplicates or reassignment fail `build-invalid`. After transformation, scan
-the final document, resolve marked links to declared real files, remove the
+duplicates or reassignment fail `build-invalid`. After transformation, use the
+[shared link finder and token scope](./mokly-stylesheet-links.md) on the final
+document, resolve active marked links to declared real files, remove the
 transient attribute, and store their full-link UTF-16 spans, public paths and
 rendered declaring component ids in the private v8 view's
 `insertedStylesheets` record. Final HTML has no token or wrapper, so the
@@ -46,9 +50,15 @@ page's root component id, even if a child also declares it; remove child-only
 inserted links. A screen has no root exception. Renderer-authored and
 compatibility-authored links stay page content, even when their files are
 also declared. Public output and snapshots keep the final documents.
-Resource discovery and CSS rule matching use those final documents with their
-normal Review-ignore policy, **without** stripping inserted links. Thus
-provenance affects page material only, not CSS rule attribution.
+Resource discovery uses the final documents before comparison-only link removal.
+It finds Mokly-inserted links from validated `insertedStylesheets` spans, even
+inside paired Review-ignore regions. Include those links and their transitive
+resources in the CSS rule scope on both the complete and fast comparison paths.
+The author's own ignored links, styles and markup stay ignored under the usual
+paired Review-ignore rule. Do not restore the surrounding ignored region or
+use its elements as selector matches. An unmarked replacement is authored
+content and gets no inserted-link exception. Provenance supplies resource
+starting points; the ordinary rule-matching contract still decides attribution.
 
 ## Derived Ownership And Conflicts
 

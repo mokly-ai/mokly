@@ -13,7 +13,12 @@ the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#mil
 
 Omitting the branch-point sentence when its name is unknown is implemented in
 [M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
-The mockups show catalogues with a known name and need no change.
+The known-name rule needs no new mockup; existing mockups already show a name.
+
+Retaining the export's known branch name during navigation is planned for
+[M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
+The excluded-only screen mockup and the shared Excluded/Matched Details card
+are planned for [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact
@@ -72,6 +77,13 @@ Keep the “Comparison details” heading and the rest of Details, including its
 metadata, evidence, exclusions and status lines. A served catalogue with a
 known name still shows the sentence.
 
+During navigation in an exported catalogue, the temporary workspace built from
+public catalogue data uses the branch name that the export already knows.
+Show the same sentence while the destination's full workspace data loads and
+after it loads. Pass the known name to that fallback; do not infer it from a
+route or invent a default. An embedded catalogue without a name still shows
+no sentence and keeps its other Details.
+
 For a component entry, the shared wording helper selects:
 
 | Evidence                     | Sentence                                                                              |
@@ -83,7 +95,7 @@ For a component entry, the shared wording helper selects:
 | One excluded stylesheet      | “This stylesheet changed, but none of the changed styles apply to this variant.”      |
 | Several excluded stylesheets | “These stylesheets changed, but none of the changed styles apply to this variant.”    |
 
-Screen Details lists only sorted retained rendered-resource reasons beneath “Changes to these files may affect this screen:”. The removed entry `sharedImpact` field supplies no paths. Excluded stylesheet evidence remains available for unchanged entries in All.
+Screen Details lists only sorted retained rendered-resource reasons beneath “Changes to these files may affect this screen:”. Excluded stylesheet evidence remains available for unchanged entries in All.
 
 A whole-document page uses the screen sentences with “page” in place of
 “screen”. Its files list follows “Changes to these files may affect this

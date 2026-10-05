@@ -1,11 +1,14 @@
 # Imported Stylesheet Delivery
 
-## Delivery
+## Delivery Status
 
 CSS/asset compilation, fragment stylesheet links, optional consumer PostCSS,
 Serve/watch, export, publication, and Changes ship together. The
 [implementation plan](../../plans/imported-css-delivery.md) records the rollout
 and reviews.
+
+## Delivery
+
 Custom renderers must emit the supplied stylesheet links; pages link CSS
 themselves. This contract extends
 [configuration](./mokly-configuration.md),

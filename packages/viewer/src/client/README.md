@@ -137,5 +137,8 @@ npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adap
 Related boundaries: [inspector](../inspector/README.md),
 [Browse document adaptation](../../../../src/browse/README.md),
 [logical navigation](../../../../docs/protocol/mokly-navigation.md),
-[standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md), and
-[implementation plans](../../../../plans/README.md).
+[standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md).
+
+## Delivery Status
+
+The [implementation plan index](../../../../plans/README.md) records delivery.

@@ -2,11 +2,10 @@
 
 ## Delivery Status
 
-Implemented in the 63 Browse/Changes design screens and two example screens with
-`MockLink`/`MockLink asChild`. Those 63 Browse/Changes designs retain canonical
-links; [components](./mokly-component-design.md) and [removed previews](./mokly-removed-previews.md) extend the contract.
+Implemented in the 63 Browse/Changes design screens and two example screens with `MockLink`/`MockLink asChild`.
+Those 63 Browse/Changes designs retain canonical links; [components](./mokly-component-design.md) and [removed previews](./mokly-removed-previews.md) extend the contract.
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+The [source-path removal plan](../../plans/remove-source-path-evidence.md) records delivery; [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state) will add the excluded-only state, split the gallery and align the paired Details.
 
 ## Scope And Ownership
 
@@ -245,10 +244,11 @@ Excluded styles shows All with one changed Welcome: one changed sheet matches an
 | Ignored only: Changes filter      | Empty Changes, `design-review-empty`                         |
 | Matched evidence: All filter      | Excluded stylesheet evidence, `design-review-style-excluded` |
 | Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                |
+| Unnamed evidence: All filter      | Canonical All Welcome, `design-browse-screen`                |
 | Page designs: Changes filter      | Document page styles, `design-review-style-page`             |
 | Document page styles: All filter  | Document page, `design-page-view`                            |
 
-Matched and unresolved show only their changed screen in Changes. Mode destinations without an owning mockup remain depictions, and these states add no tag transitions. The component explorer's stylesheet stories keep their own Changes lists under the [component design contract](./mokly-component-design.md#component-pages): Styles outside a changed component links Action, from its row and from Details, to `design-component-style-changed`, whose Affected screens open the existing Welcome and Details inspection screens; their unlinked variant rows stay depictions.
+Matched, Unresolved and Unnamed show only their changed screen in Changes. The linked Excluded and Matched states must use one Details card with both the matched and excluded evidence, as the [shell contract](./mokly-css-evidence-shell.md) defines. Mode destinations without an owning mockup remain depictions, and these states add no tag transitions. The component explorer's stylesheet stories keep their own Changes lists under the [component design contract](./mokly-component-design.md#component-pages): Styles outside a changed component links Action, from its row and from Details, to `design-component-style-changed`, whose Affected screens open the existing Welcome and Details inspection screens; their unlinked variant rows stay depictions.
 
 Tag interactions are restricted to the canonical Welcome states:
 

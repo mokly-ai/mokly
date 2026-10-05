@@ -14,6 +14,9 @@ for both catalogue kinds, including before a comparison is loaded. Screen-only
 delivery reuses accepted classification without a second resource analysis.
 See [CSS Change Attribution](../../plans/css-change-attribution.md).
 
+Discovery of inserted links inside Review-ignore is planned for
+[M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
+
 ## Purpose
 
 A linked stylesheet edit is conservative evidence that a screen may render
@@ -53,6 +56,10 @@ The comparison-only removal of Mokly-inserted links does not remove those
 links from the actual final document used to discover CSS and match changed
 rules. An unlinked declaration has no CSS evidence. No stylesheet ownership
 record controls resource eligibility or attribution.
+Use validated `insertedStylesheets` spans to recover those links even inside
+paired Review-ignore on both comparison paths and for CSS rule scope. The
+[shared link contract](./mokly-stylesheet-links.md) keeps authored ignored
+content ignored and template content inert.
 
 Resources that are not stylesheets, including fonts, images, and embedded
 documents, keep their existing file-level attribution unchanged.

@@ -109,10 +109,11 @@
   verification passes with the approved PostCSS timing retry: the complete
   gate, the separate unit suite, all 12 CSS smoke cases at both widths, the
   unchanged former-marker script, unavailable Changes with a v7 base, and
-  embedded Details without a branch-point sentence. Part 1 records the evidence
-  in a local documentation commit. The reviewer owns the push and the later
-  review. The plan stays Active until its pull request merges. Earlier work was
-  reviewed three times; second-review findings 2 to 11 remain open.
+  embedded Details without a branch-point sentence. The reviewer pushed that
+  evidence and ran the fourth review. Milestone 26 documents the 2026-10-05
+  decisions. Milestones 27 to 31 hold the approved mockup, link, warning, test,
+  type and navigation changes. The plan stays Active until its pull request
+  merges. The reviewer owns the next push and review.
 - [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
   pages embed the catalogue index plus only their own entry's component usage
   and serialise that state once. The public `catalogue.json` stays complete;

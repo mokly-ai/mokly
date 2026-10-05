@@ -9,6 +9,14 @@ Root output boundaries, independent stylesheet provenance and warnings for all
 CSS resource-owner records below are implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
+Configured-only placement and shared link discovery are planned for M28.
+Generation-scoped Serve warnings and removal of the unread
+`ComponentRuntime.warnings` field and its writers are planned for M29.
+The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
+defines producer tagging, child messages and completion without replay.
+
+## Scope
+
 This internal module loads consumer definitions, renders every configured view,
 validates the complete catalogue and produces deterministic HTML and manifest v8.
 The supported external interface is `mokly build` and `mokly check`; Serve,

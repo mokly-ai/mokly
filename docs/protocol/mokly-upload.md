@@ -1,12 +1,14 @@
 # Catalogue Upload v1
 
-## Delivery Status And Boundary
+## Delivery Status
 
 The installed CLI implements the public `mokly publish` command, upload
 manifest and [content-addressed exchange](./mokly-upload-exchange.md).
 [Delta Publishing](../../plans/delta-publishing.md) records their contract,
 implementation and verification. Nothing is live, so the earlier exchange was
 replaced rather than kept beside this one.
+
+## Boundary
 
 Receivers, hosted or self-hosted, need only the published `@mokly/mokly`
 package and its protocol documents and fixtures; Mokly Cloud has no private

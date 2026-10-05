@@ -11,6 +11,8 @@ change rule, which replaces second-review finding 1. Milestones 22 to 25, with
 23A and 23B, apply the user's 2026-10-04 decisions on the third review and on
 baseline compatibility. Milestones 26 to 32 apply the user's 2026-10-05
 decisions on the fourth-review finding and on second-review findings 2 to 11.
+Milestone 26 is implemented and verified as docs only. Its local commit awaits
+the reviewer's push. Milestones 27 to 31 have not started.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -2410,26 +2412,26 @@ keeps the screen rule.
 
 Docs only. Define the contract for Milestones 27 to 31.
 
-- [ ] Placement (1): state in `mokly-component-stylesheets.md` that only
+- [x] Placement (1): state in `mokly-component-stylesheets.md` that only
       configured hrefs are placement anchors. Generated renderer and entry
       stylesheet links are not anchors, although `RenderInput.stylesheets`
       contains them. With no configured link present, insert at the end of
       logical head content, after the generated links.
-- [ ] Warnings (2): define generation-scoped warnings in the build warning,
+- [x] Warnings (2): define generation-scoped warnings in the build warning,
       Serve and watch contracts. Cover background compilation, its
       completion, preview-process renders, failed and successful rebuilds, and
       reconfiguration.
-- [ ] Links (8, 9): define one link finder and the document scope of each step
+- [x] Links (8, 9): define one link finder and the document scope of each step
       (placement, reuse, provenance and resource discovery). Reuse every
       renderer link that resource discovery finds, including links in
       `<body>`. Find Mokly-inserted links from their recorded spans, also
       inside Review-ignore regions, while author content stays ignored.
       Remove the stale "resource owner record" wording.
-- [ ] Types (7): correct the TypeScript statements in the build warning,
+- [x] Types (7): correct the TypeScript statements in the build warning,
       configuration and authoring contracts.
-- [ ] Exported navigation (12): define in the CSS evidence presentation and
+- [x] Exported navigation (12): define in the CSS evidence presentation and
       shell contracts that the temporary view uses the known branch name.
-- [ ] Docs rule (5, 6): add the rule to `docs/protocol/README.md` that former
+- [x] Docs rule (5, 6): add the rule to `docs/protocol/README.md` that former
       version names, removed field names and plan or milestone references
       appear only in Delivery Status sections or on the reviewed allow list.
       Fix the remaining stale lines: the design-links row for the Unnamed
@@ -2437,8 +2439,85 @@ Docs only. Define the contract for Milestones 27 to 31.
       design library README neighbour wording, and the protocol index rule
       that names the current plan. Move every plan or milestone reference in
       docs and READMEs into Delivery Status sections.
-- [ ] Mark each code change as planned for its milestone. Validate the changed
+- [x] Mark each code change as planned for its milestone. Validate the changed
       Markdown and run the docs tests.
+- [x] Preserve the design-count test's two documented count sentences while
+      adding the Unnamed link row. Run its focused test and repeat the complete
+      unit suite after the wording correction.
+
+Contract notes:
+
+- Only configured head links anchor insertion. The renderer keeps its complete
+  stylesheet list. With no configured anchor, declared links follow generated
+  links at the end of logical head content.
+- The new `mokly-stylesheet-links.md` owns the shared finder and the scope of
+  placement, reuse, provenance and discovery. Body links are reused. Template
+  content stays inert. Reserved-token validation includes template attributes,
+  but only active links get recorded spans. Both comparison paths recover
+  inserted links inside Review-ignore without restoring ignored author content.
+- Warning scopes advance before each watched attempt starts. Late background
+  and child warnings retain their producing generation and cannot enter a newer
+  scope. Failed attempts leave old output serving without reviving its warnings.
+  Completion does not add `compilation.warnings` again. Unwatched Serve and
+  one-shot scopes are unchanged.
+- Removed-field values are rejected by `?: never`; explicit `undefined` needs
+  `exactOptionalPropertyTypes`. Runtime warnings cover the other case. M30 owns
+  the missing review configuration guard and its type tests.
+- Exported navigation keeps its known branch name in the temporary public-data
+  workspace. Nameless embedded catalogues still omit the sentence. M31 owns
+  the implementation; M27 owns the excluded-only and paired Details mockups.
+- The protocol index defines the fail-closed docs rule and the permitted exact
+  allow-list scopes for M30. Delivery references moved into Delivery Status
+  sections. Upload Plan terminology and SVG path commands remain domain terms.
+  The dated design snapshot changed only to place its existing status under
+  that heading. Historical plans, review records and `CHANGELOG.md` are unchanged.
+- Stale design navigation, example watch/copy and library-neighbour statements
+  now describe the current output or explicitly named pending contract. Each
+  code or mockup change remains planned for its assigned later milestone.
+
+Verification evidence:
+
+- `npm run build` passes twice. Changed-file formatting passes with
+  `xargs -d '\n' npx prettier --check < .context/m26/changed-files.txt`.
+- The seven requested docs suites pass all 28 tests:
+
+  ```sh
+  npx tsx --test tests/current_docs_contract.test.ts tests/component_protocol_docs.test.ts tests/guides_structure.test.ts tests/protocol_doc_sizes.test.ts tests/protocol_split_links.test.ts tests/mainline_preservation_docs.test.ts tests/protocol_doc_history.test.ts
+  ```
+
+  The first run passed 27 of 28. The existing guard rejected the new config
+  status sentence because it did not call the named field removed. Correcting
+  that sentence made the check pass. The tests remain unchanged. Later focused
+  runs and the final complete suite pass all 28.
+
+- The exact complete unit command ran twice:
+
+  ```sh
+  npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"
+  ```
+
+  The first run passed 3,969 of 3,970. Only the design-screen count test failed:
+  it reads two exact count sentences that the design-links edit had rephrased.
+  Restoring those sentences retained the new Unnamed filter row and the
+  327-line cap. `npx tsx --test tests/design_screen_counts.test.ts` then passed
+  its one test. The repeated complete suite passes all 3,970 tests with no
+  failures, skips, cancellations or TODOs. The PostCSS timing case passes in
+  both runs; no timing retry or test change is needed.
+
+- `git fetch origin main` succeeds; main remains `800fe9f8`, with no new commit
+  in `git log --oneline HEAD..origin/main`. Local Markdown links resolve and
+  the delivery-reference scan leaves only the documentation policy itself and
+  SVG path commands outside status sections. Protocol sizes pass without a cap
+  or fixture change. The link scope is in its own indexed protocol document.
+- `git diff --check` and `git diff --check origin/main` pass. The path/deletion
+  audit against main retains only the four earlier approved removals and the
+  catalogue fixture rename. This milestone changes only Markdown and deletes
+  no file. It leaves code, tests, mockups, dependencies, generated output,
+  historical plans, review records and `CHANGELOG.md` unchanged.
+- Logs and the changed-file manifest are under `.context/m26/`.
+  `cargo xtask check` and browser checks are not required for this docs-only
+  milestone. Delivery is one local commit. The reviewer owns the push and the
+  later review. Milestone 27 has not started.
 
 ## Milestone 27: Depict the excluded-only stylesheet state
 

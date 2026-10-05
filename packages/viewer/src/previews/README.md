@@ -89,10 +89,7 @@ reuses this pipeline for the Before and Current panes of a comparison:
 [`../shell/use_comparison_documents.ts`](../shell/use_comparison_documents.ts)
 creates a `before` and `after` loader for
 the accepted comparison's immutable generation and presents every selected pane
-document before the comparison is ready. The
-[comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
-delivered the shared loader and documented fetch set in Milestone 3 and the
-aligned panes in Milestone 4. Removed previews keep accepting
+document before the comparison is ready. Removed previews keep accepting
 `snapshots/before/` only.
 
 Related boundaries: [the Browse client](../client/README.md), the
@@ -100,3 +97,9 @@ Related boundaries: [the Browse client](../client/README.md), the
 [selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md),
 the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md),
 and the [comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md).
+
+## Delivery Status
+
+The [comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
+delivered the shared loader and documented fetch set in Milestone 3 and the
+aligned panes in Milestone 4.

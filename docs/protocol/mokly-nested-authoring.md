@@ -37,7 +37,11 @@ flat form except `navPath`, which derives as
 `[...(root.navPath ?? []), ...ancestor folder titles]`. Its id still determines
 its generated path.
 
-Related docs retain their existing override behavior. Removed `dependencies` do not inherit. Root path and folder metadata that still supply this field warn and have no effect; see [build warnings](./mokly-build-warnings.md). Address inheritance applies only to screens. Folders have no id,
+Related docs retain their existing override behavior. Removed `dependencies` do not inherit. Root path and folder metadata that still supply this field warn and have no effect; see [build warnings](./mokly-build-warnings.md).
+The `?: never` fields reject values, including spreads. Explicit `undefined`
+requires `exactOptionalPropertyTypes` for rejection; runtime warnings cover it
+otherwise, as the [authoring types](./mokly-authoring.md#input-types-and-nested-trees) define.
+Address inheritance applies only to screens. Folders have no id,
 description, rationale, status, route, or generated document. Screen color
 schemes and entry tags never inherit from a root or folder.
 

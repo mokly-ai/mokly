@@ -3,9 +3,14 @@
 ## Delivery Status
 
 CSS rule attribution and ignored stylesheet owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
-Other behavior below remains implemented.
 
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+The [source-path removal plan](../../plans/remove-source-path-evidence.md) records delivery history.
+
+The generation-scoped warning channel and supervisor-factory cleanup are
+planned for [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+Other watch behavior is implemented.
+
+## Watch Inputs
 
 `mokly serve` watches by default; `--no-watch` serves one deterministic
 snapshot. Every development catalogue shell loads the package-owned browser client, which connects to
@@ -176,11 +181,16 @@ startup are buffered. Each notification delivery is isolated: a classifier
 exception is reported once, that event is dropped, and later notifications keep
 flowing. A child receives the parent-validated catalogue, validates
 its source inventory, and binds before
-readiness. Render warnings from this child cross a typed warning IPC message,
-not stderr or the failure diagnostic channel. The parent deduplicates and
-displays them in its current startup/rebuild scope, including warnings from
-later on-demand or transient renders; see
-[build warnings](./mokly-build-warnings.md). Initial startup tries a
+readiness. Child render warnings carry their producing build generation in
+the typed warning IPC message, not stderr or the failure diagnostic channel.
+The parent accepts only the current startup/rebuild/reconfiguration attempt's
+warnings, once per identity. Starting an attempt closes the older warning
+scope before candidate loading. Even if that attempt fails and the old child
+still serves, its later on-demand or transient render warnings are discarded.
+Background warnings follow the same rule; completion never adds a second copy
+of `compilation.warnings`. See the
+[generation warning contract](./mokly-build-warnings.md#watched-serve-generations).
+Initial startup tries a
 requested concrete port and then each higher port in order when the address
 is occupied; port `0` delegates selection to the
 operating system. The resolved port remains stable across child restarts, which
@@ -191,6 +201,10 @@ once, starts cleanup if the process remains alive, and enqueues a restart throug
 the same serialized action queue used for authored changes. The supervisor
 retains ownership until terminal confirmation; a replacement cannot bypass an
 in-progress cleanup or contend with the failed child's still-bound port.
+
+Construct the process supervisor inside the startup cleanup block that owns
+the already-created watchers. A throwing injected supervisor factory closes
+those watchers before startup rejects; it must not leave a live source watcher.
 
 The supervisor retains the five-minute readiness safety allowance for the child
 to receive the accepted config, live index and retained renderer, construct its

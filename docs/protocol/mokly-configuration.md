@@ -9,7 +9,9 @@ behavior, including imported CSS and optional PostCSS.
 Uniform CSS membership, independent of configured or declared delivery, is
 implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
-The remaining contract is implemented.
+The removed `review.sharedImpact` field's type guard below is planned for
+[M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
+The other configuration behavior is implemented.
 
 The reserved CSS output directory, CSS delivery and `postcss` key are
 implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
@@ -115,6 +117,7 @@ interface MoklyConfig {
     base?: string; // origin/main; merge base with HEAD
     baselineBuild?: readonly (readonly string[])[]; // derived mode only
     outDir?: string; // .context/mokly-review
+    sharedImpact?: never;
   };
   watch?: {
     debounceMs?: number; // 75
@@ -199,8 +202,11 @@ in the [export contract](./mokly-export.md).
 even when its value is `undefined`, ignores it and issues the exact
 [build warning](./mokly-build-warnings.md#exact-messages), rather than
 `config-invalid`. It does not add watched paths or comparison evidence. See
-the [graceful-handling rule](./README.md#graceful-handling). The public config
-type still rejects this key. Source modules without rendered output or
+the [graceful-handling rule](./README.md#graceful-handling). The public review
+config type uses `sharedImpact?: never` to reject a value, including through
+spreads or alongside other review keys. An explicit `undefined` is rejected
+only with `exactOptionalPropertyTypes`; the build warning covers it otherwise.
+The Delivery Status above records the pending type guard. Source modules without rendered output or
 references do not create comparison evidence.
 Linked stylesheets, including transitive imports, are attributed by rule under
 [CSS change attribution](./mokly-css-attribution.md). A changed stylesheet keeps

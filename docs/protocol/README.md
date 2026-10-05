@@ -1,14 +1,8 @@
 # Protocol
 
-These documents define Mokly's implemented pre-release contract unless a
-Delivery Status names an approved active-plan target. The
-[id-derived routes plan](../../plans/id-derived-routes.md) defines the
-identity-only formats: paths derive from kind and id, and variants are entries.
-
-Protocol documents state the contract and current delivery status, but never
-record which plan milestone delivered a rule; plans keep that history.
-`tests/protocol_doc_history.test.ts` enforces the boundary outside `fixtures/`
-by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
+These documents define Mokly's pre-release contract. Delivery Status sections
+distinguish implemented behavior from approved work that remains to be done.
+Paths derive from kind and id, and variants are entries.
 
 ## Delivery Status
 
@@ -20,7 +14,50 @@ warnings are implemented in [M19](../../plans/remove-source-path-evidence.md#mil
 Comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence);
 the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). Unreleased v8/v4/v5 change in place.
 
-The remaining contract is implemented.
+The [id-derived routes plan](../../plans/id-derived-routes.md) records the
+identity-only format delivery. The 2026-10-05 decisions are documented in
+[M26](../../plans/remove-source-path-evidence.md#milestone-26-document-the-2026-10-05-review-decisions).
+The remaining approved work is the excluded-only mockup and shared Details card
+in [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state),
+link placement/discovery in [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links),
+warning generations, startup cleanup and unused-code removal in
+[M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup),
+stronger regression tests with recorded failing-rule runs, the docs guard and
+removed-field types in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types),
+and exported navigation and viewer alignment in
+[M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
+M30 replaces the docs guard; the existing history test still rejects numeric
+milestone prose in protocols, so status links use labels such as `M28`.
+
+## Current Documentation Rule
+
+Former version names, removed field names and implementation plan or milestone
+references belong only in `Delivery Status` sections or on a short reviewed
+allow list. A status section ends at the next heading of equal or higher level.
+Guides have no status notes; keep their delivery notes in the owning protocol.
+Keep the root README link to `plans/README.md` in its Delivery Status section.
+
+The guard scans Markdown in `docs/**`, the root README, module/package/example
+READMEs, `xtask/README.md` and authored `notes.md` files. Historical plans,
+`docs/reviews/**` and `CHANGELOG.md` stay unchanged. The guard fails closed and
+reads complete statements across line breaks, including fenced examples. A
+word such as "removed", "older" or "never" is not a general exemption.
+
+Each allow-list entry names an exact file, bounded statement or section, and
+reason. It may hold only:
+
+- Removed-input type/warning contracts, exact diagnostics, rejection/privacy
+  rules and consumer migration instructions that must name the removed input.
+- Version-admission/rejection and release migration contracts that must name
+  an earlier format; current independent protocols are not former formats.
+- Frozen wire/hash identifiers, versioned compatibility fixtures and explicitly
+  dated design snapshots retained as history, never as current behavior.
+- The documentation policy and review-workflow instructions that discuss how
+  to manage delivery references. Upload Plan operations and SVG path commands
+  are domain terms, not implementation references.
+
+No whole-directory exemption or broad keyword allowance is permitted. Match
+each reviewed exception exactly and fail when it no longer matches its source.
 
 ## Graceful Handling
 
@@ -31,7 +68,7 @@ When Mokly ignores an input that the author wrote, it shows a warning. The
 [build warning contract](./mokly-build-warnings.md) defines collection,
 deduplication and terminal presentation for the affected cases. This rule does
 not waive public-file confinement, source protection or validation of the
-inputs Mokly actually uses. The current plan applies it to duplicate component
+inputs Mokly actually uses. This rule applies to duplicate component
 CSS declarations, configured-link placement, configured/declared overlap,
 renderer ownership for every stylesheet, and the removed authoring/configuration
 fields; other validation contracts are unchanged.
@@ -78,10 +115,12 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
 - [Nested authoring trees](./mokly-nested-authoring.md)
 - [Identity-derived artifact paths](./mokly-artifact-paths.md)
 - [Rendering and generated output](./mokly-rendering.md)
-- [Component-declared stylesheets](./mokly-component-stylesheets.md) — implemented
+- [Component-declared stylesheets](./mokly-component-stylesheets.md) —
   link placement, validation, provenance, watching and delivery.
 - [Component stylesheet ownership and comparison](./mokly-component-stylesheet-ownership.md)
   — final-link provenance, ignored CSS owners and comparison exclusion.
+- [Stylesheet link discovery](./mokly-stylesheet-links.md) — shared finder scopes,
+  inert templates and recorded links inside Review-ignore.
 
   - [Generated rendering contract](./mokly-rendering-generated.md).
 

@@ -1,12 +1,14 @@
 # Export Ownership v2
 
-## Delivery Status And Boundary
+## Delivery Status
 
 Schema 2 is implemented by the exporter and every local ownership reader.
 [Delta Publishing](../../plans/delta-publishing.md) records the completed
 exporter, CLI and receiver-side compatibility work. Receivers built against
 this document accept only schema 2. The schema 1 shape is retired and no
 longer documented.
+
+## Boundary
 
 Every complete [export](./mokly-export.md) contains a regular root file named
 `.mokly-export-artifact`. This public inventory is independent of the source

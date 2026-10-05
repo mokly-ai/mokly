@@ -1,13 +1,22 @@
 # Shared Browse shell
 
+## Delivery Status
+
+The [React Browse shell plan](../../../../plans/react-browse-shell.md) records
+how Serve, export and the public viewer converged on this tree.
+Retaining the known branch name in the exported navigation fallback is planned
+for [M31](../../../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
+The [presentation contract](../../../../docs/protocol/mokly-css-evidence-presentation.md#details-copy)
+keeps the sentence during loading; a nameless embedded catalogue still omits it.
+
+## Scope
+
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document
 envelope used through `@mokly/viewer/server`, and the same tree is hydrated in
 the browser by Serve, export and React hosts, with host-owned slots as ordinary
 children. The [viewer contract](../../../../docs/protocol/mokly-viewer.md#shell-tree-and-state)
-defines the tree and its state model; the
-[React Browse shell plan](../../../../plans/react-browse-shell.md) records how
-Serve, export and the public viewer converged on this tree.
+defines the tree and its state model.
 
 `nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
 native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their

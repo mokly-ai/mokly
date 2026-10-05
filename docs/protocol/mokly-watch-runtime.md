@@ -2,6 +2,13 @@
 
 Continuation of [Watched Catalogue Development](./mokly-watch.md).
 
+## Delivery Status
+
+The warning-generation fence and failed-start supervisor cleanup are planned
+for [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+
+## Adoption And Recovery
+
 Initial startup, successful rebuilds and configuration changes, and resource
 reloads refresh the reachable resource watch set. A ready replacement is adopted
 only with its matching output; failed writes discard it and retain the previous
@@ -24,8 +31,14 @@ temporarily dangling resource remains observable and can recover after repair.
 Rebuilds are debounced and accept metadata and the retained graph together. A failed
 index candidate keeps the last-good server and output; a background failure keeps
 the last-good disk output without claiming completeness. Errors are reported while
-the watcher waits for another authored change. A
-successful rebuild or healthy restart publishes a new update version. Browsers
+the watcher waits for another authored change. Warning scopes advance when an
+attempt starts, separately from accepted output. A failed rebuild or
+reconfiguration keeps the older output serving but never restores its warning
+scope. Drop late background and preview-child warnings from that older
+generation. Flush only the current attempt's warnings before its failure line;
+successful adoption keeps that attempt's deduplication set. See
+[build warning generations](./mokly-build-warnings.md#watched-serve-generations).
+A successful rebuild or healthy restart publishes a new update version. Browsers
 reload their current durable URL and restore search, changed-only selection,
 current folder disclosure, the disclosure baseline captured before active
 filtering, details disclosure, viewport and color-scheme selection, responsive

@@ -11,7 +11,17 @@ mockup depicts the whole-document page rule below; the shell implements it in
 [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 Omitting the branch-point sentence when its name is unknown is implemented in
 [M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
-The mockups show catalogues with a known name and need no change.
+The known-name rule needs no new mockup; existing mockups already show a name.
+
+Keeping the export's known branch name during navigation is planned for
+[M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
+The excluded-only screen depiction, linked child pages and shared
+Excluded/Matched Details card are planned for
+[M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
+The current Excluded screen depicts a changed Welcome with a separate matched
+file; it is not the excluded-only state. Its card and the Matched card still
+need to converge on the same product evidence. Viewer alignment at both widths
+is planned for M31.
 
 This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the
@@ -35,6 +45,11 @@ and the rest of Details. A served catalogue with a known name retains the
 sentence. Use the same shared heading for all three entry kinds, as the
 [presentation contract](./mokly-css-evidence-presentation.md#details-copy) defines.
 
+During exported navigation, the temporary view uses the branch name already
+known to the export while the selected screen's full data loads. The sentence
+must not disappear and return when that data arrives. A nameless embedded
+catalogue still omits it.
+
 The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
 [shell design inventory](./mokly-shell-design.md#design-mockups) as
@@ -44,7 +59,8 @@ recorded in the
 component explorer's Stylesheet evidence gallery, recorded in the
 [component design inventory](./mokly-component-design.md#owning-catalogue) as
 `design-component-style-changed`, `design-component-style-outside`, and
-`design-component-shared-impact`. It fixes these presentation rules:
+`design-component-shared-impact`. These screens and the excluded-only state
+follow these presentation rules; pending depictions are named above:
 
 - The files lead names each retained file once, as one list item. That item
   holds the file's outcome sentences, each followed by its selector list, so
@@ -76,6 +92,13 @@ component explorer's Stylesheet evidence gallery, recorded in the
   ends with the terminal status line "No changes to this screen." A component
   variant's terminal line reads "No changes to this saved view." The wording
   follows the entry kind through one shared helper.
+- Linked Excluded and Matched screens show the same changed Welcome in All
+  and Changes. They use one shared Details card with the retained file, its
+  matched selectors and the excluded file. They add no explanatory sentence
+  that the viewer does not show. The separate excluded-only screen opens from
+  All and remains reachable from the stylesheet evidence designs. Split the
+  gallery into linked child pages of at most five screens, each with mobile
+  and desktop components; the parent shows one canonical screen and child links.
 - The evidence container and the approved mockup card both render eight
   pixels above each paragraph or list and fourteen pixels between a list and
   the paragraph that follows it, including the sentences and lists nested in a

@@ -9,6 +9,9 @@ On-demand startup, rendering and evidence completion are implemented. The
 route-evidence loading and failed Usage states are implemented by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
+Generation-tagged background and preview-process warnings are planned for
+[M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+
 ## Startup and completeness
 
 Serve loads one consumer graph and validates its catalogue metadata, routes,
@@ -64,7 +67,13 @@ The single-document compiler reuses exhaustive Build's validation primitives: re
 stylesheet selection, compatibility, logical links, ownership, component ranges,
 props, style/resource metadata, ignore markers, output confinement, and resource
 validation. It retains provenance only for inserted links present after the
-compatibility transform and forwards render warnings to the Serve parent.
+compatibility transform and forwards render warnings to the Serve parent with
+the generation captured from the document or transient Props render inputs.
+The child warning message includes that generation. A render still using older
+inputs cannot print warnings after a newer watched attempt starts, even while
+it continues serving after a failed candidate. The
+[warning contract](./mokly-build-warnings.md#watched-serve-generations) defines
+the message, generation fence and deduplication scope.
 Navigation without anchors needs the destination's registered route,
 
 validation. Navigation without anchors needs the destination's registered entry,
@@ -145,6 +154,13 @@ with checkpoints between documents and major validation phases. Forward-anchor
 validation cannot render a destination ahead of that order. Stateful style registries
 can include different unused CSS in on-demand previews; the exhaustive background
 artifacts retain Build's bytes and do not create artificial Changes.
+
+Background warnings carry the producing generation through the worker and
+parent. Stream them once; completion does not add `compilation.warnings`
+again. A watched rebuild or reconfiguration starts a fresh warning generation
+before candidate work, regardless of whether that candidate succeeds. Late
+warnings from superseded work are discarded. Unwatched Serve keeps its
+lifetime warning scope, and one-shot commands keep their existing scopes.
 
 Full generated output is finalized only through the existing transactional output
 store. It never substitutes for demand rendering of the current generation.

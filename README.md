@@ -213,6 +213,8 @@ preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 
 ## Delivery Status
 
+The [implementation plan index](./plans/README.md) lists active and completed work.
+
 Removal of baseline compatibility below is implemented in
 [M23B](./plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
@@ -284,7 +286,6 @@ appearance with any preview scheme. See the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
-- [Implementation plans](./plans/README.md)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents

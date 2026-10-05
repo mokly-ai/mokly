@@ -2,8 +2,14 @@
 
 ## Delivery Status
 
-The uniform CSS rule policy below is planned for Milestone 19 of the
+The uniform CSS rule policy below is implemented in Milestone 19 of the
 [source-path removal plan](../../../../../plans/remove-source-path-evidence.md).
+
+That plan delivered component stylesheet declarations in Milestone 3, removed
+source-path evidence in Milestone 4 and removed declarations in Milestone 6.
+The configured-anchor and shared-link fixes are planned for Milestone 28.
+
+## Scope
 
 These sixteen registered components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
@@ -106,10 +112,7 @@ retain that caller's ownership.
 
 ## Styles And Hosts
 
-The component stylesheet contract was delivered by
-[remove-source-path-evidence](../../../../../plans/remove-source-path-evidence.md)
-in Milestone 3 and replaces the style collector; source-path evidence
-disappears in Milestone 4 and declarations in Milestone 6.
+Component stylesheet declarations replace the per-render style collector.
 `metadata.ts` assigns each registered component its public
 `design-library/{group}/{slug}.css` relative to `mockupsDir` through
 `stylesheets`. Registered
@@ -128,8 +131,10 @@ The configuration orders shared base styles first, the `componentStylesheets`
 marker next, then context/layout overrides. Keep this explicit order: equal-specificity
 mobile rules must not override bounded workspace scrolling.
 Mokly inserts the links after the renderer returns for normal and transient
-renders and validates any missing configured neighbour. A hidden picker does
-not link chip CSS merely because another variant uses chips.
+renders. It uses the nearest present configured link, or the end of head content
+when none is present, and warns about missing configured hrefs when insertion
+is needed. A hidden picker does not link chip CSS merely because another
+variant uses chips.
 
 Keep component selectors in its declared stylesheet. Tokens, resets, mixed
 selectors and cross-component layout/state rules stay in the shared design CSS.

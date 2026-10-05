@@ -7,8 +7,13 @@ Uniform CSS rule attribution in this guide is implemented in Milestone 19 of the
 
 The example declares component CSS with `stylesheets`, uses manifest v8 and
 classifies Changes from rendered output rather than source-path declarations.
-See the [source-path removal plan](../../plans/remove-source-path-evidence.md)
-for the migration and remaining review fixes.
+The [source-path removal plan](../../plans/remove-source-path-evidence.md)
+records the delivered migration. Its M27 adds the excluded-only screen mockup,
+splits the stylesheet evidence gallery and shares the Excluded/Matched Details
+card. M31 checks the viewer against those mobile and desktop depictions.
+The [plan index](../../plans/README.md) lists active and completed work.
+
+## Example Catalogue
 
 This is a synthetic external-consumer fixture. It contains two distinct mobile
 and desktop product-style screens built with `@firna/ui` controls, nested
@@ -59,8 +64,7 @@ previews and editable local props. The outer Components and Usage tabs show actu
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./entries/design/library/README.md),
 [adoption contract](../../docs/protocol/mokly-design-components.md),
-[library inventory](../../docs/protocol/mokly-design-component-library.md)
-and [plans index](../../plans/README.md).
+[library inventory](../../docs/protocol/mokly-design-component-library.md).
 
 The entry definitions use `navPath` as their only navigation hierarchy.
 `Example` groups Screens, the example tour, and Getting started; `Design`
@@ -276,10 +280,12 @@ disclosure are independent. The
 ignored-only examples open from All with zero Changes and one Current preview.
 Rendered-resource evidence remains available in Details, while
 unchanged output and paired ignored-only edits do not fill the review list.
-The nested `design/review/impact/stylesheets/` group adds the rule-aware
-stylesheet states: a changed stylesheet whose changed styles apply to the
-screen, one whose change can apply anywhere, and one examined and excluded so
-the screen stays out of Changes. Their contract is
+The nested `design/review/impact/stylesheets/` group has five screen mockups:
+Matched, Unresolved, Unnamed, Excluded and Document page styles. Excluded opens
+a changed Welcome from All; a separate matched file keeps it in Changes.
+The excluded-only product state has no Changes row or comparison and ends its
+Details with "No changes to this screen." Its pending depiction and the shared
+Excluded/Matched card are recorded in Delivery Status. Their contract is
 [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
 
 From the repository root:
@@ -288,8 +294,10 @@ From the repository root:
 npm run dev
 ```
 
-This builds the local CLI, generates the catalogue, and watches entries, the
-renderer, and configured stylesheets. Open the printed URL; the browser reloads
+This builds the local CLI once, starts watched Serve, renders previews on demand
+and completes the catalogue in the background. It watches entries, the renderer,
+configured and component-declared stylesheets, and reachable resources.
+Open the printed URL; the browser reloads
 after watched edits. Forward Serve options with `npm run dev -- --port 0`.
 Imported consumer helpers, including this example's `theme.ts`, are tracked
 and trigger rebuilds automatically. Restart the command after changing

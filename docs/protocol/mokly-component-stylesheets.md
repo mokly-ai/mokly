@@ -6,6 +6,10 @@ Linking and provenance are implemented. The removal of CSS ownership records
 and uniform rule attribution are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
+Configured-only placement anchors, shared link discovery, body-link reuse and
+Review-ignore-safe inserted-link discovery are planned for
+[M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
+
 The [ownership and comparison contract](./mokly-component-stylesheet-ownership.md) defines final link provenance and evidence.
 
 ## Declaration And Public Files
@@ -19,8 +23,6 @@ import { defineComponent } from "@mokly/mokly";
 
 interface ComponentInput {
   stylesheets?: readonly string[];
-  dependencies?: never;
-  ownedDependencies?: never;
 }
 
 const { Component, entries } = defineComponent({
@@ -34,6 +36,11 @@ const { Component, entries } = defineComponent({
   stylesheets: ["design/components/action.css"],
 });
 ```
+
+Removed-field type rejection follows the
+[authoring contract](./mokly-authoring.md#input-types-and-nested-trees): values
+are rejected; explicit `undefined` needs `exactOptionalPropertyTypes`, and
+runtime warnings cover it otherwise.
 
 Each value is a nonempty, normalized POSIX path relative to `mockupsDir`, to
 an existing, regular, publicly servable file with a case-insensitive `.css`
@@ -135,11 +142,13 @@ The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
 owns the complete `RenderInput.stylesheets` list and its order. The marker and
 component declarations add no hrefs to this list. Its component
 `entry` omits `stylesheets` at runtime and in its public type. The renderer
-emits the supplied links. If it also emits a local stylesheet link to
-the same real file as a declaration, Mokly keeps that link at its authored
-position and does not insert another. Its decoded, `mockupsDir`-relative href
+emits the supplied links. Use the [shared link finder](./mokly-stylesheet-links.md)
+for placement, reuse, provenance and resource discovery, with the scope defined
+for each step. If resource discovery finds a renderer-authored local stylesheet
+link to the same real file as a declaration, including in `<body>`, keep its
+authored position and insert no second link. Its decoded, `mockupsDir`-relative href
 path identifies the reused link even when an alias was declared first. A
-reused authored link gets no inserted-link span or resource owner record.
+reused authored link gets no inserted-link span.
 Query and fragment suffixes on a renderer-authored local href do not change
 real-file identity; keep them on that link but omit them from resource paths.
 If several renderer links already name the same real file, Mokly leaves them
@@ -148,9 +157,11 @@ Mokly's one-link guarantee applies to links it inserts, not duplicates the
 renderer already authored. For files not already linked by the renderer, Mokly
 locates the configured links and inserts component links next to them.
 
-A configured link is a `<link>` in the logical head whose `rel` includes the
-ASCII-case-insensitive, whitespace-delimited `stylesheet` token and whose href
-matches a resolved configured href. `alternate stylesheet` qualifies. Use the
+Only configured hrefs are placement anchors. A qualifying `<link>` is in the
+logical head, has the ASCII-case-insensitive, whitespace-delimited `stylesheet`
+token in `rel`, and matches a resolved configured href. Generated renderer and entry stylesheet
+links are not anchors, although `RenderInput.stylesheets` contains them.
+`alternate stylesheet` qualifies. Use the
 first document occurrence when an href repeats. Let `p` be the marker/default
 boundary in configured order. A present link at index `i < p` is `p - i`
 positions away; one at `i >= p` is `i - p + 1` positions away. Choose the
@@ -158,8 +169,9 @@ present link with the smallest distance; on a tie choose the following link.
 Insert the ordered component-link block after a chosen preceding link or
 before a chosen following link. This uses configured order even when the
 renderer reordered its links. If no configured link is present, insert at the
-end of logical head content, after unrelated links. Use `</head>` when present,
-otherwise the parsed head's last element or the start of body content when
+end of logical head content, after unrelated and generated stylesheet links.
+Use `</head>` when present, otherwise the parsed head's last element or the
+start of body content when
 the head is empty. Omitted optional tags never fail placement.
 
 Missing, repeated or reordered configured links do not fail insertion; a
