@@ -185,7 +185,7 @@ final rendering. Preserve the existing fragment grammar, duplicate
 query rejection, invalid-anchor behavior, safe URL handling, link-owner
 authentication, and closure-limited authored HTML. Served and published
 pages must handle direct URLs, in-frame navigation, Back/Forward, and fragment
-restoration identically. Old portable artifact links remain valid.
+restoration identically. Portable artifact paths remain stable when navigation folders change.
 
 ## Changes, Watch, And Publishing
 

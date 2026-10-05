@@ -51,6 +51,7 @@ export function actions() {
 
 export function shellRecovery() {
   return {
+    changesStatus: "ready" as const,
     disclosures: { "folder:pages:fixture": false },
     colorScheme: "dark" as const,
     detailsOpen: true,

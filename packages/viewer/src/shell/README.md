@@ -28,7 +28,9 @@ segments and ignores obsolete collection and legacy keys on restore.
 `disclosure_storage.ts` owns the v3 map codec and its storage key;
 early capture, hydration, the shell store, and watched-reload recovery share
 its validation so renamed keys never override current server defaults. The
-writer touches only the current v3 map key.
+writer touches only the current v3 map key. Stored watched recovery separately
+requires `filterBaselineDisclosures` and `changesStatus`; missing fields reject
+the complete stored snapshot.
 `routes.ts` resolves URL paths to current or retained manifest entries;
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [path contract](../../../../docs/protocol/mokly-nav-paths.md)

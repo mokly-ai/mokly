@@ -58,8 +58,8 @@ form in supported navigation attributes.
 A complete document that contains an activatable logical `href` must not
 contain an HTML `<base href>` element. The base URL would change the browser's
 effective portable destination without changing the link attribute bytes that
-Browse authenticates. The builder enforces this restriction both before and
-after rendering and link rewriting. A metadata-only `data-nav-href` does not
+Browse authenticates. The builder enforces this restriction on rendered
+documents during logical-link rewriting. A metadata-only `data-nav-href` does not
 activate the restriction, and `<base target>` remains supported under the
 target rules below.
 
@@ -364,8 +364,8 @@ Coverage must prove:
 
 - helper-level id/fragment separation and id grammar, portable output, eligible
   native-link markers, metadata-only `data-nav-href`, rejection of logical
-  `href` on resource/non-link elements, rejection of `<base href>` before and
-  after rendering, dual navigation attributes, hashes,
+  `href` on resource/non-link elements, rejection of `<base href>` in
+  rendered documents, dual navigation attributes, hashes,
   use-case ids, dark-to-light fallback, conflicts, and reserved-marker errors;
 - served and preview adaptation without mutating generated fragments, including
   LF/CRLF ownership-gated promotion, unowned reserved-metadata removal, secure

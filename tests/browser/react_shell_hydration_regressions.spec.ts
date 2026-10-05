@@ -56,6 +56,7 @@ test("an early navigation disclosure beats reload recovery", async ({
         url: location.href,
         version: 1,
         browse: {
+          changesStatus: "ready",
           changedOnly: false,
           disclosures: {},
           colorScheme: "light",

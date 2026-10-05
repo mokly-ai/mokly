@@ -36,7 +36,7 @@ Public catalogue v4 contains no layout-prefix field. The viewer always uses
 `GENERATED_DIRECTORY` from `@mokly/viewer/data` to derive current paths.
 Only v4 is readable. Reject older and unknown versions before reading entries
 or deriving URLs. Disk existence, host settings and payload metadata cannot
-select another layout. Current files always use `/static/mokly-generated/`.
+select another layout. Current generated files always use `/static/mokly-generated/`.
 
 V4 records contain identity and view axes, not `route`, `documentPath` or
 `fragmentPath` fields. Derive each current file from that identity and the

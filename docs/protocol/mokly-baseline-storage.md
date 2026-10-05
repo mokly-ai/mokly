@@ -5,7 +5,7 @@ Historical commands execute trusted repository code; preparation is never an HTT
 This contract defines the v8 storage and compatibility boundary.
 The [v8 manifest gate](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
 permits only v8 content readers and retains `main`'s earlier-version outcome.
-Process, lock, confinement and retention rules remain unchanged.
+Process ownership, locking, confinement and metadata-only retention follow the rules below.
 
 ## Rebuild Procedure
 

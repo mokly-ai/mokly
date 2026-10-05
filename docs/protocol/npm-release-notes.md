@@ -41,6 +41,13 @@ output and rebuild invalid entries. Only the current generated notice is
 nonmaterial; its LF and CRLF forms remain accepted. Format version rejection,
 removed-key errors and the service's 426 handling remain unchanged.
 
+Stored `BrowseRecoveryState` requires `changesStatus` and
+`filterBaselineDisclosures`; missing values discard that stored snapshot.
+General shell snapshots keep their optional live status. Removed records require
+`snapshotId` for any non-null `comparisonUrl`. Serve's local comparison endpoint
+is not a public catalogue pointer; published pointers retain the generation-only
+allowlist.
+
 ## Breaking Portable Namespace Release Note
 
 The viewer namespace is now `mokly-viewer/`, with comparison generations below

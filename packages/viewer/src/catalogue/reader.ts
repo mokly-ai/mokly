@@ -99,7 +99,7 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
       if (removed.snapshotId === undefined && comparisonUrl !== null)
         invalidData(
           "$catalogue",
-          "removed entry needs snapshotId when a comparison generation exists",
+          "removed entry needs snapshotId when comparisonUrl is non-null",
         );
       const snapshotId =
         removed.snapshotId === undefined ? undefined : hash(removed.snapshotId);

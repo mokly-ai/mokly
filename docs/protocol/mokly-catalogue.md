@@ -169,8 +169,8 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
   from current entries. Variant grouping follows the
   [variant contract](./mokly-variants.md).
 - Details retain authored display metadata already exposed by the inspector.
-  `details.dependencies` lists the entry's source path and declared paths as
-  repository-relative display labels only. `sourcePath`, optional invocation
+  `details.dependencies` derives the sorted unique union of `sourcePath` and
+  `declaredDependencies` as repository-relative display labels only. `sourcePath`, optional invocation
   `source.path`, and local related-doc paths stay repository-relative
   metadata. They never become source-serving URLs.
 
@@ -242,8 +242,8 @@ neither real source, projection omits the field instead of deriving it from
 revisions, `deploymentId`, metadata, time, or randomness.
 
 Readers validate supplied snapshot ids and require uniqueness. They never
-derive missing ids. A removed record with an advertised comparison generation
-must supply `snapshotId`; absence is invalid. With no immutable identity,
+derive missing ids. A removed record with non-null `comparisonUrl` must supply
+`snapshotId`; absence is invalid. With no URL and no immutable identity,
 the field can remain absent. Id-only selection of a removed record
 normalizes to its safe identity when present. A baseline or generation change
 produces different ids, so an unknown, stale, or cross-catalogue selection

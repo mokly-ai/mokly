@@ -24,6 +24,10 @@ retain the reload lifecycle.
 The synchronous viewer bootstrap captures native disclosure choices made before
 module initialization. Browse preferences and one-shot recovery retain these
 newer choices, then load completion persists them and removes the capture state.
+Stored Browse recovery requires a live `changesStatus` and explicit
+`filterBaselineDisclosures`. Missing values invalidate the stored snapshot.
+General shell snapshots without a live status do not produce a stored Browse
+record; the host does not invent a status for them.
 
 `react_transports.ts` keeps local temporary previews and on-demand usage loads
 private. `react_host.ts` hydrates even when the optional event stream or recovery

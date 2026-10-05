@@ -204,7 +204,7 @@ root-level metadata cannot suppress a rebuild; invalid caches rebuild.
 Feed changed compiled CSS to rule-aware attribution; its private CSS source
 is dependency evidence, not a second public stylesheet. Preserve `main`'s
 delivered-source suppression, shared-impact fallbacks, removed-resource rules,
-component fast paths and generation consistency. Earlier baselines do not
+component fast paths and generation consistency. Pre-v8 baselines do not
 produce a one-time stylesheet Changes jump because their content is not read.
 
 Acceptance must retain `main`'s CSS/Modules/PostCSS regressions and this branch's

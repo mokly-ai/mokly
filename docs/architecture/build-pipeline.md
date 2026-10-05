@@ -6,7 +6,7 @@
 mokly.config.ts
         |
         v
-resolve `entries` globs -> matched entry modules + renderer + optional consumer modules
+resolve `entries` globs -> matched entry modules + renderer + imported helpers
         |
         v
 one esbuild graph, with React resolved from the consumer
@@ -93,7 +93,7 @@ Imported CSS does not add a separate
 manifest schema. Routes derive from entry kind and id, while navigation uses
 authored `navPath`.
 
-The resolved entry modules, the configured renderer, imported page
+The resolved entry modules, the configured renderer, and imported page
 helpers are imported by a single virtual entry and
 bundled together. The internal bundle is CommonJS so Node-oriented consumer
 dependencies can retain dynamic built-in imports. Esbuild returns this bundle
@@ -189,11 +189,11 @@ source locations to patch only the marked control and its boundary templates.
 It validates one supported root with no independent descendant interactions,
 retains inactive destinations as metadata, and adds default link/focus CSS only
 to documents with active adapted controls. Custom screen renderers and page callbacks use the
-same adapter before logical records are captured. Compatibility output cannot
-reintroduce unresolved child markers or change package-owned control metadata
-and its logical owners. One parsed attribute policy enforces case-insensitive
-reserved names at both boundaries, including inert template contents, without
-mistaking ordinary text for metadata. Unmarked document bytes stay unchanged.
+same adapter before logical records are captured. The adapter rejects
+consumer-authored control metadata and unconsumed child markers. Its parsed
+attribute policy enforces case-insensitive reserved names in rendered input,
+including inert template contents, without mistaking ordinary text for metadata.
+Unmarked document bytes stay unchanged.
 
 The [catalogue navigation contract](../protocol/mokly-navigation.md) retains
 the stable id and optional fragment in a reserved `data-mokly-link`

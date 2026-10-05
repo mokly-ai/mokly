@@ -80,9 +80,9 @@ Review phases use the same session, role and parent context as their caller:
   inventory keeps its own stages.
   For fast-path-eligible views in a component-aware classification where no
   view differs, the loop emits at most one actual occurrence per paired view
-  for complete Git-blob baselines and two for rebuilt baselines. Views with instances, styles, or
-  entry-owned slots may add one Git-blob or two rebuilt projected occurrences. One-sided views add
-  one occurrence. A repeated discovery for the same side,
+  on each side, for both Git-blob and rebuilt baselines. Views with instances,
+  styles, or entry-owned slots may add one projected occurrence on each side.
+  One-sided views add one occurrence. A repeated discovery for the same side,
   route, content digest, and exclusion callback identity is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.

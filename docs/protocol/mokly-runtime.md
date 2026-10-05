@@ -68,7 +68,7 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
    collisions.
 4. Render screen fragments and registered whole-document pages in deterministic order.
 5. Resolve id links and validate document links and anchors.
-6. Build the version 6 manifest, asset closure, generated-file inventory and
+6. Build the version 8 manifest, asset closure, generated-file inventory and
    resolved source inventory; validate closure and hrefs from `mokly-generated/`.
 7. Stage the entire `mokly-generated/` tree before changing the last-good output.
 8. Replace that tree transactionally; restore it on failure.
@@ -256,9 +256,9 @@ top-navigation sandbox token, so direct and nested consumer contexts retain the
 active restriction that prevents them from replacing the shell. The
 served/preview adapter authenticates logical markers only for current-manifest
 screen fragments and generated document pages present in the accepted
-in-memory compilation and validated manifest. A generated first-line notice,
-including the historical source-path header, is stripped from adapted copies
-without granting access or validating its owner. Other HTML loses package-reserved
+in-memory compilation and validated manifest. Only the current plain notice
+is stripped with LF or CRLF, without granting access or validating ownership.
+Former source-path headers stay ordinary text. Other HTML loses package-reserved
 metadata in the adapted copy; a trusted route with invalid logical markers or a
 marker/portable-href mismatch fails closed. One strict typed
 target parser supplies inert metadata only to trusted parent enhancement. A

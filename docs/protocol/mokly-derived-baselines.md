@@ -11,9 +11,9 @@ are tracked by [Generated Output Simplification](../../plans/generated-output-si
 
 The head side always uses the current validated **in-memory compilation**;
 neither tracked nor untracked head output has to match local generated files
-to compare. For every pinned merge-base commit independently, first reject
-recognized earlier output with `main`'s expected unavailable outcome. Otherwise
-use complete v8 generated Git blobs, or rebuild that commit using its own
+to compare. For each pinned merge-base commit, probe only its canonical
+generated-location manifest. Earlier output there gives the typed unavailable
+outcome. Otherwise use complete v8 Git blobs, or rebuild the commit using its own
 lockfile, dependencies, config, entries, renderer, and Mokly version. A change
 in tracking policy across history does not change this rule. Neither HTTP
 request paths nor disposable Serve children may run the baseline build.
@@ -82,6 +82,9 @@ After the rebuild, a canonical root-level manifest below v8 returns
 `baseline-incompatible-earlier`. A current generated manifest takes precedence.
 Do not cache earlier output or its outcome. Invalid, missing or older cached
 entries are partial and are deleted under the cache lock before rebuilding.
+Valid v8 metadata with different catalogue/build settings fails intact before
+output validation. Retention inspects only marker and input metadata, as the
+[storage contract](./mokly-baseline-storage.md#cache-layout) requires.
 No head-index state participates in these decisions.
 
 Both readable implementations accept a commit and repository-relative path.

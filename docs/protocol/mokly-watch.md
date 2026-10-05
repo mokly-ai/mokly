@@ -180,3 +180,9 @@ complete usage/Changes; valid current previews remain available. An explicit CLI
 config's comparison base.
 
 Resource adoption and recovery continue in [Watch Runtime And Recovery](./mokly-watch-runtime.md).
+
+Stored Browse recovery requires both `filterBaselineDisclosures` and a valid
+`changesStatus`. Missing fields discard the stored snapshot without defaults.
+The [disclosure persistence contract](./mokly-disclosure-persistence.md#recovery-and-versioning)
+owns these checks. The watched host stores no Browse record when a captured
+general shell snapshot has no live status.

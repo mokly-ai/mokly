@@ -14,6 +14,12 @@ private workspace together.
 v8 or live-index metadata, the section-scoped folder trees, and accepted comparison/usage
 evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
+The v8 and CLI live-index producers emit `sourcePath` and
+`declaredDependencies`; runtime and worker transfers retain those fields.
+Their public `details.dependencies` is the sorted unique union. The viewer's
+current `displayEntry` conversion also copies the public dependency labels onto
+live-index display entries. Projection preserves that current display list when
+present; it is not an older manifest reader.
 Changes membership comes from entry and component attribution, independently
 of per-view comparison eligibility. Removed entries retain baseline labels, an
 opaque per-record `snapshotId` when real immutable identity is available, plus
@@ -24,8 +30,12 @@ Snapshot ids derive through the viewer-owned shared helper from the catalogue
 identity, exact entry kind and id, and either the accepted baseline commit or,
 only when no commit exists, an immutable comparison generation. Conflicting
 baseline identities fail projection; revisions and live deployment hashes are
-never substituted. Generation-backed catalogues normalize safely. Readers
-reject any current and removed records that share an id.
+never substituted. Readers never infer missing snapshot ids.
+A non-null `comparisonUrl` requires each removed record's `snapshotId` and
+absence reports `removed entry needs snapshotId when comparisonUrl is non-null`.
+Serve's local comparison request is not a public pointer; completed captures
+publish an immutable alias. Readers reject any current and removed records
+that share an id.
 `CatalogueProjectionInput.removedPreviews` is caller-supplied generation data;
 projection never derives it from Git or the filesystem. The map is keyed by
 removed entry id; `pagePreviewMetadataPath(id)` names page metadata, while

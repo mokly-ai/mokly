@@ -204,7 +204,9 @@ Do not provide `defaultSelection` in controlled mode, and remount the viewer if
 you need to change modes.
 
 Removed entries advertise an optional opaque `snapshotId`. Supply it with the
-stable `screenId` to select that exact historical record. The viewer carries it
+stable `screenId` to select that exact historical record. When `comparisonUrl`
+is non-null, every removed entry must supply this id. The reader never derives
+a missing id. The viewer carries it
 through controlled proposals, navigation events and axis/filter changes. An
 id-only selection of a removed record normalizes to its published identity;
 stale or unknown snapshots render unavailable. Readers reject a catalogue in

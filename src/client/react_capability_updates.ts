@@ -178,9 +178,13 @@ function sameRenderCapability(
 function browseRecovery(
   value: ShellRecoverySnapshot | undefined,
 ): BrowseRecoveryState | undefined {
-  if (!value) return;
+  if (!value || value.changesStatus === undefined) return;
   const { view, ...snapshot } = value;
-  return { ...snapshot, changedOnly: view === "changes" };
+  return {
+    ...snapshot,
+    changesStatus: value.changesStatus,
+    changedOnly: view === "changes",
+  };
 }
 
 function shellRecovery(value: BrowseRecoveryState): ShellRecoverySnapshot {

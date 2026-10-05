@@ -27,8 +27,10 @@
   version checks that stop on older data stay. Milestone 16 defines the
   contracts and proves current snapshot writers supply ids. Milestone 17 removes
   the twelve approved paths and passes the full gate, including 3,768 unit tests
-  and 970 browser cases. The documentation check and user-owned final review
-  in Milestone 18 follow.
+  and 970 browser cases. Milestone 18 verifies the current display dependency
+  producer, requires complete stored recovery, aligns snapshot-id rules, and
+  checks all changed documents. Its full gate passes with 3,773 unit tests and
+  970 browser cases. Its final review remains with the orchestrator.
   Correction 3 A selects v8-only baselines; findings
   32 B and 34 C are documented. Other findings await direction; Cloud rollout
   remains a post-merge follow-up.

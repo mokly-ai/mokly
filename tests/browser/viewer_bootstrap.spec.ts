@@ -74,6 +74,7 @@ test("early native disclosures survive delayed hydration and recovery", async ({
         url: location.href,
         version: 1,
         browse: {
+          changesStatus: "ready",
           changedOnly: false,
           disclosures: { "folder:pages:Fixture/Archive": false },
           colorScheme: "light",

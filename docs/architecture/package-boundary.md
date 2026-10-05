@@ -148,7 +148,7 @@ hosting SDK is required. Typed shell-owned delivery metadata supplies exact
 static routes and immutable comparison URLs. The exporter owns file selection,
 input consistency, exclusive output reservation, replacement, and rollback;
 `scripts/preview` captures one already-built Browse snapshot with optional Changes
-and adds Pages URL/header metadata and old-preview migration. Both paths share
+and adds Pages URL/header metadata using current export ownership. Both paths share
 artifact validation, deployment identity, and the output transaction, and reuse
 the same shell renderer and comparison engine. Watch ignores inventory-listed
 export files while traversing output directories for new authored files.

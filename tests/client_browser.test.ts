@@ -54,6 +54,32 @@ test("React host updates connect recovery, reload, and shutdown", async () => {
   assert.equal(environment.source.closed, true);
 });
 
+test("the watched host does not store Browse state without a live status", async () => {
+  const environment = new FakeEnvironment();
+  const current = descriptor(1);
+  const subscription = new AbortController();
+  createReactUpdateCapability(current, environment).subscribe(
+    request(current),
+    {
+      adoptEvidence: async () => false,
+      captureRecovery: () => {
+        const { changesStatus: _status, ...snapshot } = shellState();
+        return snapshot;
+      },
+    },
+    subscription.signal,
+  );
+  environment.source.emit("update", "2");
+  await setImmediate();
+  await setImmediate();
+  assert.equal(environment.location.reloads, 1);
+  const stored = JSON.parse(
+    environment.storage.getItem("mokly:live-update-recovery")!,
+  );
+  assert.equal(Object.hasOwn(stored, "browse"), false);
+  subscription.abort();
+});
+
 test("React host updates consume stale-URL recovery without applying it", () => {
   const environment = new FakeEnvironment();
   environment.storage.setItem(
@@ -98,6 +124,7 @@ function shellState(): ShellRecoverySnapshot {
 
 function browseState(): BrowseRecoveryState {
   return {
+    changesStatus: "ready",
     changedOnly: false,
     disclosures: { "folder:pages:fixture": false },
     colorScheme: "dark",

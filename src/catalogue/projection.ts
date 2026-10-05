@@ -227,8 +227,9 @@ function projectPreview(
 }
 
 function entryDependencies(entry: ManifestEntry): string[] {
-  const historical = (entry as { dependencies?: unknown }).dependencies;
-  return Array.isArray(historical)
-    ? [...(historical as string[])].sort()
+  const displayDependencies = (entry as { dependencies?: unknown })
+    .dependencies;
+  return Array.isArray(displayDependencies)
+    ? [...(displayDependencies as string[])].sort()
     : [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort();
 }
