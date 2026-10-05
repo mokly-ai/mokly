@@ -17,9 +17,9 @@ the whole-document page display is implemented in [M20B](../../plans/remove-sour
 The [id-derived routes plan](../../plans/id-derived-routes.md) records the
 identity-only format delivery. The 2026-10-05 decisions are documented in
 [M26](../../plans/remove-source-path-evidence.md#milestone-26-document-the-2026-10-05-review-decisions).
-The remaining approved work is the excluded-only mockup and shared Details card
-in [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state),
-link placement/discovery in [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links),
+The excluded-only mockup and shared Details card are implemented in
+[M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
+The remaining approved work is link placement/discovery in [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links),
 warning generations, startup cleanup and unused-code removal in
 [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup),
 stronger regression tests with recorded failing-rule runs, the docs guard and

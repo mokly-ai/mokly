@@ -77,10 +77,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
       );
       if (!compared)
         assert.ok(
-          text
-            .trimEnd()
-            .endsWith("Other changed styles keep Welcome in Changes."),
-          id,
+          text.trimEnd().endsWith("generated/excluded.css"),
+          `${id}: Details end with the excluded file, as the viewer's do`,
         );
       for (const heading of elements(document, (node) =>
         ["h1", "h2", "h3"].includes(node.tagName),

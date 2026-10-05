@@ -8,9 +8,10 @@ Uniform CSS rule attribution in this guide is implemented in Milestone 19 of the
 The example declares component CSS with `stylesheets`, uses manifest v8 and
 classifies Changes from rendered output rather than source-path declarations.
 The [source-path removal plan](../../plans/remove-source-path-evidence.md)
-records the delivered migration. Its M27 adds the excluded-only screen mockup,
-splits the stylesheet evidence gallery and shares the Excluded/Matched Details
-card. M31 checks the viewer against those mobile and desktop depictions.
+records the delivered migration. Its M27 implements the excluded-only screen
+mockup, the split stylesheet evidence gallery and the shared Excluded/Matched
+Details card. M31 is planned to check the viewer against those mobile and
+desktop depictions.
 The [plan index](../../plans/README.md) lists active and completed work.
 
 ## Example Catalogue
@@ -57,7 +58,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 104 design screens now use 16 registered shared components, including
+Mokly's 105 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 67 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -143,7 +144,7 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its sixty-three Browse, page, publication, appearance and Changes
+Browse and Changes views. Its sixty-four Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 scrolling, stylesheet evidence for screens and document pages, the preparing and
 unavailable comparison states, and the previous-version states of removed
@@ -214,7 +215,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Eighty design screens use `colorSchemes: ["light"]` and draw only the light
+Eighty-one design screens use `colorSchemes: ["light"]` and draw only the light
 Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
 settings: thirteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
@@ -236,7 +237,7 @@ screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. Unreferenced source paths do not add Changes or comparison
 evidence.
 
-The shared inspector/workspace sheets cover all 104 design screens and standalone
+The shared inspector/workspace sheets cover all 105 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 41
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. Removed source-path declarations
@@ -280,12 +281,16 @@ disclosure are independent. The
 ignored-only examples open from All with zero Changes and one Current preview.
 Rendered-resource evidence remains available in Details, while
 unchanged output and paired ignored-only edits do not fill the review list.
-The nested `design/review/impact/stylesheets/` group has five screen mockups:
-Matched, Unresolved, Unnamed, Excluded and Document page styles. Excluded opens
-a changed Welcome from All; a separate matched file keeps it in Changes.
-The excluded-only product state has no Changes row or comparison and ends its
-Details with "No changes to this screen." Its pending depiction and the shared
-Excluded/Matched card are recorded in Delivery Status. Their contract is
+The Stylesheet evidence page shows Document page styles as its canonical
+screen and links two child pages, each in its own directory under
+`entries/design/review/impact/stylesheets/`. Matched and excluded holds
+Matched styles, Excluded styles and Excluded styles only; Unresolved and
+unnamed holds Unresolved styles and Unnamed styles. Excluded and Matched show
+one changed Welcome from All and from Changes, with one shared Details card: a
+separate matched file keeps Welcome in Changes. Excluded styles only shows
+Details from All in that branch. Details links only the excluded file, so it
+has no Changes row or comparison, and its Details end with "No changes to this
+screen." Their contract is
 [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
 
 From the repository root:

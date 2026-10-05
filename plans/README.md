@@ -111,9 +111,11 @@
   unchanged former-marker script, unavailable Changes with a v7 base, and
   embedded Details without a branch-point sentence. The reviewer pushed that
   evidence and ran the fourth review. Milestone 26 documents the 2026-10-05
-  decisions. Milestones 27 to 31 hold the approved mockup, link, warning, test,
-  type and navigation changes. The plan stays Active until its pull request
-  merges. The reviewer owns the next push and review.
+  decisions. Milestone 27 depicts the excluded-only stylesheet state, splits
+  the stylesheet evidence mockups into child pages and shares one Details card
+  between Excluded and Matched styles. Milestones 28 to 31 hold the approved
+  link, warning, test, type and navigation changes. The plan stays Active
+  until its pull request merges. The reviewer owns the next push and review.
 - [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
   pages embed the catalogue index plus only their own entry's component usage
   and serialise that state once. The public `catalogue.json` stays complete;

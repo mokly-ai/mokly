@@ -11,8 +11,9 @@ change rule, which replaces second-review finding 1. Milestones 22 to 25, with
 23A and 23B, apply the user's 2026-10-04 decisions on the third review and on
 baseline compatibility. Milestones 26 to 32 apply the user's 2026-10-05
 decisions on the fourth-review finding and on second-review findings 2 to 11.
-Milestone 26 is implemented and verified as docs only. Its local commit awaits
-the reviewer's push. Milestones 27 to 31 have not started.
+Milestone 26 is implemented, verified and pushed as docs only. Milestone 27 is
+implemented and verified as mockup work. Its local commit awaits the
+reviewer's push. Milestones 28 to 31 have not started.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -2523,22 +2524,124 @@ Verification evidence:
 
 Tags: mockup
 
-- [ ] Add a screen mockup, mobile and desktop, for a screen whose only
+- [x] Add a screen mockup, mobile and desktop, for a screen whose only
       stylesheet change is examined and excluded. The screen is not in
       Changes, opens from All, offers no comparison, and its Details end with
       "No changes to this screen." Make it reachable from the stylesheet
       evidence mockups.
-- [ ] Split the Stylesheet evidence mockup page into linked child pages with
+- [x] Split the Stylesheet evidence mockup page into linked child pages with
       at most five screens each. The parent shows one canonical screen and
       links to its children. Mirror the hierarchy in the source and generated
       directories.
-- [ ] Give the linked Excluded and Matched mockups one shared Details card that
+- [x] Give the linked Excluded and Matched mockups one shared Details card that
       matches the viewer. Remove "Other changed styles keep Welcome in
       Changes." and its test assertion. Add a test that the paired Details are
       identical.
-- [ ] Update the design inventory, link, count and reachability tests and the
+- [x] Update the design inventory, link, count and reachability tests and the
       design docs, including the example README. Build and check the example,
       run the design tests and smoke-test the changed screens at both widths.
+- [x] Guard against the same drift elsewhere: a catalogue-wide test keeps
+      every design folder at five or fewer of its own screens, a test accepts
+      only the viewer's Details sentences in the stylesheet evidence cards,
+      and the replaced-copy list rejects the removed sentence in every design.
+- [x] Add browser checks for the Details-row journey into the new screen and
+      for the shared card's spacing at both widths.
+- [x] Run build, typecheck, lint, changed-file Prettier, the seven docs
+      suites, the exact complete unit command, then the complete
+      `cargo xtask check`. Inspect the diff and deletions against
+      `origin/main`, and make one local milestone commit.
+
+Implementation notes:
+
+- `design-review-style-excluded-only` (“Excluded styles only”) shows the
+  Details screen from All in the Excluded styles branch. Details links only
+  `generated/excluded.css`, whose changed styles apply nowhere on it. It shows
+  Unmodified, has no comparison toolbar or stage heading, and its Details end
+  with “No changes to this screen.” Both All artboards use one row set,
+  `EXCLUDED_STYLE_ROWS`: Welcome keeps its changed mark and opens Excluded
+  styles, and Details opens Excluded styles only. The new screen's Changes
+  filter stays a depiction, because no design shows Details beside the
+  Changes list.
+- The subject is Details, not Welcome, so the state belongs to the same branch
+  as the pair and the Excluded styles artboard links it. A separate
+  zero-change Welcome would have no inbound design link, and its Changes
+  filter would reuse the empty state that Ignored only owns.
+- The Stylesheet evidence page keeps one canonical screen, Document page
+  styles, because its Details show every per-file outcome. Each child page has
+  its own directory under `entries/design/review/impact/stylesheets/`:
+  Matched and excluded (`matched-excluded/`, three screens) and Unresolved and
+  unnamed (`unresolved-unnamed/`, two screens). The parent stays in
+  `review_style_screens.tsx`, as the Comparison outcomes and Document pages
+  parents stay in their modules, so no file that `origin/main` has is deleted.
+  The manifest records the hierarchy in `navPath` and the directories in
+  `sourcePath`; routes still derive from ids.
+- `MatchedAndExcludedStyleCard` replaces `MatchedStyleCard` and
+  `ExcludedStyleCard`. Both pair screens render it, so their Details sections
+  are byte-identical at both widths. `ExcludedStylesheetList` draws the
+  excluded outcome in the viewer's order. `StyleComparison` moved to
+  `parts/style_comparison.tsx`, because both child pages use it. Unresolved,
+  Unnamed and Document page styles keep their markup, copy and links.
+- The design catalogue now has 105 screens: 64 Browse/Changes and 41
+  component designs. 81 are light-only. The example builds 442 files.
+- Shell navigation sorts folders before leaves, so the outer catalogue lists
+  the two child folders before Document page styles. The Appearance and
+  Component explorer groups follow the same documented rule.
+- The M16 path audit row for `review_style_screens.tsx` still records that
+  merge's instruction not to restore the excluded-only state. It is
+  historical evidence and stays unchanged.
+
+Verification:
+
+- Failure-first: before the mockup change, 15 of the 38 tests in the eight
+  new and changed design test files failed. The new screen was missing, the
+  Excluded card still rendered “Other changed styles keep Welcome in
+  Changes.”, the paired cards differed, the counts were 104 and 63, and the
+  gallery had one page. The five-screen folder guard passed before and after
+  the change, as a preservation test. The three new browser tests also failed
+  first: the Details row had no link, and the Excluded card had a fourth
+  element after its files list. Logs: `.context/m27/failing-first.log` and
+  `.context/m27/browser-failing-first.log`.
+- After the change, the same 38 tests pass. `npm run build`,
+  `npm run typecheck` and `npm run lint` pass. `npm run example:build` and
+  `npm run example:check` pass with 442 files. Changed-file Prettier passes.
+  The seven docs suites pass all 28 tests, and every changed protocol stays
+  within its cap. The design suite passes all 203 tests:
+
+  ```sh
+  npx tsx --test tests/design_*.test.ts tests/design_*.test.tsx tests/component_design_*.test.ts
+  ```
+
+- Seven browser specs pass all 40 tests: comparison design, comparison
+  eligibility, portability, stylesheet evidence, page evidence, Scroll
+  together and design links.
+- `npm run dev -- --base HEAD --port 0` served the example for the smoke
+  scripts `.context/m27/smoke.mjs` and `.context/m27/card_ends.mjs`. All six
+  stylesheet evidence screens open at 1440 × 1000 and 390 × 844 with no page
+  error. Excluded styles only shows Unmodified, no comparison toolbar or stage
+  heading, and Details that end with “No changes to this screen.” Excluded and
+  Matched end their Details with the same excluded file. The desktop journey
+  Excluded → Details row → Excluded styles only → Welcome row → Excluded →
+  Changes → Matched → All → Excluded follows every link. The outer catalogue
+  lists both child pages. The 33 screenshots are under
+  `.context/screenshots/m27/`; results are in `.context/m27/smoke-results.json`.
+- The exact complete unit command passes 3,976 of 3,977 tests. Its only
+  failure is the existing PostCSS timing case, at 2,692.9 ms against the
+  unchanged 2,500 ms limit. With no other test or server process running,
+  `npx tsx --test tests/postcss_dependency_review.test.ts` fails twice, at
+  2,680.4 and 2,682.7 ms, then passes all three tests at 1,872.8 ms. The test
+  file is identical to `origin/main`. No test is skipped, cancelled or marked
+  TODO.
+- The complete `cargo xtask check` exits 0 in 75 minutes. It passes the audit
+  with main's accepted Braces exception, formatting, lint, the 729-file length
+  audit, repository ratchets, Rust formatting and clippy, all 15 Rust tests,
+  typecheck, the 442-file example check, all six packed-consumer scenarios,
+  all 3,977 unit tests, all 779 browser tests and all 226 hydration tests.
+  No test fails, is skipped or is cancelled. Logs are under `.context/m27/`.
+- `git diff --diff-filter=D --name-status origin/main` still lists only the
+  four earlier approved deletions, and the v3-to-v4 catalogue fixture rename
+  remains. This milestone deletes no file. Historical plans,
+  `docs/reviews/**`, `CHANGELOG.md`, dependencies and generated output are
+  unchanged. Delivery is one local commit; the reviewer owns the push.
 
 ## Milestone 28: Fix component stylesheet links
 

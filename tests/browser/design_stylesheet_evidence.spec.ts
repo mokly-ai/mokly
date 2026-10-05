@@ -57,6 +57,26 @@ for (const viewport of ["desktop", "mobile"] as const) {
       }
     });
 
+    test("the shared Excluded and Matched card spaces its excluded file with the card spacing", async ({
+      page,
+    }) => {
+      for (const id of [
+        "design-review-style-excluded",
+        "design-review-style-matched",
+      ]) {
+        await page.goto(shellDesignUrl(id, viewport));
+        const spacing = await page
+          .locator(".mbk-comparison-details")
+          .evaluate((card) =>
+            [...card.querySelectorAll(":scope > .mbk-evidence-files ~ *")].map(
+              (element) =>
+                `${element.tagName.toLowerCase()} ${getComputedStyle(element).marginTop}`,
+            ),
+          );
+        expect(spacing, id).toEqual(["p 14px", "p 8px", "ul 8px"]);
+      }
+    });
+
     test("the page designs open the changed document, which has no comparison controls", async ({
       page,
     }) => {

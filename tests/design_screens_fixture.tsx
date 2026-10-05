@@ -41,17 +41,14 @@ export const stylesheetEvidence = [
   ],
 ] as const;
 
+/** The matched outcome that Excluded and Matched share in one Details card. */
+const welcomeMatched = [
+  ["Changed styles that apply to this screen:", [".example-head", "main a"]],
+] as const;
+
 /** Each card names its stylesheet once and nests that file's outcomes. */
 export const stylesheetCardGroups = [
-  [
-    "design-review-style-matched",
-    [
-      [
-        "Changed styles that apply to this screen:",
-        [".example-head", "main a"],
-      ],
-    ],
-  ],
+  ["design-review-style-matched", welcomeMatched],
   [
     "design-review-style-unresolved",
     [
@@ -70,7 +67,7 @@ export const stylesheetCardGroups = [
       ],
     ],
   ],
-  ["design-review-style-excluded", []],
+  ["design-review-style-excluded", welcomeMatched],
 ] as const;
 
 export const comparedStyleScreens = [

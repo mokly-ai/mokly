@@ -1,9 +1,10 @@
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
-import { MiniWelcome } from "./mini_screens.js";
+import { MiniDetails, MiniWelcome } from "./mini_screens.js";
 import { NavDrawer, NavTree, type ChangesStatus, type NavNode } from "./nav.js";
 import { REMOVED_SCREEN_ROWS } from "./nav_data.js";
 import { BrowserFrame, PhoneFrame } from "./stage.js";
 import {
+  ExcludedStylesheetList,
   PAGE_STYLE_COPY,
   SCREEN_STYLE_COPY,
   StylesheetEvidenceList,
@@ -126,6 +127,19 @@ export function WelcomeShot({
   );
 }
 
+/** The depicted Details preview, opened from All without a comparison. */
+export function DetailsShot({ viewport }: { viewport: "desktop" | "mobile" }) {
+  return viewport === "desktop" ? (
+    <BrowserFrame address="example.test/details">
+      <MiniDetails />
+    </BrowserFrame>
+  ) : (
+    <PhoneFrame small>
+      <MiniDetails compact />
+    </PhoneFrame>
+  );
+}
+
 /** Changes keeps its tabs and origin while a comparison is not yet usable. */
 export function AvailabilityNav({
   drawer = false,
@@ -143,26 +157,55 @@ export function IgnoredImpactCard() {
   return <p>Excluded content: example-nav.</p>;
 }
 
-/** The configured stylesheet that the matched, unresolved and unnamed cards name. */
+/** The configured stylesheet that the screen cards name as changed. */
 const STYLES = "generated/styles.css";
 
-/** A changed stylesheet whose changed styles reach this screen. */
-export function MatchedStyleCard() {
+/** A changed stylesheet whose changed styles apply to neither Welcome nor Details. */
+const EXCLUDED_STYLES = "generated/excluded.css";
+
+/**
+ * Welcome's Details in the Excluded (All) and Matched (Changes) designs. The
+ * viewer shows the same Details in either filter: the retained file with the
+ * changed styles that apply here, then the file it examined and excluded.
+ */
+export function MatchedAndExcludedStyleCard() {
   return (
-    <StylesheetEvidenceList
-      lead={SCREEN_STYLE_COPY.files}
-      stylesheets={[
-        {
-          path: STYLES,
-          outcomes: [
-            {
-              lead: SCREEN_STYLE_COPY.matched,
-              selectors: [".example-head", "main a"],
-            },
-          ],
-        },
-      ]}
-    />
+    <>
+      <StylesheetEvidenceList
+        lead={SCREEN_STYLE_COPY.files}
+        stylesheets={[
+          {
+            path: STYLES,
+            outcomes: [
+              {
+                lead: SCREEN_STYLE_COPY.matched,
+                selectors: [".example-head", "main a"],
+              },
+            ],
+          },
+        ]}
+      />
+      <ExcludedStylesheetList
+        lead={SCREEN_STYLE_COPY.excluded}
+        paths={[EXCLUDED_STYLES]}
+      />
+    </>
+  );
+}
+
+/**
+ * Details in the same branch links only the excluded file. Nothing keeps it in
+ * Changes, so its Details end with the line for an unchanged screen.
+ */
+export function ExcludedOnlyStyleCard() {
+  return (
+    <>
+      <ExcludedStylesheetList
+        lead={SCREEN_STYLE_COPY.excluded}
+        paths={[EXCLUDED_STYLES]}
+      />
+      <p>{SCREEN_STYLE_COPY.noChanges}</p>
+    </>
   );
 }
 
@@ -195,24 +238,6 @@ export function UnnamedStyleCard() {
         },
       ]}
     />
-  );
-}
-
-/** A changed stylesheet examined for this screen and set aside. */
-export function ExcludedStyleCard() {
-  return (
-    <>
-      <StylesheetEvidenceList
-        lead={SCREEN_STYLE_COPY.files}
-        stylesheets={[{ path: STYLES, outcomes: [] }]}
-      />
-      <p>{SCREEN_STYLE_COPY.excluded}</p>
-      <p>Examined and excluded:</p>
-      <ul>
-        <li>generated/excluded.css</li>
-      </ul>
-      <p>Other changed styles keep Welcome in Changes.</p>
-    </>
   );
 }
 

@@ -18,7 +18,7 @@ The known-name rule needs no new mockup; existing mockups already show a name.
 Retaining the export's known branch name during navigation is planned for
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
 The excluded-only screen mockup and the shared Excluded/Matched Details card
-are planned for [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
+are implemented in [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact

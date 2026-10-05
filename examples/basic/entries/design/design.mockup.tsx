@@ -14,7 +14,7 @@ import { removedOutcomeScreens } from "./review/outcomes/previous-version/screen
 import { reviewAvailabilityScreens } from "./review_availability_screens.js";
 import { reviewImpactScreens } from "./review_impact_screens.js";
 import { reviewOutcomeScreens } from "./review_outcome_screens.js";
-import { reviewStyleScreens } from "./review_style_screens.js";
+import { reviewStyleDesign } from "./review_style_screens.js";
 
 const designMockups = defineRoot({
   navPath: ["Design", "Mokly design"],
@@ -69,13 +69,7 @@ const designMockups = defineRoot({
           title: "Comparison outcomes",
         }),
         folder({
-          children: [
-            ...reviewImpactScreens,
-            folder({
-              children: reviewStyleScreens,
-              title: "Stylesheet evidence",
-            }),
-          ],
+          children: [...reviewImpactScreens, reviewStyleDesign],
           title: "Impact states",
         }),
         folder({

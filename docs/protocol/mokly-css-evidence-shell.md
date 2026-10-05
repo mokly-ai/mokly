@@ -15,13 +15,10 @@ The known-name rule needs no new mockup; existing mockups already show a name.
 
 Keeping the export's known branch name during navigation is planned for
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
-The excluded-only screen depiction, linked child pages and shared
-Excluded/Matched Details card are planned for
+The excluded-only screen depiction, the linked child pages and the shared
+Excluded/Matched Details card are implemented in
 [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
-The current Excluded screen depicts a changed Welcome with a separate matched
-file; it is not the excluded-only state. Its card and the Matched card still
-need to converge on the same product evidence. Viewer alignment at both widths
-is planned for M31.
+Viewer alignment with these depictions at both widths is planned for M31.
 
 This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the
@@ -53,14 +50,14 @@ catalogue still omits it.
 The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
 [shell design inventory](./mokly-shell-design.md#design-mockups) as
-`design-review-style-matched`, `design-review-style-unresolved`,
-`design-review-style-unnamed`, `design-review-style-excluded`, and
-`design-review-style-page`, and the
+`design-review-style-page`, `design-review-style-matched`,
+`design-review-style-excluded`, `design-review-style-excluded-only`,
+`design-review-style-unresolved` and `design-review-style-unnamed`, and the
 component explorer's Stylesheet evidence gallery, recorded in the
 [component design inventory](./mokly-component-design.md#owning-catalogue) as
 `design-component-style-changed`, `design-component-style-outside`, and
-`design-component-shared-impact`. These screens and the excluded-only state
-follow these presentation rules; pending depictions are named above:
+`design-component-shared-impact`. These screens follow these presentation
+rules:
 
 - The files lead names each retained file once, as one list item. That item
   holds the file's outcome sentences, each followed by its selector list, so
@@ -95,10 +92,11 @@ follow these presentation rules; pending depictions are named above:
 - Linked Excluded and Matched screens show the same changed Welcome in All
   and Changes. They use one shared Details card with the retained file, its
   matched selectors and the excluded file. They add no explanatory sentence
-  that the viewer does not show. The separate excluded-only screen opens from
-  All and remains reachable from the stylesheet evidence designs. Split the
-  gallery into linked child pages of at most five screens, each with mobile
-  and desktop components; the parent shows one canonical screen and child links.
+  that the viewer does not show. `design-review-style-excluded-only` depicts
+  the excluded-only state for Details in the same branch: it opens from All,
+  including from the Excluded screen's Details row. The gallery is split into
+  linked child pages of at most five screens, each with mobile and desktop
+  components; its parent shows the canonical `design-review-style-page`.
 - The evidence container and the approved mockup card both render eight
   pixels above each paragraph or list and fourteen pixels between a list and
   the paragraph that follows it, including the sentences and lists nested in a

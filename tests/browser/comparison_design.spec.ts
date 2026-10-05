@@ -12,6 +12,8 @@ const designIds: Readonly<Record<string, string>> = {
   "review/outcomes/removed": "design-review-removed",
   "review/outcomes/difference": "design-review-difference",
   "review/impact/stylesheets/excluded": "design-review-style-excluded",
+  "review/impact/stylesheets/excluded-only":
+    "design-review-style-excluded-only",
   "review/impact/stylesheets/matched": "design-review-style-matched",
   "review/impact/ignored-only": "design-review-ignored-only",
   "review/outcomes/previous-version/no-captured-view":
@@ -77,6 +79,45 @@ test("Excluded styles shows changed Welcome controls in both artboards", async (
       await expect(
         page.locator(".mbk-nav-row.active .mbk-nav-changed-text"),
       ).toHaveText("Changed");
+  }
+});
+
+test("Excluded styles opens Details as Excluded styles only, which returns through Welcome", async ({
+  page,
+}) => {
+  const row = (id: string) =>
+    page.locator(`a.mbk-nav-row[data-mokly-link="${id}"]`);
+  await page.goto(design("review/impact/stylesheets/excluded.desktop.html"));
+  await row("design-review-style-excluded-only").click();
+  await expect(page).toHaveURL(
+    /screens\/design-review-style-excluded-only\.desktop\.html$/,
+  );
+  for (const viewport of ["desktop", "mobile"] as const) {
+    if (viewport === "mobile")
+      await page.goto(
+        design(`review/impact/stylesheets/excluded-only.${viewport}.html`),
+      );
+    await expect(page.locator(".mbk-screen-head h2")).toHaveText("Details");
+    await expect(page.locator('[data-change-status="unmodified"]')).toHaveText(
+      "Unmodified",
+    );
+    await expect(
+      page.getByRole("group", { name: "Comparison mode" }),
+    ).toHaveCount(0);
+    await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
+    await expect(page.locator(".mbk-comparison-details")).toContainText(
+      /Examined and excluded:\s*generated\/excluded\.css\s*No changes to this screen\.$/,
+    );
+    if (viewport === "desktop") {
+      await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
+        "All",
+      );
+      await expect(page.locator("a.mbk-nav-filter-opt")).toHaveCount(0);
+      await row("design-review-style-excluded").click();
+      await expect(page).toHaveURL(
+        /screens\/design-review-style-excluded\.desktop\.html$/,
+      );
+    }
   }
 });
 

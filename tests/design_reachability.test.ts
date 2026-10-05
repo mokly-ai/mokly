@@ -114,12 +114,14 @@ test("matched and excluded styles share one changed Welcome; empty Changes keeps
       /Welcome/,
     );
   }
-  const evidence = textContent(
-    byClass(excluded.document, "mbk-comparison-details")[0]!,
-  );
-  assert.match(evidence, /generated\/styles\.css/);
-  assert.match(evidence, /generated\/excluded\.css/);
-  assert.doesNotMatch(evidence, /No changes to this screen/);
+  for (const { document } of [excluded, matched]) {
+    const evidence = textContent(
+      byClass(document, "mbk-comparison-details")[0]!,
+    );
+    assert.match(evidence, /generated\/styles\.css/);
+    assert.match(evidence, /generated\/excluded\.css/);
+    assert.doesNotMatch(evidence, /No changes to this screen/);
+  }
   for (const { document } of [ignored, empty])
     assert.equal(
       textContent(byClass(document, "mbk-nav-filter-count")[0]!),

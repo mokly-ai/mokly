@@ -12,6 +12,7 @@ export const SCREEN_STYLE_COPY = {
     "This change can apply anywhere on the screen, so the screen stays in Changes.",
   excluded:
     "This stylesheet changed, but none of the changed styles apply to this screen.",
+  noChanges: "No changes to this screen.",
   stylesChanged: "Styles this screen uses changed",
 } as const;
 
@@ -47,6 +48,30 @@ export interface StylesheetOutcome {
 export interface StylesheetEvidence {
   path: string;
   outcomes: readonly StylesheetOutcome[];
+}
+
+/**
+ * Stylesheets examined and excluded, after any files list, in the order the
+ * viewer's Details show them: the outcome, its label, then each file.
+ */
+export function ExcludedStylesheetList({
+  lead,
+  paths,
+}: {
+  lead: string;
+  paths: readonly string[];
+}) {
+  return (
+    <>
+      <p>{lead}</p>
+      <p>Examined and excluded:</p>
+      <ul>
+        {paths.map((path) => (
+          <li key={path}>{path}</li>
+        ))}
+      </ul>
+    </>
+  );
 }
 
 /**

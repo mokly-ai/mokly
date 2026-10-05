@@ -152,6 +152,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.styleUnresolved]: { all: D.welcome, changes: D.styleUnresolved },
   [D.styleUnnamed]: { all: D.welcome, changes: D.styleUnnamed },
   [D.styleExcluded]: { all: D.styleExcluded, changes: D.styleMatched },
+  [D.styleExcludedOnly]: {},
   [D.stylePage]: { all: D.page },
   [D.preparing]: { all: D.welcome },
   [D.unavailable]: { all: D.welcome },
