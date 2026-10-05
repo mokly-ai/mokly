@@ -75,13 +75,20 @@ test("saved props and schemas are isolated from the author's later mutations", (
   } as const;
   const props = { label: "Before" };
   const component = defineComponent({
-    id: "action",
+    path: "action",
     title: "Action",
     description: "Shared action",
     relatedDocs: [],
     dependencies: [],
     propSchema: input,
-    variants: [{ id: "action-default", title: "Default", props }],
+    variants: [
+      {
+        slug: "default",
+
+        title: "Default",
+        props,
+      },
+    ],
     render: (value) => value.label,
   });
   props.label = "After";

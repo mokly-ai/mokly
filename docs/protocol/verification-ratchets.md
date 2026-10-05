@@ -10,12 +10,18 @@ This contract owns the maintainability ratchets run by the repository suite of
 `cargo xtask check`. The file-length, protocol-cap, and unused-internal-export
 ratchets resolve one comparison commit with
 `git merge-base HEAD origin/main`, then compare the working tree, including
-untracked files, with the tree or policy at that commit. The tip of
-`origin/main` is never their comparison tree. The public-package-export ratchet
+untracked files, with the tree or policy at that commit. Outside an uncommitted
+merge, the tip of `origin/main` is never their comparison tree. The
+public-package-export ratchet
 is the sole exception: it compares with release tags reachable from `HEAD` and
 never uses the merge base. CI must fetch `origin/main`, enough history to
 resolve the merge base, and release tags; failure to obtain required history or
 refs fails the applicable gate.
+While a merge is uncommitted, use `MERGE_HEAD` only if it equals `origin/main`.
+If it is an ancestor of `origin/main`, main moved during the merge and the
+gate fails until the merge is refreshed. For any other merge, including a
+local `main` ahead of `origin/main`, retain the normal merge-base rule. The
+source-file-length audit uses the same Git comparison boundary.
 
 ## JavaScript And TypeScript File Length
 
@@ -44,6 +50,9 @@ line count, allowed count, and predecessor when applicable.
 remain over 250 lines. A capped value equals that file's current physical line
 count; shrinking the file requires lowering the cap. A document at or below 250
 has no cap. A new document must stay at or below 250 and cannot add a cap.
+The changed-file source-length audit and this ratchet share one length policy:
+TypeScript/JavaScript have a 300-line limit; a changed protocol page passes at
+250 lines or at its exact reviewed cap, never above it.
 Both that test and the ratchet scan Markdown recursively beneath
 `docs/protocol/`, excluding the `docs/protocol/fixtures/` tree.
 

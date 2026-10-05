@@ -68,7 +68,7 @@ function expectedRejection(
     case "source-root":
       return {
         code: "review-invalid",
-        message: `${prefix} could not retain Review asset ${route}: not a public static file: overlaps a resolved entry module (entries)`,
+        message: `${prefix} could not retain Review asset ${route}: not a public static file: overlaps an authoring input listed in sourceFiles`,
       };
     case "unsafe-view":
       return {

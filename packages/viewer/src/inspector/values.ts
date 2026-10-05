@@ -1,9 +1,10 @@
-/** Small, shared validators; no DOM or server dependency enters the wire schema. */
 import type {
   Box,
   FrameNavigation,
   NavigationTarget,
 } from "../client/frame_adapter.js";
+import { isEntryPath } from "../navigation/logical.js";
+/** Small, shared validators; no DOM or server dependency enters the wire schema. */
 export const BYTE_LIMIT = 262144;
 const KEY = /^[a-f0-9]{64}$/;
 const RANGE = /^r-\d+$/;
@@ -64,7 +65,8 @@ const target = (value: unknown): value is NavigationTarget =>
     : shape(value, 1) &&
       ["self", "top", "parent", "blank"].includes(value.kind as string));
 export const identity = (value: JsonObject): boolean =>
-  textMatch(value.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 256) &&
+  isEntryPath(value.screenPath) &&
+  value.screenPath.length <= 256 &&
   (!Object.hasOwn(value, "fragment") ||
     textMatch(value.fragment, /^[A-Za-z][A-Za-z0-9_:.-]*$/, 256)) &&
   target(value.target);

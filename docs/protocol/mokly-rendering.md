@@ -1,10 +1,14 @@
 # Mokly Rendering And Generated Output Contract
 
-This implemented contract expands the [package contract](./mokly-package.md)
-for the [authoring API](./mokly-authoring.md) and
+This contract expands the [package contract](./mokly-package.md) for the
+[authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md), including configured
 public exclusions.
+
+Rendering and the generated-output lifecycle use path-derived file names and
+manifest v8. Mokly renders discovered Markdown definitions under the
+[document contract](./mokly-documents.md); source Markdown stays private.
 
 ## Rendering Boundary
 
@@ -59,8 +63,9 @@ material stays conservative. The [component contract](./mokly-components.md)
 and [attribution contract](./mokly-component-changes.md) define validation. Mokly
 serializes Review-ignore markers, adapts opt-in `MockLink asChild` controls,
 and rewrites every complete
-`mock:<id>[#fragment]` value found in `href` or `data-nav-href` after this
-function returns, including when one element has both attributes. The rewrite
+`mock:<path>[#fragment]` value, complete or relative, found in `href` or
+`data-nav-href` after this function returns, including when one element has
+both attributes. The rewrite
 is element-aware and applies to complete page output: logical `href` is valid only on
 native HTML/SVG links, every other owner fails the build, documents with an
 activatable logical link reject `<base href>`, and final compatibility output
@@ -105,25 +110,24 @@ type CompatibilityTransformer = (input: CompatibilityTransformInput) => string;
 
 `availableRoutes` contains the complete pending output plus retained existing
 public static files; generated files scheduled for orphan removal are excluded.
-`logicalRoutes` maps screen/use-case catalogue routes, derived from kind and
-id, to concrete artifacts for the current viewport and color scheme. A dark document targets dark fragments
+`logicalRoutes` maps complete entry paths (`<path>`)
+to concrete artifacts for the current viewport and color scheme. A dark document targets dark fragments
 when the destination supports them and otherwise falls back to the light
 fragment. `outputPath` is repository-relative; no absolute checkout path is
-exposed. Mokly applies the transformer after id links resolve and before
+exposed. Mokly applies the transformer after `mock:` links resolve and before
 Review-marker, link, resource, and ownership validation. It must return a
 complete document, retain the exact generated source owner, remain
 deterministic, and stay consumer-owned. The shared ownership parser accepts LF
 or CRLF after the header and strictly decodes its versioned canonical-base64
 source field, but a missing or changed source identity fails before write. This
-keeps source filenames out of HTML comment syntax; former raw-path headers are
-accepted only when their source is comment-safe so existing files can be
-recognized for migration. A transformer must retain the current encoded form
-and cannot weaken final validation. New catalogues should author portable links
+keeps source filenames out of HTML comment syntax. Earlier headers prove no
+ownership under the [current header rule](./mokly-rendering-generated.md#ownership).
+A transformer cannot weaken final validation. New catalogues should author portable links
 directly and leave this option unset.
 
 Stylesheet rules are ordered, declarative consumer configuration. Their globs
-match the entry's catalogue route (`<prefix>/<id>.html`) before viewport
-fragments are derived, so one exact screen-route rule applies to both viewports
+match the entry's logical route (`<path>/index.html`) before viewport views
+are derived, so one exact entry-route rule applies to both viewports
 and every enabled scheme. Shared
 stylesheets come first, followed by the matching scheme-specific list.
 Generated fragment links are relative to the fragment route and URL-encoded by
@@ -131,104 +135,14 @@ segment.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 
+With [imported CSS](./mokly-imported-styles.md), the configured renderer
+stylesheet follows configured links, then the entry stylesheet. The built-in
+renderer adds none; a custom renderer emits the supplied links. Complete page
+callbacks receive no injected links and must link their generated entry CSS
+explicitly.
+
 ## Generated Contract
 
-`mokly build` writes deterministic screen/component views, complete page
-documents, and `mokly-manifest.json` beneath `mockupsDir`. The
-[artifact path contract](./mokly-artifact-paths.md) owns every exact name.
-Component parents have no views, and dark views exist only for entries whose
-effective schemes include dark.
-
-Screen, use-case, and component routes are durable identifiers and do not imply
-a composed HTML file. A screen's fragments are bare product renders with required head
-content but without Mokly shell chrome. Navigation folders generate no page.
-Light fragments remain canonical and unsuffixed. Turning dark off makes the
-previous dark documents proven generated orphans: `check` reports them and
-`build` removes them through the normal ownership-safe lifecycle.
-
-Manifest source paths are repository-relative; derived routes are relative to
-`mockupsDir` and are not stored. The manifest includes every entry, source
-input, relationship, related doc, and declared dependency needed by Browse and
-Review; every view and document path derives from an entry's kind and id. It is
-stable across operating systems and independent of absolute checkout paths.
-Repository paths are canonical POSIX paths with no empty, dot, parent, drive,
-or backslash segments; generated manifests are self-validated before writing.
-
-Generated documents carry a generic generated-file header. After compatibility
-transformation, every pending document must retain the expected source path in
-that header. The same parser accepts LF and CRLF and lets Build remove only
-files proven to have been generated by the configured catalogue: an HTML
-header's source must belong to the current entries root even when
-that source was just deleted. It never deletes an unknown or foreign-catalogue
-file.
-
-All catalogues emit [manifest v7](./mokly-component-manifest.md), including
-pages, source inventory, component variant entries and per-view
-invocation/ownership records. Current and baseline readers accept only v7;
-earlier output follows [baseline compatibility](./mokly-baseline-compatibility.md).
-Version 7 stores no route, view path, or other value derivable from identity and
-configuration. The common shape is:
-
-```ts
-interface ManifestV7 {
-  schemaVersion: 7;
-  generatedBy: "mokly";
-  entries: readonly ManifestEntry[];
-  sourceFiles: readonly string[];
-}
-
-interface CommonEntry {
-  id: string;
-  kind: "screen" | "use-case" | "page" | "component";
-  title: string;
-  description: string;
-  rationale?: string;
-  navPath: readonly string[];
-  sourcePath: string;
-  relatedDocs: readonly string[];
-  declaredDependencies: readonly string[];
-  tags?: readonly string[];
-}
-
-type ManifestEntry =
-  | ManifestComponent // See the component manifest contract for the parent shape.
-  | ManifestComponentVariant // The variant entry shape lives there too.
-  | (CommonEntry & { kind: "page" })
-  | (CommonEntry & {
-      kind: "screen";
-      address?: string;
-      colorSchemes: readonly ColorScheme[];
-      componentViews: readonly ComponentViewRecord[];
-      variantOf?: string; // Present exactly on variant screens.
-      useCaseIds: readonly string[];
-    })
-  | (CommonEntry & {
-      kind: "use-case";
-      steps: readonly {
-        screenId: string;
-        title?: string;
-        description?: string;
-      }[];
-    });
-```
-
-Entries sort by kind name in UTF-16 order (`component`, `page`, `screen`,
-`use-case`) and then id, with a parent's variants directly after it in authored
-order; source inputs, dependencies, and generated files sort lexically.
-Optional properties are omitted, not emitted as `null`.
-`navPath` is required on every v7 entry; its derivation and meaning follow
-the [navigation path contract](./mokly-nav-paths.md).
-`colorSchemes` is the entry's effective, sorted, light-first scheme set; a
-screen or component variant has dark views exactly when that set includes dark.
-Its `.mobile.dark.html` and `.desktop.dark.html` view routes derive from the
-entry's kind and id, are not stored, and participate in the same safe-route and
-collision validation as light fragments.
-`tags` carries the authored classification list, in authored order and never
-sorted, and is written only for an entry that declares a non-empty one; an
-absent or empty declaration is omitted, so an untagged catalogue serializes
-exactly as it did before the field existed.
-`sourcePath`, related docs, and declared dependencies use repo-relative POSIX
-paths. An entry's complete dependency set is the union of `sourcePath` and
-`declaredDependencies`; readers derive it, and the manifest does not store it.
-Declared dependencies retain the file-or-directory-root matching semantics of
-the authoring API.
+The deterministic generated views, manifest v8 shape, CSS/assets and ownership
+rules are defined in the linked [Generated Rendering Contract](./mokly-rendering-generated.md).
+Exact identity-derived routes follow [Artifact Paths](./mokly-artifact-paths.md).

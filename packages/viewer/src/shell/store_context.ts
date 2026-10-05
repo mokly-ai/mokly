@@ -25,6 +25,11 @@ export interface ShellStore {
   openFrame(href: string, target: string): void;
   persistNavigationWidth(value?: number): void;
   recoverySnapshot(): ShellRecoverySnapshot;
+  /**
+   * Expand and focus one section's folder row without changing the content
+   * area, clearing only the filters that would hide it.
+   */
+  revealFolder(section: NavSectionNode["id"], path: string): void;
   select(selection: Partial<ViewerSelection>): void;
   selectColorScheme(value: "dark" | "light"): void;
   selectViewport(value: "both" | "desktop" | "mobile"): void;

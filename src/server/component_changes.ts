@@ -3,28 +3,35 @@ import path from "node:path";
 import { generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifest,
-  ManifestV7,
-  ReviewResultV4,
+  ManifestV8,
+  ReviewResultV5,
   ScreenResourceEvidence,
 } from "@mokly/viewer/data";
 
 import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
+import { transferGeneratedFile } from "../build/generated_file.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isMoklyError } from "../errors.js";
-import { changedManifestIds } from "../registry/changed_ids.js";
+import { changedManifestPaths } from "../registry/changed_paths.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
+import type { AcceptedGeneration } from "../review/accepted_generation.js";
 import { GitReviewAssetReader } from "../review/assets.js";
 import {
   baselineResourceConfig,
   readBaseManifest,
 } from "../review/base_manifest.js";
+import type { ChangeEvidence } from "../review/change_evidence.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { classifyComponents } from "../review/component_classification.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
 import { derivedHeadOutputs } from "../review/head_assets.js";
+import { importedChangedPaths } from "../review/imported_changes.js";
+import { readMoveMarkdown } from "../review/moves/markdown_sources.js";
+import { prepareMoveClassification } from "../review/moves/prepare.js";
+import type { MovePairing } from "../review/moves/types.js";
 import {
   baselineReaderForCommit,
   comparisonNotPrepared,
@@ -41,8 +48,9 @@ import {
 
 export interface ComponentChangeSnapshot {
   baseline: HistoricalManifest;
-  changedIds?: readonly string[];
-  result?: ReviewResultV4;
+  pairing?: MovePairing;
+  changedEntries?: readonly string[];
+  result?: ReviewResultV5;
   comparison?: ReviewEvidence;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
@@ -55,14 +63,14 @@ export interface ComponentChangeSource {
 /** Background-owned inputs; a prepared commit prevents builds in disposable workers. */
 export interface CatalogueClassificationInputs {
   readonly commit?: string;
-  readonly outputs?: ReadonlyMap<string, string>;
+  readonly generation?: AcceptedGeneration;
 }
 
 /** Read-only catalogue classification boundary used outside the HTTP child. */
 export interface CatalogueChangeClassifier {
   read(
     config: ResolvedConfig,
-    manifest: ManifestV7,
+    manifest: ManifestV8,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
@@ -75,7 +83,7 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
 
   async read(
     config: ResolvedConfig,
-    manifest: ManifestV7,
+    manifest: ManifestV8,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
@@ -105,46 +113,13 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
   }
 }
 
-/** Retain one immutable classification; resolving the baseline never creates Review artifacts. */
-export class ComponentChangeCache {
-  private cached:
-    | {
-        sequence: number;
-        key: string;
-        result: Promise<ComponentChangeSnapshot | undefined>;
-      }
-    | undefined;
-  private epoch = 0;
-  private sequence = 0;
-  constructor(private readonly source: ComponentChangeSource) {}
-  invalidate(): void {
-    this.epoch++;
-    this.cached = undefined;
-  }
-  async read(generation: number): Promise<ComponentChangeSnapshot | undefined> {
-    const epoch = this.epoch;
-    const sequence = ++this.sequence;
-    try {
-      const baseline = await this.source.baseline();
-      const key = `${epoch}:${generation}:${baseline}`;
-      if (this.cached?.key === key) return this.cached.result;
-      const result = this.source.read(baseline).catch(() => undefined);
-      if (epoch === this.epoch && sequence >= (this.cached?.sequence ?? 0))
-        this.cached = { sequence, key, result };
-      return result;
-    } catch {
-      return undefined;
-    }
-  }
-}
-
 /** Production read boundary for a last-good catalogue and its current Git branch point. */
 export class RepositoryComponentChanges implements ComponentChangeSource {
   private readonly runner: ConfiguredGitCommandRunner;
   private git: ReadOnlyReviewRepository;
   constructor(
     private readonly config: ResolvedConfig,
-    private readonly manifest: ManifestV7,
+    private readonly manifest: ManifestV8,
     private readonly base: string,
     private readonly signal?: AbortSignal,
     commands?: GitCommandRunner,
@@ -178,7 +153,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
       this.base,
       this.git,
       commit,
-      this.accepted?.outputs,
+      this.accepted?.generation,
     );
   }
 }
@@ -186,24 +161,63 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
 /** Classify pages and ownership-aware component views against one pinned baseline. */
 export async function readCatalogueChanges(
   config: ResolvedConfig,
-  manifest: ManifestV7,
+  manifest: ManifestV8,
   base: string,
   git: ReadOnlyReviewRepository,
   commit: string,
-  outputs?: ReadonlyMap<string, string>,
+  accepted?: AcceptedGeneration,
+  acceptedEvidence?: ChangeEvidence,
 ): Promise<ComponentChangeSnapshot> {
-  outputs = await derivedHeadOutputs(config, manifest, outputs);
+  const outputs = await derivedHeadOutputs(config, manifest, accepted?.outputs);
   const baseline = await readBaseManifest(git.reader, commit, config);
-  const changedPaths = await reviewChangedPaths(
-    git.evidence,
-    commit,
-    config,
-    config.review.outDir,
-  );
+  const authoredPaths = acceptedEvidence
+    ? undefined
+    : await reviewChangedPaths(
+        git.evidence,
+        commit,
+        config,
+        config.review.outDir,
+      );
   const components =
     hasRegisteredComponents(baseline) || hasRegisteredComponents(manifest);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const reader = new EvidenceAssetReader(config, outputs);
+  const beforeReader = new GitReviewAssetReader(
+    baselineResourceConfig(config, baseline),
+    git.reader,
+    commit,
+    prefix,
+  );
+  const changedPaths =
+    acceptedEvidence ??
+    (await importedChangedPaths(
+      config,
+      beforeReader,
+      reader,
+      authoredPaths!,
+      outputs,
+      accepted?.deliveredStyleSources,
+      accepted?.routes,
+    ));
+  const prepared = await prepareMoveClassification({
+    before: baseline,
+    after: manifest,
+    config,
+    baseCommit: commit,
+    baseRef: base,
+    changedPaths,
+    beforeReader,
+    afterReader: reader,
+    sourceReader: git.sourceReader ?? git.reader,
+    markdown: await readMoveMarkdown(
+      baseline,
+      manifest,
+      config,
+      git.sourceReader ?? git.reader,
+      commit,
+      accepted?.documentMarkdown,
+    ),
+  });
   const content = await classifyChangedContent(
     manifest,
     baseline,
@@ -213,44 +227,44 @@ export async function readCatalogueChanges(
     changedPaths,
     reader,
     components ? "pages" : "all",
+    {
+      pairing: prepared.pairing,
+      beforeReader: prepared.beforeReader,
+      ...(prepared.resources ? { resources: prepared.resources } : {}),
+    },
   );
-  const result = await classifyComponents({
-    before: baseline,
-    after: manifest,
-    config,
-    baseCommit: commit,
-    baseRef: base,
-    changedPaths,
-    beforeReader: new GitReviewAssetReader(
-      baselineResourceConfig(config, baseline),
-      git.reader,
-      commit,
-      prefix,
-    ),
-    afterReader: reader,
-  });
+  const result = await classifyComponents(prepared);
   const pageIds = new Set(
     manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.id] : [],
+      entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
     ),
   );
-  const ids = changedManifestIds(
+  const ids = changedManifestPaths(
     manifest,
     baseline,
     config,
     content.changedPaths,
+    prepared.pairing.moves,
   ).filter((id) => !components || pageIds.has(id));
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry))
       if (!reader.digests[view.path]) await reader.read(view.path);
   return {
     baseline,
+    pairing: prepared.pairing,
     comparison: {
       baseCommit: commit,
       baseRef: base,
       changedPaths,
       headDigests: reader.digests,
-      ...(outputs ? { headOutputs: [...outputs] } : {}),
+      ...(outputs
+        ? {
+            headOutputs: [...outputs].map(
+              ([route, content]) =>
+                [route, transferGeneratedFile(content)] as const,
+            ),
+          }
+        : {}),
     },
     result,
     ...(!components
@@ -260,17 +274,20 @@ export async function readCatalogueChanges(
             baseline,
             config,
             content.changedPaths,
+            prepared.pairing.moves,
           ),
         }
       : {}),
     ...(!components && content.screens.length
       ? { screenEvidence: content.screens }
       : {}),
-    changedIds: [
+    changedEntries: [
       ...new Set([
         ...ids,
         ...(components
-          ? result.changes.map((entry) => (entry.after ?? entry.before)!.id)
+          ? result.changes
+              .filter((entry) => entry.reasons.length > 0)
+              .map((entry) => (entry.after ?? entry.before)!.path)
           : []),
       ]),
     ].sort(),

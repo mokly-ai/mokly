@@ -69,7 +69,7 @@ test("pre-installation cancellation preserves every wrapped Git failure", async 
           baseline,
           "a".repeat(40),
           "mockups",
-        ).read("screens/home.mobile.html"),
+        ).read("home/index.mobile.html"),
     ],
   ] as const;
 

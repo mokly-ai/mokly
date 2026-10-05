@@ -71,4 +71,4 @@ npm run package:smoke
 ```
 
 See the [action usage](../../.github/actions/publish/README.md),
-[export internals](../export/README.md) and [plan index](../../plans/README.md).
+[export internals](../export/README.md) and [implementation plans](../../plans/).

@@ -79,13 +79,17 @@ Every npm-running job installs npm 11.7.0 and runs `npm ci`. CI caches only npm
 downloads. Every npm-running job keys npm's download cache from the checked-out
 `package-lock.json`; none reads a branch-point lockfile. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
-and [cache and security semantics](./ci-verification.md#dependency-cache-and-security)
+and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
 
 Linux and Windows jobs across CI, preview, and release workflows use
 Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
-smallest available tier, which is 6 vCPUs. Every job in `ci.yml` has a 30-minute
-execution timeout.
+smallest available tier, which is 6 vCPUs. The one exception is any job that
+publishes to npm with trusted publishing, today only the release `publish` job:
+it runs on GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm
+creates provenance only on GitHub-hosted runners and rejects a publish from a
+self-hosted runner such as Blacksmith. `tests/workflow_runner_sizes.test.ts`
+enforces both rules. Every job in `ci.yml` has a 30-minute execution timeout.
 
 Action revisions are immutable commit hashes with reviewed version comments,
 runtime versions are explicit, and fork pull requests receive no release secrets

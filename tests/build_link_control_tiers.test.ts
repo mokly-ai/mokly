@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
+import { generatedText } from "../dist/build/generated_file.js";
 import { loadConfig } from "../dist/config/load.js";
 import { MoklyError } from "../dist/errors.js";
 
@@ -33,7 +34,10 @@ test("a main focus target silently contains a styled link", async (t) => {
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   assert.deepEqual(compilation.diagnostics, []);
   assert.match(
-    compilation.outputs.get("screens/home.desktop.html") ?? "",
+    generatedText(
+      compilation.outputs.get("home/index.desktop.html"),
+      "home/index.desktop.html",
+    ) ?? "",
     /<main tabindex="-1"><a /,
   );
 });
@@ -46,12 +50,12 @@ test("a button ancestor produces sorted diagnostics without changing adapted byt
   assert.deepEqual(warned.diagnostics, [
     {
       code: "link-control-ancestor",
-      route: "screens/home.desktop.html",
+      route: "home/index.desktop.html",
       message: warningMessage("button"),
     },
     {
       code: "link-control-ancestor",
-      route: "screens/home.mobile.html",
+      route: "home/index.mobile.html",
       message: warningMessage("button"),
     },
   ]);
@@ -59,10 +63,9 @@ test("a button ancestor produces sorted diagnostics without changing adapted byt
   await fs.writeFile(fixture.entryPath, source(`<div>${control()}</div>`));
   const silent = await compileCatalogue(config);
   assert.deepEqual(silent.diagnostics, []);
-  for (const route of ["screens/home.desktop.html", "screens/home.mobile.html"])
+  for (const route of ["home/index.desktop.html", "home/index.mobile.html"])
     assert.equal(
-      warned.outputs
-        .get(route)
+      generatedText(warned.outputs.get(route), route)
         ?.replace("<button>", "<div>")
         .replace("</button>", "</div>"),
       silent.outputs.get(route),
@@ -100,11 +103,11 @@ test("a focus-only descendant produces one warning per generated fragment", asyn
     [
       {
         code: "link-control-descendant",
-        route: "screens/home.desktop.html",
+        route: "home/index.desktop.html",
       },
       {
         code: "link-control-descendant",
-        route: "screens/home.mobile.html",
+        route: "home/index.mobile.html",
       },
     ],
   );
@@ -129,8 +132,8 @@ test("several controls produce route-then-message sorted diagnostics", async (t)
   assert.deepEqual(
     compilation.diagnostics.map(({ route, message }) => [route, message]),
     ["desktop", "mobile"].flatMap((viewport) => [
-      [`screens/home.${viewport}.html`, warningMessage("button")],
-      [`screens/home.${viewport}.html`, warningMessage("label")],
+      [`home/index.${viewport}.html`, warningMessage("button")],
+      [`home/index.${viewport}.html`, warningMessage("label")],
     ]),
   );
 });

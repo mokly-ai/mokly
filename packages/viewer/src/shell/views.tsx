@@ -3,7 +3,6 @@
 // active-route helpers the document scaffold and progressive navigation use.
 
 import { canonicalJson } from "../components/data.js";
-import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { sha256 } from "../data/sha256.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -15,11 +14,13 @@ import {
   targetHead,
   ViewportSwitch,
 } from "./head.js";
+import { homeSummary } from "./home_summary.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { EmptyStage, TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
+import { workspaceKey } from "./workspace_entry.js";
 
 /** One renderable Mokly shell state. */
 export type ShellView =
@@ -61,7 +62,7 @@ function TargetView(props: {
   const removed =
     target.kind === "entry" &&
     props.catalogue.removedEntries.some(
-      ({ entry }) => entry.id === target.entry.id,
+      ({ entry }) => entry.path === target.entry.path,
     );
   const preview = removed
     ? removedPreviewData(props.catalogue, props.context, target.entry)
@@ -92,7 +93,7 @@ function TargetView(props: {
         }
         crumbs={head.crumbs}
         heading={head.title}
-        id={head.id}
+        path={head.path}
         status={
           removed ? (
             <span className="mbk-entry-status" data-status="Removed">
@@ -108,28 +109,14 @@ function TargetView(props: {
 }
 
 function HomeView(props: { catalogue: Catalogue }) {
-  const entries = props.catalogue.manifest.entries;
-  const screens = entries.filter((entry) => entry.kind === "screen").length;
-  const components = entries.filter(
-    (entry) => entry.kind === "component",
-  ).length;
-  const useCases = entries.filter((entry) => entry.kind === "use-case").length;
-  const pages = entries.filter((entry) => entry.kind === "page").length;
+  const summary = homeSummary(props.catalogue.manifest.entries);
   return (
     <EmptyStage heading="Mokly">
       <p>
         Browse the mockup catalogue: expand folders and choose an item from the
         navigation.
       </p>
-      <p className="mbk-empty-note">
-        {screens} screen{screens === 1 ? "" : "s"}
-        {components
-          ? ` · ${components} component${components === 1 ? "" : "s"}`
-          : ""}{" "}
-        · {useCases} user flow{useCases === 1 ? "" : "s"} · {pages} catalogue
-        page
-        {pages === 1 ? "" : "s"}
-      </p>
+      {summary ? <p className="mbk-empty-note">{summary}</p> : null}
     </EmptyStage>
   );
 }
@@ -158,7 +145,7 @@ function activeIdForView(view: ShellView): string | undefined {
   if (view.kind !== "target") {
     return undefined;
   }
-  return view.target.entry.id;
+  return view.target.entry.path;
 }
 
 /** The browser document title for a shell view. */
@@ -181,7 +168,7 @@ export function ShellMain(props: {
   const mainId = useShellIdentifier("mb-main");
   const activeId = activeIdForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
-    ({ entry }) => entry.id === activeId,
+    ({ entry }) => entry.path === activeId,
   );
   return (
     <main
@@ -207,12 +194,7 @@ export function ShellMain(props: {
             catalogue={props.catalogue}
             context={props.context}
             entry={props.view.target.entry}
-            key={
-              props.view.target.entry.kind === "component" &&
-              isManifestComponentVariant(props.view.target.entry)
-                ? props.view.target.entry.variantOf
-                : props.view.target.entry.id
-            }
+            key={workspaceKey(props.catalogue, props.view.target.entry)}
           />
         ) : (
           <TargetView

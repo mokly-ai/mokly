@@ -11,7 +11,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 1440, height: 1000 }
         : { width: 390, height: 844 },
     );
-    await page.goto(componentDesignUrl("pages/toolbar", viewport));
+    await page.goto(
+      componentDesignUrl("design/components/pages/toolbar", viewport),
+    );
     const inspector = page.getByRole("region", {
       name: "Inspector",
       exact: true,
@@ -48,7 +50,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
 test("the shared inspector opens and closes inside sandboxed Browse frames", async ({
   page,
 }) => {
-  await page.goto("/view/screens/design-component-overview.html");
+  await page.goto("/view/design/components/overview/");
   for (const viewport of ["desktop", "mobile"] as const) {
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     const inspector = frame.getByRole("region", {

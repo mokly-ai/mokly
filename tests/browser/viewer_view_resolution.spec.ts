@@ -56,7 +56,7 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
   page,
 }) => {
   const catalogue = readyCatalogue();
-  const screen = catalogue.screens.find(({ id }) => id === "home");
+  const screen = catalogue.screens.find(({ path }) => path === "home");
   if (!screen) throw new Error("Missing Viewer screen fixture");
   screen.changes = { status: "ready", kind: "changed", included: true };
   screen.colorSchemes = ["light"];
@@ -75,7 +75,7 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
     }));
 
   await openViewer(page, "mixed", catalogue, {
-    screenId: screen.id,
+    screenPath: screen.path,
     viewport: "mobile",
     colorScheme: "dark",
   });
@@ -92,7 +92,7 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
   ).toHaveAttribute("aria-pressed", "true");
   await expect(root.locator('[data-workspace-frame="mobile"]')).toHaveAttribute(
     "src",
-    /screens\/home\.mobile\.html$/,
+    /home\/index\.mobile\.html$/,
   );
 });
 
@@ -100,11 +100,11 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   page,
 }) => {
   const catalogue = readyCatalogue();
-  const component = catalogue.components.find(({ id }) => id === "pane");
+  const component = catalogue.components.find(({ path }) => path === "pane");
   if (!component) throw new Error("Missing Viewer component fixture");
   component.changes = { status: "ready", kind: "changed", included: true };
-  const variant = catalogueComponentVariants(catalogue, component.id).find(
-    ({ id }) => id === "pane-default",
+  const variant = catalogueComponentVariants(catalogue, component.path).find(
+    ({ path }) => path === "pane/default",
   );
   if (!variant) throw new Error("Missing Viewer saved variant fixture");
   variant.comparison = { status: "unavailable" };
@@ -114,7 +114,7 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   }));
 
   await openViewer(page, "unknown", catalogue, {
-    screenId: variant.id,
+    screenPath: variant.path,
     viewport: "desktop",
   });
 

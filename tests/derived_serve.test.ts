@@ -48,11 +48,11 @@ for (const watch of [false, true]) {
           fixture.commit,
         );
         await fs.writeFile(
-          path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+          path.join(fixture.mockupsDir, "home/index.mobile.html"),
           "wrong local bytes",
         );
         const response = await fetch(
-          `${running.url}/__mokly/diffs/review.json?id=home`,
+          `${running.url}/__mokly/diffs/review.json?path=home`,
         );
         assert.equal(response.status, 200, await response.clone().text());
         const result = parseReviewResult(await response.json());
@@ -64,7 +64,7 @@ for (const watch of [false, true]) {
           await (
             await fetch(
               new URL(
-                `snapshots/after/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+                `snapshots/after/${viewRoute("home", view.viewport, view.colorScheme)}`,
                 response.url,
               ),
             )
@@ -75,7 +75,7 @@ for (const watch of [false, true]) {
           await (
             await fetch(
               new URL(
-                `snapshots/before/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+                `snapshots/before/${viewRoute("home", view.viewport, view.colorScheme)}`,
                 response.url,
               ),
             )
@@ -119,17 +119,20 @@ test(
         throw new Error("HTTP must never rebuild a baseline");
       });
       const response = await fetch(
-        `${running.url}/__mokly/diffs/review.json?page=removed-page`,
+        `${running.url}/__mokly/diffs/review.json?page=fixture/deleted-archive/deleted-section/removed-page`,
       );
       assert.equal(response.status, 200, await response.clone().text());
       const preview = parseRemovedPagePreview(await response.json());
       assert.equal(preview.baseCommit, fixture.commit);
-      assert.equal(preview.id, "removed-page");
+      assert.equal(
+        preview.path,
+        "fixture/deleted-archive/deleted-section/removed-page",
+      );
       assert.match(
         await (
           await fetch(
             new URL(
-              `snapshots/before/${entryRoute("page", preview.id)}`,
+              `snapshots/before/${entryRoute(preview.path)}`,
               response.url,
             ),
           )
@@ -214,10 +217,7 @@ test(
         html,
         /baseline-command-failed|process\.exit|\.mokly-cache/,
       );
-      assert.equal(
-        (await fetch(`${running.url}/view/screens/home.html`)).status,
-        200,
-      );
+      assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
     } finally {
       await running.close();
     }

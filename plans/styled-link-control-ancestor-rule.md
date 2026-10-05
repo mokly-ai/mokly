@@ -1,5 +1,10 @@
 # Styled Link Control Ancestor Rule
 
+Status: Active. [PR #124](https://github.com/mokly-ai/mokly/pull/124) remains
+open. Tiered placement and build warnings are delivered. Milestone 5 records
+the terminal-safety and protocol-ownership follow-up. Earlier plan-index
+references are historical delivery notes; this plan closes when its PR merges.
+
 Replace the single fail-the-build rule for styled link controls
 (`MockLink asChild`) with three tiers: structures that break the generated
 document fail, structures that only degrade accessibility warn, and structures

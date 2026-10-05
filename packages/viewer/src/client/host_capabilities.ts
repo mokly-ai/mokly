@@ -1,7 +1,7 @@
 /** Typed behavior boundary between the hydrated shell and first-party live hosts. */
 
 import { readCatalogue } from "../catalogue/reader.js";
-import type { CatalogueReadModel } from "../catalogue/types.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import type {
   ComponentRenderRequest,
   ComponentRenderSuccess,
@@ -9,7 +9,7 @@ import type {
 import type { GeneratedComponentView } from "../components/views.js";
 import type { ShellRecoverySnapshot } from "../shell/store_state.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
-import { readShellBootstrap } from "../standalone/bootstrap.js";
+import { readLiveShellBootstrap } from "../standalone/scoped_bootstrap.js";
 
 import {
   viewerCapabilityRequestMatches,
@@ -22,7 +22,7 @@ import type {
 
 /** Validated same-content catalogue revision delivered by a live host. */
 export interface ViewerEvidenceRevision {
-  catalogue: CatalogueReadModel;
+  catalogue: ShellCatalogueReadModel;
   source: ViewerCapabilitySource;
   workspace?: WorkspaceData;
 }
@@ -97,11 +97,12 @@ export function readViewerEvidenceRevision(
   value: unknown,
   workspace?: WorkspaceData,
 ): ViewerEvidenceRevision | undefined {
-  return readEvidenceRevision(
+  if (!evidenceSourceMatches(installed, request, nextSource, true)) return;
+  return validateEvidenceRevision(
     installed,
     request,
     nextSource,
-    value,
+    readCatalogue(value),
     workspace,
     true,
   );
@@ -115,18 +116,18 @@ export function readViewerRouteEvidenceRevision(
   value: unknown,
   workspace?: WorkspaceData,
 ): ViewerEvidenceRevision | undefined {
-  const bootstrap = readShellBootstrap(value);
-  const entryId =
-    bootstrap.view.kind === "target" ? bootstrap.view.entryId : null;
+  const bootstrap = readLiveShellBootstrap(value);
+  const entryPath =
+    bootstrap.view.kind === "target" ? bootstrap.view.entryPath : null;
   if (
-    entryId !== request.entryId ||
+    entryPath !== request.entryPath ||
     bootstrap.context.base !== nextSource.base ||
     bootstrap.context.contentVersion !== nextSource.contentRevision ||
     bootstrap.context.updateVersion !== nextSource.updateVersion ||
     bootstrap.context.previewGeneration !== nextSource.previewGeneration
   )
     return;
-  return readEvidenceRevision(
+  return validateEvidenceRevision(
     installed,
     request,
     nextSource,
@@ -136,36 +137,28 @@ export function readViewerRouteEvidenceRevision(
   );
 }
 
-function readEvidenceRevision(
+function validateEvidenceRevision(
   installed: ViewerCapabilitySource,
   request: ViewerCapabilityRequest,
   nextSource: ViewerCapabilitySource,
-  value: unknown,
+  catalogue: ShellCatalogueReadModel,
   workspace: WorkspaceData | undefined,
   requireAdvance: boolean,
 ): ViewerEvidenceRevision | undefined {
-  if (
-    !viewerCapabilityRequestMatches(installed, request) ||
-    !viewerCapabilityRequestMatches(request.source, {
-      entryId: request.entryId,
-      source: nextSource,
-    }) ||
-    (requireAdvance && !sourceAdvances(request.source, nextSource))
-  )
+  if (!evidenceSourceMatches(installed, request, nextSource, requireAdvance))
     return;
-  const catalogue = readCatalogue(value);
   if (
     catalogue.identity.id !== nextSource.catalogueId ||
     catalogue.revision.content !== nextSource.contentRevision ||
     catalogue.revision.evidence !== nextSource.evidenceRevision
   )
     return;
-  const expected = workspaceEntry(catalogue, request.entryId);
+  const expected = workspaceEntry(catalogue, request.entryPath);
   if (
     (expected === undefined) !== (workspace === undefined) ||
     (expected &&
       workspace &&
-      (workspace.entry.id !== expected.id ||
+      (workspace.entry.path !== expected.path ||
         workspace.entry.kind !== expected.kind))
   )
     return;
@@ -174,6 +167,22 @@ function readEvidenceRevision(
     source: nextSource,
     ...(workspace ? { workspace } : {}),
   };
+}
+
+function evidenceSourceMatches(
+  installed: ViewerCapabilitySource,
+  request: ViewerCapabilityRequest,
+  nextSource: ViewerCapabilitySource,
+  requireAdvance: boolean,
+): boolean {
+  return (
+    viewerCapabilityRequestMatches(installed, request) &&
+    viewerCapabilityRequestMatches(request.source, {
+      entryPath: request.entryPath,
+      source: nextSource,
+    }) &&
+    (!requireAdvance || sourceAdvances(request.source, nextSource))
+  );
 }
 
 function sourceAdvances(
@@ -216,13 +225,16 @@ function sameRequest(
   right: ViewerCapabilityRequest,
 ): boolean {
   return (
-    left.entryId === right.entryId &&
+    left.entryPath === right.entryPath &&
     viewerCapabilitySourceEquals(left.source, right.source)
   );
 }
 
-function workspaceEntry(catalogue: CatalogueReadModel, entryId: string | null) {
-  if (entryId === null) return;
+function workspaceEntry(
+  catalogue: ShellCatalogueReadModel,
+  entryPath: string | null,
+) {
+  if (entryPath === null) return;
   return [
     ...catalogue.screens,
     ...catalogue.components,
@@ -230,6 +242,6 @@ function workspaceEntry(catalogue: CatalogueReadModel, entryId: string | null) {
   ].find(
     (entry) =>
       (entry.kind === "screen" || entry.kind === "component") &&
-      entry.id === entryId,
+      entry.path === entryPath,
   );
 }

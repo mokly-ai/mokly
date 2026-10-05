@@ -60,7 +60,7 @@ const start = (id: string, options: HostOptions = {}) => {
     events.push({ name, value });
   };
   const state: ViewerSelection = {
-    screenId: "home",
+    screenPath: "home",
     view: "all",
     viewport: "mobile",
     colorScheme: "light",

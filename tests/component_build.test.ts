@@ -15,6 +15,7 @@ import { viewRoute } from "../packages/viewer/dist/data.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentVariants } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 async function compile(
   t: { after: (fn: () => Promise<void>) => void },
@@ -29,21 +30,23 @@ async function compile(
 
 test("component registration emits deterministic variants and actual per-view ownership", async (t) => {
   const result = await compile(t);
-  assert.equal(result.manifest.schemaVersion, 7);
-  const action = result.manifest.entries.find((entry) => entry.id === "action");
+  assert.equal(result.manifest.schemaVersion, 8);
+  const action = result.manifest.entries.find(
+    (entry) => entry.path === "action",
+  );
   assert.ok(action?.kind === "component");
   assert.equal("variants" in action, false);
   assert.equal("componentViews" in action, false);
-  const variants = componentVariants(result.manifest, action.id);
-  assert.equal(variants[0]!.variantOf, action.id);
-  assert.deepEqual(variants[0]!.navPath, action.navPath);
+  const variants = componentVariants(result.manifest, action.path);
+  assert.equal(variants[0]!.variantOf, action.path);
+  assert.equal(variants[0]!.variantOf, action.path);
   assert.equal(
-    viewRoute("component", variants[0]!.id, "mobile", "light"),
-    "components/action-default.mobile.html",
+    viewRoute(variants[0]!.path, "mobile", "light"),
+    "action/default/index.mobile.html",
   );
   assert.equal(
-    viewRoute("component", variants[1]!.id, "desktop", "dark"),
-    "components/action-disabled.desktop.dark.html",
+    viewRoute(variants[1]!.path, "desktop", "dark"),
+    "action/disabled/index.desktop.dark.html",
   );
   assert.deepEqual(
     variants[0]!.componentViews.map((view) => [
@@ -58,7 +61,7 @@ test("component registration emits deterministic variants and actual per-view ow
       ["desktop", "dark", 0],
     ],
   );
-  const screen = result.manifest.entries.find((entry) => entry.id === "home");
+  const screen = result.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   const view = screen.componentViews![0]!;
   assert.equal(view.instances.length, 5);
@@ -77,11 +80,12 @@ test("component registration emits deterministic variants and actual per-view ow
     instanceKey({ kind: "entry" }, slotted.slotKey, "action"),
   );
   assert.deepEqual(decodeProps(slotted.props), { label: "Slot action" });
-  const html = result.outputs.get(
-    viewRoute("screen", screen.id, "mobile", "light"),
+  const html = textOutput(
+    result.outputs,
+    viewRoute(screen.path, "mobile", "light"),
   )!;
   assert.equal(html.includes("<template"), false);
-  assert.match(html, /href="..\/components\/action-default.mobile.html"/);
+  assert.match(html, /href="..\/action\/default\/index.mobile.html"/);
   const ranges = validateComponentRanges(html, view.ranges);
   const hidden = view.instances.find((instance) => instance.id === "hidden")!;
   const hiddenRange = ranges.find(
@@ -101,7 +105,7 @@ test("one captured slot can render twice without duplicating its logical inputs"
     paneRender:
       "(props) => <section>{props.children}<aside>{props.children}</aside></section>",
   });
-  const home = result.manifest.entries.find((entry) => entry.id === "home");
+  const home = result.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(home?.kind === "screen");
   const view = home.componentViews![0]!;
   const slotted = view.instances.filter((instance) => instance.slotKey);
@@ -137,7 +141,7 @@ for (const [name, options, error] of [
   ],
   [
     "unregistered wrapper",
-    { exports: "pane.entries,", extra: "" },
+    { exports: "...pane.entries,", extra: "" },
     /missing-child|not exported/,
   ],
   [
@@ -168,7 +172,7 @@ for (const [name, options, error] of [
 test("v7 retains only explicit dependency declarations", async (t) => {
   const result = await compile(t);
   const action = result.manifest.entries.find(
-    (entry) => entry.id === "action",
+    (entry) => entry.path === "action",
   )!;
   assert.deepEqual(Reflect.get(action, "declaredDependencies"), ["notes.md"]);
   assert.equal("dependencies" in action, false);

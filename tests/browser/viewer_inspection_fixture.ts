@@ -43,7 +43,7 @@ export async function startInspection(
       const catalogue = structuredClone(
         host.props.catalogue,
       ) as CatalogueReadModel;
-      const home = catalogue.screens.find((entry) => entry.id === "home")!;
+      const home = catalogue.screens.find((entry) => entry.path === "home")!;
       const usage = home.views.find(
         (view) => view.viewport === "mobile",
       )!.usage;
@@ -58,7 +58,7 @@ export async function startInspection(
         withheldGeometry: 0,
         calls: [],
         instance: {
-          screenId: "home",
+          screenPath: "home",
           viewport: "mobile",
           colorScheme: "light",
           key: usage.instances.find((instance) => instance.id === "action")!

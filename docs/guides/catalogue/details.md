@@ -7,15 +7,17 @@ order: 4
 
 ## Open the inspector
 
-The details inspector sits beside the screen. It starts collapsed and keeps
+The details inspector sits beside the entry. It starts collapsed and keeps
 that choice across routes and reloads, so the catalogue opens the way you left
 it.
 
 ## What it holds
 
-- The entry's id, title and description.
+- The entry's description; for a component, also the shown entry's path.
+- Moved from, with the previous path when Changes paired a moved entry.
 - The tags it carries, as chips you can search from.
-- The dependencies it declares and the related documents it names.
+- The dependencies it declares, the related documents it names and the source
+  file it comes from.
 - Its components, and for a component page the screens that use it.
 - The changed paths behind its status, including comparison evidence for an
   unchanged screen opened from All.
@@ -46,3 +48,7 @@ declared controls. While serving locally you can edit text, boolean, number and
 preset controls and see the result immediately; Reset restores the current
 variant's declared props. A published catalogue keeps the variants and the
 inspection with the controls read only.
+
+Serve and exported shells can also show changed saved inputs as Before and
+Current props. Embedded viewers show current props only: their public catalogue
+has no branch-point usage data from which to show input changes, moved or not.

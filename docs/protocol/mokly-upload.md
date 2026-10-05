@@ -111,7 +111,7 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 
 - `moklyVersion` is the installed package's exact SemVer, including prerelease
   or build metadata, at most 255 UTF-8 bytes. `schemaVersion` versions this
-  envelope independently of catalogue manifest v7 and review result v4.
+  envelope independently of catalogue manifest v8 and review result v5.
 - `repository` obeys the identity grammar above; it is an assertion to authorize,
   not proof of repository ownership. `host` is at most 253 bytes; owner and name
   are each at most 255 bytes.

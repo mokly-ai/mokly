@@ -28,7 +28,7 @@ test("config imports resolve consumer packages from the config location", async 
   );
   await fs.promises.writeFile(
     path.join(packageDir, "index.js"),
-    'export const paths = { entriesDir: "entries", mockupsDir: "mockups" };\n',
+    'export const paths = { roots: [{ dir: "entries" }], mockupsDir: "mockups" };\n',
   );
   await fs.promises.writeFile(
     fixture.configPath,
@@ -40,6 +40,6 @@ export default defineConfig({ ...paths, repoRoot: "." });
 
   const config = await loadConfig(fixture.root);
 
-  assert.equal(config.entriesDir, fixture.entriesDir);
+  assert.equal(config.roots[0]?.dir, fixture.entriesDir);
   assert.equal(config.mockupsDir, fixture.mockupsDir);
 });

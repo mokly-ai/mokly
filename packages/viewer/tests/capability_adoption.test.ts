@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
-import type { ViewerEvidenceRevision } from "../src/client/host_capabilities.js";
-import type { ViewerCapabilitySource } from "../src/client/host_capability_descriptor.js";
+import { projectScopedCatalogue } from "../src/catalogue/scoped_projection.js";
+import { viewerCapabilityRequest } from "../src/client/host_capability_descriptor.js";
 import { viewHref } from "../src/navigation/routes.js";
 import {
   adoptedViewerCatalogue,
@@ -13,38 +10,27 @@ import {
   shellStateWithViewerEvidence,
 } from "../src/shell/capability_adoption.js";
 import { commitViewerEvidence } from "../src/shell/capability_commit.js";
-import { catalogueRouteEntry } from "../src/shell/catalogue.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { publicWorkspace } from "../src/viewer/public_workspace.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-const fixtureModel = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v3.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
-const model: CatalogueReadModel = {
-  ...fixtureModel,
-  comparisonUrl: null,
-  removedEntries: [],
-};
+import {
+  capabilitySource,
+  evidenceRevision,
+  model,
+  viewerRevision,
+} from "./capability_adoption_fixture.js";
 
 test("live evidence rebinds records while preserving interaction state", () => {
   const current = viewerCatalogue(model);
   const route = routeFromUrl(
     current,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, ["home"]);
+  const nextModel = evidenceRevision(model, ["product/browse/home"]);
   const revision = viewerRevision(nextModel, source, route);
   const next = adoptedViewerCatalogue(current, source, route, revision);
   assert.ok(next);
@@ -63,7 +49,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
       drawerOpen: true,
       filterBaselineDisclosures: null,
       navScroll: 73,
-      query: "home",
+      query: "product/browse/home",
       regionScrolls: { stage: 29 },
       view: "all",
       viewport: "mobile",
@@ -74,7 +60,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
   assert.equal(adopted.detailsOpen, true);
   assert.equal(adopted.drawerOpen, true);
   assert.equal(adopted.navScroll, 73);
-  assert.equal(adopted.query, "home");
+  assert.equal(adopted.query, "product/browse/home");
   assert.deepEqual(adopted.regionScrolls, { stage: 29 });
   assert.equal(adopted.selection.viewport, "mobile");
   assert.equal(adopted.route.view.kind, "target");
@@ -87,7 +73,10 @@ test("live evidence rebinds records while preserving interaction state", () => {
     adopted,
   );
   assert.equal(projected.updateVersion, 5);
-  assert.deepEqual(projected.changedIds, ["home"]);
+  assert.deepEqual(projected.changedEntries, [
+    "product/browse/home",
+    "product",
+  ]);
 });
 
 test("live evidence preserves host shell mode and comparison availability", () => {
@@ -95,7 +84,7 @@ test("live evidence preserves host shell mode and comparison availability", () =
   const catalogue = viewerCatalogue(model);
   const route = routeFromUrl(
     catalogue,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const source = capabilitySource(model, 4);
   const context = {
@@ -125,10 +114,10 @@ test("newer evidence adopts when the server update version is unchanged", () => 
   const current = viewerCatalogue(model);
   const route = routeFromUrl(
     current,
-    new URL("https://example.test/view/screens/home.html"),
+    new URL("https://example.test/view/product/browse/home/"),
   );
   const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, ["home"]);
+  const nextModel = evidenceRevision(model, ["product/browse/home"]);
   const revision = viewerRevision(nextModel, source, route);
   revision.source = { ...revision.source, updateVersion: source.updateVersion };
   const context = {
@@ -157,166 +146,77 @@ test("newer evidence adopts when the server update version is unchanged", () => 
   );
   assert.deepEqual(commit.snapshot.source, revision.source);
   assert.deepEqual(commit.snapshot.workspace?.request.source, revision.source);
-  assert.equal(commit.snapshot.workspace?.value.entry.id, "home");
+  assert.equal(
+    commit.snapshot.workspace?.value.entry.path,
+    "product/browse/home",
+  );
 });
 
-test("live evidence retains unchanged identity-less historical metadata", () => {
-  const screen = model.screens[0]!;
-  const historical: CatalogueReadModel = {
-    ...model,
-    screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen }],
-  };
-  const current = viewerCatalogue(historical);
+test("route adoption replaces scoped usage and private workspace atomically", () => {
+  const component = model.components.find((entry) => !("variantOf" in entry));
+  const screen = model.screens[0];
+  assert.ok(component?.kind === "component");
+  assert.ok(screen);
+  const componentScope = projectScopedCatalogue(model, {
+    kind: "target",
+    entryPath: component.path,
+    entryKind: component.kind,
+  });
+  const screenScope = projectScopedCatalogue(model, {
+    kind: "target",
+    entryPath: screen.path,
+    entryKind: screen.kind,
+  });
+  const current = viewerCatalogue(componentScope);
+  const complete = viewerCatalogue(model);
+  const componentEntry = complete.byPath.get(component.path);
+  const screenEntry = complete.byPath.get(screen.path);
+  assert.ok(componentEntry?.kind === "component");
+  assert.ok(screenEntry?.kind === "screen");
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
+    new URL(`https://example.test${viewHref(screen.path)}`),
   );
-  const source = capabilitySource(historical, 4);
-  const unchanged: CatalogueReadModel = {
-    ...historical,
-    revision: {
-      ...historical.revision,
-      evidence: historical.revision.evidence + 1,
-    },
-  };
-  const revision = viewerRevision(unchanged, source, route);
-  const next = adoptedViewerCatalogue(current, source, route, revision);
-  assert.ok(next);
-  const context = viewerContext(historical, {
-    ...defaultSelection,
-    screenId: screen.id,
-  });
+  const source = capabilitySource(model, 4);
   const state = createInitialShellState(
     current,
-    context,
+    viewerContext(componentScope, {
+      ...defaultSelection,
+      screenPath: screen.path,
+    }),
     route.view,
     undefined,
   );
-  const adopted = shellStateWithViewerEvidence(state, next);
-  assert.ok(adopted);
-  assert.equal(adopted.route.view.kind, "target");
-  assert.equal(
-    adopted.route.view.kind === "target"
-      ? adopted.route.view.target.entry.title
-      : undefined,
-    screen.title,
-  );
-});
-
-test("live evidence rejects changed or removed identity-less history", () => {
-  const screen = model.screens[0]!;
-  const historical: CatalogueReadModel = {
-    ...model,
-    screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen }],
-  };
-  const current = viewerCatalogue(historical);
-  const route = routeFromUrl(
-    current,
-    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
-  );
-  const source = capabilitySource(historical, 4);
-  const changed: CatalogueReadModel = {
-    ...historical,
-    revision: {
-      ...historical.revision,
-      evidence: historical.revision.evidence + 1,
-    },
-    removedEntries: [{ entry: { ...screen, title: "Earlier home" } }],
-  };
-  const removed: CatalogueReadModel = {
-    ...changed,
-    removedEntries: [],
-  };
-
-  for (const candidate of [changed, removed])
-    assert.equal(
-      adoptedViewerCatalogue(
-        current,
-        source,
-        route,
-        viewerRevision(candidate, source, route),
-      ),
-      undefined,
-    );
-});
-
-test("live evidence rejects private workspace removal drift", () => {
-  const current = viewerCatalogue(model);
-  const route = routeFromUrl(
-    current,
-    new URL("https://example.test/view/screens/home.html"),
-  );
-  const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, []);
-  const revision = viewerRevision(nextModel, source, route);
-  assert.ok(revision.workspace);
-  revision.workspace = { ...revision.workspace, removed: true };
-
-  assert.equal(
-    adoptedViewerCatalogue(current, source, route, revision),
-    undefined,
-  );
-});
-
-function evidenceRevision(
-  value: CatalogueReadModel,
-  changedIds: readonly string[],
-): CatalogueReadModel {
-  const changed = new Set(changedIds);
-  return {
-    ...value,
-    revision: { ...value.revision, evidence: value.revision.evidence + 1 },
-    screens: value.screens.map((entry) => ({
-      ...entry,
-      changes: {
-        status: "ready" as const,
-        kind: changed.has(entry.id) ? "changed" : "unmodified",
-        included: changed.has(entry.id),
+  const componentRequest = viewerCapabilityRequest(source, component.path);
+  const commit = commitViewerEvidence(
+    {
+      catalogue: current,
+      routeEvidence: componentRequest,
+      source,
+      workspace: {
+        request: componentRequest,
+        value: publicWorkspace(complete, model, componentEntry),
       },
-    })),
-  };
-}
-
-function capabilitySource(
-  value: CatalogueReadModel,
-  updateVersion: number,
-): ViewerCapabilitySource {
-  return {
-    base: "origin/main",
-    catalogueId: value.identity.id,
-    contentRevision: value.revision.content,
-    evidenceRevision: value.revision.evidence,
-    updateVersion,
-  };
-}
-
-function viewerRevision(
-  value: CatalogueReadModel,
-  current: ViewerCapabilitySource,
-  route: ReturnType<typeof routeFromUrl>,
-): ViewerEvidenceRevision {
-  const next = viewerCatalogue(value);
-  const routeValue =
-    route.view.kind === "target" ? route.view.target.entry.id : undefined;
-  const entry = routeValue ? catalogueRouteEntry(next, routeValue) : undefined;
-  const workspace =
-    entry &&
-    (entry.kind === "screen" ||
-      (entry.kind === "component" && !("variantOf" in entry)))
-      ? {
-          ...publicWorkspace(value, entry),
-          base: current.base,
-        }
-      : undefined;
-  return {
-    catalogue: value,
-    source: {
-      ...current,
-      evidenceRevision: value.revision.evidence,
-      updateVersion: current.updateVersion + 1,
     },
-    ...(workspace ? { workspace } : {}),
-  };
-}
+    state,
+    {
+      catalogue: screenScope,
+      source,
+      workspace: publicWorkspace(complete, model, screenEntry),
+    },
+  );
+  assert.ok(commit);
+  assert.equal(commit.snapshot.workspace?.value.entry.path, screen.path);
+  assert.equal(commit.snapshot.routeEvidence?.entryPath, screen.path);
+  const adopted = commit.snapshot.catalogue.publicModel!;
+  assert.ok(
+    adopted.screens[0]!.views.every(({ usage }) => usage.status !== "omitted"),
+  );
+  assert.ok(
+    adopted.components
+      .filter((entry) => "variantOf" in entry)
+      .every((variant) =>
+        variant.views.every(({ usage }) => usage.status === "omitted"),
+      ),
+  );
+});

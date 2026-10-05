@@ -14,7 +14,7 @@ export function renderPage(
   } catch (error) {
     throw new MoklyError(
       "build-invalid",
-      `page render failed for ${entry.id} (${entry.sourceRelativePath}): ${errorMessage(error)}`,
+      `page render failed for ${entry.path} (${entry.sourceRelativePath}): ${errorMessage(error)}`,
       { cause: error },
     );
   }
@@ -26,7 +26,7 @@ export function renderPage(
     if (rendered instanceof Promise) void rendered.catch(() => undefined);
     throw new MoklyError(
       "build-invalid",
-      `page render must return a complete HTML document synchronously for ${entry.id} (${entry.sourceRelativePath})`,
+      `page render must return a complete HTML document synchronously for ${entry.path} (${entry.sourceRelativePath})`,
     );
   }
   return `${generatedHeader(entry.sourceRelativePath)}${serializeReviewSentinels(rendered)}`;

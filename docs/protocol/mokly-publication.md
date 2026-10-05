@@ -5,7 +5,8 @@
 The repository preview builder publishes current content by default; an option
 adds a pinned comparison. [Optional Published Changes](../../plans/optional-published-changes.md)
 records verification, and [removed previews](./mokly-removed-previews.md) owns
-packaged history. The npm CLI is unchanged.
+packaged history. The npm CLI is unchanged. Shell and preview file names use
+the [path-derived artifact layout](./mokly-artifact-paths.md).
 
 ## Publication Option
 
@@ -87,11 +88,12 @@ The destination must retain its captured identity until installation; an unowned
 replacement is preserved, including one introduced during capture. Retain the
 writer reservation, OS-enforced non-replacing moves, and safe backup recovery
 defined by the [export recovery contract](./mokly-export-recovery.md).
-Only the repository adapter may migrate the prior preview ownership marker.
-Migration retains valid public routes beneath build-directory names such as
-`target` and `node_modules`, while private/source names remain disallowed.
+The repository adapter also rejects prior preview markers as replacement proof
+under the [current ownership rule](./mokly-export-safety.md).
+The [generated inventory rule](./mokly-export-public-files.md#generated-inventory)
+keeps exact generated routes public while private/source names stay denied.
 Its owned reservation namespace remains after cleanup, with no active locks.
-Each entry's shell is written once at its derived `view/<route>`; current-only
+Each entry's shell is written once at `view/<path>/index.html`; current-only
 shell metadata explicitly sets `comparisonUrl: null` and never requests a
 development comparison endpoint.
 
@@ -108,8 +110,9 @@ Copy eligible public file and directory aliases as regular files at their
 logical routes. Every copied target must also stay inside the real `mockupsDir`
 and pass the shared source/internal-metadata policy. Apply generated-artifact
 and staging/destination exclusions to both identities. After copying, validate
-the presence of every current page and light/dark screen fragment named by the
-manifest, independently of the enumerated file list. Validate every exported
+the presence of every current page, document, and light/dark screen view
+derived from the manifest's paths, independently of the enumerated file list.
+Validate every exported
 HTML/CSS resource reference against confined regular files in
 the staged static tree, including transitive references. An unavailable resource,
 including a reference through a skipped cycle or excluded alias, fails before
@@ -120,6 +123,28 @@ must retain valid catalogue routes under names such as `target` and
 inputs, and confined staging/destination paths remain excluded.
 
 ## Consistent Publication Snapshot
+
+Include accepted `mokly-generated/styles/` and `mokly-generated/assets/`
+routes in publication. Committed mode captures checked disk bytes; derived
+mode captures validated compilation bytes, including binary images and fonts,
+without enumerating the reserved output tree on disk. Private CSS and
+PostCSS-scanned inputs never publish. The CSS/PostCSS inventory pass runs for
+freshness before publication; generated links are validated against captured
+bytes, including `%40`-encoded scoped asset links. Only the accepted
+compilation's CSS and asset routes can enter `static/mokly-generated/` in
+derived mode. A missing accepted route fails validation even when a stale disk
+copy could satisfy the link. Committed capture uses checked bytes, not a
+recompiled replacement.
+
+The preview fingerprints authored inputs and the checked manifest. In derived
+mode it compiles once, requires that compilation's manifest to match the
+captured one, and uses its generated HTML, CSS and asset bytes for capture.
+The fingerprint ignores generated fragments and the entire reserved tree in
+derived mode. Before installation, fingerprint again and recompile to reject
+changed accepted output bytes. Both passes use the captured manifest's pinned
+`sourceFiles` for ownership filtering, even if freshness hydrates a mutable
+configuration inventory between them. This does not turn preview into a repair
+command for a stale manifest.
 
 Both options begin input capture before loading the current catalogue. Read
 the manifest bytes once and hash those exact bytes together with its inventoried
@@ -145,86 +170,7 @@ produce mixed navigation, missing pages, or stale shell metadata. Default
 publication performs the same filesystem consistency checks without consulting
 Git.
 
-## Explicitly Include Changes
-
-With `--include-changes`, publish the existing All/Changes navigation and screen
-comparison controls, including a zero changed count. Retain removed-screen
-metadata, previous-version pages, and comparisons. Current and removed entries
-never share an id.
-Render those removed screens with their Removed badge and no comparison
-controls. Publication packages their baseline views and advertises the
-descriptor defined by [removed previews](./mokly-removed-previews.md), which the
-shell resolves into the previous version.
-Include page impact and removed registered-page states from the
-[shared catalogue snapshot](./mokly-catalogue-changes.md), including flat
-Changes rows after deleting their parents and each removed page's packaged
-preview. Pages have no visual comparisons; screen metadata
-remains supported.
-
-Resolve the effective base and HEAD once, then pin their merge-base commit for
-both entry impact and screen comparisons. Capture the current catalogue,
-generated documents, and resources consistently for that build; fail if inputs
-change during capture rather than mix revisions. Record the resolved comparison
-baseline with the exported review metadata. The artifact represents the files
-captured at publication time, including any permitted uncommitted input, rather
-than claiming that HEAD alone identifies those bytes.
-
-Package validated comparison data and isolated resources under the existing
-immutable generation path. Browser diff selection loads the packaged result;
-refresh/retry uses that same result. Later Git commits or changes to the base
-ref do not update a published artifact. Only a new publication replaces it.
-After that generation path is known, repository publication uses the consumer
-exporter's typed removed-preview descriptor builder and adds each descriptor to
-the matching captured static shell. This artifact-only step does not advertise
-page paths from the development server used during capture.
-
-Missing history, an invalid v7 baseline, capture inconsistency, or comparison
-failure aborts publication and preserves previous output. Recognized earlier
-output instead completes with Changes unavailable under the
-[baseline compatibility contract](./mokly-baseline-compatibility.md). Preserve
-source protection, snapshot isolation, resource confinement, and sandbox rules.
-Both options apply the
-[shared source policy](./mokly-source-protection.md), including unimported
-reserved files and complete config/consumer input inventories.
-
-## Workflows And Presentation
-
-The existing `main` preview job uses the default command. The PR preview job
-explicitly passes `--include-changes --base origin/main`, retaining its current
-review purpose and full-history checkout. Deployment aliases, credentials,
-ownership checks, cleanup, and npm publication remain unchanged.
-
-The option is selected at build time. A visitor cannot toggle omitted review
-data on. Local development keeps its existing Git-aware Changes and on-demand
-comparison behavior. Reuse the same shell components, enabling controls from
-the explicit capability rather than an environment label or separate shell.
-Before UI implementation, add mobile and desktop mockups of the current
-catalogue with review omitted and the same catalogue with review included.
-
-## Acceptance
-
-Test default and explicit options through the script and internal boundary,
-including invalid arguments and configured/default/overridden bases. Prove
-default publication performs no Git/review calls and works without history.
-Opt existing comparison tests and PR workflow fixtures in explicitly.
-
-Test archive inputs, removed-entry absence, excluded stale comparison assets,
-review-to-default replacement, rollback, unavailable/advancing bases, input
-changes during capture, and frozen comparisons after publication. Browser tests
-cover controls, persisted preferences, direct links, search/tags, anchors,
-Back/Forward, zero-change review, and no comparison network requests by default
-at mobile and desktop widths. Preserve existing comparison and safety tests.
-Parameterize static-export tests over both options: no live-update entrypoint,
-no EventSource or polling request, and no events endpoint or redirect. Test
-home, current, not-found, and supported removed-entry routes while proving
-normal navigation and opted-in comparison loading still work.
-For both options, reject escaping context, parent, and output symlinks without
-changing the outside target. Prove valid in-repository symlinks and a symlinked
-repository root still support publication.
-Test a rebuild immediately before the first input scan and a manifest mutation
-after its initial read. Verify navigation, captured pages, and opted-in change
-metadata agree, and failed capture preserves the previous output.
-Cover safe file/directory aliases in both options, target-only edits, private
-aliases, unrelated outside/dangling/cyclic links, and an escaping manifest before
-any target read. Remove a copied resource during staging to prove validation
-checks exported bytes and preserves the previous artifact.
+Changes-enabled publication continues in
+[Publication Changes And Acceptance](./mokly-publication-changes.md);
+imported CSS capture follows the
+[imported-styles contract](./mokly-imported-styles.md).

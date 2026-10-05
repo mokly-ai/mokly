@@ -1,0 +1,59 @@
+import type { NavigationState } from "../../parts/navigation_states.js";
+
+import {
+  COMPONENT_PAGES,
+  CONTROLS_PAGES,
+  INSPECTION_PAGES,
+  type ComponentDesignDestination,
+} from "./destinations.js";
+
+/** Action's changed Default variant in every comparison mode: one family. */
+export const actionModes = {
+  current: COMPONENT_PAGES.affected,
+  "side-by-side": COMPONENT_PAGES.comparison,
+  overlay: COMPONENT_PAGES.overlay,
+  difference: COMPONENT_PAGES.difference,
+};
+
+/** Shared shell controls do not inherit unrelated Browse transitions. */
+export const COMPONENT_NAVIGATION_STATES = {
+  [CONTROLS_PAGES["default"]]: {},
+  [CONTROLS_PAGES["edited"]]: {},
+  [CONTROLS_PAGES["unset"]]: {},
+  [CONTROLS_PAGES["variant"]]: {},
+  [CONTROLS_PAGES["reset"]]: {},
+  [CONTROLS_PAGES["pending"]]: {},
+  [CONTROLS_PAGES["invalid"]]: {},
+  [CONTROLS_PAGES["error"]]: {},
+  [CONTROLS_PAGES["comparison"]]: {},
+  [CONTROLS_PAGES["readonly"]]: {},
+  [CONTROLS_PAGES["readonly-variant"]]: {},
+  [COMPONENT_PAGES.closed]: {},
+  [INSPECTION_PAGES.closed]: {},
+  [COMPONENT_PAGES.default]: {},
+  [COMPONENT_PAGES.disabled]: {},
+  [COMPONENT_PAGES.comparison]: { comparison: actionModes },
+  [COMPONENT_PAGES.overlay]: { comparison: actionModes },
+  [COMPONENT_PAGES.difference]: { comparison: actionModes },
+  [COMPONENT_PAGES["overlay-tall"]]: {},
+  [COMPONENT_PAGES.affected]: { comparison: actionModes },
+  [COMPONENT_PAGES.toolbar]: {},
+  [COMPONENT_PAGES.hidden]: {},
+  [COMPONENT_PAGES.unused]: {},
+  [COMPONENT_PAGES.added]: {},
+  [COMPONENT_PAGES.removed]: {},
+  [COMPONENT_PAGES["usage-loading"]]: {},
+  [COMPONENT_PAGES["usage-failed"]]: {},
+  [COMPONENT_PAGES["shared-impact"]]: {},
+  [INSPECTION_PAGES.details]: {},
+  [INSPECTION_PAGES.highlight]: {},
+  [INSPECTION_PAGES.nested]: {},
+  [INSPECTION_PAGES["direct-change"]]: {},
+  [INSPECTION_PAGES.consumer]: {},
+  [INSPECTION_PAGES["toolbar-selection"]]: {},
+  [INSPECTION_PAGES["help-selection"]]: {},
+  [INSPECTION_PAGES.empty]: {},
+  [INSPECTION_PAGES.unavailable]: {},
+  [INSPECTION_PAGES["inspection-loading"]]: {},
+  [INSPECTION_PAGES["removed-consumer"]]: {},
+} satisfies Record<ComponentDesignDestination, NavigationState>;

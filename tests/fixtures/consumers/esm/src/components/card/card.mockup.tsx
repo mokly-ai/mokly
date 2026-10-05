@@ -6,13 +6,14 @@ import { Card } from "./card.js";
 
 export const mockups = [
   defineScreen({
+    slug: "packed-card",
     dependencies: ["notes.md"],
     relatedDocs: ["notes.md"],
     description: "A screen discovered beside its component.",
     desktop: <Card>Co-located desktop</Card>,
-    id: "packed-card",
+    path: "packed-card",
     mobile: <Card>Co-located mobile</Card>,
     title: "Packed card",
-    useCaseIds: [],
+    useCasePaths: [],
   }),
 ];

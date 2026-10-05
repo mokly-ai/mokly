@@ -4,8 +4,7 @@ import path from "node:path";
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
-import { discoverEntryModules } from "./entry_discovery.js";
-import { resolveEntryGlobs } from "./entry_globs.js";
+import { discoverEntries } from "./entry_discovery.js";
 import {
   baselineBuildCommands,
   generatedOutputMode,
@@ -18,7 +17,13 @@ import {
   validateSourceRoots,
 } from "./path_validation.js";
 import { resolveInside, validateRelativeRoute } from "./paths.js";
+import { validatePostcssPath } from "./postcss.js";
 import { resolvePublicExclude } from "./public_exclusions.js";
+import {
+  isReservedConfiguredPath,
+  validateStylesheetAliases,
+} from "./reserved_paths.js";
+import { resolveRoots } from "./roots.js";
 import {
   requireString,
   validateColorSchemes,
@@ -40,11 +45,29 @@ export function resolveConfig(
       `${configPath} must export an object`,
     );
   }
-  if (Object.hasOwn(value, "legacy"))
-    throw new MoklyError(
-      "config-invalid",
-      "legacy configuration was removed; register whole documents with definePage",
-    );
+  for (const key of Object.keys(value)) {
+    if (
+      ![
+        "roots",
+        "mockupsDir",
+        "repoRoot",
+        "colorSchemes",
+        "generatedOutput",
+        "publicExclude",
+        "renderer",
+        "postcss",
+        "moduleResolution",
+        "stylesheets",
+        "review",
+        "watch",
+        "compatibility",
+      ].includes(key)
+    )
+      throw new MoklyError(
+        "config-invalid",
+        `unknown configuration field: ${key}`,
+      );
+  }
   const input = value as unknown as MoklyConfig;
   const publicExclude = resolvePublicExclude(input.publicExclude);
   const generatedOutput = generatedOutputMode(input.generatedOutput);
@@ -59,15 +82,13 @@ export function resolveConfig(
     repoRoot,
     configPath,
   );
-  const entryGlobs = resolveEntryGlobs(input, repoRoot, configDir);
-  const entriesDir = entryGlobs.entriesDir;
   const mockupsDir = resolveInside(
     repoRoot,
     configDir,
     input.mockupsDir,
     "mockupsDir",
   );
-  if (entriesDir !== undefined) requireDirectory(entriesDir, "entriesDir");
+  const roots = resolveRoots(input.roots, repoRoot, configDir, mockupsDir);
   if (generatedOutput === "committed" || fs.existsSync(mockupsDir))
     requireDirectory(mockupsDir, "mockupsDir");
   if (isBaselineCachePath(mockupsDir, repoRoot))
@@ -86,6 +107,7 @@ export function resolveConfig(
     input.renderer,
     "renderer",
   );
+  const postcss = validatePostcssPath(input.postcss, repoRoot, configDir);
   const compatibilityTransformer = optionalModule(
     repoRoot,
     configDir,
@@ -97,9 +119,11 @@ export function resolveConfig(
     repoRoot,
     configDir,
   );
-  validateSourceRoots(repoRoot, entriesDir, mockupsDir);
+  for (const [index, root] of roots.entries())
+    validateSourceRoots(repoRoot, root.dir, mockupsDir, `roots[${index}].dir`);
   const colorSchemes = validateColorSchemes(input.colorSchemes);
   const stylesheets = validateStylesheets(input.stylesheets ?? []);
+  validateStylesheetAliases(stylesheets, mockupsDir);
   const watchRules = validateWatchRules(input.watch?.rules ?? []);
   if (input.review?.base !== undefined)
     requireString(input.review.base, "review.base");
@@ -109,8 +133,13 @@ export function resolveConfig(
     input.review?.outDir ?? ".context/mokly-review",
     "review.outDir",
   );
+  if (isReservedConfiguredPath(reviewOut, mockupsDir))
+    throw new MoklyError(
+      "config-invalid",
+      "review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory",
+    );
   validateReviewOut(reviewOut, {
-    entryRoots: entriesDir ? [entriesDir] : [],
+    entryRoots: [],
     mockupsDir,
     repoRoot,
   });
@@ -124,11 +153,11 @@ export function resolveConfig(
         : {}),
     },
     configPath,
-    entryGlobs: entryGlobs.globs,
-    ...(entriesDir ? { entriesDir } : {}),
+    roots,
     mockupsDir,
     moduleResolution,
     ...(renderer ? { renderer } : {}),
+    ...(postcss ? { postcss } : {}),
     repoRoot,
     review: {
       ...(baselineBuild ? { baselineBuild } : {}),
@@ -145,10 +174,7 @@ export function resolveConfig(
       rules: watchRules,
     },
   };
-  const discovered = {
-    ...resolved,
-    entryModules: discoverEntryModules(resolved),
-  };
+  const discovered = { ...resolved, ...discoverEntries(resolved) };
   validateReviewOut(reviewOut, discovered);
   return discovered;
 }

@@ -12,28 +12,39 @@ import {
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   for (const scheme of ["light", "dark"] as const) {
     test(`${viewport}/${scheme}: real example buttons are styled portable links with the promised anchors`, async () => {
       const { manifest, outputs } = await designCatalogue;
       for (const [source, target, label, fragment] of [
-        ["example-welcome", "example-details", "View details", "details"],
-        ["example-details", "example-welcome", "Return to welcome", undefined],
+        [
+          "example/screens/welcome",
+          "example/screens/details",
+          "View details",
+          "details",
+        ],
+        [
+          "example/screens/details",
+          "example/screens/welcome",
+          "Return to welcome",
+          undefined,
+        ],
       ] as const) {
-        const entry = manifest.entries.find((entry) => entry.id === source);
+        const entry = manifest.entries.find((entry) => entry.path === source);
         const destination = manifest.entries.find(
-          (entry) => entry.id === target,
+          (entry) => entry.path === target,
         );
         assert.ok(entry?.kind === "screen" && destination?.kind === "screen");
         const route = entry.colorSchemes.includes(scheme)
-          ? viewRoute("screen", entry.id, viewport, scheme)
+          ? viewRoute(entry.path, viewport, scheme)
           : undefined;
         const targetRoute = destination.colorSchemes.includes(scheme)
-          ? viewRoute("screen", destination.id, viewport, scheme)
+          ? viewRoute(destination.path, viewport, scheme)
           : undefined;
         assert.ok(route && targetRoute);
-        const document = parse(outputs.get(route) ?? "");
+        const document = parse(textOutput(outputs, route) ?? "");
         const link = elements(
           document,
           (node) =>
@@ -58,11 +69,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
         );
         assert.equal(
           elements(document, (node) => node.tagName === "a").length,
-          source === "example-welcome" ? 6 : 4,
+          source === "example/screens/welcome" ? 6 : 4,
         );
         for (const [title, id] of [
-          ["Browse details", "example-details#details"],
-          ["Browse welcome", "example-welcome"],
+          ["Browse details", "example/screens/details#details"],
+          ["Browse welcome", "example/screens/welcome"],
         ]) {
           const nested = elements(
             document,
@@ -75,7 +86,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         if (fragment)
           assert.ok(
             elements(
-              parse(outputs.get(targetRoute) ?? ""),
+              parse(textOutput(outputs, targetRoute) ?? ""),
               (node) => attribute(node, "id") === fragment,
             ).length,
           );

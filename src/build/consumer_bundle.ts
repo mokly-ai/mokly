@@ -3,12 +3,15 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { Script } from "node:vm";
 
+import type { ResolvedDocument } from "../documents/load.js";
+
 import type { LoadedGraph } from "./load_graph.js";
 
 export interface ConsumerBundle {
   code: string;
   filename: string;
   entrySources: readonly string[];
+  documents?: readonly ResolvedDocument[];
 }
 const bundles = new WeakMap<LoadedGraph, ConsumerBundle>();
 
@@ -25,7 +28,13 @@ export function consumerBundle(graph: LoadedGraph): ConsumerBundle {
 }
 export function evaluateBundle(
   bundle: ConsumerBundle,
-): Omit<LoadedGraph, "entrySources"> {
+): Pick<
+  LoadedGraph,
+  | "definitions"
+  | "renderer"
+  | "renderWithComponents"
+  | "compatibilityTransformer"
+> {
   const module = { exports: {} };
   const run = new Script(
     `(function(exports, require, module, __filename, __dirname) {\n${bundle.code}\n})`,
@@ -44,5 +53,11 @@ export function evaluateBundle(
     bundle.filename,
     path.dirname(bundle.filename),
   );
-  return module.exports as Omit<LoadedGraph, "entrySources">;
+  return module.exports as Pick<
+    LoadedGraph,
+    | "definitions"
+    | "renderer"
+    | "renderWithComponents"
+    | "compatibilityTransformer"
+  >;
 }

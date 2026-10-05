@@ -85,7 +85,7 @@ test("browser checks support an isolated workspace port", async () => {
       "utf8",
     ),
     fs.promises.readFile(
-      path.join(repositoryRoot, "tests", "browser", "browse.spec.ts"),
+      path.join(repositoryRoot, "tests", "browser", "browse_layout.spec.ts"),
       "utf8",
     ),
   ]);

@@ -6,6 +6,7 @@ import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { ComponentReview } from "../review/component_types.js";
 
 import type { Catalogue } from "./catalogue.js";
+import { branchPoints } from "./catalogue_branch_point.js";
 import type { ShellContext } from "./context.js";
 import { shownComparisonEligible, type EntryStatus } from "./view_status.js";
 
@@ -23,7 +24,14 @@ export interface WorkspaceVariantSet {
   rows: readonly WorkspaceVariant[];
 }
 
-/** Adapt sibling variant entries to one routed component workspace. */
+/**
+ * Adapt sibling variant entries to one routed component workspace. Each
+ * current variant pairs with its own baseline counterpart, even when it moved
+ * between parents, and removed variants join the parent the branch-point
+ * lookup resolves for them. `materialChanges` holds the entries that changed
+ * beyond a move, so a pure move stays Unmodified and a metadata-only edit
+ * reads Changed.
+ */
 export function workspaceVariants(
   catalogue: Catalogue,
   entry: ManifestComponent,
@@ -32,36 +40,40 @@ export function workspaceVariants(
   known: boolean,
   parentRemoved: boolean,
   parentStatus: EntryStatus | undefined,
-  changedIds?: readonly string[],
+  materialChanges?: readonly string[],
 ): WorkspaceVariantSet {
-  const current = (catalogue.hierarchy.variantsById.get(entry.id) ?? []).filter(
+  const lookup = branchPoints(catalogue);
+  const current = (
+    catalogue.hierarchy.variantsByPath.get(entry.path) ?? []
+  ).filter(
     (candidate): candidate is ManifestComponentVariant =>
       candidate.kind === "component" && isManifestComponentVariant(candidate),
   );
-  const baseline: ManifestComponentVariant[] = [
-    ...(snapshot?.baseline.entries.filter(
-      (candidate): candidate is ManifestComponentVariant =>
-        candidate.kind === "component" &&
-        isManifestComponentVariant(candidate) &&
-        candidate.variantOf === entry.id,
-    ) ?? []),
-  ];
-  const removed = catalogue.removedEntries.flatMap(
-    ({ entry: candidate, snapshotId }) =>
-      candidate.kind === "component" &&
-      isManifestComponentVariant(candidate) &&
-      candidate.variantOf === entry.id
+  const baseline = current.flatMap((variant) => {
+    const counterpart =
+      snapshot && lookup.baselineEntry(variant, snapshot.baseline.entries);
+    return counterpart?.kind === "component" &&
+      isManifestComponentVariant(counterpart)
+      ? [counterpart]
+      : [];
+  });
+  const removed = lookup
+    .removedVariants(entry)
+    .flatMap(({ entry: candidate, snapshotId }) =>
+      candidate.kind === "component" && isManifestComponentVariant(candidate)
         ? [{ value: candidate, snapshotId }]
         : [],
-  );
+    );
   const values = [
     ...current.map((value) => ({ value, snapshotId: undefined })),
     ...removed,
   ];
   const rows = values.map(({ value, snapshotId }): WorkspaceVariant => {
-    const review = comparison?.variants.find((item) => item.id === value.id);
+    const review = comparison?.variants.find(
+      (item) => item.path === value.path,
+    );
     const isRemoved =
-      parentRemoved || !current.some((item) => item.id === value.id);
+      parentRemoved || !current.some((item) => item.path === value.path);
     const status = !known
       ? undefined
       : isRemoved
@@ -69,7 +81,7 @@ export function workspaceVariants(
         : review?.state === "added"
           ? "Added"
           : review?.state === "changed" ||
-              changedIds?.includes(value.id) ||
+              materialChanges?.includes(value.path) ||
               (review?.before &&
                 review.after &&
                 JSON.stringify(review.before.props) !==
@@ -102,12 +114,12 @@ export function standaloneWorkspaceVariant(
   const baseline = snapshot?.baseline.entries.flatMap((candidate) =>
     candidate.kind === "component" &&
     isManifestComponentVariant(candidate) &&
-    candidate.id === entry.id
+    candidate.path === entry.path
       ? [candidate]
       : [],
   ) ?? [entry];
   const review = comparison?.variants.find(
-    (candidate) => candidate.id === entry.id,
+    (candidate) => candidate.path === entry.path,
   );
   const status = !known
     ? undefined

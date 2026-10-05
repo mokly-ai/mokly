@@ -4,30 +4,40 @@ import {
   compileCatalogue,
   type Compilation,
 } from "../../dist/build/compile.js";
+import {
+  generatedBytes,
+  generatedText,
+  type GeneratedFile,
+} from "../../dist/build/generated_file.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 
 import { componentEntrySource } from "./component_fixture.js";
 import { createFixture, removeFixture } from "./fixture.js";
+import { textOutput } from "./generated_text.js";
+import { assertMoveDelivery, commitMoveBaseline } from "./move_delivery.js";
 
 export async function componentReviewFixture(
   t: { after: (fn: () => Promise<void>) => void },
   change: (source: string) => string,
   source = componentEntrySource(),
   extraConfig = 'colorSchemes: ["light", "dark"],',
+  verifyMoveDelivery = false,
 ) {
   const fixture = await createFixture(source, { extraConfig });
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const before = await compileCatalogue(config);
+  if (verifyMoveDelivery) await commitMoveBaseline(config, before);
   await fs.writeFile(fixture.entryPath, change(source));
   const after = await compileCatalogue(config);
   await writeCompilation(after, config);
+  if (verifyMoveDelivery) await assertMoveDelivery(config, after);
   const changedPaths = [
     "entries/fixture.mockup.tsx",
     ...[...after.outputs]
-      .filter(([route, html]) => before.outputs.get(route) !== html)
+      .filter(([route, html]) => textOutput(before.outputs, route) !== html)
       .map(([route]) => `mockups/${route}`),
   ];
   return {
@@ -43,10 +53,14 @@ export async function componentReviewFixture(
 export function componentGit(
   compilation: Compilation,
   changedPaths: readonly string[] = [],
+  inputs: ReadonlyMap<string, GeneratedFile> = new Map(),
 ): ReadOnlyReviewRepository {
-  const files = new Map(
-    [...compilation.outputs].map(([route, html]) => [`mockups/${route}`, html]),
-  );
+  const files = new Map([
+    ...[...compilation.outputs].map(
+      ([route, html]) => [`mockups/${route}`, html] as const,
+    ),
+    ...inputs,
+  ]);
   const read = (route: string) => {
     const result = files.get(route);
     if (result === undefined) throw new Error(`Missing fixture: ${route}`);
@@ -61,8 +75,8 @@ export function componentGit(
       fileExists: async (_commit, route) => files.has(route),
       fileKind: async (_commit, route) =>
         files.has(route) ? "regular" : "missing",
-      readFile: async (_commit, route) => read(route),
-      readFileBytes: async (_commit, route) => Buffer.from(read(route)),
+      readFile: async (_commit, route) => generatedText(read(route), route)!,
+      readFileBytes: async (_commit, route) => generatedBytes(read(route)),
     },
   };
 }

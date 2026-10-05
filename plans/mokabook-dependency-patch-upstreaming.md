@@ -1,5 +1,9 @@
 # Mokabook Dependency Patch Upstreaming
 
+Status: Completed. [PR #74](https://github.com/mokly-ai/mokly/pull/74)
+merged on 2026-09-16. Two Milestone 10 review findings, the untested worker
+error and exit seams and the README note, await the user's decision.
+
 ## Summary
 
 The juno repository carries `ts/patches/mokabook+0.8.0.patch` against the

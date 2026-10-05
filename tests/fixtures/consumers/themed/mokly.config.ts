@@ -1,7 +1,7 @@
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
-  entriesDir: "catalogue/entries",
+  roots: [{ dir: "catalogue/entries" }],
   mockupsDir: "docs/mockups",
   moduleResolution: {
     aliases: { "react-native": "react-native-web" },
@@ -28,8 +28,8 @@ export default defineConfig({
     sharedImpact: ["packages/firna-ui/**", "shared/**"],
   },
   stylesheets: [
-    { match: "screens/themed-dashboard.html", stylesheets: ["app.css"] },
-    { match: "screens/themed-campaign.html", stylesheets: ["marketing.css"] },
+    { match: "themed-dashboard/index.html", stylesheets: ["app.css"] },
+    { match: "themed-campaign/index.html", stylesheets: ["marketing.css"] },
   ],
   watch: {
     debounceMs: 20,

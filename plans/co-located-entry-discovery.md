@@ -1,8 +1,11 @@
 # Co-Located Entry Discovery
 
+Status: Completed. [PR #101](https://github.com/mokly-ai/mokly/pull/101)
+merged on 2026-09-22.
+
 ## Status And Outcome
 
-Status: completed for PR #101's delivered scope on 2026-09-22, at the user's
+Completed for PR #101's delivered scope on 2026-09-22, at the user's
 request. Unfinished review and post-merge work is owned by
 [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
 for a separate PR; none of it is implemented by this close-out. The historical

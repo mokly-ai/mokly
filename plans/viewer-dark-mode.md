@@ -1,14 +1,13 @@
 # Viewer Dark Mode
 
-Status: implementation complete; the documentation and mockup milestones
+Status: Completed. [PR #96](https://github.com/mokly-ai/mokly/pull/96)
+merged on 2026-09-23. The documentation and mockup milestones
 through 2M and delivery Milestones 3 through 14 are complete. The built-in
 preview toggle switches every dual-scheme mockup, the standalone catalogue has
 one Auto/Light/Dark Appearance control, embedded viewers accept a host-owned
 theme, and the runtime, palette, startup asset and verification boundaries are
 enforced. The user asked on 2026-09-20 for UI milestones to go to Opus 5 and
-non-UI milestones to Codex, each checked by the parent session. This plan stays
-under Active until the implementation PR merges; that merge is the plan's
-completion boundary.
+non-UI milestones to Codex, each checked by the parent session.
 
 Give `@mokly/viewer`, local Serve and static exports a complete Auto/Light/Dark
 appearance. The [appearance contract](../docs/protocol/mokly-viewer-appearance.md)

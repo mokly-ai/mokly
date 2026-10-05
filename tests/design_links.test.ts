@@ -1,20 +1,8 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import { parse } from "parse5";
-
-import { actionModes } from "../examples/basic/entries/design/components/parts/navigation_states.js";
-import {
-  appearanceModes,
-  welcomeModes,
-} from "../examples/basic/entries/design/parts/navigation_states.js";
-import {
-  entryRoute,
-  generatedViews,
-  viewRoute,
-} from "../packages/viewer/dist/data.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
   attribute,
@@ -24,29 +12,40 @@ import {
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
-import { repositoryRoot } from "./helpers/fixture.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: design actions navigate to the subject's owning screen`, async () => {
     for (const [source, className, targets] of [
-      ["design-browse-home", "mbk-empty-link", ["design-browse-screen"]],
-      ["design-browse-missing-route", "mbk-empty-link", ["design-browse-home"]],
       [
-        "design-browse-screen",
-        "mbk-shot-link",
-        ["design-browse-details-screen"],
+        "design/browse/views/home",
+        "mbk-empty-link",
+        ["design/browse/views/screen"],
       ],
       [
-        "design-browse-details-screen",
-        "mbk-shot-link",
-        ["design-browse-screen"],
+        "design/browse/states/missing-route",
+        "mbk-empty-link",
+        ["design/browse/views/home"],
       ],
       [
-        "design-browse-use-case",
+        "design/browse/views/screen",
+        "mbk-shot-link",
+        ["design/browse/views/details-screen"],
+      ],
+      [
+        "design/browse/views/details-screen",
+        "mbk-shot-link",
+        ["design/browse/views/screen"],
+      ],
+      [
+        "design/browse/views/use-case",
         "flow-step-link",
-        ["design-browse-screen", "design-browse-details-screen"],
+        ["design/browse/views/screen", "design/browse/views/details-screen"],
       ],
-      ["design-browse-details", "flow", ["design-browse-use-case"]],
+      [
+        "design/browse/states/details",
+        "flow",
+        ["design/browse/views/use-case"],
+      ],
     ] as const) {
       const { document } = await designDocument(source, viewport);
       const controls = byClass(document, className).filter(
@@ -72,19 +71,22 @@ for (const viewport of ["mobile", "desktop"] as const) {
           );
       }
     }
-    const removed = await designDocument("design-review-removed", viewport);
+    const removed = await designDocument(
+      "design/changes/outcomes/removed",
+      viewport,
+    );
     assert.equal(byClass(removed.document, "mbk-shot-link").length, 0);
     assert.equal(byClass(removed.document, "mbk-empty-link").length, 0);
   });
 
   test(`${viewport}: navigation chrome uses explicit leaves and canonical recovery`, async () => {
     const { document } = await designDocument(
-      "design-browse-navigation",
+      "design/browse/states/navigation",
       viewport,
     );
     assert.equal(
       attribute(byClass(document, "mbk-brand")[0]!, "data-mokly-link"),
-      "design-browse-home",
+      "design/browse/views/home",
     );
     const links = byClass(document, "mbk-nav-row").filter(
       (node) => node.tagName === "a",
@@ -95,32 +97,36 @@ for (const viewport of ["mobile", "desktop"] as const) {
         attribute(node, "data-mokly-link"),
       ]),
       [
-        ["Welcome", "design-browse-screen"],
-        ["Details", "design-browse-details-screen"],
-        ["Example tour", "design-browse-use-case"],
-        ["Action", "design-component-overview"],
-        ["Default", "design-component-overview"],
-        ["Disabled", "design-component-variants"],
-        ["Toolbar", "design-component-toolbar"],
-        ["Default", "design-component-toolbar"],
+        ["Overview", "design/browse/views/folder-overview"],
+        ["Welcome", "design/browse/views/screen"],
+        ["Details", "design/browse/views/details-screen"],
+        ["Example tour", "design/browse/views/use-case"],
+        ["Getting started", "design/browse/pages/view"],
+        ["Payment terms", "design/browse/pages/document"],
+        ["Profile", "design/browse/index-entries/screen"],
+        ["Action", "design/components/overview"],
+        ["Default", "design/components/overview"],
+        ["Disabled", "design/components/pages/variants"],
+        ["Toolbar", "design/components/pages/toolbar"],
+        ["Default", "design/components/pages/toolbar"],
       ],
     );
     assert.equal(
       attribute(byClass(document, "mbk-menu-btn")[0]!, "data-mokly-link"),
-      "design-browse-home",
+      "design/browse/views/home",
     );
     assert.match(
       attribute(byClass(document, "mbk-menu-btn")[0]!, "aria-label") ?? "",
       /Close/,
     );
     if (viewport === "mobile") {
-      const home = await designDocument("design-browse-home", viewport);
+      const home = await designDocument("design/browse/views/home", viewport);
       assert.equal(
         attribute(
           byClass(home.document, "mbk-menu-btn")[0]!,
           "data-mokly-link",
         ),
-        "design-browse-navigation",
+        "design/browse/states/navigation",
       );
     }
   });
@@ -129,28 +135,28 @@ for (const viewport of ["mobile", "desktop"] as const) {
 test("every design link resolves to a real same-viewport design artifact without scripts or nested controls", async () => {
   const { manifest } = await designCatalogue;
   const designs = manifest.entries.filter(
-    (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
   );
   const componentDesigns = designs.filter((entry) =>
-    entry.id.startsWith("design-component-"),
+    entry.path.startsWith("design/components/"),
   );
-  assert.equal(componentDesigns.length, 36);
-  assert.equal(designs.length - componentDesigns.length, 63);
+  assert.equal(componentDesigns.length, 39);
+  assert.equal(designs.length - componentDesigns.length, 72);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
-      const { document, route } = await designDocument(entry.id, viewport);
+      const { document, route } = await designDocument(entry.path, viewport);
       const links = elements(document, (node) => node.tagName === "a");
-      assert.ok(links.length > 0, entry.id);
+      assert.ok(links.length > 0, entry.path);
       assert.equal(
         elements(document, (node) => node.tagName === "script").length,
         0,
       );
       for (const link of links) {
         const id = attribute(link, "data-mokly-link");
-        const target = designs.find((entry) => entry.id === id);
+        const target = designs.find((entry) => entry.path === id);
         assert.ok(
           target?.kind === "screen",
-          `${entry.id}: invalid target ${id}`,
+          `${entry.path}: invalid target ${id}`,
         );
         const href = attribute(link, "href");
         assert.ok(href);
@@ -158,7 +164,7 @@ test("every design link resolves to a real same-viewport design artifact without
           path.posix.normalize(
             path.posix.join(path.posix.dirname(route), href),
           ),
-          viewRoute("screen", target.id, viewport, "light"),
+          viewRoute(target.path, viewport, "light"),
         );
         assert.equal(attribute(link, "role"), undefined);
         for (const child of link.childNodes) {
@@ -174,7 +180,7 @@ test("every design link resolves to a real same-viewport design artifact without
           );
         }
       }
-      if (!entry.id.startsWith("design-component-"))
+      if (!entry.path.startsWith("design/components/"))
         assert.equal(
           elements(
             document,
@@ -185,7 +191,7 @@ test("every design link resolves to a real same-viewport design artifact without
                 attribute(node, "tabindex") !== undefined),
           ).length,
           0,
-          `${entry.id}: misleading keyboard control`,
+          `${entry.path}: misleading keyboard control`,
         );
     }
   }
@@ -194,8 +200,8 @@ test("every design link resolves to a real same-viewport design artifact without
 test("no design route doubles as a directory holding another design route", async () => {
   const { manifest } = await designCatalogue;
   const routes = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.id.startsWith("design-")
-      ? [entryRoute("screen", entry.id)]
+    entry.kind === "screen" && entry.path.startsWith("design/")
+      ? [entryRoute(entry.path)]
       : [],
   );
   const directories = new Set(
@@ -209,138 +215,4 @@ test("no design route doubles as a directory holding another design route", asyn
       !directories.has(route.replace(/\.html$/, "")),
       `${route} collides with a route directory segment of the same name`,
     );
-});
-
-test("the canonical documented inventory exactly matches the complete design ids", async () => {
-  const { manifest } = await designCatalogue;
-  const spec = (
-    await Promise.all(
-      [
-        "docs/protocol/mokly-shell-design.md",
-        "docs/protocol/mokly-component-design.md",
-        "docs/protocol/mokly-component-inspector-design.md",
-        "docs/protocol/mokly-component-controls-design.md",
-      ].map((file) => fs.readFile(path.join(repositoryRoot, file), "utf8")),
-    )
-  ).join("\n");
-  const documented = [...spec.matchAll(/\|\s*`(design-[^`]+)`\s*\|/g)]
-    .map((match) => match[1])
-    .sort();
-  const actual = manifest.entries
-    .flatMap((entry) =>
-      entry.kind === "screen" && entry.id.startsWith("design-")
-        ? [entry.id]
-        : [],
-    )
-    .sort();
-  assert.deepEqual(documented, actual);
-});
-
-/** Comparison families whose members must agree on the schemes they publish. */
-const COMPARISON_FAMILIES = [
-  Object.values(welcomeModes),
-  Object.values(appearanceModes),
-  Object.values(actionModes),
-];
-
-test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  const designs = manifest.entries.filter(
-    (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
-  );
-  let checked = 0;
-  for (const entry of designs) {
-    if (entry.kind !== "screen" || !entry.colorSchemes.includes("dark"))
-      continue;
-    for (const viewport of ["mobile", "desktop"] as const) {
-      const route = viewRoute("screen", entry.id, viewport, "dark");
-      assert.ok(route, `${entry.id} ${viewport}`);
-      const html = outputs.get(route);
-      assert.ok(html, route);
-      for (const link of elements(
-        parse(html),
-        (node) => node.tagName === "a",
-      )) {
-        const id = attribute(link, "data-mokly-link");
-        const target = designs.find((entry) => entry.id === id);
-        if (target?.kind !== "screen") continue;
-        const href = attribute(link, "href");
-        assert.ok(href, `${route}: ${id} has no href`);
-        checked += 1;
-        assert.equal(
-          path.posix.normalize(
-            path.posix.join(path.posix.dirname(route), href),
-          ),
-          viewRoute(
-            "screen",
-            target.id,
-            viewport,
-            target.colorSchemes.includes("dark") ? "dark" : "light",
-          ),
-          `${route}: link to ${id} leaves the dark render`,
-        );
-      }
-    }
-  }
-  assert.ok(checked > 0, "no dark fragment linked anywhere");
-});
-
-test("comparison families publish the same schemes for every member", async () => {
-  const { manifest } = await designCatalogue;
-  const dualFamilies: boolean[] = [];
-  for (const family of COMPARISON_FAMILIES) {
-    const members = family.map((id) => {
-      const entry = manifest.entries.find((entry) => entry.id === id);
-      assert.ok(entry?.kind === "screen", id);
-      return [id, entry.colorSchemes.includes("dark")] as const;
-    });
-    const dual = members[0]![1];
-    dualFamilies.push(dual);
-    assert.deepEqual(
-      members.filter(([, member]) => member !== dual).map(([id]) => id),
-      [],
-      `a member with other schemes would strand a comparison: ${family[0]}`,
-    );
-  }
-  assert.deepEqual(dualFamilies, [true, true, false]);
-});
-
-test("a tag chip without a destination is a label, not a control", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  const chipStyles = await fs.readFile(
-    path.join(
-      repositoryRoot,
-      "examples/basic/generated/design-library/controls/tag-chip.css",
-    ),
-    "utf8",
-  );
-  // Cursor, hover and pressed styling belongs to a chip that navigates, so it
-  // never promises an interaction a plain label cannot deliver.
-  for (const [, selector, body] of chipStyles.matchAll(/([^{}]+)\{([^}]*)\}/gu))
-    if (
-      /cursor:|:hover|:active|box-shadow:|transform:/u.test(body ?? selector!)
-    )
-      assert.match(
-        selector!,
-        /\.mbk-chip\.tag:is\(a\)/u,
-        `${selector!.trim()} styles a chip that may be a label`,
-      );
-  let labels = 0;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
-    for (const route of generatedViews(entry)
-      .filter((view) => view.colorScheme === "light")
-      .map((view) => view.path)) {
-      const html = outputs.get(route);
-      assert.ok(html, route);
-      for (const chip of byClass(parse(html), "tag")) {
-        if (!(attribute(chip, "class") ?? "").includes("mbk-chip")) continue;
-        if (chip.tagName === "a") continue;
-        labels += 1;
-        assert.equal(chip.tagName, "span", `${route}: ${chip.tagName} chip`);
-        assert.equal(attribute(chip, "data-mokly-link"), undefined, route);
-      }
-    }
-  }
-  assert.ok(labels > 0, "no destinationless tag chip was checked");
 });

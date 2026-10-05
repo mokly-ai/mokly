@@ -13,6 +13,7 @@ import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const renderer = `import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -38,8 +39,8 @@ test("component style ownership rebases through generated headers while preservi
     (entry) => entry.kind === "screen",
   )!;
   const view = screen.componentViews![0]!;
-  const mobileView = viewRoute("screen", screen.id, "mobile", "light");
-  const html = result.outputs.get(mobileView)!;
+  const mobileView = viewRoute(screen.path, "mobile", "light");
+  const html = textOutput(result.outputs, mobileView)!;
   assert.equal(
     html.slice(view.styles[0]!.startOffset, view.styles[0]!.endOffset),
     ".action{border-radius:12px}",
@@ -62,8 +63,8 @@ test("component style ownership rebases through generated headers while preservi
 
 test("slot forwarding preserves its original caller and scope through an intermediate component", async (t) => {
   const source = componentEntrySource({
-    extra: `const forward = defineComponent({ ...metadata, id: "forward", title: "Forward", description: "Forwarded content", route: "components/forward.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <pane.Component>{props.children}</pane.Component>, variants: [{ id: "forward-default", title: "Default", props: { children: <strong>Saved</strong> } }] });`,
-    exports: "action.entries, pane.entries, forward.entries,",
+    extra: `const forward = defineComponent({ ...metadata, path: "forward", title: "Forward", description: "Forwarded content", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <pane.Component>{props.children}</pane.Component>, variants: [{ slug: "default",  title: "Default", props: { children: <strong>Saved</strong> } }] });`,
+    exports: "...action.entries, ...pane.entries, ...forward.entries,",
     body: '<forward.Component><action.Component label="Screen slot" /></forward.Component>',
   });
   const fixture = await createFixture(source);
@@ -94,8 +95,9 @@ test("component boundaries support multi-root text and reject removed or physica
     (entry) => entry.kind === "screen",
   )!;
   const view = screen.componentViews![0]!;
-  const html = result.outputs.get(
-    viewRoute("screen", screen.id, "mobile", "light"),
+  const html = textOutput(
+    result.outputs,
+    viewRoute(screen.path, "mobile", "light"),
   )!;
   const ranges = validateComponentRanges(html, view.ranges);
   assert.ok(
@@ -131,7 +133,7 @@ test("renderer mutations cannot change captured props or the next saved render",
   const second = await compileCatalogue(config);
   assert.deepEqual(first, second);
   const action = first.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "action-default",
+    (entry) => entry.kind === "component" && entry.path === "action/default",
   )!;
   assert.ok(action.kind === "component" && "variantOf" in action);
   if (action.kind !== "component" || !("variantOf" in action))

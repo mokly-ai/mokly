@@ -8,25 +8,16 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const protocolDirectory = path.join(repositoryRoot, "docs/protocol");
 const oversizedCaps: Readonly<Record<string, number>> = {
-  "ci-verification.md": 251,
-  "mokly-catalogue.md": 324,
-  "mokly-changes.md": 435,
-  "mokly-comparison-panes.md": 258,
-  "mokly-configuration.md": 333,
-  "mokly-css-attribution.md": 327,
-  "mokly-design-components.md": 254,
-  "mokly-design-links.md": 329,
-  "mokly-export-delivery.md": 264,
-  "mokly-export.md": 279,
-  "mokly-frame-adapter.md": 381,
-  "mokly-navigation.md": 410,
-  "mokly-removed-previews.md": 278,
-  "mokly-runtime.md": 443,
-  "mokly-shell-design.md": 579,
+  "mokly-catalogue.md": 251,
+  "mokly-design-components.md": 253,
+  "mokly-design-links.md": 328,
+  "mokly-export-delivery.md": 263,
+  "mokly-frame-adapter.md": 380,
+  "mokly-navigation.md": 382,
+  "mokly-runtime.md": 437,
+  "mokly-shell-design.md": 351,
   "mokly-viewer-appearance.md": 382,
-  "mokly-viewer.md": 498,
-  "mokly-watch.md": 296,
-  "npm-release.md": 264,
+  "mokly-viewer.md": 453,
 };
 
 function sizeIssue(name: string, lines: number, cap: number | undefined) {

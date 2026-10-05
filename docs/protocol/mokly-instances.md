@@ -32,17 +32,20 @@ Hash UTF-8 bytes with no trailing newline, salt, whitespace, or path prefix.
 The result is exactly 64 lowercase hexadecimal characters. The historical
 `mokabook-instance-v1` domain string is frozen, including its spelling.
 `id` is the validated local `moklyInstance` value, defaulting to the registered
-component id when omitted. `owner` is `{ kind: "entry" }` or
+component's resolved path's final segment when omitted, including after index
+collapse or a declared path override. Explicit values retain lowercase kebab-case
+grammar; inferred defaults follow the component path's segment grammar.
+`owner` is `{ kind: "entry" }` or
 `{ kind: "instance", instanceKey }`. The separate receiving-slot key is the
 same digest operation over `["mokabook-slot-v1", instanceKey, name]`.
 
-The containing entry id, viewport, color scheme, `componentId`, props, and
+The containing entry path, viewport, color scheme, `componentId`, props, and
 source location are **not** in the instance preimage. In particular, moving an
 entry-owned invocation to another screen can retain the same digest. Keys are
 unique within a view, not globally across a catalogue. Public `InstanceRef`
-stores the owning entry id in `screenId` plus viewport, scheme, key, and optional
-flow `stepIndex`; it has no `variantId`, because a component variant's global id
-is already the owning entry id. Moving entries changes the scoped reference even
+stores the owning entry path in `screenPath` plus viewport, scheme, key, and
+optional flow `stepIndex`; it has no `variantId`, because a component variant's
+path is already the owning entry path. Moving entries changes the scoped reference even
 if the digest is identical. Never search another entry for a missing key.
 
 `slotKey` denotes the original input slot scope. Forwarding a slot preserves
@@ -54,8 +57,7 @@ The input owner and physical range parent can differ.
 A digest changes if and only if its serialized preimage changes, subject to the
 usual SHA-256 collision assumption. Edits that change it are:
 
-- Changing the effective `moklyInstance` id, including changing the component
-  id when the invocation uses that id as its default.
+- Changing the effective `moklyInstance` id, including changing the final component path segment when it supplies the default.
 - Changing input ownership between entry and instance, or moving the invocation
   to a parent with a different instance key.
 - Changing the original receiving slot key, including entering/leaving a slot,
@@ -68,7 +70,7 @@ Edits that keep it, provided those inputs stay the same, are:
 - Editing data props, slot content, component implementation, styles or assets.
 - Reordering siblings, or inserting/removing other siblings with distinct ids.
 - Changing source filename, invocation line/column, comments or formatting.
-- Renaming an entry title, `navPath`, or containing entry id; moving between
+- Renaming an entry title or folder title, or moving the containing entry; moving between
   entry scopes can retain the digest but changes the scoped reference.
 - Changing viewport/scheme, or rendering under a sibling variant entry; each
   context has its own record.
@@ -126,7 +128,7 @@ errors, not a fourth resolution state.
 
 ## Optional Invocation Source
 
-Manifest v7 includes this optional instance field:
+Manifest v8 includes this optional instance field:
 
 ```ts
 interface ComponentSourceLocation {
@@ -165,7 +167,7 @@ The name is reserved from authored data props and slots. Capture it in the
 collector only; do not emit DOM attributes, source maps, or debug markup.
 Programmatic `createElement` calls and transformed modules without invocation
 information may omit `source`. Replayed slots retain the original invocation
-location; manifest-v7 readers accept records with or without the optional field.
+location; manifest-v8 readers accept records with or without the optional field.
 
 `source` is excluded from instance/slot keys, `propsKey`, direct-input comparison,
 and every Changes projection. Line shifts and source moves alone are not material.
@@ -212,7 +214,7 @@ markers and incorrect range parentage. No template sentinel survives final
 serialization. Review-ignore regions cannot enclose component or caller-slot
 boundaries. Compatibility transforms must preserve validated pairs; adapters
 inspect current views using these comments without adding layout wrappers.
-Accepted baseline and current v7 documents use the same marker spelling and
+Accepted baseline and current v8 documents use the same marker spelling and
 validation; historical marker translation is not supported.
 
 ## Acceptance

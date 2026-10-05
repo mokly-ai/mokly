@@ -1,5 +1,5 @@
 /** Parse and capture one selection without owning its generation lifetime. */
-import { isEntryId } from "@mokly/viewer/data";
+import { isEntryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
@@ -45,22 +45,26 @@ export interface SelectedCapture {
 }
 
 export function parseSelectedRequest(url: URL): SelectedRequest | undefined {
-  if (url.searchParams.has("route") || url.searchParams.has("variant"))
+  if (
+    [...url.searchParams.keys()].some(
+      (key) => !["path", "page", "refresh"].includes(key),
+    )
+  )
     return undefined;
   const pages = url.searchParams.getAll("page");
-  const ids = url.searchParams.getAll("id");
+  const ids = url.searchParams.getAll("path");
   if (pages.length === 1 && ids.length === 0) {
     const id = pages[0]!;
-    return isEntryId(id)
-      ? { kind: "page", selection: { kind: "page", id } }
+    return isEntryPath(id)
+      ? { kind: "page", selection: { kind: "page", path: id } }
       : undefined;
   }
   if (pages.length > 0 || ids.length !== 1) return undefined;
   const id = ids[0]!;
-  if (!isEntryId(id)) return undefined;
+  if (!isEntryPath(id)) return undefined;
   return {
     kind: "comparison",
-    selection: { id },
+    selection: { path: id },
   };
 }
 
@@ -68,7 +72,7 @@ export function selectedRequestKey(
   epoch: number,
   request: SelectedRequest,
 ): string {
-  return JSON.stringify([epoch, request.kind, request.selection.id]);
+  return JSON.stringify([epoch, request.kind, request.selection.path]);
 }
 
 export function prepareSelectedCapture(
@@ -86,7 +90,7 @@ export function prepareSelectedCapture(
         signal,
       );
       if (
-        artifact.preview.id !== request.selection.id ||
+        artifact.preview.path !== request.selection.path ||
         artifact.preview.baseCommit !== source.baseCommit ||
         artifact.preview.baseRef !== source.baseRef
       )

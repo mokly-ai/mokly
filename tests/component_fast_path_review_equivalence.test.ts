@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
@@ -22,8 +22,8 @@ test("Review fast and complete paths agree for owned component CSS", async (t) =
           '<button className="owned-action" data-viewport=',
         )
         .replace(
-          'id: "action",',
-          'id: "action", dependencies: ["mockups/shared.css"], ownedDependencies: ["mockups/shared.css"],',
+          'path: "action",',
+          'path: "action", dependencies: ["mockups/shared.css"], ownedDependencies: ["mockups/shared.css"],',
         ),
   });
   await fixture.append(".owned-action { padding: 2px; }");
@@ -33,7 +33,7 @@ test("Review fast and complete paths agree for owned component CSS", async (t) =
     result.changes.some(
       (entry) =>
         entry.kind === "component" &&
-        (entry.after ?? entry.before)?.id === "action",
+        (entry.after ?? entry.before)?.path === "action",
     ),
   );
 });
@@ -66,15 +66,15 @@ test("Review fast and complete paths agree for a Git asset-byte change", async (
 
 async function equivalentReview(
   fixture: Awaited<ReturnType<typeof cssAttributionFixture>>,
-): Promise<ReviewResultV4> {
+): Promise<ReviewResultV5> {
   const fast = await fixture.compare(true);
   const complete = await fixture.compare(false);
   assert.deepEqual(fast.result, complete.result);
-  assert.equal(fast.result.schemaVersion, 4);
+  assert.equal(fast.result.schemaVersion, 5);
   return fast.result;
 }
 
-function reasonPaths(result: ReviewResultV4) {
+function reasonPaths(result: ReviewResultV5) {
   return [
     ...new Set(
       result.changes.flatMap((entry) =>

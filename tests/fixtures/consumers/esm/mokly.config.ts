@@ -1,7 +1,7 @@
 import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
-  entries: ["entries/**/*.mockup.{ts,tsx}", "src/**/*.mockup.{ts,tsx}"],
+  roots: [{ dir: "entries" }, { dir: "src", files: ["**/*.mockup.{ts,tsx}"] }],
   mockupsDir: "mockups",
   repoRoot: ".",
   review: {
@@ -9,5 +9,5 @@ export default defineConfig({
     outDir: ".review",
     sharedImpact: ["notes.md"],
   },
-  stylesheets: [{ match: "screens/**/*.html", stylesheets: ["fixture.css"] }],
+  stylesheets: [{ match: "**/index.html", stylesheets: ["fixture.css"] }],
 });

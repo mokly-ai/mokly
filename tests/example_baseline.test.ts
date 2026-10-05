@@ -43,7 +43,9 @@ test("the example fixture rebuilds an untracked baseline from its own source and
       ),
     ),
   );
-  assert.ok(manifest.entries.some((entry) => entry.id === "example-welcome"));
+  assert.ok(
+    manifest.entries.some((entry) => entry.path === "example/screens/welcome"),
+  );
   await prepared.assertUnchanged();
   await assert.rejects(fs.access(manifestPath), { code: "ENOENT" });
 });

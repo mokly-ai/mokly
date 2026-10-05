@@ -5,7 +5,10 @@ import test from "node:test";
 import { DocumentCache } from "../dist/build/document_cache.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
-import { DocumentService } from "../dist/server/demand/service.js";
+import {
+  DocumentService,
+  type DocumentWorkerRequest,
+} from "../dist/server/demand/service.js";
 
 import {
   createFixture,
@@ -14,18 +17,18 @@ import {
 } from "./helpers/fixture.js";
 
 class FakeWorker extends EventEmitter {
-  readonly requests: string[] = [];
+  readonly requests: DocumentWorkerRequest[] = [];
   terminated = false;
   termination: Promise<number> = Promise.resolve(0);
-  postMessage(route: string): void {
-    this.requests.push(route);
+  postMessage(request: DocumentWorkerRequest): void {
+    this.requests.push(request);
   }
   async terminate(): Promise<number> {
     this.terminated = true;
     return this.termination;
   }
   respond(): void {
-    const route = this.requests.at(-1)!;
+    const route = this.requests.at(-1)!.route;
     this.emit("message", { ok: true, document: { route, html: route } });
   }
 }
@@ -44,21 +47,24 @@ test("demand worker coalesces, recovers after idle failure and keeps listeners b
     },
   });
   fixture.beforeRemove(() => service.close());
-  const first = service.read("screens/home.desktop.html");
-  assert.equal(service.read("screens/home.desktop.html"), first);
+  const first = service.read("home/index.desktop.html");
+  assert.deepEqual(workers[0]!.requests[0], {
+    route: "home/index.desktop.html",
+  });
+  assert.equal(service.read("home/index.desktop.html"), first);
   workers[0]!.respond();
   await first;
   assert.deepEqual(busy, [true, false]);
   assert.equal(workers[0]!.listenerCount("error"), 1);
   workers[0]!.emit("error", new Error("idle failure"));
   workers[0]!.emit("exit", 1);
-  const next = service.read("screens/home.mobile.html");
+  const next = service.read("home/index.mobile.html");
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(workers.length, 2);
   workers[1]!.respond();
   await next;
   assert.equal(workers[1]!.listenerCount("error"), 1);
-  await service.read("screens/home.desktop.html");
+  await service.read("home/index.desktop.html");
   assert.equal(workers[1]!.requests.length, 1);
 });
 
@@ -84,12 +90,12 @@ test("a failed renderer terminates before its replacement starts", async (t) => 
     await service.close();
   });
   const first = assert.rejects(
-    service.read("screens/home.desktop.html"),
+    service.read("home/index.desktop.html"),
     /failed/,
   );
   workers[0]!.emit("error", new Error("failed"));
   await first;
-  const next = service.read("screens/home.mobile.html");
+  const next = service.read("home/index.mobile.html");
   void next.catch(() => {});
   assert.equal(workers.length, 1);
   release();
@@ -115,11 +121,11 @@ test("demand admission, deadline and shutdown reject work without poisoning a re
   });
   fixture.beforeRemove(() => service.close());
   const active = assert.rejects(
-    service.read("screens/home.desktop.html"),
+    service.read("home/index.desktop.html"),
     /too long/,
   );
-  const queued = service.read("screens/home.mobile.html");
-  await assert.rejects(service.read("screens/details.desktop.html"), /busy/);
+  const queued = service.read("home/index.mobile.html");
+  await assert.rejects(service.read("details/index.desktop.html"), /busy/);
   await active;
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(workers[0]!.terminated, true);
@@ -127,7 +133,7 @@ test("demand admission, deadline and shutdown reject work without poisoning a re
   const stopped = assert.rejects(queued, /stopped/);
   await service.close();
   await stopped;
-  await assert.rejects(service.read("screens/home.desktop.html"), /closed/);
+  await assert.rejects(service.read("home/index.desktop.html"), /closed/);
 });
 
 test("document cache bounds bytes and evicts least recently used documents", () => {
@@ -142,4 +148,38 @@ test("document cache bounds bytes and evicts least recently used documents", () 
   assert.equal(cache.get("c"), "ccc");
   cache.clear();
   assert.equal(cache.get("c"), undefined);
+});
+
+test("demand rendering forwards only the currently accepted move map", async (t) => {
+  const fixture = await createFixture(validEntrySource());
+  t.after(() => removeFixture(fixture));
+  const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
+  const worker = new FakeWorker();
+  const scope = {
+    generation: runtime.generation,
+    moves: [
+      { kind: "screen" as const, path: "home", previousPath: "old-home" },
+    ],
+  };
+  let accepted = true;
+  const service = new DocumentService(runtime, () => {}, {
+    createWorker: () => worker,
+    moveTargets: (generation) => {
+      assert.equal(generation, runtime.generation);
+      return accepted ? scope : undefined;
+    },
+  });
+  fixture.beforeRemove(() => service.close());
+  const first = service.read("home/index.desktop.html");
+  assert.deepEqual(worker.requests[0], {
+    route: "home/index.desktop.html",
+    moveTargets: scope,
+  });
+  worker.respond();
+  await first;
+  accepted = false;
+  const second = service.read("home/index.mobile.html");
+  assert.deepEqual(worker.requests[1], { route: "home/index.mobile.html" });
+  worker.respond();
+  await second;
 });

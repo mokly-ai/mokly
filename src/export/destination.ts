@@ -2,10 +2,7 @@ import type fs from "node:fs";
 
 import { exportError } from "./error.js";
 import type { ExportOperations } from "./operations.js";
-import {
-  assertExportOwnership,
-  type LegacyExportOwnership,
-} from "./ownership.js";
+import { assertExportOwnership } from "./ownership.js";
 
 /** Identity of the directory inspected before any export generation. */
 export interface ExportDirectoryIdentity {
@@ -22,13 +19,12 @@ export type ExportDestination = { kind: "absent" } | ExportDirectoryIdentity;
 export async function captureDestination(
   output: string,
   operations: ExportOperations,
-  legacy?: LegacyExportOwnership,
 ): Promise<ExportDestination> {
   const stat = await operations.lstat(output);
   const initial: ExportDestination = stat
     ? directoryIdentity(stat)
     : { kind: "absent" };
-  await assertExportOwnership(output, legacy);
+  await assertExportOwnership(output);
   await assertDestination(output, initial, operations);
   return initial;
 }

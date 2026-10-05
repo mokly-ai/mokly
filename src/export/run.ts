@@ -1,17 +1,25 @@
+import path from "node:path";
+
 import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
 
 import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { compileCatalogue } from "../build/compile.js";
-import { writeCompilation } from "../build/transaction.js";
-import { projectRealPath } from "../config/paths.js";
+import { withOutputLock } from "../build/output_lock.js";
+import { writeLockedCompilation } from "../build/transaction.js";
+import { projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isCancellation, isMoklyError } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import { parseHistoricalManifest } from "../registry/manifest.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
-import { readBaseManifest } from "../review/base_manifest.js";
+import { GitReviewAssetReader } from "../review/assets.js";
+import {
+  baselineResourceConfig,
+  readBaseManifest,
+} from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
+import { importedChangedPaths } from "../review/imported_changes.js";
 import {
   captureRemovedPagePreviews,
   packageRemovedPagePreviews,
@@ -53,10 +61,7 @@ export async function exportCatalogue(
   const outputRoot = options.adapter?.outputRoot;
   const output = resolveExportOutput(config, options.outDir, outputRoot);
   assertExportActive(options.signal);
-  const transaction = await ExportTransaction.open(
-    output,
-    options.adapter?.legacyOwnership,
-  );
+  const transaction = await ExportTransaction.open(output);
   return withExportCleanup(
     () =>
       generateExport(
@@ -107,22 +112,25 @@ async function generateExport(
       });
     const compilation = await withPreInstallationCancellation(
       options.signal,
-      () => compile(config),
+      () => compile(config, undefined, options.signal),
     );
     assertExportActive(options.signal);
     options.onBuildDiagnostics?.(compilation.diagnostics);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
-    await writeCompilation(compilation, config);
+    const publicFiles = await withOutputLock(
+      config.repoRoot,
+      options.signal ? { signal: options.signal } : {},
+      async (lock) => {
+        await writeLockedCompilation(lock, compilation, config);
+        return withPreInstallationCancellation(options.signal, () =>
+          capturePublicFiles(config, compilation.outputs),
+        );
+      },
+    );
     const result = await withPreInstallationCancellation(
       options.signal,
       async () => {
-        const publicFiles = await capturePublicFiles(
-          config,
-          config.generatedOutput === "derived"
-            ? compilation.outputs
-            : undefined,
-        );
         const assetReader = capturedAssetReader(publicFiles, config);
         const exclusions = [output, transaction.reservationRoot];
         const changed =
@@ -138,40 +146,70 @@ async function generateExport(
         let comparison: ReviewArtifact | undefined;
         let contentChanges: readonly string[] = [];
         if (prepared && baseline) {
+          const prefix = toPosixPath(
+            path.relative(config.repoRoot, config.mockupsDir),
+          );
+          const baselineAssets = new GitReviewAssetReader(
+            baselineResourceConfig(config, baseline),
+            prepared.reader,
+            prepared.commit,
+            prefix,
+          );
+          const changeEvidence = await importedChangedPaths(
+            config,
+            baselineAssets,
+            assetReader,
+            changed,
+            compilation.outputs,
+            compilation.deliveredStyleSources,
+          );
           comparison = await compareReview(
             compilation,
             config,
             {
               evidence: pinnedEvidence(prepared.commit, changed),
               reader: prepared.reader,
+              ...(prepared.sourceReader
+                ? { sourceReader: prepared.sourceReader }
+                : {}),
             },
             base,
             transaction.stage,
             assetReader,
             exclusions,
+            { changeEvidence },
           );
+          for (const diagnostic of comparison.pairing?.diagnostics ?? [])
+            options.diagnostic?.(diagnostic);
           contentChanges = await changedContentPaths(
             compilation.manifest,
             baseline,
             config,
             prepared.reader,
             prepared.commit,
-            changed,
+            changeEvidence,
             assetReader,
             hasRegisteredComponents(compilation.manifest) ? "pages" : "all",
+            { ...(comparison.pairing ? { pairing: comparison.pairing } : {}) },
           );
           const removedEntries = removedManifestEntries(
             compilation.manifest,
             baseline,
+            comparison.pairing?.moves,
           );
           const pagePreviews = await captureRemovedPagePreviews(
             new RepositoryRemovedPagePreview(config, prepared.reader),
             {
-              schemaVersion: 1,
+              schemaVersion: 2,
+              movedEntries:
+                comparison.pairing?.moves.map(({ path, previousPath }) => ({
+                  path,
+                  previousPath,
+                })) ?? [],
               baseline,
               baseCommit: comparison.result.baseCommit,
               baseRef: comparison.result.baseRef,
-              changedIds: removedEntries.map(({ entry }) => entry.id),
+              changedEntries: removedEntries.map(({ entry }) => entry.path),
               removedEntries,
             },
             options.signal ?? new AbortController().signal,
@@ -232,6 +270,7 @@ async function generateExport(
           changed,
           exclusions,
           baseline !== undefined,
+          options.signal,
         );
         assertExportActive(options.signal);
         if (

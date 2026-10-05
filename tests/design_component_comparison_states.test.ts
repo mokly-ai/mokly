@@ -38,9 +38,9 @@ test("component comparison captions follow the recorded change, never the depict
   const { manifest } = await designCatalogue;
   const captions = new Map<string, Set<string>>();
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.id.startsWith("design-component-"))
+    if (entry.kind !== "screen" || !entry.path.startsWith("design/components/"))
       continue;
-    for (const { document, route } of await renders(entry.id)) {
+    for (const { document, route } of await renders(entry.path)) {
       const compared = previews(document).filter(
         ([, preview]) => byClass(preview, "ce-component-comparison").length,
       );
@@ -68,7 +68,7 @@ test("component comparison captions follow the recorded change, never the depict
 });
 
 test("the tall Checklist depicts its parent and selected variant in Changes", async () => {
-  const id = "design-component-overlay-tall";
+  const id = "design/components/pages/stacked/overlay-tall";
   for (const viewport of ["desktop", "mobile"] as const) {
     const { document, route } = await designDocument(id, viewport);
     assert.deepEqual(

@@ -7,7 +7,7 @@ export type SourceDenial =
 export function sourceDenialMessage(denial: SourceDenial): string {
   switch (denial.kind) {
     case "entries":
-      return "overlaps a resolved entry module (entries)";
+      return "overlaps a source file matched by roots";
     case "reserved":
       return "uses a reserved source basename";
     case "listed":

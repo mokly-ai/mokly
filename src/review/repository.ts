@@ -23,6 +23,8 @@ import { GitRepositoryEvidence } from "./git_evidence.js";
 export interface ReadOnlyReviewRepository {
   readonly evidence: RepositoryEvidence;
   readonly reader: BaselineReader;
+  /** Committed authoring bytes; distinct from rebuilt public baseline output. */
+  readonly sourceReader?: BaselineReader;
 }
 
 /** Committed mode needs no preparation; derived mode must receive a pinned commit. */
@@ -48,6 +50,7 @@ export function readOnlyRepositoryForCommit(
 ): ReadOnlyReviewRepository {
   const evidence = new GitRepositoryEvidence(runner);
   return {
+    sourceReader: new CommittedBaselineReader(runner),
     evidence: {
       mergeBase: async () => commit,
       changedPaths: (baseCommit, excluded) =>

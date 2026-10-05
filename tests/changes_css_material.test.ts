@@ -28,7 +28,7 @@ for (const components of [false, true]) {
     );
     await fixture.append(".auth { padding: 2px; }");
     const { result } = await fixture.compare();
-    for (const view of result.screens.find((screen) => screen.id === "home")!
+    for (const view of result.screens.find((screen) => screen.path === "home")!
       .views) {
       assert.equal(view.material, undefined);
       assert.equal(view.state, "changed");
@@ -48,7 +48,7 @@ for (const components of [false, true]) {
     const { result } = await fixture.compare();
     for (const screen of result.screens)
       for (const view of screen.views) {
-        assert.equal(view.material, screen.id === "home" ? true : undefined);
+        assert.equal(view.material, screen.path === "home" ? true : undefined);
         assert.equal(view.state, "changed");
         assert.equal(view.reasons?.[0]?.analysis?.status, "matched");
       }
@@ -59,12 +59,14 @@ for (const components of [false, true]) {
     await fs.writeFile(
       fixture.entryPath,
       (await fs.readFile(fixture.entryPath, "utf8"))
-        .replace('id: "home"', 'id: "moved"')
-        .replace('screenId: "home"', 'screenId: "moved"'),
+        .replace('path: "home"', 'path: "moved"')
+        .replace('title: "Home"', 'title: "Unrelated screen"')
+        .replaceAll("Sign in", "An unrelated task")
+        .replace('screenPath: "home"', 'screenPath: "moved"'),
     );
     const { result } = await fixture.compare();
     const views = result.screens
-      .filter((screen) => screen.id === "home" || screen.id === "moved")
+      .filter((screen) => screen.path === "home" || screen.path === "moved")
       .flatMap((screen) => screen.views);
     assert.ok(views.some((view) => view.state === "added"));
     assert.ok(views.some((view) => view.state === "removed"));

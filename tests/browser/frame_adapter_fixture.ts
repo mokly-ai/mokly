@@ -5,6 +5,7 @@ import type { Page } from "@playwright/test";
 
 import { adaptBrowseDocument } from "../../dist/browse/document_adapter.js";
 import { compileCatalogue } from "../../dist/build/compile.js";
+import { generatedText } from "../../dist/build/generated_file.js";
 import { projectCatalogue } from "../../dist/catalogue/projection.js";
 import { loadConfig } from "../../dist/config/load.js";
 import {
@@ -39,7 +40,7 @@ export async function crossOriginFixture(
   const fixture = await createFixture(
     componentEntrySource(
       options ?? {
-        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="../unowned.html" id="unowned-link">Open unowned document</a><a href="./home.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
+        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="../unowned.html" id="unowned-link">Open unowned document</a><a href="./index.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
         actionRender:
           "(props) => props.hidden ? null : props.disabled ? <><span>First root</span> Text root <strong>Last root</strong></> : <button style={{width:160,height:40}}>{props.label}</button>",
       },
@@ -69,7 +70,10 @@ export async function crossOriginFixture(
   ]);
   for (const [name, bytes] of compilation.outputs)
     if (name.endsWith(".html"))
-      files.set(`static/${name}`, adaptBrowseDocument(bytes, name, catalogue));
+      files.set(
+        `static/${name}`,
+        adaptBrowseDocument(generatedText(bytes, name)!, name, catalogue),
+      );
   files.set("static/unowned.html", unownedDocument);
   for (const [name, bytes] of loadBrowserClientModules())
     files.set(`__mokly/client/${name}`, bytes);
@@ -82,10 +86,10 @@ export async function crossOriginFixture(
   const host = await serveStaticFiles(root);
   const frames = await serveStaticFiles(root, { allowedOrigin: host.url });
   const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
+    (entry) => entry.kind === "screen" && entry.path === "home",
   );
   if (home?.kind !== "screen") throw new Error("No fixture screen");
-  const mobileView = viewRoute("screen", home.id, "mobile", "light");
+  const mobileView = viewRoute(home.path, "mobile", "light");
   const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
   const temporaryPath = `/__mokly/components/renders/${renderId}/${mobileView}`;
   const temporaryFile = path.join(root, temporaryPath.slice(1));
@@ -115,7 +119,7 @@ export async function crossOriginFixture(
 export async function mountCrossFrame(
   page: Page,
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,
-  path = "/static/screens/home.mobile.html",
+  path = "/static/home/index.mobile.html",
 ) {
   await page.goto(fixture.host.url);
   await page.evaluate(

@@ -25,7 +25,7 @@ for (const preference of [undefined, "closed"] as const) {
         localStorage.setItem("mokly:details-disclosure", value);
       }, preference);
     const gate = await delayHydration(page, developmentBundle);
-    const navigation = page.goto("/view/pages/example-handbook.html");
+    const navigation = page.goto("/view/example/getting-started/");
     await gate.requested;
     const details = page.locator("[data-mokly-details]");
     await details.locator("summary").click();
@@ -71,18 +71,18 @@ test("an early navigation disclosure beats reload recovery", async ({
     );
   });
   const gate = await delayHydration(page, developmentBundle);
-  const navigation = page.goto("/view/screens/example-welcome.html");
+  const navigation = page.goto("/view/example/screens/welcome/");
   await gate.requested;
-  const pages = page.locator('details[data-nav-disclosure="section:pages"]');
-  await pages.locator(":scope > summary").click();
-  await expect(pages).not.toHaveAttribute("open", "");
+  const specs = page.locator('details[data-nav-disclosure="section:specs"]');
+  await specs.locator(":scope > summary").click();
+  await expect(specs).not.toHaveAttribute("open", "");
 
   gate.release();
   await navigation;
 
   await expectCleanHydration(page, errors);
   await expect(page.locator("[data-mokly-search]")).toHaveValue("welcome");
-  await expect(pages).not.toHaveAttribute("open", "");
+  await expect(specs).not.toHaveAttribute("open", "");
 });
 
 test("Details remains usable for the session when localStorage is unavailable", async ({
@@ -98,7 +98,7 @@ test("Details remains usable for the session when localStorage is unavailable", 
     });
   });
   const gate = await delayHydration(page, developmentBundle);
-  const navigation = page.goto("/view/screens/example-welcome.html");
+  const navigation = page.goto("/view/example/screens/welcome/");
   await gate.requested;
   const inspector = page.locator("[data-workspace-inspector]");
   await expect(inspector).not.toHaveAttribute("data-open", "true");
@@ -110,7 +110,7 @@ test("Details remains usable for the session when localStorage is unavailable", 
   await expect(inspector).toHaveAttribute("data-open", "true");
 
   await page
-    .locator('a[data-nav-row][data-route="screens/example-details.html"]')
+    .locator('a[data-nav-row][data-route="example/screens/details/index.html"]')
     .click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect(inspector).toHaveAttribute("data-open", "true");
@@ -124,25 +124,25 @@ test("stored closed active ancestry is open for the first React render", async (
   await page.addInitScript(() => {
     if (window !== window.top) return;
     localStorage.setItem(
-      "mokly:nav-disclosure:v3",
+      "mokly:nav-disclosure:v4",
       JSON.stringify({
-        "section:pages": false,
-        "folder:pages:Example": false,
-        "folder:pages:Example/Screens": false,
+        "section:specs": false,
+        "folder:specs:example": false,
+        "folder:specs:example/screens": false,
       }),
     );
   });
   const gate = await delayHydration(page, developmentBundle);
-  const navigation = page.goto("/view/screens/example-welcome.html");
+  const navigation = page.goto("/view/example/screens/welcome/");
   await gate.requested;
-  const pages = page.locator('details[data-nav-disclosure="section:pages"]');
+  const specs = page.locator('details[data-nav-disclosure="section:specs"]');
   const example = page.locator(
-    'details[data-nav-disclosure="folder:pages:Example"]',
+    'details[data-nav-disclosure="folder:specs:example"]',
   );
   const screens = page.locator(
-    'details[data-nav-disclosure="folder:pages:Example/Screens"]',
+    'details[data-nav-disclosure="folder:specs:example/screens"]',
   );
-  await expect(pages).not.toHaveAttribute("open", "");
+  await expect(specs).not.toHaveAttribute("open", "");
   await expect(example).not.toHaveAttribute("open", "");
   await expect(screens).not.toHaveAttribute("open", "");
 
@@ -150,7 +150,7 @@ test("stored closed active ancestry is open for the first React render", async (
   await navigation;
 
   await expectCleanHydration(page, errors);
-  await expect(pages).toHaveAttribute("open", "");
+  await expect(specs).toHaveAttribute("open", "");
   await expect(example).toHaveAttribute("open", "");
   await expect(screens).toHaveAttribute("open", "");
 });

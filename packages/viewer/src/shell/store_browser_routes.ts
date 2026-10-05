@@ -51,7 +51,7 @@ export function sameShellRoute(
   return (
     left.view.kind === "target" &&
     right.view.kind === "target" &&
-    left.view.target.entry.id === right.view.target.entry.id &&
+    left.view.target.entry.path === right.view.target.entry.path &&
     left.view.target.entry.kind === right.view.target.entry.kind
   );
 }

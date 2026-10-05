@@ -1,6 +1,6 @@
 import { parse } from "parse5";
 
-import { decodeCssIdentifier, tokenizeCss } from "./review/css/source.js";
+import { extractCssReferences } from "./css_references.js";
 
 interface HtmlAttribute {
   name: string;
@@ -26,7 +26,7 @@ export interface HtmlReferenceOptions {
   resourceHints?: boolean;
 }
 
-const SOURCE_ATTRIBUTES = new Map<string, readonly string[]>([
+export const SOURCE_ATTRIBUTES = new Map<string, readonly string[]>([
   ["audio", ["src"]],
   ["embed", ["src"]],
   ["iframe", ["src"]],
@@ -93,52 +93,27 @@ export function extractHtmlReferences(
   };
 }
 
-/** Extract `url()` and string-form `@import` references from CSS. */
-export function extractCssReferences(content: string): string[] {
-  if (!/url\(|@import|\\/i.test(content)) return [];
-  const tokens = tokenizeCss(content, { allowIncomplete: true });
-  const references: string[] = [];
-  for (let index = 0; index < tokens.length; index++) {
-    const token = tokens[index]!;
-    const next = tokens[index + 1];
-    if (!token.word && token.value.endsWith(")")) {
-      const opening = token.value.indexOf("(");
-      if (
-        opening >= 0 &&
-        decodeCssIdentifier(token.value.slice(0, opening)).toLowerCase() ===
-          "url"
-      )
-        references.push(
-          decodeCssIdentifier(token.value.slice(opening + 1, -1)),
-        );
-    } else if (
-      token.word &&
-      decodeCssIdentifier(token.value).toLowerCase() === "url" &&
-      next?.value === "(" &&
-      next.start === token.end
-    ) {
-      const value = tokens[index + 2]?.value;
-      if (value && /^["']/.test(value) && tokens[index + 3]?.value === ")") {
-        references.push(decodeCssIdentifier(value.slice(1, -1)));
-        index += 3;
-      }
-    } else if (
-      token.value === "@" &&
-      next?.start === token.end &&
-      decodeCssIdentifier(next.value).toLowerCase() === "import"
-    ) {
-      const value = tokens[index + 2]?.value;
-      if (value && /^["']/.test(value)) {
-        references.push(decodeCssIdentifier(value.slice(1, -1)));
-        index += 2;
-      }
-    }
-  }
-  return references;
+function extractSourceSetReferences(value: string): string[] {
+  return sourceSetReferences(value).map((reference) => reference.value);
 }
 
-function extractSourceSetReferences(value: string): string[] {
-  const references: string[] = [];
+/** Replace parsed URL spans without revisiting text written by a previous replacement. */
+export function rewriteSourceSetReferences(
+  value: string,
+  rewrite: (reference: string) => string,
+): string {
+  for (const reference of sourceSetReferences(value).reverse())
+    value =
+      value.slice(0, reference.start) +
+      rewrite(reference.value) +
+      value.slice(reference.end);
+  return value;
+}
+
+function sourceSetReferences(
+  value: string,
+): { start: number; end: number; value: string }[] {
+  const references: { start: number; end: number; value: string }[] = [];
   let position = 0;
   while (position < value.length) {
     while (/[\s,]/.test(value[position] ?? "")) position += 1;
@@ -148,7 +123,12 @@ function extractSourceSetReferences(value: string): string[] {
     }
     const token = value.slice(start, position);
     const reference = token.replace(/,+$/, "");
-    if (reference) references.push(reference);
+    if (reference)
+      references.push({
+        start,
+        end: start + reference.length,
+        value: reference,
+      });
     if (reference !== token) continue;
     while (position < value.length && value[position] !== ",") position += 1;
   }

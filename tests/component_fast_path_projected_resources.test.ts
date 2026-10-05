@@ -7,6 +7,7 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const hiddenResourceCases = [
   {
@@ -60,7 +61,7 @@ for (const resourceCase of hiddenResourceCases)
       const compilation = await compileCatalogue(config);
       const reader = (changedContent: string) => ({
         read: async (route: string) => {
-          const generated = compilation.outputs.get(route);
+          const generated = textOutput(compilation.outputs, route);
           if (generated !== undefined) return Buffer.from(generated);
           const content =
             resourceCase.files[route as keyof typeof resourceCase.files];
@@ -123,7 +124,7 @@ for (const direction of ["added", "removed"] as const)
     const compilation = await compileCatalogue(config);
     const reader = (hasImport: boolean) => ({
       read: async (route: string) => {
-        const generated = compilation.outputs.get(route);
+        const generated = textOutput(compilation.outputs, route);
         if (generated !== undefined) return Buffer.from(generated);
         if (route === "main.css")
           return Buffer.from(hasImport ? '@import "./nested.css";' : "");
@@ -159,7 +160,7 @@ for (const direction of ["added", "removed"] as const)
       optimized.changes.some(
         (change) =>
           change.kind === "screen" &&
-          change.after?.id === "home" &&
+          change.after?.path === "home" &&
           change.reasons.some((reason) => reason.kind === "material"),
       ),
     );
@@ -179,7 +180,7 @@ for (const context of ["select", "template"] as const)
       const compilation = await compileCatalogue(config);
       const reader = (content: string) => ({
         read: async (route: string) => {
-          const generated = compilation.outputs.get(route);
+          const generated = textOutput(compilation.outputs, route);
           if (generated !== undefined) return Buffer.from(generated);
           assert.equal(route, "image.svg");
           return Buffer.from(content);
@@ -209,7 +210,7 @@ for (const context of ["select", "template"] as const)
         optimized.changes.some(
           (change) =>
             change.kind === "screen" &&
-            change.after?.id === "home" &&
+            change.after?.path === "home" &&
             change.reasons.some((reason) =>
               generatedOutput === "committed"
                 ? reason.kind === "dependency" &&

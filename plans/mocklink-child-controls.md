@@ -1,5 +1,9 @@
 # MockLink Child Controls
 
+Status: Completed. [PR #42](https://github.com/mokly-ai/mokly/pull/42)
+merged on 2026-09-09. Items 2 and 3 of the follow-up review, recorded
+below, await the user's decision.
+
 Implement the approved [styled link controls contract](../docs/protocol/mokly-link-controls.md)
 so consumers can use their existing styled controls with Mokabook navigation.
 Scope is the Mokabook package, documentation, and consumer/browser fixtures.
@@ -122,7 +126,7 @@ already-planned post-review bookkeeping.
 
 5. **Severity: Low — delivery plan status is stale for a committed/pushed review diff.**
 
-   Context: [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L49) says full validation passed, but [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L55) leaves commit, push, review, and final plan recording unchecked; [plans/README.md](../plans/README.md#L5) still lists the plan as active.
+   Context: [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L49) says full validation passed, but [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L55) leaves commit, push, review, and final plan recording unchecked; `plans/README.md` still lists the plan as active.
 
    Impact of doing nothing: reviewers cannot tell whether post-push review happened or whether the feature is complete.
 
@@ -228,7 +232,7 @@ original report.
 
 4. **Severity: Low — delivery plan still records review as pending.**
 
-   **Context:** [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L165) leaves post-push `cargo xtask review` and final plan/index recording unchecked, and [plans/README.md](../plans/README.md#L3) still lists the plan as active.
+   **Context:** [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L165) leaves post-push `cargo xtask review` and final plan/index recording unchecked, and `plans/README.md` still lists the plan as active.
 
    **Impact of doing nothing:** reviewers cannot tell from committed docs whether the required post-push Review step completed for the final fix commit.
 

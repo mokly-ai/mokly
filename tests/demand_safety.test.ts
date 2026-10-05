@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { evaluateBundle } from "../dist/build/consumer_bundle.js";
+import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -39,14 +39,8 @@ for (const reference of [
     );
     const config = await loadConfig(fixture.root);
     const runtime = await prepareLiveRuntime(config);
-    const compiler = new DocumentCompiler(runtime, {
-      ...evaluateBundle(runtime.bundle),
-      entrySources: runtime.bundle.entrySources,
-    });
-    assert.throws(
-      () => compiler.render("screens/home.desktop.html"),
-      /invalid/,
-    );
+    const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
+    assert.throws(() => compiler.render("home/index.desktop.html"), /invalid/);
     await assert.rejects(compileCatalogue(config), /invalid/);
   });
 }
@@ -63,9 +57,9 @@ test(
     const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
     const service = new DocumentService(runtime, () => {}, { timeoutMs: 1000 });
     fixture.beforeRemove(() => service.close());
-    await assert.rejects(service.read("screens/home.desktop.html"), /too long/);
+    await assert.rejects(service.read("home/index.desktop.html"), /too long/);
     assert.match(
-      (await service.read("screens/details.desktop.html")).html,
+      (await service.read("details/index.desktop.html")).html,
       /id="details"/,
     );
   },
@@ -83,7 +77,7 @@ test("metadata and complete catalogue adoption require the current generation", 
     componentRuntime: runtime,
   });
   fixture.beforeRemove(() => server.close());
-  const metadata = `${server.url}/__mokly/views/screens/home.desktop.html`;
+  const metadata = `${server.url}/__mokly/views/home/index.desktop.html`;
   assert.equal((await fetch(`${metadata}?generation=stale`)).status, 409);
   const response = await fetch(`${metadata}?generation=${runtime.generation}`);
   const data = await response.json();
@@ -95,7 +89,7 @@ test("metadata and complete catalogue adoption require the current generation", 
     false,
   );
   assert.match(
-    await (await fetch(`${server.url}/view/screens/home.html`)).text(),
+    await (await fetch(`${server.url}/view/home/`)).text(),
     /"usageComplete":false/,
   );
   assert.equal(
@@ -103,7 +97,7 @@ test("metadata and complete catalogue adoption require the current generation", 
     true,
   );
   assert.doesNotMatch(
-    await (await fetch(`${server.url}/view/screens/home.html`)).text(),
+    await (await fetch(`${server.url}/view/home/`)).text(),
     /"usageComplete":false/,
   );
   server.replaceComponentRuntime({ ...runtime, generation: "a".repeat(32) });

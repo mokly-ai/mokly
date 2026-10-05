@@ -15,7 +15,7 @@ export function WorkspaceStage({
   previewViews,
   data,
   target,
-  variantId,
+  variantPath,
   variantRemoved,
 }: {
   catalogue: Catalogue;
@@ -23,7 +23,7 @@ export function WorkspaceStage({
   previewViews: readonly GeneratedComponentView[];
   data: WorkspaceData;
   target: RouteTarget;
-  variantId?: string;
+  variantPath?: string;
   variantRemoved: boolean;
 }) {
   if (data.removed)
@@ -57,7 +57,7 @@ export function WorkspaceStage({
       previewViews={previewViews}
       target={target}
       {...(context.fragment ? { fragment: context.fragment } : {})}
-      {...(variantId ? { variantId } : {})}
+      {...(variantPath ? { variantPath } : {})}
     />
   );
 }

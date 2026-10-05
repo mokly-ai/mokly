@@ -1,0 +1,42 @@
+{
+  "lockfileVersion": 3,
+  "packages": {
+    "": {
+      "name": "@mokly/mokly",
+      "version": "0.13.0"
+    },
+    "node_modules/braces": {
+      "version": "3.0.3",
+      "dev": true,
+      "peer": true
+    },
+    "node_modules/metro": {
+      "version": "0.84.6",
+      "dev": true,
+      "peer": true,
+      "dependencies": {
+        "metro-file-map": "0.84.6"
+      }
+    },
+    "node_modules/metro-file-map": {
+      "version": "0.84.6",
+      "dev": true,
+      "peer": true,
+      "dependencies": {
+        "micromatch": "^4.0.4"
+      }
+    },
+    "node_modules/micromatch": {
+      "version": "4.0.8",
+      "dev": true,
+      "peer": true,
+      "dependencies": {
+        "braces": "^3.0.3"
+      }
+    },
+    "packages/viewer": {
+      "name": "@mokly/viewer",
+      "version": "0.4.0"
+    }
+  }
+}

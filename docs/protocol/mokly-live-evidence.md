@@ -5,6 +5,12 @@
 Live evidence updates and bounded affected-usage deduplication are implemented.
 Deduplication verification is recorded in the
 [dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
+The path-named link fields below are the approved contract; the current
+implementation still carries `entryId` until the
+[path identity plan](../../plans/path-identity.md) delivers them.
+Adoption of the current entry's scoped bootstrap with its complete private
+workspace when applicable, exact-scoped Serve responses, and rejection of
+complete live catalogues are implemented.
 
 ## Revisions and publication
 
@@ -30,16 +36,19 @@ edits can be ignored.
 ## Browser adoption
 
 For a newer update or reconnect `ready`, the browser requests its current durable
-shell URL without caching. This reuses the existing public shell projection;
-it introduces no manifest endpoint and does not transfer the internal catalogue
-or baseline inventories. It does not request comparison snapshots or replace
-the current iframe documents.
+shell URL without caching. It validates that page's
+[entry-scoped public bootstrap](./mokly-shell-bootstrap.md) and paired private
+capability descriptor; it introduces no manifest endpoint and does not transfer
+the internal catalogue or baseline inventories. It does not request comparison
+snapshots or replace the current iframe documents.
 
-If the fetched content version matches the mounted page, apply its evidence
-in place. Its update version must be at least the triggering event version and
-the mounted page's version. A later response can catch up beyond its triggering
-event. Superseded requests are aborted and cannot apply data or cause a reload.
-Page shutdown cancels pending fetches and navigation waits.
+If the fetched content version matches the mounted page, atomically replace the
+installed scoped catalogue and current entry's private workspace. Its update
+version must be at least the triggering event version and the mounted page's
+version. A later response can catch up beyond its triggering event. Never merge
+retained usage from the previous entry or revision. Superseded requests are
+aborted and cannot apply data, report failure, or cause a reload. Page shutdown
+cancels pending fetches and navigation waits.
 
 The browser retains the navigation tree, All/Changes buttons, current preview
 frames, user filter, search, section and folder disclosure, focus, drawer and
@@ -47,11 +56,12 @@ scroll state.
 Update the count/status, changed-entry attributes and baseline-only rows from
 the same snapshot. Retained removed rows keep their identity; additions/removals
 follow the canonical server order after the current tree. Existing rules for
-removed screens/components in All and removed pages only in Changes still apply.
+removed screens/components in All and removed pages and documents only in
+Changes still apply.
 Changes preparing, loading and empty/unavailable states use the existing
 sidebar design; `preparing` precedes loading only in
 [derived mode](./mokly-derived-baselines.md). A status-only evidence update
-carries no changed ids or snapshot, so entering and leaving `preparing` replaces the
+carries no changed paths or snapshot, so entering and leaving `preparing` replaces the
 count slot and the selected-Changes sidebar without touching the tree, the
 current documents, or the focused control. The tree stays `aria-busy` while
 either working state is selected.
@@ -84,8 +94,13 @@ releases evidence waiting for it. Only the current navigation may commit.
 ## Workspace evidence
 
 Update entry statuses, including variant entries, comparison eligibility,
-Details evidence and complete Used by/Affected usage without reinstalling the
-workspace. Keep temporary props, current instance selection, inspector
+baseline variants,
+Details evidence and complete Used by/Affected usage from the paired private
+workspace without reinstalling the workspace. An entry-scoped public fallback
+never derives those lists from omitted records: it reports loading until the
+private workspace is adopted and failed after a current read failure or
+rejection, without showing a partial or zero-consumer result. Keep temporary
+props, current instance selection, inspector
 disclosure, highlight state and authenticated preview documents intact. Usage
 updates retain matching link elements while adding, removing or changing only
 the affected sections and rows, so background completion cannot interrupt a
@@ -100,18 +115,20 @@ its actual displayed documents, even after exhaustive Usage becomes available.
 Retain its preview generation and already loaded per-view usage. Unloaded live
 views still request their own records when displayed; exhaustive render-order
 records cannot substitute for those documents. Exhaustive catalogue records
-supply the complete Used by list.
+supply the complete private-workspace `Used by` list. Scoped-bootstrap adoption
+does not replace a newer matching per-view record or change these retention
+rules.
 
 ### Affected-Usage Identity And Ordering
 
 The shared served/published workspace deduplicates Affected usage links after
 projecting the selected component's affected-consumer evidence. Two links are
 duplicates exactly when `JSON.stringify` of each complete link matches. Every
-field participates: `entryId`, `entryKind`, `title`, `viewport`, `colorScheme`,
-`instanceKey`, `direct`, `removed`, and `comparisonEligible`; future fields do
-too. A component variant uses its own global `entryId`; no route or saved-
-variant field exists. Preserve object field order and omission semantics rather
-than an id-only, instance-only, or sorted/subset key.
+field participates: `entryPath`, `entryKind`, `title`, `viewport`,
+`colorScheme`, `instanceKey`, `direct`, `removed`, and `comparisonEligible`;
+future fields do too. A component variant uses its own `entryPath`; no route or
+saved-variant field exists. Preserve object field order and omission semantics
+rather than a path-only, instance-only, or sorted/subset key.
 
 Keep the first occurrence in evidence order: affected-consumer record order,
 then each record's evidence order. Do not sort the result or merge distinct
@@ -130,8 +147,10 @@ evidence.
 Cover Changed selection while its current preview is unchanged, actual Usage
 completion during a temporary prop edit, later variant/scheme switches, removed
 row membership/order, superseded responses, navigation races, reconnect catch-up
-and content updates followed immediately by evidence updates. Genuine source
-and resource edits must still refresh the rendered content.
+and content updates followed immediately by evidence updates. Cover loading,
+failed and retry presentation without a partial/zero list, plus scoped-catalogue
+replacement without iframe remount or loss of retained per-view usage. Genuine
+source and resource edits must still refresh the rendered content.
 Test affected-link duplicates across evidence records, first-occurrence order,
 and distinct fields/contexts; assert at most one serialization per input link,
 including duplicates, with the same projection for served and published shells.

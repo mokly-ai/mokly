@@ -67,7 +67,8 @@ function snapshot(id: string): ComponentChangeSnapshot {
     baseline: {
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 7,
+      schemaVersion: 8 as const,
+      folders: [],
       sourceFiles: [`${id}.html`],
     },
   };
@@ -77,7 +78,8 @@ function manifest() {
   return {
     entries: [],
     generatedBy: "mokly" as const,
-    schemaVersion: 7 as const,
+    schemaVersion: 8 as const,
+    folders: [],
     sourceFiles: [],
   };
 }

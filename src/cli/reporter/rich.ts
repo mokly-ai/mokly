@@ -1,4 +1,4 @@
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
 import { formatBuildDiagnostic } from "../../build/build_warnings.js";
@@ -89,7 +89,7 @@ export class RichReporter implements CliReporter {
       this.warning(formatBuildDiagnostic(diagnostic));
   }
 
-  catalogueReady(manifest: ManifestV7, durationMs: number): void {
+  catalogueReady(manifest: ManifestV8, durationMs: number): void {
     this.settleServePhase();
     const counts = catalogueCounts(manifest);
     this.line(

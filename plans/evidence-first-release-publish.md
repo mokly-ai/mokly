@@ -1,5 +1,8 @@
 # Evidence-First Release Publish
 
+Status: Completed. [PR #117](https://github.com/mokly-ai/mokly/pull/117)
+merged on 2026-09-23.
+
 Stop re-running the complete `cargo xtask check` gate inside the npm publish
 job when successful CI evidence already exists for the exact tree being
 published. The publish job keeps every check that CI does not perform (tag

@@ -39,11 +39,11 @@ for (const producer of ["live", "export"])
     );
     if (producer === "live") {
       assert.deepEqual(
-        changes.componentChanges?.screenEvidence?.map(({ id, views }) => ({
-          id,
+        changes.componentChanges?.screenEvidence?.map(({ path, views }) => ({
+          path,
           views: views.map((view) => view.viewport),
         })),
-        [{ id: "home", views: ["mobile", "mobile"] }],
+        [{ path: "home", views: ["mobile", "mobile"] }],
       );
       return;
     }
@@ -58,7 +58,7 @@ for (const producer of ["live", "export"])
     );
     for (const screen of comparison.result.screens) {
       const html = String(
-        site.inventory.files.get(`view/screens/${screen.id}.html`),
+        site.inventory.files.get(`view/${screen.path}/index.html`),
       );
       const json = /<script[^>]*data-workspace-data[^>]*>(.*?)<\/script>/s.exec(
         html,
@@ -67,7 +67,7 @@ for (const producer of ["live", "export"])
       const data = JSON.parse(json) as WorkspaceData;
       assert.deepEqual(
         data.resourceEvidence?.map((view) => view.viewport),
-        screen.id === "home" ? ["mobile", "mobile"] : undefined,
+        screen.path === "home" ? ["mobile", "mobile"] : undefined,
       );
     }
   });

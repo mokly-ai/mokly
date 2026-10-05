@@ -75,7 +75,7 @@ code examples. Shell commands belong in language-labelled code fences.
 
 ## Guide Links
 
-The initial guide corpus contains no links. Future links use only these forms:
+Guide links use only these forms:
 
 - another guide: `/docs/<section>/<slug>/`;
 - one of the published protocol documents:
@@ -153,10 +153,12 @@ from different package versions.
 
 ## Writing And Verification Rules
 
-- Document only commands, flags, fields, exports, and behavior verified against
-  the current implementation.
-- Use present tense. Do not use "coming soon", invent customers or figures, or
-  tell readers what Mokly does not do.
+- Document shipped commands, flags, fields, exports, and behavior only after
+  verification against the current implementation. Guide examples must run
+  in the installed version; do not present future target behavior as shipped.
+- Use present tense for current behavior and conditional language for a
+  target. Do not use "coming soon", invent customers or figures, or list
+  unrelated absent features in place of actionable guidance.
 - Prefer one concept per page and keep a guide around 200 lines or fewer.
 - Use product nouns in headings. Put exact code identifiers in code spans,
   tables, or examples.

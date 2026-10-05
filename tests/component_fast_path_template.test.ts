@@ -9,6 +9,7 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const image = '<img loading="lazy" src="../image.svg" />';
 const templateCases = [
@@ -27,8 +28,8 @@ const templateCases = [
       "(props) => <template><pane2.Component>{props.children}</pane2.Component></template>",
     body: `<pane.Component>${image}</pane.Component>`,
     extra:
-      'const pane2 = defineComponent({ ...metadata, id: "pane2", title: "Pane2", description: "Forwarding receiver", route: "components/pane2.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{id: "pane2-default", title: "Default", props: {children: <b>Saved</b>}}] });',
-    exports: "action.entries, pane.entries, pane2.entries,",
+      'const pane2 = defineComponent({ ...metadata, path: "pane2", title: "Pane2", description: "Forwarding receiver", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{ slug: "default", title: "Default", props: {children: <b>Saved</b>}}] });',
+    exports: "...action.entries, ...pane.entries, ...pane2.entries,",
   },
 ] as const;
 
@@ -48,8 +49,8 @@ const selectCases = [
       "(props) => <select><pane2.Component>{props.children}</pane2.Component></select>",
     body: `<pane.Component>${image}</pane.Component>`,
     extra:
-      'const pane2 = defineComponent({ ...metadata, id: "pane2", title: "Pane2", description: "Forwarding receiver", route: "components/pane2.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{id: "pane2-default", title: "Default", props: {children: <b>Saved</b>}}] });',
-    exports: "action.entries, pane.entries, pane2.entries,",
+      'const pane2 = defineComponent({ ...metadata, path: "pane2", title: "Pane2", description: "Forwarding receiver", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{ slug: "default", title: "Default", props: {children: <b>Saved</b>}}] });',
+    exports: "...action.entries, ...pane.entries, ...pane2.entries,",
   },
 ] as const;
 
@@ -64,7 +65,7 @@ for (const templateCase of templateCases)
       const files = (content: string) => ({
         read: async (route: string) => {
           const value =
-            compilation.outputs.get(route) ??
+            textOutput(compilation.outputs, route) ??
             (route === "image.svg" ? content : undefined);
           assert.notEqual(value, undefined, route);
           return Buffer.from(value!);
@@ -91,7 +92,7 @@ for (const templateCase of templateCases)
       ]);
       assert.deepEqual(optimized, complete);
       const screenChange = optimized.changes.find(
-        (change) => change.kind === "screen" && change.after?.id === "home",
+        (change) => change.kind === "screen" && change.after?.path === "home",
       );
       assert.ok(screenChange);
       assert.ok(
@@ -115,7 +116,7 @@ for (const selectCase of selectCases)
       const reader = (content: string) => ({
         read: async (route: string) => {
           const value =
-            compilation.outputs.get(route) ??
+            textOutput(compilation.outputs, route) ??
             (route === "image.svg" ? content : undefined);
           assert.notEqual(value, undefined, route);
           return Buffer.from(value!);
@@ -142,7 +143,7 @@ for (const selectCase of selectCases)
       ]);
       assert.deepEqual(optimized, complete);
       const screenChange = optimized.changes.find(
-        (change) => change.kind === "screen" && change.after?.id === "home",
+        (change) => change.kind === "screen" && change.after?.path === "home",
       );
       assert.ok(screenChange);
       assert.ok(

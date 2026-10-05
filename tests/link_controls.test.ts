@@ -10,7 +10,7 @@ const page = (body: string) =>
   `<!doctype html><html><head><title>Control</title></head><body>${body}</body></html>`;
 const wrap = (body: string) => `${start}${body}${end}`;
 const adapt = (body: string) => {
-  const result = adaptLinkControls(page(body), "screens/home.html");
+  const result = adaptLinkControls(page(body), "home/index.html");
   assert.deepEqual(result.diagnostics, []);
   return result.html;
 };

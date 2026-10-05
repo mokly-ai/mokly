@@ -6,6 +6,7 @@ import { smokeEsmConsumer } from "./package/consumer_cases/esm.mjs";
 import { smokeJunoFixture } from "./package/consumer_cases/juno.mjs";
 import { smokeNodeNextConsumer } from "./package/consumer_cases/nodenext.mjs";
 import { smokeThemedConsumer } from "./package/consumer_cases/themed.mjs";
+import { smokeImportedStylesConsumer } from "./package/imported_styles.mjs";
 import {
   inspectPackagePair,
   packPackagePair,
@@ -57,8 +58,9 @@ try {
   await smokeCleanCacheExecution(context);
   await smokeThemedConsumer(context);
   await smokeJunoFixture(context);
+  await smokeImportedStylesConsumer(context);
   process.stdout.write(
-    "Both packed packages passed all five consumer scenarios.\n",
+    "Both packed packages passed all six consumer scenarios.\n",
   );
 } finally {
   await fs.promises.rm(workingRoot, { force: true, recursive: true });

@@ -11,6 +11,7 @@ import { MANIFEST_NAME } from "../dist/registry/manifest.js";
 import { GitProcessError } from "../dist/review/git_process.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("derived check accepts missing or stale local output and tracked authored public files", async (t) => {
   const fixture = await derivedFixture(t, undefined, {
@@ -28,7 +29,7 @@ test("derived check accepts missing or stale local output and tracked authored p
   );
   await store.write(fixture.baseline, fixture.config);
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+    path.join(fixture.mockupsDir, "home/index.mobile.html"),
     "locally edited output",
   );
   await store.check(await compileCatalogue(fixture.config), fixture.config);
@@ -48,7 +49,7 @@ test("derived check lists every tracked generated or cache path with ignore guid
     "cache",
   );
   const tracked = [
-    "mockups/screens/home.mobile.html",
+    "mockups/home/index.mobile.html",
     `mockups/${MANIFEST_NAME}`,
     ".mokly-cache/forced.txt",
   ];
@@ -69,9 +70,12 @@ test("derived check rejects retired generated routes from the index even when th
   const fixture = await derivedFixture(t);
   const store = new FileSystemGeneratedOutputStore();
   await store.write(fixture.baseline, fixture.config);
-  const retired = "mockups/screens/retired.mobile.html";
+  const retired = "mockups/retired/index.mobile.html";
+  await fs.mkdir(path.dirname(path.join(fixture.root, retired)), {
+    recursive: true,
+  });
   await fs.rename(
-    path.join(fixture.root, "mockups/screens/home.mobile.html"),
+    path.join(fixture.root, "mockups/home/index.mobile.html"),
     path.join(fixture.root, retired),
   );
   await fixture.git("add", "-f", "--", retired);
@@ -88,7 +92,7 @@ test("derived check rejects retired generated routes from the index even when th
   const guide = "mockups/guide.html";
   await fs.writeFile(
     path.join(fixture.root, guide),
-    `<!doctype html>\n${fixture.baseline.outputs.get("screens/home.mobile.html")}`,
+    `<!doctype html>\n${textOutput(fixture.baseline.outputs, "home/index.mobile.html")}`,
   );
   await fixture.git("add", "-f", "--", guide);
   await fs.rm(path.join(fixture.root, guide));
@@ -130,7 +134,7 @@ test("derived build creates an absent nested directory transactionally and prese
   await store.write(compilation, config);
   assert.equal(
     await fs.readFile(path.join(config.mockupsDir, MANIFEST_NAME), "utf8"),
-    compilation.outputs.get(MANIFEST_NAME),
+    textOutput(compilation.outputs, MANIFEST_NAME),
   );
   const rename = fs.rename;
   let failed = false;
