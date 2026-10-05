@@ -1,12 +1,15 @@
 # Mokabook Design MockLinks
 
+Status: Completed. [PR #46](https://github.com/mokly-ai/mokly/pull/46)
+merged on 2026-09-09.
+
 ## Outcome And Status
 
 Make Mokabook's own design catalogue navigable through its pictured links,
 rows, and supported state controls, in both mobile and desktop variants.
 The basic example's prominent buttons also demonstrate `MockLink asChild`.
 
-Status: complete. All milestones are delivered; implementation `9fbbc17` is
+All milestones are delivered; implementation `9fbbc17` is
 pushed and reviewed against integrated main `e47524b`. The complete contract is
 [Design mockup links](../docs/protocol/mokly-design-links.md), which builds
 on the implemented [navigation](../docs/protocol/mokly-navigation.md) and

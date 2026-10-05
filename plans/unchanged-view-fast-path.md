@@ -1,5 +1,8 @@
 # Unchanged View Fast Path
 
+Status: Completed. [PR #94](https://github.com/mokly-ai/mokly/pull/94)
+merged on 2026-09-19.
+
 ## Status And Outcome
 
 The original implementation and measurement milestones are complete. The fast path
@@ -9,8 +12,7 @@ resource and derived-byte gates intact, and emits explicit path counts.
 All eight approved findings are addressed and pushed. Milestone 9 implements
 the approved projection-aware resource proof for Finding 8, including the
 related instance-removal case found during supervision. The complete branch
-passed its checks and post-push review with no new findings. This plan remains
-Active until the PR merges.
+passed its checks and post-push review with no new findings.
 
 The final example measurement took medians of three warmed shortcut runs:
 1,064 ms committed and 1,451 ms derived. Complete comparison in the same

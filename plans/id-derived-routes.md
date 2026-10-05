@@ -1,12 +1,13 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
-Status: Milestones 1–23 implemented, verified, pushed, and reviewed on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-30); the third follow-up
-review's 9 findings in the [review record](#review-record) await the user's
-decision. Created 2026-09-26 with the user's consent after discussing route
-redundancy on the navigation-path branch; the variant unification and the wire
-cleanup were folded in the same day. The work is implemented on this branch,
-`calummoore/halifax-v2`, and the user opens a pull request when it is ready.
+Status: Completed. [PR #123](https://github.com/mokly-ai/mokly/pull/123)
+merged on 2026-09-30. Milestones 1–23 were implemented, verified, pushed,
+and reviewed on `calummoore/halifax-v2` (2026-09-26 to 2026-09-30); the third
+follow-up review's 9 findings in the [review record](#review-record) await the
+user's decision. [Path Identity](./path-identity.md) later replaced id-based
+identity with file-derived paths. Created 2026-09-26 with the user's consent
+after discussing route redundancy on the navigation-path branch; the variant
+unification and the wire cleanup were folded in the same day.
 Mokly is not live, so this plan adds no backwards compatibility: readers it
 rewrites accept only the new versions, and there are no migration guards or
 transitional shapes.

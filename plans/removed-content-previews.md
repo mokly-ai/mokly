@@ -1,5 +1,10 @@
 # Removed Content Previews
 
+Status: Completed. [PR #98](https://github.com/mokly-ai/mokly/pull/98)
+merged on 2026-09-21.
+[Viewer-Owned Historical Previews](./viewer-owned-historical-previews.md)
+closes its High cross-origin read-only finding.
+
 ## Status And Outcome
 
 Milestones 1 to 9 have completed implementation and pre-merge verification.
