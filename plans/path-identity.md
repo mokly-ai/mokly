@@ -10,10 +10,11 @@ recommended option for each of the eight findings in the
 those fixes and end with a new review. Milestones 9–12 are complete. Milestone
 13 is complete, including a second fresh review with fifteen findings in the
 [review record](../docs/reviews/path-identity.md#second-review). On 2026-10-04
-the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. Milestones 14, 15
-and 16 are complete. Milestone 17 integration, verification and CLI/browser
-smoke are complete; only its fresh review remains for the orchestrator. The
-other ten findings await the user's decision.
+the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. Milestones 14–17
+are complete, including a third fresh review whose six findings, and four
+items found during Milestone 16, are in the
+[review record](../docs/reviews/path-identity.md#third-review). They and the
+other ten second-review findings await the user's decision.
 This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
@@ -2512,9 +2513,15 @@ assigned to fresh reviewers after the push.
       `docs/reviews/path-identity.md`. Update this plan's status and
       `plans/README.md`.
 - [x] Commit and push.
-- [ ] After the push, the orchestrator assigns fresh reviewers to use
+- [x] After the push, the orchestrator assigns fresh reviewers to use
       `docs/implementation-review-prompt.md` against the complete diff from
       `origin/main` and report findings without changing the implementation.
+      Fresh Codex and Claude reviewers reviewed `aaf6fd75` against
+      `origin/main` at `800fe9f8`. The five approved fixes work as specified.
+      The [third review](../docs/reviews/path-identity.md#third-review) lists
+      six findings (two Medium, four Low), plus four items found during
+      Milestone 16, for the user's decision. No finding was fixed during the
+      review.
 
 Integration: fast-forwarded from `612c0032` through `5127f9b5` to
 `3aff9c03`. There were no conflicts or merge commit. Main remains `800fe9f8`;

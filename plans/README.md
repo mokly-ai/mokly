@@ -26,10 +26,11 @@
   Milestones 14–16 are complete. Milestone 17 integrated the shell consumers
   unchanged, passed the unmodified full gate (4,214 unit, 844 browser and 261
   hydration tests) and passed all five CLI smoke cases in Serve and export at
-  desktop and mobile widths. The approved outcomes are recorded; the final
-  review remains for fresh reviewers after the push. The other ten
-  findings await the user's decision. The plan stays Active until its pull
-  request merges.
+  desktop and mobile widths. The approved outcomes are recorded. A third
+  fresh review found [six findings](../docs/reviews/path-identity.md#third-review),
+  and Milestone 16 reported four more items. They and the other ten
+  second-review findings await the user's decision. The plan stays Active
+  until its pull request merges.
 
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete

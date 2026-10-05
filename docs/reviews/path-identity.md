@@ -469,8 +469,8 @@ The shared browser checks are
 [`branch_point_serve.spec.ts`](../../tests/browser/branch_point_serve.spec.ts),
 [`branch_point_export.spec.ts`](../../tests/browser/branch_point_export.spec.ts)
 and [`branch_point_viewer.spec.ts`](../../tests/browser/branch_point_viewer.spec.ts).
-All 30 cases pass. The guard prevents shell and viewer consumers from adding
-another path mapping outside the shared lookup.
+All 30 cases pass. The guard blocks the four patterns that it checks. The
+[third review](#third-review) found that it misses plain path lookups.
 
 **Remaining Serve behavior for finding 8:** Serve still resets the comparison
 mode on the first navigation after any new on-demand comparison, siblings
@@ -495,3 +495,169 @@ title. Removed variants retained crumbs and props, export retained Side by
 side across sibling navigation, and Changes reached the removed member.
 No browser page error or HTTP 500 occurred. Scratch sources, logs, results
 and screenshots stay in `.context/m17/`, outside the feature diff.
+
+## Third Review
+
+Two fresh reviewers repeated the read-only review on `aaf6fd75` against
+`origin/main` at `800fe9f8`, with the same split as before. The five approved
+fixes work as specified in the five shared cases, and the lookup matches its
+contract. The Codex reviewer's unmodified `cargo xtask check` passed: 4,214
+unit tests, 844 browser tests, and 261 hydration tests. The reviewers found
+seven issues, and two of them are the same, so six findings follow. The
+orchestrator reproduced finding 2 in scratch Git repositories and confirmed
+the rest by reading the code. The reviewers reproduced findings 1 to 5.
+Nothing was changed during the review. The user decides what to address next.
+
+1. **Medium — The guard test misses plain path lookups, which caused
+   second-review finding 1.**
+   - **Where:**
+     [`branch_point_guard.test.ts`](../../tests/branch_point_guard.test.ts),
+     around lines 15–23 and 66–96. The shell README (around lines 7–11 and
+     37–41) claims that no shell module resolves references outside the
+     lookup.
+   - **What happens:** the guard flags `previousPaths` reads, followed or
+     compared `variantOf` values, and case-folded paths. It cannot see a
+     plain `===`, `.find`, or `Map.get` match between a branch-point path and
+     a current path. It does not scan `packages/viewer/src/catalogue/`, which
+     the shell calls.
+   - **Confirmed:** both reviewers ran the guard's rules on the files at
+     `b02f0e7c`. The rules flag the files behind second-review findings 6,
+     8, 9, and 11, but report nothing for the `workspace_usage_data.ts` that
+     broke export (finding 1). They also miss finding 2 below.
+   - **Impact of no change:** the guard gives false confidence. New code can
+     repeat the High finding and still pass.
+   - **Options:**
+     - **A)** Widen the rules: treat `componentId` reads and plain matches on
+       paths from removed records, baseline entries, or review evidence like
+       `variantOf`. Add the faulty `workspace_usage_data.ts` as a rejected
+       guard sample.
+     - **B)** Give branch-point paths their own type when the catalogue is
+       read, for example `{ side: "before", kind, path }`, so the compiler
+       rejects a direct match against a current path. A type-aware guard then
+       blocks `.path` reads outside the lookup. This changes the readers, the
+       projection, and the consumers. The v4 read model is unreleased.
+     - **C)** Keep the guard, narrow the README claim, and add a browser
+       check that no raw path appears where a title belongs.
+   - **Recommended: B,** with A's rejected sample. This class caused five
+     second-review findings and findings 2 and 4 below. A type makes the
+     compiler enforce the rule; a list of banned patterns cannot.
+2. **Medium — A removed screen loses the titles and, in the embedded viewer,
+   the inspection of a component that moved or changed letter case.**
+   - **Where:** the label in
+     [`workspace_instances.tsx`](../../packages/viewer/src/shell/workspace_instances.tsx)
+     (around lines 118–131), the same exact match in `workspace_props.tsx`,
+     `workspace_inspection_labels.tsx`, and `viewer/inspection_layer.tsx`,
+     and the embedded "Used by" list in `viewer/public_workspace.ts`. The
+     embedded symptom comes from the projection in
+     [`views.ts`](../../src/catalogue/views.ts) (around lines 36–43). The
+     lookup contract does not list usage component names as branch-point
+     references.
+   - **What happens:** a removed screen keeps its branch-point render, which
+     names each component by its old path. A paired move removes no record at
+     that path, so the shell finds no component and shows the raw path. The
+     projection drops that usage, so the embedded viewer marks it
+     unavailable.
+   - **Confirmed:** the orchestrator moved `library/badge` to
+     `library/ui/badge` with `movedFrom` and deleted the screen that used it.
+     The exported `catalogue.json` marks the removed screen's views
+     `unavailable`; without the move they are `ready`. The reviewer saw
+     `library/badge · badge` instead of `Badge · badge` in Serve and export,
+     and `library/Badge · Badge` after a case-only rename.
+   - **Impact of no change:** after an ordinary library reorganisation,
+     users see a file path where the product shows a title, and the embedded
+     viewer stops inspecting removed screens. On main, the same change kept
+     inspection, because a move was a removal plus an addition.
+   - **Options:**
+     - **A)** Resolve each usage component name through the lookup in one
+       helper (before side for removed records, after side for current
+       entries), and use it in the four inspector places and in "Used by".
+       Keep usage that resolves through a move or a case-only rename in the
+       projection and the readers. Add the case to the lookup contract and a
+       sixth shared fixture case in all three hosts.
+     - **B)** Fix only the label in Serve and export, and document that the
+       embedded viewer has no inspection here.
+     - **C)** Show the recorded title or a neutral label when no match
+       exists.
+   - **Recommended: A.**
+3. **Low — A variant that moves into a new parent shows no Before and
+   Current values for the inputs it passes to nested components.**
+   [`workspace_input_changes.ts`](../../packages/viewer/src/shell/workspace_input_changes.ts)
+   (around line 41) stops when the parent has no branch-point entry, so a
+   variant's own move pair is never used. Details says "Supplied props or
+   slots changed" but shows no values. No shared case has a moved variant
+   with a nested component. **Options:** **A)** for component pages, pair
+   each variant through its own counterpart and drop the parent check;
+   **B)** make the check per variant. **Recommended: A,** with the
+   new-parent case in `branch_point_inputs.test.ts` and the shared fixtures.
+4. **Low — Removed variants lose their authored order after their parent
+   moves or changes letter case.** The projection
+   ([`projection.ts`](../../src/catalogue/projection.ts), around line 158)
+   groups removed variants by their old `variantOf` with an exact match, so
+   they fall back to path order. The reviewer saw `zulu, alpha` published
+   as `alpha, zulu` in Serve and export. **Options:** **A)** add move and
+   case handling to the sorter; **B)** order removed records through the
+   shared parent lookup. **Recommended: B,** with two removed siblings in
+   non-alphabetical order in the shared fixtures.
+5. **Low — Both readers accept a `previousPath` that names a current entry
+   of the same kind.**
+   [`references.ts`](../../packages/viewer/src/catalogue/references.ts)
+   (around line 74) checks uniqueness and removed paths only. The lookup
+   contract forbids this state, and the lookup then sends baseline
+   references to the wrong entry. **Options:** **A)** reject it in the
+   shared reader validator, case-folded, while reuse by another kind stays
+   valid; **B)** reject it when the lookup is built. **Recommended: A,**
+   with negative tests for both readers.
+6. **Low — The guard test fails on Windows.** It compares a native relative
+   path with a forward-slash constant
+   ([`branch_point_guard.test.ts`](../../tests/branch_point_guard.test.ts),
+   around line 114), so on Windows it scans the lookup itself and reports
+   two violations. The native CI job runs only selected tests, so CI does
+   not see this. **Options:** **A)** normalise the separators, with a test
+   for both styles; **B)** compare resolved absolute paths.
+   **Recommended: A,** and add the guard to the native Windows job.
+
+**Found during Milestone 16.** The implementation agent reported four more
+items. Items 7 to 9 also happen on main.
+
+7. **Medium — Serve resets the comparison mode after each new on-demand
+   comparison.** Each comparison document raises the evidence revision, and
+   `use_comparison.ts` includes that revision in the mode owner, so the next
+   navigation returns to Current, siblings included. The shared Serve suite
+   renders its comparisons first to avoid this. **Options:** **A)** remove
+   the revision from the mode owner and renew only the loaded comparison;
+   **B)** do A, add a contract rule that names the only events that may
+   reset the mode, and add a Serve test without the warm-up step; **C)** do
+   nothing. **Recommended: B.**
+8. **Medium — Fixed time budgets fail on slow machines.** The 2,500 ms
+   budget in `postcss_dependency_review.test.ts` and the 300 s
+   `ordinaryPreview` fixture setup failed on the Milestone 16 machine, also
+   on the unchanged base. **Options:** **A)** raise the budgets; **B)** count
+   the sorts and root projections that the PostCSS test's title names, keep
+   time only as a diagnostic, and build the shared preview once before the
+   browser stage; **C)** do nothing. **Recommended: B.**
+9. **Medium — A hydration test is flaky.** The `billing/invoice/paid` case in
+   `moved_hydration.spec.ts` sometimes logs `Blocked script execution in
+'about:srcdoc'`: once in Milestone 15 (Serve), in Milestone 16 (export,
+   also on base), and in the first Milestone 17 gate run (export).
+   **Options:** **A)** find the frame that receives the script, remove
+   scripts before framing, and add a rule test that no shell `srcdoc`
+   contains `<script>`; **B)** ignore the message in this test; **C)** do
+   nothing. **Recommended: A.**
+10. **Low — `catalogueComponentVariants` ignores case-only renames.** This
+    data-layer helper compares exact paths, so the scoped page data of a
+    case-renamed removed variant omits its sibling's usage. No visible
+    effect was found. **Options:** **A)** move the identity rules into one
+    module that `catalogue/` and `shell/` share, and extend the guard to
+    `catalogue/` (except reader validation); **B)** case-fold only this
+    helper; **C)** do nothing. **Recommended: A.**
+
+**Shared cause of findings 1, 2, 4, and 10.** The server projection and the
+viewer data layer still map branch-point paths outside the lookup. One
+change addresses all four: move the lookup into a module that the
+projection, the viewer data layer, and the shell share; give branch-point
+references their own type; and extend the guard to those layers.
+
+**Residual test risk.** Native macOS and Windows behaviour was not tested.
+The UI reviewer did not run the full suites, because their hosts bind ports
+outside its allowed range. The Codex reviewer ran them, and they passed. No
+test covers findings 1 to 6.
