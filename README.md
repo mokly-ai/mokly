@@ -332,6 +332,10 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+Pull request titles use Conventional Commits and at most 72 Unicode code points.
+The separate title check runs when a PR opens, changes, or receives a push; see
+the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
+
 `npm run dependencies:check` audits every workspace dependency category against
 the live registry. It fails on Low-or-higher advisories unless an active reviewed
 exception covers the exact dev-only path. Exceptions expire on an inclusive UTC
