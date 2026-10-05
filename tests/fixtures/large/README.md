@@ -316,10 +316,15 @@ The subsequent [full-worker ablation](../../../docs/dev/fingerprinted-materials-
 recovers 15.09 s / 2.73 ms per view by reverting M9 diagnostics, with non-overlapping
 ranges. Its [GC and fixed-view heap records](../../../docs/dev/fingerprinted-materials-gc.md)
 show greater major-GC frequency with little added live heap. The gate and push
-remain stopped pending the approved separate-collector checkpoint and remeasurement.
+were stopped pending the approved separate-collector checkpoint and remeasurement.
 The [separate-collector checkpoint](../../../docs/dev/fingerprinted-materials-detail-checkpoint.md)
 records implementation and verification. The historical records retain all original values. New timed samples use only
 M8-level core collection; exact M9 material counts come from companion passes.
+The [core-only remeasurement](../../../docs/dev/fingerprinted-materials-core-measurements.md)
+retains 26 timed samples on the post-reboot 2.50GHz host and one separate detail
+pass. Four cumulative style pairs give M9/M8 **1.0050** with overlapping ranges,
+meeting the supervisor's continuation rule. Default cold no-change (+6.9%, overlap)
+and linked (+4.8%, disjoint) remain slower; this is not Decision 13 acceptance.
 
 ### Opt-in material details
 

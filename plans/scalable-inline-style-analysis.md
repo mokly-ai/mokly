@@ -1616,20 +1616,32 @@ comparison's text work no longer grows with the style sheet. See the
       pinned browser/hydration and static checks, commit locally and stop for review.
       The [detail checkpoint](../docs/dev/fingerprinted-materials-detail-checkpoint.md)
       records 427 focused, 4,909 unit and 219 hydration passes, passing package/static
-      checks and ten caught mutations. After the reboot to Xeon 2.50GHz, the full
-      browser run has 722 passes and three non-passing cases; it is not green.
-- [ ] Discovered: obtain the supervisor's decision on the three intermittent
-      browser failures before measurement or gate/push. Both trees pass 21/21
-      focused repetitions; clean prepared M8 also passes its complete 725-test
-      browser suite. The initial M8 focused run has one mobile timeout at a
-      neighboring operation, not all three exact failures. The brief's
-      environmental rule is not met; no UI/timeouts are changed or waiver claimed.
-- [ ] After that checkpoint's approval, remeasure with core collection against
-      same-host M8 `5e5111dc`: default ABBA no-change/linked cold/warm; cumulative
-      two alternating M8/M9 style-cold pairs and one linked-cold pair. Retain
-      companion detail records separately. If a shortcut cell remains clearly
-      slower with non-overlapping ranges, report before the gate/push; otherwise
-      proceed with the gate and push below under the audit-blocker rule.
+      checks and ten caught mutations. After the reboot to Xeon 2.50GHz, the first
+      full browser run had 722 passes and three non-passing cases; it was not green.
+- [x] Discovered: obtain the supervisor's decision on the three intermittent
+      browser failures. The supervisor accepts `8da4d1a9` and orders one bounded
+      full pinned M9 run. It has 724 passes and only the known mobile `design_links`
+      timeout, with no skips; the other two cases pass. Under the explicit known-spec
+      rule, record the original and new failures as host-timing flakes using the
+      M6/M7 history and continue. No UI/timeouts change or additional M8 run is needed.
+- [x] After checkpoint approval, remeasure with core collection against same-host
+      M8 `5e5111dc`: default ABBA no-change/linked cold/warm; cumulative two alternating
+      style-cold pairs and one linked-cold pair. Keep companion detail counts separate.
+      The [core-only report](../docs/dev/fingerprinted-materials-core-measurements.md)
+      retains every sample and restored fixture hash on the 2.50GHz host.
+- [x] Discovered: the initial cold-only wrapper loaded Playwright from both trees
+      before any sample or preparation began. Fix the uncommitted wrapper to resolve
+      from the selected tree, verify imports and unchanged fixture hashes, and retain
+      the failed initialization evidence. No timed sample is discarded or retried.
+- [x] Discovered: the first two style pairs have disjoint ranges but +0.5% and +7.4%
+      paired differences. The supervisor orders two more alternating cold pairs after
+      linked, then a decision on all four: proceed if mean(M9)/mean(M8) <= 1.03 or
+      ranges overlap. All 26 classifications succeed. The final paired ratios are
+      1.0053, 1.0738, 0.9726 and 0.9671; the ratio of means is 1.0050 and ranges
+      overlap, so both continuation conditions hold. Default cold fast +6.9% still
+      overlaps; complete-path linked cold +4.8% remains disjoint and is reported.
+      The separate style companion confirms zero material/fingerprint/seam work and
+      1,338,168,848 source-normalization bytes. Decision 13 acceptance remains open.
 - [x] Update relevant READMEs and the contracts' Delivery Status for delivered
       fingerprints, preserve the 250-line protocol caps, and record the approved
       gap fix and M8 review findings.
@@ -1643,9 +1655,16 @@ comparison's text work no longer grows with the style sheet. See the
       [checkpoint report](../docs/dev/fingerprinted-materials-checkpoint.md) records
       1,540 focused, 4,631 unit, 725 browser and 219 hydration passes, all 13
       caught mutations, the final 117-test rerun and passing static checks.
-- [ ] After approved measurements, run `cargo xtask check` with pinned Chromium
-      under the brief's audit-blocker rule.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After approved measurements, run `cargo xtask check` with pinned Chromium
+      under the brief's audit-blocker rule. The known braces audit blocks the
+      combined command; the same sole advisory yields 13 transitive high findings.
+      No dependencies or gate rules change. Independent package, 4,909 unit,
+      725 pinned-browser, 219 hydration and all non-audit static checks pass;
+      the final browser run has no failures/skips. The core-only report records
+      exact commands, raw evidence and the audit-exception boundary.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch
+      under the brief's documented audit-blocker rule. No new deletions or
+      hashed-template changes; the formal review remains delegated below.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

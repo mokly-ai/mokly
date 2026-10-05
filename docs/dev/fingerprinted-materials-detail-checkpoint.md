@@ -167,3 +167,15 @@ not make unrelated UI/timeout changes based on intermittent failures.
 The combined `cargo xtask check`, remeasurement and push are deferred until
 checkpoint approval. The previously recorded `braces` audit blocker remains
 untouched; no dependency update or audit waiver is claimed in this checkpoint.
+
+## Supervisor Acceptance And Bounded Browser Rerun
+
+The supervisor accepts `8da4d1a9`: core collectors are byte-identical to M8,
+with the detail collector in a separate asynchronous context. One further full
+pinned M9 browser run on the 2.50GHz host passes 724 tests and times out only on
+the known mobile `design_links` case; no tests skip. The other two cases pass.
+Under the supervisor's explicit known-spec rule, the earlier and current failures
+are recorded as host-timing flakes, supported by the M6/M7 investigation above.
+No further M8 run is required by the same-three-cases condition. No UI or timeout
+changes are made. The [core-only measurement report](./fingerprinted-materials-core-measurements.md)
+records all subsequent samples and the revised four-pair continuation decision.

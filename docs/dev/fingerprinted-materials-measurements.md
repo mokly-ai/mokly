@@ -3,8 +3,9 @@
 Method note: these historical values are unchanged and include the original M9
 combined diagnostics. The approved [separate collector](../protocol/mokly-material-work-counts.md#companion-collection)
 restores M8-level core collection for future timed samples. Material details
-belong to independent, explicitly untimed companion records; remeasurement
-follows checkpoint approval.
+belong to independent, explicitly untimed companion records. The
+[core-only remeasurement](./fingerprinted-materials-core-measurements.md) records
+`8da4d1a9`, all four style pairs and the supervisor-approved continuation decision.
 
 The [fixed-code remeasurement](./fingerprinted-materials-remeasurement.md)
 preserves 24 further samples of `14447151` against same-session M8 controls.

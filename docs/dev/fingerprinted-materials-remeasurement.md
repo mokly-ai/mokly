@@ -3,18 +3,20 @@
 Method note: these historical values are unchanged and include the original M9
 combined diagnostics. The approved [separate collector](../protocol/mokly-material-work-counts.md#companion-collection)
 restores M8-level core collection for future timed samples. Material details
-belong to independent, explicitly untimed companion records; remeasurement
-follows checkpoint approval.
+belong to independent, explicitly untimed companion records. The
+[core-only remeasurement](./fingerprinted-materials-core-measurements.md) records
+`8da4d1a9`, all four style pairs and the supervisor-approved continuation decision.
 
 The follow-up [full-worker ablation](./fingerprinted-materials-worker-ablation.md)
 recovers most of the measured style gap by reverting M9 diagnostics. This report
-preserves all narrow samples; the gate/push remain blocked pending the supervisor's
-decision on removing that instrumentation tax from benchmark timings.
+preserves all narrow samples and the stop decision at that time. The later
+[core-only measurements](./fingerprinted-materials-core-measurements.md) record the
+approved diagnostics split and the new same-host continuation rule.
 
 Fixed M9 `14447151` still regresses on the cumulative style route: 211.85 s cold
 and 217.75 s warm versus M8's 193.95 s and 197.22 s, +9.2% and +10.4%.
 The supervisor therefore stopped the gate and push and requested the separate
-[200-view investigation](./fingerprinted-materials-route-investigation.md). No further implementation change is authorized here.
+[200-view investigation](./fingerprinted-materials-route-investigation.md). That investigation preceded the approved diagnostics split recorded above.
 
 The fixed linked-stylesheet results improve against their contemporary controls.
 Default ranges now overlap in all four measured cells. Warm default no-change
@@ -163,7 +165,7 @@ The cumulative no-change cell was not rerun in this narrow set, so it does not
 produce a fresh style/no-change ratio or replace the earlier failed 1.25 target.
 There is no regenerated acceptance pair or derived spot sample here.
 
-No gate or push runs at this stop. The earlier complete code-checkpoint suites
+No gate or push ran at this historical stop. The earlier complete code-checkpoint suites
 remain recorded; this reporting-only work runs Markdown/link/diff validation.
 The supervisor will decide the scope of any further fix from the focused
 investigation, before another code checkpoint or measurement round.
