@@ -221,8 +221,12 @@ Status: Not started.
       `serve --base main` and `export --base main` at desktop and mobile
       widths.
 - [ ] Run `cargo xtask check`.
+- [x] Merge `origin/main` (#133). Main removed `plans/README.md` with the
+      user's approval; take that deletion for the one conflict, and keep this
+      plan's index note in its status paragraph. The remerge diff lists only
+      that path, and the branch deletes no file from main.
 - [ ] Record the outcomes and covering tests in the review record, and
-      update this plan and `plans/README.md`.
+      update this plan's status paragraph.
 - [ ] Run `git add -A`, commit with Conventional Commits, and push the
       branch.
 - [ ] After the push, a fresh reviewer uses
