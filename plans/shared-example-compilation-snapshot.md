@@ -1,0 +1,342 @@
+# Shared Example Compilation Snapshot
+
+Status: Active
+
+## Status And Outcome
+
+Compile the `examples/basic` catalogue once per unit verification run. Load
+that result from a repository-local snapshot in every test file that reads the
+compiled example. Keep every assertion unchanged, and keep a compile fallback
+for test files run by hand without a fresh snapshot.
+
+This change covers test helpers, verification scripts, the xtask unit suite,
+and their documentation. It needs no product code, UI, or mockup work. The
+product CLI, `prepare:verification`, the package suite, and the browser suites
+stay unchanged.
+
+The two attribution tests (`tests/design_library_attribution.test.ts` and
+`tests/component_design_attribution.test.ts`) are restructured in a separate
+workspace. This plan only changes the fixture they share, and only in a way
+that the restructured files inherit automatically. See Milestone 4.
+
+Contract owners:
+
+- [CI suite evidence](../docs/protocol/ci-suite-evidence.md) owns the snapshot
+  contract added by Milestone 1.
+- [CI verification](../docs/protocol/ci-verification.md) owns the unit gate's
+  preparation sequence.
+- [Local verification](../xtask/README.md) and the
+  [developer section of the README](../README.md#develop-mokly) own the
+  developer-facing commands.
+
+## Measured Baseline
+
+Measurements come from the unit reports of the latest green `main` run,
+[GitHub Actions run 37354719684](https://github.com/mokly-ai/mokly/actions/runs/37354719684)
+(Node 22.14.0, four shards, 2 vCPU runners), and from this VM (8 cores,
+Node 22.14.0). Local numbers are observations, not fixed guarantees.
+
+| Measure                                                       |                          Value |
+| ------------------------------------------------------------- | -----------------------------: |
+| Unit test files observed in CI                                |                            751 |
+| Summed per-file unit time in CI                               |                        3,492 s |
+| Summed per-file time of shards 1 to 4                         | 1,201 s, 552 s, 492 s, 1,247 s |
+| Files that import `designCatalogue` (directly or via helpers) |                             34 |
+| Summed CI time of those 34 files                              |                          510 s |
+| Per-file CI time of those 34 files                            |               10.7 s to 25.0 s |
+| Two attribution tests (separate workspace)                    |                          807 s |
+| `tests/design_screen_counts.test.ts` locally, one test        |                         17.0 s |
+| `tests/derived_config.test.ts` locally, six tests, no compile |                          0.6 s |
+| One `compileCatalogue` of the example locally                 |                         17.4 s |
+| `loadConfig` of the example locally                           |                          84 ms |
+| Serialize and write a complete compilation locally            |                27.7 MB, 0.46 s |
+| Read, parse, and decode that file locally                     |                         0.34 s |
+
+A local experiment proved two properties that this plan depends on:
+
+- A compilation survives the round trip through JSON exactly. The manifest is
+  deep-equal, all 472 outputs are byte-equal, and `deliveredStyleSources` and
+  `documentMarkdown` are equal.
+- A compile of a copy made by `copyExampleSources` is identical to a compile of
+  the checked-out example. Only the resolved config differs, in `configPath`,
+  `roots`, `mockupsDir`, `renderer`, `postcss`, `repoRoot`, `review`,
+  `resolvedFiles`, `protectedFiles`, and `entryModules`.
+
+The request estimated 52 files and about 760 s. The reports show 34 files and
+510 s for the shared compile, plus the attribution fixture's before states.
+The expected saving is therefore about 460 s from the 34 files and about 90 s
+from the fixture, minus about 40 s for the two new tests that compile. Each
+affected file should drop from about 15 s to about 1 s to 2 s.
+
+## Where The Compiles Come From
+
+| Helper or test                                                 | Consumers                                                                                  | What it compiles                                              | CI time | Plan                                                  |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ------: | ----------------------------------------------------- |
+| `tests/helpers/design_catalogue.ts`                            | 34 test files; also `design_stacks.ts`, `design_rows.ts`, `design_component_navigation.ts` | The example, once per test process                            |   510 s | Load the snapshot; compile only as fallback           |
+| `tests/helpers/design_library_fixture.ts`                      | Two attribution tests, six fixture calls                                                   | A copied example as the before state, then every edited state |   807 s | Before state from the snapshot in the default mode    |
+| `tests/helpers/example_baseline.ts`                            | `preview.test.ts`, `example_baseline.test.ts`, browser fixtures                            | Copies with changed config profiles and historical rebuilds   |   109 s | Unchanged; the preparation is the behavior under test |
+| `tests/helpers/move_catalogue.ts`                              | Seven move tests                                                                           | A small synthetic catalogue, not the example                  |       — | Unchanged                                             |
+| `tests/build.test.ts`                                          | One test                                                                                   | The example, once                                             |    13 s | Unchanged; it is explicit compile coverage            |
+| `tests/helpers/design_palette.ts`                              | Appearance tests                                                                           | Nothing; it reads `generated/design.css`                      |       — | Unchanged                                             |
+| `route_scoped_catalogue_real`, `server_route_scoped_bootstrap` | Two tests                                                                                  | Nothing; they read the generated manifest                     |       — | Unchanged                                             |
+
+The two native CI jobs run named test files directly. None of those files
+imports `designCatalogue`, so they never need the snapshot.
+
+## Design
+
+### Snapshot file
+
+The snapshot is one JSON file at `.context/verification/example-compilation.json`.
+The directory is Git-ignored and already holds package artifacts. The file
+holds `schemaVersion`, the freshness `key`, the manifest, every output encoded
+with `transferGeneratedFile`, `deliveredStyleSources`, and `documentMarkdown`.
+The producer writes a temporary file beside it and renames it into place, so a
+reader never sees a partial file.
+
+### Freshness key
+
+The key is a SHA-256 digest over sorted pairs of repository-relative path and
+content digest for:
+
+- every tracked or untracked non-ignored file under `examples/basic`,
+  `docs/protocol`, and `README.md`, listed with
+  `git ls-files --cached --others --exclude-standard`, which is the inventory
+  `copyExampleSources` already uses; a tracked file that is missing from the
+  working tree hashes as missing instead of failing;
+- every file under `dist/` and `packages/viewer/dist/`;
+- `package-lock.json`, which pins every dependency the example bundles;
+- the snapshot schema version.
+
+Generated HTML, the generated manifest, and `generated/mokly-generated/` are
+ignored outputs, so they never enter the key. The key covers about 430 example
+files and about 3,300 built files, which hashes in well under one second.
+Producer and consumers share one key function, so a mismatch can only mean
+that an input changed after the snapshot was written.
+
+### Producer
+
+`node scripts/verification/example-snapshot.mjs` loads the example config,
+compiles once with `compileCatalogue`, and writes the snapshot. When the
+existing snapshot already carries the current key, it exits without compiling.
+A new `prepare:unit` npm script runs `prepare:verification` and then this
+producer. The xtask unit suite and `npm test` use `prepare:unit`. The package,
+browser, and hydration suites keep `prepare:verification`, because they never
+read the snapshot and the extra compile would cost them about 17 s each.
+
+### Consumers and fallback
+
+A new helper, `tests/helpers/example_compilation.ts`, exports
+`exampleCompilation()`. It computes the key, reads the snapshot when the key
+matches, and otherwise compiles with `loadConfig` and `compileCatalogue`. It
+never writes the snapshot, so test processes never share mutable state. It
+emits one `[mokly:fixture-timing]` line through the existing
+`timeFixturePhase` helper, with phase `snapshot` or `compile`, so logs show
+which path ran. `designCatalogue` becomes `exampleCompilation()`; its name and
+type do not change, so the 34 importers do not change.
+
+A decoded compilation has no retained consumer runtime in the
+`component_runtime` WeakMap. No test among the consumers calls
+`componentRuntime`; `writeCompilation`, `classifyComponents`, and the parse5
+helpers only read `manifest` and `outputs`.
+
+### Preparation and the strict runner
+
+`requirePrepared` gains a `unit` kind that also requires the snapshot file to
+exist, with a message that names `npm run prepare:unit`. Both unit runners use
+it. The runner only checks existence and never imports the compiler, because
+`tests/verification_wrapper.test.ts` runs the copied runner in a harness with
+empty placeholder outputs and no `dist`. Freshness stays with the helper, which
+falls back to a compile. Per-file timings in the unit reports and the fixture
+timing lines show whether the snapshot was used.
+
+### Alternatives considered
+
+- Producing the snapshot inside `prepare:verification`: rejected, because it
+  adds one compile to every package, browser, and hydration job.
+- Emitting the snapshot from the product `build` command: rejected, because it
+  adds a test-only flag to the public CLI.
+- Reading `examples/basic/generated/` back as the compilation: rejected, because
+  `deliveredStyleSources` and `documentMarkdown` are not on disk and the
+  generated tree mixes authored stylesheets with outputs.
+- Letting the helper write the snapshot on fallback: rejected, because two
+  concurrent test files would race to write 27 MB and tests would own shared
+  state.
+
+## Milestone 1: Document the snapshot contract — not started
+
+Define the complete contract before any script or helper changes.
+
+- [ ] Add an `Example Compilation Snapshot` section to
+      `docs/protocol/ci-suite-evidence.md`: file location and schema, the
+      freshness key inputs, the producer command and its skip-when-fresh rule,
+      atomic replacement, the `prepare:unit` sequence, the existence check in
+      the unit runners, the helper fallback, the fixture timing evidence, and
+      the rule that tests never write the snapshot. Mark the contract pending
+      until Milestone 5 lands.
+- [ ] Edit the unit row of the gate table and the "Xtask prepares output per
+      suite" paragraph in `docs/protocol/ci-verification.md` in place. The file
+      has 247 lines and no reviewed cap; keep it at or under 250 lines, and
+      move any overflow to `ci-suite-evidence.md`.
+- [ ] Update the `Develop Mokly` section of `README.md`: what `npm test` and
+      `npm run prepare:unit` produce, where the snapshot lives, how a single
+      test file run by hand behaves, and how to refresh a stale snapshot.
+- [ ] Update the testing paragraph of `examples/basic/README.md`, which says
+      that `npm test` builds the example before tests read its generated files.
+- [ ] Update `xtask/README.md`: the unit suite prepares the snapshot, and add
+      the new scripts under `Key Code`.
+- [ ] Validate the changed Markdown with `npx prettier --check`, run
+      `tests/protocol_doc_sizes.test.ts`, check the local links, and review the
+      documentation diff.
+
+## Milestone 2: Snapshot key, codec, and producer — not started
+
+Add the shared scripts and prove them with tests before any consumer exists.
+The repository keeps working because nothing calls them yet.
+
+- [ ] Add failure-first tests in `tests/example_compilation_key.test.ts` using
+      a temporary Git repository with a few example-like files, an ignored
+      file, and a fake `dist/`: identical trees give the same key; a content
+      edit, an added untracked file, a rename, a deleted tracked file, and a
+      built-output edit each change the key; an ignored-file edit does not.
+- [ ] Implement `scripts/verification/example-snapshot-key.mjs`: the input path
+      list, the Git inventory, the built-output walk, POSIX path normalization,
+      code-unit ordering, and the digest. Export the inventory so
+      `tests/helpers/example_sources.ts` can use the same path list.
+- [ ] Add failure-first tests in `tests/example_compilation_snapshot.test.ts`
+      for the codec and producer with a small synthetic compilation that has
+      text and binary outputs: exact round trip; rejection of a wrong schema
+      version, a missing key, invalid base64, and a manifest that fails
+      `parseManifest`; atomic replacement; skip when fresh; rewrite when stale.
+- [ ] Implement `scripts/verification/example-snapshot.mjs`: the snapshot path,
+      `encodeCompilation`, `decodeCompilation` using `parseManifest` and
+      `receiveGeneratedFile`, `readExampleSnapshot` returning `fresh`, `stale`,
+      `missing`, or `invalid` with the compilation when fresh,
+      `writeExampleSnapshot`, and the CLI entry that compiles only when needed.
+      Import `dist` modules only inside this module, never from the runner.
+- [ ] Add `.d.mts` declarations for both scripts and run
+      `npm run typecheck:script-declarations` and `npm run lint`.
+- [ ] Add the real-example equivalence test: run the producer into a temporary
+      path, decode it, and compare with the compilation the producer returned.
+      Require a deep-equal manifest, byte-equal outputs for every route, and
+      equal `deliveredStyleSources` and `documentMarkdown`.
+- [ ] Keep every new file under 300 lines and run the new tests.
+
+## Milestone 3: Load the snapshot in the test helpers — not started
+
+Switch `designCatalogue` to the snapshot with a compile fallback.
+
+- [ ] Add failure-first tests in `tests/example_compilation_loader.test.ts`
+      with injected read, compile, and timing dependencies: a fresh snapshot is
+      decoded and compile is not called; `missing`, `stale`, and `invalid` each
+      call compile once; the timing record carries the phase and status; the
+      result is memoized per process.
+- [ ] Implement `tests/helpers/example_compilation.ts` with
+      `exampleCompilation()` and an injectable `loadExampleCompilation`.
+- [ ] Point `designCatalogue` in `tests/helpers/design_catalogue.ts` at
+      `exampleCompilation()` and update its doc comment. Keep the export name
+      and type.
+- [ ] Run all 34 consumer files twice, once with a fresh snapshot present and
+      once with it absent, and require identical results on both paths.
+- [ ] Record interim local timings for `design_screen_counts`,
+      `design_variants`, `design_library_inventory`, and `brand_logo` with
+      the snapshot present.
+
+## Milestone 4: Use the snapshot for the design library fixture — not started
+
+Give the attribution fixture its before state from the snapshot in the default
+mode. Keep the diff in `design_library_fixture.ts` to a few lines so the
+attribution restructure in the other workspace merges without conflicts.
+
+- [ ] Add `tests/design_library_fixture_snapshot.test.ts`: copy the example
+      with `copyExampleSources`, load the copied config, compile, and compare
+      with `exampleCompilation()`. Require identical manifest, outputs,
+      `deliveredStyleSources`, and `documentMarkdown`, and require that the
+      config differs only in the ten root-dependent fields listed above.
+- [ ] Change `designLibraryFixture` to take `before` from
+      `exampleCompilation()` when no mode is given. Keep compiling the copy when
+      a mode is given, because `generatedOutput` changes the style inventory in
+      `src/build/styles`. Keep every after-state `build()` as a real compile.
+- [ ] Run both attribution tests once and confirm that every assertion still
+      passes. Record the before-state saving per fixture call.
+- [ ] Tell the attribution workspace that the fixture's default-mode before
+      state now comes from the snapshot, so files split from those tests pay no
+      compile for it.
+
+## Milestone 5: Produce the snapshot during unit preparation — not started
+
+Wire the producer into the unit suite and the developer test command.
+
+- [ ] Add failure-first tests: `tests/verification_prepared.test.ts` for the
+      `unit` kind of `requirePrepared` and its message; update the exact
+      `npm test` script assertion in `tests/verification_entrypoints.test.ts`;
+      add the empty snapshot placeholder to the harness in
+      `tests/verification_wrapper.test.ts`; update the unimock expectations in
+      `xtask/src/_tests_/check_tests.rs` so the unit suite runs
+      `npm run prepare:unit` and then `npm run test:prepared`.
+- [ ] Add the `prepare:unit` npm script and switch `test` to it. Leave
+      `prepare:verification`, `test:browser`, and the package scripts alone.
+- [ ] Make both unit runners call `requirePrepared(repositoryRoot, "unit")`.
+- [ ] Change the unit suite in `xtask/src/check.rs` to prepare with
+      `prepare:unit`; run `cargo fmt --all -- --check`, Clippy, and the xtask
+      tests.
+- [ ] Smoke on Node 22.14.0: `npm test` from a clean `.context` produces the
+      snapshot and every consumer logs phase `snapshot`; a second `npm test`
+      skips the compile; an edit to an example source makes the next run
+      rewrite the snapshot; `cargo xtask check --suite unit --shard 1/4`
+      passes; one consumer file run by hand uses the fallback when the
+      snapshot is stale and the snapshot when it is fresh.
+- [ ] Remove the pending marks added by Milestone 1 and align every document
+      with the delivered behavior.
+
+## Milestone 6: Measure, verify, commit, push, and review — not started
+
+Collect the acceptance evidence on the branch before the merge.
+
+- [ ] Record a before-and-after table in this plan for
+      `tests/design_screen_counts.test.ts`, `tests/design_variants.test.ts`,
+      `tests/design_library_inventory.test.ts`, and
+      `tests/brand_logo.test.tsx`, each run alone with
+      `node --import tsx --test` on Node 22.14.0, with the baseline values from
+      this plan.
+- [ ] Run the complete `npm run test:prepared` locally and compare the summed
+      per-file time of the 34 files with the 510 s CI baseline.
+- [ ] Run the complete `cargo xtask check` on Node 22.14.0 or 24.19 or later,
+      because the CLI refuses Node 24.14.x. Fix every failure.
+- [ ] Inspect the diff and deletions against `origin/main`; no test file may be
+      removed.
+- [ ] After the checks pass, run `git add -A`, commit with a Conventional
+      Commits message, and push the branch with every new script, declaration,
+      helper, test, and document.
+- [ ] Confirm with a CI run on the branch: download the `verification-unit-*`
+      artifacts, compare the summed per-file time and the slowest shard with
+      run 37354719684, confirm the `fullFiles` count did not shrink, and record
+      the result in this plan.
+- [ ] Only after the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`. Report numbered findings with severity, context,
+      the impact of doing nothing, lettered options, and a recommendation. Do
+      not change the implementation or fix findings automatically.
+
+## Post-merge follow-up (non-blocking)
+
+- Compare the first green `main` run after the merge with run 37354719684 and
+  record the shard wall-clock times.
+- If the attribution restructure splits its tests into many files, confirm
+  that each new file reports phase `snapshot` for its before state.
+- Consider whether browser fixtures that compile the unmodified example can use
+  the same snapshot. They are outside this plan.
+
+## Open Questions
+
+1. Should the unit runners fail when the snapshot exists but is stale? This
+   plan recommends no: the producer runs immediately before the runner, the
+   helper falls back safely, and a strict check would need the runner to hash
+   inputs in the wrapper harness. Per-file timings expose a silent fallback.
+2. Should the committed-mode fixture call also use the snapshot? This plan
+   recommends no. Only one call uses that mode, and `generatedOutput` changes
+   compile inputs, so the saving is one compile and the risk is a hidden
+   divergence.
+3. Should `tests/build.test.ts` keep its real compile of the example? This plan
+   recommends yes, as the one unit test that proves the compile path on the
+   real example.
