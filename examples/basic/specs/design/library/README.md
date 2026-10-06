@@ -172,11 +172,17 @@ The command runs all design-library tests and the four attribution files once.
 once and keeps a single-change `tag-chip` control.
 `tests/component_design_attribution.test.ts` classifies all nine shared sheets
 once and checks exact scopes and per-entry dependency reasons.
-`tests/design_library_source_edits.test.ts` groups rebuilds while retaining each
-edit's detection and isolation checks; same-file edits targeting different
-entries stay separate. `tests/design_library_committed_baseline.test.ts` checks
+`tests/design_library_source_edits.test.ts` keeps impacting edits alone and
+same-file edits targeting different entries separate. Other edits may share a
+rebuild with distinct paths or disjoint reason kinds at the same path. The test
+checks the exact path/reason union and no affected consumers. An extra change
+within another member's expected path and reason kinds can be masked; this is a
+reviewed trade-off, not exact per-edit isolation.
+`tests/design_library_committed_baseline.test.ts` checks
 baseline reads and agreement between Serve and comparison. Each file shares one
-isolated fixture.
+isolated fixture through `fileFixture`, which starts setup on first use and
+registers teardown when the file loads. A filtered run with no matching test
+starts no fixture.
 
 The tests retain the established screen inventory with its file-derived paths,
 assert real consumers and

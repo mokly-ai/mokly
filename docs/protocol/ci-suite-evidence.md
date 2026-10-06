@@ -81,6 +81,15 @@ fixture helpers. Failed browser and hydration jobs retain only the uploaded
 diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
 or reuse another job's writable output.
 
+A fixture shared across a test file registers its teardown synchronously when
+the file loads and starts setup on first use. Teardown waits for setup to settle,
+then runs owned cleanups in reverse registration order, even if setup failed.
+It attempts every cleanup before reporting a cleanup failure. A run that selects
+none of the file's tests starts no setup and leaves no owned output. Module-scope
+code must not start fixture setup eagerly. `tests/helpers/file_fixture.ts`
+provides this boundary; source-level verification enforces lazy setup for shared
+design fixtures.
+
 ## Unit Shard Balance
 
 Node's `--test-shard` assigns whole files by sorted index modulo the shard count
@@ -92,9 +101,15 @@ classification costs. Record shard wall time separately from summed file time.
 
 A scenario suite classifies once per scenario, then projects that result for
 its assertions. Do not classify once per assertion or subtest when those checks
-describe the same scenario. Group independent edits only when each edit keeps
-its own exact change path, reasons, and impact proof. Retain isolation checks
-that reject attribution to another component or an unrelated entry.
+describe the same scenario. An edit that makes a component impacting rebuilds
+alone. Edits to the same source file that target different entries rebuild
+separately. Other edits may share a rebuild only when each keeps a distinct
+detection signal: its own path, or reason kinds disjoint from every other member
+at the same path. The build asserts the exact union of paths and reason kinds
+and no affected consumers. An extra change on another member's path with a subset
+of that member's reason kinds is not visible. Grouping is a reviewed trade-off,
+not an exact per-edit proof. Retain exact isolation checks for single edits and
+for attribution outside a grouped build's expected union.
 
 The [attribution measurement record](../reviews/attribution-test-consolidation.md)
 records the whole-file baseline and consolidated attribution timings. File

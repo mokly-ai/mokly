@@ -48,10 +48,13 @@ a change, because `classificationContext` builds new readers and caches and
 every view is normalized and parsed again. Affected views add about 0.04 s
 each. Every `compileCatalogue` call costs 16–20 s; a rebuild after one source
 edit plus its classification costs about 31 s. Today the two files make 19
-compilations and 39 classifications: five fixtures, thirteen rebuilds, sixteen
+compilations and 39 classifications: six fixtures, thirteen rebuilds, sixteen
 library edits, nine shared edits, twelve source-edit classifications, and two
 classifications in the committed-baseline test. That is about 850 s at CI
 speed, which matches the 807 s observed.
+
+The six original fixtures were five in the library file and one in the shared
+stylesheet file.
 
 ## What The Tests Prove Today
 
@@ -125,14 +128,14 @@ change in the same result.
 
 ## Options And Decisions
 
-| Option                                        | Evidence                                                                                             | Decision                                                                                                    |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| One multi-edit pass per stylesheet family     | Per-change reasons and per-id consumers above; 18.7 s and 20.9 s instead of 16 × 13 s and 9 × 14 s   | Adopt for both files.                                                                                       |
-| A few single-edit cases for isolation         | The one-changed-resource fallback is the production case; one control costs about 13 s               | Keep one control (`tag-chip`, the deepest chain). No control in the shared file; the mechanism is the same. |
-| Group edits by directory or consumer set      | A single pass loses no information because reasons are per path                                      | Not needed.                                                                                                 |
-| Reuse the before compilation across subtests  | The fixture already keeps `before` and `resources`; today each top-level test builds its own fixture | One module-level fixture per file through the `after` hook of `node:test`; five compilations become one.    |
-| Reuse parsed resources across classifications | `classificationContext` constructs `ComponentMaterialReader` and `CssResourceAnalysis` per call      | Not reachable from tests; recorded as the product follow-up.                                                |
-| Source edits need a real rebuild              | `compileCatalogue` has no subset or incremental mode (`src/build/compile.ts`, `load_graph.ts`)       | Group edits only where expectations stay distinct; move them to their own files.                            |
+| Option                                        | Evidence                                                                                             | Decision                                                                                                                                      |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| One multi-edit pass per stylesheet family     | Per-change reasons and per-id consumers above; 18.7 s and 20.9 s instead of 16 × 13 s and 9 × 14 s   | Adopt for both files.                                                                                                                         |
+| A few single-edit cases for isolation         | The one-changed-resource fallback is the production case; one control costs about 13 s               | Keep one control (`tag-chip`, the deepest chain). No control in the shared file; the mechanism is the same.                                   |
+| Group edits by directory or consumer set      | A single pass loses no information because reasons are per path                                      | Not needed.                                                                                                                                   |
+| Reuse the before compilation across subtests  | The fixture already keeps `before` and `resources`; today each top-level test builds its own fixture | One lazily started fixture per file through `fileFixture`; the library file's five fixture compilations become three, one per resulting file. |
+| Reuse parsed resources across classifications | `classificationContext` constructs `ComponentMaterialReader` and `CssResourceAnalysis` per call      | Not reachable from tests; recorded as the product follow-up.                                                                                  |
+| Source edits need a real rebuild              | `compileCatalogue` has no subset or incremental mode (`src/build/compile.ts`, `load_graph.ts`)       | Group edits only where expectations stay distinct; move them to their own files.                                                              |
 
 ## Target Layout
 
@@ -269,11 +272,12 @@ scope comes from the dependency reasons.
 
 ## Milestone 5: Source-edit groups and the committed baseline in their own files — completed
 
-Move tests 2–5 out of `design_library_attribution.test.ts`. Group source
-edits into one rebuild only when every edit keeps its own proof under the
-rules below: its own change path or reason kinds, its own impacting
-expectation, no impacting member, and no same-file member that could mask a
-wrong attribution.
+Move tests 2–5 out of `design_library_attribution.test.ts`. Keep impacting edits
+alone and same-file edits targeting different entries separate. Other edits may
+share a rebuild with distinct detection signals under the rules below. Exact
+union assertions cannot expose an extra change covered by another member's
+expected path and reason kinds. The user accepts this residual limit and the
+five-build trade-off under Milestone 7.
 
 Measured single-edit signatures (change path, reason kinds, impacting
 components) from the real fixture:
@@ -429,10 +433,11 @@ User approvals (2026-10-06):
 - Finding 4, option A: correct the two fixture compilation counts.
 
 Evidence: `.context/attribution-test-consolidation/milestone-7-plan-checks.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-contract-checks.log`.
 
 - [ ] Define the grouping rules and residual limit in the CI protocol, library
       README, plan introduction, and source-edit test comment.
-- [ ] Define synchronous hook registration and lazy setup in the CI protocol.
+- [x] Define synchronous hook registration and lazy setup in the CI protocol.
 - [ ] Add a filtered child-process regression before the fix. Confirm the eager
       pattern fails. Save its output in the ignored evidence directory.
 - [ ] Add a typed `fileFixture` helper with one synchronously registered hook,
@@ -446,7 +451,7 @@ Evidence: `.context/attribution-test-consolidation/milestone-7-plan-checks.log`.
 - [ ] Reject module-scope calls to `designLibraryFixture` in the lifecycle
       check. Test a bad source sample. Add it to the existing helper rule if
       all consumers meet that rule.
-- [ ] Correct six baseline fixtures and three resulting library compilations
+- [x] Correct six baseline fixtures and three resulting library compilations
       in the plan. Name `fileFixture` as the shared mechanism.
 - [ ] Run helper, lifecycle, and projection tests. Run each attribution file
       individually. Check a no-match attribution run leaves no owned directory.
