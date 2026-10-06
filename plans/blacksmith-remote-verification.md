@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Milestones 1 through 5 are complete; close-out and review remain.
+Status: Active. Local verification passed; automatic verification and review remain.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -359,20 +359,35 @@ Evidence: `.context/blacksmith-remote-verification/milestone-5-evidence.md`.
 
 ## Milestone 6: Verification, close-out and review
 
-- [ ] Confirm that the live dependency audit passes on `main`. Merge `main`
-      into the branch and follow the mainline preservation rules.
+Confirm that both executors pass on the current main dependency tree.
+Leave the final review to the separate reviewer.
+
+- [x] Fetch `origin/main` and confirm that its live dependency audit passes.
+      Merge new main commits into the branch, if needed. Follow the mainline
+      preservation rules.
 - [ ] Run all tests for this change with a 100% pass rate. Run
       `cargo fmt --all -- --check`, Clippy and `cargo xtask check`. Fix every
       failure.
+  - [x] Run the complete gate with `--executor local`.
+  - [x] Commit and push all work before the automatic remote gate.
+  - [ ] Run the default automatic gate with the branch workflow ref.
+        Confirm that all commands and reports pass, the aggregate passes,
+        and the local source tree stays unchanged.
+  - [ ] Confirm that no Testbox remains and that its GitHub workflows end.
 - [ ] Inspect the diff and the deletions against `origin/main`.
 - [ ] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
-- [ ] After the push, use
+- [ ] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
-      to review the complete local diff against `origin/main`. Report each
-      finding with a number, a severity, a plain explanation, the impact of
-      doing nothing, lettered options and a recommendation. Do not change the
-      implementation.
+      to review the complete local diff against `origin/main`. The reviewer
+      reports the findings. Keep the review read-only. The implementer then
+      applies the review-fix rule in `AGENTS.md`. Fix the `Auto-fix: yes`
+      findings. Run the checks. Commit and push. Re-review once. Fix any new
+      `Auto-fix: yes` findings once more. Run the checks. Commit and push.
+      Then stop and report the rest. Add each open finding as one line under
+      this TODO.
+
+Evidence: `.context/blacksmith-remote-verification/milestone-6-evidence.md`.
 
 ## Post-merge follow-up (non-blocking)
 
