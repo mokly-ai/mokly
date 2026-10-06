@@ -1,10 +1,9 @@
 # Shared Example Compilation Snapshot
 
-Status: Active. Milestones 1 to 7 are complete on draft PR
-[#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 8 fixes review
-finding 1 with the option that the user chose. The plan closes when the PR
-merges. Review findings 2 and 3 stay open for the user to decide; Milestone 7
-lists them.
+Status: Active. All eight milestones are complete on draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138); the plan closes when that
+PR merges. Review findings 2 and 3 stay open for the user to decide; Milestone
+7 lists them.
 
 ## Status And Outcome
 
@@ -393,7 +392,7 @@ the fix, and the other findings wait for the user.
     recommended: make the xtask unit suite always write a new snapshot, and
     correct the docs.
 
-## Milestone 8: Fix review finding 1 with option B — in progress
+## Milestone 8: Fix review finding 1 with option B — completed
 
 User decision: fix review finding 1 with option B. The test helper compares the
 field sets of two compilations, and the snapshot encoder rejects a compilation
@@ -412,10 +411,12 @@ instead of writing a snapshot that drops the field.
 - [x] Run the snapshot, loader, round-trip, and fixture equivalence tests.
 - [x] Run `cargo xtask check`, commit with finding 1 named in the message, and
       push.
-- [ ] Only after the push, review the change with
+- [x] Only after the push, review the change with
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
-      `Auto-fix: yes` findings, re-review once, and report the rest.
+      `Auto-fix: yes` findings, re-review once, and report the rest. The
+      review of `c51b896` confirmed the finding 1 fix and reported no new
+      findings, so no fix round followed.
 
 Evidence: `.context/shared-example-compilation-snapshot/milestone-6.md`
 (Milestone 8 section). Merge justifications:
