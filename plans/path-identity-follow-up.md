@@ -390,6 +390,14 @@ ownership rules. Reader, snapshot and bootstrap helper signatures preserve
 their typed inputs. The read-model types page and both viewer READMEs describe
 these seams. No screen, stored string or JSON layout changed.
 
+Verification repair: the first final gate stopped at the dependency audit.
+The starting commit also locked `source-map-js` at 1.2.1. Advisory
+[GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
+requires 1.2.2. A separate verification commit updates only that transitive
+lockfile entry. The dependency audit then passed. The full gate must restart
+because its first attempt ran no later checks. This repair is outside the
+typed-reference milestones.
+
 ## Milestone 11: Verification, commit and review
 
 - [ ] Run the full smoke cases in Serve and export at desktop and mobile
