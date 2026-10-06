@@ -3,6 +3,8 @@
 Status: Completed. [PR #93](https://github.com/mokly-ai/mokly/pull/93)
 merged on 2026-09-19. The review follow-up in Milestones 6–8 shipped in
 that PR, but its post-push review was not recorded before the merge.
+The [remote-cache plan](./turborepo-cloudflare-remote-cache.md) supersedes the
+decision to build preparation independently in each hosted job.
 
 ## Status And Outcome
 
@@ -27,7 +29,7 @@ Contract owners:
 - [CI and npm release](../docs/protocol/npm-release.md).
 - [Dependency security](../docs/protocol/dependency-security.md).
 - [Local verification](../xtask/README.md).
-- [Developer setup and fixture isolation](../README.md#developer-setup).
+- [Developer setup and fixture isolation](../README.md#develop-mokly).
 
 ## Measured Baseline
 

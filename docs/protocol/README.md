@@ -35,6 +35,10 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
 - [CI workflow graph](./ci-workflow.md)
+- [CI task cache](./ci-remote-cache.md) — planned task graph, restore rules,
+  workflow delivery, and developer credentials.
+  - [CI remote cache Worker](./ci-remote-cache-worker.md) — planned API, R2
+    storage, deployment, and provisioning contract.
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
 - [Repository verification ratchets](./verification-ratchets.md)

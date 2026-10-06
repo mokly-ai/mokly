@@ -1,5 +1,11 @@
 # Npm Release Verification Evidence
 
+## Delivery Status
+
+Both verification modes and exact-tree evidence checks are implemented. The
+[task cache contract](./ci-remote-cache.md) adds a planned forced-build rule to
+the release workflow. Evidence selection and report inventories stay unchanged.
+
 ## Verification Modes
 
 The npm release workflow has two verification modes. A release push and a manual
@@ -116,6 +122,13 @@ verify immutable local and remote tags, run the live audit, pack and inspect the
 exact viewer and CLI archives, smoke-test clean consumers, recheck source and
 tags, guard existing registry versions, publish with trusted provenance, and
 verify registry bytes and attestations.
+
+After task caching is delivered, both release modes set `TURBO_FORCE=true`,
+select `TURBO_CACHE=local:rw`, and leave token and signature variables unset.
+Complete-mode preparation and every archive lifecycle build execute from source.
+Force bypasses cache reads; it may refresh local entries. Neither mode reads or
+writes remote task artifacts. Live audits and installed-consumer smoke still
+execute independently, even when earlier CI preparation used the remote cache.
 
 The v0.12.0 release measured about 54 minutes when complete verification was
 repeated in the publish job. Evidence mode is expected to take about 10 minutes,

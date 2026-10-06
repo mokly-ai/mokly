@@ -4,8 +4,18 @@
 
 The main-branch and pull-request preview workflows, static capture, publication,
 replacement, and cleanup behavior are implemented.
+The [task cache contract](./ci-remote-cache.md) defines planned cached
+package/example preparation; capture and deployment remain uncached.
 
 ## Deployment Contract
+
+After task-cache delivery, eligible same-repository preview jobs may read and
+write signed artifacts. They map the writer and signature secrets only when
+both exist; otherwise they use local cache only. Fork gating stays unchanged.
+The first Turbo use disables hosted telemetry. Historical comparison rebuilds
+use the baseline commit's own build scripts; they may restore tool builds but
+still execute the configured direct example build. Capture, input-mutation
+checks, publication, replacement, and cleanup always execute independently.
 
 The [publication option](./mokly-publication.md) is implemented. The main job
 publishes the current catalogue with `npm run preview:build`; PR previews use

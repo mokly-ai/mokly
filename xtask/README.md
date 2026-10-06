@@ -90,6 +90,16 @@ cargo xtask source-file-length-lint --all
 runs the full selected suite. Package, unit, browser, and hydration suites
 prepare their required output before invoking prepared npm scripts.
 
+The [task cache contract](../docs/protocol/ci-remote-cache.md) defines planned
+Turbo preparation. It is not implemented yet. Each suite will keep its
+`npm run prepare:verification` call and restore unchanged tasks from cache.
+Tests and reports still run. `.turbo/` will hold the ignored local cache;
+linked Git worktrees share the main worktree's `.turbo/cache` automatically.
+After remote delivery, load the read-only token and signature key from the
+admin's private password-manager share. Set `TURBO_CACHE=local:rw,remote:r`.
+Without both values, use `TURBO_CACHE=local:rw`. See the contract for setup,
+restore limits, forced release builds, and telemetry opt-out.
+
 ## Development
 
 Run the crate tests directly when changing command orchestration:

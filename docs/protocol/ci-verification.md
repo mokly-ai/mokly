@@ -2,12 +2,12 @@
 
 ## Delivery Status
 
-The suite CLI, evidence, workflow graph, fixture reuse, and every repository
-ratchet are implemented. [Hosted measurements](../reviews/ci-performance.md)
-record timing and coverage. `cargo xtask check` remains the complete local gate;
-a validated hosted aggregate is reusable evidence for its exact tree. Public
-package argument forwarding, hierarchical cancellation, and pull-request title
-validation are implemented.
+The suite CLI, evidence, job graph, fixture reuse, and repository ratchets are
+implemented. [Hosted measurements](../reviews/ci-performance.md) record timing
+and coverage. `cargo xtask check` is the complete local gate. A validated hosted
+aggregate proves its exact tree. Public package argument forwarding, hierarchical
+cancellation, and PR title validation are implemented. [Task caching](./ci-remote-cache.md)
+defines planned preparation and the hosted prepare job.
 
 ## Verification Boundary
 
@@ -91,13 +91,13 @@ Public `package:check` and `package:smoke` preserve caller arguments, including
 `--artifacts DIR`, across nested npm. Prepared test commands skip preparation,
 reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
-Xtask prepares output per suite and calls only prepared consumers; output is
-reused only within that suite.
+Today xtask prepares each suite and reuses output within it. It calls only
+prepared consumers. [Planned cache reuse](./ci-remote-cache.md#suite-preparation-and-restore) keeps those calls.
 
-Builds under test are not removed. Package dry-run allowlist inspection retains
-`--ignore-scripts`, while real packing keeps lifecycle builds. Historical
-baseline reconstruction, clean consumers and caches, source mutation, startup,
-and cache invalidation retain independent preparation.
+Builds under test are not removed. Dry-run package inspection retains
+`--ignore-scripts`; real packing keeps lifecycle builds. Historical baselines,
+clean consumers and caches, source mutation, startup, and invalidation stay
+independent today. The linked planned rules allow hits; assertions still execute.
 
 ## Deterministic Test Repository Inputs
 

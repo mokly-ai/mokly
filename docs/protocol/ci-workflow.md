@@ -1,5 +1,11 @@
 # CI Workflow Graph
 
+## Delivery Status
+
+The job graph below is implemented. Turbo task caching, the parallel prepare job,
+and remote credentials are planned in the [task cache contract](./ci-remote-cache.md).
+Hosted telemetry opt-out starts with local task caching; remote wiring comes later.
+
 ## Workflow Boundary
 
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`. It has
@@ -116,6 +122,30 @@ The [CI verification contract](./ci-verification.md) defines suite ownership,
 report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
+
+## Planned Cached Preparation
+
+The [task cache contract](./ci-remote-cache.md#cache-correctness-and-ci-delivery)
+adds one Node 22.14.0 `prepare` job beside `repository`. It uses npm 11.7.0,
+`npm ci`, and `npm run prepare:verification`, without Rust or Chromium.
+The repository job still owns profile selection and audit-first verification.
+Package, unit, browser, and hydration jobs require both prerequisites. Native
+jobs keep their existing prerequisite and receive no remote credentials.
+Every suite still calls preparation; unchanged tasks restore from cache.
+The prepare job uploads through Turbo, not GitHub build-artifact transfer.
+
+Same-repository jobs map the cache writer and signature secrets to Turbo only
+when both values exist. Empty secrets leave both variables unset and select
+local cache only; forks therefore build independently in each job.
+Read-only developer clients select `local:rw,remote:r`. Tests, audits, installs,
+capture, deployment, and report validation remain outside task caching.
+Release jobs force builds and have no remote credentials. Eligible preview
+builds can read and write; native jobs remain local. Set telemetry opt-out in
+CI, preview, and release workflows when local task caching first lands.
+
+`Required CI` adds `prepare` to its prerequisites and requires its exact success.
+The ordinary nine-report and Release Please eighteen-report aggregates remain
+unchanged. A restored task never substitutes for executed suite evidence.
 
 ## Related Docs
 

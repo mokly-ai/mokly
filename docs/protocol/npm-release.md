@@ -2,6 +2,12 @@
 
 Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
+## Delivery Status
+
+Package, verification, publishing, and preview boundaries below are implemented.
+Turbo preparation is planned in [CI Task Cache](./ci-remote-cache.md).
+Its release rule requires forced builds with no remote credentials.
+
 ## Package Metadata
 
 CSS Modules delivery lazily uses the runtime `postcss-modules-local-by-default`,
@@ -115,6 +121,12 @@ release workflow's `complete` verification mode runs this command directly. Its
 default `evidence` mode may instead consume a validated aggregate that proves
 the same tree under the
 [release verification evidence contract](./npm-release-evidence.md).
+
+Planned task caching does not change evidence selection or exact-artifact checks.
+`release.yml` will set `TURBO_FORCE=true`, use local cache only, and unset Turbo
+token and signature variables. Complete-mode preparation and every real
+`prepack` must execute; applicable CI reports cannot authorize cached release
+build outputs. Hosted telemetry opt-out begins when Turbo is first installed.
 
 Browser assertions that depend on a navigated preview's layout wait for the
 expected frame URL and complete document state together, not only the outer
