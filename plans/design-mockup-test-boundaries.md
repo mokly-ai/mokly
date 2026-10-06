@@ -1,8 +1,8 @@
 # Design Mockup Test Boundaries
 
-Status: Active. Milestones 1 through 5 and Change requests 1 through 3 are
-delivered. Milestone 6 waits for the user to say "proceed with Milestone 6".
-No PR is open.
+Status: Active. Milestones 1 through 5 and Change requests 1 through 4 are
+delivered. Milestone 6 delivery work is done. The final implementation review
+is assigned to the orchestrator. No PR is open.
 
 Give each check on Mokly's own design catalogue one home. Unit tests check the
 generated mockup HTML and CSS. Browser mockup specs open the raw generated
@@ -15,31 +15,13 @@ owns the contract.
 
 ## Background
 
-Mokly's own design catalogue is authored in `examples/basic/specs/design/` and
-generated to `examples/basic/generated/design/`. On 2026-10-06, 37 unit test
-files (125 tests) and 20 design-named Playwright specs (58 tests) covered it.
-Six more specs and one `review.spec.ts` test also open raw design artboards.
+Mokly's design catalogue is authored in `examples/basic/specs/design/` and
+compiled under `examples/basic/generated/design/`.
 
-An audit of every spec found three problems:
-
-1. Five design specs and two tests in `design_index_entries.spec.ts` drive
-   Mokly's runtime (the served Browse shell or an export) and use design pages
-   only as content. One served test each in `component_workspace` and
-   `component_inspector` does the same, and `phone_chrome.spec.ts:11` tests
-   the shell on an example screen. `preview_design_links.spec.ts` is a
-   Pages-host runtime spec, and two of its three tests use no design content.
-   Runtime specs with non-design fixtures already cover most of these
-   assertions.
-2. The other specs open raw artboards through `file://`. The artboards carry no
-   Mokly script, so these specs test only the mockups. Their layout and
-   computed-style checks exist nowhere else. They also hold static checks, such
-   as link targets, copy and counts, that a parse5 unit test can make without a
-   browser.
-3. Since the path-identity change (c4138a0), entry paths start with `design/`.
-   Five unit tests still select entries by old `design-…` ids, so they pass
-   without checking anything. Four absence checks look up old ids and cannot
-   fail. With corrected selections, the five tests check 180, 39, 39, 9 and 16
-   entries and pass (checked on 2026-10-06), so no mockup fix is expected.
+Some browser specs use design artboards as fixtures for Mokly runtime behavior.
+Others repeat static assertions that belong in unit tests. Empty selections
+from the earlier id format can also leave unit assertions untested. This plan
+separates those responsibilities and guards each boundary.
 
 ## Decisions
 
@@ -143,6 +125,8 @@ any test moves.
 - [x] Run the milestone lint, formatting, and prepared type checks. Audit the
       mainline diff and deletions. Commit with a Conventional Commit and push.
 
+Evidence: `.context/design-mockup-test-boundaries/milestone-1.md`.
+
 ## Milestone 2: Unit tests check what they claim
 
 Completed. Make every empty selection fail, then point it at current paths.
@@ -158,14 +142,14 @@ Completed. Make every empty selection fail, then point it at current paths.
         `:24-34`).
   - [x] `tests/design_library_styles.test.ts:57` (`design-ui-`).
 - [x] Point them at current paths, and confirm that they pass:
-  - [x] Screens and component variants under `design/` (180 entries).
-  - [x] Screens under `design/components/` (39 entries).
+  - [x] Screens and component variants under `design/`.
+  - [x] Screens under `design/components/`.
   - [x] `overview`, `states/auto`, `workspaces/props`, `workspaces/instance`,
         `status/loading`, `status/unavailable`, `workspaces/side-by-side`,
         `workspaces/difference` and `status/flow` under
-        `design/browse/appearance/` (9 entries).
+        `design/browse/appearance/`.
   - [x] Non-variant components under `design/library/`, with the slug taken
-        from the last path segment (16 entries).
+        from the last path segment.
 - [x] Delete the absence checks that look up old ids: the test at
       `tests/design_appearance_variants.test.ts:231`, and the asserts at
       `tests/design_appearance_controls.test.ts:69-74`,
@@ -185,10 +169,7 @@ Completed. Make every empty selection fail, then point it at current paths.
 - [x] Run the milestone lint, formatting, and prepared type checks. Audit the
       mainline diff and deletions. Commit with a Conventional Commit and push.
 
-Implementation note: The old selections failed through `designEntries` before
-path repair. The run had seven expected failures across the five tests, because
-both component checks run in mobile and desktop. The helper also accepts copied
-baseline entries so attribution assertions keep their original input.
+Evidence: `.context/design-mockup-test-boundaries/milestone-2.md`.
 
 ## Milestone 3: Static checks move to unit tests
 
@@ -317,12 +298,7 @@ below 300 lines.
 - [x] Run the milestone lint, formatting, and prepared type checks. Audit the
       mainline diff and deletions. Commit with a Conventional Commit and push.
 
-Implementation note: The modern-controls browser test reads a 55-screen
-baseline fixture. The new unit test covers all 111 current screen artboards.
-It follows the existing document contract: whole documents have Details but no
-preview toolbar, while home, flow, missing-route, and navigation states have
-neither. Affected-screen links keep their original `pages/affected` scope.
-The direct-change screen keeps its count, changed marks, rows, and selected props.
+Evidence: `.context/design-mockup-test-boundaries/milestone-3.md`.
 
 ## Milestone 4: Runtime checks move to runtime specs
 
@@ -394,6 +370,8 @@ a non-design fixture. Then delete the design spec or test.
 - [x] Run the milestone lint, formatting, and prepared type checks. Audit the
       mainline diff and deletions. Commit with a Conventional Commit and push.
 
+Evidence: `.context/design-mockup-test-boundaries/evidence-history.md`.
+
 ## Milestone 4A: Moved assertion equivalence
 
 Completed. Change request 1 restores each missing assertion before the browser directory
@@ -423,6 +401,8 @@ move. Keep the original fact, its scope, and its viewport coverage.
       and prepared type checks. Check shard balance after spec changes.
 - [x] Audit the complete mainline diff and deletions. Commit with Conventional
       Commits and push before starting Milestone 5.
+
+Evidence: `.context/design-mockup-test-boundaries/evidence-history.md`.
 
 ## Milestone 5: Mockup spec directory and boundary guard
 
@@ -458,10 +438,12 @@ mechanical.
 - [x] Run the milestone lint, formatting, and prepared type checks. Audit the
       mainline diff and deletions. Commit with a Conventional Commit and push.
 
+Evidence: `.context/design-mockup-test-boundaries/evidence-history.md`.
+
 ## Milestone 5A: Harden the boundary guard
 
 Completed. Change request 2 closes three scanner gaps before final verification resumes.
-Milestone 6 waits for the user's explicit "proceed with Milestone 6" message.
+Milestone 6 verification was deferred until the user approved it.
 
 - [x] Reject literal navigation and unverified URL variables in raw-artboard
       modules. Accept direct helper calls and variables assigned from them.
@@ -476,10 +458,12 @@ Milestone 6 waits for the user's explicit "proceed with Milestone 6" message.
 - [x] Audit the mainline diff and deletions. Commit with Conventional Commits
       and push. Stop before any more Milestone 6 full checks.
 
+Evidence: `.context/design-mockup-test-boundaries/evidence-history.md`.
+
 ## Milestone 5B: Complete assertion equivalence
 
-Completed. Change request 3 closes the remaining moved-assertion gaps. Milestone 6 stays
-paused until the user says "proceed with Milestone 6".
+Completed. Change request 3 closes the remaining moved-assertion gaps. The user
+accepted the fixes before Milestone 6 verification resumed.
 
 - [x] Restore comparison-group visibility and unit presence on the controls
       comparison artboard at both viewports.
@@ -494,34 +478,51 @@ paused until the user says "proceed with Milestone 6".
 - [x] Audit mainline paths and deletions. Commit with Conventional Commits and
       push in a separate commit. Stop before more Milestone 6 full checks.
 
-Verification passed: 127 focused unit tests, 14 other name-helper tests,
-8 raw browser tests, 34 boundary/document tests, and 2 shard checks. Lint,
-changed-file formatting, and prepared types passed. No assertion was removed.
+Evidence: `.context/design-mockup-test-boundaries/milestone-5b.md`.
 
 ## Milestone 6: Verification and review
 
-Prove the whole change, record every removal, and hand it to review.
+Prove the whole change, record every removal, and hand it to review. The user
+approved Change request 4 and the dependency maintenance that it requires.
 
-- [ ] Run `npm test` and `npm run test:browser`; every test passes.
-- [ ] Run `cargo xtask check`.
-- [ ] Run `git diff --diff-filter=D --name-status origin/main`, and confirm
+- [x] Merge `origin/main` with the source tip captured before integration.
+      Audit incoming paths, check exactly two merge parents, inspect the
+      remerge diff for each path, and push the merge.
+- [x] Integrate the later mainline hydration sample and generated-resource
+      audit. Repeat the source-tip audit, exact merge parent check, path
+      preservation inspection, and merge push before final verification.
+- [x] Apply the plan evidence rule from AGENTS.md. Move every execution record
+      and removal justification to `.context/design-mockup-test-boundaries/`.
+      Name each evidence file under its related milestone. Keep the verification
+      protocol free of evidence logs.
+- [x] Retain mainline's source-map-js fix. Patch shell-quote through an installed
+      tree as a lockfile-only update. Patch sharp through the existing scoped
+      Miniflare override. Update the dependency protocol. Add no exception.
+      Commit the dependency maintenance separately and push.
+  - [x] Add a bounded shell-quote regression before the patch. Keep ordinary
+        quoting behavior. Smoke-test safe SVG rendering with the patched sharp.
+- [x] Re-run `npm test` and `npm run test:browser`; every test passes.
+- [x] Run `cargo xtask check`.
+- [x] Run `git diff --diff-filter=D --name-status origin/main`, and confirm
       that the Removals section names every deleted file.
-- [ ] Write the PR description: each removed spec and test with its
+- [x] Write `.context/pr-description.md`: each removed spec and test with its
       replacement, each moved check with its new home, and the accepted
-      coverage losses.
-- [ ] Run `git add -A`, commit the completed work using Conventional Commits,
+      coverage losses. Give the dependency commit its own section. Explain
+      that its advisories also affect main and that context files stay out of
+      the PR. Save removal justifications in the evidence directory.
+- [x] Run `git add -A`, commit the completed work using Conventional Commits,
       and push the branch.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete local diff against `origin/main`. Report findings without
-      changing the implementation.
+      changing the implementation. The orchestrator owns this review.
 
-Removal justification: No PR is open. `.context/pr-description.md` records every
-removed spec/test, each replacement, all raw-spec moves, and the two approved
-coverage losses. Static checks moved to compiled unit tests. Visibility and
-computed styles stay in raw browser specs. Runtime checks moved to non-design
-fixtures. The removed helper/profile had no remaining caller. Every removed file
-is listed in Removals. The Milestone 5 commit body says 105 browser cases; its
-actual passing result is 101. Final verification records the correct count.
+Evidence: `.context/design-mockup-test-boundaries/milestone-6.md`.
+Mainline evidence: `.context/design-mockup-test-boundaries/main-integration.md`.
+Later mainline evidence: `.context/design-mockup-test-boundaries/late-main-integration.md`.
+Dependency evidence: `.context/design-mockup-test-boundaries/dependency-maintenance.md`.
+Removal justifications: `.context/design-mockup-test-boundaries/removals.md`.
+Deletion evidence: `.context/design-mockup-test-boundaries/deletion-audit.md`.
+Test inventory: `.context/design-mockup-test-boundaries/original-test-titles.json`.
 
 ## Post-merge follow-up (non-blocking)
 
