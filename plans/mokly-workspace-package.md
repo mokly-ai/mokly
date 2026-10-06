@@ -1,8 +1,7 @@
 # Move `@mokly/mokly` Into `packages/mokly`
 
-Status: Active. Milestones 1 and 2 are complete. Milestone 3 implementation and
-verification are complete; its commit and push are next. The coordinating
-reviewer owns Milestone 4. Maintainers must merge the pending release PR #127
+Status: Active. Milestones 1–3 are complete. Milestone 4 is next and belongs to
+the coordinating reviewer. Maintainers must merge the pending release PR #127
 before this branch.
 
 Make the CLI package a real npm workspace member at `packages/mokly`, beside
@@ -329,7 +328,7 @@ at the root. The gate stays green.
   large-fixture harness. Add that dependency without changing its assertions.
   Its five focused tests and the subsequent complete gate passed.
 
-## Milestone 3: Move the CLI package into `packages/mokly`
+## Milestone 3: Move the CLI package into `packages/mokly` (complete)
 
 Perform the move and every path update in one commit so the gate never breaks.
 
@@ -410,7 +409,7 @@ Perform the move and every path update in one commit so the gate never breaks.
       examples. Preserve all surrounding wording.
 - [x] Keep historical review wording byte-identical apart from approved
       relative link targets. Record each file's changed-target count.
-- [ ] Confirm all four ratchets pass on the uncommitted and committed moved
+- [x] Confirm all four ratchets pass on the uncommitted and committed moved
       trees. Keep the renamed internal-export baseline shrink-only.
 - [x] `git mv src packages/mokly/src`, `git mv CHANGELOG.md packages/mokly/CHANGELOG.md`,
       `git mv README.md packages/mokly/README.md`,
@@ -496,7 +495,7 @@ Perform the move and every path update in one commit so the gate never breaks.
 - [x] Audit `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`; only the Milestone 3
       renames and the root `tsconfig.build.json` may be deleted.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 
 ### Milestone 3 integration notes
 
@@ -575,6 +574,13 @@ Perform the move and every path update in one commit so the gate never breaks.
   by the identical package build project. Once every new file is staged,
   Git identifies that replacement as a 100% rename. No deleted paths remain
   in the staged diff against `origin/main`.
+- Commit `b20dc761a403ade78a76fa267914fdae45379aca` contains the complete
+  atomic move and final review fixes. The push succeeds, and the remote tip
+  matches that commit. Before and after the commit, the staged/committed
+  deletion audit is empty. All four ratchets pass on both trees: 526 changed
+  source modules, 124 protocol documents with 10 caps, 927 internal-export
+  modules with one retained exception, and both unchanged public baseline tags.
+  This separate documentation commit records completion after the push.
 
 ## Milestone 4: Review the complete diff
 
