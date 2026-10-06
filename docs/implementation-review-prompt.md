@@ -48,6 +48,13 @@ sed -n '<start>,<end>p' <path>
 Return numbered findings first. For every finding:
 
 - Give it a severity.
+- Give it a category: product bug, security, docs or spec, mockup, repository
+  rule, test, performance, code structure, UX wording, or process.
+- Give it an effort grade. Small: one change in one or two files with no new
+  module, dependency, migration, protocol section, or test file. Medium: a few
+  files, and tests may change in existing files. Large: a new module,
+  dependency, migration, protocol section, or mockup, a change across a
+  package boundary, or more than five files.
 - Include the relevant file path and line reference when possible.
 - Explain enough codebase and feature context for a reader with no prior
   knowledge.
@@ -55,7 +62,13 @@ Return numbered findings first. For every finding:
 - Give solution options labelled A, B, and so on.
 - Recommend one option and explain whether a direct fix is sufficient or a
   broader rule, test, lint, abstraction, or architectural change would better
-  prevent the issue from recurring.
+  prevent the issue from recurring. Give the broader change its own lettered
+  option.
+- End the finding with `Auto-fix: yes` or `Auto-fix: no, because …`, following
+  the review-fix rule and its ask conditions in `AGENTS.md`. Tag a flaky,
+  slow, custom, or low-value test, gate, lint, or check `Auto-fix: no` and ask
+  whether to fix it or remove it, stating what it protects and how long it
+  runs.
 
 If there are no findings, say so clearly and mention residual test risk.
 
@@ -64,18 +77,22 @@ If there are no findings, say so clearly and mention residual test risk.
 The reviewer stays read-only. The implementer then applies the review-fix rule
 from [`AGENTS.md`](../AGENTS.md):
 
-1. Fix the findings in the auto-fix categories with the recommended option:
-   product bugs (including edge cases, races, and platform differences),
+1. Fix the findings tagged `Auto-fix: yes` with the narrowest option that
+   resolves them. The tag is allowed only for small or medium effort findings
+   about product bugs (including edge cases, races, and platform differences),
    security issues, docs or spec drift, mockup mismatches that a protocol doc
-   already settles, flaky or slow tests when the fix corrects the test itself,
-   and repository-rule violations such as file size, lint, and layout.
-2. Leave findings that need a decision for the user: more than one option with
-   real trade-offs, a change to the meaning of a protocol contract, a choice
-   between the mockup and the product, deleting or weakening a test or gate or
-   raising a time limit, a user-visible behaviour change beyond the contract,
-   or a need for an audit exception, credentials, infrastructure, or a new
-   milestone. Findings about missing tests, performance, code structure, UX
-   wording, and process also wait for the user.
+   already settles, and repository-rule violations such as file size, lint,
+   and layout.
+2. Leave findings tagged `Auto-fix: no` for the user: large effort, more than
+   one option with real trade-offs, a change to the meaning of a protocol contract, a
+   choice between the mockup and the product, a user-visible behaviour change
+   beyond the contract, a new build error, rejection, gate, or stricter
+   validation, a test, lint, guard, abstraction, or milestone beyond the
+   direct fix, deleting or weakening a test or gate or raising a time limit,
+   a flaky, slow, custom, or low-value test, gate, lint, or check (ask: fix or
+   remove?), or a need for an audit exception, credentials, or
+   infrastructure. Findings about missing tests, performance, code structure,
+   UX wording, and process also wait for the user.
 3. Run the checks, commit, push, and run this review once more on the fix. Fix
    any new auto-fixable findings once more, then stop. Do not start a third fix
    round without the user.
