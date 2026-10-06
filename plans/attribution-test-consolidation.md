@@ -1,6 +1,8 @@
 # Attribution Test Consolidation
 
-Status: Active. [PR #139](https://github.com/mokly-ai/mokly/pull/139) is open as a draft.
+Status: Active. [PR #139](https://github.com/mokly-ai/mokly/pull/139) is open as a
+draft. Four post-push review findings, listed under Milestone 6, await the
+user's decision.
 
 Restructure `tests/design_library_attribution.test.ts` and
 `tests/component_design_attribution.test.ts` so they keep every guarantee at a
@@ -378,7 +380,7 @@ file). Today's `affects` boolean becomes the exact `impactingIds` list.
       every file under 300 lines.
 - [x] Run the four files individually and record each timing.
 
-## Milestone 6: Timing verification, measurement record, commit, and review
+## Milestone 6: Timing verification, measurement record, commit, and review — completed
 
 Prove the runtime reduction locally and in CI, record it, and close the plan
 with the required commit, push, and review steps.
@@ -428,9 +430,24 @@ and post-push review stay open below.
       description. Flag the lockfile-only source-map-js update for the user's
       review.
 - [x] Run `git add -A`, commit with a Conventional Commits message, and push.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       and report findings without changing the implementation.
+
+The review ran on `cb28f59b`. Its findings go to the user for a decision and
+are not applied here:
+
+1. Medium: grouped builds 3–5 can hide an extra change that lands on another
+   member's path with a subset of that member's reason kinds. The protocol and
+   README sentences describe the grouped proof as exact.
+2. Medium: `main` merged the identical source-map-js lockfile change in #140,
+   so the branch's dependency commit and its notes are stale until `main` is
+   merged into the branch.
+3. Low: a shared file-level fixture registers its teardown after two awaits,
+   so a filtered run that selects none of the file's tests leaves its
+   temporary directory behind.
+4. Low: the plan's cost model says five fixtures (six existed) and "five
+   compilations become one" (three files now compile once each).
 
 ## Post-merge follow-up (non-blocking)
 
