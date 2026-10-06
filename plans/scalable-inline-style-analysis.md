@@ -1906,6 +1906,11 @@ acceptance are deferred by the user decision of 2026-10-06.
       proof for the identical-text check and style route. Keep the ordinary
       normalized quick check available when the proof is absent. No main
       assertion or time limit changes. See the amendment evidence below.
+- [x] Discovered: the live audit reported two further advisories after the
+      source-map update. Both also fail on clean main. Apply the user's
+      approved shell-quote range update and existing Sharp override patch as
+      two separate local commits, with strict package-file audits. The final
+      dependency audit passes with only main's active braces exception.
 - [ ] Run the full suite, `npm run package:smoke`, and `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
@@ -2197,6 +2202,51 @@ browser/hydration passes do not replace that rerun.
 | Ignore non-identity resource pairs   | Caught by the resource-move model          |
 | Ignore entry kinds                   | Caught by the reused-route model           |
 | Ignore generated route-map equality  | Caught by the equal-size route-set model   |
+
+### M10 dependency updates and final verification
+
+The final merge is `197df9c5`, with the same two parents. Its final remerge
+diff has 223 paths. The 203 unchanged diffs match the first completed audit
+byte-for-byte; all 20 changed or new diffs were read after the amendment.
+`remerge-final-review.json` records each path. The final deletion audit still
+contains only the two approved branch deletions.
+
+The three dependency changes are separate local commits. No test file was
+added for these security updates. Each commit body records the advisory,
+dependency path and clean-main reproduction.
+
+| Commit     | Change                      | Advisory                             | Scope check                                                                    |
+| ---------- | --------------------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
+| `603bb1ca` | source-map-js 1.2.1 → 1.2.2 | GHSA-68fv-2mgg-jv7q                  | Only lockfile version, URL and integrity changed; package.json unchanged       |
+| `124e4c46` | shell-quote 1.10.0 → 1.12.0 | GHSA-pqg4-j6r4-53mv                  | npm resolved 1.12.0 within ^1.6.1; only those three lockfile fields changed    |
+| `44468100` | Sharp 0.35.4 → 0.35.5       | GHSA-wq5f-xc86-pv6w / CVE-2026-96889 | Only the existing miniflare.sharp pin and 27 Sharp/native lock entries changed |
+
+Source-map-js is reached through PostCSS and @tailwindcss/node. Its patched
+release was published on 2026-09-30; main still locks 1.2.1. Shell-quote is
+on the dev path @firna/ui → react-native → react-devtools-core. Sharp is on
+the dev path wrangler → miniflare through the existing override. Wrangler,
+Miniflare and the Undici override remain unchanged. Sharp's permitted native
+packages include libvips 1.3.4.
+
+The source-map-only gate attempt exposed the two later advisories. The clean
+main control reproduced both before the user approved their fixes. The strict
+audits are `source-map-lock-audit.json`, `shell-quote-lock-audit.json` and
+`sharp-lock-audit.json`. `main-control-audit-post-deps.log` and
+`post-deps-raw-audit.json` retain the failures and paths.
+
+After all three commits, `npm ci` passed and the live audit passed. It reports
+only main's reviewed braces exception, valid through 2026-11-03. No other
+advisory remains uncovered. `npm-ci-final-deps.log` and `audit-final-deps.log`
+retain those results. The security contract's documented Sharp pin is updated
+in this separate documentation commit, so each dependency commit retains its
+approved file scope.
+
+Complete verification of the final dependency tip is next. It includes the
+full unit, pinned-Chromium browser and hydration suites, the package consumer
+smokes, example build/check and `cargo xtask check`. The real Wrangler Pages
+runtime runs through `preview_comparisons`, `preview_pages`,
+`preview_preparation`, `preview_design_links` and `preview_navigation`; its
+Miniflare worker runtime is not replaced by a test double.
 
 ## Post-merge follow-up (non-blocking)
 
