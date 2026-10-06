@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Milestone 4 fixes are in progress; the full remote smoke check is pending.
+Status: Active. Milestones 1 through 4 are complete; automatic selection is next.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -254,7 +254,7 @@ Add the two scripts that the boxes run. Nothing calls them yet.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-2-evidence.md`.
 
-## Milestone 3: Testbox workflow
+## Milestone 3: Testbox workflow — completed
 
 Add the dispatch workflow and prove that it prepares a usable box.
 
@@ -269,7 +269,7 @@ Add the dispatch workflow and prove that it prepares a usable box.
   - [x] Run ESLint, TypeScript, Prettier and the protocol tests.
   - [x] Run `cargo xtask check` before the workflow commit and push.
 - [x] Commit and push. Confirm that the push run passes in validation mode.
-- [ ] Smoke test: warm up one box with `--ref <branch>`. Run the repository
+- [x] Smoke test: warm up one box with `--ref <branch>`. Run the repository
       and package suites through `testbox-suite.mjs`. Confirm Node 22.14.0,
       `chromium`, a complete Git history and passing release-tag ratchets.
       Stop the box.
@@ -278,19 +278,19 @@ Add the dispatch workflow and prove that it prepares a usable box.
   - [x] Confirm complete history during the suite and passing ratchets.
   - [x] Pass the package suite.
   - [x] Stop the box, cancel the GitHub run and confirm no active box.
-  - [ ] Pass the repository suite after the separate advisory fixes.
+  - [x] Pass the repository suite after the separate advisory fixes.
 - [x] Record smoke durations, versions and run IDs. Update the delivery
       status. Commit and push the completed documentation.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-3-evidence.md`.
 
-## Milestone 4: Explicit remote executor
+## Milestone 4: Explicit remote executor — completed
 
 Add `--executor remote`. The default `auto` keeps the local behavior in this
 milestone.
 
 The user approved a 30-minute idle timeout. Readiness stays at 10 minutes.
-Finish per-box cleanup and diagnostics before repeating the full smoke check.
+Per-box cleanup and diagnostics follow the approved contract.
 
 - [x] Run `cargo add ctrlc --features termination` in `xtask`.
 - [x] Add failure-first unimock tests at each new trait boundary:
@@ -315,10 +315,9 @@ Finish per-box cleanup and diagnostics before repeating the full smoke check.
 - [x] Run Rust formatting, Clippy, xtask tests, the Rust length audit and
       the focused Node tests. Run TypeScript, ESLint, Prettier and protocol checks.
 - [x] Commit and push.
-- [ ] Smoke test: run
+- [x] Smoke test: run
       `MOKLY_TESTBOX_REF=<branch> cargo xtask check --executor remote`. Record
-      the wall time, runner minutes and result. Require the other commands to
-      pass when the repository audit fails. Require all nine reports.
+      the wall time, runner minutes and result. Require all commands and reports.
 - [x] Smoke test: press Ctrl-C during the suites. Confirm that
       `blacksmith testbox list` shows no box and that the GitHub runs end.
 
@@ -330,9 +329,9 @@ Finish per-box cleanup and diagnostics before repeating the full smoke check.
 - [x] Skip stop and cancellation for a matching completed status table row.
 - [x] Print failed script output and use clear error and aggregate wording.
 - [x] Document saved CLI credentials and the approved timeout.
-- [ ] Commit and push these fixes before the full remote smoke check.
-- [ ] Repeat the full remote smoke check with all commands and reports.
-- [ ] Close Milestones 3 and 4. Commit and push the smoke record.
+- [x] Commit and push these fixes before the full remote smoke check.
+- [x] Repeat the full remote smoke check with all commands and reports.
+- [x] Close Milestones 3 and 4. Commit and push the smoke record.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-4-evidence.md`.
 

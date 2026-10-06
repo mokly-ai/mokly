@@ -7,7 +7,7 @@ defines this approved target. Explicit remote execution, the scripts and the
 Testbox workflow are implemented. Automatic remote selection and
 `cargo xtask executor` are pending. The default `auto` runs locally.
 The approved idle timeout is 30 minutes. Per-box cleanup and diagnostics are
-being updated. The complete remote smoke check is pending.
+implemented. The complete explicit remote smoke check passes.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
 workflow, commands, probe, suite wrapper and source-tree fingerprint.
 

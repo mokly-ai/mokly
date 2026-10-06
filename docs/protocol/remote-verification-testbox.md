@@ -7,8 +7,8 @@ Continuation of [Remote Verification](./remote-verification.md).
 The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 approves this target. Explicit remote execution, the fingerprint, suite wrapper
 and workflow are implemented. The wrapper selects `--executor local`.
-Workflow validation and the box package smoke check pass.
-Main's dependency fixes are merged. The complete remote smoke check is pending.
+Workflow validation and both box suite smoke checks pass.
+Main's dependency fixes are merged. The complete explicit remote check passes.
 Automatic remote selection and `cargo xtask executor` are pending.
 
 ## Workflow
