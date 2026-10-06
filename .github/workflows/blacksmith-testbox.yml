@@ -1,6 +1,9 @@
 name: Blacksmith Testbox
 
 on:
+  push:
+    branches: [calummoore/testbox-trial]
+    paths: [.github/workflows/blacksmith-testbox.yml]
   workflow_dispatch:
     inputs:
       testbox_id:
