@@ -1,8 +1,9 @@
 # Move `@mokly/mokly` Into `packages/mokly`
 
-Status: Active. Milestones 1–3 are complete. Milestone 4 is next and belongs to
-the coordinating reviewer. Maintainers must merge the pending release PR #127
-before this branch.
+Status: Active. Milestones 1–4 are complete. The final review found
+[three findings](../docs/reviews/mokly-workspace-package.md), one High and two
+Low; they await the user's decision. Maintainers must merge the pending release
+PR #127 before this branch.
 
 Make the CLI package a real npm workspace member at `packages/mokly`, beside
 `packages/viewer`. The repository root becomes a private workspace root that
@@ -582,9 +583,13 @@ Perform the move and every path update in one commit so the gate never breaks.
   modules with one retained exception, and both unchanged public baseline tags.
   This separate documentation commit records completion after the push.
 
-## Milestone 4: Review the complete diff
+## Milestone 4: Review the complete diff (complete)
 
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
       Report numbered findings with severity, impact, lettered options, and a
       recommendation. Do not change the implementation.
+- [x] Record the findings in
+      [`docs/reviews/mokly-workspace-package.md`](../docs/reviews/mokly-workspace-package.md).
+      The review covered `b20dc76` and `81086d8` against `origin/main` at
+      `781da7a`.
