@@ -30,6 +30,10 @@ directly with `origin/main`, so main-only additions do not become false
 violations before the merge commit exists.
 The Node unit/integration suite runs at most two test files concurrently;
 individual concurrency tests and their existing timeouts remain unchanged.
+The planned [test assertion contract](../docs/protocol/ci-test-assertions.md)
+adds an assertion guard to both unit-runner policies and native test steps.
+A unit test that makes no assertion fails. Catalogue tests use checked
+selection helpers; selection alone does not count as an assertion.
 The complete check starts with `npm run dependencies:check`, covering all
 workspace dependency categories. It requires registry access; an audit or network
 failure stops subsequent checks. Reviewed workspace exceptions have exact

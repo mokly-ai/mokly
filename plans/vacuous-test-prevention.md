@@ -1,7 +1,8 @@
 # Vacuous Test Prevention
 
-Status: Active; not started. Created 2026-10-06 with the user's consent after a
-report that four unit tests check nothing. The user chose four options: rewrite
+Status: Active; Milestone 1 completed. Waiting for reviewer approval before
+Milestone 2. Created 2026-10-06 with the user's consent after a report that four
+unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
 the unit runner; add checked catalogue-selection helpers and a lint rule; and
 make no change to the review prompt. On 2026-10-06 the user asked for every
@@ -204,28 +205,28 @@ Milestone 3 rewrites 4 of them, which leaves 23 sites in 15 files for
 Milestone 5. Selector 3 reports 57 sites in 34 files. Milestone 3 rewrites 3 of
 them, which leaves 54 sites in 32 files for Milestone 6.
 
-## Milestone 1: Define the contract
+## Milestone 1: Define the contract (completed)
 
 Write the guard, helper, and lint contracts into the documentation before any
 code changes.
 
-- [ ] Add `docs/protocol/ci-test-assertions.md` with the guard, the selection
+- [x] Add `docs/protocol/ci-test-assertions.md` with the guard, the selection
       helpers, the lint rule, and their limits, as decided above. Keep it under
       250 lines. Set its Delivery Status to planned and link this plan.
-- [ ] Index the page in `docs/protocol/README.md` beside CI suite evidence.
-- [ ] Link the page from the Unit/integration and Repository rows of the gate
+- [x] Index the page in `docs/protocol/README.md` beside CI suite evidence.
+- [x] Link the page from the Unit/integration and Repository rows of the gate
       table in `docs/protocol/ci-verification.md`. Change only those table
       rows, because the page has 247 of its 250 lines.
-- [ ] Add one paragraph to "Develop Mokly" in `README.md`: a unit test that
+- [x] Add one paragraph to "Develop Mokly" in `README.md`: a unit test that
       makes no assertion fails, and tests select catalogue entries through the
       checked helpers.
-- [ ] Update the unit-suite text in `xtask/README.md`. In the test paragraph of
+- [x] Update the unit-suite text in `xtask/README.md`. In the test paragraph of
       `examples/basic/README.md`, state that a moved or renamed spec makes a
       test fail; it cannot leave the test empty.
-- [ ] Run `npx prettier --check` on the changed Markdown. Run
+- [x] Run `npx prettier --check` on the changed Markdown. Run
       `tests/protocol_structure.test.ts`, `tests/protocol_doc_sizes.test.ts`,
       and the guide tests. Review the diff.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 2: Checked catalogue selection helpers
 
