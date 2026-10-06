@@ -2,6 +2,7 @@
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
+import { prepareCacheDirectory } from "../config/cache_ignore.js";
 import { MOKLY_CACHE } from "../config/cache_paths.js";
 import { projectRealPath } from "../config/paths.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -48,6 +49,11 @@ export function outputLockPath(repoRoot: string): string {
   );
 }
 
+/** The `.mokly-cache/` directory that holds a lock file's `locks/` directory. */
+function cacheDirectory(lockFile: string): string {
+  return path.dirname(path.dirname(lockFile));
+}
+
 /** Run `action` while this process exclusively owns the repository's generated output. */
 export async function withOutputLock<Result>(
   repoRoot: string,
@@ -86,6 +92,8 @@ async function acquire(
   const pollMs = options.pollMs ?? OUTPUT_LOCK_POLL_MS;
   const started = Date.now();
   try {
+    if (options.signal?.aborted) throw cancelled();
+    await prepareCacheDirectory(cacheDirectory(file));
     for (;;) {
       if (options.signal?.aborted) throw cancelled();
       const token = await publishLock(file);
