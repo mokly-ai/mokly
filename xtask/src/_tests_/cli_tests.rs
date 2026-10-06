@@ -7,6 +7,7 @@ use clap::Parser;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::check::{CheckRunnerRunMock, CheckRunnerSourceFileLengthMock, VerificationSuite};
+use crate::remote::contracts::{EnvironmentGetMock, ReporterExecutorMock};
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
 use super::{Application, Cli, Command, Xtask};
@@ -19,6 +20,7 @@ fn parses_every_suite_and_a_valid_shard() {
         let Command::Check {
             suite: parsed,
             shard,
+            ..
         } = cli.command
         else {
             panic!("check command expected");
@@ -75,6 +77,14 @@ fn application_dispatches_source_length_and_complete_check() {
         CheckRunnerRunMock.next_call(matching!((request) if request == &crate::check::CheckRequest::new(None, None).unwrap())).returns(Ok(())),
     )));
     let app = Application {
+        remote_runner: Arc::new(Unimock::new(())),
+        interrupt: Arc::new(Unimock::new(())),
+        environment: Arc::new(Unimock::new(
+            EnvironmentGetMock.each_call(matching!(_)).returns(None),
+        )),
+        reporter: Arc::new(Unimock::new(
+            ReporterExecutorMock.each_call(matching!(_)).returns(()),
+        )),
         check_runner: checks,
         rust_file_length_auditor: Arc::new(Unimock::new(
             RustFileLengthAuditorRunMock
@@ -88,6 +98,7 @@ fn application_dispatches_source_length_and_complete_check() {
     app.run(Command::Check {
         suite: None,
         shard: None,
+        executor: None,
     })
     .unwrap();
     app.run(Command::RustFileLengthLint { all: false }).unwrap();

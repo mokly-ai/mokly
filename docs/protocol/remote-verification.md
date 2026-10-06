@@ -3,9 +3,9 @@
 ## Delivery Status
 
 The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
-defines this approved target. Executor integration is pending. The fingerprint
-and suite wrapper scripts and Testbox workflow are implemented.
-The current complete gate runs locally under [CI verification](./ci-verification.md).
+defines this approved target. Explicit remote execution, the scripts and the
+Testbox workflow are implemented. Automatic remote selection and
+`cargo xtask executor` are pending. The default `auto` runs locally.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
 workflow, commands, probe, suite wrapper and source-tree fingerprint.
 
@@ -102,7 +102,7 @@ Run all local and CLI operations from the workspace root.
    Use `.github/workflows/blacksmith-testbox.yml`, `--ref main` and
    `--idle-timeout 10`. Use `MOKLY_TESTBOX_REF` when it is set.
    Record each box ID. Warmup must return exactly one
-   box ID per request. Missing or multiple IDs fail warmup.
+   box ID per request. Missing, multiple or repeated IDs fail warmup.
 3. Probe every box through `blacksmith testbox run`.
    Allow at most 10 minutes for readiness. The probe must confirm both the
    expected fingerprint and local `HEAD` on every box.

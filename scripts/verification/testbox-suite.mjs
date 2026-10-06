@@ -118,7 +118,14 @@ export async function runTestboxSuite(args, dependencies) {
     await writeFile(stampFile, `${digest}\n`);
   }
 
-  const suiteArgs = ["xtask", "check", "--suite", request.suite];
+  const suiteArgs = [
+    "xtask",
+    "check",
+    "--executor",
+    "local",
+    "--suite",
+    request.suite,
+  ];
   if (request.shard)
     suiteArgs.push("--shard", `${request.shard.index}/${request.shard.total}`);
   const outcome = await runCommand({

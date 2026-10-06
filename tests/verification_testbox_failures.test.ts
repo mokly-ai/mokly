@@ -92,22 +92,28 @@ test("signals and interrupted commands cannot turn into success", async () => {
     ["SIGTERM", 143],
   ] as const) {
     const harness = testboxHarness();
-    harness.outcomes.set("cargo xtask check --suite unit --shard 1/4", {
-      exitCode: null,
-      signal,
-      stdout: "",
-      stderr: "",
-    });
+    harness.outcomes.set(
+      "cargo xtask check --executor local --suite unit --shard 1/4",
+      {
+        exitCode: null,
+        signal,
+        stdout: "",
+        stderr: "",
+      },
+    );
     assert.equal(
       await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
       code,
     );
-    harness.outcomes.set("cargo xtask check --suite unit --shard 1/4", {
-      exitCode: 0,
-      interrupted: signal,
-      stdout: "",
-      stderr: "",
-    });
+    harness.outcomes.set(
+      "cargo xtask check --executor local --suite unit --shard 1/4",
+      {
+        exitCode: 0,
+        interrupted: signal,
+        stdout: "",
+        stderr: "",
+      },
+    );
     assert.equal(
       await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
       code,

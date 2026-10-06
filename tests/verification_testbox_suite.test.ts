@@ -55,6 +55,8 @@ test("the 11 commands derive exact cargo arguments, report names and streamed ou
           args: [
             "xtask",
             "check",
+            "--executor",
+            "local",
             "--suite",
             suite,
             ...(shard ? ["--shard", shard] : []),
@@ -182,7 +184,9 @@ for (const state of ["changed", "missing"]) {
     );
     assert.ok(
       order.indexOf(`write:${harness.stamp}`) <
-        order.indexOf("cargo xtask check --suite unit --shard 1/4"),
+        order.indexOf(
+          "cargo xtask check --executor local --suite unit --shard 1/4",
+        ),
     );
   });
 }
@@ -222,11 +226,14 @@ test("secrets and GitHub identity variables do not enter child commands", async 
 
 test("the wrapper returns the exact cargo exit code", async () => {
   const harness = testboxHarness();
-  harness.outcomes.set("cargo xtask check --suite unit --shard 1/4", {
-    exitCode: 7,
-    stdout: "",
-    stderr: "",
-  });
+  harness.outcomes.set(
+    "cargo xtask check --executor local --suite unit --shard 1/4",
+    {
+      exitCode: 7,
+      stdout: "",
+      stderr: "",
+    },
+  );
   assert.equal(
     await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
     7,

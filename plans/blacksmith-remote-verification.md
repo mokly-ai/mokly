@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Milestones 1 and 2 are complete; Milestone 3 remains blocked by the separate dependency fixes.
+Status: Active. Milestone 4 is in progress; Milestone 3 awaits the separate dependency fixes.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -287,31 +287,38 @@ Evidence: `.context/blacksmith-remote-verification/milestone-3-evidence.md`.
 Add `--executor remote`. The default `auto` keeps the local behavior in this
 milestone.
 
-- [ ] Run `cargo add ctrlc --features termination` in `xtask`.
-- [ ] Add failure-first unimock tests at each new trait boundary:
-  - [ ] Warmup output parsing, including output without exactly one box ID.
-  - [ ] A failed warmup, readiness probe or sync probe.
-  - [ ] A box `HEAD` that differs from the local `HEAD`.
-  - [ ] A failed suite command, report download or aggregate.
-  - [ ] A local tree that changes during the run.
-  - [ ] An interrupt during warmup and during the suites.
-  - [ ] Each case stops every warmed box. No suite command starts before all
+- [x] Run `cargo add ctrlc --features termination` in `xtask`.
+- [x] Add failure-first unimock tests at each new trait boundary:
+  - [x] Warmup output parsing, including output without exactly one box ID.
+  - [x] A failed warmup, readiness probe or sync probe.
+  - [x] A box `HEAD` that differs from the local `HEAD`.
+  - [x] A failed suite command, report download or aggregate.
+  - [x] A local tree that changes during the run.
+  - [x] An interrupt during warmup and during the suites.
+  - [x] Each case stops every warmed box. No suite command starts before all
         probes pass.
-- [ ] Add `--executor` and `MOKLY_CHECK_EXECUTOR`.
-- [ ] Make `testbox-suite.mjs` pass `--executor local`, and update its tests.
-- [ ] Implement the remote runner in `xtask/src/remote/`:
-  - [ ] Put availability checks, the Testbox client, the fingerprint reader,
+- [x] Reject repeated box IDs from separate warmup requests.
+- [x] Add `--executor` and `MOKLY_CHECK_EXECUTOR`.
+- [x] Make `testbox-suite.mjs` pass `--executor local`, and update its tests.
+- [x] Implement the remote runner in `xtask/src/remote/`:
+  - [x] Put availability checks, the Testbox client, the fingerprint reader,
         the aggregate runner, the log writer and the interrupt guard behind
         traits. Inject the concrete implementations in `cli.rs`.
-  - [ ] Use typed `thiserror` errors and keep tests under `_tests_`.
-  - [ ] Keep each Rust file at 300 lines or less.
-- [ ] Update `xtask/README.md` and the developer section of `README.md`.
+  - [x] Use typed `thiserror` errors and keep tests under `_tests_`.
+  - [x] Keep each Rust file at 300 lines or less.
+- [x] Update `xtask/README.md` and the developer section of `README.md`.
+- [x] Run Rust formatting, Clippy, xtask tests, the Rust length audit and
+      the focused Node tests. Run TypeScript, ESLint, Prettier and protocol checks.
 - [ ] Commit and push.
 - [ ] Smoke test: run
       `MOKLY_TESTBOX_REF=<branch> cargo xtask check --executor remote`. Record
       the wall time, runner minutes and result.
 - [ ] Smoke test: press Ctrl-C during the suites. Confirm that
       `blacksmith testbox list` shows no box and that the GitHub runs end.
+
+- [ ] Record both smoke checks. Commit and push the plan update.
+
+Evidence: `.context/blacksmith-remote-verification/milestone-4-evidence.md`.
 
 ## Milestone 5: Automatic selection
 

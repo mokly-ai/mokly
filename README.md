@@ -333,9 +333,19 @@ adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
 The [remote verification contract](./docs/protocol/remote-verification.md)
-defines the approved Testbox target. Its fingerprint and suite wrapper scripts
-and preparation workflow are implemented. Executor integration is pending.
-The complete gate still runs locally.
+defines the Testbox gate. Push your branch before an explicit remote check:
+
+```bash
+MOKLY_TESTBOX_REF="$(git branch --show-current)" cargo xtask check --executor remote
+```
+
+Install `blacksmith`, `rsync` and `ssh`. Set `BLACKSMITH_ORG_TOKEN` for org-key
+login, or use the current CLI login. Each remote check runs 11 suites in parallel,
+downloads nine reports and stops every box. Logs stay under `.context/`.
+`--executor local` skips remote checks. The default `auto` still runs locally.
+`MOKLY_CHECK_EXECUTOR` sets the default mode. The CLI flag overrides it.
+The workflow ref defaults to `main`. A selected `--suite` stays local.
+Explicit `remote` with `--suite` fails before work starts.
 
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
@@ -397,6 +407,8 @@ review rules, and the temporary Braces exception.
   computes the source fingerprint, including uncommitted changes.
 - [`scripts/verification/testbox-suite.mjs`](./scripts/verification/testbox-suite.mjs)
   checks that fingerprint and prepares one suite through injected commands.
+- [`xtask/src/remote`](./xtask/src/remote) runs the complete Testbox gate and
+  owns report downloads, logs and interrupt cleanup.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design
   catalogue.
 
