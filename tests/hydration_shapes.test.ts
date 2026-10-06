@@ -89,9 +89,7 @@ function view(instances: readonly Instance[]): View {
     colorScheme: "light",
     instances,
     ranges: [],
-    resources: [],
     slots: [],
-    styles: [],
     viewport: "mobile",
   };
 }
