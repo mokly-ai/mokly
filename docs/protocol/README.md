@@ -42,6 +42,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [CI example compilation snapshot](./ci-example-snapshot.md) — the compiled
     example that unit test files share, its freshness key, and the compile
     fallback.
+- [CI test timing](./ci-test-timing.md) — deterministic assertions,
+  duration reporting, and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v1](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.

@@ -3,8 +3,9 @@
 This document supplements the [CI verification contract](./ci-verification.md)
 with fixture ownership, test concurrency, failure cleanup, browser shard
 balance, and acceptance measurement rules for the unit, browser, and hydration
-suites. The [example compilation snapshot](./ci-example-snapshot.md) contract
-defines the compiled example that unit test files share.
+suites. Test timing follows [CI Test Timing](./ci-test-timing.md). The
+[example compilation snapshot](./ci-example-snapshot.md) contract defines the
+compiled example that unit test files share.
 
 ## Fixture Lifetime And Cleanup
 

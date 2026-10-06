@@ -75,12 +75,22 @@ from its peers. Chromium is installed only in browser and hydration jobs. Rust
 formatting, Clippy, and tests run only in the repository job; selected suite
 jobs still compile xtask to dispatch their gate.
 
-Every npm-running job installs npm 11.7.0 and runs `npm ci`. CI caches only npm
-downloads. Every npm-running job keys npm's download cache from the checked-out
+Every npm-running job installs npm 11.21.0, the exact `packageManager` version
+in `package.json`, and runs `npm ci`. CI caches only npm downloads. Every
+npm-running job keys npm's download cache from the checked-out
 `package-lock.json`; none reads a branch-point lockfile. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
+
+Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
+or newer: older versions drop the lockfile's `libc` fields, which select the
+glibc or musl build of a native package
+([npm/cli#9025](https://github.com/npm/cli/pull/9025)). Without those fields,
+`npm ci` on Linux installs both builds.
+[`tests/npm_pin.test.ts`](../../tests/npm_pin.test.ts) keeps every workflow
+npm pin equal to `packageManager`, requires CI and release jobs to set up that
+npm before `npm ci`, and rejects pins older than npm 11.11.0.
 
 Linux and Windows jobs across CI, preview, and release workflows use
 Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's

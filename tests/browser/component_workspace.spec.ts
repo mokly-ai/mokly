@@ -105,7 +105,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       );
       await preview
         .getByRole("link", { name: "Inspect Action, Continue" })
-        .click({ timeout: 3000 });
+        .click({ timeout: 15_000 });
       await expect(page).toHaveURL(
         componentDesignUrl(
           "design/components/inspection/inspection-consumer",

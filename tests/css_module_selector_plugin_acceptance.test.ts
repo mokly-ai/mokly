@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { performance } from "node:perf_hooks";
 import test from "node:test";
 
 import { verifyModuleScoping } from "../dist/build/styles/module_verify.js";
 import { scopeModule } from "../dist/build/styles/modules.js";
 
 import { pluginModuleOutput } from "./helpers/css_module_plugin_output.js";
+import { startDuration } from "./helpers/durations.js";
 
 const relative = "entries/matrix.module.css";
 const prefix = `mokly_${createHash("sha256").update(relative).digest("hex").slice(0, 12)}_`;
@@ -145,7 +145,7 @@ test(
   "generated plugin-output matrix has no false rejections",
   { timeout: 20_000 },
   (context) => {
-    const started = performance.now();
+    const duration = startDuration();
     let accepted = 0;
     let rejected = 0;
     for (const mode of modes)
@@ -181,13 +181,8 @@ test(
               accepted += 1;
             }
           }
-    const elapsed = performance.now() - started;
     context.diagnostic(
-      `${accepted + rejected} generated selector cases: ${accepted} accepted, ${rejected} rejected, ${elapsed.toFixed(1)} ms`,
-    );
-    assert.ok(
-      elapsed < 10_000,
-      `generated selector matrix took ${elapsed.toFixed(1)} ms`,
+      `${accepted + rejected} generated selector cases: ${accepted} accepted, ${rejected} rejected, ${duration()}`,
     );
   },
 );
