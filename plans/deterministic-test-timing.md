@@ -2,7 +2,8 @@
 
 Status: Active. No PR is open yet. On 2026-10-06 the user chose option C:
 convert every wall-clock limit in the required suites and add a guard against
-new ones.
+new ones. All seven milestones are complete. Six review findings under
+Milestone 7 await the user's decision.
 
 Replace the elapsed-time assertions in the unit, browser and hydration suites
 with checks that do not depend on machine speed. Assert the scale contracts
@@ -364,7 +365,7 @@ Evidence: `.context/deterministic-test-timing/milestone-6.md`.
       changes. Check file lengths and confirm that `src/` and `packages/`
       have no diff.
 
-## Milestone 7: Deliver and review
+## Milestone 7: Deliver and review — completed
 
 Integrate main, run the complete gate, and deliver the branch.
 
@@ -384,9 +385,17 @@ Evidence: `.context/deterministic-test-timing/milestone-7.md`.
       approved removal in the commit body.
 - [x] Run `git add -A`, commit the completed work using Conventional
       Commits, and push the branch.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review
+- [x] After the push, use `docs/implementation-review-prompt.md` to review
       the complete local diff against `origin/main`. Report the findings
-      without changing the implementation.
+      without changing the implementation. The review at `f210d15` found six
+      findings. All are tagged `Auto-fix: no` and await the user's decision.
+      Report: `.context/deterministic-test-timing/review-1.md`.
+  - 1 (Medium, test): `tests/browser/css_evidence_page.ts` waits 15 s inside a 15 s `toPass`, so a lost click is never retried. Recommended: a short per-attempt wait and a contract rule for retry loops.
+  - 2 (Medium, test): Playwright's default 5 s assertion timeout still applies to browser waits. Recommended: `expect.timeout` of 15 s in `playwright.config.ts`, with a config test.
+  - 3 (Medium, test): 15 counted polling loops and the `demand_safety` `DocumentService` timeout allow less than 10 s. Recommended: one shared `waitUntil` helper and a fake clock for `demand_safety`.
+  - 4 (Medium, docs or spec): the once-per-metafile working-directory rule is false for symlinked roots and for a working directory equal to `repoRoot`. Recommended: fix the product and count both realpath functions.
+  - 5 (Low, repository rule): the ESLint guard misses `packages/viewer/tests/` and member-expression clocks. Recommended: share the unit-suite root list and add the selectors.
+  - 6 (Low, process): commit `b51280f` has a 51-character title. Recommended: keep it and squash-merge with a compliant PR title.
 
 ## Post-merge follow-up (non-blocking)
 
