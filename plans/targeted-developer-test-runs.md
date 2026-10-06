@@ -79,7 +79,7 @@ Developer runner arguments (`npm test -- ...` and `npm run test:unit -- ...`):
 - Zero or more `--test-name-pattern=<regex>` or `--test-name-pattern <regex>`
   values. Each value must be non-empty and valid for the executing Node CLI's
   regex syntax, including `/pattern/flags` values. A missing, empty, or invalid
-  regex value fails with usage before inventory discovery, prepared-output
+  regex value fails with a problem message and usage before inventory discovery, prepared-output
   checks, or test execution. Forward all repeated patterns unchanged and in
   order. Node applies them as alternatives. File and pattern arguments can
   appear in any order.
@@ -99,7 +99,12 @@ Developer runner arguments (`npm test -- ...` and `npm run test:unit -- ...`):
   developer policy, including intentional Windows skips, and print their
   combined count. Then print one line with the selected file count, partial
   verification status, and complete gate command:
-  `selected files: <count>; partial verification; complete gate: cargo xtask check`.
+  `selected files: <files>; tests run: <n>; partial verification; complete gate: cargo xtask check`.
+  Sum per-file `passed + failed + cancelled` for `<n>`. After the skipped and todo
+  line, warn for each selected file with per-file `tests = 0`:
+  `warning: no test ran in <file>`. Append `; check --test-name-pattern` when a
+  pattern is present. Print warnings in selected-file order. Do not change the
+  evidence schema, complete output, or zero-test exit status.
   Zero matching tests in a selected file is not a failure; the reporter must
   still observe that file.
 - A selected run fails when the observed file set differs from the selected
@@ -114,6 +119,16 @@ Developer runner arguments (`npm test -- ...` and `npm run test:unit -- ...`):
 - A run with no file or pattern argument is the complete developer run and
   keeps its current behavior, including its developer skip policy, printed
   skipped and todo count, evidence report, and report-path override.
+- Developer argument and membership errors use `ExpectedFailure`. Print only
+  their message to stderr and exit 1. Unknown options and missing/empty patterns
+  name the problem before usage; invalid patterns also retain the quoted value
+  and SyntaxError reason. Empty discovery and internal faults retain stacks.
+  The strict entrypoint stays unchanged. Validate selected outcomes in order:
+  evidence, reporter completion, failed tests, cancellation, process, then file
+  set. Expected test failures report a count and at most 20 ordered `✖ <name>`
+  lines, then `… and <k> more`. Cancellation reports its count; process failures
+  name the code or signal. File-set errors name missing and unexpected files.
+  Exact messages follow the developer command protocol.
 
 Every selected run, filtered Playwright run (including project selection), and
 single `cargo xtask check --suite` run is partial verification. A complete public
@@ -292,8 +307,40 @@ and merged documentation-only main updates without another complete gate.
       with `docs/implementation-review-prompt.md`, and report the numbered
       findings with severities and recommendations. Then apply the review-fix
       rule in `AGENTS.md`.
-  - Finding 1, Medium: Zero matches look passed; recommend A: count and warn.
-  - Finding 3, Low: Windows npm probes fail; recommend B: share an npm helper.
-  - Finding 4, Low: Bad arguments wait for build; recommend B: validate first.
-  - Finding 5, Low: Error output is unclear; recommend A: clear messages.
-  - Finding 6, Low: Changes need approval; recommend A: keep all three changes.
+  - User decisions on findings 1, 3, 4, 5, and 6 are in Milestone 4.
+
+## Milestone 4: Review Decisions
+
+Implement the selected output and error improvements, share the Windows-safe
+npm test launcher, integrate main, and verify the combined tree.
+Evidence: `.context/targeted-developer-test-runs/milestone-4.md`.
+
+Decisions: The user selected finding 1 option A: count tests from file summaries,
+warn for each zero-test file, and keep a passing exit. The user selected finding
+3 option B: use one shared npm test helper with the existing executable resolver.
+The user ignored finding 4: keep the build-first order. The user selected finding
+5 option A for the developer runner only: show clear expected failure reports.
+The user selected finding 6 option A and approved all three earlier changes:
+the npm-consumed flag guard, stricter reporter evidence, and rerunning only the
+failing tests after a gate failure.
+
+- [x] Define exact selected output and developer errors in the protocol and
+      keep the plan Contract consistent before changing code.
+- [ ] Implement finding 1 with per-file counts and zero-test warnings. Keep
+      reports and complete/strict runs unchanged. Add regression tests.
+- [ ] Implement finding 5 with one expected error type, problem-first argument
+      messages, ordered outcome validation, and internal fault stacks. Test it.
+- [ ] Implement finding 3 with a shared test helper that uses
+      `NodeBaselineExecutableResolver` and shell-free `execFile` in all three
+      npm probe loops. Keep literal arguments and filter undefined env values.
+- [ ] Commit each implemented finding separately and name it in the message.
+- [ ] Merge fetched main, capture its source audit, preserve every main change,
+      confirm two parents, and inspect each remerge path.
+- [ ] Pass lint, formatting, declaration checks, and every affected test on
+      Node 24 and Node 22.14. Run the zero-match and unknown-option smoke commands.
+- [ ] Pass the repository suite, then run the complete gate once on the merged
+      tree. Use targeted reruns after a failure and report repeated unrelated failures.
+- [ ] Run the deletion checks, commit remaining changes, and push the branch.
+- [ ] After the push, review the complete diff against `origin/main` with
+      `docs/implementation-review-prompt.md`, report findings, then apply the
+      review-fix rule in `AGENTS.md`. The orchestrating agent runs this review.

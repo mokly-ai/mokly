@@ -93,9 +93,11 @@ caller can use the browser command. These errors must precede test execution.
 ### Name Patterns And Rejected Flags
 
 Accept both `--test-name-pattern=<regex>` and `--test-name-pattern <regex>`.
-Each occurrence requires a non-empty value. A missing or empty value fails with
-the usage text. Each value must follow the executing Node CLI's regex syntax,
-including `/pattern/flags` values. An invalid regex also fails with usage
+Each occurrence requires a non-empty value. A missing or empty value reports
+`--test-name-pattern needs a non-empty value`, followed by usage. Each value
+must follow Node CLI regex syntax, including `/pattern/flags` values. An invalid
+regex reports `invalid --test-name-pattern value "<value>": <SyntaxError message>`,
+followed by usage. Validation happens
 before inventory discovery, prepared-output checks, or test execution. Forward
 every pattern unchanged and in argument order to Node; Node applies repeated
 patterns as alternatives.
@@ -103,7 +105,15 @@ patterns as alternatives.
 Reject `--shard` with or without a value, including the equals form. Its error
 must name `npm run test:prepared` and
 `cargo xtask check --suite unit --shard`. Every other flag fails with the usage
-text. Only the strict runners accept shard arguments.
+text, preceded by `unknown option <flag>`. Only the strict runners accept shards.
+
+### Developer Failure Reports
+
+Argument and inventory-membership errors are expected failures. The developer
+entrypoint catches only `ExpectedFailure`, prints its complete message to stderr,
+and sets exit code 1 without a stack or Node version footer. Missing preparation,
+empty discovery, concurrency errors, and other internal faults retain Node's
+default error report. The strict entrypoint and complete report schema stay unchanged.
 
 ## Selected Unit Runs
 
@@ -122,20 +132,36 @@ current developer policy. Print their combined count. Zero matching tests in a
 selected file is not a failure; the reporter must still observe that file and
 complete normally.
 
-After the skipped and todo count, every selected run prints this one line,
-using the number of normalized selected files:
+After the skipped and todo count, print one stdout warning for each selected
+file whose per-file `test:summary` has `tests = 0`, in selected-file order:
 
 ```text
-selected files: <count>; partial verification; complete gate: cargo xtask check
+warning: no test ran in <file>
 ```
 
-A selected run fails on any of these conditions:
+Append `; check --test-name-pattern` when the run has a name pattern. Then print:
 
-- The observed file set differs from the selected set: a selected file is
-  missing or an unexpected file appears.
-- Any test fails, or a test or the run is cancelled.
-- The test process exits with a non-zero code or a signal.
-- The reporter does not complete, or its output cannot be read or validated.
+```text
+selected files: <files>; tests run: <n>; partial verification; complete gate: cargo xtask check
+```
+
+`<n>` sums per-file `passed + failed + cancelled`. Skipped and todo tests do not
+contribute. Use per-file counts because Node can report a file with zero matching
+tests as one passed test in its run-level output. Zero tests still passes.
+These totals never enter a written report or change complete-run output.
+
+Validate selected outcomes in this order: evidence error, incomplete reporter,
+failed tests, cancelled tests, process exit or signal, then the file set.
+Failed tests are an expected failure: `<n> selected unit test failed:` for one,
+or `<n> selected unit tests failed:` otherwise, followed by ordered reporter
+failure names as `✖ <name>` lines. Show at most 20 names; append `… and <k> more`
+for the rest. Cancellation reports `<n> selected unit test(s) cancelled`, using
+the same singular/plural rule. A process failure reports
+`selected unit test process exited with code <code>` or
+`selected unit test process exited with signal <signal>` as an expected failure.
+Every condition still fails the run. Evidence errors, incomplete reporters, and
+file-set mismatches remain internal errors with a stack. A file-set message names
+missing and unexpected files. Strict and complete runs keep their prior behavior.
 
 Selected runs never create, remove, or change any file under
 `.context/verification-reports`. They ignore `MOKLY_VERIFICATION_REPORT`, even
