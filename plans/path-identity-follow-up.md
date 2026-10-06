@@ -8,9 +8,10 @@ complete. On 2026-10-05 the user asked to delegate the fixes to Codex
 (`gpt-6.1-sol`, effort `max`). Four Codex workspaces implemented Milestones 2
 and 6–7, 3–4, 5, and 8 from this branch. The orchestrator reviewed each
 branch, ran its key tests independently, and merged it here. A fifth Codex
-workspace implemented Milestones 9–10. Milestones 1–10 are complete. In
-Milestone 11, the smoke tests, the full gate and the push are complete; the
-fresh review is in progress.
+workspace implemented Milestones 9–10. All milestones are complete. The fresh
+review found three Medium and nine Low findings, recorded in the
+[review record](../docs/reviews/path-identity.md#follow-up-review). They await
+the user's decision, as do item 3 and the skipped items 8 and 12.
 
 ## Scope And Decisions
 
@@ -413,7 +414,7 @@ suites passed their 27-case recheck. This repair changes test setup only.
 - [x] Run `cargo xtask check`.
 - [x] Commit with Conventional Commits and push the branch. Confirm that the
       push deletes nothing on `origin/main` without approval.
-- [ ] After the push, a fresh reviewer uses
+- [x] After the push, a fresh reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete diff from `origin/main`, and reports findings
       without changing the implementation.
@@ -441,3 +442,16 @@ the orchestrator's independent run passed on the Milestone 1–8 integration
 Deletion audit: against `origin/main`, the branch deletes only
 `packages/viewer/src/shell/catalogue_branch_point.ts`, which Milestone 3
 moved under the user's approval.
+
+Independent gate: on the pushed head `d05455f9`, the orchestrator's
+`cargo xtask check` passed the repository, Rust, package and type checks and
+all 4,319 unit tests. Its browser stage failed one check,
+`browse_appearance_navigation.spec.ts`, while a reviewer ran browser tests on
+the same machine; the gate then stopped. On the idle machine that check passed
+10 of 10 runs, and the complete browser suite (898 tests) and hydration suite
+(263 tests) passed. Finding 11 in the review record covers that check.
+
+Review: a fresh Codex reviewer and a fresh Claude reviewer reviewed the
+complete diff against `origin/main` without changing it. Their findings and
+the smoke agent's three issues on `main` are in the
+[review record](../docs/reviews/path-identity.md#follow-up-review).

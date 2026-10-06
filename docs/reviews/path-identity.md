@@ -768,3 +768,133 @@ item found during Milestone 16, and "M18" is the Milestone 18 review.
 | 13   | Low      | 2nd 14, 15             | The guides do not say what search matches and name the wrong owner page. The shell README and one design document contain stale statements.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | A                                                                                                                              |
 | 14   | Low      | M18 1, 2, 3            | The console rule accepts `/static/` at any depth and text after Chrome's sentence. Six files keep their own console listener, and `moved_rows.ts` ignores page errors. `ci-verification.md` says "only".                                                                                                                                                                                                                                                                                                                                                                                                                                                     | B                                                                                                                              |
 | 15   | Low      | M18 4; new             | The plan stayed Active after the merge, and the Milestone 18 evidence had inconsistent labels.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | A, delivered in follow-up Milestone 1                                                                                          |
+
+## Follow-up Review
+
+Two fresh reviewers reviewed the follow-up branch at `d05455f9` against
+`origin/main` at `c4138a0`, with
+[the implementation review prompt](../implementation-review-prompt.md). A
+Codex reviewer covered the data layer, the comparison engine, tooling and
+documentation. A Claude reviewer covered the shell, the embedded viewer,
+mockups and browser tests. The Milestone 11 smoke agent reported three more
+issues that also exist on `main`. The orchestrator reproduced finding 1 on the
+branch and on a build of `c4138a0`, and confirmed the other findings by
+reading the code. Nothing was changed during the review. The user decides what
+to address next.
+
+1. **Medium — A moved stylesheet can hide a real stylesheet edit in another
+   screen.**
+   - **Where:** `equivalent()` in
+     [`resources.ts`](../../src/review/moves/resources.ts) (around line 98),
+     which the new paired-view scan in
+     [`resource_candidates.ts`](../../src/review/moves/resource_candidates.ts)
+     (around line 50) now feeds.
+   - **What happens:** one screen moves its exporting module, so its
+     stylesheet route changes from A to C with equal bytes, and Mokly pairs
+     A with C. `equivalent()` then treats A and C as one file in every view
+     whose before side has A and whose after side has C. A second screen that
+     links both A and C in both versions loses its real edit to A.
+   - **Confirmed:** in a scratch Git repository, Overview renders red after
+     the edit, but the complete comparison reports it as unchanged and live
+     Changes lists nothing. Without the module move, Overview is changed. A
+     build of `c4138a0` reports Overview as changed in both runs.
+   - **Impact of no change:** Changes can hide a real visual change after a
+     refactor.
+   - **Options:** **A)** suppress an alias in a view only when the old route
+     leaves that view and the new route enters it, and compare a route that
+     both sides keep by its own bytes; **B)** store alias evidence per view
+     and side.
+   - **Recommended: A,** with regression tests for the complete comparison
+     and live Changes, and a direct unit test of the shared rule.
+2. **Medium — Serve drops a `comparison=side` link that opens while Changes
+   are still pending.**
+   - **Where:** [`comparison_mode.ts`](../../packages/viewer/src/shell/comparison_mode.ts)
+     (around lines 24–50) and `use_comparison.ts` (around lines 73–80).
+   - **What happens:** the mode owner starts while the view is not yet known
+     to be eligible, so it stores Current and marks itself started. When
+     Changes finish, Serve raises the update version, and the shell selects
+     Current again. On `c4138a0` the link opens Side by side.
+   - **Impact of no change:** a shared comparison link that opens soon after
+     `mokly serve` starts, or while Changes recompute, shows Current.
+   - **Options:** **A)** keep the initial mode pending until eligibility is
+     known, and do not let an update-version change consume it; add the rule
+     to the comparison mode lifetime and a Serve browser test that opens the
+     link while Changes are pending; **B)** state that such a link is
+     dropped.
+   - **Recommended: A,** with a branch-host option that does not wait for
+     Changes, because no Serve browser test can open a page earlier today.
+3. **Medium — In Serve, a direct page load shows "Component inspection is
+   unavailable for this view" (also on `main`).**
+   - **Where:** [`use_workspace_usage.ts`](../../packages/viewer/src/shell/use_workspace_usage.ts)
+     (around lines 40–60). The usage loader is created in one effect when the
+     host capabilities arrive; another effect calls it only when the views
+     change. The first request is lost. The new browser check skips the
+     Nested components assertion for Serve
+     ([`branch_point_follow_up_checks.ts`](../../tests/browser/branch_point_follow_up_checks.ts),
+     around line 163).
+   - **Impact of no change:** inspection is unavailable on every Serve page
+     until the reader navigates inside the app.
+   - **Options:** **A)** request usage whenever the loader is created for the
+     current views, and remove the Serve skip so the test captures the bug
+     first; **B)** keep the skip and record the gap.
+   - **Recommended: A.**
+4. **Low — The branch conflicts with the current `origin/main`.** `main` now
+   has #133, which deletes `plans/README.md` and replaces the plan index with
+   a `Status:` paragraph in each plan, and #132. The branch edits
+   `plans/README.md` and the status line of `plans/path-identity.md`.
+   **Options:** **A)** merge `origin/main`, keep the deletion, follow the new
+   status rule, and review the remerge diff; **B)** rebase.
+   **Recommended: A.**
+5. **Low — Breadcrumbs rebuild the whole navigation tree on every render.**
+   [`crumbs.ts`](../../packages/viewer/src/shell/crumbs.ts) (around line 52)
+   calls `buildNavSections` for each call. One call takes 28.6 ms at 10,000
+   entries, against 0.003 ms on `c4138a0`. **Options:** **A)** reuse the
+   memoized sections through a `WeakMap` keyed by the hierarchy; **B)**
+   memoize each trail; **C)** compute the folders that All shows once per
+   hierarchy. **Recommended: A,** with a work-count test.
+6. **Low — Public exports that only cast types are undocumented.**
+   `@mokly/viewer/data` now exports `acceptedCatalogue`, `baselineInventory`
+   and `acceptedShellEvidence`, which mark data as typed without validating
+   it. Only the CLI uses them. **Options:** **A)** document them as boundary
+   helpers; **B)** move them to an internal subpath; **C)** make them
+   validate. **Recommended: B.**
+7. **Low — The review-result reader accepts before-side usage evidence that
+   names a component that exists only on the current side.** Found by the
+   Milestone 4 self-review. **Options:** **A)** reject it in the reader, with
+   a negative test; **B)** document it. **Recommended: A.**
+8. **Low — Five protocol pages still describe delivered rules as future
+   work.** `mokly-variant-navigation.md`, `mokly-folders.md`,
+   `mokly-disclosure-persistence.md`, `mokly-navigation.md` and
+   `mokly-live-capabilities.md` say the plan "delivers" the list state, crumb,
+   reveal and mode-lifetime rules. **Options:** **A)** correct each sentence;
+   **B)** do A, and add a TODO to UI milestones to update Delivery Status.
+   **Recommended: B.**
+9. **Low — The mobile half of two design tests asserts nothing.**
+   `tests/design_filtered_lists.test.ts` finds no list button in the mobile
+   artboards, and its guard counts documents, not buttons.
+   **Options:** **A)** require at least one checked button per viewport;
+   **B)** remove the mobile loop with a comment. **Recommended: A.**
+10. **Low — Dead test code.** `BRANCH_POINT_COMPARED` in
+    `tests/browser/branch_point_checks.ts` has no importer since the Serve
+    warm-up was removed, and its comment is stale. **Recommended:** delete
+    it.
+11. **Low — One browser check has a tight fixed deadline.** In the
+    independent gate, `browse_appearance_navigation.spec.ts` "scheme
+    selection survives progressive navigation" failed once while another
+    reviewer ran browser tests on the same machine: a frame stayed blank
+    past the 5-second poll in `expectFrameSource`. It passed 10 of 10 runs
+    alone, and the Codex gate passed it. **Options:** **A)** wait for the
+    frame's load signal instead of polling its address; **B)** keep it.
+    **Recommended: A.**
+12. **Low — Details shows an internal generated path (also on `main`).**
+    "Examined and excluded" names
+    `mockups/mokly-generated/styles/specs/invoice.mockup.ts.css` instead of
+    the authored stylesheet. User-facing copy must not show internal paths.
+    **Options:** **A)** name the authored stylesheet; **B)** move the
+    generated path to a secondary detail. **Recommended: A,** after checking
+    the open `calummoore/remove-source-path-evidence` branch, which changes
+    stylesheet evidence.
+
+**Residual test risk.** Native macOS and Windows, Node 22, and the derived
+output mode were not tested locally; a pull request runs the native and
+Node 22 CI jobs.
