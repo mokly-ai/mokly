@@ -219,20 +219,20 @@ small gap above an intact rounded outline, shared by all three region layouts.
 
 ## Verification And Maintenance
 
-Use the real generator; never hand-edit generated HTML. Six hand-authored shared
-stylesheets cover thirty-nine component design routes. Rendered resources
-determine Changes. Definitions declare these dependencies. Controls adds one
-stylesheet and a matching watch rule for eleven entries. Keep these sheets out
-of global `review.sharedImpact`; watches still reload edits. Shared fixtures and
-reusable screen parts stay beside the owning screens.
+Use the real generator; never hand-edit generated HTML. Six shared component
+stylesheets are hand-authored public inputs, scoped to the component design
+entries' generated documents. Route-scoped stylesheet matching links them only
+from the thirty-nine component design routes; Changes follows those resources.
+Shared metadata supplies dependency lists to each definition. Controls extends
+that list with its own stylesheet, scoped to eleven entries with a matching
+watch rule. Keep those stylesheets out of global `review.sharedImpact`; watched
+rules still reload their edits. Shared fixtures and reusable screen parts live
+beside the owning screen modules.
 
-`tests/component_design_attribution.test.ts` changes all nine shared stylesheets
-in one classification using the real example and compiled manifest. For each
-sheet, dependency reasons must name exactly its rendered-resource scope: 39,
-11, 0, or every `design/` screen, and 69 components. The union must be exact and
-stay under `design/`, with no affected consumers. `design.css` retains its scope
-and global `sharedImpact` evidence. Unrelated product screens and use cases stay
-unchanged.
+`tests/component_design_attribution.test.ts` classifies all nine sheets once.
+Manifest links pin scopes: 39, 11, 0, or all `design/` screens; 69 components.
+Entry reasons contain only exact linked-sheet dependencies with unresolved `body` analysis.
+The exact union stays in `design/`, affects no consumers, and keeps `design.css` shared impact.
 
 Run `npm run example:build`, `npm run example:check`, and
 `npx playwright test tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.

@@ -42,9 +42,11 @@ unit critical path. The 33 tests are five top-level tests plus 28 subtests
 `tests/helpers/design_library.ts`, not 23.
 
 Local measurements in this sandbox (Node 22.14.0, 8 cores) through the real
-fixture in `tests/helpers/design_library_fixture.ts`. The whole files take
-832 s and 154 s here with `node --import tsx --test <file>`, and the library
-subtests take 13–19 s, close to the CI figures:
+fixture in `tests/helpers/design_library_fixture.ts`. The previous session measured
+832 s and 154 s before the main merge. The unchanged current-merge runs took
+612.961 s and 123.173 s with `node --import tsx --test <file>`; those are the
+primary local before figures. The earlier operation measurements below and
+library subtest times of 13–19 s remain context:
 
 | Operation                                       | Local time |
 | ----------------------------------------------- | ---------: |
@@ -190,7 +192,7 @@ The shared compilation snapshot planned in another workspace would remove the
 source-edit file are unaffected by that snapshot. This plan does not depend on
 it.
 
-## Milestone 1: Document the consolidated verification contract (completed)
+## Milestone 1: Document the consolidated verification contract — completed
 
 Update every document that describes these tests or the fixture before the
 tests change. Documentation-only; validate the Markdown and review the diff.
@@ -203,8 +205,8 @@ tests change. Documentation-only; validate the Markdown and review the diff.
       and the `design.css` shared-impact evidence. The file is at its 250-line
       cap; shorten text in place rather than growing it.
 - [x] Update the `Verification` section of
-      `examples/basic/specs/design/library/README.md`: list the four test files
-      in the command, describe the one-pass library attribution with its
+      `examples/basic/specs/design/library/README.md`: name the four test files
+      in prose and run them once through the existing globs, describe the one-pass library attribution with its
       single-change control, the grouped source-edit file, and the committed
       baseline file, and keep the paragraph about what the tests retain exact.
 - [x] Add a `Unit Shard Balance` section to `docs/protocol/ci-suite-evidence.md`:
@@ -220,7 +222,7 @@ tests change. Documentation-only; validate the Markdown and review the diff.
       `node --import tsx --test tests/protocol_doc_sizes.test.ts tests/protocol_doc_history.test.ts`,
       and review the diff.
 
-## Milestone 2: Result projections and one fixture per file (completed)
+## Milestone 2: Result projections and one fixture per file — completed
 
 Pure helpers that make the single-pass assertions readable, plus their own
 fast tests. No attribution test changes yet; the repository stays green.
@@ -248,7 +250,7 @@ fast tests. No attribution test changes yet; the repository stays green.
       single-test use. Keep the file under 300 lines.
 - [x] Run the new helper tests and both unchanged attribution files; all pass.
 
-## Milestone 3: One pass for the sixteen library stylesheets (completed)
+## Milestone 3: One pass for the sixteen library stylesheets — completed
 
 Replace the sixteen-subtest loop with one classification and one control.
 Tests 2–4 share the new module-level fixture; test 5 keeps its committed
@@ -276,7 +278,7 @@ fixture. All four stay in the file until Milestone 5 moves them.
       require the exact pair in the grouped pass and single-change control.
 - [x] Run the file; record the after timing in the measurement record.
 
-## Milestone 4: One pass for the nine shared design stylesheets (completed)
+## Milestone 4: One pass for the nine shared design stylesheets — completed
 
 Replace the nine-subtest loop with one classification whose per-stylesheet
 scope comes from the dependency reasons.
@@ -293,9 +295,13 @@ scope comes from the dependency reasons.
       every path outside `design.css`'s scope starts with `design/`,
       `sharedImpact` includes `examples/basic/generated/design.css`, and
       `affectedConsumers` is empty because shared stylesheets have no owner.
+- Per-entry reasons must equal exactly the dependency reasons for the sheets
+  whose expected scope contains that entry, including deterministic
+  `analysis: { status: "unresolved", selectors: ["body"] }`. No other reason
+  kind or dependency path is allowed.
 - [x] Run the file; record the after timing.
 
-## Milestone 5: Source-edit groups and the committed baseline in their own files (completed)
+## Milestone 5: Source-edit groups and the committed baseline in their own files — completed
 
 Move tests 2–5 out of `design_library_attribution.test.ts`. Group source
 edits into one rebuild only when every edit keeps its own proof under the
@@ -328,8 +334,14 @@ Grouping rules, derived from those signatures:
 - Edits that expect no impacting component may share one build. The merged
   `affectedConsumers` must be empty, which proves each member individually
   impacts nothing, and `changes` must equal the union of their expected paths
-  with the union of their reason kinds per path, which proves each member was
-  detected and attributed only to its owning entry.
+  with the union of their reason kinds per path. This proves the distinct
+  detection signals, but an extra change on another member's path with a
+  subset of that member's reason kinds is not visible. Keep that residual
+  limit away from same-file variant attribution by the rule below.
+- Edits to the same source file that target different entries never share a
+  build. In particular, each `top-bar.tsx` edit runs separately, so a saved
+  variant title or query cannot acquire a masked base-component change from
+  the control-label edit. The old single-edit tests targeted this boundary.
 - Two edits with the same path share a build only when their reason kinds
   are disjoint, so each edit keeps its own detection signal. Equal or subset
   signatures (`title` and `destination`; `reorder` and `removal`; `slot`
@@ -337,13 +349,13 @@ Grouping rules, derived from those signatures:
 
 Resulting builds (five instead of twelve):
 
-| Build | Edits                                                                                                            | Expected `changes`                                                                                                                             |
-| ----- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | `top-bar.view.tsx`                                                                                               | `chrome/top-bar` {dependency, material}; `impactingIds` = `[top-bar]`; consumers equal the manifest                                            |
-| 2     | `tag-chip.view.tsx`                                                                                              | `controls/tag-chip` {dependency, material}; `impactingIds` = `[tag-chip]`; consumers equal the manifest                                        |
-| 3     | `top-bar.tsx` title, `top-bar.tsx` label, `use-case.tsx` title, `use-case.tsx` slot, `picker.tsx`, `fixtures.ts` | `top-bar` {metadata}; `top-bar/search` {material, metadata}; `use-case` {inputs, material}; `tag-picker` {inputs}; `states/invalid` {material} |
-| 4     | `top-bar.tsx` query, `use-case.tsx` destination, `use-case.tsx` reorder                                          | `top-bar/search` {material, metadata}; `use-case` {inputs, material, structure}                                                                |
-| 5     | `use-case.tsx` removal                                                                                           | `use-case` {material, structure}                                                                                                               |
+| Build | Edits                                                                                       | Expected `changes`                                                                                                       |
+| ----- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1     | `top-bar.view.tsx`                                                                          | `chrome/top-bar` {dependency, material}; `impactingIds` = `[top-bar]`; consumers equal the manifest                      |
+| 2     | `tag-chip.view.tsx`                                                                         | `controls/tag-chip` {dependency, material}; `impactingIds` = `[tag-chip]`; consumers equal the manifest                  |
+| 3     | `top-bar.tsx` title, `use-case.tsx` title, `use-case.tsx` slot, `picker.tsx`, `fixtures.ts` | `top-bar/search` {material, metadata}; `use-case` {inputs, material}; `tag-picker` {inputs}; `states/invalid` {material} |
+| 4     | `top-bar.tsx` query, `use-case.tsx` destination, `use-case.tsx` reorder                     | `top-bar/search` {material, metadata}; `use-case` {inputs, material, structure}                                          |
+| 5     | `top-bar.tsx` label, `use-case.tsx` removal                                                 | `top-bar` {metadata}; `use-case` {material, structure}                                                                   |
 
 Builds 3–5 assert `affectedConsumers` equals `[]`. Every build asserts
 `changedEntryPaths` equals exactly the listed paths and `reasonsOf` equals
@@ -369,6 +381,16 @@ file). Today's `affects` boolean becomes the exact `impactingIds` list.
 Prove the runtime reduction locally and in CI, record it, and close the plan
 with the required commit, push, and review steps.
 
+- [ ] Apply the orchestrator's review corrections in follow-up commits.
+  - [ ] Separate same-file edits targeting different entries without adding a
+        build; document the grouping limit and rule.
+  - [ ] Check every shared-style entry's complete dependency reasons and analysis.
+  - [x] Run the README's heavy files once and name all four in prose.
+  - [x] Restore the public-input, route-scope, and shared-metadata contract text.
+  - [x] Use current-merge before timings and identify scratch evidence as local-only.
+  - [x] Use the repository's completed-milestone heading convention.
+  - [x] Attribute the unit split to Node and describe the evidence mirror.
+  - [x] Remove the interrupted run's owned fixture directory.
 - [ ] Run each of the four files individually with
       `node --import tsx --test <file>` and record the after durations next to
       the baseline in `docs/reviews/attribution-test-consolidation.md`.

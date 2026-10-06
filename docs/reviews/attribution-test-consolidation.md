@@ -31,16 +31,20 @@ shard assignments. CI after figures and the control decision remain pending.
 
 ## Local Baseline
 
-The sandbox has eight cores and uses Node 22.14.0. The before figures come from
-the previous session's `.context/measure/baseline-design-library.log` and
-`.context/measure/baseline-component-design.log`. Both files passed. The logs
-were measured before the latest `origin/main` merge. The old fourteen-minute
-file is not rerun to establish the before figure.
+The sandbox has eight cores and uses Node 22.14.0. The primary before figures
+are the unchanged current-merge runs: 612.961 s and 123.173 s. They use the same
+base and conditions as the after runs. Each file ran alone with
+`node --import tsx --test <file>`; the table records TAP's whole-file
+`duration_ms`, including fixture setup and teardown. All baseline tests passed.
+
+The previous session measured 831.826 s and 154.260 s before the main merge.
+Those figures provide historical context only. The scripts and raw logs are
+local-only scratch artifacts and are not part of this repository.
 
 | File                                              |   Before whole-file duration | Final after duration |
 | ------------------------------------------------- | ---------------------------: | -------------------: |
-| `tests/design_library_attribution.test.ts`        |                    831.826 s |              Pending |
-| `tests/component_design_attribution.test.ts`      |                    154.260 s |              Pending |
+| `tests/design_library_attribution.test.ts`        |                    612.961 s |              Pending |
+| `tests/component_design_attribution.test.ts`      |                    123.173 s |              Pending |
 | `tests/design_library_source_edits.test.ts`       | Included in old library file |              Pending |
 | `tests/design_library_committed_baseline.test.ts` | Included in old library file |              Pending |
 
@@ -50,9 +54,11 @@ library files. New file timings have no independent whole-file before figure.
 
 ## Local Operation Evidence
 
-These measurements use the real fixture. The previous session's
-`.context/measure/measure.ts` and `source_edits.ts`, with their logs, hold the
-operation and single-edit evidence used to approve the grouping.
+An uncommitted script drove the real fixture to measure copy/compilation,
+classification, and rebuild operations. Another script applied each of the
+twelve source edits alone and recorded exact change paths, reason kinds, and
+impacting components. These previous-session scripts and raw logs are local-only
+scratch artifacts. The operation figures below provide historical context.
 
 | Operation                                      | Duration |
 | ---------------------------------------------- | -------: |
@@ -83,8 +89,9 @@ individually, one after another, with no other heavy work running.
 | Final file split verification                             | `tests/design_library_source_edits.test.ts`       | 130.643 s | 6 passed                          |
 | Final file split verification                             | `tests/design_library_committed_baseline.test.ts` |  60.797 s | 1 passed                          |
 
-The unchanged files ran individually in this session after the merge. These
-verification runs do not replace the approved previous-session before figures.
+The unchanged current-merge runs are the primary before figures. Earlier
+consolidated runs above predate the review corrections; final after measurements
+are rerun after those corrections.
 
 The initial library consolidation run failed because a new chain assertion
 required only `top-bar/tag-picker/tag-chip`. The result also had
@@ -93,5 +100,6 @@ required only `top-bar/tag-picker/tag-chip`. The result also had
 instance, while its saved variant uses top-bar as the context entry and starts
 the instance chain at tag-picker. The approved contract required the long
 chain's presence. Both passes now require the exact pair, preserving that
-guarantee and checking agreement with the single-change control. The source-edit
-grouping is unchanged.
+guarantee and checking agreement with the single-change control. This chain correction did not change the source-edit grouping. A later
+review moved the control-label edit into build 5 to preserve same-file variant
+isolation. The number of builds remains five.

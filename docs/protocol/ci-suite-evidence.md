@@ -83,8 +83,9 @@ or reuse another job's writable output.
 
 ## Unit Shard Balance
 
-Unit shards assign whole files by their sorted inventory index modulo four,
-as defined by `nodeShardFiles` in `scripts/verification/evidence.mjs`. Each
+Node's `--test-shard` assigns whole files by sorted index modulo the shard count
+(four in CI). `nodeShardFiles` in `scripts/verification/evidence.mjs` mirrors
+that split for the evidence reports. Each
 shard runs two files concurrently. Use per-file `durationMs` in the unit
 reports to measure balance; test counts do not represent compilation and
 classification costs. Record shard wall time separately from summed file time.
