@@ -1,10 +1,12 @@
 # Deterministic Test Timing
 
-Status: Active. [PR #152](https://github.com/mokly-ai/mokly/pull/152) is
-open. On 2026-10-06 the user chose option C:
-convert every wall-clock limit in the required suites and add a guard against
-new ones. All seven milestones are complete. Six review findings under
-Milestone 7 await the user's decision.
+Status: Completed. [PR #152](https://github.com/mokly-ai/mokly/pull/152)
+merged on 2026-10-06. On 2026-10-06 the user chose option C: convert every
+wall-clock limit in the required suites and add a guard against new ones.
+Review findings 1 to 5 under Milestone 7 move to
+[Deterministic Test Timing Review Fixes](./deterministic-test-timing-review-fixes.md),
+which owns them. Finding 6 needs no change: the squash title is within the
+limit.
 
 Replace the elapsed-time assertions in the unit, browser and hydration suites
 with checks that do not depend on machine speed. Assert the scale contracts
