@@ -4,8 +4,8 @@ Continuation of [Watched Catalogue Development](./mokly-watch.md).
 
 ## Delivery Status
 
-The warning-generation fence and failed-start supervisor cleanup are planned
-for [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+The warning-generation fence and failed-start supervisor cleanup are implemented
+in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
 
 ## Adoption And Recovery
 

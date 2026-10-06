@@ -9,7 +9,7 @@ On-demand startup, rendering and evidence completion are implemented. The
 route-evidence loading and failed Usage states are implemented by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 
-Generation-tagged background and preview-process warnings are planned for
+Generation-tagged background and preview-process warnings are implemented in
 [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
 
 ## Startup and completeness

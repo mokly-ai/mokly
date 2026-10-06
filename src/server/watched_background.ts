@@ -40,9 +40,6 @@ export class WatchedBackground {
       options.outputStore,
       options.classifier,
       (compilation, accepted) => {
-        compilation.warnings?.forEach((warning) =>
-          options.warnings.add(warning),
-        );
         this.changesStartedAt = Date.now();
         if (this.reportCatalogue)
           options.reporter.catalogueReady(
@@ -71,7 +68,7 @@ export class WatchedBackground {
         );
       },
       {
-        onWarning: (warning) => options.warnings.add(warning),
+        onWarning: (event) => options.warnings.addGeneration(event),
         baselinePrepared: (commit) =>
           options.running.notifyUpdate(
             undefined,

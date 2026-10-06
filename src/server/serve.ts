@@ -100,7 +100,6 @@ export async function serve(
       dependencies.outputStore,
       dependencies.changeClassifier ?? DEFAULT_CHANGE_CLASSIFIER,
       (compilation, accepted) => {
-        compilation.warnings?.forEach((warning) => warnings.add(warning));
         changesStartedAt = Date.now();
         reporter.catalogueReady(
           compilation.manifest,
@@ -122,7 +121,7 @@ export async function serve(
         });
       },
       {
-        onWarning: (warning) => warnings.add(warning),
+        onWarning: (event) => warnings.add(event.warning),
         baselinePrepared: (commit) => {
           repository.accept(commit);
           server.publishUpdate({
@@ -160,7 +159,7 @@ export async function serve(
       port: options.port,
       review: configuredServedReview(config, base, repository),
       onDiagnostic: (error) => reporter.runtimeDiagnostic(error),
-      onBuildWarning: (warning) => warnings.add(warning),
+      onBuildWarning: (event) => warnings.add(event.warning),
     });
     warnings.flush();
     background.start(runtime, base);

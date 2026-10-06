@@ -12,8 +12,8 @@ comparison details are implemented in Milestones 20 and 20B of the
 Milestone 4 removed source-path comparison evidence. Milestone 23 removed
 historical marker translation. Milestone 28 uses recorded inserted-link
 spans inside Review-ignore for both comparison paths and the CSS rule scope.
-Milestone 29 will remove the unused one-sided `page` material used by
-`component_view.ts`, while keeping its range/span validation and resource work.
+Milestone 29 removes the unused one-sided `page` material formerly computed for
+`component_view.ts`. Range/span validation and resource work remain.
 
 ## Scope
 
@@ -49,8 +49,8 @@ selected captures to publication validation. It adds no public output field. Mat
 the normalized document, so ignored author markup, links and inline styles stay
 ignored. Renderer links reused for declarations remain page content.
 `component_view_types.ts` owns the shared comparison context and result types.
-`component_projection_resources.ts` prepares paired and one-sided
-comparison-only copies,
+`component_projection_resources.ts` prepares paired comparison material and
+normalizes one-sided resources without computing unused page material,
 while `component_view.ts` and `component_view_fast_path.ts` preserve the full
 documents for actual resource closure and CSS rule evidence. See the
 [stylesheet ownership contract](../../docs/protocol/mokly-component-stylesheet-ownership.md).

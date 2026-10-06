@@ -6,11 +6,11 @@ Removal of baseline compatibility below is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 Generation-scoped warning delivery and supervisor-factory startup cleanup are
-planned for [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+implemented in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
 The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
 defines suppression as soon as a newer attempt starts, including when a failed
 attempt leaves the old child serving. Background completion must not replay
-`compilation.warnings`. The supervisor factory will run inside watcher cleanup.
+`compilation.warnings`. The supervisor factory runs inside watcher cleanup.
 
 ## Scope
 
@@ -239,8 +239,9 @@ accepted catalogue, baseline, Changes, reference and watch-action boundaries.
 Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output. Render warnings from the child
-use a separate typed IPC warning event and the parent's run/rebuild-scoped
-deduplication sink; they are not child stderr diagnostics. Foreground and
+carry their captured `warningGeneration` in a validated IPC event. The parent
+accepts only its current attempt and deduplicates across all producers. Resource
+reloads can replace preview/cache generations while retaining that warning identity. Foreground and
 transient render warnings enter the same sink, while resource-only reloads
 do not replay an earlier warning.
 

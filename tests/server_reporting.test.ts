@@ -90,23 +90,40 @@ test("child diagnostic IPC accepts only a bounded string message", () => {
 });
 
 test("child warning IPC accepts only bounded structured warnings", () => {
+  const generation = "a".repeat(32);
   const warning = {
     code: "removed-dependencies",
     context: ["home"],
     message:
       'dependencies has been removed; ignoring it on entry "home". Delete the field.',
   };
-  assert.deepEqual(parseChildWarningMessage({ type: "warning", warning }), {
-    type: "warning",
-    warning,
-  });
+  assert.deepEqual(
+    parseChildWarningMessage({ type: "warning", generation, warning }),
+    {
+      type: "warning",
+      generation,
+      warning,
+    },
+  );
   for (const value of [
     { type: "warning" },
-    { type: "warning", warning: { ...warning, code: "unknown" } },
-    { type: "warning", warning: { ...warning, context: ["home", "extra"] } },
-    { type: "warning", warning: { ...warning, context: [42] } },
-    { type: "warning", warning: { ...warning, message: "" } },
-    { type: "warning", warning: { ...warning, message: "x".repeat(65_537) } },
+    { type: "warning", warning },
+    ...[null, 1, "", "A".repeat(32), "a".repeat(31), "g".repeat(32)].map(
+      (generation) => ({ type: "warning", generation, warning }),
+    ),
+    { type: "warning", generation, warning: { ...warning, code: "unknown" } },
+    {
+      type: "warning",
+      generation,
+      warning: { ...warning, context: ["home", "extra"] },
+    },
+    { type: "warning", generation, warning: { ...warning, context: [42] } },
+    { type: "warning", generation, warning: { ...warning, message: "" } },
+    {
+      type: "warning",
+      generation,
+      warning: { ...warning, message: "x".repeat(65_537) },
+    },
     { type: "diagnostic", warning },
   ])
     assert.equal(parseChildWarningMessage(value), undefined);
@@ -118,11 +135,14 @@ test("the supervisor forwards validated child diagnostics", async () => {
   const diagnostics: string[] = [];
   const warnings: string[] = [];
   supervisor.onDiagnostic(diagnostics.push.bind(diagnostics));
-  supervisor.onWarning((warning) => warnings.push(warning.message));
+  supervisor.onWarning((event) =>
+    warnings.push(`${event.generation}:${event.warning.message}`),
+  );
   const started = supervisor.start();
   child.emit({ type: "diagnostic", message: "before ready" });
   child.emit({
     type: "warning",
+    generation: "a".repeat(32),
     warning: {
       code: "removed-dependencies",
       context: ["home"],
@@ -135,6 +155,7 @@ test("the supervisor forwards validated child diagnostics", async () => {
   child.emit({ type: "diagnostic", message: "after ready" });
   child.emit({
     type: "warning",
+    generation: "b".repeat(32),
     warning: {
       code: "removed-dependencies",
       context: ["home"],
@@ -142,7 +163,10 @@ test("the supervisor forwards validated child diagnostics", async () => {
     },
   });
   assert.deepEqual(diagnostics, ["before ready", "after ready"]);
-  assert.deepEqual(warnings, ["before ready warning", "after ready warning"]);
+  assert.deepEqual(warnings, [
+    `${"a".repeat(32)}:before ready warning`,
+    `${"b".repeat(32)}:after ready warning`,
+  ]);
   const closing = supervisor.close();
   child.exit();
   await closing;

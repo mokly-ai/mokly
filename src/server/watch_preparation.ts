@@ -39,6 +39,7 @@ export async function prepareInitialWatchedSource(
   shutdown: Promise<void>,
   isClosed: () => boolean,
   onWarning?: (warning: BuildWarning) => void,
+  generation?: string,
 ): Promise<PreparedWatchedSource> {
   const prepared = await prepareWatchedSource(
     config,
@@ -48,6 +49,7 @@ export async function prepareInitialWatchedSource(
     shutdown,
     isClosed,
     onWarning,
+    generation,
   );
   if (!prepared)
     throw new MoklyError(
@@ -65,6 +67,7 @@ export async function prepareWatchedSource(
   shutdown: Promise<void>,
   isClosed: () => boolean,
   onWarning?: (warning: BuildWarning) => void,
+  generation?: string,
 ): Promise<PreparedWatchedSource | undefined> {
   config.warnings?.forEach(onWarning ?? (() => undefined));
   await hydrateWatchInventory(config);
@@ -110,6 +113,7 @@ export async function prepareWatchedSource(
       graph,
       registry,
       onWarning,
+      generation,
     );
     if (isClosed()) return;
     retained = true;

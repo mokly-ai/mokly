@@ -17,7 +17,7 @@ import { ResourceWatcher } from "./resource_watcher.js";
 import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
 import {
   closeWatched,
-  restartWithRecovery,
+  restartWatchedRuntime,
   startWatchedSupervisor,
 } from "./serve_lifecycle.js";
 import {
@@ -51,7 +51,6 @@ export async function serveWatched(
   } = dependencies;
   const reporter = dependencies.reporter ?? new PlainServeReporter();
   const warnings = dependencies.warnings!;
-  const warn = warnings.add.bind(warnings);
   const classifier =
     dependencies.changeClassifier ?? new RepositoryCatalogueChangeClassifier();
   let closed = false;
@@ -69,7 +68,8 @@ export async function serveWatched(
     report,
     shutdown,
     () => closed,
-    warn,
+    warnings.forGeneration(),
+    warnings.generation,
   );
   let activeConfig = prepared.runtime.config;
   let watcher = prepared.watcher;
@@ -86,7 +86,7 @@ export async function serveWatched(
     processSupervisorFactory,
     runtime,
     failures,
-    warn,
+    (event) => warnings.addGeneration(event),
     watcher,
     resources,
   );
@@ -126,21 +126,14 @@ export async function serveWatched(
     debouncer?.notify(action, event.path);
   };
 
-  const restart = async () => {
-    try {
-      await restartWithRecovery(running);
-      running.notifyUpdate(
-        undefined,
-        undefined,
-        background.changesStatus,
-        "evidence",
-      );
-    } finally {
-      if (!closed) background.schedule(background.compilation);
-    }
-  };
+  const restart = () =>
+    restartWatchedRuntime(running, background, () => closed);
 
-  const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
+  const reconfigure = async (
+    generation: string,
+    candidate?: ResolvedConfig,
+  ): Promise<void> => {
+    const warn = warnings.forGeneration(generation);
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath, warn));
     const nextGate = new NotificationGate<WatchEvent>(report);
@@ -152,6 +145,7 @@ export async function serveWatched(
       shutdown,
       () => closed,
       warn,
+      generation,
     );
     if (!prepared) return;
     const { watcher: replacement, runtime: next } = prepared;
@@ -190,7 +184,8 @@ export async function serveWatched(
 
   const performAction = async (action: RuntimeWatchAction): Promise<void> => {
     if (closed) return;
-    if (action === "reconfigure") return reconfigure();
+    const generation = warnings.generation;
+    if (action === "reconfigure") return reconfigure(generation);
     if (action === "evidence") {
       if (background.compilation) {
         await background.invalidate();
@@ -211,10 +206,11 @@ export async function serveWatched(
         activeConfig,
         undefined,
         undefined,
-        warn,
+        warnings.forGeneration(generation),
+        generation,
       );
       if (sourceTargetsChanged(activeConfig, next.config))
-        return reconfigure(next.config);
+        return reconfigure(generation, next.config);
       if (closed) return;
       await background.invalidate();
       if (closed) return;

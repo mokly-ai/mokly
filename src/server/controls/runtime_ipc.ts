@@ -24,6 +24,7 @@ export type TransferredComponentRuntime = Pick<
   | "outputSnapshot"
   | "bundle"
   | "generation"
+  | "warningGeneration"
   | "outputs"
   | "stylesheetRoutes"
   | "styleOutputs"
@@ -57,6 +58,7 @@ export function componentRuntimeMessage(
       outputSnapshot: runtime.outputSnapshot,
       bundle: runtime.bundle,
       generation: runtime.generation,
+      warningGeneration: runtime.warningGeneration,
       outputs: runtime.outputs.map(
         ([route, content]) => [route, transferGeneratedFile(content)] as const,
       ),
@@ -202,6 +204,8 @@ export function parseRuntimeMessage(
     !runtime ||
     !isOutputSnapshot(runtime.outputSnapshot) ||
     typeof runtime.generation !== "string" ||
+    typeof runtime.warningGeneration !== "string" ||
+    !/^[a-f0-9]{32}$/.test(runtime.warningGeneration) ||
     typeof runtime.bundle?.code !== "string" ||
     !Array.isArray(runtime.outputs) ||
     !Array.isArray(runtime.stylesheetRoutes) ||
@@ -233,6 +237,7 @@ export function parseRuntimeMessage(
       outputSnapshot: runtime.outputSnapshot,
       bundle: runtime.bundle,
       generation: runtime.generation,
+      warningGeneration: runtime.warningGeneration,
       outputs,
       stylesheetRoutes: runtime.stylesheetRoutes,
       styleOutputs,

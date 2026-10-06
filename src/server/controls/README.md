@@ -31,6 +31,12 @@ Private runtime IPC includes the accepted output route/orphan snapshot. Props
 uses the parent-validated snapshot and performs no independent output-tree scan;
 rendering never holds the repository writer lock.
 
+The runtime also carries `warningGeneration`, the build attempt that supplied
+its inputs. Props rendering captures it before starting work and forwards it
+with each warning. Resource reloads can replace the preview/cache generation
+without resetting that warning identity. The parent accepts only warnings from
+its current attempt, including when a failed rebuild leaves older controls live.
+
 `transient.ts` uses Build's stylesheet selection, renderer, compatibility/link
 transformation, ownership, range, prop, per-view metadata and resource checks.
 It retains one `DocumentCompiler` per generation instead of cloning and validating

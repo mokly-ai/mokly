@@ -99,22 +99,16 @@ function suppressOwnedResource(
   );
 }
 
-/** Prepare one-sided page and resource material after validating original ranges. */
+/** Normalize one-sided resource material after validating original ranges. */
 export function normalizeOneSidedView(
   html: string,
   view: GeneratedComponentView,
-  root?: string,
-): { page: string; resource: string } {
+): string {
   const ranges = view.usage
     ? validateComponentRanges(html, view.usage.ranges)
     : undefined;
-  const compared = comparisonStylesheetMaterial(html, view.usage, root);
-  const material = stripMarkers(compared.html, compared.usage);
   const original = stripMarkers(html, view.usage, ranges);
-  return {
-    page: normalizeSingleDocument(material, view.path),
-    resource: normalizeSingleDocument(original, view.path),
-  };
+  return normalizeSingleDocument(original, view.path);
 }
 
 /** Compare page material while keeping only the saved root's inserted stylesheet links. */

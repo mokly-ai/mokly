@@ -6,7 +6,7 @@ The warning channel is implemented. Extending the ignored-owner warning to
 all stylesheets is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
-Generation-scoped watched Serve warnings are planned for
+Generation-scoped watched Serve warnings are implemented in
 [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
 The `sharedImpact?: never` config guard is implemented in
 [M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
@@ -60,6 +60,9 @@ starts, before loading config or evaluating consumer code. That attempt becomes
 the current warning scope immediately, even before its output is accepted.
 Use a 32-character lowercase hexadecimal build-generation identifier;
 allocate it before preparation and carry it with the accepted rendering inputs.
+The runtime retains this attempt identity as `warningGeneration` when a resource
+reload changes its preview/cache `generation`. Reload and restart never promote
+an older build attempt into the current warning scope.
 Capture the generation at the producer's start; never label a late warning
 with whichever generation is current when it arrives.
 

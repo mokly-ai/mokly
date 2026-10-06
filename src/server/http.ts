@@ -64,7 +64,10 @@ export async function startCatalogueServer(
       activity.channel(),
       (document) => {
         document.warnings?.forEach((warning) =>
-          options.onBuildWarning?.(warning),
+          options.onBuildWarning?.({
+            generation: runtime.warningGeneration,
+            warning,
+          }),
         );
         if (runtime.generation === controls?.capability().generation)
           publicCatalogue.acceptDocument(

@@ -67,20 +67,20 @@ export async function compareComponentView(
   if (base === undefined || head === undefined) {
     const normalized =
       base !== undefined
-        ? normalizeOneSidedView(base, before!, root)
-        : normalizeOneSidedView(head!, after!, root);
+        ? normalizeOneSidedView(base, before!)
+        : normalizeOneSidedView(head!, after!);
     const evidence = await context.resources.compare(
       before
         ? {
             path: before.path,
-            html: normalized.resource,
+            html: normalized,
             insertedStylesheets: baseStylesheets,
           }
         : undefined,
       after
         ? {
             path: after.path,
-            html: normalized.resource,
+            html: normalized,
             insertedStylesheets: headStylesheets,
           }
         : undefined,

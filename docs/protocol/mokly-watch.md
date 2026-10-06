@@ -7,7 +7,7 @@ CSS rule attribution and ignored stylesheet owner records are implemented in [M1
 The [source-path removal plan](../../plans/remove-source-path-evidence.md) records delivery history.
 
 The generation-scoped warning channel and supervisor-factory cleanup are
-planned for [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+implemented in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
 Other watch behavior is implemented.
 
 ## Watch Inputs

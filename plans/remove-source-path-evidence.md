@@ -1,6 +1,6 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 28A are implemented, verified and pushed. Milestones 29 to 32 remain. The complete gate is blocked only by the new `source-map-js` advisory GHSA-68fv-2mgg-jv7q, which awaits the user's decision; every other gate step passes.
+Status: Active. Milestones 1 to 28A are implemented, verified and pushed. Milestone 29 is implemented and verified locally under the approved audit fallback and PostCSS timing retry rules. Milestones 30 to 32 remain. The complete gate remains blocked by the existing `source-map-js` advisory GHSA-68fv-2mgg-jv7q.
 
 ## Status And Outcome
 
@@ -3713,18 +3713,198 @@ remerge content are checked again before handoff.
 
 ## Milestone 29: Fix Serve warnings and startup cleanup
 
-- [ ] Failure-first (2): no older-generation warning prints after a failed
+- [x] Failure-first (2): no older-generation warning prints after a failed
       rebuild during background compilation, after a successful rebuild that
       fixes the cause, or from a preview-process render after a rebuild
       starts. Tag warnings with their generation in the background worker and
       child messages, and remove the second add of `compilation.warnings`.
-- [ ] Failure-first (10): a process-supervisor factory that throws during
+- [x] Failure-first (10): a process-supervisor factory that throws during
       watched startup leaves no watcher open. Create the supervisor inside the
       cleanup block.
-- [ ] (11) Delete `ComponentRuntime.warnings` and its writers, and the unused
+- [x] (11) Delete `ComponentRuntime.warnings` and its writers, and the unused
       one-sided `page` material in `src/review/component_view.ts`.
-- [ ] Update the READMEs near the changed code. Run the focused tests and the
+- [x] Update the READMEs near the changed code. Run the focused tests and the
       complete unit suite at 100%.
+
+- [x] Cover reconfiguration, queued warnings, runtime transfer, transient
+      renders and resource reloads. Keep preview cache identity separate from
+      the warning attempt, so a reload cannot restore a failed attempt's old
+      warnings. Move the existing restart helper into `serve_lifecycle.ts`
+      to keep `serve_watched.ts` below 300 lines.
+- [x] Preserve config-warning IPC for the full-manifest child startup path.
+      Its generation is captured before config loading, and it never writes a
+      terminal copy. Add a direct child regression test before the correction.
+- [x] Run the required build, type, lint, formatting, docs, complete unit and
+      full repository checks. Repeat the ported probes and smoke-test watched
+      Serve with warning and entry repairs. Inspect the diff and deletions
+      against `origin/main`. Record every result and new removal.
+- [x] Make one local Conventional Commit. The reviewer owns the push and
+      later review.
+
+Implementation notes:
+
+- Each warning sink allocates a 32-character build attempt before config or
+  consumer preparation. Rebuilds and reconfiguration retire the old attempt
+  immediately. Bound preparation callbacks and validated worker/child messages
+  keep their producer's generation. The terminal sink accepts only the current
+  attempt and keeps its seen identities after adoption or failure.
+- Accepted runtimes carry `warningGeneration`. A resource reload can change
+  the existing preview/cache `generation` without starting a warning attempt.
+  Both identifiers cross runtime IPC. Ordinary documents and transient Props
+  renders capture their warning identity from those accepted inputs.
+- Background compilation streams warnings once. Neither watched nor unwatched
+  completion adds `compilation.warnings` again. The child forwards tagged
+  warnings to the parent directly and does not replay parent-collected config
+  warnings. Unwatched Serve and one-shot commands retain their existing scopes.
+- Supervisor construction now runs inside startup cleanup. If its factory
+  throws, every created source watcher closes before startup rejects.
+- The unread runtime warning list and both writers are removed. One-sided
+  comparisons no longer create the unused page material. Original range and
+  stylesheet-span validation, resource discovery and CSS matching remain.
+- M29 changes no public UI, dependency, override or audit rule. M30 is not
+  started. Per the task instruction, the commit stays local for the reviewer.
+
+Failure-first evidence:
+
+- The five controlled background tests all fail before the fix. Failed and
+  successful rebuilds and both reconfiguration outcomes print three warnings
+  instead of one. Completion adds four records for two streamed warnings.
+- Both real-child tests fail before the fix. A preview started before the
+  attempt prints an old warning during successful preparation or after a
+  failed rebuild. The throwing-factory test leaves the final watcher open.
+  The two updated IPC tests fail because generation is discarded. Together
+  these valid runs have ten expected failures and five preservation passes.
+- Tests use explicit render gates, controlled watcher notifications, config
+  gates and the writer lock. They do not use long sleeps to order a race.
+  An initial harness used an async renderer, which the synchronous renderer
+  contract rejects. That run was stopped. The corrected gate uses a bounded
+  synchronous helper process. An extra reload test first targeted an unaccepted
+  config object; placing its stylesheet in startup config fixed the fixture.
+- A later direct-child test exposes an additional startup path affected by
+  the CLI change: a full-manifest child prints its config warning on stderr
+  instead of sending IPC. It fails with zero forwarded messages instead of
+  one. Capturing its startup generation before config loading restores tagged
+  forwarding. The first complete unit run was stopped to make this correction;
+  it is not counted as a completed verification run. Its log is retained as
+  `.context/m29/unit-stopped-for-child-startup.log`.
+- Logs: `.context/m29/failure-first-background.log` and
+  `.context/m29/failure-first-child.log`. The final focused run passes all
+  240 tests. The seven required docs suites pass all 28 tests. Build, typecheck
+  and lint pass. The first lint run needed two import-order corrections.
+
+Verification and delivery evidence:
+
+- `npm run build`, `npm run typecheck` and `npm run lint` pass. The changed-file
+  formatting command passes:
+
+  ```sh
+  xargs -d '\n' npx prettier --check < .context/m29/changed-files.txt
+  ```
+
+- The final broad focused run passes 240 tests. The additional child startup
+  preservation run passes 13 tests. The final startup, child-generation and
+  sink run passes seven tests. The broad command is:
+
+  ```sh
+  npx tsx --test --test-concurrency=2 tests/build_warning*.test.ts tests/css_owner_warning_delivery.test.ts tests/component_runtime*.test.ts tests/demand_service.test.ts tests/demand_props.test.ts tests/background_generation.test.ts tests/background_git_cancellation.test.ts tests/derived_generation.test.ts tests/watch*.test.ts tests/serve_on_demand.test.ts tests/serve_startup_cleanup.test.ts tests/server_reporting.test.ts tests/component_fast_path*.test.ts tests/component_stylesheet_span_resources.test.ts tests/component_stylesheet_link_delivery.test.ts tests/component_material_projection.test.ts
+  ```
+
+- All 28 requested documentation tests pass, including after the CLI and
+  controls README updates:
+
+  ```sh
+  npx tsx --test tests/current_docs_contract.test.ts tests/component_protocol_docs.test.ts tests/guides_structure.test.ts tests/protocol_doc_sizes.test.ts tests/protocol_split_links.test.ts tests/mainline_preservation_docs.test.ts tests/protocol_doc_history.test.ts
+  ```
+
+- The exact complete unit command passes all 4,620 tests, with no failures,
+  skips, cancellations or TODOs. The unchanged PostCSS timing case takes
+  1,541.8 ms against its 2,500 ms limit:
+
+  ```sh
+  npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"
+  ```
+
+- `cargo xtask check` exits 1 at `npm run dependencies:check`. The existing
+  Braces exception is accepted through 2026-11-03 UTC. The unchanged installed
+  `source-map-js` has the uncovered high-severity advisory
+  `GHSA-68fv-2mgg-jv7q`. No dependency, override, audit rule or exception changed.
+  This task uses the user's explicit fallback instead of claiming a passing
+  complete gate.
+- Every remaining gate step runs separately and in sequence. The commands are:
+
+  ```sh
+  npm run format:check
+  npm run lint
+  node scripts/verification/source-file-length.mjs
+  node scripts/verification/repository-ratchets.mjs
+  cargo fmt --all -- --check
+  cargo clippy --workspace --all-targets -- -D warnings
+  cargo test --workspace
+  cargo xtask rust-file-length-lint
+  npm run prepare:verification
+  npm run typecheck:prepared
+  npm run example:check
+  npm run package:artifacts -- --out .context/verification/package-artifacts
+  npm run package:check:prepared -- --artifacts .context/verification/package-artifacts
+  npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts
+  npm run prepare:verification
+  npm run test:prepared
+  npm run prepare:verification
+  npm run test:browser:prepared
+  npm run prepare:verification
+  npm run test:hydration:prepared
+  ```
+
+- The gate's unit step passes 4,619 of 4,620. Its only failure is the existing
+  PostCSS timing case at 2,870.8 ms. With no other suite or server running,
+  `npx tsx --test tests/postcss_dependency_review.test.ts` passes all three
+  tests on its first isolated retry, at 1,609.3 ms. The test matches
+  `origin/main` exactly. The approved isolated retry is the only non-audit
+  verification exception. The gate's failed unit report is retained.
+- All other non-audit steps exit 0. Rust passes 15 tests. Both packed packages
+  pass all six consumer scenarios. Browser passes 886 tests and hydration
+  passes 266 tests. Neither suite fails, skips or cancels a test. The normal
+  `npm run example:build` and `npm run example:check` pass with 478 files.
+- The supplied probes use current roots, entry paths and generated routes.
+  These repeated commands pass their intended warning checks:
+
+  ```sh
+  node --import tsx .context/review3/a_probe.ts broken-entry
+  node --import tsx .context/review3/a_probe.ts fixed-renderer
+  node --import tsx .context/review3/a_child_probe.ts
+  ```
+
+  Both background probes print 25 distinct warnings before the new attempt,
+  zero afterwards and zero replays. The child probe returns HTTP 200 for both
+  requests and prints no warning after the new-attempt boundary.
+
+- `node --import tsx .context/m29/smoke.mjs` runs the real example through
+  `npm run dev -- --base HEAD --port 0 --debug-timings`. It introduces an
+  ignored-owner warning, fixes the renderer during a blocked background
+  render, then breaks and repairs an entry during another blocked render.
+  No old warning prints after either boundary or after repair. Chrome loads
+  the repaired Welcome at 1440 px and 390 px with no page errors. Screenshots
+  are `.context/m29/smoke-desktop.png` and `smoke-mobile.png`. All temporary
+  edits are restored. The example diff is empty.
+- The diff and deletion audit uses fetched `origin/main` at `781da7ae`.
+  `git diff --check`, `git diff --check origin/main`,
+  `git diff --name-status origin/main` and
+  `git diff --diff-filter=D --name-status origin/main` pass inspection.
+  M29 adds no file deletion. The only deletions against main remain the four
+  approved earlier removals: the style collector at its `specs/` path,
+  `src/components/dependency_validation.ts`,
+  `src/registry/dependency_paths.ts`, and the old style-collector test.
+  The new code removals are exactly the unread runtime warning field/writers
+  and the unused one-sided page computation. The existing restart logic moves
+  to the lifecycle module to keep every changed TypeScript file below 300 lines.
+- The full command and result record is `.context/m29/report.md`; raw command
+  records are in `checks.jsonl` and each named log. No historical plan, review
+  record, changelog, dependency file or generated example HTML is changed.
+  Delivery is one local commit. The reviewer owns the push and later review.
+  M30 is unchanged.
+
+M29 is implemented and verified under the approved audit fallback and timing
+retry rules. Delivery is one local commit. The branch is not pushed.
 
 ## Milestone 30: Strengthen tests, the docs guard and removed-field types
 

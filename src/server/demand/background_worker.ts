@@ -36,7 +36,11 @@ if (!existingManifest)
   void runWithTimings(debug, "background", async () => {
     try {
       const compilation = await compileRuntime(runtime, checkpoint, (warning) =>
-        parentPort?.postMessage({ type: "warning", warning }),
+        parentPort?.postMessage({
+          type: "warning",
+          generation: runtime.warningGeneration,
+          warning,
+        }),
       );
       manifest = compilation.manifest;
       outputs = compilation.outputs;

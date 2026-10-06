@@ -26,11 +26,15 @@ test("temporary component renders forward ignored-owner warnings without exposin
 export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.path === "action/default" ? { html, resources: [{ path: "action.css", componentIds: ["action"] }] } : { html }; };`,
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const runtime = componentRuntime(compilation);
+  const runtime = {
+    ...componentRuntime(compilation),
+    warningGeneration: "a".repeat(32),
+  };
   const warnings: string[] = [];
-  const service = new ComponentRenderService(runtime, undefined, (warning) =>
-    warnings.push(warning.message),
-  );
+  const service = new ComponentRenderService(runtime, undefined, (event) => {
+    assert.equal(event.generation, runtime.warningGeneration);
+    warnings.push(event.warning.message);
+  });
   fixture.beforeRemove(() => service.close());
   const result = await service.render(
     {

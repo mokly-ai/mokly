@@ -1,7 +1,10 @@
 import { isEntryPath } from "@mokly/viewer/data";
 import type { ManifestV8 } from "@mokly/viewer/data";
 
-import { isBuildWarning, type BuildWarning } from "../build/warnings.js";
+import {
+  isGenerationWarning,
+  type GenerationWarning,
+} from "../build/warning_generation.js";
 
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type {
@@ -58,24 +61,24 @@ export interface ChildDiagnosticMessage {
   readonly type: "diagnostic";
 }
 
-export interface ChildWarningMessage {
+export interface ChildWarningMessage extends GenerationWarning {
   readonly type: "warning";
-  readonly warning: BuildWarning;
 }
 
 export function parseChildWarningMessage(
   value: unknown,
 ): ChildWarningMessage | undefined {
   if (
-    !value ||
-    typeof value !== "object" ||
+    !isGenerationWarning(value) ||
     !("type" in value) ||
-    value.type !== "warning" ||
-    !("warning" in value) ||
-    !isBuildWarning(value.warning)
+    value.type !== "warning"
   )
     return;
-  return { type: "warning", warning: value.warning };
+  return {
+    type: "warning",
+    generation: value.generation,
+    warning: value.warning,
+  };
 }
 
 /** Validate one bounded diagnostic from the supervised child. */

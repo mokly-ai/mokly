@@ -58,9 +58,13 @@ or timing JSON. The supervised Serve child stays plain and forwards diagnostics
 to the parent so only one reporter owns the terminal.
 `run.ts` also owns one structured warning sink per invocation. It flushes
 sorted, deduplicated warnings before one-shot summaries and Serve readiness,
-redacts credentials, and resets watched rebuilds without changing exit codes.
-The supervised child forwards render warnings over typed IPC instead of
-writing a second terminal copy.
+redacts credentials, and starts each watched attempt's warning scope before
+config or consumer preparation. A failed attempt keeps old previews without
+restoring their warning scope. The supervised child forwards render warnings
+with the attempt captured from its rendering inputs. A full-manifest child
+captures its own config-warning generation before loading config. A child that
+receives retained config does not replay the parent's config warnings. Only
+the parent reports IPC warnings to the terminal.
 
 ## Quick Start
 

@@ -40,14 +40,19 @@ export async function run(
     reporter.write(`${packageVersion()}\n`);
     return 0;
   }
-  const warnings = new BuildWarningSink((warning) =>
+  const warnings: BuildWarningSink = new BuildWarningSink((warning) =>
     arguments_.command === "__serve-child" && process.send
-      ? process.send({ type: "warning", warning })
+      ? process.send({
+          type: "warning",
+          generation: startupGeneration,
+          warning,
+        })
       : reporter.buildWarning({
           ...warning,
           message: redactCliSecrets(warning.message, argv, environment.env),
         }),
   );
+  const startupGeneration = warnings.generation;
   try {
     return await runWithTimings(
       arguments_.debugTimings ?? false,
@@ -103,9 +108,7 @@ async function execute(
       "Configuration loaded",
       () =>
         timeAsync("config.load", () =>
-          loadConfig(cwd, arguments_.config, (warning) =>
-            warnings.add(warning),
-          ),
+          loadConfig(cwd, arguments_.config, warnings.forGeneration()),
         ),
     ));
   if (arguments_.command === "export") {
@@ -197,8 +200,10 @@ async function execute(
   const base = arguments_.base ?? config.review.base;
   const port = arguments_.port ?? 4173;
   if (arguments_.command === "__serve-child") {
-    config.warnings?.forEach((warning) => warnings.add(warning));
-    warnings.flush();
+    if (!runtimeStartup) {
+      config.warnings?.forEach((warning) => warnings.add(warning));
+      warnings.flush();
+    }
     await runServerChild(
       config,
       port,

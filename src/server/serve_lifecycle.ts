@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import type { Compilation } from "../build/compile.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../build/output_store.js";
-import type { BuildWarning } from "../build/warnings.js";
+import type { GenerationWarning } from "../build/warning_generation.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timingArguments } from "../diagnostics/timings.js";
 
@@ -18,6 +18,7 @@ import type {
   ProcessSupervisorFactory,
 } from "./supervisor.js";
 import type { NotificationGate, WatchActionQueue } from "./watch_events.js";
+import type { WatchedBackground } from "./watched_background.js";
 import type { ConsumerWatcher } from "./watcher.js";
 
 /** Keep CLI child configuration, including diagnostic opt-in, stable across restarts. */
@@ -46,22 +47,24 @@ export async function startWatchedSupervisor(
   factory: ProcessSupervisorFactory,
   runtime: ComponentRuntime,
   failures: NotificationGate<Error>,
-  onWarning: (warning: BuildWarning) => void,
+  onWarning: (event: GenerationWarning) => void,
   watcher: ConsumerWatcher,
   resources: ResourceWatcher,
 ): Promise<{ running: ProcessSupervisor; port: number }> {
-  const running = createWatchedSupervisor(config, options, factory);
+  let running: ProcessSupervisor | undefined;
   try {
+    running = createWatchedSupervisor(config, options, factory);
     running.onUnexpectedExit((error) => failures.notify(error));
     running.onWarning?.(onWarning);
     running.replaceComponentRuntime(runtime, "stage");
-    const port = await timeAsync("child.ready", () => running.start());
+    const supervisor = running;
+    const port = await timeAsync("child.ready", () => supervisor.start());
     return { running, port };
   } catch (error) {
     await Promise.allSettled([
       watcher.close(),
       resources.close(),
-      running.close(),
+      running?.close(),
     ]);
     throw error;
   }
@@ -140,5 +143,24 @@ export async function restartWithRecovery(
       throw restartError;
     }
     throw restartError;
+  }
+}
+
+/** Restore the child and resume background evidence for the accepted inputs. */
+export async function restartWatchedRuntime(
+  running: ProcessSupervisor,
+  background: WatchedBackground,
+  isClosed: () => boolean,
+): Promise<void> {
+  try {
+    await restartWithRecovery(running);
+    running.notifyUpdate(
+      undefined,
+      undefined,
+      background.changesStatus,
+      "evidence",
+    );
+  } finally {
+    if (!isClosed()) background.schedule(background.compilation);
   }
 }

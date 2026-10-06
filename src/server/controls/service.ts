@@ -9,7 +9,7 @@ import {
 
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { MoveTargetsProvider } from "../../build/move_targets.js";
-import type { BuildWarning } from "../../build/warnings.js";
+import type { GenerationWarning } from "../../build/warning_generation.js";
 import { validateRenderRequest } from "../../components/render_request.js";
 
 import { RenderQueue } from "./queue.js";
@@ -25,7 +25,7 @@ export class ComponentRenderService {
   constructor(
     private runtime: ComponentRuntime,
     private readonly moveTargets?: MoveTargetsProvider,
-    private readonly onWarning?: (warning: BuildWarning) => void,
+    private readonly onWarning?: (event: GenerationWarning) => void,
   ) {
     this.queue = new RenderQueue(
       new NodeRenderWorkerFactory(runtime, moveTargets),
@@ -65,13 +65,16 @@ export class ComponentRenderService {
         "stale-generation",
         "The catalogue changed. Reload to continue editing.",
       );
+    const generation = this.runtime.warningGeneration;
     const result = await this.queue.render(request, signal);
     if (signal.aborted || request.generation !== this.runtime.generation)
       throw new ComponentRenderError(
         "cancelled",
         "The preview request was replaced.",
       );
-    result.warnings?.forEach((warning) => this.onWarning?.(warning));
+    result.warnings?.forEach((warning) =>
+      this.onWarning?.({ generation, warning }),
+    );
     return this.store.put(result, request.generation);
   }
   async close(): Promise<void> {

@@ -3,7 +3,7 @@
 import type { ManifestV8 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
-import type { BuildWarning } from "../build/warnings.js";
+import type { GenerationWarning } from "../build/warning_generation.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 
@@ -28,7 +28,7 @@ export interface ProcessSupervisor {
   completeCatalogue?(manifest: ManifestV8, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
-  onWarning?(callback: (warning: BuildWarning) => void): void;
+  onWarning?(callback: (event: GenerationWarning) => void): void;
   onPreviewResources?(
     callback: (observation: PreviewObservation) => void,
   ): void;
@@ -84,7 +84,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   #runtime: ComponentRuntime | undefined;
   #foreground: ((active: boolean) => void) | undefined;
   #diagnostic: ((message: string) => void) | undefined;
-  #warning: ((warning: BuildWarning) => void) | undefined;
+  #warning: ((event: GenerationWarning) => void) | undefined;
   #previewResources: ((observation: PreviewObservation) => void) | undefined;
 
   constructor(
@@ -128,7 +128,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
         if (diagnostic && this.#child === child)
           this.#diagnostic?.(diagnostic.message);
         const warning = parseChildWarningMessage(message);
-        if (warning && this.#child === child) this.#warning?.(warning.warning);
+        if (warning && this.#child === child) this.#warning?.(warning);
         if (
           message &&
           typeof message === "object" &&
@@ -251,7 +251,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   onDiagnostic(callback: (message: string) => void): void {
     this.#diagnostic = callback;
   }
-  onWarning(callback: (warning: BuildWarning) => void): void {
+  onWarning(callback: (event: GenerationWarning) => void): void {
     this.#warning = callback;
   }
   onPreviewResources(

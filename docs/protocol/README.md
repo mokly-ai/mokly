@@ -21,9 +21,9 @@ identity-only format delivery. The 2026-10-05 decisions are documented in
 The excluded-only mockup and shared Details card are implemented in
 [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
 Link placement and discovery are implemented in [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
-The remaining approved work is warning generations, startup cleanup and unused-code removal in
-[M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup),
-stronger regression tests with recorded failing-rule runs, the docs guard and
+Warning generations, startup cleanup and unused-code removal are implemented in
+[M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+The remaining approved work is stronger regression tests with recorded failing-rule runs, the docs guard and
 removed-field types in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types),
 and exported navigation and viewer alignment in
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).

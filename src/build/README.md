@@ -11,7 +11,7 @@ CSS resource-owner records below are implemented in Milestone 19 of the
 
 Configured-only placement and shared link discovery are implemented in M28.
 Generation-scoped Serve warnings and removal of the unread
-`ComponentRuntime.warnings` field and its writers are planned for M29.
+`ComponentRuntime.warnings` field and its writers are implemented in M29.
 The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
 defines producer tagging, child messages and completion without replay.
 
@@ -310,8 +310,10 @@ without deriving resource owners. Ignored renderer records for any stylesheet
 produce structured
 `BuildWarning` values on exhaustive compilations and requested documents.
 `warning_sink.ts` deduplicates them by code and context for one command or
-watched rebuild; the CLI presents them without changing output bytes or exit
-status.
+watched attempt. Each producer captures its attempt before preparation. The sink
+discards older envelopes even when a failed attempt keeps older output serving.
+Runtimes retain only the warning identity, not an unread warning list. The CLI
+presents warnings without changing output bytes or exit status.
 
 ## Development
 

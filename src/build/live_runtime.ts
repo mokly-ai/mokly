@@ -21,6 +21,7 @@ export async function prepareLiveRuntime(
   preloaded?: LoadedGraph,
   prepared?: PreparedRegistry,
   onWarning?: (warning: BuildWarning) => void,
+  generation = randomBytes(16).toString("hex"),
 ): Promise<ComponentRuntime> {
   return timeAsync("catalogue.prepare-index", async () => {
     config.warnings?.forEach(onWarning ?? (() => undefined));
@@ -59,13 +60,11 @@ export async function prepareLiveRuntime(
       config,
     );
     return {
-      ...([...(config.warnings ?? []), ...registry.warnings].length
-        ? { warnings: [...(config.warnings ?? []), ...registry.warnings] }
-        : {}),
       outputSnapshot,
       bundle: consumerBundle(graph),
       config,
-      generation: randomBytes(16).toString("hex"),
+      generation,
+      warningGeneration: generation,
       manifest,
       outputs: [],
       stylesheetRoutes: [...graph.stylesheetRoutes],

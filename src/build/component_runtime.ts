@@ -16,14 +16,14 @@ import {
 import type { GeneratedFile } from "./generated_file.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { OutputSnapshot } from "./output_snapshot.js";
-import type { BuildWarning } from "./warnings.js";
 
 export interface ComponentRuntime {
-  warnings?: readonly BuildWarning[];
   outputSnapshot: OutputSnapshot;
   bundle: ConsumerBundle;
   config: ResolvedConfig;
   generation: string;
+  /** Build attempt identity; resource reloads retain it while replacing caches. */
+  warningGeneration: string;
   manifest: ManifestV8 | CatalogueIndex;
   outputs: readonly (readonly [string, GeneratedFile])[];
   stylesheetRoutes: readonly (readonly [string, string])[];
@@ -37,12 +37,13 @@ export function rememberRuntime(
   config: ResolvedConfig,
   outputSnapshot: OutputSnapshot,
 ): void {
+  const generation = randomBytes(16).toString("hex");
   runtimes.set(compilation, {
-    ...(compilation.warnings ? { warnings: compilation.warnings } : {}),
     outputSnapshot,
     bundle: consumerBundle(graph),
     config,
-    generation: randomBytes(16).toString("hex"),
+    generation,
+    warningGeneration: generation,
     manifest: compilation.manifest,
     outputs: [...compilation.outputs].filter(
       ([route]) => route !== MANIFEST_NAME,

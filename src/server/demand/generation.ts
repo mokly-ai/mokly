@@ -6,7 +6,7 @@ import type {
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../../build/output_store.js";
-import type { BuildWarning } from "../../build/warnings.js";
+import type { GenerationWarning } from "../../build/warning_generation.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync, timingCounts } from "../../diagnostics/timings.js";
 import { acceptedGenerationFromCompilation } from "../../review/accepted_generation.js";
@@ -30,7 +30,7 @@ import { BackgroundBaseline } from "./baseline.js";
 
 /** Collaborators and observers supplied by the Serve composition root. */
 export interface BackgroundGenerationOptions {
-  readonly onWarning?: (warning: BuildWarning) => void;
+  readonly onWarning?: (event: GenerationWarning) => void;
   readonly resources?: ResourceWatcher;
   /** Resolves when the host shuts down; preparation stays independently cancellable. */
   readonly shutdown?: Promise<void>;

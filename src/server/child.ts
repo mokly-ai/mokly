@@ -42,7 +42,10 @@ export async function runServerChild(
       if (process.send) process.send({ type: "diagnostic", message });
       else process.stderr.write(`${message}\n`);
     },
-    ...(onWarning ? { onBuildWarning: onWarning } : {}),
+    onBuildWarning: (event) => {
+      if (process.send) process.send({ type: "warning", ...event });
+      else onWarning?.(event.warning);
+    },
     onPreviewResources: (observation) =>
       process.send?.({ type: "preview-resources", ...observation }),
     ...(manifest ? { manifest } : {}),
