@@ -48,5 +48,9 @@ jobs:
         run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Expose job environment to Testbox sessions
+        run: |
+          sudo sed -i '/^PATH=/d;/^PLAYWRIGHT_CHANNEL=/d' /etc/environment
+          printf 'PATH=%s\nPLAYWRIGHT_CHANNEL=%s\n' "$PATH" "$PLAYWRIGHT_CHANNEL" | sudo tee -a /etc/environment >/dev/null
       - name: Run Testbox
         uses: useblacksmith/run-testbox@5ca05834db1d3813554d1dd109e5f2087a8d7cbc # v2
