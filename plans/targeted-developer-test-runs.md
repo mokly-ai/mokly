@@ -330,10 +330,10 @@ failing tests after a gate failure.
       reports and complete/strict runs unchanged. Add regression tests.
 - [x] Implement finding 5 with one expected error type, problem-first argument
       messages, ordered outcome validation, and internal fault stacks. Test it.
-- [ ] Implement finding 3 with a shared test helper that uses
+- [x] Implement finding 3 with a shared test helper that uses
       `NodeBaselineExecutableResolver` and shell-free `execFile` in all three
       npm probe loops. Keep literal arguments and filter undefined env values.
-- [ ] Commit each implemented finding separately and name it in the message.
+- [x] Commit each implemented finding separately and name it in the message.
 - [ ] Merge fetched main, capture its source audit, preserve every main change,
       confirm two parents, and inspect each remerge path.
 - [ ] Pass lint, formatting, declaration checks, and every affected test on

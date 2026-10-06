@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { promisify } from "node:util";
 
 import { minimatch } from "minimatch";
 
@@ -12,8 +10,7 @@ import browserConfig from "../playwright.config.js";
 import { discoverUnitFiles } from "../scripts/verification/evidence.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
-
-const execute = promisify(execFile);
+import { runNpm } from "./helpers/npm.js";
 
 test("public browser test command retains the Playwright entrypoint", async () => {
   const packageJson = JSON.parse(
@@ -169,12 +166,11 @@ test("public package and test wrappers preserve caller arguments through nested 
     path.join(root, "arguments.mjs"),
     path.join(root, "scripts/verification/run-unit-dev.mjs"),
   );
-  const npm = process.platform === "win32" ? "npm.cmd" : "npm";
   for (const script of ["package:check", "package:smoke"]) {
     const environment = { ...process.env, MOKLY_ARGUMENT_OUTPUT: output };
-    await execute(npm, ["run", script], { cwd: root, env: environment });
+    await runNpm(["run", script], { cwd: root, env: environment });
     assert.deepEqual(JSON.parse(await fs.readFile(output, "utf8")), []);
-    await execute(npm, ["run", script, "--", "--artifacts", artifacts], {
+    await runNpm(["run", script, "--", "--artifacts", artifacts], {
       cwd: root,
       env: environment,
     });
@@ -190,7 +186,7 @@ test("public package and test wrappers preserve caller arguments through nested 
     "--test-name-pattern=three (four|five)$",
   ];
   for (const command of [["test"], ["run", "test:unit"]]) {
-    await execute(npm, [...command, "--", ...args], {
+    await runNpm([...command, "--", ...args], {
       cwd: root,
       env: { ...process.env, MOKLY_ARGUMENT_OUTPUT: output },
     });

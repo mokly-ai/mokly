@@ -1,22 +1,20 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { promisify } from "node:util";
 
 import { defaultReportPath } from "../scripts/verification/evidence.mjs";
 import { parseUnitSelection } from "../scripts/verification/unit-selection.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { runNpm } from "./helpers/npm.js";
 import { createSelectedHarness } from "./helpers/verification_unit_selected.js";
 import {
   runWrapper,
   writeHarnessFile,
 } from "./helpers/verification_wrapper.js";
 
-const execute = promisify(execFile);
 const consumedFlags = [
   ["npm_config_test_name_pattern", "npm test -- --test-name-pattern=<regex>"],
   ["npm_config_shard", "npm run test:prepared -- --shard INDEX/TOTAL"],
@@ -114,14 +112,13 @@ test("npm omissions of -- fail instead of launching or widening unit tests", asy
   delete environment.npm_config_shard;
   environment.PATH =
     path.dirname(process.execPath) + path.delimiter + (environment.PATH ?? "");
-  const npm = process.platform === "win32" ? "npm.cmd" : "npm";
   for (const args of [
     ["test", "--test-name-pattern=lockfile"],
     ["test", "tests/failing.test.ts", "--test-name-pattern=lockfile"],
     ["test", "--shard", "1/4"],
   ]) {
     await assert.rejects(
-      execute(npm, args, { cwd: harness.root, env: environment }),
+      runNpm(args, { cwd: harness.root, env: environment }),
       /npm consumed/u,
     );
     await assert.rejects(fs.stat(path.join(harness.root, "test-ran.marker")), {
