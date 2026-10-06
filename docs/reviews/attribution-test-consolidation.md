@@ -202,11 +202,14 @@ Uncovered advisory GHSA-68fv-2mgg-jv7q; package: source-map-js; severity: high.
 This branch includes a lockfile-only update from source-map-js 1.2.1 to 1.2.2.
 Runtime PostCSS and development Tailwind both resolve it. The
 [reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) identifies
-1.2.2 as patched. Main CI has the same failure, and unit jobs depend on the
-repository job. The patch therefore unblocks the audit required for CI shard
-measurement. Commit `a8bf3926` changes only version, resolved URL, and integrity
-in the source-map-js lockfile entry; `package.json` stays unchanged. The pull
-request description must flag this dependency update for the user's review.
+1.2.2 as patched. Main CI had the same failure at that time, and unit jobs
+depend on the repository job. The patch therefore unblocked the audit required
+for CI shard measurement. Commit `a8bf3926` changes only version, resolved URL,
+and integrity in the source-map-js lockfile entry; `package.json` stays
+unchanged. `main` later merged the identical change in #140. After merge commit
+`ff357b56` brought in `main` at `80ceb445`, the branch's lockfile diff against
+`main` is empty, and the pull request records #140 as superseding the branch
+change.
 
 A clean `npm ci` installed 1.2.2 for both parents. The live
 `npm run dependencies:check` passed with the existing reviewed Braces exception.
