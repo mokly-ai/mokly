@@ -1,6 +1,6 @@
 # Design Mockup Test Boundaries
 
-Status: Active. Milestones 1 through 5 and Change requests 1 through 4 are
+Status: Active. Milestones 1 through 5 and Change requests 1 through 5 are
 delivered. Milestone 6 delivery work is done. The final implementation review
 is assigned to the orchestrator. No PR is open.
 
@@ -485,6 +485,8 @@ Evidence: `.context/design-mockup-test-boundaries/milestone-5b.md`.
 Prove the whole change, record every removal, and hand it to review. The user
 approved Change request 4 and the dependency maintenance that it requires.
 
+Main superseded the dependency maintenance; this branch uses main's dependency files.
+
 - [x] Merge `origin/main` with the source tip captured before integration.
       Audit incoming paths, check exactly two merge parents, inspect the
       remerge diff for each path, and push the merge.
@@ -520,6 +522,7 @@ Evidence: `.context/design-mockup-test-boundaries/milestone-6.md`.
 Mainline evidence: `.context/design-mockup-test-boundaries/main-integration.md`.
 Later mainline evidence: `.context/design-mockup-test-boundaries/late-main-integration.md`.
 Dependency evidence: `.context/design-mockup-test-boundaries/dependency-maintenance.md`.
+Supersession evidence: `.context/design-mockup-test-boundaries/change-request-5/merge-preservation.md`.
 Removal justifications: `.context/design-mockup-test-boundaries/removals.md`.
 Deletion evidence: `.context/design-mockup-test-boundaries/deletion-audit.md`.
 Test inventory: `.context/design-mockup-test-boundaries/original-test-titles.json`.
