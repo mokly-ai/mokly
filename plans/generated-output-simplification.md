@@ -659,170 +659,15 @@ Completed Milestones 1–8 remain history, not the post-merge compatibility poli
 - [x] Update the plan index entry, run `npm run format:check`, review the
       diff, commit, and push.
 
-Validation: `npm run format:check` passed after formatting the two new schema
-pages. `node --import tsx --test tests/component_protocol_docs.test.ts` passed
-both tests. The Markdown audit checked 13 changed files and 227 local links
-and anchors, all changed protocols at most 250 lines, unchanged Milestones
-1–8 and moved v6 prose, and no new main-relative file deletions.
-`git diff --check` passed. `cargo xtask check` is exempt for this documentation
-milestone. The full implementation review remains assigned to the orchestrator
-in Milestone 15; this milestone only inspected its documentation diff.
+Evidence: `.context/generated-output-simplification/m09-document-validation.md`.
 
-### Mainline preservation audit
+Evidence: `.context/generated-output-simplification/m09-mainline-preservation-audit.md`.
 
-Fetched `origin/main` before this audit. Branch tip before Milestone 9:
-`56a24c70b9b6ec12350946351e8fd1c7ab8cac51`. Audited source tip:
-`b2c82c1591c91f2550a66c464833b1f864bdab07`. Merge base:
-`bf9e3c9a4151fedacf8c7db5bc957609689a348b`. The 11 source commits below are the
-preservation boundary. Refresh this audit if the source tip changes before
-Milestone 11; do not assume a later tip has the same contents.
+The user approved the Milestone 11 audit exception and writer-only lock
+adaptation. Preserve #130's audit policy and #129's writer exclusion and frame
+race fix. No reader takes the generated-output lock.
 
-The complete name/status audit used:
-
-```sh
-git diff --name-status bf9e3c9a4151fedacf8c7db5bc957609689a348b..origin/main
-```
-
-It reports 1,680 paths: 589 additions, 1,070 modifications, two renames and
-19 deletions. Every path belongs to the following inspected groups: `.github`
-actions/workflows; root runtime, package, lock, lint, ignore, changelog and agent
-files; docs/architecture, guides, protocol, fixtures, reviews and superpowers;
-plans; `examples/basic`; `packages/viewer`; scripts/package, preview, large
-and verification; all affected `src` areas; tests, browser tests, helpers and
-consumer fixtures; and `xtask`. Existing mainline deletions are part of its
-delivered architecture, not permission to remove surviving features. All
-added/changed tests, fixtures, docs and completed plans in these groups must
-survive the merge, with only the authorized adaptations listed below.
-
-Preserve each source commit's behavior and verification:
-
-1. `d4228f90` (#96): standalone Auto/Light/Dark appearance; embedded `theme`
-   prop; URL/store/system precedence; isolated preview schemes/backgrounds;
-   palette/contrast and host accent inheritance; authenticated frame reuse,
-   reconnect and latest-wins slow loads; disclosure/focus preservation; mobile
-   and desktop mockups. Preserve Node-range startup validation, `.node-version`
-   and Git-ignore-aware ESLint integration from this change. Keep appearance,
-   palette, same-origin, delayed-preview, `cli_bootstrap` and `eslint_gitignore`
-   tests, package contracts and appearance browser suites.
-2. `2ec4d837` (#115): precise `defineScreen` variant result types, effective
-   view resolution, inherited/overridden metadata, light fallback, reparented
-   history and matching design examples. Keep authoring-type, screen-variant,
-   view-status, history and reparented-design tests.
-3. `3699c566` (#119): shared Mokly logo/wordmark, exact 22px mark, accessible
-   branding and ink colors across the shell and example mockups. Keep the
-   brand/design assertions and inspection tests that wait for real geometry.
-4. `d71b03b7` (#121): immutable snapshot presentations with cancellation;
-   device-sized comparison frames, fixed/sticky content, page/inner-region
-   scrolling, two-axis matching, echoes, anchors, keyboard/touch input,
-   independent sections and Scroll together. Preserve all pane/region/scroll
-   protocols, mockups, `comparison_alignment*`, `comparison_regions*`,
-   `comparison_scroll*`, snapshot-presentation and controller tests.
-5. `b4314fec` (#123): navigation paths and folder conflicts replace collections;
-   id-derived entry/view/snapshot paths replace authored routes and `/id/`
-   aliases; component variants become ordinary entries with `variantOf`;
-   parent/variant order, breadcrumbs, removal identity, disclosure persistence
-   and fallback stay intact. Preserve manifest v7's identity-only entry model,
-   catalogue v3's complete allowlist/privacy model, delivery v3's atomic
-   deployment checks and review result v4, with only the planned version/path
-   adaptations. Preserve shared-impact Details evidence, own-source reason
-   validation, deleted-resource handling, source classification, component
-   fast paths, export confinement/cancellation fixes, lazy CLI/module boundaries,
-   and all related fixture/example conversions. Keep `nav_path_*`,
-   `id_keyed_wire_formats`, `artifact_paths`, variant/manifest/catalogue,
-   disclosure, historical identity, component reason/resource/fast-path,
-   private-metadata and export safety tests. Preserve the earlier-baseline
-   unavailable behavior, raising its threshold to v8 under correction 3 A;
-   do not restore main's deleted legacy readers, adapters, fixtures or tests.
-6. `0c8245f8` (#122): content-addressed Plan → Blobs → Complete exchange;
-   SHA-256/size ownership inventory; immutable snapshot capture; per-project
-   deduplication; bounded parallelism; retry/expiry/re-plan rules; keep-first
-   commit/config identity; cancellation/recovery precedence; redaction and
-   uploaded/unchanged accounting. Keep public receiver fixtures, independent
-   packed consumers, `publish_*`, `upload_plan_contract`, `fake_receiver*`,
-   receiver-recovery/rejection suites, and all GitHub Action behavior. Retain
-   browser shard discovery, separate hydration evidence, release verification
-   and read-only remote-state workflow guards delivered with it.
-7. `5d1c37ad` (#107): CLI 0.13.0/viewer 0.4.0 release metadata, changelogs,
-   dependency pins and Release Please records. Do not roll back versions or
-   release history to this branch's older values.
-8. `b4a02a30` (#126): GitHub-hosted `ubuntu-24.04` release publishing and pinned
-   `actions/checkout` for npm trusted-publishing provenance. Keep exact-tree
-   evidence selection and release tests; do not restore the old release runner.
-9. `4d4e752f` (#128): STE instructions for all agent responses.
-10. `ff376d71` (#125): imported plain CSS and rename-only CSS Modules; renderer
-    and entry-root bundles, first-reachability ordering, renderer exclusion at
-    every import depth, exact scoped-selector/escape checks, `empty` loader
-    opt-outs, source mapping and authored diagnostics. Preserve PostCSS ESM/CJS
-    loading, isolated state, dependency/alias privacy and worker-failure rules;
-    asset formats/MIME/raw bytes, resource URL parsing, scoped npm assets,
-    generated byte evidence and delivered-source attribution. Keep all
-    `build_imported*`, `build_module*`, `css_module*`, `build_postcss*`,
-    `postcss_*`, `imported_styles*`, `serve_imported*`, `export_imported*`,
-    publication/publish imported-binary, watch-dependency and browser stylesheet
-    regressions. Preserve Tailwind/Autoprefixer examples and packed CSS smoke,
-    dependencies/lockfile security patches, `compareCodeUnits` and its locale
-    ban. Keep the repository quality gates: 300-line TS/JS and 250-line protocol
-    limits with existing reviewed caps; unused/internal/public export ratchets;
-    module ownership and CLI boundary tests; Markdown link/history tests;
-    script declaration type checks; PR-title validation; complete test discovery;
-    CI evidence, workflow, native and hydration suites. Preserve main's two-parent
-    merge/remerge-diff review rule in `AGENTS.md`.
-11. `b2c82c15` (#120): strict route-scoped live shell bootstraps; complete public
-    catalogue and private Usage evidence; Loading/Failed/Try again states;
-    current-request ownership after A → B → A; atomic navigation/refresh
-    adoption; serialize-once/zero-in-browser behavior; shared hydration bundle;
-    exact captured-scope validation; complete static external catalogue and
-    normalized output invariance; the 1 MiB real-example limit. Keep scoped
-    reader/host tests, `captured_shell_scope`, `server_route_scoped_bootstrap`,
-    route-scoped browser/return tests, static hydration and size invariance
-    tests, and mobile/desktop loading mockups. Version/path changes may alter
-    expected bytes, but must not weaken scope, privacy, identity or size checks.
-
-Main-only protocol names above and in the new contracts are plain text, not
-links. Milestone 11 must import them before adding links. The test names denote
-whole matching families, including helpers and browser/package counterparts;
-they are preservation requirements, not a reduced validation selection.
-
-### Mainline audit refresh for Milestone 11
-
-Source tip fetched for the first merge:
-`800fe9f88a0173429b25baa1bcf41ed9e59b2256`.
-Pre-merge implementation checkpoint: `6df09b371ef2363440bd12ee1865af11eed747c0`.
-The merge base remains `bf9e3c9a4151fedacf8c7db5bc957609689a348b`.
-Audit `git diff --name-status b2c82c15..800fe9f8` in addition to the 11-commit
-preservation list above. Fetch again before the merged push; record and merge
-any new source commits before rerunning the required full gate.
-
-12. `1dc91580` (#130): preserve the dependency-audit runner, evaluator,
-    lockfile/path validation, declarations, fixtures and all audit tests.
-    Preserve the exact dev-only GHSA-vfj7-8cjw-p6xm exception through
-    2026-11-03 UTC, including expiry, stale-record rejection, sole-dependent
-    checks and failure on other advisories or production paths. Keep the new
-    dependencies:check command and strict exception-free packed-consumer audits
-    unchanged. Preserve security/release/CI documentation and package tests.
-13. `800fe9f8` (#129): preserve repository/realpath-scoped output-lock exclusion,
-    holder/token validation, bounded wait/cancellation, dead-holder reclaim,
-    release and directory-removal race handling. Adapt the lock to encompass
-    one complete generated-tree transaction: validation, staging, backup,
-    replacement, rollback and cleanup. Every explicit writer acquires it:
-    build, build --watch and the Serve parent for serve --build. Preserve
-    output.lock timings and cancellation that stops lock waiting, not an
-    already-started transaction. Plain Serve, export and publication use
-    in-memory output and must neither write nor acquire this writer lock.
-    Preserve independent export input-stability and cancellation fences.
-    Keep output_lock.ts and output_lock_file.ts guarantees and the concurrency,
-    lock-wait, native lock, baseline-directory race, timing and watcher tests;
-    adapt mode/disk-output expectations only under the approved output contract.
-    Keep the frame_session_usage.ts race fix, mount-hook integration, fake
-    adapters/harness and frame_hook_usage_race.spec.ts assertions. Preserve
-    all other #129 fixes, including baseline mkdir retries and open-stream
-    watcher tests. Do not implement Milestone 12 or 14 while resolving this merge.
-
-The user explicitly authorizes replacing main's export write/read-lock path
-with in-memory export and publication capture. Record these adaptations and
-all other main-relative removals by path in the merge commit and this plan.
-This does not authorize removing the writer lock, the frame race fix, an audit
-check or any unrelated mainline test.
+Evidence: `.context/generated-output-simplification/m11-mainline-audit-refresh.md`.
 
 ### Fixed decisions for implementation
 
@@ -904,32 +749,7 @@ Historical-reader correction 3 is now decided as A in the decisions above.
 The user accepted the subsequent contract update and authorized its separate
 documentation commit before Milestone 10. Milestone 11 follows those commits.
 
-Current-branch claims were checked against the implementation, not the guides:
-
-- `mokly-unified-output.md`: `src/config/path_validation.ts` rejects equal
-  shorthand/catalogue roots and real-path aliases; entry discovery and
-  `src/config/public_files.ts` retain nested source protection. The generated
-  constant is owned by `packages/viewer/src/catalogue/delivery_paths.ts`.
-  `src/build/output_store.ts`, `tracked_output.ts`, `transaction.ts`,
-  `src/server/static_routes.ts` and `src/export/public_files.ts` confirm the
-  index boundary, generated-tree writer, in-memory static reads and closure
-  capture. Imported CSS and the merged layout remain future targets.
-- `mokly-generated-manifest.md`: `src/build/compile.ts`,
-  `src/registry/manifest.ts`, `manifest_validation.ts` and `blob_hash.ts`
-  confirm the current v6 fields, current/historical reader split and Git blob
-  hashing. `src/review/prepare.ts`, `tree_inventory.ts` and
-  `src/baseline/manifest.ts`, `catalogue.ts`, `cache_layout.ts`, `harvest.ts`
-  confirm current lookup, inventory diagnostics, descriptors and harvest.
-  At this audit the historical-reader target was unchanged pending correction 3. The later A decision now supersedes it; other open findings stay deferred.
-- `mokly-viewer-namespace.md`: `src/publication/removed_previews.ts`,
-  `src/publish/manifest.ts`, `src/export/ownership.ts` and the viewer's catalogue
-  reader confirm the old namespace and strict current versions. New namespace,
-  version gates and main's delta exchange remain targets, not current-branch
-  claims. The fixed-name policy now excludes user-chosen names.
-- `mokly-directory-lint.md`: `eslint.config.js` and `package.json` confirm the
-  existing literal guard, covered roots and installed import plugin. The local
-  rule is Milestone 10 work; main's locale ban and merged folder coverage remain
-  later work. No extra current-branch behavior is asserted.
+Evidence: `.context/generated-output-simplification/m10-contract-proof.md`.
 
 Backend. This runs before the merge, so `main`'s `no-restricted-syntax`
 block and this branch's check never share one ESLint rule.
@@ -948,129 +768,21 @@ committed and pushed as `f8f64e8f756fcc2a7b32b7eb69df8e38b8c4a354`.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 
-Validation: the ten focused lint tests pass. Under Node 22.14.0, formatting,
-lint and type checks pass; `npm test` passes 2,251 tests with no failures,
-skips or cancellations; all 689 browser tests pass; example Check validates
-310 untracked files. The initial Node 24.14.1 unit run had one native runtime
-crash, `FATAL ERROR: v8::ToLocalChecked Empty MaybeLocal`; the isolated watcher
-retry passed both tests, and the complete run passed on Node 22.14.0.
-
-`cargo xtask check` was run and retried. Both attempts stop at
-`npm run dependencies:check` with 13 high-severity findings from the `braces`
-chain (GHSA-vfj7-8cjw-p6xm); the final audit reports `No fix available`.
-The audited `HEAD` and `origin/main` lockfiles both contain `braces` 3.0.3,
-`micromatch` 4.0.8 and `react-native-worklets` 0.8.3. No dependency or gate
-configuration was changed before the merge. The user approved committing
-Milestone 10 with this sole audit failure; all other required functional
-commands passed. No final implementation review has run. Historical-reader correction 3 was later decided as A, and its
-documentation is updated without starting Milestone 11 or making a commit.
+Evidence: `.context/generated-output-simplification/m10-validation.md`.
 
 User-approved checkpoint exception: #130 on main supplies the existing,
 expiring dev-only audit exception through 2026-11-03. Do not change package
 versions, the audit command or audit policy before merging it. This approval
 applies only to the Milestone 10 commit/push; Milestone 11 must pass the full
-gate, including the audit, before any merged tip is pushed. The captured
-pre-merge gate output is reproduced exactly below:
+gate, including the audit, before any merged tip is pushed.
 
-```text
-$ npm run dependencies:check
-
-> @mokly/mokly@0.12.0 dependencies:check
-> npm audit --audit-level=low --include=prod --include=dev --include=optional --include=peer
-
-# npm audit report
-
-braces  *
-Severity: high
-braces vulnerable to stack-exhaustion denial of service through deeply nested patterns - https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
-No fix available
-node_modules/braces
-  micromatch  >=0.2.0
-  Depends on vulnerable versions of braces
-  node_modules/micromatch
-    metro-file-map  *
-    Depends on vulnerable versions of micromatch
-    node_modules/metro-file-map
-      metro  >=0.71.0
-      Depends on vulnerable versions of metro-config
-      Depends on vulnerable versions of metro-file-map
-      Depends on vulnerable versions of metro-transform-worker
-      node_modules/metro
-        @react-native/community-cli-plugin  *
-        Depends on vulnerable versions of @react-native/metro-config
-        Depends on vulnerable versions of metro
-        Depends on vulnerable versions of metro-config
-        node_modules/@react-native/community-cli-plugin
-          react-native  >=0.73.0-nightly-20230506-1af868c52
-          Depends on vulnerable versions of @react-native/community-cli-plugin
-          Depends on vulnerable versions of @react-native/virtualized-lists
-          node_modules/react-native
-            @firna/ui  *
-            Depends on vulnerable versions of react-native
-            node_modules/@firna/ui
-            @react-native/virtualized-lists  >=0.85.0-nightly-20260108-1236b6be4
-            Depends on vulnerable versions of react-native
-            node_modules/@react-native/virtualized-lists
-            react-native-reanimated  4.1.7 || >=4.2.3
-            Depends on vulnerable versions of react-native
-            node_modules/react-native-reanimated
-        metro-config  >=0.71.0
-        Depends on vulnerable versions of metro
-        node_modules/metro-config
-          @react-native/metro-config  *
-          Depends on vulnerable versions of metro-config
-          node_modules/@react-native/metro-config
-            react-native-worklets  >=0.8.0-bundle-mode-preview-1
-            Depends on vulnerable versions of @react-native/metro-config
-            Depends on vulnerable versions of react-native
-            node_modules/react-native-worklets
-        metro-transform-worker  >=0.71.0
-        Depends on vulnerable versions of metro
-        node_modules/metro-transform-worker
-
-13 high severity vulnerabilities
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-To address all issues possible (including breaking changes), run:
-  npm audit fix --force
-
-Some issues need review, and may require choosing
-a different dependency.
-[xtask/command] `npm run dependencies:check` failed with status 1
-```
+Evidence: `.context/generated-output-simplification/m10-dependency-audit.md`.
 
 ## Milestone 11: Merge `main` and unify the generated directory
 
 Backend. Status: complete.
 
-Merged source tip: `800fe9f88a0173429b25baa1bcf41ed9e59b2256`. The final fetch
-confirmed that main had not moved. Conflicts were resolved path by path. The
-full gate passes, including main's audit exception and strict packed-consumer
-audits. An authorized local merge checkpoint supplied a v8 HEAD for main's
-unchanged browser comparison assertions. The final merge keeps exactly two
-parents; its remerge resolutions and all later edits were checked before push.
-
-The first complete unit diagnostic run reported 3,658 passes and 25 failures.
-Fixture paths, explicit metadata injection and version assertions have been
-corrected. Its obsolete negative startup test opened listeners, so that test
-process was stopped; the runner then reported
-`Error: assigned and observed files do not match`. The first browser diagnostic
-was stopped after 399 passes, 52 failures, one interruption and 511 tests not
-run. It exposed an authenticated preview URL mismatch, fixed with the shared
-path helper and a red/green transport regression. The focused browser rerun
-passed 87 of 91 cases; the two further path fixes then passed all ten focused
-cases. The two design-status assertions pass against the committed v8 HEAD. These diagnostic
-runs are not accepted full gates.
-
-All 19 paths deleted by main remain absent. The audit runner and exception,
-package and lock files, output-lock implementation, baseline directory-race
-fix and frame-session race fix match main. Its frame-usage race browser test
-passes. Disk, Serve, npm dev and static-export smoke tests load the imported
-styles and image. Serve/export leave local output unchanged. A real rebuild
-pinned to `800fe9f8` returns `baseline-incompatible-earlier`. Smoke servers have
-been stopped. The exact final command results are recorded below.
+Evidence: `.context/generated-output-simplification/m11-integration-progress.md`.
 
 - [x] Split touched test files that exceed main's 300-line limit. Preserve every
       case, hook, deadline and fixture cleanup; record test inventories after the
@@ -1099,43 +811,7 @@ explicit #129 integration instruction). Main's internal-only `fixtureRecord`
 and `extractSourceSetReferences` stay private in `scripts/large/setup.mjs` and
 `src/html_references.ts`.
 
-Merge cleanup removes unused branch-only `src/registry/generated_routes.ts`,
-`src/review/component_classification_context.ts` and `src/server/http_request.ts`.
-Main's manifest inventory, component classification modules and
-`http_request_handler.ts` own their retained behavior. These are internal
-adapters, not removed product features. The internal-export ratchet verifies
-that the merge leaves no new unused exports.
-
-Correction 3 A removes branch-only `src/review/normalize_urls.ts`,
-`snapshot_dependencies.ts`, `tests/review_cross_layout.test.ts`, legacy reader
-branches and old content-schema adapters. Snapshot resource copying is retained
-in `src/review/snapshot_resources.ts`, with catalogue-relative generated and
-authored paths; there is no cross-layout document rewrite. Main's deletions
-remain deleted.
-
-Selected authored symlinks now follow the approved regular-file closure rule:
-`tests/changes_asset_aliases.test.ts` and `tests/publication_asset_aliases.test.ts`
-replace main's selected-alias materialization cases with rejection/private cases.
-Safe source/input fingerprint aliases remain supported. Direct Changes tests use
-retained accepted generations for deleted resources; fresh compilations still
-reject missing references. This preserves main's live deletion classification.
-
-The ordinary-preview fixture imports the canonical action and toolbar entry
-modules. Its narrowed graph must still include all Tailwind-scanned authoring
-inputs now that they sit under the catalogue root. Main's PostCSS public-file
-denial remains unchanged. This is fixture correctness, not shared global setup.
-
-The imported example image moved from
-`examples/basic/src/components/workspace-note/signal.png` to
-`examples/imported-assets/workspace-note-signal.png`, because this branch's
-catalogue root contains the example's `src/`. Keeping the image outside that root
-preserves main's imported-asset privacy rule. Fixture copies and CSS references
-follow the move. Navigation assets are bundled separately for browser delivery
-so shared path/version helpers do not create missing deployed module imports.
-Authored HTML whose catalogue-relative name equals a generated-relative name
-receives untrusted-document stripping, never generated navigation or inspector
-authority. This required namespace distinction preserves main's authentication
-contract under decision 28; dedicated Serve/export regressions cover it.
+Evidence: `.context/generated-output-simplification/m11-integration-adaptations.md`.
 
 - [x] Adapt main's split packed-consumer smoke fixtures and independent
       catalogue reader to v8 paths and the required public generated prefix.
@@ -1203,78 +879,9 @@ contract under decision 28; dedicated Serve/export regressions cover it.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 
-### Final validation and preservation evidence
+Evidence: `.context/generated-output-simplification/m11-final-validation.md`.
 
-All commands ran under Node 22.14.0 with temporary files under `.context/tmp`.
-
-| Command                 | Result                                                                                                                                                                |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run format:check`  | Pass.                                                                                                                                                                 |
-| `npm run lint`          | Pass.                                                                                                                                                                 |
-| `npm run typecheck`     | Pass, including viewer and script declarations.                                                                                                                       |
-| `npm test`              | 3,686 pass; zero failed, skipped or cancelled.                                                                                                                        |
-| `npm run test:browser`  | 963 pass, including hydration; 24.3 minutes.                                                                                                                          |
-| `npm run example:check` | 436 valid untracked files.                                                                                                                                            |
-| `cargo xtask check`     | Pass: audit, formatting, lint, ratchets, Rust checks, package inspection, six packed-consumer scenarios, 3,686 unit tests, 740 browser cases and 223 hydration cases. |
-
-`node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_history.test.ts tests/protocol_doc_sizes.test.ts`
-passes all six checks. The final diff passes `git diff --check`. The file-length
-and export ratchets pass without new exemptions or raised protocol caps. All
-30 moved example stylesheets match main after formatting. Sixteen test-file
-refactors retain their 143 recorded test statements, hooks and cleanup. All
-19 mainline deletions remain absent. The audit runner/exception, package and
-lock files, output-lock implementation and frame-session race fix match main.
-
-The first `cargo xtask check` stopped at its packed-consumer smoke. Two old-path
-reads were then corrected without removing assertions or changing audits. Their
-exact errors were:
-
-```text
-Error: ENOENT: no such file or directory, open '/home/vercel-sandbox/mokly/.context/package-smoke-BHXOmg/esm-consumer/mockups/screens/packed-home.desktop.html'
-[xtask/command] `npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts` failed with status 1
-Error: ENOENT: no such file or directory, stat '/home/vercel-sandbox/mokly/.context/package-smoke-RgKhlA/esm-consumer/published/static/screens/packed-card.mobile.html'
-```
-
-The corrected packed smoke passes all six scenarios. The complete `cargo xtask
-check` retry passes in 2,728.33 seconds. Its audit output is:
-
-```text
-Accepted dependency risk: GHSA-vfj7-8cjw-p6xm; package: braces.
-Path: node_modules/metro-file-map -> node_modules/micromatch -> node_modules/braces
-End date: 2026-11-03 UTC; 31 days left.
-Reason: Dev-only React Native peer dependency. The repository does not run Metro or send untrusted patterns to it. No patched release is available.
-Tracking: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
-```
-
-The full browser diagnostic before the final passing run reported 949 passes,
-two ordinary-preview setup failures and 12 cases not run. The exact setup error
-was:
-
-```text
-MoklyError: [mokly/build-invalid] PostCSS plugin @tailwindcss/postcss scanned a public mockups file in examples/basic/src/components/workspace-note/utilities.css: examples/basic/src/components/action/action.mockup.tsx; exclude mockupsDir from the plugin's sources (Tailwind: @source not "../../..")
-```
-
-Canonical entry imports fixed that fixture while retaining the privacy check;
-all 14 affected browser cases and both complete browser gates then passed.
-The private-directory regression also failed before its fix: the expected
-`/private build or dependency directory/` diagnostic was an empty string. The
-corrected guard admits only actual generated counterparts. Its 14-test export
-and publication group passes. The old shape-only `isPublicGeneratedRoute`
-helper was removed from `src/build/styles/routes.ts`; the accepted-output set
-now owns that authorization, as required by decision 28.
-
-The partial clone emitted this nonfatal remerge diagnostic, including on one
-retry:
-
-```text
-fatal: remote error: upload-pack: not our ref 4fdf3756a8a41e7946e5716a52c0ffdd38efd177
-```
-
-The offline remerge run produced the same complete patch. Both commands exited
-zero. The initial merge had 621 remerge paths; the path ledger, main-relative
-patches, test inventory and final amendment were reviewed. No final
-implementation review has run; that remains the orchestrator's Milestone 15.
-Milestones 12–14, finding 17 and other unapproved findings remain untouched.
+Merge justifications: `.context/generated-output-simplification/m11-merge-justifications.md`.
 
 ## Milestone 12: Rename the `__mokly/` namespace to `mokly-viewer/`
 
@@ -1298,8 +905,7 @@ Backend.
 
 ### Implementation decisions and preservation
 
-The source tip was `800fe9f88a0173429b25baa1bcf41ed9e59b2256` at the start
-and at the final refresh. No further main merge occurred in this milestone.
+Evidence: `.context/generated-output-simplification/m12-source-tip.md`.
 
 - Decision 30 C replaces all public `__mokly/` paths and nested `__generations`
   paths with `mokly-viewer/` and `generations/`. There are no deployed aliases.
@@ -1324,85 +930,12 @@ and at the final refresh. No further main merge occurred in this milestone.
   and the repository adapter marker remain optional metadata, not visitor
   dependencies. Fixed-name unit tests and example export/upload inventories
   enforce the approved naming scope.
-- File-size checks require moving only helpers and complete tests:
-  `tests/publish_run.test.ts` shares setup through
-  `tests/helpers/publish_exchange_fixture.ts`; browser removed-preview observers
-  move to `tests/browser/removed_preview_observers.ts`; the existing renamed-screen
-  preview test moves to `tests/preview_comparison_routes.test.ts`. No test is removed.
-  Updating the upload fixture in the 582-line `tests/guides_ci.test.ts` also
-  requires splitting its existing checks into `tests/guides_ci_verification.test.ts`
-  and `tests/guides_upload_validation.test.ts`, with shared inputs in
-  `tests/helpers/guides_ci_context.ts`. All eleven original guide checks remain.
-  Two branch-only lint test title templates gain the directory name because both
-  constants now use the same probes. Milestone 13 folder expansion is untouched.
-- No additional main feature, test or document is removed. The five deletions
-  authorized in Milestone 11 remain unchanged. Main's audit runner, exception,
-  strict packed-consumer policy, output writer lock and frame usage fix remain.
-  The Cloud receiver/viewer rollout remains a non-blocking post-merge follow-up.
 
-### Smoke evidence
+Evidence: `.context/generated-output-simplification/m12-preservation-record.md`.
 
-All commands use Node `v22.14.0` first on `PATH`. Scratch evidence is under
-`.context/milestone-12/`. The focused real example uses committed v8 baseline
-output and includes a removed page, removed screen variant, imported CSS and PNG.
+Evidence: `.context/generated-output-simplification/m12-smoke.md`.
 
-- Serve: `http://127.0.0.1:41765/view/screens/example-welcome.html` is styled.
-  The new catalogue, shell CSS, authored CSS, compiled CSS and PNG return 200.
-  The old catalogue endpoint and private generated manifest return 404.
-- Export top-level names before removing the marker:
-  `.mokly-export-artifact`, `404.html`, `index.html`, `mokly-viewer`, `static`, `view`.
-  All 142 exported files have no segment beginning with `.`, `_`, `#` or `~`
-  except the permitted `.mokly-export-artifact` root marker.
-- After removing that marker, a plain static server loads
-  `http://127.0.0.1:35037/mokly-viewer/catalogue.json` and the styled screen.
-  Browser responses have no HTTP errors. No routing rewrite is required.
-- Publication: one Plan, 112 Blob requests and one Complete succeed.
-  All 143 reconstructed files equal the local publication bytes. Ownership is
-  v3 and upload metadata is v2. Its only prefixed segment is the optional marker.
-- All smoke servers and browsers stop in cleanup. No generated output is tracked.
-
-### Validation and completion
-
-Completed with Node `v22.14.0` first on `PATH` and `TMPDIR` under `.context/tmp`.
-The final full gate passed. These timings include command preparation:
-
-| Command                                                                  | Result                                            |  Seconds |
-| ------------------------------------------------------------------------ | ------------------------------------------------- | -------: |
-| `npm run format:check`                                                   | pass                                              |   24.067 |
-| `npm run lint`                                                           | pass                                              |   16.817 |
-| `npm run typecheck`                                                      | pass                                              |   35.824 |
-| `npm test`                                                               | 3,703 passed; no failures, skips or cancellations |  951.230 |
-| `npm run test:browser -- --output .context/milestone-12/browser-results` | 969 passed                                        | 1492.684 |
-| `npm run example:check`                                                  | 436 valid, untracked files                        |   10.654 |
-| `cargo xtask check`                                                      | pass                                              | 2753.591 |
-
-The complete cargo gate includes 15 Rust tests, six packed-consumer scenarios,
-another 3,703 unit tests, 746 browser tests and 223 hydration tests. The repository
-audit uses main's unchanged `GHSA-vfj7-8cjw-p6xm` dev-only exception, expiring
-`2026-11-03`. Strict packed-consumer audits retain no exception. Markdown links,
-protocol sizes and source-file limits also pass. Raw receipts, per-file notes,
-screenshots and smoke inventories are under `.context/milestone-12/`.
-
-The initial full unit run passed 3,699 of 3,703 tests and found four outdated
-expectations. Their exact failure messages were:
-
-```text
-9553 !== 9550
-3 !== 2
-[mokly/upload-unsupported-version] Use a receiver and Mokly version that support upload v2.
-The input did not match the regular expression /unavailable/. Input:
-'MoklyVersionError: Unsupported Mokly delivery version undefined; this viewer supports version 4.'
-```
-
-The canonical fixture byte/hash, ownership version, guide upload fixture and
-delivery error expectations now match the approved contract. Focused checks
-passed, followed by the complete passing gate above. Earlier failure tests proved
-the old namespace/version behavior and exposed the swallowed delivery-version
-error before its fix. File-size failures were resolved by the test splits above.
-
-The commit records the authorized namespace/version removals and fixture move.
-The branch check precedes commit and push. Milestones 13–15 remain open; the
-orchestrator owns the final review. No final implementation review ran here.
+Evidence: `.context/generated-output-simplification/m12-validation.md`.
 
 ## Milestone 13: Lint coverage after the merge
 
@@ -1419,91 +952,9 @@ Backend.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 
-### Implementation and preservation
+Evidence: `.context/generated-output-simplification/m13-implementation-and-preservation.md`.
 
-The tests enumerate tracked and non-ignored new source files independently of
-ESLint's configured globs. They derive 48 directory probes across all covered
-folders and extensions, including both TypeScript roots and a nested preview
-script. Seven source-order probes cover both recursive folders, all three exact
-build files and two synthetic nested folders. Each probe uses `lintText` with
-the repository's real flat config; no synthetic source file is written to disk.
-Configuration and ignore checks reject missing rules and ignored-file results.
-
-Every directory probe checks both constants through ordinary, embedded, template,
-regex and escaped spellings, plus valid imports. Source-order probes require
-both rule IDs on the same input and permit `compareCodeUnits`. Presentation
-collation remains outside that ban. Separate tests retain the owner-module
-exemption and Git-ignore/generated-output exclusions.
-
-`import/no-duplicates` uses the installed plugin's default options at the global
-import-rule scope. `npx eslint . --fix` applied the fix to the whole merged tree.
-Fixer tests cover each production root and tests, including type-only imports
-with a retained side-effect import. No suppression, forwarding module, package
-ownership change or main feature/test removal was required.
-
-Before enabling the rule, all seven duplicate-import tests failed with the
-expected diagnostic, including:
-
-```text
-src/lint-coverage-probe.ts: missing import/no-duplicates
-```
-
-After enabling it and applying the automatic fix, all 66 new coverage/fixer
-checks passed. Receipts and the complete probe inventory are under
-`.context/milestone-13/`. Full-gate and commit results follow below.
-
-The first type check caught the installed fixer's mixed type/value bug:
-
-```text
-src/shell/catalogue.ts(16,3): error TS2206: The 'type' modifier cannot be used on a named import when 'import type' is used on its import statement.
-```
-
-The affected imports in viewer `shell/catalogue.ts`, CLI `export/site.ts`,
-`registry/changed_ids.ts` and `server/component_changes.ts` were normalized from
-their original semantics into explicit type-only/value statements, then the
-default fixer ran again. Type-only emission and runtime bindings have separate
-regressions. No plugin option or suppression was added.
-
-The import fix also exposed the existing 896-line `tests/browser/browse.spec.ts`
-to the changed-file cap. Its 33 test bodies and assertions remain unchanged,
-split between that file and `browse_search_details.spec.ts`,
-`browse_view_controls.spec.ts`, `browse_toolbar_actions.spec.ts` and
-`browse_layout.spec.ts`, with shared helpers in `browse_assertions.ts`.
-Worker count, retry policy, test deadlines and fixture setup remain unchanged.
-
-### Validation and completion
-
-The final gate passed on Node `v22.14.0`. A direct comparison also proves that
-all 17 production modules changed by the fixer retain their bodies and emitted
-runtime imports. The test-title audit found no missing title. All 69 new lint
-coverage/fixer checks pass, and the source-size gate passes for 903 files.
-
-| Command                                                                  | Result                                  |  Seconds |
-| ------------------------------------------------------------------------ | --------------------------------------- | -------: |
-| `npm run format:check`                                                   | pass                                    |   24.485 |
-| `npm run lint`                                                           | pass                                    |   19.386 |
-| `npm run typecheck`                                                      | pass                                    |   36.096 |
-| `npm test`                                                               | 3,772 passed; no skips or cancellations |  947.311 |
-| `npm run test:browser -- --output .context/milestone-13/browser-results` | 969 passed                              | 1513.997 |
-| `npm run example:check`                                                  | 436 valid, untracked files              |   10.530 |
-| `cargo xtask check`                                                      | pass                                    | 2880.691 |
-
-The cargo gate also passes 15 Rust tests, six packed-consumer scenarios, another
-3,772 unit tests, 746 browser tests and 223 hydration tests. The dependency audit
-and strict packed-consumer audits retain main's existing policy unchanged.
-
-The first full unit run found one source-location assertion after the browser
-split. It reported:
-
-```text
-The input did not match the regular expression /browser\.newContext\(\{\s+baseURL,/. Input:
-```
-
-`tests/deployment.test.ts` now reads `browse_layout.spec.ts`, which owns the
-unchanged no-JavaScript test. Its three focused checks pass, followed by the
-complete passing gate above. No test or main feature was removed.
-The final main refresh remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`;
-no merge occurred. Commit and push precede all Milestone 14 implementation.
+Evidence: `.context/generated-output-simplification/m13-validation.md`.
 
 ## Milestone 14: Prepare shared browser baselines once
 
@@ -1536,171 +987,21 @@ The product and every existing UI assertion remain functional throughout.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits and push.
 
-### Merged fixture audit before implementation
-
-Audited at `332f44decd603c2c8f7d1c50dc1cb28c2d871234`. The merged code differs
-from the original preparation assumption. No browser fixture currently rebuilds
-the same example baseline twice: `createCommittedExampleBaseline` compiles and
-force-adds focused v8 output to each temporary repository, so the two named
-export fixtures use blob readers. Their source/config profiles are different.
-`createExampleBaseline` retains a real source-only rebuild in unit tests.
-
-| Browser caller                                                     | Current preparation                                                                                                                                        | Planned ownership                                                                                                     |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `static_example.spec.ts`                                           | `createCommittedExampleBaseline(root, "static-example")`; unchanged-HEAD export                                                                            | Independent copy of the shared source-only example/cache; unchanged-HEAD assertions remain                            |
-| `design_library_export.spec.ts`                                    | Same helper with `"design-library"`; tag-chip edit, then export                                                                                            | Same immutable baseline inputs as static-example; apply its existing edit only in its copy                            |
-| `ordinary_preview_fixture.ts`                                      | Same helper with distinct `"ordinary-preview"` inputs; current-only publication; shared by `preview_navigation.spec.ts` and `preview_design_links.spec.ts` | Retain its separate worker-owned current-only preparation; it performs no historical rebuild and has different inputs |
-| `preview_fixture.ts`, called only by `preview_preparation.spec.ts` | Same helper with `"static-example"`, followed by direct `buildPreview`, despite the cold `preview:build` description                                       | Independent source-only fixture and real cold `npm run preview:build`; never use the shared cache                     |
-| Playwright's example Serve                                         | The working tree's separately pinned HEAD, prepared by Serve as needed                                                                                     | Keep readiness and report it separately; it is not the fixture baseline                                               |
-
-There is no existing browser cold-baseline operation-under-test case to retain.
-Add exactly one. Keep all unit/integration callers of `createExampleBaseline`,
-`createCommittedExampleBaseline` and other baseline helpers independent.
-`design_library_fixture.ts` is a unit-only in-memory comparison helper;
-`component_design_fixture.ts` only reads prepared current output. Neither is a
-browser historical rebuild consumer.
-
-The two ordinary export fixtures will use one common focused source profile:
-the existing basic catalogue/components plus the existing design-library fixture
-entries. Their inputs, config path and real three-command recipe will be identical.
-This preserves all UI assertions without pretending the old profiles were equal.
-Generated output is absent from that baseline commit. The ordinary-preview
-profile remains separate because its inputs differ and it has no historical work.
-
-For comparable timing, first establish the required real operations without
-sharing: both ordinary consumers prepare their own identical source-only baseline,
-the new cold-baseline test performs its own rebuild, and preview preparation runs
-the real CLI command. Measure a full run of that workload, then move only ordinary
-baseline preparation into global setup and repeat the same full inventory on the
-same machine/runtime with controlled cache conditions. Record the existing M13
-24.9-minute browser run separately as the as-found shortcut workload; it is not
-an equivalent before measurement for real rebuild sharing.
+Evidence: `.context/generated-output-simplification/m14-fixture-audit.md`.
 
 - [x] Record the comparable independent-preparation run before introducing reuse.
 - [x] Retain the same common profile, recipe, cold cases and timing instrumentation
       for the after run; report global setup, teardown and fixture phases explicitly.
 
-### Comparable before measurement
+Evidence: `.context/generated-output-simplification/m14-before-measurement.md`.
 
-The independent-preparation run passed all 970 browser tests in **1618.841 s**
-(command wall time, including package/example preparation). The Playwright report
-records 26.6 minutes. No test was skipped or retried. The new inventory adds only
-the explicit cold-baseline test to M13's 969 cases.
+Evidence: `.context/generated-output-simplification/m14-after-measurement.md`.
 
-Conditions: Node `22.14.0`, npm `11.11.0`, Chrome `153.0.8010.52`, Linux x64,
-8 Intel Xeon vCPUs at 2.90 GHz, 17,452,048,384 bytes RAM, one worker, no shard,
-zero retries. Every fixture repository/cache was fresh; npm's existing download
-cache was warm. The distinct workspace Serve baseline at HEAD `332f44de` was
-prepared before measurement. Profile and lockfile SHA-256 values, the complete
-inventory and raw phase records are retained in `.context/milestone-14/before.json`
-and `before-inventory.json`; `README-timing.txt` records the controls.
-
-Startup (server plus global setup) was 22.994 s; the existing Serve-readiness
-global setup was 19.954 s. Global teardown measured 0.02 ms. The last test to
-command exit interval was 0.332 s and includes outer teardown/reporting.
-
-| Fixture               | Source/Git (s) | Install (s) | Build (s) | Cold baseline (s) | Prepare total (s) | Warm baseline (s) | Export (s) |
-| --------------------- | -------------: | ----------: | --------: | ----------------: | ----------------: | ----------------: | ---------: |
-| design-library-export |          0.722 |       9.140 |    14.770 |            25.417 |            25.447 |             0.080 |     13.698 |
-| static-example        |          0.611 |       8.018 |    13.678 |            22.876 |            22.897 |             0.062 |     13.523 |
-| cold-example-baseline |          0.712 |       8.633 |    14.827 |            24.806 |            24.826 |             0.062 |     13.879 |
-
-The separate real cold `preview:build` took 21.761 s and its server startup
-1.429 s. Ordinary current-only preview export took 161.609 s and serving 1.433 s.
-Each warm export recorded absent install/build phases as `not-observed` with null
-duration. There were three real common-profile baseline rebuilds: two ordinary
-fixture preparations and the single cold operation test. Shared preparation was
-not active. The before code and inputs stayed fixed throughout the measurement.
-
-### Comparable after measurement
-
-The shared-preparation run passed the same **970 tests in 1676.363 s** (27.6
-minutes reported by Playwright), including global preparation and teardown.
-This is **57.522 s slower** than the independent-preparation run. Do not claim
-a full-suite speedup from these measurements.
-
-Both runs used the same Node/npm/Chrome versions, machine, worker/shard/retry
-settings, warm npm cache and separately warmed workspace Serve HEAD. The lockfile
-and common-profile SHA-256 values match, and the complete test inventories match.
-The recorded startup host load averages differ: before `[1.14, 1.18, 0.85]`, after
-`[3.93, 4.18, 3.05]`. These are observed conditions, not controlled CPU scheduling;
-they prevent attributing the full wall-time difference solely to cache sharing.
-All raw after records are in `.context/milestone-14/after.json` and `after.log`.
-
-Startup was 47.884 s, including global setup at 44.562 s. That setup includes
-19.296 s of existing Serve readiness and the following one-time preparation:
-
-| Global phase                                 | Seconds |
-| -------------------------------------------- | ------: |
-| Source/Git                                   |   0.749 |
-| Install                                      |   8.181 |
-| Build                                        |  14.276 |
-| Cold baseline                                |  23.937 |
-| Prepare total                                |  23.952 |
-| Immutable-template verification and disposal |   0.380 |
-
-| Fixture               | Template validation (s) | Copy (s) | Copied-cache validation (s) | Warm baseline (s) | Export (s) |
-| --------------------- | ----------------------: | -------: | --------------------------: | ----------------: | ---------: |
-| design-library-export |                   0.470 |    0.513 |                       0.351 |             0.064 |     13.913 |
-| static-example        |                   0.437 |    0.492 |                       0.380 |             0.065 |     14.424 |
-
-Both ordinary consumers report install/build as `not-observed` with null
-duration. Neither performs a historical rebuild or shares mutable Git/cache state.
-The template's bytes and refs remained unchanged through both consumers and
-global teardown. Global teardown measured 0.380 s; the outer last-test-to-exit
-interval was 0.810 s, including teardown/reporting.
-
-The one retained cold operation measured source/Git 0.840 s, install 9.211 s,
-build 15.925 s, baseline 26.675 s and prepare total 26.711 s. Its subsequent
-comparison export used the real warm cache (0.063 s baseline validation) and took
-14.484 s. The separate real cold `preview:build` took 27.374 s and its server
-startup 1.642 s. Ordinary current-only preview remained independent: export
-166.233 s and serving 1.434 s.
-
-Common-profile rebuilds therefore changed from three to exactly two: one global
-preparation and the cold regression. Existing unit/integration rebuild tests,
-the separate preview operation and workspace Serve preparation remain independent.
-The 600-second ceiling, assertion deadlines, worker count, retries and sharding
-are unchanged. Test listing produces no preparation or fixture timing records.
-
-Focused acceptance: all 29 lifecycle/command/timing checks and all six focused
-browser checks pass. The miniature real-build fixture initially missed its required
-desktop render; that test fixture was corrected. A cache-corruption assertion was
-updated to require the existing `baseline-output-invalid` category instead of a
-generic message. No product reader, cache validator or build recipe was weakened.
-
-### Full gate and completion
-
-The complete gate passed on Node `22.14.0`:
-
-| Command                                                                | Result                                  |  Seconds |
-| ---------------------------------------------------------------------- | --------------------------------------- | -------: |
-| `npm run format:check`                                                 | pass                                    |   27.158 |
-| `npm run lint`                                                         | pass                                    |   19.771 |
-| `npm run typecheck`                                                    | pass                                    |   36.801 |
-| `npm test`                                                             | 3,795 passed; no skips or cancellations |  981.598 |
-| `npm run test:browser -- --output .context/milestone-14/after-results` | 970 passed; comparable after run above  | 1676.363 |
-| `npm run example:check`                                                | 436 valid, untracked files              |   11.221 |
-| `cargo xtask check`                                                    | pass                                    | 3016.476 |
-
-The cargo gate passed the unchanged dependency audit policy, 15 Rust tests,
-six packed-consumer scenarios, another 3,795 unit tests, 747 browser tests and
-223 hydration tests. Each browser invocation prepared its own template and
-removed it through the verification owner after immutable-content checks.
-The source-size check passed for 921 files. No main test title or product feature
-was removed; the five authorized Milestone 11 deletions remain unchanged.
-The final refresh still names main `800fe9f88a0173429b25baa1bcf41ed9e59b2256`;
-no merge occurred. Commit and push precede the final document audit.
+Evidence: `.context/generated-output-simplification/m14-validation.md`.
 
 ## Milestone 15: Verify and review the merged branch
 
-The document audit covers the union of Markdown paths changed by the first-parent
-Milestone 9–14 commits, from `a9c8a9f7^` through `1ab8f5aa`: 206 paths, including
-165 existing live documents and 41 history/index/deleted paths. The inventory
-and per-file boundary notes are retained under `.context/milestone-15/`.
-Historical review receipts, release notes and completed milestone narratives
-retain their original version claims. The two documents already deleted on
-main stay deleted; this milestone restores no legacy documentation or reader.
+Evidence: `.context/generated-output-simplification/m15-document-audit-inventory.md`.
 
 Corrections align the live documents with the implemented contracts:
 
@@ -1743,78 +1044,15 @@ configuration, script or test change and makes no new product decision.
       using `docs/implementation-review-prompt.md`; report numbered findings
       with severities and recommendations without changing the implementation.
 
-### Validation of the documentation audit
+Evidence: `.context/generated-output-simplification/m15-validation.md`.
 
-The final full gate passed on Node 22.14.0, with scratch reports under
-`.context/milestone-15/`:
+### Review outcome
 
-| Command                                                                  | Result                               |  Seconds |
-| ------------------------------------------------------------------------ | ------------------------------------ | -------: |
-| `npm run format:check`                                                   | pass                                 |   23.851 |
-| `npm run lint`                                                           | pass                                 |   18.496 |
-| `npm run typecheck`                                                      | pass                                 |   36.980 |
-| `npm test`                                                               | 3,795 pass; zero skips/cancellations | 1014.552 |
-| `npm run test:browser -- --output .context/milestone-15/browser-results` | 970 pass                             | 1710.050 |
-| `npm run example:check`                                                  | 436 valid, untracked files           |   11.105 |
-| `cargo xtask check`                                                      | pass                                 | 3052.107 |
+The orchestrator reported findings 35–57: one high, eight medium and fourteen
+low. They cover closure authority, baselines, watching, compatibility, release
+contracts and test preparation. Later approved decisions below define the work.
 
-Cargo also passed the unchanged live audit policy, 15 Rust tests, all six
-packed-consumer scenarios and their strict audits, 3,795 unit tests,
-747 browser tests and 223 hydration tests. Source length passed for 928 files.
-All 28 focused guide checks and five Markdown/link/size checks pass.
-The three documented v8 envelope field sets match the exported interface.
-
-The first unit run passed 3,794 cases and failed one guide check:
-
-```text
-✖ the initial corpus has no links and future destinations are bounded
-Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
-```
-
-The Styles guide had gained a relative Markdown link, which the guide corpus
-does not allow. The guide now uses self-contained prose; the rule and test remain.
-All guide checks then passed. The complete gate restarted from formatting
-and passed. No tests were skipped, disabled or weakened.
-
-The final review TODO remains for the orchestrator. Commit and push complete
-this milestone's first two TODOs only. Main remains
-`800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge occurred.
-Only the five authorized Milestone 11 files remain deleted relative to main.
-
-### Final review outcome
-
-Seven parallel reviewers checked the pushed tip `a6287ed6` against
-`origin/main` at `800fe9f8` with `docs/implementation-review-prompt.md`. They
-covered writers and Check; baselines and caches; the asset closure, Serve and
-export; comparisons; the viewer; documentation; and tests, lint and the merge.
-Each claim was reproduced with a scratch script or verified in the code before
-it was reported. The review reported 23 new findings, numbered 35 to 57,
-without changes: 1 high, 8 medium and 14 low.
-
-- High (35): watched Serve replaces the build's checked asset closure with the
-  file watcher's own list. Authored pages and files that mockups reach through
-  ordinary links return 404 for the whole session. Files that the privacy
-  rules reject can be served.
-- Medium: an earlier manifest that Git still tracks turns Changes off
-  permanently (36). The merge removed `main`'s package-root error (37) and
-  turned an unreadable baseline cache entry from a rebuild into a hard failure
-  (38), both without approval. Adding or removing an embedded generated
-  document makes every comparison fail (39). `build --watch` misses inputs that
-  Serve watches (40) and ignores Ctrl+C while it waits for the output lock (41).
-  The published viewer README promises support for earlier catalogues, and the
-  release notes omit the viewer API breaks (42). Compatibility transformers
-  receive inputs that contradict their contract (43).
-- Low (44–57): documentation drift, upgrade edge cases, missing acceptance
-  tests, leftovers of the removed output modes, and the Milestone 14 cost.
-  After the merge, the two export fixtures already read committed output, so
-  the shared preparation added about 1,800 lines of test code and new real
-  rebuild work instead of sharing existing work.
-
-Earlier findings 1, 4, 6, 7, 11, 12, 22, 23, 28–31, 33 and 34 are fixed, and
-26 no longer applies. Findings 2, 8, 13, 15, 18, 20, 21, 24, 27 and 32 are
-partly fixed; their remaining parts are listed with the new findings where
-they changed form. Findings 3, 5, 9, 10, 14, 16, 17, 19 and 25 remain open.
-Main had not moved. Every finding awaits the user's decision.
+Evidence: `.context/generated-output-simplification/m15-review-outcome.md`.
 
 ## Milestone 16: Define the compatibility-removal contracts
 
@@ -1916,25 +1154,12 @@ changes every instance key.
 
 ### Snapshot writer proof and contract choices
 
-The writer audit at `cc1e332e` confirms that `src/catalogue/projection.ts`
-publishes ids before serialization whenever `historicalSource` has a baseline
-commit or comparison generation. Serve's `LivePublicCatalogue`, export's
-`assembleExportSite` and `scripts/preview/catalogue.mjs` all use that projector.
-`serializeCatalogue` preserves fields; `projectScopedCatalogue` spreads each
-removed record. Hosted object, URL and loader sources go through
-`packages/viewer/src/viewer/source.ts` and only read the model. They are not
-another producer. External host data must obey this same current contract.
+No current writer omits snapshot identity when an immutable comparison
+identity exists. Remove the reader fallback. A non-null public comparison URL
+requires each removed record's snapshot id. Keep the generation hash construction
+and no-identity records with a null comparison URL.
 
-The direct source probe at `.context/milestone-16/snapshot-proof.ts` checks
-baseline-only identity, generation-only identity and no identity, before and
-after serialization and scoped delivery. Both real identities produce a
-64-hex id; only the no-identity case omits it. Therefore remove `legacyGeneration`
-from the reader. A non-null public `comparisonUrl` requires every removed
-record's id; a missing id is invalid. Serve derives ids from its baseline before
-publishing a comparison pointer. Its local comparison endpoint is a request
-route, not an allowed public pointer. No-identity records with a null pointer
-remain supported without invented ids. Keep the current writer's
-generation-based hash construction.
+Evidence: `.context/generated-output-simplification/m16-snapshot-writer-proof.md`.
 
 Invalid cache data is partial. A valid v8 marker with different requested
 catalogue/build settings keeps main's exact fail-intact error. Validate the
@@ -1980,12 +1205,7 @@ their area, make the smallest correct change and record it.
 - [x] Run `npm run format:check` and the documentation tests; review the diff;
       commit with Conventional Commits; push.
 
-Validation: Node 22.14.0; `npm run format:check` passes. The Markdown link,
-protocol size/index/history and guide structure/copy checks pass all 13 tests.
-The snapshot writer probe passes baseline, generation and no-identity cases.
-Only documentation and one lowered protocol-cap value changed. No main file
-or test title is removed in this contract commit. All removal scope maps to
-items 1–12 above; unrelated recovery/version wording remains for the search audit.
+Evidence: `.context/generated-output-simplification/m16-validation.md`.
 
 ## Milestone 17: Remove the compatibility code
 
@@ -2078,346 +1298,17 @@ covers its exact discovery path, and its synthetic probe remains. These are
 items 3, 4 and 6, with no new authored-name restriction.
 No other open finding is changed.
 
-### Smoke evidence
+Evidence: `.context/generated-output-simplification/m17-smoke.md`.
 
-`node --import tsx .context/milestone-17/smoke.ts` passes under Node 22.14.0.
-The isolated source-only example commit is
-`59ce920158bd9ca378940aa2efa2e9bfa68b91bb`. It commits
-`examples/basic/mokly-manifest.json` with v7 and has no generated subtree.
-Its own recipe runs `npm ci`, `npm run build` and `npm run example:build`.
-Head `npm run example:check` passes with 32 valid untracked files.
+Evidence: `.context/generated-output-simplification/m17-mainline-removals-and-titles.md`.
 
-Preparation selects `rebuild`, reports a cold completion, and publishes a v8
-cache. Serve reports `ready` Changes at
-`http://127.0.0.1:46427/view/screens/example-welcome.html`. The screen uses Inter,
-a 32px heading and six stylesheets. Authored and imported CSS return 200.
+Candidates 1 and 2 became approved removals 13 and 14. Candidates 3–6 remain
+outside that approval. Current format gates, source protection and hash domains
+stay. The recorded candidate list and both searches are in the evidence file.
 
-The export top level is `.mokly-export-artifact`, `404.html`, `index.html`,
-`mokly-viewer`, `static` and `view`. A plain static server returns 200 for
-`http://127.0.0.1:39375/mokly-viewer/catalogue.json`, with catalogue v4 and
-`ready` Changes. Its Welcome screen has the same styling. Browser loads have no
-HTTP failures. All 147 export files were scanned; the only path segment starting
-with `.`, `_`, `#` or `~` is `.mokly-export-artifact`. Screenshots and command receipts are under
-`.context/milestone-17/`. All smoke servers and browsers stopped in cleanup.
+Evidence: `.context/generated-output-simplification/m17-compatibility-search.md`.
 
-### Mainline removals and title inventory
-
-Main remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`. No merge occurs in this milestone.
-Items refer to the twelve approved removals in Milestone 16. The following
-eight main files are removed. No other new main file deletion is authorized:
-
-- `src/build/discovery.ts` — item 4; its only caller was the transformer.
-- `src/build/styles/lightning.ts` — item 4.
-- `src/build/styles/transformer_inventory.ts` — item 4.
-- `src/compatibility/transform.ts` — item 4.
-- `src/compatibility/types.ts` — item 4.
-- `tests/compatibility.test.ts` — item 4.
-- `tests/compatibility_link_controls.test.ts` — item 4.
-- `tests/compatibility_navigation.test.ts` — item 4.
-  The branch-only file `tests/private_metadata_baselines.test.ts` is also removed
-  under item 2. Its main-origin test title is listed below; main keeps that title
-  in its original `tests/private_metadata.test.ts` file.
-
-The five earlier Milestone 11 deletions remain: `src/build/committable_output.ts`,
-`src/build/ownership.ts`, `src/build/tracked_ownership.ts`,
-`src/config/public_exclusions.ts` and `tests/build_check_unclaimed.test.ts`.
-No audit policy, write lock, frame-session race fix or unrelated main contract is removed.
-
-The title audit compares all test declarations at the starting tip and main.
-All missing declarations map to the approved scope. The list below also expands
-every changed main title template into its concrete titles. A renamed title does
-not mean that its coverage was deleted. Ordinary CSS, custom rendering, link
-controls, anchors, source confinement and byte checks remain. The renderer
-casing test moves unchanged to `build_link_control_casing.test.ts`; final
-navigation checks move to `build_final_navigation.test.ts`.
-
-| Main test file                                        | Removed main title                                                                             | Item and disposition                                                                  |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `tests/build_imported_styles_alias.test.ts`           | `transformer-only legacy CSS does not reject deliverable CSS syntax`                           | 4: Renamed; non-transformer coverage retained.                                        |
-| `tests/build_imported_styles_alias.test.ts`           | `transformer-only legacy CSS is inventoried without strict parsing`                            | 4: Removed transformer-only coverage.                                                 |
-| `tests/build_imported_styles_graph.test.ts`           | `transformer-only CSS and its nested assets are private, not delivered`                        | 4: Removed transformer-only coverage.                                                 |
-| `tests/build_imported_styles_resources.test.ts`       | `compatibility route discovery includes pending styles and omits reserved disk orphans`        | 4: Renamed; non-transformer coverage retained.                                        |
-| `tests/build_link_controls.test.ts`                   | `custom and legacy renderers adapt controls before compatibility checks`                       | 4: Renamed; non-transformer coverage retained.                                        |
-| `tests/build_postcss_dependencies.test.ts`            | `explicit generated output fails in both modes before public file validation`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `committed plain imported CSS narrows shared-impact evidence to matching views`                | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `committed module imported CSS narrows shared-impact evidence to matching views`               | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `derived plain imported CSS narrows shared-impact evidence to matching views`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `derived module imported CSS narrows shared-impact evidence to matching views`                 | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `committed changed generated font affects every view linking its stylesheet`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `derived changed generated font affects every view linking its stylesheet`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `committed baseline predating imported CSS reports a one-time jump`                            | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `derived baseline predating imported CSS reports a one-time jump`                              | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/changes_imported_styles.test.ts`               | `committed Changes ignores syntactically valid stray generated output`                         | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/compatibility.test.ts`                         | `migration compatibility transforms documents and legacy id links`                             | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility.test.ts`                         | `compatibility transforms reuse the logical route index for each view`                         | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility.test.ts`                         | `configured compatibility transformers are typed complete-document functions`                  | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility.test.ts`                         | `compatibility output fails closed on unresolved navigation links`                             | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility_link_controls.test.ts`           | `compatibility transforms cannot introduce or alter owned control metadata`                    | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility_link_controls.test.ts`           | `compatibility cannot add control metadata to a document without child links`                  | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility_link_controls.test.ts`           | `compatibility preserves generated metadata while allowing harmless edits and literal names`   | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility_navigation.test.ts`              | `compatibility transforms preserve complete logical-link records`                              | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility_navigation.test.ts`              | `compatibility transforms cannot duplicate reserved Browse metadata`                           | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility_navigation.test.ts`              | `identity transforms preserve metadata-only native links`                                      | 4: Renamed; non-transformer coverage retained.                                        |
-| `tests/compatibility_navigation.test.ts`              | `compatibility transforms cannot add base URLs to activatable documents`                       | 4: Removed transformer-only coverage.                                                 |
-| `tests/compatibility_navigation.test.ts`              | `compatibility transforms cannot remove an anchor from one target view`                        | 4: Renamed; non-transformer coverage retained.                                        |
-| `tests/component_build_edges.test.ts`                 | `compatibility rejects removed ownership`                                                      | 4: Removed transformer-only coverage.                                                 |
-| `tests/component_build_edges.test.ts`                 | `compatibility rejects changed owned head styles`                                              | 4: Removed transformer-only coverage.                                                 |
-| `tests/component_material_reader.test.ts`             | `fall-through views reuse actual discovery in derived mode`                                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_changes_membership.test.ts`    | `committed plain exported and published Changes match live rule attribution`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_changes_membership.test.ts`    | `committed module exported and published Changes match live rule attribution`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_changes_membership.test.ts`    | `committed asset exported and published Changes match live rule attribution`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_changes_membership.test.ts`    | `derived plain exported and published Changes match live rule attribution`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_changes_membership.test.ts`    | `derived module exported and published Changes match live rule attribution`                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_changes_membership.test.ts`    | `derived asset exported and published Changes match live rule attribution`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_styles.test.ts`                | `committed export retains generated asset routes containing dist and target`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_styles.test.ts`                | `derived export retains generated asset routes containing dist and target`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_styles.test.ts`                | `committed export captures scoped CSS assets without shipping private inputs`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_styles.test.ts`                | `derived export captures scoped CSS assets without shipping private inputs`                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_imported_styles.test.ts`                | `derived public capture never adopts stray reserved files from disk`                           | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/export_migration.test.ts`                      | `only the repository adapter migrates a valid legacy preview`                                  | 6: Replaced with the current-only rejection/ownership contract.                       |
-| `tests/export_reservations.test.ts`                   | `legacy hashed reservations must be explicitly recovered`                                      | 8: Replaced with the current-only rejection/ownership contract.                       |
-| `tests/historical_snapshot_identity.test.ts`          | `reader safely derives older generation-backed identities`                                     | 10: Replaced with the current-only rejection/ownership contract.                      |
-| `tests/imported_styles_accepted_changes.test.ts`      | `accepted committed classification does not rerun PostCSS`                                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/imported_styles_accepted_changes.test.ts`      | `catalogue freshness shares one inventory graph with committed Changes`                        | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/imported_styles_low_delivery.test.ts`          | `committed generated assets have specific types in static, on-demand and transient delivery`   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/imported_styles_low_delivery.test.ts`          | `derived generated assets have specific types in static, on-demand and transient delivery`     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/imported_styles_workspace_package.test.ts`     | `transformer-only workspace-package CSS inventories a linked image`                            | 4: Renamed; non-transformer coverage retained.                                        |
-| `tests/private_metadata.test.ts`                      | `a stale historical-manifest alias does not prevent ordinary public resources`                 | 2: Replaced with the current-only rejection/ownership contract.                       |
-| `tests/private_metadata.test.ts`                      | `an earlier manifest name is only an incompatibility sentinel`                                 | 2: Replaced with the current-only rejection/ownership contract.                       |
-| `tests/publication_imported_styles.test.ts`           | `committed publication captures generated CSS and scoped binary assets without private inputs` | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publication_imported_styles.test.ts`           | `derived publication captures generated CSS and scoped binary assets without private inputs`   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_compile_cancellation.test.ts`          | `committed publish cancels when esbuild exits before the signal listener runs`                 | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_compile_cancellation.test.ts`          | `derived publish cancels when esbuild exits before the signal listener runs`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_imported_binary_snapshots.test.ts`     | `committed publish retains exact scoped binary bytes on both snapshot sides`                   | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_imported_binary_snapshots.test.ts`     | `derived publish retains exact scoped binary bytes on both snapshot sides`                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_pre_installation_cancellation.test.ts` | `committed publish cancels during comparison`                                                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_pre_installation_cancellation.test.ts` | `committed publish cancels during staging`                                                     | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_pre_installation_cancellation.test.ts` | `committed publish cancels during input-recheck`                                               | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_pre_installation_cancellation.test.ts` | `derived publish cancels during comparison`                                                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_pre_installation_cancellation.test.ts` | `derived publish cancels during staging`                                                       | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/publish_pre_installation_cancellation.test.ts` | `derived publish cancels during input-recheck`                                                 | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/serve_imported_styles.test.ts`                 | `accepted committed generated bytes are served without consulting stale disk`                  | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/serve_imported_styles.test.ts`                 | `accepted derived generated bytes are served without consulting stale disk`                    | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/serve_imported_styles.test.ts`                 | `committed watched Serve returns accepted scoped bytes`                                        | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/serve_imported_styles.test.ts`                 | `committed no-watch Serve returns accepted scoped bytes`                                       | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/serve_imported_styles.test.ts`                 | `derived watched Serve returns accepted scoped bytes`                                          | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/serve_imported_styles.test.ts`                 | `derived no-watch Serve returns accepted scoped bytes`                                         | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/serve_transient_imported_styles.test.ts`       | `committed transient HTTP delivers scoped CSS assets from memory for GET and HEAD`             | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/serve_transient_imported_styles.test.ts`       | `derived transient HTTP delivers scoped CSS assets from memory for GET and HEAD`               | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/server_changed_lazy_base.test.ts`              | `non-CSS evidence does not traverse a supplied base resource graph`                            | 12: Renamed or deduplicated; current assertions and real fixture dimensions retained. |
-| `tests/source_boundary.test.ts`                       | `transformer imports reject authoring inputs outside repoRoot`                                 | 4: Removed only this obsolete parameterized case.                                     |
-| `tests/private_metadata.test.ts`                      | `build rejects a resource or link to internal metadata: mokabook-manifest.json`                | 2: Removed only this obsolete parameterized case.                                     |
-| `tests/private_metadata.test.ts`                      | `build rejects a resource or link to internal metadata: mockbook-manifest.json`                | 2: Removed only this obsolete parameterized case.                                     |
-
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed stylesheet, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed image, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed embedded HTML, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived stylesheet, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived image, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived embedded HTML, regular at branch point, deleted now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed image, absent at branch point, absent now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived embedded HTML, absent at branch point, absent now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed stylesheet, absent at branch point, absent now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived image, absent at branch point, absent now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed image, regular at branch point, dangling now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: derived image, regular at branch point, escaping now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-| `tests/deleted_resource_classification.test.ts` | `deleted-resource classifiers agree: committed image, regular at branch point, source-root now` | 12: Renamed blob/rebuild parameter; classifier assertions retained. |
-
-The twelve nested mutation subtests of `compatibility transforms cannot
-introduce or alter owned control metadata` also disappear with that parent.
-Their exact titles are the twelve transformer expressions recorded below.
-
-```text
-input.content.replace('</body>', '<template DATA-MOKLY-LINK-CHILD-END=""></template></body>')
-input.content.replace('</body>', '<a DATA-MOKLY-LINK-CONTROL="button">Unrelated</a></body>')
-input.content.replace('</body>', '<template><a data-mokly-link-control="span">Inert</a></template></body>')
-input.content.replace('</head>', '<style DATA-MOKLY-LINK-CONTROL-STYLES=""></style></head>')
-input.content.replace('data-mokly-link-control="button"', 'data-mokly-link-control="div"')
-input.content.replace(' data-mokly-link-control="button"', '')
-input.content.replace(' data-mokly-link-control="button"', '').replace('id="ordinary"', 'id="ordinary" data-mokly-link-control="button"')
-input.content.replace('data-mokly-link-control="button"', 'data-mokly-link-control="button" DATA-MOKLY-LINK-CONTROL="div"')
-input.content.replace('width:fit-content', 'width:100%')
-input.content.replace('data-mokly-link-control-styles=""', 'data-mokly-link-control-styles="changed"')
-input.content.replace(/<style data-mokly-link-control-styles="">[^]*?<\/style>/, '')
-input.content.replace('id="ordinary"', 'id="ordinary" data-mokly-link-control-future=""')
-```
-
-Branch-only removed titles cover old cache diagnosis, former notice handling,
-old layout prefixes and old export-version messages. Their replacements assert
-the new contracts. The obsolete export baseline parameter `legacy manifest name`
-is removed; all canonical pre-v8 cases stay. Both former manifest-name route
-cases above disappear; canonical metadata and symlink privacy coverage remains.
-Item 12 changes mode names only where the fixture still has real blob/rebuild
-or fresh/retained differences. It removes duplicate runs where the mode did
-nothing. All original MIME, HTTP method, binary, cancellation-phase and
-watched/no-watch dimensions remain.
-
-### Compatibility search results
-
-The final search covers CLI, viewer, scripts, both test trees and protocol JSON
-fixtures. Generated output is excluded. It uses `rg -n -i` with
-`legacy|former|obsolete|earlier|backward.?compat|fallback|schemaVersion.{0,8}[12367]\b|ManifestV[2-7]\b`
-and the extensions `ts`, `tsx`, `mjs`, `cjs` and `json`. It returns 665 lines.
-The category counts below cover every result. They describe the accepted
-Milestone 17 implementation before the later approvals for items 13 and 14.
-
-- F — Keep the current format number or its positive/negative parser fixture.
-- B — Keep the earlier-baseline outcome, canonical version gate or its test.
-- N — Keep rejection of removed input, ignored old names or invalid stored keys.
-- C — Keep current fallback, cancellation, CSS syntax or ordinary operation ordering.
-- T — Keep authored/sample names, test vocabulary or unrelated test infrastructure.
-- D — Outside the twelve approved items. Keep and report for the user's decision.
-
-All 665 hits remain. They are kept checks, current behavior, test vocabulary
-or the separate candidates listed next. Removing an API does not authorize
-removing ordinary authored callback pages, browser Light fallback, obsolete-work
-cancellation, native launch behavior, release fallback or version-negative tests.
-
-| Category  | Matching lines |
-| --------- | -------------: |
-| F         |            276 |
-| B         |             70 |
-| N         |             26 |
-| C         |            192 |
-| T         |             96 |
-| D         |              5 |
-| **Total** |        **665** |
-
-The complete search command is:
-
-```bash
-rg -n -i 'legacy|former|obsolete|earlier|backward.?compat|fallback|schemaVersion.{0,8}[12367]\b|ManifestV[2-7]\b' src packages/viewer/src packages/viewer/tests scripts tests docs/protocol/fixtures -g '*.ts' -g '*.tsx' -g '*.mjs' -g '*.cjs' -g '*.json'
-```
-
-The raw 665-line record stays in `.context/milestone-17/search-final.txt`.
-These counts describe the accepted Milestone 17 search, before items 13 and 14.
-
-A second search for the removed symbols finds no production implementation.
-Its remaining results are negative checks only:
-
-- `tests/viewer_generated_delivery.test.ts:21:  assert.equal(Object.hasOwn(catalogue, "generatedPathPrefix"), false);`
-- `tests/viewer_generated_delivery.test.ts:44:  assert.equal(Object.hasOwn(fixture, "generatedPathPrefix"), false);`
-- `tests/viewer_generated_delivery.test.ts:46:    Object.hasOwn(readCatalogue(fixture), "generatedPathPrefix"),`
-- `tests/baseline_older_cache.test.ts:9:for (const format of ["flat-v7", "generated-v6"] as const) {`
-- `tests/baseline_older_cache.test.ts:34:async function seed(format: "flat-v7" | "generated-v6") {`
-- `tests/baseline_older_cache.test.ts:39:    format === "generated-v6"`
-- `tests/baseline_older_cache.test.ts:40:      ? { ...completed.marker, manifestVersion: 6, layout: "generated-v6" }`
-- `tests/baseline_older_cache.test.ts:50:    format === "generated-v6"`
-- `scripts/package/catalogue.mjs:15:  assert.equal(Object.hasOwn(model, "generatedPathPrefix"), false);`
-
-Additional source tracing records these candidates outside the approved list.
-Items 1 and 2 are now approved as removals 13 and 14 in Milestone 18.
-Candidates 3–6 remain unchanged.
-
-1. `src/catalogue/projection.ts:229` still reads a historical `dependencies`
-   field before current source/declaration fields. This is separate from snapshot ids.
-2. `packages/viewer/src/standalone/recovery.ts:38` accepts missing
-   `filterBaselineDisclosures` as null; `validChangesStatus` also accepts absence.
-   `tests/client_disclosures.test.ts:58` tests this stored-state case.
-3. `src/client/react_update_controller.ts:106` adopts a first ready version when
-   the initial page version is unknown. Current hosts may use this optional input.
-4. `packages/viewer/src/shell/workspace_views_data.ts:153` falls back to current
-   per-view classification while a full comparison is pending. Its comment also
-   says legacy. Removing this requires a separate current-behavior decision.
-5. `tests/browser/component_design_fixture.ts:19` maps historical fixture route
-   labels to current design ids. `tests/shell_fixture_2.ts:29` accepts two inspector
-   markup shapes. These test helpers are outside the transformer/layout API work.
-6. `tests/catalogue_removed_previews.test.ts:40` names old catalogues while
-   exercising omitted optional preview descriptors on a v4 model. The current
-   reader still accepts that absence; preview descriptors are not item 10's ids.
-
-Stable hash domains, including `mokly-historical-snapshot-v2` and component
-instance-key domains, remain unchanged. The disclosure v2 key appears only
-as negative test data. Old notices now remain ordinary text.
-
-The separate marker search finds `src/publication/files.ts:154–162` still
-rejects source references inside a tree marked `.mokly-preview-artifact`.
-This is a protected-artifact check, not ownership adoption. It stays unchanged.
-Its negative fixture uses remain in `tests/export_migration.test.ts` and
-`tests/preview_output_safety.test.ts`; `tests/preview.test.ts` asserts that no
-current preview writes that marker. No old marker can authorize replacement.
-
-### Final validation and completion
-
-All checks use Node `22.14.0` first on `PATH`, npm `11.11.0` and temporary
-paths under `.context/`. The final full gate passes:
-
-| Command                                                                  | Result                                                                                                                   |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| `npm run format:check`                                                   | Pass, including the clean build and final Markdown update.                                                               |
-| `npm run lint`                                                           | Pass.                                                                                                                    |
-| `npm run typecheck`                                                      | Pass, including the clean build.                                                                                         |
-| `npm test`                                                               | 3,768 pass; zero failures, skips or cancellations.                                                                       |
-| `npm run test:browser -- --output .context/milestone-17/browser-results` | 970 pass, including hydration; zero retries or skips.                                                                    |
-| `npm run example:check`                                                  | 436 valid untracked files.                                                                                               |
-| `cargo xtask check`                                                      | Pass; 15 Rust tests, six packed-consumer scenarios, another 3,768 unit tests, 747 browser cases and 223 hydration cases. |
-
-The complete cargo retry took 4,146.323 seconds. The direct browser command took
-2,331.617 seconds. These are validation timings, not a controlled performance
-comparison. The 600-second fixture limit, workers, retries and assertions remain
-unchanged. A clean build before browser/cargo verification removes every compiled
-file for the deleted modules. The source-size check covers 984 files. All four
-repository ratchets pass with no new exemption or raised cap. The release-export
-check records four documented removed exports.
-
-The dependency audit keeps main's unchanged record and strict packed-consumer
-audits. The accepted repository risk output is:
-
-```text
-Accepted dependency risk: GHSA-vfj7-8cjw-p6xm; package: braces.
-Path: node_modules/metro-file-map -> node_modules/micromatch -> node_modules/braces
-End date: 2026-11-03 UTC; 30 days left.
-Reason: Dev-only React Native peer dependency. The repository does not run Metro or send untrusted patterns to it. No patched release is available.
-Tracking: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
-```
-
-The required baseline regressions failed before implementation: stale root v7,
-empty/truncated cache markers and direct marker writes. Their exact errors were:
-
-```text
-[mokly/baseline-incompatible-earlier] the comparison base was built by an earlier Mokly version
-[mokly/baseline-output-invalid] Invalid completed baseline cache
-[mokly/baseline-output-invalid] Invalid completed baseline cache
-[mokly/baseline-output-invalid] Could not prepare baseline: Never write complete.json in place
-```
-
-The first complete unit run passed 3,763 of 3,768 tests. Five stale expectations
-failed: fixture bytes, two former-notice assertions and two preview migration
-setups. Their diagnostics included these exact lines:
-
-```text
-9509 !== 9553
-The input was expected to not match the regular expression /Generated by/. Input:
-+ '<!-- Generated by mokly; ownership=v1; source-base64=c29tZS9vdGhlci9vd25lci50cw==. Do not edit. -->\n' +
-+   '<html><body>Unchanged</body></html>\n'
-- '<html><body>Unchanged</body></html>\n'
-refusing to replace unowned preview directory: /home/vercel-sandbox/mokly/.context/mokly-test-SZ5ruu/.context/published. [mokly/export-invalid] Export ownership is missing; choose an empty directory.
-refusing to replace unowned preview directory: /home/vercel-sandbox/mokly/.context/mokly-test-1fStGm/.context/published. [mokly/export-invalid] Export ownership is missing; choose an empty directory.
-```
-
-The fixture pins its new exact hash/size. Former notices remain ordinary text.
-Preview route tests replace a valid current artifact; only their migration
-setup is removed. All route assertions remain. The 16 focused bootstrap/Browse
-checks and four notice/preview checks pass, followed by both complete unit runs.
-
-The internal-export check first reported the four helpers described above.
-Narrowing/removing their obsolete exports resolves that check. The first cargo
-attempt then found the packed API test's annotation on the wrong line:
-
-```text
-api.tsx(276,1): error TS2578: Unused '@ts-expect-error' directive.
-api.tsx(279,3): error TS2353: Object literal may only specify known properties, and 'compatibility' does not exist in type 'MoklyConfig'.
-[xtask/command] `npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts` failed with status 1
-```
-
-Moving the annotation onto the rejected property preserves the negative type
-check. The six packed scenarios pass, followed by the full cargo retry above.
-No dependency, audit, timeout or retry policy changes. Development diagnostics,
-raw logs, full file summaries and exact removed-title lists are retained under
-`.context/milestone-17/`. The final Markdown tests and `git diff --check` pass.
-The main tip remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge occurs.
-Branch checks precede the Conventional Commit and explicit branch push.
-Milestone 18 and its user-owned final review follow after this push.
+Evidence: `.context/generated-output-simplification/m17-validation.md`.
 
 ## Milestone 18: Verify and review the compatibility removal
 
@@ -2446,22 +1337,11 @@ Candidates 3–6 remain outside this step. The user owns the final review.
 
 ### Current producer and format decisions
 
-The manifest writer maps authoring `dependencies` to `declaredDependencies`.
-The live index uses that writer. Runtime compaction drops usage only, and IPC
-transfers the accepted entries rather than rebuilding their dependency fields.
-Before code changes, `tests/catalogue_manifest_producers.test.ts` passed:
-v8 build, serialized v8, live index, compact Serve runtime, startup IPC and
-background compilation each emit 10 entries across all four kinds, including
-component variants, with no `dependencies` field. Each published dependency
-list equals the sorted unique source/declaration union. A wider trace then finds
-a current producer in `packages/viewer/src/viewer/projection.ts`:
-`displayEntry` spreads `entry.details`, including `dependencies`, and
-`viewerCatalogue` places those records on its `live-index-1` display manifest.
-SSR, standalone hydration and current capability adoption use that conversion.
-The expanded probe confirms this field on every display entry and verifies its
-public round trip. Under item 13's condition, retain the branch and rename
-`historical` to `displayDependencies`. No canonical v8 producer or transfer gains
-that field; no earlier-format reader is restored.
+Under item 13's then-current condition, retain the display dependency branch
+and rename it `displayDependencies`. Canonical manifest entries do not gain that
+field. The later 62 A decision supersedes this retained branch.
+
+Evidence: `.context/generated-output-simplification/m18-dependency-producer-proof.md`.
 
 The stored Browse record requires a real live Changes status. General shell
 snapshots also serve static and embedded hosts and keep their optional status;
@@ -2476,158 +1356,20 @@ Serve derives ids from its accepted baseline before publishing the pointer.
 The regression must request the local endpoint, validate Serve's published
 model, and prove that a raw local endpoint is still invalid catalogue data.
 
-### Document check
+Evidence: `.context/generated-output-simplification/m18-document-check.md`.
 
-Read all 55 Markdown files changed in Milestones 16 and 17, plus the catalogue
-and client owner READMEs changed here. The per-document record is
-`.context/milestone-18/document-audit.md`. Corrections remove a remaining
-transformer-stage claim, describe manifest v8, align cache reuse and cheap
-retention, retain exact export-marker errors, and describe current resource
-discovery, portable links, dependency producers and recovery fields. The viewer
-README and catalogue contract state the same snapshot-id rule as the reader.
-No protocol cap increases. No main file or test title is removed in this step.
+Evidence: `.context/generated-output-simplification/m18-smoke.md`.
 
-Finding 17's `entriesDir === mockupsDir` wording remains for the user's decision;
-the code still rejects that configuration. Candidates 3–6 and all other
-unapproved findings remain unchanged. This document check does not perform the
-final implementation review.
+Evidence: `.context/generated-output-simplification/m18-validation.md`.
 
-### Smoke evidence
+### Review outcome
 
-`node --import tsx .context/milestone-18/smoke.ts` passes on Node 22.14.0.
-Base `66ea7e2407631396f266f40972f73b45f289eff3` commits a stale root-level v7
-manifest and no generated tree. Its own recipe rebuilds manifest v8, and Changes
-is `ready`. Build and Check pass in the isolated source-only example repository.
+The orchestrator reported findings 58–65: one medium and seven low. They cover
+style ownership, baseline races and discovery, export errors, dead code, tests
+and documents. Finding 66 adds repeated public-file checks. The decisions below
+define the approved fixes. Findings 17 and 52 remain open.
 
-The styled Serve screen is `http://127.0.0.1:40447/view/screens/example-welcome.html`.
-A plain static server returns 200 for
-`http://127.0.0.1:37529/mokly-viewer/catalogue.json`, with catalogue v4 and
-`ready` Changes. Both screens load authored and imported CSS, use Inter and a
-32px heading, and have six stylesheets. No browser request fails.
-
-The export top level is `.mokly-export-artifact`, `404.html`, `index.html`,
-`mokly-viewer`, `static` and `view`. A scan of all 147 files finds only
-`.mokly-export-artifact` among segments starting with `.`, `_`, `#` or `~`.
-Screenshots and command receipts stay under `.context/milestone-18/`.
-Both screenshots were visually checked. All smoke servers and browsers stopped.
-
-### Full gate and completion
-
-All commands use Node 22.14.0 first on `PATH`, npm 11.11.0 and scratch paths
-under `.context/`. The final full gate passes:
-
-| Command                                                                  | Result                                                                                                                                     |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run format:check`                                                   | Pass.                                                                                                                                      |
-| `npm run lint`                                                           | Pass.                                                                                                                                      |
-| `npm run typecheck`                                                      | Pass.                                                                                                                                      |
-| `npm test`                                                               | 3,773 pass; zero failures, skips or cancellations.                                                                                         |
-| `npm run test:browser -- --output .context/milestone-18/browser-results` | 970 pass, including hydration; zero retries or skips.                                                                                      |
-| `npm run example:check`                                                  | 436 valid untracked files.                                                                                                                 |
-| `cargo xtask check`                                                      | Pass: audit, repository checks, 15 Rust tests, six packed consumers, another 3,773 unit tests, 747 Chromium cases and 223 hydration cases. |
-
-The direct unit run took 1,403.258 seconds; the direct browser command took
-2,343.511 seconds; the complete cargo gate took 4,182.927 seconds. These are
-validation times, not a controlled performance comparison. The source-size
-check covers 991 files. All four repository ratchets pass without any raised
-cap, exemption, timeout or retry change. The unchanged audit record reports:
-
-```text
-Accepted dependency risk: GHSA-vfj7-8cjw-p6xm; package: braces.
-Path: node_modules/metro-file-map -> node_modules/micromatch -> node_modules/braces
-End date: 2026-11-03 UTC; 29 days left.
-Reason: Dev-only React Native peer dependency. The repository does not run Metro or send untrusted patterns to it. No patched release is available.
-Tracking: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
-```
-
-Six new unit cases cover the producer proof, both required recovery fields,
-the real writer, incomplete capture and Serve snapshot identities. The total
-increases by five because the dynamic directory-lint probe for
-`src/compatibility/` no longer runs after that directory's approved item 4
-removal in Milestone 17. No test source title was removed here; the generator
-and every current-folder probe stay unchanged. No new main file deletion occurs.
-
-Before implementation, the new reader tests produced three expected failures.
-Missing recovery fields returned a state instead of `undefined`; the Serve
-test reported this exact diagnostic difference:
-
-```text
-+   message: '[mokly/components] $catalogue: removed entry needs snapshotId when a comparison generation exists'
--   message: '[mokly/components] $catalogue: removed entry needs snapshotId when comparisonUrl is non-null'
-```
-
-A new negative type test initially supplied an explicit undefined status:
-
-```text
-tests/client_browser.test.ts(65,30): error TS2375: Type '{ changesStatus: undefined; disclosures: Readonly<Record<string, boolean>> | null; colorScheme: ViewerSelection["colorScheme"]; detailsOpen: boolean; ... 6 more ...; viewport: ViewerSelection["viewport"]; }' is not assignable to type 'ShellRecoverySnapshot' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
-  Types of property 'changesStatus' are incompatible.
-    Type 'undefined' is not assignable to type 'LiveChangesStatus'.
-```
-
-The test now omits the optional field. The first full unit run passed 3,772 of
-3,773 cases. The one failure came from a helper without the current live status:
-
-```text
-✖ React live updates provide recovery and replace strict-effect streams
-Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
-+ actual - expected
-
-+ undefined
-```
-
-The helper and two stored-state browser fixtures now include `ready` status.
-Their original assertions stay. The 11-case focused retry and the complete
-gate above pass. Exact full error objects and command logs remain in
-`.context/milestone-18/failures.md` and the adjacent logs. The final evidence
-table initially failed formatting; applying Prettier to this plan resolves it.
-The final Markdown
-link/size/index/history and guide checks pass all 13 tests; `git diff --check`
-passes. The final main fetch remains
-`800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge occurs.
-Branch checks precede the Conventional Commit and explicit branch push.
-The final implementation-review TODO remains for the orchestrator.
-
-### Final review outcome
-
-Five parallel reviewers checked the pushed tip `497445c1` against
-`origin/main` at `800fe9f8` with `docs/implementation-review-prompt.md`. They
-covered baselines and caches; the build and configuration; export and
-preview; the viewer and catalogue; and tests, documents and mainline
-preservation. Each claim was reproduced with a scratch script or verified in
-the code. No unapproved removal from `main` was found: the 13 deleted `main`
-files and every missing `main` test title are approved. The review reported 8
-new findings, numbered 58 to 65, without changes: 1 medium and 7 low.
-
-- Medium (58): a component `<style>` element in `<body>` together with
-  `MockLink asChild` breaks Build and Serve, also on `main`. Style ownership
-  pairs `<style>` elements by position, and the link adapter adds its own
-  stylesheet in `<head>`. The removal deleted the only test that reached this
-  check.
-- Low (59–65): retention can remove a cache entry that another process is
-  about to lock; a stale tracked v7 manifest still blocks a comparison after
-  the catalogue folder moves; export refusals do not name the folder, so
-  publish and preview folders from earlier releases block without a remedy;
-  the kept `dependencies` branch (item 13) is reached only by a test; dead code,
-  test lines and lint paths remain from the removal; documents still describe
-  removed items; and some kept tests and plan rows overstate their coverage.
-
-Findings 13, 19, 24, 38, 43 and 47 are fixed. Findings 36 and 44 are fixed
-apart from findings 60 and 61. Findings 3, 25, 27, 42, 48 and 53 changed form.
-Findings 10, 17, 37, 45, 46, 49, 52, 54, 56 and 57 remain open. Findings 35,
-39–41, 50, 51 and 55 are in code that Milestones 16–18 did not change, and the
-earlier findings recorded in Milestone 15 keep their status. Main had not
-moved. Every finding awaits the user's decision.
-
-Finding 66 (low, performance) was added after the review at the user's
-request. A CPU profile of `mokly check` on the example catalogue (436
-documents, about 10.4 s of compile time) attributes about 1.3 s to repeated
-checks that decide whether an authored file may be public. About 1.0 s comes
-from configured stylesheets during rendering (`src/build/render.ts:202`, the
-same code as on `main`), and about 0.3 s from the link walk
-(`src/build/html_links.ts`). Each check calls the file system and keeps no
-result, although the example has only about 30 authored files. The
-recommendation is to decide each file once per compile and reuse the result,
-in the same module as the shared list builder that finding 14 recommends.
+Evidence: `.context/generated-output-simplification/m18-review-outcome.md`.
 
 ## Milestone 19: Define the review-fix contracts
 
@@ -2743,21 +1485,18 @@ The focused contracts are `mokly-public-closure.md`,
 The contracts keep findings 17 and 52 unchanged. Package-root equality is the
 separately approved restoration, not resolution of finding 17's other rules.
 
-The detailed reports in `.context/review-reports/INDEX.md` resolve the missing
+The detailed reports in `.context/generated-output-simplification/reviewer-reports/INDEX.md` resolve the missing
 file lists. Their references were checked against the current tree. The
 source of each requested fix is recorded in that index; already-correct text
 is retained. Findings 45, 46 and 64 are documentation work here. The listed
 member/test cleanup and inaccurate Milestone 17 table rows belong to the
 approved tooling step. No unrelated review finding is changed.
 
-Tool discovery confirms API Extractor 7.59.3 supports the required Node runtime.
-The report design runs it per typed public subpath and inventories non-code
-exports. Knip 6.39.0 is current and supports Node 22.14.0, but its maintained
-v6 line removed `classMembers`. The user's follow-up explicitly selects a
-small TypeScript language-service ratchet using `findReferences` instead.
-No new member-analysis package or old Knip version is installed. API Extractor
-still comes from the current npm release when implementation starts. Registry
-metadata and research receipts are under `.context/milestone-19/`.
+The user chose a TypeScript language-service `findReferences` ratchet. Knip v6
+removed class-member analysis. Install the current maintained API Extractor
+release when public API report work starts; do not pin an older tool.
+
+Evidence: `.context/generated-output-simplification/m19-tool-research.md`.
 
 ### Squash-merge message
 
@@ -2792,29 +1531,7 @@ browser readers retain typed version failures. Plain successful baseline
 notices use stdout. See npm-release-notes.md for the complete API migration.
 ```
 
-### Documentation verification and scope
-
-Verified every explicit report reference against current source. The corrected
-facts include generated CSS/assets in guides, catalogue v4, current-marker
-stripping, unsafe-tree Check errors, complete baseline IPC descriptors,
-`html.links` timings, completion temporary cleanup, and lexical policy on
-comparison copies. Protocol prose describes current rules; meaningful Git
-merge-base terminology, former-parent labels, unsupported-input rejection and
-release migration guidance remain. No new history lint is added (46 A).
-The full search and its retained normative matches are under
-`.context/milestone-19/`. No main file or main test title is removed or renamed.
-
-The Review acceptance matrix uses the existing internal Review operation;
-the CLI has no `review` command, so this plan does not add one. The debris
-regression is assigned to the baseline/comparison step. Existing capped protocol
-pages keep their exact line counts; no cap or test metadata changes here.
-
-Validation: Node 22.14.0; `npm run format:check` passes. The exact Markdown
-command is `node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_sizes.test.ts tests/protocol_split_links.test.ts tests/protocol_doc_history.test.ts tests/guides_structure.test.ts tests/guides_copy.test.ts`;
-all 13 pass with no failures, skips or cancellations. `git diff --check` passes.
-No validation failed. This documentation-only step requires no full cargo gate.
-The source tip remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`; no merge.
-Branch guards precede the documentation commit and explicit branch push.
+Evidence: `.context/generated-output-simplification/m19-document-validation.md`.
 
 ## Milestone 20: One public-file policy
 
@@ -2840,92 +1557,9 @@ and restored main test title/assertion follow that boundary.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits; push.
 
-### Regression-first evidence and implementation
+Evidence: `.context/generated-output-simplification/m20-regressions-and-smoke.md`.
 
-Before production edits, `node --import tsx --test tests/public_closure_shared.test.ts tests/review_boundary_results.test.ts`
-failed all nine cases. The failures reproduced the separate Watch closure,
-authored navigation 404, unchecked seed, extension/folder-only rejection,
-symlink read, missing package-root export guard, source-name skip, throwing
-delivery parser and export refusal without a destination. Exact output includes:
-
-```text
-404 !== 200
-Missing expected exception.
-[mokly/build-invalid] document links and resources are invalid:
-200 !== 404
-Missing expected rejection.
-Unsupported Mokly delivery version undefined; this viewer supports version 4.
-[mokly/export-invalid] Export ownership is missing; choose an empty directory.
-```
-
-The complete errors and assertion diffs are in `.context/milestone-20/red.log`.
-Two test fixtures were corrected before acceptance: the discovery module exports
-its definitions through `mockups` and directly asserts discovery membership;
-the startup test uses the live runtime rather than preloaded compiled bytes.
-The new implementation shares generation-scoped decisions and one link walk.
-Watch recovery retains confined observable aliases separately from checked
-serving membership. Existing alias/recovery tests stay intact; Serve reads never
-follow those links. Component-resource declarations keep their existing typed
-validation error and route, while the shared link walker keeps `build-invalid`;
-this preserves the existing main error boundary. Renderer-only seeds retain their declaring route. Export's
-package-root check uses the exact restored `exportError` boundary.
-
-The focused 51-case suite and the watched authored-link regression pass. The
-smoke command `node --import tsx .context/milestone-20/smoke.ts` returns 200 for
-`http://127.0.0.1:46253/static/guide.html`, `guide.css`, `spec.pdf` and the
-generated screen. Editing the PDF publishes its new bytes. All servers stop.
-The type check passes after correcting optional fixture metadata. The first
-full unit run found two issues: an escaping alias changed the existing missing
-target diagnostic, and one exact ownership-error assertion still omitted the
-new destination. The policy now retains the missing-target diagnostic while
-still denying the alias; the assertion includes the exact output path under
-61 B. Exact failure lines were:
-
-```text
-The input did not match the regular expression /font\.css: missing target font\.woff2/.
-+ '[mokly/export-invalid] Invalid export ownership inventory: /home/vercel-sandbox/mokly/.context/mokly-test-yzMtnl/site.'
-- '[mokly/export-invalid] Invalid export ownership inventory.'
-```
-
-Development failures and complete error objects stay under
-`.context/milestone-20/`; the full gate is rerun after these fixes.
-
-### Full gate and preservation
-
-All seven commands pass on Node 22.14.0:
-
-| Command                                                                  | Result                                                                                                    |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `npm run format:check`                                                   | Pass.                                                                                                     |
-| `npm run lint`                                                           | Pass.                                                                                                     |
-| `npm run typecheck`                                                      | Pass.                                                                                                     |
-| `npm test`                                                               | 3,786 pass; zero skipped or cancelled.                                                                    |
-| `npm run test:browser -- --output .context/milestone-20/browser-results` | 970 pass; no retries or skips.                                                                            |
-| `npm run example:check`                                                  | 436 valid untracked files.                                                                                |
-| `cargo xtask check`                                                      | Pass; audit, 15 Rust tests, six packed consumers, 3,786 unit tests, 747 Chromium and 223 hydration cases. |
-
-The complete cargo gate took 2,906.842 seconds. Repository length and export
-ratchets pass with no cap increase or new exception. The combined closure fixture
-now includes renderer-only CSS in the same document as every required link form;
-its five focused tests and the complete cargo unit run pass. Its first setup
-omitted the declared component owner and failed with
-`[mokly/components] home / mobile/light: style/resource owners must render in this view`;
-adding the rendered owner corrected the fixture without a production change.
-
-No main file or main test title is removed or renamed. Main's exact title
-`a package root equal to mockupsDir fails explicitly instead of publishing a package`
-is restored, replacing this branch's metadata-only title. The shared policy
-reuses the existing source/location helpers. Existing Watch alias recovery
-coverage remains; recovery locations never confer serving permission.
-
-The final fetch found main at `c4138a0b9578448d81ce2a2868bd7ec47f5a88c6`,
-`feat!: file-path identity and Markdown documents (#131)`, after the merged
-source tip `800fe9f8`. Per the user's instruction, it is not merged. Its new
-files and contracts are unmerged additions, not deletions by this milestone.
-The milestone itself has no deleted file. The full gate's comparison boundary
-remains the existing merge base. Final Markdown checks and `git diff --check`
-pass. All smoke and verification processes stop. Branch checks precede commit
-and explicit push; the final review remains with the orchestrator.
+Evidence: `.context/generated-output-simplification/m20-validation-and-preservation.md`.
 
 ## Milestone 21: Define the merge with path identity
 
@@ -2994,62 +1628,7 @@ this branch:
 - [x] Run `npm run format:check` and the documentation tests; review the diff;
       commit with Conventional Commits; push.
 
-### Captured mainline audit
-
-Source tip before integration: `a422fbf8508cbef51253fcd6b4ddc16028051ef4`.
-Merge base: `800fe9f88a0173429b25baa1bcf41ed9e59b2256`.
-Fetched source main: `c4138a0b9578448d81ce2a2868bd7ec47f5a88c6` (#131).
-The audit command is `git diff --name-status 800fe9f8..origin/main`; its exact
-1,614-path result is `.context/milestone-21-merge/main-name-status.txt`.
-The recorded tips are not recalculated after merging. Scope counts are:
-7 root/CI/config paths, 135 documentation, 272 example, 223 viewer package,
-4 plans, 15 scripts, 253 CLI/runtime source and 705 test paths.
-
-Preserve all #131 additions and all earlier main features except the explicit
-replacements below. The preservation list covers:
-
-1. **Root and entry identity:** `src/config/roots*`, root membership/discovery,
-   `src/authoring/**`, `src/registry/**`, viewer navigation/registry helpers:
-   roots/defaults, transparent directories, branded module exports, slug/path
-   overrides, case-folded collisions, index entries and variant order.
-2. **Folders and Specs:** folder records, `_folder.json`, `defineFolder`,
-   title/order/exclude/hidden rules, independent Specs/Components filtering,
-   Overview rows, crumbs and disclosure v4. Preserve examples and every
-   folder/navigation/authoring test.
-3. **Markdown:** all `src/documents/**`, root discovery, safe parser/template,
-   front matter, headings, source-relative links, media/PDF copying, private
-   source inventory, dark documents and retained source bodies. Move only the
-   destination root of generated bytes into the unified generated tree.
-4. **Moves:** all `src/review/moves/**`, same-kind/role pairing, case-only
-   identity, declared/content/source/similarity signals, fixed-point matching,
-   ambiguity diagnostics, resource aliases, source proofs and `previousPath`.
-   Keep aliases comparison-only, and retain all move regressions.
-5. **Branch-point lookup:** the shared cached lookup and guard, explicit
-   before/current reference sides, variant counterparts/parents, stored removed
-   parent titles, workspace keys, usage destinations, props and Changes
-   activation. Preserve the five shared real-Git fixtures and all shell/embedded
-   browser assertions.
-6. **Viewer and artifact paths:** path/index helpers, shell directory URLs,
-   provider normalization, documents and moved presentation, scoped bootstraps,
-   inspector/privacy boundaries, publication resource and generation identities.
-   Adapt only the outer namespace/generated prefix and format numbers.
-7. **Generation route acceptance:** preserve immutable checked route membership,
-   worker rejection and IPC shape validation. Snapshot decision B replaces
-   disk reads and reader locking; writer ownership, cancellation and concurrency
-   guarantees stay. No consumer code runs inside the writer transaction lock.
-8. **Output and serving safety:** source/root confinement, Markdown safety,
-   regular-file checks, copied-resource collision protection, binary bytes,
-   input rechecks, atomic replacement/rollback and native filesystem boundaries.
-   Preserve every non-ownership/non-mode assertion in those tests.
-9. **Verification and packaging:** shared browser console-notice rule and its
-   bounded tests, test/module splits, source-size compliance, node/runtime
-   matrices, dependency/audit updates, package fixtures, new API docs and
-   complete example relocation. Keep all incoming plans and review records.
-   Do not fix the incoming plan's unresolved review findings during the merge.
-10. **Existing branch work:** keep both lint guards and duplicate imports,
-    checked closure and renderer seeds, safe read-time policy, exact export-only
-    package-root error, tagged delivery parsing, version failures, incomplete
-    cache recovery, per-commit selection and all completed review decisions.
+Evidence: `.context/generated-output-simplification/m21-captured-mainline-audit.md`.
 
 ### Combined versions and implementation choices
 
@@ -3113,22 +1692,7 @@ No other main feature, file or assertion is approved for removal. Findings 17
 and 52 and the remaining review fixes stay pending. The verification step maps
 those decisions against the merged code before any further implementation.
 
-### Documentation validation
-
-Node 22.14.0 is first on PATH. The first documentation run passed 12 of 13
-checks; the guide corpus forbids links and reported the newly added
-`[combined delivery contract](../../protocol/mokly-path-output-integration.md)`
-link, with `Expected values to be strictly deep-equal`. Replacing the link with
-plain guide prose preserves its no-link contract. No test or cap changes.
-Exact command/log evidence is under `.context/milestone-21-merge/`.
-
-Final validation: `npm run format:check` and `git diff --check` pass.
-`node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_sizes.test.ts tests/protocol_split_links.test.ts tests/protocol_doc_history.test.ts tests/guides_structure.test.ts tests/guides_copy.test.ts`
-passes all 13 tests, with no skips or cancellations. Documentation only: no
-source, tests, scripts, dependencies or config changed; no main file or test
-title is deleted or renamed. No cap increase. The guide-link failure above is
-the only failed validation. No server/browser started. Main remains at the
-captured tip. Commit and explicit push finish this milestone before merging.
+Evidence: `.context/generated-output-simplification/m21-document-validation.md`.
 
 ## Milestone 22: Merge `main` and apply the combined design
 
@@ -3150,927 +1714,25 @@ captured tip. Commit and explicit push finish this milestone before merging.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit; push.
 
-### Integration preservation record
+Evidence: `.context/generated-output-simplification/m22-integration-preservation-record.md`.
 
-The merge has source parent `80724073b55d4440969432e0c0ea20f91b63dfaa`
-and incoming parent `c4138a0b9578448d81ce2a2868bd7ec47f5a88c6`. Its captured
-merge base remains `800fe9f88a0173429b25baa1bcf41ed9e59b2256`. A later fetch
-found main at `781da7ae3261e6694a5ef5608a91f3e34061f6d0`: #132 keeps lock
-directories on release, and #133 closes plans and removes their index. These
-commits are not included. No second merge or rebase ran. Preservation evidence
-uses the captured incoming parent, not the advanced remote tip.
+Merge justifications: `.context/generated-output-simplification/m22-merge-justifications.md`.
 
-The implementation combines main's path, folder, Markdown, move and branch-point
-features with the generated tree and checked closure. All format writers and
-readers use the combined inventory. The private route snapshot is copied,
-validated and frozen in memory; only `writeCompilation` takes the output lock.
-Main's folder/root glob validation survives in `config/relative_globs.ts` after
-removing the publicExclude-specific API and defaults.
+Evidence: `.context/generated-output-simplification/m22-removed-main-files.md`.
 
-Markdown copied resources now enter the generated inventory, retained worker
-outputs, watch closure, comparison capture and moved-resource aliases. Main's
-final Markdown safety check moved out of the removed transformer and remains
-mandatory after logical-link rewriting. Its security tests retain every unsafe
-markup case using the final validator directly. Root and folder tests retain
-main's strict source discovery and path rules.
+Evidence: `.context/generated-output-simplification/m22-removed-main-test-titles.md`.
 
-Integration forced these small changes in pending review areas. Screen-only
-classification again reads only the required baseline documents (54 A). Current
-and historical v9 inventory hashes detect generated edits without head tracking;
-whole-document pages and Markdown retain targeted material comparison. Markdown resource
-counterparts absent from the historical inventory return absence without reading
-an unlisted file (the document part of 39 B). No full side-reader redesign is
-included. Main's imported-CSS move normalization now uses catalogue-relative
-generated paths. Frame inspection uses the reverse current-document helper;
-this repairs the merge without implementing the later shared-helper UI work.
-Findings 17 and 52 remain untouched: roots retain main's equality rejection and
-the existing CSS-class/URL-constant coupling stays. No old entriesDir API returns.
+The orchestrator allowed a local merge checkpoint for HEAD-based baseline tests. Keep
+it local until the full gate and preview smoke pass. Review both parents and
+every remerge path immediately after committing it.
 
-The following path lists record intentional conflict resolutions. Every hunk,
-its two inputs, final text and reason is retained in
-`.context/milestone-22-merge/resolution-records.json`. The Git remerge diff is the
-committed, reproducible source for those hunks. One-sided format/namespace edits
-follow the same approved contracts; main's other code and assertions stay.
+Evidence: `.context/generated-output-simplification/m22-validation-and-smoke-progress.md`.
 
-Compilation, configuration and manifest:
+Evidence: `.context/generated-output-simplification/m22-two-parent-checkpoint-review.md`.
 
-- `src/config/types.ts`: Keep main roots/path API; retain branch generatedDir and no output modes (1 A, unified-tree decision).
-- `src/config/validate.ts`: Preserve strict main roots/unknown-field/discovery checks; preserve approved removed-key errors and generated-tree input protection; no mode or transformer restoration.
-- `src/config/entry_discovery.ts`: Keep main root-owned discovery and extracted helpers; move generated-tree protection into those helpers rather than retain obsolete glob walk.
-- `src/config/reserved_paths.ts`: Keep main root-pattern expansion and shared branch directory constant.
-- `src/build/output_paths.ts`: Keep exact branch inventory/hash validation and whole-tree safety; accept main copied document resource kinds. Remove disk collision/ownership scans under snapshot B; retain source/reserved/collision constraints.
-- `src/build/source_inventory.ts`: Keep main pre-discovery root source protection and folder records; preserve generated-tree privacy and shared exported predicate.
-- `src/build/consumer_entry.ts`: Keep branded exports and flattened definitions; omit only approved removed transformer export (M16 item4).
-- `src/build/compile.ts`: Preserve main documents/folders/source bodies and accepted runtime route set; retain branch closure/hash inventory and full-tree bytes. Remove only header-owner map and transformer/disk snapshot behavior (M16, snapshot B).
-- `src/build/document_compiler.ts`: Preserve main document targets and move evidence, branch resource closure/policy, and accepted route validation; remove orphan snapshot seam and header validation only (snapshot B, ownership removal).
-- `src/build/load_graph.ts`: Preserve Markdown discovery, copying and complete source inventory. Remove output-folder inspection and transformer-only CSS paths under snapshot B/M16 item4.
-- `src/build/logical_records.ts`: Preserve Markdown scheme anchors; omit only unused transformer validation location type.
-- `src/build/check.ts`: Retain index-selected exact whole-generated-tree check; unclaimed/orphan header categories are removed under unified ownership decisions.
-- `src/build/transaction.ts`: Retain atomic whole-tree replacement under one writer lock; mixed-tree per-file backup/prune/ownership scans removed under unified tree and snapshot B.
-- `src/registry/manifest.ts`: Combine path/folder metadata with post-compilation closure/inventory; read only canonical generated manifest.
-- `src/registry/manifest_validation.ts`: Preserve path/folder/case/relationship validation with branch metadata-only live boundary and complete inventory validation; versions advance separately under2A.
-- `src/registry/catalogue_index.ts`: Keep main folders and shared metadata-only validation; no fake generated inventory for live index.
-- `src/build/html_links.ts`: Preserve shared closure resolver including relative reference validation; main CSS extractor remains at its new owner.
+Evidence: `.context/generated-output-simplification/m22-final-gate-attempts.md`.
 
-Baselines, comparisons and move evidence:
-
-- `src/baseline/manifest.ts`: Retain per-commit generated-tree descriptor and current-only content gate. Older canonical envelopes only decide incompatibility after own rebuild; no earlier filename fallback (M16 items1-3).
-- `src/baseline/cache_layout.ts`: Keep strict complete-current cache with stored layout/root; invalid earlier entries rebuild, exact settings mismatch stays intact (M16 correction1).
-- `src/review/base_manifest.ts`: Keep baseline own-source policy without executing current roots; retain branch descriptor addressing and discard unused flat join helper.
-- `src/review/component_affected.ts`: Keep move-aware affected consumers and generated-tree view addressing.
-- `src/review/component_classification_entries.ts`: Keep main extracted pairing helper instead of obsolete branch entryViews; retained prefetch uses generated-tree views.
-- `src/review/component_classification_sources.ts`: Preserve main move-classification setup and extracted context; branch byte-comparison policy is integrated into that context, not duplicated.
-- `src/review/component_compare.ts`: Keep move source reader/classification and snapshot dependency capture.
-- `src/review/component_result_sources.ts`: Keep main grouped move/counterpart source validation and generated-tree views.
-- `src/review/component_view.ts`: Preserve move-aware resource identity and normalization; always compare bytes under approved removal of mode opt-outs (M16 item12).
-- `src/review/component_view_fast_path.ts`: Preserve main moved-resource normalization and branch independent before-side byte discovery (M16 item12).
-- `src/review/page_preview.ts`: Preserve removed Markdown schemes and PDF/asset references; use shared generated prefix for actual baseline reads.
-- `src/review/repository.ts`: Retain branch pinned descriptor and main independent committed Markdown source reader for similarity.
-- `src/review/resource_comparison.ts`: Preserve move equivalence without the removed compareBytes mode flag.
-- `src/review/selection_types.ts`: Adopt path-aware review result; combined version advance follows2A.
-- `src/server/changed_content.ts`: Preserve path/move and document resource pairing; keep always-on byte comparison and inventory-backed baseline reads. No mode opt-out under M16 item12.
-- `src/server/changed_document_pairs.ts`: Preserve main page/document/view pair selection by path and moves; generated-root addressing is applied to resulting files.
-- `src/server/changed_resources.ts`: Keep document resources and move identities; baseline/current bytes always participate under M16 item12.
-
-Delivery, lifecycle, scripts and example assets:
-
-- `src/components/manifest_validation.ts`: Keep main folder/usage validation and branch generated inventory fields.
-- `src/catalogue/projection.ts`: Preserve main dependency union including Markdown resources. This resolves approved62A naturally; no display-manifest fallback is retained.
-- `src/server/catalogue_snapshot.ts`: Keep in-memory default compilation; preserve moved-entry evidence and folder-aware catalogue creation.
-- `src/server/controls/runtime_ipc.ts`: Keep private route-snapshot validation; remove only publicExclude reader under prior approval.
-- `src/server/update_messages.ts`: Combine path/move update validation with pinned baseline descriptor/selection and checked asset closure; preserve all IPC guards.
-- `src/export/public_files.ts`: Capture all generated including Markdown bytes from memory plus checked authored closure; remove only broad/disk/mode capture under unified-tree decision.
-- `src/export/resource_policy.ts`: Keep shared per-compile privacy and main exact realpath package-root export error; no old manifest-name, publicExclude or transformer branches.
-- `src/export/inputs.ts`: Preserve input-stability recompile and source checks without reader lock or disk generated capture (snapshot B).
-- `src/export/run.ts`: Preserve export/publication orchestration while using memory; no generated writes or reader lock (unified-tree, snapshot B).
-- `src/export/site.ts`: Preserve main separate before/after privacy with each side actual generated inventory; keep Markdown and move capture. No cross-side union grants.
-- `src/export/references.ts`: Preserve main ES-module lexer reference validation; retain shared namespace and closure URL resolution.
-- `src/html_references.ts`: Preserve extracted main CSS scanner and branch shared confined relative-path parser.
-- `src/publication/resources.ts`: Keep document scheme routes and copy only accepted generated/closure bytes under current namespace.
-- `src/publication/removed_previews.ts`: Keep path-addressed removed document/page previews with current public namespace.
-- `src/server/generated_static.ts`: Keep accepted in-memory bytes; remove disk/mode initial-generated loader only, under unified output and snapshot B.
-- `src/server/static_routes.ts`: Serve every accepted generated route including Markdown copies inside generated tree; retain safe authored closure reads. Disk static fallback removed under approved policy.
-- `src/server/http.ts`: Combine checked in-memory HTTP assets with main move targets and path-keyed evidence; no disk static loader or output writes.
-- `src/server/controls/transient_assets.ts`: Preserve main resource extraction including Markdown/schema-aware paths, using the shared no-follow public-file policy.
-- `src/server/selected_review_routes.ts`: Preserve main strict query-key selection; adapt only namespace under decision30.
-- `src/cli/reporter/plain.ts`: Retain writer summary for opt-in output commands; remaining notice/stdout work stays deferred.
-- `src/server/component_changes.ts`: Preserve path-keyed component result API; combined version advance follows2A.
-- `.gitignore`: Ignore the complete unified generated tree; incoming tracked authored assets stay outside it.
-- `examples/basic/mokly.config.ts`: Keep every main stylesheet, with authored assets at the branch public root.
-- `scripts/preview/artifact.mjs`: Milestone 16 removes legacy preview ownership marker.
-- `scripts/preview/catalogue.mjs`: Retain publication baseline preparation without writes.
-- `scripts/package/catalogue.mjs`: Retain public-shape assertion and use path-identity routes in generated tree.
-- `scripts/package/viewer.mjs`: Retain main path-based viewer selection and current namespace.
-- `scripts/package/imported_styles.mjs`: Path routes inside unified generated tree.
-- `scripts/preview/inputs.d.mts`: Keep optional accepted in-memory compilation input.
-- `scripts/package/consumer_cases/themed.mjs`: Retain themed packed assertions with path identity and unified tree.
-- `scripts/package/consumer_cases/juno.mjs`: Keep packed Juno view path under generated root.
-- `scripts/package/consumer_cases/esm.mjs`: Keep packed ESM path routes under generated root.
-- `examples/basic/design-library/chrome/screen-header.css`: Keep path label styling and formatting.
-
-Viewer path and format consumers:
-
-- `packages/viewer/src/registry/types.ts`: Combine main path/document/folder schema with generated inventory; one version9 follows2A.
-- `packages/viewer/src/catalogue/reader.ts`: Preserve typed version error, strict required snapshot ids and main removed-entry/move validation. Remove only approved snapshot-id inference.
-- `packages/viewer/src/client/component_geometry.ts`: Preserve main provider-normalized geometry checks while applying generated/viewer prefixes. Shared helper consolidation remains pending.
-- `packages/viewer/src/client/same_origin_adapter.ts`: Preserve main normalized readiness comparison and branch fixed generated prefix.
-- `packages/viewer/src/navigation/routes.ts`: Preserve path-derived screen and document snapshots inside unified generated subtree; remove obsolete id-only page helper under incoming API break.
-- `packages/viewer/src/previews/request.ts`: Keep split main page/document preview loading with current namespace.
-- `packages/viewer/src/shell/component_stage.tsx`: Retain path-based variant scheme views and unified generated URLs.
-- `packages/viewer/src/shell/disclosure_storage.ts`: Keep main path-keyed disclosure v4 and current-only storage behavior.
-- `packages/viewer/src/shell/metadata.ts`: Keep folders, removed baseline folder titles and required removed-parent title.
-- `packages/viewer/src/shell/stage_frame.tsx`: Keep Markdown scheme selection and generated prefix.
-- `packages/viewer/src/shell/stage_sources.ts`: Keep path/view identity under unified generated prefix.
-- `packages/viewer/src/shell/stages.tsx`: Preserve document scheme fallback and shared frame source construction.
-- `packages/viewer/src/viewer/projection.ts`: Preserve path/document/move display metadata using explicit live index rather than an incomplete persisted manifest.
-
-Contracts, guides and READMEs:
-
-- `AGENTS.md`: Keep path-identity specs source and unified generated destination.
-- `README.md`: Keep path-based quick start and Overview guidance; combine Git tracking and v9 inventory rules.
-- `docs/architecture/build-pipeline.md`: Preserve root/Markdown rendering and pure validation; remove approved modes, transformer and header authority.
-- `docs/architecture/package-boundary.md`: Keep Markdown and canonical path URLs; remove transformer and legacy preview authority.
-- `docs/guides/authoring/config.md`: Use roots and current public types; preserve closure and export-only package-root rules.
-- `docs/guides/authoring/screens.md`: Keep path examples and collisions; relocate generated views.
-- `docs/guides/authoring/viewports-and-color-schemes.md`: Use root-default config.
-- `docs/guides/catalogue/export-and-host.md`: Retain directory shell routes and memory-only export.
-- `docs/guides/cli/build.md`: Keep Markdown/component output facts in whole-tree transaction; Git alone selects check behavior.
-- `docs/guides/cli/check.md`: Keep complete generated-tree checks without ownership/modes.
-- `docs/guides/cli/export.md`: Keep memory-only export with all main document/path output.
-- `docs/guides/cli/options-and-exit-status.md`: Preserve both serve --build and main --open.
-- `docs/guides/start/build.md`: Keep path validation errors and branch tracking/writer model.
-- `docs/guides/start/configure.md`: Use incoming roots while preserving closure confinement.
-- `docs/guides/start/your-first-screen.md`: Keep path moves and movedFrom authoring; generated destination changes.
-- `examples/basic/README.md`: Keep current example source/layout and Markdown stylesheet guidance.
-- `plans/README.md`: Preserve both active plans and their historical outcomes.
-- `docs/protocol/README.md`: Keep path/folder/move protocol index and combined versions.
-- `docs/protocol/mokly-artifact-paths.md`: Keep document preview helpers and wrap generated snapshot routes.
-- `docs/protocol/mokly-authoring.md`: Keep all path/definition-relative authoring; remove compatibility and orphan authority.
-- `docs/protocol/mokly-baseline-compatibility.md`: Keep generated-location selection and rebuild-time earlier detection; no old manifest names.
-- `docs/protocol/mokly-baseline-storage.md`: Keep historical root discovery, strict current cache and check-only index reads.
-- `docs/protocol/mokly-catalogue.md`: Preserve main split serialization/fetch contracts and path-based public model; generated URLs gain prefix.
-- `docs/protocol/mokly-changes-serving.md`: Keep extracted comparison-serving contract and move pairing.
-- `docs/protocol/mokly-changes.md`: Keep move resource normalization and use current generated marker only.
-- `docs/protocol/mokly-component-controls.md`: Keep path-based control identities in current namespace.
-- `docs/protocol/mokly-component-design.md`: Keep source and path-based artboards in generated tree.
-- `docs/protocol/mokly-component-manifest.md`: Keep every new manifest field and branch inventories; current ManifestEntry has one shape.
-- `docs/protocol/mokly-component-review-fast-path.md`: Keep path-keyed fast path and current version gate.
-- `docs/protocol/mokly-component-usage-records.md`: Keep path-valued componentId usage contract.
-- `docs/protocol/mokly-components.md`: Use current schema links without stale numbers.
-- `docs/protocol/mokly-configuration-discovery.md`: Keep root discovery boundaries and removed publicExclude check.
-- `docs/protocol/mokly-configuration-imported-styles.md`: Preserve unified root reservation using roots API.
-- `docs/protocol/mokly-configuration.md`: Keep roots and strict config fields; preserve removed-key errors and export-only equality guard.
-- `docs/protocol/mokly-derived-baselines.md`: Retain per-commit rebuild selection, strict current cache and original handoff lifecycle; remove mode duplicate.
-- `docs/protocol/mokly-design-components.md`: Keep current-only controls in present tense.
-- `docs/protocol/mokly-disclosure-persistence.md`: Use main path storage key without any migration.
-- `docs/protocol/mokly-export-browser.md`: Preserve ownership/upload formats and bump changed payloads.
-- `docs/protocol/mokly-export-delivery.md`: Keep canonical directory URLs with current viewer namespace and format.
-- `docs/protocol/mokly-export-public-files.md`: Keep memory capture and shared closure; retain main document/variant validation coverage.
-- `docs/protocol/mokly-export-recovery.md`: Keep current ownership wording.
-- `docs/protocol/mokly-export-safety.md`: Approved legacy reservation and preview ownership removal.
-- `docs/protocol/mokly-export.md`: Preserve scoped-asset behavior and generated inventory without modes.
-- `docs/protocol/mokly-imported-styles-assets.md`: Path identity inside generated tree preserves relative CSS links.
-- `docs/protocol/mokly-imported-styles-errors.md`: Keep main nonportable module diagnostic; remove only mode/exclusion/transformer diagnostics.
-- `docs/protocol/mokly-imported-styles.md`: Keep output-independent compilation and current module-path diagnostic; use roots discovery.
-- `docs/protocol/mokly-live-evidence.md`: Per-commit preparation with path-keyed evidence.
-- `docs/protocol/mokly-navigation.md`: Keep folders and path navigation; validate final links without transformer or ownership header.
-- `docs/protocol/mokly-on-demand.md`: Retain document demand renders in generated namespace.
-- `docs/protocol/mokly-package.md`: Preserve path/Markdown public API and root layouts; publicExclude remains removed.
-- `docs/protocol/mokly-pages.md`: Keep path pages and unified transaction; canonical manifest schema has its own contract.
-- `docs/protocol/mokly-publication.md`: Keep closure-only publication and exact generated route admission.
-- `docs/protocol/mokly-removed-preview-acceptance.md`: Preserve removed Markdown and move acceptance without modes.
-- `docs/protocol/mokly-removed-previews.md`: Preserve path/doc previews and generated historical routes in current namespace.
-- `docs/protocol/mokly-rendering-generated.md`: Replace header authority with plain marker and v9 generated inventory; retain document output.
-- `docs/protocol/mokly-rendering.md`: Remove approved compatibility transformer API.
-- `docs/protocol/mokly-runtime.md`: Preserve path/document runtime and branch writer, closure and frame trust rules.
-- `docs/protocol/mokly-selected-comparisons.md`: Keep path query parser and document selections in current namespace.
-- `docs/protocol/mokly-shell-bootstrap.md`: Versioned bootstrap preserves scoped/full boundary with path model.
-- `docs/protocol/mokly-shell-design.md`: Preserve main split design inventory and source relocation.
-- `docs/protocol/mokly-source-protection.md`: Preserve live unmatched-root protections and Markdown resource privacy; retain checked closure instead of exclusions/headers.
-- `docs/protocol/mokly-upload.md`: Keep independent upload shape version.
-- `docs/protocol/mokly-variants.md`: Keep parent-path variant meaning.
-- `docs/protocol/mokly-viewer-appearance.md`: Keep appearance and source relocation without stale history wording.
-- `docs/protocol/mokly-viewer.md`: Retain extracted SSR contract and all host boundaries.
-- `docs/protocol/mokly-watch.md`: Root-based watch retains branch prefix ignore and opt-in writer rules.
-- `docs/protocol/npm-preview-deployments.md`: Current ownership only; no old-preview marker adoption.
-- `docs/protocol/npm-release-notes.md`: Keep incoming commit note and all branch breaking changes with combined versions.
-- `src/build/README.md`: Keep Markdown/move graph, candidate checks and source protection; replace disk snapshot and ownership transaction under decision B.
-- `src/baseline/README.md`: Keep strict current cache, moved roots and earlier outcome without caching.
-- `src/catalogue/README.md`: Preserve every path/document/move projection and require explicit snapshot identity.
-- `src/export/README.md`: Keep lexer validation and all closure/privacy facts; preserve historical document resources without modes.
-- `src/publication/README.md`: Preserve both closure policy and document packaging facts.
-- `src/review/README.md`: Keep always-on resource bytes and path/move/document comparison facts.
-- `src/server/README.md`: Keep live root protection/document changes and shared closure; writer-only locks.
-- `src/server/controls/README.md`: Preserve IPC route membership with no reader lock or transformer.
-- `packages/viewer/README.md`: Preserve removed variants, path selection and explicit ids; retain both links.
-- `packages/viewer/src/shell/README.md`: Keep path disclosure v4 and required recovery fields.
-
-Unit, package and verification tests:
-
-- `packages/viewer/tests/appearance_changed_views.test.tsx`: Retain complete synthetic inventory helper and incoming path screen.
-- `packages/viewer/tests/comparison_documents.test.ts`: Keep comparisons with path identity inside unified tree.
-- `packages/viewer/tests/component_workspace.test.tsx`: Incoming split keeps workspace-view tests in component_workspace_views; retain control/usage URL coverage here.
-- `packages/viewer/tests/frame_hook_harness.tsx`: Frame tests use current path routes.
-- `packages/viewer/tests/highlight_request.test.ts`: Highlight view path under unified tree.
-- `packages/viewer/tests/historical_baseline.test.tsx`: Keep literal version typing; version bump follows.
-- `packages/viewer/tests/routes.test.ts`: Preserve all main path/document/provider validation with generated prefix; old kind/id test replaced by approved path API.
-- `packages/viewer/tests/scoped_bootstrap.test.ts`: Retain main byte-stability assertion; regenerate fixture checksum for approved format bump.
-- `packages/viewer/tests/server.test.tsx`: Keep shared SSR helpers and incoming split variant test in server_entry_views.
-- `packages/viewer/tests/shell_state.test.ts`: Incoming shell_host_routing split preserves both host route tests and path API.
-- `tests/authoring.test.tsx`: Keep incoming path/device-name test; move main setup into existing fixture split.
-- `tests/baseline_compatibility.test.ts`: Reject every earlier canonical format, not obsolete-name sentinels.
-- `tests/baseline_integration.test.ts`: Keep historical-command fixture with combined manifest and paths.
-- `tests/baseline_platform.test.ts`: Keep closure cache platform fixture in generated tree.
-- `tests/browse_document_adapter.test.ts`: Retain synthetic complete current manifest helper.
-- `tests/build.test.ts`: Keep indexed whole-tree checks with path-derived views.
-- `tests/build_attribution.test.ts`: Keep main changedManifestPaths API and actual generated location.
-- `tests/build_generated_directory.test.ts`: Preserve main exact module-path error.
-- `tests/build_gitignore_generated.test.ts`: Approved mode/committability removal; retain no-index writer test.
-- `tests/build_imported_styles.test.ts`: Keep module diagnostic and CSS relative links within tree.
-- `tests/build_imported_styles_alias.test.ts`: Keep imported alias evidence with path view.
-- `tests/build_imported_styles_links.test.ts`: Keep CSS ordering/link roots and all second-entry assertions; plain marker only.
-- `tests/build_imported_styles_resources.test.ts`: Decision B removes orphan scan seam while retaining CSS parse-once and stale-output tests; rename mixed-purpose title.
-- `tests/build_links.test.ts`: Keep standalone authored CSS relative to generated page.
-- `tests/build_mainline_navigation.test.ts`: Keep navigation and stylesheet assertions with generated root.
-- `tests/build_ownership.test.ts`: Approved header machinery removal keeps plain-marker source safety; obsolete parser-only tests are removed.
-- `tests/helpers/baseline_fixture.ts`: Keep folder records in baseline fixture.
-- `tests/helpers/component_review_fixture.ts`: Keep historical descriptor and generated namespace while retaining main source input map.
-- `tests/helpers/derived_fixture.ts`: Use roots API and optional fixture config with no modes.
-- `tests/helpers/example_baseline.ts`: Keep prepare-once shared fixture; integrate incoming focused profiles in their existing helper module.
-- `tests/helpers/example_sources.ts`: Whole generated tree is ignored; keep authored examples and outside imported assets.
-- `tests/helpers/fixture.ts`: Default fixture uses roots without removed output mode.
-- `tests/helpers/published_preview.ts`: Keep path-based removed preview assertion.
-- `tests/helpers/react_capability_environment.ts`: Keep required recovery status and Specs disclosure path.
-- `tests/helpers/removed_delivery_fixture.ts`: Keep nested removed paths and portable authored asset links.
-- `tests/helpers/removed_page_preview_fixture.ts`: Keep complete hash-inventory fixture rather than incoming unchecked manifest cast.
-- `tests/helpers/removed_preview_fixture.ts`: Keep current paths and authored download depth.
-- `tests/helpers/review_css_schema.ts`: Keep comparison resources in generated snapshot namespace.
-- `tests/helpers/workspace_views_data_fixture.ts`: Keep path-based workspace data and complete fixture manifests.
-- `tests/fixtures/consumers/nodenext/api.tsx`: Keep new public folder/root types; remove transformer and replaced nested API.
-- `tests/fixtures/large/area.tsx`: Keep large fixture path references and authored asset depth.
-- `tests/fixtures/large/generate.ts`: Large fixture uses path roots and no modes.
-- `tests/fixtures/large/screens.tsx`: Generated root adds one relative segment for authored assets.
-- `tests/catalogue_comparison.test.ts`: Retain path selection and evidence-update API.
-- `tests/catalogue_history.test.ts`: Keep component path history in current namespace.
-- `tests/catalogue_history_conflicts.test.ts`: Retain async readiness before cross-kind history assertions.
-- `tests/catalogue_nav_paths_reader.test.ts`: Preserve main stricter path tree rejection cases and extracted matcher.
-- `tests/catalogue_server.test.ts`: Keep private retained-view route path identity.
-- `tests/catalogue_watch.test.ts`: Keep broad watch root without modes.
-- `tests/changes.test.ts`: Keep path-keyed Changes and snapshot addresses.
-- `tests/changes_activation.test.ts`: Keep complete manifest helper with path entries.
-- `tests/changes_asset_aliases.test.ts`: Retain checked closure alias rejection under unified public-file policy, with path pages.
-- `tests/changes_css_delivery.test.ts`: Keep selected path CSS comparison.
-- `tests/client_browse.test.ts`: Keep current Browse document path.
-- `tests/client_preview_fragment.test.ts`: Keep extra incoming Details fetch assertion and path fragments.
-- `tests/client_removed_preview_requests.test.ts`: Keep incoming preview renewal/split helper and historical generated paths.
-- `tests/client_removed_previews.test.ts`: Keep document preview metadata paths and path query grammar.
-- `tests/client_snapshot_presentations.test.ts`: Keep confinement-invalid cases and generated snapshot files.
-- `tests/combined_changes.test.ts`: Keep page embedding in unified static tree.
-- `tests/component_build.test.ts`: Use path-keyed manifest.
-- `tests/component_changes.test.ts`: Keep component comparison snapshot path.
-- `tests/component_controls_forwarding.test.ts`: Keep path shell and generated view forwarding.
-- `tests/component_export.test.ts`: Keep removed component path views.
-- `tests/component_fast_path_equivalence.test.ts`: Retain shared closure fixture for byte resource changes; generated depth is applied to body links.
-- `tests/component_fast_path_resources.test.ts`: Preserve path-formatting assertions with always-on byte reads; rename output-mode titles under original decision.
-- `tests/component_manifest.test.ts`: Unknown newer rejection uses 99, not new current format.
-- `tests/component_protocol_docs.test.ts`: Approved new format numbers update schema contract title/assertions.
-- `tests/component_render_diagnostics.test.ts`: Retain protected-source diagnostic instead of removed name-only exclusion.
-- `tests/component_review_fixture_contract.test.ts`: Keep complete synthetic manifest helper.
-- `tests/component_runtime_ipc.test.ts`: Keep IPC roots and generatedDir; current manifest has full inventory.
-- `tests/component_server_classification.test.ts`: Keep path server classification and no-work view reads.
-- `tests/config_generated_directory.test.ts`: Preserve removed publicExclude guard and root config.
-- `tests/config_generated_routes.test.ts`: Keep main reserved path/override tests and branch unified tree test.
-- `tests/config_public_exclusions.test.ts`: Approved publicExclude removal retains removed-option diagnostics; glob validation for roots/folders stays covered separately.
-- `tests/demand_props.test.ts`: Keep logical page target and temporary prop links in current namespace.
-- `tests/demand_safety.test.ts`: Keep metadata request path identity.
-- `tests/derived_build.test.ts`: Keep tracking-only Check tests at path-based generated output.
-- `tests/derived_changes.test.ts`: Keep source-only comparisons independent of stale disk.
-- `tests/derived_child_repository.test.ts`: Keep historical reader handoff and generated pane addresses.
-- `tests/derived_config.test.ts`: Approved output modes removed; baseline recipe is valid independently.
-- `tests/derived_css_attribution.test.ts`: Keep per-component CSS evidence paths with explicit configured closure resources.
-- `tests/derived_export.test.ts`: Keep memory-only export/stale-disk assertions in unified tree.
-- `tests/derived_resources.test.ts`: Retain always-on byte resource comparison with one explicitly referenced closure asset.
-- `tests/derived_serve.test.ts`: Keep per-commit Serve history, removed documents and stale disk independence.
-- `tests/derived_serve_status.test.ts`: Keep preparing lifecycle with path view request.
-- `tests/design_library_attribution.test.ts`: Keep attribution test with new source path and no output mode.
-- `tests/entry_attribution.test.ts`: Approved source-header ownership test removal; runtime inventory validation stays.
-- `tests/example_imported_styles.test.ts`: Use verified current Welcome stylesheet and retained outside-root image.
-- `tests/export_cases.test.ts`: Keep partial baseline reconstruction input.
-- `tests/export_changes.test.ts`: Keep current read-only repository preparation and path output variable.
-- `tests/export_current_derived.test.ts`: Keep current-only memory capture under held output lock.
-- `tests/export_deployment.test.ts`: Keep deployment inventory in current namespace.
-- `tests/export_engine.test.ts`: Keep exact shell directory and static generated inventory.
-- `tests/export_migration.test.ts`: Retain all main current-marker refusal/no-mutation assertions.
-- `tests/export_pages.test.ts`: Keep path-based exported page.
-- `tests/export_references.test.ts`: Keep real 64-hex generation fixture and current namespace.
-- `tests/export_resource_policy.test.ts`: Capture memory closure, not tampered disk; package-denial coverage stays.
-- `tests/export_source_inventory.test.ts`: Keep manifest privacy and source-safe page export.
-- `tests/export_watch.test.ts`: Keep owned export ignore paths.
-- `tests/generated_output_lock_waits.test.ts`: Decision B keeps Serve-close writer cancellation; only explicit serve --build invokes output store.
-- `tests/hierarchy.test.ts`: Keep main path/folder hierarchy replacing old label/id schema tests.
-- `tests/historical_snapshot_identity.test.ts`: Retain complete inventory helper and explicit historical identities.
-- `tests/html_css_references.test.ts`: Retain extracted CSS parser and branch local-URL tests.
-- `tests/id_keyed_wire_formats.test.ts`: Keep path wire format and earlier-version rejection with explicit complete helper.
-- `tests/inspector_publication.test.ts`: Keep published inspector placement.
-- `tests/manifest_files.test.ts`: Keep deterministic path manifest and whole-tree dark-file removal instead of orphan scanning.
-- `tests/manifest_variants.test.ts`: Keep path variant records, resolved helper and required usage in complete inventory fixtures.
-- `tests/nav_sections.test.ts`: Retain synthetic manifest envelope and incoming folders.
-- `tests/nav_tree.test.ts`: Keep incoming shared path-tree fixture and structured crumbs.
-- `tests/nav_tree_removed_variants.test.ts`: Keep path folder records in removed navigation fixture.
-- `tests/output_safety.test.ts`: Decision B replaces mixed-layout collision/header checks; preserve source and symlink confinement tests in separate generated tree.
-- `tests/page_material_changes.test.ts`: Retain compiled reader source-privacy checks; ignore stale disk bytes.
-- `tests/post_message_adapter.test.ts`: Keep invalid encoded-fragment rejection in current namespace.
-- `tests/preview.test.ts`: Preserve provider-normalized path URLs and static generated frames.
-- `tests/preview_capture_html_paths.test.ts`: Keep main canonical directory anchor and current script namespace.
-- `tests/preview_comparisons.test.ts`: Keep all path comparison and renamed title/no-id-redirect assertions.
-- `tests/preview_legacy_routes.test.ts`: Keep literal authored paths in generated output.
-- `tests/preview_removed_pages.test.ts`: Keep path-based removed documents and screens.
-- `tests/private_metadata.test.ts`: Keep generated-tree write boundary symlink rejection; obsolete manifest-name sentinel removed by M16.
-- `tests/protocol_doc_sizes.test.ts`: Use incoming lower reviewed caps; do not raise any cap.
-- `tests/public_exclusions.test.ts`: Approved publicExclude/name-only rejection removal retains source privacy and generated paths.
-- `tests/public_review_retention.test.ts`: Keep complete synthetic baseline/current fixtures.
-- `tests/public_workspace_views.test.ts`: Keep path workspace evidence and complete inventory.
-- `tests/publication_baseline.test.ts`: Keep historical generated baseline path.
-- `tests/publication_snapshot.test.ts`: Retain accepted in-memory publication and disk-unchanged proof.
-- `tests/publish_derived.test.ts`: Keep upload snapshots for rebuilt per-commit history.
-- `tests/publish_receiver_delta.test.ts`: Keep delta accounting for path-based generated views.
-- `tests/publish_run.test.ts`: Use main split publish fixture; validation tests kept in publish_run_validation.
-- `tests/removed_preview_delivery.test.ts`: Keep main path/document preview assertions; publication test remains in removed_preview_publication split.
-- `tests/removed_preview_shell.test.ts`: Keep complete helper envelope.
-- `tests/removed_screen_previews.test.ts`: Keep path views, exact missing-byte error and checked historical authored closure.
-- `tests/review.test.ts`: Keep existing split comparison helper; adapt its path data instead of duplicating incoming in-file functions.
-- `tests/review_artifact_ui.test.ts`: Keep snapshot bytes and allowlisted UI artifact assertions.
-- `tests/review_assets.test.ts`: Keep confined baseline asset/source tests using roots and generated directory.
-- `tests/review_basics.test.ts`: Keep complete synthetic baseline inventory and path screens.
-- `tests/review_public_exclusions.test.ts`: Keep closure policy fixture rather than old exclusion-based baseline.
-- `tests/review_regressions.test.ts`: Keep malformed historical document and path baseline metadata.
-- `tests/review_safety.test.ts`: Keep all snapshot confinement and manifest helper assertions.
-- `tests/serve_on_demand.test.ts`: Keep demand renderer and failed-candidate behavior on path URLs.
-- `tests/serve_removed_previews.test.ts`: Keep removed document and screen preview lifecycle.
-- `tests/serve_transient_imported_styles.test.ts`: Approved output modes collapse duplicate transient tests; keep GET/HEAD/binary/scoped-asset assertions.
-- `tests/server.test.ts`: Keep incoming lifecycle split; supplied-manifest validation stays independent of disk.
-- `tests/server_changed.test.ts`: Use path changes with existing per-commit repository and generated tree.
-- `tests/server_changed_assets.test.ts`: Keep prepared per-commit repository helper.
-- `tests/server_changed_content.test.ts`: Keep current-memory and path content comparison fixtures.
-- `tests/server_changed_hierarchy.test.ts`: Keep main changed-path API.
-- `tests/server_changed_lazy_base.test.ts`: Preserve main targeted base-read assertions and path evidence while integrating side byte readers.
-- `tests/server_changed_manifest.test.ts`: Keep path identity mapping from generated evidence.
-- `tests/server_changed_resource_validation.test.ts`: Keep compiled current reader and protected historical resource errors.
-- `tests/server_navigation.test.ts`: Keep path navigation; plain Serve ignores modified disk per approved writer-independent rule.
-- `tests/server_removed_preview_lifecycle.test.ts`: Keep main split helper and private page path lifecycle.
-- `tests/server_removed_preview_limits.test.ts`: Keep moved-entry source and complete synthetic baseline with preview bounds.
-- `tests/server_removed_preview_routes.test.ts`: Keep path-based request routing and generation snapshot addresses.
-- `tests/server_route_scoped_bootstrap.test.ts`: Read example unified manifest.
-- `tests/server_selected_review.test.ts`: Keep selected scope and immutable retained comparison tests; disk tampering cannot change accepted memory generation.
-- `tests/server_selected_review_lifecycle.test.ts`: Keep snapshot folders and path query lifecycle.
-- `tests/source_denials.test.ts`: Decision B removes mixed-layout ownership denials; whole-tree confinement and protected source causes stay.
-- `tests/source_inventory.test.ts`: Keep source inventory exclusion of generated views.
-- `tests/static_delivery.test.ts`: Keep canonical path shell and current comparison namespace.
-- `tests/variant_validation.test.ts`: Keep branded export collection and path variant diagnostics.
-- `tests/viewer_catalogue_variants.test.ts`: Keep public model folder fixture.
-- `tests/watch_classification.test.ts`: Keep folder records in watch classification fixtures.
-- `tests/watch_resource_lifecycle.test.ts`: Keep authored resource lifecycle beside generated view.
-- `tests/watch_resources.test.ts`: Keep watched resource snapshot test with path routes.
-- `tests/shell.test.ts`: Preserve incoming split: screen/flow assertions are in shell_frames and metadata tests in shell_metadata.
-- `tests/shell_appearance.test.ts`: Preserve main appearance assertions and path fixture; no duplicate style tests.
-- `tests/shell_chrome.test.ts`: Preserve main path chrome; missing/filter tests are in shell.test and styles in shell_styles.
-- `tests/shell_frames.test.ts`: Retain every main screen/flow frame assertion with generated prefix; metadata tests stay in shell_metadata.
-- `tests/shell_styles.test.ts`: Preserve main path-chip style assertions; appearance tests remain in shell_appearance.
-
-Browser fixtures and assertions:
-
-- `tests/browser/browse.spec.ts`: Keep incoming path navigation tests here; remove duplicates in search-details split.
-- `tests/browser/browse_assertions.ts`: Use path-valued selectors, folder keys and workspace identity.
-- `tests/browser/browse_disclosures.spec.ts`: Keep v4 persistence and no migration/deletion assertions.
-- `tests/browser/browse_layout.spec.ts`: Keep main path layout; expansion test is retained in browse_chrome.
-- `tests/browser/browse_navigation.spec.ts`: Keep path-based dark navigation with generated prefix.
-- `tests/browser/browse_navigation_hydration_handoff.spec.ts`: Keep delayed frame handoff assertions in current namespace.
-- `tests/browser/browse_navigation_security.spec.ts`: Retain incoming fixture setup and path-based security visits.
-- `tests/browser/browse_search_details.spec.ts`: Keep path search and moved duplicate navigation tests in browse.spec.
-- `tests/browser/catalogue_fetch.spec.ts`: Keep catalogue/ref fetch assertions with current resource paths.
-- `tests/browser/comparison_alignment.spec.ts`: Keep before/after pane alignment paths.
-- `tests/browser/comparison_alignment_hosts.spec.ts`: Keep pane failure/retry coverage.
-- `tests/browser/comparison_design.spec.ts`: Keep path-based design screenshot source.
-- `tests/browser/comparison_expiry.spec.ts`: Keep path-based selected comparison expiry.
-- `tests/browser/component_design_fixture.ts`: Use shared generated-root and incoming entryPath.
-- `tests/browser/component_design_navigation.spec.ts`: Keep design navigation frames inside generated root.
-- `tests/browser/component_explorer_inspection.spec.ts`: Keep main fixture API and path-based component inspection.
-- `tests/browser/component_explorer_runtime.spec.ts`: Keep main real Changes fixture and path-based variants.
-- `tests/browser/component_explorer_runtime_fixture.ts`: Keep main readCatalogueChanges and served-review provider with accepted in-memory output.
-- `tests/browser/component_fragments.spec.ts`: Standalone path view reads generated output.
-- `tests/browser/design_library_export.spec.ts`: Retain prepare-once rebuilt cache and main path-based design fixture.
-- `tests/browser/design_library_runtime.spec.ts`: Keep source path privacy and canonical generated manifest privacy.
-- `tests/browser/design_portable.spec.ts`: Keep portable path-based design files.
-- `tests/browser/example_links.spec.ts`: Keep exact dark frame and standalone links with current paths.
-- `tests/browser/frame_adapter.spec.ts`: Keep path-based inspector frame URL.
-- `tests/browser/frame_adapter_fixture.ts`: Keep exact handoff and unowned authored link at correct depth.
-- `tests/browser/frame_adapter_security.spec.ts`: Keep inert scripts and component navigation checks.
-- `tests/browser/frame_clipping.spec.ts`: Keep incoming frame locator and clipping coverage.
-- `tests/browser/frame_readiness.spec.ts`: Retain frame readiness fixture.
-- `tests/browser/navigation_fixture.ts`: Keep nested authored document plus path-based logical links at unified-tree depth.
-- `tests/browser/pages.spec.ts`: Keep page fragment navigation.
-- `tests/browser/phone_chrome.spec.ts`: Keep path-based component design artboard.
-- `tests/browser/preview_design_links.spec.ts`: Keep static provider-normalized design links.
-- `tests/browser/preview_pages.spec.ts`: Retain main ready-frame Home link and no-events assertions.
-- `tests/browser/removed_previews.spec.ts`: Keep removed path retry in current namespace.
-- `tests/browser/removed_previews_static.spec.ts`: Keep static omitted-preview metadata tests.
-- `tests/browser/review.spec.ts`: Keep path-based comparison mockups.
-- `tests/browser/same_origin_adapter.spec.ts`: Keep adapter identity tests in generated namespace.
-- `tests/browser/same_origin_identity.spec.ts`: Keep all delayed/mismatched/current frame identity assertions.
-- `tests/browser/same_origin_reconnect.spec.ts`: Keep reconnect identity tests.
-- `tests/browser/standalone_appearance.spec.ts`: Retain branch setup helper and main path identities; precedence tests stay in incoming split.
-- `tests/browser/standalone_appearance_loading.spec.ts`: Keep dark appearance load fixture path.
-- `tests/browser/static_example.spec.ts`: Retain prepare-once shared rebuilt cache and main example identity.
-- `tests/browser/viewer.spec.ts`: Keep public viewer current frame path.
-- `tests/browser/viewer_variants.spec.ts`: Keep main component-variant scenarios; screen scenario remains in viewer_screen_variants and branch duplicate component file will be consolidated.
-- `tests/browser/watch.spec.ts`: Keep watched path identity and generated prefix.
-
-### Removed main files
-
-- `docs/protocol/mokly-link-transform-validation.md` — 16 item 4 (transformer removal).
-- `docs/protocol/mokly-public-exclusions.md` — 19 publicExclude removal.
-- `src/build/committable_output.ts` — 16 item 7 (committability removal).
-- `src/build/discovery.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
-- `src/build/output_directories.ts` — 3/9/11 whole-tree replacement and snapshot decision B; only the removed per-file transaction used its empty-directory pruning and restoration.
-- `src/build/ownership.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
-- `src/build/previous_ownership.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
-- `src/build/styles/lightning.ts` — 16 item 4 (transformer removal).
-- `src/build/styles/transformer_inventory.ts` — 16 item 4 (transformer removal).
-- `src/build/tracked_ownership.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
-- `src/compatibility/transform.ts` — 16 item 4 (transformer removal).
-- `src/compatibility/types.ts` — 16 item 4 (transformer removal).
-- `src/export/generated_inventory.ts` — 9/11 compiled output and 19/20 checked closure; in-memory capture replaces disk-parent traversal, and per-side v9 inventories retain exact historical membership directly.
-- `tests/build_check_unclaimed.test.ts` — 3/4/9/11 whole-tree ownership removal and snapshot decision B.
-- `tests/compatibility.test.ts` — 16 item 4 (transformer removal).
-- `tests/compatibility_link_controls.test.ts` — 16 item 4 (transformer removal).
-- `tests/compatibility_navigation.test.ts` — 16 item 4 (transformer removal).
-
-`src/config/public_exclusions.ts` is renamed to `src/config/relative_globs.ts`;
-its root/folder grammar remains, while its removed public option and defaults do
-not. Main's example authored assets move from `examples/basic/generated/` to
-`examples/basic/`; their source declarations stay under main's `specs/` layout.
-The current fixture is `catalogue-v5.json`; v4 remains rejection-only test data.
-Branch-only duplicate test splits are consolidated into main's path-based splits.
-No additional main file is removed.
-
-### Removed or renamed main test titles
-
-These are exact static title expressions from the incoming tip. A title absent
-from this list remains somewhere in the merged test tree, including moved
-splits. A removed mode/transformer/header assertion is authorized below; each
-mixed-purpose test retains its other assertions. The final audit reruns before
-push. Dynamic title expressions retain their source interpolation in this list.
-
-Combined-format decision 2 A (and prior format decisions):
-
-- `packages/viewer/tests/scoped_bootstrap.test.ts`: the canonical public v4 fixture bytes remain unchanged
-- `tests/catalogue_projection.test.ts`: public v4 fixture conforms and compatible readers ignore additive fields
-- `tests/component_historical_ranges.test.ts`: baseline v7 ranges retain original offsets and validation
-- `tests/component_protocol_docs.test.ts`: manifest v8 and review v5 share path identity
-- `tests/component_source_manifest.test.ts`: v7 source metadata round-trips deterministically and accepts its absence
-- `tests/id_keyed_wire_formats.test.ts`: manifest v8 carries paths and configuration but no derived artifact names
-- `tests/static_delivery.test.ts`: delivery v3 accepts only same-origin canonical and comparison paths
-- `tests/baseline_compatibility.test.ts`: a v9 baseline stays invalid and never uses earlier-version copy
-- `tests/baseline_compatibility.test.ts`: Serve reports v9 through its ordinary safe diagnostic
-- `tests/baseline_compatibility.test.ts`: a controlled v8 baseline still produces Changes
-
-16 current-only readers, cache, ownership and identity removals:
-
-- `tests/baseline_cache.test.ts`: an earlier manifest sentinel is retained for the compatibility gate
-- `tests/baseline_cache.test.ts`: the oldest manifest sentinel is cached without parsing its contents
-- `tests/baseline_cache.test.ts`: invalid cache markers are partial entries and cannot hide corrupt manifests
-- `tests/export_reservations.test.ts`: legacy hashed reservations must be explicitly recovered
-- `tests/historical_snapshot_identity.test.ts`: reader safely derives older generation-backed identities
-- `tests/private_metadata.test.ts`: a stale historical-manifest alias does not prevent ordinary public resources
-- `tests/private_metadata.test.ts`: an earlier manifest name is only an incompatibility sentinel
-
-16 item 4: remove transformer; keep mixed-purpose validation:
-
-- `tests/build_imported_styles_alias.test.ts`: transformer-only legacy CSS does not reject deliverable CSS syntax
-- `tests/build_imported_styles_alias.test.ts`: transformer-only legacy CSS is inventoried without strict parsing
-- `tests/build_imported_styles_graph.test.ts`: transformer-only CSS and its nested assets are private, not delivered
-- `tests/build_link_controls.test.ts`: custom and legacy renderers adapt controls before compatibility checks
-- `tests/compatibility.test.ts`: configured transforms rewrite document links using path-keyed logical routes
-- `tests/compatibility.test.ts`: compatibility transforms reuse the logical route index for each view
-- `tests/compatibility.test.ts`: configured compatibility transformers are typed complete-document functions
-- `tests/compatibility.test.ts`: compatibility output fails closed on unresolved navigation links
-- `tests/compatibility.test.ts`: compatibility routes exclude generated files pending orphan removal
-- `tests/compatibility_link_controls.test.ts`: compatibility transforms cannot introduce or alter owned control metadata
-- `tests/compatibility_link_controls.test.ts`: compatibility cannot add control metadata to a document without child links
-- `tests/compatibility_link_controls.test.ts`: compatibility preserves generated metadata while allowing harmless edits and literal names
-- `tests/compatibility_navigation.test.ts`: compatibility transforms preserve complete logical-link records
-- `tests/compatibility_navigation.test.ts`: compatibility transforms cannot duplicate reserved Browse metadata
-- `tests/compatibility_navigation.test.ts`: compatibility transforms preserve every generated ownership header
-- `tests/compatibility_navigation.test.ts`: compatibility transforms may retain ownership with CRLF
-- `tests/compatibility_navigation.test.ts`: identity transforms preserve metadata-only native links
-- `tests/compatibility_navigation.test.ts`: compatibility transforms cannot add base URLs to activatable documents
-- `tests/compatibility_navigation.test.ts`: compatibility transforms cannot remove an anchor from one target view
-- `tests/component_build_edges.test.ts`: `compatibility rejects ${name}`
-- `tests/documents_links.test.ts`: logical links to entries use the same final fragment and transformer checks
-- `tests/imported_styles_workspace_package.test.ts`: transformer-only workspace-package CSS inventories a linked image
-- `tests/path_identity_review.test.ts`: transformer path routes have no inherited keys
-
-3/4/9/11 unified tree and ownership removal; snapshot decision B:
-
-- `tests/browse_document_adapter.test.ts`: Browse fails closed when trusted ownership or marker bytes diverge
-- `tests/browse_document_adapter.test.ts`: Browse accepts CRLF generated ownership headers
-- `tests/build_check_unclaimed.test.ts`: committed check separates orphan and unclaimed generated files
-- `tests/build_check_unclaimed.test.ts`: committed check tolerates a generated file removed before its header is read
-- `tests/build_imported_styles_resources.test.ts`: multiple on-demand views adopt retained orphans and parse CSS only once per generation
-- `tests/build_imported_styles_resources.test.ts`: compatibility route discovery includes pending styles and omits reserved disk orphans
-- `tests/build_links.test.ts`: link validation rejects generated targets pending orphan removal
-- `tests/build_mainline_navigation.test.ts`: writer refuses to overwrite an unowned route
-- `tests/build_ownership.test.ts`: ownership headers encode every comment-unsafe source path
-- `tests/build_ownership.test.ts`: ownership parsing rejects plain headers including comment-safe sources
-- `tests/build_ownership.test.ts`: ownership parsing rejects both former Mokabook header formats
-- `tests/build_ownership.test.ts`: catalogue output safely owns a comment-unsafe entry filename
-- `tests/component_build_edges.test.ts`: saved variants share transactional orphan protection
-- `tests/component_rendering.test.ts`: component style ownership rebases through generated headers while preserving rendered CSS
-- `tests/demand_compiler.test.ts`: demand links reject a generated orphan even while its old file exists
-- `tests/derived_build.test.ts`: indexed ownership checking accepts only Git's defined no-match status
-- `tests/entry_attribution.test.ts`: ownership trusts resolved, inventoried, and glob-matched sources
-- `tests/export_generated_inventory.test.ts`: an ownership header alone never grants export traversal through a private build directory
-- `tests/manifest_files.test.ts`: disabling dark orphans committed dark fragments
-- `tests/output_safety.test.ts`: generated ownership belongs only to configured source roots
-- `tests/output_safety.test.ts`: writer rejects crafted output inside nested authored roots
-- `tests/output_safety.test.ts`: build rejects generated routes through authored-root symlinks
-- `tests/ownership_earlier_formats.test.ts`: `earlier ${format} output grants no ownership at any HTML consumer`
-- `tests/source_inventory.test.ts`: failed page builds and source collisions preserve the previous inventory and bytes
-
-3/9/11 memory output and referenced closure; 16/19 approved review decisions:
-
-- `tests/build_binary_outputs.test.ts`: Serve sends raw public binary bytes without decoding
-- `tests/changes_asset_aliases.test.ts`: `${kind} Changes follows a stable ${alias} alias to its edited target`
-- `tests/changes_asset_aliases.test.ts`: ignored alias resources remain outside Changes after target edits
-- `tests/component_build.test.ts`: v7 retains only explicit dependency declarations
-- `tests/component_fast_path_counts.test.ts`: `zero-change ${generatedOutput} classification discovers each required side once`
-- `tests/component_fast_path_template.test.ts`: `${templateCase.name} caller slots use complete ${generatedOutput} comparison`
-- `tests/component_render_diagnostics.test.ts`: preview-resource exclusions reach stderr without exposing the cause in HTTP
-- `tests/config_generated_directory.test.ts`: Build reports reserved symlinks before inventorying another reserved source
-- `tests/config_generated_routes.test.ts`: v8 views and pages stay outside the reserved generated tree
-- `tests/documents_public_links.test.ts`: public stylesheet and ordinary-file links remain public through repeated Build and export
-- `tests/export_generated_inventory.test.ts`: exact generated membership preserves source, metadata and exclusion boundaries
-- `tests/export_pre_installation_cancellation.test.ts`: generated-output write failures remain unmarked after cancellation
-- `tests/export_resource_policy.test.ts`: baseline package resources cannot bypass current public-file exclusions
-- `tests/export_resource_policy.test.ts`: export resource policy excludes defaults and consumer globs while retaining public names
-- `tests/guides_authoring.test.ts`: the generated-output guides agree with the runtime default
-- `tests/manifest_combined.test.ts`: v7 combines pages and component usage at both manifest boundaries
-- `tests/output_safety.test.ts`: build rejects an output that would overwrite an imported source document
-- `tests/preview_aliases.test.ts`: `preview rejects colliding ${source} aliases before replacing an existing site`
-- `tests/publication_asset_aliases.test.ts`: `publication materializes safe file and directory aliases (changes: ${includeChanges})`
-- `tests/publication_input_confinement.test.ts`: publication rejects an escaping manifest before reading its bytes
-- `tests/publication_snapshot.test.ts`: `publication includes a rebuild before its initial fingerprint in every surface (changes: ${includeChanges})`
-- `tests/publication_snapshot.test.ts`: a manifest change after its snapshot read aborts default publication and preserves the previous artifact
-- `tests/serve_snapshot.test.ts`: server startup rejects invalid current metadata before querying history
-- `tests/server_changed_assets.test.ts`: Changes includes a removed resource referenced by an unchanged screen
-- `tests/server_changed_content.test.ts`: Changes includes a dark-only material edit
-- `tests/server_changed_lazy_base.test.ts`: non-CSS evidence does not traverse a supplied base resource graph
-- `tests/server_changed_resource_validation.test.ts`: Changes retains a legitimate deleted resource directory
-- `tests/watch_resource_lifecycle.test.ts`: failed output discards resource candidates and successful adoption removes old inputs
-
-19 decisions 5 A/36/37 A and 20: checked public closure; remove publicExclude:
-
-- `tests/build_generated_directory.test.ts`: generated routes collide with consumer exclusions including defaults
-- `tests/build_imported_styles_assets.test.ts`: generated CSS routes matching public exclusion are rejected
-- `tests/component_runtime_ipc.test.ts`: runtime startup preserves resolved public exclusions without duplicating defaults
-- `tests/component_runtime_ipc.test.ts`: `runtime startup rejects ${label} and waits for valid public exclusions`
-- `tests/config_public_exclusions.test.ts`: `publicExclude prepends defaults without mutating ${JSON.stringify(extra)}`
-- `tests/config_public_exclusions.test.ts`: `publicExclude rejects unsafe item ${JSON.stringify(item)}`
-- `tests/config_public_exclusions.test.ts`: `publicExclude rejects non-array ${JSON.stringify(value)}`
-- `tests/config_public_exclusions.test.ts`: `publicExclude retains config-invalid for a non-JSON ${typeof invalid} item`
-- `tests/export_resource_policy.test.ts`: export omits public-looking aliases of excluded resources
-- `tests/export_source_inventory.test.ts`: `export omits excluded files without extending source inventory (Changes ${includeChanges})`
-- `tests/export_source_inventory.test.ts`: repository preview omits public exclusions while retaining ordinary assets
-- `tests/public_exclusions.test.ts`: Serve GET and HEAD and Review deny public exclusions while ordinary assets remain public
-- `tests/public_exclusions.test.ts`: source policy matches both aliases and projects missing children relative to the mockups root
-- `tests/public_exclusions.test.ts`: `build rejects excluded generated route ${route} before writing`
-- `tests/public_exclusions.test.ts`: build rejects an excluded public resource with its referring route
-- `tests/public_exclusions.test.ts`: an excluded imported JSON file remains an authoring input and rebuilds
-- `tests/public_exclusions.test.ts`: canonical builder metadata remains writable when excluded from public reads
-- `tests/public_exclusions.test.ts`: public exclusions preserve explicit watch actions
-- `tests/resource_denials.test.ts`: export comparison reports its excluded snapshot resource and matched glob
-- `tests/review_public_exclusions.test.ts`: historical v7 resources use active exclusions relative to the baseline root
-- `tests/source_denials.test.ts`: `listed inputs take precedence over public exclusions in ${aliases} mode`
-- `tests/source_denials.test.ts`: source policy identifies entries, reserved names, listed inputs and matched exclusion globs
-- `tests/source_denials.test.ts`: generated-route denials retain source causes through canonical output aliases
-- `tests/source_inventory_cache.test.ts`: manifest classification reuses the source index across validation, ownership and spread configs
-
-Original output-mode removal; 9/11 Git tracking and per-commit baselines; 16 item 12:
-
-- `tests/build_gitignore_generated.test.ts`: committed Build and Check reject ignored generated assets before writing
-- `tests/build_gitignore_generated.test.ts`: committed output identifies ignored mockups ancestors
-- `tests/build_gitignore_generated.test.ts`: committed output honors nested negations and tracked files
-- `tests/build_gitignore_generated.test.ts`: committed output suggests exact negations for HTML and manifest routes
-- `tests/build_gitignore_generated.test.ts`: committed fixtures inside a parent Git tree retain existing behavior
-- `tests/build_postcss_dependencies.test.ts`: explicit generated output fails in both modes before public file validation
-- `tests/build_postcss_dependencies.test.ts`: committed directory dependency rejects generated CSS before public files; derived skips generated
-- `tests/build_postcss_privacy.test.ts`: a symlink alias cannot hide a directory scan of generated output
-- `tests/changes_imported_styles.test.ts`: `${mode} ${kind} imported CSS narrows shared-impact evidence to matching views`
-- `tests/changes_imported_styles.test.ts`: `${mode} changed generated font affects every view linking its stylesheet`
-- `tests/changes_imported_styles.test.ts`: `${mode} baseline predating imported CSS reports a one-time jump`
-- `tests/changes_imported_styles.test.ts`: committed Changes ignores syntactically valid stray generated output
-- `tests/component_fast_path_projected_resources.test.ts`: `select-hidden ${resourceCase.name} agrees in ${generatedOutput} mode`
-- `tests/component_fast_path_projected_resources.test.ts`: `instance projection exposes a sibling hidden by unclosed ${context} HTML in ${generatedOutput} mode`
-- `tests/component_fast_path_resources.test.ts`: `source-only formatting preserves component artifact paths in ${generatedOutput} mode`
-- `tests/component_fast_path_template.test.ts`: `${selectCase.name} resources agree in ${generatedOutput} mode`
-- `tests/component_material_reader.test.ts`: fall-through views reuse actual discovery in derived mode
-- `tests/config_git.test.ts`: nested roots fail before preparation, pinned reads, classification or derived tracking
-- `tests/config_git.test.ts`: build in either mode and committed check work outside a Git repository
-- `tests/derived_build.test.ts`: derived check lists every tracked generated or cache path with ignore guidance
-- `tests/derived_build.test.ts`: derived check rejects retired generated routes from the index even when their local files are absent
-- `tests/derived_config.test.ts`: the example rebuilds derived baselines with its own package tooling
-- `tests/derived_config.test.ts`: generated output defaults to derived and derives exact default argv
-- `tests/derived_config.test.ts`: generated output rejects unknown modes and malformed or committed commands
-- `tests/derived_config.test.ts`: only derived output may be absent and its projected root stays confined
-- `tests/derived_config.test.ts`: derived missing roots still report dangling links and file ancestors as config errors
-- `tests/export_imported_changes_membership.test.ts`: `${mode} ${kind} exported and published Changes match live rule attribution`
-- `tests/export_imported_styles.test.ts`: `${mode} export retains generated asset routes containing dist and target`
-- `tests/export_imported_styles.test.ts`: `${mode} export captures scoped CSS assets without shipping private inputs`
-- `tests/export_imported_styles.test.ts`: derived public capture never adopts stray reserved files from disk
-- `tests/imported_styles_accepted_changes.test.ts`: accepted committed classification does not rerun PostCSS
-- `tests/imported_styles_accepted_changes.test.ts`: catalogue freshness shares one inventory graph with committed Changes
-- `tests/imported_styles_low_contract.test.ts`: derived Check gives one directory ignore rule for tracked reserved routes
-- `tests/imported_styles_low_delivery.test.ts`: `${mode} generated assets have specific types in static, on-demand and transient delivery`
-- `tests/publication_imported_styles.test.ts`: `${mode} publication captures generated CSS and scoped binary assets without private inputs`
-- `tests/publish_compile_cancellation.test.ts`: `${mode} publish cancels when esbuild exits before the signal listener runs`
-- `tests/publish_imported_binary_snapshots.test.ts`: `${mode} publish retains exact scoped binary bytes on both snapshot sides`
-- `tests/publish_pre_installation_cancellation.test.ts`: `${mode} publish cancels during ${phase}`
-- `tests/removed_screen_previews.test.ts`: `removed screen selected capture retains every historical view in ${mode} mode`
-- `tests/removed_screen_previews.test.ts`: `component-aware removed screen stays before-only in ${mode} mode`
-- `tests/serve_imported_styles.test.ts`: `accepted ${mode} generated bytes are served without consulting stale disk`
-- `tests/serve_imported_styles.test.ts`: `${mode} ${watch ? "watched" : "no-watch"} Serve returns accepted scoped bytes`
-- `tests/serve_transient_imported_styles.test.ts`: `${mode} transient HTTP delivers scoped CSS assets from memory for GET and HEAD`
-
-Snapshot decision B; whole-tree replacement (3/9/11):
-
-- `tests/generated_output_lock_waits.test.ts`: export cancellation stops its wait for the writer lock
-- `tests/generated_output_lock_waits.test.ts`: export waits for another writer, then completes
-- `tests/generated_output_lock_waits.test.ts`: the export input recheck waits for a writer that is replacing generated assets
-- `tests/output_snapshot_concurrency.test.ts`: `compile snapshots wait for another process pruning ${previous}`
-- `tests/output_snapshot_validation.test.ts`: render callbacks run after output snapshot lock release
-- `tests/output_snapshot_validation.test.ts`: a surviving unowned collision still fails at generation acceptance
-- `tests/path_collision_inventory.test.ts`: demand output collision inventory is scanned once and renewed for each generation
-- `tests/path_output_collisions.test.ts`: build rejects a case-folded public file against a generated directory
-- `tests/path_ownership_moves.test.ts`: `moving an exporting module and its helper preserves ownership: declared path ${declared}`
-- `tests/path_ownership_moves.test.ts`: prior manifest proof is exact, config-scoped and invalidated when metadata changes
-- `tests/path_transaction_regressions.test.ts`: unchanged output directories survive replacement without directory watch events
-- `tests/path_transaction_regressions.test.ts`: final reserved-directory pruning runs while the output lock remains held
-
-### Validation and smoke progress
-
-The first full unit integration run that reached the complete inventory ran
-`npm test`: 4,355 tests, 4,214 passed, 141 failed, zero skipped/cancelled, in
-1,559,882.291 ms. Exact failure output is retained in
-`.context/milestone-22-merge/unit-5.log` and `unit-5-failures.json`. Most failures
-were old fixture paths, old format expectations or removed transformer setup.
-Focused repair runs passed 219/220, then 53/59, then 66/73 as remaining fixture
-issues were isolated; later focused runs passed all 17 and all 23 tests.
-The immutable-route and whole-tree transaction run passed all 12 tests.
-
-New pre-fix regressions failed with `Missing expected rejection.` for callbacks
-that ran before reserved-route validation, and `read entries before version gate`
-for an unsupported manifest. Both now pass. Preserved main tests also exposed
-`missing target ../diagram.svg`, `not an accepted generated resource`, and
-CSS views incorrectly receiving Changes. The fixes retain Markdown copied bytes
-in watching, map moved resources in the generated namespace, and apply CSS rule
-attribution to in-memory byte changes. The checkpoint remerge audit found that the branch's two-batch assertion had
-replaced main's one-batch test. Main's three exact assertions are restored
-(including its greater-than-200-view check); inventory hashes avoid unnecessary
-baseline bodies. This restoration follows 57 B and mainline preservation. No timeout or source-size cap was increased.
-
-Documentation validation passes all 13 Markdown/link/size/history/guide checks.
-The clean build and full type check pass. Example Check reports
-`Mokly output is valid and untracked (472 files).` The initial browser run failed
-in global setup with `mockupsDir must be a non-empty string`; shared preparation
-now replaces the roots block once. Subsequent browser integration is in progress.
-Its frame-inspection failure exposed use of the forward path helper where the
-reverse helper is required. The fixed call retains main's normalization.
-
-The smoke fixture runs Build, tracked Check, Serve and export. Its v9 committed
-base also contains a stale root-level v7 manifest. Serve reports ready Changes
-and retains `previousPath: "home"` for `account/home`. The styled URL is
-`http://127.0.0.1:33505/view/account/home/`, with background
-`rgb(224, 240, 232)`. Markdown, a folder Overview and its PDF return successfully;
-the private generated manifest returns 404. Static export loads catalogue v5 at
-`http://127.0.0.1:38849/mokly-viewer/catalogue.json` and the same styled screen.
-Its root names are `.mokly-export-artifact`, `404.html`, `index.html`,
-`mokly-viewer`, `static`, `view`; the optional marker is the only segment with a
-leading `.`, `_`, `#` or `~`. Both smoke servers and its browser closed.
-Screenshots, command receipts and results are in
-`.context/milestone-22-merge/smoke/`. Initial smoke fixture errors (an unused
-folder and an unborn fixture HEAD) were corrected before the passing run.
-
-A local merge checkpoint is permitted by the user. It is required for tests
-whose example server compares against checkout HEAD: the pre-merge HEAD writes
-v8 and correctly gives unavailable Changes to v9 readers. The checkpoint stays
-local until the complete full gate and mandatory preview against origin/main
-pass. Immediately after committing it, verify exactly two parents and review
-every path in its remerge diff; amend before any push if content was lost.
-
-### Two-parent checkpoint review
-
-Checkpoint `464b3ceefaf8ac70ae77783cbd2a8999f679873d` has exactly two parents:
-`80724073` and `c4138a0b`. `git show --remerge-diff --stat` lists 740 paths.
-Every path was read with `git show --remerge-diff --format= <checkpoint> -- <path>`;
-complete patches and SHA-256 receipts are under `.context/milestone-22-merge/remerge/`
-and `remerge-review.json`. One blobless-clone read failed with
-`fatal: remote error: upload-pack: not our ref 8031ade4c1b69effb09e05f9e9ca9f2056bca214`;
-the required retry succeeded. No parent-count or deletion check failed.
-
-The review checked original conflict choices, one-sided source changes,
-namespace/version fixtures, relocated examples, and deleted main files. The
-assertion-count audit found six reductions in otherwise retained test titles.
-The output-ownership, document collision, output-mode, authored-tree and
-unreferenced HTTP cases match their recorded approvals. The sixth was a lost
-main performance assertion in `tests/design_library_attribution.test.ts`:
-main requires one view batch, its exact view count, and more than 200 views.
-All three main assertions are restored. The branch's two-batch expectation is
-removed; current inventory hashes preserve the incoming targeted baseline reads.
-This is a restoration under 57 B and the mainline preservation rule. The
-checkpoint is amended before push. No other main assertion was removed outside
-the approved scopes. The audit is a merge-preservation check, not the final
-implementation review owned by the orchestrator.
-
-### Final gate evidence
-
-The first final-gate attempt passed `npm run format:check` (31.915 s),
-`npm run lint` (24.436 s) and `npm run typecheck` (43.907 s). `npm test`
-then failed after 1,521.747 s: 4,353 tests, 4,351 passed, two failed, zero
-skipped or cancelled. The two existing regression failures were:
-
-```text
-the served manifest's source path links its current document
-Error [ERR_TEST_FAILURE]: Cannot read properties of undefined (reading 'flatMap')
-
-material Changes can use captured documents without reading current file bytes
-Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
-+ actual - expected
-
-+ []
-- [
--   'mockups/mokly-generated/home/index.mobile.html'
-- ]
-```
-
-The document fixture now supplies its required `resources` array. Public change
-evidence retains generated document paths while it still excludes both private
-manifest locations and protected authored inputs. Both tests keep their original
-assertions. Full failure output and command receipts are in
-`.context/milestone-22-merge/gate-first-unit.log` and
-`gate-first-receipts.json`. No current-manifest helper, limit or skip changed.
-
-The preflight source-size check reported:
-
-```text
-Source file-length audit failed:
-src/server/component_changes.ts: 303 lines (limit 300)
-```
-
-Its four shared snapshot/classifier interfaces now live in
-`src/server/component_change_types.ts`. Consumers import those types from their
-owner. The repository implementation and every test assertion stay unchanged.
-This is a module split to meet the existing cap, not a removed main API or test.
-The source-size check then passed all 1,153 scoped files. The focused command
-`npm run build && node --import tsx --test packages/viewer/tests/document_details.test.tsx tests/export_changes.test.ts tests/baseline_reader.test.ts tests/design_library_attribution.test.ts`
-passed all 52 tests in 743,543.575 ms, with zero skips or cancellations.
-This includes both repaired regressions and main's exact one-batch assertions.
-
-The second complete unit run passed 4,352 of 4,353 tests in 1,662.138 s,
-with zero skips or cancellations. Its only failure was a disk-poll race:
-
-```text
-serve --build writes only complete compilations (watch=true)
-Error [ERR_TEST_FAILURE]: ENOENT: no such file or directory, open '/home/vercel-sandbox/mokly/.context/mokly-test-GFC3Ax/mockups/mokly-generated/home/index.mobile.html'
-```
-
-The two-rename transaction can briefly remove the destination name. The test
-now retries only `ENOENT` while polling and asserts against the bytes returned
-by the successful poll. Other read errors still fail immediately. Its title,
-assertions and 30-second test limit remain. No writer or reader-lock behavior
-changes. The complete failure and receipts are in `gate-second-unit.log` and
-`gate-second-receipts.json` under the same evidence directory.
-`node --import tsx --test tests/derived_serve.test.ts` then passed all seven
-tests in 11,825.214 ms. The source-size audit still passes. The next full gate
-runs the browser suite before the unit suite to expose any remaining browser
-integration failures before repeating the long unit run; all seven required
-commands remain in the gate.
-
-The third gate passed format, lint, type checking, all 1,114 browser cases
-(2,406.587 s), all 4,353 unit cases (1,498.345 s), and Example Check
-(10.998 s). Both test suites had zero failures or skips. Cargo then stopped at
-the internal-export ratchet:
-
-```text
-Unused internal export ratchet failed:
-- new unused internal export: src/build/output_directories.ts#OutputDirectories
-- new unused internal export: src/export/generated_inventory.ts#generatedParentDirectories
-- new unused internal export: src/export/generated_inventory.ts#historicalGeneratedPaths
-```
-
-`git grep` against `c4138a0b` proves that `OutputDirectories` served only the
-replaced per-file transaction. The two export helpers served disk traversal and
-the old derived historical membership. No current caller exists. Delete both
-modules under the approvals in the main-file list above. Current capture still
-uses accepted bytes, and `site.ts` passes each side's exact v9 inventory to the
-shared resource policy. No behavior or test assertion changes. This is forced
-merge cleanup, not the broader pending unused-member work. The main-file removal
-count is now 17; the removed/renamed main title count remains 171.
-The Build README removes the obsolete helper and transformer descriptions. The
-export README names the current delivery v5. The ratchet baseline and audit
-policy are unchanged. `gate-first-cargo.log` retains the exact failure;
-`gate-third-receipts.json` retains all seven command receipts. Cargo's dependency
-audit passed with main's existing braces exception and its 2026-11-03 expiry.
-
-The clean Cargo retry passed repository checks, all 15 Rust tests, declarations,
-Example Check and package inspection. Its packed-consumer smoke found a remaining
-flat fixture path:
-
-```text
-Error: ENOENT: no such file or directory, open '/home/vercel-sandbox/mokly/.context/package-smoke-ndQjtP/esm-consumer/mockups/guides/markdown/index.html'
-```
-
-`scripts/package/documents.mjs` now inspects generated Markdown and copied
-resources below `mokly-generated/`, including the export's `static/` prefix.
-`scripts/package/consumer_cases/esm.mjs` uses that prefix for its Serve document
-request. `scripts/package/export.mjs` and `scripts/package/components.mjs`
-expect review v6. These are layout/version fixture updates under 1 A and 2 A;
-every Markdown safety, byte-equality, component, ownership and strict audit
-assertion stays. `gate-second-cargo.log` and `gate-fourth-receipts.json` retain
-the failure and timing (195.714 s). No runtime source or audit policy changes.
-The focused command `npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts`
-then passed: `Both packed packages passed all six consumer scenarios.`
-The complete Cargo gate is rerun after these fixture repairs.
-
-`npm run preview:build -- --include-changes --base origin/main` succeeded
-against the captured incoming v8 main commit. It printed the exact earlier
-version line once. The exported catalogue is v5, Changes is unavailable,
-`comparisonUrl` is null, and no incompatible completion entry exists.
-`preview-main-stable.log` and `preview-main-evidence.json` record the result.
-An earlier attempt detected changed inputs while fixtures were still being
-edited; the stable run retained the normal input-consistency checks.
-
-### Completed validation and final amendment
-
-All seven required commands pass under Node 22.14.0. The final Cargo run also
-checks the final source after the two unused-module removals and packed-fixture
-repairs. The dependency exception record and strict packed audits stay unchanged.
-
-| Command                                                                              | Result                                                                                              |   Seconds |
-| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | --------: |
-| `npm run format:check`                                                               | Pass                                                                                                |    32.900 |
-| `npm run lint`                                                                       | Pass                                                                                                |    24.903 |
-| `npm run typecheck`                                                                  | Pass                                                                                                |    45.685 |
-| `npm run test:browser -- --output .context/milestone-22-merge/final-browser-results` | 1,114 passed                                                                                        | 2,406.587 |
-| `npm test`                                                                           | 4,353 passed; no skips/cancellations                                                                | 1,498.345 |
-| `npm run example:check`                                                              | Valid, untracked; 472 files                                                                         |    10.998 |
-| `cargo xtask check`                                                                  | Pass; audit, ratchets, 15 Rust tests, all six packed consumers, strict unit/browser/hydration gates | 4,967.512 |
-
-Cargo repeats the complete final-source unit suite (4,353), browser suite (851)
-and separate hydration suite (263). All pass with no skips or cancellations.
-`gate-receipts.json` and `gate-*.log` hold exact commands, times and output.
-Both smoke screenshots were visually checked. Every fixture server and browser
-closed through its normal teardown. No generated output enters the branch.
-
-The final amendment retains exactly the captured two parents. Its mandatory
-remerge review compares every listed path with the reviewed checkpoint and
-checks all final edits. The final main-file list has 17 approved removals, and
-all 171 removed/renamed incoming test-title expressions are listed above and in
-the commit body. The five remaining assertion-count reductions are the approved
-ownership, mixed-layout, output-mode and closure replacements. The one-batch
-assertions from main stay exact. No timeout, cap, skip or audit rule changed.
-
-The additional classification split changes only type imports in:
-
-- `src/server/component_changes.ts`
-- `src/server/component_change_types.ts`
-- `src/catalogue/projection_input.ts`
-- `src/server/http_types.ts`
-- `src/server/changed.ts`
-- `src/server/serve.ts`
-- `src/server/component_change_cache.ts`
-- `src/server/supervisor.ts`
-- `src/server/catalogue_update.ts`
-- `src/server/render_moves.ts`
-- `src/server/watch_classification.ts`
-- `src/server/http_routes.ts`
-- `src/server/baseline_catalogue.ts`
-- `src/server/update_messages.ts`
-- `src/server/watched_background.ts`
-- `src/server/catalogue_snapshot.ts`
-- `src/server/review_sources.ts`
-- `src/server/classification_result.ts`
-- `src/server/demand/generation.ts`
-- `tests/changes_loading_lifecycle.test.ts`
-- `tests/watch_classification.test.ts`
-- `tests/watch_startup.test.ts`
-
-The late browser expectation changes keep their assertions: generated snapshot
-paths in `tests/browser/moved_comparison_cases.ts`, generated frame requests in
-`standalone_appearance_precedence.spec.ts`, catalogue v5 in
-`viewer_namespace_embedded.spec.ts`, and delivery v5/path shell links in
-`viewer_namespace_versions.spec.ts`. The document fixture and Serve polling
-repairs are described with their failing evidence above. No other main behavior
-is removed. The latest fetch still names `781da7ae`; it is not merged.
+Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
 
 ## Milestone 23: Verify the merge and re-plan the review fixes
 
@@ -4086,8 +1748,8 @@ is removed. The latest fetch still names `781da7ae`; it is not merged.
 - [x] Re-read every document changed in Milestones 21 and 22 against the code,
       and fix drift. Keep the tested projection and Markdown boundary fixes.
 - [x] Finish the current non-browser checks and checkpoint the document audit
-      locally, including the approved `source-map-js` advisory patch. Do not push.
-- [ ] Move evidence to `.context/generated-output-simplification/` as a separate
+      locally, including the orchestrator-confirmed `source-map-js` advisory patch. Do not push.
+- [x] Move evidence to `.context/generated-output-simplification/` as a separate
       local plan-only commit. Keep decisions, approvals, contracts and TODOs in
       this plan; name the evidence files here. Validate the plan with Prettier
       and review its diff. Use `docs(plans): move evidence logs to .context`.
@@ -4113,205 +1775,50 @@ is removed. The latest fetch still names `781da7ae`; it is not merged.
       `docs/implementation-review-prompt.md`; report numbered findings with
       severities and recommendations without changing the implementation.
 
-### Current checkpoint and integration approval
+### Current checkpoint and integration instructions
 
-The user approved local audit and evidence commits before the #124 merge.
-This supersedes the earlier audit-push-before-merge order. No commit is pushed
-until the merged gate passes. Keep the compatible `source-map-js` 1.2.2 update
-for GHSA-68fv-2mgg-jv7q and name that advisory in the audit commit body.
-The user also directed this plan to follow PR #137's evidence rule without
-editing `AGENTS.md`: keep evidence and merge justifications in the ignored
-plan directory, and copy merge justifications into the future PR description.
+The orchestrator directed local audit and evidence commits before the #124
+merge. This replaces the earlier audit-push-before-merge order. Nothing is
+pushed until the merged gate passes. The orchestrator measured CPU steal and
+confirmed the compatible `source-map-js` 1.2.2 patch for GHSA-68fv-2mgg-jv7q.
+User decision 1 A approves merging main before the remaining review fixes,
+including #124 and its navigation waits. The user asked for the evidence move
+at the next safe point without delaying the merge. The orchestrator directed
+this plan to follow PR #137's rule without editing `AGENTS.md`: store evidence
+and merge justifications in the ignored plan directory, and copy the merge
+justifications into the future PR description.
 
 Evidence: `.context/generated-output-simplification/m23-browser-trace-observations.md`.
 
 Evidence: `.context/generated-output-simplification/m23-checkpoint-validation.md`.
 
-### Additional main integration: #133 and #132
+### Additional main integration approvals
 
-The user approved this additional merge under decision 1 A after accepting
-Milestone 22's `d724b952` merge. That commit is pushed before this step starts.
-Captured source tip: `d724b9529f8d404016f3526d99cd3f6d12e8fe84`.
-Captured incoming tip: `781da7ae3261e6694a5ef5608a91f3e34061f6d0`.
-Captured merge base: `c4138a0b9578448d81ce2a2868bd7ec47f5a88c6`.
-The audit command is `git diff --name-status c4138a0b..origin/main`.
-Its 65-path result is saved in `.context/milestone-23-merge/main-name-status.txt`.
+Decision 1 A covers #133 and #132. Keep main's plan-status rule and removal of
+`plans/README.md`. Keep persistent output-lock directories with decision B's
+writer-only ownership. Keep the incoming APFS and successor-lock checks. Main's
+own removed directory-disappearance retries stay removed.
 
-Preserve all incoming changes:
+Evidence: `.context/generated-output-simplification/m23-133-132-merge-justifications.md`.
 
-- #133 (`60d48370`): keep main's plan rules in `AGENTS.md`, its plan statuses,
-  PR links, review owners and documentation links. Delete the index as main did.
-  This branch's still-useful index summary moves to this plan's first paragraph.
-  Repair branch-only index links to point to the plans directory or the owning
-  plan. Historical review evidence remains intact.
-- #132 (`781da7ae`): release only the owned lock file. Keep `.mokly-cache/locks/`
-  and `.mokly-cache/` even when empty. Keep its successor-lock and APFS create
-  regression tests, and remove only main's obsolete directory-disappearance
-  retries and their tests. Keep source confinement and cancellation checks.
-  Carry its cache fixture setup changes into the whole-tree model.
-- Snapshot decision B still applies: only Build, `build --watch`, and the
-  `serve --build` parent call the output write lock. Compilation, plain Serve,
-  export, publication and Check neither acquire nor wait for it. The accepted
-  in-memory route set and strict worker validation remain unchanged.
+Merge commit justifications: `.context/generated-output-simplification/m23-133-132-commit-justifications.md`.
 
-Main itself removes `plans/README.md` and
-`tests/baseline_directory_walk.test.ts`. The latter's removed titles are
-`baseline directory creation restarts when an empty cache root disappears` and
-`baseline directory creation stops retrying a parent that keeps disappearing`.
-Main also removes `a lock directory that a concurrent release removes is recreated`
-and replaces `release removes the lock and its empty directories once` with
-`release removes only its own lock file, once`. These changes are #132/#133
-behavior and test changes approved by this merge instruction. No other incoming
-main file, feature or assertion is approved for removal in this step.
-
-The incoming APFS regression was run against the pre-merge implementation first:
-`node --import tsx --test --test-name-pattern='a release never removes the directory a waiting writer creates its lock in' .context/milestone-23-merge/generated_output_lock.test.ts`.
-It failed (one test, zero passes, zero skips) with the expected create error:
-
-```text
-"[mokly/build-invalid] could not lock generated output at /home/vercel-sandbox/mokly/.context/tmp/mokly-output-lock-ckc5EL/.mokly-cache/locks/generated-output.lock: EINVAL: invalid argument, open '/home/vercel-sandbox/mokly/.context/tmp/mokly-output-lock-ckc5EL/.mokly-cache/locks/generated-output.lock'"
-```
-
-The copied test uses the incoming assertions with absolute imports of the current
-package. It changes no tracked test before the merge. The exact failing log is
-`.context/milestone-23-merge/lock-before.log`.
-
-Conflict resolutions and merge-only adaptations:
-
-- `plans/README.md`: accept main's deletion after moving this plan's useful
-  status summary to its first paragraph. Historical textual index references
-  stay as historical evidence; no live link targets the deleted file.
-- `packages/viewer/src/client/README.md`: keep the approved frame contract and
-  use main's directory link for implementation plans.
-- `src/build/README.md`: combine persistent lock directories with the existing
-  writer-only, whole-tree transaction. Do not restore reader-lock instructions.
-- `tests/path_transaction_regressions.test.ts`: retain every whole-tree and
-  authored-sibling assertion. Add main's zero-`rmdir` assertion across both
-  writes, with its directory-removal spy, so lock release cannot remove parents.
-- `tests/export_current_derived.test.ts`: a fresh nonwriting fixture keeps the
-  cache absent under decision B. A new separate case keeps main's `locks`-only
-  assertion after a real prior Build and also checks the lock directory's inode
-  and empty contents. No original test title or assertion coverage is dropped.
-- `README.md`: repair the additional branch-only link to the removed index.
-- `mokly-rendering-generated.md`: retain #132's release behavior and replace
-  the stale disk-snapshot paragraph with decision B's immutable memory route
-  set. `mokly-baseline-storage.md` retains #132's cache creation rule and corrects
-  its stale marker example from manifest 8 to the implemented manifest 9.
-  These two documentation corrections are recorded for the later full audit.
-- `AGENTS.md`: main's Plans section is byte-identical. Existing generated-tree
-  example instructions remain under the prior approved output-layout decision.
-  All other incoming plan statuses, PR history and review owners stay intact.
-
-The first focused post-merge run passed 30 of 31 tests. Its export fixture failed
-because the incoming assertion expected a cache even though the branch's
-fixture only compiles and export never takes the writer lock:
-
-```text
-ENOENT: no such file or directory, scandir '/home/vercel-sandbox/mokly/.context/mokly-test-Xnpz5A/.mokly-cache'
-```
-
-The explicit no-writer/prior-writer cases above resolve that conflict. The next
-focused command passed all 32 tests:
-`node --import tsx --test tests/generated_output_lock.test.ts tests/generated_output_lock_waits.test.ts tests/path_transaction_regressions.test.ts tests/derived_build.test.ts tests/derived_cache_boundaries.test.ts tests/export_current_derived.test.ts`.
-The incoming APFS test now passes. The writer-lock call remains exclusively in
-`writeCompilation`. All 13 documentation/link/size/history/guide checks pass.
-No timeout, audit policy, schema version or nonwriting boundary changes.
-
-### Additional merge validation
-
-All seven commands pass under Node 22.14.0:
-
-| Command                                                                              | Result                                                                       |  Seconds |
-| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | -------: |
-| `npm run format:check`                                                               | Pass                                                                         |   49.849 |
-| `npm run lint`                                                                       | Pass                                                                         |   32.725 |
-| `npm run typecheck`                                                                  | Pass                                                                         |   65.868 |
-| `npm run test:browser -- --output .context/milestone-23-merge/final-browser-results` | 1,114 passed                                                                 | 2751.623 |
-| `npm test`                                                                           | 4,352 passed; no skips/cancellations                                         | 1728.273 |
-| `npm run example:check`                                                              | Valid, untracked; 472 files                                                  |   13.507 |
-| `cargo xtask check`                                                                  | Pass; audit, Rust, six packed consumers, strict unit/browser/hydration gates | 4789.246 |
-
-Cargo repeats all 4,352 unit cases, 851 browser cases and 263 hydration cases.
-All pass with no skips or cancellations. The deterministic APFS create-race
-regression passes, as do successor-lock safety, whole-tree lock coverage,
-lock-free nonwriters and the prior-Build export case. Main's audit exception
-and its strict packed-consumer audits stay unchanged. Logs and exact receipts
-are under `.context/milestone-23-merge/`.
-
-The final title audit against `781da7ae` retains every incoming test title except
-the same 171 prior approved replacements listed in Milestone 22. Relative to
-that incoming tip, the same 17 approved branch file removals remain. Main's own
-two-file deletion and old lock-test replacements are recorded separately above.
-No new incoming feature or test is removed. The latest fetch remains `781da7ae`.
-The merge retains the captured two parents; its remerge diff and deletion list
-are checked immediately after the commit and before the explicit push.
-
-The document check, remaining-decision re-plan and their commit below are still
-pending. The orchestrator owns the final review TODO.
+Evidence: `.context/generated-output-simplification/m23-133-132-validation.md`.
 
 ### Document audit and route-member decision
 
-The document audit covers 226 changed Markdown paths since `a422fbf8`, including
-historical plans and review records. All 174 current documents in the 63 read
-batches have been read. Historical review outcomes remain intact. Current edits
-correct version numbers, generated resource paths, source privacy, removed
-compatibility claims, appearance controls and the writer-only lock boundary.
-The historical release notes retain main's original version numbers; the current
-release note names the combined formats. The audit edits are complete and await
-the full gate. Its inventory and notes are in `.context/milestone-23-docs/`.
+The audit corrects current format numbers, generated paths, source privacy,
+compatibility claims and writer-only locking. Two runtime fixes enforce approved
+contracts: reject unsupported projection versions before entry access (2 A),
+and keep Markdown's package-root equality rejection export-only (37 A).
 
-Two runtime corrections follow already approved contracts, with failing tests
-written first:
-
-- **2 A:** `src/catalogue/projection.ts` now checks manifest v9/live-index-2
-  before accessing entries and reports v9 in its diagnostic.
-  `tests/catalogue_projection_versions.test.ts` probes v8, v10 and live-index-1
-  with an entries getter that must not run. Before the fix, all three failed:
-
-  ```text
-  The input did not match the regular expression /current projection requires manifest v9 or live metadata/. Input:
-
-  'Error: entry identity read before the version gate'
-  ```
-
-- **37 A:** `src/documents/destination_files.ts` uses the shared public-resource
-  denial directly. Markdown Build and Serve must not apply export's package-root
-  equality guard. Export retains its exact guard and error.
-  `tests/documents_export_boundary.test.ts` covers successful Build, real Serve
-  GETs and the export refusal. The initial fixture lacked package metadata:
-
-  ```text
-  [mokly/config-invalid] moduleResolution package root has no package.json: mockups
-  ```
-
-  After adding the fixture's package.json, the test failed for the intended
-  reason before changing production code:
-
-  ```text
-  [mokly/export-invalid] A consumer package root must not equal mockupsDir; choose a separate public output directory.
-  ```
-
-Failing commands were `node --import tsx --test tests/catalogue_projection_versions.test.ts tests/documents_export_boundary.test.ts`
-and then `node --import tsx --test tests/documents_export_boundary.test.ts`.
-After both fixes, `npm run build` and
-`node --import tsx --test tests/catalogue_projection_versions.test.ts tests/documents_export_boundary.test.ts tests/documents_links.test.ts tests/documents_safety.test.ts tests/export_resource_policy.test.ts`
-passed all 64 cases, with no skips or cancellations (4,369.446 ms).
-No main file or test title is removed. The user permits a local audit checkpoint;
-the merged full gate remains required before any push.
+Evidence: `.context/generated-output-simplification/m23-document-audit-evidence.md`.
 
 **Resolved re-plan question: finding 63 B includes a used main member.**
-`PendingGeneratedFiles.routes()` at `src/build/pending_generated.ts:84` has a
-production caller at `src/build/document_compiler.ts:136`:
 
-```ts
-assertSnapshotRoutes(runtime.outputSnapshot, this.pending.routes());
-```
+Evidence: `.context/generated-output-simplification/m23-route-member-proof.md`.
 
-The same call exists on main `781da7ae`, introduced with #131. It checks the
-complete pending generated route set, including styles and document resources,
-against the immutable generation proof. Snapshot decision B explicitly keeps
-this guarantee. The earlier finding described `routes()` as unused and approved
-its deletion. That description no longer fits the merged code. The user chose
+The user chose
 **A**: retain `routes()` and remove it from the 63 B deletion list. Preserve its
 real caller and the route-set guarantee. All other 63 B cleanup and the
 TypeScript language-service unused-member ratchet remain planned for Milestone 27. The ratchet must count this production call as a use.
@@ -4323,103 +1830,9 @@ per-entry retention race. Milestone 22's document-resource counterpart handling 
 not the projection cleanup. Findings 17 and 52 remain untouched. No remaining
 review-fix milestone or final review has started.
 
-The first documentation command passed 9 of 11 cases. Its exact failure details
-were:
+Evidence: `.context/generated-output-simplification/m23-document-validation.md`.
 
-```text
-docs/protocol/mokly-artifact-paths.md -> ./mokly-unified-output.md#reserved-route-segments: missing anchor
-docs/protocol/mokly-published-inspector.md -> ./mokly-frame-adapter.md#wire-protocol-v1: missing anchor
-mokly-component-explorer.md has 251 lines; new protocol docs must stay at or below 250 lines, or gain a reviewed cap
-mokly-design-components.md has 254 lines, above its 253-line cap; split by responsibility instead of raising the cap
-mokly-viewer-appearance.md has 381 lines; lower the cap to 381
-```
-
-Corrected the two links, removed repeated wording and lowered the appearance
-cap to 381. No cap increased. The command is
-`node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_sizes.test.ts tests/protocol_doc_history.test.ts tests/protocol_split_links.test.ts tests/protocol_structure.test.ts tests/component_protocol_docs.test.ts`.
-
-The final fetch for this pause returned main `781da7ae3261e6694a5ef5608a91f3e34061f6d0`.
-`HEAD` and `origin/calummoore/lome-v2` both point to
-`74e7db538d72f575e47601b735cf6412d05ff91b`; both accepted merges are pushed.
-
-### Clean-checkout comparison and validation blockers
-
-The first audit browser command ran for 6,532.989 seconds, then was stopped
-with SIGINT after the user said the timing investigation could be deferred to
-prioritize integration. It reported **908 passed, 13 failed, 1 interrupted and
-192 not run**, exit 130. This is failed/incomplete evidence, never a gate pass.
-The user then required a clean-checkout comparison and restored full validation
-before the audit push. No timeout, retry, worker, assertion or NODE_ENV change
-was made. The test list and traces are saved under
-`.context/milestone-23-docs/final-browser-results/`.
-
-A detached clean worktree at `74e7db53` was created under
-`.context/milestone-23-comparison/clean`. It installed its own dependencies with
-`npm ci`, rebuilt its own package/example, and retained an independent viewer
-workspace link. The original clean attempt failed during global setup:
-
-```text
-Error: referenced resource edit did not publish completed initial Changes; the last published update had no changed screens; waiting after version 0; last version 3, Changes unavailable
-```
-
-That diagnostic does not prove terminal unavailable status: its final text uses
-`changedCount` as a fallback label. The baseline was still preparing. Normal
-`prepareReviewRepository(config, "HEAD")` completed the clean tree's own rebuild
-in 178.354 seconds. The current tree already had the same completed baseline
-(7.664-second cache validation). Both comparison runs then used warm server
-baselines and their unchanged normal shared-fixture setup.
-
-Both ran `npm run test:browser -- tests/browser/design_links.spec.ts tests/browser/pages.spec.ts --output <separate .context result directory>`:
-
-| Tree             | Result                  | Command seconds | Serve readiness seconds |
-| ---------------- | ----------------------- | --------------: | ----------------------: |
-| Clean `74e7db53` | 7 passed, 4 failed      |         590.207 |                 105.092 |
-| Current audit    | 7 passed, same 4 failed |         607.456 |                 108.438 |
-
-The common failures are mobile design navigation; mobile and desktop comparison,
-tag and flow links; and mobile page-design details/drawer navigation. Their exact
-assertion text, commands and traces are in
-`.context/milestone-23-comparison/report.md` and the adjacent result directories.
-These failures reproduce without the audit changes. No bisection of the two
-runtime fixes is justified by this result. It does not establish the cause of
-all 13 failures in the larger run.
-
-Environment checks: both use Node 22.14.0, npm 11.11.0, Chrome 153.0.8010.52,
-unset NODE_ENV/CI, matching checked dependency files, and byte-identical 29
-browser JavaScript bundles. Both rebuild before testing. The clean worktree
-remains Git-clean. No prior servers or browsers were left running; disk had
-49 GB free. No specific environment defect is established. A 10-second CPU
-profile of a slow ordinary-preview worker attributed about 81% of samples to
-React's development JSX runtime; its inspector was closed. The 600-second
-fixture limit and shorter assertion limits remain unchanged. Incoming #124
-already adds frame/target waits to two affected specs; they are not yet applied.
-The user approved the local audit checkpoint, a separate local evidence move,
-and the #124 merge before requiring the final passing gate. The current approval
-above supersedes the earlier push order.
-
-The non-browser repository gate separately failed its live audit (7.437 s):
-
-```text
-Uncovered advisory GHSA-68fv-2mgg-jv7q; package: source-map-js; severity: high.
-Title: source-map-js allows event-loop denial of service through indexed source-map section offsets
-URL: https://github.com/advisories/GHSA-68fv-2mgg-jv7q
-Install locations: node_modules/source-map-js
-Action: Update the dependency to remove the advisory, or request a reviewed exception for this exact dev-only path.
-[xtask/command] `npm run dependencies:check` failed with status 1
-```
-
-`npm ls source-map-js --all`, npm metadata and the live advisory confirm version
-1.2.1 through runtime PostCSS and Tailwind Node tools, with compatible patched
-1.2.2. Under the existing dependency update policy, `npm update source-map-js
---ignore-scripts --no-audit --no-fund` updated only that lock entry's version,
-resolved URL and integrity; no package range, other lock entry, override, audit
-runner or exception changed. `npm run dependencies:check` is rerun afterward.
-The first scratch-only lockfile probes also materialized optional dependency
-metadata; none of those unrelated records was applied. The root targeted npm
-update produced the exact three-field patch. The interrupted `npm test` run
-(437.259 s) was stopped for the user's isolated comparison and is incomplete;
-the current non-browser checks finish before the local checkpoint. The merged
-full gate decides whether the branch can be pushed.
+Evidence: `.context/generated-output-simplification/m23-browser-and-audit-blockers.md`.
 
 ## Milestone 24: Shared watching and command output
 
