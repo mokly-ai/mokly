@@ -61,6 +61,11 @@ The design depends on these findings:
 6. `blacksmith testbox stop` ends the GitHub run 15 seconds to 5 minutes
    later. That delay was about 17% of the trial cost.
 7. All 11 boxes became ready together. No box waited in a queue.
+8. The CLI sync fetches the local `HEAD` with
+   `git fetch --no-tags --depth 50`. A local Git test showed that this fetch
+   makes a full clone shallow every time it runs, even when the commit is
+   already present. History and release tags older than 50 commits then
+   disappear. `git fetch --unshallow --tags origin` restores them.
 
 ## Decisions
 
@@ -162,12 +167,15 @@ valid. The fingerprint check covers the uncommitted changes.
 `scripts/verification/testbox-suite.mjs` runs on the box. It does these steps:
 
 1. It stops with a failure when the fingerprint differs.
-2. It compares the `package-lock.json` digest with the workflow stamp. When
+2. When the box repository is shallow, it runs
+   `git fetch --unshallow --tags origin`. Each `testbox run` sync makes the
+   clone shallow again, so this step runs in every suite command.
+3. It compares the `package-lock.json` digest with the workflow stamp. When
    they differ, it runs `npm ci` and `npx playwright install chromium`.
-3. It runs `cargo xtask check --executor local --suite <suite>` with the
+4. It runs `cargo xtask check --executor local --suite <suite>` with the
    optional shard. It sets `MOKLY_VERIFICATION_REPORT` to
    `.context/verification-reports/remote/<command>.json`.
-4. It exits with the exit code of the suite.
+5. It exits with the exit code of the suite.
 
 ### Source-Tree Fingerprint
 
@@ -245,10 +253,12 @@ Add the two scripts that the boxes run. Nothing calls them yet.
 - [ ] Implement `source-tree.mjs` with `--expect` and `--print-head`. Add a
       `.d.mts` declaration if TypeScript tests import it.
 - [ ] Add failure-first tests for `scripts/verification/testbox-suite.mjs`.
-      Inject the process runner. Cover a fingerprint mismatch, a changed and
-      an unchanged lockfile stamp, the exact xtask command, the report path
-      and the exit code.
+      Inject the process runner. Cover a fingerprint mismatch, a shallow and
+      a complete repository, a changed and an unchanged lockfile stamp, the
+      exact xtask command, the report path and the exit code.
 - [ ] Implement `testbox-suite.mjs`. Keep each file at 300 lines or less.
+      Until Milestone 4 adds `--executor`, the wrapper runs
+      `cargo xtask check --suite <suite>` without that flag.
 - [ ] Run the focused tests with a 100% pass rate.
 - [ ] Commit.
 
@@ -265,9 +275,10 @@ Add the dispatch workflow and prove that it prepares a usable box.
       `tests/ci_workflow_remote_state.test.ts`. Run actionlint when it is
       available.
 - [ ] Commit and push. Confirm that the push run passes in validation mode.
-- [ ] Smoke test: warm up one box with `--ref <branch>`. Run the package suite
-      through `testbox-suite.mjs`. Confirm Node 22.14.0 and `chromium`. Stop
-      the box.
+- [ ] Smoke test: warm up one box with `--ref <branch>`. Run the repository
+      and package suites through `testbox-suite.mjs`. Confirm Node 22.14.0,
+      `chromium`, a complete Git history and passing release-tag ratchets.
+      Stop the box.
 
 ## Milestone 4: Explicit remote executor
 
@@ -285,6 +296,7 @@ milestone.
   - [ ] Each case stops every warmed box. No suite command starts before all
         probes pass.
 - [ ] Add `--executor` and `MOKLY_CHECK_EXECUTOR`.
+- [ ] Make `testbox-suite.mjs` pass `--executor local`, and update its tests.
 - [ ] Implement the remote runner in `xtask/src/remote/`:
   - [ ] Put availability checks, the Testbox client, the fingerprint reader,
         the aggregate runner, the log writer and the interrupt guard behind
