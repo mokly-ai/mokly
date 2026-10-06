@@ -58,12 +58,9 @@ async function runFixtureFile(
   filters: readonly string[],
   failSetup = false,
 ): Promise<{ root: string; output: string; exitCode: number | null }> {
-  const root = await fs.mkdtemp(
-    path.join(
-      repositoryRoot,
-      ".context/attribution-test-consolidation/file-fixture-",
-    ),
-  );
+  const contextRoot = path.join(repositoryRoot, ".context");
+  await fs.mkdir(contextRoot, { recursive: true });
+  const root = await fs.mkdtemp(path.join(contextRoot, "file-fixture-"));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const file = path.join(root, "fixture.test.ts");
   const owned = path.join(root, "owned");
@@ -94,7 +91,14 @@ for (const name of ["first", "second"])
   });
 `,
   );
-  const args = ["--import", "tsx", "--test", ...filters, file];
+  const args = [
+    "--import",
+    "tsx",
+    "--test",
+    "--test-reporter=tap",
+    ...filters,
+    file,
+  ];
   const execArgv: string[] = [];
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
@@ -102,7 +106,7 @@ for (const name of ["first", "second"])
     cwd: repositoryRoot,
     env,
     stdio: ["ignore", "pipe", "pipe"],
-    timeout: 10_000,
+    timeout: 60_000,
   });
   assert.deepEqual(child.spawnargs, [process.execPath, ...args]);
   let output = "";

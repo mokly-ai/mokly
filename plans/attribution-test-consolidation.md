@@ -445,6 +445,8 @@ Evidence: `.context/attribution-test-consolidation/design_library_attribution.lo
 Evidence: `.context/attribution-test-consolidation/component_design_attribution.log`.
 Evidence: `.context/attribution-test-consolidation/design_library_source_edits.log`.
 Evidence: `.context/attribution-test-consolidation/design_library_committed_baseline.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-scratch-independent-check.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-review-correction-checks.log`.
 
 - [x] Define the grouping rules and residual limit in the CI protocol, library
       README, plan introduction, and source-edit test comment.
@@ -468,6 +470,13 @@ Evidence: `.context/attribution-test-consolidation/design_library_committed_base
       individually. Check a no-match attribution run leaves no owned directory.
 - [x] Run Prettier, ESLint, prepared type checks, protocol size/history tests,
       and changed-file size checks. Save logs and name them below.
+- [x] Remove the child regression's dependency on the plan evidence directory.
+      Use a neutral owned fixture root, an explicit TAP reporter, and a 60 s
+      hang guard. Prove it works with the evidence directory renamed away.
+- [x] Correct the README to distinguish the three lazy shared files from the
+      single-test committed-baseline fixture.
+- [x] Rerun the changed helper tests, lifecycle test, format, lint, and prepared
+      type checks after the review correction.
 - [ ] Fetch `origin/main` and run one unqualified `cargo xtask check`. Fix any
       in-scope failure and rerun. Save the complete output outside the plan.
 - [ ] Commit completed work locally in logical Conventional Commits.
