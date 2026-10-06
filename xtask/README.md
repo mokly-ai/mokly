@@ -113,7 +113,9 @@ cargo test --package xtask
   validates the delivered browser module graph;
   [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and
   [`../scripts/package/imported_styles.mjs`](../scripts/package/imported_styles.mjs)
-  own every clean packed-consumer smoke.
+  own every clean packed-consumer smoke. The
+  [consumer fixtures README](../tests/fixtures/consumers/README.md) states what
+  each copied project tests.
 - [`../scripts/verification/example-snapshot.mjs`](../scripts/verification/example-snapshot.mjs)
   produces, encodes, and decodes the example compilation snapshot, and
   [`example-snapshot-key.mjs`](../scripts/verification/example-snapshot-key.mjs)
