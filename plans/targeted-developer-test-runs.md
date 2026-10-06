@@ -284,9 +284,9 @@ and merged documentation-only main updates without another complete gate.
       `cargo xtask check`, and fix every finding.
 - [x] Run `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] Fix review findings 2 and 7, and record the open findings.
-- [ ] Merge current main with shared file concurrency and preserve all changes.
-- [ ] Run affected tests on both Node versions, then the required gates.
-- [ ] Commit and push this review-fix round before the next review.
+- [x] Merge current main with shared file concurrency and preserve all changes.
+- [x] Run affected tests on both Node versions, then the required gates.
+- [x] Commit and push this review-fix round before the next review.
 - [ ] After the push, review the complete local diff against `origin/main`
       with `docs/implementation-review-prompt.md`, and report the numbered
       findings with severities and recommendations. Then apply the review-fix
