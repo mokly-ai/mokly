@@ -9,6 +9,7 @@ import {
 import { compareComponentViews } from "../dist/review/component_compare_views.js";
 import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -46,6 +47,11 @@ test("each completed real view samples heap once; a rejecting view never samples
   const changed = new Set<string>();
   const context = {
     componentAware: true,
+    links: catalogueLinkNormalizer(
+      fixture.before.manifest.entries,
+      fixture.after.manifest.entries,
+      [],
+    ),
     beforeReader,
     afterReader,
     changed,

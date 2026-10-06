@@ -8,6 +8,7 @@ import {
 import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -166,6 +167,11 @@ test("fall-through views reuse actual discovery in derived mode", async (t) => {
         compareComponentView(
           {
             componentAware: true,
+            links: catalogueLinkNormalizer(
+              fixture.before.manifest.entries,
+              fixture.after.manifest.entries,
+              [],
+            ),
             beforeReader,
             afterReader,
             dependencies: new ComponentDependencyPolicy(

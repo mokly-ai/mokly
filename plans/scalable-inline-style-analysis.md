@@ -1904,6 +1904,7 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
       decisions when that rule requires them. Do not change older review records
       without separate approval.
       Read-only M10 review complete; report: `.context/scalable-inline-style-analysis/m10-review/report.md`.
+      Supervisor check of the seven fix commits: `.context/scalable-inline-style-analysis/m10-seven-fixes-follow-up/report.md`.
       Finding 1: the link-normalization cache keeps every changed page until classification ends; pending the user's decision.
       Finding 2: the link proof and link parses reduce the shortcut savings, without measurement; pending the user's decision.
       Finding 3: 31 `docs/dev` evidence reports conflict with #147; pending the user's decision.

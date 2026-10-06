@@ -6,6 +6,7 @@ import { compareComponentViews } from "../dist/review/component_compare_views.js
 import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -23,6 +24,11 @@ test("disabled view instrumentation creates no promises beyond the delivered com
     const changed = new Set<string>();
     return {
       componentAware: true,
+      links: catalogueLinkNormalizer(
+        fixture.before.manifest.entries,
+        fixture.after.manifest.entries,
+        [],
+      ),
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(

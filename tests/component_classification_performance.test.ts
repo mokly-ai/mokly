@@ -8,6 +8,7 @@ import {
 } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { computeChangedPaths } from "../dist/server/changed.js";
@@ -83,6 +84,11 @@ test("component views validate each retained document range index once", async (
   await compareComponentView(
     {
       componentAware: true,
+      links: catalogueLinkNormalizer(
+        fixture.after.manifest.entries,
+        fixture.after.manifest.entries,
+        [],
+      ),
       beforeReader: reader,
       afterReader: reader,
       dependencies: new ComponentDependencyPolicy(

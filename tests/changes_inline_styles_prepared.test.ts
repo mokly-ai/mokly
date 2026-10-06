@@ -5,6 +5,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -45,6 +46,11 @@ test("parse failure selectors remain prepared for later evidence delivery", asyn
   const comparison = await compareComponentView(
     {
       componentAware: true,
+      links: catalogueLinkNormalizer(
+        compilation.manifest.entries,
+        compilation.manifest.entries,
+        [],
+      ),
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(
@@ -95,6 +101,11 @@ test("all-excluded status remains prepared for later evidence delivery", async (
   const comparison = await compareComponentView(
     {
       componentAware: true,
+      links: catalogueLinkNormalizer(
+        compilation.manifest.entries,
+        compilation.manifest.entries,
+        [],
+      ),
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(
@@ -151,6 +162,11 @@ test("unchanged reference analysis prepares no future inline evidence", async (t
   const comparison = await compareComponentView(
     {
       componentAware: true,
+      links: catalogueLinkNormalizer(
+        compilation.manifest.entries,
+        compilation.manifest.entries,
+        [],
+      ),
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(

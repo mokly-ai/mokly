@@ -9,6 +9,7 @@ import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js"
 import { prepareComponentProjection } from "../dist/review/component_projection_resources.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -70,6 +71,11 @@ for (const receiver of ["template", "select"] as const)
       ]);
       const context = {
         componentAware: true,
+        links: catalogueLinkNormalizer(
+          compilation.manifest.entries,
+          compilation.manifest.entries,
+          [],
+        ),
         beforeReader,
         afterReader,
         dependencies: new ComponentDependencyPolicy(

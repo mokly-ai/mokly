@@ -11,6 +11,7 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -93,6 +94,11 @@ for (const full of [false, true])
     const changed = new Set(full ? ["mockups/sheet.css"] : []);
     const context = {
       componentAware: true,
+      links: catalogueLinkNormalizer(
+        fixture.before.manifest.entries,
+        fixture.after.manifest.entries,
+        [],
+      ),
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(
@@ -144,6 +150,7 @@ for (const full of [false, true])
       full
         ? {
             "htmlParses.pageAnalysis": 2,
+            "htmlParses.linkNormalization": 24,
             "htmlParses.resourceReference": 2,
           }
         : { "htmlParses.pageAnalysis": 1 },
