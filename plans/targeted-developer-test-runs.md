@@ -242,15 +242,15 @@ checks or starting a test process. Values still pass to Node unchanged.
 ## Milestone 3: Verification, Commit, Push, And Review
 
 Prove the commands with real runs, run the complete gate once, then commit,
-push, and hand the final review to the user.
+push, and review.
 Merge evidence: `.context/targeted-developer-test-runs/merge-main.md`.
 Refresh evidence: `.context/targeted-developer-test-runs/after-refresh-verification.md`.
 Smoke evidence: `.context/targeted-developer-test-runs/smoke-tests.md`.
 Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
 Document check evidence: `.context/targeted-developer-test-runs/document-checks.md`.
 
-Decision: The user accepted the complete gate and approved documentation-only
-main updates without another complete gate.
+Decision: The orchestrating agent accepted the complete gate on `732c981`
+and merged documentation-only main updates without another complete gate.
 
 - [x] Split dependency remediation and targeted test commands into separate
       commits before integrating main.
@@ -281,4 +281,4 @@ main updates without another complete gate.
 - [ ] After the push, review the complete local diff against `origin/main`
       with `docs/implementation-review-prompt.md`, and report the numbered
       findings with severities and recommendations. Then apply the review-fix
-      rule in `AGENTS.md`. The user runs this review.
+      rule in `AGENTS.md`.
