@@ -1,8 +1,9 @@
 # CI Suite Evidence
 
 This document supplements the [CI verification contract](./ci-verification.md)
-with fixture ownership, failure cleanup, browser shard balance, and acceptance
-measurement rules for the unit, browser, and hydration suites.
+with fixture ownership, the shared example compilation snapshot, failure
+cleanup, browser shard balance, and acceptance measurement rules for the unit,
+browser, and hydration suites.
 
 ## Fixture Lifetime And Cleanup
 
@@ -58,6 +59,77 @@ directory beneath their temporary harness so runner metadata cannot enter the
 consumer repository's publication fingerprint. Unit tests that fork compiled CLI
 entrypoints set an empty `execArgv`, preventing the parent test runner's loader
 and concurrency flags from changing child startup behavior.
+
+## Example Compilation Snapshot
+
+Status: pending. The
+[shared example compilation plan](../../plans/shared-example-compilation-snapshot.md)
+delivers this contract; until its unit preparation lands, every consumer
+compiles the example itself.
+
+Unit test files that read the compiled `examples/basic` catalogue share one
+in-memory compilation per unit preparation. The snapshot is the Git-ignored
+file `.context/verification/example-compilation.json`. It is one JSON object
+with exactly these fields:
+
+| Field                   | Value                                                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `schemaVersion`         | `1`.                                                                                                                  |
+| `key`                   | The freshness key, as 64 lowercase hexadecimal characters.                                                            |
+| `manifest`              | The compilation's schema-v8 manifest object.                                                                          |
+| `outputs`               | `[route, file]` pairs in compilation order. Text stays a string; binary output is `{ "kind": "bytes", "base64": … }`. |
+| `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
+| `documentMarkdown`      | `[sourcePath, markdown]` pairs; omitted when the compilation has none.                                                |
+
+Decoding validates the manifest with the strict schema-v8 parser. It rejects
+another schema version, a malformed key, unknown fields, duplicate routes or
+document paths, and invalid binary transfer values. A decoded compilation is
+equal to the encoded one. It has no retained component runtime, so a test that
+needs `componentRuntime` compiles instead.
+
+The freshness key is a SHA-256 digest of the schema version followed by one
+`[path, digest]` JSON line per input, in code-unit order of the
+repository-relative `/`-separated path. `digest` is the SHA-256 of the file
+bytes, `symlink:` plus the target of a symbolic link, or `missing`. The inputs
+are:
+
+- every file that `git ls-files --cached --others --exclude-standard` lists
+  under `examples/basic`, `docs/protocol` and `README.md`, so a tracked file
+  deleted from the working tree hashes as `missing`;
+- every regular file under `dist/` and `packages/viewer/dist/`, or the
+  directory itself as `missing`;
+- `package-lock.json` and `tsconfig.json`.
+
+Ignored generated output never enters the key. The producer and the test
+helper share one key function, so a mismatch means an input changed after the
+snapshot was written.
+
+`node scripts/verification/example-snapshot.mjs` is the only writer. It exits
+without compiling when the existing snapshot decodes and carries the current
+key. Otherwise it compiles `examples/basic/mokly.config.ts` in memory and
+computes the key again; when an input changed during the compile, it fails
+without writing. It writes a temporary file beside the snapshot and renames it
+into place, so a reader never sees a partial file. `npm run prepare:unit` runs
+`npm run prepare:verification` and then the producer. `npm test` and the xtask
+unit suite use it; the package, browser and hydration suites keep
+`npm run prepare:verification` because they never read the snapshot.
+
+`tests/helpers/example_compilation.ts` loads the compilation at most once per
+test process. It returns the decoded snapshot when the snapshot is fresh. When
+the snapshot is missing, stale or invalid, it compiles the example in memory,
+so a test file run by hand always works. Tests never write the snapshot.
+`designCatalogue` and the default-mode before state of `designLibraryFixture`
+use this helper. Fixtures that compile edited copies, other config profiles or
+historical commits keep compiling, because that preparation is part of what
+they verify. Each load emits `[mokly:fixture-timing]` lines with fixture
+`example-compilation`: phase `snapshot` measures the lookup, and a fallback
+adds phase `compile:missing`, `compile:stale` or `compile:invalid`.
+
+Both unit runners require the snapshot file, the package outputs and the
+example manifest to exist, and name `npm run prepare:unit` when one is missing.
+They only check existence and never import the compiler; the helper owns
+freshness and the compile fallback. Per-file report durations and the fixture
+timing lines show when a fallback happened.
 
 ## Failure, Cancellation And Cleanup
 

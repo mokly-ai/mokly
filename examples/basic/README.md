@@ -320,7 +320,11 @@ assets are ignored local artifacts, absent in a fresh clone.
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its
-generated files. Baseline fixtures copy authored inputs and use the normal cached
+generated files. `npm test` also saves one in-memory compilation of the example
+to `.context/verification/example-compilation.json`; unit tests that read
+compiled output load it instead of compiling the example again, as the
+[snapshot contract](../../docs/protocol/ci-suite-evidence.md#example-compilation-snapshot)
+defines. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
 `design-documents.css`, `design-review.css`, `design-review-scroll.css`, and the component design stylesheets) also live under `generated/` because it doubles as the

@@ -92,7 +92,8 @@ The directory is Git-ignored and already holds package artifacts. The file
 holds `schemaVersion`, the freshness `key`, the manifest, every output encoded
 with `transferGeneratedFile`, `deliveredStyleSources`, and `documentMarkdown`.
 The producer writes a temporary file beside it and renames it into place, so a
-reader never sees a partial file.
+reader never sees a partial file. It computes the key before and after the
+compile and fails without writing when an input changed during the compile.
 
 ### Freshness key
 
@@ -104,13 +105,19 @@ content digest for:
   `git ls-files --cached --others --exclude-standard`, which is the inventory
   `copyExampleSources` already uses; a tracked file that is missing from the
   working tree hashes as missing instead of failing;
-- every file under `dist/` and `packages/viewer/dist/`;
-- `package-lock.json`, which pins every dependency the example bundles;
+- every regular file under `dist/` and `packages/viewer/dist/`;
+- `package-lock.json`, which pins every dependency the example bundles, and
+  `tsconfig.json`, which esbuild reads for every example module;
 - the snapshot schema version.
+
+A symbolic link hashes as its target text. The key reads files synchronously:
+on the implementation VM, synchronous reads hash the 3,736 inputs in about
+0.14 s, and asynchronous reads through the four-thread pool take about 1 s.
 
 Generated HTML, the generated manifest, and `generated/mokly-generated/` are
 ignored outputs, so they never enter the key. The key covers about 430 example
-files and about 3,300 built files, which hashes in well under one second.
+files and about 3,300 built files, which hashes in about a quarter of a second
+including the Git listing.
 Producer and consumers share one key function, so a mismatch can only mean
 that an input changed after the snapshot was written.
 
@@ -130,9 +137,10 @@ A new helper, `tests/helpers/example_compilation.ts`, exports
 `exampleCompilation()`. It computes the key, reads the snapshot when the key
 matches, and otherwise compiles with `loadConfig` and `compileCatalogue`. It
 never writes the snapshot, so test processes never share mutable state. It
-emits one `[mokly:fixture-timing]` line through the existing
-`timeFixturePhase` helper, with phase `snapshot` or `compile`, so logs show
-which path ran. `designCatalogue` becomes `exampleCompilation()`; its name and
+emits `[mokly:fixture-timing]` lines through the existing `timeFixturePhase`
+helper with fixture `example-compilation`: phase `snapshot` measures the
+lookup, and a fallback adds phase `compile:missing`, `compile:stale`, or
+`compile:invalid`, so logs show which path ran and why. `designCatalogue` becomes `exampleCompilation()`; its name and
 type do not change, so the 34 importers do not change.
 
 A decoded compilation has no retained consumer runtime in the
@@ -163,29 +171,29 @@ timing lines show whether the snapshot was used.
   concurrent test files would race to write 27 MB and tests would own shared
   state.
 
-## Milestone 1: Document the snapshot contract — not started
+## Milestone 1: Document the snapshot contract — completed
 
 Define the complete contract before any script or helper changes.
 
-- [ ] Add an `Example Compilation Snapshot` section to
+- [x] Add an `Example Compilation Snapshot` section to
       `docs/protocol/ci-suite-evidence.md`: file location and schema, the
       freshness key inputs, the producer command and its skip-when-fresh rule,
       atomic replacement, the `prepare:unit` sequence, the existence check in
       the unit runners, the helper fallback, the fixture timing evidence, and
       the rule that tests never write the snapshot. Mark the contract pending
       until Milestone 5 lands.
-- [ ] Edit the unit row of the gate table and the "Xtask prepares output per
+- [x] Edit the unit row of the gate table and the "Xtask prepares output per
       suite" paragraph in `docs/protocol/ci-verification.md` in place. The file
       has 247 lines and no reviewed cap; keep it at or under 250 lines, and
       move any overflow to `ci-suite-evidence.md`.
-- [ ] Update the `Develop Mokly` section of `README.md`: what `npm test` and
+- [x] Update the `Develop Mokly` section of `README.md`: what `npm test` and
       `npm run prepare:unit` produce, where the snapshot lives, how a single
       test file run by hand behaves, and how to refresh a stale snapshot.
-- [ ] Update the testing paragraph of `examples/basic/README.md`, which says
+- [x] Update the testing paragraph of `examples/basic/README.md`, which says
       that `npm test` builds the example before tests read its generated files.
-- [ ] Update `xtask/README.md`: the unit suite prepares the snapshot, and add
+- [x] Update `xtask/README.md`: the unit suite prepares the snapshot, and add
       the new scripts under `Key Code`.
-- [ ] Validate the changed Markdown with `npx prettier --check`, run
+- [x] Validate the changed Markdown with `npx prettier --check`, run
       `tests/protocol_doc_sizes.test.ts`, check the local links, and review the
       documentation diff.
 

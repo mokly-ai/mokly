@@ -46,7 +46,7 @@ hydration suite fail before any subprocess starts.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                          |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
-| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                            |
+| Unit/integration | One ordinary package/example preparation and one example compilation snapshot, followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                      |
 | Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                          |
 | Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding.                                                                                                                                                                                                                      |
 | Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                        |
@@ -77,6 +77,8 @@ including Wrangler scratch, cannot make a later complete gate fail.
 
 The public `npm test` and `npm run test:browser` commands prepare package and
 example output; the latter runs both Playwright projects and every spec.
+`npm test` also writes the example compilation snapshot defined in
+[CI suite evidence](./ci-suite-evidence.md#example-compilation-snapshot).
 Filtering or selecting a project is partial verification. `npm test` and
 `test:prepared` share recursive discovery of `.test.ts` and `.test.tsx` files
 under `tests/` and `packages/viewer/tests/`, with two-file concurrency. The
@@ -92,7 +94,8 @@ Public `package:check` and `package:smoke` preserve caller arguments, including
 reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
 Xtask prepares output per suite and calls only prepared consumers; output is
-reused only within that suite.
+reused only within that suite. Only the unit suite runs `npm run prepare:unit`,
+which adds that snapshot; the unit runners require it to exist.
 
 Builds under test are not removed. Package dry-run allowlist inspection retains
 `--ignore-scripts`, while real packing keeps lifecycle builds. Historical

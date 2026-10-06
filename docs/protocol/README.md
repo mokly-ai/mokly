@@ -35,8 +35,9 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
 - [CI workflow graph](./ci-workflow.md)
-- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
-  balance, and acceptance measurement.
+- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, the shared
+  example compilation snapshot, browser shard balance, and acceptance
+  measurement.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v1](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.

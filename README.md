@@ -331,6 +331,21 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+`npm test` runs `npm run prepare:unit` and then every Node unit test file.
+`prepare:unit` builds the package and the example, then compiles the example
+once more in memory and saves the result to
+`.context/verification/example-compilation.json`. Test files that read the
+compiled example load this snapshot instead of compiling the example again. The
+snapshot stores a key of the example sources, the built package and the
+lockfile, and a test file uses it only while that key still matches. When you
+run one file by hand, for example
+`node --import tsx --test tests/design_screens.test.tsx`, the file uses a fresh
+snapshot or compiles the full example itself, which is much slower.
+Run `npm run prepare:unit` again after you change the example or rebuild the
+package. The
+[snapshot contract](./docs/protocol/ci-suite-evidence.md#example-compilation-snapshot)
+gives the details.
+
 `npm run dependencies:check` audits every workspace dependency category against
 the live registry. It fails on Low-or-higher advisories unless an active reviewed
 exception covers the exact dev-only path. Exceptions expire on an inclusive UTC
