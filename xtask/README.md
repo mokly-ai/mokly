@@ -68,9 +68,12 @@ prerequisite and explicitly shares that exact result with dependent jobs,
 keeping shard evidence consistent across runner caches. The single release
 publishing job independently resolves the latest Node 24.
 
-Hydration coverage discovers a separate browser test for every example route, so
-adding screens does not consume one shared test deadline. The unsharded
-`hydration` suite runs those filename-selected specs separately from `browser`.
+Hydration coverage discovers a separate browser test for one representative
+route per example entry shape, as
+[development hydration coverage](../docs/protocol/ci-verification-hydration.md)
+defines. A new screen adds a test only when it adds a new shape, and no route
+shares a test deadline. The unsharded `hydration` suite runs those
+filename-selected specs separately from `browser`.
 Tests using `changedFixture` register servers and workers with
 `fixture.onCleanup` to drain them before removing their working tree.
 
@@ -115,7 +118,9 @@ cargo test --package xtask
   validates the delivered browser module graph;
   [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and
   [`../scripts/package/imported_styles.mjs`](../scripts/package/imported_styles.mjs)
-  own every clean packed-consumer smoke.
+  own every clean packed-consumer smoke. The
+  [consumer fixtures README](../tests/fixtures/consumers/README.md) states what
+  each copied project tests.
 - [`../scripts/verification/repository-ratchets.mjs`](../scripts/verification/repository-ratchets.mjs)
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)

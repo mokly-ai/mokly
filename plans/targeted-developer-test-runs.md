@@ -239,14 +239,23 @@ checks or starting a test process. Values still pass to Node unchanged.
 ## Milestone 3: Verification, Commit, Push, And Review
 
 Prove the commands with real runs, run the complete gate once, then commit,
-push, and review.
+push, and hand the final review to the user.
+Merge evidence: `.context/targeted-developer-test-runs/merge-main.md`.
+Smoke evidence: `.context/targeted-developer-test-runs/smoke-tests.md`.
+Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
 
+- [x] Split dependency remediation and targeted test commands into separate
+      commits before integrating main.
+- [ ] Merge fetched `origin/main`, preserve each main change, confirm two
+      merge parents, and inspect every path in the remerge diff.
+- [ ] Check this plan against the evidence-log rule after the main merge.
 - [ ] Smoke test from a fresh `npm run prepare:verification`:
       `npm test -- tests/ci_workflow.test.ts`,
       `npm test -- tests/ci_workflow.test.ts --test-name-pattern="lockfile"`,
       `npm run test:unit -- packages/viewer/tests/<one file>`,
       `npm test -- tests/browser/pages.spec.ts` (expect the browser hint),
-      `npm test -- --shard 1/4` (expect the `test:prepared` message), and
+      `npm test -- --shard 1/4` (expect the `test:prepared` message),
+      `npm test --test-name-pattern=lockfile` (expect the npm-consumed message), and
       `npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"`.
 - [ ] Confirm that no selected run created or changed a file under
       `.context/verification-reports`.
