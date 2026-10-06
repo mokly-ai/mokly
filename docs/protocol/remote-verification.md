@@ -34,8 +34,16 @@ The first terminating result decides the executor. The missing-key row lets
 | Warmup, readiness or sync probe fails                | Stop warmed boxes; then local       | Stop warmed boxes; then error   |
 | All checks pass                                      | Remote                              | Remote                          |
 
-Check commit reachability from the local origin refs. Do not accept an unpushed
-`HEAD`. Name each missing program in the diagnostic. For a missing CLI, print:
+Require this command to print at least one origin ref:
+
+```bash
+git for-each-ref --contains HEAD --format=%(refname) refs/remotes/origin/
+```
+
+Detect `blacksmith`, `rsync` and `ssh` by searching `PATH` for an executable
+file. Do not run those programs to detect them. Run `blacksmith --version`
+only after finding the CLI. Name each missing program in the diagnostic.
+For a missing CLI, print:
 
 ```bash
 curl -fsSL https://get.blacksmith.sh | sh
@@ -49,9 +57,16 @@ After that boundary, every execution or evidence failure fails the check.
 One check must never mix local and remote suite results.
 
 `cargo xtask executor` uses the same mode precedence and availability checks.
-It prints `local` or `remote` and the reason. A rejected mode returns an error.
+It prints exactly one line to standard output: `<executor>: <reason>`.
+Send the CLI version and other diagnostics to standard error.
+The executor is `local` or `remote`. Both decisions exit 0.
+An invalid mode value or a rejected mode exits nonzero. This includes an
+explicit remote request in GitHub Actions.
 It does not warm up boxes, run probes or execute suites. Its remote decision
 therefore confirms availability, not box readiness.
+
+`cargo xtask check` writes its decision, information and warning lines to
+standard error. Each line starts with `[xtask/executor]` followed by a space.
 
 ## Key And CLI Handling
 
@@ -85,7 +100,7 @@ Run all local and CLI operations from the workspace root.
 2. Warm up 11 boxes in parallel through `blacksmith testbox warmup`.
    Use `.github/workflows/blacksmith-testbox.yml`, `--ref main` and
    `--idle-timeout 10`. Use `MOKLY_TESTBOX_REF` when it is set.
-   Record each box ID and its GitHub run ID. Warmup must return exactly one
+   Record each box ID. Warmup must return exactly one
    box ID per request. Missing or multiple IDs fail warmup.
 3. Probe every box through `blacksmith testbox run`.
    Allow at most 10 minutes for readiness. The probe must confirm both the
@@ -120,6 +135,9 @@ the nine required reports. Repository and package outcomes use command exits.
 
 Allocate a new local report directory for each run:
 `.context/verification-reports/remote/<run>/`.
+The `<run>` value is UTC time in `YYYYMMDDTHHMMSSZ` format, a hyphen and the
+xtask process ID in decimal. For example, `20261006T134131Z-1234`.
+Compute it once at run start. Report and log directories use the same value.
 Download each report there under its command name. Do not use reports from
 another run. A missing or failed download fails remote verification.
 
@@ -151,8 +169,11 @@ during an interrupted or failed warmup. Stop launching suite commands after
 an interrupt. Attempt cleanup for all boxes even if one cleanup call fails.
 Report cleanup failures. An interrupted check cannot pass or start local fallback.
 
-Use `blacksmith testbox stop --id <box-id>` for each box.
-Use `gh run cancel <github-run-id>` when `gh` is available.
+Before stopping each box, run `blacksmith testbox status --id <box-id>`.
+Read its GitHub run ID from the first `/actions/runs/<digits>` match.
+If there is no match, print a warning and skip cancellation for that box.
+Then run `blacksmith testbox stop --id <box-id>`.
+Use `gh run cancel <github-run-id>` when an ID and `gh` are available.
 The 10-minute idle timeout and 30-minute workflow
 timeout limit cost if the local process is killed before cleanup.
 Do not reuse boxes between checks.

@@ -85,8 +85,13 @@ It does not copy Git-ignored files. The probe command is:
 blacksmith testbox run --id <box-id> --wait-timeout 10m "node scripts/verification/source-tree.mjs --expect <fingerprint> --print-head"
 ```
 
-Retry connection/readiness attempts within the 10-minute readiness limit.
-Once the command runs, reject a fingerprint mismatch or a different `HEAD`.
+The probe uses `--wait-timeout 10m`. Xtask does not retry it.
+The CLI prints status lines around the command output. Xtask reads the
+fingerprint from the one line that matches `^sha256:[0-9a-f]{64}$`.
+It reads `HEAD` from the one line that matches `^[0-9a-f]{40}$`.
+Zero or several matches for either value fail the probe.
+Any nonzero exit, a missing or different fingerprint line, or a missing or
+different `HEAD` line fails the probe phase.
 Require successful probes on every box before any suite command starts.
 The [executor contract](./remote-verification.md#executor-selection) defines
 fallback at this boundary.
