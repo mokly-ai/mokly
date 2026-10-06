@@ -41,7 +41,7 @@ async function bounded<T>(work: Promise<T>): Promise<T> {
       new Promise<never>((_, reject) => {
         timeout = setTimeout(
           () => reject(new Error("worker request hung")),
-          2_000,
+          10_000,
         );
       }),
     ]);

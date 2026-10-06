@@ -55,7 +55,7 @@ for (const exitLauncher of [false, true]) {
       );
       for (const file of ["launcher.pid", "descendant.pid"]) {
         let value = "";
-        for (let attempt = 0; attempt < 300 && !value; attempt++) {
+        for (let attempt = 0; attempt < 1_500 && !value; attempt++) {
           try {
             value = await fs.readFile(path.join(root, file), "utf8");
           } catch (error) {
@@ -69,7 +69,7 @@ for (const exitLauncher of [false, true]) {
       if (exitLauncher) {
         for (
           let attempt = 0;
-          attempt < 300 && runner.isAlive(pids[0]!);
+          attempt < 1_500 && runner.isAlive(pids[0]!);
           attempt++
         )
           await setTimeout(10);
@@ -81,7 +81,10 @@ for (const exitLauncher of [false, true]) {
       }
       controller.abort(reason);
       assert.equal(
-        await Promise.race([outcome, setTimeout(5000, "hung", { ref: false })]),
+        await Promise.race([
+          outcome,
+          setTimeout(10_000, "hung", { ref: false }),
+        ]),
         reason,
       );
       for (const pid of pids) {

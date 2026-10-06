@@ -6,6 +6,10 @@ import {
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
 
+interface RequestTestWindow extends FrameTestWindow {
+  requestCode: string | null;
+}
+
 let fixture: Awaited<ReturnType<typeof crossOriginFixture>>;
 test.beforeAll(async () => {
   fixture = await crossOriginFixture({
@@ -128,23 +132,39 @@ test("an unanswered request expires after five seconds and disposes pending work
   await child.evaluate(() => {
     window.name = "drop-inspector-requests";
   });
-  const result = await page.evaluate(async () => {
-    const state = window as unknown as FrameTestWindow;
-    const started = performance.now();
-    const code = await state.mounted
-      .listInstanceBoundaries()
-      .catch((error: { code: string }) => error.code);
-    return {
-      code,
-      elapsed: performance.now() - started,
-      after: await state.mounted
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
+  await page.evaluate(() => {
+    const state = window as unknown as RequestTestWindow;
+    state.requestCode = null;
+    void state.mounted.listInstanceBoundaries().then(
+      () => {
+        state.requestCode = "answered";
+      },
+      (error: { code: string }) => {
+        state.requestCode = error.code;
+      },
+    );
+  });
+  await page.clock.runFor(4_999);
+  expect(
+    await page.evaluate(
+      () => (window as unknown as RequestTestWindow).requestCode,
+    ),
+  ).toBeNull();
+  await page.clock.runFor(1);
+  expect(
+    await page.evaluate(
+      () => (window as unknown as RequestTestWindow).requestCode,
+    ),
+  ).toBe("timeout");
+  expect(
+    await page.evaluate(() =>
+      (window as unknown as FrameTestWindow).mounted
         .listInstanceBoundaries()
         .catch((error: { code: string }) => error.code),
-    };
-  });
-  expect(result.code).toBe("timeout");
-  expect(result.elapsed).toBeGreaterThanOrEqual(4900);
-  expect(result.after).toBe("disposed");
+    ),
+  ).toBe("disposed");
   await expect(
     page.frameLocator("#frame").locator("[data-mokly-overlay]"),
   ).toHaveCount(0);

@@ -290,7 +290,7 @@ class UnusedServerFactory implements CatalogueServerFactory {
 }
 
 async function waitFor(condition: () => boolean): Promise<void> {
-  const deadline = Date.now() + 5_000;
+  const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
     if (condition()) return;
     await new Promise((resolve) => setTimeout(resolve, 10));

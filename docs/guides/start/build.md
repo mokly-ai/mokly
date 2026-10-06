@@ -42,6 +42,11 @@ catalogue. Commit the generated documents and manifest. Check then proves
 their bytes match the current compilation, and a comparison reads its baseline
 straight from Git without running a historical build.
 
+In both modes, Mokly keeps private state in `.mokly-cache/` at the repository
+root and writes a `.gitignore` file inside it, so Git never shows or adds that
+folder. Keep the `.mokly-cache/` rule when you commit generated output too:
+formatters and other tools may read only your root `.gitignore`.
+
 ## Validate without writing
 
 ```shell

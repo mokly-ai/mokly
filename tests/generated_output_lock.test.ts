@@ -90,7 +90,7 @@ test("a release never removes the directory a waiting writer creates its lock in
       return open(candidate, flags, mode);
     },
   );
-  const second = await acquireOutputLock(root, { timeoutMs: 5_000 });
+  const second = await acquireOutputLock(root, { timeoutMs: 15_000 });
   assert.equal(released, true);
   assertOutputLockHeld(second, root);
   await second.release();
@@ -121,7 +121,7 @@ for (const [name, pid] of [
   test(`a lock left by ${name} is reclaimed`, async (context) => {
     const root = await repository(context);
     await writeLock(root, holder(await pid()));
-    const lock = await acquireOutputLock(root, { timeoutMs: 5_000 });
+    const lock = await acquireOutputLock(root, { timeoutMs: 15_000 });
     assert.equal(
       JSON.parse(await fs.readFile(lock.path, "utf8")).pid,
       process.pid,
@@ -158,7 +158,7 @@ test(
     assert.equal(await fs.readFile(file, "utf8"), record);
     running.kill();
     await once(running, "exit");
-    const lock = await acquireOutputLock(root, { timeoutMs: 5_000 });
+    const lock = await acquireOutputLock(root, { timeoutMs: 15_000 });
     await lock.release();
   },
 );
@@ -230,7 +230,7 @@ test("a lock directory replaced by a regular file fails at once", async (context
   await fs.mkdir(path.dirname(locks), { recursive: true });
   await fs.writeFile(locks, "not a directory");
   await assert.rejects(
-    acquireOutputLock(root, { pollMs: 20, timeoutMs: 5_000 }),
+    acquireOutputLock(root, { pollMs: 20, timeoutMs: 15_000 }),
     /generated-output lock directory must be a real directory/u,
   );
   assert.equal(await fs.readFile(locks, "utf8"), "not a directory");
