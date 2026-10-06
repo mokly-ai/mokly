@@ -338,6 +338,8 @@ are partial verification. See [developer test commands](./docs/protocol/develope
 for the argument and report rules.
 Selected unit runs report the number of tests that ran. They warn when a file
 runs no tests, including when a name pattern matches nothing.
+Developer argument errors print their message without a stack. Internal faults
+keep the full error report.
 
 Run the complete repository gate before submitting a change:
 

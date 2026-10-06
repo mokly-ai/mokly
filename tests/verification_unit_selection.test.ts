@@ -6,6 +6,7 @@ import test from "node:test";
 import type { TestContext } from "node:test";
 
 import { discoverUnitFiles } from "../scripts/verification/evidence.mjs";
+import { ExpectedFailure } from "../scripts/verification/expected-failure.mjs";
 import {
   parseUnitSelection,
   selectUnitFiles,
@@ -101,6 +102,7 @@ for (const argument of [
       await assert.rejects(
         parseUnitSelection(root, [argument]),
         (error: Error) => {
+          assert.ok(error instanceof ExpectedFailure);
           assert.ok(error.message.includes(argument));
           if (argument.endsWith(".spec.ts"))
             assert.ok(
@@ -129,6 +131,7 @@ test("developer selection rejects inventory misses and names the original argume
   assert.throws(
     () => selectUnitFiles(selection, inventory),
     (error: Error) => {
+      assert.ok(error instanceof ExpectedFailure);
       assert.ok(error.message.includes(argument));
       return true;
     },
@@ -188,6 +191,7 @@ for (const args of [
     async (context) => {
       const root = await fixture(context);
       await assert.rejects(parseUnitSelection(root, args), (error: Error) => {
+        assert.ok(error instanceof ExpectedFailure);
         assert.match(error.message, /usage: npm test --/u);
         assert.match(error.message, /npm run test:unit --/u);
         assert.match(error.message, /--test-name-pattern=<regex>/u);

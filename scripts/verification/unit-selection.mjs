@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { ExpectedFailure } from "./expected-failure.mjs";
+
 const usage = [
   "usage: npm test -- [<file> ...] [<pattern> ...]",
   "       npm run test:unit -- [<file> ...] [<pattern> ...]",
@@ -20,7 +22,7 @@ export async function parseUnitSelection(
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--shard" || argument.startsWith("--shard="))
-      throw new Error(
+      throw new ExpectedFailure(
         "Developer runs do not accept --shard; use npm run test:prepared or cargo xtask check --suite unit --shard INDEX/TOTAL.",
       );
     if (argument === patternFlag) {
@@ -28,7 +30,7 @@ export async function parseUnitSelection(
     } else if (argument.startsWith(patternFlag + "=")) {
       patterns.push(requirePattern(argument.slice(patternFlag.length + 1)));
     } else if (argument.startsWith("-")) {
-      throw new Error(usage);
+      throw new ExpectedFailure("unknown option " + argument + "\n" + usage);
     } else {
       argumentsForFiles.push(argument);
     }
@@ -43,7 +45,7 @@ export async function parseUnitSelection(
   for (const argument of argumentsForFiles) {
     let absolute = path.resolve(realRoot, argument.replaceAll("\\", "/"));
     if (absolute.endsWith(".spec.ts"))
-      throw new Error(
+      throw new ExpectedFailure(
         "Browser spec argument " +
           argument +
           "; use npm run test:browser -- " +
@@ -58,17 +60,21 @@ export async function parseUnitSelection(
       relative.startsWith(".." + path.sep) ||
       path.isAbsolute(relative)
     )
-      throw new Error(
+      throw new ExpectedFailure(
         "Test file argument is outside the repository: " + argument,
       );
     let metadata;
     try {
       metadata = await fs.stat(absolute);
     } catch (cause) {
-      throw new Error("Cannot read test file argument: " + argument, { cause });
+      throw new ExpectedFailure("Cannot read test file argument: " + argument, {
+        cause,
+      });
     }
     if (!metadata.isFile())
-      throw new Error("Test file argument is not a file: " + argument);
+      throw new ExpectedFailure(
+        "Test file argument is not a file: " + argument,
+      );
     const file = relative.split(path.sep).join("/");
     if (!seen.has(file)) {
       files.push({ argument, file });
@@ -84,7 +90,7 @@ export function selectUnitFiles(selection, inventory) {
   const discovered = new Set(inventory);
   for (const { argument, file } of selection.files)
     if (!discovered.has(file))
-      throw new Error(
+      throw new ExpectedFailure(
         "Test file argument is outside the unit inventory: " + argument,
       );
   return selection.files.length > 0
@@ -94,12 +100,25 @@ export function selectUnitFiles(selection, inventory) {
 
 /** Compile without matching so bad regexes fail before preparation or Node. */
 function requirePattern(value) {
-  if (!value) throw new Error(usage);
+  if (!value)
+    throw new ExpectedFailure(
+      patternFlag + " needs a non-empty value\n" + usage,
+    );
   try {
     const literal = /^\/(.*)\/([a-z]*)$/.exec(value);
     RegExp(literal?.[1] ?? value, literal?.[2] || "");
   } catch (cause) {
-    throw new Error(usage, { cause });
+    throw new ExpectedFailure(
+      "invalid " +
+        patternFlag +
+        " value " +
+        JSON.stringify(value) +
+        ": " +
+        cause.message +
+        "\n" +
+        usage,
+      { cause },
+    );
   }
   return value;
 }
@@ -119,7 +138,7 @@ function rejectConsumedNpmFlags(environment) {
     ],
   ]) {
     if (environment[variable])
-      throw new Error(
+      throw new ExpectedFailure(
         "npm consumed " +
           flag +
           ". Put every argument after --; use " +

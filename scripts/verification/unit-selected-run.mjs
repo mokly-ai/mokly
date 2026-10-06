@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { unitTestConcurrency } from "./concurrency.mjs";
 import { discoverUnitFiles } from "./evidence.mjs";
+import { ExpectedFailure } from "./expected-failure.mjs";
 import { requirePrepared } from "./prepared.mjs";
 import { executeUnitTests } from "./unit-execution.mjs";
 import { selectUnitFiles } from "./unit-selection.mjs";
@@ -57,20 +58,49 @@ function validateSelectedRun(result, files) {
   if (result.reporterComplete !== true)
     throw new Error("Node reporter did not complete");
   if (
+    result.failed !== 0 ||
+    (result.failures.length > 0 && result.cancelled === 0)
+  ) {
+    const failed = result.failed || result.failures.length;
+    const lines = [
+      failed + " selected unit test" + (failed === 1 ? "" : "s") + " failed:",
+      ...result.failures.slice(0, 20).map(({ name }) => "✖ " + name),
+    ];
+    if (result.failures.length > 20)
+      lines.push("… and " + (result.failures.length - 20) + " more");
+    throw new ExpectedFailure(lines.join("\n"));
+  }
+  if (result.cancelled !== 0)
+    throw new ExpectedFailure(
+      result.cancelled +
+        " selected unit test" +
+        (result.cancelled === 1 ? "" : "s") +
+        " cancelled",
+    );
+  if (
     result.outcome.status !== "passed" ||
     result.outcome.exitCode !== 0 ||
     result.outcome.signal !== null
   )
-    throw new Error("selected unit test process did not finish successfully");
-  if (result.failed !== 0 || result.failures.length > 0)
-    throw new Error("selected unit tests failed");
-  if (result.cancelled !== 0)
-    throw new Error("selected unit tests were cancelled");
+    throw new ExpectedFailure(
+      "selected unit test process exited with " +
+        (result.outcome.signal !== null
+          ? "signal " + result.outcome.signal
+          : "code " + result.outcome.exitCode),
+    );
   const observed = new Set(result.observedFiles.map(({ file }) => file));
+  const selected = new Set(files);
+  const missing = files.filter((file) => !observed.has(file));
+  const unexpected = [...observed].filter((file) => !selected.has(file));
   if (
     result.observedFiles.length !== files.length ||
     observed.size !== files.length ||
     files.some((file) => !observed.has(file))
   )
-    throw new Error("selected and observed unit files differ");
+    throw new Error(
+      "selected and observed unit files differ; missing: " +
+        (missing.join(", ") || "none") +
+        "; unexpected: " +
+        (unexpected.join(", ") || "none"),
+    );
 }

@@ -328,7 +328,7 @@ failing tests after a gate failure.
       keep the plan Contract consistent before changing code.
 - [x] Implement finding 1 with per-file counts and zero-test warnings. Keep
       reports and complete/strict runs unchanged. Add regression tests.
-- [ ] Implement finding 5 with one expected error type, problem-first argument
+- [x] Implement finding 5 with one expected error type, problem-first argument
       messages, ordered outcome validation, and internal fault stacks. Test it.
 - [ ] Implement finding 3 with a shared test helper that uses
       `NodeBaselineExecutableResolver` and shell-free `execFile` in all three
