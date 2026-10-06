@@ -234,12 +234,11 @@ against the real example configuration and current compiled manifest through the
 Changes membership for the component design entries, excluding unrelated design screens,
 product screens, and their use case.
 
-Run `npm run example:build`, `npm run example:check`, and
-`npx playwright test tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.
-The browser suite opens every artboard directly from disk, checks links,
-selection semantics, counts, missing states, responsive overflow, mask
-geometry, and the stacked frames' layers, blending, single scroller and drawn
-offset; `tests/design_component_stacks.test.ts` pins their structure,
+The [design verification contract](./mokly-design-verification.md) owns test
+layers and commands. Raw-artboard specs check responsive overflow, mask geometry,
+and stacked frames' layers, blending, single scroller, and drawn offset.
+Unit tests check links, selection semantics, counts, and missing states;
+`tests/design_component_stacks.test.ts` pins stacked structure,
 `tests/design_component_comparison_states.test.ts` ties every comparison
 caption to its recorded change and pins the Checklist's Changes, and
 `tests/design_screen_counts.test.ts` keeps the documented screen counts

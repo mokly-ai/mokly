@@ -320,7 +320,12 @@ assets are ignored local artifacts, absent in a fresh clone.
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its
-generated files. Baseline fixtures copy authored inputs and use the normal cached
+generated files. Design unit tests check compiled HTML and CSS. Raw-artboard
+browser specs check layout, styles, and native interactions. Runtime specs check
+Mokly's shell, exports, and preview hosts with non-design fixtures. The
+[design verification contract](../../docs/protocol/mokly-design-verification.md)
+owns these layers, their commands, and the rules for new tests.
+Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
 `design-documents.css`, `design-review.css`, `design-review-scroll.css`, and the component design stylesheets) also live under `generated/` because it doubles as the

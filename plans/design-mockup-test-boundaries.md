@@ -1,6 +1,6 @@
 # Design Mockup Test Boundaries
 
-Status: Active. Work has not started, and no PR is open.
+Status: Active. The test layer contract is written. No PR is open.
 
 Give each check on Mokly's own design catalogue one home. Unit tests check the
 generated mockup HTML and CSS. Browser mockup specs open the raw generated
@@ -84,40 +84,42 @@ deleted test beside its replacement, and the PR description lists them all.
 
 ## Milestone 1: Test layer contract
 
-Define the three layers, their rules and the delivery status before any test
-moves.
+Completed. Define the three layers, their rules and the delivery status before
+any test moves.
 
-- [ ] Add `docs/protocol/mokly-design-verification.md` at or below 250 lines.
+- [x] Add `docs/protocol/mokly-design-verification.md` at or below 250 lines.
       It owns the scope, the three layers, what each layer may open and
       assert, `designArtboardUrl`, `designEntries`, the inventory rule for
       removed screens, the boundary guard, where runtime checks belong, how to
       run each layer, and a Delivery Status section.
-- [ ] Give the protocol a "Rules for new tests" section that forbids adding
+- [x] Give the protocol a "Rules for new tests" section that forbids adding
       back the removed patterns, with the reason for each rule:
-  - [ ] No browser spec tests Mokly's runtime (the served shell, exports or
+  - [x] No browser spec tests Mokly's runtime (the served shell, exports or
         preview hosts) with design pages as content. Such checks go to a
         runtime spec with a non-design fixture.
-  - [ ] No browser spec asserts a static mockup fact, such as text, an
+  - [x] No browser spec asserts a static mockup fact, such as text, an
         attribute, a link target or a count. Such checks go to a unit test.
-  - [ ] No test looks up a removed design id; the inventory test guards
+  - [x] No test looks up a removed design id; the inventory test guards
         removed screens.
-  - [ ] No catalogue-wide unit selection bypasses `designEntries`.
-  - [ ] Name `tests/design_test_boundaries.test.ts` as the guard for the
+  - [x] No catalogue-wide unit selection bypasses `designEntries`.
+  - [x] Name `tests/design_test_boundaries.test.ts` as the guard for the
         first rule, and the review of new tests as the guard for the others.
-- [ ] List it with the design catalogue contracts in `docs/protocol/README.md`.
-- [ ] Replace the spec list and Playwright command in
+- [x] List it with the design catalogue contracts in `docs/protocol/README.md`.
+- [x] Replace the spec list and Playwright command in
       `docs/protocol/mokly-component-design.md:236-250` with a link to the new
       protocol. Keep the checks that the page owns and its `design/…`
       inventory tables, which `tests/design_links_inventory.test.ts` reads.
       Stay at or below 250 lines.
-- [ ] Link the new protocol from the Design Mockups section of
+- [x] Link the new protocol from the Design Mockups section of
       `docs/protocol/mokly-shell-design.md` without growing the file. If the
       file shrinks, lower its cap in `tests/protocol_doc_sizes.test.ts`.
-- [ ] Describe the three layers in the test notes of `examples/basic/README.md`
+- [x] Describe the three layers in the test notes of `examples/basic/README.md`
       and link the protocol.
-- [ ] Run `npx prettier --check` on the changed Markdown. Run
+- [x] Run `npx prettier --check` on the changed Markdown. Run
       `npm run prepare:verification`, then
       `node --import tsx --test tests/protocol_doc_sizes.test.ts tests/design_links_inventory.test.ts`.
+- [x] Run the milestone lint, formatting, and prepared type checks. Audit the
+      mainline diff and deletions. Commit with a Conventional Commit and push.
 
 ## Milestone 2: Unit tests check what they claim
 

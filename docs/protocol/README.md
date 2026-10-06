@@ -185,6 +185,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   [design screen inventory](./mokly-shell-design-inventory.md), and the
   [depicted design catalogue](./mokly-shell-design-catalogue.md).
 - [Design mockup links](./mokly-design-links.md)
+- [Design mockup verification](./mokly-design-verification.md) — unit mockup
+  tests, raw-artboard browser specs, and runtime test boundaries.
 - [Registered components in Mokly's design catalogue](./mokly-design-components.md)
   — implemented shared design components and ownership rules, with the
   [component library inventory](./mokly-design-component-library.md).

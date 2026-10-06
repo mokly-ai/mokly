@@ -4,7 +4,7 @@
 
 This document records the approved design for the package-owned Browse shell
 and the optional in-place screen comparisons. The visual source of truth is the
-design catalogue in the basic example, whose entry names start with `design-`;
+design catalogue in the basic example, whose entry paths start with `design/`;
 this contract fixes the tokens, dimensions, and responsive behavior that
 implementation and tests must preserve. Runtime behavior stays in
 [mokly-runtime.md](./mokly-runtime.md).
@@ -49,7 +49,7 @@ The approved screens are authored in `examples/basic/specs/design/`. The
 and Changes design screen with its folder and depicted state, describes the
 fixture catalogue they browse, and owns the dual-scheme and owning-group rules;
 the [component design inventory](./mokly-component-design.md#owning-catalogue)
-lists the component explorer screens.
+lists the component explorer screens. The [verification contract](./mokly-design-verification.md) owns test layers and commands.
 
 ## Consumer-Tunable Custom Properties
 
