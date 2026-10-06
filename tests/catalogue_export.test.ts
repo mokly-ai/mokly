@@ -81,7 +81,7 @@ test("export owns a deterministic public catalogue and stamps its artifact ident
 test("adapter files enter the finalized ownership marker", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
-  const upload = `${JSON.stringify({ schemaVersion: 1 })}\n`;
+  const upload = `${JSON.stringify({ schemaVersion: 2 })}\n`;
   await exportCatalogue(fixture.config, {
     outDir: "site",
     noChanges: true,

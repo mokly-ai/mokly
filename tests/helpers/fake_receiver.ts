@@ -6,7 +6,7 @@ import {
   delay,
   expired,
   nextOverride,
-  publicationKey,
+  planMissing,
   requestBytes,
   requestKind,
   routePath,
@@ -41,10 +41,13 @@ export type {
 export interface FakeReceiver {
   readonly blobs: Map<string, Buffer>;
   readonly control: FakeReceiverControl;
+  /** Publications with uncommitted changes, which never claim a commit key. */
+  readonly dirtyPublications: FakeReceiverPublication[];
   readonly endpoint: string;
   readonly maxConcurrentPuts: number;
   readonly origin: string;
   readonly plans: FakeReceiverPlan[];
+  /** The one kept clean publication for each commit and config path. */
   readonly publications: Map<string, FakeReceiverPublication>;
   readonly puts: string[];
   readonly requests: FakeReceiverRequest[];
@@ -66,6 +69,7 @@ export async function startFakeReceiver(
   const blobs = new Map<string, Buffer>();
   const plans: FakeReceiverPlan[] = [];
   const publications = new Map<string, FakeReceiverPublication>();
+  const dirtyPublications: FakeReceiverPublication[] = [];
   const puts: string[] = [];
   const requests: FakeReceiverRequest[] = [];
   const uploads = new Map<string, FakeUpload>();
@@ -166,18 +170,7 @@ export async function startFakeReceiver(
           return;
         }
         const id = `upload-${plans.length + 1}`;
-        const published = publications.has(publicationKey(validated.manifest));
-        for (const [name, bytes] of validated.files) {
-          const entry = validated.ownership.files.find(
-            (candidate) => candidate.path === name,
-          );
-          if (entry) blobs.set(entry.sha256, bytes);
-        }
-        const missing = published
-          ? []
-          : [...validated.entriesByDigest.keys()]
-              .filter((digest) => !blobs.has(digest))
-              .sort();
+        const missing = planMissing(validated, blobs, publications);
         const expiry = control.expiryMs.shift() ?? control.defaultExpiryMs;
         const plan: FakeUpload = {
           ...validated,
@@ -233,7 +226,7 @@ export async function startFakeReceiver(
         const result = resolveFakeComplete(
           match ? uploads.get(match[1] ?? "") : undefined,
           blobs,
-          publications,
+          { publications, dirtyPublications },
           origin,
           () => `publication-${++publicationNumber}`,
         );
@@ -265,6 +258,7 @@ export async function startFakeReceiver(
   const receiver: FakeReceiver = {
     blobs,
     control,
+    dirtyPublications,
     endpoint: `${origin}${endpointPath}`,
     get maxConcurrentPuts() {
       return maxConcurrentPuts;

@@ -86,6 +86,27 @@ export function publishIdentityFailed(message: string): MoklyError {
   return new MoklyError("git-failed", message);
 }
 
+/** Fixed failure when Git cannot report the checkout's uncommitted changes. */
+export function uncommittedChangesUnavailable(): MoklyError {
+  return publishIdentityFailed(
+    "Git could not report uncommitted changes. Check the repository, then publish again.",
+  );
+}
+
+/** Fixed failure when the uncommitted-changes state differs before Plan. */
+export function uncommittedChangesChanged(): MoklyError {
+  return publishIdentityFailed(
+    "Uncommitted changes appeared or disappeared during export. Commit or ignore files that builds write, then publish again.",
+  );
+}
+
+/** Fixed failure when a receiver joins a dirty upload to an earlier publication. */
+export function dirtyUploadJoined(): MoklyError {
+  return uploadFailed(
+    "The service returned an earlier publication instead of these uncommitted changes. Check the endpoint, then publish again.",
+  );
+}
+
 /** Map a terminal HTTP status to its stable public category and copy. */
 export function statusError(status: number): MoklyError {
   const [code, message] = REJECTIONS[status] ?? [

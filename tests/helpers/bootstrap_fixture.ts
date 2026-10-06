@@ -121,7 +121,9 @@ export async function bootstrapFixture(
     "docs/protocol/fixtures/export-ownership-v2.json":
       '{"schemaVersion":1,"cases":[]}\n',
     "docs/protocol/fixtures/upload-plan-v1.json":
-      '{"schemaVersion":1,"endpoint":"https://example.com","marker":[],"cases":[]}\n',
+      '{"schemaVersion":2,"endpoint":"https://example.com","marker":[],"cases":[]}\n',
+    "docs/protocol/fixtures/upload-manifest-v2.json":
+      '{"schemaVersion":1,"cases":[]}\n',
     "docs/protocol/mokly-frame-adapter.md": "# Frame protocol test fixture\n",
     "docs/protocol/mokly-catalogue.md": "# Catalogue protocol test fixture\n",
     "docs/protocol/fixtures/catalogue-v4.json": '{"schemaVersion":1}\n',

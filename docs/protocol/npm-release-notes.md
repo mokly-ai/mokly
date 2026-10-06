@@ -8,6 +8,8 @@ commit returned by
 
 - `43404882 feat!: derive entry identity from paths` — the path identity note
   below.
+- `89eedbdd feat(publish)!: report uncommitted changes` — the uncommitted
+  changes note below.
 
 The historical notes retain coverage for earlier releases: `7aba5ec2`
 (navigation paths), `d227702e` (identity), `40ab4324` (comparison baseline),
@@ -85,6 +87,31 @@ The path identity change also removes the obsolete nested input types
 package, and `ViewHrefIdentity`, `navConflictKey`, `navPathKey`, and `validNavLabel`
 from the viewer data package. The public replacement is the path model described
 in [paths](./mokly-paths.md) and [entry modules](./mokly-entry-modules.md).
+
+## Breaking Uncommitted Changes Release Note
+
+`mokly publish` now reports whether the checkout had uncommitted changes. The
+upload manifest `mokly-upload.json` becomes `schemaVersion: 2` with a required
+`uncommittedChanges` boolean after `headSha`. Schema 1 is neither written nor
+read, and `headSha` still names the checked-out commit. Git status decides the
+value: modified, staged, deleted, renamed and type-changed files, unmerged
+paths, submodule changes and untracked files that Git does not ignore count.
+Ignored files and Mokly's own working paths do not count. A publish whose
+state changes during export fails as `git-failed`.
+
+Receivers must accept only manifest schema 2 and apply the new
+[publication rule](./mokly-upload.md#publication-rule). Keep at most one clean
+publication for each `headSha` and `configPath`. A dirty publication never
+claims or replaces it, and a later clean publication of a commit becomes its
+publication even when dirty publications exist. A Plan or Complete joins an
+existing publication only when both are clean. Every completed dirty upload
+answers `201`; the CLI reports `200` for a dirty upload as `upload-failed`.
+Regenerate receiver contract tests from the new `upload-manifest-v2.json`
+fixture and from `upload-plan-v1.json`, whose fixture format is now version 2.
+
+A dirty publication adds `This publication includes uncommitted changes.` to
+the publish result. Build steps that leave untracked files which Git does not
+ignore now mark publications as dirty; add those files to `.gitignore`.
 
 ## Historical Navigation Path Upgrade Release Note
 

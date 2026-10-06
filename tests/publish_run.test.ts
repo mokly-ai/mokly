@@ -31,13 +31,15 @@ test("publish exchanges the pinned export and returns counts", async () => {
     uploaded: 3,
     unchanged: fixture.entries().length - 3,
     viewerUrl: "https://mokly.ai/catalogues/one",
+    uncommittedChanges: false,
   });
   assert.deepEqual(fixture.metadata(), {
-    schemaVersion: 1,
+    schemaVersion: 2,
     moklyVersion: "1.2.3",
     repository: { host: "github.com", owner: "team", name: "catalogue" },
     branch: "feature",
     headSha: head,
+    uncommittedChanges: false,
     baseRef: "origin/main",
     baseSha: base,
     pullRequest: null,

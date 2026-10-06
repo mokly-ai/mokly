@@ -1,5 +1,6 @@
 import {
   expired,
+  joinedPublication,
   publicationKey,
   type FakeReceiverPublication,
   type FakeUpload,
@@ -11,11 +12,17 @@ export interface FakeCompleteResult extends FakeUploadCompletion {
   firstCompletion: boolean;
 }
 
+/** Completed publications: clean ones by commit key, dirty ones in order. */
+export interface FakePublicationStore {
+  publications: Map<string, FakeReceiverPublication>;
+  dirtyPublications: FakeReceiverPublication[];
+}
+
 /** Resolve Complete at request time and retain its first successful result. */
 export function resolveFakeComplete(
   upload: FakeUpload | undefined,
   blobs: ReadonlyMap<string, Buffer>,
-  publications: Map<string, FakeReceiverPublication>,
+  store: FakePublicationStore,
   origin: string,
   nextPublicationId: () => string,
 ): FakeCompleteResult {
@@ -24,8 +31,7 @@ export function resolveFakeComplete(
     return { ...upload.completion, firstCompletion: false };
   if (expired(upload)) return { firstCompletion: false, status: 410 };
 
-  const key = publicationKey(upload.manifest);
-  const existing = publications.get(key);
+  const existing = joinedPublication(upload.manifest, store.publications);
   let status: 200 | 201;
   let responseBody: Buffer;
   if (existing) {
@@ -44,7 +50,10 @@ export function resolveFakeComplete(
       viewerUrl: `${origin}/catalogues/${publicationId}/view`,
     };
     responseBody = Buffer.from(JSON.stringify(body));
-    publications.set(key, { body, manifest: upload.manifest, responseBody });
+    const publication = { body, manifest: upload.manifest, responseBody };
+    if (upload.manifest.uncommittedChanges)
+      store.dirtyPublications.push(publication);
+    else store.publications.set(publicationKey(upload.manifest), publication);
   }
   upload.completion = { body: responseBody, status };
   return { ...upload.completion, firstCompletion: true };

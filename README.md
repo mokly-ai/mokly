@@ -262,7 +262,9 @@ the required headers and deployment model.
 For automated uploads, Mokly also provides a
 [public composite GitHub Action](./.github/actions/publish/README.md) and a
 documented [upload protocol](./docs/protocol/mokly-upload.md) for hosted or
-self-hosted receivers.
+self-hosted receivers. Every upload records whether the checkout had
+uncommitted changes, and only a clean publication becomes the publication of
+its commit.
 
 ## Packages
 

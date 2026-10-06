@@ -10,7 +10,13 @@ import {
 
 import { ownershipMarkerFromFiles } from "./helpers/ownership_marker.js";
 
-const config = { configPath: "/repo/mokly.config.ts" } as ResolvedConfig;
+const config = {
+  configPath: "/repo/mokly.config.ts",
+  generatedOutput: "committed",
+  mockupsDir: "/repo/mockups",
+  repoRoot: "/repo",
+  review: { outDir: "/repo/.context/mokly-review" },
+} as ResolvedConfig;
 const options = {
   endpoint: "https://example.com/plan",
   token: "secret",
@@ -31,7 +37,9 @@ function fixture(rounds: "one" | "empty" | "replan" | "replan-empty") {
           ? "main"
           : args.includes("--show-toplevel")
             ? "/repo"
-            : "a".repeat(40),
+            : args.includes("status")
+              ? ""
+              : "a".repeat(40),
     },
     now: () => new Date("2026-09-26T12:00:00.000Z"),
     random: () => 0,

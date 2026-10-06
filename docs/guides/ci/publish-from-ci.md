@@ -30,6 +30,14 @@ If you would rather not carry history at all, publish the current catalogue
 alone with `--no-changes`. There is then no baseline to fetch, and a derived
 catalogue skips its historical rebuild too.
 
+## Keep the checkout clean
+
+Publish reports uncommitted changes in the checkout. A step before it that
+leaves untracked files which Git does not ignore, such as a build that writes
+into the repository, marks the publication as having uncommitted changes. Such
+a publication never becomes the publication of its commit. Add those files to
+`.gitignore` to prevent this. Files that Mokly writes for itself never count.
+
 ## Keep the credentials safe
 
 Your authoring code runs during the export, so only grant upload credentials
@@ -45,7 +53,9 @@ as uploaded when their digest matches an ownership entry; every other entry
 counts after its digest's Blob PUT is attempted. Only missing Blobs are sent, so a job publishing an unchanged
 catalogue can send no Blob PUT and still succeed; it still sends the Plan
 archive.
-A rerun for a commit the service already published prints
+A publication with uncommitted changes adds
+`This publication includes uncommitted changes.` after the counted line. A
+rerun from a clean checkout of a commit the service already published prints
 `Mokly catalogue already published for this commit.` with the existing address
 and also succeeds.
 

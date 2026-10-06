@@ -78,7 +78,7 @@ public-safe inventory is distinct from private comparison metadata.
 collision-checked ownership/upload inventories, alongside the implemented
 `__mokly/client/inspector.js`. The read model v4 is a public allowlist
 projection of manifest v8; `mokly-manifest.json` remains excluded. Ownership v2
-and upload v1 keep their schema versions; the review result is v5 and the
+and upload v2 keep their schema versions; the review result is v5 and the
 delivery descriptor v3. Deployment identity includes the catalogue under the
 [delivery hashing rule](./mokly-export-browser.md#deployment-identity) and
 includes the inspector and its inert maps.

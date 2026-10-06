@@ -24,6 +24,7 @@ const FIELDS = [
   "repository",
   "branch",
   "headSha",
+  "uncommittedChanges",
   "baseRef",
   "baseSha",
   "pullRequest",
@@ -34,14 +35,16 @@ const FIELDS = [
 const INVALID_MANIFEST_MESSAGE =
   "Upload metadata is invalid; check repository, revision and config paths.";
 
-/** Validate the generated v1 envelope before it enters the export snapshot. */
+/** Validate the generated v2 envelope before it enters the export snapshot. */
 export function validateUploadManifest(value: unknown): UploadManifest {
-  if (!isRecord(value) || !keys(value, FIELDS))
+  if (!isRecord(value) || !Object.hasOwn(value, "schemaVersion"))
     throw invalidBundle(INVALID_MANIFEST_MESSAGE);
-  if (value["schemaVersion"] !== 1)
+  if (value["schemaVersion"] !== 2)
     throw unsupportedUploadVersion(
-      "Use a receiver and Mokly version that support upload v1.",
+      "Use a receiver and Mokly version that support upload v2.",
     );
+  if (!keys(value, FIELDS) || typeof value["uncommittedChanges"] !== "boolean")
+    throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   const repository = value["repository"];
   if (
     !isRecord(repository) ||

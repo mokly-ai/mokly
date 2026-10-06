@@ -20,14 +20,17 @@ Published Mokly catalogue. 0 files uploaded, <unchanged> unchanged.
 Published Mokly catalogue. 1 file uploaded, <unchanged> unchanged.
 Published Mokly catalogue. 2 files uploaded, <unchanged> unchanged.
 Mokly catalogue already published for this commit.
+This publication includes uncommitted changes.
 <viewer-url>
 ```
 
 The first three lines show the exact plural rule for any counted summary:
 singular only for one. `<uploaded>` and `<unchanged>` otherwise use the same
 decimal counts as rich mode. A publish prints one counted line or the
-already-published line. `<viewer-url>` appears only when accepted and contains
-that normalized URL alone.
+already-published line. A dirty publication then prints
+`This publication includes uncommitted changes.`; a clean one prints nothing
+there. `<viewer-url>` appears only when accepted and contains that normalized
+URL alone.
 
 Plain commands add no phase or watch-event lines. Successful plain commands
 write nothing to stderr unless `--debug-timings` was requested. Expected plain
@@ -47,6 +50,15 @@ An exhausted retry or transport failure has exact plain output:
 
 ```text
 [mokly/upload-failed] The catalogue upload did not complete. Check the endpoint and connection, then retry.
+```
+
+When the checkout's [uncommitted-changes state](./mokly-upload.md#uncommitted-changes)
+differs before Plan from its value before export, or Git cannot report it,
+publish uses the existing `git-failed` code with this exact plain output:
+
+```text
+[mokly/git-failed] Uncommitted changes appeared or disappeared during export. Commit or ignore files that builds write, then publish again.
+[mokly/git-failed] Git could not report uncommitted changes. Check the repository, then publish again.
 ```
 
 ## Rich Errors

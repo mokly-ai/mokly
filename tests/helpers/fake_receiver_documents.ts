@@ -15,6 +15,7 @@ const MANIFEST_FIELDS = [
   "repository",
   "branch",
   "headSha",
+  "uncommittedChanges",
   "baseRef",
   "baseSha",
   "pullRequest",
@@ -26,8 +27,12 @@ const MANIFEST_FIELDS = [
 /** Independently validate an upload manifest received in the plan archive. */
 export function readFakeUploadManifest(value: unknown): UploadManifest {
   if (!record(value) || !Object.hasOwn(value, "schemaVersion")) throw invalid();
-  if (value["schemaVersion"] !== 1) throw unsupported();
-  if (!exactKeys(value, MANIFEST_FIELDS)) throw invalid();
+  if (value["schemaVersion"] !== 2) throw unsupported();
+  if (
+    !exactKeys(value, MANIFEST_FIELDS) ||
+    typeof value["uncommittedChanges"] !== "boolean"
+  )
+    throw invalid();
   const repository = value["repository"];
   if (
     !record(repository) ||

@@ -26,7 +26,7 @@ The exporter writes UTF-8 JSON without a BOM, with these two fields:
   "files": [
     { "path": "404.html", "sha256": "<64 lowercase hex>", "size": 1834 },
     { "path": "index.html", "sha256": "<64 lowercase hex>", "size": 20991 },
-    { "path": "mokly-upload.json", "sha256": "<64 lowercase hex>", "size": 412 }
+    { "path": "mokly-upload.json", "sha256": "<64 lowercase hex>", "size": 421 }
   ]
 }
 ```
@@ -89,8 +89,10 @@ including a nonnumeric size or non-string path, remain invalid.
 ## Complete Artifact And Upload Validation
 
 `files` lists every regular file in the completed export except the marker
-itself, including package assets and `mokly-upload.json` when publishing. The
-upload envelope is therefore written and hashed before the marker. Directories
+itself, including package assets and, when publishing, the schema 2
+[`mokly-upload.json`](./mokly-upload.md#upload-manifest) with its
+`uncommittedChanges` state. The upload envelope is therefore written and hashed
+before the marker. Directories
 are implicit and are not inventory entries. A complete artifact has exactly the
 inventory plus the root marker; compare case-sensitive paths as sets after
 checking duplicates. File/directory prefix collisions are invalid, including

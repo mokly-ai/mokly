@@ -144,7 +144,7 @@ test("publish manifest revisions leave identity, every shell and catalogue uncha
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
   const baseManifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     moklyVersion: "1.2.3",
     repository: { host: "example.com", owner: "team", name: "catalogue" },
     branch: "main",
@@ -154,7 +154,11 @@ test("publish manifest revisions leave identity, every shell and catalogue uncha
     configPath: "mokly.config.ts",
     comparisonPath: null,
   };
-  const build = async (headSha: string, exportedAt: string) => {
+  const build = async (
+    headSha: string,
+    uncommittedChanges: boolean,
+    exportedAt: string,
+  ) => {
     const result = await exportCatalogue(fixture.config, {
       outDir: "site",
       noChanges: true,
@@ -163,15 +167,15 @@ test("publish manifest revisions leave identity, every shell and catalogue uncha
         transform(files) {
           files.set(
             "mokly-upload.json",
-            `${JSON.stringify({ ...baseManifest, headSha, exportedAt })}\n`,
+            `${JSON.stringify({ ...baseManifest, headSha, uncommittedChanges, exportedAt })}\n`,
           );
         },
       },
     });
     return { result, files: await directoryFiles(fixture.output) };
   };
-  const first = await build("a".repeat(40), "2026-09-26T12:00:00.000Z");
-  const second = await build("b".repeat(40), "2026-09-26T13:00:00.000Z");
+  const first = await build("a".repeat(40), false, "2026-09-26T12:00:00.000Z");
+  const second = await build("b".repeat(40), true, "2026-09-26T13:00:00.000Z");
   assert.equal(second.result.deploymentId, first.result.deploymentId);
   const stable = [...first.files.keys()].filter(
     (name) =>

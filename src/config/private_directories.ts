@@ -23,8 +23,13 @@ const DENIED_SOURCE_TEMPORARY_PREFIXES = [
 export function isDeniedSourceSegment(segment: string): boolean {
   return (
     DENIED_SOURCE_DIRECTORY_NAMES.has(segment) ||
-    DENIED_SOURCE_TEMPORARY_PREFIXES.some((prefix) =>
-      segment.startsWith(prefix),
-    )
+    isMoklyTemporarySegment(segment)
+  );
+}
+
+/** Return whether one path segment names a Mokly temporary write directory. */
+export function isMoklyTemporarySegment(segment: string): boolean {
+  return DENIED_SOURCE_TEMPORARY_PREFIXES.some((prefix) =>
+    segment.startsWith(prefix),
   );
 }

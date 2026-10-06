@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "endpoint": "https://api.example.com/v1/projects/p-123/publications",
   "marker": [
     "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
@@ -870,6 +870,54 @@
         "region": "eu"
       },
       "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+    },
+    {
+      "name": "complete-201-dirty-upload",
+      "step": "complete",
+      "valid": true,
+      "outcome": "published",
+      "status": 201,
+      "uncommittedChanges": true,
+      "document": {
+        "id": "pub-2",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-2",
+        "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-2"
+      },
+      "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-2"
+    },
+    {
+      "name": "complete-200-clean-upload-joins-the-clean-publication",
+      "step": "complete",
+      "valid": true,
+      "outcome": "already-published",
+      "status": 200,
+      "uncommittedChanges": false,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+      },
+      "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+    },
+    {
+      "name": "complete-200-dirty-upload-is-not-a-success",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-failed",
+      "status": 200,
+      "uncommittedChanges": true,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+      },
+      "viewerUrl": null
     },
     {
       "name": "complete-204-is-not-a-success",

@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "clean-current-only",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": false,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "dirty-current-only",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": true,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "clean-with-comparison",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": false,
+        "baseRef": "origin/main",
+        "baseSha": "9c2e5a8d1f4b7e0a3c6f9b2d5e8a1c4f7b0e3d6a",
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": "__mokly/diffs/__generations/7d1e4a9c2f5b8e0d3a6c9f2b5e8d1a4c7f0b3e6d9a2c5f8b1e4d7a0c3f6b9e2d/review.json"
+      }
+    },
+    {
+      "name": "dirty-with-comparison",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": true,
+        "baseRef": "origin/main",
+        "baseSha": "9c2e5a8d1f4b7e0a3c6f9b2d5e8a1c4f7b0e3d6a",
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": "__mokly/diffs/__generations/7d1e4a9c2f5b8e0d3a6c9f2b5e8d1a4c7f0b3e6d9a2c5f8b1e4d7a0c3f6b9e2d/review.json"
+      }
+    },
+    {
+      "name": "dirty-pull-request-in-a-subdirectory",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "feature/screens",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": true,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": 42,
+        "configPath": "tools/mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "clean-sha256-repository",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "uncommittedChanges": false,
+        "baseRef": "origin/main",
+        "baseSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": "__mokly/diffs/__generations/7d1e4a9c2f5b8e0d3a6c9f2b5e8d1a4c7f0b3e6d9a2c5f8b1e4d7a0c3f6b9e2d/review.json"
+      }
+    },
+    {
+      "name": "schema-version-1",
+      "valid": false,
+      "rejection": "unsupported-version",
+      "document": {
+        "schemaVersion": 1,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "schema-version-1-with-uncommitted-changes",
+      "valid": false,
+      "rejection": "unsupported-version",
+      "document": {
+        "schemaVersion": 1,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": false,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "string-schema-version",
+      "valid": false,
+      "rejection": "unsupported-version",
+      "document": {
+        "schemaVersion": "2",
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": false,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "schema-version-3",
+      "valid": false,
+      "rejection": "unsupported-version",
+      "document": {
+        "schemaVersion": 3,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": true,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "missing-schema-version",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": false,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "missing-uncommitted-changes",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "string-uncommitted-changes",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": "true",
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "numeric-uncommitted-changes",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": 1,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "null-uncommitted-changes",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": null,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null
+      }
+    },
+    {
+      "name": "extra-field",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": true,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": null,
+        "dirtyPaths": ["docs/notes.md"]
+      }
+    },
+    {
+      "name": "comparison-path-without-base",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "moklyVersion": "0.14.0",
+        "repository": {
+          "host": "github.com",
+          "owner": "mokly-ai",
+          "name": "catalogue"
+        },
+        "branch": "main",
+        "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+        "uncommittedChanges": true,
+        "baseRef": null,
+        "baseSha": null,
+        "pullRequest": null,
+        "configPath": "mokly.config.ts",
+        "exportedAt": "2026-10-05T12:00:00.000Z",
+        "comparisonPath": "__mokly/diffs/__generations/7d1e4a9c2f5b8e0d3a6c9f2b5e8d1a4c7f0b3e6d9a2c5f8b1e4d7a0c3f6b9e2d/review.json"
+      }
+    },
+    {
+      "name": "array-root",
+      "valid": false,
+      "rejection": "invalid",
+      "document": [
+        {
+          "schemaVersion": 2,
+          "moklyVersion": "0.14.0",
+          "repository": {
+            "host": "github.com",
+            "owner": "mokly-ai",
+            "name": "catalogue"
+          },
+          "branch": "main",
+          "headSha": "3f8a1c6e2b9d4f7a0c5e8b1d6f2a9c4e7b0d3f6a",
+          "uncommittedChanges": false,
+          "baseRef": null,
+          "baseSha": null,
+          "pullRequest": null,
+          "configPath": "mokly.config.ts",
+          "exportedAt": "2026-10-05T12:00:00.000Z",
+          "comparisonPath": null
+        }
+      ]
+    }
+  ]
+}

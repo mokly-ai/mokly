@@ -1,18 +1,20 @@
-# Catalogue Upload v1
+# Catalogue Upload v2
 
 ## Delivery Status And Boundary
 
 The installed CLI implements the public `mokly publish` command, upload
 manifest and [content-addressed exchange](./mokly-upload-exchange.md).
-[Delta Publishing](../../plans/delta-publishing.md) records their contract,
-implementation and verification. Nothing is live, so the earlier exchange was
-replaced rather than kept beside this one.
+[Delta Publishing](../../plans/delta-publishing.md) records the exchange, and
+[Uncommitted Changes Reporting](../../plans/uncommitted-changes-reporting.md)
+records manifest schema 2. Nothing is live, so each earlier contract was
+replaced rather than kept beside the current one.
 
 Receivers, hosted or self-hosted, need only the published `@mokly/mokly`
 package and its protocol documents and fixtures; Mokly Cloud has no private
 protocol. `mokly export` remains local-only. `mokly publish` exports, then runs
 the exchange so a receiver stores only content it lacks. The
-`mokly-upload.json` envelope keeps `schemaVersion: 1`; the ownership marker is
+`mokly-upload.json` envelope is `schemaVersion: 2`, which adds the required
+`uncommittedChanges` state; schema 1 is not read. The ownership marker is
 [schema 2](./mokly-export-ownership.md), and the Plan response is independently
 versioned as v1.
 
@@ -61,11 +63,11 @@ explicit `--base`. Both modes build and validate the catalogue.
 Publish requires a Git checkout with a commit even without comparisons, to
 identify the uploaded revision. Derived catalogues rebuild the pinned baseline
 only when comparisons are enabled; `--no-changes` requires neither that
-history nor a historical install or build. Uncommitted authoring changes are
-permitted: `headSha` identifies checkout context, not a claim that every
-exported byte exists at that commit. A receiver keeps the first publication it
-completes for a `headSha` and `configPath`; publishing a dirty tree is not a
-supported way to change a published commit.
+history nor a historical install or build. Uncommitted changes are permitted
+and reported: `headSha` names the checked-out commit, and
+[`uncommittedChanges`](#uncommitted-changes) says whether the checkout
+differed from it. Only a clean publication can become the publication of a
+commit under the [publication rule](#publication-rule).
 
 ## Repository And Revision Identity
 
@@ -87,17 +89,64 @@ the actual checked-out commit, never a substituted pull-request SHA.
 context only when `GITHUB_ACTIONS=true`. For pull-request-head semantics, check
 out the head explicitly as in the action guide.
 
+## Uncommitted Changes
+
+`uncommittedChanges` is `true` when Git reports a change outside Mokly's
+working paths, and `false` otherwise. Publish runs Git from `repoRoot` with
+this fixed argument list and no shell, then parses its NUL-separated records:
+
+```bash
+git --no-optional-locks status --porcelain=v1 -z --untracked-files=all --ignore-submodules=none --no-renames
+```
+
+Porcelain paths are relative to the Git top level, so the whole repository
+counts even when the config is in a subdirectory. Every record counts:
+modified, staged, deleted, renamed or type-changed tracked files, unmerged
+paths, submodule changes, and untracked files that Git does not ignore. The
+fixed options override `status.showUntrackedFiles`, `diff.ignoreSubmodules` and
+`submodule.<name>.ignore`. Ignored files never count. A record counts when any
+path that it names is outside these working paths:
+
+- this run's export directory, `--out`;
+- the `.mokly-export-reservations` folder beside that directory;
+- `.mokly-cache/` under `repoRoot` and the configured `review.outDir`;
+- any path with a segment that starts with `.mokly-write-` or `.mokly-review-`;
+  and
+- for `generatedOutput: "derived"`, each file under `mockupsDir` that the
+  [generated ownership rule](./mokly-rendering-generated.md#ownership) proves
+  Mokly-owned: generated documents and views, `mokly-manifest.json`,
+  `mokly-generated/` and copied document resources.
+
+Compare each folder's lexical and real path, relative to the Git top level,
+with every reported path. These paths never hold catalogue inputs, and a
+derived export publishes compiled bytes rather than generated files on disk,
+so the export cannot mark itself dirty. A committed catalogue's generated files
+are not excluded, because Git holds them as content: commit them after
+`mokly build`.
+
+Resolve the state immediately after HEAD and before export. Before Plan, after
+the changed-HEAD check, read it again; a different value fails as:
+
+```text
+[mokly/git-failed] Uncommitted changes appeared or disappeared during export. Commit or ignore files that builds write, then publish again.
+```
+
+A failed status command or output that is not valid porcelain fails as
+`[mokly/git-failed] Git could not report uncommitted changes. Check the repository, then publish again.`
+A cancelled Git command keeps the exchange's cancellation classification.
+
 ## Upload Manifest
 
 `mokly-upload.json` is UTF-8 JSON at the export root with exactly these fields:
 
 ```ts
-interface MoklyUploadV1 {
-  schemaVersion: 1;
+interface MoklyUploadV2 {
+  schemaVersion: 2;
   moklyVersion: string;
   repository: { host: string; owner: string; name: string };
   branch: string;
   headSha: string;
+  uncommittedChanges: boolean;
   baseRef: string | null;
   baseSha: string | null;
   pullRequest: number | null;
@@ -107,7 +156,9 @@ interface MoklyUploadV1 {
 }
 ```
 
-Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
+Readers accept only the number `2` as `schemaVersion` and check it before
+other fields; schema 1 is unsupported. Readers reject missing/extra
+upload-manifest fields and duplicate JSON keys.
 
 - `moklyVersion` is the installed package's exact SemVer, including prerelease
   or build metadata, at most 255 UTF-8 bytes. `schemaVersion` versions this
@@ -120,6 +171,9 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 - `headSha` and non-null `baseSha` are full lowercase hexadecimal Git object
   ids, exactly 40 or 64 characters. Resolve HEAD before export and reject a
   changed HEAD before Plan.
+- `uncommittedChanges` is a required boolean defined by
+  [Uncommitted Changes](#uncommitted-changes). `true` means that the publication
+  can contain bytes that `headSha` does not hold.
 - With comparisons, `baseRef` is the effective ref, nonempty and at most 255
   UTF-8 bytes with no category Cc character. `baseSha` is the pinned merge
   base, never the current tip of `baseRef`; they equal `baseRef` and
@@ -145,11 +199,28 @@ changing `deploymentId` or the stamped catalogue and shell bytes. The Plan
 archive and every Blob request use the same finalized byte snapshot as the
 installed export, never a later walk of mutable output.
 
+## Publication Rule
+
+A clean publication has `uncommittedChanges: false`; a dirty publication has
+`uncommittedChanges: true`. Receivers apply these rules:
+
+- A receiver keeps at most one clean publication for each `headSha` and
+  `configPath`: the first clean publication that it completes.
+- A publication with `uncommittedChanges: true` never claims that key and
+  never replaces a clean publication.
+- A later clean publication of a commit becomes the publication of that commit,
+  also when dirty publications of it exist.
+
+The [exchange replay rules](./mokly-upload-exchange.md#complete) apply this rule
+to Plan and Complete: only a clean upload joins an existing publication, and
+only a clean one.
+
 ## Output
 
 The [exchange accounting and output contract](./mokly-upload-exchange.md#accounting-and-output)
 defines uploaded and unchanged counts, per-round progress, singular and plural
-strings, viewer URL handling, cancellation, and transport-failure copy. The
+strings, the uncommitted-changes line, viewer URL handling, cancellation, and
+transport-failure copy. The
 [terminal output contract](./mokly-terminal-output.md#one-shot-commands) owns
 plain and rich rendering. Failed publication leaves the complete local export
 available; it is not rolled back.

@@ -21,6 +21,7 @@ interface FixtureCase {
   body?: string;
   outcome?: string;
   viewerUrl?: string | null;
+  uncommittedChanges?: boolean;
 }
 
 interface UploadPlanFixture {
@@ -76,7 +77,7 @@ function responseBytes(value: string): Uint8Array<ArrayBuffer> {
 
 test("the CLI plan reader conforms to every public plan fixture case", async () => {
   const contract = await fixture();
-  assert.equal(contract.schemaVersion, 1);
+  assert.equal(contract.schemaVersion, 2);
   for (const sample of contract.cases.filter(
     ({ step }) => step === undefined || step === "plan",
   )) {
@@ -112,7 +113,11 @@ test("the CLI Complete reader conforms to every public Complete fixture case", a
     let calls = 0;
     const read = completeUpload(
       plan,
-      { endpoint: contract.endpoint, token: "secret" },
+      {
+        endpoint: contract.endpoint,
+        token: "secret",
+        uncommittedChanges: sample.uncommittedChanges ?? false,
+      },
       {
         ...retryDependencies,
         fetch: async (_url, init) => {
@@ -142,6 +147,29 @@ test("the CLI Complete reader conforms to every public Complete fixture case", a
       );
     }
   }
+});
+
+test("Complete cases cover clean and dirty uploads", async () => {
+  const cases = (await fixture()).cases.filter(
+    ({ step }) => step === "complete",
+  );
+  assert.deepEqual(
+    cases
+      .filter(({ uncommittedChanges }) => uncommittedChanges === true)
+      .map(({ status, outcome }) => [status, outcome]),
+    [
+      [201, "published"],
+      [200, "upload-failed"],
+    ],
+  );
+  assert.ok(
+    cases.some(
+      ({ uncommittedChanges, status, outcome }) =>
+        uncommittedChanges === false &&
+        status === 200 &&
+        outcome === "already-published",
+    ),
+  );
 });
 
 test("the independent package reader covers both fixture steps", async () => {

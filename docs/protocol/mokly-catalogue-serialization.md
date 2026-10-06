@@ -49,7 +49,7 @@ require `parentTitle`. These v4 fields are one unreleased contract; readers
 do not translate earlier v4 drafts. Optional
 fields are additive; removals, required additions, changed meaning, new union
 discriminants or incompatible paths require a new version. This file and the
-inspector asset are additive inventory entries: ownership v2 and upload v1
+inspector asset are additive inventory entries: ownership v2 and upload v2
 remain unchanged; the review result and delivery descriptor follow the
 [Changes](./mokly-changes.md) and [static delivery](./mokly-export-delivery.md)
 contracts.

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   publishOutput,
   publishProgressLabel,
+  UNCOMMITTED_CHANGES_LINE,
 } from "../dist/cli/publish_output.js";
 import { PlainReporter } from "../dist/cli/reporter/plain.js";
 import { RichReporter } from "../dist/cli/reporter/rich.js";
@@ -39,6 +40,7 @@ test("plain publish output pluralizes 0, 1 and 2 files", () => {
         uploaded,
         unchanged: 2 - uploaded,
         viewerUrl: "https://mokly.ai/catalogue",
+        uncommittedChanges: false,
       },
       "secret",
     );
@@ -61,6 +63,7 @@ test("plain publish output uses the already-published line", () => {
       uploaded: 0,
       unchanged: 1,
       viewerUrl: null,
+      uncommittedChanges: false,
     },
     "secret",
   );
@@ -84,6 +87,7 @@ test("rich publish summaries pluralize 0, 1 and 2 files", () => {
         uploaded,
         unchanged: 2 - uploaded,
         viewerUrl: null,
+        uncommittedChanges: false,
       },
       "secret",
     );
@@ -103,6 +107,7 @@ test("rich publish output keeps summaries styled and viewer URLs unstyled", () =
       uploaded: 12,
       unchanged: 266,
       viewerUrl: "https://mokly.ai/catalogue",
+      uncommittedChanges: false,
     },
     "secret",
   );
@@ -122,6 +127,7 @@ test("rich publish output keeps summaries styled and viewer URLs unstyled", () =
       uploaded: 0,
       unchanged: 278,
       viewerUrl: null,
+      uncommittedChanges: false,
     },
     "secret",
   );
@@ -145,9 +151,50 @@ test("viewer URLs containing raw or encoded bearer tokens are omitted", () => {
           uploaded: 1,
           unchanged: 2,
           viewerUrl,
+          uncommittedChanges: false,
         },
         token,
       ).viewerUrl,
       null,
     );
+});
+
+test("a dirty publication adds one aligned line in plain and rich output", () => {
+  const result = {
+    outcome: "published" as const,
+    uploaded: 2,
+    unchanged: 5,
+    viewerUrl: "https://mokly.ai/catalogue",
+    uncommittedChanges: true,
+  };
+  const output = publishOutput(result, "secret");
+  assert.equal(output.note, "This publication includes uncommitted changes.");
+  assert.equal(output.note, UNCOMMITTED_CHANGES_LINE);
+  assert.equal(
+    publishOutput({ ...result, uncommittedChanges: false }, "secret").note,
+    null,
+  );
+  const render = (tty: boolean) => {
+    const terminal = memoryTerminal({ isTTY: tty });
+    const reporter = tty
+      ? new RichReporter(terminal.environment)
+      : new PlainReporter(terminal.environment);
+    reporter.summary(output.plain, output.rich, 900);
+    if (output.note) reporter.write(`${output.note}\n`);
+    if (output.viewerUrl) reporter.write(`${output.viewerUrl}\n`);
+    assert.equal(terminal.stderr(), "");
+    return terminal.stdout();
+  };
+  assert.equal(
+    render(false),
+    "Published Mokly catalogue. 2 files uploaded, 5 unchanged.\n" +
+      "This publication includes uncommitted changes.\n" +
+      "https://mokly.ai/catalogue\n",
+  );
+  assert.equal(
+    render(true),
+    "  ✔ Published Mokly catalogue · 2 files uploaded, 5 unchanged (900ms)\n" +
+      "This publication includes uncommitted changes.\n" +
+      "https://mokly.ai/catalogue\n",
+  );
 });

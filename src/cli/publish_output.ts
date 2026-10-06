@@ -2,10 +2,16 @@ import type { PublishResult } from "../publish/types.js";
 
 import { formatBytes, formatCount } from "./reporter/terminal.js";
 
+/** Unstyled result line for a publication with uncommitted changes. */
+export const UNCOMMITTED_CHANGES_LINE =
+  "This publication includes uncommitted changes.";
+
 /** Plain/rich summary copy and a credential-safe optional viewer destination. */
 export interface PublishOutput {
   plain: string;
   rich: string;
+  /** Unstyled line written after the summary in both output modes. */
+  note: string | null;
   viewerUrl: string | null;
 }
 
@@ -34,6 +40,7 @@ export function publishOutput(
     rich: published
       ? `Published Mokly catalogue · ${uploaded} uploaded, ${result.unchanged} unchanged`
       : "Mokly catalogue already published for this commit",
+    note: result.uncommittedChanges ? UNCOMMITTED_CHANGES_LINE : null,
     viewerUrl: safeViewerUrl(result.viewerUrl, token),
   };
 }

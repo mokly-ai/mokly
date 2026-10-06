@@ -24,8 +24,10 @@ both entry impact and screen comparisons. Capture the current catalogue,
 generated documents, and resources consistently for that build; fail if inputs
 change during capture rather than mix revisions. Record the resolved comparison
 baseline with the exported review metadata. The artifact represents the files
-captured at publication time, including any permitted uncommitted input, rather
-than claiming that HEAD alone identifies those bytes.
+captured at publication time, including any uncommitted input, rather than
+claiming that HEAD alone identifies those bytes. This repository preview writes
+no upload manifest; `mokly publish` reports the same condition as the manifest's
+[`uncommittedChanges`](./mokly-upload.md#uncommitted-changes) value.
 
 Package validated comparison data and isolated resources under the existing
 immutable generation path. Browser diff selection loads the packaged result;

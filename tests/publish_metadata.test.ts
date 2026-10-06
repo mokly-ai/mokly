@@ -12,11 +12,12 @@ import type { GitCommandRunner } from "../dist/review/git.js";
 
 const head = "a".repeat(40);
 const manifest = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   moklyVersion: "1.2.3-beta.1+build.5",
   repository: { host: "github.com", owner: "sample", name: "catalogue" },
   branch: "feature/screens",
   headSha: head,
+  uncommittedChanges: false,
   baseRef: null,
   baseSha: null,
   pullRequest: null,
@@ -175,7 +176,8 @@ test("manifest validates exact fields, paired comparison metadata, versions, siz
     comparisonPath,
   });
   for (const invalid of [
-    { ...manifest, schemaVersion: 2 },
+    { ...manifest, schemaVersion: 1 },
+    { ...manifest, uncommittedChanges: "false" },
     { ...manifest, extra: true },
     { ...manifest, moklyVersion: "1.2" },
     { ...manifest, headSha: "a".repeat(41) },

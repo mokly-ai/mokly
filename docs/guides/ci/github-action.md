@@ -65,6 +65,14 @@ choosing, and replace `COMMIT_SHA` with the action commit you reviewed.
 | `base`       | no       | Comparison ref; otherwise the config's own base             |
 | `no-changes` | no       | `true` publishes without comparisons; conflicts with `base` |
 
+## Untracked build output
+
+Publish reports uncommitted changes in the checkout. Build steps that run
+before the action and leave untracked files which Git does not ignore mark the
+publication as having uncommitted changes, so it never becomes the publication
+of its commit. Add those files to `.gitignore` to prevent this. Files that
+Mokly writes for itself never count.
+
 ## What it leaves to you
 
 The action uses the tested Node 24.21 lane and runs the command. Published Mokly

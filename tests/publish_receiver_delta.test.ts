@@ -4,6 +4,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
+import { writeCompilation } from "../dist/build/transaction.js";
+
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -75,7 +78,11 @@ test("publish uploads changed content and identity-stamped shells after an entry
     fixture.entryPath,
     validEntrySource({ body: "<strong>Changed published home</strong>" }),
   );
-  await fixture.git("add", "entries/fixture.mockup.tsx");
+  await writeCompilation(
+    await compileCatalogue(fixture.config),
+    fixture.config,
+  );
+  await fixture.git("add", "entries", "mockups");
   await fixture.git("commit", "-qm", "test: change one published screen");
   const { stdout, stderr } = await runPublishedCli(
     fixture.root,

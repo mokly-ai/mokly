@@ -6,6 +6,7 @@ import path from "node:path";
 
 import { inspectPublicCatalogue } from "./catalogue.mjs";
 import { runCommand } from "./command.mjs";
+import { commitSmokeEdits } from "./fixture.mjs";
 import {
   assertCompleteInventory,
   assertOwnershipMarker,
@@ -18,6 +19,7 @@ import {
   requestBytes,
   validBlob,
 } from "./publish_exchange.mjs";
+import { checkUploadManifestFixtures } from "./upload_manifest.mjs";
 import { checkUploadPlanFixtures } from "./upload_plan.mjs";
 
 /** Exercise only the packed public CLI and documented files against a receiver. */
@@ -25,6 +27,7 @@ export async function smokeConsumerPublish(context, root) {
   const packageRoot = path.join(root, "node_modules/@mokly/mokly");
   await checkOwnershipFixtures(packageRoot);
   await checkUploadPlanFixtures(packageRoot);
+  await checkUploadManifestFixtures(packageRoot);
   const plans = [];
   const blobs = new Map();
   const uploads = new Map();
@@ -67,7 +70,9 @@ export async function smokeConsumerPublish(context, root) {
       const id = `upload-${plans.length + 1}`;
       const byDigest = new Map(entries.map((entry) => [entry.sha256, entry]));
       const publicationKey = `${manifest.headSha}\0${manifest.configPath}`;
-      const existing = publications.get(publicationKey);
+      const existing = manifest.uncommittedChanges
+        ? undefined
+        : publications.get(publicationKey);
       const missing = existing
         ? []
         : [...byDigest.keys()].filter((digest) => !blobs.has(digest)).sort();
@@ -133,7 +138,8 @@ export async function smokeConsumerPublish(context, root) {
       const publication = {
         viewerUrl: `${origin}/catalogues/${complete[1]}/view`,
       };
-      publications.set(upload.publicationKey, publication);
+      if (!upload.manifest.uncommittedChanges)
+        publications.set(upload.publicationKey, publication);
       response
         .writeHead(201, { "Content-Type": "application/json" })
         .end(JSON.stringify(publication));
@@ -155,6 +161,8 @@ export async function smokeConsumerPublish(context, root) {
     for (const noChanges of [false, true]) {
       blobs.clear();
       publications.clear();
+      const dirty = !noChanges;
+      if (!dirty) await commitSmokeEdits(root);
       const { stdout, stderr } = await runCommand(
         bin,
         [
@@ -178,12 +186,14 @@ export async function smokeConsumerPublish(context, root) {
       assert.equal(
         stdout,
         `Published Mokly catalogue. ${uploaded} ${uploaded === 1 ? "file" : "files"} uploaded, ${plan.entries.length - uploaded} unchanged.\n` +
+          (dirty ? "This publication includes uncommitted changes.\n" : "") +
           `${origin}/catalogues/upload-${plans.length}/view\n`,
       );
       assert.doesNotMatch(stdout + stderr, /package-smoke-token/);
       const manifest = plan.manifest;
       assert.equal(manifest.moklyVersion, context.packageVersion);
-      assert.equal(manifest.schemaVersion, 1);
+      assert.equal(manifest.schemaVersion, 2);
+      assert.equal(manifest.uncommittedChanges, dirty);
       assert.equal(manifest.configPath, "mokly.config.ts");
       assert.deepEqual(
         [...plan.files.keys()],
