@@ -1,6 +1,6 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestone 28A is implemented locally. All non-audit checks pass under the authorized audit-failure fallback. The reviewer owns the push.
+Status: Active. Milestones 1 to 28A are implemented, verified and pushed. Milestones 29 to 32 remain. The complete gate is blocked only by the new `source-map-js` advisory GHSA-68fv-2mgg-jv7q, which awaits the user's decision; every other gate step passes.
 
 ## Status And Outcome
 
@@ -2835,9 +2835,10 @@ on 2026-10-05. A trial merge gives 315 conflicts.
       its live audit is blocked. Require 100% on all other steps. Inspect the
       diff and deletions against `origin/main`, record the result, and make
       the local merge commit.
-- [ ] The reviewer pushes the branch after checking the local commit.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
-      complete diff against `origin/main`. Report findings without changing code.
+- [x] The reviewer pushes the branch after checking the local commit. The
+      reviewer checked the merge parents, the deletions, the conflict record
+      and the screenshots, and pushed `12202f14`. The review of the complete
+      diff against `origin/main` runs once, in Milestone 32.
 
 ### Integration record
 
