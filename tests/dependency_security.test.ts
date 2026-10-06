@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import test from "node:test";
 
 import { braceExpand, minimatch } from "minimatch";
@@ -35,6 +36,63 @@ test("glob expansion bounds total padded output, not just result count", () => {
   assert.ok(
     expanded.reduce((length, value) => length + value.length, 0) <= 4_000_000,
     "padded sequences must respect the dependency's aggregate expansion budget",
+  );
+});
+
+/** The consumer surface PostCSS uses to read and apply a previous source map. */
+interface SourceMapModule {
+  SourceMapConsumer: new (map: string) => {
+    eachMapping(
+      callback: (mapping: {
+        generatedLine: number;
+        source: string | null;
+      }) => void,
+    ): void;
+  };
+}
+
+/** Load the exact `source-map-js` copy that the runtime PostCSS resolves. */
+function postcssSourceMap(): SourceMapModule {
+  const postcssEntry = createRequire(import.meta.url).resolve("postcss");
+  return createRequire(postcssEntry)("source-map-js") as SourceMapModule;
+}
+
+/** Serialize an indexed map with one single-mapping section per offset line. */
+function indexedSourceMap(offsetLines: readonly number[]): string {
+  return JSON.stringify({
+    version: 3,
+    sections: offsetLines.map((line, index) => ({
+      offset: { line, column: 0 },
+      map: {
+        version: 3,
+        sources: [`section-${index}.css`],
+        names: [],
+        mappings: "AAAA",
+      },
+    })),
+  });
+}
+
+test("PostCSS source maps keep ordinary indexed section offsets", () => {
+  const { SourceMapConsumer } = postcssSourceMap();
+  const consumer = new SourceMapConsumer(indexedSourceMap([0, 2]));
+  const mappings: Array<[number, string | null]> = [];
+  consumer.eachMapping(({ generatedLine, source }) =>
+    mappings.push([generatedLine, source]),
+  );
+
+  assert.deepEqual(mappings, [
+    [1, "section-0.css"],
+    [3, "section-1.css"],
+  ]);
+});
+
+test("PostCSS source maps reject section offsets beyond the line budget", () => {
+  const { SourceMapConsumer } = postcssSourceMap();
+
+  assert.throws(
+    () => new SourceMapConsumer(indexedSourceMap([1_000_000_000])),
+    /Section offset line must not exceed 10000000/,
   );
 });
 
