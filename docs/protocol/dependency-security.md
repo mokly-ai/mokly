@@ -127,6 +127,11 @@ Node floor, and regenerate the lockfile with npm. Do not blindly run
 `npm audit fix --force`: an audit's suggested parent change can be a downgrade
 or an incompatible toolchain replacement.
 
+Update from an installed tree: run `npm ci`, then `npm update <package>`.
+Lockfile-only mode can record bundled entries of optional platform packages
+that this machine does not install. Keep the lockfile diff to the intended
+entries.
+
 Use a narrowly scoped override only to select a patched release when a parent
 pins an affected dependency and a compatible parent update is not appropriate.
 Do not use an override to replace an unpatched package. Document why it exists and
@@ -151,6 +156,15 @@ The current maintenance choices are:
   padded output and preserves normal brace alternatives. The
   [upstream advisory](https://github.com/advisories/GHSA-rgw5-rvv9-x895)
   explains why the intermediate-allocation fix requires 5.0.9, not 5.0.8.
+- [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
+  / CVE-2026-93749 affects `source-map-js >=1.0.0 <1.2.2`: a huge section
+  offset in an indexed source map can block the event loop. Runtime `postcss`
+  and development `@tailwindcss/node` share one copy, and both accept `^1.2.1`.
+  The workspace therefore locks 1.2.2 as a lockfile-only update, with no
+  override or exception. Mokly disables PostCSS map output, so its builds did
+  not reach the blocking step. A bounded regression loads the copy that PostCSS
+  resolves. It keeps ordinary section offsets and rejects an offset line above
+  10,000,000.
 - React Native's compatible Metro 0.84 line is updated to 0.84.6, including its
   coupled packages. The
   [0.84.5 security fix](https://github.com/react/metro/releases/tag/v0.84.5)
