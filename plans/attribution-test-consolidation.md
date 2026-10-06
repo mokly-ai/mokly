@@ -1,8 +1,8 @@
 # Attribution Test Consolidation
 
 Status: Active. [PR #139](https://github.com/mokly-ai/mokly/pull/139) is open as a
-draft. Three post-push review findings, listed under Milestone 6, await the
-user's decision; merging `main` resolved the fourth.
+draft. Milestone 7 applies the approved post-push findings from Milestone 6.
+Merging `main` resolved finding 2. The plan stays active until the PR merges.
 
 Restructure `tests/design_library_attribution.test.ts` and
 `tests/component_design_attribution.test.ts` so they keep every guarantee at a
@@ -395,12 +395,12 @@ audit history.
       with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       and report findings without changing the implementation.
 
-The review ran on `cb28f59b`. Its findings go to the user for a decision and
-are not applied here:
+The review ran on `cb28f59b`. Milestone 7 applies the user's decisions below:
 
 1. Medium: grouped builds 3–5 can hide an extra change that lands on another
    member's path with a subset of that member's reason kinds. The protocol and
    README sentences describe the grouped proof as exact.
+   User decision: A (Milestone 7).
 2. Medium: `main` merged the identical source-map-js lockfile change in #140,
    so the branch's dependency commit and its notes are stale until `main` is
    merged into the branch. Resolved at the user's request: the branch merged
@@ -408,8 +408,57 @@ are not applied here:
 3. Low: a shared file-level fixture registers its teardown after two awaits,
    so a filtered run that selects none of the file's tests leaves its
    temporary directory behind.
+   User decision: A (Milestone 7).
 4. Low: the plan's cost model says five fixtures (six existed) and "five
    compilations become one" (three files now compile once each).
+   User decision: A (Milestone 7).
+
+## Milestone 7: Apply approved review findings
+
+Keep the five source-edit builds with an explicit grouping limit. Make shared
+file fixtures lazy and safe in filtered runs. Enforce their lifetime in tests
+and correct the plan's fixture counts.
+
+User approvals (2026-10-06):
+
+- Finding 1, option A: keep five builds and accept the residual masking limit.
+  Grouping is a reviewed trade-off, not an exact per-edit attribution proof.
+- Finding 2: resolved by merging `main`; no further action is needed.
+- Finding 3, option A: add one shared lazy file-scoped fixture helper, test it,
+  and extend the source-level fixture lifetime check.
+- Finding 4, option A: correct the two fixture compilation counts.
+
+Evidence: `.context/attribution-test-consolidation/milestone-7-plan-checks.log`.
+
+- [ ] Define the grouping rules and residual limit in the CI protocol, library
+      README, plan introduction, and source-edit test comment.
+- [ ] Define synchronous hook registration and lazy setup in the CI protocol.
+- [ ] Add a filtered child-process regression before the fix. Confirm the eager
+      pattern fails. Save its output in the ignored evidence directory.
+- [ ] Add a typed `fileFixture` helper with one synchronously registered hook,
+      one memoized setup, setup settlement before cleanup, reverse cleanup
+      order, and cleanup failure propagation after every cleanup is attempted.
+- [ ] Test helper behavior with an injected hook registrar and no compilation.
+- [ ] Test child runs with no matching tests, two matching tests sharing one
+      setup, and failed setup that still removes its owned output.
+- [ ] Use the lazy helper in the three shared attribution files. Update only
+      the fixture's sharing doc comment in `design_library_fixture.ts`.
+- [ ] Reject module-scope calls to `designLibraryFixture` in the lifecycle
+      check. Test a bad source sample. Add it to the existing helper rule if
+      all consumers meet that rule.
+- [ ] Correct six baseline fixtures and three resulting library compilations
+      in the plan. Name `fileFixture` as the shared mechanism.
+- [ ] Run helper, lifecycle, and projection tests. Run each attribution file
+      individually. Check a no-match attribution run leaves no owned directory.
+- [ ] Run Prettier, ESLint, prepared type checks, protocol size/history tests,
+      and changed-file size checks. Save logs and name them below.
+- [ ] Fetch `origin/main` and run one unqualified `cargo xtask check`. Fix any
+      in-scope failure and rerun. Save the complete output outside the plan.
+- [ ] Commit completed work locally in logical Conventional Commits.
+- [ ] Run git add -A, commit with a Conventional Commits message, and push.
+- [ ] After the push, review the complete local diff against `origin/main`
+      with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
