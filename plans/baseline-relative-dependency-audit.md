@@ -115,7 +115,11 @@ These decisions are fixed for every milestone below.
    Release Please pull request under the existing same-repository detection.
    It is `baseline` for every other pull request and for every push. A fork
    cannot select a mode. The Release workflow's `npm run dependencies:check`
-   publish step is unchanged and strict.
+   publish step is unchanged and strict. Strict mode on every surface honours
+   active reviewed exceptions exactly as today: a valid, unexpired, used
+   record covers its advisory, and an expired or stale record fails the
+   release pull request, the scheduled audit, and the update pull request
+   until it is renewed with a new review or removed.
 10. **Scheduled workflow.** `.github/workflows/dependency-audit.yml` runs
     daily off the hour and on `workflow_dispatch`. Its one job runs on
     `blacksmith-2vcpu-ubuntu-2404` with a timeout, the concurrency group
