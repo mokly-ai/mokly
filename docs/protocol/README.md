@@ -37,8 +37,9 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [Development hydration coverage](./ci-verification-hydration.md) — one
     route per entry shape and the generated resource audit.
 - [CI workflow graph](./ci-workflow.md)
-- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
-  balance, and acceptance measurement.
+- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, test
+  concurrency, unit shard balance and scenario grouping, browser shard balance,
+  and acceptance measurement.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v1](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.

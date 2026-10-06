@@ -1,9 +1,9 @@
 # CI Suite Evidence
 
 This document supplements the [CI verification contract](./ci-verification.md)
-with fixture ownership, test concurrency, failure cleanup, browser shard
-balance, and acceptance measurement rules for the unit, browser, and hydration
-suites.
+with fixture ownership, test concurrency, failure cleanup, unit shard balance
+and scenario grouping, browser shard balance, and acceptance measurement rules
+for the unit, browser, and hydration suites.
 
 ## Fixture Lifetime And Cleanup
 

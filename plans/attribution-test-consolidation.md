@@ -1,8 +1,9 @@
 # Attribution Test Consolidation
 
-Status: Active. [PR #139](https://github.com/mokly-ai/mokly/pull/139) is open as a
-draft. Milestone 7 applies the approved post-push findings from Milestone 6.
-Merging `main` resolved finding 2. The plan stays active until the PR merges.
+Status: Active. [PR #139](https://github.com/mokly-ai/mokly/pull/139) is open and
+ready for review. Milestone 8 applies the review-fix rule to the Milestone 7
+review. Milestone 7 finding 1 awaits the user's decision. The plan stays active
+until the PR merges.
 
 Restructure `tests/design_library_attribution.test.ts` and
 `tests/component_design_attribution.test.ts` to reduce repeated work. Keep exact
@@ -55,10 +56,11 @@ a change, because `classificationContext` builds new readers and caches and
 every view is normalized and parsed again. Affected views add about 0.04 s
 each. Every `compileCatalogue` call costs 16–20 s; a rebuild after one source
 edit plus its classification costs about 31 s. Today the two files make 19
-compilations and 39 classifications: six fixtures, thirteen rebuilds, sixteen
-library edits, nine shared edits, twelve source-edit classifications, and two
-classifications in the committed-baseline test. That is about 850 s at CI
-speed, which matches the 807 s observed.
+compilations and 40 classifications: six fixtures, thirteen rebuilds, sixteen
+library edits, nine shared edits, twelve source-edit classifications, and three
+classifications in the committed-baseline test (`fixture.compare`,
+`computeChangedPaths`, and `compareReview`). That is about 860 s at CI speed,
+close to the 807 s observed.
 
 The six original fixtures were five in the library file and one in the shared
 stylesheet file.
@@ -135,14 +137,14 @@ change in the same result.
 
 ## Options And Decisions
 
-| Option                                        | Evidence                                                                                             | Decision                                                                                                                                      |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| One multi-edit pass per stylesheet family     | Per-change reasons and per-id consumers above; 18.7 s and 20.9 s instead of 16 × 13 s and 9 × 14 s   | Adopt for both files.                                                                                                                         |
-| A few single-edit cases for isolation         | The one-changed-resource fallback is the production case; one control costs about 13 s               | Keep one control (`tag-chip`, the deepest chain). No control in the shared file; the mechanism is the same.                                   |
-| Group edits by directory or consumer set      | A single pass loses no information because reasons are per path                                      | Not needed.                                                                                                                                   |
-| Reuse the before compilation across subtests  | The fixture already keeps `before` and `resources`; today each top-level test builds its own fixture | One lazily started fixture per file through `fileFixture`; the library file's five fixture compilations become three, one per resulting file. |
-| Reuse parsed resources across classifications | `classificationContext` constructs `ComponentMaterialReader` and `CssResourceAnalysis` per call      | Not reachable from tests; recorded as the product follow-up.                                                                                  |
-| Source edits need a real rebuild              | `compileCatalogue` has no subset or incremental mode (`src/build/compile.ts`, `load_graph.ts`)       | Group edits only where expectations stay distinct; move them to their own files.                                                              |
+| Option                                        | Evidence                                                                                             | Decision                                                                                                                                                                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| One multi-edit pass per stylesheet family     | Per-change reasons and per-id consumers above; 18.7 s and 20.9 s instead of 16 × 13 s and 9 × 14 s   | Adopt for both files.                                                                                                                                                                                                                  |
+| A few single-edit cases for isolation         | The one-changed-resource fallback is the production case; one control costs about 13 s               | Keep one control (`tag-chip`, the deepest chain). No control in the shared file; the mechanism is the same.                                                                                                                            |
+| Group edits by directory or consumer set      | A single pass loses no information because reasons are per path                                      | Not needed.                                                                                                                                                                                                                            |
+| Reuse the before compilation across subtests  | The fixture already keeps `before` and `resources`; today each top-level test builds its own fixture | The three shared files each start one fixture lazily through `fileFixture`; the committed-baseline file creates its fixture inside its single test. The library file's five fixture compilations become three, one per resulting file. |
+| Reuse parsed resources across classifications | `classificationContext` constructs `ComponentMaterialReader` and `CssResourceAnalysis` per call      | Not reachable from tests; recorded as the product follow-up.                                                                                                                                                                           |
+| Source edits need a real rebuild              | `compileCatalogue` has no subset or incremental mode (`src/build/compile.ts`, `load_graph.ts`)       | Group edits only where expectations stay distinct; move them to their own files.                                                                                                                                                       |
 
 ## Target Layout
 
@@ -501,14 +503,47 @@ are not applied here:
 1. Low: `tests/fixture_lifecycle.test.ts` now lists `designLibraryFixture`, but
    its message points to `beforeRemove`, which that fixture does not have. The
    rule also flags a correct `owner.after` cleanup inside a `fileFixture` setup.
+   Auto-fix: no; open under Milestone 8.
 2. Low: the measurement record's first sentence and the PR summary still say
    that every attribution guarantee is kept, despite the accepted grouping
    limit. After #147 the record left the repository; the PR summary remains.
+   Auto-fix: yes; fixed in Milestone 8.
 3. Low: the introduction of `docs/protocol/ci-suite-evidence.md` and its entry
    in `docs/protocol/README.md` do not mention the Unit Shard Balance section.
+   Auto-fix: yes; fixed in Milestone 8.
 4. Low: the plan status still calls PR #139 a draft; the decision table says
    every file uses `fileFixture`, but the committed-baseline file does not; the
    cost model counts two committed-baseline classifications instead of three.
+   Auto-fix: yes; fixed in Milestone 8.
+
+## Milestone 8: Apply the review-fix rule to the Milestone 7 review
+
+Fix the Milestone 7 review findings tagged `Auto-fix: yes`, re-review once,
+and record the remaining findings for the user.
+
+User approval (2026-10-06): the user asked to apply the review-fix rule from
+#147 to the Milestone 7 review.
+
+Evidence: `.context/attribution-test-consolidation/review-78b35567.md`.
+Evidence: `.context/attribution-test-consolidation/milestone-8-validation.log`.
+
+- [x] Tag the Milestone 7 review findings under the review-fix rule.
+- [x] Finding 2 (Auto-fix: yes): correct the PR #139 summary and the local
+      measurement record so they state the accepted masking limit.
+- [x] Finding 3 (Auto-fix: yes): name unit shard balance, scenario grouping,
+      and test concurrency in the protocol summaries.
+- [x] Finding 4 (Auto-fix: yes): correct the plan status, the `fileFixture`
+      decision row, and the committed-baseline classification count.
+- [x] Validate the changed Markdown and review the diff.
+- [ ] Run `git add -A`, commit with a Conventional Commits message that names
+      the fixed findings, and push.
+- [ ] After the push, re-run the review once with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      against `origin/main`. Fix any new `Auto-fix: yes` findings once, then
+      stop and report the rest.
+  - Open: Milestone 7 finding 1 (Low, test, medium; Auto-fix: no) — the
+    lifecycle rule points designLibraryFixture users to a beforeRemove hook the
+    fixture lacks; recommended option C.
 
 ## Post-merge follow-up (non-blocking)
 
