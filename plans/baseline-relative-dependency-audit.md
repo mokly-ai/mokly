@@ -151,10 +151,19 @@ These decisions are fixed for every milestone below.
 12. **Token.** A pull request opened with `github.token` does not trigger
     `pull_request` workflows. The workflow uses
     `secrets.DEPENDENCY_AUDIT_TOKEN || github.token`. The secret is a
-    fine-grained or app installation token with contents, pull requests, and
-    issues write access to this repository. Without it the update pull
-    request exists but needs a maintainer push or close-and-reopen before
-    CI runs. The new protocol page records the owner and scope.
+    fine-grained personal access token or app installation token with
+    repository access to this repository only and exactly these repository
+    permissions: Contents read and write, to push and delete the branch;
+    Pull requests read and write, to open, update, comment on, and close
+    the pull request; and Issues read and write, to create the label.
+    Metadata read is implicit. No account or Workflows permission is
+    granted. The owner's write access bounds the token, the owner appears
+    as the pull request author and cannot approve it, and a fine-grained
+    token expires and must be rotated before its end date. If the
+    organization requires approval for fine-grained tokens, an owner
+    approves the request. Without the secret the update pull request exists
+    but needs a maintainer push or close-and-reopen before CI runs. The new
+    protocol page records the owner, scope, and expiry.
 
 ## Milestone 1: Define the baseline audit contract
 
@@ -283,8 +292,9 @@ branch without applying review findings automatically.
 
 ## Post-merge follow-up (non-blocking)
 
-- Create the `DEPENDENCY_AUDIT_TOKEN` secret with an authorized maintainer
-  credential.
+- Create the `DEPENDENCY_AUDIT_TOKEN` secret from a fine-grained personal
+  access token with the exact repository access and permissions in
+  decision 12, and record its expiry date.
 - Dispatch the Dependency Audit workflow once. Confirm it opens the update
   pull request with `shell-quote` moved to 1.12.0 by the compatible update
   (patched at 1.11.0; React DevTools Core accepts `^1.6.1`), with `sharp`
