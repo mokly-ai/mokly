@@ -82,11 +82,20 @@ raw artboards. New runtime checks do not extend that exception.
   cannot determine whether every assertion is static or every selection is
   catalogue-wide.
 
-The boundary guard scans spec source with a pure function. It rejects a spec
-under `tests/browser/design/` that navigates the served shell or starts an
-export, preview, or server. It rejects a spec elsewhere that imports
-`designArtboardUrl` or names `generated/design`. Violating samples prove each
-rule before the real tree is checked.
+The boundary guard scans every `.ts` module under `tests/browser/` with a pure
+function. Modules under `tests/browser/design/`, including `artboards.ts`, must
+not start an export, preview, or server. Every `goto` must use a
+`designArtboardUrl` result, directly or through variables whose assignments all
+retain that result. String and template literal destinations are rejected,
+including relative paths that Playwright would resolve against its served base.
+
+Other browser modules must not import the artboard helper or construct raw
+design paths. The scan detects `generated` followed by `design` in joined,
+resolved, and template paths, including assigned path pieces. It also rejects
+design paths passed to `pathToFileURL` and design `file://` URLs. Served
+`/view/design/` routes, `data-route="design/…"` markers, and `**/design/…` request
+patterns remain valid runtime content. Violating and accepted samples prove
+these rules before the complete browser tree is checked.
 
 Move an assertion only after its replacement passes. Preserve the same fact,
 including its viewport and scheme scope. Keep layout and native interaction

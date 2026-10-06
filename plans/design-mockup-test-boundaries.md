@@ -1,7 +1,8 @@
 # Design Mockup Test Boundaries
 
-Status: Active. The test layer contract and unit selection guards are delivered.
-No PR is open.
+Status: Active. Milestones 1 through 5 and Change request 1 are delivered.
+Change request 2 is delivered. Change request 3 is pending. Milestone 6 waits for explicit permission
+to proceed. No PR is open.
 
 Give each check on Mokly's own design catalogue one home. Unit tests check the
 generated mockup HTML and CSS. Browser mockup specs open the raw generated
@@ -457,6 +458,24 @@ mechanical.
 - [x] Run the milestone lint, formatting, and prepared type checks. Audit the
       mainline diff and deletions. Commit with a Conventional Commit and push.
 
+## Milestone 5A: Harden the boundary guard
+
+Completed. Change request 2 closes three scanner gaps before final verification resumes.
+Milestone 6 waits for the user's explicit "proceed with Milestone 6" message.
+
+- [x] Reject literal navigation and unverified URL variables in raw-artboard
+      modules. Accept direct helper calls and variables assigned from them.
+- [x] Detect raw design paths assembled with join, resolve, templates, file
+      URLs, and assigned path pieces. Keep served design routes and markers valid.
+- [x] Scan every TypeScript browser module, including helpers and artboards.ts.
+- [x] Prove the old gaps with regression failures before fixing the scanner.
+      Add accepted examples for helper URL variables and served route forms.
+- [x] Update the verification protocol for complete module scanning and URL rules.
+- [x] Run boundary tests, lint, changed-file Prettier, and prepared type checks.
+      Keep both scanner files at or below 300 lines.
+- [x] Audit the mainline diff and deletions. Commit with Conventional Commits
+      and push. Stop before any more Milestone 6 full checks.
+
 ## Milestone 6: Verification and review
 
 Prove the whole change, record every removal, and hand it to review.
@@ -473,6 +492,14 @@ Prove the whole change, record every removal, and hand it to review.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete local diff against `origin/main`. Report findings without
       changing the implementation.
+
+Removal justification: No PR is open. `.context/pr-description.md` records every
+removed spec/test, each replacement, all raw-spec moves, and the two approved
+coverage losses. Static checks moved to compiled unit tests. Visibility and
+computed styles stay in raw browser specs. Runtime checks moved to non-design
+fixtures. The removed helper/profile had no remaining caller. Every removed file
+is listed in Removals. The Milestone 5 commit body says 105 browser cases; its
+actual passing result is 101. Final verification records the correct count.
 
 ## Post-merge follow-up (non-blocking)
 
