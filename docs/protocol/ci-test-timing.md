@@ -110,13 +110,27 @@ callable, counted `native` method attached.
 
 The helper restores every original function when the callback finishes.
 It also restores every original when the callback throws. A callback that
-returns a promise must fail because asynchronous work can escape the
-counting window. Rejection must also restore the original functions.
+returns a promise or another thenable must fail because asynchronous work can
+escape the counting window. Handle its rejection before reporting that error.
+Do not await it. Rejection must also restore the original functions.
+Reject nested counting calls before replacing any function.
+
+Use `countOperations(callback)` to get the callback's `result` and `counts`.
+Read totals from `counts.totals[operation]`.
+Read path counts from `counts.byPath[operation].get(path)`.
+The path maps use string keys. Convert other first arguments with `String`.
+Sort has a total only.
 
 The helper provides a two-size assertion with the acceptance relations in
 [Operation Counts](#operation-counts). Equal once-only counts pass. Growing
 once-only counts fail. A total above 4.5 times fails. Any asserted count
 that is zero at the smaller size fails.
+
+Use `assertOperationScaling(smaller, larger, onceOnly, scaledTotals)`.
+Pass the two counter results as `smaller` and `larger`.
+List once-only counts as `{ operation, path? }` objects.
+List scaled totals by operation name. Omit `path` for a total.
+Failure text names the operation, the selected path, and both counts.
 
 Counted code must call `fs` and `path` functions through their default
 imports. A named function import can escape the wrappers. The positive
@@ -136,6 +150,14 @@ The helper is the only test module that directly subtracts clock reads.
 The helper returns the result of synchronous and asynchronous callbacks.
 It reports text once when the callback succeeds, throws, or rejects.
 It preserves the callback's failure and exposes no numeric duration.
+
+Use `reportDuration(label, report, callback)` for one report line.
+Pass the reporter as a function, for example `(text) => context.diagnostic(text)`.
+Await it to get the callback's result.
+The callback's error takes precedence if the reporter also throws.
+Use `startDuration()` to get a function that returns bare duration text.
+Call that function when the observation ends to combine the text with counts.
+Both forms use one decimal place followed by ` ms`.
 
 ## Benchmark Boundary
 
@@ -179,4 +201,5 @@ The lint message must name `docs/protocol/ci-test-timing.md`. Rule tests use
 ## Delivery Status
 
 Planned in [Deterministic Test Timing](../../plans/deterministic-test-timing.md).
-The helpers and test conversions are planned. The ESLint guard is not active yet.
+The shared helpers are implemented. The test conversions are planned.
+The ESLint guard is not active yet.

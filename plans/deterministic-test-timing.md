@@ -190,28 +190,34 @@ Evidence: `.context/deterministic-test-timing/milestone-1.md`.
       `tests/protocol_structure.test.ts` and
       `tests/protocol_doc_history.test.ts`. Review the diff.
 
-## Milestone 2: Shared evidence helpers
+## Milestone 2: Shared evidence helpers — completed
 
 Add the counting and duration helpers with their own tests. No existing test
 changes in this milestone.
 
 Evidence: `.context/deterministic-test-timing/milestone-2.md`.
 
-- [ ] Write failing tests for `tests/helpers/operation_counts.ts`. The helper
+- [x] Write failing tests for `tests/helpers/operation_counts.ts`. The helper
       counts each listed operation, records counts per first path argument,
       keeps `fs.realpathSync.native` callable and counted, restores every
       original after a throw, and rejects a callback that returns a promise.
-- [ ] Write failing tests for the two-size assertion. Equal once-only counts
+- [x] Write failing tests for the two-size assertion. Equal once-only counts
       pass. A once-only count that grows fails. A total above 4.5 times fails.
       A zero count at the smaller size fails.
-- [ ] Implement `tests/helpers/operation_counts.ts` until those tests pass.
-- [ ] Re-check that each module on the counted paths still calls `fs` and
+- [x] Split operation-count case data into a test helper so that the test
+      file stays at or below 300 lines.
+- [x] Implement `tests/helpers/operation_counts.ts` until those tests pass.
+- [x] Re-check that each module on the counted paths still calls `fs` and
       `path` functions through the default import. Save the list of checked
       modules in the evidence file.
-- [ ] Write failing tests for `tests/helpers/durations.ts`. The helper returns
+- [x] Write failing tests for `tests/helpers/durations.ts`. The helper returns
       the result of sync and async callbacks, reports the text once when the
       callback throws, and exposes no number. Then implement it.
-- [ ] Run the new helper tests, `npm run lint` and `npm run typecheck`.
+- [x] Add a README link to the test timing contract and its shared helpers.
+      Document the helper APIs, nested-use rejection, and thenable handling
+      in the timing contract. Mark the shared helpers as implemented.
+- [x] Run each new helper test file five times. Run `npm run lint` and
+      `npm run typecheck`.
 
 ## Milestone 3: PostCSS collection guards
 

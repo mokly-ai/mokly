@@ -332,6 +332,10 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+Required tests follow [CI test timing](./docs/protocol/ci-test-timing.md).
+Use the shared helpers in `tests/helpers/operation_counts.ts` and
+`tests/helpers/durations.ts` for operation counts and duration text.
+
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
