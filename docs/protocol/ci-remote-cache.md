@@ -13,7 +13,7 @@ the check revalidates referenced paths and Git state outside the build hash.
 ## Task Graph And Files
 
 Use Turborepo 2.11.7 as a root development dependency with npm workspaces.
-Keep the lockfile and `packageManager: "npm@11.7.0"`. Register these tasks:
+Keep the lockfile and `packageManager: "npm@11.21.0"`. Register these tasks:
 
 | Task                  | Dependency            | Inputs                                                    | Outputs                                 |
 | --------------------- | --------------------- | --------------------------------------------------------- | --------------------------------------- |
@@ -219,7 +219,7 @@ Fix any hidden input or keep the affected task uncached until the contract holds
 Input-mutation checks cover specs, config, authored CSS, root source, viewer
 runtime/helper, and the inherited root tsconfig.
 
-The planned hosted `prepare` job uses Node 22.14.0 and npm 11.7.0. It runs in
+The planned hosted `prepare` job uses Node 22.14.0 and npm 11.21.0. It runs in
 parallel with `repository`, installs with `npm ci`, and runs preparation once.
 It needs neither Rust nor Chromium. `package`, `unit`, `browser`, and
 `hydration` depend on both jobs. Each keeps its suite preparation call and

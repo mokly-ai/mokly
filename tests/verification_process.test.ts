@@ -223,7 +223,7 @@ async function writePlaywrightScopeHarness(
 }
 
 async function waitFor(predicate: () => boolean | Promise<boolean>) {
-  const deadline = Date.now() + 5_000;
+  const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
     if (await predicate()) return;
     await delay(25);

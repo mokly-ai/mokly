@@ -60,8 +60,9 @@ The release workflow then:
    incomplete pair fails closed; ordinary pushes do nothing.
 2. Checks out the CLI tag with history on GitHub-hosted `ubuntu-24.04`.
 3. Resolves the latest available Node 24 patch for the single publish job and
-   installs npm 11.7.0 without a package cache. Rust 1.95.0 and Chromium are
-   installed only when complete verification is selected.
+   installs npm 11.21.0, the `packageManager` version, without a package cache.
+   Rust 1.95.0 and Chromium are installed only when complete verification is
+   selected.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.
 5. Runs `npm ci`, performs the live workspace dependency audit, then selects
@@ -135,6 +136,6 @@ As rechecked on 15 September 2026, npm trusted publishing requires Node 22.14 or
 newer and npm 11.5.1 or newer. Use npm 11.15 or newer for `npm trust`
 management, including allowed-action permissions added in 11.15. The package
 must already exist before a trust relationship can be configured. The workflow's
-npm 11.7.0 satisfies publishing; use npm 11.15 or newer only for the separate
-interactive trust-management command. Trusted publishing creates provenance
-automatically on supported GitHub-hosted runners.
+npm 11.21.0 satisfies publishing and also meets the `npm trust` minimum; trust
+management remains a separate interactive command. Trusted publishing creates
+provenance automatically on supported GitHub-hosted runners.

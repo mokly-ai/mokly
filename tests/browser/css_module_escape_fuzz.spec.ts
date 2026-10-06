@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
-import { performance } from "node:perf_hooks";
 
 import { expect, test } from "@playwright/test";
 
 import { scopeModule } from "../../dist/build/styles/modules.js";
 import { pluginModuleOutput } from "../helpers/css_module_plugin_output.js";
+import { startDuration } from "../helpers/durations.js";
 
 const seed = 0x30c55e1;
 const count = 600;
@@ -93,7 +93,7 @@ function literalNames(css: string): string {
 test(`seeded CSS Modules escape-and-wrapper oracle (seed ${seed})`, async ({
   page,
 }) => {
-  const started = performance.now();
+  const duration = startDuration();
   const rows: {
     name: string;
     delivered: string;
@@ -181,6 +181,6 @@ test(`seeded CSS Modules escape-and-wrapper oracle (seed ${seed})`, async ({
   }
   test.info().annotations.push({
     type: "fuzz",
-    description: `${rows.length} generated; ${accepted} accepted; ${JSON.stringify(Object.fromEntries(rejected))} rejected; ${tolerated} tolerated escape errors; ${(performance.now() - started).toFixed(1)} ms`,
+    description: `${rows.length} generated; ${accepted} accepted; ${JSON.stringify(Object.fromEntries(rejected))} rejected; ${tolerated} tolerated escape errors; ${duration()}`,
   });
 });

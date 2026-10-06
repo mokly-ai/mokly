@@ -11,6 +11,11 @@ import type { Compilation } from "./compile.js";
 import { GENERATED_DIRECTORY } from "./styles/routes.js";
 import { trackedOwnedOutput } from "./tracked_ownership.js";
 
+/** A path below the private cache, which its own ignore file keeps out of Git. */
+function isCacheName(name: string): boolean {
+  return name === MOKLY_CACHE || name.startsWith(`${MOKLY_CACHE}/`);
+}
+
 /** Git index boundary for derived output validation; it never writes generated files. */
 export interface TrackedGeneratedOutput {
   check(compilation: Compilation, config: ResolvedConfig): Promise<void>;
@@ -69,8 +74,7 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
                 `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`,
               ),
             ) ||
-            name === MOKLY_CACHE ||
-            name.startsWith(`${MOKLY_CACHE}/`),
+            isCacheName(name),
         )
         .sort();
       if (!invalid.length) return;
@@ -88,6 +92,7 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
       const otherIgnoreRules = invalid
         .filter(
           (name) =>
+            !isCacheName(name) &&
             !prefixes.some((prefix) =>
               name.startsWith(
                 `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`,
@@ -97,11 +102,13 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
         .map((name) => `/${name}`);
       const ignoreRules = [
         ...new Set([...otherIgnoreRules, ...reservedIgnoreRules]),
-        `/${MOKLY_CACHE}/`,
       ];
+      const remedy = ignoreRules.length
+        ? ` and add these rules to .gitignore:\n${ignoreRules.join("\n")}`
+        : ".";
       throw new MoklyError(
         "build-invalid",
-        `derived output must not be tracked by Git:\n${invalid.map((name) => `  - ${name}`).join("\n")}\nRemove these paths from the index with git rm --cached and add these rules to .gitignore:\n${ignoreRules.join("\n")}`,
+        `derived output must not be tracked by Git:\n${invalid.map((name) => `  - ${name}`).join("\n")}\nRemove these paths from the index with git rm --cached${remedy}`,
       );
     } catch (error) {
       if (
