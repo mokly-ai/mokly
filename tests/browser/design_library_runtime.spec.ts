@@ -30,18 +30,26 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ),
       );
     const before = await contents();
-    // Compare the Search variant with its own saved status before temporary edits.
+    // Save each selected variant's final status before temporary edits.
     await page.goto("/view/design/library/chrome/top-bar/search/");
     await chooseViewport(page, viewport);
     await chooseVariant(page, "Default");
     const workspaceStatus = page.locator("[data-workspace-status]");
-    const defaultStatus = await workspaceStatus.textContent();
+    await expect(page).toHaveURL(
+      /\/view\/design\/library\/chrome\/top-bar\/default\//,
+    );
+    await expect(workspaceStatus).toHaveText(/^(Changed|Unmodified)$/);
+    const defaultStatus = await workspaceStatus.innerText();
     const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
     await chooseVariant(page, "Search");
+    await expect(page).toHaveURL(
+      /\/view\/design\/library\/chrome\/top-bar\/search\//,
+    );
+    await expect(workspaceStatus).toHaveText(/^(Changed|Unmodified)$/);
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    const searchStatus = await workspaceStatus.textContent();
+    const searchStatus = await workspaceStatus.innerText();
     await chooseVariant(page, "Default");
-    await expect(workspaceStatus).toHaveText(defaultStatus!);
+    await expect(workspaceStatus).toHaveText(defaultStatus);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
@@ -60,10 +68,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await expect(workspaceStatus).toHaveText(defaultStatus!);
+    await expect(workspaceStatus).toHaveText(defaultStatus);
     await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(workspaceStatus).toHaveText(searchStatus!);
+    await expect(workspaceStatus).toHaveText(searchStatus);
     expect(await contents()).toEqual(before);
   });
 
