@@ -113,7 +113,7 @@ These rules apply to every Rust edit:
 - Order imports std, external crates, `crate::`, then `self::`/`super::`. Declare them at the top of the file, never rename with `as`, and prefer imports over inline `crate::` paths
 - Keep tests out of production files. Put them in a `_tests_` directory beside the source and declare them with `#[cfg(test)] #[path = "_tests_/<name>_tests.rs"]`. Use file-based `insta` snapshots only
 - Use the narrowest visibility that works, keep `lib.rs`, `mod.rs`, and `bin.rs` as thin module roots, use `#[path]` only for test modules, and use `#[expect(dead_code, reason = "...")]` rather than a silent `allow`
-- Do not call `drop`; end a borrow with a scope instead
+- Do not call `drop` unless absolutely necessary; end a borrow with a scope instead
 - Prefer enums and structs over raw strings and `serde_json::Value`; fully type domain, service, and interface code
 - **NEVER** use `panic!()`, `unwrap()`, or `expect()` in production code; test code may use them
 - Avoid `unsafe` except for FFI, keep it minimal, and add a safety comment

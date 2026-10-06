@@ -49,7 +49,7 @@ rule to tick TODOs as you complete them; this document holds the rest.
   review TODO must direct a reviewer to use
   `docs/implementation-review-prompt.md` against `origin/main` after the push,
   to report findings, and then to apply the review-fix rule in [`review.md`](./review.md):
-  section: fix the `Auto-fix: yes` findings, re-review once, and report the
+  fix the `Auto-fix: yes` findings, re-review once, and report the
   rest.
   Read existing plan review TODOs that say "without changing the
   implementation" under the same rule.
