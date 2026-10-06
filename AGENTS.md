@@ -5,6 +5,8 @@
 - When adding new packages or services, always attempt to build them to check for errors
 - Everything must be fully tested
 - Search for and run relevant tests after making changes, ensure all tests pass (100% pass rate required)
+- Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
+  Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
 - Run `cargo xtask check` before saying work is complete; if it cannot be run, explain the blocker and the checks already run
 - After tests and `cargo xtask check` pass, run `git add -A`, commit the
   completed work using Conventional Commits, and push the branch; newly created

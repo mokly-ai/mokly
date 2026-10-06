@@ -151,37 +151,41 @@ test a rule with `ESLint.lintText`.
   `tests/helpers/fixture_timing.ts`, and test `timeout` options do not change.
 - Completed plans and `docs/reviews` stay as historical records.
 
-## Milestone 1: Define the timing contract
+## Milestone 1: Define the timing contract — completed
 
 Write the rule and the missing scale contract into the protocol before any
 test changes.
 
 Evidence: `.context/deterministic-test-timing/milestone-1.md`.
 
-- [ ] Fetch `origin/main`, record the source tip and the branch point, and
+- [x] Fetch `origin/main`, record the source tip and the branch point, and
       audit main's additions so that the work preserves mainline features.
       Save the audit in the evidence file.
-- [ ] Add `docs/protocol/ci-test-timing.md` with the rule, the four evidence
+- [x] Add `docs/protocol/ci-test-timing.md` with the rule, the four evidence
       methods, the allowed clock uses, the duration helper, the benchmark
       boundary and the ESLint guard. Add a Delivery Status section that points
       at this plan until the guard lands. Do not name plan milestones, because
       `tests/protocol_doc_history.test.ts` rejects them.
-- [ ] Index the new page in `docs/protocol/README.md` beside CI suite
+- [x] Index the new page in `docs/protocol/README.md` beside CI suite
       evidence.
-- [ ] Add one link to the new page in the first paragraph of
+- [x] Add one link to the new page in the first paragraph of
       `docs/protocol/ci-suite-evidence.md`. Change no other line on that page.
-- [ ] In `docs/protocol/mokly-timings.md`, link the sentence about
+- [x] In `docs/protocol/mokly-timings.md`, link the sentence about
       wall-clock assertions to the new page. Keep the opt-in benchmark's
       `usableMs < 5000` contract.
-- [ ] Add the guard to the ESLint description in
+- [x] Add the guard to the ESLint description in
       `docs/protocol/ci-verification-repository.md`.
-- [ ] Add the metafile scale contract to `docs/protocol/mokly-imported-styles.md`:
+- [x] Add the metafile scale contract to `docs/protocol/mokly-imported-styles.md`:
       resolve esbuild's working directory once per metafile, and read each
       metafile input at most once per root traversal. `src/build/README.md`
       already states the first half.
-- [ ] Add one line under General in `AGENTS.md`: tests must not assert
+- [x] Add one line under General in `AGENTS.md`: tests must not assert
       elapsed wall-clock time; link the new page.
-- [ ] Validate the changed Markdown with `npx prettier --check`. Run
+- [x] Search `tests/` for other readers of the changed documents and run the
+      matching tests.
+- [x] Prepare the generated example catalogue required by the documentation
+      link test.
+- [x] Validate the changed Markdown with `npx prettier --check`. Run
       `tests/protocol_doc_sizes.test.ts`, `tests/protocol_split_links.test.ts`,
       `tests/protocol_structure.test.ts` and
       `tests/protocol_doc_history.test.ts`. Review the diff.
@@ -274,6 +278,10 @@ Evidence: `.context/deterministic-test-timing/milestone-5.md`.
       cannot control the adapter's timer, stop. Then add a new milestone to
       decide on a timer seam.
 - [ ] Raise the five polling deadlines listed in Replacements to 15 seconds.
+- [ ] Raise the expected-state lock waits in `tests/generated_output_lock.test.ts`
+      from `timeoutMs: 5_000` to 15 seconds at the acquisitions that must succeed
+      (near lines 93, 124, and 161). Audit every other test-supplied timeout
+      option under `tests/` for expected-state waits below 10 seconds.
 - [ ] Move the duration text in
       `tests/browser/css_module_selector_oracle.spec.ts` and
       `tests/browser/css_module_escape_fuzz.spec.ts` to the helper.
@@ -306,6 +314,8 @@ Evidence: `.context/deterministic-test-timing/milestone-6.md`.
       and delete the temporary file.
 - [ ] Set the Delivery Status in `docs/protocol/ci-test-timing.md` to
       Implemented.
+- [ ] Update the planned guard wording in `docs/protocol/README.md` and
+      `docs/protocol/ci-verification-repository.md` when the guard is active.
 
 ## Milestone 7: Deliver and review
 

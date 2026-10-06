@@ -2,7 +2,8 @@
 
 This document supplements the [CI verification contract](./ci-verification.md)
 with fixture ownership, failure cleanup, browser shard balance, and acceptance
-measurement rules for the unit, browser, and hydration suites.
+measurement rules for the unit, browser, and hydration suites. Test timing
+follows [CI Test Timing](./ci-test-timing.md).
 
 ## Fixture Lifetime And Cleanup
 
