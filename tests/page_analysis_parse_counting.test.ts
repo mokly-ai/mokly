@@ -11,7 +11,7 @@ import { inlineChangesFixture } from "./helpers/inline_changes.js";
 import { pageFixtureInput } from "./helpers/page_fixture_inputs.js";
 
 for (const changed of [false, true])
-  test(`intercept every parse5 call: ${changed ? "full fall-through" : "identical quick check"} parses originals only, once per side`, async (context) => {
+  test(`intercept every parse5 call: ${changed ? "full fall-through" : "identical quick check"} counts original and link-normalization parses`, async (context) => {
     const fixture = await componentReviewFixture(context, (source) =>
       changed ? source.replace("Screen content", "Changed screen") : source,
     );
@@ -44,12 +44,18 @@ for (const changed of [false, true])
       parses: number;
       views: number;
       complete: number;
+      steps: Record<string, number>;
     };
-    assert.equal(counts.parses, counts.views + counts.complete);
+    assert.equal(counts.steps.pageAnalysis, counts.views + counts.complete);
+    assert.equal(counts.steps.linkNormalization ?? 0, changed ? 44 : 0);
+    assert.equal(
+      counts.parses,
+      counts.views + counts.complete + (changed ? 44 : 0),
+    );
     assert.equal(counts.complete > 0, changed);
   });
 
-test("every parse5 call stays on original pages when inferred owners traverse CSS references", async (context) => {
+test("inferred-owner references count every original and link-normalization parse", async (context) => {
   const fixture = await inlineChangesFixture(
     context,
     '<style>.actual-only{background:url("../owned.svg")}</style>',
@@ -89,7 +95,10 @@ test("every parse5 call stays on original pages when inferred owners traverse CS
     parses: number;
     views: number;
     complete: number;
+    steps: Record<string, number>;
   };
   assert.equal(counts.complete, counts.views);
-  assert.equal(counts.parses, counts.views * 2);
+  assert.equal(counts.steps.pageAnalysis, counts.views * 2);
+  assert.equal(counts.steps.linkNormalization, 92);
+  assert.equal(counts.parses, 112);
 });

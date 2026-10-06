@@ -42,7 +42,14 @@ for (const mode of ["committed", "derived"] as const)
       const complete = results.filter(
         ({ comparisonPath }) => comparisonPath === "complete",
       ).length;
-      assert.equal(counts.htmlParses, results.length + complete);
+      assert.equal(
+        counts.htmlParses,
+        results.length + complete + (changed ? 44 : 0),
+      );
+      assert.equal(
+        counts["htmlParses.linkNormalization"] ?? 0,
+        changed ? 44 : 0,
+      );
       assert.equal(
         counts["htmlParses.pageAnalysis"],
         results.length + complete,

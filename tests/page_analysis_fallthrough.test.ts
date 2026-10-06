@@ -62,8 +62,10 @@ for (const mode of ["committed", "derived"] as const)
         stage === "review.document-work" && event === "counts",
     )!.counts!;
     assert.equal(
-      counts.htmlParses,
+      counts["htmlParses.pageAnalysis"],
       current.length * 2,
       "failed proof reuses both original analyses",
     );
+    assert.equal(counts["htmlParses.linkNormalization"], 156);
+    assert.equal(counts.htmlParses, current.length * 2 + 156);
   });

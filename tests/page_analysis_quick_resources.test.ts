@@ -92,8 +92,12 @@ for (const mode of ["committed", "derived"] as const)
       assert.equal(counts["htmlParses.pageAnalysis"], changed ? 2 : 1);
       assert.equal(
         counts.htmlParses,
-        changed ? 2 : 1,
-        "no material, matching or reference reparse",
+        changed ? 20 : 1,
+        "only original analyses and counted link normalization parse",
+      );
+      assert.equal(
+        counts["htmlParses.linkNormalization"] ?? 0,
+        changed ? 18 : 0,
       );
       assert.deepEqual(
         reads.after.sort(),

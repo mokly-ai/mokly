@@ -1,6 +1,7 @@
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import { rewriteCssReferences } from "../../css_references.js";
+import { parseHtml } from "../../diagnostics/html_parse.js";
 import { isMoklyError } from "../../errors.js";
 import { SOURCE_ATTRIBUTES } from "../../html_reference_values.js";
 import { rewriteSourceSetReferences } from "../../source_set_references.js";
@@ -70,7 +71,7 @@ export function normalizeResourceLinks(
     if ("childNodes" in node) for (const child of node.childNodes) visit(child);
     if ("content" in node) visit(node.content);
   };
-  visit(parse(html, { sourceCodeLocationInfo: true }));
+  visit(parseHtml("linkNormalization", html, { sourceCodeLocationInfo: true }));
   for (const patch of patches.sort((a, b) => b.start - a.start))
     html = html.slice(0, patch.start) + patch.value + html.slice(patch.end);
   return html;

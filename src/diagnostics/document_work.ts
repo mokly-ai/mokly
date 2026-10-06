@@ -16,6 +16,7 @@ export type DocumentWorkField =
   | "hashMs";
 export type HtmlParseStep =
   | "pageAnalysis"
+  | "linkNormalization"
   | "range"
   | "styleDiscovery"
   | "reference"

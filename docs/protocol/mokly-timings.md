@@ -164,12 +164,14 @@ Component-free/live loops emit no new records; build parses do not count.
   Count every classification HTML tree-parse attempt, including embedded resources
   and separate-page normalized parses. Bytes are UTF-8 input length, not retained heap.
   Nonzero per-step totals use `htmlParses.<step>`/`htmlParseBytes.<step>`:
-  `pageAnalysis`, `range`, `styleDiscovery`, `reference`, `inlineMatching`,
+  `pageAnalysis`, `linkNormalization`, `range`, `styleDiscovery`, `reference`, `inlineMatching`,
   `stylesheetMatching`, `resourceReference`, `resourceMatching`, `legacyStylesheetMatching`,
   `legacyResourceMatching`. Legacy steps belong to the preceding page pass;
   resource steps count referenced HTML separately. `pageAnalysis` counts shared
   original view trees, never rewritten materials; the separate page path keeps
-  legacy steps/caches even in component catalogues. Their sums equal the totals.
+  legacy steps/caches even in component catalogues. `linkNormalization` counts
+  catalogue-link and resource-URL parses of comparison strings. They preserve
+  mainline URL equality semantics. Their sums equal the totals.
 
 `MOKLY_MATERIAL_WORK=1` additionally enables separate `review.material-work`
 [detail counts](./mokly-material-work-counts.md) in this scope, including partial

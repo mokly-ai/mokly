@@ -30,8 +30,11 @@ Create one analysis lazily for each view side and discard it with the view.
 It holds that side's original text and its one source-located default-adapter
 parse5 tree. It is not a catalogue-lifetime page cache. The quick check,
 projection, inline analysis, implementation comparison and linked-CSS matching
-share it; none parses rewritten/normalized page HTML. An identical-text quick
-check may use the head analysis alone. Embedded HTML resources still use the
+share it; none of these consumers parses rewritten/normalized page HTML.
+Link normalization is the one exception: it parses comparison strings to
+preserve catalogue-link and resource-URL equality after moves. These trees
+never supply CSS subjects or resource seeds. Count them as `linkNormalization`.
+An identical-text quick check may use the head analysis alone. Embedded HTML resources still use the
 existing resource reader's own document parsing, separately from view analysis.
 Their discovery keeps delivered paired normalization; when it changes resource
 text, the reader may parse it separately from its original matching tree.

@@ -139,7 +139,11 @@ export async function assertStyleRoute(
   if (expected === "style") {
     const work = counts("review.document-work");
     assert.equal(work["htmlParses.pageAnalysis"], 1);
-    assert.equal(work.htmlParses, 1);
+    assert.equal(
+      work.htmlParses,
+      1 + Number(work["htmlParses.linkNormalization"] ?? 0),
+      "only the original head and the preceding quick check's link rewrites parse",
+    );
     assert.equal(work.projectionMs, 0);
     assert.equal(work.hashMs, 0);
   }

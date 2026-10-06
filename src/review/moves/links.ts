@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import {
   documentRoute,
@@ -11,6 +11,8 @@ import {
   parseLogicalTarget,
   type ManifestEntry,
 } from "@mokly/viewer/data";
+
+import { parseHtml } from "../../diagnostics/html_parse.js";
 
 import type { ReviewLinkNormalization } from "../ignore.js";
 
@@ -147,7 +149,7 @@ function rewrite(
     if ("childNodes" in node) for (const child of node.childNodes) visit(child);
     if ("content" in node) visit(node.content);
   };
-  visit(parse(html, { sourceCodeLocationInfo: true }));
+  visit(parseHtml("linkNormalization", html, { sourceCodeLocationInfo: true }));
   for (const patch of patches.sort((a, b) => b.start - a.start))
     html = html.slice(0, patch.start) + patch.value + html.slice(patch.end);
   return html;
