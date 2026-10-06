@@ -427,7 +427,7 @@ and post-push review stay open below.
 - [x] Mark the plan status and record any approved removals in the PR
       description. Flag the lockfile-only source-map-js update for the user's
       review.
-- [ ] Run `git add -A`, commit with a Conventional Commits message, and push.
+- [x] Run `git add -A`, commit with a Conventional Commits message, and push.
 - [ ] After the push, review the complete local diff against `origin/main`
       with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       and report findings without changing the implementation.
