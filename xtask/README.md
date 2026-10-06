@@ -109,7 +109,9 @@ cargo test --package xtask
   validates the delivered browser module graph;
   [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and
   [`../scripts/package/imported_styles.mjs`](../scripts/package/imported_styles.mjs)
-  own every clean packed-consumer smoke.
+  own every clean packed-consumer smoke. The
+  [consumer fixtures README](../tests/fixtures/consumers/README.md) states what
+  each copied project tests.
 - [`../scripts/verification/repository-ratchets.mjs`](../scripts/verification/repository-ratchets.mjs)
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)
