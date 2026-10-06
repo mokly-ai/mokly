@@ -3,7 +3,7 @@
 Continuation of [CI Verification](./ci-verification.md). The repository suite
 starts with the live `npm run dependencies:check` audit, then Prettier, ESLint,
 changed source/protocol file-length audit, Rust formatting, workspace Clippy
-with warnings denied, Rust tests and the Rust file-length audit. The planned
+with warnings denied, Rust tests and the Rust file-length audit. The
 [test-timing guard](./ci-test-timing.md) adds elapsed-time and polling-deadline
 checks to ESLint under `tests/`. The live dependency audit fails before any later
 gate on an uncovered Low-or-higher advisory, invalid exception, or registry error.

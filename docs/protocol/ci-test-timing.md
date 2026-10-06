@@ -206,6 +206,5 @@ The lint message must name `docs/protocol/ci-test-timing.md`. Rule tests use
 
 ## Delivery Status
 
-Planned in [Deterministic Test Timing](../../plans/deterministic-test-timing.md).
-The shared helpers are implemented. The test conversions are planned.
-The ESLint guard is not active yet.
+Implemented. Required tests use deterministic assertions and the shared
+evidence helpers. The ESLint guard rejects the patterns above.

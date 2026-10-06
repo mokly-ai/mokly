@@ -321,29 +321,36 @@ Evidence: `.context/deterministic-test-timing/milestone-5.md`.
       only `tests/component_controls_watch.test.ts` from 25 to 60 seconds.
       Keep the other runner limits unchanged.
 
-## Milestone 6: Lint guard
+## Milestone 6: Lint guard — completed
 
 Add the ESLint guard after every test complies, so the gate stays green.
 
 Evidence: `.context/deterministic-test-timing/milestone-6.md`.
 
-- [ ] Write a failing `tests/test_timing_lint.test.ts` with
+- [x] Write a failing `tests/test_timing_lint.test.ts` with
       `ESLint.lintText`. It must flag elapsed subtraction from each clock in
       `tests/` and `tests/browser/` paths, including inside a `page.evaluate`
       callback, and literal deadlines below 10,000 ms. It must allow
       deadlines of 10,000 ms or more, deadline comparisons, timestamps such as
       `Date.now() - 10_000`, the duration helper's own path, and files under
       `src/` and `scripts/`.
-- [ ] Add the `no-restricted-syntax` entry to `eslint.config.js` as described
+- [x] Add the `no-restricted-syntax` entry to `eslint.config.js` as described
       in Guard.
-- [ ] Run `npm run lint` on the whole repository and confirm zero findings.
-- [ ] Smoke-test the message: add the banned pattern to a temporary test
+- [x] Run `npm run lint` on the whole repository and confirm zero findings.
+- [x] Smoke-test the message: add the banned pattern to a temporary test
       file, run `npx eslint` on it, save the message in the evidence file,
       and delete the temporary file.
-- [ ] Set the Delivery Status in `docs/protocol/ci-test-timing.md` to
+- [x] Set the Delivery Status in `docs/protocol/ci-test-timing.md` to
       Implemented.
-- [ ] Update the planned guard wording in `docs/protocol/README.md` and
+- [x] Update the planned guard wording in `docs/protocol/README.md` and
       `docs/protocol/ci-verification-repository.md` when the guard is active.
+- [x] Run `tests/test_timing_lint.test.ts` five times. Run
+      `tests/import_order.test.ts`, `tests/eslint_gitignore.test.ts`, and
+      `npm run typecheck`. Check formatting for the changed files,
+      `tests/protocol_*.test.ts`, and `tests/markdown_links.test.ts`.
+- [x] Run the protocol and Markdown link tests after the documentation
+      changes. Check file lengths and confirm that `src/` and `packages/`
+      have no diff.
 
 ## Milestone 7: Deliver and review
 
