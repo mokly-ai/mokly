@@ -332,6 +332,22 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+Measure unit test coverage locally with:
+
+```bash
+npm run coverage
+```
+
+The command runs the unit suite under Node's coverage, writes
+`coverage/lcov.info` and `coverage/summary.json`, and fails when the totals fall
+below the reviewed minimums in
+[`scripts/verification/coverage-thresholds.json`](./scripts/verification/coverage-thresholds.json).
+Pass unit test files to measure a subset without the threshold check. A
+complete run takes much longer than `npm test` and needs several gigabytes of
+free temporary disk space. The coverage check is a developer tool outside
+`cargo xtask check` and CI; the
+[coverage check contract](./docs/protocol/coverage-check.md) defines it.
+
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
@@ -385,6 +401,8 @@ review rules, and the temporary Braces exception.
 - [`src/publish`](./src/publish/README.md) — content-addressed publication exchange.
 - [`packages/viewer`](./packages/viewer/README.md) — React shell, catalogue read
   model, navigation, frames, and inspection.
+- [`scripts/verification/coverage-runner.mjs`](./scripts/verification/coverage-runner.mjs)
+  — the local coverage checker behind `npm run coverage`.
 - [`scripts/preview/baseline.mjs`](./scripts/preview/baseline.mjs) and
   [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
   baseline-availability and provider-path adapters.

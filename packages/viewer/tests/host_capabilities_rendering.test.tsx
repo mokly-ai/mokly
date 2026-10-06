@@ -106,6 +106,7 @@ test("server rendering serializes each embedded state exactly once", async () =>
       callCount: true,
       detailed: true,
     });
+    await session.post("Profiler.takePreciseCoverage");
     renderHydratedShellPage(
       view,
       {

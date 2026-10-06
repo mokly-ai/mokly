@@ -41,6 +41,9 @@ dependencies without workspace overrides or audit exceptions.
 The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
 are partial verification; the unqualified command remains the complete gate. The
+local coverage checker, `npm run coverage`, is a separate developer command that
+neither this gate nor CI runs; the
+[coverage check contract](../docs/protocol/coverage-check.md) defines it. The
 [repository ratchet contract](../docs/protocol/verification-ratchets.md) owns
 the exact scopes and exceptions. Length, protocol-cap, and
 unused-internal-export analysis compare against

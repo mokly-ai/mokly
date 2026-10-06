@@ -36,6 +36,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
   - [Development hydration coverage](./ci-verification-hydration.md) — one
     route per entry shape and the generated resource audit.
+  - [Local coverage check](./coverage-check.md) — developer-only Node test
+    coverage measurement and thresholds, outside the gate and CI.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
