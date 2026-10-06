@@ -92,6 +92,18 @@ moves.
       assert, `designArtboardUrl`, `designEntries`, the inventory rule for
       removed screens, the boundary guard, where runtime checks belong, how to
       run each layer, and a Delivery Status section.
+- [ ] Give the protocol a "Rules for new tests" section that forbids adding
+      back the removed patterns, with the reason for each rule:
+  - [ ] No browser spec tests Mokly's runtime (the served shell, exports or
+        preview hosts) with design pages as content. Such checks go to a
+        runtime spec with a non-design fixture.
+  - [ ] No browser spec asserts a static mockup fact, such as text, an
+        attribute, a link target or a count. Such checks go to a unit test.
+  - [ ] No test looks up a removed design id; the inventory test guards
+        removed screens.
+  - [ ] No catalogue-wide unit selection bypasses `designEntries`.
+  - [ ] Name `tests/design_test_boundaries.test.ts` as the guard for the
+        first rule, and the review of new tests as the guard for the others.
 - [ ] List it with the design catalogue contracts in `docs/protocol/README.md`.
 - [ ] Replace the spec list and Playwright command in
       `docs/protocol/mokly-component-design.md:236-250` with a link to the new
