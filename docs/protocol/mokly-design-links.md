@@ -313,13 +313,12 @@ normal enhanced navigation. Do not equate these two contexts.
 - Prove each new state is reachable from its owning screen/flow and has the
   specified return destination. Test tag query/picker agreement and both-scheme
   renders of the dual-scheme screens.
-- In Browse, exercise pointer and Tab/Enter activation from mobile and desktop
-  design frames, history Back/Forward, canonical outer URLs, active catalogue
-  rows, and preserved outer viewport selection. Keep consumer scripts denied.
+- Unit tests verify design link targets. Browse navigation and history use
+  Example or isolated fixtures, with consumer scripts denied.
 - Open every changed generated design page directly from disk and inspect both
   variants for visual regressions; test representative portable link round trips.
-- Build the static preview and exercise the same journeys through its existing
-  preview test helper. Cover actual Review snapshot link fallback separately.
+- Test static preview navigation with non-design fixtures. Follow the
+  [design verification contract](./mokly-design-verification.md).
 - Use a small semantic expectation set per control family plus catalogue-wide
   target validation. A positive total-link count alone does not prove adoption.
 - Run the relevant suites and complete `cargo xtask check`, then commit and push

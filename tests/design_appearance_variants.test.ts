@@ -93,7 +93,9 @@ test("the appearance-related registered samples render in both schemes", async (
   for (const id of dualSchemeComponents) {
     const entry = manifest.entries.find((entry) => entry.path === id);
     assert.ok(entry?.kind === "component", id);
-    for (const variant of componentVariants(manifest, id)) {
+    const variants = componentVariants(manifest, id);
+    await designEntries(() => true, `${id} appearance variants`, variants);
+    for (const variant of variants) {
       assert.ok(
         variant.colorSchemes.includes("dark"),
         `${id}/${variant.path} has no dark sample`,

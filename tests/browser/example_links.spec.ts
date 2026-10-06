@@ -151,6 +151,7 @@ for (const delayedStyles of [false, true])
         await route.continue();
       });
     try {
+      await expect(iframe).toHaveAttribute("data-mokly-frame-state", "ready");
       await iframe
         .contentFrame()
         .getByRole("link", { name: "View details", exact: true })
@@ -172,6 +173,7 @@ for (const delayedStyles of [false, true])
         "desktop",
       );
       if (delayedStyles) expect(delayedRequests).toBeGreaterThan(0);
+      await expect(iframe).toHaveAttribute("data-mokly-frame-state", "ready");
       await iframe
         .contentFrame()
         .locator('a[data-mokly-link-control="button"]')

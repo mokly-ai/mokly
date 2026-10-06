@@ -12,11 +12,12 @@ This contract defines how to verify them.
 
 ### Unit mockup tests
 
-`tests/design_*.test.ts(x)`, `tests/component_design_*.test.ts`, and
-`tests/brand_logo.test.tsx` read the in-memory compilation from
-`tests/helpers/design_catalogue.ts`. They check generated HTML and CSS:
-text, attributes, link targets, counts, presence, absence, and stylesheet rules.
-They do not need a browser or a served shell.
+Generated-catalogue assertions in `tests/design_*.test.ts(x)`,
+`tests/component_design_*.test.ts`, and `tests/brand_logo.test.tsx` read the
+in-memory compilation from `tests/helpers/design_catalogue.ts`. Other unit
+checks under these names inspect authored styles, isolated components, helpers,
+or source boundaries. Unit tests check text, attributes, link targets, counts,
+presence, absence, and stylesheet rules without a browser or a served shell.
 
 Selected screen and component depictions have one inspector and one Preview
 options toolbar. Whole-page and document depictions have one inspector and no
@@ -59,10 +60,11 @@ They verify navigation, history, appearance changes, inspection, link
 adaptation, and runtime script behavior. A design change must not break a
 runtime test merely because its sample content changed.
 
-Existing served-design fixtures in `browse_history`, `pages`,
-`document_typography`, `standalone_appearance_loading`, and
-`react_shell_state_regressions` are outside this migration. They do not open
-raw artboards. New runtime checks do not extend that exception.
+Existing served-design fixtures in `browse_frames`, `browse_history`, `pages`,
+`document_typography`, `standalone_appearance_loading`,
+`react_shell_state_regressions`, and `react_shell_hydration_routes` are outside
+this migration. They do not open raw artboards. New runtime checks do not extend
+that exception.
 
 ## Rules for new tests
 
@@ -77,25 +79,36 @@ raw artboards. New runtime checks do not extend that exception.
   current path-based catalogue.
 - Do not bypass `designEntries` for catalogue-wide unit selections. Its empty
   selection failure prevents tests from passing without checking any entries.
-- Use `tests/design_test_boundaries.test.ts` to guard the browser layer boundary.
-  Review new tests to enforce fixture choice and the other rules. The scan
-  cannot determine whether every assertion is static or every selection is
-  catalogue-wide.
+- Use `tests/design_test_boundaries.test.ts` to reject the source forms listed
+  below. Review new tests to enforce fixture choice, helper behavior, and the
+  other rules. The scan cannot determine whether every assertion is static or
+  every selection is catalogue-wide.
 
-The boundary guard scans every `.ts` module under `tests/browser/` with a pure
-function. Modules under `tests/browser/design/`, including `artboards.ts`, must
-not start an export, preview, or server. Every `goto` must use a
-`designArtboardUrl` result, directly or through variables whose assignments all
-retain that result. String and template literal destinations are rejected,
-including relative paths that Playwright would resolve against its served base.
+The boundary guard scans only `.ts` modules under `tests/browser/` with a pure
+function. Inside `tests/browser/design/`, including `artboards.ts`, it rejects:
 
-Other browser modules must not import the artboard helper or construct raw
-design paths. The scan detects `generated` followed by `design` in joined,
-resolved, and template paths, including assigned path pieces. It also rejects
-design paths passed to `pathToFileURL` and design `file://` URLs. Served
-`/view/design/` routes, `data-route="design/…"` markers, and `**/design/…` request
-patterns remain valid runtime content. Violating and accepted samples prove
-these rules before the complete browser tree is checked.
+- Static imports whose paths contain `/export/` or `/server/`, or match
+  `preview.*fixture`, `static_server`, or `runtime_fixture`.
+- Calls named `exportCatalogue`, `buildPreview`, `servePreviewFixture`, or
+  `startCatalogueServer`, or matching `start.*Server` or
+  `create.*Preview.*Fixture`. Imported aliases of these names are also checked.
+- Any `goto` argument that does not resolve to a call named `designArtboardUrl`
+  or its imported alias, directly or through all assignments to a variable.
+  String and template literal destinations are rejected, including relative
+  paths that Playwright would resolve against its served base.
+
+Outside that directory, the scan rejects named imports of `designArtboardUrl`
+and imports from a path ending in `/design/artboards` with an optional module
+extension. It rejects contiguous `generated/design` paths and `generated`
+followed by `design` in joined, resolved, and template paths, including assigned
+path pieces. It also rejects design paths passed to `pathToFileURL` and design
+`file://` URLs. Served `/view/design/` routes, `data-route="design/…"` markers,
+and `**/design/…` request patterns remain valid runtime content.
+
+The scan does not follow other helper modules, wrapper imports, or dynamic
+imports, and it does not scan `.tsx` files. Runtime work started through those
+forms is left to review. Violating and accepted samples test the listed source
+rules before all `.ts` modules in the browser tree are checked.
 
 Move an assertion only after its replacement passes. Preserve the same fact,
 including its viewport and scheme scope. Keep layout and native interaction
@@ -140,9 +153,10 @@ After the push, use the
 
 The three test layers are delivered. Catalogue-wide unit selections reject
 empty results. Static facts live in unit tests. Visibility, computed style, and
-interaction checks remain on raw artboards. Runtime checks use non-design
+interaction checks remain on raw artboards. New runtime checks use non-design
 fixtures. All raw-artboard specs use the shared helper in their owning directory.
-The tested source scanner enforces the browser layer boundary.
+The tested source scanner rejects the listed `.ts` forms. Review checks runtime
+work started through other helper modules and the remaining test-layer rules.
 
 The approved migration drops only two checks: the served shell's tab order
 from its brand to a design link, and inspection three levels deep on a real

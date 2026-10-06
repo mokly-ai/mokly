@@ -34,7 +34,7 @@ export function ordinaryPreviewTest(
         const preview = await startOwnedPreviewFixture({
           artifactRelative: ".context/site",
           build: (output) =>
-            timeFixturePhase("ordinary-preview", "export", false, async () => {
+            timeFixturePhase(profile, "export", false, async () => {
               const fixtureRoot = path.dirname(path.dirname(output));
               const config = await createCommittedExampleBaseline(
                 fixtureRoot,
@@ -47,7 +47,7 @@ export function ordinaryPreviewTest(
           ),
           prefix: `mokly-preview-worker-${workerInfo.workerIndex}-`,
           serve: (artifact) =>
-            timeFixturePhase("ordinary-preview", "serve", false, () =>
+            timeFixturePhase(profile, "serve", false, () =>
               servePreviewFixture(artifact),
             ),
         });

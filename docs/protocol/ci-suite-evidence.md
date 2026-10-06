@@ -7,12 +7,14 @@ suites.
 
 ## Fixture Lifetime And Cleanup
 
-Prepared package/example output belongs to one suite invocation. Navigation and
-design-link specs share one unique read-only ordinary-preview artifact per
-browser worker. Before serving, the fixture proves that its owned output path
-was absent and validates a current-build ownership marker. Mutable source trees,
-Git repositories, generated directories, ports, servers and child processes
-remain worker/job local. Setup failure triggers the same cleanup as normal
+Prepared package/example output belongs to one suite invocation. Preview
+navigation specs use one unique read-only publication per browser worker and
+profile. `preview_navigation` uses `ordinary-preview`, and
+`preview_host_navigation` uses `static-example`. Before serving, the fixture
+proves that its owned output path was absent and validates a current-build
+ownership marker. Mutable source trees, Git repositories, generated directories,
+ports, servers and child processes remain worker/job local. Setup failure
+triggers the same cleanup as normal
 teardown. Cleanup drains the complete POSIX process group or Windows job before
 removing owned output. If termination cannot be confirmed, teardown fails and
 retains the owned output for diagnosis; concurrent and repeated close calls

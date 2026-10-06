@@ -321,8 +321,8 @@ compilation and rejects tracked generated output without requiring files on disk
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its
 generated files. Design unit tests check compiled HTML and CSS. Raw-artboard
-browser specs check layout, styles, and native interactions. Runtime specs check
-Mokly's shell, exports, and preview hosts with non-design fixtures. The
+browser specs check layout, styles, and native interactions. New runtime checks
+use non-design fixtures for Mokly's shell, exports, and preview hosts. The
 [design verification contract](../../docs/protocol/mokly-design-verification.md)
 owns these layers, their commands, and the rules for new tests.
 Baseline fixtures copy authored inputs and use the normal cached

@@ -158,7 +158,7 @@ npm run example:build
 npm run example:check
 npm run typecheck
 node --import tsx --test tests/design_library*.test.ts tests/design_library*.test.tsx tests/component_design_attribution.test.ts
-npx playwright test tests/browser/design_library*.spec.ts
+npx playwright test tests/browser/design --project chromium
 cargo xtask check
 ```
 

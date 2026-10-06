@@ -54,6 +54,10 @@ for (const viewport of ["desktop", "mobile"] as const)
       requests.push(new URL(request.url()).pathname),
     );
     page.on("pageerror", (error) => errors.push(error.message));
+    page.on("response", (response) => {
+      if (response.status() >= 400)
+        errors.push(`${response.status()} ${response.url()}`);
+    });
     await page.setViewportSize(
       viewport === "desktop"
         ? { width: 1280, height: 900 }
@@ -85,6 +89,11 @@ for (const viewport of ["desktop", "mobile"] as const)
         .frameLocator(`[data-workspace-frame="${viewport}"]`)
         .getByRole("button", { name: "Continue" }),
     ).toBeDisabled();
+    await expect(
+      page
+        .frameLocator(`[data-workspace-frame="${viewport}"]`)
+        .getByRole("button", { name: "Continue" }),
+    ).toHaveClass(/(?:^|\s)revised(?:\s|$)/);
     await chooseScheme(page, "dark");
     await expect
       .poll(() =>
@@ -131,6 +140,13 @@ for (const viewport of ["desktop", "mobile"] as const)
       .getByRole("link", { name: "Open component", exact: true })
       .click();
     await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
+    await page.goto(`${site.url}/view/home/`);
+    await page.getByLabel("Viewport", { exact: true }).selectOption(viewport);
+    await expect(
+      page
+        .frameLocator(`[data-workspace-frame="${viewport}"]`)
+        .getByRole("button", { name: "Inside", exact: true }),
+    ).toHaveClass(/(?:^|\s)revised(?:\s|$)/);
     expect(
       requests.filter(
         (route) =>

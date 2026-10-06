@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import type { RunningServer } from "../../dist/server/http_types.js";
 
 import { startComponentExplorer } from "./component_explorer_runtime_fixture.js";
+import { chooseViewport } from "./workspace_actions.js";
 
 let server: RunningServer;
 
@@ -141,24 +142,38 @@ test("the inspector divider lights up like the navigation divider", async ({
   );
 });
 
-test("nested disclosures keep Components selected and choosing an instance shows its props", async ({
-  page,
-}) => {
-  await page.goto(`${server.url}/view/home/`);
-  const tab = page.getByRole("tab", { name: "Components", exact: true });
-  await tab.click();
-  const panel = page.getByRole("tabpanel", { name: "Components", exact: true });
-  const summaries = panel.locator("details > summary");
-  expect(await summaries.count()).toBeGreaterThan(0);
-  for (const summary of await summaries.all()) {
-    await summary.click();
-    await expect(tab).toHaveAttribute("aria-selected", "true");
-  }
-  await panel
-    .locator(".mbk-instance-select")
-    .filter({ hasText: "footer" })
-    .click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Props", exact: true }),
-  ).toContainText("Finish");
-});
+for (const viewport of ["desktop", "mobile"] as const)
+  test(`${viewport}: nested disclosures keep Components selected and choosing an instance shows its props`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(
+      viewport === "desktop"
+        ? { width: 1280, height: 900 }
+        : { width: 390, height: 844 },
+    );
+    await page.goto(`${server.url}/view/home/`);
+    await chooseViewport(page, viewport);
+    const tab = page.getByRole("tab", { name: "Components", exact: true });
+    await tab.click();
+    if (viewport === "mobile")
+      await page
+        .getByRole("button", { name: "Expand inspector", exact: true })
+        .click();
+    const panel = page.getByRole("tabpanel", {
+      name: "Components",
+      exact: true,
+    });
+    const summaries = panel.locator("details > summary");
+    expect(await summaries.count()).toBeGreaterThan(0);
+    for (const summary of await summaries.all()) {
+      await summary.click();
+      await expect(tab).toHaveAttribute("aria-selected", "true");
+    }
+    await panel
+      .locator(".mbk-instance-select")
+      .filter({ hasText: "footer" })
+      .click();
+    await expect(
+      page.getByRole("tabpanel", { name: "Props", exact: true }),
+    ).toContainText("Finish");
+  });

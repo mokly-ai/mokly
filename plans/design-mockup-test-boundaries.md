@@ -1,13 +1,14 @@
 # Design Mockup Test Boundaries
 
 Status: Active. Milestones 1 through 5 and Change requests 1 through 5 are
-delivered. Milestone 6 delivery work is done. The final implementation review
-is assigned to the orchestrator. No PR is open.
+delivered. Milestone 6 delivery work is done. Review items 1 to 10 are addressed.
+Items 11 to 14 await user decisions. The orchestrator owns the re-review.
+No PR is open.
 
 Give each check on Mokly's own design catalogue one home. Unit tests check the
 generated mockup HTML and CSS. Browser mockup specs open the raw generated
-artboards and check only what needs a browser. Runtime specs test Mokly's own
-code with non-design fixtures. Delete the browser design specs that repeat
+artboards and check only what needs a browser. New runtime checks test Mokly's
+own code with non-design fixtures. Delete the browser design specs that repeat
 runtime coverage after their unique checks move, and repair the unit tests that
 stopped checking anything when entry ids became paths. The new
 [design verification protocol](../docs/protocol/mokly-design-verification.md)
@@ -27,21 +28,35 @@ separates those responsibilities and guards each boundary.
 
 ### Test layers
 
-| Layer                | Files                                                                                        | Opens                                                        | Asserts                                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| Unit mockup tests    | `tests/design_*.test.ts(x)`, `tests/component_design_*.test.ts`, `tests/brand_logo.test.tsx` | The in-memory compile in `tests/helpers/design_catalogue.ts` | Generated HTML and CSS facts: text, attributes, link targets, counts, presence and absence, stylesheet rules       |
-| Browser mockup specs | `tests/browser/design/*.spec.ts`                                                             | Raw generated artboards, only through `designArtboardUrl`    | Layout, computed style, CSS-driven visibility, overflow, scrolling, focus, hit-testing and native control behavior |
-| Runtime specs        | Other `tests/browser/*.spec.ts`                                                              | The served shell, exports and preview hosts                  | Mokly's own code; checks that this plan adds use non-design fixtures                                               |
+| Layer                | Files                                                                                        | Opens                                                                      | Asserts                                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Unit mockup tests    | `tests/design_*.test.ts(x)`, `tests/component_design_*.test.ts`, `tests/brand_logo.test.tsx` | Compiled catalogue, authored styles, isolated components and helper inputs | Generated HTML and CSS facts, helper behavior and source boundaries                                                |
+| Browser mockup specs | `tests/browser/design/*.spec.ts`                                                             | Raw generated artboards, only through `designArtboardUrl`                  | Layout, computed style, CSS-driven visibility, overflow, scrolling, focus, hit-testing and native control behavior |
+| Runtime specs        | Other `tests/browser/*.spec.ts`                                                              | The served shell, exports and preview hosts                                | Mokly's own code; checks that this plan adds use non-design fixtures                                               |
 
 - A browser mockup spec never opens `/view/`, an export, a preview host or a
   server. No spec outside `tests/browser/design/` opens a raw design artboard.
-  `tests/design_test_boundaries.test.ts` enforces both rules. Runtime specs may
-  still open served design routes (see Out of scope).
+  `tests/design_test_boundaries.test.ts` rejects the source forms listed below.
+  Review covers the remaining forms. Runtime specs may still open served design
+  routes (see Out of scope).
+- The scanner reads only `.ts` modules under `tests/browser/`. Inside the design
+  directory, it rejects static import paths containing `/export/` or `/server/`
+  or matching `preview.*fixture`, `static_server`, or `runtime_fixture`; calls
+  named `exportCatalogue`, `buildPreview`, `servePreviewFixture`, or
+  `startCatalogueServer`, calls matching `start.*Server` or
+  `create.*Preview.*Fixture`, and their imported aliases; and `goto` arguments
+  that do not resolve to calls named `designArtboardUrl` or imported aliases,
+  directly or through variable assignments. Outside the design directory,
+  it rejects named artboard-helper imports, imports from `/design/artboards`,
+  raw `generated/design` paths, joined/resolved/template `generated` then
+  `design` path segments, and design paths in `pathToFileURL` or `file://` URLs.
+  It does not follow other helper modules, wrapper or dynamic imports, or scan
+  `.tsx` files. Review checks runtime work started through those forms.
 - Catalogue-wide unit selections use `designEntries`, which fails when nothing
   matches.
-- The documented inventory test (`tests/design_links_inventory.test.ts:24`)
-  is the only guard against a removed design screen returning. Tests do not
-  look up removed ids.
+- The test "the canonical documented inventory exactly matches the complete
+  design paths" in `tests/design_links_inventory.test.ts` is the only guard
+  against a removed design screen returning. Tests do not look up removed ids.
 - A check leaves a spec only after its replacement passes in the same
   milestone.
 
@@ -106,8 +121,9 @@ any test moves.
   - [x] No test looks up a removed design id; the inventory test guards
         removed screens.
   - [x] No catalogue-wide unit selection bypasses `designEntries`.
-  - [x] Name `tests/design_test_boundaries.test.ts` as the guard for the
-        first rule, and the review of new tests as the guard for the others.
+  - [x] Name `tests/design_test_boundaries.test.ts` as the guard for recognized
+        raw-artboard navigation, runtime calls/imports, and raw design paths.
+        Review new tests for runtime fixture choice and the other rules.
 - [x] List it with the design catalogue contracts in `docs/protocol/README.md`.
 - [x] Replace the spec list and Playwright command in
       `docs/protocol/mokly-component-design.md:236-250` with a link to the new
@@ -406,8 +422,8 @@ Evidence: `.context/design-mockup-test-boundaries/evidence-history.md`.
 
 ## Milestone 5: Mockup spec directory and boundary guard
 
-Completed. Put every browser mockup spec in one directory, and make the layer rules
-mechanical.
+Completed. Put every browser mockup spec in one directory, and add source checks
+for the listed layer violations.
 
 - [x] Add `tests/browser/design/artboards.ts` with
       `designArtboardUrl(path, viewport, scheme?)`. Replace
@@ -449,10 +465,10 @@ Milestone 6 verification was deferred until the user approved it.
       modules. Accept direct helper calls and variables assigned from them.
 - [x] Detect raw design paths assembled with join, resolve, templates, file
       URLs, and assigned path pieces. Keep served design routes and markers valid.
-- [x] Scan every TypeScript browser module, including helpers and artboards.ts.
+- [x] Scan every `.ts` browser module, including helpers and artboards.ts.
 - [x] Prove the old gaps with regression failures before fixing the scanner.
       Add accepted examples for helper URL variables and served route forms.
-- [x] Update the verification protocol for complete module scanning and URL rules.
+- [x] Update the verification protocol for `.ts` module scanning and URL rules.
 - [x] Run boundary tests, lint, changed-file Prettier, and prepared type checks.
       Keep both scanner files at or below 300 lines.
 - [x] Audit the mainline diff and deletions. Commit with Conventional Commits
@@ -517,6 +533,12 @@ Main superseded the dependency maintenance; this branch uses main's dependency f
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete local diff against `origin/main`. Report findings without
       changing the implementation. The orchestrator owns this review.
+      Review source: `.context/design-mockup-test-boundaries/review-1.md`.
+  - [x] Fix review items 1 to 10: docs drift and moved-check equivalence.
+  - [ ] Review item 11: recommend B, an import allowlist and `.tsx` scanning.
+  - [ ] Review item 12: recommend A, move the three static strings to a unit case and keep browser visibility.
+  - [ ] Review item 13: recommend B, require both viewports in `previews()` and reuse it in `twoPreviews()`.
+  - [ ] Review item 14: recommend A, share the private document reader, use `hasClass`, and remove the dead check.
 
 Evidence: `.context/design-mockup-test-boundaries/milestone-6.md`.
 Mainline evidence: `.context/design-mockup-test-boundaries/main-integration.md`.
@@ -526,6 +548,7 @@ Supersession evidence: `.context/design-mockup-test-boundaries/change-request-5/
 Removal justifications: `.context/design-mockup-test-boundaries/removals.md`.
 Deletion evidence: `.context/design-mockup-test-boundaries/deletion-audit.md`.
 Test inventory: `.context/design-mockup-test-boundaries/original-test-titles.json`.
+Review-fix evidence: `.context/design-mockup-test-boundaries/review-fix-1/verification.md`.
 
 ## Post-merge follow-up (non-blocking)
 
@@ -534,10 +557,11 @@ Test inventory: `.context/design-mockup-test-boundaries/original-test-titles.jso
 ## Out of scope
 
 - Runtime specs that open served design routes as fixtures:
-  `browse_history.spec.ts`, `pages.spec.ts`, `document_typography.spec.ts`,
-  `standalone_appearance_loading.spec.ts` and
-  `react_shell_state_regressions.spec.ts`. They test Mokly's code, but a
-  mockup change can break them.
+  `browse_frames.spec.ts`, `browse_history.spec.ts`, `pages.spec.ts`,
+  `document_typography.spec.ts`, `standalone_appearance_loading.spec.ts`,
+  `react_shell_state_regressions.spec.ts` and
+  `react_shell_hydration_routes.spec.ts`. They test Mokly's code, but a mockup
+  change can break them.
 - Pixel comparison against approved mockup images.
 - Failing the example build on warnings (`--strict` for `example:build` and
   `example:check`). The example builds without warnings today.
