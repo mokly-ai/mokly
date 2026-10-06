@@ -245,6 +245,10 @@ Merge evidence: `.context/targeted-developer-test-runs/merge-main.md`.
 Refresh evidence: `.context/targeted-developer-test-runs/after-refresh-verification.md`.
 Smoke evidence: `.context/targeted-developer-test-runs/smoke-tests.md`.
 Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
+Document check evidence: `.context/targeted-developer-test-runs/document-checks.md`.
+
+Decision: The user accepted the complete gate and approved documentation-only
+main updates without another complete gate.
 
 - [x] Split dependency remediation and targeted test commands into separate
       commits before integrating main.
@@ -254,6 +258,11 @@ Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
 - [x] Merge PR #146 dependency updates, keep main's lockfile and policy,
       preserve the test scripts, confirm two parents, and run a clean install.
 - [x] Rerun the changed verification test files after the dependency refresh.
+- [x] Merge main's current documentation rules and cleanup, preserve its
+      permalinks and deletions, confirm two parents, inspect each remerge path,
+      and prove that only Markdown changed from the accepted gate tree.
+- [x] Run the repository suite and the document-reading tests after the
+      documentation merge.
 - [x] Smoke test from a fresh `npm run prepare:verification`:
       `npm test -- tests/ci_workflow.test.ts`,
       `npm test -- tests/ci_workflow.test.ts --test-name-pattern="lockfile"`,
@@ -266,8 +275,8 @@ Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
       `.context/verification-reports`.
 - [x] Run `cargo xtask check --suite repository` first, then the complete
       `cargo xtask check`, and fix every finding.
-- [ ] Run `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Run `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, review the complete local diff against `origin/main`
       with `docs/implementation-review-prompt.md`, and report the numbered
-      findings with severities and recommendations without changing the
-      implementation.
+      findings with severities and recommendations. Then apply the review-fix
+      rule in `AGENTS.md`. The user runs this review.
