@@ -177,7 +177,9 @@ can enforce millisecond thresholds. `scripts/large/benchmark.mjs` keeps
 Apply `no-restricted-syntax` in `eslint.config.js` to every JavaScript and
 TypeScript file under `tests/`, including browser and hydration specs.
 The only exempt file is `tests/helpers/durations.ts`. Files under `src/`
-and `scripts/` are outside the guard.
+and `scripts/` are outside the guard. The guard shares the rule with the
+[catalogue selection lint](./ci-test-assertions.md#catalogue-selection-lint),
+which defines how the two rule sets combine.
 
 The guard rejects two patterns, including inside a `page.evaluate` callback:
 

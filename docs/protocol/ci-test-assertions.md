@@ -196,6 +196,12 @@ path under a live anchor passes and counts as an assertion.
 `packages/viewer/tests` has no catalogue selections and remains outside the
 lint scope. Each diagnostic names the checked helper to use.
 
+These rules share `no-restricted-syntax` with the
+[test timing guard](./ci-test-timing.md#eslint-guard). ESLint keeps only the
+last options of a rule for each file. So each config block lists every
+restriction set for its files, and `tests/test_lint_rule_sets.test.ts` checks
+that both sets apply to every file in both scopes.
+
 The first two diagnostics say: "Select catalogue entries with entriesUnder or
 entriesWhere so an empty selection fails."
 The third says: "Select literal catalogue paths with entryAt, entriesAt or

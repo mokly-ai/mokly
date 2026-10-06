@@ -1,8 +1,9 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 7 completed. The reviewer agent runs the
-post-push review, and the implementation agent applies `Auto-fix: yes` findings.
-Finding 4 remains for the user to decide. The plan closes when its PR merges.
+Status: Active; Milestones 1 through 7 completed, Milestone 8 in progress. The
+reviewer agent runs the post-push review, and the implementation agent applies
+`Auto-fix: yes` findings. Finding 4 remains for the user to decide. The plan
+closes when its PR merges.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -485,6 +486,34 @@ Evidence: `.context/vacuous-test-prevention/gate-results.md`.
       `AGENTS.md` review-fix rule.
       Open: the viewer workspace `npm test` runs without the assertion guard (review 1, finding 4); the user decides.
       Evidence: `.context/vacuous-test-prevention/review-1.md`.
+
+## Milestone 8: Combine the test lint rule sets with main
+
+Merge the newer `origin/main` at the user's request. Main's test timing guard
+adds a second `no-restricted-syntax` block for `tests/`. ESLint keeps only the
+last options of a rule for each file, so two blocks silently drop one rule set.
+
+Evidence: `.context/vacuous-test-prevention/merge-2/` and `merge-3/`.
+
+- [x] Merge `origin/main` at `43ae07b` (#145). Add main's
+      `tests/cache_ignore.test.ts` to the guarded native transaction step.
+- [x] Merge `origin/main` at `667bbdb` (#151, #152). Keep both protocol index
+      entries.
+- [x] Add `tests/test_lint_rule_sets.test.ts` first. It checks that both rule
+      sets apply to `.ts`, `.tsx`, and spec files, and that each helper keeps
+      its exemption. A naive two-block resolution fails its `.ts`, `.tsx`, and
+      spec rows.
+- [x] Move both restriction sets into shared lists in `eslint.config.js`.
+      Each block lists every restriction set for its files.
+- [x] State the shared rule in `docs/protocol/ci-test-assertions.md` and
+      `docs/protocol/ci-test-timing.md`.
+- [x] Run `cargo xtask check`.
+- [x] Run `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] After the push, the reviewer agent reviews the complete local diff
+      against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+      The implementation agent applies the `Auto-fix: yes` findings under the
+      `AGENTS.md` review-fix rule.
 
 ## Post-merge follow-up (non-blocking)
 
