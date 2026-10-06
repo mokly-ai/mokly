@@ -311,8 +311,8 @@ and merged documentation-only main updates without another complete gate.
 
 ## Milestone 4: Review Decisions
 
-Implement the selected output and error improvements, share the Windows-safe
-npm test launcher, integrate main, and verify the combined tree.
+This milestone applies the selected output and error improvements, shares the
+Windows-safe npm test launcher, and integrates main. Post-push review is pending.
 Evidence: `.context/targeted-developer-test-runs/milestone-4.md`.
 
 Decisions: The user selected finding 1 option A: count tests from file summaries,
@@ -334,13 +334,13 @@ failing tests after a gate failure.
       `NodeBaselineExecutableResolver` and shell-free `execFile` in all three
       npm probe loops. Keep literal arguments and filter undefined env values.
 - [x] Commit each implemented finding separately and name it in the message.
-- [ ] Merge fetched main, capture its source audit, preserve every main change,
+- [x] Merge fetched main, capture its source audit, preserve every main change,
       confirm two parents, and inspect each remerge path.
-- [ ] Pass lint, formatting, declaration checks, and every affected test on
+- [x] Pass lint, formatting, declaration checks, and every affected test on
       Node 24 and Node 22.14. Run the zero-match and unknown-option smoke commands.
-- [ ] Pass the repository suite, then run the complete gate once on the merged
+- [x] Pass the repository suite, then run the complete gate once on the merged
       tree. Use targeted reruns after a failure and report repeated unrelated failures.
-- [ ] Run the deletion checks, commit remaining changes, and push the branch.
+- [x] Run the deletion checks, commit remaining changes, and push the branch.
 - [ ] After the push, review the complete diff against `origin/main` with
       `docs/implementation-review-prompt.md`, report findings, then apply the
       review-fix rule in `AGENTS.md`. The orchestrating agent runs this review.
