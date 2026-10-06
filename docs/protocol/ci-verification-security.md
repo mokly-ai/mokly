@@ -29,13 +29,14 @@ exact-artifact checks.
 
 ## Task Cache Security And Remote Target
 
-The local task cache stores viewer, package, and example outputs. The planned
-remote cache uses a repository-owned Worker and R2 bucket. It does not cache `npm ci`, audits, tests, or reports.
+The local task cache stores viewer, package, and example outputs. The locally
+verified remote Worker is not deployed; it uses the repository R2 bucket. It does not cache `npm ci`, audits, tests, or reports.
 Every job keeps its lockfile-keyed download cache and fresh install. Missing,
 unavailable, or rejected artifacts require task execution, not skipped checks.
 
-After remote delivery, same-repository CI has a writer token. Developers receive a reader
-token and the shared signature key through a private password-manager share.
+The [access contract](./ci-remote-cache-access.md) defines trusted writers,
+scoped PR writers, and readers. CI policy A/B/C awaits the user; B is recommended.
+Developers receive the reader and signature key through a private password-manager share.
 They set `TURBO_CACHE=local:rw,remote:r` to prevent forbidden upload attempts.
 The signing key alone does not grant Worker write access. The Worker stores
 signatures without holding that key. Turbo verifies downloads before extraction.

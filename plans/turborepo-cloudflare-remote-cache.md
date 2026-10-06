@@ -3,7 +3,8 @@
 Status: Active. Created on 2026-10-06. No pull request yet. Milestone 1 was
 accepted at `7b70b7e`. Milestone 2 local implementation and checks are complete; hosted native
 verification remains a pre-merge requirement. The supervising agent owns formal
-reviews in another worktree. The Worker is not implemented.
+reviews in another worktree. Milestone 3 implementation, local smokes, and the full gate are complete;
+its supervising-agent review is pending. CI policy remains open, with B recommended. The Worker is not deployed.
 
 ## Summary
 
@@ -17,8 +18,9 @@ The change avoids repeated task execution in authorized hosted CI.
 Today the package job, four unit shards, four browser shards, and the hydration
 job each run `npm run prepare:verification` on an identical tree, so one pull
 request runs the same build ten times. A Release Please pull request runs it
-twenty times. After this change one prepare job builds and uploads the outputs,
-and downstream suites restore unchanged tasks. Each suite still calls
+twenty times. With writes enabled for an event, one prepare job builds and uploads
+the outputs, and downstream suites restore unchanged tasks. Under policy A,
+PR jobs can restore trusted hits but execute new hashes in each job. Each suite still calls
 preparation. Fork jobs build with local cache only. Developers get the same
 local cache, including sharing between linked Git worktrees.
 
@@ -32,20 +34,20 @@ suite boundaries, shard evidence, and fail-closed aggregate stay unchanged.
 
 ## Decisions
 
-| Topic          | Decision                                                                                                                                                         |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Task runner    | Turborepo 2.11.7 as a root `turbo` devDependency. npm workspaces and `package-lock.json` stay as they are.                                                       |
-| Cached tasks   | `@mokly/viewer#build`, root `build:package`, and root `example:build`. Test suites are not cached by this plan.                                                  |
-| Remote cache   | A Worker owned by this repository under `scripts/turbo-cache/`, storing artifacts in one R2 bucket. No Vercel account.                                           |
-| Write policy   | Keys are write-once. Same-repository CI uses a read-write token. Developers use a read-only token. Fork pull requests get no token and use the local cache only. |
-| Integrity      | `remoteCache.signature` is on with a key of at least 32 bytes. CI and read-only developers need the same key. Invalid downloads are rejected before extraction.  |
-| Release        | `release.yml` forces task execution with `TURBO_FORCE=true`, local cache only, and no remote credentials. Force can refresh local entries.                       |
-| Native CI jobs | The macOS and Windows jobs keep building from source with no remote token.                                                                                       |
-| Agent guidance | `agentGuidance: false`, so `turbo` never edits `AGENTS.md`.                                                                                                      |
-| Expiry         | An R2 lifecycle rule deletes artifacts after 30 days.                                                                                                            |
-| Node in hashes | Exclude the Node version only after proving declared outputs match on Node 22.14 and Node 24. The prepare job must serve both Linux profiles.                    |
-| Telemetry      | Disable Turbo telemetry at workflow scope in CI, preview, and release from Milestone 2. Developers can export `TURBO_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1`.  |
-| Team identity  | Configure `teamSlug: "mokly"` and leave `teamId` unset for every client. Rotate the team namespace when rotating the signature key.                              |
+| Topic          | Decision                                                                                                                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Task runner    | Turborepo 2.11.7 as a root `turbo` devDependency. npm workspaces and `package-lock.json` stay as they are.                                                      |
+| Cached tasks   | `@mokly/viewer#build`, root `build:package`, and root `example:build`. Test suites are not cached by this plan.                                                 |
+| Remote cache   | A Worker owned by this repository under `scripts/turbo-cache/`, storing artifacts in one R2 bucket. No Vercel account.                                          |
+| Write policy   | Keys are write-once. CI policy A/B/C awaits the user, with B (scoped PR writes) recommended. Three principals support all options; forks remain local only.     |
+| Integrity      | `remoteCache.signature` is on with a key of at least 32 bytes. CI and read-only developers need the same key. Invalid downloads are rejected before extraction. |
+| Release        | `release.yml` forces task execution with `TURBO_FORCE=true`, local cache only, and no remote credentials. Force can refresh local entries.                      |
+| Native CI jobs | The macOS and Windows jobs keep building from source with no remote token.                                                                                      |
+| Agent guidance | `agentGuidance: false`, so `turbo` never edits `AGENTS.md`.                                                                                                     |
+| Expiry         | Trusted artifacts expire after 30 days; a 7-day PR-prefix rule is planned for Milestone 4.                                                                      |
+| Node in hashes | Exclude the Node version only after proving declared outputs match on Node 22.14 and Node 24. The prepare job must serve both Linux profiles.                   |
+| Telemetry      | Disable Turbo telemetry at workflow scope in CI, preview, and release from Milestone 2. Developers can export `TURBO_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1`. |
+| Team identity  | Trusted/read clients use mokly; scoped PR clients use mokly-pr-<number>. Keep teamId empty across namespaces; rotate the team when rotating the key.            |
 
 Rejected alternatives:
 
@@ -66,6 +68,8 @@ contract before implementation:
 - New [`docs/protocol/ci-remote-cache.md`](../docs/protocol/ci-remote-cache.md):
   task graph, inputs, outputs, environment handling, cache sources per
   environment, and local use.
+- New [`docs/protocol/ci-remote-cache-access.md`](../docs/protocol/ci-remote-cache-access.md):
+  three principals, namespaces, pending CI policy, expiry, and recovery.
 - New
   [`docs/protocol/ci-remote-cache-worker.md`](../docs/protocol/ci-remote-cache-worker.md):
   Worker HTTP contract, token classes, write-once storage, limits, deployment,
@@ -153,7 +157,7 @@ Cache sources per environment:
 | -------------------------------------------- | -------------- | ----------- | ------------ |
 | Developer without both credentials           | yes            | no          | no           |
 | Developer with read-only token and key       | yes            | yes         | no           |
-| Same-repository pull request and `main` push | yes            | yes         | yes          |
+| Same-repository pull request and `main` push | yes            | yes         | policy A/B/C |
 | Fork pull request                            | yes            | no          | no           |
 | Release workflow                             | forced rebuild | no          | no           |
 | Native macOS and Windows jobs                | yes            | no          | no           |
@@ -186,9 +190,10 @@ Rules:
   compared in constant time. A missing or unknown token gets 401.
 - Artifact path and query hashes match `^[a-fA-F0-9]{1,128}$`; invalid values
   get 400. Discarded event payloads have no field validation.
-- The `slug` or `teamId` query value must equal the configured team; objects
-  are keyed `<team>/<hash>`. Missing, duplicate, or different teams get 403.
-  Validate both when both appear. The client sends team IDs only with `team_`.
+- The [access contract](../docs/protocol/ci-remote-cache-access.md) resolves
+  three principals and allowed namespaces. PR reads fall back to trusted
+  objects per hash; writes stay in the PR namespace. Missing, duplicate, or
+  forbidden team values get 403. Store the principal in object metadata.
 - Write-once calls `R2Bucket.put` with
   `onlyIf: new Headers({ "If-None-Match": "*" })`. A failed condition returns
   `null`, not an exception; retain the winner and answer 202. Confirm this in
@@ -204,7 +209,9 @@ Rules:
   rejecting uploads. Keep content type, length, duration, and tag rules strict.
 - OpenAPI paths omit `/v8`; the 2.11.7 client supplies that prefix. Follow the
   actual client paths, including metadata headers omitted from the initial plan.
-- Secrets: `TURBO_CACHE_READ_WRITE_TOKEN` and `TURBO_CACHE_READ_ONLY_TOKEN`.
+- Secrets: `TURBO_CACHE_TRUSTED_WRITE_TOKEN`, `TURBO_CACHE_PR_WRITE_TOKEN`,
+  and `TURBO_CACHE_READ_TOKEN`. Missing/short secrets disable their principal;
+  duplicate secrets or an invalid team return `configuration_error` (500).
   Binding: `ARTIFACTS` for bucket `mokly-turbo-cache`. Variable:
   `TURBO_CACHE_TEAM`.
 
@@ -227,19 +234,19 @@ Storage write permissions.
 ## CI Wiring
 
 - A new `prepare` job on Node 22.14.0 runs in parallel with `repository`. It
-  runs `npm ci` and `npm run prepare:verification` with the read-write token
-  and uploads the three task outputs. It does not need Rust or Chromium.
+  runs `npm ci` and `npm run prepare:verification` with the selected access policy
+  and uploads only when that policy grants writes. It does not need Rust or Chromium.
 - `package`, `unit`, `browser`, and `hydration` add `prepare` to `needs` and
-  receive the same token variables. Their unchanged `cargo xtask check` call
+  receive the token selected by policy A/B/C. Their unchanged `cargo xtask check` call
   restores the outputs through `turbo`.
 - `Required CI` adds `prepare` to its `needs`.
-- Token variables come from `secrets.TURBO_CACHE_TOKEN` and
-  `secrets.TURBO_CACHE_SIGNATURE_KEY`. Export both only when both exist and
-  select `local:rw,remote:rw`; otherwise leave both unset and select `local:rw`.
+- Token variables follow the [access policy](../docs/protocol/ci-remote-cache-access.md).
+  The signature variable comes from `secrets.TURBO_CACHE_SIGNATURE_KEY`. Export both only when both exist and
+  select the policy's mode and namespace; otherwise leave both unset and select `local:rw`.
   A fork receives no remote credentials. Hosted telemetry is disabled from
   Milestone 2, before this remote wiring.
 - `release.yml` sets `TURBO_FORCE=true`, local cache only, and no credentials.
-  Eligible same-repository preview jobs receive the pair. Native jobs do not.
+  Preview main uses a trusted writer; preview PR follows the chosen policy. Native jobs do not.
 
 ## Out Of Scope
 
@@ -298,9 +305,15 @@ documentation-only: validate the Markdown and review the diff instead of running
       documentation validation and Git preservation checks, then commit and push.
 - [x] Review the diff against `origin/main`, then `git add -A`, commit with
       Conventional Commits, and push.
-- [ ] Review the complete local diff against `origin/main` with
+- [x] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
+  - Baseline rebuilds reused another commit's Turbo output — fixed in Milestone 2 with direct baseline commands.
+  - Same-repository PR jobs can poison shared cache — open, user decision; access model supports A, B, and C.
+  - Turbo stdout broke `npm pack --json` — fixed in Milestone 2.
+  - Ignored files under example inputs — fixed in Milestone 2.
+  - Preview wording claimed example caching — fixed in Milestone 2.
+  - Release Please measurement could not run before merge — moved to non-blocking post-merge follow-up in Milestone 2.
 
 Evidence files: `.context/turborepo-cloudflare-remote-cache/milestone-1-validation.md`
 and `.context/turborepo-cloudflare-remote-cache/milestone-1-sources.md`.
@@ -438,9 +451,10 @@ telemetry and forces release builds from the first Turbo use.
       prove native jobs; no hosted CI run exists yet.
 - [x] Run `cargo xtask check`.
 - [x] Run `git add -A`, commit with Conventional Commits, and push.
-- [ ] Review the complete local diff against `origin/main` with
+- [x] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
+  - Re-review of the fixes (`0c8608c`, `37e4a1b`) and merge `d6e8414`: no new findings. Findings 1–6, 8, and 9 wait for the user.
   - Finding 1 (medium, code structure): direct baseline recipe copies the build pipeline; recommend a stable `baseline:build` in a follow-up PR. Waiting for the user.
   - Finding 2 (medium, test): Turbo tests check the real root's unstaged AGENTS diff; recommend comparing bytes where Turbo runs. Waiting for the user.
   - Finding 3 (low, product bug): distribution cleanup causes dev HTTP 500 during uncached builds; recommend building in place and removing unwritten files. Waiting for the user.
@@ -460,32 +474,65 @@ Merge decisions: `.context/turborepo-cloudflare-remote-cache/m2-merge-decisions.
 Implement, test, and typecheck the Worker and its deployment workflow. Nothing
 in CI uses it yet, so the product stays functional.
 
-- [ ] Run `npm install --save-dev @cloudflare/workers-types` and confirm the
+- [x] Record Milestone 1 review statuses and close its review TODO. Preserve the
+      Milestone 2 review TODO. Confirm the old Milestone 2 stash contains no
+      missing change, then drop it.
+- [x] Write the three-principal access contract before implementation. Keep the
+      CI policy pending between A, B, and C, with B recommended.
+- [x] Clarify that policy A cannot share new PR hashes across jobs; scoped
+      writes under B or accepted shared writes under C can populate them.
+- [x] Preserve main's cache self-ignore behavior, npm 11.21.0 pin, and
+      deterministic test rules. Align the Worker workflow and contract with the
+      npm pin. Repeat the signed-client smoke and complete gate on this tree.
+- [x] Keep protocol pages free of plan milestone history. Preserve Delivery
+      Status and link the plan for implementation ownership.
+- [x] Prove that a real PR client using the trusted slug receives 403, builds
+      continue with remote caching disabled, and no new trusted object appears.
+- [x] Put the final GET after the duplicate PUT in the local runbook. State
+      that earlier PR-prefix expiry is inferred from the R2 lifecycle example
+      and requires production confirmation before remote writes are enabled.
+- [x] Keep auth, routing, and ArtifactStore runtime-neutral. Confine Workers
+      types to the R2 adapter and fetch entry; preserve root Node/DOM types.
+- [x] Compare fixed SHA-256 token digests with a constant-time loop in both
+      runtimes, against every configured secret on every request.
+- [x] Validate all request metadata before body consumption. Stream artifacts,
+      enforce actual length and limits, and test mismatched Content-Length.
+- [x] Prove every HEAD response is bodyless, including all error paths.
+- [x] Select a compatibility date accepted by pinned Wrangler without a
+      fallback warning and record the result in the Worker contract.
+- [x] Follow deployment workflow runner, action, permission, timeout,
+      concurrency, remote-Git, telemetry, credential, and no-fork conventions.
+      Assert the exact deploy command and tests/typecheck before deploy.
+- [x] Run real Turbo signed writer/reader, wrong-key, PR fallback/scoped-write,
+      and forbidden trusted-write smokes against local Wrangler from a separate
+      clone. Compare outputs byte for byte and preserve the main cache.
+- [x] Add and confirm an ignore rule before creating local .dev.vars secrets.
+- [x] Run `npm install --save-dev @cloudflare/workers-types` and confirm the
       dependency audit passes.
-- [ ] Implement `scripts/turbo-cache/store.ts`: an `ArtifactStore` interface
-      with `head`, `get`, and `putIfAbsent`, and the R2 adapter that uses
+- [x] Implement `scripts/turbo-cache/store.ts`: an `ArtifactStore` interface
+      with `head`, `get`, and `putIfAbsent`, and a separate runtime-specific R2 adapter that uses
       `onlyIf: new Headers({ "If-None-Match": "*" })`. Treat null as an
-      existing-key result. Store duration, tag, SHA, and dirty hash atomically.
-- [ ] Implement `scripts/turbo-cache/auth.ts`: bearer parsing, a constant-time
-      comparison over UTF-8 bytes that works in Workers and Node, and token
-      class resolution.
-- [ ] Implement `scripts/turbo-cache/artifacts.ts`: the six routes, hash
+      existing-key result. Store principal, duration, tag, SHA, and dirty hash atomically.
+- [x] Implement `scripts/turbo-cache/auth.ts`: bearer parsing, a constant-time
+      comparison of fixed SHA-256 digests in Workers and Node, and three-principal
+      resolution with fail-closed configuration.
+- [x] Implement `scripts/turbo-cache/artifacts.ts`: the six routes, hash
       validation, the team check, response headers, 202 for already-present
       keys, and 403 for read-only writes.
-- [ ] Implement `scripts/turbo-cache/worker.ts`: the `fetch` entry, routing,
+- [x] Implement `scripts/turbo-cache/worker.ts`: the `fetch` entry, routing,
       404 and 405 defaults, and flat plus wrapped error fields that meet both
       OpenAPI and the 2.11.7 client. Keep every HEAD response bodyless.
-- [ ] Add `scripts/turbo-cache/wrangler.jsonc` with `name`, `main`,
+- [x] Add `scripts/turbo-cache/wrangler.jsonc` with `name`, `main`,
       `compatibility_date`, the R2 binding, `TURBO_CACHE_TEAM`, and
       observability. Add `scripts/turbo-cache/tsconfig.json` with Workers
       types and add `tsc --project scripts/turbo-cache/tsconfig.json --noEmit`
       to `typecheck:prepared`.
-- [ ] Add `tests/turbo_cache_worker.test.ts`, `tests/turbo_cache_auth.test.ts`,
+- [x] Add `tests/turbo_cache_worker.test.ts`, `tests/turbo_cache_auth.test.ts`,
       and `tests/turbo_cache_store.test.ts` with an in-memory store: status,
       head, get, put, write-once, read-only 403, missing and wrong token 401,
       wrong team 403, bad hash 400, query, events, method not allowed, and the
       header round trip for `x-artifact-tag` and `x-artifact-duration`.
-- [ ] Test the complete verified wire contract: PUT 202 `urls`, bare query
+- [x] Test the complete verified wire contract: PUT 202 `urls`, bare query
       maps with `taskDurationMs` and optional commit metadata, HEAD metadata,
       bodyless HEAD errors, status values, flat/wrapped 403 compatibility,
       missing/duplicate/both team parameters, JSON and upload limits, duration
@@ -493,28 +540,37 @@ in CI uses it yet, so the product stays functional.
       and interactive diagnostics do not reject PUTs and are not stored or
       echoed. Events require auth, team, a JSON array, and limits only; accept
       arbitrary items and fields. Do not require client-interactive headers.
-- [ ] Test the R2 adapter binding call itself, including `Headers` in `onlyIf`,
+- [x] Bridge the core stream through a Workers FixedLengthStream in the R2
+      adapter. Capture the known-length failure first; prove early conditional
+      refusal, stream errors, and complete metadata without buffering artifacts.
+- [x] Test the R2 adapter binding call itself, including `Headers` in `onlyIf`,
       null on an existing object, no head-then-put guard, exceptions, and
       preservation of the first body and all metadata during concurrent PUTs.
-- [ ] Add `.github/workflows/turbo-cache.yml` with `workflow_dispatch` and a
+- [x] Add `.github/workflows/turbo-cache.yml` with `workflow_dispatch` and a
       `main` path filter. Validate the account and token like `preview.yml`.
       Deploy with
       `npx --no-install wrangler deploy --config scripts/turbo-cache/wrangler.jsonc`.
-- [ ] Add `scripts/turbo-cache/README.md` with the runbook commands: bucket
+- [x] Add `scripts/turbo-cache/README.md` with the runbook commands: bucket
       create, `wrangler r2 bucket lifecycle add` with a 30-day expiry,
-      `wrangler secret put` for both tokens, deploy, and a curl smoke test.
-- [ ] Keep every file under 300 lines and resolve ratchet findings for the new
+      `wrangler secret put` for the three tokens, deploy, a curl smoke test,
+      PR-prefix expiry, and one-object poison recovery. Document only the admin commands.
+- [x] Keep every file under 300 lines and resolve ratchet findings for the new
       `scripts` modules.
-- [ ] Local smoke: run
-      `npx wrangler dev --config scripts/turbo-cache/wrangler.jsonc` with the
+- [x] Local smoke: run
+      `npx --no-install wrangler dev --local --config scripts/turbo-cache/wrangler.jsonc` with the
       local R2 simulation, then curl status, put, head, get, and a second put.
       Keep the runbook in the README and the transcript under `.context/`.
-- [ ] Update the Delivery Status in `docs/protocol/ci-remote-cache-worker.md`.
-- [ ] Run `cargo xtask check`.
-- [ ] Run `git add -A`, commit with Conventional Commits, and push.
+- [x] Update the Delivery Status in `docs/protocol/ci-remote-cache-worker.md`.
+- [x] Run `cargo xtask check`.
+- [x] Run `git add -A`, commit with Conventional Commits, and push.
 - [ ] Review the complete local diff against `origin/main` with
-      `docs/implementation-review-prompt.md` after the push. Report findings
-      without changing the implementation.
+      `docs/implementation-review-prompt.md` after the push. The supervising
+      agent runs the review. Apply the `AGENTS.md` review-fix rule after it
+      reports; keep the review itself read-only.
+
+Evidence: `.context/turborepo-cloudflare-remote-cache/m3-progress.md` and
+`.context/turborepo-cloudflare-remote-cache/m3-validation.md`.
+Main integration decisions: `.context/turborepo-cloudflare-remote-cache/m3-main-decisions.md`.
 
 ### Milestone 4: Cloudflare Provisioning And CI Wiring
 
@@ -530,14 +586,22 @@ before the merge.
       2026-10-06.
 - [ ] Admin: create the `CLOUDFLARE_WORKERS_API_TOKEN` repository secret with
       Workers Scripts and Workers R2 Storage write permissions.
-- [ ] Admin: generate the two Worker tokens and the signature key with
+- [ ] Admin: choose CI policy A, B (recommended), or C. Restrict the trusted
+      writer GitHub environment to main for A/B; apply the same choice to PR
+      previews. Record B's shared-PR-token residual risk or C's accepted risk.
+- [ ] Admin: add the documented 7-day mokly-pr- lifecycle rule; confirm that
+      its expiry takes precedence over the existing all-prefix 30-day rule.
+- [ ] Admin: generate the three Worker tokens and the signature key with
       `openssl rand -hex 32`.
+- [ ] Verify the rotation runbook changes the Worker team, all client team
+      settings, and the 7-day PR lifecycle prefix together, preserving old
+      namespace expiry.
 - [ ] Admin: set the Worker secrets with `wrangler secret put`, then run the
       first deploy from this branch. Use `workflow_dispatch` if the workflow
       is already registered; otherwise use the documented pinned-Wrangler
       deploy command after its checks. A new dispatch-only workflow is not on
       the default branch yet. Record the Worker URL before merging.
-- [ ] Admin: add the repository secrets `TURBO_CACHE_TOKEN` (read-write) and
+- [ ] Admin: add repository secrets with the selected principal token names and
       `TURBO_CACHE_SIGNATURE_KEY`.
 - [ ] Admin: give approved developers the read-only token and signature key
       through a private password-manager share. Confirm `local:rw,remote:r`
@@ -552,8 +616,7 @@ before the merge.
       `unit`, `browser`, `hydration`, and `Required CI`. Add the token
       environment only when both secrets exist; otherwise leave both unset
       and use local cache only, including forks.
-- [ ] Keep the forced release and telemetry settings from Milestone 2. Add the
-      token/key pair to eligible same-repository preview jobs. Keep release
+- [ ] Keep the forced release and telemetry settings from Milestone 2. Map main preview to the trusted writer and PR preview to the chosen policy. Keep release
       and native jobs without remote credentials.
 - [ ] Update `tests/ci_workflow.test.ts` and the related workflow tests for the
       new job graph and environment.

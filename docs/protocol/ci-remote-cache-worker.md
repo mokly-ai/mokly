@@ -4,8 +4,9 @@
 
 This is the approved service contract for the
 [remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
-The R2 bucket in WEUR and its expiry rule are provisioned. Everything else
-below is planned, including the Worker, tests, workflow, and client wiring.
+The R2 bucket in WEUR and its expiry rule are provisioned. Worker code,
+tests, deployment workflow, and local signed-client verification are implemented.
+The Worker is not deployed; client wiring remains planned.
 The [task contract](./ci-remote-cache.md) owns builds and client credentials.
 
 ## Compatibility And Routing
@@ -17,24 +18,19 @@ client adds `/v8`; serve that prefix and set `apiUrl` to the origin without it.
 Use HTTPS, no redirects, and `remoteCache.preflight: false`.
 No browser CORS or OPTIONS preflight support is required for this CLI service.
 
-Authenticate every request first with exactly one `Authorization: Bearer TOKEN`.
-Missing, malformed, or unknown credentials return 401. Compare token bytes in
-constant time. The read-only token permits every route except PUT; PUT returns
-403 before reading or writing its body. The writer permits all six routes.
-Both token classes may send events; accepting events does not write R2.
-
-Require one `slug` or `teamId` query parameter. Each supplied value must equal
-`TURBO_CACHE_TEAM`; missing, duplicate, or different team values return 403.
-If both are present, validate both. Turbo sends `slug` when `teamSlug` is set
-and sends `teamId` only for an ID starting with `team_`; it can send both.
-Mokly sets only `teamSlug: "mokly"`, so requests use `?slug=mokly`.
+Authenticate every request with one bearer token. The
+[access contract](./ci-remote-cache-access.md) defines the three principals,
+constant-time digest checks, configuration failures, namespace validation,
+PR read fallback, and pending CI policy. Reject forbidden uploads before body
+consumption. All principals may submit discarded events. Mokly uses slug-only
+requests with an empty actual team ID; the contract retains the teamId alias.
 Ignore unrelated query parameters. Preserve hash spelling in storage and URLs.
 Hashes match `^[a-fA-F0-9]{1,128}$`; invalid path or batch hashes return 400.
 The 128-character maximum is our limit; OpenAPI has no maximum.
 
 | Route                       | Success contract                                                                                                                           |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GET /v8/artifacts/status`  | 200 JSON `{"status":"enabled"}` for either valid token and team.                                                                           |
+| `GET /v8/artifacts/status`  | 200 JSON `{"status":"enabled"}` for a valid principal and namespace.                                                                       |
 | `HEAD /v8/artifacts/{hash}` | 200 with artifact headers and no body, or 404.                                                                                             |
 | `GET /v8/artifacts/{hash}`  | 200 with the original gzip tarball as an octet stream and artifact headers, or 404.                                                        |
 | `PUT /v8/artifacts/{hash}`  | 202 JSON `{"urls":["https://WORKER/v8/artifacts/HASH?slug=TEAM"]}` after a successful conditional write, including an existing-key result. |
@@ -129,7 +125,8 @@ Use `application/json` for errors except HEAD, which always has no body.
 HEAD 403 is a client JSON error, never a hit.
 Use codes `bad_request` (400), `unauthorized` (401), `forbidden` (403),
 `not_found` (404), `method_not_allowed` (405), `too_large` (413),
-`unsupported_media_type` (415), and `internal_error` (500).
+`unsupported_media_type` (415), `internal_error` (500), and
+`configuration_error` (500) for invalid Worker configuration.
 Keep tokens, storage errors, and account details private. `remote_caching_*`
 codes signal cache-status changes; do not use them for permission failures.
 GET/HEAD 404 is a miss. Other unsuccessful statuses are cache errors.
@@ -149,13 +146,19 @@ before extraction; task execution may continue as a cache miss.
 ## Storage And Limits
 
 Use `ArtifactStore` with `head`, `get`, and `putIfAbsent`. Metadata contains
-`duration`, optional `tag`, optional `sha`, and optional `dirtyHash`, all strings.
-Keys are `<TURBO_CACHE_TEAM>/<hash>`. Stream PUT and GET bodies; never buffer
+`duration`, `principal`, optional `tag`, optional `sha`, and optional `dirtyHash`.
+Keys and read fallback follow the access contract. Stream PUT and GET bodies; never buffer
 an artifact into Worker memory. Store metadata in the same atomic PUT.
-The required Workers R2 binding call is:
+Actual length mismatches return 400; size overflow returns 413. Stream counting
+must abort the atomic write and discard partial bytes. Drain conditional losers
+to validate length too. No failed request may install a partial object.
+The core counts a standard stream. The R2 adapter pipes it into a
+Workers `FixedLengthStream` to preserve the known length R2 requires. This
+bridge buffers no artifact; [stream semantics](https://developers.cloudflare.com/workers/runtime-apis/streams/transformstream/#fixedlengthstream)
+define overrun/underrun errors. The conditional binding call is:
 
 ```ts
-await env.ARTIFACTS.put(key, request.body, {
+await env.ARTIFACTS.put(key, fixedLengthReadable, {
   onlyIf: new Headers({ "If-None-Match": "*" }),
   customMetadata: metadata,
   httpMetadata: { contentType: "application/octet-stream" },
@@ -188,7 +191,7 @@ Own the modules under `scripts/turbo-cache/`: `worker.ts`, `artifacts.ts`,
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "mokly-turbo-cache",
   "main": "worker.ts",
-  "compatibility_date": "2026-10-06",
+  "compatibility_date": "2026-07-21",
   "workers_dev": true,
   "r2_buckets": [
     { "binding": "ARTIFACTS", "bucket_name": "mokly-turbo-cache" }
@@ -198,9 +201,11 @@ Own the modules under `scripts/turbo-cache/`: `worker.ts`, `artifacts.ts`,
 }
 ```
 
-Secrets are `TURBO_CACHE_READ_WRITE_TOKEN` and `TURBO_CACHE_READ_ONLY_TOKEN`.
+Principal secrets and expiry/recovery commands follow the access contract.
+The pinned Workerd build supports compatibility date `2026-07-21`; local
+Wrangler verification must accept it without a fallback warning.
 The dedicated `turbo-cache.yml` uses manual dispatch and `main` pushes touching
-`scripts/turbo-cache/**`. It uses immutable action revisions, npm 11.7.0,
+`scripts/turbo-cache/**`. It uses immutable action revisions, npm 11.21.0,
 `npm ci`, the repository's pinned Wrangler, and a 30-minute timeout.
 Validate `vars.CLOUDFLARE_ACCOUNT_ID` and
 `secrets.CLOUDFLARE_WORKERS_API_TOKEN`; give that token account-scoped Workers
@@ -210,36 +215,11 @@ Never deploy from a fork or supply Cloudflare credentials to build-cache clients
 
 ## Admin Runbook
 
-Use these commands only during authorized provisioning. The existing bucket and
-rule need inspection, not recreation. The
-[lifecycle guide](https://developers.cloudflare.com/r2/buckets/object-lifecycles/)
-owns expiry behavior; deletion can occur after the 30-day age threshold.
-
-```bash
-npx --no-install wrangler r2 bucket create mokly-turbo-cache
-npx --no-install wrangler r2 bucket lifecycle add mokly-turbo-cache expire-artifacts --expire-days 30
-npx --no-install wrangler r2 bucket lifecycle list mokly-turbo-cache
-openssl rand -hex 32
-npx --no-install wrangler secret put TURBO_CACHE_READ_WRITE_TOKEN --config scripts/turbo-cache/wrangler.jsonc
-npx --no-install wrangler secret put TURBO_CACHE_READ_ONLY_TOKEN --config scripts/turbo-cache/wrangler.jsonc
-```
-
-Generate three independent private values: writer, reader, and signature key.
-Hex output has 64 ASCII bytes; Turbo does not decode it. Set deployment
-credentials. For the first deploy, run the checked branch's pinned deploy command;
-use dispatch if the workflow is already registered. A new workflow is not yet
-on the default branch, as required by the
-[dispatch guide](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
-Record the URL and test all six routes with both token classes.
-Then set repository cache secrets, distribute the reader/key privately, and
-commit the URL and slug. Confirm real signed upload/download with Turbo.
-
-Rotate one access token by replacing its Worker secret and private consumers;
-replace `TURBO_CACHE_TOKEN` for a writer rotation. Old tokens must return 401.
-To rotate the signature key, use a new team namespace such as `mokly-v2` in
-Worker vars and client `teamSlug` too. Existing write-once objects cannot be
-re-signed in place. Populate the new namespace with CI, distribute the new key,
-and let old objects expire. Cache failures during rotation must allow builds.
+The [Worker README](../../scripts/turbo-cache/README.md) owns local setup,
+authorized provisioning, deployment, and curl commands. The
+[access contract](./ci-remote-cache-access.md#expiry-and-recovery-runbook)
+owns PR-prefix expiry and poisoned-object recovery. Provisioning commands are
+planned; existing bucket/rules must not be recreated without inspection.
 
 ## Verified Client Sources
 

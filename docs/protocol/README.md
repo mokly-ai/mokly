@@ -39,8 +39,10 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [CI workflow graph](./ci-workflow.md)
 - [CI task cache](./ci-remote-cache.md) — implemented local task graph and
   restore rules; planned remote workflow delivery and developer credentials.
-  - [CI remote cache Worker](./ci-remote-cache-worker.md) — planned API, R2
-    storage, deployment, and provisioning contract.
+  - [CI remote cache Worker](./ci-remote-cache-worker.md) — implemented API,
+    R2 storage, and deployment workflow; production deployment remains planned.
+  - [CI remote cache access](./ci-remote-cache-access.md) — implemented
+    principals and namespaces; pending CI policy and recovery runbook.
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
 - [CI test timing](./ci-test-timing.md) — deterministic assertions,

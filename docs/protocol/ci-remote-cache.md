@@ -5,9 +5,10 @@
 This is the approved target of the
 [remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
 The local task graph, strict environment, cache exclusions, and workflow
-telemetry/release-force settings are implemented. The remote service, credentials,
-and hosted prepare job remain planned. The R2 bucket and expiry rule exist; the
-Worker is not deployed. Tests, reports, and `npm run example:check` stay uncached;
+telemetry/release-force settings are implemented. Worker code and local signed
+verification are implemented. The Worker is not deployed; credentials and the
+hosted prepare job remain planned. The R2 bucket and expiry rule exist.
+Tests, reports, and `npm run example:check` stay uncached;
 the check revalidates referenced paths and Git state outside the build hash.
 
 ## Task Graph And Files
@@ -132,15 +133,15 @@ Remote access in this table remains planned. Current jobs use local cache only.
 | --------------------------------------- | ---------------- | ----------- | ------------ |
 | Developer with neither credential       | read/write       | no          | no           |
 | Developer with read-only token and key  | read/write       | yes         | no           |
-| Same-repository CI and eligible preview | read/write       | yes         | yes          |
+| Same-repository CI and eligible preview | read/write       | yes         | policy A/B/C |
 | Fork pull request                       | read/write       | no          | no           |
 | Release publishing                      | forced execution | no          | no           |
 | Native macOS and Windows                | read/write       | no          | no           |
 
-The repository admin stores the CI writer as `secrets.TURBO_CACHE_TOKEN` and
-the shared key as `secrets.TURBO_CACHE_SIGNATURE_KEY`. Jobs map these to
+The [access contract](./ci-remote-cache-access.md) defines three principals and
+pending CI policy A/B/C (B recommended). The shared key is `secrets.TURBO_CACHE_SIGNATURE_KEY`. Jobs map these to
 `TURBO_TOKEN` and `TURBO_REMOTE_CACHE_SIGNATURE_KEY` only when both are nonempty.
-Use `TURBO_CACHE=local:rw,remote:rw` for those jobs. With either value absent,
+Use the selected policy's read/write mode and namespace for those jobs. With either value absent,
 leave both Turbo credentials unset and use `TURBO_CACHE=local:rw`.
 A fork or developer with neither value must build successfully with local
 caching only. Prove this before and after the Worker URL is configured.

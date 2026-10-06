@@ -147,14 +147,16 @@ The repository job still owns profile selection and audit-first verification.
 Package, unit, browser, and hydration jobs require both prerequisites. Native
 jobs keep their existing prerequisite and receive no remote credentials.
 Every suite still calls preparation; unchanged tasks restore from cache.
-The prepare job uploads through Turbo, not GitHub build-artifact transfer.
+The prepare job uses the selected [access policy](./ci-remote-cache-access.md);
+only authorized writers upload through Turbo.
 
-Same-repository jobs map the cache writer and signature secrets to Turbo only
+Same-repository jobs map the selected principal and signature secrets only
 when both values exist. Empty secrets leave both variables unset and select
 local cache only; forks therefore build independently in each job.
 Read-only developer clients select `local:rw,remote:r`. Tests, audits, installs,
 capture, deployment, and report validation remain outside task caching.
-Eligible preview builds may read and write; native jobs remain local.
+Preview main jobs use the trusted writer; PR jobs follow the chosen policy.
+Native jobs remain local.
 
 `Required CI` adds `prepare` to its prerequisites and requires its exact success.
 The ordinary nine-report and Release Please eighteen-report aggregates remain

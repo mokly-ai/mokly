@@ -13,7 +13,12 @@ interface Workflow {
 }
 
 test("every hosted Turbo workflow opts out of telemetry and stays local", async () => {
-  for (const file of ["ci.yml", "preview.yml", "release.yml"]) {
+  for (const file of [
+    "ci.yml",
+    "preview.yml",
+    "release.yml",
+    "turbo-cache.yml",
+  ]) {
     const workflow = parse(
       await fs.readFile(
         path.join(repositoryRoot, ".github/workflows", file),

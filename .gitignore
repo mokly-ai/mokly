@@ -3,6 +3,7 @@
 .mokly-review-*/
 .mokly-write-*/
 .wrangler/
+/scripts/turbo-cache/.dev.vars*
 .turbo/
 coverage/
 dist/

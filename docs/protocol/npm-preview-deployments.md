@@ -10,8 +10,8 @@ cache access is planned.
 
 ## Deployment Contract
 
-After remote delivery, eligible same-repository preview jobs may read and
-write signed artifacts. They map the writer and signature secrets only when
+After remote delivery, main preview uses a trusted writer. PR preview follows
+the pending [access policy](./ci-remote-cache-access.md), with B recommended. Jobs map the policy-selected principal and signature secrets only when
 both exist; otherwise they use local cache only. Fork gating stays unchanged.
 Hosted Turbo telemetry is disabled. Historical comparison rebuilds use the
 commit's source and lockfile with the configured direct build recipe. They never

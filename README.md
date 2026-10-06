@@ -417,6 +417,10 @@ review rules, and the temporary Braces exception.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design
   catalogue.
 
+The repository-owned [cache Worker](./scripts/turbo-cache/README.md) has local
+R2 development and runtime-neutral tests. Deployment and CI cache policy remain
+planned; no remote credentials are part of the local build.
+
 ## License
 
 Mokly is available under the [MIT License](./LICENSE).
