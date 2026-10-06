@@ -60,13 +60,21 @@ jobs:
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
       - name: Set up npm
-        run: npm install --global npm@11.7.0
+        run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: |
           rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
           rustup default 1.95.0
       - name: Install dependencies
         run: npm ci
+      - name: Verify lockfile matches pinned npm
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          if ! git diff --exit-code -- package.json package-lock.json; then
+            pinned="$(npm --version)"
+            echo "::error title=Lockfile does not match pinned npm::npm ${pinned} changed package.json or package-lock.json. Run npm install with npm ${pinned}, then commit the changed files."
+            exit 1
+          fi
       - name: Run repository verification
         run: cargo xtask check --suite repository
 
@@ -92,7 +100,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Set up npm
-        run: npm install --global npm@11.7.0
+        run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: |
           rustup toolchain install 1.95.0 --profile minimal
@@ -128,7 +136,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Set up npm
-        run: npm install --global npm@11.7.0
+        run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: |
           rustup toolchain install 1.95.0 --profile minimal
@@ -174,7 +182,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Set up npm
-        run: npm install --global npm@11.7.0
+        run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: |
           rustup toolchain install 1.95.0 --profile minimal
@@ -228,7 +236,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Set up npm
-        run: npm install --global npm@11.7.0
+        run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: |
           rustup toolchain install 1.95.0 --profile minimal
@@ -279,7 +287,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Set up npm
-        run: npm install --global npm@11.7.0
+        run: npm install --global npm@11.21.0
       - name: Install dependencies
         run: npm ci
       - name: Build package
