@@ -112,15 +112,23 @@ export function unclaimedGeneratedRoutes(config: ResolvedConfig): string[] {
     .sort();
 }
 
-/** Determine whether an existing target may be replaced safely. */
-export function isOwned(candidate: string, config: ResolvedConfig): boolean {
-  return generatedOwnershipDenial(candidate, config) === undefined;
+/** Determine ownership, reusing a supplied mockups projection within one load. */
+export function isOwned(
+  candidate: string,
+  config: ResolvedConfig,
+  physicalMockupsRoot?: string,
+): boolean {
+  return (
+    generatedOwnershipDenial(candidate, config, physicalMockupsRoot) ===
+    undefined
+  );
 }
 
-/** Explain why a target cannot be replaced, retaining the shared source cause. */
+/** Explain an ownership denial, retaining source causes and supplied root projections. */
 export function generatedOwnershipDenial(
   candidate: string,
   config: ResolvedConfig,
+  physicalMockupsRoot?: string,
 ): string | undefined {
   try {
     if (!isInside(config.mockupsDir, candidate)) return "is outside mockupsDir";
@@ -134,6 +142,7 @@ export function generatedOwnershipDenial(
     const denial = isAuthoringSource(candidate, config, "all", {
       ignorePublicExclusions:
         candidate === path.join(config.mockupsDir, MANIFEST_NAME),
+      ...(physicalMockupsRoot === undefined ? {} : { physicalMockupsRoot }),
     });
     if (denial) return sourceDenialMessage(denial);
     if (relative === MANIFEST_NAME) return;

@@ -40,7 +40,7 @@ export function blocksRequiredInput(
   return reason !== undefined && (reason !== "denied" || !required);
 }
 
-/** Classify a path by both its authored name and projected physical location. */
+/** Classify logical and physical paths, reusing supplied root projections. */
 export function packageOwnedPath(
   candidate: string,
   config: ResolvedConfig,
@@ -48,12 +48,16 @@ export function packageOwnedPath(
   deniedRoot = config.repoRoot,
   roots?: PackageOwnedRoots,
 ): PackageOwnedReason | undefined {
-  const absolute = logicalRepositoryPath(candidate, config.repoRoot);
+  const absolute = logicalRepositoryPath(
+    candidate,
+    config.repoRoot,
+    roots?.repo,
+  );
   if (!isInside(config.repoRoot, absolute)) return "outside";
   if (
     absolute.endsWith(".html") &&
     isInside(config.mockupsDir, absolute) &&
-    isOwned(absolute, config)
+    isOwned(absolute, config, roots?.mockups)
   )
     return "generated";
   let isDirectory: boolean;
@@ -76,7 +80,10 @@ export function packageOwnedPath(
       const route = toPosixPath(path.relative(mockupsDir, pathName));
       if (route === MANIFEST_NAME || isGeneratedRoute(route))
         return "generated";
-      if (!isDirectory && isOwned(pathName, { ...config, mockupsDir }))
+      if (
+        !isDirectory &&
+        isOwned(pathName, { ...config, mockupsDir }, roots?.mockups)
+      )
         return "generated";
     }
     if (isInside(reviewDir, pathName)) return "review";

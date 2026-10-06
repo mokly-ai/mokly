@@ -155,33 +155,41 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-2.md`.
 - [x] Run the helper tests five times. Run `npm run lint` and
       `npm run typecheck`.
 
-## Milestone 3: Fixed root resolution (finding 4)
+## Milestone 3: Fixed root resolution (finding 4) — completed
 
 Fix the root resolution in path mapping and source inventory, test first.
 
 Evidence: `.context/deterministic-test-timing-review-fixes/milestone-3.md`.
 
-- [ ] Write failing tests in `tests/metafile_path_mapper.test.ts` for a
+- [x] Write failing tests in `tests/metafile_path_mapper.test.ts` for a
       symlinked working directory (`orderedStyles` and `graphSourceFiles`)
       and for a working directory equal to `repoRoot`, at two sizes. Assert
       the logical outputs and constant combined `realpath` counts. Split the
       file if it passes 300 lines.
-- [ ] Fix `createMetafilePathMapper`, `normalizeSourceFiles`, and the helpers
+- [x] Fix `createMetafilePathMapper`, `normalizeSourceFiles`, and the helpers
       that they call in `src/config/file_locations.ts`, as decided. Keep the
       behavior of every other caller.
-- [ ] Use the combined `realpath` selection in every working-directory and
+- [x] Use the combined `realpath` selection in every working-directory and
       fixed-root once-only check, including
       `tests/postcss_dependency_review.test.ts`.
-- [ ] Check PostCSS dependency collection with a symlinked repository root.
+- [x] Check PostCSS dependency collection with a symlinked repository root.
       If it resolves a fixed root for each report, add a failing test, then
       fix it.
-- [ ] Prove each new guard. Restore the per-edge projection in the mapper and
+- [x] Test cached ownership of physical PostCSS candidates at two sizes.
+      Reuse the repository projection and prove the guard with a mutation.
+- [x] Test PostCSS graph inputs under the public mockups root and its aliases
+      at two sizes. Cache their location and ownership roots. Prove each guard.
+- [x] Check locator results for missing, escaping and dangling paths, and for
+      physical paths below symlinked roots. Keep lookup failures recoverable.
+- [x] Prove each new guard. Restore the per-edge projection in the mapper and
       the per-input `repoRoot` resolution, and confirm that the matching test
       fails. Save the results in the evidence file.
-- [ ] Update the mapper doc comment and `src/build/README.md`. Use fixed-count
+- [x] Update the mapper doc comment and `src/build/README.md`. Use fixed-count
       wording for root resolutions instead of promising one resolution.
-- [ ] Run every test file that imports the changed modules, then
+- [x] Run every test file that imports the changed modules, then
       `npm run lint` and `npm run typecheck`.
+- [x] Run every symlink test once. Run the new tests five times. Check changed
+      file sizes and format.
 
 ## Milestone 4: Polling waits (finding 3)
 

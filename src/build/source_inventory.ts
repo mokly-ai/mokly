@@ -11,7 +11,7 @@ import {
   isAuthoredEntryPath,
   projectedEntryPaths,
 } from "../config/entry_membership.js";
-import { locatePath } from "../config/file_locations.js";
+import { createPathLocator } from "../config/file_locations.js";
 import { isPackageCode } from "../config/package_code.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import { matchesRootFile } from "../config/root_membership.js";
@@ -47,10 +47,12 @@ const exclusionMatchers = new WeakMap<
   readonly Minimatch[]
 >();
 
-/** Classification exceptions for internal generated metadata. */
+/** Classification options for internal metadata and per-load root projections. */
 export interface SourceClassificationOptions {
   /** Bypass public globs while retaining every authoring-source protection. */
   readonly ignorePublicExclusions?: boolean;
+  /** Reuse a physical mockups root within one dependency collection. */
+  readonly physicalMockupsRoot?: string;
 }
 
 /**
@@ -93,7 +95,7 @@ export function isAuthoringSource(
     ? undefined
     : matchingPublicExclusion(
         real,
-        projectRealPath(config.mockupsDir),
+        options.physicalMockupsRoot ?? projectRealPath(config.mockupsDir),
         config.publicExclude,
       );
   if (physicalExclusion !== undefined)
@@ -188,13 +190,14 @@ export function graphSourceFiles(
   return normalizeSourceFiles(candidates, repoRoot, mockupsDir);
 }
 
-/** Prove regular in-repository inputs and retain logical and physical identities. */
+/** Prove regular inputs with cached roots; retain logical and physical identities. */
 export function normalizeSourceFiles(
   files: readonly string[],
   repoRoot: string,
   mockupsDir: string,
 ): string[] {
   const inventory = new Set<string>();
+  const locate = createPathLocator(repoRoot);
   const reservedRoot = path.join(mockupsDir, GENERATED_DIRECTORY);
   const realReservedRoot = fs
     .lstatSync(reservedRoot, { throwIfNoEntry: false })
@@ -203,7 +206,7 @@ export function normalizeSourceFiles(
     : projectRealPath(reservedRoot);
   for (const file of files) {
     const absolute = path.resolve(repoRoot, file);
-    const location = locatePath(absolute, repoRoot);
+    const location = locate(absolute);
     if (!location || !fs.statSync(location.physicalPath).isFile())
       throw new MoklyError(
         "build-invalid",

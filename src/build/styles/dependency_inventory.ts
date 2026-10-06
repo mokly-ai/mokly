@@ -36,7 +36,7 @@ interface Candidate {
   readonly directory?: string;
 }
 
-/** Apply generated-output precedence before public-source and regular-file checks. */
+/** Reuse root projections; check generated output, public sources, then regular files. */
 export function collectPostcssDependencies(
   config: ResolvedConfig,
   reports: readonly StyleDependencyReport[],
@@ -55,7 +55,11 @@ export function collectPostcssDependencies(
     ),
   );
   for (const report of ordered) {
-    const source = logicalRepositoryPath(report.source, config.repoRoot);
+    const source = logicalRepositoryPath(
+      report.source,
+      config.repoRoot,
+      ownership.roots.repo,
+    );
     if (report.malformed)
       throw new MoklyError(
         "build-invalid",
@@ -67,6 +71,7 @@ export function collectPostcssDependencies(
         report.type === "dependency" ? report.file! : report.directory!,
       ),
       config.repoRoot,
+      ownership.roots.repo,
     );
     const normalizedReport = { ...report, source };
     if (ignoredDependencyPath(file, config, ownership)) continue;
@@ -174,7 +179,10 @@ function isPublicMockupsDependency(
     !isInside(cache.roots.mockups, projectRealPath(file))
   )
     return false;
-  return wouldPrivatizePublicFile(file, config, graphInputs);
+  return wouldPrivatizePublicFile(file, config, graphInputs, {
+    location: cache.locate(file),
+    mockupsRoot: cache.roots.mockups,
+  });
 }
 
 function generatedError(

@@ -3,6 +3,10 @@ import path from "node:path";
 
 import { Minimatch } from "minimatch";
 
+import {
+  createPathLocator,
+  type FileLocation,
+} from "../../config/file_locations.js";
 import { compareCodeUnits } from "../../config/path_order.js";
 import { isInside, toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
@@ -16,6 +20,8 @@ import {
 
 /** Keep logical/physical classification stable and reusable throughout one load. */
 export interface DependencyPathCache {
+  /** Locate files with root lookups shared by this collection. */
+  readonly locate: (candidate: string) => FileLocation | undefined;
   readonly reasons: Map<string, PackageOwnedReason | undefined>;
   readonly roots: PackageOwnedRoots;
 }
@@ -24,7 +30,11 @@ export interface DependencyPathCache {
 export function createDependencyPathCache(
   config: ResolvedConfig,
 ): DependencyPathCache {
-  return { reasons: new Map(), roots: packageOwnedRoots(config) };
+  return {
+    locate: createPathLocator(config.repoRoot),
+    reasons: new Map(),
+    roots: packageOwnedRoots(config),
+  };
 }
 
 /** Memoize one path's ownership for the duration of a dependency inventory. */

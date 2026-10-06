@@ -110,9 +110,10 @@ committed mode scan generated trees for matching files before reporting them;
 in derived mode skip those trees entirely.
 Each reported glob is compiled once per report, classification is cached
 within the graph load, and expanded files already checked as explicit
-dependencies are not checked again. Resolve fixed logical/physical roots once
-per dependency collection, compute each candidate's repository-relative path
-once, sort each candidate class once, then apply generated-output, public-file,
+dependencies are not checked again. Resolve fixed logical/physical roots a
+fixed number of times per dependency collection. The count must not grow with
+the number of reports or files. Compute each candidate's repository-relative
+path once, sort each candidate class once, then apply generated-output, public-file,
 and regular-file checks in that order. A missing directory report is deferred
 until the regular-file pass, after any generated-output or public-file error;
 among missing exact files and directories, exact-file errors come first.
