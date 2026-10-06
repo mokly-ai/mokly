@@ -301,7 +301,7 @@ Interim timings, each file run alone with `node --import tsx --test` on Node
 | `tests/design_library_inventory.test.ts` |           45.2 s |         4.3 s |
 | `tests/brand_logo.test.tsx`              |           43.8 s |         3.2 s |
 
-## Milestone 4: Use the snapshot for the design library fixture — in progress
+## Milestone 4: Use the snapshot for the design library fixture — completed
 
 Give the attribution fixture its before state from the snapshot in the default
 mode. Keep the diff in `design_library_fixture.ts` to a few lines so the
@@ -318,9 +318,11 @@ attribution restructure in the other workspace merges without conflicts.
       `src/build/styles`. Keep every after-state `build()` as a real compile.
 - [x] Run both attribution tests once and confirm that every assertion still
       passes. Record the before-state saving per fixture call.
-- [ ] Tell the attribution workspace that the fixture's default-mode before
+- [x] Tell the attribution workspace that the fixture's default-mode before
       state now comes from the snapshot, so files split from those tests pay no
-      compile for it.
+      compile for it. Sent as an information-only message to the
+      "Attribution Test Consolidation" session of the "tests: attribution test
+      consolidation" workspace, naming draft PR #138 and the changed lines.
 
 Delivered notes:
 
@@ -338,7 +340,7 @@ Delivered notes:
   default-mode calls in the two files therefore save about 240 s here and
   about 80 s in CI. The committed-mode call keeps its compile.
 
-## Milestone 5: Produce the snapshot during unit preparation — in progress
+## Milestone 5: Produce the snapshot during unit preparation — completed
 
 Wire the producer into the unit suite and the developer test command.
 
@@ -355,7 +357,7 @@ Wire the producer into the unit suite and the developer test command.
 - [x] Change the unit suite in `xtask/src/check.rs` to prepare with
       `prepare:unit`; run `cargo fmt --all -- --check`, Clippy, and the xtask
       tests.
-- [ ] Smoke on Node 22.14.0: `npm test` from a clean `.context` produces the
+- [x] Smoke on Node 22.14.0: `npm test` from a clean `.context` produces the
       snapshot and every consumer logs phase `snapshot`; a second `npm test`
       skips the compile; an edit to an example source makes the next run
       rewrite the snapshot; `cargo xtask check --suite unit --shard 1/4`
@@ -373,9 +375,9 @@ Wire the producer into the unit suite and the developer test command.
         rewrote the snapshot (`previous snapshot: stale`); the same file then
         logged `snapshot` and passed in 2.8 s. Reverting the edit repeated the
         rewrite, and the file passed again from the snapshot in 3.4 s.
-  - [ ] `cargo xtask check --suite unit --shard 1/4` passes. Locally, shard 1
+  - [x] `cargo xtask check --suite unit --shard 1/4` passes. Locally, shard 1
         holds the two failures below, so CI's identical shard command is the
-        confirmation.
+        confirmation: it passed in CI run 37457988316.
 - [x] Remove the pending marks added by Milestone 1 and align every document
       with the delivered behavior.
 
@@ -403,7 +405,7 @@ Integration notes:
   the protocol field table lists it. The real example compiles with zero
   diagnostics; the synthetic codec tests cover a non-empty list.
 
-## Milestone 6: Measure, verify, commit, push, and review — not started
+## Milestone 6: Measure, verify, commit, push, and review — in progress
 
 Collect the acceptance evidence on the branch before the merge.
 
@@ -422,7 +424,7 @@ Collect the acceptance evidence on the branch before the merge.
 - [ ] After the checks pass, run `git add -A`, commit with a Conventional
       Commits message, and push the branch with every new script, declaration,
       helper, test, and document.
-- [ ] Confirm with a CI run on the branch: download the `verification-unit-*`
+- [x] Confirm with a CI run on the branch: download the `verification-unit-*`
       artifacts, compare the summed per-file time and the slowest shard with
       run 37354719684, confirm the `fullFiles` count did not shrink, and record
       the result in this plan.
@@ -431,6 +433,32 @@ Collect the acceptance evidence on the branch before the merge.
       against `origin/main`. Report numbered findings with severity, context,
       the impact of doing nothing, lettered options, and a recommendation. Do
       not change the implementation or fix findings automatically.
+
+CI confirmation. Draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138) ran
+[CI run 37457988316](https://github.com/mokly-ai/mokly/actions/runs/37457988316)
+for branch head `790421e`; its reports name the pull-request merge commit
+`8f385ac` (Node 22.14.0). Every job passed, including `Required CI`. The unit reports compare with the baseline run as follows:
+
+| Measure                                 |                Run 37354719684 |            Run 37457988316 |
+| --------------------------------------- | -----------------------------: | -------------------------: |
+| `fullFiles` (observed)                  |                            751 |                        768 |
+| Tests                                   |                          4,214 |                      4,370 |
+| Summed per-file unit time               |                        3,492 s |                    1,836 s |
+| Summed per-file time of shards 1 to 4   | 1,201 s, 552 s, 492 s, 1,247 s | 617 s, 449 s, 433 s, 337 s |
+| Test-process wall time of shards 1 to 4 |     691 s, 331 s, 290 s, 768 s | 398 s, 268 s, 259 s, 211 s |
+| Unit job time of shards 1 to 4          |     789 s, 405 s, 356 s, 835 s | 450 s, 320 s, 317 s, 264 s |
+| The 34 `designCatalogue` consumers      |  510 s (10.7 s to 25.0 s each) | 19 s (0.3 s to 1.7 s each) |
+| `design_library_attribution.test.ts`    |                          615 s |                      319 s |
+| `component_design_attribution.test.ts`  |                          192 s |                       69 s |
+| New tests that compile the example      |                              — |          10.9 s and 10.0 s |
+
+No baseline file is missing on the branch; the 17 extra files are the 11
+that `f66c274` added and the 6 that this plan adds. The slowest unit job fell
+from 835 s to 450 s. The attribution files fell by more than their saved
+before-state compiles alone, because their neighbours on the same 2 vCPU
+runner now compile far less; the other jobs and file counts also changed
+with `f66c274`, so only the unit numbers above are attributed to this plan.
 
 ## Post-merge follow-up (non-blocking)
 
