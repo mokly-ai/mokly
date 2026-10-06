@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Verification and close-out passed; the separate review and PR merge remain.
+Status: Active. The first review is complete; the re-review, open findings and PR merge remain.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -14,10 +14,12 @@ snapshot script is outside this repository. It installs the Blacksmith CLI.
 
 Contract owners:
 
-- `docs/protocol/remote-verification.md`, which Milestone 1 adds.
+- [Remote verification](../docs/protocol/remote-verification.md).
+- [Testbox execution](../docs/protocol/remote-verification-testbox.md).
 - [CI verification](../docs/protocol/ci-verification.md).
 - [CI workflow graph](../docs/protocol/ci-workflow.md).
 - [CI dependency cache and security](../docs/protocol/ci-verification-security.md).
+- [CI and npm release](../docs/protocol/npm-release.md).
 - The [xtask README](../xtask/README.md) and the
   [repository README](../README.md).
 
@@ -386,8 +388,22 @@ Leave the final review to the separate reviewer.
       `Auto-fix: yes` findings once more. Run the checks. Commit and push.
       Then stop and report the rest. Add each open finding as one line under
       this TODO.
+  - Open finding 1 (High): Closed output can stop box cleanup.
+  - Open finding 2 (Medium): Local fallback can ignore stop signals.
+  - Open finding 3 (Medium): New verification tests fail on macOS.
+  - Open finding 4 (Medium): OS adapters need more test coverage.
+  - Open finding 5 (Low): Cleanup counts attempts and can hide stop failures.
+  - Open finding 6 (Low): Tag pushes start the Testbox workflow.
+  - Open finding 7 (Low): Nested Git trees fail without a path in the error.
+  - Open finding 8 (Low): Local suites receive the Blacksmith org key.
+  - Open finding 9 (Low): Only the first missing tool is named.
+  - Open finding 10 (Low): Invalid wrapper input shows the wrong command help.
+  - Open finding 11 (Low): The timestamp dependency adds unused packages.
+  - Open finding 12 (Low): Cancellation warnings can follow completed runs.
+  - Open finding 13 (Low): Warning lines repeat the output prefix.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-6-evidence.md`.
+Evidence: `.context/blacksmith-remote-verification/review-fixes-evidence.md`.
 
 ## Post-merge follow-up (non-blocking)
 

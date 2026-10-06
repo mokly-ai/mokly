@@ -4,6 +4,7 @@ use std::env;
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
@@ -28,10 +29,41 @@ impl Environment for SystemEnvironment {
     }
 }
 
-/// PATH lookup with an injected environment.
+/// PATH lookup with injected environment and file access.
 pub(crate) struct SystemPrograms {
     /// Environment source.
     pub(crate) environment: Arc<dyn Environment + Send + Sync>,
+    /// Candidate file lookup.
+    pub(crate) files: Arc<dyn ProgramFiles + Send + Sync>,
+}
+
+/// File type and execute-permission lookup for one PATH candidate.
+#[cfg_attr(test, unimock::unimock(api = [ProgramFilesExecutableMock]))]
+pub(crate) trait ProgramFiles: Send + Sync {
+    /// Check whether the candidate is an executable regular file.
+    fn executable(&self, path: &Path) -> Result<bool>;
+}
+
+/// Operating-system candidate file lookup.
+pub(crate) struct SystemProgramFiles;
+
+impl ProgramFiles for SystemProgramFiles {
+    fn executable(&self, path: &Path) -> Result<bool> {
+        let metadata = match fs::metadata(path) {
+            Ok(metadata) => metadata,
+            Err(source) => {
+                return Err(Error::Io {
+                    operation: Operation::Program,
+                    source,
+                });
+            }
+        };
+        #[cfg(unix)]
+        let executable = metadata.permissions().mode() & 0o111 != 0;
+        #[cfg(not(unix))]
+        let executable = true;
+        Ok(metadata.is_file() && executable)
+    }
 }
 
 impl Programs for SystemPrograms {
@@ -41,22 +73,9 @@ impl Programs for SystemPrograms {
         };
         for directory in env::split_paths(&path) {
             let candidate = directory.join(name);
-            let metadata = match fs::metadata(candidate) {
-                Ok(metadata) => metadata,
-                Err(source) if source.kind() == std::io::ErrorKind::NotFound => continue,
-                Err(source) => {
-                    return Err(Error::Io {
-                        operation: Operation::Program,
-                        source,
-                    });
-                }
-            };
-            #[cfg(unix)]
-            let executable = metadata.permissions().mode() & 0o111 != 0;
-            #[cfg(not(unix))]
-            let executable = true;
-            if metadata.is_file() && executable {
-                return Ok(true);
+            match self.files.executable(&candidate) {
+                Ok(true) => return Ok(true),
+                Ok(false) | Err(_) => continue,
             }
         }
         Ok(false)
@@ -114,3 +133,7 @@ impl Reporter for SystemReporter {
         eprintln!("[xtask/remote] {message}");
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/runtime_programs_tests.rs"]
+mod runtime_programs_tests;

@@ -1,11 +1,14 @@
 //! Phase-specific Blacksmith mocks for remote orchestration tests.
 
-use super::harness_tests::{Case, output};
-use crate::remote::contracts::*;
-use crate::remote::error::{Error, Operation};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+
 use unimock::{MockFn, Unimock, matching};
+
+use crate::remote::contracts::*;
+use crate::remote::error::{Error, Operation};
+
+use super::harness_tests::{Case, output};
 
 pub(super) fn client(
     case: Case,

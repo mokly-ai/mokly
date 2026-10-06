@@ -15,7 +15,8 @@ internal binary and is not published to npm or crates.io.
 - Ratchet JavaScript/TypeScript length, protocol caps, and internal exports
   against the branch point, and published-package exports against release tags.
 - Keep the complete local gate aligned with the approved independent CI suites.
-- Run explicit remote checks on 11 Testboxes with complete shard evidence.
+- Run explicit and automatic remote checks on 11 Testboxes with complete shard
+  evidence.
 - Stop warmed boxes on failure, success, SIGINT and SIGTERM.
 
 ## What This Crate Does
@@ -93,7 +94,7 @@ cargo xtask check
 cargo xtask check --executor local
 cargo xtask executor
 cargo xtask executor --executor local
-MOKLY_TESTBOX_REF="$(git branch --show-current)" cargo xtask check --executor remote
+cargo xtask check --executor remote
 cargo xtask check --suite repository
 cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4
@@ -112,12 +113,15 @@ prepare their required output before invoking prepared npm scripts.
 An absent flag and variable select `auto`. Explicit `local` skips remote checks.
 Explicit `remote` rejects `--suite` and GitHub Actions.
 Push local `HEAD` before a remote check. Install `blacksmith`, `rsync` and `ssh`.
+PATH lookup skips entries when file access fails.
 Set `BLACKSMITH_ORG_TOKEN` to use org-key login through stdin.
 Remote mode can use the current CLI login when the key is absent.
 Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 The CLI never receives the key in arguments or remote commands.
-`MOKLY_TESTBOX_REF` selects the workflow ref. Its default is `main`.
+Warmup uses the Testbox workflow from `main`.
+Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
+before it merges.
 It does not change the required source fingerprint or `HEAD`.
 
 The [remote contract](../docs/protocol/remote-verification.md) defines the

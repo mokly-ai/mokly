@@ -3,7 +3,7 @@
 use crate::remote::error::{Error, Result};
 
 /// Extract canonical whole-line box identifiers, including recoverable extras.
-pub(crate) fn warmup_ids(output: &str) -> Vec<String> {
+pub(super) fn warmup_ids(output: &str) -> Vec<String> {
     output
         .lines()
         .filter(|line| {
@@ -19,7 +19,7 @@ pub(crate) fn warmup_ids(output: &str) -> Vec<String> {
 }
 
 /// Require exactly one warmup identifier line.
-pub(crate) fn require_warmup_id(output: &str) -> Result<String> {
+pub(super) fn require_warmup_id(output: &str) -> Result<String> {
     let ids = warmup_ids(output);
     if ids.len() != 1 {
         return Err(Error::WarmupIds { count: ids.len() });
@@ -39,7 +39,7 @@ fn hex(value: &str, length: usize) -> bool {
 }
 
 /// Validate the one fingerprint and one HEAD line despite CLI status noise.
-pub(crate) fn probe_identity(output: &str, fingerprint: &str, head: &str) -> Result<()> {
+pub(super) fn probe_identity(output: &str, fingerprint: &str, head: &str) -> Result<()> {
     let fingerprints: Vec<_> = output
         .lines()
         .filter(|line| {
@@ -64,7 +64,7 @@ pub(crate) fn probe_identity(output: &str, fingerprint: &str, head: &str) -> Res
 }
 
 /// Validate local fingerprint output before inserting it into remote shell text.
-pub(crate) fn fingerprint_value(output: &str) -> Result<String> {
+pub(super) fn fingerprint_value(output: &str) -> Result<String> {
     let lines: Vec<_> = output.lines().collect();
     if lines.len() == 1
         && lines[0]
@@ -80,7 +80,7 @@ pub(crate) fn fingerprint_value(output: &str) -> Result<String> {
 }
 
 /// Find the first numeric GitHub Actions run URL in status output.
-pub(crate) fn run_id_from_status(output: &str) -> Option<u64> {
+pub(super) fn run_id_from_status(output: &str) -> Option<u64> {
     output.split("/actions/runs/").skip(1).find_map(|tail| {
         let digits: String = tail.chars().take_while(char::is_ascii_digit).collect();
         digits.parse().ok()
@@ -88,7 +88,7 @@ pub(crate) fn run_id_from_status(output: &str) -> Option<u64> {
 }
 
 /// Prove completion only from one box row and the named table status column.
-pub(crate) fn box_is_completed(output: &str, id: &str) -> bool {
+pub(super) fn box_is_completed(output: &str, id: &str) -> bool {
     let status_column = output.lines().find_map(|line| {
         let columns: Vec<_> = line.split_ascii_whitespace().collect();
         if columns.first() != Some(&"ID") {

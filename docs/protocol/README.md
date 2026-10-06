@@ -36,8 +36,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
   - [Development hydration coverage](./ci-verification-hydration.md) — one
     route per entry shape and the generated resource audit.
-- [Remote verification](./remote-verification.md) — approved executor target;
-  executor integration is pending.
+- [Remote verification](./remote-verification.md) — implemented explicit and
+  automatic remote execution.
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands,
     sync probe, suite wrapper and source-tree fingerprint.
 - [CI workflow graph](./ci-workflow.md)

@@ -21,7 +21,8 @@ use crate::remote::logs::SystemLogs;
 use crate::remote::process::{Process, SystemProcess};
 use crate::remote::runner::DefaultRemoteRunner;
 use crate::remote::runtime::{
-    SystemClock, SystemEnvironment, SystemInterrupt, SystemPrograms, SystemReporter,
+    SystemClock, SystemEnvironment, SystemInterrupt, SystemProgramFiles, SystemPrograms,
+    SystemReporter,
 };
 use crate::remote::scripts::SystemScripts;
 use crate::rust_file_length::{RustFileLengthAuditor, SystemRustFileLengthAuditor};
@@ -116,6 +117,7 @@ fn remote_dependencies(workspace: PathBuf) -> Dependencies {
     let environment: Arc<dyn Environment + Send + Sync> = Arc::new(SystemEnvironment);
     let programs: Arc<dyn Programs + Send + Sync> = Arc::new(SystemPrograms {
         environment: Arc::clone(&environment),
+        files: Arc::new(SystemProgramFiles),
     });
     let clock: Arc<dyn Clock + Send + Sync> = Arc::new(SystemClock);
     let interrupt: Arc<dyn Interrupt + Send + Sync> = Arc::new(SystemInterrupt::default());

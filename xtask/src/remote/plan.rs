@@ -4,20 +4,20 @@ use crate::check::VerificationSuite;
 
 /// One suite assigned to exactly one box.
 #[derive(Clone, Debug)]
-pub(crate) struct RunCommand {
+pub(super) struct RunCommand {
     /// Stable command, report and log name.
-    pub(crate) name: String,
+    pub(super) name: String,
     /// Selected verification suite.
-    pub(crate) suite: VerificationSuite,
+    pub(super) suite: VerificationSuite,
     /// Optional one-based shard out of four.
-    pub(crate) shard: Option<u8>,
+    pub(super) shard: Option<u8>,
     /// Whether this command must produce a report.
-    pub(crate) report: bool,
+    pub(super) report: bool,
 }
 
 impl RunCommand {
     /// Format only validated identities and closed suite/shard values.
-    pub(crate) fn shell_command(&self, fingerprint: &str) -> String {
+    pub(super) fn shell_command(&self, fingerprint: &str) -> String {
         let mut command = format!(
             "node scripts/verification/testbox-suite.mjs --expect {fingerprint} --suite {}",
             self.suite
@@ -30,7 +30,7 @@ impl RunCommand {
 }
 
 /// List the same eleven minimum-runtime commands as hosted CI.
-pub(crate) fn commands() -> Vec<RunCommand> {
+pub(super) fn commands() -> Vec<RunCommand> {
     let mut commands = vec![
         RunCommand {
             name: "repository".into(),

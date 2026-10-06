@@ -5,13 +5,13 @@ use std::collections::BTreeSet;
 use crate::remote::error::Error;
 use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 
+use self::harness_tests::{Case, harness};
+
 #[path = "harness_tests.rs"]
 mod harness_tests;
 
 #[path = "harness_client_tests.rs"]
 mod harness_client_tests;
-
-use self::harness_tests::{Case, harness};
 
 #[test]
 fn complete_remote_gate_downloads_nine_reports_after_eleven_suites() {

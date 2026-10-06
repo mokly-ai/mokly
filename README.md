@@ -336,8 +336,12 @@ The [remote verification contract](./docs/protocol/remote-verification.md)
 defines the Testbox gate. Push your branch before an explicit remote check:
 
 ```bash
-MOKLY_TESTBOX_REF="$(git branch --show-current)" cargo xtask check --executor remote
+cargo xtask check --executor remote
 ```
+
+Warmup uses the Testbox workflow from `main`.
+Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
+before it merges. This variable does not change the source commit under test.
 
 Install `blacksmith`, `rsync` and `ssh`. Set `BLACKSMITH_ORG_TOKEN` for org-key
 login, or use the current CLI login. The remote gate runs 11 commands in parallel.
@@ -353,7 +357,7 @@ Run `cargo xtask executor` to print `<executor>: <reason>` without warming boxes
 Automatic fallback runs the full local gate only before a remote suite starts.
 An interrupt never starts local fallback.
 `MOKLY_CHECK_EXECUTOR` sets the default mode. The CLI flag overrides it.
-The workflow ref defaults to `main`. A selected `--suite` stays local.
+A selected `--suite` stays local.
 Explicit `remote` with `--suite` fails before work starts.
 
 Local test runs scale with the machine. Unit tests run half the available CPUs'
