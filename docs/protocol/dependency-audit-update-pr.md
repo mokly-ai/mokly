@@ -23,7 +23,8 @@ Check out `main` with `fetch-depth: 0` and this checkout token:
 token: ${{ secrets.DEPENDENCY_AUDIT_TOKEN || github.token }}
 ```
 
-Set up Node 24 and npm 11.7.0. The strict audit uses only the root lockfile,
+Set up Node 24 and npm 11.21.0, the exact `packageManager` version that
+`tests/npm_pin.test.ts` requires. The strict audit uses only the root lockfile,
 so do not run `npm ci` before it. Its step has an `id`,
 `continue-on-error: true`, and `shell: bash` or explicit `set -o pipefail`.
 GitHub's explicit Bash shell includes pipefail. Create `.context/` before

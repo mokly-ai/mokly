@@ -163,7 +163,8 @@ These decisions are fixed for every milestone below.
     `pull-requests: write`, and `issues: write` permissions. It checks out
     `main` with full history and
     `token: ${{ secrets.DEPENDENCY_AUDIT_TOKEN || github.token }}`. It sets up
-    Node 24 and npm 11.7.0, creates `.context/`, and runs the strict audit with
+    Node 24 and npm 11.21.0 (the exact `packageManager` pin), creates
+    `.context/`, and runs the strict audit with
     `--report .context/dependency-audit.json` through `tee` into
     `.context/dependency-audit.log` with `continue-on-error`. Use `shell: bash`
     or explicit `set -o pipefail` so the audit's failure survives the pipe.
@@ -353,6 +354,9 @@ Evidence: `.context/baseline-relative-dependency-audit/milestone-2-checks.md`.
 Implement decisions 8 and 9 so local checks, ordinary pull requests, and
 pushes default to baseline mode while update and release pull requests stay
 strict.
+
+Merge justification for `30ce35f`:
+`.context/baseline-relative-dependency-audit/merge-2-justification.md`.
 
 - [ ] Add `--dependency-audit <baseline|strict>` to `cargo xtask check` with a
       typed error for non-repository suites; pass `-- --baseline` only in
