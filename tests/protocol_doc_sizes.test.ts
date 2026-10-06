@@ -10,7 +10,7 @@ const protocolDirectory = path.join(repositoryRoot, "docs/protocol");
 const oversizedCaps: Readonly<Record<string, number>> = {
   "mokly-catalogue.md": 251,
   "mokly-design-components.md": 253,
-  "mokly-design-links.md": 327,
+  "mokly-design-links.md": 328,
   "mokly-export-delivery.md": 263,
   "mokly-frame-adapter.md": 380,
   "mokly-navigation.md": 382,

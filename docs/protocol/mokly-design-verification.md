@@ -92,8 +92,9 @@ function. Inside `tests/browser/design/`, including `artboards.ts`, it rejects:
 - Calls named `exportCatalogue`, `buildPreview`, `servePreviewFixture`, or
   `startCatalogueServer`, or matching `start.*Server` or
   `create.*Preview.*Fixture`. Imported aliases of these names are also checked.
-- Any `goto` argument that does not resolve to a call named `designArtboardUrl`
-  or its imported alias, directly or through all assignments to a variable.
+- A `goto` destination (its first argument) that does not resolve to a call
+  named `designArtboardUrl` or its imported alias, directly or through all
+  assignments to a variable.
   String and template literal destinations are rejected, including relative
   paths that Playwright would resolve against its served base.
 
@@ -105,10 +106,10 @@ path pieces. It also rejects design paths passed to `pathToFileURL` and design
 `file://` URLs. Served `/view/design/` routes, `data-route="design/…"` markers,
 and `**/design/…` request patterns remain valid runtime content.
 
-The scan does not follow other helper modules, wrapper imports, or dynamic
-imports, and it does not scan `.tsx` files. Runtime work started through those
-forms is left to review. Violating and accepted samples test the listed source
-rules before all `.ts` modules in the browser tree are checked.
+The scan does not follow other helper modules, wrapper or re-exported imports,
+or dynamic imports, and it does not scan `.tsx` files. Review covers both runtime
+work and raw-artboard access through those forms. Violating and accepted samples
+test the listed source rules before all `.ts` browser modules are checked.
 
 Move an assertion only after its replacement passes. Preserve the same fact,
 including its viewport and scheme scope. Keep layout and native interaction
@@ -155,8 +156,9 @@ The three test layers are delivered. Catalogue-wide unit selections reject
 empty results. Static facts live in unit tests. Visibility, computed style, and
 interaction checks remain on raw artboards. New runtime checks use non-design
 fixtures. All raw-artboard specs use the shared helper in their owning directory.
-The tested source scanner rejects the listed `.ts` forms. Review checks runtime
-work started through other helper modules and the remaining test-layer rules.
+The tested source scanner rejects the listed `.ts` forms. Review checks both
+runtime work and raw-artboard access through the unscanned helper and import
+forms, plus the remaining test-layer rules.
 
 The approved migration drops only two checks: the served shell's tab order
 from its brand to a design link, and inspection three levels deep on a real

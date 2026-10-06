@@ -1,9 +1,7 @@
 # Design Mockup Test Boundaries
 
-Status: Active. Milestones 1 through 5 and Change requests 1 through 5 are
-delivered. Milestone 6 delivery work is done. Review items 1 to 10 are addressed.
-Items 11 to 14 await user decisions. The orchestrator owns the re-review.
-No PR is open.
+Status: Active. All milestones are delivered and reviewed. Review items 11 to 15
+await user decisions. No PR is open.
 
 Give each check on Mokly's own design catalogue one home. Unit tests check the
 generated mockup HTML and CSS. Browser mockup specs open the raw generated
@@ -44,14 +42,16 @@ separates those responsibilities and guards each boundary.
   or matching `preview.*fixture`, `static_server`, or `runtime_fixture`; calls
   named `exportCatalogue`, `buildPreview`, `servePreviewFixture`, or
   `startCatalogueServer`, calls matching `start.*Server` or
-  `create.*Preview.*Fixture`, and their imported aliases; and `goto` arguments
-  that do not resolve to calls named `designArtboardUrl` or imported aliases,
-  directly or through variable assignments. Outside the design directory,
+  `create.*Preview.*Fixture`, and their imported aliases; and the `goto`
+  destination (its first argument) if it does not resolve to a call named
+  `designArtboardUrl` or an imported alias, directly or through all assignments
+  to a variable. Outside the design directory,
   it rejects named artboard-helper imports, imports from `/design/artboards`,
   raw `generated/design` paths, joined/resolved/template `generated` then
   `design` path segments, and design paths in `pathToFileURL` or `file://` URLs.
-  It does not follow other helper modules, wrapper or dynamic imports, or scan
-  `.tsx` files. Review checks runtime work started through those forms.
+  It does not follow other helper modules, wrapper or re-exported imports,
+  or dynamic imports, or scan `.tsx` files. Review checks both runtime work
+  and raw-artboard access through those forms.
 - Catalogue-wide unit selections use `designEntries`, which fails when nothing
   matches.
 - The test "the canonical documented inventory exactly matches the complete
@@ -98,7 +98,9 @@ deleted test beside its replacement, and the PR description lists them all.
 - Tab order from the brand mark to a design link in the served shell. Unit
   tests prove that every design link is a native `<a href>`.
 - Inspection three levels deep on a real screen. Two-level nesting stays
-  covered by `component_explorer_inspection.spec.ts:27-30` and
+  covered by the test
+  "screen inspection records real nested, repeated and hidden instances without listing the screen in Changes"
+  in `component_explorer_inspection.spec.ts` and
   `component_explorer_comparisons.spec.ts:121-131`.
 
 ## Milestone 1: Test layer contract
@@ -498,7 +500,7 @@ Evidence: `.context/design-mockup-test-boundaries/milestone-5b.md`.
 
 ## Milestone 6: Verification and review
 
-Prove the whole change, record every removal, and hand it to review. The user
+Completed. Prove the whole change, record every removal, and review it. The user
 approved Change request 4 and the dependency maintenance that it requires.
 
 Main superseded the dependency maintenance; this branch uses main's dependency files.
@@ -530,15 +532,18 @@ Main superseded the dependency maintenance; this branch uses main's dependency f
       the PR. Save removal justifications in the evidence directory.
 - [x] Run `git add -A`, commit the completed work using Conventional Commits,
       and push the branch.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete local diff against `origin/main`. Report findings without
       changing the implementation. The orchestrator owns this review.
       Review source: `.context/design-mockup-test-boundaries/review-1.md`.
+      Re-review source: `.context/design-mockup-test-boundaries/review-2.md`.
   - [x] Fix review items 1 to 10: docs drift and moved-check equivalence.
+  - [x] Fix review items 16 to 18: scanner wording, mainline guidance and title reference.
   - [ ] Review item 11: recommend B, an import allowlist and `.tsx` scanning.
   - [ ] Review item 12: recommend A, move the three static strings to a unit case and keep browser visibility.
   - [ ] Review item 13: recommend B, require both viewports in `previews()` and reuse it in `twoPreviews()`.
   - [ ] Review item 14: recommend A, share the private document reader, use `hasClass`, and remove the dead check.
+  - [ ] Review item 15: recommend B, add a rejected sample per scanner pattern after the item 11 decision.
 
 Evidence: `.context/design-mockup-test-boundaries/milestone-6.md`.
 Mainline evidence: `.context/design-mockup-test-boundaries/main-integration.md`.
@@ -549,6 +554,7 @@ Removal justifications: `.context/design-mockup-test-boundaries/removals.md`.
 Deletion evidence: `.context/design-mockup-test-boundaries/deletion-audit.md`.
 Test inventory: `.context/design-mockup-test-boundaries/original-test-titles.json`.
 Review-fix evidence: `.context/design-mockup-test-boundaries/review-fix-1/verification.md`.
+Final review-fix evidence: `.context/design-mockup-test-boundaries/review-fix-2/verification.md`.
 
 ## Post-merge follow-up (non-blocking)
 
