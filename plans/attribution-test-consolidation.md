@@ -276,24 +276,24 @@ fixture. All four stay in the file until Milestone 5 moves them.
       require the exact pair in the grouped pass and single-change control.
 - [x] Run the file; record the after timing in the measurement record.
 
-## Milestone 4: One pass for the nine shared design stylesheets
+## Milestone 4: One pass for the nine shared design stylesheets (completed)
 
 Replace the nine-subtest loop with one classification whose per-stylesheet
 scope comes from the dependency reasons.
 
-- [ ] Record the before timing:
+- [x] Record the before timing:
       `node --import tsx --test tests/component_design_attribution.test.ts`
       (local figure and the CI figure, 192 s).
-- [ ] Rewrite the file around one module-level fixture: append the marker rule
+- [x] Rewrite the file around one module-level fixture: append the marker rule
       to all nine stylesheets, classify once, and per stylesheet compute the
       expected entries from the rendered outputs as today, assert the counts
       table (39, 11, 0, or every `design/` screen; 69 components), and assert
       `stylesheetScope` equals the expected paths exactly.
-- [ ] Assert that `changedEntryPaths` equals the union of the expected sets,
+- [x] Assert that `changedEntryPaths` equals the union of the expected sets,
       every path outside `design.css`'s scope starts with `design/`,
       `sharedImpact` includes `examples/basic/generated/design.css`, and
       `affectedConsumers` is empty because shared stylesheets have no owner.
-- [ ] Run the file; record the after timing.
+- [x] Run the file; record the after timing.
 
 ## Milestone 5: Source-edit groups and the committed baseline in their own files
 
