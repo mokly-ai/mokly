@@ -1,7 +1,8 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 6 completed and approved. Delivery work
-is complete; the user owns the post-push review. The plan closes when its PR merges.
+Status: Active; Milestones 1 through 7 completed. The reviewer agent runs the
+post-push review, and the implementation agent applies `Auto-fix: yes` findings.
+Finding 4 remains for the user to decide. The plan closes when its PR merges.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -449,7 +450,7 @@ Extend the lint rule to literal path lookups, as the user approved on
       changed browser specs.
 - [x] Commit.
 
-## Milestone 7: Deliver and review
+## Milestone 7: Deliver and review — completed
 
 Complete the required delivery sequence after validation passes.
 
@@ -478,10 +479,12 @@ Evidence: `.context/vacuous-test-prevention/gate-results.md`.
 - [x] Run `cargo xtask check` once. If only a known timing test fails, rerun
       that suite once. Report every other failure before changing code.
 - [x] Run `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] The reviewer runs the post-push review against `origin/main` with
+- [x] The reviewer agent runs the post-push review against `origin/main` with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
-      Apply the `AGENTS.md` review-fix rule to returned findings. The user owns
-      this review; the implementation agent does not run it.
+      The implementation agent applies the `Auto-fix: yes` findings under the
+      `AGENTS.md` review-fix rule.
+      Open: the viewer workspace `npm test` runs without the assertion guard (review 1, finding 4); the user decides.
+      Evidence: `.context/vacuous-test-prevention/review-1.md`.
 
 ## Post-merge follow-up (non-blocking)
 

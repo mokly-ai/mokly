@@ -99,7 +99,8 @@ assertion guard needs sequential tests: <open test> is still running
 ```
 
 Node's default sequential execution within a file satisfies this rule.
-Separate test files retain the runner's existing two-file concurrency.
+Separate test files use the
+[shared file concurrency](./ci-suite-evidence.md#test-concurrency) rule.
 
 ### Assertion Diagnostics And Limits
 
@@ -114,6 +115,11 @@ Current test assertion imports are default imports, and no test calls that
 default export directly.
 
 The counter counts method reads, so a read without a call also gives credit.
+A method read with no open test counts for no test. For example,
+`const { equal } = assert;` at module scope reads the method before a test
+opens; later `equal(...)` calls do not count. Read assertion methods inside
+the test, or use a named import so the call counts for the open test.
+
 The guard detects zero counts; it does not prove that the assertion checks the
 intended behavior. An absence assertion against a stale path can still pass.
 Checked selection and lint rules address that failure below.
