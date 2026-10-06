@@ -2,9 +2,18 @@ import type { FullConfig } from "@playwright/test";
 
 import { waitForInitialChanges } from "../helpers/watched_catalogue.js";
 
-/** Wait for the example's tree-owned HEAD comparison to reach a terminal state. */
+import { exampleServerPorts } from "./example_servers.js";
+
+/** Wait for every worker's example HEAD comparison to reach a terminal state. */
 export default async function setup(config: FullConfig): Promise<void> {
-  const url = config.projects[0]?.use.baseURL;
-  if (!url) throw new Error("The browser suite needs its example base URL");
-  await waitForInitialChanges(url, 180_000);
+  const ports = exampleServerPorts();
+  if (config.workers > ports.length)
+    throw new Error(
+      `Playwright runs ${config.workers} workers but starts ${ports.length} example server(s); set MOKLY_PLAYWRIGHT_WORKERS=${config.workers} instead of passing --workers`,
+    );
+  await Promise.all(
+    ports.map((port) =>
+      waitForInitialChanges(`http://127.0.0.1:${port}`, 180_000),
+    ),
+  );
 }
