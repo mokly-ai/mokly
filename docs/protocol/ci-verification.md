@@ -77,8 +77,6 @@ including Wrangler scratch, cannot make a later complete gate fail.
 
 The public `npm test` and `npm run test:browser` commands prepare package and
 example output; the latter runs both Playwright projects and every spec.
-`npm test` also writes the example compilation snapshot defined in
-[CI suite evidence](./ci-suite-evidence.md#example-compilation-snapshot).
 Filtering or selecting a project is partial verification. `npm test` and
 `test:prepared` share recursive discovery of `.test.ts` and `.test.tsx` files
 under `tests/` and `packages/viewer/tests/`, with two-file concurrency. The
@@ -94,8 +92,9 @@ Public `package:check` and `package:smoke` preserve caller arguments, including
 reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
 Xtask prepares output per suite and calls only prepared consumers; output is
-reused only within that suite. Only the unit suite runs `npm run prepare:unit`,
-which adds that snapshot; the unit runners require it to exist.
+reused only within that suite. `npm test` and the xtask unit suite run
+`npm run prepare:unit`; the unit runners require the example compilation
+[snapshot](./ci-suite-evidence.md#example-compilation-snapshot) it writes.
 
 Builds under test are not removed. Package dry-run allowlist inspection retains
 `--ignore-scripts`, while real packing keeps lifecycle builds. Historical
