@@ -8,6 +8,11 @@ imports. Both protocol documents are included in the npm package. Publishing
 uses the content-addressed Plan → Blobs → Complete exchange over a schema 2
 ownership marker.
 
+Publish forwards the exporter's primary build diagnostics to its CLI reporter
+before bundle capture and upload. With `--strict`, that callback raises the
+typed build failure at the same boundary, so no archive or HTTP side effect can
+begin.
+
 `run.ts` composes injected Git, export, HTTP and time boundaries. It pins the
 actual checkout HEAD, adds an owned manifest through the exporter, captures its
 finalized bytes before installation and rechecks HEAD. `snapshot.ts` validates

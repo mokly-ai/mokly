@@ -30,6 +30,14 @@ with any service that implements the upload contract.
 | `--repository <host>/<owner>/<name>` | Override the detected repository identity                              |
 | `--upload-concurrency <n>`           | Upload 1 to 32 missing files at once; defaults to 8                    |
 | `--debug-timings`                    | Report phase timings and catalogue counts on standard error            |
+| `--strict`                           | Fail before upload when the build reports warnings                     |
+
+## Warnings
+
+Publish reports the export's build warnings the same way `export` does. With
+`--strict` it prints them and stops before uploading. The failure says
+`1 build warning with --strict` for one warning and
+`<n> build warnings with --strict` otherwise.
 
 ## Credentials
 

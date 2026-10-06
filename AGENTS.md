@@ -553,7 +553,9 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
 ### Rules
 
-Commit title (first line) must be <= 50 characters.
+Use at most 50 characters for individual commit titles (the first line).
+Pull request titles and their squash commit titles may use at most 72 Unicode
+code points. Keep the Conventional Commits format for both.
 Commit body (subsequent lines, after a blank line) has no strict length limit.
 If a merge produces conflicts, resolve every conflict and verify the resulting
 worktree before saying the merge or work is complete.

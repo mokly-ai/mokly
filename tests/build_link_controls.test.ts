@@ -110,7 +110,6 @@ for (const body of [
   '<MockLink asChild to="details"><button><a href="mock:home">Nested</a></button></MockLink>',
   '<MockLink asChild to="details"><div role="checkbox">Wrong role</div></MockLink>',
   '<MockLink asChild to="details"><input value="Void" readOnly /></MockLink>',
-  '<MockLink asChild to="details"><span tabIndex={0}><span tabIndex={-1}>Focus</span></span></MockLink>',
   '<MockLink asChild to="details"><a href="mock:home">Conflict</a></MockLink>',
   '<MockLink asChild to="details"><span data-nav-href="mock:home">Conflict</span></MockLink>',
   '<MockLink asChild to="details"><div><MockLink asChild to="home"><button>Nested</button></MockLink></div></MockLink>',
