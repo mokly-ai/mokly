@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 import type { JSONReport } from "@playwright/test/reporter";
 
 import { parseManifest } from "../dist/registry/manifest.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import {
@@ -30,14 +31,6 @@ test("every hydration shape has exactly one independently timed test", async () 
     ),
   );
   assert.ok(manifest.entries.length > 80);
-  const sample = hydrationShapeSample(manifest.entries);
-  const shapes = new Set(sample.map(({ shape }) => shape));
-  assert.equal(shapes.size, sample.length);
-  for (const entry of manifest.entries)
-    assert.ok(
-      shapes.has(hydrationShapeKey(entry)),
-      `${entry.path} has no hydrated representative`,
-    );
   const { stdout } = await execute(
     process.execPath,
     [
@@ -57,5 +50,31 @@ test("every hydration shape has exactly one independently timed test", async () 
       spec.title.startsWith(prefix) ? [spec.title.slice(prefix.length)] : [],
     ),
   );
-  assert.deepEqual(observed.sort(), sample.map(({ route }) => route).sort());
+  assert.deepEqual(
+    observed.sort(),
+    hydrationShapeSample(manifest.entries)
+      .map(({ route }) => route)
+      .sort(),
+  );
+  const shapeByRoute = new Map(
+    manifest.entries.map((entry) => [
+      entryRoute(entry.path),
+      hydrationShapeKey(entry),
+    ]),
+  );
+  const observedShapes = observed.map((route) => shapeByRoute.get(route));
+  assert.ok(
+    observedShapes.every((shape) => shape !== undefined),
+    "a hydrated route names no manifest entry",
+  );
+  assert.equal(
+    new Set(observedShapes).size,
+    observed.length,
+    "two hydrated routes share a shape",
+  );
+  assert.deepEqual(
+    [...new Set(observedShapes)].sort(),
+    [...new Set(shapeByRoute.values())].sort(),
+    "a manifest entry's shape has no hydrated route",
+  );
 });

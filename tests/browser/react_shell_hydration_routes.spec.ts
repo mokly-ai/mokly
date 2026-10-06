@@ -23,7 +23,6 @@ const manifest = parseManifest(
 );
 expect(manifest.entries.length).toBeGreaterThan(80);
 const sample = hydrationShapeSample(manifest.entries);
-expect(sample.length).toBeGreaterThan(0);
 
 let developmentBundle: string;
 test.beforeAll(async () => {

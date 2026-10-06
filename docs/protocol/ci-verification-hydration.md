@@ -20,16 +20,18 @@ parent contract lists.
 
 The route only selects which catalogue entry the shell shows. Every route runs
 the same shell modules, and the entry's manifest data chooses the branches
-inside them. On 2026-10-05 the 210 example entries ran 889 shell functions
-during hydration, and every entry ran the same 411 of them. The suite therefore
-hydrates one representative route per entry shape, not every route.
+inside them. On 2026-10-06 the 210 entry routes ran 875 shell functions from
+navigation until the page finished loading, and every entry route ran the same
+507 of them. The suite therefore hydrates one representative route per entry
+shape, not every route.
 
 ## Entry Shapes
 
-`tests/helpers/hydration_shapes.ts` reads the entries of
-`examples/basic/generated/mokly-manifest.json` in manifest order. The shape key
-of an entry `e` is the `JSON.stringify` text of an object with exactly these
-properties, in this order:
+The route spec and the inventory test read
+`examples/basic/generated/mokly-manifest.json` and pass its entries, in
+manifest order, to `tests/helpers/hydration_shapes.ts`. The helper does no file
+or network access. The shape key of an entry `e` is the `JSON.stringify` text
+of an object with exactly these properties, in this order:
 
 1. `kind`: `e.kind`.
 2. `fields`: the sorted names of the own properties of `e` whose values are
@@ -78,7 +80,7 @@ cannot exhaust a shared loop deadline.
 Each test opens `/view/<route>` with every path segment percent-encoded and
 requires status 200. It passes `<route> (<shape>)` as the failure context, so a
 failure names the shape it represents. Discovery fails when the manifest has 80
-or fewer entries or when the sample is empty.
+or fewer entries.
 
 The sample hydrates the default state: a fresh browser context, Playwright's
 default viewport, no stored preferences and the Auto appearance.
@@ -87,13 +89,21 @@ default viewport, no stored preferences and the Auto appearance.
 
 `tests/hydration_inventory.test.ts` lists the Playwright inventory for
 `react_shell_hydration` with the JSON reporter. The fixture-route titles must
-equal the sample routes, each exactly once. Every manifest entry's shape key
-must have a representative in the sample.
+equal the sample routes, each exactly once. A second check does not use the
+sample: each discovered route must name a manifest entry, no two discovered
+routes may share a shape key, and the discovered routes must cover the shape
+key of every manifest entry.
 
-`tests/hydration_shapes.test.ts` proves each shape property with synthetic
-entries: text-only changes keep a shape, each property above changes it, empty
-values count as absent, and the same input always gives the same keys in the
-same order.
+`tests/hydration_shapes.test.ts` proves the helper with synthetic entries:
+
+- the sample keeps the first entry of each distinct shape, once;
+- text-only changes keep a shape;
+- each shape property changes the key on its own, while every other property
+  keeps its value, and every property has such a case;
+- empty values count as absent;
+- reordered object keys, colour schemes, controls, props, views and instances
+  keep the key; and
+- the key lists its properties in a fixed order.
 
 ## Changing The Shape Key
 
@@ -122,34 +132,33 @@ resource load reached the page console. The sample loads only its own frames.
 `.css` file under `examples/basic/generated/` with
 `tests/helpers/generated_resource_references.ts`.
 
-The audit checks these HTML references:
+`mokly build` already validates these references when it writes the output
+(`src/build/html_links.ts`). The audit checks the files on disk after the
+build, so a regression in that validation, or a later change to the files,
+still fails a test. The audit uses the build's own rules:
 
-- `link[href]` when `rel` contains `stylesheet`, `icon`, `preload` or
-  `modulepreload`;
-- `src` on `img`, `source`, `video`, `audio`, `track`, `iframe`, `embed` and
-  `input[type=image]`;
-- `srcset` on `img` and `source`, read as HTML reads candidates: each URL is a
-  run of non-whitespace characters, and its descriptors end at the next comma;
-- `poster` on `video` and `data` on `object`;
-- `href` and `xlink:href` on SVG `image` and `use`; and
-- `@import` targets and declaration `url()` values in `<style>` elements, and
-  `url()` values in `style` attributes.
+- **Extraction:** the resources that `extractHtmlReferences` returns for an
+  HTML file, including `srcset` candidates, `style` attributes and `<style>`
+  elements, and the `url()` and `@import` targets that `extractCssReferences`
+  returns for a `.css` file. Navigation links are not resources.
+- **Classification:** `classifyResourceUrl`, as the
+  [Resource URL Classification](./mokly-changes-serving.md#resource-url-classification)
+  defines it. The file type selects the rule: `css` for a `.css` file and
+  `html` for every value in an HTML file, including inline styles.
+- **External values** need no check. **Invalid values** fail with the
+  classification reason: `protocol-relative`, `root-absolute` or
+  `unsupported scheme`.
+- **Local values:** a value that starts with `#` or `?` names the same
+  document and needs no file. For every other local value, the audit removes
+  the fragment and then the query, percent-decodes the path and resolves it
+  from the file's folder. The value fails with `invalid URL encoding`, with
+  `root-absolute` when the decoded path starts with `/` or `\`, with
+  `outside the generated root`, or with `missing file` when no regular file
+  exists there.
 
-In each `.css` file, it checks every `@import` target and every `url()` value
-in a declaration.
-
-The audit ignores empty values, fragment-only values, values with a URL scheme
-such as `data:` or `https:`, and protocol-relative values. These values fail:
-
-- a root-absolute value, because Serve and export deliver generated files under
-  `/static/` and a file opened from disk has no site root;
-- a relative value that resolves outside `examples/basic/generated/`; and
-- a relative value that does not name an existing regular file after the audit
-  removes its query and fragment and percent-decodes it.
-
-Each failure names the file, the attribute or rule, the value and the reason,
-and the audit sorts the failures. The test requires no failures. It also
-requires that the audit read more than zero HTML files and stylesheet links.
+Each failure names the file, the value and the reason, and the audit sorts the
+failures. The test requires no failures, at least one HTML file and at least
+one checked local reference.
 Anchor links stay with the build's link validation and the design link tests.
 
 ## Boundary

@@ -4,116 +4,66 @@ import test from "node:test";
 import type { ManifestEntry } from "@mokly/viewer/data";
 
 import {
+  component,
+  instance,
+  markdownDocument,
+  reverseKeys,
+  screen,
+  variant,
+  view,
+} from "./helpers/hydration_shape_entries.js";
+import {
   hydrationShapeKey,
   hydrationShapeSample,
 } from "./helpers/hydration_shapes.js";
 
-type Screen = Extract<ManifestEntry, { kind: "screen" }>;
-type Page = Extract<ManifestEntry, { kind: "page" }>;
-type Component = Exclude<
-  Extract<ManifestEntry, { kind: "component" }>,
-  { variantOf: string }
->;
-type Variant = Extract<ManifestEntry, { kind: "component"; variantOf: string }>;
-type View = Variant["componentViews"][number];
-type Instance = View["instances"][number];
+const PROPERTIES = [
+  "kind",
+  "fields",
+  "colorSchemes",
+  "controls",
+  "propSchema",
+  "values",
+  "instances",
+  "slotted",
+] as const;
+type ShapeProperty = (typeof PROPERTIES)[number];
 
-const common = {
-  declaredDependencies: [],
-  description: "An entry",
-  relatedDocs: [],
-  sourcePath: "specs/entries.mockup.tsx",
-};
-
-function screen(path: string, extra: Partial<Screen> = {}): Screen {
-  return {
-    ...common,
-    colorSchemes: ["light"],
-    kind: "screen",
-    path,
-    title: "Screen",
-    useCasePaths: [],
-    ...extra,
-  };
+/** The shape properties whose values differ between two entries. */
+function changedProperties(
+  before: ManifestEntry,
+  after: ManifestEntry,
+): ShapeProperty[] {
+  const parse = (entry: ManifestEntry) =>
+    JSON.parse(hydrationShapeKey(entry)) as Record<ShapeProperty, unknown>;
+  const [left, right] = [parse(before), parse(after)];
+  return PROPERTIES.filter(
+    (property) =>
+      JSON.stringify(left[property]) !== JSON.stringify(right[property]),
+  );
 }
 
-function page(path: string): Page {
-  return { ...common, kind: "page", path, title: "Page" };
-}
-
-function component(path: string, extra: Partial<Component> = {}): Component {
-  return {
-    ...common,
-    colorSchemes: ["light"],
-    controls: {},
-    kind: "component",
-    ownedDependencies: [],
-    path,
-    propSchema: { kind: "object", properties: {} },
-    slots: [],
-    title: "Component",
-    ...extra,
-  };
-}
-
-function variant(path: string, extra: Partial<Variant> = {}): Variant {
-  return {
-    ...common,
-    colorSchemes: ["light"],
-    componentViews: [],
-    kind: "component",
-    path,
-    props: {},
-    suppliedSlots: [],
-    title: "Variant",
-    variantOf: "fx/component",
-    ...extra,
-  };
-}
-
-function instance(extra: Partial<Instance> = {}): Instance {
-  return {
-    componentId: "fx/component",
-    id: "one",
-    key: "instance-key",
-    order: 0,
-    owner: { kind: "entry" },
-    props: {},
-    propsKey: "props-key",
-    ...extra,
-  };
-}
-
-function view(instances: readonly Instance[]): View {
-  return {
-    colorScheme: "light",
-    instances,
-    ranges: [],
-    resources: [],
-    slots: [],
-    styles: [],
-    viewport: "mobile",
-  };
-}
-
-function shape(entry: ManifestEntry): { fields: string[] } {
-  return JSON.parse(hydrationShapeKey(entry)) as { fields: string[] };
-}
-
-test("entries with one shape share the route of their first entry", () => {
-  const sample = hydrationShapeSample([
+test("the sample keeps the first entry of each shape, once", () => {
+  const entries = [
     screen("fx/first"),
     component("fx/component"),
     screen("fx/second"),
-  ]);
+    markdownDocument("fx/doc"),
+    component("fx/other"),
+  ];
+  const sample = hydrationShapeSample(entries);
   assert.deepEqual(
     sample.map(({ entryPath, route }) => ({ entryPath, route })),
     [
       { entryPath: "fx/first", route: "fx/first/index.html" },
       { entryPath: "fx/component", route: "fx/component/index.html" },
+      { entryPath: "fx/doc", route: "fx/doc/index.html" },
     ],
   );
-  assert.equal(sample[0]?.shape, hydrationShapeKey(screen("fx/first")));
+  assert.deepEqual(
+    sample.map(({ shape }) => shape),
+    [...new Set(entries.map(hydrationShapeKey))],
+  );
 });
 
 test("text-only changes keep the shape", () => {
@@ -129,60 +79,69 @@ test("text-only changes keep the shape", () => {
   );
 });
 
-test("each shape property changes the shape", () => {
-  const optional = { optional: true, schema: { kind: "string" } } as const;
-  const cases: readonly (readonly [string, ManifestEntry, ManifestEntry])[] = [
-    ["kind", screen("fx/a"), page("fx/a")],
-    ["field", screen("fx/a"), screen("fx/a", { rationale: "Why" })],
+test("each shape property changes the shape on its own", () => {
+  const props = (kind: "string" | "boolean", optional?: true) => ({
+    kind: "object" as const,
+    properties: { a: { schema: { kind }, ...(optional ? { optional } : {}) } },
+  });
+  const cases: readonly (readonly [
+    ShapeProperty,
+    string,
+    ManifestEntry,
+    ManifestEntry,
+  ])[] = [
+    ["kind", "a document", screen("fx/a"), markdownDocument("fx/a")],
     [
-      "colour schemes",
+      "fields",
+      "a rationale",
+      screen("fx/a"),
+      screen("fx/a", { rationale: "Why" }),
+    ],
+    [
+      "fields",
+      "a parent",
+      screen("fx/a"),
+      screen("fx/a/b", { variantOf: "fx/a" }),
+    ],
+    [
+      "colorSchemes",
+      "a dark scheme",
       screen("fx/a"),
       screen("fx/a", { colorSchemes: ["light", "dark"] }),
     ],
     [
-      "control kind",
+      "controls",
+      "a control kind",
       component("fx/c", { controls: { a: { kind: "text" } } }),
       component("fx/c", { controls: { a: { kind: "boolean" } } }),
     ],
     [
-      "control option",
+      "controls",
+      "a control option",
       component("fx/c", { controls: { a: { kind: "number" } } }),
       component("fx/c", { controls: { a: { kind: "number", minimum: 0 } } }),
     ],
     [
-      "prop schema kind",
-      component("fx/c", {
-        propSchema: {
-          kind: "object",
-          properties: { a: { schema: { kind: "string" } } },
-        },
-      }),
-      component("fx/c", {
-        propSchema: {
-          kind: "object",
-          properties: { a: { schema: { kind: "boolean" } } },
-        },
-      }),
+      "propSchema",
+      "a prop kind",
+      component("fx/c", { propSchema: props("string") }),
+      component("fx/c", { propSchema: props("boolean") }),
     ],
     [
-      "optional flag",
-      component("fx/c", {
-        propSchema: {
-          kind: "object",
-          properties: { a: { schema: { kind: "string" } } },
-        },
-      }),
-      component("fx/c", {
-        propSchema: { kind: "object", properties: { a: optional } },
-      }),
+      "propSchema",
+      "an optional prop",
+      component("fx/c", { propSchema: props("string") }),
+      component("fx/c", { propSchema: props("string", true) }),
     ],
     [
-      "own wire tag",
+      "values",
+      "an own wire tag",
       variant("fx/v", { props: { a: ["string", "Go"] } }),
       variant("fx/v", { props: { a: ["number", "1"] } }),
     ],
     [
-      "instance wire tag",
+      "values",
+      "an instance wire tag",
       screen("fx/a", {
         componentViews: [view([instance({ props: { a: ["string", "Go"] } })])],
       }),
@@ -191,20 +150,27 @@ test("each shape property changes the shape", () => {
       }),
     ],
     [
-      "instance presence",
+      "instances",
+      "an instance",
       screen("fx/a", { componentViews: [view([])] }),
       screen("fx/a", { componentViews: [view([instance()])] }),
     ],
     [
-      "slotted instance",
+      "slotted",
+      "a slot",
       screen("fx/a", { componentViews: [view([instance()])] }),
       screen("fx/a", {
         componentViews: [view([instance({ slotKey: "slot-key" })])],
       }),
     ],
   ];
-  for (const [name, before, after] of cases)
-    assert.notEqual(hydrationShapeKey(before), hydrationShapeKey(after), name);
+  for (const [property, change, before, after] of cases)
+    assert.deepEqual(changedProperties(before, after), [property], change);
+  assert.deepEqual(
+    [...new Set(cases.map(([property]) => property))].sort(),
+    [...PROPERTIES].sort(),
+    "every shape property needs a case",
+  );
 });
 
 test("empty strings, arrays and objects count as absent", () => {
@@ -214,42 +180,78 @@ test("empty strings, arrays and objects count as absent", () => {
       screen("fx/a", { componentViews: [], rationale: "", tags: [] }),
     ),
   );
-  assert.ok(!shape(component("fx/c")).fields.includes("controls"));
-  assert.ok(
-    shape(
-      component("fx/c", { controls: { a: { kind: "boolean" } } }),
-    ).fields.includes("controls"),
-  );
-});
-
-test("a variant and its base entry have different shapes", () => {
-  assert.notEqual(
-    hydrationShapeKey(screen("fx/a")),
-    hydrationShapeKey(screen("fx/a/b", { variantOf: "fx/a" })),
-  );
-});
-
-test("the same input gives the same keys in the same order", () => {
-  const entries = [screen("fx/a"), component("fx/c"), variant("fx/c/v")];
   assert.deepEqual(
-    hydrationShapeSample(entries),
-    hydrationShapeSample(entries),
+    changedProperties(
+      component("fx/c"),
+      component("fx/c", { controls: { a: { kind: "boolean" } } }),
+    ),
+    ["fields", "controls"],
   );
+});
+
+test("reordered properties, controls, props and instances keep the shape", () => {
+  const parent = component("fx/c", {
+    colorSchemes: ["light", "dark"],
+    controls: {
+      a: { kind: "text", maxLength: 9 },
+      b: { kind: "number", minimum: 0, maximum: 5 },
+      c: { kind: "boolean" },
+    },
+    propSchema: {
+      kind: "object",
+      properties: {
+        a: { schema: { kind: "string" } },
+        b: { optional: true, schema: { kind: "number" } },
+        c: { schema: { kind: "boolean" } },
+      },
+    },
+    tags: ["one", "two"],
+  });
+  const views = [
+    view([
+      instance({ props: { a: ["string", "Go"], b: ["number", "1"] } }),
+      instance({ props: { c: ["boolean", true] }, slotKey: "slot-key" }),
+    ]),
+    view([instance({ props: { d: ["null"] } })]),
+  ];
+  const owner = screen("fx/s", { componentViews: views });
+  const reordered: readonly (readonly [ManifestEntry, ManifestEntry])[] = [
+    [
+      parent,
+      reverseKeys({ ...parent, colorSchemes: ["dark", "light"] as const }),
+    ],
+    [
+      owner,
+      reverseKeys({
+        ...owner,
+        componentViews: [...views]
+          .reverse()
+          .map((item) => ({
+            ...item,
+            instances: [...item.instances].reverse(),
+          })),
+      }),
+    ],
+    [
+      variant("fx/v", {
+        props: { a: ["string", "Go"], b: ["array", []], c: ["object", []] },
+      }),
+      reverseKeys(
+        variant("fx/v", {
+          props: { a: ["string", "Go"], b: ["array", []], c: ["object", []] },
+        }),
+      ),
+    ],
+  ];
+  for (const [before, after] of reordered) {
+    assert.notEqual(JSON.stringify(before), JSON.stringify(after));
+    assert.equal(hydrationShapeKey(before), hydrationShapeKey(after));
+  }
+});
+
+test("the key lists its properties in a fixed order", () => {
   assert.deepEqual(
     Object.keys(JSON.parse(hydrationShapeKey(screen("fx/a"))) as object),
-    [
-      "kind",
-      "fields",
-      "colorSchemes",
-      "controls",
-      "propSchema",
-      "values",
-      "instances",
-      "slotted",
-    ],
-  );
-  assert.equal(
-    hydrationShapeKey(screen("fx/a", { colorSchemes: ["dark", "light"] })),
-    hydrationShapeKey(screen("fx/a", { colorSchemes: ["light", "dark"] })),
+    [...PROPERTIES],
   );
 });

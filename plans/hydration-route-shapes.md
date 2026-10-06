@@ -1,11 +1,14 @@
 # Hydration Route Shapes
 
-Status: Active. Created 2026-10-05. On 2026-10-05 the user approved option C:
-hydrate one route per entry shape instead of every example route, and add an
-audit of generated resource references. All six milestones are complete.
-[PR #142](https://github.com/mokly-ai/mokly/pull/142) is open. The plan stays
-Active until the pull request merges. Five review findings await the user's
-decision: four from Milestone 5 and one from Milestone 6.
+Status: Completed. [PR #142](https://github.com/mokly-ai/mokly/pull/142)
+merged on 2026-10-06. On 2026-10-05 the user approved option C: hydrate one
+route per entry shape instead of every example route, and add an audit of
+generated resource references. Branch `calummoore/tests-hydration-route-shape-v1`
+fixes Milestone 5 review findings 2, 3 and 4, and the
+[development hydration coverage](../docs/protocol/ci-verification-hydration.md)
+contract owns the updated audit and test rules. Milestone 5 finding 1 (nothing
+measures the sample's coverage again) and the Milestone 6 finding (pull
+request description wording) remain open for the user's decision.
 
 ## Outcome
 

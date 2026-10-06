@@ -11,5 +11,8 @@ test("generated example documents reference only existing local resources", asyn
   );
   assert.deepEqual(audit.failures, []);
   assert.ok(audit.htmlFiles > 0, "the audit read no generated HTML files");
-  assert.ok(audit.stylesheetLinks > 0, "the audit read no stylesheet links");
+  assert.ok(
+    audit.localReferences > 0,
+    "the audit checked no local resource references",
+  );
 });
