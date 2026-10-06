@@ -1,6 +1,6 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 7 completed, Milestone 8 in progress. The
+Status: Active; Milestones 1 through 8 completed. The
 reviewer agent runs the post-push review, and the implementation agent applies
 `Auto-fix: yes` findings. Finding 4 remains for the user to decide. The plan
 closes when its PR merges.
@@ -487,7 +487,7 @@ Evidence: `.context/vacuous-test-prevention/gate-results.md`.
       Open: the viewer workspace `npm test` runs without the assertion guard (review 1, finding 4); the user decides.
       Evidence: `.context/vacuous-test-prevention/review-1.md`.
 
-## Milestone 8: Combine the test lint rule sets with main
+## Milestone 8: Combine the test lint rule sets with main — completed
 
 Merge the newer `origin/main` at the user's request. Main's test timing guard
 adds a second `no-restricted-syntax` block for `tests/`. ESLint keeps only the
@@ -509,11 +509,13 @@ Evidence: `.context/vacuous-test-prevention/merge-2/` and `merge-3/`.
       `docs/protocol/ci-test-timing.md`.
 - [x] Run `cargo xtask check`.
 - [x] Run `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, the reviewer agent reviews the complete local diff
+- [x] After the push, the reviewer agent reviews the complete local diff
       against `origin/main` with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
       The implementation agent applies the `Auto-fix: yes` findings under the
       `AGENTS.md` review-fix rule.
+      Review 3 found one auto-fixed docs finding; finding 4 of review 1 stays
+      open. Evidence: `.context/vacuous-test-prevention/review-3.md`.
 
 ## Post-merge follow-up (non-blocking)
 
