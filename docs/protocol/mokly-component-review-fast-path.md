@@ -30,8 +30,9 @@ Apply these steps in order:
 
 0. Try the [identical-text check](./mokly-page-analysis.md#identical-text-quick-check).
    If link normalization is present, require its metadata proof that equal
-   original text normalizes equally on both sides; an absent proof takes
-   fall-through. A reused path after a move can otherwise change link identity
+   original text normalizes equally on both sides. Without that proof, skip
+   only step 0 and continue with the normalized quick check in step 1.
+   A reused path after a move can otherwise change link identity
    without changing the HTML. The proof scans no document or stylesheet text.
    It shares the head analysis and raw seeds, skips projection and preserves
    usage reasons. If any eligible unowned style's outer source contains

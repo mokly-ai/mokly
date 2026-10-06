@@ -1840,7 +1840,12 @@ contract's Result and proof sections before implementation (M6 finding 2).
       Not required: stop optimization; implement no candidate. No code change.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
       The documentation checkpoint and the dated scope decisions are pushed.
-- [x] Read-only M9A review complete; graded findings and dispositions are at `.context/scalable-inline-style-analysis/m9a-review/findings.md`.
+- [x] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+      Read-only M9A review complete; graded findings and dispositions are at `.context/scalable-inline-style-analysis/m9a-review/findings.md`.
       Finding 1 broader option (AGENTS.md rule for lettered decisions): pending the user's decision.
 
 ## Milestone 10: Mainline Integration And Final Alignment
@@ -1891,13 +1896,20 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
       the push.
 - [x] After checks pass and push is permitted, `git add -A`, commit with
       Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only. Then apply main's
       [review-fix rule](../AGENTS.md#general) to findings marked `Auto-fix: yes`,
       re-review once, and report fixed and open findings separately. Ask for
       decisions when that rule requires them. Do not change older review records
       without separate approval.
+      Read-only M10 review complete; report: `.context/scalable-inline-style-analysis/m10-review/report.md`.
+      Finding 1: the link-normalization cache keeps every changed page until classification ends; pending the user's decision.
+      Finding 2: the link proof and link parses reduce the shortcut savings, without measurement; pending the user's decision.
+      Finding 3: 31 `docs/dev` evidence reports conflict with #147; pending the user's decision.
+      Finding 6: history phrases, stale links and the release-note coverage list in the protocol docs; pending the user's decision.
+      Finding 7: move-pairing HTML parses are not counted; pending the user's decision.
+      Finding 8: the `197df9c5` message names the wrong decision owner; pending the user's decision.
 
 ### Decisions and approvals
 

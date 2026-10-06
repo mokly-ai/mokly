@@ -15,10 +15,8 @@ below define that behavior. The user deferred performance acceptance on
 2026-10-06 under the plan's Decision 13; integration and correctness checks
 remain required. The benchmark procedure is retained for a later plan.
 
-Protocol documents state the contract and current delivery status. Pending
-Delivery Status schedules may link future plan steps as `M2`, `M3`, etc.; remove
-those schedules when the plan finishes. Never record delivered-step history;
-plans keep that history.
+Protocol documents state the contract and current delivery status, but never
+record which plan milestone delivered a rule; plans keep that history.
 `tests/protocol_doc_history.test.ts` enforces the boundary outside `fixtures/`
 by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
@@ -93,6 +91,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   inventory beside the private manifest, with its
   [fetch rules](./mokly-catalogue-fetch.md) and
   [tree and section order](./mokly-catalogue-tree.md).
+  - [Catalogue projection and privacy](./mokly-catalogue-projection.md) —
+    public fields and private-data exclusions.
 - [Standalone shell bootstrap](./mokly-shell-bootstrap.md) — entry-scoped Serve
   hydration, strict reading, evidence adoption, and static capture.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
@@ -116,6 +116,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)
 - [Startup diagnostics and scale fixtures](./mokly-timings.md)
+  - [Baseline and fixture timings](./mokly-timing-baselines.md) —
+    preparation phases and fixture measurements.
 - [Comparison material work counts](./mokly-material-work-counts.md)
 - [Pages in the catalogue](./mokly-pages.md)
 - [Variants](./mokly-variants.md) — screen and component variants as entries
@@ -167,13 +169,16 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [Component review fast path](./mokly-component-review-fast-path.md)
 - [CSS parse reuse](./mokly-css-parse-reuse.md) — bounded caches, verified
   segments, rule data and changed-segment policy (implemented; performance acceptance deferred)
+  - [CSS run composition](./mokly-css-run-composition.md) —
+    matched occurrences and retained materials.
 - [Component-aware page analysis](./mokly-page-analysis.md) — provenance,
   matching, quick checks and fingerprints (implemented; performance acceptance deferred)
+  - [Fingerprinted comparison materials](./mokly-fingerprinted-materials.md) —
+    digest forms, guards and string equality.
 - [Page source provenance](./mokly-page-source-provenance.md) — extractor
   inventory, adopted attributes and formatting clones
 - [Component-aware style-only route](./mokly-style-only-route.md) — conditions,
   equivalent results and fallback (implemented; performance acceptance deferred)
-- [CSS change attribution](./mokly-css-attribution.md)
 - [Inline style resource ownership](./mokly-inline-style-resources.md)
 - [Inline style evidence](./mokly-inline-style-evidence.md)
 - [Inline style ownership](./mokly-inline-styles.md) — document-derived
@@ -211,7 +216,11 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   [device chrome and preview scheme](./mokly-shell-device-chrome.md), the
   [design screen inventory](./mokly-shell-design-inventory.md), and the
   [depicted design catalogue](./mokly-shell-design-catalogue.md).
+  - [Shell layout](./mokly-shell-layout.md) —
+    responsive geometry and navigation layout.
 - [Design mockup links](./mokly-design-links.md)
+  - [Design link states](./mokly-design-link-states.md) —
+    variant, scheme and filter destinations.
 - [Registered components in Mokly's design catalogue](./mokly-design-components.md)
   — implemented shared design components and ownership rules, with the
   [component library inventory](./mokly-design-component-library.md).
@@ -231,15 +240,3 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   snapshot identity and strict current-format readers.
 - [Public exclusion configuration](./mokly-public-exclusions.md) — defaults,
   validation and the public-file matching base.
-
-- [Shell Layout](./mokly-shell-layout.md)
-
-- [Design Link States](./mokly-design-link-states.md)
-
-- [Baseline And Fixture Timings](./mokly-timing-baselines.md)
-
-- [Fingerprinted Comparison Materials](./mokly-fingerprinted-materials.md)
-
-- [CSS run composition](./mokly-css-run-composition.md)
-
-- [Catalogue Projection And Privacy](./mokly-catalogue-projection.md)
