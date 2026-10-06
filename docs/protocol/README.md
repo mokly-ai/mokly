@@ -41,6 +41,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   balance, and acceptance measurement.
 - [CI test assertions](./ci-test-assertions.md) — unit assertion guard,
   checked catalogue selections, and test lint rules.
+- [CI test timing](./ci-test-timing.md) — deterministic assertions,
+  duration reporting, and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v1](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.

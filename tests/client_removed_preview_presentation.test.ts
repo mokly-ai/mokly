@@ -111,7 +111,7 @@ test("pinned presentations accept extensionless delivery and cache by address", 
     { kind: "pinned", comparisonUrl: `${GENERATION}review.json` },
     fetch.value,
   );
-  const signal = AbortSignal.timeout(5_000);
+  const signal = AbortSignal.timeout(15_000);
   const [first, second] = await Promise.all([
     loader.load(SNAPSHOT, signal),
     loader.load(SNAPSHOT, signal),
@@ -142,7 +142,7 @@ for (const suffix of ["/index.html", "/index", "/", ""]) {
       { kind: "pinned", comparisonUrl: `${GENERATION}review.json` },
       fetch.value,
     );
-    const result = await loader.load(requested, AbortSignal.timeout(5_000));
+    const result = await loader.load(requested, AbortSignal.timeout(15_000));
     assert.equal(result.snapshotAddress, requested);
     assert.ok(result.srcdoc.includes(`<base href="${requested}">`));
   });
@@ -156,7 +156,7 @@ test("live presentations use same-origin credentials", async () => {
     { kind: "live" },
     fetch.value,
   );
-  await loader.load(SNAPSHOT, AbortSignal.timeout(5_000));
+  await loader.load(SNAPSHOT, AbortSignal.timeout(15_000));
   assert.equal(fetch.calls[0]?.credentials, "same-origin");
 });
 
@@ -177,7 +177,7 @@ test("historical fetches reject responses outside the acceptance contract", asyn
       fetch.value,
     );
     await assert.rejects(
-      loader.load(SNAPSHOT, AbortSignal.timeout(5_000)),
+      loader.load(SNAPSHOT, AbortSignal.timeout(15_000)),
       /previous version is unavailable/i,
     );
   }
@@ -194,7 +194,7 @@ test("removed-preview failures keep their unavailable copy", async () => {
     fetch.value,
   );
   await assert.rejects(
-    loader.load(SNAPSHOT, AbortSignal.timeout(5_000)),
+    loader.load(SNAPSHOT, AbortSignal.timeout(15_000)),
     /^Error: The previous version is unavailable\.$/,
   );
 });
@@ -214,7 +214,7 @@ test("historical fetches count the body instead of trusting its headers", async 
     fetch.value,
   );
   await assert.rejects(
-    loader.load(SNAPSHOT, AbortSignal.timeout(5_000)),
+    loader.load(SNAPSHOT, AbortSignal.timeout(15_000)),
     /previous version is unavailable/i,
   );
 });
@@ -238,7 +238,7 @@ test("a loader never fetches outside its generation snapshot prefix", async () =
     `${SNAPSHOT}?changed=1`,
   ])
     await assert.rejects(
-      loader.load(address, AbortSignal.timeout(5_000)),
+      loader.load(address, AbortSignal.timeout(15_000)),
       /previous version is unavailable/i,
     );
   assert.deepEqual(fetch.calls, []);

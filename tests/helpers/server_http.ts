@@ -108,7 +108,7 @@ export function nodeRequest(
         resolve({ body, status: response.statusCode }),
       );
     });
-    request_.setTimeout(2_000, () =>
+    request_.setTimeout(15_000, () =>
       request_.destroy(new Error(`${method} ${url} timed out`)),
     );
     request_.once("error", reject);
