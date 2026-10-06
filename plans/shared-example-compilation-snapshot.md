@@ -1,9 +1,9 @@
 # Shared Example Compilation Snapshot
 
-Status: Active. Milestones 1 to 6 are complete on draft PR
-[#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 7 applies the
-review-fix rule. The plan closes when the PR merges. Three review findings
-stay open for the user to decide; Milestone 7 lists them.
+Status: Active. All seven milestones are complete on draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138); the plan closes when that
+PR merges. Three review findings stay open for the user to decide; Milestone
+7 lists them.
 
 ## Status And Outcome
 
@@ -361,7 +361,7 @@ Review summary. The post-push review used
 on head `9d15e6d` and reported three findings; Milestone 7 applies the
 review-fix rule that main's #147 added.
 
-## Milestone 7: Apply the review-fix rule — in progress
+## Milestone 7: Apply the review-fix rule — completed
 
 Main's #147 replaced the rule that review findings wait for the user. Findings
 that the reviewer tags `Auto-fix: yes` are fixed, the review runs once more on
@@ -376,9 +376,11 @@ the fix, and the other findings wait for the user.
       line, `mokly-example-compilation-snapshot 1`.
 - [x] Run `cargo xtask check`, commit with the fixed findings named in the
       message, and push.
-- [ ] Re-run [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] Re-run [the implementation review prompt](../docs/implementation-review-prompt.md)
       once on the fix against `origin/main`. Fix new `Auto-fix: yes` findings
-      once, then stop and report.
+      once, then stop and report. The re-review confirmed findings 4 and 5
+      and reported finding 6, `Auto-fix: yes`: the example README now says
+      that `npm test` keeps a fresh snapshot. The fix round then stopped.
   - Open finding 1 (Medium, test): the codec names `Compilation` fields by
     hand, so a new field can drop out of the snapshot while every test passes;
     recommended: compare field sets in `assertSameCompilation` and make
