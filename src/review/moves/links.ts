@@ -13,7 +13,6 @@ import {
 } from "@mokly/viewer/data";
 
 import { parseHtml } from "../../diagnostics/html_parse.js";
-
 import type { ReviewLinkNormalization } from "../ignore.js";
 
 import { baselinePathMapper } from "./identity.js";
