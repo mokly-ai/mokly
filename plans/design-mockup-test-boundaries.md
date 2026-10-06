@@ -171,112 +171,137 @@ baseline entries so attribution assertions keep their original input.
 
 ## Milestone 3: Static checks move to unit tests
 
-Give every static assertion in a browser mockup spec a unit test. The specs
+Completed. Give every static assertion in a browser mockup spec a unit test. The specs
 keep only the checks that need a browser. Each changed unit file stays at or
 below 300 lines.
 
-- [ ] `component_design_selection.spec.ts`: move both tests to a new
+- [x] `component_design_selection.spec.ts`: move both tests to a new
       `tests/design_component_inspection.test.ts`. They cover usage links that
       select a container or a hidden instance (`inspection/selection/*`
       targets and "Selected instance" details), and the removed consumer's
       Changes membership (count 2, the Farewell row, the `removed-consumer`
       page and one changed mark). Delete the spec.
-- [ ] `component_design.spec.ts`: add these checks to a new
+- [x] `component_design.spec.ts`: add these checks to a new
       `tests/design_component_pages.test.ts`, and keep the visible canvas
       count, the open-panel `overflow-y: auto` and the horizontal-overflow
       checks in the spec:
-  - [ ] The `.ce-design .mbk-shell--<viewport>` wrapper and a heading on all
+  - [x] The `.ce-design .mbk-shell--<viewport>` wrapper and a heading on all
         39 owning artboards.
-  - [ ] "Saved variants › Disabled" targets `pages/variants`, which shows the
+  - [x] "Saved variants › Disabled" targets `pages/variants`, which shows the
         disabled Continue button and "Supplied props: true".
-  - [ ] "Used by › Welcome" targets `inspection-details`, with the "Welcome"
+  - [x] "Used by › Welcome" targets `inspection-details`, with the "Welcome"
         heading and "Footer action".
-  - [ ] The viewport select's value equals the viewport.
-  - [ ] Count 1 on `affected`. Count 2, two "Affected screens" links, two
+  - [x] The viewport select's value equals the viewport.
+  - [x] Count 1 on `affected`. Count 2, two "Affected screens" links, two
         changed marks, and the Welcome, Action and Default rows on
         `direct-change`.
-- [ ] `component_design_inspection.spec.ts:84`: add to a new
+- [x] `component_design_inspection.spec.ts:84`: add to a new
       `tests/design_component_states.test.ts` the empty, unavailable, unused
       and removed panel copy; the "No visible region" text; the Farewell link
       to `removed-consumer`, with that page's previous-version label, copy,
       before-state action, frame type and `data-viewport`; and the link to
       `states/removed`. Keep only the visibility of "No visible region" after
       its `<details>` opens.
-- [ ] `component_workspace.spec.ts`:
-  - [ ] Move the tab checks of `:14` and the Controls tab, "Expanded
+- [x] `component_workspace.spec.ts`:
+  - [x] Move the tab checks of `:14` and the Controls tab, "Expanded
         inspector" switch and hint field of `:150` to a new
         `tests/design_component_inspector.test.ts`.
-  - [ ] Move the "Preview options" toolbar, its "Preview viewport" select, the
+  - [x] Move the "Preview options" toolbar, its "Preview viewport" select, the
         Light `.ce-scheme` labels and the absent top-bar view controls of `:47`
         to `tests/component_design_navigation.test.ts`.
-  - [ ] Move the "Inspect Action, Continue" link and the "Selected instance"
+  - [x] Move the "Inspect Action, Continue" link and the "Selected instance"
         name of `:87`, and the unique mask ids of `:215`, to
         `tests/design_component_inspection.test.ts`.
-  - [ ] Delete `:14`, and delete `:120`, which
+  - [x] Delete `:14`, and delete `:120`, which
         `tests/component_design_navigation.test.ts:61-69` and `:109` cover.
-  - [ ] Keep the label edit across viewport switches (`:47`), the highlight
+  - [x] Keep the label edit across viewport switches (`:47`), the highlight
         that reaches the device bottom and its click (`:87`), and the unique
         layout checks of `:150`. Remove the checks in `:150` that repeat
         `component_surfaces.spec.ts`.
-- [ ] `component_controls.spec.ts`: move `:23` and the static part of `:132`
+- [x] `component_controls.spec.ts`: move `:23` and the static part of `:132`
       to a new `tests/design_component_controls.test.ts`: link targets, field
       values, the edited and reset states, the invalid field and its error,
       the invalid preview's inline 8px radius, the alert copy, the pending
       status, the comparison and published notices, and the disabled previews.
       Delete `:23`. Keep `:6` and the hint visibility in `:132`.
-- [ ] `component_evidence.spec.ts`: move `:14`, `:63` and the badge, count
+- [x] `component_evidence.spec.ts`: move `:14`, `:63` and the badge, count
       and rows of `:164` to `tests/design_component_comparison_states.test.ts`.
       Move the "Changed" and "Removed" statuses of `:164` to
       `tests/design_component_headers.test.ts`, and the highlight reasons of
       `:88` to `tests/design_component_inspection.test.ts`. Delete those four
       tests, and keep `:127`.
-- [ ] `component_inspector.spec.ts`: move the open panel at load, the summary
+- [x] `component_inspector.spec.ts`: move the open panel at load, the summary
       labels that match their regions and the shared `details` name of `:6`,
       and the "Used by" region of `:50`, to
       `tests/design_component_inspector.test.ts`. In `:6`, keep only focus and
       Space opening each tab in turn.
-- [ ] `phone_chrome.spec.ts:35`: add a component-variant reader to
+- [x] `phone_chrome.spec.ts:35`: add a component-variant reader to
       `tests/helpers/design_catalogue.ts`, and check `aria-hidden` on the home
       bar and notch in a new `tests/design_library_device_frame.test.ts`. Keep
       the visibility and `pointer-events` checks.
-- [ ] `review.spec.ts:224`: move the "Comparison mode" group's role, name and
+- [x] `review.spec.ts:224`: move the "Comparison mode" group's role, name and
       Current state, and the absent "Mokly modes" navigation, to
       `tests/design_link_states.test.ts`. Delete the browser test.
-- [ ] `tests/design_appearance_controls.test.ts`: ban a "Dark preview" switch
+- [x] `tests/design_appearance_controls.test.ts`: ban a "Dark preview" switch
       by accessible name as well as by class.
-- [ ] `comparison_design.spec.ts`: move `:18`, `:134` and the static part of
+- [x] `comparison_design.spec.ts`: move `:18`, `:134` and the static part of
       `:30` to a new `tests/design_comparison_context.test.ts`. Keep the
       Details toggle, the desktop-only resize handles and `:100` in the spec.
-- [ ] `design_comparison_eligibility.spec.ts:89`: add a unit test that no
+- [x] `design_comparison_eligibility.spec.ts:89`: add a unit test that no
       unchanged design shows a comparison band or a stage heading in either
       scheme, in a new `tests/design_comparison_eligibility.test.ts`. Keep
       the opaque-band style check in the spec.
-- [ ] `design_modern_controls.spec.ts:37`: add one inspector, one "Preview
+- [x] `design_modern_controls.spec.ts:37`: add one inspector, one "Preview
       options" toolbar and no top-bar view controls on every screen artboard
       to `tests/design_modern_controls.test.ts`. Keep the viewport-select and
       overflow checks in the spec.
-- [ ] `design_library.spec.ts:144`: add to `tests/design_library_usage.test.ts`
+- [x] `design_library.spec.ts:144`: add to `tests/design_library_usage.test.ts`
       that the last `.flow-step` is the last element child and that the
       `.flow-step:last-child::before` rule hides its connector. Delete the
       browser test.
-- [ ] `design_library.spec.ts:28`: add to `tests/design_links.test.ts` that no
+- [x] `design_library.spec.ts:28`: add to `tests/design_links.test.ts` that no
       link in a library sample (components under `design/library/`) uses an
       absolute or external URL. The test at `:135` covers screens only, and
       the build already rejects missing link and stylesheet targets. Then
       remove the link and stylesheet checks from the spec.
-- [ ] `tests/design_index_entries.test.ts`: assert the folder screen's menu
+- [x] `tests/design_index_entries.test.ts`: assert the folder screen's menu
       target and the mobile drawer's "Show contents of Profile" toggle on the
       member pages.
-- [ ] `tests/design_comparison_scrolling.test.ts`: assert that Current draws
+- [x] `tests/design_comparison_scrolling.test.ts`: assert that Current draws
       no Scroll together anywhere on the page. Then delete
       `design_scroll_together.spec.ts:160`.
-- [ ] Delete `design_portable.spec.ts:19`, which
+- [x] Delete `design_portable.spec.ts:19`, which
       `tests/design_links.test.ts:150-168` covers, and
       `design_component_stacks.spec.ts:229`, which
       `tests/component_design_navigation.test.ts:71-94` and
       `tests/design_link_states.test.ts:80-95` cover.
-- [ ] Run the design unit tests and every changed browser spec.
-- [ ] Update the Delivery Status in the design verification protocol.
+- [x] Run the design unit tests and every changed browser spec.
+- [x] Update the Delivery Status in the design verification protocol.
+- [x] Add and test shared accessible-name, field-value, region, and description
+      readers so moved assertions keep native names and field semantics.
+- [x] Move the initially checked highlight, nested disclosure, and selected
+      instance facts from the geometry test to the inspection unit test.
+- [x] Preserve the native label edit and visible canvas checks in the surviving
+      controls spec. Keep the closed inspector height and pane resize checks
+      in the surviving surface spec at both viewport sizes.
+- [x] Clarify the selected-screen, whole-document, and home/flow/navigation
+      control scopes. Update stale neighboring verification guidance to link
+      the three-layer contract.
+- [x] Open and capture only comparison-band artboards in the eligibility
+      browser test. Read other HTML without a browser to select those views.
+      Preserve every style and bounds check and the existing test timeout.
+      Unchanged structure remains checked in the eligibility unit test.
+- [x] Retry focused browser verification after the unit workers and HEAD baseline
+      preparation finish. Preserve the normal global setup and test assertions.
+- [x] Run the milestone lint, formatting, and prepared type checks. Audit the
+      mainline diff and deletions. Commit with a Conventional Commit and push.
+
+Implementation note: The modern-controls browser test reads a 55-screen
+baseline fixture. The new unit test covers all 111 current screen artboards.
+It follows the existing document contract: whole documents have Details but no
+preview toolbar, while home, flow, missing-route, and navigation states have
+neither. Affected-screen links keep their original `pages/affected` scope.
+The direct-change screen keeps its count, changed marks, rows, and selected props.
 
 ## Milestone 4: Runtime checks move to runtime specs
 

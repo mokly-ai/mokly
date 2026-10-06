@@ -3,6 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type {
@@ -16,25 +17,19 @@ const directory = path.join(repositoryRoot, "examples/basic/generated");
 const manifest = JSON.parse(
   fs.readFileSync(path.join(directory, "mokly-manifest.json"), "utf8"),
 ) as ManifestV8;
-const changedDesigns = new Set([
-  "design/browse/variants/variant-changes",
-  "design/browse/index-entries/member-changes",
-  "design/changes/diff-controls/current",
-  "design/changes/outcomes/moved",
-  "design/changes/diff-controls/overlay",
-  "design/changes/diff-controls/overlay-long",
-  "design/changes/diff-controls/overlay-panel",
-  "design/changes/diff-controls/side-by-side-apart",
-  "design/changes/outcomes/changed",
-  "design/changes/outcomes/difference",
-  "design/changes/impact/styles/matched",
-  "design/changes/impact/styles/unresolved",
-  "design/changes/impact/styles/unnamed",
-  "design/browse/publication/changes",
-  "design/browse/appearance/workspaces/side-by-side",
-  "design/browse/appearance/workspaces/difference",
-]);
 
+function hasComparisonBand(node: DefaultTreeAdapterMap["node"]): boolean {
+  if (
+    "tagName" in node &&
+    node.attrs.some(
+      (attribute) =>
+        attribute.name === "class" &&
+        attribute.value.split(/\s+/u).includes("mbk-cmp-toolbar"),
+    )
+  )
+    return true;
+  return "childNodes" in node && node.childNodes.some(hasComparisonBand);
+}
 async function assertFragmentEligibility(
   page: Page,
   testInfo: TestInfo,
@@ -43,26 +38,8 @@ async function assertFragmentEligibility(
   fragment: string,
 ): Promise<void> {
   await page.goto(pathToFileURL(path.join(directory, fragment)).href);
-  const componentDesign = entry.path.startsWith("design/components/");
-  const changedComponentOrScreen =
-    componentDesign &&
-    (await page.locator('[data-change-status="changed"]').count()) > 0;
-  const removedComponent =
-    componentDesign &&
-    (await page.locator('[data-change-status="removed"]').count()) > 0 &&
-    (await page.locator(".ce-variants").count()) > 0;
-  const expected =
-    changedDesigns.has(entry.path) ||
-    changedComponentOrScreen ||
-    removedComponent;
   const toolbar = page.locator(".mbk-cmp-toolbar");
-  await expect(toolbar, fragment).toHaveCount(expected ? 1 : 0);
-  if (!expected) {
-    await expect(
-      page.locator(".mbk-comparison-stage h3"),
-      fragment,
-    ).toHaveCount(0);
-  } else {
+  if (await toolbar.count()) {
     await expect(toolbar, fragment).toHaveCSS(
       "background-color",
       await paletteColor(appearance, "--chrome-surface"),
@@ -78,11 +55,11 @@ async function assertFragmentEligibility(
         bounds!.y + bounds!.height,
       );
     }
+    await page.screenshot({
+      path: testInfo.outputPath(`${entry.path}.${appearance}.png`),
+      fullPage: true,
+    });
   }
-  await page.screenshot({
-    path: testInfo.outputPath(`${entry.path}.${appearance}.png`),
-    fullPage: true,
-  });
 }
 
 for (const viewport of ["desktop", "mobile"] as const) {
@@ -94,6 +71,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1440, height: 1000 },
     );
+    let measured = 0;
     for (const entry of manifest.entries) {
       if (entry.kind !== "screen" || !entry.path.startsWith("design/"))
         continue;
@@ -107,6 +85,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ],
       ] as const) {
         if (!fragment) continue;
+        const html = fs.readFileSync(path.join(directory, fragment), "utf8");
+        if (!hasComparisonBand(parse(html))) continue;
+        measured += 1;
         await assertFragmentEligibility(
           page,
           testInfo,
@@ -116,5 +97,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         );
       }
     }
+    expect(
+      measured,
+      "comparison styles have real artboards to measure",
+    ).toBeGreaterThan(0);
   });
 }

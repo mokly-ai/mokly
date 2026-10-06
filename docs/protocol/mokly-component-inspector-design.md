@@ -92,3 +92,5 @@ verify that closed panels reserve no space, and inspect both viewport layouts.
 Catalogue checks cover all owning entries and every current-page destination.
 Regression tests verify explicit Help hint source metadata and the removal of
 footer navigation. Preserve component highlight geometry and attribution checks.
+The [design verification contract](./mokly-design-verification.md) owns unit,
+raw-artboard, and runtime coverage. Runtime frame checks use non-design fixtures.

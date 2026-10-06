@@ -1,10 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 import { expect, test } from "@playwright/test";
-
-import { repositoryRoot } from "../helpers/fixture.js";
 
 import {
   expectPresentedPane,
@@ -219,31 +213,6 @@ test("narrow diffs fit the shell and retain the catalogue drawer", async ({
   await expect(page.locator('[data-route="details/index.html"]')).toBeVisible();
   await page.locator('[data-route="details/index.html"]').click();
   await expect(page.locator("h2")).toHaveText("Details");
-});
-
-test("approved changes mockups render directly from disk", async ({ page }) => {
-  for (const mode of [
-    "current",
-    "overlay",
-    "overlay-long",
-    "overlay-panel",
-    "side-by-side-apart",
-  ]) {
-    for (const viewport of ["desktop", "mobile"]) {
-      const file = path.join(
-        repositoryRoot,
-        `examples/basic/generated/design/changes/diff-controls/${mode}/index.${viewport}.html`,
-      );
-      expect(fs.existsSync(file)).toBe(true);
-      await page.goto(pathToFileURL(file).href);
-      await expect(
-        page.getByRole("group", { name: "Comparison mode" }),
-      ).toContainText("Current");
-      await expect(
-        page.getByRole("navigation", { name: "Mokly modes" }),
-      ).toHaveCount(0);
-    }
-  }
 });
 
 test("mode switches keep frames and cannot expand one side alone", async ({

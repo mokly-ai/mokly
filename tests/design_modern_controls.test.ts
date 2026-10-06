@@ -6,7 +6,15 @@ import {
   isManifestComponentVariant,
 } from "../packages/viewer/dist/data.js";
 
-import { designCatalogue, designEntries } from "./helpers/design_catalogue.js";
+import { named } from "./helpers/design_assertions.js";
+import {
+  attribute,
+  byClass,
+  designCatalogue,
+  designDocument,
+  designEntries,
+  elements,
+} from "./helpers/design_catalogue.js";
 import { textOutput } from "./helpers/generated_text.js";
 
 const { manifest, outputs } = await designCatalogue;
@@ -97,5 +105,74 @@ test("every owning design and shared sample omits legacy footer and view markup"
           file,
         );
       }
+  }
+});
+
+const withoutInspector = new Set([
+  "design/browse/views/home",
+  "design/browse/states/missing-route",
+  "design/browse/states/navigation",
+  "design/browse/views/use-case",
+  "design/browse/appearance/status/home",
+  "design/browse/appearance/status/flow",
+  "design/browse/appearance/workspaces/drawer",
+]);
+
+test("every selected screen uses one inspector and one preview toolbar", async () => {
+  const screens = await designEntries(
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "modern screen controls",
+  );
+  for (const entry of screens) {
+    for (const viewport of ["desktop", "mobile"] as const) {
+      const { document } = await designDocument(entry.path, viewport);
+      assert.equal(byClass(document, "mbk-details-bar").length, 0, entry.path);
+      assert.equal(
+        elements(
+          document,
+          (node) =>
+            attribute(node, "role") === "group" &&
+            /^(Viewport|Preview color scheme)$/u.test(
+              attribute(node, "aria-label") ?? "",
+            ),
+        ).length,
+        0,
+        entry.path,
+      );
+      if (withoutInspector.has(entry.path)) {
+        assert.equal(byClass(document, "ce-inspector").length, 0, entry.path);
+        assert.equal(
+          byClass(document, "ce-view-controls").length,
+          0,
+          entry.path,
+        );
+        continue;
+      }
+      assert.equal(byClass(document, "ce-inspector").length, 1, entry.path);
+      const documentPage =
+        entry.path.startsWith("design/browse/pages/") ||
+        [
+          "design/browse/views/folder-overview",
+          "design/browse/appearance/states/light-only-current",
+          "design/browse/appearance/states/light-only-document",
+        ].includes(entry.path);
+      if (documentPage) {
+        assert.equal(
+          byClass(document, "ce-view-controls").length,
+          0,
+          entry.path,
+        );
+      } else
+        assert.equal(
+          attribute(named(document, "Preview options"), "role"),
+          "toolbar",
+          entry.path,
+        );
+      assert.equal(
+        byClass(byClass(document, "mbk-topbar")[0]!, "ce-view-controls").length,
+        0,
+        entry.path,
+      );
+    }
   }
 });

@@ -19,6 +19,45 @@ function destinations(nodes: Element[]) {
     ]);
 }
 
+test("Changes artboards have named comparison modes and no separate modes navigation", async () => {
+  for (const mode of [
+    "current",
+    "overlay",
+    "overlay-long",
+    "overlay-panel",
+    "side-by-side-apart",
+  ]) {
+    for (const viewport of ["desktop", "mobile"] as const) {
+      const { document } = await designDocument(
+        `design/changes/diff-controls/${mode}`,
+        viewport,
+      );
+      const groups = elements(
+        document,
+        (node) =>
+          attribute(node, "role") === "group" &&
+          attribute(node, "aria-label") === "Comparison mode",
+      );
+      assert.equal(groups.length, 1);
+      assert.match(textContent(groups[0]!), /Current/u);
+      if (mode === "current") {
+        assert.deepEqual(byClass(groups[0]!, "active").map(textContent), [
+          "Current",
+        ]);
+      }
+      assert.equal(
+        elements(
+          document,
+          (node) =>
+            node.tagName === "nav" &&
+            attribute(node, "aria-label") === "Mokly modes",
+        ).length,
+        0,
+      );
+    }
+  }
+});
+
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: the consolidated screens keep a navigation-free toolbar`, async () => {
     for (const source of [

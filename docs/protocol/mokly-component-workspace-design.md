@@ -162,10 +162,11 @@ remain separate from saved comparison evidence.
 
 ## Verification
 
-Capture regressions before implementing the changes. Exercise native viewport,
-theme, and highlight controls from disk and inside served frames. Verify both
-rendered contexts, independent mask ids, correct labels, retained control values,
-leaf/composite tab membership, and explicit comparison eligibility.
+Capture regressions before implementing changes. The
+[design verification contract](./mokly-design-verification.md) owns test layers
+and commands. Unit tests check mask ids, labels, tab membership, and comparison
+eligibility. Raw-artboard specs check native viewport and highlight controls.
+Runtime specs check non-design content inside served sandboxed frames.
 
 Use pointer dragging on the centered desktop grip, and touch/Space on the mobile
 grabber. Check bounds, closing/reopening, retained edits and preview dimensions,
@@ -174,5 +175,5 @@ Verify centered menu/caret SVGs and clear Usage geometry at both sizes.
 Keep existing link, prop, usage, highlight-geometry, and Changes-count assertions.
 Open and visually inspect every changed artboard and the interactive Both/Dark
 states. Regenerate with `npm run example:build`, verify with
-`npm run example:check`, and run `npx playwright test tests/browser/component*.spec.ts`.
+`npm run example:check`, and use the linked verification commands.
 Finish with `cargo xtask check`, commit/push, and the post-push review.

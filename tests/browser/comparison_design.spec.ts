@@ -15,18 +15,6 @@ const design = (entryPath: string, viewport: string): string =>
     ),
   ).href;
 
-test("flow designs keep comparisons on the owning screens", async ({
-  page,
-}) => {
-  for (const viewport of ["desktop", "mobile"]) {
-    await page.goto(design("design/browse/views/use-case", viewport));
-    await expect(
-      page.getByRole("group", { name: "Comparison mode" }),
-    ).toHaveCount(0);
-    await expect(page.locator(".flow-step-link")).toHaveCount(2);
-  }
-});
-
 test("comparison designs use screen context instead of report chrome", async ({
   page,
 }) => {
@@ -40,59 +28,26 @@ test("comparison designs use screen context instead of report chrome", async ({
   ]) {
     for (const viewport of ["desktop", "mobile"]) {
       await page.goto(design(`design/changes/${route}`, viewport));
-      await expect(
-        page.locator(".mbk-title-row .mbk-status, .mbk-review-summary"),
-      ).toHaveCount(0);
       const comparisonDetails = page.getByText("Comparison details", {
         exact: true,
       });
       if (route === "outcomes/added") {
-        await expect(
-          page.locator('details[data-panel="info"]'),
-        ).not.toHaveAttribute("open", "");
+        await expect(comparisonDetails).toBeHidden();
         await page
           .getByRole("button", { name: "Details", exact: true })
           .click();
-        await expect(
-          page.getByText("Added to this branch.", { exact: true }),
-        ).toBeVisible();
       }
       await expect(comparisonDetails).toBeVisible();
-      if (route.startsWith("impact/") && viewport === "desktop") {
-        await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
-          "All",
-        );
-        await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
-      }
       await expect(page.locator(".mbk-nav .mbk-nav-resize")).toHaveCount(
         viewport === "desktop" ? 1 : 0,
       );
       await expect(page.locator(".ce-inspector-resize:visible")).toHaveCount(
         viewport === "desktop" ? 1 : 0,
       );
-      if (route === "outcomes/removed") {
-        await expect(page.locator("[data-change-status]")).toHaveText(
-          "Removed",
-        );
-        await expect(
-          page.getByText("Farewell was removed from the catalogue.", {
-            exact: true,
-          }),
-        ).toBeVisible();
-        await expect(
-          page.getByRole("group", { name: "Comparison mode" }),
-        ).toHaveCount(0);
-        await expect(page.locator(".mbk-previous")).toHaveText(
-          "Showing previous version",
-        );
-        await expect(page.locator(".mbk-empty")).toHaveCount(0);
-      }
       const frame = page
         .locator(viewport === "desktop" ? ".browser-frame" : ".phone-frame")
         .first();
       await expect(frame).toBeVisible();
-      if (route === "outcomes/removed")
-        await expect(frame).toContainText("Thanks for looking around");
     }
   }
 });
@@ -128,18 +83,5 @@ test("a viewport with no previous view names the one that still opens", async ({
     await selection.selectOption("desktop");
     await expect(note).toBeHidden();
     await expect(captured).toBeVisible();
-  }
-});
-
-test("empty Changes designs retain the selected current screen", async ({
-  page,
-}) => {
-  for (const viewport of ["desktop", "mobile"]) {
-    await page.goto(design("design/changes/impact/empty", viewport));
-    await expect(page.locator(".mbk-screen-head h2")).toHaveText("Welcome");
-    await expect(
-      page.getByRole("group", { name: "Comparison mode" }),
-    ).toHaveCount(0);
-    await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
   }
 });

@@ -35,14 +35,6 @@ const DIFF_MODES = [
   ],
 ] as const;
 
-/** Bands showing Current, where one version has nothing to scroll with. */
-const CURRENT = [
-  "design/changes/diff-controls/current",
-  "design/components/pages/affected",
-  "design/library/controls/comparison-toolbar/current",
-  "design/library/chrome/screen-header/changed",
-];
-
 async function open(
   page: Page,
   route: string,
@@ -154,17 +146,6 @@ for (const viewport of ["desktop", "mobile"] as const) {
           );
         }
       }
-    }
-  });
-
-  test(`${viewport}: Current draws no Scroll together`, async ({ page }) => {
-    for (const route of CURRENT) {
-      await open(page, route, viewport);
-      await expect(
-        page.getByRole("switch", { name: "Scroll together" }),
-        route,
-      ).toHaveCount(0);
-      await expect(page.locator(".mbk-cmp-sync"), route).toHaveCount(0);
     }
   });
 

@@ -88,5 +88,8 @@ artifacts. Test all input labels/types, current variant identity, full reset
 values, optional/unset states, pending/error preservation, validation errors,
 disabled comparison inputs, read-only guidance, and links between owning states.
 Open every artboard from disk and visually inspect both viewport variants. Test
-inspector open/switch/close and keyboard behavior in standalone and served frames.
+inspector open/switch/close and keyboard behavior on raw artboards. Runtime
+checks use non-design sandboxed-frame fixtures. The
+[design verification contract](./mokly-design-verification.md) owns test layers
+and commands.
 Run the complete local gate, commit/push, and required post-push review.

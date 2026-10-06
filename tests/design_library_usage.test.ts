@@ -3,9 +3,41 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { designCatalogue, designEntries } from "./helpers/design_catalogue.js";
+import {
+  byClass,
+  designCatalogue,
+  designDocument,
+  designEntries,
+} from "./helpers/design_catalogue.js";
 import { designLibrary } from "./helpers/design_library.js";
+import { children } from "./helpers/design_stacks.js";
+import { declaration, designStyleRules } from "./helpers/design_styles.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+
+test("a flow's last step is its last element child and has no trailing connector", async () => {
+  for (const viewport of ["desktop", "mobile"] as const) {
+    const { document } = await designDocument(
+      "design/browse/views/use-case",
+      viewport,
+    );
+    const steps = byClass(document, "flow-step");
+    assert.equal(steps.length, 2);
+    const last = steps.at(-1)!;
+    const parent = last.parentNode;
+    assert.ok(parent && "tagName" in parent);
+    assert.equal(children(parent).at(-1), last);
+  }
+  const rules = await designStyleRules();
+  const base = rules.filter((rule) => rule.selector === ".flow-step::before");
+  assert.equal(base.length, 1);
+  assert.equal(declaration(base[0]!.body, "content"), '""');
+  assert.notEqual(declaration(base[0]!.body, "display"), "none");
+  const last = rules.filter(
+    (rule) => rule.selector === ".flow-step:last-child::before",
+  );
+  assert.equal(last.length, 1);
+  assert.equal(declaration(last[0]!.body, "display"), "none");
+});
 
 test("every owning artboard records its shared chrome and real component consumers", async () => {
   const { manifest } = await designCatalogue;

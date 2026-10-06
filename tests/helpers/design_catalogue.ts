@@ -4,7 +4,11 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { loadConfig } from "../../dist/config/load.js";
-import { viewRoute } from "../../packages/viewer/dist/data.js";
+import type { ManifestComponentVariant } from "../../packages/viewer/dist/components/manifest_types.js";
+import {
+  isManifestComponentVariant,
+  viewRoute,
+} from "../../packages/viewer/dist/data.js";
 import type {
   ManifestEntry,
   ManifestScreen,
@@ -84,6 +88,28 @@ export async function designDocument(
   const compilation = await designCatalogue;
   const entry = compilation.manifest.entries.find((entry) => entry.path === id);
   assert.ok(entry?.kind === "screen", `Missing screen ${id}`);
+  const route = viewRoute(entry.path, viewport, "light");
+  const html = textOutput(compilation.outputs, route);
+  assert.ok(html, `Missing ${viewport} output for ${id}`);
+  return { document: parse(html), entry, html, route };
+}
+
+/** Read one saved component sample from the real compilation. */
+export async function designVariantDocument(
+  id: string,
+  viewport: "mobile" | "desktop",
+): Promise<{
+  document: DefaultTreeAdapterMap["document"];
+  entry: ManifestComponentVariant;
+  html: string;
+  route: string;
+}> {
+  const compilation = await designCatalogue;
+  const entry = compilation.manifest.entries.find((entry) => entry.path === id);
+  assert.ok(
+    entry?.kind === "component" && isManifestComponentVariant(entry),
+    `Missing component variant ${id}`,
+  );
   const route = viewRoute(entry.path, viewport, "light");
   const html = textOutput(compilation.outputs, route);
   assert.ok(html, `Missing ${viewport} output for ${id}`);

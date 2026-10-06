@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { named, region } from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -130,3 +131,115 @@ test("the tall Checklist depicts its parent and selected variant in Changes", as
     assert.equal(byClass(usage, "ce-usage-list").length, 0, route);
   }
 });
+
+for (const viewport of ["desktop", "mobile"] as const) {
+  test(`${viewport}: comparison facts appear only in Details when evidence exists`, async () => {
+    for (const id of [
+      "design/components/pages/comparison",
+      "design/components/pages/stacked/overlay",
+      "design/components/pages/stacked/difference",
+      "design/components/pages/stacked/overlay-tall",
+      "design/components/pages/affected",
+      "design/components/controls/states/comparison",
+      "design/components/states/removed",
+      "design/components/states/removed-consumer",
+      "design/components/inspection/inspection-direct-change",
+    ]) {
+      const { document } = await designDocument(id, viewport);
+      assert.equal(
+        byClass(
+          byClass(document, "ce-preview-pane")[0]!,
+          "ce-comparison-evidence",
+        ).length,
+        0,
+        id,
+      );
+      assert.equal(byClass(document, "ce-change-context").length, 0, id);
+      const details = region(document, "Details");
+      assert.match(textContent(details), /Comparison details/u, id);
+      const evidence = byClass(document, "ce-comparison-evidence");
+      assert.equal(evidence.length, 1, id);
+      assert.ok(
+        byClass(details, "ce-comparison-evidence").includes(evidence[0]!),
+      );
+      assert.doesNotMatch(
+        textContent(evidence[0]!),
+        /corners and spacing/u,
+        id,
+      );
+      if (id.endsWith("removed-consumer"))
+        assert.match(
+          textContent(details),
+          /A former screen that is no longer in the catalogue\./u,
+        );
+    }
+    for (const id of [
+      "design/components/overview",
+      "design/components/controls/editing/edited",
+      "design/components/states/empty",
+    ]) {
+      const { document } = await designDocument(id, viewport);
+      assert.equal(byClass(document, "ce-comparison-evidence").length, 0, id);
+    }
+  });
+
+  test(`${viewport}: screen comparison identifies the instance and before/current props`, async () => {
+    const { document } = await designDocument(
+      "design/components/inspection/inspection-direct-change",
+      viewport,
+    );
+    assert.equal(byClass(document, "ce-change-context").length, 0);
+    const evidence = byClass(document, "ce-comparison-evidence")[0]!;
+    assert.match(textContent(evidence), /Action · Footer action/u);
+    const table = elements(evidence, (node) => node.tagName === "table");
+    assert.equal(table.length, 1);
+    assert.match(textContent(table[0]!), /Continue/u);
+    assert.match(textContent(table[0]!), /Get started/u);
+    assert.equal(
+      attribute(named(evidence, "Action", "a"), "data-mokly-link"),
+      "design/components/pages/affected",
+    );
+    assert.match(
+      textContent(named(document, "Supplied props")),
+      /Get started/u,
+    );
+    assert.equal(byClass(document, "ce-prop-change").length, 0);
+  });
+
+  test(`${viewport}: an added Badge has its own preview and Changes rows`, async () => {
+    const { document } = await designDocument(
+      "design/components/states/additions/added",
+      viewport,
+    );
+    assert.equal(
+      elements(
+        document,
+        (node) => attribute(node, "aria-label") === "Comparison mode",
+      ).length,
+      0,
+    );
+    for (const preview of byClass(document, "ce-preview-view")) {
+      assert.equal(byClass(preview, "mbk-pane-missing").length, 0);
+      assert.deepEqual(byClass(preview, "ce-badge").map(textContent), ["New"]);
+    }
+    assert.deepEqual(
+      byClass(
+        document,
+        viewport === "desktop" ? "mbk-nav-filter-count" : "ce-change-count",
+      ).map(textContent),
+      ["1"],
+    );
+    if (viewport === "desktop") {
+      const nav = byClass(document, "mbk-nav-scroll")[0]!;
+      assert.deepEqual(
+        elements(nav, (node) => node.tagName === "a").map((node) =>
+          textContent(node)
+            .replace(/Changed$/u, "")
+            .trim(),
+        ),
+        ["Badge", "Default"],
+      );
+      assert.equal(byClass(nav, "mbk-nav-changed").length, 2);
+    }
+  });
+}

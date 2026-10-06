@@ -46,7 +46,6 @@ for (const width of [390, 1280]) {
       const decoration = page.locator(selector);
       await expect(decoration).toBeVisible();
       await expect(decoration).toHaveCSS("pointer-events", "none");
-      await expect(decoration).toHaveAttribute("aria-hidden", "true");
     }
   });
 }

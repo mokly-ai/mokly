@@ -188,7 +188,32 @@ test("every diff-mode band draws Scroll together after its modes, and Current ne
   for (const { id, route } of views) {
     const html = textOutput(outputs, route);
     assert.ok(html, route);
-    for (const toolbar of byClass(parse(html), "mbk-cmp-toolbar")) {
+    const document = parse(html);
+    const toolbars = byClass(document, "mbk-cmp-toolbar");
+    if (
+      toolbars.every((toolbar) =>
+        byClass(toolbar, "active").every(
+          (node) => textContent(node).trim() === "Current",
+        ),
+      )
+    ) {
+      assert.equal(
+        byClass(document, "mbk-cmp-sync").length,
+        0,
+        `${route}: Current has no Scroll together anywhere`,
+      );
+      assert.equal(
+        elements(
+          document,
+          (node) =>
+            attribute(node, "role") === "switch" &&
+            attribute(node, "aria-label") === "Scroll together",
+        ).length,
+        0,
+        route,
+      );
+    }
+    for (const toolbar of toolbars) {
       const [modes, ...rest] = children(toolbar);
       assert.ok(modes && hasClass(modes, "mbk-seg"), route);
       const active = byClass(modes, "active").map((node) =>

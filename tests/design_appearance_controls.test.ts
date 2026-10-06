@@ -5,6 +5,7 @@ import { parse } from "parse5";
 
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
 
+import { accessibleName } from "./helpers/design_assertions.js";
 import {
   attribute,
   designCatalogue,
@@ -39,6 +40,17 @@ test("no design artboard depicts a scheme control", async () => {
       const html = textOutput(outputs, route)!;
       assert.equal(countClass(html, "ce-theme-control"), 0, route);
       assert.equal(countClass(html, "ce-theme-toggle"), 0, route);
+      const document = parse(html);
+      assert.equal(
+        elements(
+          document,
+          (node) =>
+            attribute(node, "role") === "switch" &&
+            accessibleName(node, document) === "Dark preview",
+        ).length,
+        0,
+        route,
+      );
     }
   }
 });

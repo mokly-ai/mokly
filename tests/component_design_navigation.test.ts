@@ -8,6 +8,7 @@ import {
 } from "../examples/basic/specs/design/components/parts/destinations.js";
 import { actionModes } from "../examples/basic/specs/design/components/parts/navigation_states.js";
 
+import { named } from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -120,5 +121,23 @@ for (const viewport of ["mobile", "desktop"] as const) {
         );
       }
     }
+  });
+
+  test(`${viewport}: preview options own the viewport control and Light canvas labels`, async () => {
+    const { document } = await designDocument(
+      "design/components/controls/editing/edited",
+      viewport,
+    );
+    const toolbar = named(document, "Preview options");
+    assert.equal(attribute(toolbar, "role"), "toolbar");
+    assert.ok(named(toolbar, "Preview viewport", "select"));
+    assert.deepEqual(byClass(document, "ce-scheme").map(textContent), [
+      "Light",
+      "Light",
+    ]);
+    const top = byClass(document, "mbk-topbar")[0]!;
+    assert.equal(byClass(top, "mbk-seg").length, 0);
+    assert.equal(byClass(top, "ce-view-controls").length, 0);
+    assert.equal(byClass(document, "ce-inspection-toolbar").length, 0);
   });
 }

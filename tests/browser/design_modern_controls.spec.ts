@@ -39,21 +39,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     }) => {
       for (const screen of screens) {
         await page.goto(fileUrl(`${screen.path}/index.${viewport}.html`));
-        await expect(page.locator(".mbk-details-bar")).toHaveCount(0);
-        await expect(
-          page.getByRole("group", {
-            name: /^(Viewport|Preview color scheme)$/,
-          }),
-        ).toHaveCount(0);
         if (withoutInspector.has(screen.path)) continue;
-        await expect(page.locator(".ce-inspector"), screen.path).toHaveCount(1);
-        await expect(
-          page.getByRole("toolbar", { name: "Preview options" }),
-          screen.path,
-        ).toHaveCount(1);
-        await expect(page.locator(".mbk-topbar .ce-view-controls")).toHaveCount(
-          0,
-        );
         for (const selection of ["mobile", "desktop", "both"]) {
           await page
             .getByLabel("Preview viewport", { exact: true })

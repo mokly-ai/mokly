@@ -16,51 +16,6 @@ const design = (entryPath: string, viewport: string) =>
   ).href;
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: portable design links work without Browse enhancement`, async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({
-      javaScriptEnabled: false,
-      viewport:
-        viewport === "mobile"
-          ? { width: 390, height: 1000 }
-          : { width: 1440, height: 1000 },
-    });
-    const page = await context.newPage();
-    await page.goto(design("design/browse/views/home", viewport));
-    await page.locator(".mbk-empty-link").click();
-    await expect(page).toHaveURL(
-      design("design/browse/views/screen", viewport),
-    );
-    await page.locator(".mbk-shot-link:visible").first().click();
-    await expect(page).toHaveURL(
-      design("design/browse/views/details-screen", viewport),
-    );
-    await page.locator(".mbk-shot-link:visible").first().click();
-    await page.locator(".mbk-search-tag").click();
-    await page
-      .getByRole("group", { name: "Tags", exact: true })
-      .getByRole("link", { name: "onboarding", exact: true })
-      .click();
-    await expect(page).toHaveURL(
-      design("design/browse/views/screen/tag-onboarding", viewport),
-    );
-    await page.locator(".mbk-search-tag").click();
-    await expect(page).toHaveURL(
-      design("design/browse/views/screen/tag-onboarding-picker", viewport),
-    );
-    await page.getByRole("link", { name: "Close tag picker" }).click();
-    await expect(page).toHaveURL(
-      design("design/browse/views/screen/tag-onboarding", viewport),
-    );
-    await page.goto(design("design/browse/views/use-case", viewport));
-    await page.locator(".flow-step-link").nth(1).click();
-    await expect(page).toHaveURL(
-      design("design/browse/views/details-screen", viewport),
-    );
-    await context.close();
-  });
-
   test(`${viewport}: link adaptation preserves row hit areas, colors, and toolbar dimensions`, async ({
     page,
   }) => {

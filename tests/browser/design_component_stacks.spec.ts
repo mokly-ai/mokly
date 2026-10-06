@@ -225,32 +225,4 @@ for (const viewport of ["desktop", "mobile"] as const) {
       "thumb size matches the shown share",
     ).toBeLessThan(0.005);
   });
-
-  test(`${viewport}: Action's comparison modes open their own artboards`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(
-      viewport === "mobile"
-        ? { width: 390, height: 844 }
-        : { width: 1440, height: 1000 },
-    );
-    await page.goto(
-      componentDesignUrl("design/components/pages/comparison", viewport),
-    );
-    const modes = page.getByRole("group", { name: "Comparison mode" });
-    for (const [label, route] of [
-      ["Overlay", "design/components/pages/stacked/overlay"],
-      ["Difference", "design/components/pages/stacked/difference"],
-      ["Current", "design/components/pages/affected"],
-      ["Side by side", "design/components/pages/comparison"],
-    ] as const) {
-      const link = modes.getByRole("link", { name: label, exact: true });
-      await link.focus();
-      await page.keyboard.press("Enter");
-      await expect(page).toHaveURL(componentDesignUrl(route, viewport));
-      await expect(
-        modes.getByRole("button", { name: label, exact: true }),
-      ).toHaveAttribute("aria-pressed", "true");
-    }
-  });
 }

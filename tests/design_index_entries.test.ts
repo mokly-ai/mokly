@@ -24,6 +24,26 @@ const SCREEN = "design/browse/index-entries/screen";
 const MEMBER = "design/browse/index-entries/member";
 const SCREEN_CHANGES = "design/browse/index-entries/screen-changes";
 const MEMBER_CHANGES = "design/browse/index-entries/member-changes";
+
+test("folder screens open the drawer and member navigation keeps Profile collapsed there", async () => {
+  const target = "design/browse/states/navigation";
+  const { document } = await designDocument(SCREEN, "mobile");
+  assert.equal(
+    attribute(byClass(document, "mbk-menu-btn")[0]!, "data-mokly-link"),
+    target,
+  );
+  for (const id of [MEMBER, MEMBER_CHANGES]) {
+    const member = (await designDocument(id, "mobile")).document;
+    assert.equal(
+      attribute(byClass(member, "mbk-menu-btn")[0]!, "data-mokly-link"),
+      target,
+    );
+  }
+  const drawer = (await designDocument(target, "mobile")).document;
+  const toggle = profileToggle(drawer);
+  assert.equal(attribute(toggle, "aria-label"), "Show contents of Profile");
+  assert.equal(attribute(toggle, "aria-expanded"), "false");
+});
 const HOME_CRUMB = ["Catalogue home", "design/browse/views/home"];
 
 type Node = Parameters<typeof byClass>[0];

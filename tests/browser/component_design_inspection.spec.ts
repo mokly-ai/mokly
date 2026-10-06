@@ -29,9 +29,6 @@ for (const viewport of ["desktop", "mobile"] as const) {
             viewport,
           ),
         );
-        await expect(
-          page.getByRole("switch", { name: "Highlight components" }),
-        ).toBeChecked();
         for (const [mask, component] of matches) {
           const geometry = await page.evaluate(
             ({ mask, component, viewport }) => {
@@ -71,34 +68,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
           );
         }
         if (route === "nested") {
-          await expect(
-            page.locator(".ce-instance-tree details").first(),
-          ).toHaveAttribute("open", "");
-          await expect(
-            page.getByRole("region", { name: "Selected instance" }),
-          ).toContainText("Toolbar action");
           await expect(page.locator(".ce-region:visible")).toHaveCount(1);
         } else await expect(page.locator(".ce-region:visible")).toHaveCount(2);
       }
     });
-    test("missing metadata, empty usage, invisible instances, and removed states stay distinct", async ({
+    test("an invisible instance explains its region after its disclosure opens", async ({
       page,
     }) => {
-      await page.goto(
-        componentDesignUrl("design/components/states/empty", viewport),
-      );
-      await expect(
-        page.getByText("No registered components are used in this view."),
-      ).toBeVisible();
-      await page.goto(
-        componentDesignUrl("design/components/states/unavailable", viewport),
-      );
-      await expect(
-        page.getByText("Component inspection is unavailable for this screen."),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("switch", { name: "Highlight components" }),
-      ).toBeDisabled();
       await page.goto(
         componentDesignUrl(
           "design/components/inspection/inspection-details",
@@ -114,75 +90,6 @@ for (const viewport of ["desktop", "mobile"] as const) {
         .click();
       await expect(
         page.getByText("No visible region", { exact: true }),
-      ).toBeVisible();
-      await page.goto(
-        componentDesignUrl("design/components/states/unused", viewport),
-      );
-      await expect(
-        page.getByText("No screens or components use Badge yet."),
-      ).toBeVisible();
-      await page.goto(
-        componentDesignUrl("design/components/states/removed", viewport),
-      );
-      await expect(
-        page
-          .locator(".ce-preview-view:visible")
-          .getByText("This variant has been removed.", { exact: true }),
-      ).toBeVisible();
-      await page
-        .getByRole("region", { name: "Affected screens", exact: true })
-        .getByRole("link", { name: "Farewell" })
-        .click();
-      await expect(page).toHaveURL(
-        componentDesignUrl(
-          "design/components/states/removed-consumer",
-          viewport,
-        ),
-      );
-      await expect(page.locator(".mbk-previous")).toHaveText(
-        "Showing previous version",
-      );
-      await expect(
-        page
-          .locator(".ce-preview-view:visible")
-          .getByText("Come back whenever you are ready.", { exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.locator(".ce-preview-view:visible .ce-action--before"),
-      ).toBeVisible();
-      await expect(page.locator(".ce-preview-set")).toHaveAttribute(
-        "data-viewport",
-        viewport,
-      );
-      await expect(
-        page.locator(
-          viewport === "desktop"
-            ? ".ce-preview-view:visible .browser-frame"
-            : ".ce-preview-view:visible .phone-frame",
-        ),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("group", { name: "Comparison mode" }),
-      ).toHaveCount(0);
-      await expect(page.locator(".mbk-pane-missing")).toHaveCount(0);
-      await expect(page.getByRole("switch", { name: "Dark mode" })).toHaveCount(
-        0,
-      );
-      await expect(page.getByLabel("Appearance", { exact: true })).toHaveValue(
-        "light",
-      );
-      await expect(
-        page.getByRole("switch", { name: "Highlight components" }),
-      ).toBeDisabled();
-      await expect(
-        page
-          .locator(viewport === "desktop" ? ".mbk-nav" : ".ce-mobile-location")
-          .getByRole("link", {
-            name: viewport === "desktop" ? "Action" : /Changes/,
-          }),
-      ).toHaveAttribute("data-mokly-link", "design/components/states/removed");
-      await expect(
-        page.getByRole("button", { name: "Details", exact: true }),
       ).toBeVisible();
     });
   });

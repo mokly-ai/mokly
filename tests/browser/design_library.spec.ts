@@ -51,15 +51,6 @@ for (const viewport of ["desktop", "mobile"] as const) {
             ),
             `${entry.variantOf}/${entry.path} fits`,
           ).toBe(true);
-          const urls = await page
-            .locator("a[href],link[rel=stylesheet]")
-            .evaluateAll((nodes) =>
-              nodes.map((node) => (node as HTMLAnchorElement).href),
-            );
-          for (const url of new Set(urls)) {
-            expect(url).toMatch(/^file:/);
-            await fs.access(new URL(url));
-          }
           await page.screenshot({
             path: testInfo.outputPath(`${entry.variantOf}-${entry.path}.png`),
             fullPage: true,
@@ -139,26 +130,6 @@ for (const viewport of ["desktop", "mobile"] as const) {
         name: viewport === "desktop" ? "rgb(26, 29, 28)" : null,
       });
       expect(isolated).toEqual(inScreen);
-    });
-
-    test("the last flow step has no trailing connector after registered boundaries", async ({
-      page,
-    }) => {
-      await page.goto(
-        fileUrl(`design/browse/views/use-case/index.${viewport}.html`),
-      );
-      const steps = page.locator(".flow-step");
-      await expect(steps).toHaveCount(2);
-      expect(
-        await steps
-          .first()
-          .evaluate((node) => getComputedStyle(node, "::before").display),
-      ).not.toBe("none");
-      expect(
-        await steps
-          .last()
-          .evaluate((node) => getComputedStyle(node, "::before").display),
-      ).toBe("none");
     });
 
     test("standalone inline components retain their intrinsic width", async ({

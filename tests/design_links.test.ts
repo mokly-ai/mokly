@@ -2,16 +2,56 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { test } from "node:test";
 
-import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
+import { parse } from "parse5";
+
+import {
+  entryRoute,
+  generatedViews,
+  viewRoute,
+} from "../packages/viewer/dist/data.js";
 
 import {
   attribute,
   byClass,
+  designCatalogue,
   designEntries,
   designDocument,
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
+
+test("shared library sample links use portable relative URLs", async () => {
+  const { outputs } = await designCatalogue;
+  const entries = await designEntries(
+    (entry) =>
+      entry.kind === "component" &&
+      "variantOf" in entry &&
+      entry.path.startsWith("design/library/"),
+    "portable library samples",
+  );
+  let links = 0;
+  for (const entry of entries) {
+    for (const view of generatedViews(entry)) {
+      const html = textOutput(outputs, view.path);
+      assert.ok(html, view.path);
+      for (const link of elements(
+        parse(html),
+        (node) => node.tagName === "a",
+      )) {
+        const href = attribute(link, "href");
+        assert.ok(href, view.path);
+        assert.doesNotMatch(
+          href,
+          /^(?:[a-z][a-z\d+.-]*:|\/)/iu,
+          `${view.path}: ${href}`,
+        );
+        links += 1;
+      }
+    }
+  }
+  assert.ok(links > 0, "library samples contain links");
+});
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: design actions navigate to the subject's owning screen`, async () => {

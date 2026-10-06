@@ -170,4 +170,19 @@ for (const viewport of ["mobile", "desktop"] as const) {
       );
     }
   });
+
+  test(`${viewport}: independently changed and removed screens show their own status`, async () => {
+    for (const [id, status] of [
+      ["design/components/inspection/inspection-direct-change", "Changed"],
+      ["design/components/states/removed-consumer", "Removed"],
+    ] as const) {
+      const { document } = await designDocument(id, viewport);
+      const heading = byClass(document, "mbk-screen-head")[0]!;
+      assert.deepEqual(
+        byClass(heading, "ce-change-status").map(textContent),
+        [status],
+        id,
+      );
+    }
+  });
 }
