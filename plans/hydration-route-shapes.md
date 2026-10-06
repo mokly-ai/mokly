@@ -2,7 +2,10 @@
 
 Status: Active. Created 2026-10-05. On 2026-10-05 the user approved option C:
 hydrate one route per entry shape instead of every example route, and add an
-audit of generated resource references. Milestones 1 to 4 are complete, and Milestone 5 is in progress.
+audit of generated resource references. Milestones 1 to 4 are complete. In
+Milestone 5 the work is committed, pushed and reviewed. The complete gate did
+not reach 100% locally because of timeouts on a slow VM, so the CI run on the
+pull request must confirm it. Four review findings await the user's decision.
 
 ## Outcome
 
@@ -357,14 +360,45 @@ The CI run on the pull request must confirm the pass rate.
       `origin/main` with `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`. Confirm that the only
       removals are the [approved removals](#approved-removals).
-- [ ] Run `git add -A` and commit the work with a Conventional Commit. Inspect
+- [x] Run `git add -A` and commit the work with a Conventional Commit. Inspect
       `git diff --name-status origin/main..HEAD` again. Push the branch with
       every new file tracked. List the approved removals in the pull request
-      description.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+      description. Pushed as `ed1ee4b0` (`fix(deps)`) and `e93f7aff` (`test`).
+      The diff against `origin/main` has no deletions. No pull request exists
+      yet. The `e93f7aff` commit message lists the approved removals; copy
+      them into the pull request description when it opens.
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main`. Report numbered findings with a
       severity, the impact, lettered options and a recommendation. Do not
       change the implementation.
+
+Review outcome: an independent read-only review found four findings. They
+await the user's decision, and nothing was changed.
+
+1. Medium: the sample keeps full coverage partly by chance, and nothing
+   measures it again. The shape key reads only the entry's own data, but the
+   shell also renders data from other entries, such as the Variants row of a
+   screen that has variants. In 8 of the 51 shapes, other members run 39
+   functions that their representative does not run; other representatives
+   cover them today. Neither screen that has variants is a representative.
+   Representatives can change when entries change, and the protocol requires
+   a new measurement only when the shape key changes. Recommended: commit the
+   coverage comparison as a tool and run it automatically outside the pull
+   request path, and correct the protocol wording.
+2. Low: the build already rejects missing, escaping and root-absolute
+   resource targets, and the audit uses a different URL rule from the shared
+   Resource URL Classification for protocol-relative and `about:` values.
+   Recommended: use `classifyResourceUrl` in the audit and name the build
+   check in the protocol doc.
+3. Low: some new assertions cannot fail, such as the inventory test's
+   per-entry representative check, and the `kind` test case also changes
+   other properties. Recommended: replace them with property-order and
+   isolated `kind` tests.
+4. Low: the protocol doc gives 889 and 411 functions for the 210 entries, but
+   those totals include the home and missing routes. The 210 entry routes ran
+   875 functions, and every entry route ran 507. The doc also says that the
+   helper reads the manifest file, but the callers read it. Recommended:
+   correct both sentences.
 
 ## Post-merge follow-up (non-blocking)
 
