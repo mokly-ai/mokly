@@ -102,7 +102,8 @@ versions may differ visibly past a shorter region's end.
 The browser may animate a source scroll over several frames, for example the
 scroll that a scroll key starts. Each frame's scroll event reports a new
 offset, so, with Scroll together on, every counterpart follows each frame,
-clamped to its own range, and comes to rest when the source does.
+clamped to its own range. A counterpart therefore stops no later than the
+source: at the source's final offset, or earlier at the end of its own range.
 
 The per-element echo rule is the page rule: an event equal to that element's
 last recorded value, written by the viewer or scrolled by the reader, is
