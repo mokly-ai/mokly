@@ -391,9 +391,10 @@ with the required commit, push, and review steps.
   - [x] Use the repository's completed-milestone heading convention.
   - [x] Attribute the unit split to Node and describe the evidence mirror.
   - [x] Remove the interrupted run's owned fixture directory.
-- [ ] Run each of the four files individually with
+- [x] Run each of the four files individually with
       `node --import tsx --test <file>` and record the after durations next to
       the baseline in `docs/reviews/attribution-test-consolidation.md`.
+- [x] Commit the recorded local timings without pushing.
 - [ ] Run `cargo xtask check`.
 - [ ] Commit and push the branch. Wait for the CI run, then download the
       `verification-unit-*` artifacts with

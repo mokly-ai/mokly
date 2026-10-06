@@ -43,10 +43,10 @@ local-only scratch artifacts and are not part of this repository.
 
 | File                                              |   Before whole-file duration | Final after duration |
 | ------------------------------------------------- | ---------------------------: | -------------------: |
-| `tests/design_library_attribution.test.ts`        |                    612.961 s |              Pending |
-| `tests/component_design_attribution.test.ts`      |                    123.173 s |              Pending |
-| `tests/design_library_source_edits.test.ts`       | Included in old library file |              Pending |
-| `tests/design_library_committed_baseline.test.ts` | Included in old library file |              Pending |
+| `tests/design_library_attribution.test.ts`        |                    612.961 s |             39.105 s |
+| `tests/component_design_attribution.test.ts`      |                    123.173 s |             32.692 s |
+| `tests/design_library_source_edits.test.ts`       | Included in old library file |            142.444 s |
+| `tests/design_library_committed_baseline.test.ts` | Included in old library file |             62.987 s |
 
 The original library file includes all twelve source edits and the committed
 baseline. Compare its before duration with the sum of the three resulting
@@ -84,10 +84,10 @@ individually, one after another, with no other heavy work running.
 | Unchanged current-merge verification                      | `tests/component_design_attribution.test.ts`      | 123.173 s | 10 passed                         |
 | Library CSS consolidated; source cases still in this file | `tests/design_library_attribution.test.ts`        | 382.350 s | 18 passed                         |
 | Shared CSS consolidated                                   | `tests/component_design_attribution.test.ts`      |  27.641 s | 1 passed; all nine scopes checked |
-| Final file split verification                             | `tests/design_library_attribution.test.ts`        |  38.513 s | 2 passed                          |
-| Final file split verification                             | `tests/component_design_attribution.test.ts`      |  27.891 s | 1 passed                          |
-| Final file split verification                             | `tests/design_library_source_edits.test.ts`       | 130.643 s | 6 passed                          |
-| Final file split verification                             | `tests/design_library_committed_baseline.test.ts` |  60.797 s | 1 passed                          |
+| Initial file split verification                           | `tests/design_library_attribution.test.ts`        |  38.513 s | 2 passed                          |
+| Initial file split verification                           | `tests/component_design_attribution.test.ts`      |  27.891 s | 1 passed                          |
+| Initial file split verification                           | `tests/design_library_source_edits.test.ts`       | 130.643 s | 6 passed                          |
+| Initial file split verification                           | `tests/design_library_committed_baseline.test.ts` |  60.797 s | 1 passed                          |
 
 The unchanged current-merge runs are the primary before figures. Earlier
 consolidated runs above predate the review corrections; final after measurements
@@ -119,3 +119,11 @@ checks passed. The first contract-restoration check reported
 `mokly-component-design.md has 251 lines`. Tightening only the new test
 paragraph restored the 250-line cap. All five protocol size/history tests then
 passed. The interrupted run's owned fixture directory was removed.
+
+## Final Local Measurements
+
+All four files ran individually in sequence after the review corrections, with
+no other heavy work running. All ten tests passed. The library scenarios took
+244.537 s across the three files, versus 612.961 s before (60.1% less).
+All attribution scenarios took 277.228 s, versus 736.134 s before (62.3% less).
+These are summed isolated file times. CI shard wall times remain pending.
