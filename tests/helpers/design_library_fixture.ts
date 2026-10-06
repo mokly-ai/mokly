@@ -12,10 +12,15 @@ import { loadConfig } from "../../dist/config/load.js";
 import { classifyComponents } from "../../dist/review/component_classification.js";
 import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 
+import { exampleCompilation } from "./example_compilation.js";
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
 
-/** Copy the actual consumer so source-edit tests never mutate the working catalogue. */
+/**
+ * Copy the actual consumer so source-edit tests never mutate the working
+ * catalogue. Without a mode, the unedited copy compiles to the shared example
+ * compilation, so the before state reuses it.
+ */
 export async function designLibraryFixture(
   t: { after(fn: () => Promise<void>): void },
   mode?: "committed" | "derived",
@@ -29,7 +34,9 @@ export async function designLibraryFixture(
   const config = await loadConfig(path.join(root, "examples/basic"));
   if (mode) config.generatedOutput = mode;
   if (mode === "committed") delete config.review.baselineBuild;
-  const before = await compileCatalogue(config);
+  const before = mode
+    ? await compileCatalogue(config)
+    : await exampleCompilation();
   const resources = new Map<string, string>();
   for (const file of await fs.readdir(config.mockupsDir, { recursive: true })) {
     if (file.endsWith(".css"))

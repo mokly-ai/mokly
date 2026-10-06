@@ -307,20 +307,36 @@ Give the attribution fixture its before state from the snapshot in the default
 mode. Keep the diff in `design_library_fixture.ts` to a few lines so the
 attribution restructure in the other workspace merges without conflicts.
 
-- [ ] Add `tests/design_library_fixture_snapshot.test.ts`: copy the example
+- [x] Add `tests/design_library_fixture_snapshot.test.ts`: copy the example
       with `copyExampleSources`, load the copied config, compile, and compare
       with `exampleCompilation()`. Require identical manifest, outputs,
       `deliveredStyleSources`, and `documentMarkdown`, and require that the
       config differs only in the ten root-dependent fields listed above.
-- [ ] Change `designLibraryFixture` to take `before` from
+- [x] Change `designLibraryFixture` to take `before` from
       `exampleCompilation()` when no mode is given. Keep compiling the copy when
       a mode is given, because `generatedOutput` changes the style inventory in
       `src/build/styles`. Keep every after-state `build()` as a real compile.
-- [ ] Run both attribution tests once and confirm that every assertion still
+- [x] Run both attribution tests once and confirm that every assertion still
       passes. Record the before-state saving per fixture call.
 - [ ] Tell the attribution workspace that the fixture's default-mode before
       state now comes from the snapshot, so files split from those tests pay no
       compile for it.
+
+Delivered notes:
+
+- The equivalence test also requires each of the ten differing config fields
+  to become equal once the copy root is replaced with the repository root.
+  It passed in 50.8 s, of which 1.6 s loaded the snapshot.
+- Both attribution tests passed on this VM with the snapshot:
+  `tests/component_design_attribution.test.ts` with 10 tests in 318.9 s and
+  `tests/design_library_attribution.test.ts` with 33 tests in 1,485.3 s.
+  Each process loaded the before state once, in 2.5 s.
+- Before-state saving per default-mode fixture call: the first call in a
+  process now costs one snapshot load (2.5 s here) instead of one copy
+  compile (about 49 s here and about 17 s in CI), and every later call in the
+  same process costs nothing because the load is memoized. The five
+  default-mode calls in the two files therefore save about 240 s here and
+  about 80 s in CI. The committed-mode call keeps its compile.
 
 ## Milestone 5: Produce the snapshot during unit preparation — not started
 
