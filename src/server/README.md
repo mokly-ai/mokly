@@ -10,7 +10,7 @@ implemented in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix
 The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
 defines suppression as soon as a newer attempt starts, including when a failed
 attempt leaves the old child serving. Background completion must not replay
-`compilation.warnings`. The supervisor factory runs inside watcher cleanup.
+`compilation.diagnostics`. The supervisor factory runs inside watcher cleanup.
 
 ## Scope
 
@@ -238,12 +238,18 @@ deduplicated build warnings when inputs are ignored. Rich mode presents
 accepted catalogue, baseline, Changes, reference and watch-action boundaries.
 Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
-without IPC retains direct diagnostic output. Render warnings from the child
-carry their captured `warningGeneration` in a validated IPC event. The parent
-accepts only its current attempt and deduplicates across all producers. Resource
-reloads can replace preview/cache generations while retaining that warning identity. Foreground and
-transient render warnings enter the same sink, while resource-only reloads
-do not replay an earlier warning.
+without IPC retains direct diagnostic output. A generation's
+[build warnings](../../docs/protocol/mokly-build-warnings.md) arrive on the
+background compilation result through the existing structured clone.
+`reportCatalogueReady` combines streamed and result diagnostics, then reports
+each once before `Catalogue ready` for watched and snapshot Serve. Ignored-input
+producers also retain their captured
+`warningGeneration` across workers, child renders and transient Props renders.
+The parent accepts only its current attempt and deduplicates all producers.
+Resource reloads keep that identity. Failed attempts flush only their own
+records. Ordinary on-demand link diagnostics wait for exhaustive compilation;
+child-only and transient producers use the same sink after readiness.
+No diagnostic enters an HTTP response.
 
 The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 adds config-owned `publicExclude` globs to the shared source classifier.

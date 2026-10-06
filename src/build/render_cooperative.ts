@@ -11,10 +11,10 @@ import type { LinkedComponentStylesheet } from "../components/render.js";
 import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 
+import type { BuildDiagnostic } from "./build_warnings.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
-import type { BuildWarning } from "./warnings.js";
 
 export async function renderCooperatively(
   entries: readonly ResolvedRegistryEntry[],
@@ -24,7 +24,7 @@ export async function renderCooperatively(
   componentViews: Map<string, ComponentViewRecord>,
   checkpoint: () => Promise<void>,
   pending: PendingGeneratedFiles,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
   stylesheetLinks?: Map<string, readonly LinkedComponentStylesheet[]>,
 ): Promise<Map<string, string>> {
   const outputs = new Map<string, string>();

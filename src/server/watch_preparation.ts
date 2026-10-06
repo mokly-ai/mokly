@@ -1,7 +1,7 @@
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
 import { loadConsumerGraph } from "../build/load_graph.js";
-import type { BuildWarning } from "../build/warnings.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -38,7 +38,7 @@ export async function prepareInitialWatchedSource(
   report: (error: unknown) => void,
   shutdown: Promise<void>,
   isClosed: () => boolean,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
   generation?: string,
 ): Promise<PreparedWatchedSource> {
   const prepared = await prepareWatchedSource(
@@ -66,10 +66,10 @@ export async function prepareWatchedSource(
   report: (error: unknown) => void,
   shutdown: Promise<void>,
   isClosed: () => boolean,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
   generation?: string,
 ): Promise<PreparedWatchedSource | undefined> {
-  config.warnings?.forEach(onWarning ?? (() => undefined));
+  config.diagnostics?.forEach(onWarning ?? (() => undefined));
   await hydrateWatchInventory(config);
   const initialTargets = watchTargets(config);
   let watcher = createSourceWatcher(factory, config, gate, report);

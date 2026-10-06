@@ -99,7 +99,7 @@ Missing or unsafe files still fail normal validation. Do not validate ignored
 component paths, merge their owners, or grant them any effect.
 
 Emit the single `ignored-stylesheet-resource-owner` warning for each route/file
-identity under [Build Warnings](./mokly-build-warnings.md#exact-messages). This
+identity under [Build Warnings](#ignored-owner-warning). This
 replaces `ignored-declared-resource-owner`, with no duplicate old-code warning.
 It applies even if no declaring or asserted component renders. This follows
 [graceful handling](./README.md#graceful-handling): the unnecessary ownership
@@ -119,3 +119,14 @@ and unresolved rules, give the page its own row. Imports, generated copies,
 configuration and declarations follow the same rule. No CSS owner record can
 suppress a page reason or grant a component reason. Unlinked files add nothing.
 Declared links and `insertedStylesheets` keep the comparison exclusion above.
+
+## Ignored Owner Warning
+
+`ignored-stylesheet-resource-owner` names the generated route and says exactly
+`Stylesheet ownership for <path> is ignored. Changes follow the elements that each changed rule matches.`
+`<path>` is the JSON-quoted first renderer-record public path for that file in
+authored order. Realpath aliases warn once per route/render. Generated CSS uses
+its canonical public route, whether pending or written. Safety checks precede
+this warning, including unlinked CSS and pages without registered components.
+Across renders, equal records use the [warning channel](./mokly-build-warnings.md).
+Non-CSS owners and document `styles` retain their behavior.

@@ -75,19 +75,19 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
 ] });`,
     );
     const result = await compileCatalogue(await loadConfig(fixture.root));
-    const warnings = result.warnings!.filter(
+    const warnings = result.diagnostics!.filter(
       (warning) => warning.code === "ignored-stylesheet-resource-owner",
     );
     const home = warnings.filter(
-      (warning) => warning.context[0] === "home/index.mobile.html",
+      (warning) => warning.route === "home/index.mobile.html",
     );
     assert.equal(home.length, 2);
     assert.equal(
-      home[0]!.message,
-      'Stylesheet ownership for "unlinked.CSS" on "home/index.mobile.html" is ignored. Changes follow the elements that each changed rule matches.',
+      home.find((warning) => warning.message.includes("unlinked.CSS"))!.message,
+      'Stylesheet ownership for "unlinked.CSS" is ignored. Changes follow the elements that each changed rule matches.',
     );
     assert.ok(
-      !result.warnings!.some(
+      !result.diagnostics!.some(
         (warning) => String(warning.code) === "ignored-declared-resource-owner",
       ),
     );

@@ -1,7 +1,7 @@
 import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
-import type { BuildWarning } from "../../build/warnings.js";
+import { formatBuildDiagnostic } from "../../build/build_warnings.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 import { cliErrorPresentation } from "../errors.js";
@@ -82,6 +82,13 @@ export class RichReporter implements CliReporter {
     this.#servePhase = this.startPhase("Checking changes");
   }
 
+  buildWarnings(
+    diagnostics: Parameters<CliReporter["buildWarnings"]>[0],
+  ): void {
+    for (const diagnostic of diagnostics)
+      this.warning(formatBuildDiagnostic(diagnostic));
+  }
+
   catalogueReady(manifest: ManifestV8, durationMs: number): void {
     this.settleServePhase();
     const counts = catalogueCounts(manifest);
@@ -106,10 +113,6 @@ export class RichReporter implements CliReporter {
       this.environment.stdout,
       `  ${this.#glyphs.warning} Changes unavailable (${formatDuration(durationMs)})`,
     );
-  }
-
-  buildWarning(warning: BuildWarning): void {
-    this.warning(warning.message);
   }
 
   diagnostic(message: string): void {

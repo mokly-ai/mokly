@@ -176,7 +176,8 @@ milestone.
   redundant or conflicting inputs when output stays correct and safe. Build,
   Check, export, publish and Serve collect and deduplicate structured warnings
   across configuration, registry and render stages, including Serve children.
-  Warnings do not affect exit codes; plain and rich CLI reporting follows the
+  Without `--strict`, warnings do not affect exit codes. Strict commands count
+  every producer. Plain and rich CLI reporting follows the
   [warning contract](../docs/protocol/mokly-build-warnings.md).
 - Versions after the 0.13.0 integration: manifest v8 is main's v7 without
   `dependencies`, `declaredDependencies` or `ownedDependencies`, and retains
@@ -4221,23 +4222,142 @@ conflicts, most of them between the two build warning systems.
 - [ ] Audit main's additions from the source tip, merge `origin/main` with
       exactly two parents, resolve conflicts path by path and review every
       remerge-diff path.
-- [ ] Combine the two warning systems under the 2026-10-06 decision: main's
+- [x] Combine the two warning systems under the 2026-10-06 decision: main's
       record, reporters, exact lines and `--strict`; this branch's warnings as
       producers, with a non-page subject where needed; Milestone 29 build
       fencing in Serve. Update the build warning, terminal output, CLI, Serve
       and watch contracts and the guides. Record here every renamed code,
       field, type or message and every conflict of meaning.
-- [ ] Failure-first tests: `--strict` fails on each of this branch's warnings;
+- [x] Failure-first tests: `--strict` fails on each of this branch's warnings;
       warnings with a non-page subject print in the plain and rich reporters;
       Serve prints each attempt's warnings once and no older-generation warning
       after a rebuild; main's link-control warnings keep their exact lines.
-- [ ] Follow #141: use `.nvmrc` wherever the branch names `.node-version`.
-- [ ] Compare every line that main added since `781da7ae` with the merged tree.
+- [x] Follow #141: use `.nvmrc` wherever the branch names `.node-version`.
+- [x] Compare every line that main added since `781da7ae` with the merged tree.
       Classify each absent line as an intended migration, a move or a loss, and
       restore every loss before the push.
 - [ ] Run `cargo xtask check` at 100%, including the dependency audit. Inspect
-      the diff and the deletions against `origin/main`, record the result, and
-      push the branch.
+      the diff and the deletions against `origin/main`, and record the result.
+- [x] Keep document compilation and CLI composition within 300 lines by moving
+      transformed-view validation and Serve shutdown to named helper modules.
+- [x] Preserve the newer fetched main additions (#137, #142 and #143), and
+      migrate their fixtures and current docs to this branch's removed inputs.
+- [x] Keep main's requested-document link-control diagnostic scope when
+      referenced documents render for validation. Preserve the branch's
+      ignored-input coverage for those renders and test both boundaries.
+- [x] Fence failure flushes as well as successful completion. An older worker
+      failure must not flush a newer attempt's pending diagnostics. Add the
+      regression before the fix and repeat the complete unit command.
+- [ ] Commit the checked merge locally with exactly two parents. The reviewer
+      owns the push and the later review. Do not start Milestone 31.
+- [ ] Push the branch after the reviewer checks the local merge.
+
+### Integration decisions
+
+The required fetch advanced main from `80ceb445` to `f52303cb`. The source tip
+is `60d7e831`; the captured merge base is `781da7ae`. As in M28A, this merge
+preserves the fetched additions: #137 keeps new evidence logs outside plans,
+#142 covers hydration by route shape, and #143 removes the Juno consumer smoke.
+The main merge ran once and gave 21 conflicts, resolved by path. The two extra
+fixture conflicts accept main's Juno deletion. No historical plan or review
+record is edited beyond main's inherited changes.
+
+### Warning names and messages
+
+No producer code is renamed. Main's two link-control codes and exact messages
+stay. The branch's six codes join the same table. Former folder dependencies
+still use `removed-dependencies` with a folder subject.
+
+| Former branch name                                                                                                   | Integrated name or meaning                                                                                   |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `BuildWarning` and its inline code union                                                                             | `BuildDiagnostic` and main's `BuildDiagnosticCode` in `build_warnings.ts`                                    |
+| `context`                                                                                                            | `route` for page warnings; `subject: { kind, path }` for entry, component, folder and configuration warnings |
+| `warnings` on compilation, configuration, prepared registry, renderer output, compiled document and transient render | `diagnostics`; one record type and result channel                                                            |
+| `isBuildWarning`                                                                                                     | `isBuildDiagnostic`, using the shared validation and bounded IPC admission                                   |
+| `buildWarning(warning)`                                                                                              | Main's `buildWarnings(diagnostics)` on both CLI and Serve reporters                                          |
+| Physical-file producer arguments                                                                                     | Producer-local alias filtering; diagnostic identity is main's normalized record                              |
+
+`BuildWarningSink`, `GenerationWarning`, `warningGeneration`, callback names and
+the `warning` IPC envelope stay as internal collection and attempt boundaries.
+They carry only `BuildDiagnostic`. There is no second diagnostic record or
+reporter. Main's compilation result remains the successful completion transport.
+
+| Producer                           | New exact message, without the printed subject                                                            |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Removed entry or folder dependency | `dependencies has been removed; ignoring it. Delete the field.`                                           |
+| Removed component ownership        | `ownedDependencies has been removed; ignoring it. Delete the field.`                                      |
+| Removed configuration setting      | `review.sharedImpact has been removed; ignoring it. Delete the field.` (unchanged)                        |
+| Duplicate stylesheet               | `duplicate component stylesheet <path> is ignored; it is linked once.`                                    |
+| Missing configured anchor          | `configured stylesheet link <href> is absent; component stylesheets use another anchor.`                  |
+| Ignored stylesheet owner           | `Stylesheet ownership for <path> is ignored. Changes follow the elements that each changed rule matches.` |
+
+`<path>` and `<href>` keep JSON quoting. The former entry/component/folder or
+route text leaves each message. The reporter supplies it once. Page lines keep
+main's format. Other lines replace the route with `<kind> <JSON-quoted-path>`.
+Configuration paths are repository-relative, with a basename fallback before
+that root is usable. Main's lexical location/message/code order remains; a
+final kind tie-break prevents two different locations with equal printed text
+from merging. No absolute checkout path decides the order.
+
+### Conflicts of meaning
+
+- Main reports the primary compilation only. The branch also covers configuration,
+  registry, failed compilation, child-only rendering and transient Props. These
+  producers use the same diagnostic type and sink. Secondary Changes, freshness,
+  Review and historical-baseline diagnostics keep main's discard policy.
+- Main reports successful Serve diagnostics at Catalogue ready. The old branch
+  reported configuration warnings at HTTP readiness and streamed render warnings
+  to the terminal during compilation. The unified sink collects until Catalogue
+  ready, or failure, then reports sorted records once. Ordinary on-demand link
+  warnings still wait for exhaustive compilation. Unseen child-only and transient
+  records can report after readiness. Tests observe collection before a gated
+  rebuild and still prove that retired records never print.
+- The captured attempt fences both streamed records and completed compilations.
+  A newer attempt can start before the older worker finishes. Its old result
+  cannot bypass the sink's generation check. Failed attempts never revive the
+  previously accepted runtime's warning scope. An older worker failure also
+  cannot flush a newer candidate's pending records before its own outcome.
+- Main deduplicates the full diagnostic, including its message. The branch used
+  code plus private context. Alias filtering stays at each stylesheet producer;
+  normalization and invocation deduplication now use the full record. If a
+  transient render changes the first alias named for one file, its changed
+  message is a distinct diagnostic. This follows the approved main channel.
+- Main's #142 browser test waits for the selected Dark previews before navigation.
+  That replaces the branch's response wait after navigation. Its route and scheme
+  assertions remain. The hydration fixture omits retired ownership fields, and
+  the new packed-fixture README describes rendered-resource changes instead of
+  removed shared-impact globs. Main's five retained package scenarios stay.
+- Main's #137 evidence policy applies to new logs. The user's specific request
+  keeps this short migration and path classification record in M30A; full
+  command output and line ledgers remain under `.context/m30a/`.
+
+Evidence and exact commands: `.context/m30a/report.md`. The preservation ledger
+and merge inspections are retained in the same directory.
+
+### Main-added line classification
+
+Class (a) is an approved migration. Class (b) is moved or reworded content.
+Every other main-added non-blank line remains in its path. The full line ledger
+is `.context/m30a/main-lines-classified.json`. The omitted main build-warning
+README section is restored; no loss remains. The only main-relative deletions
+remain the four approved files listed in M28A.
+
+| Path with absent main additions          | Class | Reason                                                                                                                                                                                                    |
+| ---------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/protocol/mokly-build-warnings.md`  | a, b  | Extend the record with typed subjects and the branch producers. Retain main route output, strict behavior and secondary-compilation discard rules. Add the approved attempt fence and transient coverage. |
+| `docs/protocol/mokly-terminal-output.md` | b     | The no-repeat and singular-count sentences remain, rewrapped beside the subject reference.                                                                                                                |
+| `src/build/README.md`                    | a     | Add the approved non-page subject to the diagnostic record description. The omitted main Build Warnings section was restored in full.                                                                     |
+| `src/build/build_warnings.ts`            | a     | Add producer codes and the exclusive route/subject union. Format and sort the location with a final kind tie-break; main route-only messages and order remain.                                            |
+| `src/build/compile.ts`                   | a     | Normalize the combined configuration, registry, stylesheet and link-control diagnostics on main Compilation.diagnostics.                                                                                  |
+| `src/build/document_compiler.ts`         | a, b  | Keep the main requested-document diagnostic list and add branch ignored-input records from renders needed for validation. The diagnostics type field moved to document_types.ts.                          |
+| `src/cli/publish.ts`                     | a     | Report through the unified invocation sink before the unchanged strict boundary; prevent callback/result replay.                                                                                          |
+| `src/cli/run.ts`                         | a     | Report through the unified invocation sink before the unchanged strict boundary; count and redact every producer.                                                                                         |
+| `src/export/run.ts`                      | a     | Keep the injected compiler seam and signal, adding the branch callback to retain warnings on failed compilation.                                                                                          |
+| `src/server/README.md`                   | a     | Keep once-before-Catalogue-ready reporting and main ordinary-preview suppression; document the approved failure, subject and transient coverage.                                                          |
+| `src/server/reporter.ts`                 | a     | Keep the main reporter call with an optional unified sink and captured-attempt fence before catalogue readiness.                                                                                          |
+| `tests/fixtures/consumers/README.md`     | a     | Migrate the removed shared-impact prose to the retained rendered-resource checks; keep main five-scenario inventory.                                                                                      |
+| `tests/hydration_shapes.test.ts`         | a     | Remove retired declaredDependencies and ownedDependencies from main current-v8 fixture; all route-shape assertions remain.                                                                                |
+| `tests/server_reporting.test.ts`         | b     | The BuildDiagnostic import, ServeReporter types and buildWarnings method live in server_reporting_fixture.ts, alongside the pre-existing extracted reporter.                                              |
 
 ## Milestone 31: Keep the branch name in exported navigation
 

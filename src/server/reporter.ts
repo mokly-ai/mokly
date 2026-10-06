@@ -1,7 +1,12 @@
 import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../baseline/compatibility.js";
-import type { BuildWarning } from "../build/warnings.js";
+import {
+  formatBuildDiagnostic,
+  type BuildDiagnostic,
+} from "../build/build_warnings.js";
+import type { Compilation } from "../build/compile.js";
+import type { BuildWarningSink } from "../build/warning_sink.js";
 import { errorMessage } from "../errors.js";
 
 import type { RuntimeWatchAction } from "./watch_events.js";
@@ -26,9 +31,9 @@ export interface WatchReport {
 
 /** Presentation boundary for Serve lifecycle, watch, and runtime diagnostics. */
 export interface ServeReporter {
-  buildWarning?(warning: BuildWarning): void;
   baselinePreparing(base: string): void;
   baselineReady(commit: string, cacheHit: boolean, durationMs: number): void;
+  buildWarnings(diagnostics: readonly BuildDiagnostic[]): void;
   catalogueReady(manifest: ManifestV8, durationMs: number): void;
   changesReady(changed: number, durationMs: number): void;
   changesUnavailable(durationMs: number): void;
@@ -39,6 +44,20 @@ export interface ServeReporter {
   watchFailed(report: WatchReport, error: unknown): void;
   watchFinished(report: WatchReport): void;
   watchStarted(report: WatchReport): void;
+}
+
+/** Report one accepted generation's warnings immediately before its ready line. */
+export function reportCatalogueReady(
+  reporter: ServeReporter,
+  compilation: Compilation,
+  durationMs: number,
+  warnings?: BuildWarningSink,
+  generation = warnings?.generation,
+): void {
+  if (warnings && generation !== warnings.generation) return;
+  if (warnings) warnings.complete(compilation.diagnostics);
+  else reporter.buildWarnings(compilation.diagnostics);
+  reporter.catalogueReady(compilation.manifest, durationMs);
 }
 
 /** Default server reporter: lifecycle events stay silent and errors keep old bytes. */
@@ -55,12 +74,13 @@ export class PlainServeReporter implements ServeReporter {
     _cacheHit: boolean,
     _durationMs: number,
   ): void {}
+  buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
+    for (const diagnostic of diagnostics)
+      this.write(`[mokly/warning] ${formatBuildDiagnostic(diagnostic)}\n`);
+  }
   catalogueReady(_manifest: ManifestV8, _durationMs: number): void {}
   changesReady(_changed: number, _durationMs: number): void {}
   changesUnavailable(_durationMs: number): void {}
-  buildWarning(warning: BuildWarning): void {
-    this.write(`[mokly/warning] ${warning.message}\n`);
-  }
   gitReferenceRefresh(_base: string): void {}
   incompatibleBaseline(commit: string): void {
     if (this.incompatible.has(commit)) return;

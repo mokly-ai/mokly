@@ -2,6 +2,7 @@ import http, { type ServerResponse } from "node:http";
 
 import { createCatalogue } from "@mokly/viewer/server";
 
+import { isLinkControlDiagnostic } from "../build/build_warnings.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -63,12 +64,14 @@ export async function startCatalogueServer(
       runtime,
       activity.channel(),
       (document) => {
-        document.warnings?.forEach((warning) =>
-          options.onBuildWarning?.({
-            generation: runtime.warningGeneration,
-            warning,
-          }),
-        );
+        document.diagnostics
+          ?.filter((warning) => !isLinkControlDiagnostic(warning))
+          .forEach((warning) =>
+            options.onBuildWarning?.({
+              generation: runtime.warningGeneration,
+              warning,
+            }),
+          );
         if (runtime.generation === controls?.capability().generation)
           publicCatalogue.acceptDocument(
             document,

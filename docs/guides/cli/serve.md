@@ -47,6 +47,12 @@ A watched server also notices Git ref changes, reloads the page when your
 sources change and keeps your place. `--no-watch` starts the same way but does
 not follow later edits.
 
+When the complete generated output finishes, Serve prints that generation's
+build warnings once on standard error. Previews you open afterwards are not
+reported again, and Serve never stops for a warning.
+`--strict` is not a Serve option; use it with `build`, `check`, `export`, or
+`publish` when warnings must fail automation.
+
 ## Access
 
 While the local controls are active, every request must address
@@ -54,3 +60,9 @@ While the local controls are active, every request must address
 port is supported; a request that arrives with another host is refused for the
 whole catalogue. Rendering requests additionally require the exact matching
 origin and the render token.
+
+Warnings name the page or authored input that needs attention. Serve reports
+each warning once for its current build attempt before Catalogue ready. A
+failed attempt reports its collected warnings before its error. Late warnings
+from older attempts stay silent. New warnings from temporary component edits
+use the current attempt and never repeat an already reported warning.

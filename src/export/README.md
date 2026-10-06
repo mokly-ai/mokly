@@ -14,6 +14,12 @@ Export passes configuration, registry and render warnings to the caller's
 invocation sink across its build and capture phases; warnings do not enter
 the staged site or change the export result.
 
+The primary compilation reports its sorted build diagnostics through
+`ExportOptions.onBuildDiagnostics` immediately after rendering and before
+generated output or staged export bytes are written. The CLI uses that seam for
+warning presentation and `--strict`. The final freshness compilation remains a
+private consistency check and deliberately does not report its diagnostics.
+
 Initial and final input-check compilation capture output-validation evidence
 under a short writer-lock hold. Their pending waits obey export cancellation.
 Rendering stays outside the lock; capture and installation retain their existing

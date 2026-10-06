@@ -26,6 +26,10 @@ import {
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
+import {
+  normalizeBuildDiagnostics,
+  type BuildDiagnostic,
+} from "./build_warnings.js";
 import { rememberRuntime } from "./component_runtime.js";
 import { generatedByteLength, type GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks } from "./html_links.js";
@@ -40,15 +44,14 @@ import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
-import type { BuildWarning } from "./warnings.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
+  diagnostics: readonly BuildDiagnostic[];
   manifest: ManifestV8;
   outputs: ReadonlyMap<string, GeneratedFile>;
   /** Repository-relative inputs of delivered CSS and asset routes. */
   deliveredStyleSources: readonly string[];
-  warnings?: readonly BuildWarning[];
   /** Accepted authored Markdown bodies, keyed by repository source path. */
   documentMarkdown?: ReadonlyMap<string, string>;
 }
@@ -62,7 +65,7 @@ export async function compileCatalogue(
     outputSnapshot: OutputSnapshot;
   },
   signal?: AbortSignal,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<Compilation> {
   return timeAsync("compile", () =>
     compileMeasured(config, accepted, signal, onWarning),
@@ -77,14 +80,14 @@ async function compileMeasured(
     outputSnapshot: OutputSnapshot;
   },
   signal?: AbortSignal,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<Compilation> {
-  const warnings: BuildWarning[] = [];
-  const recordWarning = (warning: BuildWarning) => {
+  const warnings: BuildDiagnostic[] = [];
+  const recordWarning = (warning: BuildDiagnostic) => {
     warnings.push(warning);
     onWarning?.(warning);
   };
-  config.warnings?.forEach(recordWarning);
+  config.diagnostics?.forEach(recordWarning);
   const graph = accepted?.graph ?? (await loadConsumerGraph(config));
   config = {
     ...config,
@@ -169,7 +172,7 @@ async function compileMeasured(
   }
   const beforeTransform = new Map(outputs);
   await accepted?.checkpoint();
-  const logicalRecords = timeSync("html.compatibility", () =>
+  const compatibility = timeSync("html.compatibility", () =>
     transformCompatibilityDocuments(
       outputs,
       registry.entries,
@@ -206,7 +209,12 @@ async function compileMeasured(
     validateGeneratedOwnershipHeaders(outputs, generatedOwners),
   );
   timeSync("html.logical-links", () =>
-    validateLogicalFragments(outputs, logicalRecords, registry.entries, config),
+    validateLogicalFragments(
+      outputs,
+      compatibility.records,
+      registry.entries,
+      config,
+    ),
   );
   await accepted?.checkpoint();
   timeSync("html.ignore-rules", () => {
@@ -246,11 +254,14 @@ async function compileMeasured(
       onDemand: false,
     }),
   );
-  const compilation = {
+  const compilation: Compilation = {
+    diagnostics: normalizeBuildDiagnostics([
+      ...warnings,
+      ...compatibility.diagnostics,
+    ]),
     manifest,
     outputs: compilationOutputs,
     deliveredStyleSources: graph.deliveredStyleSources,
-    ...(warnings.length ? { warnings } : {}),
     documentMarkdown: new Map(
       (graph.documents ?? []).map((entry) => [
         entry.sourceRelativePath,

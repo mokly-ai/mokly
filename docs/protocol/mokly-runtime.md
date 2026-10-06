@@ -65,16 +65,13 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 8. Atomically replace generated files and remove proven generated orphans.
 
 An error leaves the last-good generated tree unchanged. Build output and
-diagnostics use repo-relative paths and deterministic ordering.
-Ignored, unnecessary inputs issue warnings without changing the exit code or
-generated output; Check reports the same warnings while leaving files untouched.
-
-Source-attributed authoring failures thrown inside the consumer bundle retain
-their typed code across the bundle boundary and appear with one
-`[mokly/<code>]` prefix and their source module; unexpected module evaluation
-failures remain bundling errors. Forbidden authored fields on flattened
-variants must be retained for registry validation even when their values are
-`undefined`.
+diagnostics use repo-relative paths and deterministic ordering. Non-fatal
+[build warnings](./mokly-build-warnings.md) are reported after rendering and
+fail the command only with `--strict`. Source-attributed authoring failures from
+the consumer bundle retain their typed code and appear with one
+`[mokly/<code>]` prefix plus their source module; unexpected module evaluation
+failures remain bundling errors. Forbidden authored fields on flattened variants
+remain available for registry validation even when their values are `undefined`.
 
 ## Check
 

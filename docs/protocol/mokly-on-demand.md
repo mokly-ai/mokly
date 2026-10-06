@@ -89,6 +89,9 @@ CSS imports are validated transitively. Protected sources and manifests remain
 private even through aliases. No validation is skipped to meet the time target.
 
 Entry indexes and parsed resource metadata are reused within the generation.
+An on-demand document carries its [build warnings](./mokly-build-warnings.md)
+beside its HTML; Serve reports warnings once per generation from the exhaustive
+compilation, never per foreground request.
 The inspector loads usage for displayed views on demand. Uncomputed catalogue-wide
 usage is explicitly unavailable, never displayed as zero consumers. Live All/Changes
 controls are always present. While a calculation is pending, a spinner replaces the
@@ -162,8 +165,8 @@ can include different unused CSS in on-demand previews; the exhaustive backgroun
 artifacts retain Build's bytes and do not create artificial Changes.
 
 Background warnings carry the producing generation through the worker and
-parent. Stream them once; completion does not add `compilation.warnings`
-again. A watched rebuild or reconfiguration starts a fresh warning generation
+parent. Stream branch producers once into the shared diagnostic sink; completion
+combines `compilation.diagnostics` without replay before Catalogue ready. A watched rebuild or reconfiguration starts a fresh warning generation
 before candidate work, regardless of whether that candidate succeeds. Late
 warnings from superseded work are discarded. Unwatched Serve keeps its
 lifetime warning scope, and one-shot commands keep their existing scopes.

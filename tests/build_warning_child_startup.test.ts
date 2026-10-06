@@ -73,7 +73,7 @@ test(
     assert.equal(warnings.length, 1, stderr);
     assert.deepEqual(
       parseChildWarningMessage(warnings[0])!.warning,
-      config.warnings![0],
+      config.diagnostics![0],
     );
     assert.doesNotMatch(stderr, /\[mokly\/warning\]/);
   },

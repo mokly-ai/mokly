@@ -3,10 +3,10 @@ import { resolveLinkPath } from "@mokly/viewer/data";
 
 import { existingDefinitionReference } from "../authoring/identity.js";
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import { type BuildDiagnostic } from "../build/build_warnings.js";
 import {
   removedDependencies,
   removedOwnedDependencies,
-  type BuildWarning,
 } from "../build/warnings.js";
 import {
   validateComponentDefinition,
@@ -40,12 +40,12 @@ export function prepareRegistry(
   values: readonly unknown[],
   config: ResolvedConfig,
   documents: readonly ResolvedDocument[] = [],
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
   const entries: ResolvedRegistryEntry[] = [];
-  const warnings: BuildWarning[] = [];
-  const warn = (warning: BuildWarning) => {
+  const warnings: BuildDiagnostic[] = [];
+  const warn = (warning: BuildDiagnostic) => {
     warnings.push(warning);
     onWarning?.(warning);
   };
@@ -141,7 +141,7 @@ export function prepareRegistry(
     ),
     byPath: new Map(orderedEntries.map((entry) => [entry.path, entry])),
     entries: orderedEntries,
-    warnings,
+    diagnostics: warnings,
   };
 }
 

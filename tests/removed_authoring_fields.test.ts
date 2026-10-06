@@ -100,7 +100,7 @@ test("every authoring boundary warns once for removed dependencies", async (cont
     const definitions = [create()].flat();
     const prepared = prepareWarningRegistry(definitions, config);
     assert.deepEqual(
-      prepared.warnings.map((warning) => warning.context),
+      prepared.diagnostics.map((warning) => [warning.subject?.path]),
       [[label === "screen variant" ? "example/example-variant" : "example"]],
       label,
     );
@@ -119,7 +119,7 @@ test("component ownedDependencies warns without entering the registry", async (c
     config,
   );
   assert.deepEqual(
-    prepared.warnings.map((warning) => warning.code),
+    prepared.diagnostics.map((warning) => warning.code),
     ["removed-owned-dependencies"],
   );
   assert.equal(Object.hasOwn(prepared.entries[0]!, "ownedDependencies"), false);
@@ -141,7 +141,7 @@ test("removed fields on a variant parent warn once without inheritance", async (
   for (const definitions of cases) {
     const prepared = prepareWarningRegistry([definitions].flat(), config);
     assert.deepEqual(
-      prepared.warnings.map((warning) => warning.context),
+      prepared.diagnostics.map((warning) => [warning.subject?.path]),
       [["example"]],
     );
     assert.ok(

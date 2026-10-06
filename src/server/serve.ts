@@ -18,7 +18,11 @@ import {
   NodeCatalogueServerFactory,
   type CatalogueServerFactory,
 } from "./factory.js";
-import { PlainServeReporter, type ServeReporter } from "./reporter.js";
+import {
+  PlainServeReporter,
+  reportCatalogueReady,
+  type ServeReporter,
+} from "./reporter.js";
 import { ServedReviewRepository } from "./review_repository.js";
 import { serveWatched } from "./serve_watched.js";
 import {
@@ -81,8 +85,8 @@ export async function serve(
   const reporter = dependencies.reporter ?? DEFAULT_DEPENDENCIES.reporter!;
   const warnings =
     dependencies.warnings ??
-    new BuildWarningSink((warning) => reporter.buildWarning?.(warning));
-  config.warnings?.forEach((warning) => warnings.add(warning));
+    new BuildWarningSink((warning) => reporter.buildWarnings([warning]));
+  config.diagnostics?.forEach((warning) => warnings.add(warning));
   if (!options.watch) {
     const generationStartedAt = Date.now();
     let changesStartedAt = generationStartedAt;
@@ -101,9 +105,12 @@ export async function serve(
       dependencies.changeClassifier ?? DEFAULT_CHANGE_CLASSIFIER,
       (compilation, accepted) => {
         changesStartedAt = Date.now();
-        reporter.catalogueReady(
-          compilation.manifest,
+        reportCatalogueReady(
+          reporter,
+          compilation,
           changesStartedAt - generationStartedAt,
+          warnings,
+          warnings.generation,
         );
         server.completeCatalogue?.(compilation.manifest, accepted.generation);
         server.publishUpdate({ kind: "evidence" });
@@ -143,7 +150,10 @@ export async function serve(
               Date.now() - baselineStartedAt,
             );
         },
-        diagnostic: (error) => reporter.runtimeDiagnostic(error),
+        diagnostic: (error) => {
+          warnings.flush();
+          reporter.runtimeDiagnostic(error);
+        },
         incompatibleBaseline: (commit) => reporter.incompatibleBaseline(commit),
         ...(dependencies.baselineBuilder
           ? { builder: dependencies.baselineBuilder }
@@ -161,7 +171,6 @@ export async function serve(
       onDiagnostic: (error) => reporter.runtimeDiagnostic(error),
       onBuildWarning: (event) => warnings.add(event.warning),
     });
-    warnings.flush();
     background.start(runtime, base);
     return {
       port: server.port,

@@ -235,3 +235,15 @@ or resource target merely because it still exists before commit.
 All public exports ship ESM JavaScript and declarations usable by NodeNext and
 bundler TypeScript resolution. The package export map and packed-tarball tests
 define the public boundary; consumers must not import `dist` internals.
+
+## Removed Input Warnings
+
+A present removed `dependencies` key emits `removed-dependencies` with an entry
+subject. A present removed `ownedDependencies` key emits
+`removed-owned-dependencies` with a component subject. Variants name their own
+complete path. Their messages are exactly:
+
+```text
+dependencies has been removed; ignoring it. Delete the field.
+ownedDependencies has been removed; ignoring it. Delete the field.
+```

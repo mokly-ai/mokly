@@ -48,7 +48,7 @@ for (const configured of [false, true])
       let documents: string[];
       if (mode === "build") {
         const built = await compileCatalogue(config);
-        assert.deepEqual(built.warnings ?? [], []);
+        assert.deepEqual(built.diagnostics ?? [], []);
         documents = routes.map((route) => built.outputs.get(route) as string);
       } else {
         const running = await serve(config, { port: 0, watch: false });

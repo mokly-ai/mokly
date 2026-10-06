@@ -6,11 +6,6 @@
   },
   {
     "file": "docs/protocol/README.md",
-    "statement": "Removed `dependencies`, `ownedDependencies` and `review.sharedImpact` warn and have no effect.",
-    "reason": "Names the removed inputs or rejected versions at the current admission boundary."
-  },
-  {
-    "file": "docs/protocol/README.md",
     "statement": "Public readers reject catalogue v1 to v3 and comparison v4 and earlier; regenerate those exports.",
     "reason": "Names the removed inputs or rejected versions at the current admission boundary."
   },
@@ -33,31 +28,6 @@
     "file": "docs/protocol/mokly-authoring.md",
     "statement": "All entry, folder and variant inputs reject removed `dependencies` values through `dependencies?: never`; component inputs also reject removed `ownedDependencies` values through `ownedDependencies?: never`.",
     "reason": "Public removed-input type contract, including the never field in the example."
-  },
-  {
-    "file": "docs/protocol/mokly-build-warnings.md",
-    "statement": "| `removed-dependencies` | Entry path | `dependencies has been removed; ignoring it on entry <entryPath>. Delete the field.` |",
-    "reason": "Exact removed-input diagnostics, warning scope and graceful handling boundary."
-  },
-  {
-    "file": "docs/protocol/mokly-build-warnings.md",
-    "statement": "| `removed-owned-dependencies` | Component path | `ownedDependencies has been removed; ignoring it on component <entryPath>. Delete the field.` |",
-    "reason": "Exact removed-input diagnostics, warning scope and graceful handling boundary."
-  },
-  {
-    "file": "docs/protocol/mokly-build-warnings.md",
-    "statement": "| `removed-shared-impact` | Config path | `review.sharedImpact has been removed; ignoring it. Delete the field.` |",
-    "reason": "Exact removed-input diagnostics, warning scope and graceful handling boundary."
-  },
-  {
-    "file": "docs/protocol/mokly-build-warnings.md",
-    "statement": "A `defineFolder` that supplies removed `dependencies` uses the context `[\"folder:\" + path]` and the message `dependencies has been removed; ignoring it on folder <entryPath>. Delete the field.` Folder warnings never enter descendants.",
-    "reason": "Exact removed-input diagnostics, warning scope and graceful handling boundary."
-  },
-  {
-    "file": "docs/protocol/mokly-build-warnings.md",
-    "statement": "This rule applies to duplicate component CSS declarations, configured-link placement, configured/declared overlap, renderer ownership for every stylesheet, and exactly three removed inputs: removed entry `dependencies`, component `ownedDependencies`, and `review.sharedImpact`.",
-    "reason": "Exact removed-input diagnostics, warning scope and graceful handling boundary."
   },
   {
     "file": "docs/protocol/mokly-catalogue-delivery.md",
@@ -97,16 +67,6 @@
   {
     "file": "docs/protocol/mokly-configuration.md",
     "statement": "```ts type ColorScheme = \"dark\" | \"light\"; type SharedStylesheet = string | typeof componentStylesheets; type ModuleLoader = | \"base64\" | \"binary\" | \"css\" | \"dataurl\" | \"empty\" | \"file\" | \"js\" | \"json\" | \"jsx\" | \"text\" | \"ts\" | \"tsx\"; interface RootConfig { dir: string; // config-relative directory inside repoRoot files?: readonly string[]; // [\"**/*.mockup.{ts,tsx}\", \"**/*.md\"] path?: string; // prefix for every derived path; none by default transparent?: readonly string[]; // directory names removed from paths } interface MoklyConfig { colorSchemes?: readonly ColorScheme[]; // [\"light\"] generatedOutput?: \"committed\" | \"derived\"; // \"derived\" mockupsDir: string; roots?: readonly RootConfig[]; // [{ dir: \"specs\" }] publicExclude?: readonly string[]; // extends shipped public exclusions repoRoot?: string; // config directory renderer?: string; postcss?: string; // config-relative PostCSS module moduleResolution?: { aliases?: Readonly<Record<string, string>>; conditions?: readonly string[]; loaders?: Readonly<Record<string, ModuleLoader>>; mainFields?: readonly string[]; packageRoots?: readonly string[]; resolveExtensions?: readonly string[]; }; stylesheets?: readonly { match: string; stylesheets: readonly SharedStylesheet[]; lightStylesheets?: readonly string[]; darkStylesheets?: readonly string[]; }[]; review?: { base?: string; // origin/main; merge base with HEAD baselineBuild?: readonly (readonly string[])[]; // derived mode only outDir?: string; // .context/mokly-review sharedImpact?: never; }; watch?: { debounceMs?: number; // 75 rules?: readonly { action: \"ignore\" | \"rebuild\" | \"reload\" | \"restart\"; paths: readonly string[]; }[]; }; compatibility?: { transformer?: string; }; } ```",
-    "reason": "Public review input type and removal contract, including the complete config example."
-  },
-  {
-    "file": "docs/protocol/mokly-configuration.md",
-    "statement": "`review.sharedImpact` is removed.",
-    "reason": "Public review input type and removal contract, including the complete config example."
-  },
-  {
-    "file": "docs/protocol/mokly-configuration.md",
-    "statement": "The public review config type uses `sharedImpact?: never` to reject a value, including through spreads or alongside other review keys.",
     "reason": "Public review input type and removal contract, including the complete config example."
   },
   {
@@ -248,5 +208,40 @@
     "file": "docs/protocol/mokly-catalogue-delivery.md",
     "statement": "The removed `details.dependencies` field is absent.",
     "reason": "Public privacy contract: the removed details field never appears in the catalogue."
+  },
+  {
+    "file": "docs/protocol/mokly-authoring.md",
+    "statement": "A present removed `dependencies` key emits `removed-dependencies` with an entry subject.",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-authoring.md",
+    "statement": "A present removed `ownedDependencies` key emits `removed-owned-dependencies` with a component subject.",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-authoring.md",
+    "statement": "```text dependencies has been removed; ignoring it. Delete the field. ownedDependencies has been removed; ignoring it. Delete the field. ```",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-build-warnings.md",
+    "statement": "```text [mokly/warning] entry \"home\": dependencies has been removed; ignoring it. Delete the field. ! entry \"home\": dependencies has been removed; ignoring it. Delete the field. ```",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-configuration.md",
+    "statement": "A present removed `review.sharedImpact` key, even with `undefined`, emits `removed-shared-impact` with a configuration subject and exactly `review.sharedImpact has been removed; ignoring it. Delete the field.` It adds no watched paths or evidence.",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-configuration.md",
+    "statement": "The public `sharedImpact?: never` rejects values, including spreads and objects with other review keys.",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-folders.md",
+    "statement": "A `defineFolder` with removed `dependencies` emits `removed-dependencies` with a folder subject and exactly `dependencies has been removed; ignoring it. Delete the field.` It never warns on descendants.",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
   }
 ]

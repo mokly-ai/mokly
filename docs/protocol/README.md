@@ -28,19 +28,15 @@ implemented in [M30](../../plans/remove-source-path-evidence.md#milestone-30-str
 Exported navigation and viewer alignment remain planned for
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
 
-## Current Documentation Rule
-
-Use the [documentation policy](./documentation-policy.md) for status sections and
-reviewed exceptions. There is no plan index. Link to `plans/`. Each plan starts
-with `Status: Active` or `Status: Completed` directly below its title.
-
 ## Graceful Handling
 
-The [graceful-handling rule](./mokly-build-warnings.md#graceful-handling) applies
-to safe stylesheet conflicts and the three removed inputs.
-Removed `dependencies`, `ownedDependencies` and `review.sharedImpact` warn
-and have no effect. Other unknown fields, including former configuration fields, fail
-under their owning contract.
+For duplicate CSS, configured-link placement or overlap, stylesheet owners and
+the three removed inputs in [Build Warnings](./mokly-build-warnings.md#record), continue with safe, unambiguous output. Use the more specific
+input. Warn when an authored input is discarded. Confinement, source protection
+and retained-input validation still apply. Other unknown fields, folder JSON
+and document front matter keep their owning rules. [Build Warnings](./mokly-build-warnings.md)
+owns reporting. These warnings succeed normally; strict Build, Check, export
+and publish fail before writes or uploads. Serve refuses strict mode.
 
 ## Supported Formats
 
@@ -64,10 +60,13 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
 
 ## Contracts
 
+- [Documentation policy](./documentation-policy.md) — status sections, reviewed exceptions and plan records.
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
+  - [Development hydration coverage](./ci-verification-hydration.md) — one
+    route per entry shape and the generated resource audit.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
@@ -84,7 +83,8 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
   interactive progress, watched events, and shortcuts.
 - [CLI terminal compatibility and errors](./mokly-terminal-errors.md) — exact
   plain output and rich error presentation.
-- [Build warnings](./mokly-build-warnings.md) — ignored-input diagnostics and invocation deduplication.
+- [Build warnings](./mokly-build-warnings.md) — implemented non-fatal compile
+  diagnostics, command reporting, and `--strict` enforcement.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md), with [public exclusions](./mokly-public-exclusions.md) for validation, defaults and the public-file matching base.

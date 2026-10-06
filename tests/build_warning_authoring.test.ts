@@ -77,12 +77,12 @@ test("each removed authoring field emits one entry-scoped warning and no registr
   ];
   for (const create of cases) {
     const prepared = prepareWarningRegistry([create()].flat(), config);
-    assert.deepEqual(prepared.warnings, [
+    assert.deepEqual(prepared.diagnostics, [
       {
         code: "removed-dependencies",
-        context: ["example"],
+        subject: { kind: "entry", path: "example" },
         message:
-          'dependencies has been removed; ignoring it on entry "example". Delete the field.',
+          "dependencies has been removed; ignoring it. Delete the field.",
       },
     ]);
     assert.ok(
@@ -99,12 +99,12 @@ test("component ownedDependencies warns without granting ownership", async (cont
     component({ ownedDependencies: ["mockups/asset.svg"] }),
     config,
   );
-  assert.deepEqual(prepared.warnings, [
+  assert.deepEqual(prepared.diagnostics, [
     {
       code: "removed-owned-dependencies",
-      context: ["example"],
+      subject: { kind: "component", path: "example" },
       message:
-        'ownedDependencies has been removed; ignoring it on component "example". Delete the field.',
+        "ownedDependencies has been removed; ignoring it. Delete the field.",
     },
   ]);
   assert.ok(
@@ -161,7 +161,7 @@ test("variant parent warnings do not inherit into their children", async (contex
   ]) {
     const prepared = prepareWarningRegistry([definitions].flat(), config);
     assert.deepEqual(
-      prepared.warnings.map((warning) => warning.context),
+      prepared.diagnostics.map((warning) => [warning.subject?.path]),
       [["example"]],
     );
     assert.ok(
@@ -182,7 +182,7 @@ test("a screen variant's own removed field warns under its own path", async (con
   });
   const prepared = prepareWarningRegistry([definitions].flat(), config);
   assert.deepEqual(
-    prepared.warnings.map((warning) => warning.context),
+    prepared.diagnostics.map((warning) => [warning.subject?.path]),
     [["example/child"]],
   );
 });

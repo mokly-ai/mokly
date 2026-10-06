@@ -21,10 +21,10 @@ import {
 import { memoryTerminal } from "./helpers/terminal.js";
 
 const entryWarning =
-  '[mokly/warning] dependencies has been removed; ignoring it on entry "home". Delete the field.\n';
+  '[mokly/warning] entry "home": dependencies has been removed; ignoring it. Delete the field.\n';
 const configWarning =
-  "[mokly/warning] review.sharedImpact has been removed; ignoring it. Delete the field.\n";
-const expectedWarnings = entryWarning + configWarning;
+  '[mokly/warning] configuration "mokly.config.ts": review.sharedImpact has been removed; ignoring it. Delete the field.\n';
+const expectedWarnings = configWarning + entryWarning;
 
 function sourceWithRemovedField(): string {
   return validEntrySource().replace(
@@ -54,7 +54,7 @@ async function execute(
 ) {
   const terminal = memoryTerminal({
     isTTY: false,
-    ...(mode === "rich" ? { columns: 120 } : {}),
+    ...(mode === "rich" ? { columns: 240 } : {}),
     env: { ...process.env, MOKLY_OUTPUT: mode, NO_COLOR: "1", ...extraEnv },
   });
   const reporter =
@@ -184,7 +184,7 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
   assert.equal(
     lines.filter((line) =>
       line.includes(
-        'duplicate component stylesheet "action.css" on component "action"',
+        'component "action": duplicate component stylesheet "action.css"',
       ),
     ).length,
     1,
@@ -192,7 +192,7 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
   assert.equal(
     lines.filter((line) =>
       line.includes(
-        'configured stylesheet link "../base.css" is absent from "home/index.mobile.html"',
+        'home/index.mobile.html: configured stylesheet link "../base.css" is absent',
       ),
     ).length,
     1,
@@ -200,7 +200,7 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
   assert.equal(
     lines.filter((line) =>
       line.includes(
-        'Stylesheet ownership for "action.css" on "home/index.mobile.html"',
+        'home/index.mobile.html: Stylesheet ownership for "action.css"',
       ),
     ).length,
     1,

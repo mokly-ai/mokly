@@ -66,6 +66,10 @@ mokly --help          Show commands, options, and config discovery
 mokly --version       Show the installed package version
 ```
 
+`build`, `check`, `export` and `publish` accept `--strict`; Serve refuses it.
+Every warning, including ignored inputs, follows the count and failure boundary
+in [Build Warnings](./mokly-build-warnings.md).
+
 Common options include `--config <path>` and opt-in `--debug-timings`
 ([diagnostic contract](./mokly-timings.md)). Serve accepts `--port`, `--base`,
 `--watch`, `--no-watch`, and `--open`. Export requires `--out` and accepts `--base`;

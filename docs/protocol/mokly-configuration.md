@@ -211,14 +211,14 @@ to configured comparison output and the transactional writer boundary. The
 required `--out` has the additional source/runtime/ownership confinement rules
 in the [export contract](./mokly-export.md).
 
-`review.sharedImpact` is removed. Loading a configuration that has this key,
-even when its value is `undefined`, ignores it and issues the exact
-[build warning](./mokly-build-warnings.md#exact-messages), rather than
-`config-invalid`. It does not add watched paths or comparison evidence. See
-the [graceful-handling rule](./README.md#graceful-handling). The public review
-config type uses `sharedImpact?: never` to reject a value, including through
-spreads or alongside other review keys. An explicit `undefined` is rejected
-only with `exactOptionalPropertyTypes`; the build warning covers it otherwise.
+### Removed Review Setting
+
+A present removed `review.sharedImpact` key, even with `undefined`, emits
+`removed-shared-impact` with a configuration subject and exactly
+`review.sharedImpact has been removed; ignoring it. Delete the field.`
+It adds no watched paths or evidence. [Build Warnings](./mokly-build-warnings.md) owns strict rejection. The public `sharedImpact?: never` rejects values,
+including spreads and objects with other review keys. Rejecting explicit
+`undefined` requires `exactOptionalPropertyTypes`; otherwise runtime warns.
 Source modules without rendered output or references do not create evidence.
 Linked stylesheets, including transitive imports, are attributed by rule under
 [CSS change attribution](./mokly-css-attribution.md). A changed stylesheet keeps

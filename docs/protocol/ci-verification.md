@@ -146,7 +146,7 @@ interpolate the title into shell source. The workflow runs
 `scripts/verification/pull-request-title.mjs`, which reads only
 `PULL_REQUEST_TITLE` and needs no installed dependencies.
 
-The complete title is at most 50 Unicode code points, has no leading or
+The complete title is at most 72 Unicode code points, has no leading or
 trailing whitespace or newline, and has this Conventional Commits shape:
 
 ```text
@@ -168,7 +168,7 @@ remote-tracking references.
 An invalid title exits unsuccessfully and prints exactly:
 
 ```text
-Pull request titles must use type(scope)!: description with type build, chore, ci, docs, feat, fix, perf, refactor, revert, style, or test. Keep any scope lowercase and the whole title to 50 characters or fewer.
+Pull request titles must use type(scope)!: description with type build, chore, ci, docs, feat, fix, perf, refactor, revert, style, or test. Keep any scope lowercase and the whole title to 72 characters or fewer.
 ```
 
 The check protects release notes because this repository squash-merges pull
@@ -192,11 +192,12 @@ fixed in advance. Browser or hydration discovery asks Playwright; an empty suite
 fails. A failed browser discovery reports the load errors from Playwright's JSON
 output as well as its standard error.
 
-Development hydration registers one browser test per unique generated catalogue
-route at discovery time, plus the home and missing-route cases. Each route keeps
-the normal test deadline and error assertions; catalogue growth cannot exhaust a
-shared route-loop deadline. Unit coverage checks that browser discovery includes
-every generated route exactly once. Browser error assertions accept only Chrome's
+Development hydration registers one browser test per entry shape of the
+generated example catalogue at discovery time, plus the home and missing-route
+cases, as [development hydration coverage](./ci-verification-hydration.md)
+defines. Each test keeps the normal deadline and error assertions, and unit
+coverage checks that discovery lists each shape exactly once. That page also
+owns the generated resource audit. Browser error assertions accept only Chrome's
 report that a viewer-owned sandboxed frame (`/static/`, a temporary render, or
 `about:srcdoc`) blocked a script, as `tests/browser/console_notices.ts` defines.
 

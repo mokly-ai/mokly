@@ -1,10 +1,8 @@
 import path from "node:path";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import {
-  duplicateComponentStylesheet,
-  type BuildWarning,
-} from "../build/warnings.js";
+import { type BuildDiagnostic } from "../build/build_warnings.js";
+import { duplicateComponentStylesheet } from "../build/warnings.js";
 import {
   publicFileLocation,
   publicFileFailureReason,
@@ -17,7 +15,7 @@ import { isComponentVariantDefinition } from "./types.js";
 export function validateDeclaredStylesheets(
   entries: readonly ResolvedRegistryEntry[],
   config: ResolvedConfig,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): void {
   const declaredPaths = new Set<string>();
   for (const entry of entries) {
@@ -35,13 +33,7 @@ export function validateDeclaredStylesheets(
       }
       const first = firstPaths.get(location.physicalPath);
       if (first !== undefined) {
-        onWarning?.(
-          duplicateComponentStylesheet(
-            entry.path,
-            location.physicalPath,
-            first,
-          ),
-        );
+        onWarning?.(duplicateComponentStylesheet(entry.path, first));
         continue;
       }
       firstPaths.set(location.physicalPath, file);

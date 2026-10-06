@@ -57,7 +57,7 @@ module or an imported source as a public stylesheet.
 Preserve authored order and group paths by resolved real file. If one component
 lists a file twice, by the same path or an alias, keep its first path and
 position, link it once and issue the
-[duplicate warning](./mokly-build-warnings.md#exact-messages). Different
+[duplicate warning](#warning-messages). Different
 components may declare the same file. Validate input shape at authoring and
 registry boundaries, including untyped inputs; check existence, realpath
 identity and public eligibility after config resolves `mockupsDir`. Missing
@@ -175,7 +175,7 @@ start of body content when
 the head is empty. Omitted optional tags never fail placement.
 
 Missing, repeated or reordered configured links do not fail insertion; a
-missing href gets a [warning](./mokly-build-warnings.md#exact-messages).
+missing href gets a [warning](#warning-messages).
 Keep every renderer-authored link unchanged, even duplicates. Preserve other
 head content, rebase UTF-16 style offsets, and validate final output normally.
 See the [graceful-handling rule](./README.md#graceful-handling).
@@ -224,3 +224,16 @@ of stylesheet loading from manually declared review dependencies.
   defines final-document provenance and rule-based comparison.
 - [Watch](./mokly-watch.md), [export](./mokly-export.md), and
   [publication](./mokly-publication.md) define delivery boundaries.
+
+## Warning Messages
+
+`duplicate-component-stylesheet` names a component subject and says
+`duplicate component stylesheet <path> is ignored; it is linked once.`
+`<path>` is the first authored public path for that real file, JSON-quoted.
+
+`missing-configured-stylesheet-link` names the generated route and says
+`configured stylesheet link <href> is absent; component stylesheets use another anchor.`
+`<href>` is the JSON-quoted configured href. Only a missing anchor needed for
+insertion warns; repeated or reordered renderer links stay unchanged. A
+configured/declared overlap needs no warning. The [warning channel](./mokly-build-warnings.md)
+counts both producers in strict mode.

@@ -80,7 +80,7 @@ export default (input) => { const html = '<html><head></head><body>' + renderToS
   for (const bytes of [body, html]) {
     assert.doesNotMatch(
       bytes,
-      /warnings|ignored-stylesheet-resource-owner|Stylesheet ownership/,
+      /warnings|diagnostics|ignored-stylesheet-resource-owner|Stylesheet ownership/,
     );
     assert.ok(!bytes.includes(warnings[0]!));
   }

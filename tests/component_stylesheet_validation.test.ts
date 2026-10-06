@@ -126,7 +126,9 @@ test("renderer CSS aliases are ignored and declarations retain inserted provenan
     ["action"],
   );
   assert.ok(
-    result.warnings?.some((warning) => warning.message.includes("alias.css")),
+    result.diagnostics?.some((warning) =>
+      warning.message.includes("alias.css"),
+    ),
   );
 });
 

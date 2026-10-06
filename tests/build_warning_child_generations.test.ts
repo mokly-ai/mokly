@@ -34,8 +34,8 @@ for (const fails of [false, true]) {
       first.release();
       assert.equal((await current).status, 200);
       await fixture.journal.wait("preview-received");
-      assert.equal(fixture.emitted.length, 1);
-      assert.equal(fixture.emitted[0]!.context[0], "home/index.mobile.html");
+      assert.equal(fixture.emitted.length, 0);
+      assert.equal(fixture.sink.additions[0]!.route, "home/index.mobile.html");
       const accepted = [...fixture.emitted];
       const response = fetch(`${running.url}/static/home/index.desktop.html`);
       const preview = await fixture.gate.next("preview", first.index + 1);

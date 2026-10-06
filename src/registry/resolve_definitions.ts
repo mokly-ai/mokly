@@ -13,7 +13,8 @@ import type {
   RegistryDefinition,
   ResolvedRegistryEntry,
 } from "../authoring/types.js";
-import { removedDependencies, type BuildWarning } from "../build/warnings.js";
+import { type BuildDiagnostic } from "../build/build_warnings.js";
+import { removedDependencies } from "../build/warnings.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -31,7 +32,7 @@ import {
 export function resolveDefinitions(
   values: readonly unknown[],
   config: ResolvedConfig,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): {
   entries: ResolvedRegistryEntry[];
   folders: FolderRecord[];

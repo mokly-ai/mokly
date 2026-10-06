@@ -7,7 +7,7 @@ import type { ResolvedConfig } from "../config/types.js";
 
 import type { CatalogueChangeClassifier } from "./component_changes.js";
 import { BackgroundGeneration } from "./demand/generation.js";
-import type { ServeReporter } from "./reporter.js";
+import { reportCatalogueReady, type ServeReporter } from "./reporter.js";
 import type { ResourceWatcher } from "./resource_watcher.js";
 import type { ProcessSupervisor } from "./supervisor.js";
 
@@ -42,9 +42,12 @@ export class WatchedBackground {
       (compilation, accepted) => {
         this.changesStartedAt = Date.now();
         if (this.reportCatalogue)
-          options.reporter.catalogueReady(
-            compilation.manifest,
+          reportCatalogueReady(
+            options.reporter,
+            compilation,
             this.changesStartedAt - this.generationStartedAt,
+            options.warnings,
+            accepted.warningGeneration,
           );
         this.activeCompilation = compilation;
         options.running.completeCatalogue?.(
@@ -85,7 +88,13 @@ export class WatchedBackground {
             "evidence",
           ),
         baselineProgress: (event) => this.reportBaseline(event),
-        diagnostic: options.report,
+        diagnostic: (error) => {
+          if (
+            options.runtime().warningGeneration === options.warnings.generation
+          )
+            options.warnings.flush();
+          options.report(error);
+        },
         incompatibleBaseline: (commit) =>
           options.reporter.incompatibleBaseline(commit),
         resources: options.resources,

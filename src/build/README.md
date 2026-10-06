@@ -307,13 +307,30 @@ transform on retained inserted links; Mokly removes it before writing output
 and records private final-document spans for comparison projection.
 `stylesheet_provenance.ts` keeps final inserted-link spans and declaring paths
 without deriving resource owners. Ignored renderer records for any stylesheet
-produce structured
-`BuildWarning` values on exhaustive compilations and requested documents.
-`warning_sink.ts` deduplicates them by code and context for one command or
-watched attempt. Each producer captures its attempt before preparation. The sink
-discards older envelopes even when a failed attempt keeps older output serving.
-Runtimes retain only the warning identity, not an unread warning list. The CLI
-presents warnings without changing output bytes or exit status.
+produce the same `BuildDiagnostic` records as configuration, registry and
+link-control validation. `Compilation.diagnostics` and requested-document
+`diagnostics` retain the normalized list. `build_warnings.ts` owns validation,
+sorting, formatting and strict failures; `warnings.ts` owns ignored-input
+producers. Non-page warnings name a typed subject instead of a route.
+`warning_sink.ts` collects one invocation or watched attempt, deduplicates
+streamed and completed records, and discards older envelopes. Serve flushes
+before `Catalogue ready` or failure. Runtimes retain their attempt identity.
+Strict commands count every producer before any output write.
+
+## Build Warnings
+
+`build_warnings.ts` owns the validated code, route or subject, and single-line message
+record plus deterministic sorting and de-duplication. The child-control adapter
+and compatibility transform return diagnostics beside their output;
+`compile.ts` puts the normalized list on `Compilation`, while
+`document_compiler.ts` retains the requested document's list without reporting
+it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
+timing records. Authored C0/C1 controls become visible `\uXXXX` escapes before
+normalization, and reporters defensively apply the same encoder.
+`link_control_tiers.ts` owns the explicit ancestor and
+descendant tier sets, feature precedence, and one-line element descriptions
+used by both errors and warnings. See the
+[build warnings contract](../../docs/protocol/mokly-build-warnings.md).
 
 ## Development
 
@@ -325,10 +342,16 @@ npm run example:check
 cargo xtask check
 ```
 
-- `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
-  compilation using the same validation boundary.
-- `document_types.ts`: renderer input and generated document types, separate
-  from render orchestration.
+The example uses derived output: generation writes local ignored HTML and a
+manifest; authored public CSS remains tracked. Committed output and historical
+manifest rejection are tested with isolated consumers.
+
+- `compile.ts`, `build_warnings.ts`, `render.ts`, `document_compiler.ts`:
+  exhaustive and requested-view compilation using the same validation boundary.
+- `link_control_tiers.ts`, `link_control_nodes.ts`, `link_controls.ts`: tiered
+  placement validation and source-byte-preserving styled-control adaptation.
+- `document_types.ts`: requested-document types. `document_components.ts`
+  finalizes and validates transformed view metadata.
 - `../config/stylesheet_rules.ts`: configured stylesheet validation and the
   component marker position.
 - `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer

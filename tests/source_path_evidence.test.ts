@@ -48,7 +48,7 @@ for (const components of [false, true])
     assert.deepEqual(compilation.outputs, clean.outputs);
     await writeCompilation(compilation, config);
     assert.deepEqual(
-      compilation.warnings?.map((warning) => warning.code).sort(),
+      compilation.diagnostics?.map((warning) => warning.code).sort(),
       components
         ? [
             "removed-dependencies",

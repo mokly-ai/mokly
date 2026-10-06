@@ -10,21 +10,21 @@ import { MANIFEST_NAME } from "../registry/manifest.js";
 import { prepareRegistry } from "../registry/prepare.js";
 import type { PreparedRegistry } from "../registry/prepared_types.js";
 
+import type { BuildDiagnostic } from "./build_warnings.js";
 import type { ComponentRuntime } from "./component_runtime.js";
 import { consumerBundle } from "./consumer_bundle.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { captureOutputSnapshot } from "./output_snapshot.js";
-import type { BuildWarning } from "./warnings.js";
 
 export async function prepareLiveRuntime(
   config: ResolvedConfig,
   preloaded?: LoadedGraph,
   prepared?: PreparedRegistry,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
   generation = randomBytes(16).toString("hex"),
 ): Promise<ComponentRuntime> {
   return timeAsync("catalogue.prepare-index", async () => {
-    config.warnings?.forEach(onWarning ?? (() => undefined));
+    config.diagnostics?.forEach(onWarning ?? (() => undefined));
     const graph = preloaded ?? (await loadConsumerGraph(config));
     config = {
       ...config,
@@ -36,7 +36,7 @@ export async function prepareLiveRuntime(
     const registry =
       prepared ??
       prepareRegistry(graph.definitions, config, graph.documents, onWarning);
-    if (prepared) registry.warnings.forEach(onWarning ?? (() => undefined));
+    if (prepared) registry.diagnostics.forEach(onWarning ?? (() => undefined));
     const manifest = createCatalogueIndex(
       registry.entries,
       graph.sourceFiles,

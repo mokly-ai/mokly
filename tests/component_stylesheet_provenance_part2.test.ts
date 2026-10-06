@@ -83,10 +83,10 @@ export default (input) => { const home = input.entry.path === "home"; const html
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   assert.ok(
-    compilation.warnings?.some(
+    compilation.diagnostics?.some(
       (warning) =>
         warning.code === "ignored-stylesheet-resource-owner" &&
-        warning.context[0] === "home/index.mobile.html" &&
+        warning.route === "home/index.mobile.html" &&
         warning.message.includes("action.css"),
     ),
   );

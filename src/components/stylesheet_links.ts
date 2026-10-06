@@ -1,9 +1,7 @@
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
-import {
-  missingConfiguredStylesheetLink,
-  type BuildWarning,
-} from "../build/warnings.js";
+import { type BuildDiagnostic } from "../build/build_warnings.js";
+import { missingConfiguredStylesheetLink } from "../build/warnings.js";
 import { localStylesheetHref } from "../config/stylesheet_hrefs.js";
 import { MoklyError } from "../errors.js";
 import { parseHtmlLinks } from "../html_links.js";
@@ -66,7 +64,7 @@ export function insertComponentStylesheets(
   position: number,
   declared: readonly string[],
   provenance = false,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): string {
   if (!declared.length) return html;
   const { document, head, links } = parseHtmlLinks(html);

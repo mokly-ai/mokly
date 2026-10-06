@@ -208,7 +208,7 @@ test("renderer ownership for declared CSS is ignored while provenance is retaine
     ],
   );
   assert.ok(
-    result.warnings?.some(
+    result.diagnostics?.some(
       (warning) => warning.code === "ignored-stylesheet-resource-owner",
     ),
   );

@@ -30,6 +30,14 @@ with any service that implements the upload contract.
 | `--repository <host>/<owner>/<name>` | Override the detected repository identity                              |
 | `--upload-concurrency <n>`           | Upload 1 to 32 missing files at once; defaults to 8                    |
 | `--debug-timings`                    | Report phase timings and catalogue counts on standard error            |
+| `--strict`                           | Fail before upload when the build reports warnings                     |
+
+## Warnings
+
+Publish reports the export's build warnings the same way `export` does. With
+`--strict` it prints them and stops before uploading. The failure says
+`1 build warning with --strict` for one warning and
+`<n> build warnings with --strict` otherwise.
 
 ## Credentials
 
@@ -106,3 +114,6 @@ Cancelling prints
 instead of telling you to check the connection. If Mokly could not put your
 previous export back, it prints the recovery error with the folder to recover
 instead, even when you cancelled.
+
+Warnings name a generated page, an entry, a component, a folder or the
+configuration file. Strict mode counts all warnings, including ignored inputs.

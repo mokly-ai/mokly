@@ -43,16 +43,18 @@ test("generated stylesheet owner warnings keep one identity before and after dis
   const before = await compileCatalogue(config);
   await writeCompilation(before, config);
   const after = await compileCatalogue(config);
-  assert.deepEqual(before.warnings, after.warnings);
-  assert.ok(before.warnings!.length > 0);
-  for (const warning of before.warnings!) {
+  assert.deepEqual(before.diagnostics, after.diagnostics);
+  assert.ok(before.diagnostics!.length > 0);
+  for (const warning of before.diagnostics!) {
     assert.equal(warning.code, "ignored-stylesheet-resource-owner");
-    assert.equal(warning.context[1], `generated:${route}`);
+    assert.equal(
+      warning.message,
+      `Stylesheet ownership for "${route}" is ignored. Changes follow the elements that each changed rule matches.`,
+    );
   }
   assert.equal(
-    new Set(before.warnings!.map((warning) => JSON.stringify(warning.context)))
-      .size,
-    before.warnings!.length,
+    new Set(before.diagnostics!.map((warning) => JSON.stringify(warning))).size,
+    before.diagnostics!.length,
   );
 });
 

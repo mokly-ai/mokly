@@ -17,6 +17,16 @@ npx mokly build
 | ----------------- | ----------------------------------------------------------- |
 | `--config <path>` | Use an explicit `mokly.config` file                         |
 | `--debug-timings` | Report phase timings and catalogue counts on standard error |
+| `--strict`        | Fail before writing when the build reports warnings         |
+
+## Warnings
+
+A build can succeed with warnings, for example a styled link placed inside a
+button. Each warning is one line on standard error naming the route and the
+element, the output is still written, and the exit status stays `0`. Pass
+`--strict` to print the warnings and then fail without writing anything.
+The failure says `1 build warning with --strict` for one warning and
+`<n> build warnings with --strict` otherwise.
 
 ## What it writes
 
@@ -52,3 +62,6 @@ root, Build and Check reject generated files hidden by `.gitignore`; the error
 names the matching rule and a negation to add in that rule's `.gitignore` file.
 Do not ignore the mockups directory itself: remove that rule or choose derived
 output.
+
+Warnings name a generated page, an entry, a component, a folder or the
+configuration file. Strict mode counts all warnings, including ignored inputs.

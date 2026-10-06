@@ -73,7 +73,7 @@ async function waitFor(
 }
 
 test(
-  "unwatched Serve warns about removed inputs before readiness without failing",
+  "unwatched Serve reports removed inputs for its catalogue without failing",
   { timeout: 45_000 },
   async (context) => {
     const source = validEntrySource().replace(
@@ -91,10 +91,15 @@ test(
     );
     const running = await startServe(fixture, false);
     assert.match(running.stdout(), /Mokly listening at .*\n$/);
+    await waitFor(
+      () => running.stderr().includes('entry "home":'),
+      running.stderr,
+      running.child,
+    );
     assert.equal(
       running.stderr(),
-      '[mokly/warning] dependencies has been removed; ignoring it on entry "home". Delete the field.\n' +
-        "[mokly/warning] review.sharedImpact has been removed; ignoring it. Delete the field.\n",
+      '[mokly/warning] configuration "mokly.config.ts": review.sharedImpact has been removed; ignoring it. Delete the field.\n' +
+        '[mokly/warning] entry "home": dependencies has been removed; ignoring it. Delete the field.\n',
     );
     assert.equal((await fetch(`${running.url}/`)).status, 200);
   },
@@ -117,7 +122,7 @@ export default (input) => { const html = '<html><head></head><body>' + renderToS
     );
     const running = await startServe(fixture, true);
     const warning =
-      '[mokly/warning] Stylesheet ownership for "action.css" on "home/index.mobile.html" is ignored. Changes follow the elements that each changed rule matches.';
+      '[mokly/warning] home/index.mobile.html: Stylesheet ownership for "action.css" is ignored. Changes follow the elements that each changed rule matches.';
     for (let attempt = 0; attempt < 2; attempt += 1)
       assert.equal(
         (await fetch(`${running.url}/static/home/index.mobile.html`)).status,
@@ -147,7 +152,12 @@ test(
     await fs.writeFile(fixture.configPath, configured);
     const running = await startServe(fixture, true);
     const warning =
-      "[mokly/warning] review.sharedImpact has been removed; ignoring it. Delete the field.";
+      '[mokly/warning] configuration "mokly.config.ts": review.sharedImpact has been removed; ignoring it. Delete the field.';
+    await waitFor(
+      () => running.stderr().includes(warning),
+      running.stderr,
+      running.child,
+    );
     assert.equal(running.stderr().split(warning).length - 1, 1);
     await fs.writeFile(
       fixture.configPath,

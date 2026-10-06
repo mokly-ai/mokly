@@ -90,17 +90,17 @@ for (const mode of ["plain", "rich"] as const) {
         );
         assert.equal(code, 1, stderr);
         const prefix = mode === "plain" ? "[mokly/warning]" : "  !";
-        const expected = `${prefix} dependencies has been removed; ignoring it on entry "home". Delete the field.\n${prefix} ${configMessage}\n`;
+        const expected = `${prefix} configuration "mokly.config.ts": ${configMessage}\n${prefix} entry "home": dependencies has been removed; ignoring it. Delete the field.\n`;
         const displayed =
           mode === "rich"
-            ? expected.replace("Delete the field.\n", "Delete the fiel…\n")
+            ? `${prefix} configuration "mokly.config.ts": review.sharedImpact has been removed; igno…\n${prefix} entry "home": dependencies has been removed; ignoring it. Delete the field.\n`
             : expected;
         assert.ok(stderr.startsWith(displayed), stderr);
         assert.match(
           stderr.slice(displayed.length),
           /deliberate-render-failure/,
         );
-        assert.equal(stderr.split(configMessage).length - 1, 1);
+        assert.equal(stderr.split("review.sharedImpact").length - 1, 1);
       },
     );
   }
@@ -159,12 +159,17 @@ for (const mode of ["plain", "rich"] as const) {
       await failed;
       const stderr = terminal.stderr();
       const prefix = mode === "plain" ? "[mokly/warning]" : "  !";
-      assert.ok(stderr.startsWith(`${prefix} ${configMessage}\n`), stderr);
+      assert.ok(
+        stderr.startsWith(
+          `${prefix} configuration "mokly.config.ts": ${configMessage}\n`,
+        ),
+        stderr,
+      );
       assert.match(
         stderr.slice(stderr.indexOf(configMessage) + configMessage.length),
         /colorSchemes|failed/i,
       );
-      assert.equal(stderr.split(configMessage).length - 1, 1);
+      assert.equal(stderr.split("review.sharedImpact").length - 1, 1);
     },
   );
 }

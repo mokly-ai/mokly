@@ -40,10 +40,13 @@ test("folder dependency warnings use paths and do not enter descendants", async 
   assert.ok(
     prepared.entries.every((entry) => !Object.hasOwn(entry, "dependencies")),
   );
-  assert.deepEqual(prepared.warnings.map(({ message }) => message).sort(), [
-    'dependencies has been removed; ignoring it on folder "Root". Delete the field.',
-    'dependencies has been removed; ignoring it on folder "Root/Group". Delete the field.',
-  ]);
+  assert.deepEqual(
+    prepared.diagnostics.map(({ subject }) => subject),
+    [
+      { kind: "folder", path: "Root" },
+      { kind: "folder", path: "Root/Group" },
+    ],
+  );
 });
 
 test("flattened component variants warn for their own removed inputs without inheritance", async (t) => {
@@ -67,7 +70,7 @@ test("flattened component variants warn for their own removed inputs without inh
     await loadConfig(fixture.root),
   );
   assert.deepEqual(
-    prepared.warnings.map(({ code, context }) => [code, context]),
+    prepared.diagnostics.map(({ code, subject }) => [code, [subject?.path]]),
     [
       ["removed-dependencies", ["component/default"]],
       ["removed-owned-dependencies", ["component/default"]],

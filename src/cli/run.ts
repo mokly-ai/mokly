@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { enforceStrictBuildWarnings } from "../build/build_warnings.js";
 import { compileCatalogue } from "../build/compile.js";
 import { FileSystemGeneratedOutputStore } from "../build/output_store.js";
 import { BuildWarningSink } from "../build/warning_sink.js";
@@ -7,7 +8,7 @@ import { loadConfig } from "../config/load.js";
 import { runWithTimings, timeAsync } from "../diagnostics/timings.js";
 import { runServerChild } from "../server/child.js";
 import { receiveComponentRuntimeStartup } from "../server/controls/runtime_ipc.js";
-import { serve, type RunningServe } from "../server/serve.js";
+import { serve } from "../server/serve.js";
 
 import { parseArguments, type CliArguments } from "./arguments.js";
 import { openServedBrowser } from "./browser.js";
@@ -17,11 +18,11 @@ import {
   processTerminalEnvironment,
   reportPhase,
   selectReporter,
-  ServeShortcuts,
   type CliReporter,
   type TerminalEnvironment,
 } from "./reporter/index.js";
 import { redactCliSecrets } from "./secrets.js";
+import { waitForShutdown } from "./serve_shutdown.js";
 import { packageVersion } from "./version.js";
 
 /** Execute one CLI invocation and return its process exit code. */
@@ -47,10 +48,26 @@ export async function run(
           generation: startupGeneration,
           warning,
         })
-      : reporter.buildWarning({
-          ...warning,
-          message: redactCliSecrets(warning.message, argv, environment.env),
-        }),
+      : reporter.buildWarnings([
+          {
+            code: warning.code,
+            ...(warning.subject
+              ? {
+                  subject: {
+                    ...warning.subject,
+                    path: redactCliSecrets(
+                      warning.subject.path,
+                      argv,
+                      environment.env,
+                    ),
+                  },
+                }
+              : {
+                  route: redactCliSecrets(warning.route, argv, environment.env),
+                }),
+            message: redactCliSecrets(warning.message, argv, environment.env),
+          },
+        ]),
   );
   const startupGeneration = warnings.generation;
   try {
@@ -77,13 +94,7 @@ async function execute(
     const publish = await import("./publish.js");
     const outputPresentation = await import("./publish_output.js");
     const result = await timeAsync("publish", () =>
-      publish.runPublish(
-        arguments_,
-        cwd,
-        reporter,
-        environment.env,
-        (warning) => warnings.add(warning),
-      ),
+      publish.runPublish(arguments_, cwd, reporter, environment.env, warnings),
     );
     warnings.flush();
     const output = outputPresentation.publishOutput(
@@ -123,6 +134,13 @@ async function execute(
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
             incompatibleBaseline: (commit) =>
               reporter.incompatibleBaseline(commit),
+            onBuildDiagnostics: (diagnostics) => {
+              warnings.complete(diagnostics);
+              enforceStrictBuildWarnings(
+                diagnostics,
+                arguments_.strict ?? false,
+              );
+            },
             outDir: arguments_.out ?? "",
             ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
           }),
@@ -151,6 +169,11 @@ async function execute(
           warnings.add(warning),
         ),
     );
+    warnings.complete(compilation.diagnostics);
+    enforceStrictBuildWarnings(
+      compilation.diagnostics,
+      arguments_.strict ?? false,
+    );
     await reportPhase(
       reporter,
       "Writing generated output",
@@ -175,7 +198,11 @@ async function execute(
           warnings.add(warning),
         ),
     );
-    warnings.flush();
+    warnings.complete(compilation.diagnostics);
+    enforceStrictBuildWarnings(
+      compilation.diagnostics,
+      arguments_.strict ?? false,
+    );
     await reportPhase(
       reporter,
       "Checking generated output",
@@ -201,7 +228,7 @@ async function execute(
   const port = arguments_.port ?? 4173;
   if (arguments_.command === "__serve-child") {
     if (!runtimeStartup) {
-      config.warnings?.forEach((warning) => warnings.add(warning));
+      config.diagnostics?.forEach((warning) => warnings.add(warning));
       warnings.flush();
     }
     await runServerChild(
@@ -250,49 +277,4 @@ async function execute(
 
 function relativeOutput(cwd: string, output: string): string {
   return path.relative(cwd, output) || ".";
-}
-
-function waitForShutdown(
-  running: RunningServe,
-  environment: TerminalEnvironment,
-  reporter: CliReporter,
-  watched: boolean,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    let closing = false;
-    const onSignal = (): void => void close();
-    const shortcuts = new ServeShortcuts(environment, reporter, {
-      clear: () => reporter.clearServe(),
-      close: onSignal,
-      help: () => reporter.showShortcuts(),
-      open: async () => {
-        await openServedBrowser(
-          environment.browserOpener,
-          reporter,
-          running.url,
-        );
-      },
-      rebuild: () => running.rebuild?.(),
-    });
-    const cleanup = (): void => {
-      shortcuts.close();
-      process.off("SIGINT", onSignal);
-      process.off("SIGTERM", onSignal);
-    };
-    const close = async (): Promise<void> => {
-      if (closing) return;
-      closing = true;
-      try {
-        await running.close();
-        cleanup();
-        resolve();
-      } catch (error) {
-        cleanup();
-        reject(error);
-      }
-    };
-    process.once("SIGINT", onSignal);
-    process.once("SIGTERM", onSignal);
-    if (watched) shortcuts.start();
-  });
 }

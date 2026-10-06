@@ -5,8 +5,8 @@ import http, { type ServerResponse } from "node:http";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
+import type { BuildDiagnostic } from "../../dist/build/build_warnings.js";
 import { BuildWarningSink } from "../../dist/build/warning_sink.js";
-import type { BuildWarning } from "../../dist/build/warnings.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { PlainServeReporter } from "../../dist/server/reporter.js";
 import type { WatchReport } from "../../dist/server/reporter.js";
@@ -97,18 +97,19 @@ export class WarningRenderGate {
 }
 
 class ObservedWarningSink extends BuildWarningSink {
-  readonly additions: BuildWarning[] = [];
+  readonly additions: BuildDiagnostic[] = [];
   constructor(
     readonly journal: WarningJournal,
-    readonly emitted: BuildWarning[],
+    readonly emitted: BuildDiagnostic[],
   ) {
     super((warning) => {
       emitted.push(warning);
       journal.record("warning");
     });
   }
-  override add(warning: BuildWarning): void {
+  override add(warning: BuildDiagnostic): void {
     this.additions.push(warning);
+    this.journal.record("collected");
     super.add(warning);
   }
   override reset(): void {
@@ -172,7 +173,7 @@ export default (input) => {
   );
   const config = await loadConfig(fixture.root);
   const journal = new WarningJournal();
-  const emitted: BuildWarning[] = [];
+  const emitted: BuildDiagnostic[] = [];
   const sink = new ObservedWarningSink(journal, emitted);
   const watchers = new FakeWatcherFactory();
   return {

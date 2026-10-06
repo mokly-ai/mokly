@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { removedSharedImpact, type BuildWarning } from "../build/warnings.js";
+import { type BuildDiagnostic } from "../build/build_warnings.js";
+import { removedSharedImpact } from "../build/warnings.js";
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
@@ -38,7 +39,7 @@ import type { MoklyConfig, ResolvedConfig } from "./types.js";
 export function resolveConfig(
   value: unknown,
   configPath: string,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): ResolvedConfig {
   if (!isRecord(value)) {
     throw new MoklyError(
@@ -71,7 +72,12 @@ export function resolveConfig(
   }
   const removedReviewField =
     isRecord(value.review) && Object.hasOwn(value.review, "sharedImpact")
-      ? removedSharedImpact(configPath)
+      ? removedSharedImpact(
+          configPath,
+          typeof value.repoRoot === "string"
+            ? path.resolve(path.dirname(configPath), value.repoRoot)
+            : undefined,
+        )
       : undefined;
   if (removedReviewField) onWarning?.(removedReviewField);
   const input = value as unknown as MoklyConfig;
@@ -150,7 +156,7 @@ export function resolveConfig(
     repoRoot,
   });
   const resolved: ResolvedConfig = {
-    ...(removedReviewField ? { warnings: [removedReviewField] } : {}),
+    ...(removedReviewField ? { diagnostics: [removedReviewField] } : {}),
     publicExclude,
     generatedOutput,
     colorSchemes,

@@ -19,6 +19,7 @@ npx mokly export --out .context/mokly-site
 | `--config <path>` | Use an explicit `mokly.config` file                         |
 | `--base <ref>`    | Git base ref used to find the branch point                  |
 | `--debug-timings` | Report phase timings and catalogue counts on standard error |
+| `--strict`        | Fail before writing when the build reports warnings         |
 
 ## What it produces
 
@@ -29,6 +30,13 @@ never uploads anything.
 
 Deploy the directory's contents at the root of an HTTP(S) origin. Hosting
 requirements are on the Catalogue page for export and hosting.
+
+## Warnings
+
+Export prints the warnings of the build it packages on standard error and
+still exports. With `--strict` it prints them and stops before writing the
+destination. The failure says `1 build warning with --strict` for one warning
+and `<n> build warnings with --strict` otherwise.
 
 ## The destination
 
@@ -55,3 +63,6 @@ deleting that folder and exporting again.
 point must exist in the checkout together with the authored assets and either
 the committed generated output or the tooling a derived baseline rebuild
 needs. In CI, check out the full history.
+
+Warnings name a generated page, an entry, a component, a folder or the
+configuration file. Strict mode counts all warnings, including ignored inputs.

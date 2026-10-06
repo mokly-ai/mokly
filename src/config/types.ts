@@ -1,6 +1,6 @@
 import type { ColorScheme } from "@mokly/viewer";
 
-import type { BuildWarning } from "../build/warnings.js";
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import type { FolderRecord } from "../registry/folder_records.js";
 
 import type { componentStylesheets } from "./component_stylesheets.js";
@@ -126,7 +126,7 @@ export interface MoklyConfig {
 /** Absolute, validated configuration consumed by runtime engines. */
 export interface ResolvedConfig {
   /** Configuration warnings retained across command and Serve boundaries. */
-  warnings?: readonly BuildWarning[];
+  diagnostics?: readonly BuildDiagnostic[];
   generatedOutput: "committed" | "derived";
   colorSchemes: readonly ColorScheme[];
   compatibility: {

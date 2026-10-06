@@ -230,3 +230,11 @@ behaviour, and the exact text of every diagnostic.
 - [Variant navigation](./mokly-variant-navigation.md)
 - [Public catalogue read model](./mokly-catalogue.md)
 - [Catalogue navigation](./mokly-navigation.md)
+
+## Removed Input Warnings
+
+A `defineFolder` with removed `dependencies` emits `removed-dependencies` with
+a folder subject and exactly
+`dependencies has been removed; ignoring it. Delete the field.`
+It never warns on descendants. Directory JSON and document front matter remain
+strict. Retired nested/root helpers have no runtime boundary.

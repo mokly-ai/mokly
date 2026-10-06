@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
-import type { BuildWarning } from "../dist/build/warnings.js";
 import { insertComponentStylesheets } from "../dist/components/stylesheet_links.js";
 import { rendererStylesheetPaths } from "../dist/components/stylesheet_reuse.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -170,7 +170,7 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
 });
 
 test("configured alternate stylesheet tokens anchor declared links", () => {
-  const warnings: BuildWarning[] = [];
+  const warnings: BuildDiagnostic[] = [];
   const html =
     '<html><head><link rel="alternate Stylesheet" href="../base.css"><meta name="after-anchor"></head><body>Content</body></html>';
   assert.equal(

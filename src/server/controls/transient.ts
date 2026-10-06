@@ -54,7 +54,7 @@ export function renderTransient(
       target.colorScheme === request.colorScheme,
   )![0];
   const document = compiler.render(route, props, moveTargets);
-  const warnings = [...(document.warnings ?? [])];
+  const warnings = [...(document.diagnostics ?? [])];
   const files = captureRenderBundle(
     route,
     new Map([...graph.styleOutputs, [route, document.html]]),
@@ -64,7 +64,7 @@ export function renderTransient(
       if (!compiler!.routes.has(target))
         return compiler!.readGeneratedFile(target);
       const generated = compiler!.render(target, undefined, moveTargets);
-      warnings.push(...(generated.warnings ?? []));
+      warnings.push(...(generated.diagnostics ?? []));
       return generated.html;
     },
   );
@@ -73,6 +73,6 @@ export function renderTransient(
     props: encodeProps(props),
     view: document.view!,
     files,
-    ...(warnings.length ? { warnings } : {}),
+    ...(warnings.length ? { diagnostics: warnings } : {}),
   };
 }

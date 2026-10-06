@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
+import { normalizeBuildDiagnostics } from "../dist/build/build_warnings.js";
 import { acquireOutputLock } from "../dist/build/output_lock.js";
 
 import { warningFixture } from "./helpers/warning_generations.js";
@@ -14,14 +15,14 @@ test(
     const running = await fixture.start();
     const first = await fixture.gate.next("background");
     first.release();
-    await fixture.journal.wait("warning");
+    await fixture.journal.wait("collected");
     const last = await fixture.gate.next("background", first.index + 1);
     await fs.writeFile(fixture.entryPath, "export const broken = ;");
     running.rebuild!();
     await fixture.journal.wait("failed:rebuild");
     last.release();
     await fixture.journal.wait("classified");
-    assert.equal(fixture.emitted.length, 1, JSON.stringify(fixture.emitted));
+    assert.equal(fixture.emitted.length, 0, JSON.stringify(fixture.emitted));
   },
 );
 
@@ -33,7 +34,7 @@ test(
     const running = await fixture.start();
     const first = await fixture.gate.next("background");
     first.release();
-    await fixture.journal.wait("warning");
+    await fixture.journal.wait("collected");
     const last = await fixture.gate.next("background", first.index + 1);
     const lock = await acquireOutputLock(fixture.root);
     fixture.beforeRemove(() => lock.release());
@@ -46,7 +47,7 @@ test(
     await lock.release();
     await fixture.journal.wait("finished:rebuild", boundary);
     await fixture.journal.wait("classified", boundary);
-    assert.equal(fixture.emitted.length, 1, JSON.stringify(fixture.emitted));
+    assert.equal(fixture.emitted.length, 0, JSON.stringify(fixture.emitted));
   },
 );
 
@@ -73,7 +74,7 @@ for (const fails of [false, true]) {
       fixture.beforeRemove(() => release());
       const first = await fixture.gate.next("background");
       first.release();
-      await fixture.journal.wait("warning");
+      await fixture.journal.wait("collected");
       const last = await fixture.gate.next("background", first.index + 1);
       await fixture.fixRenderer();
       fixture.watchers.watchers[0]!.change(fixture.configPath);
@@ -84,7 +85,7 @@ for (const fails of [false, true]) {
       await fixture.journal.wait(
         `${fails ? "failed" : "finished"}:reconfigure`,
       );
-      assert.equal(fixture.emitted.length, 1, JSON.stringify(fixture.emitted));
+      assert.equal(fixture.emitted.length, 0, JSON.stringify(fixture.emitted));
     },
   );
 }
@@ -101,6 +102,10 @@ test(
     last.release();
     await fixture.journal.wait("classified");
     assert.equal(fixture.emitted.length, 2);
-    assert.deepEqual(fixture.sink.additions, fixture.emitted);
+    assert.equal(fixture.sink.additions.length, 2);
+    assert.deepEqual(
+      normalizeBuildDiagnostics(fixture.sink.additions),
+      fixture.emitted,
+    );
   },
 );

@@ -192,7 +192,12 @@ follow the command, for example `mokly build --config tools/mokly.config.ts`.
 
 The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. During watched Serve, press `h` to see shortcuts for opening,
-rebuilding, clearing, and quitting.
+rebuilding, clearing, and quitting. Build warnings print on standard error
+without changing the exit status; `--strict` turns them into a failed command.
+
+Ignored-input warnings use the same channel as link-control warnings. They
+name the affected page or authored input. `--strict` counts every warning
+before Build, Check, export or publish can write or upload output.
 
 Detailed command references:
 
@@ -321,8 +326,8 @@ generated output, and tests aligned.
 ## Develop Mokly
 
 For repository development, use the tested Node.js version in
-[`.node-version`](./.node-version), npm 11.7, Rust 1.95, and Chromium for the
-browser suite.
+[`.nvmrc`](./.nvmrc), npm 11.7, Rust 1.95, and Chromium for the browser suite.
+With nvm, run `nvm install` in the repository to install and use that version.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
@@ -355,6 +360,9 @@ merge.
 Large ordinary-preview browser fixtures build in an owned Node child, then
 serve that real artifact in the worker. This keeps Playwright's diagnostic
 stack capture out of the build while retaining the same catalogue and checks.
+Pull request titles use Conventional Commits and at most 72 Unicode code points.
+The separate title check runs when a PR opens, changes, or receives a push; see
+the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
 `npm run dependencies:check` audits every workspace dependency category against
 the live registry. It fails on Low-or-higher advisories unless an active reviewed

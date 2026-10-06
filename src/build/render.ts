@@ -33,12 +33,12 @@ import { MoklyError, errorMessage } from "../errors.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
 
+import type { BuildDiagnostic } from "./build_warnings.js";
 import { generatedHeader } from "./ownership.js";
 import { renderPage } from "./render_page.js";
 import { rendererWithoutCssOwners } from "./renderer_resources.js";
 import { stylesheetHref, type StyleDelivery } from "./styles/links.js";
 import { isGeneratedRoute } from "./styles/routes.js";
-import type { BuildWarning } from "./warnings.js";
 
 /** Render every screen view to owned, linked static documents. */
 export function renderFragments(
@@ -54,7 +54,7 @@ export function renderFragments(
     colorScheme: ColorScheme;
   },
   styles?: StyleDelivery,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
   stylesheetLinks?: Map<string, readonly LinkedComponentStylesheet[]>,
 ): Map<string, string> {
   const outputs = new Map<string, string>();
@@ -153,7 +153,7 @@ export function renderFragments(
               });
               rendered = output.html;
               stylesheetLinks?.set(route, output.stylesheetLinks);
-              if (onWarning) output.warnings?.forEach(onWarning);
+              if (onWarning) output.diagnostics?.forEach(onWarning);
               componentViews.set(route, {
                 ...output.view,
                 styles: rebaseStyleOwnership(

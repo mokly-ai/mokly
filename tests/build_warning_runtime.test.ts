@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { normalizeBuildDiagnostics } from "../dist/build/build_warnings.js";
 import type { ComponentRuntime } from "../dist/build/component_runtime.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import type { GenerationWarning } from "../dist/build/warning_generation.js";
@@ -37,8 +38,8 @@ test(
     const compilation = await worker.compilation;
     assert.equal(events.length, 2);
     assert.deepEqual(
-      events.map((event) => event.warning),
-      compilation.warnings,
+      normalizeBuildDiagnostics(events.map((event) => event.warning)),
+      compilation.diagnostics,
     );
     assert.deepEqual(
       events.map((event) => event.generation),

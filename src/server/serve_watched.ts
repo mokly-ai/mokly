@@ -275,7 +275,6 @@ export async function serveWatched(
     activeConfig.repoRoot,
     options.base ?? activeConfig.review.base,
   );
-  warnings.flush();
   return {
     port,
     rebuild: () => queue.notify("rebuild"),

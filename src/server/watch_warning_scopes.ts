@@ -11,8 +11,9 @@ export function scopedWatchWarnings(
     if (action === "rebuild" || action === "reconfigure") warnings.reset();
     try {
       await process(action);
-    } finally {
+    } catch (error) {
       warnings.flush();
+      throw error;
     }
   };
 }

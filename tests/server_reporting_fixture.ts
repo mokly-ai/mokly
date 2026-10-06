@@ -1,5 +1,6 @@
 import type { ManifestV8 } from "@mokly/viewer/data";
 
+import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
 import type { ChildHandle } from "../dist/server/child_process.js";
 import type { ServeReporter, WatchReport } from "../dist/server/reporter.js";
 import type { ChildCommand } from "../dist/server/update_messages.js";
@@ -43,6 +44,10 @@ export class RecordingReporter implements ServeReporter {
     this.events.push(
       `baseline-ready:${commit}:${cacheHit ? "reused" : "rebuilt"}`,
     );
+  }
+  buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
+    for (const diagnostic of diagnostics)
+      this.events.push(`warning:${diagnostic.route}`);
   }
   catalogueReady(manifest: ManifestV8): void {
     const screens = manifest.entries.filter(

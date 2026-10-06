@@ -4,7 +4,6 @@ import {
   entryRoute,
   documentRoute,
   isManifestComponentVariant,
-  validateComponentViewRecord,
   generatedViews,
 } from "@mokly/viewer/data";
 import type { ArtifactView } from "@mokly/viewer/data";
@@ -14,19 +13,21 @@ import {
   transformCompatibilityDocuments,
   type CompatibilityContext,
 } from "../compatibility/transform.js";
-import { validateComponentResources } from "../components/output_validation.js";
-import { validateComponentRanges } from "../components/ranges.js";
 import type { LinkedComponentStylesheet } from "../components/render.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
-import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
 import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
+import {
+  normalizeBuildDiagnostics,
+  isLinkControlDiagnostic,
+  type BuildDiagnostic,
+} from "./build_warnings.js";
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
+import { finalizeDocumentView } from "./document_components.js";
 import type {
   CompiledDocument,
   DocumentTarget,
@@ -47,7 +48,6 @@ import {
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
-import type { BuildWarning } from "./warnings.js";
 
 /** Pure/countable boundaries used once per accepted document generation. */
 export interface DocumentValidationSeams {
@@ -146,12 +146,16 @@ export class DocumentCompiler {
       : this.prepare(route);
     const outputs = new Map([[route, document.html]]);
     const observed = new Map<string, string>();
-    const warnings = [...(document.warnings ?? [])];
+    const warnings = [...(document.diagnostics ?? [])];
     const read = (target: string) => {
       const value = target === route ? document : this.prepare(target);
       if (target !== route) {
         observed.set(target, value.html);
-        warnings.push(...(value.warnings ?? []));
+        warnings.push(
+          ...value.diagnostics.filter(
+            (warning) => !isLinkControlDiagnostic(warning),
+          ),
+        );
       }
       return value;
     };
@@ -172,11 +176,11 @@ export class DocumentCompiler {
         if (this.routes.has(target)) this.links.parsed.delete(target);
     }
     return {
+      diagnostics: normalizeBuildDiagnostics(warnings),
       route,
       html: document.html,
       ...(document.view ? { view: document.view } : {}),
       ...(observed.size ? { watchDocuments: [...observed] } : {}),
-      ...(warnings.length ? { warnings } : {}),
     };
   }
 
@@ -201,7 +205,7 @@ export class DocumentCompiler {
     const config = this.runtime.config;
     const views = new Map<string, ArtifactView>();
     const componentViews = new Map<string, ComponentViewRecord>();
-    const warnings: BuildWarning[] = [];
+    const warnings: BuildDiagnostic[] = [];
     const stylesheetLinks = new Map<
       string,
       readonly LinkedComponentStylesheet[]
@@ -225,7 +229,7 @@ export class DocumentCompiler {
       stylesheetLinks,
     );
     const original = outputs.get(route)!;
-    const records = transformCompatibilityDocuments(
+    const compatibility = transformCompatibilityDocuments(
       outputs,
       this.entries,
       config,
@@ -241,54 +245,30 @@ export class DocumentCompiler {
       outputs,
       new Map([[route, entry.sourceRelativePath]]),
     );
-    const captured = componentViews.get(route);
-    const view = captured
-      ? (() => {
-          if (entry.kind !== "screen" && entry.kind !== "component")
-            throw new MoklyError(
-              "build-invalid",
-              `${route}: unexpected component view`,
-            );
-          const finalized = finalizeComponentStylesheets(
-            original,
-            html,
-            captured,
-            route,
-            config.mockupsDir,
-            stylesheetLinks.get(route) ?? [],
-          );
-          html = finalized.html;
-          outputs.set(route, html);
-          return {
-            ...finalized.view,
-            styles: rebaseStyleOwnership(original, html, captured.styles),
-          };
-        })()
-      : undefined;
-    if (view) {
-      validateComponentRanges(html, view.ranges);
-      validateComponentViewRecord(
-        view,
-        this.components,
-        route,
-        entry.kind === "component" && "variantOf" in entry
-          ? entry.variantOf
-          : undefined,
-      );
-      validateComponentResources(
-        new Map([[route, view]]),
-        config,
-        this.pending,
-      );
-    }
+    const finalized = finalizeDocumentView({
+      route,
+      entry,
+      original,
+      html,
+      captured: componentViews.get(route),
+      config,
+      links: stylesheetLinks.get(route) ?? [],
+      components: this.components,
+      pending: this.pending,
+    });
+    html = finalized.html;
+    const view = finalized.view;
     normalizeSingleDocument(html, route);
     const prepared = {
+      diagnostics: normalizeBuildDiagnostics([
+        ...warnings,
+        ...compatibility.diagnostics,
+      ]),
       route,
       html,
-      records,
+      records: compatibility.records,
       anchors: extractHtmlReferences(html).anchors,
       ...(view ? { view } : {}),
-      ...(warnings.length ? { warnings } : {}),
     };
     if (!componentProps) this.prepared.set(route, prepared);
     return prepared;

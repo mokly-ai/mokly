@@ -72,7 +72,7 @@ export class ComponentRenderService {
         "cancelled",
         "The preview request was replaced.",
       );
-    result.warnings?.forEach((warning) =>
+    result.diagnostics?.forEach((warning) =>
       this.onWarning?.({ generation, warning }),
     );
     return this.store.put(result, request.generation);

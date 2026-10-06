@@ -1,4 +1,3 @@
-import type { BuildWarning } from "../../build/warnings.js";
 import type { ServeReporter } from "../../server/reporter.js";
 import type { BrowserOpener } from "../browser.js";
 
@@ -44,7 +43,6 @@ export interface ReporterPhase {
 
 /** Output seam shared by command composition and terminal tests. */
 export interface CliReporter extends ServeReporter {
-  buildWarning(warning: BuildWarning): void;
   readonly environment: TerminalEnvironment;
   readonly mode: OutputMode;
   clearServe(): void;

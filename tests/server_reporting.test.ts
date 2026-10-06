@@ -93,9 +93,8 @@ test("child warning IPC accepts only bounded structured warnings", () => {
   const generation = "a".repeat(32);
   const warning = {
     code: "removed-dependencies",
-    context: ["home"],
-    message:
-      'dependencies has been removed; ignoring it on entry "home". Delete the field.',
+    subject: { kind: "entry", path: "home" },
+    message: "dependencies has been removed; ignoring it. Delete the field.",
   };
   assert.deepEqual(
     parseChildWarningMessage({ type: "warning", generation, warning }),
@@ -145,7 +144,7 @@ test("the supervisor forwards validated child diagnostics", async () => {
     generation: "a".repeat(32),
     warning: {
       code: "removed-dependencies",
-      context: ["home"],
+      subject: { kind: "entry", path: "home" },
       message: "before ready warning",
     },
   });
@@ -158,7 +157,7 @@ test("the supervisor forwards validated child diagnostics", async () => {
     generation: "b".repeat(32),
     warning: {
       code: "removed-dependencies",
-      context: ["home"],
+      subject: { kind: "entry", path: "home" },
       message: "after ready warning",
     },
   });

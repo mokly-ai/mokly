@@ -53,18 +53,27 @@ exit before the reporter sets status 1.
 Publish-only modules are loaded after command selection. Build, Check, Export,
 and supervised Serve children therefore do not initialize the upload exchange.
 
+Build warnings are non-fatal compile diagnostics carried on the compilation
+result. `run.ts` prints them through the reporter after the rendering phase.
+`build`, `check`, `export`, and `publish` accept `--strict`, which reports every
+warning and then fails before the next write, comparison, staging, or upload
+boundary. Serve refuses the flag. Plain and rich warning lines both use stderr,
+so plain stdout and rich summaries retain their established bytes.
+
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
 to the parent so only one reporter owns the terminal.
 `run.ts` also owns one structured warning sink per invocation. It flushes
-sorted, deduplicated warnings before one-shot summaries and Serve readiness,
+sorted, deduplicated diagnostics before one-shot summaries and Catalogue ready,
 redacts credentials, and starts each watched attempt's warning scope before
 config or consumer preparation. A failed attempt keeps old previews without
 restoring their warning scope. The supervised child forwards render warnings
 with the attempt captured from its rendering inputs. A full-manifest child
 captures its own config-warning generation before loading config. A child that
 receives retained config does not replay the parent's config warnings. Only
-the parent reports IPC warnings to the terminal.
+the parent reports IPC warnings to the terminal. Main's `buildWarnings` reporter
+formats both routes and typed subjects. Strict commands count every producer
+and fail before writes or upload; Serve refuses `--strict`.
 
 ## Quick Start
 

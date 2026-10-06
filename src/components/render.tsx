@@ -7,7 +7,7 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
 import { definitionPath } from "../authoring/identity.js";
-import type { BuildWarning } from "../build/warnings.js";
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
 
@@ -36,7 +36,7 @@ export interface ComponentRenderOutput {
   html: string;
   view: ComponentViewRecord;
   stylesheetLinks: readonly LinkedComponentStylesheet[];
-  warnings?: readonly BuildWarning[];
+  diagnostics?: readonly BuildDiagnostic[];
 }
 export type ComponentGraphRenderer = (
   input: RenderInput,
@@ -126,7 +126,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
     }
   }
   const physicalPaths = new Set(declarations.keys());
-  const warnings: BuildWarning[] = [];
+  const warnings: BuildDiagnostic[] = [];
   const rendererLinks = rendererStylesheetPaths(
     serialized.html,
     placement.route,
@@ -167,7 +167,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
       physical,
       componentPaths: [...paths].sort(),
     })),
-    ...(warnings.length ? { warnings } : {}),
+    ...(warnings.length ? { diagnostics: warnings } : {}),
   };
 };
 

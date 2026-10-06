@@ -1,69 +1,47 @@
-/** Structured, non-fatal diagnostics retained for the CLI warning reporter. */
-export interface BuildWarning {
-  code:
-    | "removed-dependencies"
-    | "removed-owned-dependencies"
-    | "removed-shared-impact"
-    | "duplicate-component-stylesheet"
-    | "missing-configured-stylesheet-link"
-    | "ignored-stylesheet-resource-owner";
-  context: readonly string[];
-  message: string;
-}
+import path from "node:path";
 
-const WARNING_CODES = new Set<BuildWarning["code"]>([
-  "removed-dependencies",
-  "removed-owned-dependencies",
-  "removed-shared-impact",
-  "duplicate-component-stylesheet",
-  "missing-configured-stylesheet-link",
-  "ignored-stylesheet-resource-owner",
-]);
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
-export function isBuildWarning(value: unknown): value is BuildWarning {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<BuildWarning>;
-  return (
-    WARNING_CODES.has(candidate.code as BuildWarning["code"]) &&
-    Array.isArray(candidate.context) &&
-    candidate.context.length ===
-      (candidate.code === "removed-dependencies" ||
-      candidate.code === "removed-owned-dependencies" ||
-      candidate.code === "removed-shared-impact"
-        ? 1
-        : 2) &&
-    candidate.context.every(
-      (item) => typeof item === "string" && Buffer.byteLength(item) <= 4_096,
-    ) &&
-    typeof candidate.message === "string" &&
-    candidate.message.length > 0 &&
-    Buffer.byteLength(candidate.message) <= 65_536
-  );
-}
+import { escapeTerminalControlCharacters } from "../diagnostics/terminal_text.js";
 
+import type { BuildDiagnostic } from "./build_warnings.js";
+
+/** Removed inputs are warning producers, never comparison evidence. */
 export function removedDependencies(
   path: string,
-  subject: "entry" | "folder" = "entry",
-): BuildWarning {
+  kind: "entry" | "folder" = "entry",
+): BuildDiagnostic {
   return {
     code: "removed-dependencies",
-    context: [subject === "folder" ? `folder:${path}` : path],
-    message: `dependencies has been removed; ignoring it on ${subject} ${JSON.stringify(path)}. Delete the field.`,
+    subject: { kind, path },
+    message: "dependencies has been removed; ignoring it. Delete the field.",
   };
 }
 
-export function removedOwnedDependencies(path: string): BuildWarning {
+export function removedOwnedDependencies(path: string): BuildDiagnostic {
   return {
     code: "removed-owned-dependencies",
-    context: [path],
-    message: `ownedDependencies has been removed; ignoring it on component ${JSON.stringify(path)}. Delete the field.`,
+    subject: { kind: "component", path },
+    message:
+      "ownedDependencies has been removed; ignoring it. Delete the field.",
   };
 }
 
-export function removedSharedImpact(configPath: string): BuildWarning {
+export function removedSharedImpact(
+  configPath: string,
+  repoRoot?: string,
+): BuildDiagnostic {
+  const relative = repoRoot
+    ? path.relative(repoRoot, configPath)
+    : path.basename(configPath);
   return {
     code: "removed-shared-impact",
-    context: [configPath],
+    subject: {
+      kind: "configuration",
+      path: isSafeRepositoryPath(relative.split(path.sep).join("/"))
+        ? relative.split(path.sep).join("/")
+        : path.basename(configPath),
+    },
     message:
       "review.sharedImpact has been removed; ignoring it. Delete the field.",
   };
@@ -71,35 +49,37 @@ export function removedSharedImpact(configPath: string): BuildWarning {
 
 export function duplicateComponentStylesheet(
   componentPath: string,
-  physicalPath: string,
   publicPath: string,
-): BuildWarning {
+): BuildDiagnostic {
   return {
     code: "duplicate-component-stylesheet",
-    context: [componentPath, physicalPath],
-    message: `duplicate component stylesheet ${JSON.stringify(publicPath)} on component ${JSON.stringify(componentPath)} is ignored; it is linked once.`,
+    subject: { kind: "component", path: componentPath },
+    message: `duplicate component stylesheet ${quoted(publicPath)} is ignored; it is linked once.`,
   };
 }
 
 export function missingConfiguredStylesheetLink(
   route: string,
   href: string,
-): BuildWarning {
+): BuildDiagnostic {
   return {
     code: "missing-configured-stylesheet-link",
-    context: [route, href],
-    message: `configured stylesheet link ${JSON.stringify(href)} is absent from ${JSON.stringify(route)}; component stylesheets use another anchor.`,
+    route,
+    message: `configured stylesheet link ${quoted(href)} is absent; component stylesheets use another anchor.`,
   };
 }
 
 export function ignoredStylesheetResourceOwner(
   route: string,
-  physicalPath: string,
   publicPath: string,
-): BuildWarning {
+): BuildDiagnostic {
   return {
     code: "ignored-stylesheet-resource-owner",
-    context: [route, physicalPath],
-    message: `Stylesheet ownership for ${JSON.stringify(publicPath)} on ${JSON.stringify(route)} is ignored. Changes follow the elements that each changed rule matches.`,
+    route,
+    message: `Stylesheet ownership for ${quoted(publicPath)} is ignored. Changes follow the elements that each changed rule matches.`,
   };
+}
+
+function quoted(value: string): string {
+  return escapeTerminalControlCharacters(JSON.stringify(value));
 }

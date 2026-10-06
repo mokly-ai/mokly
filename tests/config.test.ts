@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import type { BuildWarning } from "../dist/build/warnings.js";
+import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
 import { discoverConfig, loadConfig } from "../dist/config/load.js";
 import { validateRelativeRoute } from "../dist/config/paths.js";
 import { resolveConfig } from "../dist/config/validate.js";
@@ -61,19 +61,19 @@ test("review.sharedImpact warns and is ignored even when undefined", async (cont
         `outDir: ".review", sharedImpact: ${value}`,
       ),
     );
-    const emitted: BuildWarning[] = [];
+    const emitted: BuildDiagnostic[] = [];
     const config = await loadConfig(fixture.root, undefined, (warning) =>
       emitted.push(warning),
     );
-    assert.deepEqual(config.warnings, [
+    assert.deepEqual(config.diagnostics, [
       {
         code: "removed-shared-impact",
-        context: [fixture.configPath],
+        subject: { kind: "configuration", path: "mokly.config.ts" },
         message:
           "review.sharedImpact has been removed; ignoring it. Delete the field.",
       },
     ]);
-    assert.deepEqual(emitted, config.warnings);
+    assert.deepEqual(emitted, config.diagnostics);
     await fs.promises.writeFile(fixture.configPath, source);
   }
 });

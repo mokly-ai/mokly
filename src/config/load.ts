@@ -5,8 +5,8 @@ import { pathToFileURL } from "node:url";
 
 import { build, type Plugin, type PluginBuild } from "esbuild";
 
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { graphSourceFiles } from "../build/source_inventory.js";
-import type { BuildWarning } from "../build/warnings.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import { componentStylesheetsKey } from "./component_stylesheets.js";
@@ -25,7 +25,7 @@ const CONFIG_NAMES = [
 export interface ConfigLoader {
   load(
     configPath: string,
-    onWarning?: (warning: BuildWarning) => void,
+    onWarning?: (warning: BuildDiagnostic) => void,
   ): Promise<ResolvedConfig>;
 }
 
@@ -33,7 +33,7 @@ export interface ConfigLoader {
 export class FileSystemConfigLoader implements ConfigLoader {
   load(
     configPath: string,
-    onWarning?: (warning: BuildWarning) => void,
+    onWarning?: (warning: BuildDiagnostic) => void,
   ): Promise<ResolvedConfig> {
     return loadConfig(path.dirname(configPath), configPath, onWarning);
   }
@@ -74,7 +74,7 @@ export function discoverConfig(cwd: string, explicitPath?: string): string {
 export async function loadConfig(
   cwd: string,
   explicitPath?: string,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<ResolvedConfig> {
   const configPath = discoverConfig(cwd, explicitPath);
   const temporaryDir = await fs.promises.mkdtemp(

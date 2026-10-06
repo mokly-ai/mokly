@@ -25,7 +25,7 @@ export default defineScreen({title:'Home',description:'Home',relatedDocs:[],
   const built = await fixture.compile();
   assert.equal(parseManifest(built.manifest).schemaVersion, 8);
   assert.deepEqual(
-    built.warnings?.map((warning) => warning.context),
+    built.diagnostics?.map((warning) => [warning.subject?.path]),
     [["library/action"], ["library/action"]],
   );
   assert.ok(
@@ -107,17 +107,17 @@ defineScreen({path:'shop/home',title:'Home',description:'Home',relatedDocs:[],mo
   t.after(fixture.remove);
   const built = await fixture.compile();
   assert.deepEqual(
-    built.warnings?.map(({ code, context, message }) => ({
+    built.diagnostics?.map(({ code, subject, message }) => ({
       code,
-      context,
+      subject,
       message,
     })),
     [
       {
         code: "removed-dependencies",
-        context: ["folder:shop"],
+        subject: { kind: "folder", path: "shop" },
         message:
-          'dependencies has been removed; ignoring it on folder "shop". Delete the field.',
+          "dependencies has been removed; ignoring it. Delete the field.",
       },
     ],
   );

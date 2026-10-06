@@ -1,9 +1,9 @@
-import { isBuildWarning, type BuildWarning } from "./warnings.js";
+import { isBuildDiagnostic, type BuildDiagnostic } from "./build_warnings.js";
 
 /** A diagnostic retains the build attempt that supplied its rendering inputs. */
 export interface GenerationWarning {
   readonly generation: string;
-  readonly warning: BuildWarning;
+  readonly warning: BuildDiagnostic;
 }
 
 /** Validate the same producer envelope at worker and child-process boundaries. */
@@ -15,6 +15,6 @@ export function isGenerationWarning(
   return (
     typeof candidate.generation === "string" &&
     /^[a-f0-9]{32}$/.test(candidate.generation) &&
-    isBuildWarning(candidate.warning)
+    isBuildDiagnostic(candidate.warning)
   );
 }

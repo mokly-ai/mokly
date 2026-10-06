@@ -204,6 +204,8 @@ flowing. A child receives the parent-validated catalogue, validates
 its source inventory, and binds before
 readiness. Child and background warnings follow the
 [generation warning contract](./mokly-build-warnings.md#watched-serve-generations).
+The shared diagnostic sink flushes before Catalogue ready or failure and
+rejects old-attempt records immediately when a newer attempt starts.
 Initial startup tries a
 requested concrete port and then each higher port in order when the address
 is occupied; port `0` delegates selection to the

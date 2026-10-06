@@ -166,7 +166,7 @@ test("removed component and variant dependencies warn without inheritance or val
     config,
   );
   assert.deepEqual(
-    prepared.warnings.map(({ code, context }) => [code, context]),
+    prepared.diagnostics.map(({ code, subject }) => [code, [subject?.path]]),
     [
       ["removed-dependencies", [parent.path]],
       ["removed-dependencies", [child.path]],

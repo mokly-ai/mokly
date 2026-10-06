@@ -95,8 +95,13 @@ for (const field of [
     if (field === "dependencies") {
       const built = await fixture.compile();
       assert.deepEqual(
-        built.warnings?.map(({ code, context }) => ({ code, context })),
-        [{ code: "removed-dependencies", context: ["library/action/primary"] }],
+        built.diagnostics?.map(({ code, subject }) => ({ code, subject })),
+        [
+          {
+            code: "removed-dependencies",
+            subject: { kind: "entry", path: "library/action/primary" },
+          },
+        ],
       );
       assert.ok(
         built.manifest.entries.every(

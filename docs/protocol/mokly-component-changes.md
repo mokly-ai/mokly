@@ -184,7 +184,7 @@ per-rule facts before merging evidence by path. See the
 
 Mokly derives no CSS resource ownership records. Renderer `resources` records
 for any stylesheet are ignored with the
-[stylesheet-owner warning](./mokly-build-warnings.md#exact-messages), after
+[stylesheet-owner warning](./mokly-component-stylesheet-ownership.md#ignored-owner-warning), after
 public-path safety checks. Declarations still control links and
 `insertedStylesheets` provenance. Adding or removing a declaration changes
 material only if retained document content changes, or CSS/resource evidence

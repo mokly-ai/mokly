@@ -7,12 +7,10 @@ import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { Renderer } from "../renderer/types.js";
 
+import { type BuildDiagnostic } from "./build_warnings.js";
 import type { PendingGeneratedFiles } from "./pending_generated.js";
 import { isGeneratedRoute } from "./styles/routes.js";
-import {
-  ignoredStylesheetResourceOwner,
-  type BuildWarning,
-} from "./warnings.js";
+import { ignoredStylesheetResourceOwner } from "./warnings.js";
 
 /** Discard stylesheet assertions only after validating their public file identity. */
 export function rendererWithoutCssOwners(
@@ -20,7 +18,7 @@ export function rendererWithoutCssOwners(
   route: string,
   config: ResolvedConfig,
   pending?: PendingGeneratedFiles,
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Renderer {
   return (input) => {
     const result = renderer(input);
@@ -51,9 +49,7 @@ export function rendererWithoutCssOwners(
       if (!stylesheet) return true;
       if (!warned.has(identity)) {
         warned.add(identity);
-        onWarning?.(
-          ignoredStylesheetResourceOwner(route, identity, resource.path),
-        );
+        onWarning?.(ignoredStylesheetResourceOwner(route, resource.path));
       }
       return false;
     });

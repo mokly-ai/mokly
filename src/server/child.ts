@@ -1,5 +1,5 @@
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
-import type { BuildWarning } from "../build/warnings.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 
@@ -25,7 +25,7 @@ export async function runServerChild(
   strictPort: boolean,
   retainedRuntime: boolean,
   manifest?: ComponentRuntime["manifest"],
-  onWarning?: (warning: BuildWarning) => void,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<void> {
   const initial =
     retainedRuntime && manifest?.schemaVersion === "live-index-1"
