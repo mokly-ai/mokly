@@ -83,21 +83,14 @@ npm-running job keys npm's download cache from the checked-out
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
 
-`npm ci` never writes the lockfile, so after it the repository job runs
-`npm install --ignore-scripts --no-audit --no-fund`. The step fails with a
-`Lockfile does not match pinned npm` annotation when `package.json` or
-`package-lock.json` changes. It proves that the pinned npm reproduces the
-committed lockfile byte for byte. Another npm version can serialize different
-metadata. For example, npm 11.10.1 and older drop the `libc` fields that select
-the glibc or musl build of a native package; npm 11.11.0 started writing them
+Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
+or newer: older versions drop the lockfile's `libc` fields, which select the
+glibc or musl build of a native package
 ([npm/cli#9025](https://github.com/npm/cli/pull/9025)). Without those fields,
-`npm ci` on Linux installs both builds. The step uses a full install because
-`--package-lock-only` also records the bundled dependencies of the optional
-`@tailwindcss/oxide-wasm32-wasi` package, which a full install leaves out.
+`npm ci` on Linux installs both builds.
 [`tests/npm_pin.test.ts`](../../tests/npm_pin.test.ts) keeps every workflow
 npm pin equal to `packageManager`, requires CI and release jobs to set up that
-npm before `npm ci`, rejects pins older than npm 11.11.0, and runs this step
-against stub npm rewrites.
+npm before `npm ci`, and rejects pins older than npm 11.11.0.
 
 Linux and Windows jobs across CI, preview, and release workflows use
 Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
