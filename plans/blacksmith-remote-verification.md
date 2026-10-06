@@ -1,6 +1,8 @@
 # Blacksmith Remote Verification
 
 Status: Active. No pull request exists yet. Milestones 1 and 2 are complete.
+Milestone 3 is in progress. The live audit reports new advisories in `sharp`
+and `shell-quote`.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -211,9 +213,11 @@ valid. The fingerprint check covers the uncommitted changes.
 ## Prerequisites
 
 - The trial found advisory `GHSA-68fv-2mgg-jv7q` in `source-map-js` on
-  2026-10-06. The local live audit now passes with the same lockfile as
-  `origin/main`. Confirm the audit on `main` before Milestone 6. Keep any
-  required dependency fix in a separate change.
+  2026-10-06. The local live audit passed during Milestone 2. It now reports
+  `GHSA-wq5f-xc86-pv6w` in `sharp` and `GHSA-pqg4-j6r4-53mv` in `shell-quote`.
+  Keep required dependency fixes in a separate change. The repository smoke
+  test needs a passing live audit. Confirm the audit on `main` before
+  Milestone 6.
 - Done on 2026-10-06: the Conductor cloud snapshot installs the Blacksmith
   CLI. A new cloud workspace had CLI 0.4.65 in `/usr/local/bin`, `rsync`,
   `openssh-clients`, no saved Blacksmith login and a working
@@ -285,19 +289,29 @@ hydration tests. All 15 Rust tests pass. The source length audits pass.
 
 Add the dispatch workflow and prove that it prepares a usable box.
 
-- [ ] Add a failure-first workflow test. Cover the triggers, permissions,
+- [x] Add a failure-first workflow test. Cover the triggers, permissions,
       runner tier, timeout, pinned actions, step order, toolchain versions
       shared with `ci.yml`, the lockfile stamp and the `/etc/environment` step.
-- [ ] Add `.github/workflows/blacksmith-testbox.yml`. Confirm that
+- [x] Add `.github/workflows/blacksmith-testbox.yml`. Confirm that
       `useblacksmith/checkout` accepts `persist-credentials: false`.
-- [ ] Run the new test, `tests/workflow_runner_sizes.test.ts` and
+- [x] Run the new test, `tests/workflow_runner_sizes.test.ts` and
       `tests/ci_workflow_remote_state.test.ts`. Run actionlint when it is
       available.
+  - [x] Run ESLint, TypeScript, Prettier and the protocol tests.
+  - [x] Run `cargo xtask check` before the workflow commit and push.
 - [ ] Commit and push. Confirm that the push run passes in validation mode.
 - [ ] Smoke test: warm up one box with `--ref <branch>`. Run the repository
       and package suites through `testbox-suite.mjs`. Confirm Node 22.14.0,
       `chromium`, a complete Git history and passing release-tag ratchets.
       Stop the box.
+- [ ] Record smoke durations, versions and run IDs. Update the delivery
+      status. Commit and push the completed documentation.
+
+The six workflow tests failed before the workflow file existed.
+All 52 focused workflow and protocol tests pass. ESLint, TypeScript,
+Prettier, source audits and Clippy pass. Actionlint is not installed.
+`cargo xtask check` stops at the two dependency advisories listed above.
+The pinned checkout manifest declares `persist-credentials` as an input.
 
 ## Milestone 4: Explicit remote executor
 

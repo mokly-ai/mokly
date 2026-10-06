@@ -30,7 +30,7 @@ measurement follow the separate
 
 The [remote verification contract](./remote-verification.md) is an approved
 target under the active [plan](../../plans/blacksmith-remote-verification.md).
-Implementation is pending.
+The workflow secret boundary is implemented. Executor key handling is pending.
 
 Xtask reads the org key only from `BLACKSMITH_ORG_TOKEN`.
 It sends the key to `blacksmith auth login --api-token -` on standard input.

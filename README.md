@@ -334,8 +334,8 @@ merge.
 
 The [remote verification contract](./docs/protocol/remote-verification.md)
 defines the approved Testbox target. Its fingerprint and suite wrapper scripts
-are available. Workflow and executor integration are pending. The complete gate
-still runs locally.
+and preparation workflow are implemented. Executor integration is pending.
+The complete gate still runs locally.
 
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see

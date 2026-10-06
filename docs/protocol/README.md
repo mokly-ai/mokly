@@ -35,7 +35,7 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
 - [Remote verification](./remote-verification.md) — approved executor target;
-  implementation is pending.
+  executor integration is pending.
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands,
     sync probe, suite wrapper and source-tree fingerprint.
 - [CI workflow graph](./ci-workflow.md)
