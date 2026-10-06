@@ -45,7 +45,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         entry.path,
       );
       assert.equal(
-        namedRole(document, "navigation", "Related design pages").length,
+        namedRole(document, "navigation", /related design pages/iu).length,
         0,
         entry.path,
       );

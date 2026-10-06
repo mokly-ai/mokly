@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { parse } from "parse5";
+
 import type { ManifestComponentVariant } from "../packages/viewer/dist/components/manifest_types.js";
 import {
   generatedViews,
@@ -96,9 +98,11 @@ test("every owning design and shared sample omits legacy footer and view markup"
       const html = textOutput(outputs, file);
       assert.ok(html, file);
       assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
-      assert.doesNotMatch(
-        html,
-        /role="group" aria-label="(?:Viewport|Preview color scheme)"/,
+      const document = parse(html);
+      assert.equal(namedRole(document, "group", /viewport/iu).length, 0, file);
+      assert.equal(
+        namedRole(document, "group", /preview color scheme/iu).length,
+        0,
         file,
       );
     }
@@ -125,8 +129,8 @@ test("every selected screen uses one inspector and one preview toolbar", async (
       const { document } = await designDocument(entry.path, viewport);
       assert.equal(byClass(document, "mbk-details-bar").length, 0, entry.path);
       assert.equal(
-        namedRole(document, "group", "Viewport").length +
-          namedRole(document, "group", "Preview color scheme").length,
+        namedRole(document, "group", /viewport/iu).length +
+          namedRole(document, "group", /preview color scheme/iu).length,
         0,
         entry.path,
       );

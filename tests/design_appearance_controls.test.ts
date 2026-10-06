@@ -6,7 +6,7 @@ import { parse } from "parse5";
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
 import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
-import { accessibleName } from "./helpers/design_assertions.js";
+import { namedRole } from "./helpers/design_assertions.js";
 import {
   attribute,
   designCatalogue,
@@ -43,12 +43,7 @@ test("no design artboard depicts a scheme control", async () => {
       assert.equal(countClass(html, "ce-theme-toggle"), 0, route);
       const document = parse(html);
       assert.equal(
-        elements(
-          document,
-          (node) =>
-            attribute(node, "role") === "switch" &&
-            accessibleName(node, document) === "Dark preview",
-        ).length,
+        namedRole(document, "switch", /dark preview/iu).length,
         0,
         route,
       );

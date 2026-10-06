@@ -5,6 +5,7 @@ import {
   description,
   fieldValue,
   named,
+  namedRole,
   region,
   twoPreviews,
 } from "./helpers/design_assertions.js";
@@ -41,6 +42,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     );
     assert.equal(
       attribute(named(controls, "disabled", "input"), "type"),
+      "checkbox",
+    );
+    assert.equal(
+      attribute(named(controls, "Set hint", "input"), "type"),
       "checkbox",
     );
     for (const [name, tag, value] of [
@@ -188,6 +193,11 @@ for (const viewport of ["desktop", "mobile"] as const) {
         0,
         path,
       );
+      if (path === "states/comparison")
+        assert.equal(
+          namedRole(document, "group", /comparison mode/iu).length,
+          1,
+        );
       if (path === "states/comparison")
         assert.equal(
           attribute(

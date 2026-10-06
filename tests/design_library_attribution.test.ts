@@ -4,6 +4,7 @@ import test from "node:test";
 import { compareReview } from "../dist/review/compare.js";
 import { computeChangedPaths } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
 import { designEntries } from "./helpers/design_catalogue.js";
 import { designLibrary } from "./helpers/design_library.js";
@@ -24,13 +25,12 @@ test("each exclusive library stylesheet changes its component and only affects r
         [`design/library/${group}/${slug}`],
       );
       const baseline = await designEntries(
-        (entry) => entry.kind === "screen",
+        (entry): entry is ManifestScreen => entry.kind === "screen",
         "baseline consumers",
         fixture.before.manifest.entries,
       );
       const consumers = baseline
         .flatMap((entry) =>
-          entry.kind === "screen" &&
           generatedViews(entry).some((view) =>
             view.usage?.instances.some(
               (instance) =>

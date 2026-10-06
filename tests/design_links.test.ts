@@ -9,6 +9,7 @@ import {
   generatedViews,
   viewRoute,
 } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
 import {
   attribute,
@@ -179,7 +180,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 test("every design link resolves to a real same-viewport design artifact without scripts or nested controls", async () => {
   const designs = await designEntries(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
     "same-viewport design links",
   );
   const componentDesigns = designs.filter((entry) =>
@@ -244,14 +246,11 @@ test("every design link resolves to a real same-viewport design artifact without
 
 test("no design route doubles as a directory holding another design route", async () => {
   const entries = await designEntries(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
     "design directory routes",
   );
-  const routes = entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.path.startsWith("design/")
-      ? [entryRoute(entry.path)]
-      : [],
-  );
+  const routes = entries.map((entry) => entryRoute(entry.path));
   const directories = new Set(
     routes.flatMap((route) => {
       const segments = route.split("/").slice(0, -1);

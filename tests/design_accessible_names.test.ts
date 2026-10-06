@@ -37,3 +37,35 @@ test("named role checks include references and wrapping labels", () => {
   );
   assert.equal(namedRole(document, "switch", "Scroll together").length, 1);
 });
+
+test("named roles can match case-insensitive substrings without weakening exact names", () => {
+  const document = parse(
+    '<div role="group" aria-label="Selected COMPARISON MODE options"></div><div role="group" aria-label="Other group"></div>',
+  );
+  assert.equal(namedRole(document, "group", /comparison mode/giu).length, 1);
+  assert.equal(namedRole(document, "group", "Comparison mode").length, 0);
+});
+
+test("fieldset groups take their name from the direct legend", () => {
+  const document = parse(
+    '<fieldset title="Fallback"><legend>Preview color scheme options</legend><input></fieldset>',
+  );
+  assert.equal(
+    namedRole(document, "group", /preview color scheme/iu).length,
+    1,
+  );
+  assert.equal(namedRole(document, "group", "Fallback").length, 0);
+});
+
+test("titles name otherwise unnamed controls and groups", () => {
+  const document = parse(
+    '<nav title="Other related DESIGN PAGES"></nav><div role="group" title="Comparison mode"><span>Unrelated content</span></div><button title="Hint">Own name</button><input aria-label="Explicit" title="Fallback">',
+  );
+  assert.equal(
+    namedRole(document, "navigation", /related design pages/iu).length,
+    1,
+  );
+  assert.equal(namedRole(document, "group", /comparison mode/iu).length, 1);
+  assert.equal(named(document, "Own name", "button").tagName, "button");
+  assert.equal(named(document, "Explicit", "input").tagName, "input");
+});

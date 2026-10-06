@@ -216,7 +216,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       "design/components/states/additions/added",
       viewport,
     );
-    assert.equal(namedRole(document, "group", "Comparison mode").length, 0);
+    assert.equal(namedRole(document, "group", /comparison mode/iu).length, 0);
     for (const preview of twoPreviews(document)) {
       assert.equal(byClass(preview, "mbk-pane-missing").length, 0);
       assert.deepEqual(byClass(preview, "ce-badge").map(textContent), ["New"]);

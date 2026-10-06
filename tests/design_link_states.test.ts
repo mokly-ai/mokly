@@ -46,7 +46,10 @@ test("Changes artboards have named comparison modes and no separate modes naviga
           "Current",
         ]);
       }
-      assert.equal(namedRole(document, "navigation", "Mokly modes").length, 0);
+      assert.equal(
+        namedRole(document, "navigation", /mokly modes/iu).length,
+        0,
+      );
     }
   }
 });

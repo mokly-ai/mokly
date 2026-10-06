@@ -21,8 +21,8 @@ They do not need a browser or a served shell.
 Selected screen and component depictions have one inspector and one Preview
 options toolbar. Whole-page and document depictions have one inspector and no
 preview toolbar, including loading and unavailable previous documents. Home,
-missing-route, catalogue-navigation, and flow depictions have neither. Appearance
-depictions follow the same rule for the entry kind they show.
+missing-route, catalogue-navigation, and flow depictions have neither.
+Appearance depictions follow the same rule for the entry kind they show.
 
 Catalogue-wide selections use `designEntries(predicate, label)`. The helper
 returns matching manifest entries and fails with the supplied label if none

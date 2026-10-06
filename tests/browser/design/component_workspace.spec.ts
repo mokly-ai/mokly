@@ -41,7 +41,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       );
     });
 
-    test("an empty screen keeps its Components tab visible", async ({
+    test("empty and comparison states keep their controls visible", async ({
       page,
     }) => {
       await page.goto(
@@ -51,6 +51,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
         page
           .getByRole("region", { name: "Inspector", exact: true })
           .getByRole("button", { name: "Components", exact: true }),
+      ).toBeVisible();
+      await page.goto(
+        designArtboardUrl(
+          "design/components/controls/states/comparison",
+          viewport,
+        ),
+      );
+      await expect(
+        page.getByRole("group", { name: "Comparison mode" }),
       ).toBeVisible();
     });
 

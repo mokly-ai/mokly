@@ -205,7 +205,7 @@ test("every diff-mode band draws Scroll together after its modes, and Current ne
         `${route}: Current has no Scroll together anywhere`,
       );
       assert.equal(
-        namedRole(document, "switch", "Scroll together").length,
+        namedRole(document, "switch", /scroll together/iu).length,
         0,
         route,
       );

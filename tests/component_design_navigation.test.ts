@@ -110,7 +110,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       } else {
         assert.equal(toolbar, undefined, id);
         assert.equal(
-          namedRole(document, "group", "Comparison mode").length,
+          namedRole(document, "group", /comparison mode/iu).length,
           0,
           id,
         );

@@ -34,6 +34,13 @@ export function accessibleName(node: Element, root: Node): string {
       .join(" ");
   const ariaLabel = attribute(node, "aria-label");
   if (ariaLabel) return ariaLabel;
+  if (node.tagName === "fieldset") {
+    const legend = node.childNodes.find(
+      (child): child is Element =>
+        "tagName" in child && child.tagName === "legend",
+    );
+    if (legend) return normalized(legend);
+  }
   const id = attribute(node, "id");
   const labels = id
     ? elements(
@@ -47,7 +54,21 @@ export function accessibleName(node: Element, root: Node): string {
     if (parent.tagName === "label") return normalized(parent);
     parent = parent.parentNode;
   }
-  return normalized(node);
+  const content = normalized(node);
+  if (
+    ["a", "button", "summary", "label", "option", "legend"].includes(
+      node.tagName,
+    ) &&
+    content
+  )
+    return content;
+  return attribute(node, "title") || content;
+}
+
+function nameMatcher(name: string | RegExp): (actual: string) => boolean {
+  if (typeof name === "string") return (actual) => actual === name;
+  const pattern = new RegExp(name.source, name.flags.replace(/[gy]/gu, ""));
+  return (actual) => pattern.test(actual);
 }
 
 /** Find one authored element with its accessible name and optional tag. */
@@ -56,17 +77,12 @@ export function named(
   name: string | RegExp,
   tag?: string,
 ): Element {
-  const pattern =
-    name instanceof RegExp
-      ? new RegExp(name.source, name.flags.replace(/[gy]/gu, ""))
-      : undefined;
+  const matchesName = nameMatcher(name);
   const matches = elements(
     root,
     (node) =>
       (tag === undefined || node.tagName === tag) &&
-      (pattern
-        ? pattern.test(accessibleName(node, root))
-        : accessibleName(node, root) === name),
+      matchesName(accessibleName(node, root)),
   );
   assert.equal(
     matches.length,
@@ -92,8 +108,9 @@ export function region(root: Node, name: string): Element {
 export function namedRole(
   root: Node,
   role: "group" | "navigation" | "switch",
-  name: string,
+  name: string | RegExp,
 ): Element[] {
+  const matchesName = nameMatcher(name);
   return elements(root, (node) => {
     const nativeRole =
       node.tagName === "nav"
@@ -103,7 +120,7 @@ export function namedRole(
           : undefined;
     return (
       (attribute(node, "role") ?? nativeRole) === role &&
-      accessibleName(node, root) === name
+      matchesName(accessibleName(node, root))
     );
   });
 }

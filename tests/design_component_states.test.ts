@@ -94,9 +94,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
           : "phone-frame";
       assert.equal(byClass(view, frame).length, 1);
     }
-    assert.equal(namedRole(previous, "group", "Comparison mode").length, 0);
+    assert.equal(namedRole(previous, "group", /comparison mode/iu).length, 0);
     assert.equal(byClass(previous, "mbk-pane-missing").length, 0);
-    assert.equal(namedRole(previous, "switch", "Dark mode").length, 0);
+    assert.equal(namedRole(previous, "switch", /dark mode/iu).length, 0);
     assert.equal(fieldValue(named(previous, "Appearance", "select")), "light");
     assert.ok(
       attribute(

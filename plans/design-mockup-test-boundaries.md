@@ -1,8 +1,8 @@
 # Design Mockup Test Boundaries
 
-Status: Active. Milestones 1 through 5 and Change request 1 are delivered.
-Change request 2 is delivered. Change request 3 is pending. Milestone 6 waits for explicit permission
-to proceed. No PR is open.
+Status: Active. Milestones 1 through 5 and Change requests 1 through 3 are
+delivered. Milestone 6 waits for the user to say "proceed with Milestone 6".
+No PR is open.
 
 Give each check on Mokly's own design catalogue one home. Unit tests check the
 generated mockup HTML and CSS. Browser mockup specs open the raw generated
@@ -475,6 +475,28 @@ Milestone 6 waits for the user's explicit "proceed with Milestone 6" message.
       Keep both scanner files at or below 300 lines.
 - [x] Audit the mainline diff and deletions. Commit with Conventional Commits
       and push. Stop before any more Milestone 6 full checks.
+
+## Milestone 5B: Complete assertion equivalence
+
+Completed. Change request 3 closes the remaining moved-assertion gaps. Milestone 6 stays
+paused until the user says "proceed with Milestone 6".
+
+- [x] Restore comparison-group visibility and unit presence on the controls
+      comparison artboard at both viewports.
+- [x] Replace the remaining raw legacy-group text match with parsed named roles.
+- [x] Support case-insensitive substring names, fieldset legends, and fallback
+      titles. Test each case. Preserve non-exact Playwright absence semantics.
+- [x] Narrow the remaining link/attribution selections with type guards.
+      Rewrap the verification protocol's long line.
+- [x] Restore the Set hint checkbox type on the canonical controls screen.
+- [x] Run changed unit tests and raw specs, boundary tests, lint, changed-file
+      Prettier, and prepared types. Keep changed TypeScript below 300 lines.
+- [x] Audit mainline paths and deletions. Commit with Conventional Commits and
+      push in a separate commit. Stop before more Milestone 6 full checks.
+
+Verification passed: 127 focused unit tests, 14 other name-helper tests,
+8 raw browser tests, 34 boundary/document tests, and 2 shard checks. Lint,
+changed-file formatting, and prepared types passed. No assertion was removed.
 
 ## Milestone 6: Verification and review
 
