@@ -121,7 +121,8 @@ the dual-runtime aggregate can prove an immutable release tree.
 
 The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 approves `.github/workflows/blacksmith-testbox.yml`. The workflow is implemented.
-Hosted validation and box smoke checks are pending.
+Validation mode and the box package smoke check pass. The repository box smoke
+check is blocked by the live dependency audit.
 The workflow has `workflow_dispatch` with an optional `testbox_id` input.
 It also has `push`, limited to changes of its own workflow file.
 An empty `testbox_id` makes `begin-testbox` use validation mode.

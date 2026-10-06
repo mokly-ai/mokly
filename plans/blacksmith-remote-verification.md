@@ -1,7 +1,8 @@
 # Blacksmith Remote Verification
 
 Status: Active. No pull request exists yet. Milestones 1 and 2 are complete.
-Milestone 3 is in progress. The live audit reports new advisories in `sharp`
+Milestone 3 is in progress. Workflow validation and the box package smoke
+check pass. The repository smoke check is blocked by advisories in `sharp`
 and `shell-quote`.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
@@ -299,12 +300,18 @@ Add the dispatch workflow and prove that it prepares a usable box.
       available.
   - [x] Run ESLint, TypeScript, Prettier and the protocol tests.
   - [x] Run `cargo xtask check` before the workflow commit and push.
-- [ ] Commit and push. Confirm that the push run passes in validation mode.
+- [x] Commit and push. Confirm that the push run passes in validation mode.
 - [ ] Smoke test: warm up one box with `--ref <branch>`. Run the repository
       and package suites through `testbox-suite.mjs`. Confirm Node 22.14.0,
       `chromium`, a complete Git history and passing release-tag ratchets.
       Stop the box.
-- [ ] Record smoke durations, versions and run IDs. Update the delivery
+  - [x] Match the box fingerprint and `HEAD` to the local checkout.
+  - [x] Confirm Node, npm, Rust and the Chromium channel.
+  - [x] Confirm complete history during the suite and passing ratchets.
+  - [x] Pass the package suite.
+  - [x] Stop the box, cancel the GitHub run and confirm no active box.
+  - [ ] Pass the repository suite after the separate advisory fixes.
+- [x] Record smoke durations, versions and run IDs. Update the delivery
       status. Commit and push the completed documentation.
 
 The six workflow tests failed before the workflow file existed.
@@ -312,6 +319,29 @@ All 52 focused workflow and protocol tests pass. ESLint, TypeScript,
 Prettier, source audits and Clippy pass. Actionlint is not installed.
 `cargo xtask check` stops at the two dependency advisories listed above.
 The pinned checkout manifest declares `persist-credentials` as an input.
+
+### Smoke results
+
+The test used branch `calummoore/blacksmith-ci-remote-testing` at `5f33479b`.
+Blacksmith CLI 0.4.65 ran with automatic updates disabled.
+The box had Node v22.14.0, npm 11.7.0, Rust 1.95.0 and
+`PLAYWRIGHT_CHANNEL=chromium`.
+
+| Check                                                                                          | Result                                                   | Duration            |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------- |
+| Push validation, run [37491150327](https://github.com/mokly-ai/mokly/actions/runs/37491150327) | Passed in validation mode                                | 62 s                |
+| Warmup request                                                                                 | Box ID `tbx_01m48yt2kj9v8sy58s8y41k9dj`                  | 2.31 s              |
+| Box preparation, run [37491517281](https://github.com/mokly-ai/mokly/actions/runs/37491517281) | Ready                                                    | 60 s after dispatch |
+| Fingerprint and `HEAD` probe                                                                   | Both match the local checkout                            | 3.28 s              |
+| Repository suite                                                                               | Audit fails on `sharp` and `shell-quote`                 | 8.50 s              |
+| Repository history confirmation                                                                | History is complete during the suite; audit still fails  | 1.41 s              |
+| Package suite                                                                                  | Passed all six consumer scenarios                        | 173.99 s            |
+| Standalone repository ratchets                                                                 | All four pass; merge base and release tags are available | Not recorded        |
+
+The local fingerprint stayed unchanged through the smoke test.
+The box stopped. Its GitHub run completed with the requested cancellation.
+The CLI reports no active box. No remote contract rule changed.
+The repository smoke remains open until the separate dependency fixes land.
 
 ## Milestone 4: Explicit remote executor
 

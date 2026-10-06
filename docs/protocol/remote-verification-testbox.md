@@ -7,7 +7,8 @@ Continuation of [Remote Verification](./remote-verification.md).
 The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 approves this target. The fingerprint, suite wrapper and workflow are
 implemented.
-Hosted validation and box smoke checks are pending. Executor integration is
+Workflow validation and the box package smoke check pass. The repository box
+smoke check is blocked by the live dependency audit. Executor integration is
 pending. The current wrapper uses `cargo xtask check --suite <suite>` with the
 optional shard. The local executor
 flag described below is pending CLI support.
