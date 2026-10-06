@@ -84,7 +84,10 @@ test("source-tree CLI prints only the fingerprint and requested repository HEAD"
     ),
     (error: unknown) => {
       assert.equal((error as { code: number }).code, 1);
-      assert.match((error as { stderr: string }).stderr, /fingerprint/u);
+      assert.equal(
+        (error as { stderr: string }).stderr,
+        `[verification/source-tree] source-tree fingerprint does not match: expected sha256:${"0".repeat(64)}; actual ${fingerprint}\n`,
+      );
       return true;
     },
   );

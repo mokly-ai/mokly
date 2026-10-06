@@ -159,7 +159,8 @@ files. The same working tree has the same digest whether changes are committed
 or uncommitted. Tracked paths still participate if an ignore rule matches them.
 
 `--expect <fingerprint>` requires the computed value to match exactly.
-A mismatch returns nonzero. `--print-head` adds the full lowercase local
+A mismatch returns nonzero. Both scripts include the expected and actual
+fingerprints in the mismatch error. `--print-head` adds the full lowercase local
 `HEAD` SHA on a separate line after the fingerprint. Read failures return
 nonzero. The probe checks that SHA independently from the digest.
 

@@ -75,9 +75,10 @@ export async function runTestboxSuite(args, dependencies) {
       env,
       captureOutput,
     });
-  if ((await readFingerprint()) !== request.expected)
+  const fingerprint = await readFingerprint();
+  if (fingerprint !== request.expected)
     throw new Error(
-      "source-tree fingerprint does not match the expected value",
+      `source-tree fingerprint does not match: expected ${request.expected}; actual ${fingerprint}`,
     );
   const history = await requireSuccess(
     command("git", ["rev-parse", "--is-shallow-repository"], true),

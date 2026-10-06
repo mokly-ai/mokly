@@ -131,7 +131,7 @@ async function main() {
   const fingerprint = await readSourceTree(cwd);
   if (expected !== undefined && fingerprint !== expected)
     throw new Error(
-      "source-tree fingerprint does not match the expected value",
+      `source-tree fingerprint does not match: expected ${expected}; actual ${fingerprint}`,
     );
   let output = `${fingerprint}\n`;
   if (printHead) {

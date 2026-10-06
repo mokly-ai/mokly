@@ -120,7 +120,9 @@ test("a fingerprint mismatch stops before history, installs and cargo", async ()
   harness.dependencies.readFingerprint = async () => `sha256:${"b".repeat(64)}`;
   await assert.rejects(
     runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
-    /fingerprint/u,
+    {
+      message: `source-tree fingerprint does not match: expected ${TESTBOX_FINGERPRINT}; actual sha256:${"b".repeat(64)}`,
+    },
   );
   assert.deepEqual(harness.commands, []);
   assert.deepEqual(harness.writes, []);
