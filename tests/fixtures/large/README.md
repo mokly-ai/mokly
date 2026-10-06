@@ -328,8 +328,10 @@ and linked (+4.8%, disjoint) remain slower; this is not Decision 13 acceptance.
 
 The [M9A residual-cost checkpoint](../../../docs/dev/residual-sheet-cost-checkpoint.md)
 records the full 2.50 GHz diagnostic matrix, worker profiles and design options.
-Cumulative style/no-change is 3.0623 cold / 2.9067 warm; implementation and the
-reference-machine decision await approval.
+Cumulative style/no-change is 3.0623 cold / 2.9067 warm. On 2026-10-06 the user
+chose option C: stop optimization and implement no candidate or review finding.
+The user also deferred performance acceptance to a later plan with a fresh
+same-session reference and relaxed cumulative component-style limits.
 
 ### Opt-in material details
 

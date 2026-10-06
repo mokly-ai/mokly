@@ -174,6 +174,16 @@ fixed before this plan can prove its result.
     requirements and pass/fail treatment. Historical Problem measurements are
     never substituted for the Milestone 2 reference.
 
+    **User decision (2026-10-06): performance acceptance is deferred.** This
+    plan no longer runs it. The
+    [benchmark contract](../tests/fixtures/large/benchmark-contract.md#classification-performance-acceptance)
+    stays as the procedure for a later plan. The stored Milestone 2 reference
+    cannot be reused: the host changed from 2.90 to 2.50 GHz, and main's #131
+    changes digest-covered fixture templates. M2 code cannot read those
+    templates because it requires entry `id`s. A later run must re-measure its
+    reference in the same session as the candidate, on one machine, in
+    alternating order. Keep all harness code, fixtures, tools and their tests.
+
 ## Non-Goals
 
 - A selector index; matching is under 0.1% of the analysis time.
@@ -1789,46 +1799,53 @@ contract's Result and proof sections before implementation (M6 finding 2).
       Decision 13 target; stronger reuse or user-approved target changes need
       a decision. Do not implement per-rule cancellation, residual equality,
       regex changes, route remedies or any recorded M9 finding automatically.
-- [ ] If residual sheet work still dominates, design a contract-preserving
+- [x] If residual sheet work still dominates, design a contract-preserving
       bound on unchanged-prefix/suffix scanning, lookup and cancellation, or
       another measured remedy. Preserve current segment equivalence, bounded
       flat retention, ordinals, grouped displacement and pair-wide fallback.
       Ask for approval before any new cache semantics or Decision/contract
       change; the checkpoint does not choose an unapproved algorithm.
-      **Decision point:** the linked report recommends seeking approval for B
-      plus bounded cache-free work first. A and E1/E2/E3/E5 preserve the contract
-      only with their stated proofs; B needs a route-contract amendment, C a
-      Decision 5 change, and D/E4 new cache/index semantics. No scope is approved.
+      User decision (2026-10-06): option C. Stop optimization; no candidate or
+      finding is implemented. Because the speed test is removed for now, no
+      numeric targets are set. A later speed test must relax the cumulative
+      component-style limits to fit this code's measured results (M9A:
+      style/no-change 3.0623 cold / 2.9067 warm), using a fresh same-session reference.
 - [x] Discovered: validate and commit/push this documentation-only analysis
       checkpoint, including the fixture README link and focused evidence.
       The Markdown exception applies; runtime verification and the remaining
       implementation/measurement TODOs below await the scope decision.
-- [ ] Implement an approved remedy only if required; add failing work-bound
+- [x] Implement an approved remedy only if required; add failing work-bound
       tests first, plus full-result differentials and production-path GC tests.
       Prove that unique-sheet/Emotion cold costs do not conceal a default
       regression; consider lazy derived data only if the breakdown supports it.
-- [ ] Update relevant READMEs and delivered statuses if code changes; finish
+      Not required: user decision C; no code change.
+- [x] Update relevant READMEs and delivered statuses if code changes; finish
       targeted/full unit/browser/static checks, commit the code checkpoint and
       stop for supervisor verification before measuring.
-- [ ] Record supervisor-approved no-change/style cold/warm samples on both
+      Not required: user decision C; no code change.
+- [x] Record supervisor-approved no-change/style cold/warm samples on both
       fixtures and unique-sheet cold-cost evidence, retaining every outcome;
       confirm which targets now hold and any remaining design decision.
-- [ ] Validate documentation, run the suite and `cargo xtask check` on the
+      Not required: user decision C; no code change.
+- [x] Validate documentation, run the suite and `cargo xtask check` on the
       measured result if implementation changed; documentation-only conclusions
       use the repository's Markdown validation exception.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+      Not required: user decision C; no code change.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+      The documentation checkpoint and the dated scope decisions are pushed.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
-## Milestone 10: Performance Acceptance And Final Alignment
+## Milestone 10: Mainline Integration And Final Alignment
 
-Summary: prove the Decision 13 targets on both fixtures, record what now
-dominates, and leave every document aligned.
+Summary: merge the latest mainline features with M1–M9, verify the complete
+implementation, and align its documentation. Optimization and performance
+acceptance are deferred by the user decision of 2026-10-06.
 
-- [ ] Discovered: before regenerating fixtures or running acceptance, fetch
+- [ ] Discovered: before final implementation and documentation checks, fetch
       and merge the latest `origin/main` under
       [Mainline Feature Preservation](../AGENTS.md#mainline-feature-preservation).
       Capture the source tip, audit main's additions, reconcile each path
@@ -1845,18 +1862,11 @@ dominates, and leave every document aligned.
       excepted tests satisfy this final complete-suite gate.
       The reboot moved M7 to a 2.50GHz host; the six specs fail fixed waits on
       M6 too, with median per-test slowdown 1.46×. The M7 checkpoint exception
-      is not final acceptance. Keep benchmark machine-contract decisions pending
-      the user's resolution; this TODO changes no Decision 13 condition.
-- [ ] Regenerate both fixtures. Run the full committed matrix twice on each,
-      and the derived-mode cold component-style sample on the cumulative
-      fixture.
-- [ ] Acceptance: every Decision 13 condition holds. If one does not, record
-      it, add a new milestone before this one for the dominant measured cost,
-      and leave this TODO open.
-- [ ] Record the final samples against the Milestone 2 baseline, and name the
-      new dominant costs, in the fixture README.
+      is not final acceptance. The user deferred performance acceptance on
+      2026-10-06; this browser gate still applies unchanged.
 - [ ] Re-read every document this plan touched against the implementation,
-      fix drift, and remove the approved-target sentences naming this plan.
+      fix drift, and replace the approved-target sentences naming this plan
+      with the Decision 13 deferral.
 - [ ] Run the full suite, `npm run package:smoke`, and `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
@@ -1869,3 +1879,7 @@ dominates, and leave every document aligned.
 
 - Smoke the published package against a React Native Web catalogue whose
   renderer collects `getStyleElement()` output.
+- Restore performance acceptance in a later plan. Re-measure the reference in
+  the same session as the candidate, on one machine, in alternating order.
+  Apply decision C's relaxed cumulative component-style limits to fit the
+  delivered code's measured results; no numeric targets are set in this plan.
