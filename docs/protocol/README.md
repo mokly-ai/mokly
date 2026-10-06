@@ -1,10 +1,8 @@
 # Protocol
 
-These documents define Mokly's implemented pre-release contract unless a
-Delivery Status names an approved active-plan target. The
-[path identity plan](../../plans/path-identity.md) defines the approved
-path-based formats: every entry is identified by a path derived from its file,
-Markdown files are documents, and moves are paired with their baseline.
+These documents define Mokly's implemented pre-release contract, except for
+approved active-plan targets named by Delivery Status. The [path identity plan](../../plans/path-identity.md)
+defines file-derived entry paths, Markdown documents and baseline-paired moves.
 
 Protocol documents state the contract and current delivery status, but never
 record which plan milestone delivered a rule; plans keep that history.
@@ -58,6 +56,8 @@ unsupported versions before content or path interpretation.
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
+  - [Development hydration coverage](./ci-verification-hydration.md) — one
+    route per entry shape and the generated resource audit.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.

@@ -1781,9 +1781,22 @@ Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
       and merge justifications under this plan's ignored evidence directory.
 - [x] Carry the warning-contract wording clarification into that integration;
       build warnings stay on stderr, while 18 A moves successful baseline notices.
-- [ ] Run the full gate once on that merged tip. Commit and push only after
-      it passes. If main moves after integration starts, report the new tip and
-      do not merge again.
+- [ ] Finish the pending gate and push through the user's additional main
+      integration below. Keep local merge `61a1ce3e` unchanged.
+- [x] Merge latest main once on top of `61a1ce3e` under the user's direct
+      2026-10-06 instruction and decision 1 A. Capture both tips and the merge
+      base; audit every incoming path; preserve #142's shape hydration and
+      resource audit, and #146's dependency updates and security tests. Review
+      all remerge paths and exactly two parents before pushing.
+- [x] Keep main's `package.json`, `package-lock.json`, `xtask/Cargo.toml` and
+      `Cargo.lock` exactly. Run `npm ci` without regenerating the lock. Fix
+      branch code for the new tools without changing lint or format settings.
+- [x] Restore the verified example-catalogue paragraph from `85f45a7b` while
+      keeping every other main rule in `AGENTS.md`. Adapt the new audit to the
+      generated tree and authored closure under the existing path contracts.
+- [ ] Run the full gate once on the combined tip. After it passes, commit
+      completion and push both local merges together. If main moves after this
+      integration starts, report its new tip without merging again.
 - [ ] After the push, review the merge against `origin/main` using
       `docs/implementation-review-prompt.md`; report numbered findings with
       severities and recommendations without changing the implementation.
@@ -1908,9 +1921,9 @@ four incoming changes path by path.
 
 ### Final main integration
 
-Keep all of #137, #140, #141 and #143 under decision 1 A. The orchestrator
-requires `AGENTS.md` exactly as incoming main. Its older example paragraph
-therefore remains; this does not restore output modes or change generated paths.
+Merge `61a1ce3e` keeps #137, #140, #141 and #143 under decision 1 A. The
+orchestrator then required `AGENTS.md` exactly as incoming main. The additional
+integration below corrects that instruction for the example paragraph only.
 Keep the `.nvmrc` pin, all moved CI assertions, the source-map regression tests
 and five packed-consumer scenarios. The warning clarification changes only the
 target contract; implementation remains in Milestone 24.
@@ -1922,6 +1935,28 @@ Merge justifications: `.context/generated-output-simplification/m23-final-main-j
 Evidence: `.context/generated-output-simplification/m23-final-main-remerge-review.md`.
 
 Validation: `.context/generated-output-simplification/m23-final-main-validation.md`.
+
+### Hydration and dependency integration
+
+The user directly approved another main merge on 2026-10-06 and chose main's
+fix for the dependency advisories. Keep `61a1ce3e` unchanged. Preserve #142's
+shape rule, default-state coverage boundary and all reference checks. Audit
+the generated tree and authored closure beneath the catalogue root, as the
+unified layout requires. Keep #146's dependency files exactly and install them
+with `npm ci`. Preserve the dependency policy and all new tests.
+
+The orchestrator corrects the earlier exact-`AGENTS.md` instruction: restore
+only the checked example paragraph from `85f45a7b`. The user's output-mode
+removal and generated-directory rename authorize that correction. Keep every
+other main rule. No later review-fix milestone or final review starts here.
+
+Preservation record: `.context/generated-output-simplification/m23-142-146-preservation.md`.
+
+Merge justifications: `.context/generated-output-simplification/m23-142-146-justifications.md`.
+
+Validation: `.context/generated-output-simplification/m23-142-146-validation.md`.
+
+Remerge review: `.context/generated-output-simplification/m23-142-146-remerge-review.md`.
 
 ## Milestone 24: Shared watching and command output
 

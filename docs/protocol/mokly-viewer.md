@@ -445,8 +445,8 @@ are defined by [viewer SSR and hydration](./mokly-viewer-ssr.md).
 
 Acceptance includes all props, slots, events, handle methods, controlled-state
 round trips, multiple independent mounts, SSR/client lifecycle cleanup,
-hydration without mismatches on every fixture route, source replacement,
-same/cross-origin frames and the existing local browser tests passing against
-the hydrated shell. Standalone coverage enforces the scoped-bootstrap contract.
-Behavioural parity under `tests/browser` is the bar; shell module bytes and the
-derived export deployment identity may change with viewer source.
+hydration without mismatches on one fixture route per [entry shape](./ci-verification-hydration.md#entry-shapes),
+source replacement, same/cross-origin frames and the existing local browser tests
+passing against the hydrated shell. Standalone coverage enforces the scoped-bootstrap
+contract. Behavioural parity under `tests/browser` is the bar; shell module bytes and
+the derived export deployment identity may change with viewer source.
