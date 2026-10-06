@@ -332,7 +332,7 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
-The planned [test assertion contract](./docs/protocol/ci-test-assertions.md)
+The [test assertion contract](./docs/protocol/ci-test-assertions.md)
 makes a unit test fail when it makes no assertion. Tests select catalogue
 entries through checked helpers. A moved or renamed spec must make its
 selection fail instead of leaving a test empty.

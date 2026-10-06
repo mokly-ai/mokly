@@ -38,7 +38,7 @@ positive integer to override these values. The
 defines them. Individual concurrency tests and their existing timeouts remain
 unchanged.
 
-The planned [test assertion contract](../docs/protocol/ci-test-assertions.md)
+The [test assertion contract](../docs/protocol/ci-test-assertions.md)
 adds an assertion guard to both unit-runner policies and native test steps.
 A unit test that makes no assertion fails. Catalogue tests use checked
 selection helpers; selection alone does not count as an assertion.

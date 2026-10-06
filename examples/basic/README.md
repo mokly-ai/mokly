@@ -320,7 +320,7 @@ assets are ignored local artifacts, absent in a fresh clone.
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its
-generated files. Under the planned
+generated files. Under the
 [test assertion contract](../../docs/protocol/ci-test-assertions.md), tests use
 checked catalogue selections. A moved or renamed spec makes a test fail.
 It cannot leave the test empty. Baseline fixtures copy authored inputs and use

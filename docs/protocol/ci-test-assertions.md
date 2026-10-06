@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Planned. The approved [vacuous test prevention plan](../../plans/vacuous-test-prevention.md)
-owns delivery. This page defines the target contract before implementation.
+Implemented. The [vacuous test prevention plan](../../plans/vacuous-test-prevention.md)
+records the approved delivery scope. This page defines the delivered contract.
 
 ## Scope
 

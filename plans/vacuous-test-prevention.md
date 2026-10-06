@@ -1,7 +1,7 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 6 completed and approved. Milestone 7
-in progress.
+Status: Active; Milestones 1 through 6 completed and approved. Delivery work
+is complete; the user owns the post-push review. The plan closes when its PR merges.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -12,8 +12,8 @@ delegated to a Codex agent and checked by the planning agent.
 
 Make a test that checks nothing fail. A guard fails every unit test that makes
 no assertion. Checked helpers fail when a catalogue selection matches nothing,
-and a lint rule sends selections through them. Milestone 3 rewrites the nine
-checks that are empty today. Milestone 1 writes the contract into a new
+and a lint rule sends selections through them. Milestone 3 rewrites the stale
+checks listed below. Milestone 1 writes the contract into a new
 protocol page, `docs/protocol/ci-test-assertions.md`.
 
 ## Background
@@ -25,37 +25,9 @@ updated the ids that made a test fail. It did not see the ids that made a test
 pass without checking anything: `entry.id === "design-review-dark-scheme"`
 became `entry.path === "design-review-dark-scheme"`.
 
-A filtered loop that matches nothing makes no assertion, and `node:test`
-reports the test as passed. An absence check on an id that cannot exist always
-passes. Nothing in the gate rejects either case.
-
-Measurements on 2026-10-06, with the example catalogue built from `f66c274`:
-
-- 0 of 210 manifest entries match `design-`, `design-component-`, or
-  `design-ui-`.
-- A prototype guard over all 762 unit test files failed 17 tests with zero
-  assertions: 7 runs of 5 empty test definitions, and 10 valid tests that only
-  complete without an error. No other test changed its result. Two timing tests,
-  `tests/postcss_dependency_review.test.ts` and
-  `tests/watch_postcss_scale.test.ts`, failed on the measurement machine with
-  and without the guard.
-- Four absence checks use ids that cannot exist. They assert, so the guard
-  cannot find them.
-- Copies of the five empty tests with current paths pass with real assertions.
-  No regression hid behind them.
-- A first prototype replaced methods on Node's `assert` object. On Node 22.14
-  this turned `assert.match` into `doesNotMatch`, because that release compares
-  its own function with the current `assert.match`. The guard therefore never
-  changes Node's `assert` object.
-- A second prototype counted calls through wrapper functions. A failing
-  `assert.ok(expression)` without a message then showed the wrapper's source
-  line in place of the test's expression, because Node reads the caller's
-  source to generate that message. The guard therefore counts reads of
-  assertion methods, which add no stack frame.
-- Without process gating, a Node child that a test forks with inherited
-  `execArgv` loads the guard, starts a test-runner root, and appends serialized
-  test events to its own stdout. A prototype that gates on `NODE_TEST_CONTEXT`
-  and a process record keeps that stdout unchanged on Node 22.14 and 24.21.
+Before this change, a filtered loop that matched nothing made no assertion,
+and `node:test` reported it as passed. An absence check on an obsolete id
+also passed. The gate did not reject either case.
 
 ## The Nine Empty Checks
 
@@ -106,6 +78,8 @@ occupy.
   names on the running Node release. Direct hook tests statically import
   `initialize`, `resolve`, and `load`. The export ratchet needs no new baseline
   exception.
+- Never change Node's `assert` object; Node compares assertion methods by identity.
+- Count method reads because call wrappers change generated `assert.ok` messages.
 - A counting module's default export is a `Proxy` over the real module. Each
   read of a function-valued property counts once, so `assert.equal(...)` counts
   when the test reads `equal`. A direct call such as `assert(value)` counts
@@ -219,11 +193,6 @@ check cannot go stale silently. The user approved this extension on 2026-10-06.
 The rule sees syntax only. It does not see filters over arrays derived from
 `entries`, comparisons with variables, or content filters in inner loops. The
 guard still fails such a test when it makes no assertion.
-
-Measured on 2026-10-06: selectors 1 and 2 report 27 sites in 18 files.
-Milestone 3 rewrites 4 of them, which leaves 23 sites in 15 files for
-Milestone 5. Selector 3 reports 57 sites in 34 files. Milestone 3 rewrites 3 of
-them, which leaves 54 sites in 32 files for Milestone 6.
 
 ## Milestone 1: Define the contract — completed
 
@@ -365,7 +334,7 @@ Fail every unit test that makes no assertion.
       `tests/path_identity_review.test.ts:36`,
       `tests/publication_input_confinement.test.ts:56`, and
       `tests/verification_process_owner.test.ts:128`.
-- [x] Run `npm run test:prepared` on the `.node-version` release and on Node
+- [x] Run `npm run test:prepared` on the `.nvmrc` release and on Node
       22.14.0, the CI minimum. If the guard fails another test, for example
       after the Milestone 2 helper change, give that test an assertion that
       states its claim. Both runs must pass. Record both suite durations, with
@@ -379,8 +348,7 @@ Fail every unit test that makes no assertion.
 
 Send catalogue selections through the checked helpers.
 
-- [x] Confirm that all 295 existing assertion calls in the migrated files
-      remain unchanged.
+- [x] Preserve the existing assertion claims in the migrated files.
 - [x] `min` defaults to 1. Raise it only when the test needs that many entries
       to prove its claim and no assertion already checks the count. Never copy
       an exact count into `min`; exact counts belong in assertions.
@@ -448,8 +416,7 @@ Extend the lint rule to literal path lookups, as the user approved on
       manifest with `entryAt`, then find the private compiler location by that
       checked path. The private record is not a manifest entry. Assert that
       the location record exists; keep all render diagnostics.
-- [x] Record the selector 3 count as 54 before the root-anchor correction,
-      53 after its one migrated site, and 0 after the remaining migration.
+- [x] Record the selector 3 count before and after the complete migration.
 - [x] Migrate the 54 sites in 32 files. A presence lookup becomes `entryAt`, an
       absence check becomes `assertAbsent`, and a literal list becomes
       `entriesAt`. When a migrated test then makes no assertion, add one that
@@ -486,27 +453,35 @@ Extend the lint rule to literal path lookups, as the user approved on
 
 Complete the required delivery sequence after validation passes.
 
+Evidence: `.context/vacuous-test-prevention/measurements.md`.
+Evidence: `.context/vacuous-test-prevention/main-audit.md`.
+Evidence: `.context/vacuous-test-prevention/merge-review.md`.
+Evidence: `.context/vacuous-test-prevention/gate-results.md`.
+
+- [x] Move verification evidence out of the plan under the updated agent rule.
+
 - [x] Remove optional chains and tautological assertions on `entryAt`
       results in a separate cleanup commit. Run all affected files under the
       guard and retain assertions that state their real claims.
-- [ ] Set the Delivery Status of `docs/protocol/ci-test-assertions.md` to
+- [x] Set the Delivery Status of `docs/protocol/ci-test-assertions.md` to
       implemented.
-- [ ] Remove the "planned" assertion-contract wording from `README.md`,
+- [x] Remove the "planned" assertion-contract wording from `README.md`,
       `xtask/README.md`, `examples/basic/README.md`, and the
       `docs/protocol/README.md` index entry when the protocol is implemented.
-- [ ] Confirm that each remaining `"design-…"` literal in `tests/` names a
-      stylesheet, a fixture, or a baseline profile, not a catalogue entry.
-- [ ] Fetch `origin/main` and record the source tip. Audit main's additions
+- [x] Classify each remaining `"design-…"` literal in `tests/` and confirm that
+      no obsolete catalogue entry id remains.
+      Evidence: `.context/vacuous-test-prevention/design-literals.md`.
+- [x] Fetch `origin/main` and record the source tip. Audit main's additions
       from the branch point. Merge one branch at a time, check the merge
       parents and the remerge diff, and confirm that no file or feature on
       `origin/main` is deleted without approval.
-- [ ] Run `cargo xtask check`. Fix every failure until it passes.
-- [ ] Run `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, review the complete local diff against `origin/main` with
+- [x] Run `cargo xtask check` once. If only a known timing test fails, rerun
+      that suite once. Report every other failure before changing code.
+- [x] Run `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] The reviewer runs the post-push review against `origin/main` with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
-      Report each finding with a number, severity, plain explanation, impact
-      of doing nothing, lettered options, and a recommendation. Do not change
-      the implementation.
+      Apply the `AGENTS.md` review-fix rule to returned findings. The user owns
+      this review; the implementation agent does not run it.
 
 ## Post-merge follow-up (non-blocking)
 
