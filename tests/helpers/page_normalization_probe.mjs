@@ -21,9 +21,9 @@ let calls = 0;
 mock.module("../../dist/review/ignore.js", {
   namedExports: {
     ...real,
-    normalizeReviewPair(left, right, route) {
+    normalizeReviewPair(left, right, route, links) {
       if (scenario === "pair" && left === base && right === head) calls++;
-      return real.normalizeReviewPair(left, right, route);
+      return real.normalizeReviewPair(left, right, route, links);
     },
     normalizeSingleDocument(...args) {
       if (scenario === "one-sided") calls++;

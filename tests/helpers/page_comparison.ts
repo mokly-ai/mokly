@@ -3,13 +3,18 @@ import path from "node:path";
 import { ComponentDependencyPolicy } from "../../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../../dist/review/component_resources.js";
 import { compareComponentView } from "../../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../../dist/review/moves/links.js";
 import { ResourceComparison } from "../../dist/review/resource_comparison.js";
 import { generatedViews } from "../../packages/viewer/dist/components/views.js";
 
 import { memoryReader, type FastPathFixture } from "./component_fast_path.js";
 import { compareComponentView as delivered } from "./page_m6/component_view.js";
 
-export function pageContext(fixture: FastPathFixture, componentAware = true) {
+export function pageContext(
+  fixture: FastPathFixture,
+  componentAware = true,
+  oracle?: "page_m6",
+) {
   const beforeReader = new ComponentMaterialReader(
     memoryReader(fixture.beforeFiles),
   );
@@ -23,6 +28,15 @@ export function pageContext(fixture: FastPathFixture, componentAware = true) {
   );
   return {
     componentAware,
+    ...(oracle === "page_m6"
+      ? {}
+      : {
+          links: catalogueLinkNormalizer(
+            fixture.before.entries,
+            fixture.after.entries,
+            [],
+          ),
+        }),
     beforeReader,
     afterReader,
     dependencies: new ComponentDependencyPolicy(
@@ -59,9 +73,10 @@ export async function comparePageViews(
   oracle = false,
   useFastPath = true,
   useMaterialFingerprints = true,
+  oracleContext?: "page_m6",
 ) {
   const context = {
-    ...pageContext(fixture, !oracle),
+    ...pageContext(fixture, !oracle, oracle ? "page_m6" : oracleContext),
     useFastPath,
     useStylePath: false,
     useMaterialFingerprints,

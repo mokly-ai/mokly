@@ -12,8 +12,8 @@ import { comparePageViews, pageContext } from "./page_comparison.js";
 import { prepareComponentProjection as delivered } from "./page_m6/component_projection_resources.js";
 
 export async function assertPageMaterialEquivalence(fixture: FastPathFixture) {
-  const context = pageContext(fixture);
-  const oldContext = pageContext(fixture, false);
+  const context = pageContext(fixture, true, "page_m6");
+  const oldContext = pageContext(fixture, false, "page_m6");
   for (const entry of fixture.after.entries) {
     const previous = fixture.before.entries.find(
       ({ path: id }) => id === entry.path,
@@ -111,7 +111,9 @@ export async function assertPageMaterialEquivalence(fixture: FastPathFixture) {
       }),
     );
   assert.deepEqual(
-    publicResults(await comparePageViews(fixture)),
+    publicResults(
+      await comparePageViews(fixture, false, true, true, "page_m6"),
+    ),
     publicResults(await comparePageViews(fixture, true)),
     "public comparison results equal M6",
   );

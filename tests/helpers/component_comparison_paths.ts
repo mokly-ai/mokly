@@ -9,6 +9,7 @@ import { ComponentDependencyPolicy } from "../../dist/review/component_metadata.
 import { ComponentMaterialReader } from "../../dist/review/component_resources.js";
 import { compareComponentView } from "../../dist/review/component_view.js";
 import { CssResourceAnalysis } from "../../dist/review/css/resource_analysis.js";
+import { catalogueLinkNormalizer } from "../../dist/review/moves/links.js";
 import { ResourceComparison } from "../../dist/review/resource_comparison.js";
 import { isManifestComponentVariant } from "../../packages/viewer/dist/components/manifest_types.js";
 import { generatedViews } from "../../packages/viewer/dist/components/views.js";
@@ -41,6 +42,11 @@ export async function assertComparisonPaths(
   const compareResourceBytes = fixture.config.generatedOutput === "derived";
   const context = {
     componentAware: true,
+    links: catalogueLinkNormalizer(
+      fixture.before.entries,
+      fixture.after.entries,
+      [],
+    ),
     beforeReader,
     afterReader,
     dependencies,
