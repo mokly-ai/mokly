@@ -7,7 +7,6 @@ import type {
   MoklyViewerProps,
 } from "@mokly/viewer";
 
-import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 import { fixtureVariantsAt } from "../../packages/viewer/tests/path_fixture.js";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
@@ -25,6 +24,7 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
   await page.waitForFunction(() => Boolean(window.viewerHarness));
   await page.evaluate(
     ({ cross, screenPath }) => {
+      const readCurrentPath = window.viewerHarness.readCurrentPath;
       const host = window.viewerHarness.start("one", {
         cross,
         defaultSelection: { screenPath, viewport: "both" },

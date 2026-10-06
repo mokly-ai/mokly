@@ -7,8 +7,6 @@ import type {
   MoklyViewerProps,
 } from "@mokly/viewer";
 
-import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
-
 import { followupFixture } from "./viewer_followup_fixture.js";
 
 import type {} from "./viewer_harness.js";
@@ -116,6 +114,7 @@ for (const cross of [false, true]) {
   }) => {
     await openViewer(page, cross);
     const refs = await page.evaluate(() => {
+      const readCurrentPath = window.viewerHarness.readCurrentPath;
       const host = window.viewerHarness.get("one");
       const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
       const home = model.screens.find((entry) => entry.path === "home")!;

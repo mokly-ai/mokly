@@ -6,8 +6,6 @@ import type {
   MoklyViewerProps,
 } from "@mokly/viewer";
 
-import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
-
 import { markerFixture } from "./viewer_marker_fixture.js";
 import {
   expectMarkerAligned,
@@ -180,6 +178,7 @@ for (const cross of [false, true]) {
     await page.setViewportSize({ width: 1280, height: 1000 });
     await openMarkerViewer(page, fixture, cross);
     const flowRef = await page.evaluate(() => {
+      const readCurrentPath = window.viewerHarness.readCurrentPath;
       const host = window.viewerHarness.get("one");
       const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
       const home = model.screens.find(({ path }) => path === "home")!;

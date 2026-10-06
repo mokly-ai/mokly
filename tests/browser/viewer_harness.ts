@@ -1,4 +1,5 @@
 import type {
+  CurrentPath,
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
@@ -16,6 +17,7 @@ export interface ViewerHost {
   setTheme(theme: ViewerTheme): void;
 }
 interface Harness {
+  readCurrentPath(value: unknown): CurrentPath;
   start(id: string, options?: Record<string, unknown>): ViewerHost;
   get(id: string): ViewerHost;
   remove(id: string): void;

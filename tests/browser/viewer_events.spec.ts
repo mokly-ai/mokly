@@ -6,7 +6,6 @@ import type {
   ViewerSelection,
 } from "@mokly/viewer";
 
-import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import type {} from "./viewer_harness.js";
@@ -141,6 +140,7 @@ test("flow events preserve the screen key and identify the owning step", async (
   page,
 }) => {
   await page.evaluate(() => {
+    const readCurrentPath = window.viewerHarness.readCurrentPath;
     const host = window.viewerHarness.start("one", { cross: true });
     const catalogue = structuredClone(
       host.props.catalogue,

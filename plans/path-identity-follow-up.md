@@ -398,6 +398,12 @@ lockfile entry. The dependency audit then passed. The full gate must restart
 because its first attempt ran no later checks. This repair is outside the
 typed-reference milestones.
 
+Browser fixture repair: the restarted gate passed the repository, package and
+4,319 unit checks. Its Chromium suite passed 885 cases and failed 13 because
+four flow fixtures called a Node-imported path helper inside `page.evaluate`.
+The browser test harness now supplies that typed helper. All four affected
+suites passed their 27-case recheck. This repair changes test setup only.
+
 ## Milestone 11: Verification, commit and review
 
 - [ ] Run the full smoke cases in Serve and export at desktop and mobile
