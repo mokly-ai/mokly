@@ -11,6 +11,7 @@ use crate::check::{DefaultCheckRunner, Shard, VerificationSuite};
 use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::executor::Executor;
+use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::clients::{SystemBlacksmith, SystemGithub};
 use crate::remote::contracts::{
     Aggregate, Blacksmith, Clock, Dependencies, Environment, Fingerprint, Git, Github, Interrupt,
@@ -37,7 +38,7 @@ pub(crate) struct Cli {
 #[derive(Debug, Subcommand)]
 /// Repository task variants.
 pub(crate) enum Command {
-    /// Run every local verification gate.
+    /// Run the full gate or one selected verification suite.
     Check {
         /// Run one partial verification suite.
         #[arg(long, value_enum)]
@@ -46,6 +47,12 @@ pub(crate) enum Command {
         #[arg(long, value_name = "INDEX/TOTAL")]
         shard: Option<Shard>,
         /// Select auto, local or explicit remote execution.
+        #[arg(long, value_enum)]
+        executor: Option<Executor>,
+    },
+    /// Print the available executor without warming boxes or running suites.
+    Executor {
+        /// Override the default automatic, local or remote mode.
         #[arg(long, value_enum)]
         executor: Option<Executor>,
     },
@@ -76,7 +83,11 @@ pub(crate) fn main() -> ExitCode {
     let rust_file_length_auditor: Arc<dyn RustFileLengthAuditor> =
         Arc::new(SystemRustFileLengthAuditor);
     let dependencies = remote_dependencies(workspace.clone());
+    let selector: Arc<dyn Selector + Send + Sync> = Arc::new(DefaultSelector {
+        dependencies: dependencies.clone(),
+    });
     let app: Arc<dyn Xtask> = Arc::new(Application {
+        selector,
         check_runner: Arc::new(DefaultCheckRunner::new(
             command_runner,
             Arc::clone(&rust_file_length_auditor),

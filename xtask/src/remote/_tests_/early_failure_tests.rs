@@ -5,9 +5,11 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::executor::Executor;
+use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
-use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
+use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 
 fn failure(operation: Operation) -> Error {
     Error::Io {
@@ -41,7 +43,7 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
             GitPublishedMock
                 .next_call(matching!())
                 .answers(&|_| Ok(true)),
-            InterruptRequestedMock.next_call(matching!()).returns(false),
+            InterruptRequestedMock.each_call(matching!()).returns(false),
             GitHeadMock
                 .next_call(matching!())
                 .answers_arc(Arc::new(move |_| {
@@ -86,7 +88,7 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
             Unimock::new(())
         });
         let unused = Arc::new(Unimock::new(()));
-        let result = DefaultRemoteRunner {
+        let runner = DefaultRemoteRunner {
             dependencies: Dependencies {
                 environment,
                 programs: shared.clone(),
@@ -101,8 +103,15 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
                 reporter: shared,
                 workspace: PathBuf::from("/workspace"),
             },
+        };
+        DefaultSelector {
+            dependencies: runner.dependencies.clone(),
         }
-        .run();
-        assert!(matches!(result, Err(Error::Io { .. })));
+        .select(Executor::Remote)
+        .unwrap();
+        assert!(matches!(
+            runner.run(),
+            Err(Failure::Unavailable(Error::Io { .. }))
+        ));
     }
 }

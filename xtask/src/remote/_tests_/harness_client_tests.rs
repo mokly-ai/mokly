@@ -44,7 +44,7 @@ pub(super) fn client(
             };
             Ok(output(
                 text,
-                if index == 0 && case == Case::Warmup {
+                if index == 0 && matches!(case, Case::Warmup | Case::CleanupWarmup) {
                     1
                 } else {
                     0
@@ -122,6 +122,12 @@ pub(super) fn client(
         .each_call(matching!(_))
         .answers_arc(Arc::new(move |_, id| {
             stop_events.lock().unwrap().push(format!("stop:{id}"));
+            if case == Case::CleanupWarmup && id == "tbx_0" {
+                return Err(Error::Command {
+                    operation: Operation::Blacksmith,
+                    code: Some(1),
+                });
+            }
             Ok(())
         }));
     let common = (

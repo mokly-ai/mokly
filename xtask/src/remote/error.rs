@@ -103,6 +103,14 @@ pub(crate) enum Error {
         /// Repeated identifier.
         id: String,
     },
+    /// Preparation cannot fall back when a box stop still failed.
+    #[error("[xtask/remote] preparation cleanup failed for {failures} stop attempts: {source}")]
+    PreparationCleanup {
+        /// Original preparation error.
+        source: Box<Error>,
+        /// Failed cleanup attempts.
+        failures: usize,
+    },
     /// Probe lines or local fingerprint output are invalid.
     #[error("[xtask/remote] invalid or different {field} output; expected {expected}")]
     Identity {

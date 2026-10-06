@@ -6,10 +6,11 @@ use std::sync::Arc;
 use crate::check::{CheckRequest, CheckRunner};
 use crate::cli::Command;
 use crate::error::{Error, Result};
-use crate::executor::{Executor, resolve_executor};
+use crate::executor::{Decision, Executor, LocalReason, resolve_executor};
+use crate::remote::availability::Selector;
 use crate::remote::contracts::{Environment, Interrupt, Reporter};
 use crate::remote::error;
-use crate::remote::runner::RemoteRunner;
+use crate::remote::runner::{Failure, RemoteRunner};
 use crate::rust_file_length::RustFileLengthAuditor;
 
 /// Side-effecting xtask application boundary.
@@ -20,6 +21,8 @@ pub(crate) trait Xtask: Send + Sync {
 
 /// Application dependencies created by the CLI composition root.
 pub(crate) struct Application {
+    /// Ordered availability selector.
+    pub(crate) selector: Arc<dyn Selector + Send + Sync>,
     /// Local gate dispatcher.
     pub(crate) check_runner: Arc<dyn CheckRunner + Send + Sync>,
     /// Complete remote gate dispatcher.
@@ -54,30 +57,70 @@ impl Xtask for Application {
                     executor,
                     self.environment.get("MOKLY_CHECK_EXECUTOR").as_deref(),
                 ))?;
-                if mode == Executor::Remote {
-                    if suite.is_some() {
-                        return Err(Error::Remote {
-                            source: error::Error::SelectedSuite,
-                        });
-                    }
-                    remote(self.interrupt.arm())?;
-                    self.reporter
-                        .executor("remote: explicit complete verification");
-                    remote(self.remote_runner.run())
-                } else {
-                    self.reporter.executor(if mode == Executor::Auto {
-                        "local: automatic remote selection is pending"
-                    } else {
-                        "local: explicit local verification"
+                if mode == Executor::Remote && suite.is_some() {
+                    return Err(Error::Remote {
+                        source: error::Error::SelectedSuite,
                     });
-                    self.check_runner.run(request)
                 }
+                if suite.is_some() || mode == Executor::Local {
+                    return self.local(
+                        request,
+                        if suite.is_some() {
+                            LocalReason::Suite
+                        } else {
+                            LocalReason::Requested
+                        },
+                    );
+                }
+                match remote(self.selector.select(mode))? {
+                    Decision::Local(reason) => self.local(request, reason),
+                    Decision::Remote => {
+                        remote(self.interrupt.arm())?;
+                        self.reporter.executor(&Decision::Remote.to_string());
+                        match self.remote_runner.run() {
+                            Ok(()) => Ok(()),
+                            Err(Failure::Unavailable(source)) if mode == Executor::Auto => {
+                                if self.interrupt.requested()
+                                    || matches!(source, error::Error::Interrupted)
+                                {
+                                    return Err(Error::Remote {
+                                        source: error::Error::Interrupted,
+                                    });
+                                }
+                                self.reporter.executor(&format!(
+                                    "warning: remote preparation unavailable: {source}"
+                                ));
+                                self.local(request, LocalReason::Preparation)
+                            }
+                            Err(Failure::Unavailable(source) | Failure::Failed(source)) => {
+                                Err(Error::Remote { source })
+                            }
+                        }
+                    }
+                }
+            }
+            Command::Executor { executor } => {
+                let mode = remote(resolve_executor(
+                    executor,
+                    self.environment.get("MOKLY_CHECK_EXECUTOR").as_deref(),
+                ))?;
+                let decision = remote(self.selector.select(mode))?;
+                self.reporter.decision(decision);
+                Ok(())
             }
             Command::RustFileLengthLint { all: _ } => {
                 self.rust_file_length_auditor.run(&self.workspace)
             }
             Command::SourceFileLengthLint { all } => self.check_runner.source_file_length(all),
         }
+    }
+}
+
+impl Application {
+    /// Announce and execute a complete or selected local request.
+    fn local(&self, request: CheckRequest, reason: LocalReason) -> Result<()> {
+        self.reporter.executor(&Decision::Local(reason).to_string());
+        self.check_runner.run(request)
     }
 }
 
@@ -92,3 +135,7 @@ fn remote<T>(result: error::Result<T>) -> Result<T> {
 #[cfg(test)]
 #[path = "_tests_/application_tests.rs"]
 mod application_tests;
+
+#[cfg(test)]
+#[path = "_tests_/fallback_tests.rs"]
+mod fallback_tests;

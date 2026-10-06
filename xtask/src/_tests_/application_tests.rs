@@ -9,7 +9,8 @@ use crate::application::{Application, Xtask};
 use crate::check::{CheckRequest, CheckRunnerRunMock, VerificationSuite};
 use crate::cli::Command;
 use crate::error::Error;
-use crate::executor::Executor;
+use crate::executor::{Decision, Executor, LocalReason, resolve_executor};
+use crate::remote::availability::SelectorSelectMock;
 use crate::remote::contracts::{EnvironmentGetMock, InterruptArmMock, ReporterExecutorMock};
 use crate::remote::error;
 use crate::remote::runner::RemoteRunnerRunMock;
@@ -18,7 +19,9 @@ fn application(
     environment: Option<&str>,
     suite: Option<VerificationSuite>,
     remote: bool,
+    flag: Option<Executor>,
 ) -> Application {
+    let mode = resolve_executor(flag, environment).unwrap();
     let unused = Arc::new(Unimock::new(()));
     let check_runner = Arc::new(if remote {
         Unimock::new(())
@@ -47,6 +50,22 @@ fn application(
         Unimock::new(())
     });
     Application {
+        selector: Arc::new(if suite.is_none() && mode != Executor::Local {
+            Unimock::new(
+                SelectorSelectMock
+                    .next_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, actual| {
+                        assert_eq!(actual, mode);
+                        Ok(if remote {
+                            Decision::Remote
+                        } else {
+                            Decision::Local(LocalReason::NoKey)
+                        })
+                    })),
+            )
+        } else {
+            Unimock::new(())
+        }),
         check_runner,
         remote_runner,
         interrupt,
@@ -75,7 +94,7 @@ fn auto_and_selected_suites_keep_local_behavior() {
         (Some("local"), None),
         (None, Some(VerificationSuite::Package)),
     ] {
-        application(mode, suite, false)
+        application(mode, suite, false, None)
             .run(Command::Check {
                 suite,
                 shard: None,
@@ -93,7 +112,7 @@ fn flags_override_environment_and_inherited_remote_runs_the_runner() {
         (Some("local"), Some(Executor::Remote), true),
         (Some("remote"), None, true),
     ] {
-        application(mode, None, remote)
+        application(mode, None, remote, flag)
             .run(Command::Check {
                 suite: None,
                 shard: None,
@@ -106,6 +125,7 @@ fn flags_override_environment_and_inherited_remote_runs_the_runner() {
 fn rejecting_application(environment: Arc<Unimock>, interrupt: Arc<Unimock>) -> Application {
     let unused = Arc::new(Unimock::new(()));
     Application {
+        selector: unused.clone(),
         check_runner: unused.clone(),
         remote_runner: unused.clone(),
         rust_file_length_auditor: unused.clone(),
@@ -162,13 +182,29 @@ fn signal_registration_failure_cannot_start_remote_work() {
             })
         }),
     ));
+    let mut app = rejecting_application(environment, interrupt);
+    app.selector = Arc::new(Unimock::new(
+        SelectorSelectMock
+            .next_call(matching!(Executor::Remote))
+            .answers(&|_, _| Ok(Decision::Remote)),
+    ));
     assert!(
-        rejecting_application(environment, interrupt)
-            .run(Command::Check {
-                suite: None,
-                shard: None,
-                executor: None
-            })
-            .is_err()
+        app.run(Command::Check {
+            suite: None,
+            shard: None,
+            executor: None
+        })
+        .is_err()
     );
+}
+
+#[test]
+fn default_auto_runs_remote_when_selection_is_available() {
+    application(None, None, true, None)
+        .run(Command::Check {
+            suite: None,
+            shard: None,
+            executor: None,
+        })
+        .unwrap();
 }

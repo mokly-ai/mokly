@@ -7,6 +7,8 @@ use clap::Parser;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::check::{CheckRunnerRunMock, CheckRunnerSourceFileLengthMock, VerificationSuite};
+use crate::executor::{Decision, Executor, LocalReason};
+use crate::remote::availability::SelectorSelectMock;
 use crate::remote::contracts::{EnvironmentGetMock, ReporterExecutorMock};
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
@@ -35,6 +37,15 @@ fn parses_every_suite_and_a_valid_shard() {
         panic!("check command expected");
     };
     assert_eq!(shard.expect("shard exists").to_string(), "3/4");
+}
+
+#[test]
+fn executor_command_accepts_the_same_mode_flag() {
+    for mode in ["auto", "local", "remote"] {
+        let parsed = Cli::try_parse_from(["xtask", "executor", "--executor", mode]).unwrap();
+        assert!(matches!(parsed.command, Command::Executor { .. }));
+    }
+    assert!(Cli::try_parse_from(["xtask", "executor", "--executor", "invalid"]).is_err());
 }
 
 #[test]
@@ -77,6 +88,11 @@ fn application_dispatches_source_length_and_complete_check() {
         CheckRunnerRunMock.next_call(matching!((request) if request == &crate::check::CheckRequest::new(None, None).unwrap())).returns(Ok(())),
     )));
     let app = Application {
+        selector: Arc::new(Unimock::new(
+            SelectorSelectMock
+                .next_call(matching!(Executor::Auto))
+                .answers(&|_, _| Ok(Decision::Local(LocalReason::NoKey))),
+        )),
         remote_runner: Arc::new(Unimock::new(())),
         interrupt: Arc::new(Unimock::new(())),
         environment: Arc::new(Unimock::new(

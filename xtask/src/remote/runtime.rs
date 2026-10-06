@@ -11,6 +11,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use chrono::Utc;
 
+use crate::executor::Decision;
+
 use crate::remote::contracts::{Clock, Environment, Interrupt, Programs, Reporter};
 use crate::remote::error::{Error, Operation, Result};
 
@@ -102,6 +104,9 @@ impl Interrupt for SystemInterrupt {
 pub(crate) struct SystemReporter;
 
 impl Reporter for SystemReporter {
+    fn decision(&self, decision: Decision) {
+        println!("{decision}");
+    }
     fn executor(&self, message: &str) {
         eprintln!("[xtask/executor] {message}");
     }

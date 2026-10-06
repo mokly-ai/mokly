@@ -5,7 +5,7 @@
 The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 defines this approved target. Explicit remote execution, the scripts and the
 Testbox workflow are implemented. Automatic remote selection and
-`cargo xtask executor` are pending. The default `auto` runs locally.
+`cargo xtask executor` are implemented. The automatic smoke check is pending.
 The approved idle timeout is 30 minutes. Per-box cleanup and diagnostics are
 implemented. The complete explicit remote smoke check passes.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
@@ -58,8 +58,12 @@ operating system's package manager. Xtask never installs these tools.
 Local fallback is allowed only before the first remote suite command starts.
 After that boundary, every execution or evidence failure fails the check.
 One check must never mix local and remote suite results.
+Use a typed unavailable result for preparation failures before any suite.
+Use a typed failed result after the execution boundary.
+An interrupt or failed preparation cleanup must never start local fallback.
 
-`cargo xtask executor` uses the same mode precedence and availability checks.
+`cargo xtask executor` accepts the same `--executor` flag and mode precedence.
+It uses the same availability checks.
 It prints exactly one line to standard output: `<executor>: <reason>`.
 Send the CLI version and other diagnostics to standard error.
 The executor is `local` or `remote`. Both decisions exit 0.

@@ -5,9 +5,10 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::executor::{Decision, Executor};
+use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
-use crate::remote::runner::DefaultRemoteRunner;
 
 fn command_failure() -> Error {
     Error::Command {
@@ -16,9 +17,10 @@ fn command_failure() -> Error {
     }
 }
 
-fn fixture(stage: usize, key: bool) -> (DefaultRemoteRunner, Arc<Mutex<Vec<String>>>) {
+fn fixture(stage: usize, key: bool, mode: Executor) -> (DefaultSelector, Arc<Mutex<Vec<String>>>) {
     let events = Arc::new(Mutex::new(Vec::new()));
-    let environment = Arc::new(if stage <= 4 {
+    let early_local = stage == 0 || (mode == Executor::Auto && !key);
+    let environment = Arc::new(if stage == 0 || (stage <= 4 && mode == Executor::Remote) {
         Unimock::new(
             EnvironmentGetMock
                 .next_call(matching!("GITHUB_ACTIONS"))
@@ -39,7 +41,7 @@ fn fixture(stage: usize, key: bool) -> (DefaultRemoteRunner, Arc<Mutex<Vec<Strin
         ))
     });
     let lookup_events = events.clone();
-    let programs = Arc::new(if stage == 0 {
+    let programs = Arc::new(if early_local {
         Unimock::new(())
     } else {
         Unimock::new(
@@ -87,7 +89,7 @@ fn fixture(stage: usize, key: bool) -> (DefaultRemoteRunner, Arc<Mutex<Vec<Strin
                 Ok(())
             }
         }));
-    let blacksmith = Arc::new(if stage < 4 {
+    let blacksmith = Arc::new(if stage < 4 || early_local {
         Unimock::new(())
     } else if stage == 4 {
         Unimock::new(version)
@@ -99,7 +101,7 @@ fn fixture(stage: usize, key: bool) -> (DefaultRemoteRunner, Arc<Mutex<Vec<Strin
         Unimock::new((version, list))
     });
     let publish_events = events.clone();
-    let git = Arc::new(if stage < 7 {
+    let git = Arc::new(if stage < 7 || early_local {
         Unimock::new(())
     } else {
         Unimock::new(
@@ -111,7 +113,11 @@ fn fixture(stage: usize, key: bool) -> (DefaultRemoteRunner, Arc<Mutex<Vec<Strin
                 })),
         )
     });
-    let reporter = Arc::new(if stage < 5 {
+    let reporter = Arc::new(if mode == Executor::Auto && stage == 0 {
+        Unimock::new(())
+    } else if mode == Executor::Auto && (stage < 9 || !key) {
+        Unimock::new(ReporterExecutorMock.each_call(matching!(_)).returns(()))
+    } else if stage < 5 {
         Unimock::new(())
     } else {
         Unimock::new(
@@ -120,7 +126,7 @@ fn fixture(stage: usize, key: bool) -> (DefaultRemoteRunner, Arc<Mutex<Vec<Strin
                 .returns(()),
         )
     });
-    let interrupt = Arc::new(if stage < 8 {
+    let interrupt = Arc::new(if stage < 8 || early_local {
         Unimock::new(())
     } else {
         Unimock::new(
@@ -131,7 +137,7 @@ fn fixture(stage: usize, key: bool) -> (DefaultRemoteRunner, Arc<Mutex<Vec<Strin
     });
     let unused = Arc::new(Unimock::new(()));
     (
-        DefaultRemoteRunner {
+        DefaultSelector {
             dependencies: Dependencies {
                 environment,
                 programs,
@@ -163,14 +169,14 @@ fn each_remote_condition_fails_before_the_next_condition() {
         "published",
     ];
     for stage in 0..=9 {
-        let (runner, events) = fixture(stage, true);
-        let result = runner.require_remote();
+        let (runner, events) = fixture(stage, true, Executor::Remote);
+        let result = runner.select(Executor::Remote);
         assert_eq!(result.is_ok(), stage == 9, "stage={stage}");
         match (stage, result) {
             (0, Err(Error::GithubActions))
             | (7, Err(Error::UnpublishedHead))
             | (8, Err(Error::Interrupted))
-            | (9, Ok(())) => {}
+            | (9, Ok(Decision::Remote)) => {}
             (1..=3, Err(Error::MissingProgram { program, hint })) => {
                 assert_eq!(program, all[stage - 1]);
                 assert!(hint.contains(if stage == 1 {
@@ -188,10 +194,35 @@ fn each_remote_condition_fails_before_the_next_condition() {
 
 #[test]
 fn explicit_remote_uses_current_login_when_the_key_is_missing() {
-    let (runner, events) = fixture(9, false);
-    runner.require_remote().unwrap();
+    let (runner, events) = fixture(9, false, Executor::Remote);
+    assert_eq!(runner.select(Executor::Remote).unwrap(), Decision::Remote);
     assert_eq!(
         *events.lock().unwrap(),
         ["blacksmith", "rsync", "ssh", "version", "list", "published"]
     );
+}
+
+#[test]
+fn automatic_selection_uses_every_table_row_and_never_hides_interrupts() {
+    for stage in 0..=9 {
+        let (selector, _) = fixture(stage, true, Executor::Auto);
+        let result = selector.select(Executor::Auto);
+        if stage == 8 {
+            assert!(matches!(result, Err(Error::Interrupted)));
+        } else if stage == 9 {
+            assert_eq!(result.unwrap(), Decision::Remote);
+        } else {
+            assert!(matches!(result, Ok(Decision::Local(_))));
+        }
+    }
+}
+
+#[test]
+fn missing_key_selects_local_before_any_program_lookup() {
+    let (selector, events) = fixture(9, false, Executor::Auto);
+    assert!(matches!(
+        selector.select(Executor::Auto).unwrap(),
+        Decision::Local(_)
+    ));
+    assert!(events.lock().unwrap().is_empty());
 }

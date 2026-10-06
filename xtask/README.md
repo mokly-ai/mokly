@@ -43,7 +43,8 @@ dependencies without workspace overrides or audit exceptions.
 The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
 are partial verification. The unqualified command runs the complete gate.
-`--executor remote` runs that gate on Testboxes. `auto` currently stays local.
+`--executor remote` runs that gate on Testboxes. `auto` selects remote mode when
+an org key and every availability check pass. It otherwise selects local mode.
 The [repository ratchet contract](../docs/protocol/verification-ratchets.md) owns
 the exact scopes and exceptions. Length, protocol-cap, and
 unused-internal-export analysis compare against
@@ -83,6 +84,8 @@ Tests using `changedFixture` register servers and workers with
 ```bash
 cargo xtask check
 cargo xtask check --executor local
+cargo xtask executor
+cargo xtask executor --executor local
 MOKLY_TESTBOX_REF="$(git branch --show-current)" cargo xtask check --executor remote
 cargo xtask check --suite repository
 cargo xtask check --suite package
@@ -124,7 +127,15 @@ Suite progress and summaries start with `[xtask/remote]`.
 Failed commands show their last 60 log lines and the log path.
 Failed aggregate and fingerprint reads show captured stdout and stderr after
 their warning. The summary names the aggregate outcome as `passed` or `failed`.
-Remote failures never substitute local suite results.
+Automatic mode checks the key before looking for programs.
+No key prints one information line and selects local mode.
+`cargo xtask executor` prints exactly `<executor>: <reason>` on stdout.
+It checks availability without warming boxes or running suites.
+The CLI version and diagnostics stay on stderr. Both decisions exit 0.
+Invalid or rejected modes exit nonzero.
+Automatic preparation failures stop their boxes before the full local fallback.
+Typed results prevent fallback after suites start or an interrupt arrives.
+Failed preparation cleanup also prevents fallback.
 
 ## Development
 

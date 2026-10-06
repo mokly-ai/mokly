@@ -6,6 +6,8 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::executor::Executor;
+use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 
@@ -15,6 +17,7 @@ use super::harness_client_tests::client;
 pub(super) enum Case {
     Success,
     Warmup,
+    CleanupWarmup,
     MultipleIds,
     RepeatedBox,
     NoId,
@@ -36,6 +39,7 @@ impl Case {
         matches!(
             self,
             Self::Warmup
+                | Self::CleanupWarmup
                 | Self::MultipleIds
                 | Self::RepeatedBox
                 | Self::NoId
@@ -194,7 +198,7 @@ pub(super) fn harness(case: Case) -> Harness {
             )
         },
     );
-    Harness {
+    let fixture = Harness {
         events,
         dependencies: Dependencies {
             environment: shared.clone(),
@@ -210,5 +214,11 @@ pub(super) fn harness(case: Case) -> Harness {
             reporter,
             workspace: PathBuf::from("/workspace"),
         },
+    };
+    DefaultSelector {
+        dependencies: fixture.dependencies.clone(),
     }
+    .select(Executor::Remote)
+    .unwrap();
+    fixture
 }

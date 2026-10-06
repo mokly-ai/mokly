@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use crate::remote::error::Error;
-use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
+use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 
 #[path = "harness_tests.rs"]
 mod harness_tests;
@@ -172,8 +172,51 @@ fn interruption_is_nonzero_even_when_children_return_zero() {
             dependencies: fixture.dependencies
         }
         .run(),
-        Err(Error::Interrupted)
+        Err(Failure::Failed(Error::Interrupted))
     ));
+}
+
+#[test]
+fn preparation_failures_are_unavailable_and_later_failures_are_terminal() {
+    for (case, unavailable) in [
+        (Case::Warmup, true),
+        (Case::Probe, true),
+        (Case::Suite, false),
+        (Case::Download, false),
+        (Case::Aggregate, false),
+        (Case::ChangedTree, false),
+    ] {
+        let fixture = harness(case);
+        let result = DefaultRemoteRunner {
+            dependencies: fixture.dependencies,
+        }
+        .run();
+        assert_eq!(
+            matches!(result, Err(Failure::Unavailable(_))),
+            unavailable,
+            "{case:?}"
+        );
+    }
+}
+
+#[test]
+fn preparation_cleanup_failure_cannot_allow_local_fallback() {
+    let fixture = harness(Case::CleanupWarmup);
+    assert!(matches!(
+        DefaultRemoteRunner {
+            dependencies: fixture.dependencies
+        }
+        .run(),
+        Err(Failure::Failed(Error::PreparationCleanup { .. }))
+    ));
+    assert!(
+        !fixture
+            .events
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|event| event.starts_with("suite:"))
+    );
 }
 
 #[test]

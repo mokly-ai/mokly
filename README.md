@@ -347,7 +347,11 @@ Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each ended command downloads its report and cleans up its box at once.
 The gate requires nine reports. It skips stop and cancellation for a status
 table row that proves the box is completed. Logs stay under `.context/`.
-`--executor local` skips remote checks. The default `auto` still runs locally.
+`--executor local` skips remote checks. The default `auto` selects remote mode
+when an org key and all availability checks pass. It otherwise runs locally.
+Run `cargo xtask executor` to print `<executor>: <reason>` without warming boxes.
+Automatic fallback runs the full local gate only before a remote suite starts.
+An interrupt never starts local fallback.
 `MOKLY_CHECK_EXECUTOR` sets the default mode. The CLI flag overrides it.
 The workflow ref defaults to `main`. A selected `--suite` stays local.
 Explicit `remote` with `--suite` fails before work starts.

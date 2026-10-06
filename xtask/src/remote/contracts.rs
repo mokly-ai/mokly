@@ -3,6 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::executor::Decision;
 use crate::remote::error::Result;
 
 /// Captured process output and its real exit status.
@@ -133,12 +134,14 @@ pub(crate) trait Interrupt: Send + Sync {
 }
 
 /// Developer-facing output boundary.
-#[cfg_attr(test, unimock::unimock(api = [ReporterExecutorMock, ReporterProgressMock]))]
+#[cfg_attr(test, unimock::unimock(api = [ReporterExecutorMock, ReporterProgressMock, ReporterDecisionMock]))]
 pub(crate) trait Reporter: Send + Sync {
     /// Write a decision, information or warning line with the executor prefix.
     fn executor(&self, message: &str);
     /// Write a progress or summary line.
     fn progress(&self, message: &str);
+    /// Print exactly one executor result line to standard output.
+    fn decision(&self, decision: Decision);
 }
 
 /// Shared typed collaborators, constructed only by the CLI.

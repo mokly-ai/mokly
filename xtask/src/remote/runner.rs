@@ -2,14 +2,30 @@
 
 use std::collections::BTreeSet;
 
+use thiserror::Error;
+
 use crate::remote::contracts::Dependencies;
-use crate::remote::error::{Error, Result};
+use crate::remote::error::{self, Result};
+
+/// The stage boundary that controls automatic local fallback.
+#[derive(Debug, Error)]
+pub(crate) enum Failure {
+    /// Preparation failed before a suite started, after successful cleanup.
+    #[error("[xtask/runner] remote unavailable before suites: {0}")]
+    Unavailable(#[source] error::Error),
+    /// A started check, interrupt or cleanup failure cannot fall back.
+    #[error("[xtask/runner] remote verification failed: {0}")]
+    Failed(#[source] error::Error),
+}
+
+/// Typed remote result that cannot infer its phase from diagnostic text.
+pub(crate) type RunResult = std::result::Result<(), Failure>;
 
 /// Stateful orchestration boundary consumed through a trait object.
 #[cfg_attr(test, unimock::unimock(api = [RemoteRunnerRunMock]))]
 pub(crate) trait RemoteRunner: Send + Sync {
     /// Execute the complete remote gate and always clean up warmed boxes.
-    fn run(&self) -> Result<()>;
+    fn run(&self) -> RunResult;
 }
 
 /// Runner composed entirely from trait-backed collaborators.
@@ -19,9 +35,38 @@ pub(crate) struct DefaultRemoteRunner {
 }
 
 impl RemoteRunner for DefaultRemoteRunner {
-    fn run(&self) -> Result<()> {
+    fn run(&self) -> RunResult {
+        let mut boxes = Vec::new();
+        let preparation = self.prepare(&mut boxes);
+        let (head, fingerprint, run) = match preparation {
+            Ok(identity) => identity,
+            Err(source) => {
+                let failures = self.stop_boxes(&boxes);
+                if self.dependencies.interrupt.requested()
+                    || matches!(source, error::Error::Interrupted)
+                {
+                    return Err(Failure::Failed(error::Error::Interrupted));
+                }
+                if failures != 0 {
+                    return Err(Failure::Failed(error::Error::PreparationCleanup {
+                        source: Box::new(source),
+                        failures,
+                    }));
+                }
+                return Err(Failure::Unavailable(source));
+            }
+        };
+        match self.finish(&boxes, &fingerprint, &run, &head) {
+            Ok(()) => Ok(()),
+            Err(source) => Err(Failure::Failed(source)),
+        }
+    }
+}
+
+impl DefaultRemoteRunner {
+    /// Prepare all boxes before the first suite, preserving recoverable IDs.
+    fn prepare(&self, boxes: &mut Vec<String>) -> Result<(String, String, String)> {
         let dependencies = &self.dependencies;
-        self.require_remote()?;
         let head = dependencies.git.head()?;
         let fingerprint = self.fingerprint()?;
         let run = format!(
@@ -37,22 +82,22 @@ impl RemoteRunner for DefaultRemoteRunner {
         dependencies.reporter.executor(&format!(
             "information: run={run} ref={reference} HEAD={head}"
         ));
-        let mut boxes = Vec::new();
-        let preparation = self
-            .warmup(&reference, &mut boxes)
-            .and_then(|()| self.probe(&boxes, &fingerprint, &head));
-        if let Err(error) = preparation {
-            self.stop_boxes(&boxes);
-            return Err(error);
-        }
+        self.warmup(&reference, boxes)?;
+        self.probe(boxes, &fingerprint, &head)?;
         dependencies
             .reporter
             .executor("information: all 11 probes passed");
-        let completed = self.execute(&boxes, &fingerprint, &run);
+        Ok((head, fingerprint, run))
+    }
+
+    /// Execute the complete remote gate after the fallback boundary.
+    fn finish(&self, boxes: &[String], fingerprint: &str, run: &str, head: &str) -> Result<()> {
+        let dependencies = &self.dependencies;
+        let completed = self.execute(boxes, fingerprint, run);
         let reports = dependencies
             .workspace
             .join(".context/verification-reports/remote")
-            .join(&run);
+            .join(run);
         let downloads = 9 - completed
             .iter()
             .filter(|completion| completion.report_downloaded)
@@ -73,9 +118,9 @@ impl RemoteRunner for DefaultRemoteRunner {
             .count()
             + self.stop_boxes(&remaining);
         if dependencies.interrupt.requested() {
-            return Err(Error::Interrupted);
+            return Err(error::Error::Interrupted);
         }
-        let aggregate_failed = match dependencies.aggregate.validate(&reports, &head) {
+        let aggregate_failed = match dependencies.aggregate.validate(&reports, head) {
             Ok(()) => false,
             Err(error) => {
                 self.report_failure("report aggregate", &error);
@@ -109,7 +154,7 @@ impl RemoteRunner for DefaultRemoteRunner {
             !changed
         ));
         if failures != 0 || downloads != 0 || aggregate_failed || changed || cleanup != 0 {
-            return Err(Error::Verification {
+            return Err(error::Error::Verification {
                 commands: failures,
                 reports: downloads,
                 aggregate_failed,
@@ -134,11 +179,11 @@ impl DefaultRemoteRunner {
     }
 
     /// Emit a warning before the original captured stdout and stderr.
-    pub(super) fn report_failure(&self, context: &str, error: &Error) {
+    pub(super) fn report_failure(&self, context: &str, error: &error::Error) {
         self.dependencies
             .reporter
             .executor(&format!("warning: {context} failed: {error}"));
-        if let Error::Captured { output, .. } = error {
+        if let error::Error::Captured { output, .. } = error {
             for (name, stream) in [("stdout", &output.stdout), ("stderr", &output.stderr)] {
                 for line in stream.lines() {
                     self.dependencies
