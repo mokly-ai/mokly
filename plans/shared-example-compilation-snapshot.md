@@ -197,38 +197,60 @@ Define the complete contract before any script or helper changes.
       `tests/protocol_doc_sizes.test.ts`, check the local links, and review the
       documentation diff.
 
-## Milestone 2: Snapshot key, codec, and producer — not started
+## Milestone 2: Snapshot key, codec, and producer — completed
 
 Add the shared scripts and prove them with tests before any consumer exists.
 The repository keeps working because nothing calls them yet.
 
-- [ ] Add failure-first tests in `tests/example_compilation_key.test.ts` using
+- [x] Add failure-first tests in `tests/example_compilation_key.test.ts` using
       a temporary Git repository with a few example-like files, an ignored
       file, and a fake `dist/`: identical trees give the same key; a content
       edit, an added untracked file, a rename, a deleted tracked file, and a
       built-output edit each change the key; an ignored-file edit does not.
-- [ ] Implement `scripts/verification/example-snapshot-key.mjs`: the input path
+- [x] Implement `scripts/verification/example-snapshot-key.mjs`: the input path
       list, the Git inventory, the built-output walk, POSIX path normalization,
       code-unit ordering, and the digest. Export the inventory so
       `tests/helpers/example_sources.ts` can use the same path list.
-- [ ] Add failure-first tests in `tests/example_compilation_snapshot.test.ts`
+- [x] Add failure-first tests in `tests/example_compilation_snapshot.test.ts`
       for the codec and producer with a small synthetic compilation that has
       text and binary outputs: exact round trip; rejection of a wrong schema
       version, a missing key, invalid base64, and a manifest that fails
       `parseManifest`; atomic replacement; skip when fresh; rewrite when stale.
-- [ ] Implement `scripts/verification/example-snapshot.mjs`: the snapshot path,
+- [x] Implement `scripts/verification/example-snapshot.mjs`: the snapshot path,
       `encodeCompilation`, `decodeCompilation` using `parseManifest` and
       `receiveGeneratedFile`, `readExampleSnapshot` returning `fresh`, `stale`,
       `missing`, or `invalid` with the compilation when fresh,
       `writeExampleSnapshot`, and the CLI entry that compiles only when needed.
       Import `dist` modules only inside this module, never from the runner.
-- [ ] Add `.d.mts` declarations for both scripts and run
+- [x] Add `.d.mts` declarations for both scripts and run
       `npm run typecheck:script-declarations` and `npm run lint`.
-- [ ] Add the real-example equivalence test: run the producer into a temporary
+- [x] Add the real-example equivalence test: run the producer into a temporary
       path, decode it, and compare with the compilation the producer returned.
       Require a deep-equal manifest, byte-equal outputs for every route, and
       equal `deliveredStyleSources` and `documentMarkdown`.
-- [ ] Keep every new file under 300 lines and run the new tests.
+- [x] Keep every new file under 300 lines and run the new tests.
+
+Delivered notes:
+
+- `parseManifest` costs about 2.1 s per decode on the 4.4 MB example manifest
+  on the implementation VM, because it re-hashes and re-validates every
+  component record. The compile already runs it before it serializes
+  `mokly-manifest.json`. `decodeCompilation` therefore requires the manifest
+  object to serialize exactly to that output instead, which takes about
+  0.47 s and still rejects any manifest that differs from the validated one.
+  A full fresh decode now takes about 0.4 s instead of about 2.3 s.
+- The compile emits binary assets as plain `Uint8Array` values, while
+  `receiveGeneratedFile` returns a `Buffer`. Decoding returns a plain
+  `Uint8Array` view, and the real-example test checks the constructor of
+  every binary output.
+- The key also hashes `tsconfig.json`, because esbuild reads it for every
+  example module, and hashes a symbolic link as its target text.
+- `readExampleSnapshot` moved to Milestone 3. The unused-internal-export
+  ratchet rejects a script export that no module imports, and its only
+  consumer is the Milestone 3 helper.
+- `tests/helpers/compilation_equality.ts` holds the shared equality assertion,
+  and `tests/example_compilation_round_trip.test.ts` holds the real-example
+  test, so the fast codec tests stay separate from the 17 s to 45 s compile.
 
 ## Milestone 3: Load the snapshot in the test helpers — not started
 

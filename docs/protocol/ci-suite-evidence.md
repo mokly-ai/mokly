@@ -81,17 +81,21 @@ with exactly these fields:
 | `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
 | `documentMarkdown`      | `[sourcePath, markdown]` pairs; omitted when the compilation has none.                                                |
 
-Decoding validates the manifest with the strict schema-v8 parser. It rejects
-another schema version, a malformed key, unknown fields, duplicate routes or
-document paths, and invalid binary transfer values. A decoded compilation is
-equal to the encoded one. It has no retained component runtime, so a test that
-needs `componentRuntime` compiles instead.
+Decoding requires the manifest object to serialize exactly to the snapshot's
+`mokly-manifest.json` output. The compile writes that output only after its
+strict schema-v8 validation, so decoding does not repeat the validation, which
+costs seconds per test process. Decoding rejects another schema version, a
+malformed key, unknown fields, duplicate routes or document paths, and invalid
+binary transfer values. A decoded compilation equals the encoded one, with
+binary outputs as plain `Uint8Array` values like a fresh compile. It has no
+retained component runtime, so a test that needs `componentRuntime` compiles
+instead.
 
 The freshness key is a SHA-256 digest of the schema version followed by one
 `[path, digest]` JSON line per input, in code-unit order of the
 repository-relative `/`-separated path. `digest` is the SHA-256 of the file
-bytes, `symlink:` plus the target of a symbolic link, or `missing`. The inputs
-are:
+bytes, `symlink:` plus the target of a symbolic link, or `missing` when the
+path is absent or is not a regular file. The inputs are:
 
 - every file that `git ls-files --cached --others --exclude-standard` lists
   under `examples/basic`, `docs/protocol` and `README.md`, so a tracked file
