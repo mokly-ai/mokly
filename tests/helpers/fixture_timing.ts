@@ -21,7 +21,8 @@ export interface FixturePhaseTiming {
   readonly operationUnderTest: boolean;
 }
 
-interface FixtureTimingOptions {
+/** Optional clock and writer overrides for fixture timing records. */
+export interface FixtureTimingOptions {
   readonly clock?: () => number;
   readonly write?: (timing: FixturePhaseTiming) => void;
 }

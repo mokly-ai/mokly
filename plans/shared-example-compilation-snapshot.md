@@ -252,25 +252,54 @@ Delivered notes:
   and `tests/example_compilation_round_trip.test.ts` holds the real-example
   test, so the fast codec tests stay separate from the 17 s to 45 s compile.
 
-## Milestone 3: Load the snapshot in the test helpers — not started
+## Milestone 3: Load the snapshot in the test helpers — completed
 
 Switch `designCatalogue` to the snapshot with a compile fallback.
 
-- [ ] Add failure-first tests in `tests/example_compilation_loader.test.ts`
+- [x] Add failure-first tests in `tests/example_compilation_loader.test.ts`
       with injected read, compile, and timing dependencies: a fresh snapshot is
       decoded and compile is not called; `missing`, `stale`, and `invalid` each
       call compile once; the timing record carries the phase and status; the
       result is memoized per process.
-- [ ] Implement `tests/helpers/example_compilation.ts` with
+- [x] Implement `tests/helpers/example_compilation.ts` with
       `exampleCompilation()` and an injectable `loadExampleCompilation`.
-- [ ] Point `designCatalogue` in `tests/helpers/design_catalogue.ts` at
+- [x] Point `designCatalogue` in `tests/helpers/design_catalogue.ts` at
       `exampleCompilation()` and update its doc comment. Keep the export name
       and type.
-- [ ] Run all 34 consumer files twice, once with a fresh snapshot present and
+- [x] Run all 34 consumer files twice, once with a fresh snapshot present and
       once with it absent, and require identical results on both paths.
-- [ ] Record interim local timings for `design_screen_counts`,
+- [x] Record interim local timings for `design_screen_counts`,
       `design_variants`, `design_library_inventory`, and `brand_logo` with
       the snapshot present.
+
+Delivered notes:
+
+- The helper emits a `snapshot` timing line for every lookup and, on a
+  fallback, a second `compile:missing`, `compile:stale`, or `compile:invalid`
+  line. Each line times one real phase with the unchanged `timeFixturePhase`
+  helper, which now exports its `FixtureTimingOptions` type.
+- `exampleCompilationLoader` memoizes one load per process; the loader tests
+  inject the read, compile, clock, and timing writer.
+- With a fresh snapshot, all 34 consumer files passed with 143 tests; summed
+  time 165.1 s and wall time 83.6 s at concurrency 2. Every file logged only
+  phase `snapshot`, which took 1.2 s to 2.4 s. With the snapshot absent, the
+  same 34 files passed with the same 143 tests; summed time 1,917.0 s and wall
+  time 962.5 s. Every file logged `compile:missing`. Per-file test, pass,
+  fail, and skip counts were identical on both paths.
+- This implementation VM compiles about 2.5 times slower than the planning VM:
+  one consumer file takes about 44 s instead of 17 s, and the no-compile
+  control file takes 1.6 s instead of 0.6 s. Before-and-after comparisons
+  below use this VM for both columns.
+
+Interim timings, each file run alone with `node --import tsx --test` on Node
+22.14.0 with a fresh snapshot:
+
+| File                                     | Before (this VM) | With snapshot |
+| ---------------------------------------- | ---------------: | ------------: |
+| `tests/design_screen_counts.test.ts`     |           43.1 s |         3.2 s |
+| `tests/design_variants.test.ts`          |           43.7 s |         3.4 s |
+| `tests/design_library_inventory.test.ts` |           45.2 s |         4.3 s |
+| `tests/brand_logo.test.tsx`              |           43.8 s |         3.2 s |
 
 ## Milestone 4: Use the snapshot for the design library fixture — not started
 

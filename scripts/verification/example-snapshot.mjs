@@ -114,6 +114,14 @@ export async function readSnapshotFile(file, currentKey) {
   }
 }
 
+/** Classify the repository snapshot against the current example inputs. */
+export function readExampleSnapshot(repositoryRoot) {
+  return readSnapshotFile(
+    path.join(repositoryRoot, EXAMPLE_SNAPSHOT_PATH),
+    () => exampleSnapshotKey(repositoryRoot),
+  );
+}
+
 /** Write beside the snapshot, then rename, so readers never see a partial file. */
 export async function writeExampleSnapshot(file, snapshot) {
   await fs.mkdir(path.dirname(file), { recursive: true });

@@ -41,6 +41,11 @@ export function readSnapshotFile(
   currentKey: () => Promise<string>,
 ): Promise<ExampleSnapshotRead>;
 
+/** Classify the repository snapshot against the current example inputs. */
+export function readExampleSnapshot(
+  repositoryRoot: string,
+): Promise<ExampleSnapshotRead>;
+
 /** Write beside the snapshot, then rename, so readers never see a partial file. */
 export function writeExampleSnapshot(
   file: string,
