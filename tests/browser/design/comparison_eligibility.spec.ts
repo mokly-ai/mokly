@@ -1,17 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
-import { viewRoute } from "../../packages/viewer/dist/data.js";
+import { viewRoute } from "../../../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
   ManifestV8,
-} from "../../packages/viewer/dist/registry/types.js";
-import { paletteColor } from "../helpers/design_palette.js";
-import { repositoryRoot } from "../helpers/fixture.js";
+} from "../../../packages/viewer/dist/registry/types.js";
+import { paletteColor } from "../../helpers/design_palette.js";
+import { repositoryRoot } from "../../helpers/fixture.js";
+
+import { designArtboardUrl } from "./artboards.js";
 
 const directory = path.join(repositoryRoot, "examples/basic/generated");
 const manifest = JSON.parse(
@@ -34,10 +35,11 @@ async function assertFragmentEligibility(
   page: Page,
   testInfo: TestInfo,
   entry: ManifestScreen,
+  viewport: "mobile" | "desktop",
   appearance: "light" | "dark",
   fragment: string,
 ): Promise<void> {
-  await page.goto(pathToFileURL(path.join(directory, fragment)).href);
+  await page.goto(designArtboardUrl(entry.path, viewport, appearance));
   const toolbar = page.locator(".mbk-cmp-toolbar");
   if (await toolbar.count()) {
     await expect(toolbar, fragment).toHaveCSS(
@@ -92,6 +94,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
           page,
           testInfo,
           entry,
+          viewport,
           appearance,
           fragment,
         );

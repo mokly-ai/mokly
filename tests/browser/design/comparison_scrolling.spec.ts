@@ -1,10 +1,8 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { paletteColor } from "../helpers/design_palette.js";
-import { repositoryRoot } from "../helpers/fixture.js";
+import { paletteColor } from "../../helpers/design_palette.js";
+
+import { designArtboardUrl } from "./artboards.js";
 
 type Scheme = "dark" | "light";
 type Viewport = "desktop" | "mobile";
@@ -27,10 +25,7 @@ async function open(
       : { width: 1440, height: 1000 },
   );
   const file = `${route}/index.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
-  await page.goto(
-    pathToFileURL(path.join(repositoryRoot, "examples/basic/generated", file))
-      .href,
-  );
+  await page.goto(designArtboardUrl(route, viewport, scheme));
   const preview = page.locator(
     `.ce-preview-view[data-preview-viewport="${viewport}"]`,
   );

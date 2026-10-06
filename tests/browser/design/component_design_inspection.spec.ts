@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test.describe(`${viewport} component designs`, () => {
@@ -24,7 +24,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ["nested", [[".ce-nested-cutout", ".ce-demo-toolbar .ce-action"]]],
       ] as const) {
         await page.goto(
-          componentDesignUrl(
+          designArtboardUrl(
             `design/components/inspection/inspection-${route}`,
             viewport,
           ),
@@ -76,7 +76,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        componentDesignUrl(
+        designArtboardUrl(
           "design/components/inspection/inspection-details",
           viewport,
         ),
@@ -97,7 +97,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        componentDesignUrl(
+        designArtboardUrl(
           "design/components/inspection/inspection-details",
           viewport,
         ),
@@ -121,7 +121,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        componentDesignUrl(
+        designArtboardUrl(
           "design/components/inspection/selection/inspection-help",
           viewport,
         ),
@@ -142,12 +142,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ["unused", "No screens or components use Badge yet."],
       ]) {
         await page.goto(
-          componentDesignUrl(`design/components/states/${route}`, viewport),
+          designArtboardUrl(`design/components/states/${route}`, viewport),
         );
         await expect(page.getByText(copy!, { exact: true })).toBeVisible();
       }
       await page.goto(
-        componentDesignUrl("design/components/states/removed", viewport),
+        designArtboardUrl("design/components/states/removed", viewport),
       );
       await expect(
         page
@@ -155,7 +155,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
           .getByText("This variant has been removed.", { exact: true }),
       ).toBeVisible();
       await page.goto(
-        componentDesignUrl(
+        designArtboardUrl(
           "design/components/states/removed-consumer",
           viewport,
         ),

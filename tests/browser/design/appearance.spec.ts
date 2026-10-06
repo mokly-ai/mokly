@@ -1,9 +1,6 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 import { expect, test } from "@playwright/test";
 
-import { repositoryRoot } from "../helpers/fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["mobile", "desktop"] as const)
   test(`${viewport}: appearance artboards paint their own Light and Dark backgrounds`, async ({
@@ -23,12 +20,13 @@ for (const viewport of ["mobile", "desktop"] as const)
         ["light", "rgb(244, 244, 241)"],
         ["dark", "rgb(22, 21, 18)"],
       ] as const) {
-        const file = path.join(
-          repositoryRoot,
-          "examples/basic/generated",
-          `design/browse/appearance/${entry}/index.${viewport}${scheme === "dark" ? ".dark" : ""}.html`,
+        await page.goto(
+          designArtboardUrl(
+            `design/browse/appearance/${entry}`,
+            viewport,
+            scheme,
+          ),
         );
-        await page.goto(pathToFileURL(file).href);
         await expect(
           page.locator("[data-mbk-appearance] .mbk-shell"),
         ).toHaveCSS("background-color", color);

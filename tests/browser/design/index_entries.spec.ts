@@ -1,9 +1,6 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 import { expect, test } from "@playwright/test";
 
-import { repositoryRoot } from "../helpers/fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["desktop", "mobile"] as const)
   test(`${viewport}: the first changed member shows only its first changed view`, async ({
@@ -15,13 +12,7 @@ for (const viewport of ["desktop", "mobile"] as const)
         : { width: 1440, height: 1000 },
     );
     await page.goto(
-      pathToFileURL(
-        path.join(
-          repositoryRoot,
-          "examples/basic/generated/design/browse/index-entries/member-changes",
-          `index.${viewport}.html`,
-        ),
-      ).href,
+      designArtboardUrl("design/browse/index-entries/member-changes", viewport),
     );
     const control = page.locator(".ce-viewport-control");
     await expect(

@@ -1,11 +1,6 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 import { expect, test } from "@playwright/test";
 
-import { repositoryRoot } from "../helpers/fixture.js";
-
-const directory = path.join(repositoryRoot, "examples/basic/generated");
+import { designArtboardUrl } from "./artboards.js";
 
 const pickerDesigns = [
   "design/browse/views/screen/tag-picker",
@@ -25,12 +20,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     page,
   }) => {
     await page.goto(
-      pathToFileURL(
-        path.join(
-          directory,
-          `design/browse/variants/changed-views/index.${viewport}.html`,
-        ),
-      ).href,
+      designArtboardUrl("design/browse/variants/changed-views", viewport),
     );
     const appearance = page.locator(".mbk-appearance");
     const mark = appearance.locator('[data-view-changed="scheme"]');
@@ -51,10 +41,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 1440, height: 1000 },
     );
     for (const route of pickerDesigns) {
-      await page.goto(
-        pathToFileURL(path.join(directory, `${route}/index.${viewport}.html`))
-          .href,
-      );
+      await page.goto(designArtboardUrl(route, viewport));
       const panel = page.locator(".mbk-tag-picker");
       if ((await panel.count()) === 0) continue;
       const chip = panel.locator(".mbk-chip").first();
@@ -74,10 +61,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   }) => {
     for (const [route, width] of barDesigns) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(
-        pathToFileURL(path.join(directory, `${route}/index.${viewport}.html`))
-          .href,
-      );
+      await page.goto(designArtboardUrl(route, viewport));
       const search = page.locator(".mbk-search").first();
       const box = (await search.boundingBox())!;
       expect(box.height, `${route}: the query wrapped`).toBeLessThanOrEqual(32);

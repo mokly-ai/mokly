@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import {
-  componentDesignRoutes,
-  componentDesignUrl,
-} from "./component_design_fixture.js";
+import { componentDesignRoutes, designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test.describe(`${viewport} component designs`, () => {
@@ -18,7 +15,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }, testInfo) => {
       for (const route of componentDesignRoutes) {
-        await page.goto(componentDesignUrl(route, viewport));
+        await page.goto(designArtboardUrl(route, viewport));
         await expect(page.locator(".mbk-screen-head h2"), route).toHaveCount(1);
         await expect(page.locator(".mbk-screen-head h2"), route).toBeVisible();
         for (const panel of await page
@@ -48,14 +45,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
         "design/components/overview",
         "design/components/pages/variants",
       ]) {
-        await page.goto(componentDesignUrl(route, viewport));
+        await page.goto(designArtboardUrl(route, viewport));
         await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
       }
     });
 
     test("viewport controls accept keyboard focus", async ({ page }) => {
       await page.goto(
-        componentDesignUrl("design/components/overview", viewport),
+        designArtboardUrl("design/components/overview", viewport),
       );
       const selection = page.getByRole("combobox", {
         name: "Preview viewport",

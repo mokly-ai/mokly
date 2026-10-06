@@ -80,6 +80,21 @@ deleted test beside its replacement, and the PR description lists them all.
   `design-library` profile and its embedded fixture source have no remaining
   caller after `design_library_export.spec.ts` is removed.
 
+- Raw-artboard moves in Milestone 5 preserve every assertion. These files
+  move under `tests/browser/design/`, dropping only a leading `design_`:
+  `design_comparison_stacks.spec.ts`, `design_component_stacks.spec.ts`,
+  `design_comparison_scrolling.spec.ts`, `design_scroll_together.spec.ts`,
+  `design_comparison_eligibility.spec.ts`, `comparison_design.spec.ts`,
+  `design_modern_controls.spec.ts`, `design_top_bar.spec.ts`,
+  `design_library.spec.ts`, `design_portable.spec.ts`,
+  `design_index_entries.spec.ts`, `design_appearance.spec.ts`,
+  `component_design.spec.ts`, `component_design_inspection.spec.ts`,
+  `component_workspace.spec.ts`, `component_surfaces.spec.ts`,
+  `component_controls.spec.ts`, `component_evidence.spec.ts`,
+  `component_inspector.spec.ts`, and `phone_chrome.spec.ts`. Remove
+  `component_design_fixture.ts` after moving its route list and raw URL reader
+  into `tests/browser/design/artboards.ts`.
+
 ### Accepted coverage losses
 
 - Tab order from the brand mark to a design link in the served shell. Unit
@@ -410,14 +425,14 @@ move. Keep the original fact, its scope, and its viewport coverage.
 
 ## Milestone 5: Mockup spec directory and boundary guard
 
-Put every browser mockup spec in one directory, and make the layer rules
+Completed. Put every browser mockup spec in one directory, and make the layer rules
 mechanical.
 
-- [ ] Add `tests/browser/design/artboards.ts` with
+- [x] Add `tests/browser/design/artboards.ts` with
       `designArtboardUrl(path, viewport, scheme?)`. Replace
       `componentDesignUrl` and the ad hoc `pathToFileURL` artboard paths with
       it, then delete `tests/browser/component_design_fixture.ts`.
-- [ ] Move these specs to `tests/browser/design/`, drop a leading `design_`
+- [x] Move these specs to `tests/browser/design/`, drop a leading `design_`
       from each file name, and fix their relative imports:
       `design_comparison_stacks`, `design_component_stacks`,
       `design_comparison_scrolling`, `design_scroll_together`,
@@ -427,16 +442,20 @@ mechanical.
       `component_design`, `component_design_inspection`, `component_workspace`,
       `component_surfaces`, `component_controls`, `component_evidence`,
       `component_inspector` and `phone_chrome`.
-- [ ] Add `tests/design_test_boundaries.test.ts`. Write the scan as a pure
+- [x] Add `tests/design_test_boundaries.test.ts`. Write the scan as a pure
       function, and prove it with one violating sample per rule: a spec under
       `tests/browser/design/` that navigates the served shell or starts an
       export, preview or server; and a spec elsewhere that imports
       `designArtboardUrl` or names `generated/design`. Then assert that the
       real tree passes.
-- [ ] Update the Playwright commands in the design verification protocol,
+- [x] Update the Playwright commands in the design verification protocol,
       and mark the contract delivered.
-- [ ] Run `npx playwright test tests/browser/design` and
+- [x] Run `npx playwright test tests/browser/design` and
       `node --import tsx --test tests/browser_shard_balance.test.ts`.
+- [x] Test the shared URL helper's viewport, scheme, screen, and component
+      sample behavior. Reject unknown entries, runtime content, and missing schemes.
+- [x] Run the milestone lint, formatting, and prepared type checks. Audit the
+      mainline diff and deletions. Commit with a Conventional Commit and push.
 
 ## Milestone 6: Verification and review
 

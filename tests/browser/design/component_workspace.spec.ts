@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test.describe(`${viewport} component workspace`, () => {
@@ -15,7 +15,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        componentDesignUrl(
+        designArtboardUrl(
           "design/components/controls/editing/edited",
           viewport,
         ),
@@ -45,7 +45,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        componentDesignUrl("design/components/states/empty", viewport),
+        designArtboardUrl("design/components/states/empty", viewport),
       );
       await expect(
         page
@@ -58,7 +58,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        componentDesignUrl(
+        designArtboardUrl(
           "design/components/inspection/inspection-consumer",
           viewport,
         ),
@@ -82,7 +82,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        componentDesignUrl(
+        designArtboardUrl(
           "design/components/controls/editing/edited",
           viewport,
         ),

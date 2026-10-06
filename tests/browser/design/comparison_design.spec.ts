@@ -1,19 +1,6 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 import { expect, test } from "@playwright/test";
 
-import { repositoryRoot } from "../helpers/fixture.js";
-
-const design = (entryPath: string, viewport: string): string =>
-  pathToFileURL(
-    path.join(
-      repositoryRoot,
-      "examples/basic/generated",
-      entryPath,
-      `index.${viewport}.html`,
-    ),
-  ).href;
+import { designArtboardUrl } from "./artboards.js";
 
 test("comparison designs use screen context instead of report chrome", async ({
   page,
@@ -26,8 +13,8 @@ test("comparison designs use screen context instead of report chrome", async ({
     "impact/shared-impact",
     "impact/ignored-only",
   ]) {
-    for (const viewport of ["desktop", "mobile"]) {
-      await page.goto(design(`design/changes/${route}`, viewport));
+    for (const viewport of ["desktop", "mobile"] as const) {
+      await page.goto(designArtboardUrl(`design/changes/${route}`, viewport));
       const comparisonDetails = page.getByText("Comparison details", {
         exact: true,
       });
@@ -64,9 +51,12 @@ test("comparison designs use screen context instead of report chrome", async ({
 test("a viewport with no previous view names the one that still opens", async ({
   page,
 }) => {
-  for (const viewport of ["desktop", "mobile"]) {
+  for (const viewport of ["desktop", "mobile"] as const) {
     await page.goto(
-      design("design/changes/outcomes/previous-version/no-view", viewport),
+      designArtboardUrl(
+        "design/changes/outcomes/previous-version/no-view",
+        viewport,
+      ),
     );
     await expect(page.locator("[data-change-status]")).toHaveText("Removed");
     await expect(page.locator(".mbk-previous")).toHaveText(

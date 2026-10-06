@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: controls keep the saved component canvas width`, async ({
@@ -11,10 +11,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 1440, height: 1000 }
         : { width: 390, height: 844 },
     );
-    await page.goto(componentDesignUrl("design/components/overview", viewport));
+    await page.goto(designArtboardUrl("design/components/overview", viewport));
     const saved = await page.locator(".ce-canvas:visible").boundingBox();
     await page.goto(
-      componentDesignUrl("design/components/controls/controls", viewport),
+      designArtboardUrl("design/components/controls/controls", viewport),
     );
     const editable = await page.locator(".ce-canvas:visible").boundingBox();
     expect(editable?.width).toBe(saved?.width);
@@ -28,7 +28,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       "states/invalid",
     ]) {
       await page.goto(
-        componentDesignUrl(`design/components/controls/${route}`, viewport),
+        designArtboardUrl(`design/components/controls/${route}`, viewport),
       );
       await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
       if (route === "states/invalid")
@@ -48,7 +48,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 390, height: 844 },
     );
     await page.goto(
-      componentDesignUrl("design/components/controls/editing/unset", viewport),
+      designArtboardUrl("design/components/controls/editing/unset", viewport),
     );
     await expect(
       page.getByRole("textbox", { name: "hint", exact: true }),

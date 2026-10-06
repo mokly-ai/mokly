@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: inspector icons open each panel with keyboard focus`, async ({
@@ -12,7 +12,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         : { width: 390, height: 844 },
     );
     await page.goto(
-      componentDesignUrl("design/components/pages/toolbar", viewport),
+      designArtboardUrl("design/components/pages/toolbar", viewport),
     );
     const inspector = page.getByRole("region", {
       name: "Inspector",
@@ -28,7 +28,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         inspector.getByRole("region", { name, exact: true }),
       ).toBeVisible();
     }
-    await page.goto(componentDesignUrl("design/components/overview", viewport));
+    await page.goto(designArtboardUrl("design/components/overview", viewport));
     await page.getByRole("button", { name: "Usage", exact: true }).click();
     await expect(
       page.getByRole("region", { name: "Used by", exact: true }),

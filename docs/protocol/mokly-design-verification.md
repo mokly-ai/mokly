@@ -107,11 +107,10 @@ Run unit mockup checks:
 node --import tsx --test tests/design_*.test.ts tests/design_*.test.tsx tests/component_design_*.test.ts tests/brand_logo.test.tsx
 ```
 
-During migration, raw-artboard specs still live directly under
-`tests/browser/`. Run changed specs by their current paths:
+Run all raw-artboard browser specs from their owning directory:
 
 ```sh
-npx playwright test tests/browser/component_design.spec.ts --project chromium
+npx playwright test tests/browser/design --project chromium
 ```
 
 Run selected runtime specs by file, or run the complete browser suite:
@@ -130,9 +129,11 @@ After the push, use the
 
 ## Delivery Status
 
-The layer contract, non-empty catalogue selections, static-check moves, and
-runtime-check moves are delivered. The raw-artboard directory and boundary
-guard are pending. Current browser commands above use the existing spec locations.
+The three test layers are delivered. Catalogue-wide unit selections reject
+empty results. Static facts live in unit tests. Visibility, computed style, and
+interaction checks remain on raw artboards. Runtime checks use non-design
+fixtures. All raw-artboard specs use the shared helper in their owning directory.
+The tested source scanner enforces the browser layer boundary.
 
 The approved migration drops only two checks: the served shell's tab order
 from its brand to a design link, and inspection three levels deep on a real

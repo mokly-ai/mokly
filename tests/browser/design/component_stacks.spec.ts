@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 type Viewport = "desktop" | "mobile";
 
@@ -21,7 +21,7 @@ async function open(
       ? { width: 390, height: 844 }
       : { width: 1440, height: 1000 },
   );
-  await page.goto(componentDesignUrl(route, viewport));
+  await page.goto(designArtboardUrl(route, viewport));
   const scroller = page.locator(
     `.ce-preview-view[data-preview-viewport="${viewport}"] .mbk-stack-viewport`,
   );

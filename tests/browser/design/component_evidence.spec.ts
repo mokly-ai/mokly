@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test.describe(`${viewport} comparison evidence`, () => {
@@ -19,7 +19,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         "design/components/inspection/inspection-nested",
         "design/components/inspection/inspection-consumer",
       ]) {
-        await page.goto(componentDesignUrl(route, viewport));
+        await page.goto(designArtboardUrl(route, viewport));
         await page
           .getByRole("switch", { name: "Highlight components" })
           .check();

@@ -1,20 +1,17 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 import { expect, test } from "@playwright/test";
 
-import { viewRoute } from "../../packages/viewer/dist/data.js";
-import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
-import { repositoryRoot } from "../helpers/fixture.js";
+import type { ManifestV8 } from "../../../packages/viewer/dist/registry/types.js";
+import { repositoryRoot } from "../../helpers/fixture.js";
+
+import { designArtboardUrl } from "./artboards.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/generated");
 const manifest = JSON.parse(
   await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
 ) as ManifestV8;
-const fileUrl = (route: string) =>
-  pathToFileURL(path.join(generated, route)).href;
-
 for (const viewport of ["desktop", "mobile"] as const) {
   test.describe(`${viewport} shared design library`, () => {
     test.use({
@@ -38,7 +35,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         )
           continue;
         {
-          await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
+          await page.goto(designArtboardUrl(entry.path, viewport));
           await expect(page.locator(".mbk-library-host")).toBeVisible();
           for (const panel of await page
             .locator(".ce-workspace details[open] > .ce-inspector-panel")
@@ -78,16 +75,18 @@ for (const viewport of ["desktop", "mobile"] as const) {
             };
           });
       await page.goto(
-        fileUrl(
-          `design/library/chrome/catalogue-navigation/all/index.${viewport}.html`,
+        designArtboardUrl(
+          `design/library/chrome/catalogue-navigation/all`,
+          viewport,
         ),
       );
       const isolated = await typography();
       await page.goto(
-        fileUrl(
+        designArtboardUrl(
           viewport === "mobile"
-            ? "design/browse/states/navigation/index.mobile.html"
-            : "design/browse/views/details-screen/index.desktop.html",
+            ? "design/browse/states/navigation"
+            : "design/browse/views/details-screen",
+          viewport,
         ),
       );
       const inScreen = await typography();
@@ -116,12 +115,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
           };
         });
       await page.goto(
-        fileUrl(`design/library/chrome/top-bar/default/index.${viewport}.html`),
+        designArtboardUrl(`design/library/chrome/top-bar/default`, viewport),
       );
       const isolated = await logo();
-      await page.goto(
-        fileUrl(`design/browse/views/home/index.${viewport}.html`),
-      );
+      await page.goto(designArtboardUrl(`design/browse/views/home`, viewport));
       const inScreen = await logo();
       expect(inScreen).toEqual({
         brand: "rgb(26, 29, 28)",
@@ -147,7 +144,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         );
         if (entry?.kind !== "component" || !("variantOf" in entry))
           throw new Error(`Missing ${slug}`);
-        await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
+        await page.goto(designArtboardUrl(entry.path, viewport));
         expect(
           (await page.locator(selector!).boundingBox())!.width,
         ).toBeLessThan(150);
@@ -158,7 +155,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        fileUrl(`design/browse/views/use-case/index.${viewport}.html`),
+        designArtboardUrl(`design/browse/views/use-case`, viewport),
       );
       const steps = page.locator(".flow-step");
       await expect(steps).toHaveCount(2);
@@ -182,7 +179,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       );
       if (entry?.kind !== "component" || !("variantOf" in entry))
         throw new Error("Missing footer panel");
-      await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
+      await page.goto(designArtboardUrl(entry.path, viewport));
       await expect(
         page.getByText(
           "A shared action with an optional destination and hint.",
@@ -200,7 +197,7 @@ test("mobile comparison samples fit with wider fallback fonts", async ({
     "design/library/chrome/screen-header/changed",
     "design/library/controls/comparison-toolbar/side-by-side",
   ]) {
-    await page.goto(fileUrl(`${route}/index.mobile.html`));
+    await page.goto(designArtboardUrl(route, "mobile"));
     await page.addStyleTag({
       content: ":root { --sans: Verdana, sans-serif; }",
     });
@@ -224,7 +221,7 @@ test("mobile footer component owns its full-width sheet surface", async ({
   );
   if (entry?.kind !== "component" || !("variantOf" in entry))
     throw new Error("Missing footer panel");
-  await page.goto(fileUrl(viewRoute(entry.path, "mobile", "light")));
+  await page.goto(designArtboardUrl(entry.path, "mobile"));
   const workspace = page.locator(".ce-workspace");
   const dock = page.locator(".ce-inspector-dock");
   const inspector = page.locator(".ce-inspector");

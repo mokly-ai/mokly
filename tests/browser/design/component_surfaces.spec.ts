@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { designArtboardUrl } from "./artboards.js";
 
 test("desktop inspector uses a centered divider with real bounded resizing", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(
-    componentDesignUrl("design/components/controls/editing/edited", "desktop"),
+    designArtboardUrl("design/components/controls/editing/edited", "desktop"),
   );
   const divider = page.locator(".ce-inspector-resize");
   await expect(divider).toBeVisible();
@@ -70,7 +70,7 @@ test.describe("mobile inspector sheet", () => {
     page,
   }) => {
     await page.goto(
-      componentDesignUrl("design/components/controls/editing/edited", "mobile"),
+      designArtboardUrl("design/components/controls/editing/edited", "mobile"),
     );
     const dock = page.locator(".ce-inspector-dock");
     const inspector = page.locator(".ce-inspector");
@@ -137,7 +137,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1440, height: 1000 },
     );
-    await page.goto(componentDesignUrl("design/components/overview", viewport));
+    await page.goto(designArtboardUrl("design/components/overview", viewport));
     const usage = page.locator('[data-panel="usage"] > summary > svg');
     const ink = await usage.evaluate((node) => {
       const box = (node as SVGGraphicsElement).getBBox();

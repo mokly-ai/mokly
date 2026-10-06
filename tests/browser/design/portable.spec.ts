@@ -1,19 +1,6 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 import { expect, test } from "@playwright/test";
 
-import { repositoryRoot } from "../helpers/fixture.js";
-
-const design = (entryPath: string, viewport: string) =>
-  pathToFileURL(
-    path.join(
-      repositoryRoot,
-      "examples/basic/generated",
-      entryPath,
-      `index.${viewport}.html`,
-    ),
-  ).href;
+import { designArtboardUrl } from "./artboards.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: link adaptation preserves row hit areas, colors, and toolbar dimensions`, async ({
@@ -24,13 +11,15 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ? { width: 390, height: 1000 }
         : { width: 1440, height: 1000 },
     );
-    await page.goto(design("design/browse/views/screen", viewport));
-    await page.goto(design("design/changes/diff-controls/current", viewport));
+    await page.goto(designArtboardUrl("design/browse/views/screen", viewport));
+    await page.goto(
+      designArtboardUrl("design/changes/diff-controls/current", viewport),
+    );
     const toolbar = page.getByRole("group", { name: "Comparison mode" });
     const side = toolbar.getByRole("link", { name: "Side by side" });
     const sideBounds = await side.boundingBox();
     expect((sideBounds?.width ?? 0) > 70).toBe(true);
-    await page.goto(design("design/browse/views/screen", viewport));
+    await page.goto(designArtboardUrl("design/browse/views/screen", viewport));
     if (viewport === "desktop") {
       const row = page.locator(".mbk-nav-row.active");
       await expect(row).toHaveCSS("display", "flex");
@@ -39,10 +28,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
       expect(bounds?.width).toBeGreaterThan(180);
       await row.click({ position: { x: (bounds?.width ?? 200) - 5, y: 12 } });
       await expect(page).toHaveURL(
-        design("design/browse/views/screen", viewport),
+        designArtboardUrl("design/browse/views/screen", viewport),
       );
     }
-    await page.goto(design("design/browse/views/screen", `${viewport}.dark`));
+    await page.goto(
+      designArtboardUrl("design/browse/views/screen", viewport, "dark"),
+    );
     const link = page.locator(".mbk-shot-link:visible").first();
     await link.focus();
     await expect(link).toHaveCSS("outline-style", "solid");

@@ -1,10 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 import { expect, test } from "@playwright/test";
 
-import { repositoryRoot } from "../helpers/fixture.js";
+import { repositoryRoot } from "../../helpers/fixture.js";
+
+import { designArtboardUrl } from "./artboards.js";
 
 const screens = JSON.parse(
   await fs.readFile(
@@ -14,9 +15,6 @@ const screens = JSON.parse(
 ) as {
   path: string;
 }[];
-const generated = path.join(repositoryRoot, "examples/basic/generated");
-const fileUrl = (file: string) =>
-  pathToFileURL(path.join(generated, file)).href;
 const withoutInspector = new Set([
   "design/browse/views/home",
   "design/browse/states/missing-route",
@@ -38,7 +36,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       for (const screen of screens) {
-        await page.goto(fileUrl(`${screen.path}/index.${viewport}.html`));
+        await page.goto(designArtboardUrl(screen.path, viewport));
         if (withoutInspector.has(screen.path)) continue;
         for (const selection of ["mobile", "desktop", "both"]) {
           await page
@@ -60,7 +58,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       await page.goto(
-        fileUrl(`design/browse/views/screen/index.${viewport}.html`),
+        designArtboardUrl("design/browse/views/screen", viewport),
       );
       const header = page.locator(".mbk-screen-head");
       const initialHeader = await header.boundingBox();
@@ -110,7 +108,7 @@ test("Both keeps full-size phone and desktop previews from overlapping", async (
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(fileUrl("design/browse/views/screen/index.desktop.html"));
+  await page.goto(designArtboardUrl("design/browse/views/screen", "desktop"));
   const phone = (await page.locator(".phone-frame").boundingBox())!;
   const desktop = (await page.locator(".browser-frame").boundingBox())!;
   expect(
@@ -120,7 +118,7 @@ test("Both keeps full-size phone and desktop previews from overlapping", async (
 
 test("Browse footer resizes through its centered divider", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(fileUrl("design/browse/views/screen/index.desktop.html"));
+  await page.goto(designArtboardUrl("design/browse/views/screen", "desktop"));
   await page.getByRole("button", { name: "Details", exact: true }).click();
   const panel = page.locator(".ce-inspector");
   const before = (await panel.boundingBox())!;
