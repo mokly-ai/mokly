@@ -224,12 +224,10 @@ test("reordered properties, controls, props and instances keep the shape", () =>
       owner,
       reverseKeys({
         ...owner,
-        componentViews: [...views]
-          .reverse()
-          .map((item) => ({
-            ...item,
-            instances: [...item.instances].reverse(),
-          })),
+        componentViews: [...views].reverse().map((item) => ({
+          ...item,
+          instances: [...item.instances].reverse(),
+        })),
       }),
     ],
     [
