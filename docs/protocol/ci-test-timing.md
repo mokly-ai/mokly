@@ -87,10 +87,16 @@ can stay short if the test makes no elapsed-time assertion. For example,
 `acquireOutputLock(root, { timeoutMs: 100 })` inside `assert.rejects` can
 use a real timer to check the timeout outcome.
 
-A polling deadline does not establish a speed contract. Test-runner
-timeouts and existing fixture setup budgets in
-`tests/helpers/fixture_timing.ts` remain unchanged. Fixture phase reporting
-continues to follow [CI suite evidence](./ci-suite-evidence.md).
+A polling deadline does not establish a speed contract.
+A test-runner timeout is a hang guard for the whole test.
+Keep it at least three times the test's typical duration.
+An expected-state allowance inside a test can be longer than the runner timeout.
+The runner timeout then bounds the whole test.
+The inner allowance sets the failure message when it expires first.
+
+The fixture setup budgets in `tests/helpers/fixture_timing.ts` stay unchanged.
+Fixture phase reporting continues to follow
+[CI suite evidence](./ci-suite-evidence.md).
 
 ## Shared Evidence Helpers
 

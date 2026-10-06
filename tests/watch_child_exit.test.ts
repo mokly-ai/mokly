@@ -73,7 +73,7 @@ test(
 
     child.disconnect();
 
-    assert.equal(await exitsWithin(child, 1_000), 0);
+    assert.equal(await exitsWithin(child, 10_000), 0);
   },
 );
 
@@ -114,7 +114,7 @@ test("watched Serve restarts through the action queue after an unexpected child 
   fixture.beforeRemove(() => running.close());
 
   supervisor.exitUnexpectedly();
-  const deadline = performance.now() + 5000;
+  const deadline = performance.now() + 15_000;
   while (supervisor.restarts === 0 && performance.now() < deadline)
     await new Promise((resolve) => setTimeout(resolve, 10));
   assert.equal(supervisor.restarts, 1);
@@ -283,7 +283,7 @@ function exitsWithin(
 
 async function stopChild(child: ChildProcess): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) return;
-  const exited = exitsWithin(child, 2_000);
+  const exited = exitsWithin(child, 10_000);
   child.kill("SIGTERM");
   await exited;
 }

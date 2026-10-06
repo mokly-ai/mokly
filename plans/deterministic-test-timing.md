@@ -147,8 +147,9 @@ test a rule with `ESLint.lintText`.
 
 - Product behavior and speed do not change. Faster dependency
   classification is a follow-up.
-- Opt-in benchmarks, fixture setup budgets in
-  `tests/helpers/fixture_timing.ts`, and test `timeout` options do not change.
+- Opt-in benchmarks and fixture setup budgets in
+  `tests/helpers/fixture_timing.ts` do not change. Test-runner timeouts follow
+  the timing contract. Only the controls watch test's runner limit changes.
 - Completed plans and `docs/reviews` stay as historical records.
 
 ## Milestone 1: Define the timing contract — completed
@@ -264,50 +265,61 @@ Evidence: `.context/deterministic-test-timing/milestone-4.md`.
 - [x] Run the file five times, then `tests/watch_*.test.ts`, `npm run lint`
       and `npm run typecheck`.
 
-## Milestone 5: Remaining limits and short deadlines
+## Milestone 5: Remaining limits and short deadlines — completed
 
 Convert the other five assertions, raise the short polling deadlines, and
 move hand-built duration text to the helper.
 
 Evidence: `.context/deterministic-test-timing/milestone-5.md`.
 
-- [ ] Convert both tests in `tests/metafile_path_mapper.test.ts` as described
+- [x] Convert both tests in `tests/metafile_path_mapper.test.ts` as described
       in Replacements.
-- [ ] Remove the limit in `tests/css_module_selector_plugin_acceptance.test.ts`
+- [x] Remove the limit in `tests/css_module_selector_plugin_acceptance.test.ts`
       and report its duration with the helper.
-- [ ] Replace the 1,000 ms check in `tests/component_controls_watch.test.ts`
+- [x] Replace the 1,000 ms check in `tests/component_controls_watch.test.ts`
       with the order check. The render worker stops the `Hang` job after ten
       seconds, so Browse must answer first.
-- [ ] Drive the five-second request timeout in
+- [x] Drive the five-second request timeout in
       `tests/browser/frame_adapter_navigation.spec.ts` with `page.clock`.
       Install the clock after the frame mounts and before the request starts.
       Assert that the request is pending at 4,999 ms, gives `timeout` at
       5,000 ms, and that the next request gives `disposed`. If `page.clock`
       cannot control the adapter's timer, stop. Then add a new milestone to
       decide on a timer seam.
-- [ ] Raise the five polling deadlines listed in Replacements to 15 seconds.
-- [ ] Raise the expected-state lock waits in `tests/generated_output_lock.test.ts`
+- [x] Raise the five polling deadlines listed in Replacements to 15 seconds.
+- [x] Raise the expected-state lock waits in `tests/generated_output_lock.test.ts`
       from `timeoutMs: 5_000` to 15 seconds at the acquisitions that must succeed
       (near lines 93, 124, and 161). Audit every other test-supplied timeout
       option under `tests/` for expected-state waits below 10 seconds.
-- [ ] Audit direct timer guards in `tests/imported_styles_supervision_watch.test.ts`
+- [x] Audit direct timer guards in `tests/imported_styles_supervision_watch.test.ts`
       (9 seconds for a watch event) and `tests/postcss_worker_failure.test.ts`
       (the 2-second `bounded` helper) for successful expected-state waits below
       10 seconds. Keep test-runner timeouts and timeout-outcome cases unchanged.
-- [ ] Audit successful-state timer guards in `tests/watch_child_exit.test.ts`
+- [x] Audit successful-state timer guards in `tests/watch_child_exit.test.ts`
       (`exitsWithin` at 1,000 and 2,000 ms) and
       `tests/watch_config_shutdown.test.ts` (`completesWithin` at 1,000 ms).
       Keep test-runner timeouts unchanged.
-- [ ] Move the duration text in
+- [x] Raise other expected-state limits found by the audit in HTTP helpers,
+      preview requests, browser actions, process cleanup, and frame readiness.
+      Keep the operation-count and duration helpers unchanged. Record each
+      timeout decision and each runner-budget conflict in the evidence file.
+- [x] Split changed preview-process and frame-lifecycle files that exceed
+      300 lines. Preserve every test and update imports to the new owners.
+- [x] Move the duration text in
       `tests/browser/css_module_selector_oracle.spec.ts` and
       `tests/browser/css_module_escape_fuzz.spec.ts` to the helper.
-- [ ] Prove the guards: create a mapper for each edge, remove the visited-set
+- [x] Prove the guards: create a mapper for each edge, remove the visited-set
       check in `orderedStyles`, make Browse wait for the active render job,
       and set the frame timeout to 4,000 ms and to 6,000 ms. Confirm that each
       change fails, then revert it. If a mutation is not practical, record why
       in the evidence file.
-- [ ] Run each changed Node test file five times and each changed browser spec
+- [x] Run each changed Node test file five times and each changed browser spec
       three times. Then run `npm run lint` and `npm run typecheck`.
+- [x] Define test-runner timeouts as whole-test hang guards with at least
+      three times the typical duration. Allow inner expected-state waits to
+      exceed the runner limit. Keep fixture setup budgets unchanged. Raise
+      only `tests/component_controls_watch.test.ts` from 25 to 60 seconds.
+      Keep the other runner limits unchanged.
 
 ## Milestone 6: Lint guard
 

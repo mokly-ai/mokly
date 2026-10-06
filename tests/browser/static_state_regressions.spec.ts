@@ -236,7 +236,7 @@ test("a newer history action cancels superseded deployment validation", async ({
   });
 
   const back = page.goBack();
-  await expect.poll(() => validations, { timeout: 5_000 }).toBe(1);
+  await expect.poll(() => validations, { timeout: 15_000 }).toBe(1);
   const forward = page.goForward();
   await expect.poll(() => validations).toBe(2);
   releaseFirst();
