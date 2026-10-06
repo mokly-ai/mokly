@@ -150,3 +150,58 @@ test("the coverage runner fails closed when the coverage reporter is incomplete"
     await fs.rm(root, { force: true, recursive: true });
   }
 });
+
+test("the coverage runner runs test files with the unit suite's concurrency", async () => {
+  const root = await createCoverageHarness();
+  try {
+    await writeCoverageThresholds(root, {
+      lines: 0,
+      branches: 0,
+      functions: 0,
+    });
+    for (const name of ["first", "second"])
+      await writeHarnessFile(
+        root,
+        `tests/${name}_order.test.ts`,
+        `import fs from "node:fs";
+import test from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
+
+test("${name} file", async () => {
+  fs.appendFileSync("order.log", "start ${name}\\n");
+  await delay(200);
+  fs.appendFileSync("order.log", "end ${name}\\n");
+});
+`,
+      );
+    const orderPath = path.join(root, "order.log");
+    const serial = await runCoverage(root, [], 0, {
+      MOKLY_UNIT_CONCURRENCY: "1",
+    });
+    assert.match(serial.stdout, /^unit test files active at once: 1$/mu);
+    const order = (await fs.readFile(orderPath, "utf8")).trim().split("\n");
+    assert.equal(order.length, 4, order.join(", "));
+    for (let index = 0; index < order.length; index += 2)
+      assert.equal(
+        order[index + 1],
+        order[index]?.replace("start", "end"),
+        `one test file at a time: ${order.join(", ")}`,
+      );
+    await fs.rm(orderPath);
+
+    const summaryPath = path.join(root, "coverage/summary.json");
+    const summary = await fs.readFile(summaryPath, "utf8");
+    const invalid = await runCoverageCommand(root, [], {
+      MOKLY_UNIT_CONCURRENCY: "0",
+    });
+    assert.equal(invalid.code, 1);
+    assert.match(
+      invalid.stderr,
+      /MOKLY_UNIT_CONCURRENCY must be a positive integer; received 0/u,
+    );
+    await assert.rejects(fs.stat(orderPath));
+    assert.equal(await fs.readFile(summaryPath, "utf8"), summary);
+  } finally {
+    await fs.rm(root, { force: true, recursive: true });
+  }
+});

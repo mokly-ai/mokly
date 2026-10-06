@@ -27,9 +27,13 @@ thresholds were not checked. The result of a selection is partial evidence.
 ## Measurement
 
 The runner discovers the same recursive `.test.ts` and `.test.tsx` inventory
-under `tests/` and `packages/viewer/tests/` as the unit suite, runs it with
-`tsx`, two-file concurrency, and Node's `--experimental-test-coverage`, and
-pairs the evidence reporter with `scripts/verification/coverage-reporter.mjs`.
+under `tests/` and `packages/viewer/tests/` as the unit suite. It runs that
+inventory with `tsx` and Node's `--experimental-test-coverage`, and pairs the
+evidence reporter with `scripts/verification/coverage-reporter.mjs`. It runs as
+many test files at once as the unit suite: `unitTestConcurrency()` in
+`scripts/verification/concurrency.mjs` sets the limit, as the
+[test concurrency contract](./ci-suite-evidence.md#test-concurrency) defines,
+and `MOKLY_UNIT_CONCURRENCY` overrides it.
 
 Built output executes from `dist/` and `packages/viewer/dist/`. The runner adds
 `--enable-source-maps` to `NODE_OPTIONS`, and the include globs name both the
@@ -82,8 +86,10 @@ directory. It then writes:
   `durationMs`, and `outcome` with the exit code, signal, and `passed` or
   `failed` status.
 
-The console prints the totals, up to ten files with the lowest line coverage,
-any unmapped files, the skipped or todo count, the thresholds or a note that a
+Before the tests start, the console prints
+`unit test files active at once: <limit>`, as the unit runner does. After the
+tests, it prints the totals, up to ten files with the lowest line coverage, any
+unmapped files, the skipped or todo count, the thresholds or a note that a
 selection skipped them, both output paths, and one `coverage check passed` or
 `coverage check failed: <reason>` line per problem. The runner deletes the
 intermediate reporter files after it reads them.
@@ -94,9 +100,9 @@ The command exits with status 1, after writing the summary, when the tests
 fail, cancel, or exit by signal, when either reporter does not complete, when
 Node reports no coverage summary, or when a complete run misses a threshold.
 Skipped and todo tests are tolerated and counted, matching the developer unit
-runner. Discovery, selection, thresholds, and prepared-output failures happen
-before the test process starts; they write no summary and leave an earlier
-`coverage/` directory unchanged.
+runner. Discovery, selection, an invalid `MOKLY_UNIT_CONCURRENCY`, thresholds,
+and prepared-output failures happen before the test process starts; they write
+no summary and leave an earlier `coverage/` directory unchanged.
 
 ## Inspector Coverage In Tests
 
@@ -121,8 +127,10 @@ therefore adds little to the measured totals.
 - `tests/verification_coverage_runner.test.ts` runs the command end to end in
   an isolated harness from `tests/helpers/coverage_harness.ts`: mapped sources,
   lcov output, a missed threshold, a partial selection, an unknown file that
-  leaves earlier output unchanged, a failing test, and a coverage reporter that
-  does not complete.
+  leaves earlier output unchanged, a failing test, a coverage reporter that
+  does not complete, the shared file limit with `MOKLY_UNIT_CONCURRENCY=1`
+  running one test file at a time, and an invalid limit that stops the command
+  before a test starts.
 - `tests/verification_coverage_mapping.test.ts` runs built output in a child
   with a bounded environment: output with a source map maps back to its source,
   and output without one is listed as unmapped.

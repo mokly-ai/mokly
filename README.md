@@ -353,10 +353,11 @@ The command runs the unit suite under Node's coverage, writes
 `coverage/lcov.info` and `coverage/summary.json`, and fails when the totals fall
 below the reviewed minimums in
 [`scripts/verification/coverage-thresholds.json`](./scripts/verification/coverage-thresholds.json).
-Pass unit test files to measure a subset without the threshold check. A
-complete run takes much longer than `npm test` and needs several gigabytes of
-free temporary disk space. The coverage check is a developer tool outside
-`cargo xtask check` and CI; the
+Pass unit test files to measure a subset without the threshold check. The
+command runs as many test files at once as the unit tests, so
+`MOKLY_UNIT_CONCURRENCY` sets its limit too. A complete run takes much longer
+than `npm test` and needs several gigabytes of free temporary disk space. The
+coverage check is a developer tool outside `cargo xtask check` and CI; the
 [coverage check contract](./docs/protocol/coverage-check.md) defines it.
 
 Pull request titles use Conventional Commits and at most 72 Unicode code points.

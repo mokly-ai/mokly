@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 
+import { unitTestConcurrency } from "./concurrency.mjs";
 import {
   coverageIncludeGlobs,
   evaluateThresholds,
@@ -39,6 +40,7 @@ export async function runCoverageVerification(argv) {
   const fullFiles = await discoverUnitFiles(repositoryRoot);
   if (fullFiles.length === 0) throw new Error("unit test discovery was empty");
   const selection = selectCoverageFiles(fullFiles, argv);
+  const concurrency = unitTestConcurrency();
   const thresholds = parseThresholds(
     JSON.parse(
       await fs.readFile(
@@ -54,10 +56,11 @@ export async function runCoverageVerification(argv) {
   await fs.mkdir(output, { recursive: true });
   const eventPath = path.join(output, "node-events.json");
   const coveragePath = path.join(output, "node-coverage.json");
+  console.log(`unit test files active at once: ${concurrency}`);
   const started = performance.now();
   const outcome = await runInherited(
     process.execPath,
-    testArguments(selection),
+    testArguments(selection, concurrency),
     {
       cwd: repositoryRoot,
       env: {
@@ -123,12 +126,12 @@ export async function runCoverageVerification(argv) {
   return summary;
 }
 
-function testArguments(selection) {
+function testArguments(selection, concurrency) {
   const args = [
     "--import",
     "tsx",
     "--test",
-    "--test-concurrency=2",
+    `--test-concurrency=${concurrency}`,
     "--experimental-test-coverage",
     ...coverageIncludeGlobs().map((glob) => `--test-coverage-include=${glob}`),
     "--test-reporter=./scripts/verification/node-reporter.mjs",

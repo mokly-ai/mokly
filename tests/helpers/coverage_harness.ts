@@ -121,8 +121,9 @@ export async function runCoverage(
   root: string,
   args: readonly string[],
   expectedExitCode = 0,
+  overrides: Readonly<Record<string, string>> = {},
 ): Promise<CoverageRun> {
-  const result = await runCoverageCommand(root, args);
+  const result = await runCoverageCommand(root, args, overrides);
   assert.equal(result.code, expectedExitCode, result.stderr);
   const summary = JSON.parse(
     await fs.readFile(path.join(root, "coverage/summary.json"), "utf8"),
@@ -134,8 +135,9 @@ export async function runCoverage(
 export async function runCoverageCommand(
   root: string,
   args: readonly string[],
+  overrides: Readonly<Record<string, string>> = {},
 ): Promise<CoverageCommandResult> {
-  const environment = { ...process.env };
+  const environment = { ...process.env, ...overrides };
   delete environment.NODE_TEST_CONTEXT;
   return await execute(
     process.execPath,

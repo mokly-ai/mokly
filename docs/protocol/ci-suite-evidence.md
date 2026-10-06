@@ -84,7 +84,9 @@ hydrate, and they pass with parallel workers.
 `MOKLY_PLAYWRIGHT_WORKERS` replaces the worker count of both Playwright suites.
 Each accepts only a positive decimal integer without a sign or leading zero, up
 to JavaScript's maximum safe integer. Any other value stops the command before
-tests start. The unit and Playwright runners print the value they use.
+tests start. The unit and Playwright runners print the value they use. The
+[local coverage check](./coverage-check.md) uses the same unit file limit and
+prints it too.
 
 Each Playwright worker owns one example server.
 [`tests/browser/example_servers.ts`](../../tests/browser/example_servers.ts)
