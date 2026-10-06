@@ -3,11 +3,15 @@ import test from "node:test";
 
 import type { ManifestV9 } from "@mokly/viewer/data";
 
+import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
 import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
 import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
 import type { ChildHandle } from "../dist/server/child_process.js";
 import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
-import type { ServeReporter, WatchReport } from "../dist/server/reporter.js";
+import {
+  type ServeReporter,
+  type WatchReport,
+} from "../dist/server/reporter.js";
 import { serve } from "../dist/server/serve.js";
 import {
   NodeProcessSupervisorFactory,
@@ -218,6 +222,10 @@ class RecordingReporter implements ServeReporter {
     this.events.push(
       `baseline-ready:${commit}:${cacheHit ? "reused" : "rebuilt"}`,
     );
+  }
+  buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
+    for (const diagnostic of diagnostics)
+      this.events.push(`warning:${diagnostic.route}`);
   }
   catalogueReady(manifest: ManifestV9): void {
     const screens = manifest.entries.filter(

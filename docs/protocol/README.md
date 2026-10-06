@@ -74,6 +74,8 @@ unsupported versions before content or path interpretation.
   interactive progress, watched events, and shortcuts.
 - [CLI terminal compatibility and errors](./mokly-terminal-errors.md) — exact
   plain output and rich error presentation.
+- [Build warnings](./mokly-build-warnings.md) — implemented non-fatal compile
+  diagnostics, command reporting, and `--strict` enforcement.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — catalogue paths and settings.

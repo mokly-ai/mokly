@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { enforceStrictBuildWarnings } from "../build/build_warnings.js";
 import { compileCatalogue } from "../build/compile.js";
 import {
   FileSystemGeneratedOutputStore,
@@ -31,6 +32,7 @@ export async function watchBuild(
   reporter: CliReporter,
   factory: ConsumerWatcherFactory = new ChokidarWatcherFactory(),
   store: GeneratedOutputStore = new FileSystemGeneratedOutputStore(),
+  strict = false,
 ): Promise<void> {
   let config = initial;
   let closed = false;
@@ -66,6 +68,8 @@ export async function watchBuild(
     const started = reporter.environment.now();
     const compilation = await compileCatalogue(config);
     if (closed) return;
+    reporter.buildWarnings(compilation.diagnostics);
+    enforceStrictBuildWarnings(compilation.diagnostics, strict);
     await store.write(compilation, config);
     config.sourceFiles = compilation.manifest.sourceFiles;
     await refreshSources();

@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { parseReviewResult } from "@mokly/viewer/data";
 
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { withPreInstallationCancellation } from "../export/error.js";
@@ -23,6 +24,7 @@ export interface PublishOptions extends UploadOptions {
   out?: string;
   base?: string;
   noChanges?: boolean;
+  onBuildDiagnostics?: (diagnostics: readonly BuildDiagnostic[]) => void;
   repository?: string;
   uploadConcurrency?: number;
   diagnostic?: (message: string) => void;
@@ -58,6 +60,9 @@ export async function publishCatalogue(
       ...(options.base === undefined ? {} : { base: options.base }),
       ...(signal === undefined ? {} : { signal }),
       noChanges: options.noChanges ?? false,
+      ...(options.onBuildDiagnostics
+        ? { onBuildDiagnostics: options.onBuildDiagnostics }
+        : {}),
       ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
       ...(options.incompatibleBaseline
         ? { incompatibleBaseline: options.incompatibleBaseline }

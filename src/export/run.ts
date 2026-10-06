@@ -1,8 +1,7 @@
 import path from "node:path";
 
-import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
+import type { ReviewArtifact } from "@mokly/viewer/data";
 
-import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { compileCatalogue } from "../build/compile.js";
 import { projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -14,10 +13,7 @@ import {
 } from "../registry/manifest.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import { GitReviewAssetReader } from "../review/assets.js";
-import {
-  baselineResourceConfig,
-  readBaseManifest,
-} from "../review/base_manifest.js";
+import { baselineResourceConfig } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
@@ -26,9 +22,9 @@ import {
   packageRemovedPagePreviews,
   RepositoryRemovedPagePreview,
 } from "../review/page_preview.js";
-import { prepareReviewRepository } from "../review/prepare.js";
 import { changedContentPaths } from "../server/changed_content.js";
 
+import { prepareExportBaseline } from "./baseline.js";
 import { withExportCleanup } from "./cleanup.js";
 import {
   assertExportActive,
@@ -48,17 +44,31 @@ import { stageExport } from "./stage.js";
 import { ExportTransaction } from "./transaction.js";
 import type { ExportOptions, ExportResult, ExportRoutes } from "./types.js";
 
+/** Injectable exhaustive compilation boundary. */
+export interface ExportDependencies {
+  readonly compile: typeof compileCatalogue;
+}
+
 /** Build and transactionally export a consumer's complete static catalogue. */
 export async function exportCatalogue(
   config: ResolvedConfig,
   options: ExportOptions,
+  provided: Partial<ExportDependencies> = {},
 ): Promise<ExportResult> {
   const outputRoot = options.adapter?.outputRoot;
   const output = resolveExportOutput(config, options.outDir, outputRoot);
   assertExportActive(options.signal);
   const transaction = await ExportTransaction.open(output);
   return withExportCleanup(
-    () => generateExport(config, options, output, transaction, outputRoot),
+    () =>
+      generateExport(
+        config,
+        options,
+        output,
+        transaction,
+        provided.compile ?? compileCatalogue,
+        outputRoot,
+      ),
     () => transaction.close(),
   );
 }
@@ -68,51 +78,21 @@ async function generateExport(
   options: ExportOptions,
   output: string,
   transaction: ExportTransaction,
+  compile: typeof compileCatalogue,
   outputRoot?: string,
 ): Promise<ExportResult> {
   try {
     const base = options.base ?? config.review.base;
     const { baseline, incompatible, prepared } =
-      await withPreInstallationCancellation(options.signal, async () => {
-        let prepared;
-        try {
-          prepared = options.noChanges
-            ? undefined
-            : await prepareReviewRepository(config, base, {
-                ...(options.signal ? { signal: options.signal } : {}),
-                ...(options.diagnostic
-                  ? { diagnostic: options.diagnostic }
-                  : {}),
-              });
-        } catch (error) {
-          if (!isIncompatibleEarlierBaseline(error)) throw error;
-          options.incompatibleBaseline?.(base);
-          return {
-            baseline: undefined,
-            incompatible: true,
-            prepared: undefined,
-          };
-        }
-        let incompatible = false;
-        let baseline: HistoricalManifest | undefined;
-        if (prepared)
-          try {
-            baseline = await readBaseManifest(
-              prepared.reader,
-              prepared.commit,
-              config,
-            );
-          } catch (error) {
-            if (!isIncompatibleEarlierBaseline(error)) throw error;
-            incompatible = true;
-            options.incompatibleBaseline?.(prepared.commit);
-          }
-        return { baseline, incompatible, prepared };
-      });
+      await withPreInstallationCancellation(options.signal, () =>
+        prepareExportBaseline(config, options, base),
+      );
     const compilation = await withPreInstallationCancellation(
       options.signal,
-      () => compileCatalogue(config, undefined, options.signal),
+      () => compile(config, undefined, options.signal),
     );
+    assertExportActive(options.signal);
+    options.onBuildDiagnostics?.(compilation.diagnostics);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
     const publicFiles = await capturePublicFiles(

@@ -22,6 +22,10 @@ import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 import type { EntryMove } from "../review/moves/types.js";
 
+import {
+  normalizeBuildDiagnostics,
+  type BuildDiagnostic,
+} from "./build_warnings.js";
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
 import { resolveDocumentLinks } from "./document_links.js";
@@ -45,6 +49,7 @@ import { renderFragments } from "./render.js";
 import { componentResourceSeeds } from "./resource_seeds.js";
 
 export interface CompiledDocument {
+  diagnostics: readonly BuildDiagnostic[];
   route: string;
   html: string;
   view?: ComponentViewRecord;
@@ -188,6 +193,7 @@ export class DocumentCompiler {
           this.links.parsed.delete(target);
     }
     return {
+      diagnostics: document.diagnostics,
       route,
       html: document.html,
       assetClosure,
@@ -240,7 +246,7 @@ export class DocumentCompiler {
       },
     );
     const original = outputs.get(route)!;
-    const records = resolveDocumentLinks(
+    const resolvedLinks = resolveDocumentLinks(
       outputs,
       this.entries,
       config,
@@ -276,9 +282,10 @@ export class DocumentCompiler {
       );
     }
     const prepared = {
+      diagnostics: normalizeBuildDiagnostics(resolvedLinks.diagnostics),
       route,
       html,
-      records,
+      records: resolvedLinks.records,
       anchors: extractHtmlReferences(html).anchors,
       ...(view ? { view } : {}),
     };

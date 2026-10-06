@@ -3,12 +3,13 @@ export const HELP = `Mokly — app-independent React mockup catalogues
 
 Usage:
   mokly [serve] [--config <path>] [--port <port>] [--base <ref>] [--no-watch] [--build] [--open]
-  mokly build [--config <path>] [--watch]
-  mokly check [--config <path>]
-  mokly export --out <path> [--config <path>] [--base <ref>]
+  mokly build [--config <path>] [--watch] [--strict]
+  mokly check [--config <path>] [--strict]
+  mokly export --out <path> [--config <path>] [--base <ref>] [--strict]
   mokly publish [--endpoint <url>] [--token <token>] [--out <path>]
                 [--config <path>] [--base <ref> | --no-changes]
                 [--repository <host>/<owner>/<name>] [--upload-concurrency <n>]
+                [--strict]
 
 Commands:
   serve    Build and serve the catalogue with on-demand diffs
@@ -28,6 +29,7 @@ Options:
   --token <token>  Bearer token (publish; or MOKLY_TOKEN)
   --repository <host>/<owner>/<name>  Override publish repository identity
   --no-changes     Publish current catalogue without a comparison baseline
+  --strict         Fail build, check, export or publish on build warnings
   --upload-concurrency <n>  Parallel file uploads from 1 to 32 (default 8)
   --watch          Watch consumer inputs (serve default; build opt-in)
   --no-watch       Serve one deterministic snapshot

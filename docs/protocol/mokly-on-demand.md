@@ -73,6 +73,9 @@ CSS imports are validated transitively. Protected sources and manifests remain
 private even through aliases. No validation is skipped to meet the time target.
 
 Entry indexes and parsed resource metadata are reused within the generation.
+An on-demand document carries its [build warnings](./mokly-build-warnings.md)
+beside its HTML; Serve reports warnings once per generation from the exhaustive
+compilation, never per foreground request.
 The inspector loads usage for displayed views on demand. Uncomputed catalogue-wide
 usage is explicitly unavailable, never displayed as zero consumers. Live All/Changes
 controls are always present. While a calculation is pending, a spinner replaces the

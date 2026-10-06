@@ -203,7 +203,9 @@ makes Changes unavailable under
 
 The [child-control adapter](../protocol/mokly-link-controls.md) uses parsed
 source locations to patch only the marked control and its boundary templates.
-It validates one supported root with no independent descendant interactions,
+It validates one supported root, classifies the control's ancestors and
+descendants into error, warning, and silent placement tiers, returns
+[build warnings](../protocol/mokly-build-warnings.md) for the warning tier,
 retains inactive destinations as metadata, and adds default link/focus CSS only
 to documents with active adapted controls. Custom screen renderers and page callbacks use the
 same adapter before logical records are captured. The adapter rejects

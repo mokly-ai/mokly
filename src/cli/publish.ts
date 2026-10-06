@@ -1,5 +1,6 @@
 import { setTimeout as delay } from "node:timers/promises";
 
+import { enforceStrictBuildWarnings } from "../build/build_warnings.js";
 import { loadConfig } from "../config/load.js";
 import { withPreInstallationCancellation } from "../export/error.js";
 import { exportCatalogue } from "../export/run.js";
@@ -73,6 +74,10 @@ export async function runPublish(
           diagnostic: (message) => reporter.runtimeDiagnostic(message),
           incompatibleBaseline: (commit) =>
             reporter.incompatibleBaseline(commit),
+          onBuildDiagnostics: (diagnostics) => {
+            reporter.buildWarnings(diagnostics);
+            enforceStrictBuildWarnings(diagnostics, arguments_.strict ?? false);
+          },
         },
         packageVersion(),
         env,

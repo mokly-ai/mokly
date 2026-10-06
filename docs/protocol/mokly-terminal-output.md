@@ -3,9 +3,9 @@
 ## Scope
 
 This contract defines the user-visible terminal behavior of the `mokly` CLI.
-It covers reporter selection, rich progress, plain compatibility, errors,
-watched Serve events, and interactive shortcuts. It does not change catalogue
-HTTP errors, `MoklyError` messages, generated files, or timing records.
+It covers reporter selection, rich progress, plain compatibility, warnings,
+errors, watched Serve events, and interactive shortcuts. It does not change
+catalogue HTTP errors, `MoklyError` messages, generated files, or timing records.
 
 ## Output mode
 
@@ -113,9 +113,11 @@ watched catalogue then reports existing lifecycle boundaries:
 
 Catalogue counts come from accepted manifest entries. Zero-valued kinds are
 omitted. A baseline cache hit says `Baseline ready · reused <short-sha>`; a
-complete committed v9 baseline omits rebuild progress. Unavailable Changes says
-`! Changes unavailable` and preserves All browsing. Counted nouns use singular
-only for one, including `1 changed screen` and `2 changed screens`.
+complete committed v9 output omits rebuild progress. Unavailable Changes says
+`! Changes unavailable` and preserves All browsing. Serve reports each
+generation's build warnings immediately before `Catalogue ready`; on-demand
+previews never repeat them. Counted nouns use singular only for one, including
+`1 changed screen` and `2 changed screens`.
 
 Watched actions use one durable line after the action settles:
 
@@ -195,6 +197,10 @@ no following noun. The exchange contract defines which digests count across
 Plan files, Blob attempts and re-plans. The already-published summary replaces
 the counted one only when Complete returns `200`, meaning a different upload
 kept the first publication for the same commit and config path.
+
+The build warnings contract owns warning order, exact stderr formats, and
+`--strict` failures for one-shot commands and Serve; see
+[Build warnings](./mokly-build-warnings.md).
 
 ## Plain Compatibility And Errors
 

@@ -17,7 +17,11 @@ import {
   NodeCatalogueServerFactory,
   type CatalogueServerFactory,
 } from "./factory.js";
-import { PlainServeReporter, type ServeReporter } from "./reporter.js";
+import {
+  PlainServeReporter,
+  reportCatalogueReady,
+  type ServeReporter,
+} from "./reporter.js";
 import { ServedReviewRepository } from "./review_repository.js";
 import { serveWatched } from "./serve_watched.js";
 import {
@@ -91,8 +95,9 @@ export async function serve(
       dependencies.changeClassifier ?? DEFAULT_CHANGE_CLASSIFIER,
       (compilation, accepted) => {
         changesStartedAt = Date.now();
-        reporter.catalogueReady(
-          compilation.manifest,
+        reportCatalogueReady(
+          reporter,
+          compilation,
           changesStartedAt - generationStartedAt,
         );
         server.completeCatalogue?.(compilation.manifest, accepted.generation);

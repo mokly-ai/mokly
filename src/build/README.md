@@ -226,6 +226,21 @@ case-folded and file-directory collisions. `transaction.ts` holds the writer
 lock for complete generated-tree replacement and rollback. Only Build,
 `build --watch` and `serve --build` write; all other consumers use memory.
 
+## Build Warnings
+
+`build_warnings.ts` owns the validated code, route, and single-line message
+record plus deterministic sorting and de-duplication. The child-control adapter
+and direct document-link resolver return diagnostics beside their output;
+`compile.ts` puts the normalized list on `Compilation`, while
+`document_compiler.ts` retains the requested document's list without reporting
+it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
+timing records. Authored C0/C1 controls become visible `\uXXXX` escapes before
+normalization, and reporters defensively apply the same encoder.
+`link_control_tiers.ts` owns the explicit ancestor and
+descendant tier sets, feature precedence, and one-line element descriptions
+used by both errors and warnings. See the
+[build warnings contract](../../docs/protocol/mokly-build-warnings.md).
+
 ## Development
 
 ```sh
@@ -243,10 +258,12 @@ blobs; missing or stale output is rebuilt. Export and plain Serve compile in
 memory without writing local output; `build --watch` and `serve --build` write
 only after successful complete compilations.
 
-- `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
-  compilation with shared validation.
-- `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: consumer graph,
-  exports and dependency resolution.
+- `compile.ts`, `build_warnings.ts`, `render.ts`, `document_compiler.ts`:
+  exhaustive and requested-view compilation with shared validation.
+- `link_control_tiers.ts`, `link_control_nodes.ts`, `link_controls.ts`: tiered
+  placement validation and source-byte-preserving styled-control adaptation.
+- `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
+  graph, discovered through `config/entry_discovery.ts`, and its module resolution.
 - `source_inventory.ts`, `output_paths.ts`, `output_snapshot.ts`: source protection and
   accepted in-memory route boundaries. `transaction_tree.ts` stages and replaces
   the complete generated tree and restores its backup if installation fails.

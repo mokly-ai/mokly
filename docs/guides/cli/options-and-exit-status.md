@@ -20,26 +20,27 @@ takes no value. There are no silent positional arguments.
 
 ## Options
 
-| Option                               | Commands                     | Meaning                                                        |
-| ------------------------------------ | ---------------------------- | -------------------------------------------------------------- |
-| `--config <path>`                    | every command                | Use an explicit `mokly.config` file                            |
-| `--debug-timings`                    | every command                | Report phase timings and catalogue counts on standard error    |
-| `--port <port>`                      | `serve`                      | Starting port; advances if occupied, `0` selects any free port |
-| `--watch`                            | `serve`, `build`             | Watch inputs; default for Serve                                |
-| `--no-watch`                         | `serve`                      | Serve one deterministic snapshot                               |
-| `--build`                            | `serve`                      | Write `mokly-generated/` after successful compilation          |
-| `--open`                             | `serve`                      | Open the catalogue in your default browser                     |
-| `--base <ref>`                       | `serve`, `export`, `publish` | Git base ref used to find the branch point                     |
-| `--out <path>`                       | `export`, `publish`          | Config-relative output directory                               |
-| `--endpoint <url>`                   | `publish`                    | The service's plan URL, or `MOKLY_ENDPOINT`                    |
-| `--token <token>`                    | `publish`                    | Bearer token, or `MOKLY_TOKEN`                                 |
-| `--repository <host>/<owner>/<name>` | `publish`                    | Override the detected repository identity                      |
-| `--no-changes`                       | `publish`                    | Publish with no comparison baseline                            |
-| `--upload-concurrency <n>`           | `publish`                    | Upload 1 to 32 missing files at once; defaults to 8            |
-| `--help`                             | every command                | Show the commands and their options                            |
-| `-h`                                 | every command                | Short form of `--help`                                         |
-| `--version`                          | every command                | Print the installed version                                    |
-| `-v`                                 | every command                | Short form of `--version`                                      |
+| Option                               | Commands                              | Meaning                                                        |
+| ------------------------------------ | ------------------------------------- | -------------------------------------------------------------- |
+| `--config <path>`                    | every command                         | Use an explicit `mokly.config` file                            |
+| `--debug-timings`                    | every command                         | Report phase timings and catalogue counts on standard error    |
+| `--port <port>`                      | `serve`                               | Starting port; advances if occupied, `0` selects any free port |
+| `--watch`                            | `serve`, `build`                      | Watch inputs; default for Serve                                |
+| `--no-watch`                         | `serve`                               | Serve one deterministic snapshot                               |
+| `--build`                            | `serve`                               | Write `mokly-generated/` after successful compilation          |
+| `--open`                             | `serve`                               | Open the catalogue in your default browser                     |
+| `--base <ref>`                       | `serve`, `export`, `publish`          | Git base ref used to find the branch point                     |
+| `--out <path>`                       | `export`, `publish`                   | Config-relative output directory                               |
+| `--endpoint <url>`                   | `publish`                             | The service's plan URL, or `MOKLY_ENDPOINT`                    |
+| `--token <token>`                    | `publish`                             | Bearer token, or `MOKLY_TOKEN`                                 |
+| `--repository <host>/<owner>/<name>` | `publish`                             | Override the detected repository identity                      |
+| `--no-changes`                       | `publish`                             | Publish with no comparison baseline                            |
+| `--upload-concurrency <n>`           | `publish`                             | Upload 1 to 32 missing files at once; defaults to 8            |
+| `--strict`                           | `build`, `check`, `export`, `publish` | Fail when the build reports warnings                           |
+| `--help`                             | every command                         | Show the commands and their options                            |
+| `-h`                                 | every command                         | Short form of `--help`                                         |
+| `--version`                          | every command                         | Print the installed version                                    |
+| `-v`                                 | every command                         | Short form of `--version`                                      |
 
 An option given to a command that does not take it is refused by name rather
 than ignored. `--out` is required by `export`, and `--no-changes` cannot be
@@ -51,6 +52,12 @@ combined with `--base`.
 | ---- | --------------------- |
 | `0`  | The command succeeded |
 | `1`  | The command failed    |
+
+A command that finishes with build warnings still exits `0`. `--strict`, which
+`build`, `check`, `export` and `publish` accept, prints the warnings and then
+exits `1` under the `build-invalid` category. Its error is
+`1 build warning with --strict` for one warning and
+`<n> build warnings with --strict` for any other count.
 
 ## Errors
 

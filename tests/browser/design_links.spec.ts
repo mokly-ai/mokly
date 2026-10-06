@@ -1,4 +1,10 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type FrameLocator,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 
 import { chooseViewport } from "./workspace_actions.js";
 
@@ -8,6 +14,24 @@ async function tabTo(page: Page, link: Locator): Promise<void> {
     if (await link.evaluate((node) => node === document.activeElement)) return;
   }
   throw new Error("Design link was not reachable with Tab");
+}
+
+function visibleShotLink(frame: FrameLocator, name: string): Locator {
+  return frame
+    .locator(".mbk-shot-link:visible")
+    .filter({ hasText: name })
+    .first();
+}
+
+async function expectFrameRoute(
+  page: Page,
+  viewport: "mobile" | "desktop",
+  entryPath: string,
+): Promise<void> {
+  await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
+    "src",
+    `/static/mokly-generated/${entryPath}/index.${viewport}.html`,
+  );
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
@@ -20,13 +44,19 @@ for (const viewport of ["mobile", "desktop"] as const) {
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     await frame.locator(".mbk-empty-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-    const details = frame.locator(".mbk-shot-link:visible").first();
+    await expectFrameRoute(page, viewport, "design/browse/views/screen");
+    const details = visibleShotLink(frame, "Open the details screen");
     await frame.locator(".mbk-brand").focus();
     await tabTo(page, details);
     await expect(details).toHaveCSS("outline-style", "solid");
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(
       /\/view\/design\/browse\/views\/details-screen\/$/,
+    );
+    await expectFrameRoute(
+      page,
+      viewport,
+      "design/browse/views/details-screen",
     );
     const row = page.locator(
       'a[data-nav-row][data-route="design/browse/views/details-screen/index.html"]',
@@ -39,9 +69,16 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     await page.goBack();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
+    await expectFrameRoute(page, viewport, "design/browse/views/screen");
+    await expect(details).toBeVisible();
     await page.goForward();
     await expect(row).toHaveAttribute("aria-current", "page");
-    await frame.locator(".mbk-shot-link:visible").first().click();
+    await expectFrameRoute(
+      page,
+      viewport,
+      "design/browse/views/details-screen",
+    );
+    await visibleShotLink(frame, "Return to welcome").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
     await expect(frame.locator("script")).toHaveCount(1);
     await expect(frame.locator("script")).toHaveAttribute(
@@ -65,11 +102,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await page.goto("/view/design/browse/views/screen/");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-    await frame.locator(".mbk-shot-link:visible").first().click();
+    await visibleShotLink(frame, "Open the details screen").click();
     await expect(page).toHaveURL(
       /\/view\/design\/browse\/views\/details-screen\/$/,
     );
-    await frame.locator(".mbk-shot-link:visible").first().click();
+    await visibleShotLink(frame, "Return to welcome").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(

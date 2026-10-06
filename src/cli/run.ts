@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { enforceStrictBuildWarnings } from "../build/build_warnings.js";
 import { compileCatalogue } from "../build/compile.js";
 import { FileSystemGeneratedOutputStore } from "../build/output_store.js";
 import { loadConfig } from "../config/load.js";
@@ -92,6 +93,13 @@ async function execute(
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
             incompatibleBaseline: (commit) =>
               reporter.incompatibleBaseline(commit),
+            onBuildDiagnostics: (diagnostics) => {
+              reporter.buildWarnings(diagnostics);
+              enforceStrictBuildWarnings(
+                diagnostics,
+                arguments_.strict ?? false,
+              );
+            },
             outDir: arguments_.out ?? "",
             ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
           }),
@@ -111,7 +119,14 @@ async function execute(
   const outputStore = new FileSystemGeneratedOutputStore();
   if (arguments_.command === "build") {
     if (arguments_.watch) {
-      await watchBuild(config, cwd, reporter);
+      await watchBuild(
+        config,
+        cwd,
+        reporter,
+        undefined,
+        undefined,
+        arguments_.strict ?? false,
+      );
       return 0;
     }
     const compilation = await reportPhase(
@@ -119,6 +134,11 @@ async function execute(
       "Rendering catalogue",
       "Catalogue rendered",
       () => compileCatalogue(config),
+    );
+    reporter.buildWarnings(compilation.diagnostics);
+    enforceStrictBuildWarnings(
+      compilation.diagnostics,
+      arguments_.strict ?? false,
     );
     await reportPhase(
       reporter,
@@ -139,6 +159,11 @@ async function execute(
       "Rendering catalogue",
       "Catalogue rendered",
       () => compileCatalogue(config),
+    );
+    reporter.buildWarnings(compilation.diagnostics);
+    enforceStrictBuildWarnings(
+      compilation.diagnostics,
+      arguments_.strict ?? false,
     );
     const tracking = await reportPhase(
       reporter,

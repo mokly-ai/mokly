@@ -21,6 +21,10 @@ import {
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
+import {
+  normalizeBuildDiagnostics,
+  type BuildDiagnostic,
+} from "./build_warnings.js";
 import { rememberRuntime } from "./component_runtime.js";
 import { resolveDocumentLinks } from "./document_links.js";
 import {
@@ -44,6 +48,7 @@ import { componentResourceSeeds } from "./resource_seeds.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
+  diagnostics: readonly BuildDiagnostic[];
   manifest: ManifestV9;
   outputs: ReadonlyMap<string, GeneratedFile>;
   /** Repository-relative inputs of delivered CSS and asset routes. */
@@ -136,7 +141,7 @@ async function compileMeasured(
   pending.addHtmlMap(outputs);
   const beforeLinks = new Map(outputs);
   await accepted?.checkpoint();
-  const logicalRecords = timeSync("html.links", () =>
+  const resolvedLinks = timeSync("html.links", () =>
     resolveDocumentLinks(outputs, registry.entries, config, fragmentViews),
   );
   pending.addHtmlMap(outputs);
@@ -155,7 +160,12 @@ async function compileMeasured(
     }
   });
   timeSync("html.logical-links", () =>
-    validateLogicalFragments(outputs, logicalRecords, registry.entries, config),
+    validateLogicalFragments(
+      outputs,
+      resolvedLinks.records,
+      registry.entries,
+      config,
+    ),
   );
   await accepted?.checkpoint();
   timeSync("html.ignore-rules", () => {
@@ -214,7 +224,8 @@ async function compileMeasured(
   timeSync("output.paths", () =>
     validateGeneratedOutputPaths(compilationOutputs.keys(), config),
   );
-  const compilation = {
+  const compilation: Compilation = {
+    diagnostics: normalizeBuildDiagnostics(resolvedLinks.diagnostics),
     manifest,
     outputs: compilationOutputs,
     deliveredStyleSources: graph.deliveredStyleSources,

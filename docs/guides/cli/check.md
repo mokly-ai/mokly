@@ -17,6 +17,7 @@ npx mokly check
 | ----------------- | ----------------------------------------------------------- |
 | `--config <path>` | Use an explicit `mokly.config` file                         |
 | `--debug-timings` | Report phase timings and catalogue counts on standard error |
+| `--strict`        | Fail before comparison when the build reports warnings      |
 
 ## What it validates
 
@@ -41,3 +42,8 @@ remain tracked; unrelated files are not served or exported.
 network, and it fails when tracked output and its sources disagree.
 When it reports a stale file, run `mokly build`, read the diff, and run
 `check` again.
+
+Build warnings appear on standard error and do not fail the check. Pass
+`--strict` when a pull request should fail on warnings as well. The failure
+says `1 build warning with --strict` for one warning and
+`<n> build warnings with --strict` otherwise.

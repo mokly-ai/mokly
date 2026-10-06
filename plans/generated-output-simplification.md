@@ -1834,6 +1834,23 @@ Evidence: `.context/generated-output-simplification/m23-document-validation.md`.
 
 Evidence: `.context/generated-output-simplification/m23-browser-and-audit-blockers.md`.
 
+### Link-control and warning integration
+
+The #124 integration keeps placement tiers, diagnostics, strict command checks
+and navigation waits. Warnings stay on stderr. Watched Build applies strict
+checks before each writer call and keeps its existing failure/recovery path.
+The direct link resolver carries diagnostics without restoring the transformer.
+No public or persisted format changes are required for these private compile
+records. The remaining watch and reporting redesign stays in Milestone 24.
+
+Evidence: `.context/generated-output-simplification/m23-124-preservation.md`.
+
+Merge justifications: `.context/generated-output-simplification/m23-124-merge-justifications.md`.
+
+Evidence: `.context/generated-output-simplification/m23-124-validation.md`.
+
+Evidence: `.context/generated-output-simplification/m23-124-remerge-review.md`.
+
 ## Milestone 24: Shared watching and command output
 
 Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.

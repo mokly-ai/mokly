@@ -4,52 +4,18 @@ import type { DefaultTreeAdapterMap } from "parse5";
 
 import { MoklyError } from "../errors.js";
 
+import {
+  classifyLinkControlDescendant,
+  describeLinkControlElement,
+  type LinkControlWarning,
+} from "./link_control_tiers.js";
+
 export type ControlNode = DefaultTreeAdapterMap["node"];
 export type ControlElement = DefaultTreeAdapterMap["element"];
 
 export const CHILD_MARKER = "data-mokly-link-child-";
 export const CONTROL_MARKER = "data-mokly-link-control";
 const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
-const INTERACTIVE_TAGS = new Set([
-  "a",
-  "area",
-  "button",
-  "input",
-  "select",
-  "textarea",
-  "summary",
-  "details",
-  "iframe",
-  "object",
-  "embed",
-  "label",
-]);
-const INTERACTIVE_ROLES = new Set([
-  "button",
-  "link",
-  "checkbox",
-  "combobox",
-  "gridcell",
-  "listbox",
-  "menu",
-  "menubar",
-  "menuitem",
-  "menuitemcheckbox",
-  "menuitemradio",
-  "option",
-  "radio",
-  "radiogroup",
-  "searchbox",
-  "slider",
-  "spinbutton",
-  "switch",
-  "tab",
-  "tablist",
-  "textbox",
-  "tree",
-  "treegrid",
-  "treeitem",
-]);
 
 export function controlError(route: string, detail: string): MoklyError {
   return new MoklyError(
@@ -64,20 +30,6 @@ function attribute(node: ControlElement, name: string): string | undefined {
 
 export function isElement(node: ControlNode): node is ControlElement {
   return "tagName" in node;
-}
-
-export function isInteractive(node: ControlElement): boolean {
-  return (
-    INTERACTIVE_TAGS.has(node.tagName) ||
-    attribute(node, "tabindex") !== undefined ||
-    (attribute(node, "contenteditable") !== undefined &&
-      attribute(node, "contenteditable") !== "false") ||
-    (attribute(node, "role") ?? "")
-      .split(/\s+/)
-      .some((role) => INTERACTIVE_ROLES.has(role)) ||
-    (["audio", "video"].includes(node.tagName) &&
-      attribute(node, "controls") !== undefined)
-  );
 }
 
 export function isInactive(node: ControlElement, ownControl = false): boolean {
@@ -95,7 +47,7 @@ export function validateControl(
   node: ControlElement,
   target: string,
   route: string,
-): void {
+): LinkControlWarning | undefined {
   if (
     node.namespaceURI !== HTML_NAMESPACE ||
     !["a", "button", "div", "span"].includes(node.tagName)
@@ -122,13 +74,22 @@ export function validateControl(
       throw controlError(route, "has conflicting destinations");
     }
   }
+  let warning: LinkControlWarning | undefined;
   const inspect = (child: ControlNode): void => {
     if (!isElement(child)) return;
-    if (child.attrs.some((attr) => attr.name.startsWith("on")))
-      throw controlError(route, "contains inline event handlers");
-    if (isInteractive(child))
-      throw controlError(route, "contains another interactive control");
+    const placement = classifyLinkControlDescendant(child);
+    if (placement?.tier === "error") {
+      const element = describeLinkControlElement(placement);
+      throw controlError(
+        route,
+        placement.feature.kind === "event"
+          ? `contains ${element}; remove the inline event handler`
+          : `contains ${element}; remove the nested interactive element`,
+      );
+    }
+    warning ??= placement;
     child.childNodes.forEach(inspect);
   };
   node.childNodes.forEach(inspect);
+  return warning;
 }
