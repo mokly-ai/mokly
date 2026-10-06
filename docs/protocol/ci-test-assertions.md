@@ -139,6 +139,8 @@ The four selection helpers are preconditions. They throw
 - `min`: the minimum match count, with a default of 1.
 
 `entriesWhere` also accepts `min`, with a default of 1.
+Kind arguments narrow the result types of `entryAt`, `entriesAt`, and
+`entriesUnder`. A component kind accepts both parents and variants.
 Selection errors name the helper, path or folder, requested kind or variant
 filter, and match count. Predicate errors include their description.
 
@@ -146,6 +148,8 @@ Shared single-entry lookups use `entryAt`: `designDocument` in
 `tests/helpers/design_catalogue.ts`, `componentParent` in
 `tests/helpers/component_views.ts`, and the local `component()` in
 `tests/design_modern_controls.test.ts`.
+`componentParent` keeps its variant check and throws `CatalogueSelectionError`
+when the selected entry is a component variant.
 
 ### Absence Assertions
 

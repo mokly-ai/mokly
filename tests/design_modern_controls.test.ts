@@ -9,6 +9,10 @@ import {
 } from "../packages/viewer/dist/data.js";
 import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 
+import {
+  CatalogueSelectionError,
+  entryAt,
+} from "./helpers/catalogue_selection.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/generated");
@@ -17,9 +21,16 @@ const manifest = JSON.parse(
 ) as ManifestV8;
 
 function component(id: string) {
-  const entry = manifest.entries.find((entry) => entry.path === id);
-  if (entry?.kind !== "component" || isManifestComponentVariant(entry))
-    throw new Error(`Missing ${id}`);
+  const entry = entryAt(manifest, id, "component");
+  if (isManifestComponentVariant(entry))
+    throw new CatalogueSelectionError({
+      helper: "component",
+      target: id,
+      kind: "component",
+      variants: "exclude",
+      matches: 0,
+      reason: "expected a component parent, found a variant",
+    });
   return entry;
 }
 

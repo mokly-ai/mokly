@@ -1,7 +1,8 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestone 1 completed. Waiting for reviewer approval before
-Milestone 2. Created 2026-10-06 with the user's consent after a report that four
+Status: Active; Milestones 1 and 2 completed. Waiting for reviewer approval
+before Milestone 3.
+Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
 the unit runner; add checked catalogue-selection helpers and a lint rule; and
@@ -169,12 +170,16 @@ occupy.
   of `path`, or `path` itself when `path` has no `/`. A live anchor proves that
   the check still looks at a real area.
 - The helpers return the manifest's own entry objects, never copies.
+- Kind arguments narrow the result type of `entryAt`, `entriesAt`, and
+  `entriesUnder`. A component kind still permits a component variant.
 - Every error names the helper, the path or folder, the kind or variant filter,
   and the match count.
 - The shared lookups use `entryAt`: `designDocument` in
   `tests/helpers/design_catalogue.ts`, `componentParent` in
   `tests/helpers/component_views.ts`, and the local `component()` in
   `tests/design_modern_controls.test.ts`.
+- `componentParent` keeps its variant rejection and throws
+  `CatalogueSelectionError` when the selected component is a variant.
 
 ### Lint rule
 
@@ -228,31 +233,39 @@ code changes.
       and the guide tests. Review the diff.
 - [x] Commit.
 
-## Milestone 2: Checked catalogue selection helpers
+## Milestone 2: Checked catalogue selection helpers — completed
 
 Add the helpers and their tests. No existing test changes its behavior.
 
-- [ ] Add failing tests in `tests/catalogue_selection.test.ts` that use small
+- [x] Record kind-result narrowing and component-variant rejection in this
+      plan and `docs/protocol/ci-test-assertions.md`.
+- [x] Add failing tests in `tests/catalogue_selection.test.ts` that use small
       manifest literals:
-  - [ ] `entryAt`: a found entry, a missing path, and a wrong kind.
-  - [ ] `entriesAt`: the input order, and missing, duplicate, and wrong-kind
+  - [x] `entryAt`: a found entry, a missing path, and a wrong kind.
+  - [x] `entriesAt`: the input order, and missing, duplicate, and wrong-kind
         paths.
-  - [ ] `entriesUnder`: `design/components` does not match
+  - [x] `entriesUnder`: `design/components` does not match
         `design/componentsx/a` or the folder's own entry; one kind and a list
         of kinds; each `variants` value; the default `min` and a larger `min`.
-  - [ ] `entriesWhere`: a match, and too few matches with the description in
+  - [x] `entriesWhere`: a match, and too few matches with the description in
         the message.
-  - [ ] `assertAbsent`: a present path raises `AssertionError`; an absent path
+  - [x] `assertAbsent`: a present path raises `AssertionError`; an absent path
         under a live anchor passes; a dead anchor raises
         `CatalogueSelectionError`; a top-level path is its own anchor.
-  - [ ] Every helper returns the manifest's own objects.
-- [ ] Implement `tests/helpers/catalogue_selection.ts` with doc comments on
+  - [x] Every helper returns the manifest's own objects.
+  - [x] Kind arguments narrow result types without caller casts.
+  - [x] `componentParent` returns a parent and rejects a variant with
+        `CatalogueSelectionError`.
+- [x] Keep the helper tests under 300 lines by moving shared manifest literals
+      to `tests/helpers/catalogue_selection_fixture.ts` and the parent-lookup
+      regression to `tests/component_parent_selection.test.ts`.
+- [x] Implement `tests/helpers/catalogue_selection.ts` with doc comments on
       every export.
-- [ ] Route `designDocument`, `componentParent`, and the local `component()`
+- [x] Route `designDocument`, `componentParent`, and the local `component()`
       lookup through `entryAt`.
-- [ ] Run the new tests and every test file that imports a changed helper. Run
+- [x] Run the new tests and every test file that imports a changed helper. Run
       `npm run lint` and `npm run typecheck:prepared`.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 3: Rewrite the nine empty checks, test-first
 
