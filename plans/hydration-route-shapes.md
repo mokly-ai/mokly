@@ -2,10 +2,10 @@
 
 Status: Active. Created 2026-10-05. On 2026-10-05 the user approved option C:
 hydrate one route per entry shape instead of every example route, and add an
-audit of generated resource references. Milestones 1 to 4 are complete. In
-Milestone 5 the work is committed, pushed and reviewed. The complete gate did
-not reach 100% locally because of timeouts on a slow VM, so the CI run on the
-pull request must confirm it. Four review findings await the user's decision.
+audit of generated resource references. All five milestones are complete.
+[PR #142](https://github.com/mokly-ai/mokly/pull/142) is open, and its CI run
+passed every job. The plan stays Active until the pull request merges. Four
+review findings await the user's decision.
 
 ## Outcome
 
@@ -344,7 +344,16 @@ findings.
       `.nvmrc`, so this plan's two references to the Node version file now
       name `.nvmrc`. Neither commit changes viewer or example code, so the
       coverage evidence above stays valid.
-- [ ] Run `cargo xtask check` and require a 100% pass rate.
+- [x] Run `cargo xtask check` and require a 100% pass rate. CI confirmed it:
+      run [37475751439](https://github.com/mokly-ai/mokly/actions/runs/37475751439)
+      on PR #142 at `99661ee0` passed every job, including `Required CI`.
+
+CI evidence: the Hydration job took 264 s. It took 596–597 s on the two
+`main` runs before this pull request (`ad2b3ece` and `80ceb445`) and 519 s at
+`c4138a0`. It is no longer the longest job. The change saves about 5.5
+runner minutes per run against the latest `main` runs. The wall time changes
+little: the slowest unit shard now sets it, and that shard took 595 s on
+`main` and 603 s in this run.
 
 Local result on 2026-10-06 for the merged tree on Node 24.21.0: this VM runs
 tests about four times slower than CI, and no single local run reached 100%.
@@ -373,9 +382,10 @@ The CI run on the pull request must confirm the pass rate.
       `git diff --name-status origin/main..HEAD` again. Push the branch with
       every new file tracked. List the approved removals in the pull request
       description. Pushed as `ed1ee4b0` (`fix(deps)`) and `e93f7aff` (`test`).
-      The diff against `origin/main` has no deletions. No pull request exists
-      yet. The `e93f7aff` commit message lists the approved removals; copy
-      them into the pull request description when it opens.
+      The diff against `origin/main` has no deletions. The `e93f7aff` commit
+      message lists the approved removals. PR #142 opened on 2026-10-06, and
+      its description lists the approved removals and the decisions of both
+      merges from `main`.
 - [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main`. Report numbered findings with a
       severity, the impact, lettered options and a recommendation. Do not
@@ -412,7 +422,8 @@ await the user's decision, and nothing was changed.
 ## Post-merge follow-up (non-blocking)
 
 - Record the hydration job duration of the first `main` CI run after the merge.
-  Compare it with the 519 s baseline.
+  Compare it with the 596–597 s of the last `main` runs before the merge, and
+  with the 264 s of the pull request run.
 
 ## Appendix: Coverage Comparison Method
 
