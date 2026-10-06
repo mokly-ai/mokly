@@ -156,7 +156,7 @@
 - Mockup screens must not contain implementation hints, engineering notes, or
   explanatory annotations inside the rendered screen area. Put implementation
   hints below the screen or in a separate non-screen section.
-- Mokly's example catalogue under `examples/basic/mokly-generated/` is generated from
+- Mokly's example catalogue under `examples/basic/generated/` is generated from
   the structured definitions under `examples/basic/specs/` using
   `examples/basic/mokly.config.ts`. Canonical entry modules end in `.mockup.ts`
   or `.mockup.tsx`; shared TSX components and page-render helpers live alongside
@@ -165,11 +165,10 @@
   changing example entries, the renderer, configuration, or configured styles,
   run `npm run build`, run `npm run example:build`, run
   `npm run example:check`, and visually smoke-test the changed pages through
-  `npm run dev`. Generated HTML and `mokly-manifest.json` under
-  `examples/basic/mokly-generated/` are ignored local artifacts validated by
-  `npm run example:check`. Commit only the tracked authored CSS under
-  `examples/basic/` and `examples/basic/design-library/`; never force-add
-  ignored generated output.
+  `npm run dev`. The example uses the default derived output mode: generated
+  HTML and `mokly-manifest.json` under `examples/basic/generated/` are ignored
+  local artifacts validated by `npm run example:check`. Commit only the tracked
+  authored CSS there; never force-add ignored generated output.
 - Do not hand-edit Mokly-owned generated HTML or `mokly-manifest.json` as source
   of truth. Update the entry, imported helper, renderer, or shared component
   first, then regenerate the example catalogue.
@@ -254,6 +253,14 @@
 - Any time a new TODO is discovered during implementation, it should be added under the relevant milestone (just add the new TODO, and then continue with the active TODO)
 - If a TODO is complex, break it down into sub-tasks/TODOs
 - As you complete items, you should tick them off in the relevant file under `./plans`
+- Do not put evidence logs in plan files. Evidence logs show how work was
+  checked: command output, test and gate results or timings, smoke-test
+  output, search results, audit and preservation records, test-title
+  inventories, and full reviewer reports. Save them under
+  `.context/<plan-name>/`, which Git ignores. Under the related milestone, add
+  one line that names the file. A plan keeps only its summary, milestones,
+  TODOs, contracts, decisions, user approvals, and short review summaries.
+  Agents read the whole plan, so logs in a plan slow every session.
 - The workspace `README.md` should link to the `plans/` directory, not to an individual plan file unless a specific change needs to be referenced
 - Mark a milestone as completed when all the tasks are completed, do not re-open existing milestones - create a new milestone if new tasks are needed that do not fit into an existing milestone
 
@@ -538,8 +545,9 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
   `git commit --amend`, which keeps both parents; then review the merge again.
   After pushing, use a follow-up commit.
   Justify each intentional decision in the PR description, naming every path
-  it affects. If no PR exists yet, record the justifications in the active
-  plan milestone and copy them into the PR description when it opens.
+  it affects. If no PR exists yet, save the justifications under
+  `.context/<plan-name>/`, name that file in the active plan milestone, and
+  copy them into the PR description when it opens.
 
 - Before commit and after commit, inspect the diff and deletions against main:
 

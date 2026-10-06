@@ -1772,14 +1772,14 @@ Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
       that the merge resolved or changed, and stop for the user's decision
       where a recorded decision no longer fits.
 - [x] `git add -A`; commit with Conventional Commits; push.
-- [ ] Merge main once more under the orchestrator's instruction and user
+- [x] Merge main once more under the orchestrator's instruction and user
       decision 1 A. Capture both tips and the merge base, audit additions, resolve
       each conflict, confirm exactly two parents and review every remerge path
       and deletion. Keep #137, #140, #141 and #143 completely, including
       `AGENTS.md` exactly as main has it. Preserve the writer-only output lock
       and existing approved branch contracts. Store all preservation evidence
       and merge justifications under this plan's ignored evidence directory.
-- [ ] Carry the warning-contract wording clarification into that integration;
+- [x] Carry the warning-contract wording clarification into that integration;
       build warnings stay on stderr, while 18 A moves successful baseline notices.
 - [ ] Run the full gate once on that merged tip. Commit and push only after
       it passes. If main moves after integration starts, report the new tip and
@@ -1905,6 +1905,23 @@ The incoming changes can affect the remaining plan as follows:
 These changes do not alter the recorded runtime fixes in Milestones 24–26.
 The re-plan is based on pushed `d0f6dd99`; the additional merge will verify the
 four incoming changes path by path.
+
+### Final main integration
+
+Keep all of #137, #140, #141 and #143 under decision 1 A. The orchestrator
+requires `AGENTS.md` exactly as incoming main. Its older example paragraph
+therefore remains; this does not restore output modes or change generated paths.
+Keep the `.nvmrc` pin, all moved CI assertions, the source-map regression tests
+and five packed-consumer scenarios. The warning clarification changes only the
+target contract; implementation remains in Milestone 24.
+
+Preservation record: `.context/generated-output-simplification/m23-final-main-preservation.md`.
+
+Merge justifications: `.context/generated-output-simplification/m23-final-main-justifications.md`.
+
+Evidence: `.context/generated-output-simplification/m23-final-main-remerge-review.md`.
+
+Validation: `.context/generated-output-simplification/m23-final-main-validation.md`.
 
 ## Milestone 24: Shared watching and command output
 

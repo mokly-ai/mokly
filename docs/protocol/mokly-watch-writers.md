@@ -67,8 +67,10 @@ summary because it performs no write.
 
 In plain mode, successful baseline preparation notes and the exact
 [earlier-version line](./mokly-baseline-compatibility.md#incompatible-earlier-baseline) use
-stdout. Successful commands produce no stderr except explicitly requested
-timing JSON. Errors remain on stderr. Keep the existing progress wording.
+stdout. Warning-free successful commands produce no stderr except requested
+timing JSON. Build warnings and errors remain on stderr. Preserve the
+[build warning contract](./mokly-build-warnings.md), including strict rejection
+before writes and once-per-generation Serve reporting. Keep existing progress wording.
 Serve prints an earlier-version notice once for its accepted base; moving to
 a different base clears the notice state so a later incompatible base can
 report once again. Rich mode keeps its existing reporter surfaces.
@@ -86,5 +88,6 @@ Test Ctrl+C during the first build and under a held writer lock with explicit
 synchronization. Require prompt settlement, no new output, no foreign-lock
 deletion and no leaked process/watcher. Smoke-test both writing watch commands
 with Tailwind-style scanning and these lifecycle cases. Assert exact stdout,
-empty successful stderr, root-directory summaries, and one earlier-version
-notice per accepted base in real Serve.
+empty successful stderr when warning-free, root-directory summaries, and one
+earlier-version notice per accepted base in real Serve. Also combine a build
+warning with a successful baseline notice: only the warning stays on stderr.

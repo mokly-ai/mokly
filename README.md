@@ -319,8 +319,8 @@ receiver and viewer update before publication. Progress remains in the
 ## Develop Mokly
 
 For repository development, use the tested Node.js version in
-[`.node-version`](./.node-version), npm 11.7, Rust 1.95, and Chromium for the
-browser suite.
+[`.nvmrc`](./.nvmrc), npm 11.7, Rust 1.95, and Chromium for the browser suite.
+With nvm, run `nvm install` in the repository to install and use that version.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
