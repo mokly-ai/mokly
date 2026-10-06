@@ -1809,7 +1809,7 @@ Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
       the writer-only output lock and 600-second fixture limit. Record every
       resolution and review exactly two parents, every remerge path and all
       deletions before pushing.
-- [ ] Run the full gate because the captured tip includes #148 code/tests.
+- [x] Run the full gate because the captured tip includes #148 code/tests.
       Commit and push only after it passes. Report later main movement without
       another merge, then stop for the orchestrator's review.
 - [ ] After the push, the orchestrator reviews the merge against `origin/main`
