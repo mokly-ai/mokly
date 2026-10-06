@@ -3,7 +3,7 @@
 ## Delivery Status
 
 The suite CLI, evidence, workflow graph, fixture reuse, and every repository
-ratchet are implemented. [Hosted measurements](../reviews/ci-performance.md)
+ratchet are implemented. [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
 record timing and coverage. `cargo xtask check` remains the complete local gate;
 a validated hosted aggregate is reusable evidence for its exact tree. Public
 package argument forwarding, hierarchical cancellation, and pull-request title
