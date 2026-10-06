@@ -22,11 +22,14 @@ Existing M8 source guards and `<!--mokly-` in canonical appendices keep text too
 canonical markers must reach normalization unchanged. Those checked appendices
 need no index scan. No fingerprint appears on a guarded view.
 
-Path/move normalization keeps real URLs in resource materials. If its rewrite
-changes an eligible skipped outer source or a canonical actual/projected
-appendix, keep text materials for the whole view. The URL rewrite must remain
-visible to comparison; hashing it first must not turn equal normalized materials
-into a change. Resource seeds still come from original and retained-rule records.
+Path/move normalization keeps real URLs in resource materials. For skipped
+analysis, identical-source link normalization (`equalSource === true`) needs no
+fallback. Without that proof, keep text if either normalizer changes an eligible
+outer source. For resolved analysis, compare the before/after appendices for
+actual and projected materials separately. Keep text only if normalization
+changes an equality outcome: `(links.before(Ab) === links.after(Aa)) !== (Ab === Aa)`.
+An unchanged local URL beside another rule's edit can keep fingerprints.
+Resource seeds still come from original and retained-rule records.
 
 Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
 

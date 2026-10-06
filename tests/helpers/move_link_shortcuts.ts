@@ -17,6 +17,7 @@ export async function moveLinkShortcutFixture(
   mode: "committed" | "derived",
   styleEdit: boolean,
   move = true,
+  styleLink = false,
 ) {
   const fixture = await pathFixture(
     {
@@ -27,7 +28,7 @@ export async function moveLinkShortcutFixture(
       "specs/action.mockup.tsx": moveComponentSource(),
       "specs/guide.mockup.tsx": `import {defineScreen,MockLink} from '@mokly/mokly';
 export default defineScreen({title:'Guide',description:'Guide',dependencies:[],relatedDocs:[],desktop:<MockLink to="target">Target</MockLink>,mobile:<MockLink to="target">Target</MockLink>});`,
-      "renderer.tsx": renderer("red"),
+      "renderer.tsx": renderer("red", styleLink),
     },
     `{mockupsDir:"generated",roots:[{dir:"specs"}],renderer:"./renderer.tsx",generatedOutput:${JSON.stringify(mode)}}`,
   );
@@ -40,7 +41,8 @@ export default defineScreen({title:'Guide',description:'Guide',dependencies:[],r
     );
     await fixture.write("specs/target.md", "# Target\n\nA new document.");
   }
-  if (styleEdit) await fixture.write("renderer.tsx", renderer("blue"));
+  if (styleEdit)
+    await fixture.write("renderer.tsx", renderer("blue", styleLink));
   const after = await fixture.compile();
   const input = await prepareMoveClassification({
     before: before.manifest,
@@ -67,7 +69,7 @@ export default defineScreen({title:'Guide',description:'Guide',dependencies:[],r
   };
 }
 
-function renderer(color: string): string {
+function renderer(color: string, styleLink: boolean): string {
   return `import {renderToStaticMarkup} from 'react-dom/server';
-export default input => '<!doctype html><html><head><style>.unused{color:${color}}</style></head><body>'+renderToStaticMarkup(input.node)+'</body></html>';`;
+export default input => '<!doctype html><html><head><style${styleLink ? ' data-nav-href="../target/index.html"' : ""}>.unused{color:${color}}</style></head><body>'.replaceAll('../', '../'.repeat(input.entry.path.split('/').length))+renderToStaticMarkup(input.node)+'</body></html>';`;
 }

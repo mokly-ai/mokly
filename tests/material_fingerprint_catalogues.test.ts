@@ -93,7 +93,7 @@ test("existing inline, CSS and Changes catalogues equal M8 text materials in bot
     {
       catalogues: 432,
       pairs: 860,
-      fingerprintedViews: 7612,
+      fingerprintedViews: 8100,
       excludedCatalogues: 2,
       excludedPairs: 4,
     },
