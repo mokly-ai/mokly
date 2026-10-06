@@ -76,18 +76,18 @@ Planning evidence: `.context/deterministic-test-timing/measurements.md`.
 
 ### Replacements
 
-| Assertion                                                 | Current limit             | Replacement                                                                                                     | Contract                                                                                     |
-| --------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `tests/postcss_dependency_review.test.ts:93`              | 20,000 reports < 2,500 ms | 500 and 2,000 reports: equal fixed-root `realpath` counts, equal sort counts, totals at most 4.5 times          | `mokly-imported-styles-postcss.md`: resolve fixed roots once, sort each candidate class once |
-| `tests/imported_styles_low_dependencies.test.ts:39`       | 8,000 files < 1,500 ms    | 1,000 and 4,000 files: one `Minimatch` compilation per walk                                                     | `mokly-imported-styles-postcss.md`: each reported glob is compiled once per report           |
-| `tests/watch_postcss_scale.test.ts:51`                    | 3,000 lookups < 1,500 ms  | 750 and 3,000 sources: reads of `config.sourceFiles` elements at most twice the source count across all lookups | `mokly-watch.md`: build the required-file index once; callbacks consult it in constant time  |
-| `tests/watch_postcss_scale.test.ts:87`                    | ready < 8,000 ms          | The factory receives the directory and no file inside it                                                        | `mokly-watch.md`: watch targets omit files covered by a PostCSS directory-dependency root    |
-| `tests/watch_postcss_scale.test.ts:144`                   | ready < 12,000 ms         | The same target check, plus the existing single-rebuild and single-watcher checks                               | `mokly-watch.md`, as above                                                                   |
-| `tests/metafile_path_mapper.test.ts:26`                   | 10,000 edges < 400 ms     | 2,500 and 10,000 edges: each metafile input read at most once; one working-directory `realpath` at both sizes   | `mokly-imported-styles.md`: the sentence that Milestone 1 adds                               |
-| `tests/metafile_path_mapper.test.ts:60`                   | 3,000 inputs < 2,500 ms   | 750 and 3,000 inputs: one working-directory `realpath` at both sizes; at most one `realpath` per input          | `mokly-imported-styles.md`, as above                                                         |
-| `tests/css_module_selector_plugin_acceptance.test.ts:144` | matrix < 10,000 ms        | Remove the limit. Report the duration with the helper. Keep the 20-second test timeout                          | No speed contract; the test checks correctness                                               |
-| `tests/component_controls_watch.test.ts:74`               | Browse < 1,000 ms         | Browse answers with 200 while the `Hang` render is still pending                                                | `mokly-component-controls.md`: a synchronous render failure cannot hang Browse               |
-| `tests/browser/frame_adapter_navigation.spec.ts:114`      | elapsed ≥ 4,900 ms        | `page.clock`: the request is pending at 4,999 ms and gives `timeout` at 5,000 ms                                | `mokly-frame-adapter.md`: requests time out after five seconds                               |
+| Assertion                                                 | Current limit             | Replacement                                                                                                                       | Contract                                                                                     |
+| --------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `tests/postcss_dependency_review.test.ts:93`              | 20,000 reports < 2,500 ms | 500 and 2,000 reports: equal fixed-root `realpath` counts, equal sort counts, totals at most 4.5 times                            | `mokly-imported-styles-postcss.md`: resolve fixed roots once, sort each candidate class once |
+| `tests/imported_styles_low_dependencies.test.ts:39`       | 8,000 files < 1,500 ms    | 1,000 and 4,000 files: one `Minimatch` compilation per walk                                                                       | `mokly-imported-styles-postcss.md`: each reported glob is compiled once per report           |
+| `tests/watch_postcss_scale.test.ts:51`                    | 3,000 lookups < 1,500 ms  | 750 and 3,000 sources: reads of `config.sourceFiles` elements during the lookup loop are at most one per source (one index build) | `mokly-watch.md`: build the required-file index once; callbacks consult it in constant time  |
+| `tests/watch_postcss_scale.test.ts:87`                    | ready < 8,000 ms          | The factory receives the directory and no file inside it                                                                          | `mokly-watch.md`: watch targets omit files covered by a PostCSS directory-dependency root    |
+| `tests/watch_postcss_scale.test.ts:144`                   | ready < 12,000 ms         | The same target check, plus the existing single-rebuild and single-watcher checks                                                 | `mokly-watch.md`, as above                                                                   |
+| `tests/metafile_path_mapper.test.ts:26`                   | 10,000 edges < 400 ms     | 2,500 and 10,000 edges: each metafile input read at most once; one working-directory `realpath` at both sizes                     | `mokly-imported-styles.md`: the sentence that Milestone 1 adds                               |
+| `tests/metafile_path_mapper.test.ts:60`                   | 3,000 inputs < 2,500 ms   | 750 and 3,000 inputs: one working-directory `realpath` at both sizes; at most one `realpath` per input                            | `mokly-imported-styles.md`, as above                                                         |
+| `tests/css_module_selector_plugin_acceptance.test.ts:144` | matrix < 10,000 ms        | Remove the limit. Report the duration with the helper. Keep the 20-second test timeout                                            | No speed contract; the test checks correctness                                               |
+| `tests/component_controls_watch.test.ts:74`               | Browse < 1,000 ms         | Browse answers with 200 while the `Hang` render is still pending                                                                  | `mokly-component-controls.md`: a synchronous render failure cannot hang Browse               |
+| `tests/browser/frame_adapter_navigation.spec.ts:114`      | elapsed ≥ 4,900 ms        | `page.clock`: the request is pending at 4,999 ms and gives `timeout` at 5,000 ms                                                  | `mokly-frame-adapter.md`: requests time out after five seconds                               |
 
 The original count was nine limits. Planning found the tenth, the lower bound
 in the frame adapter spec. Planning also found five polling deadlines under
@@ -243,23 +243,25 @@ Evidence: `.context/deterministic-test-timing/milestone-3.md`.
 - [x] Run `tests/*postcss*.test.ts` and `tests/imported_styles_*.test.ts`,
       then `npm run lint` and `npm run typecheck`.
 
-## Milestone 4: Watch scale guards
+## Milestone 4: Watch scale guards — completed
 
 Convert the three limits in `tests/watch_postcss_scale.test.ts`.
 
 Evidence: `.context/deterministic-test-timing/milestone-4.md`.
 
-- [ ] Convert the indexed-lookup test as described in Replacements.
-- [ ] Convert the real-watcher test. Wrap `ChokidarWatcherFactory` to capture
+- [x] Resolve the read budget for the added-file classification scan before
+      completing the indexed-lookup guard.
+- [x] Convert the indexed-lookup test as described in Replacements.
+- [x] Convert the real-watcher test. Wrap `ChokidarWatcherFactory` to capture
       the targets. Keep the readiness wait and the added-file event under the
       test timeout. Report readiness with the helper.
-- [ ] Convert the watched Serve test. Assert the target rule through the
+- [x] Convert the watched Serve test. Assert the target rule through the
       existing counting factory and report readiness with the helper.
-- [ ] Prove the guards: build the required-file index on every lookup, and
+- [x] Prove the guards: build the required-file index on every lookup, and
       add each source file as a watch target. Confirm that each change fails,
       then revert it. Save the results in the evidence file.
-- [ ] Split the file if it grows past 300 lines.
-- [ ] Run the file five times, then `tests/watch_*.test.ts`, `npm run lint`
+- [x] Split the file if it grows past 300 lines.
+- [x] Run the file five times, then `tests/watch_*.test.ts`, `npm run lint`
       and `npm run typecheck`.
 
 ## Milestone 5: Remaining limits and short deadlines
@@ -292,6 +294,10 @@ Evidence: `.context/deterministic-test-timing/milestone-5.md`.
       (9 seconds for a watch event) and `tests/postcss_worker_failure.test.ts`
       (the 2-second `bounded` helper) for successful expected-state waits below
       10 seconds. Keep test-runner timeouts and timeout-outcome cases unchanged.
+- [ ] Audit successful-state timer guards in `tests/watch_child_exit.test.ts`
+      (`exitsWithin` at 1,000 and 2,000 ms) and
+      `tests/watch_config_shutdown.test.ts` (`completesWithin` at 1,000 ms).
+      Keep test-runner timeouts unchanged.
 - [ ] Move the duration text in
       `tests/browser/css_module_selector_oracle.spec.ts` and
       `tests/browser/css_module_escape_fuzz.spec.ts` to the helper.
@@ -353,6 +359,10 @@ Evidence: `.context/deterministic-test-timing/milestone-7.md`.
 
 ## Post-merge follow-up (non-blocking)
 
+- Consider classifying sources through the required-file index.
+  `classifyWatchPath` in `src/server/watch_events.ts` scans
+  `config.sourceFiles` with `path.resolve` for every watch event. Each event
+  costs one pass over the inventory.
 - Consider faster dependency classification. About 60% of collection time is
   in `packageOwnedPath`, which makes about ten `path.relative` calls and three
   to five filesystem calls per file. Options: resolve each parent directory's
