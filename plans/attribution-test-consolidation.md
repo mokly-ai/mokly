@@ -383,6 +383,12 @@ file). Today's `affects` boolean becomes the exact `impactingIds` list.
 Prove the runtime reduction locally and in CI, record it, and close the plan
 with the required commit, push, and review steps.
 
+Local timing work is committed. The complete gate stopped at the live audit for
+source-map-js 1.2.1 (GHSA-68fv-2mgg-jv7q); 1.2.2 is patched. The repository's
+other checks and the separately selected package, unit, browser, and hydration
+suites passed. The test-only scope leaves the runtime lockfile unchanged, so
+complete-gate verification remains open. See the measurement record for results.
+
 - [x] Apply the orchestrator's review corrections in follow-up commits.
   - [x] Separate same-file edits targeting different entries without adding a
         build; document the grouping limit and rule.

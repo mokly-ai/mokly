@@ -127,3 +127,40 @@ no other heavy work running. All ten tests passed. The library scenarios took
 244.537 s across the three files, versus 612.961 s before (60.1% less).
 All attribution scenarios took 277.228 s, versus 736.134 s before (62.3% less).
 These are summed isolated file times. CI shard wall times remain pending.
+
+## Final Verification
+
+`cargo xtask check` ran after the implementation and timing commits and after
+`git fetch origin main`. It stopped at the live dependency audit. A retry with
+`cargo xtask check --suite repository` reported the same failure:
+
+```text
+Uncovered advisory GHSA-68fv-2mgg-jv7q; package: source-map-js; severity: high.
+[xtask/command] `npm run dependencies:check` failed with status 1
+```
+
+The lockfile has source-map-js 1.2.1 through runtime PostCSS and development
+Tailwind. The [reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
+identifies 1.2.2 as patched. The repository lockfile stays unchanged under the
+test-only scope. A targeted three-field lockfile proposal is a local-only
+artifact. Its scope decision remains open; no exception was added.
+
+The functional suites then ran separately on Node 22.14.0:
+
+| Check             | Result                                                 | Suite duration |
+| ----------------- | ------------------------------------------------------ | -------------: |
+| Package           | Both packed packages passed all six consumer scenarios |   Not recorded |
+| Unit              | 4310 passed; no failures, skips, or cancellations      |     1158.863 s |
+| Browser, Chrome   | 844 passed across 168 files; no skips or cancellations |     1345.261 s |
+| Hydration, Chrome | 263 passed across 11 files; no skips or cancellations  |      830.007 s |
+
+Repository formatting, ESLint, source length, all four ratchets, Rust formatting,
+Clippy, all 15 Rust tests, and the Rust length audit passed when run separately
+from the blocked audit. All changed TypeScript files remain below 300 lines;
+the component-design protocol remains at 250 lines. The six projection tests
+passed in 0.220 s without compilation. All targeted attribution and protocol
+checks passed after correcting the two documented initial assertion failures.
+
+The complete gate remains unsuccessful because its audit prerequisite failed.
+CI timing, push, the control decision, PR status, and post-push review remain
+with the orchestrator. No push or PR was made.
