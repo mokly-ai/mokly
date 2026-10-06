@@ -44,6 +44,9 @@ export async function executeUnitTests(repositoryRoot, options) {
       failed: sum(raw.summaries, "failed"),
       reporterComplete: true,
     };
+    if (options.selected)
+      evidence.testsRun =
+        sum(raw.summaries, "passed") + evidence.failed + evidence.cancelled;
   } catch (error) {
     evidenceError = error;
     evidence = {
@@ -54,6 +57,7 @@ export async function executeUnitTests(repositoryRoot, options) {
       failed: 0,
       reporterComplete: false,
     };
+    if (options.selected) evidence.testsRun = 0;
   }
   return {
     ...evidence,

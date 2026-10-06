@@ -22,13 +22,28 @@ export async function runSelectedUnitVerification(repositoryRoot, selection) {
     const result = await executeUnitTests(repositoryRoot, {
       files,
       concurrency,
+      selected: true,
       patterns: selection.patterns,
       eventPath: path.join(temporary, "report.events"),
     });
     console.log("unit tests skipped or todo: " + result.skipped);
+    const observed = new Map(
+      result.observedFiles.map(({ file, tests }) => [file, tests]),
+    );
+    for (const file of files)
+      if (observed.get(file) === 0)
+        console.log(
+          "warning: no test ran in " +
+            file +
+            (selection.patterns.length > 0
+              ? "; check --test-name-pattern"
+              : ""),
+        );
     console.log(
       "selected files: " +
         files.length +
+        "; tests run: " +
+        result.testsRun +
         "; partial verification; complete gate: cargo xtask check",
     );
     validateSelectedRun(result, files);

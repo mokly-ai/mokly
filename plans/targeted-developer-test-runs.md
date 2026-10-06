@@ -326,7 +326,7 @@ failing tests after a gate failure.
 
 - [x] Define exact selected output and developer errors in the protocol and
       keep the plan Contract consistent before changing code.
-- [ ] Implement finding 1 with per-file counts and zero-test warnings. Keep
+- [x] Implement finding 1 with per-file counts and zero-test warnings. Keep
       reports and complete/strict runs unchanged. Add regression tests.
 - [ ] Implement finding 5 with one expected error type, problem-first argument
       messages, ordered outcome validation, and internal fault stacks. Test it.

@@ -336,6 +336,8 @@ build; run `npm run prepare:verification` after a `src/` change before using
 them. Browser tests reject `.only`; select by path and `-g`. These selected runs
 are partial verification. See [developer test commands](./docs/protocol/developer-test-commands.md)
 for the argument and report rules.
+Selected unit runs report the number of tests that ran. They warn when a file
+runs no tests, including when a name pattern matches nothing.
 
 Run the complete repository gate before submitting a change:
 

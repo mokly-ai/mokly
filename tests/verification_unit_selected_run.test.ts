@@ -21,7 +21,7 @@ test("one selected file runs alone and prints the partial verification boundary"
   assert.doesNotMatch(stdout, /selected failing sentinel/u);
   assert.match(
     stdout,
-    /unit tests skipped or todo: 0\nselected files: 1; partial verification; complete gate: cargo xtask check/u,
+    /unit tests skipped or todo: 0\nselected files: 1; tests run: 1; partial verification; complete gate: cargo xtask check/u,
   );
   await assert.rejects(fs.stat(path.join(harness.root, "test-ran.marker")), {
     code: "ENOENT",
@@ -39,7 +39,10 @@ test("a failing selected test fails the process and still prints the run scope",
     (error: Error & { code: number; stdout: string }) => {
       assert.notEqual(error.code, 0);
       assert.match(error.stdout, /selected failure sentinel/u);
-      assert.match(error.stdout, /selected files: 1; partial verification/u);
+      assert.match(
+        error.stdout,
+        /selected files: 1; tests run: 1; partial verification/u,
+      );
       return true;
     },
   );
@@ -52,7 +55,10 @@ test("zero matching tests in a selected file pass with real reporter coverage", 
     "--test-name-pattern",
     "no matching title",
   ]);
-  assert.match(stdout, /selected files: 1; partial verification/u);
+  assert.match(
+    stdout,
+    /selected files: 1; tests run: 0; partial verification/u,
+  );
   await assert.rejects(fs.stat(path.join(harness.root, "test-ran.marker")), {
     code: "ENOENT",
   });
@@ -63,7 +69,10 @@ test("a pattern without files uses the whole inventory and leaves no report", as
   const { stdout } = await runSelected(harness, [
     "--test-name-pattern=no matching title",
   ]);
-  assert.match(stdout, /selected files: 2; partial verification/u);
+  assert.match(
+    stdout,
+    /selected files: 2; tests run: 0; partial verification/u,
+  );
   await assert.rejects(
     fs.stat(path.join(harness.root, ".context/verification-reports")),
     { code: "ENOENT" },
