@@ -18,6 +18,9 @@ memo between the graph and stylesheet passes. The generated name is
 of SHA-256 over the UTF-8 repository-relative POSIX stylesheet path. It never
 depends on source bytes, bundle order, process cwd or platform separators.
 Distinct local identities colliding at a generated name fail Build.
+Parse and process with `map: false`: a `sourceMappingURL` comment never
+loads a map or reads a file, and diagnostic positions always refer to the
+module file.
 
 CSS whitespace in selectors and `@scope` preludes means only space, tab, line
 feed, carriage return and form feed. A hex escape consumes its next single

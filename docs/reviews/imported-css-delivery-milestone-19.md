@@ -33,8 +33,8 @@ The change works for the cases it targeted:
 The nine findings below were reproduced in scratch copies. The parent session
 independently confirmed findings 1, 2, 6 and 7 and the animation, custom
 property, view-transition and composition rules in finding 4. Finding 1 is
-resolved in `9bab3d7`; finding 2 is partly mitigated, and the other findings
-remain open for the user's decision.
+resolved in `9bab3d7` and finding 6 after the merge; finding 2 is partly
+mitigated, and the other findings remain open for the user's decision.
 
 Findings 1, 2 and 4 share one cause. The plugins find names with text
 heuristics instead of a CSS parser. Milestone 20 now verifies that their
@@ -225,6 +225,15 @@ in findings 2 and 4.
      loading, with tests for a sibling map, a bad inline map and a changed
      working directory.
    - Recommended: B, so no future internal PostCSS call can forget the option.
+
+   Resolved after the merge with option A: `scopeModule` parses with
+   `map: false`, so every internal PostCSS parse and process call passes it.
+   `tests/build_module_source_maps.test.ts` covers a broken inline map, an
+   unsupported inline encoding, an indexed map offset that source-map-js 1.2.2
+   rejects, a sibling map read from the working directory, and diagnostic
+   positions with a valid inline map. The shared helper of option B was not
+   adopted.
+
 7. **Low — every command, including `--help`, loads the Lightning CSS native
    package, contrary to the protocol.**
    - What happens: the protocol says the CLI does not load Lightning CSS

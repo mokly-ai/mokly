@@ -26,7 +26,7 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
   const prefix = `mokly_${hash}_`;
   let root: Root | undefined;
   try {
-    root = postcss.parse(css, { from: relative });
+    root = postcss.parse(css, { from: relative, map: false });
     rejectAuthoredICSS(root, relative);
     rejectUnsafeModuleEscapes(root, relative);
     const restoreScopes = prepareModuleScopes(root, relative);

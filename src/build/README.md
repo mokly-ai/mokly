@@ -27,6 +27,8 @@ rename local classes, IDs and keyframes by a path-only hash and expose default
 and named bindings to JavaScript. The module scoper never re-prints authored
 values, imports, URLs, comments or modern syntax; ordinary CSS and modules
 reach the same bundle and inventory. Consumer PostCSS still runs first.
+The scoper parses with `map: false`, so a `sourceMappingURL` comment never
+loads a map or moves a diagnostic position.
 `styles/module_scope.ts` handles real `@scope` preludes with temporary sourced
 selector rules while hiding every scope-suffixed at-rule from plugin heuristics.
 `styles/module_verify.ts` compares restored output with the authored PostCSS
@@ -47,6 +49,7 @@ Wrapper empty tails and comments follow the plugin output.
 
 CSS Modules mutation checklist:
 
+- Ignored source-map comments: `tests/build_module_source_maps.test.ts`.
 - Scanner escapes, strings and Unicode spacing: `tests/css_module_css_scan.test.ts`.
 - Raw escape guard and meaning-preserving advice: `tests/css_module_escape_regressions.test.ts` and `tests/browser/css_module_escape_advice.spec.ts`.
 - Empty tails and exact comment boundaries: `tests/css_module_empty_tail.test.ts`.
