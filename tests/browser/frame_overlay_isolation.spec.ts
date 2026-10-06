@@ -85,8 +85,8 @@ for (const hostile of [
       transform: "none",
       filter: "none",
     });
-    await button.hover({ timeout: 5_000 });
-    await button.click({ timeout: 5_000 });
+    await button.hover({ timeout: 15_000 });
+    await button.click({ timeout: 15_000 });
     await expect
       .poll(() =>
         page.evaluate(

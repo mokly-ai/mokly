@@ -3,7 +3,9 @@
 Continuation of [CI Verification](./ci-verification.md). The repository suite
 starts with the live lockfile-only workspace audit, then Prettier, ESLint,
 changed source/protocol file-length audit, Rust formatting, workspace Clippy
-with warnings denied, Rust tests and the Rust file-length audit. The live
+with warnings denied, Rust tests and the Rust file-length audit. The
+[test-timing guard](./ci-test-timing.md) adds elapsed-time and polling-deadline
+checks to ESLint under `tests/`. The live
 dependency audit defaults to baseline mode for local checks, ordinary pull
 requests, and every push. New findings or exception issues fail; inherited
 issues print as notices. Report, input, and registry errors always fail.

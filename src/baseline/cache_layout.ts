@@ -2,9 +2,10 @@ import path from "node:path";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import { MOKLY_CACHE } from "../config/cache_paths.js";
+
 import { BaselineError } from "./errors.js";
 
-const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
 export const DEFAULT_RETAINED_COUNT = 3;
 export const LOCK_TIMEOUT_MS = 120_000;
 export const LOCK_POLL_MS = 100;
@@ -20,6 +21,8 @@ export interface CompletionMarker {
 }
 
 export interface CacheLayout {
+  /** The repository's `.mokly-cache/` directory, which holds `root`. */
+  readonly cache: string;
   readonly root: string;
   readonly entry: string;
   readonly source: string;
@@ -34,9 +37,11 @@ export function cacheLayout(repoRoot: string, commit: string): CacheLayout {
       "baseline-history-unavailable",
       `Invalid baseline commit: ${commit}`,
     );
-  const root = path.join(repoRoot, BASELINE_CACHE_PATH);
+  const cache = path.join(repoRoot, MOKLY_CACHE);
+  const root = path.join(cache, "baselines");
   const entry = path.join(root, commit);
   return {
+    cache,
     root,
     entry,
     source: path.join(entry, "source"),

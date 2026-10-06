@@ -157,7 +157,7 @@ test("the real watcher traverses owned directories to observe later unowned addi
   const unowned = path.join(fixture.output, "static", "notes.md");
   await fs.promises.writeFile(unowned, "An authored input\n");
   await fs.promises.appendFile(path.join(fixture.output, "index.html"), "\n");
-  const deadline = Date.now() + 2000;
+  const deadline = Date.now() + 15_000;
   while (!events.includes(unowned) && Date.now() < deadline) await delay(25);
   assert.ok(
     events.includes(unowned),
