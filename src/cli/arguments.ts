@@ -20,6 +20,7 @@ export interface CliArguments {
   out?: string;
   port?: number;
   strictPort?: boolean;
+  strict?: boolean;
   retainedRuntime?: boolean;
   updateVersion?: number;
   version: boolean;
@@ -61,6 +62,7 @@ export function parseArguments(argv: readonly string[]): CliArguments {
     else if (argument === "--open") parsed.open = true;
     else if (argument === "--retained-runtime") parsed.retainedRuntime = true;
     else if (argument === "--strict-port") parsed.strictPort = true;
+    else if (argument === "--strict") parsed.strict = true;
     else if (option === "--config")
       parsed.config = takeValue(option, values, assigned);
     else if (option === "--base")
@@ -134,6 +136,14 @@ function parsePort(value: string): number {
 }
 
 function validateCommandOptions(arguments_: CliArguments): void {
+  if (
+    arguments_.strict &&
+    !["build", "check", "export", "publish"].includes(arguments_.command)
+  )
+    throw new MoklyError(
+      "cli-invalid",
+      "--strict belongs to build, check, export or publish",
+    );
   if (arguments_.retainedRuntime && arguments_.command !== "__serve-child")
     throw new MoklyError(
       "cli-invalid",

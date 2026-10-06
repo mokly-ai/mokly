@@ -3,6 +3,7 @@ import path from "node:path";
 import { type ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { walkFiles } from "../build/discovery.js";
 import { validateControlMetadata } from "../build/link_control_metadata.js";
 import { adaptLinkControls } from "../build/link_controls.js";
@@ -22,6 +23,12 @@ import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 import type { EntryMove } from "../review/moves/types.js";
 
+/** Compatibility records and non-fatal diagnostics from transformed documents. */
+export interface CompatibilityTransform {
+  readonly diagnostics: readonly BuildDiagnostic[];
+  readonly records: readonly LogicalReferenceRecord[];
+}
+
 /** Resolve catalogue id links and apply an explicitly configured migration bridge. */
 export function transformCompatibilityDocuments(
   outputs: Map<string, string>,
@@ -32,10 +39,11 @@ export function transformCompatibilityDocuments(
   retainedRoutes?: readonly string[],
   context?: CompatibilityContext,
   pending?: PendingGeneratedFiles,
-): readonly LogicalReferenceRecord[] {
+): CompatibilityTransform {
   const byPath =
     context?.byPath ?? new Map(entries.map((entry) => [entry.path, entry]));
   const records: LogicalReferenceRecord[] = [];
+  const diagnostics: BuildDiagnostic[] = [];
   const outputRoutes = [...outputs.keys()];
   const availableRoutes = graph.compatibilityTransformer
     ? (context?.availableRoutes ??
@@ -50,8 +58,10 @@ export function transformCompatibilityDocuments(
       colorScheme: "light",
       viewport: "desktop",
     };
+    const adapted = adaptLinkControls(original, route);
+    diagnostics.push(...adapted.diagnostics);
     const linked = rewriteMockLinks(
-      adaptLinkControls(original, route),
+      adapted.html,
       route,
       viewport,
       colorScheme,
@@ -113,7 +123,7 @@ export function transformCompatibilityDocuments(
     const entry = byPath.get(route.slice(0, route.lastIndexOf("/")));
     if (entry?.kind === "document") validateDocumentHtml(html, entry.location);
   }
-  return records;
+  return { diagnostics, records };
 }
 
 /** Immutable-route indexes reused across documents of one consumer generation. */

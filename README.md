@@ -187,7 +187,8 @@ follow the command, for example `mokly build --config tools/mokly.config.ts`.
 
 The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. During watched Serve, press `h` to see shortcuts for opening,
-rebuilding, clearing, and quitting.
+rebuilding, clearing, and quitting. Build warnings print on standard error
+without changing the exit status; `--strict` turns them into a failed command.
 
 Detailed command references:
 
@@ -330,6 +331,10 @@ suite, dependency checks, and Rust checks. See the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
+
+Pull request titles use Conventional Commits and at most 72 Unicode code points.
+The separate title check runs when a PR opens, changes, or receives a push; see
+the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
 `npm run dependencies:check` audits every workspace dependency category against
 the live registry. It fails on Low-or-higher advisories unless an active reviewed

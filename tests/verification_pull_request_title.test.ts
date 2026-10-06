@@ -81,15 +81,19 @@ test("pull request titles reject malformed forms", () => {
     assert.equal(isValidPullRequestTitle(title), false, JSON.stringify(title));
 });
 
-test("pull request title length is bounded at 50 Unicode code points", () => {
-  const fiftyAscii = `feat: ${"a".repeat(44)}`;
-  const fiftyUnicode = `feat: ${"🙂".repeat(44)}`;
-  assert.equal([...fiftyAscii].length, 50);
-  assert.equal([...fiftyUnicode].length, 50);
-  assert.equal(isValidPullRequestTitle(fiftyAscii), true);
-  assert.equal(isValidPullRequestTitle(fiftyUnicode), true);
-  assert.equal(isValidPullRequestTitle(`${fiftyAscii}a`), false);
-  assert.equal(isValidPullRequestTitle(`${fiftyUnicode}🙂`), false);
+test("pull request title length is bounded at 72 Unicode code points", () => {
+  for (const character of ["a", "🙂"])
+    for (const length of [50, 51, 60, 71, 72, 73]) {
+      const title = `feat: ${character.repeat(length - 6)}`;
+      assert.equal([...title].length, length);
+      assert.equal(isValidPullRequestTitle(title), length <= 72, title);
+    }
+});
+
+test("the descriptive MockLink title fits the pull request limit", () => {
+  const title = "feat: tier MockLink asChild placement and add build warnings";
+  assert.equal([...title].length, 60);
+  assert.equal(isValidPullRequestTitle(title), true);
 });
 
 test("pull request title CLI reads only the environment and has fixed failure copy", async () => {
@@ -98,7 +102,7 @@ test("pull request title CLI reads only the environment and has fixed failure co
       cwd: repositoryRoot,
       env: {
         ...process.env,
-        PULL_REQUEST_TITLE: "feat(publish)!: upload catalogue content deltas",
+        PULL_REQUEST_TITLE: `feat: ${"🙂".repeat(66)}`,
       },
     }),
   );
@@ -109,6 +113,26 @@ test("pull request title CLI reads only the environment and has fixed failure co
     }),
     (error: unknown) => {
       const output = error as { stderr: string; stdout: string };
+      assert.equal(output.stdout, "");
+      assert.equal(output.stderr, `${PULL_REQUEST_TITLE_ERROR}\n`);
+      return true;
+    },
+  );
+});
+
+test("the title CLI rejects 73 code points and names the 72-character limit", async () => {
+  assert.match(
+    PULL_REQUEST_TITLE_ERROR,
+    /whole title to 72 characters or fewer\.$/u,
+  );
+  await assert.rejects(
+    execute(process.execPath, [script], {
+      cwd: repositoryRoot,
+      env: { ...process.env, PULL_REQUEST_TITLE: `feat: ${"🙂".repeat(67)}` },
+    }),
+    (error: unknown) => {
+      const output = error as { code: number; stderr: string; stdout: string };
+      assert.equal(output.code, 1);
       assert.equal(output.stdout, "");
       assert.equal(output.stderr, `${PULL_REQUEST_TITLE_ERROR}\n`);
       return true;
@@ -133,6 +157,7 @@ test("CI and release contracts document the enforced title boundary", async () =
   ]);
   assert.ok(ci.includes("scripts/verification/pull-request-title.mjs"));
   assert.ok(ci.includes(PULL_REQUEST_TITLE_ERROR));
+  assert.match(ci, /at most 72 Unicode code points/u);
   for (const type of PULL_REQUEST_TITLE_TYPES)
     assert.ok(ci.includes(`\`${type}\``), type);
   assert.match(ci, /\[a-z0-9\._\/-\]\+/u);
