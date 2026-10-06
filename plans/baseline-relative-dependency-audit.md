@@ -70,8 +70,14 @@ These decisions are fixed for every milestone below.
    mode; any other argument fails before npm runs. Both modes run:
 
    ```bash
-   npm audit --json --audit-level=low --package-lock-only --include=prod --include=dev --include=optional --include=peer
+   npm audit --json --audit-level=low --package-lock-only --include=prod --include=dev --include=optional --include=peer --prefix .
    ```
+
+   Set the command's working directory to the tree under audit. Keep the
+   explicit `--prefix .` and remove inherited npm prefix, local-prefix,
+   workspace, workspaces, and global environment settings. Set `INIT_CWD` to
+   that directory. Keep registry and authentication configuration. This applies
+   to npm-invoked head and temporary audits.
 
    On every completed run, pass or fail, `--report` writes a JSON summary with
    `mode` (`strict` or `baseline`), `ok`, optional `comparisonCommit`, and
@@ -106,7 +112,8 @@ These decisions are fixed for every milestone below.
    `exception` (invalid, expired, stale, or duplicate record),
    `report` (npm report shape, registry error object, exit-status mismatch),
    and `input` (file read or parse failure, command launch failure, signal,
-   baseline resolution failure, invalid lockfile or clock, report write
+   baseline resolution failure, invalid lockfile or clock, non-array exception
+   file, temporary-directory creation/write/disposal failure, report write
    failure). The strict evaluator's `ok` is true only when `issues` is empty;
    the baseline run's `ok` is true when all its issues are inherited.
 5. **Inheritance.** A head `finding` is inherited when the baseline
@@ -282,26 +289,33 @@ Evidence: `.context/baseline-relative-dependency-audit/milestone-1-checks.md`.
 
 ## Milestone 2: Baseline-relative audit script
 
+Completed. The scripts, documentation, unit tests, and live fixture smoke tests
+meet decisions 1 through 7.
+
 Implement decisions 1 through 7 in the verification scripts with injected
 boundaries. Prove both modes with reproducible Git fixtures and the live registry.
 
-- [ ] Refactor `dependency-audit-evaluation.mjs` to return structured
+- [x] Read comparison and working-tree inputs as `Buffer` bytes and compare
+      them with `Buffer.equals`. Classify every current error source explicitly;
+      non-array exception files and invalid clocks are `input` issues. Update
+      the baseline page's kind table with these cases.
+- [x] Refactor `dependency-audit-evaluation.mjs` to return structured
       `issues`; update `dependency-audit-evaluation.d.mts`,
       `dependency_security.test.ts`, `verification_dependency_audit.test.ts`,
       and `verification_dependency_audit_validation.test.ts` to the new shape
       without changing any rule.
-- [ ] Add `--package-lock-only` to the audit arguments; before switching, run
+- [x] Add `--package-lock-only` to the audit arguments; before switching, run
       `npm ci` and compare the installed-tree report with the lockfile-only
       report, record the comparison in `.context/`, and handle any added
       finding before this milestone closes.
-- [ ] Add baseline mode to `dependency-audit.mjs` with injected baseline
+- [x] Add baseline mode to `dependency-audit.mjs` with injected baseline
       collaborators (comparison-commit resolver, revision file reader,
       temporary-directory factory with disposal) composed from `GitWorkspace`
       and `fs.mkdtemp` in `main()`; add the argument parser that accepts only
       `--baseline` and `--report <file>`, with an injected report writer;
       keep files near 200 lines by splitting the inheritance
       logic into `dependency-audit-baseline.mjs` with a declaration file.
-- [ ] Add runner tests: lazy baseline on a clean head, head-then-baseline
+- [x] Add runner tests: lazy baseline on a clean head, head-then-baseline
       order, baseline command runs lockfile-only in the temporary directory,
       byte-identical manifest, lockfile, and exception inputs inherit eligible
       issues without a second audit, comparison commit equal to `HEAD` with a
@@ -315,18 +329,24 @@ boundaries. Prove both modes with reproducible Git fixtures and the live registr
       arguments fail before npm, JSON summaries are written on success and
       failure in both modes, write failures fail, temporary directory is
       disposed on every path. Update `verification_dependency_audit_runner.test.ts`.
-- [ ] Run a reproducible fixture smoke in a temporary local clone outside
-      the repository, such as `/tmp`. Build a short history whose comparison
-      commit (`origin/main` in the clone) contains the vulnerable root
-      `package.json` and `package-lock.json` from `f52303c` plus the new
-      scripts, then add a child commit with an unrelated change. Against the
-      live registry, prove strict mode fails on both advisories and baseline
-      mode passes with both as inherited notices. Build a second fixture with
-      a clean comparison commit and vulnerable head; prove baseline mode
-      fails with both as new findings. Save output under the plan's `.context/`
-      directory. The live audit on current `main` passes and cannot prove this.
-- [ ] Run `npm run typecheck:script-declarations` and the focused audit tests;
+- [x] Run four live fixture smokes through `npm run dependencies:check -- ...`
+      in temporary local clones outside the repository, such as `/tmp`. Use
+      `f52303c`'s vulnerable root manifest and lockfile plus the new scripts
+      for the vulnerable comparison commit (`origin/main` in each clone).
+      Record command counts and output under the plan's `.context/` directory:
+      A, unrelated head edit inherits both advisories with one registry call;
+      B, harmless head script edit with the same lockfile inherits both with
+      a second audit in the temporary directory;
+      C, current clean comparison lockfile and vulnerable head fails both as
+      new findings; D, strict vulnerable tree fails both.
+- [x] Prove the npm-invoked temporary audit uses its own lockfile despite
+      inherited `npm_config_*` settings. Fix directory selection if needed,
+      add a regression first, and document explicit prefix or environment
+      handling without dropping registry configuration or credentials.
+- [x] Run `npm run typecheck:script-declarations` and the focused audit tests;
       record their results under the plan's `.context/` directory.
+
+Evidence: `.context/baseline-relative-dependency-audit/milestone-2-checks.md`.
 
 ## Milestone 3: xtask mode flag and CI selection
 

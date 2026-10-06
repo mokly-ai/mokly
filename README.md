@@ -349,11 +349,13 @@ the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contr
 
 `npm run dependencies:check` runs the strict live audit of every workspace
 dependency category from the lockfile. It fails on uncovered Low-or-higher
-advisories and invalid exception records. The approved
-[baseline audit contract](./docs/protocol/dependency-audit-baseline.md) adds
-`npm run dependencies:check -- --baseline` and makes baseline mode the default
-for `cargo xtask check`, ordinary pull requests, and pushes. It prints issues
-already present at the comparison commit as notices and fails on new issues.
+advisories and invalid exception records. Use
+`npm run dependencies:check -- --baseline` to report issues already present at
+the comparison commit as notices and fail on new issues. The
+[baseline audit contract](./docs/protocol/dependency-audit-baseline.md) defines
+byte comparison and inheritance. The remaining approved implementation target
+makes baseline mode the default for `cargo xtask check`, ordinary pull requests,
+and pushes.
 Either mode can write a JSON summary with `--report <file>`.
 
 Release Please and dependency update pull requests, release publishing, and

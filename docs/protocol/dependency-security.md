@@ -8,8 +8,8 @@ production, development, optional, and peer dependencies, even if local npm
 configuration would otherwise omit a category. The Node entry point is
 `scripts/verification/dependency-audit.mjs`. Both audit modes run `npm audit
 --json --audit-level=low --package-lock-only --include=prod --include=dev
---include=optional --include=peer` against the live registry. Strict mode fails
-on every uncovered Low-or-higher advisory or exception issue. Registry,
+--include=optional --include=peer --prefix .` against the live registry.
+Strict mode fails on every uncovered Low-or-higher advisory or exception issue. Registry,
 transport, report, and input errors always fail. The approved
 [baseline audit contract](./dependency-audit-baseline.md) defines the active
 implementation target, CLI, JSON summary, and comparison rules.

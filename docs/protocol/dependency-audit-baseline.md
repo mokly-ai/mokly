@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-This is the approved contract for the active
-[baseline-relative audit plan](../../plans/baseline-relative-dependency-audit.md).
-The current script remains strict until that plan implements this contract.
+The strict and baseline scripts, structured issues, byte comparison, and JSON
+reports are implemented. Xtask defaults and CI mode selection remain targets
+of the active [audit plan](../../plans/baseline-relative-dependency-audit.md).
 The [dependency security contract](./dependency-security.md) owns reviewed
 exceptions and dependency update policy.
 
@@ -19,8 +19,18 @@ path fails before npm starts.
 Both modes run the same live registry command:
 
 ```bash
-npm audit --json --audit-level=low --package-lock-only --include=prod --include=dev --include=optional --include=peer
+npm audit --json --audit-level=low --package-lock-only --include=prod --include=dev --include=optional --include=peer --prefix .
 ```
+
+The explicit `--prefix .` and cleaned `npm_config_*` keys make npm audit
+the working-directory tree, even when a parent `npm run` exported another
+project prefix. Set the command's working directory to the tree under audit.
+Before spawning npm, remove inherited `npm_config_local_prefix`,
+`npm_config_prefix`, `npm_config_workspace`, `npm_config_workspaces`, and
+`npm_config_global` keys, regardless of their case. Set `INIT_CWD` to that
+directory. Preserve registry, user configuration, and authentication settings.
+This applies to both head and temporary audits invoked through `npm run`.
+The relative prefix also keeps paths with spaces outside Windows shell arguments.
 
 The root lockfile supplies the dependency tree. Installed packages do not
 supply audit input. All four categories stay explicit even when local npm
@@ -65,12 +75,17 @@ exception file. Capture the clock once and use that value for both trees.
 The evaluator returns `ok`, `issues: AuditIssue[]`, and accepted-risk
 `notices`. Each issue has a `kind` and an actionable `message`:
 
-| Kind        | Meaning and additional fields                                                                                                    |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `finding`   | Uncovered advisory: `package`, `advisoryUrl`, optional GHSA `advisoryId`, `severity`, `title`, and `installLocations: string[]`. |
-| `exception` | Invalid, duplicate, expired, stale, or changed-path exception record.                                                            |
-| `report`    | Invalid npm report shape, registry error object, or disagreement between exit status and report.                                 |
-| `input`     | File read or parse failure, invalid lockfile or clock, command launch failure, signal, baseline resolution or report writing.    |
+| Kind        | Meaning and additional fields                                                                                                                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `finding`   | Uncovered advisory: `package`, `advisoryUrl`, optional GHSA `advisoryId`, `severity`, `title`, and `installLocations: string[]`.                                                                                                                                                                        |
+| `exception` | Single-record schema, duplicate, expiry or review-window issue; stale record; invalid reviewed dependency path or coverage.                                                                                                                                                                             |
+| `report`    | Non-JSON npm output; invalid report version, entries, advisories, references, or effects; registry error object; unexpected exit status or report/status disagreement.                                                                                                                                  |
+| `input`     | File read or JSON parse failure; invalid lockfile inventory, entry, location, or dependency map; non-array exception file; invalid clock, including its record messages; launch failure or signal; comparison resolution/read; temporary-directory creation, write, or disposal; summary write failure. |
+
+Classify each error at its source. A file-level exception-array error is
+`input`, even though its message names exceptions. An invalid clock is also
+`input` for both its global message and each affected record. If an invalid
+lockfile prevents a reviewed path check, that derived failure is `input`.
 
 The strict evaluator's `ok` is true only when `issues` is empty. Report
 validation and exception coverage keep their existing rules. Informational
@@ -161,7 +176,7 @@ comparison tree or fetch the required history and retry. A baseline registry
 or report failure asks the caller to restore registry access or check npm's
 output and retry. These failures never become inherited notices.
 
-Unit tests inject commands, reads, comparison resolution, temporary-directory
+Unit tests inject commands, byte reads, comparison resolution, temporary-directory
 creation and disposal, report writing, the clock, and logging. They make no
 registry calls. Live smoke tests use fixture-owned Git histories outside the
 repository and keep evidence under `.context/`.
