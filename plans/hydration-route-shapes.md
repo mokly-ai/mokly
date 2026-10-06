@@ -2,7 +2,7 @@
 
 Status: Active. Created 2026-10-05. On 2026-10-05 the user approved option C:
 hydrate one route per entry shape instead of every example route, and add an
-audit of generated resource references. No milestone has started.
+audit of generated resource references. Milestones 1 to 4 are complete, and Milestone 5 is in progress.
 
 ## Outcome
 
@@ -106,12 +106,16 @@ Milestone 1 writes this audit into the new protocol doc.
     `modulepreload`;
   - `src` on `img`, `source`, `video`, `audio`, `track`, `iframe`, `embed` and
     `input[type=image]`;
-  - `srcset` on `img` and `source`, split at commas, using the first token of
-    each candidate;
+  - `srcset` on `img` and `source`, read as HTML reads candidates: each URL is
+    a run of non-whitespace characters, and its descriptors end at the next
+    comma. Milestone 3 changed this from a plain split at commas, which breaks
+    `data:` URLs that contain commas;
   - `poster` on `video` and `data` on `object`;
   - `href` and `xlink:href` on SVG `image` and `use`; and
-  - `url()` and `@import` in `<style>` elements and `style` attributes.
-- **Stylesheet references:** every `url()` and `@import` target.
+  - `@import` targets and declaration `url()` values in `<style>` elements,
+    and `url()` values in `style` attributes.
+- **Stylesheet references:** every `@import` target and every `url()` value in
+  a declaration.
 - **Ignored values:** empty values, fragment-only values, values with a URL
   scheme such as `data:` or `https:`, and protocol-relative values.
 - **Failures:**
@@ -148,42 +152,42 @@ kind of difference.
 Write the shape sample and the resource audit into the protocol docs, and
 replace the per-route rule. Do not change tests in this milestone.
 
-- [ ] Create `docs/protocol/ci-verification-hydration.md`, at most 250 lines,
+- [x] Create `docs/protocol/ci-verification-hydration.md`, at most 250 lines,
       with the title `# Development Hydration Coverage`. Start its body with
       "Continuation of [CI Verification](./ci-verification.md).", as the other
       continuation pages do. It must define:
-  - [ ] what development hydration checks, and why route data selects shell
+  - [x] what development hydration checks, and why route data selects shell
         rendering paths;
-  - [ ] the shape key, the representatives, their routes and the two shell
+  - [x] the shape key, the representatives, their routes and the two shell
         tests, as the [shape rule](#shape-rule) gives them;
-  - [ ] test registration: one test for each representative at discovery
+  - [x] test registration: one test for each representative at discovery
         time, the title `development React hydrates fixture route <route>`, the
         normal deadline and error assertions, and a failure message that names
         the route and its shape key;
-  - [ ] the inventory rule that Milestone 4 enforces;
-  - [ ] the rule that a change to the shape key must keep the measured code
+  - [x] the inventory rule that Milestone 4 enforces;
+  - [x] the rule that a change to the shape key must keep the measured code
         coverage, with a short form of the appendix method;
-  - [ ] the [resource reference audit](#resource-reference-audit); and
-  - [ ] the boundary: hidden folders, moved and removed entries, static
+  - [x] the [resource reference audit](#resource-reference-audit); and
+  - [x] the boundary: hidden folders, moved and removed entries, static
         exports, the embedded viewer and early user input stay in their own
         hydration specs, which this change does not touch.
-- [ ] In `docs/protocol/ci-verification.md`, replace the paragraph that starts
+- [x] In `docs/protocol/ci-verification.md`, replace the paragraph that starts
       "Development hydration registers one browser test per unique generated
       catalogue route" with a short paragraph that links the new doc. Keep the
       sentence about accepted console notices. Keep the file at or below 250
       lines.
-- [ ] In `docs/protocol/mokly-viewer.md`, replace "hydration without
+- [x] In `docs/protocol/mokly-viewer.md`, replace "hydration without
       mismatches on every fixture route" with wording for one fixture route per
       entry shape, and link the new doc. Keep the file at 453 lines, or set its
       exact new cap in `tests/protocol_doc_sizes.test.ts`.
-- [ ] List the new doc under CI verification in `docs/protocol/README.md`.
-- [ ] In `docs/protocol/ci-suite-evidence.md`, state that the shape contract
+- [x] List the new doc under CI verification in `docs/protocol/README.md`.
+- [x] In `docs/protocol/ci-suite-evidence.md`, state that the shape contract
       defines development hydration route coverage. The rule that coverage is
       never relaxed then applies to the measured code coverage that the shape
       rule keeps.
-- [ ] In `xtask/README.md`, replace "a separate browser test for every example
+- [x] In `xtask/README.md`, replace "a separate browser test for every example
       route" with the per-shape rule.
-- [ ] Run `npx prettier --check` on the changed Markdown, and run
+- [x] Run `npx prettier --check` on the changed Markdown, and run
       `node --import tsx --test tests/protocol_doc_sizes.test.ts tests/protocol_structure.test.ts`.
       The structure test requires the parent page to link the new page, a
       unique title, and no shared sentences between pages. Review the diff.
@@ -193,27 +197,27 @@ replace the per-route rule. Do not change tests in this milestone.
 Add the pure shape functions and their tests. The route spec does not use them
 yet.
 
-- [ ] Add `tests/helpers/hydration_shapes.ts` with two pure functions.
+- [x] Add `tests/helpers/hydration_shapes.ts` with two pure functions.
       `hydrationShapeKey(entry)` returns the shape key text.
       `hydrationShapeSample(entries)` returns `{ entryPath, route, shape }` for
       each representative, in manifest order. Import the manifest entry type
       from `@mokly/viewer/data` as a type-only import, and import `entryRoute`
       from `packages/viewer/dist/data.js`, as the route spec does. Do no file or
       network access.
-- [ ] Add `tests/hydration_shapes.test.ts`. Use synthetic entries to prove:
-  - [ ] entries with the same shape share one representative, which is the
+- [x] Add `tests/hydration_shapes.test.ts`. Use synthetic entries to prove:
+  - [x] entries with the same shape share one representative, which is the
         first of them in manifest order;
-  - [ ] changes to the `title`, `description`, `path` or `sourcePath` text do
+  - [x] changes to the `title`, `description`, `path` or `sourcePath` text do
         not change the shape;
-  - [ ] each dimension changes the shape: the kind; a field that becomes
+  - [x] each dimension changes the shape: the kind; a field that becomes
         non-empty, such as `rationale`; the colour schemes; a control kind; a
         control option name; a prop schema kind; the optional flag; a wire tag
         in `props`; a wire tag in an instance's `props`; instance presence; and
         a slotted instance;
-  - [ ] an empty string, array or object counts as absent;
-  - [ ] a variant (`variantOf`) and its base entry have different shapes; and
-  - [ ] the same input always gives the same keys in the same order.
-- [ ] Use Node 24.21.0 from `.node-version`, and run
+  - [x] an empty string, array or object counts as absent;
+  - [x] a variant (`variantOf`) and its base entry have different shapes; and
+  - [x] the same input always gives the same keys in the same order.
+- [x] Use Node 24.21.0 from `.node-version`, and run
       `npm run prepare:verification` once, because the helper imports built
       `dist` output. Then run
       `node --import tsx --test tests/hydration_shapes.test.ts`, ESLint on the
@@ -224,73 +228,132 @@ yet.
 Add the replacement check for mockup assets before the sweep gets smaller, so
 that this protection never stops.
 
-- [ ] Add `tests/helpers/generated_resource_references.ts`. It scans one
+- [x] Add `tests/helpers/generated_resource_references.ts`. It scans one
       directory and returns the sorted failures that the
       [audit](#resource-reference-audit) defines. Parse HTML with `parse5` and
       the helpers in `tests/helpers/html.ts`. Parse CSS with `postcss` and
       `postcss-value-parser`.
-- [ ] Add `tests/generated_resource_references.test.ts`. Use temporary
+- [x] Add `tests/generated_resource_references.test.ts`. Use temporary
       directories to prove each rule:
-  - [ ] a missing stylesheet link, `srcset` candidate, `url()` target or
+  - [x] a missing stylesheet link, `srcset` candidate, `url()` target or
         `@import` target fails;
-  - [ ] a root-absolute value fails, and a value that resolves outside the root
+  - [x] a root-absolute value fails, and a value that resolves outside the root
         fails;
-  - [ ] an existing percent-encoded path, such as one with `%40scope`, passes;
-  - [ ] a query or fragment does not change how a value resolves;
-  - [ ] `data:`, `https:`, protocol-relative and fragment-only values are
+  - [x] an existing percent-encoded path, such as one with `%40scope`, passes;
+  - [x] a query or fragment does not change how a value resolves;
+  - [x] `data:`, `https:`, protocol-relative and fragment-only values are
         ignored; and
-  - [ ] the audit checks `url()` in `<style>` elements and `style` attributes.
-- [ ] Add `tests/example_resource_references.test.ts`. It scans
+  - [x] the audit checks `url()` in `<style>` elements and `style` attributes.
+- [x] Add `tests/example_resource_references.test.ts`. It scans
       `examples/basic/generated/` and expects no failures. It also requires that
       the scan read more than zero HTML files and stylesheet links.
-- [ ] Prove that the check finds a real break. Delete one generated stylesheet
+- [x] Prove that the check finds a real break. Delete one generated stylesheet
       that a mockup links, run the test, and confirm that the failure names the
       file. Then run `npm run example:build` to restore the output.
-- [ ] Run the new tests, ESLint on the changed files and `npm run typecheck`.
+- [x] Run the new tests, ESLint on the changed files and `npm run typecheck`.
+
+Evidence: the example audit read 465 HTML files and 6,056 stylesheet links
+with no failures in about 4 s. After the generated
+`mokly-generated/styles/examples/basic/specs/example/screens/welcome.mockup.ts.css`
+was deleted, the test failed and named that file for each Welcome view.
+`npm run example:build` restored it, and the test passed again.
 
 ## Milestone 4: Hydrate one route per shape
 
 Change the route spec and its inventory test to use the shape sample.
 
-- [ ] In `tests/browser/react_shell_hydration_routes.spec.ts`:
-  - [ ] register one test for each item of
+- [x] In `tests/browser/react_shell_hydration_routes.spec.ts`:
+  - [x] register one test for each item of
         `hydrationShapeSample(manifest.entries)`, and keep the title format;
-  - [ ] pass `<route> (<shape>)` to `expectCleanHydration` as the failure
+  - [x] pass `<route> (<shape>)` to `expectCleanHydration` as the failure
         context;
-  - [ ] keep the home and missing-route tests unchanged; and
-  - [ ] keep the guard that the manifest has more than 80 entries, and add a
+  - [x] keep the home and missing-route tests unchanged; and
+  - [x] keep the guard that the manifest has more than 80 entries, and add a
         guard that the sample is not empty.
-- [ ] In `tests/hydration_inventory.test.ts`, rename the test to "every
+- [x] In `tests/hydration_inventory.test.ts`, rename the test to "every
       hydration shape has exactly one independently timed test". Assert that
       the discovered fixture-route titles are the sample routes, each exactly
       once, and that each manifest entry's shape key has a representative in
       the sample.
-- [ ] Run `node --import tsx --test tests/hydration_inventory.test.ts` and
+- [x] Run `node --import tsx --test tests/hydration_inventory.test.ts` and
       `npx playwright test --project=hydration tests/browser/react_shell_hydration_routes.spec.ts`.
-- [ ] Prove that the sample still finds a mismatch:
-  - [ ] in `packages/viewer/src`, add a temporary attribute to an element that
+- [x] Prove that the sample still finds a mismatch:
+  - [x] in `packages/viewer/src`, add a temporary attribute to an element that
         only some shapes render, such as the saved-variants bar, and do not
         rebuild `dist`, so that only the client development bundle renders the
         attribute;
-  - [ ] run the route spec, and confirm that each representative that renders
+  - [x] run the route spec, and confirm that each representative that renders
         the element fails with a hydration error that names its shape, and that
         the other tests pass; and
-  - [ ] revert the change, and confirm that the diff does not contain it.
-- [ ] Do the [coverage comparison](#appendix-coverage-comparison-method) again
+  - [x] revert the change, and confirm that the diff does not contain it.
+
+Evidence: the inventory test passes, and Playwright lists 53 route tests (51
+shapes plus the two shell routes). The route spec passed 53 of 53 locally in
+6.0 min; this VM ran each test in 3–9 s, about four times slower than CI. The
+probe added `data-hydration-probe` to the saved-variants bar, which only
+component workspaces render. All 36 component representatives failed with
+React's attribute mismatch error, and each message named its route and shape.
+The other 17 tests passed. The probe is reverted.
+
+- [x] Do the [coverage comparison](#appendix-coverage-comparison-method) again
       on the current catalogue. Record the route counts and the function and
       character totals in this plan. If the sample misses a function or a
       character, stop. Extend the shape key in the protocol doc first, then the
       helper and its tests, and measure again.
-- [ ] Run `cargo xtask check --suite hydration`. Record the test count and the
+
+Evidence: on 2026-10-06 the full list had 212 routes and the sample had 53
+routes (51 shapes plus the two shell routes). The full list ran 889 functions
+and 253,691 non-whitespace code characters. The sample ran all 889 functions
+and all 253,691 characters, so it missed none. One route's first measurement
+failed in the script's extra HTML fetch (`ECONNRESET`), not in hydration; a
+repeat of that route succeeded.
+
+- [x] Run `cargo xtask check --suite hydration`. Record the test count and the
       duration in this plan.
+
+Evidence: `cargo xtask check --suite hydration` passed all 104 tests on Node
+24.21.0 in 13m03s, including preparation; the test run took 11m11s. The route
+spec took 338 s for its 53 tests on this VM. The same VM ran each route test
+about four times slower than CI, so the CI estimate of about 77 s still
+stands. Before the change, CI spent about 350 s on 212 route tests.
 
 ## Milestone 5: Verify and deliver
 
 Run the complete gate, deliver the branch, and review it. Do not apply review
 findings.
 
+- [x] Merge `origin/main` (`f66c274d`, #124) before the complete gate. The
+      merge `ae35bc2f` has two parents, no conflicts and an empty remerge diff.
+      #124 edits `docs/protocol/README.md` and `docs/protocol/ci-verification.md`
+      in other sections, so both sides stay intact. #124 changes no viewer or
+      example code, so the coverage evidence above stays valid.
+- [x] The live dependency audit at the start of `cargo xtask check` reported a
+      new high advisory, GHSA-68fv-2mgg-jv7q, in `source-map-js` 1.2.1, which
+      `postcss` and `@tailwindcss/node` install. `npm update source-map-js`
+      moved the lockfile to the patched 1.2.2, and `npm run dependencies:check`
+      passes. Commit this lockfile change separately as `fix(deps)`.
 - [ ] Run `cargo xtask check` and require a 100% pass rate.
-- [ ] Before the commit, inspect the diff and the deletions against
+
+Local result on 2026-10-06 for the merged tree on Node 24.21.0: this VM runs
+tests about four times slower than CI, and no single local run reached 100%.
+The CI run on the pull request must confirm the pass rate.
+
+- The repository and package suites passed.
+- The unit suite passed 4,348 of 4,350 tests in 70 min. Two tests timed out
+  under load: `plain Serve with piped stdin exits promptly on SIGINT`
+  (`tests/cli_shortcuts.test.ts`) and
+  `watched controls adopt only successful graphs and never publish edits or delay Browse`
+  (`tests/component_controls_watch.test.ts`). Both files passed when run
+  alone, in 3.6 s and 17.2 s.
+- The gate stops at the first failed suite, so the browser suite ran next with
+  `cargo xtask check --suite browser`. It passed 830 of 844 tests. The shared
+  ordinary-preview fixture exceeded its 300 s setup limit, so 2 tests timed
+  out and 12 were skipped in `preview_design_links.spec.ts` and
+  `preview_navigation.spec.ts`.
+  With the limit raised temporarily, and not committed, all 14 passed.
+- `cargo xtask check --suite hydration` passed all 104 tests in 8m30s.
+
+- [x] Before the commit, inspect the diff and the deletions against
       `origin/main` with `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`. Confirm that the only
       removals are the [approved removals](#approved-removals).
