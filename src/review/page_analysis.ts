@@ -24,7 +24,7 @@ import {
   reviewMaterialSignals,
   type ReviewIgnoreRegion,
 } from "./ignore.js";
-import { parsePageDocument } from "./page_parser.js";
+import { hasOpenForeignContent, parsePageDocument } from "./page_parser.js";
 import {
   deriveMaterialReferences,
   pageReferenceRecords,
@@ -113,6 +113,10 @@ export class PageAnalysis {
 
   get materialIds(): ReadonlySet<string> {
     return (this.ids ??= new Set(this.originalMaterials?.keys()));
+  }
+
+  get openForeignContent(): boolean {
+    return hasOpenForeignContent(this.document);
   }
 
   get materialSignals(): readonly (SourceSpan & { id: string })[] {

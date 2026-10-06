@@ -389,8 +389,10 @@ Key code:
   parse failures stay verbatim. Producer references survive the representation
   change, and the route keeps its canonical comparison without fingerprint work.
 - `inline_link_material.ts`: keeps text when path/move normalization changes an
-  eligible style source or its canonical appendix. URL normalization remains
-  visible to material equality; resource traversal keeps the real URLs.
+  skipped style source without an identical-normalizer proof, or changes an
+  actual/projected appendix equality outcome. Original open SVG/MathML EOF state
+  also keeps text. Link-normalization parses use the counted `linkNormalization`
+  step; CSS matching and reference discovery still use originals.
 - `page_fingerprint_guard.ts`, `material_normalization_recipe.ts` and
   `fingerprint_seams.ts`: inspect delivered recipe joins, including marker/ignore
   normalization and caller copies. Windows read at most 12 UTF-16 units on each

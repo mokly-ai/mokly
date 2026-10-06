@@ -50,6 +50,10 @@ Every condition must hold, otherwise use the full comparison:
    before either window. Check actual code units, not serialized selectors or
    a decoded string. This rules out a partial raw-text end-tag transition at
    the start; empty insertion/deletion windows use the same guard.
+   When link normalization is present, fall back if the original parse leaves
+   SVG or MathML open at EOF: the full path's appended style can acquire foreign
+   entity decoding. The safe raw-text window proves equal EOF structure on both
+   sides, so the head's existing parse proves this without a second parse.
 5. Both complete eligible-unowned rule lists resolve under the full path's
    parse-reuse policy, including unchanged other style elements. Reuse their
    runs and compute the **view-wide** diff/cancellation with original ordinals,

@@ -31,6 +31,11 @@ changes an equality outcome: `(links.before(Ab) === links.after(Aa)) !== (Ab ===
 An unchanged local URL beside another rule's edit can keep fingerprints.
 Resource seeds still come from original and retained-rule records.
 
+When link normalization is present, also keep text if either original parse
+leaves SVG or MathML open at EOF. An appended style can then become foreign
+content, where entity decoding can change URL equality. Read the EOF state from
+the original page parse; never parse again for this guard.
+
 Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
 
 - After successful inline analysis, remove eligible unowned outer spans and

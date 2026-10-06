@@ -58,6 +58,9 @@ function prepareMaterials(
       !analysis.beforeSpans.length &&
       !analysis.afterSpans.length) ||
     analysis.status === "unresolved" ||
+    (pages.links &&
+      (pages.beforeAnalysis.openForeignContent ||
+        pages.afterAnalysis.openForeignContent)) ||
     base.includes("mokly-inline-") ||
     head.includes("mokly-inline-") ||
     unsafeStyleSources(analysis, pages, options.reuseSourceSafety) ||
