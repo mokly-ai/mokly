@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test, { after } from "node:test";
+import test from "node:test";
 
 import type { ReviewResultV5 } from "../packages/viewer/dist/data.js";
 
@@ -18,11 +18,12 @@ import {
   libraryStylesheetMarker,
   libraryStylesheetPath,
 } from "./helpers/design_stylesheets.js";
+import { fileFixture } from "./helpers/file_fixture.js";
 
-const sharedFixture = designLibraryFixture({ after });
+const sharedFixture = fileFixture((owner) => designLibraryFixture(owner));
 
 test("library stylesheets attribute only to their own component in one pass", async (t) => {
-  const fixture = await sharedFixture;
+  const fixture = await sharedFixture();
   await fixture.reset();
   for (const [group, slug] of designLibrary)
     await fixture.edit(

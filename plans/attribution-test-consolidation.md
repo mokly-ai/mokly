@@ -5,8 +5,10 @@ draft. Milestone 7 applies the approved post-push findings from Milestone 6.
 Merging `main` resolved finding 2. The plan stays active until the PR merges.
 
 Restructure `tests/design_library_attribution.test.ts` and
-`tests/component_design_attribution.test.ts` so they keep every guarantee at a
-fraction of the runtime. The change is test-only. It does not change
+`tests/component_design_attribution.test.ts` to reduce repeated work. Keep exact
+stylesheet and consumer checks. Source-edit groups retain distinct detection
+signals with the reviewed masking limit described below. The change is test-only.
+It does not change
 classification, compilation, or any product behaviour. The dominant product
 cost is recorded under the non-blocking section as a separate plan candidate.
 
@@ -434,28 +436,37 @@ User approvals (2026-10-06):
 
 Evidence: `.context/attribution-test-consolidation/milestone-7-plan-checks.log`.
 Evidence: `.context/attribution-test-consolidation/milestone-7-contract-checks.log`.
+Evidence: `.context/attribution-test-consolidation/eager-fixture-regression.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-helper-checks.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-source-checks.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-source-checks-retry.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-filtered-attribution.log`.
+Evidence: `.context/attribution-test-consolidation/design_library_attribution.log`.
+Evidence: `.context/attribution-test-consolidation/component_design_attribution.log`.
+Evidence: `.context/attribution-test-consolidation/design_library_source_edits.log`.
+Evidence: `.context/attribution-test-consolidation/design_library_committed_baseline.log`.
 
-- [ ] Define the grouping rules and residual limit in the CI protocol, library
+- [x] Define the grouping rules and residual limit in the CI protocol, library
       README, plan introduction, and source-edit test comment.
 - [x] Define synchronous hook registration and lazy setup in the CI protocol.
-- [ ] Add a filtered child-process regression before the fix. Confirm the eager
+- [x] Add a filtered child-process regression before the fix. Confirm the eager
       pattern fails. Save its output in the ignored evidence directory.
-- [ ] Add a typed `fileFixture` helper with one synchronously registered hook,
+- [x] Add a typed `fileFixture` helper with one synchronously registered hook,
       one memoized setup, setup settlement before cleanup, reverse cleanup
       order, and cleanup failure propagation after every cleanup is attempted.
-- [ ] Test helper behavior with an injected hook registrar and no compilation.
-- [ ] Test child runs with no matching tests, two matching tests sharing one
+- [x] Test helper behavior with an injected hook registrar and no compilation.
+- [x] Test child runs with no matching tests, two matching tests sharing one
       setup, and failed setup that still removes its owned output.
-- [ ] Use the lazy helper in the three shared attribution files. Update only
+- [x] Use the lazy helper in the three shared attribution files. Update only
       the fixture's sharing doc comment in `design_library_fixture.ts`.
-- [ ] Reject module-scope calls to `designLibraryFixture` in the lifecycle
+- [x] Reject module-scope calls to `designLibraryFixture` in the lifecycle
       check. Test a bad source sample. Add it to the existing helper rule if
       all consumers meet that rule.
 - [x] Correct six baseline fixtures and three resulting library compilations
       in the plan. Name `fileFixture` as the shared mechanism.
-- [ ] Run helper, lifecycle, and projection tests. Run each attribution file
+- [x] Run helper, lifecycle, and projection tests. Run each attribution file
       individually. Check a no-match attribution run leaves no owned directory.
-- [ ] Run Prettier, ESLint, prepared type checks, protocol size/history tests,
+- [x] Run Prettier, ESLint, prepared type checks, protocol size/history tests,
       and changed-file size checks. Save logs and name them below.
 - [ ] Fetch `origin/main` and run one unqualified `cargo xtask check`. Fix any
       in-scope failure and rerun. Save the complete output outside the plan.

@@ -17,8 +17,8 @@ import { repositoryRoot } from "./fixture.js";
 
 /**
  * Copy the actual consumer so edits never mutate the working catalogue.
- * Share one fixture across a file with `designLibraryFixture({ after })`,
- * using the module-level `after` hook from `node:test` for file teardown.
+ * Share across a file with `fileFixture((owner) => designLibraryFixture(owner))`.
+ * That helper registers teardown immediately and starts setup on first use.
  * Pass `t` to `designLibraryFixture(t)` for a single test's lifetime instead.
  */
 export async function designLibraryFixture(

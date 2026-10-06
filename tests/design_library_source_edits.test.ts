@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test, { after } from "node:test";
+import test from "node:test";
 
 import type { EntryChangeReason } from "../packages/viewer/dist/data.js";
 
@@ -13,6 +13,7 @@ import {
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 import { sourceEdits } from "./helpers/design_library_source_edits.js";
 import type { SourceEdit } from "./helpers/design_library_source_edits.js";
+import { fileFixture } from "./helpers/file_fixture.js";
 
 interface EditGroup {
   name: string;
@@ -28,6 +29,7 @@ interface EditGroup {
  * Same-file edits targeting different entries must rebuild separately.
  * A subset of another member's reasons can mask an extra change at its path;
  * this rule keeps that limit away from same-file variant attribution.
+ * Grouping is a reviewed trade-off, not exact per-edit isolation.
  * Equal or subset signatures stay separate. Regroup when a signature changes.
  */
 const groups: readonly EditGroup[] = [
@@ -110,10 +112,10 @@ const groups: readonly EditGroup[] = [
   },
 ];
 
-const sharedFixture = designLibraryFixture({ after });
+const sharedFixture = fileFixture((owner) => designLibraryFixture(owner));
 
 test("real source edits keep exact ownership, reasons and consumer impact", async (t) => {
-  const fixture = await sharedFixture;
+  const fixture = await sharedFixture();
   for (const group of groups)
     await t.test(group.name, async () => {
       await fixture.reset();

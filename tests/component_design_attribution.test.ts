@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test, { after } from "node:test";
+import test from "node:test";
 
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import type { DependencyReason } from "../packages/viewer/dist/data.js";
@@ -14,12 +14,13 @@ import {
   sharedDesignStylesheets,
   sharedStylesheetMarker,
 } from "./helpers/design_stylesheets.js";
+import { fileFixture } from "./helpers/file_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-const sharedFixture = designLibraryFixture({ after });
+const sharedFixture = fileFixture((owner) => designLibraryFixture(owner));
 
 test("mixed component design styles retain their actual rendered resource scope in one pass", async () => {
-  const fixture = await sharedFixture;
+  const fixture = await sharedFixture();
   await fixture.reset();
   for (const [stylesheet] of sharedDesignStylesheets)
     await fixture.edit(
