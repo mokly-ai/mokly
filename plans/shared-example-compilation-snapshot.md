@@ -361,8 +361,33 @@ Wire the producer into the unit suite and the developer test command.
       rewrite the snapshot; `cargo xtask check --suite unit --shard 1/4`
       passes; one consumer file run by hand uses the fallback when the
       snapshot is stale and the snapshot when it is fresh.
-- [ ] Remove the pending marks added by Milestone 1 and align every document
+  - [x] With the snapshot deleted, `npm test -- --shard 1/4` wrote it
+        (`previous snapshot: missing`). All 9 consumers in that shard logged
+        only phase `snapshot`. 1,139 of 1,141 tests passed; the two others
+        are listed below.
+  - [x] A second `npm run prepare:unit`, the preparation half of `npm test`,
+        printed `is fresh; skipped the example compile`.
+  - [x] After a one-line edit to `examples/basic/theme.ts`,
+        `tests/design_screen_counts.test.ts` run by hand logged
+        `compile:stale` (43.1 s) and passed; the next `npm run prepare:unit`
+        rewrote the snapshot (`previous snapshot: stale`); the same file then
+        logged `snapshot` and passed in 2.8 s. Reverting the edit repeated the
+        rewrite, and the file passed again from the snapshot in 3.4 s.
+  - [ ] `cargo xtask check --suite unit --shard 1/4` passes. Locally, shard 1
+        holds the two failures below, so CI's identical shard command is the
+        confirmation.
+- [x] Remove the pending marks added by Milestone 1 and align every document
       with the delivered behavior.
+
+Pre-existing local failures. These two tests fail on this VM both on this
+branch and on a clean `origin/main` worktree (`f66c274`), so they are not
+caused by this change. They depend on runner speed, and this VM is about 2.5
+times slower than CI:
+
+- `tests/component_controls_watch.test.ts` exceeds its 25 s test timeout
+  (28.7 s alone here; 17.4 s in CI run 37354719684).
+- `tests/watched_child_startup.test.ts` waits only 1 s for the forked CLI
+  child's first message, but the CLI takes about 1.5 s to start here.
 
 Integration notes:
 
