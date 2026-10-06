@@ -19,10 +19,10 @@ import {
   validateReviewScreen,
 } from "./result_records.js";
 import { validateResultReferences } from "./result_references.js";
-import type { ReviewResult } from "./types.js";
+import type { TypedReviewResult } from "./types.js";
 
 /** Decode the path-addressed v5 result shared by every catalogue. */
-export function parseReviewResult(value: unknown): ReviewResult {
+export function parseReviewResult(value: unknown): TypedReviewResult {
   try {
     return validateResult(value);
   } catch (error) {
@@ -32,7 +32,7 @@ export function parseReviewResult(value: unknown): ReviewResult {
   }
 }
 
-function validateResult(value: unknown): ReviewResult {
+function validateResult(value: unknown): TypedReviewResult {
   if (
     !value ||
     typeof value !== "object" ||
@@ -129,7 +129,7 @@ function validateResult(value: unknown): ReviewResult {
   validateIgnoredImpact(result.ignoredImpact, screens);
   validateResultMoves(value as ReviewResultV5);
   validateResultReferences(value as ReviewResultV5);
-  return value as ReviewResult;
+  return value as TypedReviewResult;
 }
 
 function validateIgnoredImpact(

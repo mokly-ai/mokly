@@ -1,5 +1,6 @@
 // Breadcrumb trails derived from the one path tree.
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import { viewHref } from "../navigation/routes.js";
 import type { CatalogueHierarchy } from "../registry/hierarchy.js";
 import type { ManifestEntry } from "../registry/types.js";
@@ -34,7 +35,9 @@ export interface CatalogueCrumb {
  * without search has no row for it, including pruned or hidden ancestry.
  */
 export function structuredCrumbTrail(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+  hierarchy: CatalogueHierarchy<
+    ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>
+  >,
   entryId: string,
 ): CatalogueCrumb[] {
   const titles = hierarchy.ancestorsByPath.get(entryId) ?? [];

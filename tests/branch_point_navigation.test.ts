@@ -4,6 +4,7 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 import { changesActivation } from "../packages/viewer/src/shell/changes_activation.js";
 import { EntryDetailsBody } from "../packages/viewer/src/shell/details.js";
 import { targetHead } from "../packages/viewer/src/shell/head.js";
@@ -93,7 +94,9 @@ for (const [name, expected] of Object.entries(cases)) {
     const shell = await branchPointShell(name as keyof typeof cases);
     t.after(shell.remove);
     for (const side of shell.sides) {
-      const container = side.catalogue.byPath.get(expected.container)!;
+      const container = side.catalogue.byPath.get(
+        readCurrentPath(expected.container),
+      )!;
       const removed = side.catalogue.removedEntries.find(
         ({ entry }) => entry.path === expected.removed,
       )!;

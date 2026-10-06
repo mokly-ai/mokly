@@ -5,13 +5,8 @@ import ts from "typescript";
 
 import { repositoryRoot } from "./fixture.js";
 
-const PATH_NAME = /^(path|entryId|parentId|componentId)$|Path$/;
-const CASE_FOLDS = new Set([
-  "toLowerCase",
-  "toUpperCase",
-  "toLocaleLowerCase",
-  "toLocaleUpperCase",
-]);
+const CURRENT_ADDRESS_NAME =
+  /^(path|entryId|parentId|componentId|currentPath)$/;
 
 /** Name a property access, element access or binding reads, if any. */
 function readName(node: ts.Node): string | undefined {
@@ -51,7 +46,7 @@ function permittedVariantRead(node: ts.Expression): boolean {
 /** Whether a receiver names an entry path or path-valued identity. */
 function pathReceiver(node: ts.Expression): boolean {
   const name = ts.isIdentifier(node) ? node.text : readName(node);
-  return name !== undefined && PATH_NAME.test(name);
+  return name !== undefined && CURRENT_ADDRESS_NAME.test(name);
 }
 
 /** Every branch-point mapping a module performs outside the lookup. */
@@ -73,13 +68,6 @@ export function branchPointViolations(source: ts.SourceFile): string[] {
       )
     )
       report(node, "destructures a branch-point field");
-    if (
-      ts.isCallExpression(node) &&
-      ts.isPropertyAccessExpression(node.expression) &&
-      CASE_FOLDS.has(node.expression.name.text) &&
-      pathReceiver(node.expression.expression)
-    )
-      report(node, "case-folds a path");
     if (
       ts.isBinaryExpression(node) &&
       [

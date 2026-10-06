@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
-import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import { renderViewer } from "../src/viewer/server.js";
+
+import { currentVariant, currentVariants } from "./path_fixture.js";
 
 const fixture = readCatalogue(
   JSON.parse(
@@ -21,12 +23,12 @@ const fixture = readCatalogue(
 test("SSR selects a component variant entry in navigation, chrome, and preview", () => {
   const model = structuredClone(fixture);
   const component = model.components[0]!;
-  const original = catalogueComponentVariants(model, component.path)[0]!;
+  const original = currentVariant(model, component.path);
   model.components = [
     ...model.components,
     {
       ...structuredClone(original),
-      path: "components/action/second",
+      path: readCurrentPath("components/action/second"),
       title: "Second",
       views: original.views.map((view) => structuredClone(view)),
     },
@@ -40,7 +42,7 @@ test("SSR selects a component variant entry in navigation, chrome, and preview",
   if (actionNode?.kind === "entry")
     actionNode.children = [
       ...(actionNode.children ?? []),
-      { kind: "entry", path: "components/action/second" },
+      { kind: "entry", path: readCurrentPath("components/action/second") },
     ];
   const html = renderViewer({
     viewerId: "fixture",
@@ -91,7 +93,7 @@ test("SSR resolves light fallback evidence across status, marks and comparison",
     },
   }));
   component.colorSchemes = ["light", "dark"];
-  for (const variant of catalogueComponentVariants(model, component.path)) {
+  for (const variant of currentVariants(model, component.path)) {
     variant.colorSchemes = ["light", "dark"];
     variant.views = variant.views.flatMap((view) => [
       view,

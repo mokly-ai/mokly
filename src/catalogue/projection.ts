@@ -4,8 +4,13 @@ import type {
   CatalogueRecord,
   RemovedEntryPreview,
 } from "@mokly/viewer";
-import type { ManifestEntry } from "@mokly/viewer/data";
+import type {
+  BranchPointPath,
+  CurrentPath,
+  ManifestEntry,
+} from "@mokly/viewer/data";
 import {
+  acceptedCatalogue,
   invalidData,
   isManifestComponentVariant,
   readControls,
@@ -36,7 +41,7 @@ import { projectViews } from "./views.js";
 export function projectCatalogue(
   input: CatalogueProjectionInput,
 ): CatalogueReadModel {
-  const { catalogue } = input;
+  const catalogue = acceptedCatalogue(input.catalogue);
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const identity = catalogueIdentity(input.configPath);
   const snapshotSource = historicalSource(input, comparisonUrl);
@@ -52,7 +57,10 @@ export function projectCatalogue(
   const documentReference = relatedDocumentReferences(
     catalogue.manifest.entries,
   );
-  const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
+  const common = (
+    entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
+    removed: boolean,
+  ): CatalogueEntry => ({
     path: entry.path,
     ...(!removed && entryPreviousPath(entry, input)
       ? { previousPath: entryPreviousPath(entry, input)! }
@@ -70,7 +78,10 @@ export function projectCatalogue(
     },
     changes: entryChanges(entry, input, removed),
   });
-  const record = (entry: ManifestEntry, removed: boolean): CatalogueRecord => {
+  const record = <Reference extends CurrentPath | BranchPointPath>(
+    entry: ManifestEntry<CurrentPath, Reference>,
+    removed: boolean,
+  ): CatalogueRecord<CurrentPath, Reference> => {
     const base = common(entry, removed);
     if (entry.kind === "page")
       return {
@@ -148,8 +159,8 @@ export function projectCatalogue(
   const removedSnapshots =
     input.changesStatus === "ready"
       ? orderEntriesWithVariants<{
-          entry: ManifestEntry;
-          snapshot?: CatalogueProjectionInput["catalogue"]["removedEntries"][number];
+          entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>;
+          snapshot?: (typeof catalogue.removedEntries)[number];
         }>(
           [
             ...catalogue.manifest.entries.map((entry) => ({ entry })),
@@ -162,8 +173,11 @@ export function projectCatalogue(
           ({ entry, snapshot }) => {
             const parent = lookup.parent(
               snapshot
-                ? { source: "removed", entry, record: snapshot }
-                : { source: "current", entry },
+                ? { source: "removed", entry: snapshot.entry, record: snapshot }
+                : {
+                    source: "current",
+                    entry: entry as ManifestEntry<CurrentPath>,
+                  },
             );
             return parent && parent.source !== "title"
               ? parent.entry
@@ -171,7 +185,9 @@ export function projectCatalogue(
           },
         ).flatMap(({ snapshot }) => (snapshot ? [snapshot] : []))
       : [];
-  const removedPaths = new Set(removedSnapshots.map(({ entry }) => entry.path));
+  const removedPaths = new Set<string>(
+    removedSnapshots.map(({ entry }) => entry.path),
+  );
   for (const id of input.removedPreviews?.keys() ?? [])
     if (!removedPaths.has(id))
       invalidData("$catalogue", "preview path is not a removed entry");
@@ -240,7 +256,7 @@ function historicalSource(
 }
 
 function projectPreview(
-  entry: ManifestEntry,
+  entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
   preview: RemovedEntryPreview | undefined,
   comparisonUrl: string | null,
 ): { preview?: RemovedEntryPreview } {
@@ -259,7 +275,9 @@ function projectPreview(
   return { preview: { kind: "page" } };
 }
 
-function entryDependencies(entry: ManifestEntry): string[] {
+function entryDependencies(
+  entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
+): string[] {
   return [
     ...new Set([
       entry.sourcePath,

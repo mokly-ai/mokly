@@ -7,6 +7,12 @@ import { catalogueAtBaseline } from "../dist/server/baseline_catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { selectedVariant } from "../packages/viewer/dist/shell/workspace_selection.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
+import {
+  baselineManifestFixture,
+  shellContextFixture,
+} from "../packages/viewer/tests/manifest_path_fixture.js";
+import { typedReviewFixture } from "../packages/viewer/tests/path_fixture.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
@@ -25,7 +31,7 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
     fixture.after.manifest,
     removedManifestEntries(fixture.after.manifest, fixture.before.manifest),
   );
-  const entry = catalogue.byPath.get("action");
+  const entry = catalogue.byPath.get(readCurrentPath("action"));
   if (entry?.kind !== "component" || "variantOf" in entry)
     assert.fail("Expected component");
   const context = {
@@ -34,7 +40,7 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
     comparisons: true,
     componentChanges: { baseline: fixture.before.manifest, result },
   };
-  const data = workspaceData(catalogue, context, entry);
+  const data = workspaceData(catalogue, shellContextFixture(context), entry);
   assert.equal(data.status, "Changed");
   assert.equal(data.comparisonEligible, true);
   assert.deepEqual(
@@ -60,16 +66,20 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
   assert.ok(data.views.every((view) => view.usage));
   const live = workspaceData(
     catalogue,
-    { ...context, previewGeneration: "live-generation" },
+    shellContextFixture({ ...context, previewGeneration: "live-generation" }),
     entry,
   );
   assert.deepEqual(live.usedBy, data.usedBy);
   assert.equal(live.previewGeneration, "live-generation");
   assert.ok(live.views.every((view) => view.usage === undefined));
-  const disabled = catalogue.byPath.get("action/disabled");
+  const disabled = catalogue.byPath.get(readCurrentPath("action/disabled"));
   if (disabled?.kind !== "component" || !("variantOf" in disabled))
     assert.fail("Expected component variant");
-  const disabledData = workspaceData(catalogue, context, disabled);
+  const disabledData = workspaceData(
+    catalogue,
+    shellContextFixture(context),
+    disabled,
+  );
   assert.equal(
     selectedVariant(disabledData).variant?.value.path,
     disabled.path,
@@ -101,17 +111,17 @@ test("unrelated screens retain distinct Added and Removed evidence in a componen
     fixture.after.manifest,
     fixture.before.manifest,
   );
-  const current = catalogue.byPath.get("renamed");
+  const current = catalogue.byPath.get(readCurrentPath("renamed"));
   if (current?.kind !== "screen") assert.fail("Expected current screen");
   const context = {
     base: "main",
     updateVersion: 1,
     componentChanges: { baseline: fixture.before.manifest, result },
   };
-  const after = workspaceData(catalogue, context, current);
+  const after = workspaceData(catalogue, shellContextFixture(context), current);
   const before = workspaceData(
     catalogue,
-    context,
+    shellContextFixture(context),
     catalogue.removedScreens[0]!,
   );
   assert.equal(after.status, "Added");
@@ -146,7 +156,7 @@ test("a removed component variant retains its previous comparison", async (t) =>
     fixture.after.manifest,
     removedManifestEntries(fixture.after.manifest, fixture.before.manifest),
   );
-  const entry = catalogue.byPath.get("action");
+  const entry = catalogue.byPath.get(readCurrentPath("action"));
   if (entry?.kind !== "component" || "variantOf" in entry)
     assert.fail("Expected component");
   const data = workspaceData(
@@ -155,7 +165,10 @@ test("a removed component variant retains its previous comparison", async (t) =>
       base: "main",
       updateVersion: 1,
       comparisons: true,
-      componentChanges: { baseline: fixture.before.manifest, result },
+      componentChanges: {
+        baseline: baselineManifestFixture(fixture.before.manifest),
+        result: typedReviewFixture(result),
+      },
     },
     entry,
   );
@@ -180,7 +193,10 @@ test("a removed component variant retains its previous comparison", async (t) =>
           base: "main",
           updateVersion: 1,
           comparisons: true,
-          componentChanges: { baseline: fixture.before.manifest, result },
+          componentChanges: {
+            baseline: baselineManifestFixture(fixture.before.manifest),
+            result: typedReviewFixture(result),
+          },
         },
         catalogue.removedEntries.find(
           ({ entry }) => entry.path === "action/disabled",

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import type { CurrentPath } from "../../packages/viewer/src/catalogue/path_types.js";
 
 import {
   crossOriginFixture,
@@ -33,7 +34,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       else {
         await page.goto(fixture.host.url);
         await page.evaluate(async (json) => {
-          const usage = JSON.parse(json) as ComponentViewRecord;
+          const usage = JSON.parse(json) as ComponentViewRecord<CurrentPath>;
           const { sameOriginAdapter } = (await import(
             `${location.origin}/__mokly/client/same_origin_adapter.js`
           )) as typeof LocalAdapter;

@@ -18,6 +18,7 @@ import {
 import { usageHref } from "../src/shell/workspace_usage.js";
 
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
+import { currentManifestEntryFixture } from "./manifest_path_fixture.js";
 
 const { source, sourceVariant } = componentWorkspaceFixture();
 
@@ -73,7 +74,7 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
       }),
     },
   };
-  const draft = controlDraft(component, variant);
+  const draft = controlDraft(currentManifestEntryFixture(component), variant);
   assert.deepEqual(draft, {
     label: { supplied: true, value: "Continue" },
     count: { supplied: true, value: "-0" },
@@ -83,30 +84,42 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
     hint: { supplied: true, value: "Optional" },
   });
 
-  const emptySelects = validateControlDraft(component, variant, {
-    ...draft,
-    tone: { supplied: true, value: "" },
-    accent: { supplied: true, value: "" },
-  });
+  const emptySelects = validateControlDraft(
+    currentManifestEntryFixture(component),
+    variant,
+    {
+      ...draft,
+      tone: { supplied: true, value: "" },
+      accent: { supplied: true, value: "" },
+    },
+  );
   assert.equal(emptySelects.overrides, undefined);
   assert.equal(emptySelects.errors["tone"], "Choose an available value.");
   assert.equal(emptySelects.errors["accent"], "Choose an available value.");
 
-  const invalid = validateControlDraft(component, variant, {
-    ...draft,
-    count: { supplied: true, value: "11" },
-  });
+  const invalid = validateControlDraft(
+    currentManifestEntryFixture(component),
+    variant,
+    {
+      ...draft,
+      count: { supplied: true, value: "11" },
+    },
+  );
   assert.equal(invalid.overrides, undefined);
   assert.equal(
     invalid.errors["count"],
     "Enter a number within the allowed range.",
   );
 
-  const valid = validateControlDraft(component, variant, {
-    ...draft,
-    label: { supplied: true, value: "Purchase" },
-    hint: { supplied: false, value: "Optional" },
-  });
+  const valid = validateControlDraft(
+    currentManifestEntryFixture(component),
+    variant,
+    {
+      ...draft,
+      label: { supplied: true, value: "Purchase" },
+      hint: { supplied: false, value: "Optional" },
+    },
+  );
   assert.deepEqual(valid.errors, {});
   assert.deepEqual(valid.overrides, {
     label: { kind: "set", value: ["string", "Purchase"] },
@@ -118,7 +131,9 @@ test("control availability and usage URLs explain the active product state", () 
   const variant = {
     comparisonEligible: false,
     removed: false,
-    value: sourceVariant as ManifestComponentVariant,
+    value: currentManifestEntryFixture(
+      sourceVariant as ManifestComponentVariant,
+    ),
   } satisfies WorkspaceVariant;
   const data = {
     entry: source,

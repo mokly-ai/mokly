@@ -6,10 +6,10 @@ import type { ComponentWireProps, ObjectPropSchema } from "./prop_types.js";
 
 export type ComponentInputOwner =
   { kind: "entry" } | { kind: "instance"; instanceKey: string };
-export interface ComponentInstanceRecord {
+export interface ComponentInstanceRecord<Path extends string = string> {
   key: string;
   id: string;
-  componentId: string;
+  componentId: Path;
   owner: ComponentInputOwner;
   slotKey?: string;
   order: number;
@@ -36,27 +36,30 @@ export interface ComponentRangeRecord {
   target: ComponentRangeTarget;
   parentId?: string;
 }
-export interface ComponentStyleOwnership {
+export interface ComponentStyleOwnership<Path extends string = string> {
   startOffset: number;
   endOffset: number;
-  componentIds: readonly string[];
+  componentIds: readonly Path[];
 }
-export interface ComponentResourceOwnership {
+export interface ComponentResourceOwnership<Path extends string = string> {
   path: string;
-  componentIds: readonly string[];
+  componentIds: readonly Path[];
 }
-export interface ComponentViewRecord {
+export interface ComponentViewRecord<Path extends string = string> {
   viewport: "mobile" | "desktop";
   colorScheme: ColorScheme;
-  instances: readonly ComponentInstanceRecord[];
+  instances: readonly ComponentInstanceRecord<Path>[];
   slots: readonly ComponentSlotRecord[];
   ranges: readonly ComponentRangeRecord[];
-  styles: readonly ComponentStyleOwnership[];
-  resources: readonly ComponentResourceOwnership[];
+  styles: readonly ComponentStyleOwnership<Path>[];
+  resources: readonly ComponentResourceOwnership<Path>[];
 }
 
 /** Current identity-only component parent. */
-export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
+export interface ManifestComponent<
+  Path extends string = string,
+  _Reference extends string = Path,
+> extends Omit<ManifestEntryBase<Path>, "kind"> {
   colorSchemes: readonly ColorScheme[];
   kind: "component";
   tags?: readonly string[];
@@ -67,22 +70,27 @@ export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
 }
 
 /** Current identity-only flattened component variant. */
-export interface ManifestComponentVariant extends Omit<
-  ManifestEntryBase,
-  "kind"
-> {
+export interface ManifestComponentVariant<
+  Path extends string = string,
+  Reference extends string = Path,
+> extends Omit<ManifestEntryBase<Path>, "kind"> {
   colorSchemes: readonly ColorScheme[];
   kind: "component";
   tags?: readonly string[];
-  variantOf: string;
+  variantOf: Reference;
   props: ComponentWireProps;
   suppliedSlots: readonly string[];
-  componentViews: readonly ComponentViewRecord[];
+  componentViews: readonly ComponentViewRecord<Reference>[];
 }
 
 /** Whether one current or historical-v7 component is a variant entry. */
-export function isManifestComponentVariant(
-  entry: ManifestComponent | ManifestComponentVariant,
-): entry is ManifestComponentVariant {
+export function isManifestComponentVariant<
+  Path extends string,
+  Reference extends string,
+>(
+  entry:
+    | ManifestComponent<Path, Reference>
+    | ManifestComponentVariant<Path, Reference>,
+): entry is ManifestComponentVariant<Path, Reference> {
   return "variantOf" in entry && typeof entry.variantOf === "string";
 }

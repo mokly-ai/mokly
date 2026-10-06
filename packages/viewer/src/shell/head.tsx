@@ -5,10 +5,13 @@ import type { ReactNode } from "react";
 
 import { branchPoints } from "../catalogue/branch_point.js";
 import type { VariantParentResolution } from "../catalogue/branch_point_types.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import { viewHref } from "../navigation/routes.js";
+import type { ManifestEntry } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { structuredCrumbTrail, type CatalogueCrumb } from "./crumbs.js";
+import type { RemovedEntrySnapshot } from "./metadata.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 
@@ -155,7 +158,12 @@ export function ScreenHead(props: {
  * The crumb for a variant's parent: an eligible current parent links to its
  * page, a removed parent to its retained snapshot, and a stored title is text.
  */
-function parentCrumb(parent: VariantParentResolution): CatalogueCrumb {
+function parentCrumb(
+  parent: VariantParentResolution<
+    ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
+    RemovedEntrySnapshot
+  >,
+): CatalogueCrumb {
   if (parent.source === "title") return { label: parent.title };
   const snapshot =
     parent.source === "removed" ? parent.record.snapshotId : undefined;

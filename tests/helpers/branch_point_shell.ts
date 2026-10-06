@@ -1,5 +1,6 @@
 /** Served and public shell inputs for one shared branch-point fixture case. */
 
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 import { readShellCatalogue } from "../../packages/viewer/src/catalogue/reader.js";
 import {
   createCatalogue,
@@ -14,6 +15,7 @@ import {
 } from "../../packages/viewer/src/viewer/projection.js";
 import { defaultSelection } from "../../packages/viewer/src/viewer/selection.js";
 import type { ViewerSelection } from "../../packages/viewer/src/viewer/types.js";
+import { shellContextFixture } from "../../packages/viewer/tests/manifest_path_fixture.js";
 import { projectCatalogue } from "../../src/catalogue/projection.js";
 import { computeCatalogueChanges } from "../../src/server/changed.js";
 
@@ -79,7 +81,7 @@ export async function branchPointShell(
           catalogue,
           context: (entry) => {
             const snapshotId = snapshot(catalogue, entry);
-            return {
+            return shellContextFixture({
               base: "main",
               changedEntries: changes.changedEntries,
               ...(changes.componentChanges
@@ -88,7 +90,7 @@ export async function branchPointShell(
               updateVersion: 0,
               ...(entry ? { activeId: entry.path } : {}),
               ...(snapshotId ? { snapshotId } : {}),
-            };
+            });
           },
         },
         {
@@ -117,7 +119,7 @@ export function routedEntry(
   side: BranchPointShellSide,
   path: string,
 ): WorkspaceEntry {
-  const entry = side.catalogue.byPath.get(path);
+  const entry = side.catalogue.byPath.get(readCurrentPath(path));
   if (entry?.kind !== "component" && entry?.kind !== "screen")
     throw new Error(`Missing ${side.name} entry ${path}`);
   return entry;

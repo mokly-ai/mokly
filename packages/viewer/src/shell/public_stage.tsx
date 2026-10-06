@@ -4,16 +4,16 @@ import { useContext } from "react";
 
 import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type {
+  AnyShellCatalogueScreen,
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
-  ShellCatalogueScreen,
 } from "../catalogue/scoped_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
 import { viewHref } from "../navigation/routes.js";
 import { VIEWPORTS } from "../registry/views.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { DocumentStageFrame, StageFrame } from "./stage_frame.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 
 /** Render current frames without giving consumer documents script capability. */
 export function PublicStage({
@@ -28,7 +28,7 @@ export function PublicStage({
   entry: ShellCatalogueRoutedEntry;
   fragment?: string;
   hasDarkFragments: boolean;
-  previewViews?: readonly GeneratedComponentView[];
+  previewViews?: readonly ShellGeneratedView[];
   variantPath?: string;
 }) {
   const selection = useContext(DisplaySelection);
@@ -53,16 +53,16 @@ export function PublicStage({
     entry.kind === "component"
       ? (("variantOf" in entry
           ? [entry]
-          : catalogueComponentVariants(catalogue, entry.path)
+          : catalogueComponentVariants(catalogue, entry)
         ).find((variant) => variant.path === variantPath) ??
         ("variantOf" in entry
           ? entry
-          : catalogueComponentVariants(catalogue, entry.path)[0]))
+          : catalogueComponentVariants(catalogue, entry)[0]))
       : undefined;
   const views =
     entry.kind === "component"
       ? (selectedVariant?.views ?? [])
-      : (entry as ShellCatalogueScreen).views;
+      : (entry as AnyShellCatalogueScreen).views;
   const effectiveVariant = selectedVariant?.path;
   const frameEntry = selectedVariant ?? entry;
   return (

@@ -9,6 +9,8 @@ import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descript
 import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
+import { removedManifestEntryFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 
 import { documentText } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
@@ -27,14 +29,14 @@ type RemovedEntry = RemovedEntrySnapshot["entry"];
 const page: RemovedEntry = {
   ...metadata,
   kind: "page",
-  path: "handbook",
+  path: readCurrentPath("handbook"),
   title: "Getting started",
 };
 
 const screen: RemovedEntry = {
   ...metadata,
   kind: "screen",
-  path: "farewell",
+  path: readCurrentPath("farewell"),
   title: "Farewell",
   colorSchemes: ["light"],
   address: "example.test/farewell",
@@ -44,7 +46,7 @@ const screen: RemovedEntry = {
 const component: RemovedEntry = {
   ...metadata,
   kind: "component",
-  path: "chip",
+  path: readCurrentPath("chip"),
   title: "Chip",
   colorSchemes: ["light"],
   propSchema: { kind: "object", properties: {} },
@@ -53,22 +55,22 @@ const component: RemovedEntry = {
   ownedDependencies: [],
 };
 
-const componentVariant: RemovedEntry = {
+const componentVariant: RemovedEntry = removedManifestEntryFixture({
   ...metadata,
   kind: "component",
-  path: "chip/default",
+  path: readCurrentPath("chip/default"),
   title: "Default",
   colorSchemes: ["light"],
   variantOf: "chip",
   props: {},
   suppliedSlots: [],
   componentViews: [],
-};
+});
 
 const flow: RemovedEntry = {
   ...metadata,
   kind: "use-case",
-  path: "tour",
+  path: readCurrentPath("tour"),
   title: "Tour",
   steps: [],
 };

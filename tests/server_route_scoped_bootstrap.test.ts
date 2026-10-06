@@ -14,6 +14,7 @@ import { createCatalogue } from "@mokly/viewer/server";
 
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { homePage, notFoundPage, viewPage } from "../dist/server/pages.js";
+import { currentManifestEntryFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 
 const LIMIT = 1_048_576;
 type RoutedManifestEntry = ManifestV8["entries"][number];
@@ -55,7 +56,14 @@ test("every real Serve entry emits a strict bootstrap below 1 MiB", () => {
     ["missing", notFoundPage("missing", privateCatalogue, context)],
     ...routedEntries().map(
       (entry) =>
-        [entry.path, viewPage(entry, privateCatalogue, context)] as const,
+        [
+          entry.path,
+          viewPage(
+            currentManifestEntryFixture(entry),
+            privateCatalogue,
+            context,
+          ),
+        ] as const,
     ),
   ] as const;
   for (const [entryId, html] of pages) {
@@ -84,11 +92,19 @@ test("real entry bootstraps ignore another entry's usage", () => {
       : { kind: "home" };
     const changed = withOtherUsageChanged(model, target);
     const originalHtml = selected
-      ? viewPage(selected, privateCatalogue, context)
+      ? viewPage(
+          currentManifestEntryFixture(selected),
+          privateCatalogue,
+          context,
+        )
       : homePage(privateCatalogue, context);
     const changedContext = { ...context, readModel: changed };
     const changedHtml = selected
-      ? viewPage(selected, privateCatalogue, changedContext)
+      ? viewPage(
+          currentManifestEntryFixture(selected),
+          privateCatalogue,
+          changedContext,
+        )
       : homePage(privateCatalogue, changedContext);
     assert.equal(
       bootstrapBytes(changedHtml),

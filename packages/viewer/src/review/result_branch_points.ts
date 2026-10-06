@@ -2,6 +2,11 @@
 
 import { branchPoints } from "../catalogue/branch_point.js";
 import type { EntryIdentity } from "../catalogue/branch_point_types.js";
+import type { CurrentPath, BranchPointPath } from "../catalogue/path_types.js";
+import {
+  readCurrentPath,
+  readBranchPointPath,
+} from "../catalogue/path_values.js";
 
 import type {
   ComponentReview,
@@ -10,25 +15,40 @@ import type {
   ScreenReviewV5,
 } from "./component_types.js";
 
-interface ReviewLookupEntry extends EntryIdentity {
-  readonly variantOf?: string;
-  readonly record: ScreenReviewV5 | ComponentReview | ComponentVariantReview;
+interface ReviewLookupEntry<
+  Current extends string,
+  Before extends string,
+> extends EntryIdentity {
+  readonly variantOf?: CurrentPath | BranchPointPath;
+  readonly record:
+    | ScreenReviewV5<Current, Before>
+    | ComponentReview<Current, Before>
+    | ComponentVariantReview<Current, Before>;
 }
 
 /** One review generation resolves context entries, variants and usage names. */
-export function resultBranchPoints(result: ReviewResultV5) {
-  const entries: ReviewLookupEntry[] = [
+export function resultBranchPoints<
+  Current extends string,
+  Before extends string,
+>(result: ReviewResultV5<Current, Before>) {
+  const entries: ReviewLookupEntry<Current, Before>[] = [
     ...result.screens.map((record) => ({
       kind: "screen" as const,
-      path: record.path,
+      path: readCurrentPath(record.path),
       record,
     })),
     ...result.components.flatMap((record) => [
-      { kind: "component" as const, path: record.path, record },
+      {
+        kind: "component" as const,
+        path: readCurrentPath(record.path),
+        record,
+      },
       ...record.variants.map((variant) => ({
         kind: "component" as const,
-        path: variant.path,
-        variantOf: record.path,
+        path: readCurrentPath(variant.path),
+        variantOf: variant.after
+          ? readCurrentPath(record.path)
+          : readBranchPointPath(record.path),
         record: variant,
       })),
     ]),
@@ -40,7 +60,13 @@ export function resultBranchPoints(result: ReviewResultV5) {
       .map((entry) => ({ entry })),
     moves: entries.flatMap(({ kind, path, record }) =>
       record.previousPath
-        ? [{ kind, path, previousPath: record.previousPath }]
+        ? [
+            {
+              kind,
+              path,
+              previousPath: readBranchPointPath(record.previousPath),
+            },
+          ]
         : [],
     ),
   });

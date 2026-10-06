@@ -4,7 +4,10 @@ import type {
   ManifestScreen,
   ManifestV8,
 } from "../../packages/viewer/src/registry/types.js";
-import { createCatalogue } from "../../packages/viewer/src/shell/catalogue.js";
+import {
+  createCatalogue,
+  type Catalogue,
+} from "../../packages/viewer/src/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../../packages/viewer/src/shell/metadata.js";
 
 function metadata(path: string) {
@@ -42,9 +45,9 @@ export function lookupComponent(path: string): ManifestComponent {
 
 export function lookupCatalogue(
   entries: readonly ManifestEntry[],
-  removed: readonly RemovedEntrySnapshot[] = [],
+  removed: readonly RemovedEntrySnapshot<string>[] = [],
   moves: readonly { path: string; previousPath: string }[] = [],
-) {
+): Catalogue {
   const manifest: ManifestV8 = {
     schemaVersion: 8,
     generatedBy: "mokly",

@@ -1,11 +1,10 @@
 /** Current workspace preview or its explicit unavailable state. */
 
-import type { GeneratedComponentView } from "../components/views.js";
-
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** Render only an available current preview; comparisons stay independently usable. */
@@ -20,7 +19,7 @@ export function WorkspaceStage({
 }: {
   catalogue: Catalogue;
   context: ShellContext;
-  previewViews: readonly GeneratedComponentView[];
+  previewViews: readonly ShellGeneratedView[];
   data: WorkspaceData;
   target: RouteTarget;
   variantPath?: string;

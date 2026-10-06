@@ -8,35 +8,50 @@ import type {
   ViewReview,
 } from "./types.js";
 
-export interface ReviewEntryAddress {
-  path: string;
+export interface ReviewEntryAddress<Path extends string = string> {
+  path: Path;
   title: string;
 }
-export interface ReviewEntrySides {
-  before?: ReviewEntryAddress;
-  after?: ReviewEntryAddress;
-  previousPath?: string;
+export interface ReviewEntrySides<
+  Current extends string = string,
+  Before extends string = string,
+> {
+  before?: ReviewEntryAddress<Before>;
+  after?: ReviewEntryAddress<Current>;
+  previousPath?: Before;
 }
-export interface ScreenReviewV5 extends ScreenReview, ReviewEntrySides {}
-export interface ReviewVariantAddress {
-  path: string;
+export interface ScreenReviewV5<
+  Current extends string = string,
+  Before extends string = string,
+>
+  extends ScreenReview<Current>, ReviewEntrySides<Current, Before> {}
+export interface ReviewVariantAddress<Path extends string = string> {
+  path: Path;
   title: string;
   description?: string;
   props: ComponentWireProps;
   suppliedSlots: readonly string[];
 }
-export interface ComponentVariantReview {
-  path: string;
-  previousPath?: string;
+export interface ComponentVariantReview<
+  Current extends string = string,
+  Before extends string = string,
+> {
+  path: Current;
+  previousPath?: Before;
   title: string;
-  before?: ReviewVariantAddress;
-  after?: ReviewVariantAddress;
+  before?: ReviewVariantAddress<Before>;
+  after?: ReviewVariantAddress<Current>;
   state: ReviewState;
   views: readonly ViewReview[];
 }
-export interface ComponentReview
-  extends Omit<ScreenReview, "views">, ReviewEntrySides {
-  variants: readonly ComponentVariantReview[];
+export interface ComponentReview<
+  Current extends string = string,
+  Before extends string = string,
+>
+  extends
+    Omit<ScreenReview<Current>, "views">,
+    ReviewEntrySides<Current, Before> {
+  variants: readonly ComponentVariantReview<Current, Before>[];
 }
 export type EntryChangeReason =
   | {
@@ -45,36 +60,54 @@ export type EntryChangeReason =
     }
   | DependencyReason
   | { kind: "screen"; screenPath: string };
-export interface ChangedEntry extends ReviewEntrySides {
+export interface ChangedEntry<
+  Current extends string = string,
+  Before extends string = string,
+> extends ReviewEntrySides<Current, Before> {
   kind: "screen" | "component" | "use-case";
   reasons: readonly EntryChangeReason[];
 }
-export type ComponentUsageContext =
+export type ComponentUsageContext<Path extends string = string> =
   | {
       kind: "screen";
-      entry: ReviewEntryAddress;
+      entry: ReviewEntryAddress<Path>;
       viewport: Viewport;
       colorScheme: ColorScheme;
     }
   | {
       kind: "component";
-      entry: ReviewEntryAddress;
-      variantPath: string;
+      entry: ReviewEntryAddress<Path>;
+      variantPath: Path;
       viewport: Viewport;
       colorScheme: ColorScheme;
     };
-export interface AffectedUsageEvidence {
-  side: "before" | "after";
-  context: ComponentUsageContext;
-  via: readonly { componentId: string; instanceKey: string }[];
-}
-export interface AffectedConsumer {
-  changedComponentId: string;
+export type AffectedUsageEvidence<
+  Current extends string = string,
+  Before extends string = string,
+> =
+  | {
+      side: "before";
+      context: ComponentUsageContext<Before>;
+      via: readonly { componentId: Before; instanceKey: string }[];
+    }
+  | {
+      side: "after";
+      context: ComponentUsageContext<Current>;
+      via: readonly { componentId: Current; instanceKey: string }[];
+    };
+export interface AffectedConsumer<
+  Current extends string = string,
+  Before extends string = string,
+> {
+  changedComponentId: Current;
   consumer:
-    { kind: "screen"; path: string } | { kind: "component"; path: string };
-  evidence: readonly AffectedUsageEvidence[];
+    { kind: "screen"; path: Current } | { kind: "component"; path: Current };
+  evidence: readonly AffectedUsageEvidence<Current, Before>[];
 }
-export interface ReviewResultV5 {
+export interface ReviewResultV5<
+  Current extends string = string,
+  Before extends string = string,
+> {
   baseCommit: string;
   baseRef: string;
   changedPaths: readonly string[];
@@ -84,10 +117,10 @@ export interface ReviewResultV5 {
     id: string;
     viewport: Viewport;
   }[];
-  screens: readonly ScreenReviewV5[];
+  screens: readonly ScreenReviewV5<Current, Before>[];
   schemaVersion: 5;
   sharedImpact: readonly string[];
-  components: readonly ComponentReview[];
-  changes: readonly ChangedEntry[];
-  affectedConsumers: readonly AffectedConsumer[];
+  components: readonly ComponentReview<Current, Before>[];
+  changes: readonly ChangedEntry<Current, Before>[];
+  affectedConsumers: readonly AffectedConsumer<Current, Before>[];
 }

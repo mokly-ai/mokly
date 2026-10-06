@@ -1,12 +1,11 @@
+/** Serializable, source-derived state shared by the served and published inspector. */
+
 import { branchPoints } from "../catalogue/branch_point.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { RenderCapability } from "../components/render_types.js";
-/** Serializable, source-derived state shared by the served and published inspector. */
-import {
-  generatedViews,
-  type GeneratedComponentView,
-} from "../components/views.js";
+import { generatedViews } from "../components/views.js";
 import type {
   ChangedEntry,
   ComponentReview,
@@ -15,8 +14,11 @@ import type {
 import type { ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
+import { catalogueRouteEntry } from "./catalogue.js";
 import type { Catalogue } from "./catalogue.js";
+import { changePath } from "./change_path.js";
 import { materialChangedEntries, type ShellContext } from "./context.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 import {
   shownComparisonEligible,
   type EntryStatus,
@@ -43,13 +45,13 @@ import {
 } from "./workspace_variants.js";
 import {
   changedViewsBySelection,
-  type ChangedViewsBySelection,
   viewStatesBySelection,
+  type ChangedViewsBySelection,
 } from "./workspace_views_data.js";
 
 export type { EntryStatus } from "./view_status.js";
-export type { WorkspaceVariant } from "./workspace_variants.js";
 export type { UsageLink } from "./workspace_usage_data.js";
+export type { WorkspaceVariant } from "./workspace_variants.js";
 export interface WorkspaceData {
   previewGeneration?: string;
   usageComplete?: boolean;
@@ -59,9 +61,9 @@ export interface WorkspaceData {
   /** The exact routed entry whose chrome and lifecycle own this workspace. */
   entry: WorkspaceEntry;
   /** Parent schema and controls for a component parent or variant route. */
-  component?: ManifestComponent;
-  components: readonly Pick<ManifestComponent, "path" | "title">[];
-  views: readonly GeneratedComponentView[];
+  component?: ManifestComponent<CurrentPath>;
+  components: readonly Pick<ManifestComponent<CurrentPath>, "path" | "title">[];
+  views: readonly ShellGeneratedView[];
   /**
    * Canonically ordered changed views, keyed by saved-variant id for a
    * component and by the entry id for a screen.
@@ -76,8 +78,10 @@ export interface WorkspaceData {
   usedBy: readonly UsageLink[];
   affected: readonly UsageLink[];
   status?: EntryStatus;
-  change?: ChangedEntry;
-  comparison?: ComponentReview | ScreenReviewV5;
+  change?: ChangedEntry<CurrentPath, BranchPointPath>;
+  comparison?:
+    | ComponentReview<CurrentPath, BranchPointPath>
+    | ScreenReviewV5<CurrentPath, BranchPointPath>;
   resourceEvidence?: readonly ViewResourceEvidence[];
   base: string;
   comparisons: boolean;
@@ -127,7 +131,7 @@ export function workspaceData(
     (candidate) => candidate.path === entry.path,
   );
   const change = result?.changes.find(
-    (item) => (item.after ?? item.before)?.path === entry.path,
+    (item) => changePath(branchPoints(catalogue), item) === entry.path,
   );
   /** A pure move is in Changes without changing, so it is not material. */
   const materialChanges = materialChangedEntries(context);
@@ -164,6 +168,7 @@ export function workspaceData(
       )
     : orphanVariant
       ? standaloneWorkspaceVariant(
+          catalogue,
           entry,
           snapshot,
           componentComparison,
@@ -221,13 +226,13 @@ export function workspaceData(
     inputChanges,
     relatedComponents: (result?.components ?? [])
       .filter((item) => {
-        const routed = catalogue.byPath.get(item.path);
+        const routed = catalogueRouteEntry(catalogue, item.path);
         return relatedIds.has(item.path) && routed?.kind === "component";
       })
       .map(({ path, title }) => ({ path, title })),
     components: [...catalogue.manifest.entries, ...catalogue.removedComponents]
       .filter(
-        (item): item is ManifestComponent =>
+        (item): item is ManifestComponent<CurrentPath> =>
           item.kind === "component" && !isManifestComponentVariant(item),
       )
       .map(({ path, title }) => ({ path, title })),

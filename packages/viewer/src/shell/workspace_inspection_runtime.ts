@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 
 import type { FrameEvent } from "../client/frame_adapter.js";
-import type { GeneratedComponentView } from "../components/views.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellFrameGeometryController } from "./frame_geometry_controller.js";
@@ -18,6 +17,7 @@ import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "./frame_registry.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 export const WAITING_REASON = "Waiting for the component preview.";
@@ -26,7 +26,7 @@ export interface WorkspaceInspectionContext {
   comparisonActive: boolean;
   data: WorkspaceData;
   invalidSelection: boolean;
-  views: readonly GeneratedComponentView[];
+  views: readonly ShellGeneratedView[];
 }
 
 export interface WorkspaceInspectionInput extends WorkspaceInspectionContext {

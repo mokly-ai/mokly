@@ -4,15 +4,16 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ManifestComponentVariant } from "@mokly/viewer";
+import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
 import {
-  generatedViews,
-  entryRoute,
   documentRoute,
+  entryRoute,
+  generatedViews,
   isLogicalFragment,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
-import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
+import { catalogueRouteEntry } from "@mokly/viewer/server";
 
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -73,7 +74,7 @@ function destinationScreen(
       : (catalogue.hierarchy.variantsByPath.get(entry.path)?.[0] as
           ManifestComponentVariant | undefined);
   if (entry?.kind !== "use-case" || !entry.steps[0]) return undefined;
-  const candidate = catalogue.byPath.get(entry.steps[0].screenPath);
+  const candidate = catalogueRouteEntry(catalogue, entry.steps[0].screenPath);
   return candidate?.kind === "screen" ? candidate : undefined;
 }
 

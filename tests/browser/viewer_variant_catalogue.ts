@@ -1,4 +1,6 @@
 import type { CatalogueNode, CatalogueReadModel } from "@mokly/viewer";
+
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 import type {} from "./viewer_harness.js";
 
 export function appendScreenVariant(
@@ -11,7 +13,7 @@ export function appendScreenVariant(
       ...node,
       children: [
         ...(node.children ?? []),
-        { kind: "entry", path: variantPath },
+        { kind: "entry", path: readCurrentPath(variantPath) },
       ],
     };
   return node.children
@@ -57,7 +59,7 @@ export function screenVariantCatalogue(
   if (!parent) throw new Error("Missing viewer screen fixture");
   const variant = {
     ...parent,
-    path: "home/error",
+    path: readCurrentPath("home/error"),
     title: "Save failed",
     variantOf: parent.path,
     changes: {

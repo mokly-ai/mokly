@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 
 import {
   attribute,
@@ -29,7 +30,9 @@ import {
 
 test("screen page renders device chrome, viewport switch, and details", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byPath.get("example/screens/welcome");
+  const entry = catalogue.byPath.get(
+    readCurrentPath("example/screens/welcome"),
+  );
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
@@ -97,7 +100,7 @@ test("screen page renders device chrome, viewport switch, and details", () => {
 
 test("use-case page renders the flow with catalogue links per step", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byPath.get("example/tour");
+  const entry = catalogue.byPath.get(readCurrentPath("example/tour"));
   assert.ok(entry);
   const html = viewPage(entry, catalogue, context);
   const welcomeLink = requiredElement(

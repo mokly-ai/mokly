@@ -6,10 +6,12 @@
 import type { ReactNode } from "react";
 
 import { branchPoints } from "../catalogue/branch_point.js";
+import type { CurrentPath } from "../catalogue/path_types.js";
 import { parseLogicalTarget } from "../navigation/logical.js";
 import { viewHref } from "../navigation/routes.js";
 import type { ManifestUseCase } from "../registry/types.js";
 
+import { catalogueRouteEntry } from "./catalogue.js";
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
 import { TagChip } from "./tags.js";
@@ -96,7 +98,7 @@ function relatedDocument(
     !catalogue.removedEntries.some(({ entry: removed }) => removed === entry)
       ? entry
       : undefined;
-  if (target) return current(catalogue.byPath.get(target.path));
+  if (target) return current(catalogueRouteEntry(catalogue, target.path));
   for (const entry of catalogue.byPath.values())
     if (entry.sourcePath === value && current(entry)) return entry;
   return undefined;
@@ -141,9 +143,9 @@ export function UsedByChips(props: {
   useCasePaths: readonly string[];
 }) {
   const useCases = props.useCasePaths
-    .map((id) => props.catalogue.byPath.get(id))
+    .map((id) => catalogueRouteEntry(props.catalogue, id))
     .filter(
-      (entry): entry is ManifestUseCase =>
+      (entry): entry is ManifestUseCase<CurrentPath> =>
         entry !== undefined && entry.kind === "use-case",
     );
   if (useCases.length === 0) {

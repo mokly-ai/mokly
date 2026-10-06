@@ -17,6 +17,7 @@ import {
   setTagTerm,
 } from "../packages/viewer/dist/shell/search_query.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 
 const context: ShellContext = {
   base: "",
@@ -91,7 +92,7 @@ function leaf(
     .at(-1)!
     .replace(/\.html$/, "");
   return {
-    entryId,
+    entryId: readCurrentPath(entryId),
     entryKind: "screen",
     key: `entry:${entryId}`,
     kind: "leaf",

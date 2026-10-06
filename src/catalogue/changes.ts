@@ -1,19 +1,25 @@
 import type { CatalogueChanges, ComparisonSelection } from "@mokly/viewer";
-import type { ManifestEntry, ReviewState } from "@mokly/viewer/data";
+import { baselineInventory } from "@mokly/viewer/data";
+import type {
+  BranchPointPath,
+  CurrentPath,
+  ManifestEntry,
+  ReviewState,
+} from "@mokly/viewer/data";
 
 import { projectionBranchPoints } from "./branch_points.js";
 import type { CatalogueProjectionInput } from "./projection_input.js";
 
 export function entryPreviousPath(
-  entry: ManifestEntry,
+  entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
   input: CatalogueProjectionInput,
-): string | undefined {
+): BranchPointPath | undefined {
   if (input.changesStatus !== "ready") return;
   return projectionBranchPoints(input).previousPath(entry);
 }
 
 export function entryChanges(
-  entry: ManifestEntry,
+  entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
   input: CatalogueProjectionInput,
   removed: boolean,
 ): CatalogueChanges {
@@ -34,7 +40,7 @@ export function entryChanges(
     input.evidence &&
     projectionBranchPoints(input).baselineEntry(
       entry,
-      input.evidence.baseline.entries,
+      baselineInventory(input.evidence.baseline).entries,
     );
   return {
     status: "ready",

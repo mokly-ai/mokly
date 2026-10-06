@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { SHELL_CSS } from "../packages/viewer/dist/shell/css.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 
 import {
   attribute,
@@ -149,7 +150,9 @@ test("the search field leads with a legible search icon, not a glyph", () => {
 
 test("the browser bar draws copy and expand icons, not tiny glyphs", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byPath.get("example/screens/welcome");
+  const entry = catalogue.byPath.get(
+    readCurrentPath("example/screens/welcome"),
+  );
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,

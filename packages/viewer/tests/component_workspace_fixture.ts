@@ -1,5 +1,6 @@
 import fs from "node:fs";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import { isManifestComponentVariant } from "../src/components/manifest_types.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
@@ -19,7 +20,7 @@ export function componentWorkspaceFixture() {
 
   const catalogue = viewerCatalogue(model);
 
-  const source = catalogue.byPath.get("components/action");
+  const source = catalogue.byPath.get(readCurrentPath("components/action"));
 
   if (source?.kind !== "component" || isManifestComponentVariant(source))
     throw new Error("Missing component fixture");

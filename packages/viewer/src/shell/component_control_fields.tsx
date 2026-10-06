@@ -1,5 +1,6 @@
 /** Declarative prop controls with explicit optional supply and field errors. */
 
+import type { CurrentPath } from "../catalogue/path_types.js";
 import { decodeProps, encodeValue } from "../components/codec.js";
 import { validateControlledValues } from "../components/controls.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
@@ -30,7 +31,7 @@ export interface ValidatedControlDraft {
 
 /** Build a fresh form state from one saved variant. */
 export function controlDraft(
-  component: ManifestComponent,
+  component: ManifestComponent<CurrentPath>,
   variant: WorkspaceVariant,
 ): ControlDraft {
   const values = decodeProps(variant.value.props);
@@ -62,7 +63,7 @@ export function controlDraft(
 
 /** Validate the complete draft without replacing the last valid preview. */
 export function validateControlDraft(
-  component: ManifestComponent,
+  component: ManifestComponent<CurrentPath>,
   variant: WorkspaceVariant,
   draft: ControlDraft,
 ): ValidatedControlDraft {
@@ -118,7 +119,7 @@ export function ComponentControlFields({
   errors,
   onChange,
 }: {
-  component: ManifestComponent;
+  component: ManifestComponent<CurrentPath>;
   disabled: boolean;
   draft: ControlDraft;
   errors: Readonly<Record<string, string>>;
@@ -185,7 +186,7 @@ export function ComponentControlFields({
   );
 }
 
-function controlEntries(component: ManifestComponent) {
+function controlEntries(component: ManifestComponent<CurrentPath>) {
   return Object.entries(component.controls).sort(([left], [right]) =>
     left < right ? -1 : left > right ? 1 : 0,
   );
@@ -200,7 +201,7 @@ function ControlInput({
   name,
   onChange,
 }: {
-  control: ManifestComponent["controls"][string];
+  control: ManifestComponent<CurrentPath>["controls"][string];
   disabled: boolean;
   field: ControlDraftField;
   id: string;

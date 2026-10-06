@@ -15,6 +15,8 @@ import {
 } from "../src/shell/previews.js";
 import { DocumentStageFrame } from "../src/shell/stage_frame.js";
 
+import { currentManifestEntryFixture } from "./manifest_path_fixture.js";
+
 const BAND =
   '<p class="mbk-previous mbk-scheme-fallback" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note">Light only</span></p>';
 
@@ -88,7 +90,11 @@ function removedStage(
     changesStatus: "ready",
     updateVersion: 1,
   };
-  const data = removedPreviewData(catalogue, context, removed);
+  const data = removedPreviewData(
+    catalogue,
+    context,
+    currentManifestEntryFixture(removed),
+  );
   assert.ok(data);
   return renderToStaticMarkup(<RemovedPreviewStage data={data} />);
 }

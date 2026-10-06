@@ -1,16 +1,17 @@
 import { webcrypto } from "node:crypto";
 
 import type {
+  FrameAdapter,
   FrameEvent,
   FrameMount,
-  MountedFrame,
-  FrameAdapter,
   InstanceBoundary,
+  MountedFrame,
 } from "../../packages/viewer/dist/client/frame_adapter.js";
 import {
   encodeMessage,
   type MessageBody,
 } from "../../packages/viewer/dist/inspector/schema.js";
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 
 export const instanceKey = "a".repeat(64);
 export const frameView: FrameMount = {
@@ -20,7 +21,7 @@ export const frameView: FrameMount = {
     instances: [
       {
         key: instanceKey,
-        componentId: "action",
+        componentId: readCurrentPath("action"),
         id: "action",
         owner: { kind: "entry" },
         order: 0,

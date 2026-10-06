@@ -1,8 +1,12 @@
 /** Served shell pages composed from the catalogue and shell views. */
 
-import type { ManifestEntry } from "@mokly/viewer/data";
-import { renderHydratedShellPage, toRouteTarget } from "@mokly/viewer/server";
+import type {
+  BranchPointPath,
+  CurrentPath,
+  ManifestEntry,
+} from "@mokly/viewer/data";
 import type { Catalogue, ShellContext, ShellView } from "@mokly/viewer/server";
+import { renderHydratedShellPage, toRouteTarget } from "@mokly/viewer/server";
 
 /** Render the catalogue home page. */
 export function homePage(catalogue: Catalogue, context: ShellContext): string {
@@ -11,7 +15,7 @@ export function homePage(catalogue: Catalogue, context: ShellContext): string {
 
 /** Render one screen, use case, or whole-document page. */
 export function viewPage(
-  entry: ManifestEntry,
+  entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
   catalogue: Catalogue,
   context: ShellContext,
 ): string {

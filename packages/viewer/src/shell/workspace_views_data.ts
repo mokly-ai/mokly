@@ -4,6 +4,7 @@
 // records. Unknown evidence stays an empty list, so the workspace never claims
 // a view is unmodified when it has not examined one.
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type {
   ManifestComponent,
   ManifestComponentVariant,
@@ -38,9 +39,15 @@ const CHANGED_STATES: ReadonlySet<ReviewState> = new Set<ReviewState>([
  * component's saved variant; a screen ignores it.
  */
 export function changedViews(
-  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
+  entry:
+    | ManifestComponent<CurrentPath>
+    | ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>
+    | ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV5 | undefined,
+  comparison:
+    | ComponentReview<CurrentPath, BranchPointPath>
+    | ScreenReviewV5<CurrentPath, BranchPointPath>
+    | undefined,
   variantPath?: string,
 ): readonly ChangedView[] {
   return orderChangedViews(
@@ -52,9 +59,15 @@ export function changedViews(
 
 /** Every known state for one screen or component saved variant. */
 export function viewStates(
-  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
+  entry:
+    | ManifestComponent<CurrentPath>
+    | ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>
+    | ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV5 | undefined,
+  comparison:
+    | ComponentReview<CurrentPath, BranchPointPath>
+    | ScreenReviewV5<CurrentPath, BranchPointPath>
+    | undefined,
   variantPath?: string,
 ): readonly ViewState[] | undefined {
   return evidenceViews(entry, context, comparison, variantPath)?.map(
@@ -67,9 +80,15 @@ export function viewStates(
  * are both retained, including reviews that are not present in the manifest.
  */
 export function changedViewsBySelection(
-  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
+  entry:
+    | ManifestComponent<CurrentPath>
+    | ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>
+    | ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV5 | undefined,
+  comparison:
+    | ComponentReview<CurrentPath, BranchPointPath>
+    | ScreenReviewV5<CurrentPath, BranchPointPath>
+    | undefined,
   variantIds: readonly string[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
@@ -91,9 +110,15 @@ export function changedViewsBySelection(
  * reader can preserve its route-level status instead of inventing evidence.
  */
 export function viewStatesBySelection(
-  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
+  entry:
+    | ManifestComponent<CurrentPath>
+    | ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>
+    | ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV5 | undefined,
+  comparison:
+    | ComponentReview<CurrentPath, BranchPointPath>
+    | ScreenReviewV5<CurrentPath, BranchPointPath>
+    | undefined,
   variantIds: readonly string[] = [],
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
@@ -116,7 +141,10 @@ export function viewStatesBySelection(
 
 /** Read the screen or selected saved variant without a caller inventing a key. */
 export function selectedChangedViews(
-  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
+  entry:
+    | ManifestComponent<CurrentPath>
+    | ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>
+    | ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
   evidence: ChangedViewsBySelection,
   variantPath?: string,
 ): readonly ChangedView[] {
@@ -125,9 +153,15 @@ export function selectedChangedViews(
 }
 
 function evidenceViews(
-  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
+  entry:
+    | ManifestComponent<CurrentPath>
+    | ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>
+    | ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV5 | undefined,
+  comparison:
+    | ComponentReview<CurrentPath, BranchPointPath>
+    | ScreenReviewV5<CurrentPath, BranchPointPath>
+    | undefined,
   variantPath?: string,
 ): readonly ReviewedView[] | undefined {
   const reviewed =

@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 import type { ManifestEntry } from "../packages/viewer/src/registry/types.js";
 import type { ReviewResultV5 } from "../packages/viewer/src/review/component_types.js";
 import type { ShellContext } from "../packages/viewer/src/shell/context.js";
 import { workspaceData } from "../packages/viewer/src/shell/workspace_data.js";
 import { affectedUsageLinks } from "../packages/viewer/src/shell/workspace_usage_data.js";
+import { typedReviewFixture } from "../packages/viewer/tests/path_fixture.js";
 
 import {
   lookupCatalogue,
@@ -104,7 +106,7 @@ const cases = [
 for (const current of cases)
   test(`supplied inputs pair across ${current.label}`, () => {
     const catalogue = lookupCatalogue(current.current, [], current.moves);
-    const entry = catalogue.byPath.get(current.selected);
+    const entry = catalogue.byPath.get(readCurrentPath(current.selected));
     assert.ok(entry?.kind === "component");
     const data = workspaceData(
       catalogue,
@@ -167,12 +169,9 @@ test("affected evidence resolves each side and omits a before path another kind 
     ],
   } as unknown as ReviewResultV5;
   assert.deepEqual(
-    affectedUsageLinks(catalogue, result, "lib/badge").map((link) => [
-      link.entryId,
-      link.title,
-      link.removed,
-      link.instanceKey,
-    ]),
+    affectedUsageLinks(catalogue, typedReviewFixture(result), "lib/badge").map(
+      (link) => [link.entryId, link.title, link.removed, link.instanceKey],
+    ),
     [
       ["shop/order", "shop/order", false, "k3"],
       ["shop/order", "shop/order", false, "k4"],

@@ -7,6 +7,8 @@
  */
 
 import type { BranchPointLookup } from "../catalogue/branch_point_types.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
+import type { ManifestEntry } from "../registry/types.js";
 
 import { materialChangedEntries, type ShellContext } from "./context.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
@@ -14,7 +16,12 @@ import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 /** Copy the sections with each paired entry's branch-point path on its row. */
 export function withMovedRows(
   sections: readonly NavSectionNode[],
-  lookup: Pick<BranchPointLookup, "previousPath">,
+  lookup: Pick<
+    BranchPointLookup<
+      ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>
+    >,
+    "previousPath"
+  >,
 ): NavSectionNode[] {
   const leaf = (node: NavLeafNode): NavLeafNode => {
     const movedFrom = node.key.startsWith("removed:")

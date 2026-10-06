@@ -91,7 +91,7 @@ export function shellStateWithViewerEvidence(
             record.entry.kind === previous.kind &&
             record.snapshotId === route.snapshot,
         )?.entry
-      : catalogue.byPath.get(previous.path);
+      : catalogueRouteEntry(catalogue, previous.path);
     const target = entry && toRouteTarget(entry);
     route =
       target && entry.path === previous.path && entry.kind === previous.kind

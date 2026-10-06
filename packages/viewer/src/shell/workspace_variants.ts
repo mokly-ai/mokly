@@ -1,4 +1,5 @@
 import { branchPoints } from "../catalogue/branch_point.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type {
   ManifestComponent,
   ManifestComponentVariant,
@@ -11,7 +12,7 @@ import type { ShellContext } from "./context.js";
 import { shownComparisonEligible, type EntryStatus } from "./view_status.js";
 
 export interface WorkspaceVariant {
-  value: ManifestComponentVariant;
+  value: ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>;
   removed: boolean;
   comparisonEligible: boolean;
   snapshotId?: string;
@@ -19,8 +20,8 @@ export interface WorkspaceVariant {
 }
 
 export interface WorkspaceVariantSet {
-  baseline: readonly ManifestComponentVariant[];
-  current: readonly ManifestComponentVariant[];
+  baseline: readonly ManifestComponentVariant<BranchPointPath>[];
+  current: readonly ManifestComponentVariant<CurrentPath>[];
   rows: readonly WorkspaceVariant[];
 }
 
@@ -34,9 +35,9 @@ export interface WorkspaceVariantSet {
  */
 export function workspaceVariants(
   catalogue: Catalogue,
-  entry: ManifestComponent,
+  entry: ManifestComponent<CurrentPath>,
   snapshot: ShellContext["componentChanges"],
-  comparison: ComponentReview | undefined,
+  comparison: ComponentReview<CurrentPath, BranchPointPath> | undefined,
   known: boolean,
   parentRemoved: boolean,
   parentStatus: EntryStatus | undefined,
@@ -46,7 +47,7 @@ export function workspaceVariants(
   const current = (
     catalogue.hierarchy.variantsByPath.get(entry.path) ?? []
   ).filter(
-    (candidate): candidate is ManifestComponentVariant =>
+    (candidate): candidate is ManifestComponentVariant<CurrentPath> =>
       candidate.kind === "component" && isManifestComponentVariant(candidate),
   );
   const baseline = current.flatMap((variant) => {
@@ -103,21 +104,28 @@ export function workspaceVariants(
 
 /** Build the only available row when a removed variant has no usable parent. */
 export function standaloneWorkspaceVariant(
-  entry: ManifestComponentVariant,
+  catalogue: Catalogue,
+  entry: ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>,
   snapshot: ShellContext["componentChanges"],
-  comparison: ComponentReview | undefined,
+  comparison: ComponentReview<CurrentPath, BranchPointPath> | undefined,
   known: boolean,
   removed: boolean,
   entryStatus: EntryStatus | undefined,
   snapshotId?: string,
 ): WorkspaceVariantSet {
-  const baseline = snapshot?.baseline.entries.flatMap((candidate) =>
-    candidate.kind === "component" &&
-    isManifestComponentVariant(candidate) &&
-    candidate.path === entry.path
-      ? [candidate]
-      : [],
-  ) ?? [entry];
+  const counterpart =
+    snapshot &&
+    branchPoints(catalogue).baselineEntry(entry, snapshot.baseline.entries);
+  const baseline =
+    counterpart?.kind === "component" && isManifestComponentVariant(counterpart)
+      ? [counterpart]
+      : [];
+  const current = catalogue.manifest.entries.filter(
+    (candidate): candidate is ManifestComponentVariant<CurrentPath> =>
+      candidate.path === entry.path &&
+      candidate.kind === "component" &&
+      isManifestComponentVariant(candidate),
+  );
   const review = comparison?.variants.find(
     (candidate) => candidate.path === entry.path,
   );
@@ -132,7 +140,7 @@ export function standaloneWorkspaceVariant(
           : (entryStatus ?? "Unmodified");
   return {
     baseline,
-    current: removed ? [] : [entry],
+    current: removed ? [] : current,
     rows: [
       {
         value: entry,

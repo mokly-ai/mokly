@@ -1,4 +1,5 @@
 import { branchPoints } from "../catalogue/branch_point.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import { generatedViews, orderedInstances } from "../components/views.js";
 import type { ReviewResultV5 } from "../review/component_types.js";
 
@@ -31,7 +32,7 @@ export interface UsageLink {
  */
 export function affectedUsageLinks(
   catalogue: Catalogue,
-  result: ReviewResultV5 | undefined,
+  result: ReviewResultV5<CurrentPath, BranchPointPath> | undefined,
   componentId: string | undefined,
 ): UsageLink[] {
   const lookup = branchPoints(catalogue);
@@ -39,14 +40,25 @@ export function affectedUsageLinks(
     .filter((item) => item.changedComponentId === componentId)
     .flatMap((item) =>
       item.evidence.flatMap((evidence) => {
-        const destination = lookup.resolve({
-          side: evidence.side,
-          kind: evidence.context.kind,
-          path:
-            evidence.context.kind === "component"
-              ? evidence.context.variantPath
-              : evidence.context.entry.path,
-        });
+        const reference =
+          evidence.side === "before"
+            ? {
+                side: evidence.side,
+                kind: evidence.context.kind,
+                path:
+                  evidence.context.kind === "component"
+                    ? evidence.context.variantPath
+                    : evidence.context.entry.path,
+              }
+            : {
+                side: evidence.side,
+                kind: evidence.context.kind,
+                path:
+                  evidence.context.kind === "component"
+                    ? evidence.context.variantPath
+                    : evidence.context.entry.path,
+              };
+        const destination = lookup.resolve(reference);
         if (!destination) return [];
         const removed = destination.source === "removed";
         return [

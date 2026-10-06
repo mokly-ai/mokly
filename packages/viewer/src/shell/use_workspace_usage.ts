@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 
 import type { ViewerCapabilityRequest } from "../client/host_capability_descriptor.js";
-import type { GeneratedComponentView } from "../components/views.js";
 
 import { useViewerCapabilities } from "./capability_context.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** Retain one request cache while asking only for currently displayed views. */
@@ -20,11 +20,11 @@ export function useWorkspaceUsage({
   data: WorkspaceData;
   refresh(): void;
   request?: ViewerCapabilityRequest;
-  views: readonly GeneratedComponentView[];
+  views: readonly ShellGeneratedView[];
 }): void {
   const capabilities = useViewerCapabilities();
   const loader = useRef<
-    ((views: readonly GeneratedComponentView[]) => void) | undefined
+    ((views: readonly ShellGeneratedView[]) => void) | undefined
   >(undefined);
   useEffect(() => {
     loader.current = undefined;

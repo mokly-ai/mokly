@@ -10,6 +10,7 @@ import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../../packages/viewer/dist/shell/context.js";
 import { renderViewer } from "../../packages/viewer/dist/viewer/server.js";
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 
 import { publicShellContext } from "./public_shell.js";
 
@@ -147,7 +148,7 @@ export function routePage(
 ): string {
   const identity = parseViewHref(`/view/${route}`);
   assert.ok(identity);
-  const entry = catalogue.byPath.get(identity);
+  const entry = catalogue.byPath.get(readCurrentPath(identity));
   assert.ok(entry);
   return viewPage(entry, catalogue, {
     ...context,

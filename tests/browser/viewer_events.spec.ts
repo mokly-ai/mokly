@@ -140,24 +140,31 @@ test("flow events preserve the screen key and identify the owning step", async (
   page,
 }) => {
   await page.evaluate(() => {
+    const readCurrentPath = window.viewerHarness.readCurrentPath;
     const host = window.viewerHarness.start("one", { cross: true });
     const catalogue = structuredClone(
       host.props.catalogue,
     ) as CatalogueReadModel;
-    catalogue.screens[0]!.useCasePaths = ["tour"];
+    catalogue.screens[0]!.useCasePaths = ["tour"].map(readCurrentPath);
     catalogue.useCases = [
       {
         kind: "use-case",
-        path: "tour",
+        path: readCurrentPath("tour"),
 
         title: "Tour",
         tags: [],
         details: catalogue.screens[0]!.details,
         changes: { status: "disabled" },
-        steps: [{ screenPath: "home" }, { screenPath: "home" }],
+        steps: [
+          { screenPath: readCurrentPath("home") },
+          { screenPath: readCurrentPath("home") },
+        ],
       },
     ];
-    catalogue.tree = [...catalogue.tree, { kind: "entry", path: "tour" }];
+    catalogue.tree = [
+      ...catalogue.tree,
+      { kind: "entry", path: readCurrentPath("tour") },
+    ];
     host.props = {
       ...host.props,
       catalogue,

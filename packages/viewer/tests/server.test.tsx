@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
-import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import { renderViewer } from "../src/viewer/server.js";
 import { catalogueUrl, readObjectSource } from "../src/viewer/source.js";
+
+import { fixtureVariantsAt } from "./path_fixture.js";
 
 const fixture = readCatalogue(
   JSON.parse(
@@ -139,7 +140,7 @@ test("distinct valid viewer IDs cannot absorb dynamic control IDs", () => {
   const model = structuredClone(fixture);
   const component = model.components[0]!;
   if ("variantOf" in component) throw new Error("Missing component parent");
-  const variant = catalogueComponentVariants(model, component.path)[0]!;
+  const variant = fixtureVariantsAt(model, component.path)[0]!;
   component.controls = {
     ...component.controls,
     "mb-main": component.controls.label!,

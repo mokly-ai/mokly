@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import type { CatalogueUsage } from "../src/catalogue/types.js";
 import type { MountedFrame } from "../src/client/frame_adapter.js";
 import {
@@ -20,7 +21,7 @@ const usage: CatalogueUsage = {
   instances: [alpha, beta].map((key, order) => ({
     key,
     id: order === 0 ? "alpha" : "beta",
-    componentId: "action",
+    componentId: readCurrentPath("action"),
     owner: { kind: "entry" as const },
     order,
     props: {},

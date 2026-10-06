@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 import type { ManifestEntry } from "../packages/viewer/src/registry/types.js";
 import { workspaceKey } from "../packages/viewer/src/shell/workspace_entry.js";
+import { currentManifestEntryFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 
 import {
   lookupCatalogue,
@@ -45,9 +47,13 @@ test("a component workspace is keyed by the resolved parent", () => {
       [gone],
       moves,
     );
-    for (const entry of [catalogue.byPath.get(parent)!, current, gone.entry])
+    for (const entry of [
+      catalogue.byPath.get(readCurrentPath(parent))!,
+      current,
+      gone.entry,
+    ])
       assert.equal(
-        workspaceKey(catalogue, entry),
+        workspaceKey(catalogue, currentManifestEntryFixture(entry)),
         parent,
         `${label} ${entry.path}`,
       );
@@ -66,6 +72,12 @@ test("a variant without an eligible parent and a screen keep their own keys", ()
     [document, lookupScreen("lib/welcome"), screen],
     [gone],
   );
-  assert.equal(workspaceKey(catalogue, gone.entry), "lib/action/default");
-  assert.equal(workspaceKey(catalogue, screen), "lib/welcome/error");
+  assert.equal(
+    workspaceKey(catalogue, currentManifestEntryFixture(gone.entry)),
+    "lib/action/default",
+  );
+  assert.equal(
+    workspaceKey(catalogue, currentManifestEntryFixture(screen)),
+    "lib/welcome/error",
+  );
 });

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import type * as PostAdapter from "../../packages/viewer/dist/client/post_message_adapter.js";
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import type { CurrentPath } from "../../packages/viewer/src/catalogue/path_types.js";
 
 import {
   crossOriginFixture,
@@ -168,7 +169,7 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
   await mountCrossFrame(page, fixture);
   const outcome = await page.evaluate(
     async ({ origin, usageJson }) => {
-      const usage = JSON.parse(usageJson) as ComponentViewRecord;
+      const usage = JSON.parse(usageJson) as ComponentViewRecord<CurrentPath>;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
         `${location.origin}/__mokly/client/post_message_adapter.js`

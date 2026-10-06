@@ -1,15 +1,16 @@
 import path from "node:path";
 
-import type { Viewport, ComponentViewRecord } from "@mokly/viewer";
+import type { ComponentViewRecord, Viewport } from "@mokly/viewer";
+import type { LogicalTarget } from "@mokly/viewer/data";
 import {
-  generatedViews,
+  documentRoute,
   encodeUrlPath,
   entryRoute,
-  documentRoute,
+  generatedViews,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
-import type { LogicalTarget } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
+import { catalogueRouteEntry } from "@mokly/viewer/server";
 
 import { MoklyError } from "../errors.js";
 
@@ -61,7 +62,7 @@ export function expectedPortableHref(
   destination: LogicalTarget,
   catalogue: Catalogue,
 ): string {
-  const entry = catalogue.byPath.get(destination.path);
+  const entry = catalogueRouteEntry(catalogue, destination.path);
   const screen =
     entry?.kind === "screen"
       ? entry
@@ -70,7 +71,7 @@ export function expectedPortableHref(
           ? entry
           : catalogue.hierarchy.variantsByPath.get(entry.path)?.[0]
         : entry?.kind === "use-case" && entry.steps[0]
-          ? catalogue.byPath.get(entry.steps[0].screenPath)
+          ? catalogueRouteEntry(catalogue, entry.steps[0].screenPath)
           : undefined;
   if (
     entry?.kind !== "page" &&

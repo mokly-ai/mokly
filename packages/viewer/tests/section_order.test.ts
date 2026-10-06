@@ -12,6 +12,8 @@ import type { ManifestEntry, ManifestFolder } from "../src/registry/types.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
 import { adoptCatalogueTree } from "../src/viewer/catalogue_tree.js";
 
+import { shellHierarchyFixture } from "./manifest_path_fixture.js";
+
 const entry = (path: string, kind: string, title: string): ManifestEntry =>
   ({ path, kind, title }) as ManifestEntry;
 
@@ -50,7 +52,9 @@ test("a folder whose own page is in the other section sorts with the folder rows
     specs: ["folder:fx/lib", "folder:fx/zoo", "entry:fx/alpha", "entry:fx/kit"],
     components: ["folder:fx/kit", "entry:fx/button", "entry:fx/lib"],
   });
-  const [specs, components] = buildNavSections(hierarchy);
+  const [specs, components] = buildNavSections(
+    shellHierarchyFixture(hierarchy),
+  );
   const labels = (section: typeof specs) => {
     const fx = section?.children[0];
     return fx?.kind === "group"

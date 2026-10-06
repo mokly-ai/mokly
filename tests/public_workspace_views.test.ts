@@ -8,6 +8,7 @@ import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_ty
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 
 import {
   component,
@@ -31,7 +32,7 @@ test("public workspace keeps each saved variant's changed views", () => {
     revision: { content: 0, evidence: 1 },
   });
   const catalogue = viewerCatalogue(model);
-  const entry = catalogue.byPath.get(component.path);
+  const entry = catalogue.byPath.get(readCurrentPath(component.path));
   assert.equal(entry?.kind, "component");
   assert.ok(entry?.kind === "component" && !("variantOf" in entry));
   if (entry?.kind !== "component" || "variantOf" in entry)
@@ -128,7 +129,7 @@ test("public workspace derives a screen's ready per-view states", () => {
     revision: { content: 0, evidence: 1 },
   });
   const catalogue = viewerCatalogue(model);
-  const entry = catalogue.byPath.get(screen.path);
+  const entry = catalogue.byPath.get(readCurrentPath(screen.path));
   assert.equal(entry?.kind, "screen");
   assert.ok(entry?.kind === "screen");
 

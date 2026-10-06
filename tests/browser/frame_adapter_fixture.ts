@@ -20,6 +20,7 @@ import type * as PostAdapter from "../../packages/viewer/dist/client/post_messag
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
+import type { CurrentPath } from "../../packages/viewer/src/catalogue/path_types.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
@@ -124,7 +125,7 @@ export async function mountCrossFrame(
   await page.goto(fixture.host.url);
   await page.evaluate(
     async ({ origin, usageJson, path }) => {
-      const usage = JSON.parse(usageJson) as ComponentViewRecord;
+      const usage = JSON.parse(usageJson) as ComponentViewRecord<CurrentPath>;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
         `${location.origin}/__mokly/client/post_message_adapter.js`

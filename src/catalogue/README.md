@@ -20,6 +20,13 @@ that state. The local shell keeps its embedded private data; Serve evidence
 updates replace the validated scoped public snapshot and optional matching
 private workspace together.
 
+The projection types accepted current and removed addresses as `CurrentPath`.
+Removed relationships, usage names, previous paths and baseline inventories use
+`BranchPointPath`. `acceptedCatalogue` and `baselineInventory` assign sides to
+already validated inputs. The lookup alone maps between those sides. Complete
+and scoped readers validate raw strings before returning the same typed model.
+The type-aware guard checks these consumers with the TypeScript checker.
+
 `projection_input.ts` is the typed input boundary. It accepts validated manifest
 v8 or live-index metadata, the shared folder tree, and accepted comparison/usage
 evidence; projection performs no filesystem reads, Git commands, or rendering.

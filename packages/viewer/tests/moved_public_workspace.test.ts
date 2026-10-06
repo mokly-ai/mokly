@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { navRowPresentation } from "../src/shell/nav_moves.js";
 import type { NavLeafNode, NavNode } from "../src/shell/nav_tree.js";
@@ -13,6 +13,7 @@ import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
 import { movedComponentModel } from "./moved_component_model.js";
+import { fixtureVariantsAt } from "./path_fixture.js";
 
 const model = movedComponentModel();
 const catalogue = viewerCatalogue(model);
@@ -24,7 +25,7 @@ const VARIANTS = [
 ];
 
 function open(path: string): WorkspaceData {
-  const entry = catalogue.byPath.get(path);
+  const entry = catalogue.byPath.get(readCurrentPath(path));
   assert.ok(entry?.kind === "component", path);
   return workspaceData(catalogue, context, entry);
 }
@@ -44,7 +45,7 @@ const ROWS = [
 test("a moved parent keeps the variants removed at its previous path, under either path", () => {
   for (const parent of ["ui/action", "components/action"])
     assert.deepEqual(
-      catalogueComponentVariants(model, parent).map(({ path }) => path),
+      fixtureVariantsAt(model, parent).map(({ path }) => path),
       VARIANTS,
     );
 });
@@ -53,8 +54,11 @@ test("a moved variant whose only edit is metadata reads Changed, and a pure move
   const statuses = new Map(
     open("ui/action").variants.map(({ value, status }) => [value.path, status]),
   );
-  assert.equal(statuses.get("ui/action/ghost"), "Changed");
-  assert.equal(statuses.get("ui/action/primary"), "Unmodified");
+  assert.equal(statuses.get(readCurrentPath("ui/action/ghost")), "Changed");
+  assert.equal(
+    statuses.get(readCurrentPath("ui/action/primary")),
+    "Unmodified",
+  );
   assert.equal(open("ui/action/ghost").status, "Changed");
   assert.equal(open("ui/action/primary").status, "Unmodified");
 });

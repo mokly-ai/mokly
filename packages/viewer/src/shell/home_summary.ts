@@ -1,8 +1,12 @@
 /** The home page's count of the catalogue's current entries. */
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { ManifestEntry } from "../registry/types.js";
 
-type EntryKind = ManifestEntry["kind"];
+type EntryKind = ManifestEntry<
+  CurrentPath,
+  CurrentPath | BranchPointPath
+>["kind"];
 
 /**
  * Each entry kind's label, singular then plural, in the order the summary
@@ -21,7 +25,10 @@ const LABELS = {
  * omit kinds with none. A catalogue with no entries has no summary.
  */
 export function homeSummary(
-  entries: readonly Pick<ManifestEntry, "kind">[],
+  entries: readonly Pick<
+    ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
+    "kind"
+  >[],
 ): string | undefined {
   const counts = new Map<EntryKind, number>();
   for (const { kind } of entries) counts.set(kind, (counts.get(kind) ?? 0) + 1);

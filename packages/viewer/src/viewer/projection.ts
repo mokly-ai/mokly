@@ -1,7 +1,9 @@
 /** Convert validated public data to the existing shell's display records. */
 
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type {
+  AnyShellCatalogueEntry,
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
   ShellCatalogueView,
@@ -12,7 +14,11 @@ import type {
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
 import type { ManifestEntry, ManifestV8 } from "../registry/types.js";
-import { catalogueRouteEntry, createCatalogue } from "../shell/catalogue.js";
+import {
+  catalogueRouteEntry,
+  createCatalogue,
+  type CatalogueManifestEntry,
+} from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
@@ -30,7 +36,9 @@ function metadata(entry: CatalogueEntry) {
   };
 }
 
-function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
+function usageView<Reference extends string>(
+  view: ShellCatalogueView<Reference>,
+): ComponentViewRecord<Reference> | undefined {
   if (view.usage.status !== "ready") return;
   return {
     viewport: view.viewport,
@@ -43,7 +51,15 @@ function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
   };
 }
 
-export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
+export function displayEntry<Reference extends string>(
+  entry: ShellCatalogueRoutedEntry<CurrentPath, Reference>,
+): ManifestEntry<CurrentPath, Reference>;
+export function displayEntry(
+  entry: AnyShellCatalogueEntry,
+): CatalogueManifestEntry;
+export function displayEntry(
+  entry: AnyShellCatalogueEntry,
+): CatalogueManifestEntry {
   const base = { ...metadata(entry) };
   switch (entry.kind) {
     case "document":
@@ -79,7 +95,10 @@ export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
           variantOf: entry.variantOf,
           props: entry.props,
           suppliedSlots: entry.suppliedSlots,
-        } as ManifestComponentVariant;
+        } as ManifestComponentVariant<
+          CurrentPath,
+          BranchPointPath | CurrentPath
+        >;
       return {
         ...base,
         colorSchemes: entry.colorSchemes,
@@ -100,7 +119,7 @@ export function viewerCatalogue(model: ShellCatalogueReadModel) {
     ...model.useCases,
     ...model.components,
   ];
-  const manifest: ManifestV8 = {
+  const manifest: ManifestV8<CurrentPath> = {
     schemaVersion: 8,
     generatedBy: "mokly",
     folders: [],
@@ -198,7 +217,7 @@ export function viewerView(
       ? catalogueRouteEntry(catalogue, selected.entry.path, selected.entry.kind)
       : undefined
     : selection.snapshotId === undefined
-      ? catalogue.byPath.get(selection.screenPath)
+      ? catalogueRouteEntry(catalogue, selection.screenPath)
       : undefined;
   const target = entry && toRouteTarget(entry);
   return target

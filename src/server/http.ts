@@ -12,8 +12,8 @@ import { includeMovedEntries } from "../review/moves/entries.js";
 import { catalogueWithChanges } from "./baseline_catalogue.js";
 import {
   catalogueSnapshotForConfig,
-  loadServedCatalogueSnapshot,
   loadLiveCatalogueSnapshot,
+  loadServedCatalogueSnapshot,
 } from "./catalogue_snapshot.js";
 import { advanceCatalogueState } from "./catalogue_update.js";
 import { loadServeBrowserAssets } from "./client_modules.js";
@@ -218,7 +218,7 @@ export async function startCatalogueServer(
         { ...publicInput(), catalogue: nextActive },
         contentVersion,
       );
-      manifest = complete;
+      manifest = nextCatalogue.manifest;
       catalogue = nextCatalogue;
       activeCatalogue = nextActive;
       return true;
@@ -238,8 +238,8 @@ export async function startCatalogueServer(
       void documents?.close();
       documents = createDocuments(runtime);
       if (runtime.manifest.schemaVersion === "live-index-1") {
-        manifest = runtime.manifest;
-        catalogue = createCatalogue(manifest);
+        catalogue = createCatalogue(runtime.manifest);
+        manifest = catalogue.manifest;
         activeCatalogue = catalogue;
       }
       if (controls) controls.replace(runtime);

@@ -87,9 +87,9 @@ export function externalShellBootstrap(
 }
 
 /** Encode hydration state with stable lexical object-key ordering. */
-export function serializeShellBootstrap(
-  bootstrap: ShellBootstrapEnvelope<unknown>,
-): string {
+export function serializeShellBootstrap<
+  Bootstrap extends ShellBootstrapEnvelope<unknown>,
+>(bootstrap: Bootstrap): string {
   return canonicalJson(bootstrap).replaceAll("<", "\\u003c");
 }
 

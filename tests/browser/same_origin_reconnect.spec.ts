@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import type { CurrentPath } from "../../packages/viewer/src/catalogue/path_types.js";
 
 import {
   crossOriginFixture,
@@ -103,7 +104,7 @@ for (const kind of ["current", "temporary"] as const) {
     await page.goto(fixture.host.url);
     const result = await page.evaluate(
       async ({ kind, path, usageJson }) => {
-        const usage = JSON.parse(usageJson) as ComponentViewRecord;
+        const usage = JSON.parse(usageJson) as ComponentViewRecord<CurrentPath>;
         const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
           `${location.origin}/__mokly/client/same_origin_adapter.js`
         )) as typeof LocalAdapter;

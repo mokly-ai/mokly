@@ -1,3 +1,4 @@
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { inspection } from "../inspector/inspection.js";
@@ -154,7 +155,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
 
 function localRecord(
   frame: HTMLIFrameElement,
-  usage: CatalogueUsage,
+  usage: CatalogueUsage<CurrentPath | BranchPointPath>,
 ): ComponentViewRecord | undefined {
   return usage.status === "ready"
     ? {

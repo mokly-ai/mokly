@@ -19,6 +19,7 @@ import {
   viewerRevision,
 } from "./capability_adoption_fixture.js";
 import { withoutTreeEntries } from "./catalogue_fixture.js";
+import { historicalEntry } from "./path_fixture.js";
 
 test("live evidence retains unchanged identity-less historical metadata", () => {
   const screen = model.screens[0]!;
@@ -26,7 +27,7 @@ test("live evidence retains unchanged identity-less historical metadata", () => 
     ...model,
     screens: model.screens.slice(1),
     tree: withoutTreeEntries(model.tree, [screen.path]),
-    removedEntries: [{ folderTitles: [], entry: screen }],
+    removedEntries: [{ folderTitles: [], entry: historicalEntry(screen) }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
@@ -71,7 +72,7 @@ test("live evidence rejects changed or removed identity-less history", () => {
     ...model,
     screens: model.screens.slice(1),
     tree: withoutTreeEntries(model.tree, [screen.path]),
-    removedEntries: [{ folderTitles: [], entry: screen }],
+    removedEntries: [{ folderTitles: [], entry: historicalEntry(screen) }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
@@ -86,7 +87,10 @@ test("live evidence rejects changed or removed identity-less history", () => {
       evidence: historical.revision.evidence + 1,
     },
     removedEntries: [
-      { folderTitles: [], entry: { ...screen, title: "Earlier home" } },
+      {
+        folderTitles: [],
+        entry: historicalEntry({ ...screen, title: "Earlier home" }),
+      },
     ],
   };
   const removed: CatalogueReadModel = {

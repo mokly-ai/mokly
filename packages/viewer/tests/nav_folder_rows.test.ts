@@ -18,6 +18,8 @@ import {
   type NavSectionNode,
 } from "../src/shell/nav_tree.js";
 
+import { shellHierarchyFixture } from "./manifest_path_fixture.js";
+
 const entry = (
   path: string,
   kind: string,
@@ -43,7 +45,9 @@ function sections(
   entries: readonly ManifestEntry[],
   folders: readonly ManifestFolder[] = [],
 ): readonly NavSectionNode[] {
-  return buildNavSections(analyzeHierarchy(entries, folders).hierarchy);
+  return buildNavSections(
+    shellHierarchyFixture(analyzeHierarchy(entries, folders).hierarchy),
+  );
 }
 
 function section(

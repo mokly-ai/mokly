@@ -1,22 +1,26 @@
 /** Merge route classification with evidence loaded for one comparison. */
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type {
   ComponentReview,
   EntryChangeReason,
 } from "../review/component_types.js";
+import { resultBranchPoints } from "../review/result_branch_points.js";
 import type {
-  ReviewResult,
   ScreenReview,
-  ViewReview,
+  TypedReviewResult,
   ViewResourceEvidence,
+  ViewReview,
 } from "../review/types.js";
 
+import { changePath } from "./change_path.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { componentReview } from "./workspace_entry.js";
 
 /** Complete evidence projected into one Details panel. */
 export interface WorkspaceComparisonEvidence {
-  comparison: ComponentReview | ScreenReview | undefined;
+  comparison:
+    ComponentReview<CurrentPath, BranchPointPath> | ScreenReview | undefined;
   views: readonly ViewReview[];
   resourceViews: readonly ViewResourceEvidence[];
   reasons: readonly EntryChangeReason[];
@@ -27,7 +31,7 @@ export interface WorkspaceComparisonEvidence {
 export function workspaceComparisonEvidence(
   data: WorkspaceData,
   variantPath?: string,
-  loaded?: ReviewResult,
+  loaded?: TypedReviewResult,
 ): WorkspaceComparisonEvidence {
   const selected =
     data.entry.kind === "component"
@@ -36,7 +40,7 @@ export function workspaceComparisonEvidence(
   const change = loaded?.changes.find(
     (item) =>
       item.kind === data.entry.kind &&
-      (item.after ?? item.before)?.path === data.entry.path,
+      changePath(resultBranchPoints(loaded!), item) === data.entry.path,
   );
   const views = [
     ...comparisonViews(data.comparison, variantPath),
@@ -61,7 +65,8 @@ export function workspaceComparisonEvidence(
 }
 
 function comparisonViews(
-  comparison: ComponentReview | ScreenReview | undefined,
+  comparison:
+    ComponentReview<CurrentPath, BranchPointPath> | ScreenReview | undefined,
   variantPath?: string,
 ): readonly ViewReview[] {
   return comparison && "variants" in comparison

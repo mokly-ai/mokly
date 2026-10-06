@@ -2,13 +2,13 @@
 
 import { FrameError } from "../client/frame_error.js";
 import { frameUsage } from "../client/frame_usage.js";
-import type { GeneratedComponentView } from "../components/views.js";
 import type { InstanceRef } from "../viewer/types.js";
 
 import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "./frame_registry.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** Whether one session's complete identity matches a public instance reference. */
@@ -101,7 +101,7 @@ export function frameInstanceRef(
 function matchesWorkspaceFrame(
   session: ShellFrameSession,
   data: WorkspaceData,
-  view: GeneratedComponentView,
+  view: ShellGeneratedView,
 ): boolean {
   const identity = session.identity;
   return (
@@ -117,7 +117,7 @@ function matchesWorkspaceFrame(
 export function workspaceFrameSessions(
   sessions: readonly ShellFrameSession[],
   data: WorkspaceData,
-  views: readonly GeneratedComponentView[],
+  views: readonly ShellGeneratedView[],
 ): readonly ShellFrameSession[] {
   return views.flatMap((view) => {
     const candidates = sessions.filter((session) =>

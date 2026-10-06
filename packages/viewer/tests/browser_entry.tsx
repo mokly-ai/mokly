@@ -15,6 +15,7 @@ import type {
   ViewerSelection,
   ViewerTheme,
 } from "@mokly/viewer";
+import { readCurrentPath } from "@mokly/viewer/data";
 
 import { installFrameHookHarness } from "./frame_hook_harness.js";
 
@@ -169,6 +170,7 @@ const start = (id: string, options: HostOptions = {}) => {
   return host;
 };
 (window as unknown as { viewerHarness: unknown }).viewerHarness = {
+  readCurrentPath,
   start,
   get: (id: string) => hosts.get(id),
   remove: (id: string) => {

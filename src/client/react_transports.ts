@@ -1,22 +1,21 @@
 /** Private preview and on-demand usage transports for the React shell host. */
 
-import type { ComponentViewRecord } from "@mokly/viewer";
+import type { ComponentViewRecord, CurrentPath } from "@mokly/viewer";
 import type {
   ComponentRenderRequest,
   ComponentRenderSuccess,
-  GeneratedComponentView,
   RenderCapability,
 } from "@mokly/viewer/data";
 import { localFramePath } from "@mokly/viewer/runtime";
-import type { WorkspaceData } from "@mokly/viewer/server";
+import type { ShellGeneratedView, WorkspaceData } from "@mokly/viewer/server";
 
 /** Request and validate one authenticated temporary component preview. */
 export async function requestComponentPreview(
   request: ComponentRenderRequest,
   capability: RenderCapability,
-  view: GeneratedComponentView,
+  view: ShellGeneratedView,
   signal: AbortSignal,
-): Promise<ComponentRenderSuccess> {
+): Promise<ComponentRenderSuccess<CurrentPath>> {
   const response = await fetch("/__mokly/components/render", {
     method: "POST",
     credentials: "same-origin",
@@ -42,7 +41,7 @@ export async function requestComponentPreview(
         "The preview could not be updated. Try again.",
     );
   }
-  const result = (await response.json()) as ComponentRenderSuccess;
+  const result = (await response.json()) as ComponentRenderSuccess<CurrentPath>;
   if (
     !result ||
     !/^[a-f0-9]{48}\.[a-f0-9]{64}$/.test(result.renderId) ||
@@ -82,7 +81,7 @@ export function workspaceLoader(
   data: WorkspaceData,
   signal: AbortSignal,
   changed: () => void,
-): (views: readonly GeneratedComponentView[]) => void {
+): (views: readonly ShellGeneratedView[]) => void {
   const requested = new Set<string>();
   return (views) => {
     if (!data.previewGeneration || signal.aborted) return;
@@ -97,7 +96,7 @@ export function workspaceLoader(
           const result = (await response.json()) as {
             route: string;
             generation: string;
-            usage?: ComponentViewRecord;
+            usage?: ComponentViewRecord<CurrentPath>;
           };
           if (
             signal.aborted ||

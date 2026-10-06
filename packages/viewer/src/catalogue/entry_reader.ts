@@ -78,7 +78,7 @@ function readComparison(value: unknown): ComparisonSelection {
       }
     : { status };
 }
-function readUsage(value: unknown): CatalogueUsage {
+function readUsage(value: unknown): CatalogueUsage<string> {
   const input = object(value),
     status = choice(input.status, ["ready", "pending", "unavailable"] as const);
   if (status !== "ready") absent(input, ["instances", "slots", "ranges"]);
@@ -91,7 +91,7 @@ function readUsage(value: unknown): CatalogueUsage {
       }
     : { status };
 }
-function readShellUsage(value: unknown): ShellCatalogueUsage {
+function readShellUsage(value: unknown): ShellCatalogueUsage<string> {
   const input = object(value),
     status = choice(input.status, [
       "ready",
@@ -109,16 +109,16 @@ function readShellUsage(value: unknown): ShellCatalogueUsage {
       }
     : { status };
 }
-function readView(value: unknown): CatalogueView {
+function readView(value: unknown): CatalogueView<string> {
   return readViewWithUsage(value, readUsage);
 }
-function readShellView(value: unknown): ShellCatalogueView {
+function readShellView(value: unknown): ShellCatalogueView<string> {
   return readViewWithUsage(value, readShellUsage);
 }
-function readViewWithUsage<Usage extends ShellCatalogueUsage>(
+function readViewWithUsage<Usage extends ShellCatalogueUsage<string>>(
   value: unknown,
   read: (value: unknown) => Usage,
-): Omit<CatalogueView, "usage"> & { usage: Usage } {
+): Omit<CatalogueView<string>, "usage"> & { usage: Usage } {
   const input = object(value);
   return {
     viewport: choice(input.viewport, ["mobile", "desktop"] as const),
@@ -127,9 +127,9 @@ function readViewWithUsage<Usage extends ShellCatalogueUsage>(
     comparison: readComparison(input.comparison),
   };
 }
-function common(input: Record<string, unknown>): CatalogueEntry {
+function common(input: Record<string, unknown>): CatalogueEntry<string> {
   const details = object(input.details);
-  const result: CatalogueEntry = {
+  const result: CatalogueEntry<string> = {
     path: entryPath(input.path),
     title: text(input.title),
     tags: array(input.tags).map(tag),
@@ -148,26 +148,28 @@ function common(input: Record<string, unknown>): CatalogueEntry {
     result.details.rationale = string(details.rationale);
   return result;
 }
-export function readEntry(value: unknown): CatalogueRecord {
+export function readEntry(value: unknown): CatalogueRecord<string> {
   return readEntryWithViews(value, readView);
 }
-export function readShellEntry(value: unknown): ShellCatalogueRoutedEntry {
+export function readShellEntry(
+  value: unknown,
+): ShellCatalogueRoutedEntry<string> {
   return readEntryWithViews(value, readShellView);
 }
 
-type ParsedVariant<View extends ShellCatalogueView> = Omit<
-  CatalogueComponentVariant,
+type ParsedVariant<View extends ShellCatalogueView<string>> = Omit<
+  CatalogueComponentVariant<string>,
   "views"
 > & { views: readonly View[] };
-type ParsedEntry<View extends ShellCatalogueView> =
-  | (Omit<CatalogueScreen, "views"> & { views: readonly View[] })
-  | CataloguePage
-  | CatalogueDocument
-  | CatalogueUseCase
-  | CatalogueComponent
+type ParsedEntry<View extends ShellCatalogueView<string>> =
+  | (Omit<CatalogueScreen<string>, "views"> & { views: readonly View[] })
+  | CataloguePage<string>
+  | CatalogueDocument<string>
+  | CatalogueUseCase<string>
+  | CatalogueComponent<string>
   | ParsedVariant<View>;
 
-function readEntryWithViews<View extends ShellCatalogueView>(
+function readEntryWithViews<View extends ShellCatalogueView<string>>(
   value: unknown,
   readCatalogueView: (value: unknown) => View,
 ): ParsedEntry<View> {

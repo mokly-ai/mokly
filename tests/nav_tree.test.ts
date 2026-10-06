@@ -8,6 +8,7 @@ import {
   type NavLeafNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { toRouteTarget } from "../packages/viewer/dist/shell/target.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 
 import { group, page, screen, tree } from "./helpers/nav_tree_fixture.js";
 
@@ -89,7 +90,9 @@ test("screen variants stay under their parent in authored order", () => {
       },
     ],
   );
-  const variant = catalogue.byPath.get("Example/Screens/welcome-zeta");
+  const variant = catalogue.byPath.get(
+    readCurrentPath("Example/Screens/welcome-zeta"),
+  );
   assert.ok(variant);
   const target = toRouteTarget(variant);
   assert.ok(target);
@@ -105,7 +108,7 @@ test("removed rows follow the complete current hierarchy in kind and path order"
     screen("Folders/nested", "Nested"),
   ]);
   const removed = (id: string, _route: string): NavLeafNode => ({
-    entryId: id,
+    entryId: readCurrentPath(id),
     entryKind: "page",
     key: `removed:${id}`,
     kind: "leaf",

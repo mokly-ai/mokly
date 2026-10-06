@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
+import type {
+  CurrentPath,
+  BranchPointPath,
+} from "../src/catalogue/path_types.js";
 import type { CatalogueRecord, CatalogueView } from "../src/catalogue/types.js";
 import {
   resolveCatalogueUsageScope,
   type CatalogueUsageScopeTarget,
 } from "../src/catalogue/usage_scope.js";
 
+import { fixtureVariantsAt } from "./path_fixture.js";
 import { scopedCatalogueFixture } from "./scoped_catalogue_fixture.js";
 
 const model = scopedCatalogueFixture();
@@ -31,18 +35,22 @@ test("component entries retain current and removed saved variants", () => {
   const component = model.components.find(
     (entry) => entry.path === "components/action" && !("variantOf" in entry),
   )!;
-  const variants = catalogueComponentVariants(model, component.path);
+  const variants = fixtureVariantsAt(model, component.path);
   assert.deepEqual(
     variants.map(({ path: id }) => id),
     ["components/action/default", "components/action/retired"],
   );
   assertScope(
     target(component),
-    variants.flatMap(({ views }) => views),
+    variants.flatMap<CatalogueView<CurrentPath | BranchPointPath>>(
+      ({ views }) => views,
+    ),
   );
   assertScope(
     target(variants[0]!),
-    variants.flatMap(({ views }) => views),
+    variants.flatMap<CatalogueView<CurrentPath | BranchPointPath>>(
+      ({ views }) => views,
+    ),
   );
 });
 
@@ -76,10 +84,12 @@ test("snapshot-selected removed components retain their historical variants", ()
   )!;
   assert.ok(record.snapshotId);
   assert.equal(record.entry.kind, "component");
-  const variants = catalogueComponentVariants(model, record.entry.path);
+  const variants = fixtureVariantsAt(model, record.entry.path);
   assertScope(
     { ...target(record.entry), snapshotId: record.snapshotId },
-    variants.flatMap(({ views }) => views),
+    variants.flatMap<CatalogueView<CurrentPath | BranchPointPath>>(
+      ({ views }) => views,
+    ),
   );
 });
 
@@ -128,7 +138,7 @@ function target(entry: Pick<CatalogueRecord, "path" | "kind">) {
 
 function assertScope(
   scopeTarget: CatalogueUsageScopeTarget,
-  expected: readonly CatalogueView[],
+  expected: readonly CatalogueView<CurrentPath | BranchPointPath>[],
 ): void {
   const scope = resolveCatalogueUsageScope(model, scopeTarget);
   assert.equal(scope.size, expected.length);

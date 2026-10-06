@@ -12,6 +12,7 @@ import {
   type Catalogue,
 } from "../../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../../packages/viewer/dist/shell/context.js";
+import { readCurrentPath } from "../../packages/viewer/src/catalogue/path_values.js";
 
 /** Light views whose entry supplies a glyph Icon named `name`. */
 function iconViews(componentId: string, name: string) {
@@ -220,7 +221,7 @@ export function movedComponentEvidence(): {
 
 /** The current or removed entry the shell routes at one path. */
 export function routed(catalogue: Catalogue, path: string) {
-  const entry = catalogue.byPath.get(path);
+  const entry = catalogue.byPath.get(readCurrentPath(path));
   if (entry?.kind !== "component") throw new Error(`Missing ${path}`);
   return entry;
 }

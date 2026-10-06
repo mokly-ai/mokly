@@ -3,25 +3,22 @@
 import { branchPoints } from "../catalogue/branch_point.js";
 import { decodeProps } from "../components/codec.js";
 import type {
-  ComponentInstanceRecord,
-  ComponentViewRecord,
-} from "../components/manifest_types.js";
-import type {
   ComponentWireProps,
   PropValue,
 } from "../components/prop_types.js";
 import { viewHref } from "../navigation/routes.js";
 
 import type { Catalogue } from "./catalogue.js";
+import type { ShellInstance, ShellUsage } from "./usage_types.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
 /** Current inspector selection independent of its rendering surface. */
 export interface WorkspaceInspectorSelection {
-  instance?: ComponentInstanceRecord;
+  instance?: ShellInstance;
   props?: ComponentWireProps;
   slots?: readonly string[];
-  usage?: ComponentViewRecord;
+  usage?: ShellUsage;
 }
 
 /** Human-readable supplied values preserve negative zero and nested data. */

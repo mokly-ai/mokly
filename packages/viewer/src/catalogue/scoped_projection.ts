@@ -1,10 +1,10 @@
 /** Deterministic projection from a complete public catalogue to one shell entry. */
 
+import type { BranchPointPath, CurrentPath } from "./path_types.js";
 import type {
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
   ShellCatalogueScreen,
-  ShellCatalogueUsage,
   ShellCatalogueVariant,
   ShellCatalogueView,
 } from "./scoped_types.js";
@@ -21,7 +21,7 @@ import {
   type CatalogueUsageScopeTarget,
 } from "./usage_scope.js";
 
-const OMITTED_USAGE: ShellCatalogueUsage = { status: "omitted" };
+const OMITTED_USAGE = { status: "omitted" as const };
 
 /** Retain all index data while replacing out-of-scope usage with `omitted`. */
 export function projectScopedCatalogue(
@@ -42,20 +42,21 @@ export function projectScopedCatalogue(
   };
 }
 
-function projectScreen(
-  screen: CatalogueScreen,
-  scope: ReadonlySet<CatalogueView>,
-): ShellCatalogueScreen {
+function projectScreen<Reference extends CurrentPath | BranchPointPath>(
+  screen: CatalogueScreen<CurrentPath, Reference>,
+  scope: ReadonlySet<CatalogueView<CurrentPath | BranchPointPath>>,
+): ShellCatalogueScreen<CurrentPath, Reference> {
   return {
     ...screen,
     views: screen.views.map((view) => projectView(view, scope)),
   };
 }
 
-function projectComponent(
-  component: CatalogueComponent | CatalogueComponentVariant,
-  scope: ReadonlySet<CatalogueView>,
-): CatalogueComponent | ShellCatalogueVariant {
+function projectComponent<Reference extends CurrentPath | BranchPointPath>(
+  component:
+    CatalogueComponent | CatalogueComponentVariant<CurrentPath, Reference>,
+  scope: ReadonlySet<CatalogueView<CurrentPath | BranchPointPath>>,
+): CatalogueComponent | ShellCatalogueVariant<CurrentPath, Reference> {
   return "variantOf" in component
     ? {
         ...component,
@@ -64,19 +65,19 @@ function projectComponent(
     : component;
 }
 
-function projectEntry(
-  entry: CatalogueRecord,
-  scope: ReadonlySet<CatalogueView>,
-): ShellCatalogueRoutedEntry {
+function projectEntry<Reference extends CurrentPath | BranchPointPath>(
+  entry: CatalogueRecord<CurrentPath, Reference>,
+  scope: ReadonlySet<CatalogueView<CurrentPath | BranchPointPath>>,
+): ShellCatalogueRoutedEntry<CurrentPath, Reference> {
   if (entry.kind === "screen") return projectScreen(entry, scope);
   if (entry.kind === "component") return projectComponent(entry, scope);
   return entry;
 }
 
-function projectView(
-  view: CatalogueView,
-  scope: ReadonlySet<CatalogueView>,
-): ShellCatalogueView {
+function projectView<Reference extends CurrentPath | BranchPointPath>(
+  view: CatalogueView<Reference>,
+  scope: ReadonlySet<CatalogueView<CurrentPath | BranchPointPath>>,
+): ShellCatalogueView<Reference> {
   return {
     ...view,
     usage: scope.has(view) ? view.usage : OMITTED_USAGE,

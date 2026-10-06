@@ -10,16 +10,16 @@ import type { ManifestEntry } from "../registry/types.js";
  * Retain the validated public tree's titles, order and hidden-folder flags,
  * with the folder `order` lists each section applies again.
  */
-export function adoptCatalogueTree(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+export function adoptCatalogueTree<Entry extends ManifestEntry>(
+  hierarchy: CatalogueHierarchy<Entry>,
   nodes: readonly CatalogueNode[],
   order?: readonly string[],
-): CatalogueHierarchy<ManifestEntry> {
+): CatalogueHierarchy<Entry> {
   const ancestors = new Map(hierarchy.ancestorsByPath);
   const convert = (
     node: CatalogueNode,
     titles: readonly string[],
-  ): HierarchyNode<ManifestEntry> => {
+  ): HierarchyNode<Entry> => {
     if (node.kind === "folder") {
       const index = node.index ? hierarchy.byPath.get(node.index) : undefined;
       return {

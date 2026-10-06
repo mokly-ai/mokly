@@ -6,15 +6,15 @@ import {
   useMemo,
   useRef,
   useState,
-  type RefObject,
   type ReactNode,
+  type RefObject,
 } from "react";
 
 import type { ViewerCapabilityRequest } from "../client/host_capability_descriptor.js";
 import type { ComponentWireProps } from "../components/prop_types.js";
 import type { ComponentOverride } from "../components/render_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
 
+import { acceptedCurrentPreview } from "./accepted_inputs.js";
 import { useViewerCapabilities } from "./capability_context.js";
 import {
   controlDraft,
@@ -29,12 +29,13 @@ import {
   initialComponentEditorState,
 } from "./component_controls_state.js";
 import { useComponentPreviewExpiration } from "./component_preview_expiration.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
 /** Control output consumed by both the stage and Props panel. */
 export interface ComponentControlsResult {
   panel: ReactNode;
-  previewViews: readonly GeneratedComponentView[];
+  previewViews: readonly ShellGeneratedView[];
   props?: ComponentWireProps;
 }
 
@@ -48,7 +49,7 @@ export function useComponentControls({
   workspaceRef,
 }: {
   comparing: boolean;
-  contexts: readonly GeneratedComponentView[];
+  contexts: readonly ShellGeneratedView[];
   data: WorkspaceData;
   request?: ViewerCapabilityRequest | undefined;
   variant?: WorkspaceVariant | undefined;
@@ -268,7 +269,7 @@ export function useComponentControls({
           ? {
               ...view,
               path: decodeURIComponent(preview.previewUrl),
-              usage: preview.view,
+              usage: acceptedCurrentPreview(preview).view,
             }
           : view;
       }),

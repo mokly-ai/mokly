@@ -8,6 +8,11 @@ import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellInitialState } from "../src/shell/store_state.js";
 import { StandaloneShellDocument } from "../src/standalone/document.js";
 
+import {
+  baselineManifestFixture,
+  currentManifestEntryFixture,
+} from "./manifest_path_fixture.js";
+
 const screen = {
   colorSchemes: ["light", "dark"],
   declaredDependencies: [],
@@ -41,7 +46,7 @@ function render(colorScheme: "light" | "dark", home = false): string {
         changesStatus: "ready",
         changedEntries: [screen.path],
         componentChanges: {
-          baseline: manifest,
+          baseline: baselineManifestFixture(manifest),
           screenViews: [
             {
               path: screen.path,
@@ -56,7 +61,13 @@ function render(colorScheme: "light" | "dark", home = false): string {
       view={
         home
           ? { kind: "home" }
-          : { kind: "target", target: { kind: "entry", entry: screen } }
+          : {
+              kind: "target",
+              target: {
+                kind: "entry",
+                entry: currentManifestEntryFixture(screen),
+              },
+            }
       }
     />,
   );

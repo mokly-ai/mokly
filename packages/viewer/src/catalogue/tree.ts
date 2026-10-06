@@ -4,6 +4,7 @@ import type {
   HierarchyNode,
 } from "../registry/hierarchy.js";
 
+import { readCurrentPath } from "./path_values.js";
 import type { CatalogueNode } from "./types.js";
 
 /** Serialize the shared path tree, preserving folder order and index rows. */
@@ -15,16 +16,16 @@ export function projectTree<T extends HierarchyEntry>(
       ? {
           kind: "folder",
           ...(node.hidden ? { hidden: true } : {}),
-          path: node.path,
+          path: readCurrentPath(node.path),
           title: node.label,
-          ...(node.index ? { index: node.index.path } : {}),
+          ...(node.index ? { index: readCurrentPath(node.index.path) } : {}),
           ...(node.order ? { order: [...node.order] } : {}),
           children: node.children.map(project),
         }
       : {
           kind: "entry",
           ...(node.hidden ? { hidden: true } : {}),
-          path: node.entry.path,
+          path: readCurrentPath(node.entry.path),
           ...(node.order ? { order: [...node.order] } : {}),
           ...(node.children?.length
             ? { children: node.children.map(project) }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import type { ManifestEntry, ManifestV8 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { changesActivation } from "../src/shell/changes_activation.js";
@@ -52,7 +53,7 @@ function opened(
     changesStatus: "ready",
     updateVersion: 1,
   };
-  const entry = catalogue.byPath.get(requested);
+  const entry = catalogue.byPath.get(readCurrentPath(requested));
   assert.ok(entry);
   const route: ShellRoute = {
     view: { kind: "target", target: { kind: "entry", entry } },

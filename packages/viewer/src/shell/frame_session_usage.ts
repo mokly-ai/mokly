@@ -1,5 +1,6 @@
 /** Usage adoption for one mounted frame session, including mount completion. */
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import { FrameError } from "../client/frame_error.js";
 
@@ -26,7 +27,7 @@ export interface ActiveSession extends ShellFrameSession {
 export async function adoptUsage(
   registry: ShellFrameRegistry,
   session: ActiveSession,
-  usage: CatalogueUsage,
+  usage: CatalogueUsage<CurrentPath | BranchPointPath>,
   replace: () => void,
   setStatus: (status: ShellFrameStatus) => void,
 ): Promise<void> {

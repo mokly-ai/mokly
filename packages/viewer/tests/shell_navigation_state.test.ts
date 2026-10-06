@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import { entryWording } from "../src/shell/entry_wording.js";
 import { targetHead } from "../src/shell/head.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
@@ -16,10 +17,11 @@ import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import { withoutTreeEntries } from "./catalogue_fixture.js";
+import { historicalEntry } from "./path_fixture.js";
 import { catalogue, context, model } from "./shell_state_fixture.js";
 
 test("component variant heads keep the parent heading and shown entry path", () => {
-  const parent = catalogue.byPath.get("components/action");
+  const parent = catalogue.byPath.get(readCurrentPath("components/action"));
   assert.ok(parent?.kind === "component" && !("variantOf" in parent));
   assert.deepEqual(targetHead(catalogue, { kind: "entry", entry: parent }), {
     crumbs: [
@@ -31,7 +33,9 @@ test("component variant heads keep the parent heading and shown entry path", () 
     path: "components/action",
     title: "Action",
   });
-  const variant = catalogue.byPath.get("components/action/default");
+  const variant = catalogue.byPath.get(
+    readCurrentPath("components/action/default"),
+  );
   assert.ok(variant?.kind === "component" && "variantOf" in variant);
   const head = targetHead(catalogue, { kind: "entry", entry: variant });
   assert.equal(head.title, "Action");
@@ -63,7 +67,7 @@ test("removed component variants keep catalogue-wide Dark available", () => {
     removedEntries: [
       ...model.removedEntries,
       {
-        entry: historical,
+        entry: historicalEntry(historical),
         folderTitles: [],
         parentTitle: "Action",
         snapshotId: "e".repeat(64),

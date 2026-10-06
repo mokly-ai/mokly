@@ -1,6 +1,8 @@
 import type { CatalogueView } from "@mokly/viewer";
 import type {
   BranchPointLookup,
+  BranchPointPath,
+  CurrentPath,
   ManifestEntry,
   ManifestScreen,
 } from "@mokly/viewer/data";
@@ -8,6 +10,7 @@ import {
   generatedViews,
   isManifestComponentVariant,
   readInstance,
+  readBranchPointPath,
   readRange,
   readSlot,
   lexical,
@@ -17,12 +20,14 @@ import { projectionBranchPoints } from "./branch_points.js";
 import { comparisonSelection } from "./changes.js";
 import type { CatalogueProjectionInput } from "./projection_input.js";
 
-export function projectViews(
+export function projectViews<Reference extends CurrentPath | BranchPointPath>(
   input: CatalogueProjectionInput,
   lookup: Pick<BranchPointLookup, "usageComponent">,
-  entry: ManifestScreen | Extract<ManifestEntry, { kind: "component" }>,
+  entry:
+    | ManifestScreen<CurrentPath, Reference>
+    | Extract<ManifestEntry<CurrentPath, Reference>, { kind: "component" }>,
   removed: boolean,
-): CatalogueView[] {
+): CatalogueView<Reference>[] {
   if (entry.kind === "component" && !isManifestComponentVariant(entry))
     return [];
   const result = input.comparison ?? input.evidence?.result;
@@ -48,7 +53,11 @@ export function projectViews(
     const usage =
       removed &&
       recordedUsage?.instances.some(
-        (instance) => !lookup.usageComponent(instance.componentId, "before"),
+        (instance) =>
+          !lookup.usageComponent(
+            readBranchPointPath(instance.componentId),
+            "before",
+          ),
       )
         ? undefined
         : recordedUsage;
@@ -74,7 +83,7 @@ export function projectViews(
         ? {
             status: "ready",
             instances: usage.instances
-              .map(readInstance)
+              .map(readInstance<Reference>)
               .sort((a, b) => lexical(a.key, b.key)),
             slots: usage.slots
               .map(readSlot)

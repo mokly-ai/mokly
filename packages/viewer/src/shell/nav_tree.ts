@@ -1,5 +1,6 @@
 // Builds the Specs and Components sections from the one path tree.
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import {
   folderTitleLookup,
   type FolderTitleLookup,
@@ -18,7 +19,7 @@ import {
 /** A leaf navigation row linking to one viewable route. */
 export interface NavLeafNode {
   hidden?: true;
-  entryId: string;
+  entryId: CurrentPath;
   /**
    * The folder's own page, listed as the folder's first child row. Its label
    * is `Overview` when its title is also the folder's title.
@@ -38,9 +39,9 @@ export interface NavLeafNode {
    * Entry id of the current parent a retained baseline variant attaches to,
    * as the branch-point lookup resolved it from the variant's baseline parent.
    */
-  parentId?: string;
+  parentId?: CurrentPath;
   /** The branch-point path of an entry a move paired; Changes labels it Moved. */
-  movedFrom?: string;
+  movedFrom?: BranchPointPath;
   entryKind: "component" | "document" | "screen" | "use-case" | "page";
   key: string;
   kind: "leaf";
@@ -98,13 +99,18 @@ interface NavFolderContext {
 /** Shared lookups for projecting one hierarchy into rows. */
 interface NavProjection {
   /** Each current variant's current parent, keyed by the variant's path. */
-  parents: ReadonlyMap<string, ManifestEntry>;
+  parents: ReadonlyMap<
+    string,
+    ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>
+  >;
   titles: FolderTitleLookup;
 }
 
 /** Project the one path tree into the Specs and Components sections. */
 export function buildNavSections(
-  hierarchy: CatalogueHierarchy<ManifestEntry>,
+  hierarchy: CatalogueHierarchy<
+    ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>
+  >,
   additionalLeaves: readonly NavLeafNode[] = [],
 ): NavSectionNode[] {
   const adopted = adoptedVariants(hierarchy, additionalLeaves);
@@ -165,7 +171,7 @@ export function buildNavSections(
 
 /** One entry row, with the variants and folder members it discloses. */
 function leafNode(
-  entry: ManifestEntry,
+  entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
   titles: FolderTitleLookup,
   variants: readonly NavLeafNode[] = [],
   members: readonly NavNode[] = [],
@@ -186,7 +192,9 @@ function leafNode(
 }
 
 function isVariantOf(
-  node: HierarchyNode<ManifestEntry>,
+  node: HierarchyNode<
+    ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>
+  >,
   path: string,
   projection: NavProjection,
 ): boolean {
@@ -204,7 +212,9 @@ function isVariantOf(
  * A hidden folder hides every row below it, variants included.
  */
 function structuredNode(
-  node: HierarchyNode<ManifestEntry>,
+  node: HierarchyNode<
+    ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>
+  >,
   projection: NavProjection,
   inheritedHidden = false,
   folder?: NavFolderContext,

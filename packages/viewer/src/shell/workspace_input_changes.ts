@@ -5,15 +5,14 @@
 
 import { branchPoints } from "../catalogue/branch_point.js";
 import type { EntryIdentity } from "../catalogue/branch_point_types.js";
-import type {
-  ManifestComponent,
-  ManifestComponentVariant,
-} from "../components/manifest_types.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
+import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import type { ComponentWireProps } from "../components/prop_types.js";
 import { generatedViews } from "../components/views.js";
-import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
+import type { ManifestEntry } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
+import type { WorkspaceEvidenceEntry } from "./workspace_entry.js";
 
 /** One instance whose supplied props differ from the baseline render. */
 export interface InputChange {
@@ -32,18 +31,23 @@ export interface InputChange {
  * baseline `inventory`, so a move or a case-only rename keeps its inputs. */
 export function inputChanges(
   catalogue: Catalogue,
-  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
-  baseline: ManifestEntry | undefined,
-  inventory: readonly EntryIdentity[],
-  currentVariants: readonly ManifestComponentVariant[] = [],
-  baselineVariants: readonly ManifestComponentVariant[] = [],
+  entry: WorkspaceEvidenceEntry,
+  baseline: ManifestEntry<BranchPointPath> | undefined,
+  inventory: readonly EntryIdentity<BranchPointPath>[],
+  currentVariants: readonly ManifestComponentVariant<CurrentPath>[] = [],
+  baselineVariants: readonly ManifestComponentVariant<BranchPointPath>[] = [],
 ): InputChange[] {
   const changes: InputChange[] = [];
   if (entry.kind === "screen" && !baseline) return changes;
+  const currentEntry = catalogue.manifest.entries.find(
+    (candidate) => candidate.path === entry.path,
+  );
   const afterViews =
     entry.kind === "component"
       ? currentVariants.flatMap((variant) => generatedViews(variant))
-      : generatedViews(entry);
+      : currentEntry
+        ? generatedViews(currentEntry)
+        : [];
   const beforeViews =
     entry.kind === "component"
       ? baselineVariants.flatMap((variant) => generatedViews(variant))
@@ -51,7 +55,7 @@ export function inputChanges(
         ? generatedViews(baseline)
         : [];
   const lookup = branchPoints(catalogue);
-  const counterpart = (path: string) =>
+  const counterpart = (path: CurrentPath) =>
     lookup.counterpart({ kind: "component", path }, inventory)?.path;
   for (const after of afterViews) {
     const variantPath =

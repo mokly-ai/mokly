@@ -2,7 +2,8 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import type { InstanceRef, ViewerSelection } from "@mokly/viewer";
-import { catalogueComponentVariants } from "@mokly/viewer/data";
+
+import { fixtureVariantsAt } from "../../packages/viewer/tests/path_fixture.js";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
@@ -172,10 +173,9 @@ for (const cross of [false, true]) {
     const component = fixture.catalogue.components.find(
       (entry) => entry.path === "pane",
     )!;
-    const variant = catalogueComponentVariants(
-      fixture.catalogue,
-      component.path,
-    ).find((entry) => entry.path === "pane/second")!;
+    const variant = fixtureVariantsAt(fixture.catalogue, component.path).find(
+      (entry) => entry.path === "pane/second",
+    )!;
     const view = variant.views.find(
       (entry) => entry.viewport === "desktop" && entry.colorScheme === "light",
     )!;

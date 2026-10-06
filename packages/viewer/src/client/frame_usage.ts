@@ -1,19 +1,22 @@
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import {
-  readMetadata,
-  metadataKeys,
-  unavailableMetadata,
   compactRanges,
+  metadataKeys,
+  readMetadata,
+  unavailableMetadata,
   type InspectorMetadata,
 } from "../inspector/metadata.js";
-import { BYTE_LIMIT, EVENTS } from "../inspector/values.js";
 import type { InspectorEventType } from "../inspector/values.js";
+import { BYTE_LIMIT, EVENTS } from "../inspector/values.js";
 
 import type { InstanceBoundary } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 
 /** Snapshot only the instance/range identities needed by the mounted session. */
-export function frameUsage(usage: CatalogueUsage): InspectorMetadata {
+export function frameUsage(
+  usage: CatalogueUsage<CurrentPath | BranchPointPath>,
+): InspectorMetadata {
   if (usage.status !== "ready") return unavailableMetadata("unavailable");
   if (usage.instances.length > 1024 || usage.ranges.length > 4096)
     return unavailableMetadata("limit");

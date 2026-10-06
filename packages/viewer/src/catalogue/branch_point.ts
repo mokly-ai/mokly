@@ -10,13 +10,16 @@ import type {
   EntryResolution,
   VariantParentResolution,
 } from "./branch_point_types.js";
+import type { BeforePath } from "./path_types.js";
 
 const lookups = new WeakMap<object, unknown>();
 
 /** Index a generation on first use, retaining each input entry and record. */
 export function branchPoints<
-  Entry extends BranchPointEntry,
-  Removed extends BranchPointRemovedEntry<Entry>,
+  Entry extends BranchPointEntry<string, string, string>,
+  Removed extends BranchPointRemovedEntry<
+    BranchPointEntry<Entry["path"], string, string>
+  >,
 >(
   catalogue: BranchPointInputs<Entry, Removed>,
 ): BranchPointLookup<Entry, Removed> {
@@ -29,8 +32,10 @@ export function branchPoints<
 }
 
 function createBranchPointLookup<
-  Entry extends BranchPointEntry,
-  Removed extends BranchPointRemovedEntry<Entry>,
+  Entry extends BranchPointEntry<string, string, string>,
+  Removed extends BranchPointRemovedEntry<
+    BranchPointEntry<Entry["path"], string, string>
+  >,
 >(
   catalogue: BranchPointInputs<Entry, Removed>,
 ): BranchPointLookup<Entry, Removed> {
@@ -52,7 +57,7 @@ function createBranchPointLookup<
     ]),
   );
   const moved = new Map<string, Entry>();
-  const previous = new Map<string, string>();
+  const previous = new Map<string, BeforePath<Entry["path"]>>();
   const pairs =
     "manifest" in catalogue
       ? new Map(
@@ -70,15 +75,15 @@ function createBranchPointLookup<
         : entry.previousPath;
     if (previousPath === undefined) continue;
     moved.set(identityKey({ kind: entry.kind, path: previousPath }), entry);
-    previous.set(identityKey(entry), previousPath);
+    previous.set(identityKey(entry), previousPath as BeforePath<Entry["path"]>);
   }
   const inventories = new WeakMap<
-    readonly EntryIdentity[],
+    readonly EntryIdentity<string>[],
     ReadonlyMap<string, number>
   >();
   const position = (
-    baseline: readonly EntryIdentity[],
-    identity: EntryIdentity,
+    baseline: readonly EntryIdentity<string>[],
+    identity: EntryIdentity<string>,
   ): number | undefined => {
     const known = inventories.get(baseline);
     const index =
@@ -89,7 +94,7 @@ function createBranchPointLookup<
   };
 
   const resolve = (
-    reference: EntryReference,
+    reference: EntryReference<Entry["path"], BeforePath<Entry["path"]>>,
   ): EntryResolution<Entry, Removed> | undefined => {
     const key = identityKey(reference);
     const entry =
@@ -102,7 +107,7 @@ function createBranchPointLookup<
       : undefined;
   };
   const locate = (
-    identity: EntryIdentity,
+    identity: EntryIdentity<string>,
   ): EntryResolution<Entry, Removed> | undefined => {
     const key = identityKey(identity);
     const entry = current.get(key);
@@ -113,9 +118,9 @@ function createBranchPointLookup<
       : undefined;
   };
   const counterpart = (
-    reference: EntryIdentity,
-    baseline: readonly EntryIdentity[] = [],
-  ): EntryIdentity | undefined => {
+    reference: EntryIdentity<Entry["path"]>,
+    baseline: readonly EntryIdentity<BeforePath<Entry["path"]>>[] = [],
+  ): EntryIdentity<BeforePath<Entry["path"]>> | undefined => {
     const key = identityKey(reference);
     const entry = current.get(key);
     if (!entry) return undefined;
@@ -135,7 +140,7 @@ function createBranchPointLookup<
       side: variant.source === "current" ? "after" : "before",
       kind: entry.kind,
       path: entry.variantOf,
-    });
+    } as EntryReference<Entry["path"], BeforePath<Entry["path"]>>);
     if (resolved && resolved.entry.variantOf === undefined) return resolved;
     return variant.source === "removed" &&
       variant.record.parentTitle !== undefined
@@ -151,8 +156,13 @@ function createBranchPointLookup<
   }
   return {
     resolve,
+    at: locate,
     usageComponent(name, side) {
-      const resolved = resolve({ kind: "component", path: name, side });
+      const resolved = resolve({
+        kind: "component",
+        path: name,
+        side,
+      } as EntryReference<Entry["path"], BeforePath<Entry["path"]>>);
       return resolved && resolved.entry.variantOf === undefined
         ? resolved
         : undefined;
@@ -173,6 +183,6 @@ function createBranchPointLookup<
   };
 }
 
-function identityKey(entry: EntryIdentity): string {
+function identityKey(entry: EntryIdentity<string>): string {
   return `${entry.kind}:${entry.path.toLowerCase()}`;
 }
