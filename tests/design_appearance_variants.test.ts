@@ -13,6 +13,7 @@ import { componentVariants } from "./helpers/component_views.js";
 import {
   attribute,
   designCatalogue,
+  designEntries,
   elements,
 } from "./helpers/design_catalogue.js";
 import { textOutput } from "./helpers/generated_text.js";
@@ -22,16 +23,16 @@ const dualSchemeComponents = [...DUAL_SCHEME_SAMPLES].map(
   (slug) => `design/library/chrome/${slug}`,
 );
 const previewScreens = [
-  "design-appearance-overview",
-  "design-appearance-auto",
-  "design-appearance-props",
-  "design-appearance-instance",
-  "design-appearance-loading",
-  "design-appearance-unavailable",
-  "design-appearance-side-by-side",
-  "design-appearance-difference",
-  "design-appearance-flow",
-];
+  "overview",
+  "states/auto",
+  "workspaces/props",
+  "workspaces/instance",
+  "status/loading",
+  "status/unavailable",
+  "workspaces/side-by-side",
+  "workspaces/difference",
+  "status/flow",
+].map((path) => `design/browse/appearance/${path}`);
 
 function appearanceOf(html: string): string | undefined {
   const roots = elements(
@@ -43,11 +44,11 @@ function appearanceOf(html: string): string | undefined {
 }
 
 test("appearance screens publish both schemes for both viewports", async () => {
-  const { manifest } = await designCatalogue;
-  const screens = manifest.entries.filter(
+  const screens = await designEntries(
     (entry) =>
       entry.kind === "screen" &&
       entry.path.startsWith("design/browse/appearance/"),
+    "appearance screens",
   );
   assert.ok(screens.length > 0, "the appearance section exists");
   for (const entry of screens) {
@@ -61,11 +62,12 @@ test("appearance screens publish both schemes for both viewports", async () => {
 });
 
 test("each generated appearance variant draws the scheme it was rendered for", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  const screens = manifest.entries.filter(
+  const { outputs } = await designCatalogue;
+  const screens = await designEntries(
     (entry) =>
       entry.kind === "screen" &&
       entry.path.startsWith("design/browse/appearance/"),
+    "appearance screens",
   );
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
@@ -113,8 +115,14 @@ test("the appearance-related registered samples render in both schemes", async (
 async function appearanceFragments(): Promise<
   { id: string; scheme: "light" | "dark"; viewport: string; html: string }[]
 > {
-  const { manifest, outputs } = await designCatalogue;
-  return manifest.entries.flatMap((entry) =>
+  const { outputs } = await designCatalogue;
+  const entries = await designEntries(
+    (entry) =>
+      entry.kind === "screen" &&
+      entry.path.startsWith("design/browse/appearance/"),
+    "appearance fragments",
+  );
+  return entries.flatMap((entry) =>
     entry.kind === "screen" &&
     entry.path.startsWith("design/browse/appearance/")
       ? (["mobile", "desktop"] as const).flatMap((viewport) =>
@@ -202,6 +210,11 @@ test("the Appearance selector reads Auto, or the scheme it rendered for", async 
 });
 
 test("depicted previews follow the artboard's scheme", async () => {
+  const entries = await designEntries(
+    (entry) => entry.kind === "screen" && previewScreens.includes(entry.path),
+    "appearance preview screens",
+  );
+  assert.equal(entries.length, 9);
   for (const view of await appearanceFragments()) {
     if (!previewScreens.includes(view.id)) continue;
     const dark = countClass(view.html, "mbk-screen-dark");
@@ -212,6 +225,12 @@ test("depicted previews follow the artboard's scheme", async () => {
 });
 
 test("the light-only subject keeps light frames and names its fallback under Dark", async () => {
+  await designEntries(
+    (entry) =>
+      entry.kind === "screen" &&
+      entry.path === "design/browse/appearance/states/light-only",
+    "light-only appearance subject",
+  );
   for (const view of await appearanceFragments()) {
     if (view.id !== "design/browse/appearance/states/light-only") continue;
     const where = `${view.viewport} ${view.scheme}`;
@@ -226,19 +245,6 @@ test("the light-only subject keeps light frames and names its fallback under Dar
       `${where}: fallback caption only under Dark`,
     );
   }
-});
-
-test("the removed fixed-theme scenarios are gone", async () => {
-  const { manifest } = await designCatalogue;
-  for (const id of [
-    "design-appearance-light-preview",
-    "design-appearance-dark-preview",
-  ])
-    assert.equal(
-      manifest.entries.find((entry) => entry.path === id),
-      undefined,
-      id,
-    );
 });
 
 /** Canonical screens that replaced the removed head-band scheme depictions. */

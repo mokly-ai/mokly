@@ -7,7 +7,7 @@ import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import {
   attribute,
   byClass,
-  designCatalogue,
+  designEntries,
   designDocument,
   elements,
   textContent,
@@ -133,9 +133,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
 }
 
 test("every design link resolves to a real same-viewport design artifact without scripts or nested controls", async () => {
-  const { manifest } = await designCatalogue;
-  const designs = manifest.entries.filter(
+  const designs = await designEntries(
     (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "same-viewport design links",
   );
   const componentDesigns = designs.filter((entry) =>
     entry.path.startsWith("design/components/"),
@@ -198,8 +198,11 @@ test("every design link resolves to a real same-viewport design artifact without
 });
 
 test("no design route doubles as a directory holding another design route", async () => {
-  const { manifest } = await designCatalogue;
-  const routes = manifest.entries.flatMap((entry) =>
+  const entries = await designEntries(
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "design directory routes",
+  );
+  const routes = entries.flatMap((entry) =>
     entry.kind === "screen" && entry.path.startsWith("design/")
       ? [entryRoute(entry.path)]
       : [],

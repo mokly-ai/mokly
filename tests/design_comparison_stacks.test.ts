@@ -9,6 +9,7 @@ import {
   attribute,
   byClass,
   designCatalogue,
+  designEntries,
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
@@ -137,8 +138,11 @@ test("Side by side keeps one chrome per version", async () => {
 
 /** Every generated design output: each screen view and saved sample view. */
 async function designOutputs(): Promise<string[]> {
-  const { manifest } = await designCatalogue;
-  return manifest.entries.flatMap((entry) => {
+  const entries = await designEntries(
+    (entry) => entry.path.startsWith("design/"),
+    "design outputs",
+  );
+  return entries.flatMap((entry) => {
     if (!entry.path.startsWith("design/")) return [];
     return generatedViews(entry).map((view) => view.path);
   });

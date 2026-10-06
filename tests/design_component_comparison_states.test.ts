@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   attribute,
   byClass,
-  designCatalogue,
+  designEntries,
   designDocument,
   elements,
   textContent,
@@ -35,9 +35,12 @@ function evidence(document: Document, where: string): Map<string, string> {
 }
 
 test("component comparison captions follow the recorded change, never the depicted content", async () => {
-  const { manifest } = await designCatalogue;
   const captions = new Map<string, Set<string>>();
-  for (const entry of manifest.entries) {
+  for (const entry of await designEntries(
+    (entry) =>
+      entry.kind === "screen" && entry.path.startsWith("design/components/"),
+    "component comparison artboards",
+  )) {
     if (entry.kind !== "screen" || !entry.path.startsWith("design/components/"))
       continue;
     for (const { document, route } of await renders(entry.path)) {

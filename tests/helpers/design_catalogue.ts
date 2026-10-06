@@ -5,7 +5,10 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { viewRoute } from "../../packages/viewer/dist/data.js";
-import type { ManifestScreen } from "../../packages/viewer/dist/registry/types.js";
+import type {
+  ManifestEntry,
+  ManifestScreen,
+} from "../../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./fixture.js";
 import { textOutput } from "./generated_text.js";
@@ -18,6 +21,28 @@ export const designCatalogue = loadConfig(
   repositoryRoot,
   "examples/basic/mokly.config.ts",
 ).then(compileCatalogue);
+
+/** Select current catalogue entries and reject a vacuous check. */
+export function designEntries<T extends ManifestEntry>(
+  predicate: (entry: ManifestEntry) => entry is T,
+  label: string,
+  entries?: readonly ManifestEntry[],
+): Promise<T[]>;
+export function designEntries(
+  predicate: (entry: ManifestEntry) => boolean,
+  label: string,
+  entries?: readonly ManifestEntry[],
+): Promise<ManifestEntry[]>;
+export async function designEntries(
+  predicate: (entry: ManifestEntry) => boolean,
+  label: string,
+  entries?: readonly ManifestEntry[],
+): Promise<ManifestEntry[]> {
+  const catalogue = entries ?? (await designCatalogue).manifest.entries;
+  const selected = catalogue.filter(predicate);
+  assert.ok(selected.length > 0, `No design entries matched: ${label}`);
+  return selected;
+}
 
 export function elements(
   node: Node,

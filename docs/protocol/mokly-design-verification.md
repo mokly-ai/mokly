@@ -20,7 +20,8 @@ They do not need a browser or a served shell.
 
 Catalogue-wide selections use `designEntries(predicate, label)`. The helper
 returns matching manifest entries and fails with the supplied label if none
-match. A path or kind change must fail a selection instead of silently skipping
+match. Baseline tests can supply the copied catalogue's entries as a third
+argument to preserve the exact historical input. A path or kind change must fail a selection instead of silently skipping
 its assertions. Readers for one screen or component variant must also fail
 when the requested entry or output does not exist.
 
@@ -122,7 +123,7 @@ After the push, use the
 
 ## Delivery Status
 
-The layer contract is defined. Non-empty catalogue selections, static-check
+The layer contract and non-empty catalogue selections are delivered. Static-check
 moves, runtime-check moves, the raw-artboard directory, and the boundary guard
 are pending. Current browser commands above use the existing spec locations.
 

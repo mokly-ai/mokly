@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { designCatalogue } from "./helpers/design_catalogue.js";
+import { designEntries } from "./helpers/design_catalogue.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const UNITS = [
@@ -61,10 +61,12 @@ async function stated(file: string, pattern: RegExp): Promise<number[]> {
 }
 
 test("documented design-screen counts match the compiled catalogue", async () => {
-  const { manifest } = await designCatalogue;
-  const designs = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.path.startsWith("design/") ? [entry] : [],
-  );
+  const designs = (
+    await designEntries(
+      (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+      "documented design screens",
+    )
+  ).flatMap((entry) => (entry.kind === "screen" ? [entry] : []));
   const components = designs.filter((entry) =>
     entry.path.startsWith("design/components/"),
   );

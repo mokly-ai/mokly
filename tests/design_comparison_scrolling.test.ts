@@ -9,6 +9,7 @@ import {
   attribute,
   byClass,
   designCatalogue,
+  designEntries,
   elements,
   textContent,
   type Element,
@@ -167,8 +168,14 @@ const SCROLLING_APART = new Set([
 ]);
 
 test("every diff-mode band draws Scroll together after its modes, and Current never does", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  const views = manifest.entries.flatMap((entry) => {
+  const { outputs } = await designCatalogue;
+  const entries = await designEntries(
+    (entry) =>
+      entry.path.startsWith("design/") &&
+      (entry.kind === "screen" || entry.kind === "component"),
+    "comparison bands",
+  );
+  const views = entries.flatMap((entry) => {
     if (entry.kind !== "screen" && entry.kind !== "component") return [];
     if (!entry.path.startsWith("design/")) return [];
     return generatedViews(entry).map((view) => ({

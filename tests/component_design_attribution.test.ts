@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
+import { designEntries } from "./helpers/design_catalogue.js";
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -25,20 +26,25 @@ test("mixed component design styles retain their actual rendered resource scope"
         `examples/basic/generated/${stylesheet}`,
         (source) => source + "\nbody { gap: 17px; }\n",
       );
-      const expected = fixture.before.manifest.entries.filter((entry) =>
-        generatedViews(entry).some((view) =>
-          textOutput(fixture.before.outputs, view.path)!.includes(
-            `/${stylesheet}"`,
+      const expected = await designEntries(
+        (entry) =>
+          generatedViews(entry).some((view) =>
+            textOutput(fixture.before.outputs, view.path)!.includes(
+              `/${stylesheet}"`,
+            ),
           ),
-        ),
+        `rendered resources for ${stylesheet}`,
+        fixture.before.manifest.entries,
       );
       const expectedScreens = expected.filter(
         (entry) => entry.kind === "screen",
       );
       if (screens === "all-design") {
-        const allDesignScreens = fixture.before.manifest.entries.filter(
+        const allDesignScreens = await designEntries(
           (entry) =>
             entry.kind === "screen" && entry.path.startsWith("design/"),
+          "baseline design screens",
+          fixture.before.manifest.entries,
         );
         assert.deepEqual(
           expectedScreens.map(({ path }) => path).sort(),

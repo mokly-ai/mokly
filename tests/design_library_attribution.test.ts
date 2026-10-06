@@ -5,6 +5,7 @@ import { compareReview } from "../dist/review/compare.js";
 import { computeChangedPaths } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
+import { designEntries } from "./helpers/design_catalogue.js";
 import { designLibrary } from "./helpers/design_library.js";
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 
@@ -22,7 +23,12 @@ test("each exclusive library stylesheet changes its component and only affects r
         result.changes.map((change) => (change.after ?? change.before)!.path),
         [`design/library/${group}/${slug}`],
       );
-      const consumers = fixture.before.manifest.entries
+      const baseline = await designEntries(
+        (entry) => entry.kind === "screen",
+        "baseline consumers",
+        fixture.before.manifest.entries,
+      );
+      const consumers = baseline
         .flatMap((entry) =>
           entry.kind === "screen" &&
           generatedViews(entry).some((view) =>
@@ -231,7 +237,13 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
   assert.equal(viewBatches.length, 1);
   assert.equal(
     viewBatches[0]!.length,
-    fixture.before.manifest.entries.flatMap(generatedViews).length,
+    (
+      await designEntries(
+        () => true,
+        "baseline generated views",
+        fixture.before.manifest.entries,
+      )
+    ).flatMap(generatedViews).length,
   );
   assert.ok(viewBatches[0]!.length > 200);
   const resourceReads = fixture.batches

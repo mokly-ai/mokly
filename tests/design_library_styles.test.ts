@@ -7,7 +7,7 @@ import {
   componentParent,
   componentVariants,
 } from "./helpers/component_views.js";
-import { designCatalogue } from "./helpers/design_catalogue.js";
+import { designCatalogue, designEntries } from "./helpers/design_catalogue.js";
 import { textOutput } from "./helpers/generated_text.js";
 
 test("standalone variants emit only the exclusive child styles they actually render", async () => {
@@ -55,15 +55,17 @@ test("standalone variants emit only the exclusive child styles they actually ren
 });
 
 test("ownership includes implementation and CSS, while variants stay outside impact dependencies", async () => {
-  const { manifest } = await designCatalogue;
-  for (const entry of manifest.entries) {
-    if (
-      entry.kind !== "component" ||
-      "variantOf" in entry ||
-      !entry.path.startsWith("design-ui-")
-    )
-      continue;
-    const slug = entry.path.slice("design-ui-".length);
+  const entries = await designEntries(
+    (entry) =>
+      entry.kind === "component" &&
+      !("variantOf" in entry) &&
+      entry.path.startsWith("design/library/"),
+    "shared component ownership",
+  );
+  assert.equal(entries.length, 16);
+  for (const entry of entries) {
+    assert.ok(entry.kind === "component" && !("variantOf" in entry));
+    const slug = entry.path.split("/").at(-1)!;
     assert.ok(
       entry.ownedDependencies.some((file) =>
         file.endsWith("/" + slug + ".css"),

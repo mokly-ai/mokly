@@ -57,10 +57,6 @@ test("the Welcome conversion keeps the approved screens as variants, not folder 
     assert.equal(entry.variantOf, "design/browse/views/screen", id);
     assert.ok(entry.path.startsWith(`${parent.path}/`), id);
   }
-  assert.equal(
-    manifest.entries.some((entry) => entry.path === "design-browse-tags"),
-    false,
-  );
   const filter = manifest.entries.find(
     (entry) => entry.path === "design/browse/states/tag-filter",
   );

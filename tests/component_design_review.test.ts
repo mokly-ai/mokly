@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   attribute,
   byClass,
-  designCatalogue,
+  designEntries,
   designDocument,
   elements,
   textContent,
@@ -12,13 +12,13 @@ import {
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: component current-page links identify the rendered artboard`, async () => {
-    const { manifest } = await designCatalogue;
-    for (const entry of manifest.entries) {
-      if (
-        entry.kind !== "screen" ||
-        !entry.path.startsWith("design-component-")
-      )
-        continue;
+    const entries = await designEntries(
+      (entry) =>
+        entry.kind === "screen" && entry.path.startsWith("design/components/"),
+      "component owning artboards",
+    );
+    assert.equal(entries.length, 39);
+    for (const entry of entries) {
       const { document } = await designDocument(entry.path, viewport);
       const current = elements(
         document,
@@ -35,13 +35,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
   });
 
   test(`${viewport}: design-only footer navigation stays outside product artboards`, async () => {
-    const { manifest } = await designCatalogue;
-    for (const entry of manifest.entries) {
-      if (
-        entry.kind !== "screen" ||
-        !entry.path.startsWith("design-component-")
-      )
-        continue;
+    const entries = await designEntries(
+      (entry) =>
+        entry.kind === "screen" && entry.path.startsWith("design/components/"),
+      "component footer artboards",
+    );
+    assert.equal(entries.length, 39);
+    for (const entry of entries) {
       const { document } = await designDocument(entry.path, viewport);
       assert.equal(byClass(document, "ce-design-links").length, 0, entry.path);
     }

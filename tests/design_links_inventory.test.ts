@@ -16,13 +16,13 @@ import {
   attribute,
   byClass,
   designCatalogue,
+  designEntries,
   elements,
 } from "./helpers/design_catalogue.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
 test("the canonical documented inventory exactly matches the complete design paths", async () => {
-  const { manifest } = await designCatalogue;
   const spec = (
     await Promise.all(
       [
@@ -36,7 +36,12 @@ test("the canonical documented inventory exactly matches the complete design pat
   const documented = [...spec.matchAll(/\|\s*`(design\/[^`]+)`\s*\|/g)]
     .map((match) => match[1])
     .sort();
-  const actual = manifest.entries
+  const actual = (
+    await designEntries(
+      (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+      "documented inventory",
+    )
+  )
     .flatMap((entry) =>
       entry.kind === "screen" && entry.path.startsWith("design/")
         ? [entry.path]
@@ -53,9 +58,10 @@ const COMPARISON_FAMILIES = [
 ];
 
 test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  const designs = manifest.entries.filter(
+  const { outputs } = await designCatalogue;
+  const designs = await designEntries(
     (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "all design links",
   );
   let checked = 0;
   for (const entry of designs) {
@@ -114,7 +120,7 @@ test("comparison families publish the same schemes for every member", async () =
 });
 
 test("a tag chip without a destination is a label, not a control", async () => {
-  const { manifest, outputs } = await designCatalogue;
+  const { outputs } = await designCatalogue;
   const chipStyles = await fs.readFile(
     path.join(
       repositoryRoot,
@@ -134,7 +140,10 @@ test("a tag chip without a destination is a label, not a control", async () => {
         `${selector!.trim()} styles a chip that may be a label`,
       );
   let labels = 0;
-  for (const entry of manifest.entries) {
+  for (const entry of await designEntries(
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "tag chip artboards",
+  )) {
     if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry)
       .filter((view) => view.colorScheme === "light")

@@ -1,20 +1,15 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
-import path from "node:path";
 import test from "node:test";
 
 import {
   generatedViews,
   isManifestComponentVariant,
 } from "../packages/viewer/dist/data.js";
-import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { designCatalogue, designEntries } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
-const generated = path.join(repositoryRoot, "examples/basic/generated");
-const manifest = JSON.parse(
-  await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
-) as ManifestV8;
+const { manifest, outputs } = await designCatalogue;
 
 function component(id: string) {
   const entry = manifest.entries.find((entry) => entry.path === id);
@@ -23,17 +18,18 @@ function component(id: string) {
   return entry;
 }
 
-test("the shared footer exposes only the icon panel and its current variants", () => {
+test("the shared footer exposes only the icon panel and its current variants", async () => {
   const footer = component("design/library/inspector/inspector");
   assert.deepEqual(
-    manifest.entries
-      .filter(
+    (
+      await designEntries(
         (entry) =>
           entry.kind === "component" &&
           isManifestComponentVariant(entry) &&
           entry.variantOf === footer.path,
+        "shared footer variants",
       )
-      .map((variant) => variant.path),
+    ).map((variant) => variant.path),
     [
       "design/library/inspector/inspector/details",
       "design/library/inspector/inspector/props",
@@ -78,14 +74,22 @@ test("view options have one icon presentation and no view-controls scheme contro
 });
 
 test("every owning design and shared sample omits legacy footer and view markup", async () => {
-  for (const entry of manifest.entries) {
-    if (!entry.path.startsWith("design-")) continue;
+  const entries = await designEntries(
+    (entry) =>
+      entry.path.startsWith("design/") &&
+      (entry.kind === "screen" ||
+        (entry.kind === "component" && isManifestComponentVariant(entry))),
+    "owning designs and shared variants",
+  );
+  assert.equal(entries.length, 180);
+  for (const entry of entries) {
     if (
       entry.kind === "screen" ||
       (entry.kind === "component" && isManifestComponentVariant(entry))
     )
       for (const file of generatedViews(entry).map((view) => view.path)) {
-        const html = await fs.readFile(path.join(generated, file), "utf8");
+        const html = textOutput(outputs, file);
+        assert.ok(html, file);
         assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
         assert.doesNotMatch(
           html,

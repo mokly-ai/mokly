@@ -9,14 +9,18 @@ import {
   attribute,
   byClass,
   designCatalogue,
+  designEntries,
   elements,
 } from "./helpers/design_catalogue.js";
 import { textOutput } from "./helpers/generated_text.js";
 
 test("every design artboard with a rendered document links the document stylesheet", async () => {
-  const { manifest, outputs } = await designCatalogue;
+  const { outputs } = await designCatalogue;
   let documents = 0;
-  for (const entry of manifest.entries) {
+  for (const entry of await designEntries(
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "document artboards",
+  )) {
     if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const viewport of ["mobile", "desktop"] as const)
       for (const scheme of entry.colorSchemes) {

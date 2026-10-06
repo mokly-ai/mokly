@@ -8,6 +8,7 @@ import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
 import {
   attribute,
   designCatalogue,
+  designEntries,
   elements,
 } from "./helpers/design_catalogue.js";
 import { textOutput } from "./helpers/generated_text.js";
@@ -28,8 +29,11 @@ function countClass(html: string, className: string): number {
 }
 
 test("no design artboard depicts a scheme control", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  for (const entry of manifest.entries) {
+  const { outputs } = await designCatalogue;
+  for (const entry of await designEntries(
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "appearance control artboards",
+  )) {
     if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;
@@ -66,18 +70,15 @@ test("retained Welcome variants follow the single Appearance setting", async () 
       assert.equal(countClass(dark, "mbk-frame-scheme-note") > 0, !darkDevice);
     }
   }
-  assert.equal(
-    manifest.entries.find(
-      (entry) => entry.path === "design-review-dark-scheme",
-    ),
-    undefined,
-  );
 });
 
 test("every artboard with a top bar draws one Appearance control", async () => {
-  const { manifest, outputs } = await designCatalogue;
+  const { outputs } = await designCatalogue;
   let checked = 0;
-  for (const entry of manifest.entries) {
+  for (const entry of await designEntries(
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "appearance control artboards",
+  )) {
     if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;
@@ -90,8 +91,11 @@ test("every artboard with a top bar draws one Appearance control", async () => {
 });
 
 test("the depicted Appearance control names the scheme it rendered for", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  for (const entry of manifest.entries) {
+  const { outputs } = await designCatalogue;
+  for (const entry of await designEntries(
+    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    "appearance control artboards",
+  )) {
     if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     if (entry.path === "design/browse/appearance/states/auto") continue;
     for (const scheme of entry.colorSchemes) {

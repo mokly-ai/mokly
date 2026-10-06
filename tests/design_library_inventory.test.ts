@@ -16,7 +16,7 @@ import {
   componentParent,
   componentVariants,
 } from "./helpers/component_views.js";
-import { designCatalogue } from "./helpers/design_catalogue.js";
+import { designCatalogue, designEntries } from "./helpers/design_catalogue.js";
 import { designLibrary } from "./helpers/design_library.js";
 
 test("catalogue navigation's All example matches its in-screen navigation", () => {
@@ -84,17 +84,14 @@ test("the shared library preserves every existing design screen and viewport rou
 
 test("all sixteen shared components have connected pages, controls and saved examples", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const components = manifest.entries.filter(
+  const components = await designEntries(
     (entry) =>
       entry.kind === "component" &&
       !("variantOf" in entry) &&
       entry.path.startsWith("design/library/"),
+    "shared library components",
   );
   assert.equal(components.length, 16);
-  assert.equal(
-    manifest.entries.some((entry) => entry.path === "design-root"),
-    false,
-  );
   const hierarchy = analyzeHierarchy(
     manifest.entries,
     manifest.folders,

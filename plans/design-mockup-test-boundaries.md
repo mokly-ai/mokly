@@ -1,6 +1,7 @@
 # Design Mockup Test Boundaries
 
-Status: Active. The test layer contract is written. No PR is open.
+Status: Active. The test layer contract and unit selection guards are delivered.
+No PR is open.
 
 Give each check on Mokly's own design catalogue one home. Unit tests check the
 generated mockup HTML and CSS. Browser mockup specs open the raw generated
@@ -123,38 +124,50 @@ any test moves.
 
 ## Milestone 2: Unit tests check what they claim
 
-Make every empty selection fail, then point it at current paths.
+Completed. Make every empty selection fail, then point it at current paths.
 
-- [ ] Add `designEntries(predicate, label)` to
+- [x] Add `designEntries(predicate, label)` to
       `tests/helpers/design_catalogue.ts`. It returns the matching manifest
       entries and fails with `label` when none match.
-- [ ] Route these selections through it, and confirm that each test fails:
-  - [ ] `tests/design_modern_controls.test.ts:80` (filter `design-`).
-  - [ ] `tests/component_design_review.test.ts:14` and `:37`
+- [x] Route these selections through it, and confirm that each test fails:
+  - [x] `tests/design_modern_controls.test.ts:80` (filter `design-`).
+  - [x] `tests/component_design_review.test.ts:14` and `:37`
         (`design-component-`).
-  - [ ] `tests/design_appearance_variants.test.ts:204` (`previewScreens` at
+  - [x] `tests/design_appearance_variants.test.ts:204` (`previewScreens` at
         `:24-34`).
-  - [ ] `tests/design_library_styles.test.ts:57` (`design-ui-`).
-- [ ] Point them at current paths, and confirm that they pass:
-  - [ ] Screens and component variants under `design/` (180 entries).
-  - [ ] Screens under `design/components/` (39 entries).
-  - [ ] `overview`, `states/auto`, `workspaces/props`, `workspaces/instance`,
+  - [x] `tests/design_library_styles.test.ts:57` (`design-ui-`).
+- [x] Point them at current paths, and confirm that they pass:
+  - [x] Screens and component variants under `design/` (180 entries).
+  - [x] Screens under `design/components/` (39 entries).
+  - [x] `overview`, `states/auto`, `workspaces/props`, `workspaces/instance`,
         `status/loading`, `status/unavailable`, `workspaces/side-by-side`,
         `workspaces/difference` and `status/flow` under
         `design/browse/appearance/` (9 entries).
-  - [ ] Non-variant components under `design/library/`, with the slug taken
+  - [x] Non-variant components under `design/library/`, with the slug taken
         from the last path segment (16 entries).
-- [ ] Delete the absence checks that look up old ids: the test at
+- [x] Delete the absence checks that look up old ids: the test at
       `tests/design_appearance_variants.test.ts:231`, and the asserts at
       `tests/design_appearance_controls.test.ts:69-74`,
       `tests/design_library_inventory.test.ts:94-97` and
       `tests/design_screens.test.tsx:61-64`.
-- [ ] Route every other catalogue-wide selection in the design unit tests
+- [x] Route every other catalogue-wide selection in the design unit tests
       through `designEntries`. Find them with
       `rg -n "manifest\.entries" tests/design_* tests/component_design_* tests/brand_logo.test.tsx`.
-- [ ] Run
+- [x] Run
       `node --import tsx --test tests/design_*.test.ts tests/design_*.test.tsx tests/component_design_*.test.ts tests/brand_logo.test.tsx`.
-- [ ] Update the Delivery Status in the design verification protocol.
+- [x] Update the Delivery Status in the design verification protocol.
+- [x] Test empty current and copied-baseline selections. Preserve the supplied
+      baseline entries. The helper's optional third argument avoids changing
+      the historical input of attribution checks.
+- [x] Guard the current light-only appearance subject before filtering fragments,
+      so removing that subject cannot leave its assertions untested.
+- [x] Run the milestone lint, formatting, and prepared type checks. Audit the
+      mainline diff and deletions. Commit with a Conventional Commit and push.
+
+Implementation note: The old selections failed through `designEntries` before
+path repair. The run had seven expected failures across the five tests, because
+both component checks run in mobile and desktop. The helper also accepts copied
+baseline entries so attribution assertions keep their original input.
 
 ## Milestone 3: Static checks move to unit tests
 

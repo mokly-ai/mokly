@@ -6,6 +6,7 @@ import { NAV_TREE } from "../examples/basic/specs/design/parts/nav_data.js";
 import {
   attribute,
   designCatalogue,
+  designEntries,
   designDocument,
 } from "./helpers/design_catalogue.js";
 import { componentSection } from "./helpers/design_component_navigation.js";
@@ -28,14 +29,15 @@ test("shared navigation data follows the real component variant ids and authored
     assert.notEqual(parentIndex, -1, `${parentId} navigation parent`);
     const parentRow = NAV_TREE[parentIndex]!;
     assert.equal(parentRow.variants, "open", parentId);
-    const expected = manifest.entries
-      .filter(
+    const expected = (
+      await designEntries(
         (entry) =>
           entry.kind === "component" &&
           "variantOf" in entry &&
           entry.variantOf === parentId,
+        `saved variants of ${parentId}`,
       )
-      .map((entry) => [entry.path, entry.title, "component"]);
+    ).map((entry) => [entry.path, entry.title, "component"]);
     const variants: [string, string, string | undefined][] = [];
     for (const row of NAV_TREE.slice(parentIndex + 1)) {
       if (row.kind !== "variant") break;
