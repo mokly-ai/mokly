@@ -4,9 +4,8 @@
 
 This is the approved service contract for the
 [remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
-The Worker, tests, deployment workflow, and client wiring are not implemented.
-The R2 bucket in WEUR and its 30-day expiry rule are provisioned.
-All service behavior below is planned.
+The R2 bucket in WEUR and its expiry rule are provisioned. Everything else
+below is planned, including the Worker, tests, workflow, and client wiring.
 The [task contract](./ci-remote-cache.md) owns builds and client credentials.
 
 ## Compatibility And Routing
@@ -42,9 +41,8 @@ The 128-character maximum is our limit; OpenAPI has no maximum.
 | `POST /v8/artifacts`        | 200 JSON mapping every requested hash to stored metadata or `null`.                                                                        |
 | `POST /v8/artifacts/events` | Validate the event array, discard it, and return 200 with no body.                                                                         |
 
-URL values in PUT responses use the actual request origin and encoded team/hash,
-not the illustrative uppercase values above. The client checks PUT success but
-does not read its response body. OpenAPI requires the `urls` array for 202.
+PUT URLs use the actual request origin and encoded team/hash. The client checks
+success without reading the body; OpenAPI requires the `urls` array for 202.
 Status values defined by both sources are `enabled`, `disabled`, `over_limit`,
 and `paused`. This service reports only `enabled` for authorized requests.
 Unknown paths return 404; wrong methods return 405 with `Allow`. Route `/status` first.
@@ -63,13 +61,15 @@ GET, HEAD, PUT, status, and query set Turbo's `User-Agent`; events do not.
 | `x-artifact-client-ci`                    | PUT sends the CI vendor constant when in known CI (`GITHUB_ACTIONS` here); events send it too. GET/HEAD, status, and query do not set it. |
 | `x-artifact-client-interactive`           | OpenAPI allows `0` or `1`; this client does not send it. Do not require it.                                                               |
 
-Validate optional CI text (at most 50 characters) and interactive `0`/`1`; discard both.
+CI accepts text up to 50 characters; interactive accepts `0` or `1`. Discard
+both headers whether valid or invalid; never reject an upload for either one.
 Require PUT content type and an integer `Content-Length` from 0 to 100,000,000.
 Reject other media types with 415 and invalid lengths with 400; excess is 413.
 Accept duration as a decimal integer from 0 to `Number.MAX_SAFE_INTEGER`;
 store it as a string. Missing duration means `"0"`.
 Accept an optional tag of at most 600 characters. Preserve tag bytes exactly.
-Optional SHA and dirty hash must be hexadecimal, at most 128 characters each.
+Store and echo SHA/dirty hash only if hexadecimal and at most 128 characters.
+Drop invalid values; do not store or echo them. Continue the upload.
 The Worker does not decompress, re-sign, or verify a tag.
 
 GET and HEAD return `Content-Type: application/octet-stream`, the R2 object's
@@ -99,19 +99,17 @@ The batch request is `{"hashes":["abc","def"]}`. Its response is a bare map:
 }
 ```
 
-Omit optional fields if absent; return `{}` for an empty hash list. `size` and
-`taskDurationMs` are JSON integers. The client requires duration as `u64` and reads optional
-`sha` and `dirtyHash`; it ignores `size` and `tag`. OpenAPI requires size and
-duration and permits tag. Its per-hash error alternative is not accepted by
-this client's hit parser: fail the whole query with 500 on storage failure.
-Unsupported or malformed batch responses cause the caller to fall back to HEAD.
+Omit absent optional fields. An empty hash list returns `{}`. Size and duration
+are JSON integers. The client reads `taskDurationMs` as `u64`, plus `sha` and
+`dirtyHash`; it ignores size and tag. OpenAPI requires size and duration and
+permits tag or per-hash errors. This client's hit parser rejects per-hash errors:
+return 500 for storage failure. Unsupported or invalid batches fall back to HEAD.
 
-Events are an array of `{sessionId, source, event, hash, duration}`. The session
-ID is a UUID, source is `LOCAL` or `REMOTE`, event is `HIT` or `MISS`, and optional
-duration is an integer from 0 to `Number.MAX_SAFE_INTEGER`. Accept empty arrays.
-The client checks event success and reads no body or artifact headers.
+Events require authentication, a valid team, and a JSON array. Do not validate
+individual items or their fields. Discard all items, including unknown shapes.
+Accept empty arrays. The client checks status and reads no response body.
 Limit JSON bodies to 1 MiB and batch/event arrays to 1,024 items; excess is 413.
-Reject malformed JSON, wrong field types, or invalid hashes with 400.
+Malformed JSON or non-array events are 400; invalid batch fields/hashes are 400.
 
 ## Errors And Signatures
 
@@ -132,10 +130,15 @@ HEAD 403 is a client JSON error, never a hit.
 Use codes `bad_request` (400), `unauthorized` (401), `forbidden` (403),
 `not_found` (404), `method_not_allowed` (405), `too_large` (413),
 `unsupported_media_type` (415), and `internal_error` (500).
-Do not expose tokens, storage errors, or account details. Never use
-`remote_caching_*` codes for an ordinary permission failure: the client treats
-those as global cache-status changes. GET/HEAD 404 is a miss. Other unsuccessful
-statuses are cache errors; query/status/event clients otherwise use HTTP status.
+Keep tokens, storage errors, and account details private. `remote_caching_*`
+codes signal cache-status changes; do not use them for permission failures.
+GET/HEAD 404 is a miss. Other unsuccessful statuses are cache errors.
+
+A parsed 403 with wrapped code `forbidden` triggers token recovery. If access
+cannot be restored, `disable_after_forbidden()` turns remote reads and writes
+off for the rest of the Turbo run; builds continue. A reader without `remote:r`
+loses remote reads after its first upload attempt. A wrong team also disables
+remote caching for the run when its JSON 403 is parsed.
 
 Turbo signs with HMAC-SHA256 and base64 encodes the result. Its versioned message
 includes length-prefixed `artifact-signature:v2`, hash, team ID, and body bytes.
@@ -160,11 +163,10 @@ await env.ARTIFACTS.put(key, request.body, {
 ```
 
 The [R2 Workers reference](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#conditional-operations)
-permits `Headers` in `onlyIf`. It returns an `R2Object` on success and `null`
-when the condition fails. A null result means the existing object and all its
-metadata stay unchanged; return 202 anyway. Do not implement a head-then-put
-guard. Concurrent uploads retain one winner. Exceptions are 500.
-Lifecycle owns deletion; the Worker never lists or deletes objects.
+allows `Headers` in `onlyIf`. Success returns `R2Object`; failed conditions return
+`null` and preserve the first body and metadata. Return 202 for either result.
+Use one atomic put; never head-then-put. Concurrent writes retain one winner.
+Exceptions are 500; lifecycle owns deletion. The Worker never lists or deletes.
 Local Wrangler R2 simulation may differ from production. The
 [provisioning validation](../../plans/turborepo-cloudflare-remote-cache.md#milestone-4-cloudflare-provisioning-and-ci-wiring)
 must confirm absent-key writes, repeat writes, and concurrent writes in real R2.

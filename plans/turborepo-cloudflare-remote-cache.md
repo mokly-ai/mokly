@@ -110,13 +110,15 @@ task.
 | `//#example:build` | `//#build:package`    | `examples/basic/**` minus the generated outputs                             | `examples/basic/generated/**/*.html`, `examples/basic/generated/mokly-manifest.json`, `examples/basic/generated/example/workspace.svg`, `examples/basic/generated/mokly-generated/**` |
 
 `package.json`, `turbo.json`, and package manager lockfiles are always task
-inputs, even with explicit `inputs`. Viewer changes reach `//#build:package`
-through its `@mokly/viewer#build` dependency hash, not an automatic viewer
-global hash. The viewer's default inputs include `scripts/browser.mjs` and
-`src/runtime.ts`, which `scripts/copy-assets.mjs` consumes directly. This
-transitive contract avoids duplicate root globs. Its inherited root tsconfig
-also needs the explicit input above. Example inputs exclude all four generated
-output globs with `!`; explicit inputs do not inherit `.gitignore` filtering.
+inputs, even with explicit `inputs`. The root manifest, lockfile, and source
+files in internal packages that the root depends on enter the global hash.
+The root depends on `@mokly/viewer`, so viewer source edits change all three
+task hashes. They also reach `//#build:package` through its viewer dependency
+hash. Viewer default inputs include `scripts/browser.mjs` and `src/runtime.ts`,
+which `scripts/copy-assets.mjs` consumes directly. These paths cover the reads
+without duplicate root globs. The inherited root tsconfig is not a default
+global input; keep its explicit viewer input. Example inputs exclude all four
+generated output globs with `!`; explicit inputs bypass `.gitignore` filtering.
 
 Global settings: `envMode: "strict"`, `agentGuidance: false`,
 `noUpdateNotifier: true`, `ui: "stream"`, `cacheMaxAge: "14d"`,
@@ -178,7 +180,8 @@ Rules:
 
 - `Authorization: Bearer <token>` is required on every route. Tokens are
   compared in constant time. A missing or unknown token gets 401.
-- `hash` must match `^[a-fA-F0-9]{1,128}$`; anything else gets 400.
+- Artifact path and query hashes match `^[a-fA-F0-9]{1,128}$`; invalid values
+  get 400. Discarded event payloads have no field validation.
 - The `slug` or `teamId` query value must equal the configured team; objects
   are keyed `<team>/<hash>`. Missing, duplicate, or different teams get 403.
   Validate both when both appear. The client sends team IDs only with `team_`.
@@ -189,6 +192,12 @@ Rules:
 - Errors include flat `{code,message}` fields plus the matching
   `{error:{code,message}}` that the real client needs for 403. HEAD stays
   bodyless. The Worker never lists or deletes objects; lifecycle owns expiry.
+- A parsed `forbidden` 403 triggers token recovery. If recovery fails, remote
+  reads and writes stop for the rest of that run while builds continue. A reader
+  without `remote:r` loses reads after its first upload; a wrong team also
+  disables the remote cache when its JSON 403 is parsed.
+- Drop invalid optional SHA, dirty-hash, CI, and interactive diagnostics without
+  rejecting uploads. Keep content type, length, duration, and tag rules strict.
 - OpenAPI paths omit `/v8`; the 2.11.7 client supplies that prefix. Follow the
   actual client paths, including metadata headers omitted from the initial plan.
 - Secrets: `TURBO_CACHE_READ_WRITE_TOKEN` and `TURBO_CACHE_READ_ONLY_TOKEN`.
@@ -279,6 +288,10 @@ documentation-only: validate the Markdown and review the diff instead of running
 - [x] Find and run every test that reads a changed document. Check every
       relative link, including plan links. Run the mainline diff and deletion
       checks before and after the commit. Keep all evidence under `.context/`.
+- [x] Apply the four supervising-agent review corrections: global viewer
+      inputs, discarded event validation, optional diagnostic handling, and
+      the client's `forbidden` recovery and run-wide disable behavior. Repeat
+      documentation validation and Git preservation checks, then commit and push.
 - [x] Review the diff against `origin/main`, then `git add -A`, commit with
       Conventional Commits, and push.
 - [ ] Review the complete local diff against `origin/main` with
@@ -287,6 +300,8 @@ documentation-only: validate the Markdown and review the diff instead of running
 
 Evidence files: `.context/turborepo-cloudflare-remote-cache/milestone-1-validation.md`
 and `.context/turborepo-cloudflare-remote-cache/milestone-1-sources.md`.
+Review follow-up evidence: `.context/turborepo-cloudflare-remote-cache/milestone-1-review-validation.md`
+and `.context/turborepo-cloudflare-remote-cache/milestone-1-review-merge-audit.log`.
 
 ### Milestone 2: Turborepo Task Graph With Local Caching
 
@@ -301,9 +316,12 @@ telemetry and forces release builds from the first Turbo use.
 - [ ] Add `turbo.json` with the `$schema`, the task table, and the global
       settings. Keep `remoteCache.apiUrl` and `teamSlug` out until
       Milestone 4.
-- [ ] Preserve viewer default inputs, add its inherited root tsconfig input,
-      and verify viewer helper/runtime edits invalidate `//#build:package`
-      through the viewer dependency hash. Verify root tsconfig edits miss both.
+- [ ] Preserve viewer default inputs and its `$TURBO_ROOT$/tsconfig.json` input.
+      Use `--dry=json` to prove viewer source/helper edits change the global hash
+      and all three task hashes. Prove a root tsconfig edit changes the viewer
+      and `//#build:package` hashes; the root tsconfig is not a global input.
+      Check which viewer files the global hash covers, including README and
+      tests, and record the result in `ci-remote-cache.md`.
 - [ ] Change the root scripts: `build` to `turbo run build:package`, a new
       `build:package`, and `prepare:verification` to `turbo run example:build`.
 - [ ] Add `turbo.json` to the fixed copy list in
@@ -397,7 +415,10 @@ in CI uses it yet, so the product stays functional.
       maps with `taskDurationMs` and optional commit metadata, HEAD metadata,
       bodyless HEAD errors, status values, flat/wrapped 403 compatibility,
       missing/duplicate/both team parameters, JSON and upload limits, duration
-      bounds, and optional headers. Do not require client-interactive headers.
+      bounds, and strict tag rules. Prove invalid optional SHA, dirty-hash, CI,
+      and interactive diagnostics do not reject PUTs and are not stored or
+      echoed. Events require auth, team, a JSON array, and limits only; accept
+      arbitrary items and fields. Do not require client-interactive headers.
 - [ ] Test the R2 adapter binding call itself, including `Headers` in `onlyIf`,
       null on an existing object, no head-then-put guard, exceptions, and
       preservation of the first body and all metadata during concurrent PUTs.
@@ -469,8 +490,11 @@ before the merge.
       cache, the read-only token/key, and `local:rw,remote:r`. Confirm three
       remote hits after CI fills the cache. Do not delete a shared worktree cache.
 - [ ] Smoke-test real signed round trips, rejected unsigned/invalid artifacts,
-      response length, batch-to-HEAD fallback, and safe cache errors. Document
-      access-token rotation and new-namespace signature-key rotation.
+      response length, batch-to-HEAD fallback, and safe cache errors. Prove a
+      parsed `forbidden` from a reader upload or wrong team disables remote
+      reads and writes for the rest of the run while builds pass. Confirm
+      `remote:r` prevents reader uploads. Document access-token rotation and
+      new-namespace signature-key rotation.
 - [ ] Push and read the pull request run: `prepare` uploads three artifacts and
       ten downstream jobs (twenty for Release Please) report cache hits. Record
       per-job durations before and after, and the R2 object count, in

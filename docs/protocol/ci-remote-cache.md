@@ -38,14 +38,17 @@ Do not include generated HTML, the manifest, copied SVG, or generated assets as
 inputs. Do not cache `.mokly-cache`, review output, reports, or preview exports.
 
 `package.json`, `turbo.json`, and package manager lockfiles are always inputs,
-even with explicit `inputs`. Viewer source changes reach `//#build:package`
-through the `@mokly/viewer#build` dependency hash. They do not enter every task's
-global hash merely because the root depends on the viewer.
+even with explicit `inputs`. The global hash includes source files in internal
+packages that the root depends on, directly or transitively. The root depends
+on `@mokly/viewer`, so a viewer source edit changes all three task hashes.
+Viewer edits also reach `//#build:package` through its viewer dependency hash.
 `scripts/copy-assets.mjs` imports `packages/viewer/scripts/browser.mjs` and
 reads `packages/viewer/src/runtime.ts`. Both tracked files belong to the
-viewer's default inputs. Their dependency hash therefore invalidates the root
-build without duplicate root globs. Preserve this dependency when narrowing
-viewer inputs. The viewer's inherited root tsconfig has an explicit input.
+viewer's default inputs. Both hashing paths cover these reads without duplicate
+root globs. Preserve the dependency when narrowing viewer inputs. The root
+tsconfig is not a default global input; keep its explicit viewer input.
+Local task-graph checks must record whether viewer README and test edits also
+change the global hash and all three task hashes.
 
 Change only these root scripts:
 
