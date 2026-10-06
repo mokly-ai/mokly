@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { repositoryRoot } from "./helpers/fixture.js";
 import { readTestboxWorkflow } from "./helpers/testbox_workflow.js";
 
 const execute = promisify(execFile);
@@ -83,6 +84,13 @@ test("Testbox steps use the exact order, action pins and version comments", asyn
 });
 
 test("Testbox toolchains and npm cache match the CI minimum runtime", async () => {
+  const manifest = JSON.parse(
+    await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+  ) as { packageManager?: string };
+  const npmVersion = /^npm@(\d+\.\d+\.\d+)$/u.exec(
+    manifest.packageManager ?? "",
+  )?.[1];
+  assert.ok(npmVersion, "packageManager must pin an exact npm version");
   const { workflow } = await readTestboxWorkflow();
   const ci = (await readTestboxWorkflow("ci.yml")).workflow;
   const steps = workflow.jobs.testbox!.steps;
@@ -102,7 +110,7 @@ test("Testbox toolchains and npm cache match the CI minimum runtime", async () =
     steps[3]?.run,
     repository.find(({ name }) => name === "Set up npm")?.run,
   );
-  assert.equal(steps[3]?.run, "npm install --global npm@11.7.0");
+  assert.equal(steps[3]?.run, `npm install --global npm@${npmVersion}`);
   assert.equal(
     steps[4]?.run,
     repository.find(({ name }) => name === "Set up Rust")?.run,

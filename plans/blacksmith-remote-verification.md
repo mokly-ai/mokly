@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. The first review is complete; the re-review, open findings and PR merge remain.
+Status: Active. The review is complete; 13 open findings await the user's decision. The plan closes when its PR merges.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -114,7 +114,7 @@ these rules:
   1. Full-history checkout with `persist-credentials: false`. The repository
      is public, so the box can fetch pushed commits without a token.
   2. `useblacksmith/begin-testbox`.
-  3. Node 22.14.0 with the npm download cache, then npm 11.7.0.
+  3. Node 22.14.0 with the npm download cache, then npm 11.21.0.
   4. Rust 1.95.0 with rustfmt and Clippy.
   5. `npm ci`, then a SHA-256 stamp of `package-lock.json` at
      `$HOME/.mokly-testbox/package-lock.sha256`.
@@ -359,7 +359,7 @@ Make `auto` use the remote gate when a working key is present.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-5-evidence.md`.
 
-## Milestone 6: Verification, close-out and review
+## Milestone 6: Verification, close-out and review — completed
 
 Confirm that both executors pass on the current main dependency tree.
 Leave the final review to the separate reviewer.
@@ -379,7 +379,7 @@ Leave the final review to the separate reviewer.
 - [x] Inspect the diff and the deletions against `origin/main`.
 - [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
-- [ ] After the push, a reviewer uses
+- [x] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. The reviewer
       reports the findings. Keep the review read-only. The implementer then
@@ -388,6 +388,7 @@ Leave the final review to the separate reviewer.
       `Auto-fix: yes` findings once more. Run the checks. Commit and push.
       Then stop and report the rest. Add each open finding as one line under
       this TODO.
+  - Re-review of `d05a167d`: no new findings.
   - Open finding 1 (High): Closed output can stop box cleanup.
   - Open finding 2 (Medium): Local fallback can ignore stop signals.
   - Open finding 3 (Medium): New verification tests fail on macOS.
@@ -404,6 +405,7 @@ Leave the final review to the separate reviewer.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-6-evidence.md`.
 Evidence: `.context/blacksmith-remote-verification/review-fixes-evidence.md`.
+Evidence: `.context/blacksmith-remote-verification/npm-pin-evidence.md`.
 
 ## Post-merge follow-up (non-blocking)
 

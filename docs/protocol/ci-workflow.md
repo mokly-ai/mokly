@@ -141,7 +141,7 @@ The push run registers the workflow before merge.
 One job runs on `blacksmith-2vcpu-ubuntu-2404` with a 30-minute timeout.
 It has `contents: read` permission and no secrets.
 It checks out full history with `persist-credentials: false`.
-It prepares Node 22.14.0, npm 11.7.0, Rust 1.95.0 and Chromium.
+It prepares Node 22.14.0, npm 11.21.0, Rust 1.95.0 and Chromium.
 It records the installed lockfile digest and exposes the job environment to
 Testbox SSH sessions. `run-testbox` keeps the job alive until the idle timeout.
 

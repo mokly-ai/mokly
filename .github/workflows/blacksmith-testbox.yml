@@ -40,7 +40,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Set up npm
-        run: npm install --global npm@11.7.0
+        run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: |
           rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy

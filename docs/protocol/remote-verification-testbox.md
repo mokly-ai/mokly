@@ -34,7 +34,7 @@ Run the steps in this order:
    An empty input uses validation mode, including on push runs.
 3. Install Node 22.14.0 with `actions/setup-node` and npm's download cache.
    Use `cache: npm` and `cache-dependency-path: package-lock.json`.
-   Set `package-manager-cache: false`. Then install npm 11.7.0.
+   Set `package-manager-cache: false`. Then install npm 11.21.0.
 4. Install Rust 1.95.0 with rustfmt and Clippy. Select it as the default.
 5. Run `npm ci`. Write the lowercase SHA-256 digest of `package-lock.json`
    plus a newline to `$HOME/.mokly-testbox/package-lock.sha256`.
