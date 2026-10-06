@@ -65,6 +65,29 @@ test("developer selection accepts normalized and absolute file arguments once", 
   ]);
 });
 
+test("developer selection accepts absolute paths through a linked repository alias", async (context) => {
+  const root = await fixture(context);
+  const aliases = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-unit-selection-alias-"),
+  );
+  context.after(() => fs.rm(aliases, { recursive: true, force: true }));
+  const alias = path.join(aliases, "checkout");
+  await fs.symlink(
+    root,
+    alias,
+    process.platform === "win32" ? "junction" : "dir",
+  );
+  const file = "tests/alpha.test.ts";
+  const argumentsForFile = [path.join(alias, file), path.join(root, file)];
+  for (const repositoryRoot of [root, alias]) {
+    const selection = await parseUnitSelection(
+      repositoryRoot,
+      argumentsForFile,
+    );
+    assert.deepEqual(selectUnitFiles(selection, inventory), [file]);
+  }
+});
+
 for (const argument of [
   "../outside.test.ts",
   "tests",

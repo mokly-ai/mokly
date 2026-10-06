@@ -34,14 +34,14 @@ export async function parseUnitSelection(
     }
   }
 
+  const realRoot =
+    argumentsForFiles.length > 0
+      ? await fs.realpath(repositoryRoot)
+      : repositoryRoot;
   const files = [];
   const seen = new Set();
   for (const argument of argumentsForFiles) {
-    const absolute = path.resolve(
-      repositoryRoot,
-      argument.replaceAll("\\", "/"),
-    );
-    const relative = path.relative(repositoryRoot, absolute);
+    let absolute = path.resolve(realRoot, argument.replaceAll("\\", "/"));
     if (absolute.endsWith(".spec.ts"))
       throw new Error(
         "Browser spec argument " +
@@ -49,6 +49,10 @@ export async function parseUnitSelection(
           "; use npm run test:browser -- " +
           argument,
       );
+    const parent = path.dirname(absolute);
+    const realParent = await fs.realpath(parent).catch(() => parent);
+    absolute = path.join(realParent, path.basename(absolute));
+    const relative = path.relative(realRoot, absolute);
     if (
       relative === ".." ||
       relative.startsWith(".." + path.sep) ||

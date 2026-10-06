@@ -82,6 +82,7 @@ segments that stay inside the repository, platform path separators, and
 absolute paths inside the repository. Normalize every accepted path to its
 repository-relative POSIX form before comparing it with the inventory.
 Paths that normalize to the same file execute that file only once.
+Resolve the root and linked parent folders, leaving each file name unchanged.
 
 A directory, missing file, path outside the repository, or file absent from the
 discovered inventory fails. Each error names the original argument. A

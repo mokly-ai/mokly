@@ -69,7 +69,9 @@ Developer runner arguments (`npm test -- ...` and `npm run test:unit -- ...`):
   separators, and absolute paths inside the repository. Normalize each path to
   repository-relative POSIX form before comparing it with the discovered unit
   inventory (`.test.ts` or `.test.tsx` under `tests/` or
-  `packages/viewer/tests/`). Duplicate normalized paths run once. A directory,
+  `packages/viewer/tests/`). Resolve the root and existing parent folders to
+  their real paths without resolving the file itself. Duplicate normalized
+  paths run once. A directory,
   missing file, file outside the repository, or file outside that inventory
   fails and names the original argument. A `.spec.ts` path fails and also names
   `npm run test:browser -- <path>`.
