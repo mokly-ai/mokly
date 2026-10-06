@@ -172,11 +172,14 @@ The current maintenance choices are:
   parser to another affected release or jump Metro compatibility lines just to
   change the audit report.
 - Wrangler remains at 4.113.0 with its existing Miniflare/Workerd versions. The
-  `miniflare`-scoped overrides select `sharp` 0.35.4 (including patched native
+  `miniflare`-scoped overrides select `sharp` 0.35.5 (including patched native
   image libraries) and `undici` 7.29.1. Remove each override when a deliberately
   upgraded Wrangler/Miniflare version resolves a patched version without it and
   passes the complete gate. These overrides do not apply to unrelated dependency
   parents.
+- React DevTools accepts `shell-quote` through its existing compatible range.
+  The workspace locks a patched release without an override or new direct
+  dependency. The Sharp update retains each platform's native image packages.
 - Compatible Browserslist, browser-baseline data, and Nano ID patches remain
   lockfile-only updates; they do not add direct runtime dependencies.
 - The PostCSS CSS Modules plugins and `icss-utils` are runtime dependencies
