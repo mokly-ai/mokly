@@ -8,13 +8,16 @@ import { promisify } from "node:util";
 import type { JSONReport } from "@playwright/test/reporter";
 
 import { parseManifest } from "../dist/registry/manifest.js";
-import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import {
+  hydrationShapeKey,
+  hydrationShapeSample,
+} from "./helpers/hydration_shapes.js";
 
 const execute = promisify(execFile);
 
-test("every catalogue route has an independently timed hydration test", async () => {
+test("every hydration shape has exactly one independently timed test", async () => {
   const manifest = parseManifest(
     JSON.parse(
       await fs.readFile(
@@ -26,8 +29,15 @@ test("every catalogue route has an independently timed hydration test", async ()
       ),
     ),
   );
-  const routes = manifest.entries.map((entry) => entryRoute(entry.path));
-  assert.ok(routes.length > 80);
+  assert.ok(manifest.entries.length > 80);
+  const sample = hydrationShapeSample(manifest.entries);
+  const shapes = new Set(sample.map(({ shape }) => shape));
+  assert.equal(shapes.size, sample.length);
+  for (const entry of manifest.entries)
+    assert.ok(
+      shapes.has(hydrationShapeKey(entry)),
+      `${entry.path} has no hydrated representative`,
+    );
   const { stdout } = await execute(
     process.execPath,
     [
@@ -47,5 +57,5 @@ test("every catalogue route has an independently timed hydration test", async ()
       spec.title.startsWith(prefix) ? [spec.title.slice(prefix.length)] : [],
     ),
   );
-  assert.deepEqual(observed.sort(), [...new Set(routes)].sort());
+  assert.deepEqual(observed.sort(), sample.map(({ route }) => route).sort());
 });
