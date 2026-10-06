@@ -1,7 +1,7 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 3 completed. Waiting for reviewer approval
-before Milestone 4.
+Status: Active; Milestones 1 through 3 completed and approved. Milestone 4
+completed. Waiting for reviewer approval before Milestone 5.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -102,6 +102,10 @@ occupy.
   a file inside the repository root imports them. Files under `node_modules`
   and the guard's own modules get the real modules. The guard derives the
   repository root from its own location.
+- A `load` hook generates counting-module source from the real module's export
+  names on the running Node release. Direct hook tests statically import
+  `initialize`, `resolve`, and `load`. The export ratchet needs no new baseline
+  exception.
 - A counting module's default export is a `Proxy` over the real module. Each
   read of a function-valued property counts once, so `assert.equal(...)` counts
   when the test reads `equal`. A direct call such as `assert(value)` counts
@@ -294,44 +298,53 @@ Prove that each check is empty, then make it check the current catalogue.
 - [x] Record the narrowing in this plan and the protocol. Run relevant tests,
       lint, type checks, and formatting. Commit the review fixes separately.
 
-## Milestone 4: Zero-assertion guard
+## Milestone 4: Zero-assertion guard — completed
 
 Fail every unit test that makes no assertion.
 
-- [ ] Add failing tests in `tests/verification_assertion_guard.test.ts`. Each
+- [x] Keep only the runner-argument check in the new entrypoint test. The
+      existing test already checks both entrypoints.
+- [x] Split the existing CI workflow tests by responsibility without changing
+      their assertions, so the new native guard test fits the 300-line cap.
+- [x] Use `.mjs` guard fixtures and test the resolve/load hooks directly. Run
+      the repository ratchet early. Run guard tests on both Node releases.
+- [x] Run the generated-expression fixture without `tsx` on both releases;
+      Node 24 with `tsx` emits `false == true` even for `.mjs` input. Keep the
+      standard flags for the other fixtures.
+- [x] Add failing tests in `tests/verification_assertion_guard.test.ts`. Each
       test starts Node with the guard flags and the repository reporter on a
       fixture in `scripts/verification/_fixtures_/assertion-guard/`. Like
       `tests/verification_process.test.ts`, it removes `NODE_TEST_CONTEXT` and
       the guard's process record from the child environment. Then it reads the
       event report. Cover these cases:
-  - [ ] A test without an assertion fails with the documented message. A test
+  - [x] A test without an assertion fails with the documented message. A test
         with one passes.
-  - [ ] A subtest's assertion gives credit to its parent. A subtest without an
+  - [x] A subtest's assertion gives credit to its parent. A subtest without an
         assertion fails.
-  - [ ] `describe` and `it` follow the same rules.
-  - [ ] A skip option, `t.skip()`, and a todo test do not fail the run, and the
+  - [x] `describe` and `it` follow the same rules.
+  - [x] A skip option, `t.skip()`, and a todo test do not fail the run, and the
         tests after them still pass.
-  - [ ] `await assert.rejects(...)`, a direct `assert(value)` call, a named
+  - [x] `await assert.rejects(...)`, a direct `assert(value)` call, a named
         import, a `t.assert` method, and an import of `node:assert` each
         count. `node:assert` keeps its loose comparisons, and its `strict`
         property counts.
-  - [ ] An assertion in a file `beforeEach` hook counts. An assertion only in
+  - [x] An assertion in a file `beforeEach` hook counts. An assertion only in
         `afterEach` or `t.after()` does not.
-  - [ ] Concurrent sibling tests fail with the sequential message.
-  - [ ] `assert.match`, `assert.doesNotMatch`, and the `rejects` message
+  - [x] Concurrent sibling tests fail with the sequential message.
+  - [x] `assert.match`, `assert.doesNotMatch`, and the `rejects` message
         "Missing expected rejection" behave as they do without the guard.
-  - [ ] The first stack frame of a failing assertion is the fixture line.
-  - [ ] A failing `assert.ok(expression)` without a message shows the fixture's
+  - [x] The first stack frame of a failing assertion is the fixture line.
+  - [x] A failing `assert.ok(expression)` without a message shows the fixture's
         expression in its generated message.
-  - [ ] A Node child that a fixture forks with inherited `execArgv` keeps its
+  - [x] A Node child that a fixture forks with inherited `execArgv` keeps its
         stdout and exit code.
-- [ ] Add a test to `tests/verification_entrypoints.test.ts` that the unit
+- [x] Add a test to `tests/verification_entrypoints.test.ts` that the unit
       runner loads the guard under both policies. Add a test to
       `tests/ci_workflow.test.ts` that each native `node --test` step loads it.
-- [ ] Implement the guard modules as decided above.
-- [ ] Add the guard flag to `scripts/verification/unit-runner.mjs`, after
+- [x] Implement the guard modules as decided above.
+- [x] Add the guard flag to `scripts/verification/unit-runner.mjs`, after
       `tsx`, and to the three native steps in `.github/workflows/ci.yml`.
-- [ ] Make the ten tests that only complete without an error state that claim
+- [x] Make the ten tests that only complete without an error state that claim
       with `assert.doesNotThrow` or `await assert.doesNotReject`:
       `tests/baseline_timings.test.ts:97`,
       `tests/build_gitignore_generated.test.ts:126`,
@@ -343,15 +356,15 @@ Fail every unit test that makes no assertion.
       `tests/path_identity_review.test.ts:36`,
       `tests/publication_input_confinement.test.ts:56`, and
       `tests/verification_process_owner.test.ts:128`.
-- [ ] Run `npm run test:prepared` on the `.node-version` release and on Node
+- [x] Run `npm run test:prepared` on the `.node-version` release and on Node
       22.14.0, the CI minimum. If the guard fails another test, for example
       after the Milestone 2 helper change, give that test an assertion that
       states its claim. Both runs must pass. Record both suite durations, with
       and without the guard, in the commit body.
-- [ ] Smoke test: add a temporary test file with one empty test, run
+- [x] Smoke test: add a temporary test file with one empty test, run
       `npm run test:prepared`, and confirm the guard message and the failed
       run. Then delete the file.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 5: Lint prefix and continue filters
 

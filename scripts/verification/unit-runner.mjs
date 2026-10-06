@@ -42,6 +42,8 @@ export async function runUnitVerification(policy, argv) {
   const args = [
     "--import",
     "tsx",
+    "--import",
+    "./scripts/verification/assertion-guard.mjs",
     "--test",
     "--test-concurrency=2",
     "--test-reporter=./scripts/verification/node-reporter.mjs",

@@ -129,6 +129,8 @@ test("committed fixtures inside a parent Git tree retain existing behavior", asy
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const store = new FileSystemGeneratedOutputStore();
-  await store.write(compilation, config);
-  await store.check(compilation, config);
+  await assert.doesNotReject(async () => {
+    await store.write(compilation, config);
+    await store.check(compilation, config);
+  });
 });

@@ -42,5 +42,5 @@ test("transformer path routes have no inherited keys", async (t) => {
     '{mockupsDir:"generated",roots:[{dir:"specs"}],compatibility:{transformer:"transform.ts"}}',
   );
   t.after(fixture.remove);
-  await fixture.compile();
+  await assert.doesNotReject(() => fixture.compile());
 });

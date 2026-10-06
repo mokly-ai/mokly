@@ -96,14 +96,16 @@ test("failed and interrupted commands close diagnostic spans without adopting ou
 
 test("ordinary rebuilds produce no diagnostic events", async () => {
   const { builder, request } = baselineFixture();
-  await runWithTimings(false, "test", () => builder.build(request), {
-    clock() {
-      throw new Error("disabled timing clock called");
-    },
-    write() {
-      throw new Error("disabled timing sink called");
-    },
-  });
+  await assert.doesNotReject(() =>
+    runWithTimings(false, "test", () => builder.build(request), {
+      clock() {
+        throw new Error("disabled timing clock called");
+      },
+      write() {
+        throw new Error("disabled timing sink called");
+      },
+    }),
+  );
 });
 
 test("resolution timings capture pinned commits and missing history without private refs", async (t) => {

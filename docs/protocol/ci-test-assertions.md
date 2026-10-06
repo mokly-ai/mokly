@@ -49,6 +49,10 @@ imports from files inside the repository root. The guard derives this root
 from its own location. Imports from `node_modules` and the guard's own modules
 receive Node's real modules.
 
+A `load` hook builds counting-module source from the real module's named
+exports on the running Node release. Hook unit tests statically import
+`initialize`, `resolve`, and `load`. No export-baseline exception is needed.
+
 The default counting export is a `Proxy` over the real assertion module.
 Reading a function-valued property counts once. Thus `assert.equal(...)`
 counts when the test reads `equal`, without wrapping that function.

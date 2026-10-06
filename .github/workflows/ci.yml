@@ -285,11 +285,11 @@ jobs:
       - name: Build package
         run: npm run build
       - name: Verify exclusive directory transactions
-        run: node --import tsx --test tests/export_rename.test.ts tests/export_destination_races.test.ts tests/generated_output_lock.test.ts tests/path_transaction_regressions.test.ts
+        run: node --import tsx --import ./scripts/verification/assertion-guard.mjs --test tests/export_rename.test.ts tests/export_destination_races.test.ts tests/generated_output_lock.test.ts tests/path_transaction_regressions.test.ts
       - name: Verify native CSS rule parsing and diffing
-        run: node --import tsx --test tests/review_css_rules.test.ts tests/review_css_diff.test.ts
+        run: node --import tsx --import ./scripts/verification/assertion-guard.mjs --test tests/review_css_rules.test.ts tests/review_css_diff.test.ts
       - name: Verify native baseline commands
-        run: node --import tsx --test tests/baseline_platform.test.ts tests/baseline_process_tree.test.ts
+        run: node --import tsx --import ./scripts/verification/assertion-guard.mjs --test tests/baseline_platform.test.ts tests/baseline_process_tree.test.ts
 
   required:
     name: Required CI

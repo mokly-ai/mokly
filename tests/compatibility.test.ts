@@ -216,7 +216,9 @@ export default function transform(input: CompatibilityTransformInput): string {
     'export default { compatibility: { transformer: "compatibility.ts" }, roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: "." };\n',
   );
 
-  await compileCatalogue(await loadConfig(fixture.root));
+  await assert.doesNotReject(async () =>
+    compileCatalogue(await loadConfig(fixture.root)),
+  );
 });
 
 function oneScreenSource(): string {

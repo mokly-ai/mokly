@@ -141,7 +141,7 @@ test(
     });
     new InheritedProcessOwnerRegistrar(ownedEnvironment).register(child.pid!);
     await childClosed(child);
-    await owner.dispose();
+    await assert.doesNotReject(() => owner.dispose());
   },
 );
 

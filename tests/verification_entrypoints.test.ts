@@ -15,6 +15,17 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
+test("both unit policies load the assertion guard after tsx", async () => {
+  const source = await fs.readFile(
+    path.join(repositoryRoot, "scripts/verification/unit-runner.mjs"),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /"--import",\s*"tsx",\s*"--import",\s*"\.\/scripts\/verification\/assertion-guard\.mjs"/u,
+  );
+});
+
 test("public browser test command retains the Playwright entrypoint", async () => {
   const packageJson = JSON.parse(
     await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
