@@ -165,6 +165,11 @@ The current maintenance choices are:
   not reach the blocking step. A bounded regression loads the copy that PostCSS
   resolves. It keeps ordinary section offsets and rejects an offset line above
   10,000,000.
+- [GHSA-pqg4-j6r4-53mv](https://github.com/advisories/GHSA-pqg4-j6r4-53mv)
+  affects `shell-quote >=1.8.4 <1.11.0`. React Devtools Core 6.1.5 accepts
+  `^1.6.1`, so the workspace locks 1.11.0 without an override or exception.
+  A bounded regression preserves ordinary words and comments and rejects line
+  terminators after a comment token. It quotes data without executing a shell.
 - React Native's compatible Metro 0.84 line is updated to 0.84.6, including its
   coupled packages. The
   [0.84.5 security fix](https://github.com/react/metro/releases/tag/v0.84.5)
@@ -172,8 +177,10 @@ The current maintenance choices are:
   parser to another affected release or jump Metro compatibility lines just to
   change the audit report.
 - Wrangler remains at 4.113.0 with its existing Miniflare/Workerd versions. The
-  `miniflare`-scoped overrides select `sharp` 0.35.4 (including patched native
-  image libraries) and `undici` 7.29.1. Remove each override when a deliberately
+  `miniflare`-scoped overrides select `sharp` 0.35.5 for
+  [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w)
+  and `undici` 7.29.1. Miniflare pins sharp exactly, so its override selects the
+  patched native image libraries. Remove each override when a deliberately
   upgraded Wrangler/Miniflare version resolves a patched version without it and
   passes the complete gate. These overrides do not apply to unrelated dependency
   parents.

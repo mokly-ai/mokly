@@ -39,6 +39,33 @@ test("glob expansion bounds total padded output, not just result count", () => {
   );
 });
 
+/** The quoting surface React Devtools resolves from its dependency tree. */
+interface ShellQuoteModule {
+  quote(tokens: readonly (string | { comment: string })[]): string;
+}
+
+function devtoolsShellQuote(): ShellQuoteModule {
+  const devtoolsEntry = createRequire(import.meta.url).resolve(
+    "react-devtools-core",
+  );
+  return createRequire(devtoolsEntry)("shell-quote") as ShellQuoteModule;
+}
+
+test("Devtools shell quoting preserves ordinary words and comments", () => {
+  const { quote } = devtoolsShellQuote();
+  assert.equal(quote(["echo", "two words"]), "echo 'two words'");
+  assert.equal(quote(["echo", { comment: "note" }]), "echo #note");
+});
+
+test("Devtools shell quoting rejects line terminators after comments", () => {
+  const { quote } = devtoolsShellQuote();
+  for (const terminator of ["\n", "\r", "\u2028", "\u2029"])
+    assert.throws(
+      () => quote(["echo", { comment: "note" }, `value${terminator}suffix`]),
+      TypeError,
+    );
+});
+
 /** The consumer surface PostCSS uses to read and apply a previous source map. */
 interface SourceMapModule {
   SourceMapConsumer: new (map: string) => {
