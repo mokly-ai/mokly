@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Local verification passed; automatic verification and review remain.
+Status: Active. Verification and close-out passed; the separate review and PR merge remain.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -365,17 +365,17 @@ Leave the final review to the separate reviewer.
 - [x] Fetch `origin/main` and confirm that its live dependency audit passes.
       Merge new main commits into the branch, if needed. Follow the mainline
       preservation rules.
-- [ ] Run all tests for this change with a 100% pass rate. Run
+- [x] Run all tests for this change with a 100% pass rate. Run
       `cargo fmt --all -- --check`, Clippy and `cargo xtask check`. Fix every
       failure.
   - [x] Run the complete gate with `--executor local`.
   - [x] Commit and push all work before the automatic remote gate.
-  - [ ] Run the default automatic gate with the branch workflow ref.
+  - [x] Run the default automatic gate with the branch workflow ref.
         Confirm that all commands and reports pass, the aggregate passes,
         and the local source tree stays unchanged.
-  - [ ] Confirm that no Testbox remains and that its GitHub workflows end.
-- [ ] Inspect the diff and the deletions against `origin/main`.
-- [ ] After the checks pass, run `git add -A`, commit with Conventional
+  - [x] Confirm that no Testbox remains and that its GitHub workflows end.
+- [x] Inspect the diff and the deletions against `origin/main`.
+- [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
 - [ ] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
