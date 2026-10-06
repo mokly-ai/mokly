@@ -104,10 +104,13 @@ npm, Node and Rust commands from the workspace root and includes:
 
 Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a
-workspace symlink. Historical cross-repository parity audits are release
-evidence rather than recurring CI dependencies on other repositories. The
-independent suite and shard commands, including their complete command mapping
-and fail-closed inventory evidence, are defined by the
+workspace symlink. Smoke checks read protocol documents and protocol fixtures
+from the installed package, not from the source tree; the packed NodeNext
+consumer type-checks the renderer contract that its installed
+`mokly-rendering.md` declares. Historical cross-repository parity audits are
+release evidence rather than recurring CI dependencies on other repositories.
+The independent suite and shard commands, including their complete command
+mapping and fail-closed inventory evidence, are defined by the
 [CI verification contract](./ci-verification.md). Selected suites and shards are
 partial checks; the unqualified command remains the complete release gate. The
 release workflow's `complete` verification mode runs this command directly. Its

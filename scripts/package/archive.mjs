@@ -110,6 +110,7 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
     "dist/build/styles/postcss_worker.js",
     "dist/browser.manifest.json",
     "docs/protocol/mokly-frame-adapter.md",
+    "docs/protocol/mokly-rendering.md",
     "dist/export/run.js",
     "dist/export/transaction.js",
     ...ROOT_FILES,

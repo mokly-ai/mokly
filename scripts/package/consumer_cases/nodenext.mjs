@@ -4,7 +4,7 @@ import path from "node:path";
 import { runCommand } from "../command.mjs";
 import { consumerPackage } from "../consumer_package.mjs";
 import { copyFixture, installConsumer } from "../fixture.mjs";
-import { rendererContractSnippet } from "../renderer_contract.mjs";
+import { installedRendererContract } from "../renderer_contract.mjs";
 
 export async function smokeNodeNextConsumer(context) {
   const root = path.join(context.workingRoot, "nodenext-consumer");
@@ -14,13 +14,9 @@ export async function smokeNodeNextConsumer(context) {
     context.archivePath,
     consumerPackage("packed-nodenext-consumer", context, true),
   );
-  const renderingContract = await fs.promises.readFile(
-    path.join(context.repositoryRoot, "docs/protocol/mokly-rendering.md"),
-    "utf8",
-  );
   await fs.promises.writeFile(
     path.join(root, "renderer-contract.d.ts"),
-    `${rendererContractSnippet(renderingContract)}\n`,
+    `${await installedRendererContract(root)}\n`,
   );
   await runCommand(
     path.join(root, "node_modules/.bin/tsc"),
