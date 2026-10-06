@@ -448,9 +448,12 @@ Evidence: `.context/attribution-test-consolidation/design_library_committed_base
 Evidence: `.context/attribution-test-consolidation/milestone-7-scratch-independent-check.log`.
 Evidence: `.context/attribution-test-consolidation/milestone-7-review-correction-checks.log`.
 Evidence: `.context/attribution-test-consolidation/milestone-7-corrected-complete-gate.log`.
+Evidence: `.context/attribution-test-consolidation/gate-without-audit-summary.log`.
 
 Complete-gate verification remains open pending repository dependency
-maintenance. Keep the gate TODO incomplete until an unqualified run passes.
+maintenance. The live audit reports advisories published on 2026-10-06 for
+`sharp` and `shell-quote`, outside this change. Keep the gate TODO incomplete
+until an unqualified run passes.
 
 - [x] Define the grouping rules and residual limit in the CI protocol, library
       README, plan introduction, and source-edit test comment.
@@ -484,7 +487,7 @@ maintenance. Keep the gate TODO incomplete until an unqualified run passes.
 - [ ] Fetch `origin/main` and run one unqualified `cargo xtask check`. Fix any
       in-scope failure and rerun. Save the complete output outside the plan.
 - [x] Commit completed work locally in logical Conventional Commits.
-- [ ] Run git add -A, commit with a Conventional Commits message, and push.
+- [x] Run git add -A, commit with a Conventional Commits message, and push.
 - [ ] After the push, review the complete local diff against `origin/main`
       with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       and report findings without changing the implementation.
