@@ -535,7 +535,7 @@ Evidence: `.context/attribution-test-consolidation/milestone-8-validation.log`.
 - [x] Finding 4 (Auto-fix: yes): correct the plan status, the `fileFixture`
       decision row, and the committed-baseline classification count.
 - [x] Validate the changed Markdown and review the diff.
-- [ ] Run `git add -A`, commit with a Conventional Commits message that names
+- [x] Run `git add -A`, commit with a Conventional Commits message that names
       the fixed findings, and push.
 - [ ] After the push, re-run the review once with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
