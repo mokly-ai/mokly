@@ -131,7 +131,10 @@ an acceptance waiver. Queue time and the up-to-22 downstream verification jobs
 must be reported separately from execution. Compare shard balance and the
 measured setup/teardown phases of the slow export fixtures before changing
 partitioning. Coverage, assertion deadlines, worker limits, audits and zero
-retry behavior are never relaxed to meet the timing target.
+retry behavior are never relaxed to meet the timing target. The
+[entry-shape contract](./ci-verification-hydration.md) defines development
+hydration route coverage. For that suite, this rule protects the measured shell
+code coverage that a shape-key change must keep.
 
 Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
 attempts with complete dynamic inventories on both runtimes. The

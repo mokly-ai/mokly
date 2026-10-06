@@ -301,6 +301,14 @@
 - Any time a new TODO is discovered during implementation, it should be added under the relevant milestone (just add the new TODO, and then continue with the active TODO)
 - If a TODO is complex, break it down into sub-tasks/TODOs
 - As you complete items, you should tick them off in the relevant file under `./plans`
+- Do not put evidence logs in plan files. Evidence logs show how work was
+  checked: command output, test and gate results or timings, smoke-test
+  output, search results, audit and preservation records, test-title
+  inventories, and full reviewer reports. Save them under
+  `.context/<plan-name>/`, which Git ignores. Under the related milestone, add
+  one line that names the file. A plan keeps only its summary, milestones,
+  TODOs, contracts, decisions, user approvals, and short review summaries.
+  Agents read the whole plan, so logs in a plan slow every session.
 - The workspace `README.md` should link to the `plans/` directory, not to an individual plan file unless a specific change needs to be referenced
 - Mark a milestone as completed when all the tasks are completed, do not re-open existing milestones - create a new milestone if new tasks are needed that do not fit into an existing milestone
 
@@ -585,8 +593,9 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
   `git commit --amend`, which keeps both parents; then review the merge again.
   After pushing, use a follow-up commit.
   Justify each intentional decision in the PR description, naming every path
-  it affects. If no PR exists yet, record the justifications in the active
-  plan milestone and copy them into the PR description when it opens.
+  it affects. If no PR exists yet, save the justifications under
+  `.context/<plan-name>/`, name that file in the active plan milestone, and
+  copy them into the PR description when it opens.
 
 - Before commit and after commit, inspect the diff and deletions against main:
 
