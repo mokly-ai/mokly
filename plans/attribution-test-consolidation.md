@@ -515,7 +515,7 @@ are not applied here:
    cost model counts two committed-baseline classifications instead of three.
    Auto-fix: yes; fixed in Milestone 8.
 
-## Milestone 8: Apply the review-fix rule to the Milestone 7 review
+## Milestone 8: Apply the review-fix rule to the Milestone 7 review — completed
 
 Fix the Milestone 7 review findings tagged `Auto-fix: yes`, re-review once,
 and record the remaining findings for the user.
@@ -547,7 +547,7 @@ Evidence: `.context/attribution-test-consolidation/milestone-8-round-2-validatio
   - [x] Re-review finding 2 (Low, docs or spec, small; Auto-fix: yes): name
         test concurrency, unit shard balance, and scenario grouping in the suite
         evidence summary in `docs/protocol/ci-verification-security.md`.
-  - [ ] Commit the round-2 fixes with a message that names them, and push.
+  - [x] Commit the round-2 fixes with a message that names them, and push.
   - Open: Milestone 7 finding 1 (Low, test, medium; Auto-fix: no) — the
     lifecycle rule points designLibraryFixture users to a beforeRemove hook the
     fixture lacks; recommended option C. Option B would still delete the
