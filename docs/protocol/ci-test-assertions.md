@@ -145,9 +145,8 @@ Selection errors name the helper, path or folder, requested kind or variant
 filter, and match count. Predicate errors include their description.
 
 Shared single-entry lookups use `entryAt`: `designDocument` in
-`tests/helpers/design_catalogue.ts`, `componentParent` in
-`tests/helpers/component_views.ts`, and the local `component()` in
-`tests/design_modern_controls.test.ts`.
+`tests/helpers/design_catalogue.ts` and `componentParent` in
+`tests/helpers/component_views.ts`.
 `componentParent` keeps its variant check and throws `CatalogueSelectionError`
 when the selected entry is a component variant.
 

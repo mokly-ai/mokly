@@ -9,10 +9,7 @@ import {
 } from "../packages/viewer/dist/data.js";
 import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 
-import {
-  CatalogueSelectionError,
-  entryAt,
-} from "./helpers/catalogue_selection.js";
+import { componentParent } from "./helpers/component_views.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/generated");
@@ -20,22 +17,11 @@ const manifest = JSON.parse(
   await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
 ) as ManifestV8;
 
-function component(id: string) {
-  const entry = entryAt(manifest, id, "component");
-  if (isManifestComponentVariant(entry))
-    throw new CatalogueSelectionError({
-      helper: "component",
-      target: id,
-      kind: "component",
-      variants: "exclude",
-      matches: 0,
-      reason: "expected a component parent, found a variant",
-    });
-  return entry;
-}
-
 test("the shared footer exposes only the icon panel and its current variants", () => {
-  const footer = component("design/library/inspector/inspector");
+  const footer = componentParent(
+    manifest,
+    "design/library/inspector/inspector",
+  );
   assert.deepEqual(
     manifest.entries
       .filter(
@@ -58,8 +44,11 @@ test("the shared footer exposes only the icon panel and its current variants", (
 });
 
 test("view options have one icon presentation and no view-controls scheme control", () => {
-  const controls = component("design/library/controls/view-controls");
-  const topBar = component("design/library/chrome/top-bar");
+  const controls = componentParent(
+    manifest,
+    "design/library/controls/view-controls",
+  );
+  const topBar = componentParent(manifest, "design/library/chrome/top-bar");
   if (
     controls.propSchema.kind !== "object" ||
     topBar.propSchema.kind !== "object"

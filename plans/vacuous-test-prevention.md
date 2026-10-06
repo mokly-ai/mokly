@@ -175,9 +175,8 @@ occupy.
 - Every error names the helper, the path or folder, the kind or variant filter,
   and the match count.
 - The shared lookups use `entryAt`: `designDocument` in
-  `tests/helpers/design_catalogue.ts`, `componentParent` in
-  `tests/helpers/component_views.ts`, and the local `component()` in
-  `tests/design_modern_controls.test.ts`.
+  `tests/helpers/design_catalogue.ts` and `componentParent` in
+  `tests/helpers/component_views.ts`.
 - `componentParent` keeps its variant rejection and throws
   `CatalogueSelectionError` when the selected component is a variant.
 
@@ -261,8 +260,8 @@ Add the helpers and their tests. No existing test changes its behavior.
       regression to `tests/component_parent_selection.test.ts`.
 - [x] Implement `tests/helpers/catalogue_selection.ts` with doc comments on
       every export.
-- [x] Route `designDocument`, `componentParent`, and the local `component()`
-      lookup through `entryAt`.
+- [x] Route `designDocument` and `componentParent` through `entryAt`. Use
+      `componentParent` in `tests/design_modern_controls.test.ts`.
 - [x] Run the new tests and every test file that imports a changed helper. Run
       `npm run lint` and `npm run typecheck:prepared`.
 - [x] Commit.

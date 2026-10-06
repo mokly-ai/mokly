@@ -154,8 +154,9 @@ export function entriesUnder(
     (entry) =>
       entry.path.startsWith(`${folder}/`) &&
       matchesKind(entry, options.kind) &&
+      // prettier-ignore
       (variants === "include" ||
-        "variantOf" in entry === (variants === "only")),
+        ("variantOf" in entry) === (variants === "only")),
   );
   const min = options.min ?? 1;
   if (selected.length < min)
