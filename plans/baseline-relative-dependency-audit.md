@@ -3,8 +3,9 @@
 Status: Active. Planned on 2026-10-06 after two registry advisories
 (`sharp` below 0.35.5, GHSA-wq5f-xc86-pv6w; `shell-quote` 1.10.0,
 GHSA-pqg4-j6r4-53mv) appeared on `main` and failed every branch at the live
-audit. This plan changes the audit policy only; the dependency fixes are a
-separate change.
+audit. Revised the same day so the strict failure lands on a bot-maintained
+dependency update pull request, not on `main` or a tracking issue. This plan
+changes the audit policy only; the dependency fixes are a separate change.
 
 ## Status And Outcome
 
@@ -13,25 +14,33 @@ first command of `cargo xtask check`. A new advisory therefore stops every
 pull request and every local check, even when the branch did not change a
 dependency. After this plan:
 
-- A pull request fails the audit only for issues that are **not already
-  present at its comparison commit** (`git merge-base HEAD origin/main`, with
-  the same uncommitted-merge rules as the repository ratchets). Issues that
-  `main` already has print as inherited notices.
-- Pushes to `main`, the Release workflow, and a new daily scheduled workflow
-  run the **strict** audit. The scheduled workflow opens or updates one
-  tracking issue while `main` has uncovered advisories and closes it when
-  `main` is clean. Release publication stays blocked until `main` is clean.
+- Ordinary pull requests, pushes to `main`, and local `cargo xtask check`
+  fail the audit only for issues that are **not already present at the
+  comparison commit** (`git merge-base HEAD origin/main`, with the same
+  uncommitted-merge rules as the repository ratchets). Issues `main` already
+  has print as inherited notices.
+- A daily scheduled workflow runs the **strict** audit on `main`. When it
+  fails, the workflow opens or refreshes one dependency update pull request
+  on the `dependency-audit/main` branch. That pull request runs the strict
+  audit in CI and stays red until its branch fixes, overrides, or accepts
+  every finding. When `main` is clean, the workflow closes any open update
+  pull request.
+- Release Please pull requests and the release publish job stay strict, so a
+  release cannot proceed while `main` has an uncovered advisory.
 - Both audit modes read the lockfile only (`npm audit --package-lock-only`),
-  so head and baseline use the same tree source and the scheduled workflow
-  needs no installed dependencies.
+  so head and baseline use the same tree source and the scheduled audit needs
+  no installed dependencies.
 
-Reviewed exceptions keep their exact-path and 31-day rules. This is CI,
-verification-script, xtask, test, and documentation work. It changes no
-product behavior, UI, or mockups.
+Reviewed exceptions keep their exact-path and 31-day rules and remain the only
+time-boxed element. When a record expires or goes stale, the strict scheduled
+audit fails and the update pull request carries that failure; ordinary pull
+requests still pass. This is CI, verification-script, xtask, test, and
+documentation work. It changes no product behavior, UI, or mockups.
 
 Contract owners:
 
-- New: [Dependency audit baseline](../docs/protocol/dependency-audit-baseline.md).
+- New: [Dependency audit baseline](../docs/protocol/dependency-audit-baseline.md)
+  and [Dependency update pull request](../docs/protocol/dependency-audit-update-pr.md).
 - [Dependency security](../docs/protocol/dependency-security.md).
 - [CI verification](../docs/protocol/ci-verification.md) and its
   [security](../docs/protocol/ci-verification-security.md) and
@@ -62,7 +71,9 @@ These decisions are fixed for every milestone below.
    `scripts/verification/dependency-audit-exceptions.json` at that commit,
    writes the first two into a temporary directory, and runs the baseline
    audit there. A verified sandbox run shows that the root `package.json` and
-   lockfile are enough; workspace manifests are not required.
+   lockfile are enough; workspace manifests are not required. When the
+   comparison commit equals `HEAD`, as on a push to `main`, every head issue
+   is inherited by definition and no second audit runs.
 3. **Order and laziness.** The head audit runs first and is evaluated
    strictly. If it has no inheritable issue, the run ends with one registry
    call. Otherwise the baseline audit runs second, so an advisory published
@@ -97,63 +108,83 @@ These decisions are fixed for every milestone below.
    `--suite repository`; any other suite rejects it with a typed error before
    a subprocess starts. The repository suite runs
    `npm run dependencies:check -- --baseline` or `npm run dependencies:check`.
-9. **CI.** The repository job runs one step:
-
-   ```yaml
-   env:
-     DEPENDENCY_AUDIT: ${{ github.event_name == 'push' && 'strict' || 'baseline' }}
-   run: cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"
-   ```
-
-   Pull requests use baseline mode; pushes to `main` use strict mode, so
-   `main`'s status shows its true state. The Release workflow's
-   `npm run dependencies:check` step is unchanged and strict.
-
-10. **Scheduled workflow.** `.github/workflows/dependency-audit.yml` runs on
-    a daily cron off the hour and on `workflow_dispatch`, with read-only
-    contents permission and job-level `issues: write`, on
-    `blacksmith-2vcpu-ubuntu-2404` with a timeout. It checks out `main`,
+9. **CI mode selection.** The repository job passes
+   `--dependency-audit "$DEPENDENCY_AUDIT"`. The value is `strict` for a
+   same-repository pull request whose head ref starts with
+   `dependency-audit/` or carries the `dependency-audit` label, and for a
+   Release Please pull request under the existing same-repository detection.
+   It is `baseline` for every other pull request and for every push. A fork
+   cannot select a mode. The Release workflow's `npm run dependencies:check`
+   publish step is unchanged and strict.
+10. **Scheduled workflow.** `.github/workflows/dependency-audit.yml` runs
+    daily off the hour and on `workflow_dispatch`. Its one job runs on
+    `blacksmith-2vcpu-ubuntu-2404` with a timeout, the concurrency group
+    `dependency-audit`, and `contents: write`, `pull-requests: write`, and
+    `issues: write` permissions. It checks out `main` with full history,
     sets up Node 24 and npm 11.7.0, runs the strict audit through `tee` into
-    `.context/dependency-audit.log` with `continue-on-error`, syncs the
-    tracking issue, then fails when the audit failed. It runs no `npm ci`.
-11. **Tracking issue.** `scripts/verification/dependency-audit-issue.mjs`
-    takes `--outcome success|failure` and `--log <file>`, reads
-    `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, `GITHUB_SERVER_URL`, and
-    `GITHUB_RUN_ID`, and calls the GitHub REST API through an injected
-    `fetch` with the same headers as `scripts/release/evidence_github.mjs`.
-    Label: `dependency-audit`, created when missing. Title:
-    `Dependency audit: main has uncovered advisories`. On failure it creates
-    the issue or replaces the body of the lowest-numbered open labelled issue
-    with the UTC date, run URL, fenced log truncated to fit GitHub's body
-    limit, and a link to the protocol page. On success it comments on and
-    closes every open labelled issue with `state_reason: completed`. Pull
-    requests are ignored; any non-2xx response fails the script.
+    `.context/dependency-audit.log` with `continue-on-error`, then runs the
+    update pull request script. It runs no `npm ci` before the audit. The
+    run fails only when the audit command, registry, Git, npm, or GitHub API
+    fails; a failing audit with a created or refreshed pull request is a
+    successful run.
+11. **Update pull request.** `scripts/verification/dependency-audit-pr.mjs`
+    takes `--outcome success|failure`, `--log <file>`, and `--report <json>`,
+    reads `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, `GITHUB_SERVER_URL`, and
+    `GITHUB_RUN_ID`, and uses an injected `fetch` and command runner. The
+    branch is `dependency-audit/main`; the label is `dependency-audit`,
+    created when missing; the title is
+    `fix(deps): resolve dependency audit findings`; commits use the
+    `github-actions[bot]` identity. Open pull requests are found by head
+    branch. On failure with no open pull request, it creates the branch from
+    `main`, runs `npm ci`, then runs `npm update <package>` for every
+    uncovered finding, fails if any `package.json` changed, commits a
+    lockfile change as `fix(deps): update audited dependencies` or an empty
+    commit `chore(deps): track dependency audit findings`, pushes, and opens
+    the pull request. The body holds the UTC date, run URL, fenced log
+    truncated to GitHub's limit, a link to the protocol page, and the
+    required actions. On failure with an open pull request, it recreates the
+    branch from current `main` and force-pushes only when every commit
+    beyond `main` is the bot's; otherwise it leaves the branch alone. It
+    replaces the body in both cases. On success it comments on and closes
+    every open labelled pull request and deletes the branch only when every
+    commit is the bot's. Any non-2xx response or command failure fails.
+12. **Token.** A pull request opened with `github.token` does not trigger
+    `pull_request` workflows. The workflow uses
+    `secrets.DEPENDENCY_AUDIT_TOKEN || github.token`. The secret is a
+    fine-grained or app installation token with contents, pull requests, and
+    issues write access to this repository. Without it the update pull
+    request exists but needs a maintainer push or close-and-reopen before
+    CI runs. The new protocol page records the owner and scope.
 
 ## Milestone 1: Define the baseline audit contract
 
 Document the complete contract before changing executable code. Every
 protocol page must stay at or below 250 lines; `ci-verification.md` is at
 248 lines and `dependency-security.md` at 234, so edit those in place or
-move detail into the new page.
+move detail into the new pages.
 
 - [ ] Add `docs/protocol/dependency-audit-baseline.md` covering decisions
-      1 through 11: modes and CLI, comparison commit, baseline tree, order
+      1 through 9: modes and CLI, comparison commit, baseline tree, order
       and laziness, issue kinds, inheritance rules, output text, fail-closed
-      cases, xtask flag, CI mode selection, scheduled workflow, and tracking
-      issue fields.
+      cases, xtask flag, and CI mode selection by pull request kind.
+- [ ] Add `docs/protocol/dependency-audit-update-pr.md` covering decisions
+      10 through 12: workflow triggers, permissions, steps, success and
+      failure semantics, branch and label names, create, refresh, and close
+      rules, the bot-only commit test, body fields, and the token.
 - [ ] Update `dependency-security.md`: lockfile-only command, the two modes,
-      which workflows are strict, and a link to the new page. Keep the
-      exception rules and update policy unchanged.
+      which runs are strict, the update pull request as the place where
+      fixes, overrides, and exceptions land, and links to the new pages.
+      Keep the exception rules and update policy unchanged.
 - [ ] Update `ci-verification.md` (boundary paragraph and the Repository gate
       row), `ci-verification-security.md`, and
-      `ci-verification-repository.md` for mode selection by event and the
-      strict release and scheduled audits.
+      `ci-verification-repository.md` for mode selection and the strict
+      release, update-pull-request, and scheduled audits.
 - [ ] Update `ci-workflow.md`: add the Dependency Audit workflow to the
       workflow boundary, state the repository job's mode by event, and
       correct the sentence that says no job reads a branch-point lockfile.
 - [ ] Add one cross-reference in `verification-ratchets.md` stating that the
       baseline audit shares the comparison-commit rule.
-- [ ] Add the new page to `docs/protocol/README.md`; update the
+- [ ] Add both pages to `docs/protocol/README.md`; update the
       `dependencies:check` paragraph in the root `README.md` and the
       responsibilities, CLI, and default-mode text in `xtask/README.md`.
 - [ ] Validate the changed Markdown with Prettier, confirm every protocol
@@ -181,7 +212,8 @@ boundaries, then prove both modes against today's registry state.
       logic into `dependency-audit-baseline.mjs` with a declaration file.
 - [ ] Add runner tests: lazy baseline on a clean head, head-then-baseline
       order, baseline command runs lockfile-only in the temporary directory,
-      inherited finding passes with notices, new finding fails, extra
+      comparison commit equal to `HEAD` inherits everything without a second
+      audit, inherited finding passes with notices, new finding fails, extra
       install location fails, inherited expired and stale exception issues
       pass, changed exception path fails, `report` and `input` issues never
       inherit, resolver and baseline registry failures fail closed, unknown
@@ -192,37 +224,43 @@ boundaries, then prove both modes against today's registry state.
 
 ## Milestone 3: xtask mode flag and CI selection
 
-Implement decisions 8 and 9 so local checks and pull requests default to
-baseline mode while pushes to `main` stay strict.
+Implement decisions 8 and 9 so local checks, ordinary pull requests, and
+pushes default to baseline mode while update and release pull requests stay
+strict.
 
 - [ ] Add `--dependency-audit <baseline|strict>` to `cargo xtask check` with a
       typed error for non-repository suites; pass `-- --baseline` only in
       baseline mode; update `check_tests.rs` and `cli_tests.rs`.
-- [ ] Update `.github/workflows/ci.yml` repository step to the env-selected
-      mode; update `tests/ci_workflow.test.ts` to assert the env expression
-      and the flag.
+- [ ] Update the `.github/workflows/ci.yml` repository job: compute
+      `DEPENDENCY_AUDIT` from the same-repository head ref prefix, the label,
+      and the existing release detection; pass it to the suite command.
+      Update `tests/ci_workflow.test.ts` to assert the expression and flag.
 - [ ] Run Actionlint on `ci.yml`, `cargo xtask check --suite repository`, and
       the focused workflow tests; record results in `.context/`.
 
-## Milestone 4: Scheduled strict audit and tracking issue
+## Milestone 4: Scheduled strict audit and update pull request
 
-Implement decisions 10 and 11 so `main`'s advisories have one visible owner
-without blocking pull requests.
+Implement decisions 10 through 12 so `main`'s advisories have one visible,
+fixable owner without blocking ordinary work.
 
-- [ ] Add `scripts/verification/dependency-audit-issue.mjs` and its
-      declaration file with an injected `fetch`, label and issue discovery,
-      create, body replace, comment, and close operations, and body
-      truncation.
-- [ ] Add `tests/verification_dependency_audit_issue.test.ts`: first failure
-      creates the label and issue; repeat failure replaces the body of the
-      lowest-numbered open issue; success comments and closes; pull requests
-      are ignored; oversized logs are truncated; non-2xx fails; missing
-      environment fails.
-- [ ] Add `.github/workflows/dependency-audit.yml` per decision 10 with
-      pinned action revisions and a new `tests/dependency_audit_workflow.test.ts`
-      asserting triggers, permissions, runner, timeout, pinned actions, strict
-      command, `tee` log capture, issue sync step with the token, final
-      failure step, and the absence of `npm ci`.
+- [ ] Add `scripts/verification/dependency-audit-pr.mjs` and its declaration
+      file with an injected `fetch` and command runner: label and open pull
+      request discovery, branch creation, compatible update, manifest-change
+      guard, commit, push, force-push, body replacement, comment, close,
+      branch deletion, and body truncation.
+- [ ] Add `tests/verification_dependency_audit_pr.test.ts`: first failure
+      creates branch, lockfile commit, label, and pull request; no lockfile
+      change makes an empty commit; a changed `package.json` fails; an open
+      pull request with bot-only commits is recreated and force-pushed; one
+      with human commits gets a body update and no push; success comments,
+      closes, and deletes only bot-only branches; oversized logs are
+      truncated; non-2xx fails; missing environment fails.
+- [ ] Add `.github/workflows/dependency-audit.yml` per decisions 10 and 12
+      with pinned action revisions, and `tests/dependency_audit_workflow.test.ts`
+      asserting triggers, permissions, runner, timeout, concurrency, pinned
+      actions, full-history checkout, strict command, `tee` log capture with
+      `continue-on-error`, the script step with the token expression, and no
+      `npm ci` before the audit.
 - [ ] Run Actionlint on the new workflow and confirm
       `tests/workflow_runner_sizes.test.ts` accepts it.
 
@@ -245,11 +283,14 @@ branch without applying review findings automatically.
 
 ## Post-merge follow-up (non-blocking)
 
-- Dispatch the Dependency Audit workflow once and confirm it creates the
-  tracking issue while `main` still has uncovered advisories.
-- Confirm the next ordinary pull request passes the repository job in
-  baseline mode while the `main` push run is red.
-- In a separate change, fix the two advisories: bump the Miniflare `sharp`
-  override to 0.35.5 and update `shell-quote` to 1.12.0 (patched at 1.11.0;
-  React DevTools Core accepts `^1.6.1`). Confirm the next scheduled run
-  closes the issue.
+- Create the `DEPENDENCY_AUDIT_TOKEN` secret with an authorized maintainer
+  credential.
+- Dispatch the Dependency Audit workflow once. Confirm it opens the update
+  pull request with `shell-quote` moved to 1.12.0 by the compatible update
+  (patched at 1.11.0; React DevTools Core accepts `^1.6.1`), with `sharp`
+  still failing, and that CI runs on it in strict mode.
+- On the update branch, bump the Miniflare `sharp` override to 0.35.5,
+  confirm the strict audit passes, and merge. Confirm the next scheduled run
+  finds `main` clean with nothing to close.
+- Confirm an ordinary pull request passes the repository job in baseline
+  mode.
