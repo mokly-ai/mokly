@@ -15,29 +15,73 @@
   followed by a review item that uses
   [`docs/implementation-review-prompt.md`](./docs/implementation-review-prompt.md)
   to review the complete local diff against `origin/main`; run the review only
-  after the push
+  after the push, then apply the review-fix rule below
 - Treat existing plan items that name the removed `cargo xtask review` command
   as review items that use `docs/implementation-review-prompt.md`
-- Do not automatically fix review findings; include each finding and a clear
-  recommendation in the final message so the user can decide what to address
-  next
+- Review-fix rule: after the post-push review reports, fix the findings that
+  the reviewer tagged `Auto-fix: yes` without waiting for the user. The
+  reviewer may use that tag only when the finding has one clear fix, for
+  small or medium effort findings in these categories: product bugs
+  (including edge cases, races, and platform differences), security issues,
+  docs or spec drift, mockup mismatches that a protocol doc already settles,
+  and repository-rule violations such as file size, lint, and layout. Effort
+  grades: small is one change in one or two files with no new module,
+  dependency, migration, protocol section, or test file; medium is a few files
+  and may change tests in existing files; large adds a new module, dependency,
+  migration, protocol section, or mockup, crosses a package boundary, or
+  touches more than five files. Large findings always ask
+- The reviewer tags a finding `Auto-fix: no` and the agent asks the user when
+  the finding needs a decision: more than one option has real trade-offs and
+  the recommendation is not clearly best; the fix changes the meaning of a
+  protocol contract or decides which side of a mockup/product mismatch is
+  right; the fix changes user-visible behaviour beyond what the contract says;
+  the fix adds a new build error, rejection, gate, or stricter validation; a
+  narrow fix and a better broader fix (a rule, test, lint, guard, abstraction,
+  or architectural change) both exist, so the user chooses between them; the
+  fix deletes, skips, or weakens a test or gate, or raises a time
+  limit; or the fix needs an audit exception, credentials, or infrastructure.
+  Findings about missing tests, performance, code structure, UX wording, and
+  process always wait for the user
+- Do not fix a flaky, slow, custom, or low-value test, gate, lint, or check
+  automatically. Ask the user whether to fix it or remove it, and state what
+  it protects and how long it runs
+- Keep the review itself read-only. After it reports, fix the `Auto-fix: yes`
+  findings, run the checks, commit, push, and re-run the review once on the
+  fix. Fix any new `Auto-fix: yes` findings once more, then stop and report.
+  Do not start a third fix round without the user
+- In the final message, list the auto-fixed findings (number, severity, plain
+  explanation, what changed, commit) separately from the findings that need a
+  decision, each with a clear recommendation. Name the fixed finding in its
+  commit message. Add each open finding as one line under the plan's review
+  TODO so that it is not lost when the session ends
+- Keep review reports, verification evidence, measurements, and other scratch
+  output under the git-ignored `.context/` directory. Do not create review
+  records or evidence files in the repository
 - When providing review comments or review output, number each review item, give
-  each item a severity, and explain it in simple language that assumes the
-  reader has no prior codebase or feature context. State the impact of not
-  making the change / doing nothing, provide solution options with lettered
-  labels, and clearly state the recommended option
+  each item a severity, a category (product bug, security, docs or spec,
+  mockup, repository rule, test, performance, code structure, UX wording, or
+  process), and an effort grade (small, medium, or large, as defined in the
+  review-fix rule), and explain it in simple language that assumes the reader has no
+  prior codebase or feature context. State the impact of not making the change
+  / doing nothing, provide solution options with lettered labels, clearly state
+  the recommended option, and end the item with `Auto-fix: yes` or
+  `Auto-fix: no, because …` according to the review-fix rule
 - When suggesting fixes for review items, evaluate whether the direct fix is
   enough or whether a broader rule, test, lint, abstraction, or architectural
-  change would prevent the same class of issue from recurring. Do not default to
-  the simplest, smallest, or quickest fix when a larger change would materially
-  reduce future bugs, review findings, or maintenance risk; explain the tradeoff
-  and recommend the scope that best protects the codebase.
+  change would prevent the same class of issue from recurring, and explain the
+  tradeoff. Give the broader change its own lettered option and say which
+  option best protects the codebase. When a narrow fix and a better broader fix
+  both exist, tag the finding `Auto-fix: no`: the choice between them is the
+  user's decision
 - Write agent responses to the user, including summaries, plans, and review
   output, in Simplified Technical English (STE, ASD-STE100): short sentences,
   one instruction per sentence, active voice, and simple, consistent words
 - Documentation-only or plan-only changes, including initial plan creation, do not require `cargo xtask check`; validate the changed Markdown and review the diff instead
 - This project is not currently in production/live, so breaking changes are
   acceptable when they improve correctness, architecture, or product quality
+- Prefer graceful handling. When input is recoverable, warn and continue; fail
+  only when the output would be wrong or unsafe. Do not add a new build error,
+  rejection, gate, or stricter validation without asking the user
 - Read the README.md for the relevant section of code you are working on, and update it with any new useful context
 - Make sure README.md is up to date based on changes in the code you make
 - If you get compile errors, keep working to fix them until you no longer have errors
@@ -232,8 +276,12 @@
   speculative duplicate mockup milestones during initial planning.
 - Each plan must end with a review TODO after its commit-and-push TODO. The
   review TODO must direct a reviewer to use
-  `docs/implementation-review-prompt.md` against `origin/main` after the push
-  and to report findings without changing the implementation.
+  `docs/implementation-review-prompt.md` against `origin/main` after the push,
+  to report findings, and then to apply the review-fix rule from the General
+  section: fix the `Auto-fix: yes` findings, re-review once, and report the
+  rest.
+  Read existing plan review TODOs that say "without changing the
+  implementation" under the same rule.
 - When a plan includes backend changes, mockup or design updates, and UI
   implementation, keep each area in its own milestone. Mockup/design work and
   UI implementation must be separate milestones, with mockups completed before
