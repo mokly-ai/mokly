@@ -347,9 +347,14 @@ hosted CI to the remote cache, and measure the result. The provisioning steps
 need a Cloudflare account owner and a repository admin. They are completable
 before the merge.
 
-- [ ] Admin: create the `mokly-turbo-cache` R2 bucket, add the 30-day expiry
-      lifecycle rule, create the `CLOUDFLARE_WORKERS_API_TOKEN` repository
-      secret, and generate the two Worker tokens and the signature key with
+- [x] Admin: create the `mokly-turbo-cache` R2 bucket. Done on 2026-10-06 in
+      region WEUR; see
+      `.context/turborepo-cloudflare-remote-cache/provisioning-2026-10-06.md`.
+- [x] Admin: add the 30-day expiry lifecycle rule `expire-artifacts`. Done on
+      2026-10-06.
+- [ ] Admin: create the `CLOUDFLARE_WORKERS_API_TOKEN` repository secret with
+      Workers Scripts and Workers R2 Storage write permissions.
+- [ ] Admin: generate the two Worker tokens and the signature key with
       `openssl rand -hex 32`.
 - [ ] Admin: set the Worker secrets with `wrangler secret put`, then run the
       `turbo-cache.yml` workflow from this branch with `workflow_dispatch`.
