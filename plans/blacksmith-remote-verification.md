@@ -9,9 +9,9 @@ same 11 commands as hosted CI on 11 boxes at the same time. Then it validates
 the same shard evidence. In the trial, it finished in about 10 minutes. The
 local gate runs the same suites one after another.
 
-This change covers xtask, verification scripts, one GitHub workflow, the
-Conductor setup script and their documentation. It has no product UI or mockup
-work.
+This change covers xtask, verification scripts, one GitHub workflow and their
+documentation. It has no product UI or mockup work. The Conductor cloud
+snapshot script is outside this repository. It installs the Blacksmith CLI.
 
 Contract owners:
 
@@ -103,8 +103,9 @@ reason. It does not warm up boxes.
   command arguments, logs, remote commands or reports.
 - xtask sets `BLACKSMITH_DISABLE_AUTO_UPDATE=1` for every CLI call. It prints
   the CLI version.
-- xtask never installs the CLI. The Conductor setup script installs it in cloud
-  workspaces when the key is set. Developers install it themselves.
+- xtask never installs the CLI. The Conductor cloud snapshot includes the
+  CLI, `rsync` and `ssh`. The snapshot must not contain
+  `~/.blacksmith/credentials`. Developers install the CLI themselves.
 
 ### Testbox Workflow
 
@@ -199,11 +200,13 @@ valid. The fingerprint check covers the uncommitted changes.
 - The native macOS and Windows tests and the Node 24 release profile. They stay
   in hosted CI.
 
-## Prerequisite
+## Prerequisites
 
-Since 2026-10-06, `main` fails the dependency audit for advisory
-`GHSA-68fv-2mgg-jv7q` in `source-map-js`. Fix it in a separate change before
-Milestone 7. Until then, every complete check fails in the repository suite.
+- Since 2026-10-06, `main` fails the dependency audit for advisory
+  `GHSA-68fv-2mgg-jv7q` in `source-map-js`. Fix it in a separate change before
+  Milestone 6. Until then, every complete check fails in the repository suite.
+- The Conductor cloud snapshot script installs the Blacksmith CLI. Until a new
+  snapshot exists, install the CLI by hand in the implementation workspace.
 
 ## Milestone 1: Contract documentation
 
@@ -312,24 +315,7 @@ Make `auto` use the remote gate when a working key is present.
       pushed.
 - [ ] Smoke test one complete `cargo xtask check` with `auto`.
 
-## Milestone 6: Conductor cloud setup
-
-Install the CLI in new cloud workspaces when the key is set.
-
-- [ ] Add failure-first tests for `scripts/conductor/setup.sh` with stubbed
-      commands. Cover a local workspace, no key, a CLI that is present, an
-      install, and a failed install that prints a warning and exits 0. The
-      script must never print the key.
-- [ ] Add `.conductor/settings.toml` with a `scripts.setup` entry that runs
-      the script.
-- [ ] Implement the script. It runs the official installer only when
-      `CONDUCTOR_IS_LOCAL` is `0`, the key is set and the CLI is missing.
-- [ ] Document the setup in `README.md`.
-- [ ] Smoke test the script in a cloud workspace with an empty install
-      directory.
-- [ ] Commit.
-
-## Milestone 7: Verification, close-out and review
+## Milestone 6: Verification, close-out and review
 
 - [ ] Confirm that the prerequisite advisory fix is on `main`. Merge `main`
       into the branch and follow the mainline preservation rules.
@@ -348,9 +334,10 @@ Install the CLI in new cloud workspaces when the key is set.
 
 ## Post-merge follow-up (non-blocking)
 
-- Create a cloud workspace from `main`. Confirm that setup installs the CLI,
-  that `cargo xtask executor` prints `remote` and that a complete check passes
-  with `--ref main`. Record the time and cost of three runs.
+- Create a cloud workspace from the new snapshot and `main`. Confirm that the
+  CLI is present, that `cargo xtask executor` prints `remote` and that a
+  complete check passes with `--ref main`. Record the time and cost of three
+  runs.
 - Test remote mode on a macOS developer machine, including its `rsync`.
 - Ask the user before you delete the trial branch `calummoore/testbox-trial`.
 - Evaluate two later changes: copy unpushed commits to the boxes, and reuse
