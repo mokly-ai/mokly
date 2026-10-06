@@ -3,6 +3,10 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import {
+  browserWorkerCount,
+  playwrightSuiteEnvironment,
+} from "./concurrency.mjs";
+import {
   defaultReportPath,
   parseShardArgument,
   readReport,
@@ -16,6 +20,8 @@ import { validateCompletedReport } from "./report-validation.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const { suite, project, shard } = browserArguments(process.argv.slice(2));
+const environment = playwrightSuiteEnvironment(suite);
+const workers = browserWorkerCount(environment);
 const identity = await verificationIdentity(repositoryRoot);
 const reportPath =
   process.env.MOKLY_VERIFICATION_REPORT ??
@@ -40,10 +46,11 @@ const args = [
   "--reporter=./scripts/verification/playwright-reporter.mjs",
 ];
 if (shard) args.push(`--shard=${shard.index}/${shard.total}`);
+console.log(`${suite} Playwright workers: ${workers}`);
 const started = performance.now();
 const outcome = await runInherited(process.execPath, args, {
   cwd: repositoryRoot,
-  env: { ...process.env, MOKLY_PLAYWRIGHT_EVENT_REPORT: eventPath },
+  env: { ...environment, MOKLY_PLAYWRIGHT_EVENT_REPORT: eventPath },
 });
 
 let raw;
