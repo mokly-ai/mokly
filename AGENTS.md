@@ -17,9 +17,9 @@
 - Treat existing plan items that name the removed `cargo xtask review` command
   as review items that use `docs/implementation-review-prompt.md`
 - Review-fix rule: after the post-push review reports, fix the findings that
-  the reviewer tagged `Auto-fix: yes` without waiting for the user. Apply the
-  narrowest option that resolves the finding. The reviewer may use that tag
-  only for small or medium effort findings in these categories: product bugs
+  the reviewer tagged `Auto-fix: yes` without waiting for the user. The
+  reviewer may use that tag only when the finding has one clear fix, for
+  small or medium effort findings in these categories: product bugs
   (including edge cases, races, and platform differences), security issues,
   docs or spec drift, mockup mismatches that a protocol doc already settles,
   and repository-rule violations such as file size, lint, and layout. Effort
@@ -33,9 +33,10 @@
   the recommendation is not clearly best; the fix changes the meaning of a
   protocol contract or decides which side of a mockup/product mismatch is
   right; the fix changes user-visible behaviour beyond what the contract says;
-  the fix adds a new build error, rejection, gate, or stricter validation; the
-  fix adds a test, lint, guard, abstraction, or milestone beyond the direct
-  fix; the fix deletes, skips, or weakens a test or gate, or raises a time
+  the fix adds a new build error, rejection, gate, or stricter validation; a
+  narrow fix and a better broader fix (a rule, test, lint, guard, abstraction,
+  or architectural change) both exist, so the user chooses between them; the
+  fix deletes, skips, or weakens a test or gate, or raises a time
   limit; or the fix needs an audit exception, credentials, or infrastructure.
   Findings about missing tests, performance, code structure, UX wording, and
   process always wait for the user
@@ -67,9 +68,9 @@
   enough or whether a broader rule, test, lint, abstraction, or architectural
   change would prevent the same class of issue from recurring, and explain the
   tradeoff. Give the broader change its own lettered option and say which
-  option best protects the codebase. Auto-fix applies only the narrowest option
-  that resolves the finding; the broader change is a proposal that waits for
-  the user's yes
+  option best protects the codebase. When a narrow fix and a better broader fix
+  both exist, tag the finding `Auto-fix: no`: the choice between them is the
+  user's decision
 - Write agent responses to the user, including summaries, plans, and review
   output, in Simplified Technical English (STE, ASD-STE100): short sentences,
   one instruction per sentence, active voice, and simple, consistent words
