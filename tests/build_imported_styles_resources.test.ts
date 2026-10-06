@@ -194,11 +194,18 @@ test("component resources reject stale reserved disk files absent from pending o
   await fs.writeFile(stale, ".stale{color:red}");
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<!doctype html><html><head><link rel="stylesheet" href="../../${missing}"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
+    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<!doctype html><html><head><link rel="stylesheet" href="' + '../'.repeat(input.entry.path.split('/').length) + '${missing}"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
   );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /mokly-generated.*stale\.css/,
+    (error: Error) => {
+      assert.match(
+        error.message,
+        /missing target (?:\.\.\/)+mokly-generated\/styles\/stale\.css/,
+      );
+      assert.doesNotMatch(error.message, /escapes mockupsDir/);
+      return true;
+    },
   );
 });
 
