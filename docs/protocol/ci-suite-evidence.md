@@ -145,7 +145,7 @@ code coverage that a shape-key change must keep.
 
 Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
 attempts with complete dynamic inventories on both runtimes. The
-[measurement record](../reviews/ci-performance.md) retains all three observed
+[measurement record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md) retains all three observed
 results, including two queue-constrained misses and a 9m06s `Required CI`
 success with all 20 downstream runner slots available. Native whole-file
 sharding remains appropriate for the measured workload; the browser balance

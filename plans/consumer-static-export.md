@@ -9,9 +9,9 @@ unit/integration tests, 107 browser tests, three Rust tests, and packed consumer
 smoke tests. Both native platform jobs and Required CI pass. The pre-integration
 gate also passed on Linux Node 22.14, and all 112 focused export/release tests passed on
 macOS Node 24. The two approved findings from the
-[follow-up review](../docs/reviews/consumer-export-followup.md) are implemented in
+[follow-up review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/consumer-export-followup.md) are implemented in
 milestones 14–16: exclusive directory transactions and current release guidance.
-The [exclusive-destination review record](../docs/reviews/consumer-export-exclusive.md)
+The [exclusive-destination review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/consumer-export-exclusive.md)
 tracks implementation `95bee11`, integration of main `aa5adea` in `4f944b0`,
 and the completed post-push review with no actionable findings. Milestones 1–16
 are complete; the record retains the initial CI browser failure, passing retry,
@@ -23,9 +23,9 @@ Earlier milestones remain completed and retain their historical validation.
 Milestones 1–16 completed, including the approved transaction, adapter-alias,
 deployment-identity, preview-confinement, and CI follow-ups, latest-main
 integration, and [PR #49](https://github.com/futex-ai/mokabook/pull/49).
-The [integration review](../docs/reviews/consumer-export-integration.md) records
+The [integration review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/consumer-export-integration.md) records
 the preceding delivery and original findings. The
-[preceding review](../docs/reviews/consumer-static-export.md) retains earlier context.
+[preceding review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/consumer-static-export.md) retains earlier context.
 The user subsequently approved both code follow-ups and investigation of Node 22
 CI. Milestones 10–13 track that work without reopening completed milestones.
 Milestones 14–16 complete the approved exclusive-destination and release-doc
@@ -298,7 +298,7 @@ Delivery: implementation commit `638b848` and checklist commit `d8c7a13` were
 pushed to `calummoore/publish-export` before `cargo xtask review`. The review
 completed successfully against `origin/main` on 2026-09-09 and reported three
 Medium findings and one Low finding. See the
-[post-push review](../docs/reviews/consumer-static-export.md) for every finding,
+[post-push review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/consumer-static-export.md) for every finding,
 impact, solution options, verification notes, and recommended preventive scope.
 The final plan/index/review-record changes are documentation-only bookkeeping.
 
@@ -347,7 +347,7 @@ Resolve both approved follow-up findings at shared transaction/cleanup boundarie
 Delivered `7fee0f4` with 20 new regressions and the complete passing gate above.
 The post-push review completed on 2026-09-09 against main `93ac778`; its one new
 Medium finding, reproduction, and recommended preventive scope are in the
-[review report](../docs/reviews/consumer-static-export.md).
+[review report](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/consumer-static-export.md).
 
 ## Milestone 9: Validate Host Aliases And Deliver The PR — completed
 
@@ -374,7 +374,7 @@ Fix the approved collision gap, preserve latest main, and open the feature PR.
 Integration audit: source `5b143d1`, merge base `93ac778`, fetched main `a5ecbc0`.
 Main adds material-output Changes and resource watching. Both watch conflicts
 retain main's behavior plus export exclusions; no mainline files were deleted.
-See the [integration record](../docs/reviews/consumer-export-integration.md).
+See the [integration record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/consumer-export-integration.md).
 
 Delivery: merged implementation `43b6de0` was committed and pushed before the
 completed independent review. Seven additional static/preview browser smoke
@@ -459,7 +459,7 @@ Delivery: implementation `38e0aaa` was committed and pushed before the required
 review. Both supported CI runtimes and Required CI passed. The review returned
 one High installation-race finding and one Low pre-existing release-doc finding;
 both are independently confirmed and recorded with options in the
-[follow-up review](../docs/reviews/consumer-export-followup.md). They were not
+[follow-up review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/consumer-export-followup.md). They were not
 automatically fixed or added as implementation TODOs. Final documentation
 closeout records the completed approved scope without merging PR #49 or
 publishing a release.
