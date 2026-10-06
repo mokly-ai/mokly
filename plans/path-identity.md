@@ -7,14 +7,14 @@ complete, including main integration, viewer integration and file-length
 compliance. Milestone 8 implementation, verification and the fresh
 implementation review are complete. On 2026-10-04 the user approved the
 recommended option for each of the eight findings in the
-[review record](../docs/reviews/path-identity.md); Milestones 9–13 deliver
+[review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/path-identity.md); Milestones 9–13 deliver
 those fixes and end with a new review. Milestones 9–12 are complete. Milestone
 13 is complete, including a second fresh review with fifteen findings in the
-[review record](../docs/reviews/path-identity.md#second-review). On 2026-10-04
+[review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/path-identity.md#second-review). On 2026-10-04
 the user approved one shared branch-point lookup for findings 1, 6, 8, 9, and 11. Milestones 14–17 deliver it and end with a new review. Milestones 14–17
 are complete, including a third fresh review whose six findings, and four
 items found during Milestone 16, are in the
-[review record](../docs/reviews/path-identity.md#third-review). On 2026-10-05
+[review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/path-identity.md#third-review). On 2026-10-05
 the user approved a shared console rule for third-review finding 9, which
 failed the pull request's CI. Milestone 18 delivered it, and CI passes; its
 review found four Low findings. They, the other third-review items, and the ten
@@ -1925,7 +1925,7 @@ The six post-merge items remain optional and do not block plan completion.
       reviewed `74e7596b` against `origin/main` at `800fe9f8`: Codex for the
       backend and documentation, and Claude for the viewer UI and mockups.
       The orchestrator confirmed every finding. The
-      [review record](../docs/reviews/path-identity.md) lists eight findings
+      [review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/path-identity.md) lists eight findings
       (one High, two Medium, five Low) for the user's decision. No finding
       was fixed during the review.
 
@@ -2213,7 +2213,7 @@ below remains unticked and is not run by this implementation agent.
       `origin/main` and report findings without changing the implementation.
       Fresh Codex and Claude reviewers reviewed `013b8add` against
       `origin/main` at `800fe9f8`. The first-round fixes hold. The
-      [second review](../docs/reviews/path-identity.md#second-review) lists
+      [second review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/path-identity.md#second-review) lists
       fifteen new findings (one High, four Medium, ten Low) for the user's
       decision. No finding was fixed during the review.
 
@@ -2522,7 +2522,7 @@ assigned to fresh reviewers after the push.
       `origin/main` and report findings without changing the implementation.
       Fresh Codex and Claude reviewers reviewed `aaf6fd75` against
       `origin/main` at `800fe9f8`. The five approved fixes work as specified.
-      The [third review](../docs/reviews/path-identity.md#third-review) lists
+      The [third review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/path-identity.md#third-review) lists
       six findings (two Medium, four Low), plus four items found during
       Milestone 16, for the user's decision. No finding was fixed during the
       review.
@@ -2594,7 +2594,7 @@ sandboxed `about:srcdoc` frames. The hydration helper accepted that report
 only from `/static/` frames. On 2026-10-05 the user approved one shared rule:
 the report from a viewer-owned sandboxed frame is expected, and every other
 console error stays a failure. The
-[review record](../docs/reviews/path-identity.md#approved-third-follow-up)
+[review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/path-identity.md#approved-third-follow-up)
 has the evidence.
 
 Status: Complete. The fresh review found four Low findings for the user's
@@ -2644,7 +2644,7 @@ decision.
       `origin/main`, focused on this milestone, and reports findings without
       changing the implementation. The reviewer confirmed the cause and that
       the rule misses no viewer frame, and found four Low findings, recorded
-      in the [review record](../docs/reviews/path-identity.md#milestone-18-review)
+      in the [review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/path-identity.md#milestone-18-review)
       for the user's decision. No finding was fixed during the review.
 
 ## Post-merge follow-up (non-blocking)
