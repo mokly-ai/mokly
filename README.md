@@ -318,6 +318,25 @@ npm run dev
 renderer, and stylesheets. Changes to Mokly's own `src/` files require
 restarting the command so the CLI is rebuilt.
 
+Run tests that cover the change while you develop:
+
+```bash
+npm test -- tests/ci_workflow.test.ts
+npm run test:unit -- tests/ci_workflow.test.ts --test-name-pattern="CI shards complete verification"
+npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
+```
+
+Put every test argument after `--`. npm consumes flags before that separator.
+The developer runner rejects consumed name-pattern and shard flags.
+
+`npm test`, `npm run test:unit`, and `npm run test:browser` always prepare
+package and example output, so they test the current `src/`. The raw commands
+`node --import tsx --test <file>` and `npx playwright test <spec>` use the last
+build; run `npm run prepare:verification` after a `src/` change before using
+them. Browser tests reject `.only`; select by path and `-g`. These selected runs
+are partial verification. See [developer test commands](./docs/protocol/developer-test-commands.md)
+for the argument and report rules.
+
 Run the complete repository gate before submitting a change:
 
 ```bash

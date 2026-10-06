@@ -30,6 +30,8 @@ directly with `origin/main`, so main-only additions do not become false
 violations before the merge commit exists.
 The Node unit/integration suite runs at most two test files concurrently;
 individual concurrency tests and their existing timeouts remain unchanged.
+For targeted unit and browser runs during development, use the
+[developer test commands](../docs/protocol/developer-test-commands.md).
 The complete check starts with `npm run dependencies:check`, covering all
 workspace dependency categories. It requires registry access; an audit or network
 failure stops subsequent checks. Reviewed workspace exceptions have exact
@@ -105,6 +107,10 @@ cargo test --package xtask
   boundary.
 - [`src/check.rs`](./src/check.rs) defines the complete source, packed-consumer,
   browser, hydration, and Rust verification sequence.
+- [`../scripts/verification/unit-selection.mjs`](../scripts/verification/unit-selection.mjs)
+  validates developer test arguments before preparation checks;
+  [`unit-execution.mjs`](../scripts/verification/unit-execution.mjs) shares
+  Node execution and reporter evidence across complete and selected runs.
 - [`../scripts/package/browser_graph_analysis.mjs`](../scripts/package/browser_graph_analysis.mjs)
   validates the delivered browser module graph;
   [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and

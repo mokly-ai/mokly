@@ -4,8 +4,15 @@
 
 - When adding new packages or services, always attempt to build them to check for errors
 - Everything must be fully tested
-- Search for and run relevant tests after making changes, ensure all tests pass (100% pass rate required)
-- Run `cargo xtask check` before saying work is complete; if it cannot be run, explain the blocker and the checks already run
+- During development, run only tests that cover the change. Require a 100% pass
+  rate. Follow the commands and rebuild rules in
+  [developer test commands](./docs/protocol/developer-test-commands.md).
+- Run `cargo xtask check --suite repository` early. Leave complete unit and
+  browser suite runs to the complete gate.
+- Run the complete `cargo xtask check` once before saying work is complete.
+  It stops at the first failed suite. After a failure, fix it. Rerun only the
+  failing tests or the failed repository or package suite. Then rerun the
+  complete gate. If it cannot run, explain the blocker and the checks already run.
 - After tests and `cargo xtask check` pass, run `git add -A`, commit the
   completed work using Conventional Commits, and push the branch; newly created
   files must be tracked and included in the commit, push, and review diff

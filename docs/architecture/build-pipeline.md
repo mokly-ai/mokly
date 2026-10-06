@@ -277,9 +277,10 @@ rejects Git-tracked generated routes, the manifest and cache contents; local
 generated files may be absent or stale. Authored public assets remain tracked
 in either mode.
 
-This repository's example uses derived mode. Both test entrypoints build the
-package and example before tests read generated files, so the verification order
-(`npm test` before `example:check`) works on a fresh clone. Comparisons rebuild
+This repository's example uses derived mode. The `test:unit`, `test`, and
+`test:browser` entrypoints build the package and example before tests read
+generated files, so the verification order (`npm test` before `example:check`)
+works on a fresh clone. Comparisons rebuild
 the baseline commit with `npm ci`, `npm run build`, then `npm run example:build`
 inside its extraction and read the validated cached output. Head and baseline
 compilation use their respective source and package versions; see the

@@ -1,32 +1,38 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { performance } from "node:perf_hooks";
 
 import {
   defaultReportPath,
   discoverUnitFiles,
   nodeShardFiles,
   parseShardArgument,
-  readReport,
   verificationIdentity,
   writeReport,
 } from "./evidence.mjs";
 import { requirePrepared } from "./prepared.mjs";
-import { runInherited } from "./process.mjs";
 import { validateCompletedReport } from "./report-validation.mjs";
+import { executeUnitTests } from "./unit-execution.mjs";
+import { runSelectedUnitVerification } from "./unit-selected-run.mjs";
+import { parseUnitSelection } from "./unit-selection.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
 /** Run the same discovered Node suite with strict gate or developer skip policy. */
 export async function runUnitVerification(policy, argv) {
   if (policy !== "strict" && policy !== "developer")
-    throw new Error(`unknown unit verification policy ${policy}`);
-  const shard = parseShardArgument(argv);
+    throw new Error("unknown unit verification policy " + policy);
+  if (policy === "developer") {
+    const selection = await parseUnitSelection(repositoryRoot, argv);
+    if (selection.selected)
+      return await runSelectedUnitVerification(repositoryRoot, selection);
+  }
+  const shard = policy === "strict" ? parseShardArgument(argv) : undefined;
+
   const identity = await verificationIdentity(repositoryRoot);
   const reportPath =
     process.env.MOKLY_VERIFICATION_REPORT ??
     defaultReportPath(repositoryRoot, "unit", shard);
-  const eventPath = `${reportPath}.events`;
+  const eventPath = reportPath + ".events";
   await fs.mkdir(path.dirname(reportPath), { recursive: true });
   await Promise.all([
     fs.rm(reportPath, { force: true }),
@@ -38,41 +44,11 @@ export async function runUnitVerification(policy, argv) {
   if (assignedFiles.length === 0)
     throw new Error("unit shard assignment was empty");
   await requirePrepared(repositoryRoot);
-  const started = performance.now();
-  const args = [
-    "--import",
-    "tsx",
-    "--test",
-    "--test-concurrency=2",
-    "--test-reporter=./scripts/verification/node-reporter.mjs",
-  ];
-  if (shard) args.push(`--test-shard=${shard.index}/${shard.total}`);
-  args.push(...fullFiles);
-  const outcome = await runInherited(process.execPath, args, {
-    cwd: repositoryRoot,
-    env: { ...process.env, MOKLY_NODE_EVENT_REPORT: eventPath },
+  const result = await executeUnitTests(repositoryRoot, {
+    files: fullFiles,
+    shard,
+    eventPath,
   });
-
-  let raw;
-  let evidenceError;
-  try {
-    raw = await readReport(eventPath);
-    if (raw.reporterComplete !== true)
-      throw new Error("Node reporter did not complete");
-  } catch (error) {
-    evidenceError = error;
-    raw = { summaries: [] };
-  }
-  const observedFiles = raw.summaries.map((summary) => fileEvidence(summary));
-  const skipped = raw.summaries.reduce(
-    (total, summary) =>
-      total + count(summary, "skipped") + count(summary, "todo"),
-    0,
-  );
-  const cancelled = raw.summaries.reduce(
-    (total, summary) => total + count(summary, "cancelled"),
-    0,
-  );
   const report = {
     schemaVersion: 1,
     suite: "unit",
@@ -80,28 +56,19 @@ export async function runUnitVerification(policy, argv) {
     shard: shard ?? null,
     fullFiles,
     assignedFiles,
-    observedFiles,
+    observedFiles: result.observedFiles,
     fullTests: [],
     assignedTests: [],
     observedTests: [],
-    failures: raw.failures ?? [],
-    skipped,
-    cancelled,
-    reporterComplete: raw.reporterComplete === true,
+    failures: result.failures,
+    skipped: result.skipped,
+    cancelled: result.cancelled,
+    reporterComplete: result.reporterComplete,
     reporterErrors: [],
-    durationMs: performance.now() - started,
-    outcome: {
-      exitCode: outcome.exitCode,
-      signal: outcome.signal ?? outcome.interrupted,
-      status:
-        outcome.exitCode === 0 &&
-        outcome.signal === null &&
-        outcome.interrupted === null &&
-        !evidenceError
-          ? "passed"
-          : "failed",
-    },
+    durationMs: result.durationMs,
+    outcome: result.outcome,
   };
+  let evidenceError = result.evidenceError;
   try {
     validateCompletedReport(
       report,
@@ -114,25 +81,6 @@ export async function runUnitVerification(policy, argv) {
   await writeReport(reportPath, report);
   await fs.rm(eventPath, { force: true });
   if (policy === "developer")
-    console.log(`unit tests skipped or todo: ${skipped}`);
+    console.log("unit tests skipped or todo: " + result.skipped);
   if (evidenceError) throw evidenceError;
-}
-
-function fileEvidence(summary) {
-  const absolute = path.resolve(summary.file);
-  const relative = path.relative(repositoryRoot, absolute);
-  if (relative.startsWith("..") || path.isAbsolute(relative))
-    throw new Error(
-      `Node reported a test outside the repository: ${summary.file}`,
-    );
-  return {
-    file: relative.split(path.sep).join("/"),
-    durationMs: Number(summary.duration_ms ?? summary.durationMs ?? 0),
-    tests: count(summary, "tests"),
-  };
-}
-
-function count(summary, name) {
-  const value = summary.counts?.[name] ?? summary[name] ?? 0;
-  return Number.isInteger(value) ? value : 0;
 }

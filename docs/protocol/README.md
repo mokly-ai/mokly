@@ -30,6 +30,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 
 ## Contracts
 
+- [Developer test commands](./developer-test-commands.md) — public preparation,
+  targeted unit and browser runs, and partial verification rules.
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).

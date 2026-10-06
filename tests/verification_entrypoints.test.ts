@@ -32,6 +32,11 @@ test("npm test and the strict gate share recursive unit discovery", async () => 
   );
   assert.equal(
     packageJson.scripts.test,
+    "npm run test:unit --",
+    "npm test must forward every argument to the developer unit command",
+  );
+  assert.equal(
+    packageJson.scripts["test:unit"],
     "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
     "npm test must use the developer runner, not shell globs that silently skip root-level unit files",
   );
@@ -125,7 +130,7 @@ test("prepared verification commands remain shard-only wrappers", async () => {
   );
 });
 
-test("public package wrappers preserve caller arguments through npm", async (context) => {
+test("public package and test wrappers preserve caller arguments through nested npm", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "mokly-package-entrypoints-"),
   );
@@ -136,6 +141,7 @@ test("public package wrappers preserve caller arguments through npm", async (con
     await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
   );
   const scripts = packageJson.scripts as Readonly<Record<string, string>>;
+  await fs.mkdir(path.join(root, "scripts/verification"), { recursive: true });
   await Promise.all([
     fs.writeFile(
       path.join(root, "package.json"),
@@ -144,6 +150,9 @@ test("public package wrappers preserve caller arguments through npm", async (con
         private: true,
         scripts: {
           build: 'node -e ""',
+          "prepare:verification": 'node -e ""',
+          test: scripts.test,
+          "test:unit": scripts["test:unit"],
           "package:check": scripts["package:check"],
           "package:check:prepared": "node arguments.mjs",
           "package:smoke": scripts["package:smoke"],
@@ -156,6 +165,10 @@ test("public package wrappers preserve caller arguments through npm", async (con
       'import fs from "node:fs"; fs.writeFileSync(process.env.MOKLY_ARGUMENT_OUTPUT, JSON.stringify(process.argv.slice(2)));\n',
     ),
   ]);
+  await fs.copyFile(
+    path.join(root, "arguments.mjs"),
+    path.join(root, "scripts/verification/run-unit-dev.mjs"),
+  );
   const npm = process.platform === "win32" ? "npm.cmd" : "npm";
   for (const script of ["package:check", "package:smoke"]) {
     const environment = { ...process.env, MOKLY_ARGUMENT_OUTPUT: output };
@@ -169,6 +182,19 @@ test("public package wrappers preserve caller arguments through npm", async (con
       "--artifacts",
       artifacts,
     ]);
+  }
+  const args = [
+    "tests/one file.test.ts",
+    "--test-name-pattern",
+    "^(one name|two name).*end$",
+    "--test-name-pattern=three (four|five)$",
+  ];
+  for (const command of [["test"], ["run", "test:unit"]]) {
+    await execute(npm, [...command, "--", ...args], {
+      cwd: root,
+      env: { ...process.env, MOKLY_ARGUMENT_OUTPUT: output },
+    });
+    assert.deepEqual(JSON.parse(await fs.readFile(output, "utf8")), args);
   }
 });
 
