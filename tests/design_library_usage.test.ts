@@ -13,7 +13,6 @@ test("every owning artboard records its shared chrome and real component consume
   assert.ok(manifest.schemaVersion === 8);
   const screens = entriesUnder(manifest, "design", {
     kind: "screen",
-    min: 111,
   });
   assert.equal(screens.length, 111);
   for (const entry of screens) {

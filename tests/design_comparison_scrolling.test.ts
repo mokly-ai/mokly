@@ -171,7 +171,6 @@ test("every diff-mode band draws Scroll together after its modes, and Current ne
   const { manifest, outputs } = await designCatalogue;
   const views = entriesUnder(manifest, "design", {
     kind: ["screen", "component"],
-    min: DIFF_MODE_DESIGNS.length,
   }).flatMap((entry) =>
     generatedViews(entry).map((view) => ({
       id: entry.path,

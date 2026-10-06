@@ -1,7 +1,7 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 4 completed and approved. Milestone 5
-completed. Waiting for reviewer approval before Milestone 6.
+Status: Active; Milestones 1 through 5 completed and approved. Milestone 6
+in progress.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -168,6 +168,12 @@ occupy.
   - `entriesWhere(manifest, description, predicate, options?)` returns the
     entries that satisfy `predicate`. It throws with `description` when fewer
     than `min` entries match; `min` defaults to 1.
+- `min` defaults to 1. Raise it only when the test needs that many entries
+  to prove its claim and no assertion already checks the count. Never copy an
+  exact count into `min`; exact counts belong in assertions. Both helpers
+  validate it before selecting entries. A value that is not a positive safe
+  integer raises `CatalogueSelectionError` with reason
+  `min must be a positive integer` and `matches=0`.
 - `assertAbsent(manifest, path)` is an assertion. It throws
   `CatalogueSelectionError` when its anchor holds no entry. Then it asserts with
   `node:assert/strict` that no entry has `path`. The anchor is the parent folder
@@ -372,9 +378,9 @@ Send catalogue selections through the checked helpers.
 
 - [x] Confirm that all 295 existing assertion calls in the migrated files
       remain unchanged.
-- [x] Use the existing expected count as `min` during migration. For
-      `checked > 100`, use `min: 101`. Keep every count assertion. Otherwise
-      keep the default `min` of 1.
+- [x] `min` defaults to 1. Raise it only when the test needs that many entries
+      to prove its claim and no assertion already checks the count. Never copy
+      an exact count into `min`; exact counts belong in assertions.
 - [x] Record the selectors 1 and 2 lint result over `tests/` before and after
       migration. The reported-site count must change from 23 to 0.
 - [x] Run each browser spec affected by the shared fixture, including each
@@ -413,6 +419,17 @@ Send catalogue selections through the checked helpers.
 Extend the lint rule to literal path lookups, as the user approved on
 2026-10-06.
 
+- [x] Apply the reviewer correction in a separate commit before selector 3:
+  - [x] Remove the eleven raised `min` values from Milestone 5. Keep exact count
+        assertions and use the default minimum.
+  - [x] Define and test positive safe integer validation before implementing
+        it. Both selection helpers throw `CatalogueSelectionError` with reason
+        `min must be a positive integer` for zero, negative, fractional,
+        `NaN`, infinite, or unsafe values. Keep the helper files under 300 lines.
+  - [x] Record the minimum rule and validation in the protocol and this plan.
+  - [x] Run the changed unit files, helper tests, ESLint, and prepared type
+        checks. Browser specs are unchanged and need no repeat run.
+  - [x] Commit the correction.
 - [ ] Extend the lint tests. Selector 3 reports a literal path compared with
       `===` or `!==` in `find`, `some`, `filter`, and `every` calls on
       `entries`. A comparison with a variable reports nothing.

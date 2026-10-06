@@ -68,19 +68,9 @@ test("documented design-screen counts match the compiled catalogue", async () =>
   const readme = "examples/basic/README.md";
   const designs = entriesUnder(manifest, "design", {
     kind: "screen",
-    min: Math.max(
-      1,
-      (await stated(readme, /Mokly's (\d+) design screens/gu))[0]!,
-    ),
   });
   const components = entriesUnder(manifest, "design/components", {
     kind: "screen",
-    min: Math.max(
-      1,
-      (
-        await stated(readme, /scoped to the (\d+) component-design routes/gu)
-      )[0]!,
-    ),
   });
   const dual = designs.filter((entry) => entry.colorSchemes.includes("dark"));
   const dualBrowse = entriesWhere(

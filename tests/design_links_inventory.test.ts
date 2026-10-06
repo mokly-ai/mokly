@@ -40,7 +40,6 @@ test("the canonical documented inventory exactly matches the complete design pat
     .sort();
   const actual = entriesUnder(manifest, "design", {
     kind: "screen",
-    min: Math.max(1, documented.length),
   })
     .map((entry) => entry.path)
     .sort();

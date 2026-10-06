@@ -40,7 +40,6 @@ test("component comparison captions follow the recorded change, never the depict
   const captions = new Map<string, Set<string>>();
   for (const entry of entriesUnder(manifest, "design/components", {
     kind: "screen",
-    min: 2,
   })) {
     for (const { document, route } of await renders(entry.path)) {
       const compared = previews(document).filter(

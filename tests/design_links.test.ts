@@ -137,11 +137,9 @@ test("every design link resolves to a real same-viewport design artifact without
   const { manifest } = await designCatalogue;
   const designs = entriesUnder(manifest, "design", {
     kind: "screen",
-    min: 111,
   });
   const componentDesigns = entriesUnder(manifest, "design/components", {
     kind: "screen",
-    min: 39,
   });
   assert.equal(componentDesigns.length, 39);
   assert.equal(designs.length - componentDesigns.length, 72);
@@ -204,7 +202,6 @@ test("no design route doubles as a directory holding another design route", asyn
   const { manifest } = await designCatalogue;
   const routes = entriesUnder(manifest, "design", {
     kind: "screen",
-    min: 111,
   }).map((entry) => entryRoute(entry.path));
   const directories = new Set(
     routes.flatMap((route) => {

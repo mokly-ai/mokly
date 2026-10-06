@@ -79,7 +79,6 @@ test("every artboard with a top bar draws one Appearance control", async () => {
   let checked = 0;
   for (const entry of entriesUnder(manifest, "design", {
     kind: "screen",
-    min: 101,
   })) {
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;

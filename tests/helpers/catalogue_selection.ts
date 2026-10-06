@@ -56,6 +56,21 @@ export class CatalogueSelectionError extends Error {
   }
 }
 
+/** Validate the minimum before selecting catalogue entries. */
+function minimumCount(
+  min: number | undefined,
+  failure: Omit<SelectionFailure, "matches" | "reason">,
+): number {
+  const minimum = min === undefined ? 1 : min;
+  if (!Number.isSafeInteger(minimum) || minimum < 1)
+    throw new CatalogueSelectionError({
+      ...failure,
+      matches: 0,
+      reason: "min must be a positive integer",
+    });
+  return minimum;
+}
+
 function matchesKind(
   entry: ManifestEntry,
   kind: EntryKind | readonly EntryKind[] | undefined,
@@ -183,13 +198,18 @@ export function entriesUnder(
   options: UnderOptions = {},
 ): ManifestEntry[] {
   const variants = options.variants ?? "include";
+  const min = minimumCount(options.min, {
+    helper: "entriesUnder",
+    target: folder,
+    kind: options.kind,
+    variants,
+  });
   const selected = manifest.entries.filter(
     (entry) =>
       entry.path.startsWith(`${folder}/`) &&
       matchesKind(entry, options.kind) &&
       matchesVariants(entry, variants),
   );
-  const min = options.min ?? 1;
   if (selected.length < min)
     throw new CatalogueSelectionError({
       helper: "entriesUnder",
@@ -223,8 +243,11 @@ export function entriesWhere(
   predicate: (entry: ManifestEntry) => boolean,
   options: MinimumOptions = {},
 ): ManifestEntry[] {
+  const min = minimumCount(options.min, {
+    helper: "entriesWhere",
+    target: description,
+  });
   const selected = manifest.entries.filter(predicate);
-  const min = options.min ?? 1;
   if (selected.length < min)
     throw new CatalogueSelectionError({
       helper: "entriesWhere",

@@ -88,7 +88,6 @@ test("all sixteen shared components have connected pages, controls and saved exa
   const components = entriesUnder(manifest, "design/library", {
     kind: "component",
     variants: "exclude",
-    min: 16,
   });
   assert.equal(components.length, 16);
   assertAbsent(manifest, "design");

@@ -144,8 +144,15 @@ The four selection helpers are preconditions. They throw
 
 `entriesWhere` also accepts `min`, with a default of 1.
 
-When a test states an expected count, use that lower bound as `min`. For
-`checked > 100`, use `min: 101`. Keep the existing count assertion.
+`min` defaults to 1. Raise it only when the test needs that many entries
+to prove its claim and no assertion already checks the count. Never copy an
+exact count into `min`; exact counts belong in assertions.
+
+Both helpers validate `min` before selecting entries. It must be a positive
+safe integer. Zero, negative, fractional, `NaN`, infinite, and unsafe values
+raise `CatalogueSelectionError` with reason `min must be a positive integer`.
+These errors report `matches=0` because selection has not started.
+
 Kind arguments narrow the result types of `entryAt`, `entriesAt`, and
 `entriesUnder`. A component kind accepts both parents and variants unless
 `variants: "exclude"` removes component variants. `variants: "only"` returns
