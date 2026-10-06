@@ -3,7 +3,8 @@
 Use this prompt for the final review item in every implementation plan. Run the
 review after the completed work has passed its checks, been committed, and been
 pushed. The reviewer must inspect the complete local diff against `origin/main`
-without changing files or automatically applying findings.
+without changing files or automatically applying findings. Fixing happens in a
+separate step after the report; see [After The Review](#after-the-review).
 
 The prompt preserves the former `cargo xtask review` instructions. It replaces
 the command's injected review request with explicit commands that the reviewer
@@ -57,3 +58,28 @@ Return numbered findings first. For every finding:
   prevent the issue from recurring.
 
 If there are no findings, say so clearly and mention residual test risk.
+
+## After The Review
+
+The reviewer stays read-only. The implementer then applies the review-fix rule
+from [`AGENTS.md`](../AGENTS.md):
+
+1. Fix the findings in the auto-fix categories with the recommended option:
+   product bugs (including edge cases, races, and platform differences),
+   security issues, docs or spec drift, mockup mismatches that a protocol doc
+   already settles, flaky or slow tests when the fix corrects the test itself,
+   and repository-rule violations such as file size, lint, and layout.
+2. Leave findings that need a decision for the user: more than one option with
+   real trade-offs, a change to the meaning of a protocol contract, a choice
+   between the mockup and the product, deleting or weakening a test or gate or
+   raising a time limit, a user-visible behaviour change beyond the contract,
+   or a need for an audit exception, credentials, infrastructure, or a new
+   milestone. Findings about missing tests, performance, code structure, UX
+   wording, and process also wait for the user.
+3. Run the checks, commit, push, and run this review once more on the fix. Fix
+   any new auto-fixable findings once more, then stop. Do not start a third fix
+   round without the user.
+4. Report the fixed findings (number, severity, plain explanation, what
+   changed, commit) separately from the open findings and their
+   recommendations. When the plan has a review record under `docs/reviews/`,
+   mark each fixed finding there as resolved in its commit.

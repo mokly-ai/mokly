@@ -13,12 +13,33 @@
   followed by a review item that uses
   [`docs/implementation-review-prompt.md`](./docs/implementation-review-prompt.md)
   to review the complete local diff against `origin/main`; run the review only
-  after the push
+  after the push, then apply the review-fix rule below
 - Treat existing plan items that name the removed `cargo xtask review` command
   as review items that use `docs/implementation-review-prompt.md`
-- Do not automatically fix review findings; include each finding and a clear
-  recommendation in the final message so the user can decide what to address
-  next
+- Review-fix rule: after the post-push review reports, fix findings in these
+  categories without waiting for the user, using the reviewer's recommended
+  option: product bugs (including edge cases, races, and platform differences),
+  security issues, docs or spec drift, mockup mismatches that a protocol doc
+  already settles, flaky or slow tests when the fix corrects the test itself,
+  and repository-rule violations such as file size, lint, and layout
+- Ask the user instead of fixing when a finding needs a decision: more than one
+  option has real trade-offs and the recommendation is not clearly best; the
+  fix changes the meaning of a protocol contract or decides which side of a
+  mockup/product mismatch is right; the fix deletes, skips, or weakens a test
+  or gate, or raises a time limit; the fix changes user-visible behaviour
+  beyond what the contract says; or the fix needs an audit exception,
+  credentials, infrastructure, or a new milestone. Findings about missing
+  tests, performance, code structure, UX wording, and process always wait for
+  the user
+- Keep the review itself read-only. After it reports, fix the auto-fixable
+  findings, run the checks, commit, push, and re-run the review once on the
+  fix. Fix any new auto-fixable findings once more, then stop and report. Do
+  not start a third fix round without the user
+- In the final message, list the auto-fixed findings (number, severity, plain
+  explanation, what changed, commit) separately from the findings that need a
+  decision, each with a clear recommendation. When the plan has a review
+  record under `docs/reviews/`, mark each fixed finding there as resolved in
+  its commit
 - When providing review comments or review output, number each review item, give
   each item a severity, and explain it in simple language that assumes the
   reader has no prior codebase or feature context. State the impact of not
@@ -230,8 +251,11 @@
   speculative duplicate mockup milestones during initial planning.
 - Each plan must end with a review TODO after its commit-and-push TODO. The
   review TODO must direct a reviewer to use
-  `docs/implementation-review-prompt.md` against `origin/main` after the push
-  and to report findings without changing the implementation.
+  `docs/implementation-review-prompt.md` against `origin/main` after the push,
+  to report findings, and then to apply the review-fix rule from the General
+  section: fix the auto-fixable findings, re-review once, and report the rest.
+  Read existing plan review TODOs that say "without changing the
+  implementation" under the same rule.
 - When a plan includes backend changes, mockup or design updates, and UI
   implementation, keep each area in its own milestone. Mockup/design work and
   UI implementation must be separate milestones, with mockups completed before
