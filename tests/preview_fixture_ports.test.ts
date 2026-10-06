@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  servePreviewFixture,
-  type PreviewServerProcess,
-} from "./browser/preview_fixture.js";
+import { servePreviewFixture } from "./browser/preview_fixture.js";
+import type { PreviewServerProcess } from "./browser/preview_process.js";
 
 test("preview lets Wrangler own the ephemeral port and uses its reported endpoint", async () => {
   const expectedUrl = "http://127.0.0.1:43217";

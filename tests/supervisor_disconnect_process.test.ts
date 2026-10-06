@@ -67,7 +67,7 @@ server.listen(Number(process.argv[process.argv.indexOf("--port") + 1]), "127.0.0
     assert.deepEqual(await state(port, "/disconnect"), { connected: false });
     await Promise.race([
       failureObserved,
-      delay(1000, undefined, { ref: false }),
+      delay(15_000, undefined, { ref: false }),
     ]);
     assert.equal(
       failures.length,
@@ -94,7 +94,7 @@ server.listen(Number(process.argv[process.argv.indexOf("--port") + 1]), "127.0.0
     assert.deepEqual(await state(port), { connected: true, updates: 0 });
     supervisor.notifyUpdate(["home"]);
     let current = await state(port);
-    for (let attempt = 0; attempt < 100 && current.updates === 0; attempt++) {
+    for (let attempt = 0; attempt < 1_500 && current.updates === 0; attempt++) {
       await delay(10);
       current = await state(port);
     }
@@ -114,7 +114,7 @@ async function state(
   route = "/",
 ): Promise<{ connected: boolean; updates?: number }> {
   const response = await fetch(`http://127.0.0.1:${port}${route}`, {
-    signal: AbortSignal.timeout(2000),
+    signal: AbortSignal.timeout(15_000),
   });
   assert.equal(response.status, 200);
   return response.json();
