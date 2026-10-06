@@ -21,7 +21,9 @@ While a merge is uncommitted, use `MERGE_HEAD` only if it equals `origin/main`.
 If it is an ancestor of `origin/main`, main moved during the merge and the
 gate fails until the merge is refreshed. For any other merge, including a
 local `main` ahead of `origin/main`, retain the normal merge-base rule. The
-source-file-length audit uses the same Git comparison boundary.
+source-file-length audit uses the same Git comparison boundary. The approved
+[baseline dependency audit](./dependency-audit-baseline.md) also shares this
+comparison-commit rule through `GitWorkspace.requireBase()`.
 
 ## JavaScript And TypeScript File Length
 

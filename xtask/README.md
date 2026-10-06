@@ -6,8 +6,8 @@ internal binary and is not published to npm or crates.io.
 ## Responsibilities
 
 - Run the current source-level TypeScript, package, example, and Rust suite.
-- Fail verification on uncovered Low-or-higher advisories, invalid exceptions,
-  or audit errors.
+- Run the baseline dependency audit by default and fail on new issues or
+  audit errors. Support strict mode for release and dependency update checks.
 - Enforce the Rust file-length limit.
 - Enforce changed repository-wide TypeScript/JavaScript (300 lines) and
   protocol Markdown (250 lines or an exact reviewed cap) limits against the
@@ -37,10 +37,14 @@ positive integer to override these values. The
 [test concurrency contract](../docs/protocol/ci-suite-evidence.md#test-concurrency)
 defines them. Individual concurrency tests and their existing timeouts remain
 unchanged.
-The complete check starts with `npm run dependencies:check`, covering all
-workspace dependency categories. It requires registry access; an audit or network
-failure stops subsequent checks. Reviewed workspace exceptions have exact
-dev-only paths, inclusive UTC end dates, and a maximum 31-day window under the
+The approved [baseline audit contract](../docs/protocol/dependency-audit-baseline.md)
+sets the complete check's default to `npm run dependencies:check -- --baseline`,
+covering every dependency category from the lockfile. Issues already present at
+the merge base print as inherited notices. New issues or operational audit
+errors stop subsequent checks. `--dependency-audit strict` instead calls
+`npm run dependencies:check`, which fails on all uncovered findings and invalid
+exception records. Both modes require registry access. Reviewed exceptions
+have exact dev-only paths, inclusive UTC end dates, and a maximum 31-day window under the
 [dependency security contract](../docs/protocol/dependency-security.md).
 Packed-consumer smokes separately audit the consumer's resolved production
 dependencies without workspace overrides or audit exceptions.
@@ -86,7 +90,9 @@ Tests using `changedFixture` register servers and workers with
 
 ```bash
 cargo xtask check
+cargo xtask check --dependency-audit strict
 cargo xtask check --suite repository
+cargo xtask check --suite repository --dependency-audit strict
 cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4
 cargo xtask check --suite browser --shard 1/4
@@ -99,6 +105,14 @@ cargo xtask source-file-length-lint --all
 `--shard INDEX/TOTAL` is valid only for the unit and browser suites. Omitting it
 runs the full selected suite. Package, unit, browser, and hydration suites
 prepare their required output before invoking prepared npm scripts.
+
+`--dependency-audit <baseline|strict>` defaults to `baseline`. It is valid for
+the complete gate or repository suite. An explicit mode flag with another suite
+returns a typed error before subprocesses start. Ordinary pull requests and all
+pushes use baseline mode; same-repository dependency update and Release Please
+pull requests use strict mode. Scheduled `main` and release publish audits stay
+strict. These mode rules are the active implementation target in the linked
+baseline audit contract.
 
 ## Development
 
@@ -149,3 +163,5 @@ cargo test --package xtask
 - [CI and npm release contract](../docs/protocol/npm-release.md)
 - [CI verification](../docs/protocol/ci-verification.md)
 - [Dependency security](../docs/protocol/dependency-security.md)
+- [Baseline dependency audit](../docs/protocol/dependency-audit-baseline.md)
+- [Dependency update pull request](../docs/protocol/dependency-audit-update-pr.md)

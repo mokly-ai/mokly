@@ -201,6 +201,10 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [Dependency security](./dependency-security.md) — advisory gates, targeted
   updates, temporary patched-release overrides, reviewed path exceptions, and
   strict packed-consumer audit coverage.
+  - [Baseline dependency audit](./dependency-audit-baseline.md) — approved
+    modes, comparison tree, structured issues, JSON summary, and CI selection.
+  - [Dependency update pull request](./dependency-audit-update-pr.md) — approved
+    scheduled strict audit, branch ownership, update rules, and token rotation.
 
 - [Catalogue serialization](./mokly-catalogue-serialization.md) — canonical bytes,
   snapshot identity and strict current-format readers.

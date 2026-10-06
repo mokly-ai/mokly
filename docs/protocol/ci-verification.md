@@ -2,21 +2,22 @@
 
 ## Delivery Status
 
-The suite CLI, evidence, workflow graph, fixture reuse, and every repository
-ratchet are implemented. [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
-record timing and coverage. `cargo xtask check` remains the complete local gate;
-a validated hosted aggregate is reusable evidence for its exact tree. Public
-package argument forwarding, hierarchical cancellation, and pull-request title
-validation are implemented.
+The suite CLI, evidence, workflow graph, fixture reuse, ratchets, argument
+forwarding, cancellation, and title validation are implemented.
+[Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
+record timing and coverage. The approved [baseline audit contract](./dependency-audit-baseline.md)
+defines the active target for dependency mode selection.
 
 ## Verification Boundary
 
 `cargo xtask check` is the complete local and release complete-mode entrypoint.
 With no options it runs every gate sequentially in one checkout, beginning with
-the live workspace dependency audit. Only active reviewed path exceptions can
-cover findings; the [dependency security contract](./dependency-security.md)
-defines their UTC expiry and 31-day limit. The packed-consumer production audit
-has no exceptions. A selected suite is partial evidence and
+the live baseline workspace audit. It fails on new issues and reports inherited
+ones as notices. `--dependency-audit strict` selects strict mode for the complete
+gate or repository suite; [baseline auditing](./dependency-audit-baseline.md)
+owns the CLI and CI mode rules. Reviewed path exceptions retain their UTC expiry
+and 31-day limit under [dependency security](./dependency-security.md).
+The packed-consumer production audit has no exceptions. A selected suite is partial evidence and
 must never report that the complete gate passed. CI's validated aggregate of all
 required jobs and reports is complete verification of their exact tree; the
 [release evidence contract](./npm-release-evidence.md) defines reuse.
@@ -44,7 +45,7 @@ hydration suite fail before any subprocess starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                            |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                          |
+| Repository       | Live audit first: baseline for ordinary PRs, pushes, and local checks; strict for release and dependency update PRs. Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                  |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                                                               |
 | Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                  |
