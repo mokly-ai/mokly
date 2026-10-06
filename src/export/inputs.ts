@@ -1,20 +1,29 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import {
+  isSafeRepositoryPath,
+  type HistoricalManifest,
+} from "@mokly/viewer/data";
 
+import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { compileCatalogue, type Compilation } from "../build/compile.js";
 import { withOutputLock } from "../build/output_lock.js";
 import { loadConfig } from "../config/load.js";
 import { publicPathLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { OptionalReviewAssetReader } from "../review/assets.js";
+import { readBaseManifest } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import type { RepositoryEvidence } from "../review/git.js";
-import type { PreparedReviewRepository } from "../review/prepare.js";
+import {
+  prepareReviewRepository,
+  type PreparedReviewRepository,
+} from "../review/prepare.js";
 
-import { exportError } from "./error.js";
+import { exportError, withPreInstallationCancellation } from "./error.js";
 import { capturePublicFiles } from "./public_files.js";
+import type { ExportOptions } from "./types.js";
 
 /** Share captured public bytes between comparison and Changes calculations. */
 export function capturedAssetReader(
@@ -101,4 +110,39 @@ function materialConfig(config: ResolvedConfig): ResolvedConfig {
   const comparable = { ...config };
   delete comparable.postcssWatchDirectories;
   return comparable;
+}
+
+/** Prepare one pinned baseline while retaining cancellation and earlier-output handling. */
+export async function prepareExportBaseline(
+  config: ResolvedConfig,
+  base: string,
+  options: ExportOptions,
+): Promise<{
+  baseline: HistoricalManifest | undefined;
+  incompatible: boolean;
+  prepared: PreparedReviewRepository | undefined;
+}> {
+  return withPreInstallationCancellation(options.signal, async () => {
+    const prepared = options.noChanges
+      ? undefined
+      : await prepareReviewRepository(config, base, {
+          ...(options.signal ? { signal: options.signal } : {}),
+          ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+        });
+    let incompatible = false;
+    let baseline: HistoricalManifest | undefined;
+    if (prepared)
+      try {
+        baseline = await readBaseManifest(
+          prepared.reader,
+          prepared.commit,
+          config,
+        );
+      } catch (error) {
+        if (!isIncompatibleEarlierBaseline(error)) throw error;
+        incompatible = true;
+        options.incompatibleBaseline?.(prepared.commit);
+      }
+    return { baseline, incompatible, prepared };
+  });
 }

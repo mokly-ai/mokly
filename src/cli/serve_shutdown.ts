@@ -1,8 +1,11 @@
 import type { RunningServe } from "../server/serve.js";
 
 import { openServedBrowser } from "./browser.js";
-import { ServeShortcuts } from "./reporter/shortcuts.js";
-import type { CliReporter, TerminalEnvironment } from "./reporter/types.js";
+import {
+  ServeShortcuts,
+  type CliReporter,
+  type TerminalEnvironment,
+} from "./reporter/index.js";
 
 /** Keep the CLI alive until Serve and its shortcuts have closed. */
 export function waitForShutdown(

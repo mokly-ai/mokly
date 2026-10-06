@@ -2235,6 +2235,11 @@ Merge `main` at `80ceb445` before Milestones 31 and 32.
       decision, user approval and short review summary. Validate the Markdown
       and commit this work separately with `docs(plans)`.
 - [x] Update Milestone 32's review TODO to the new review-fix rule in `AGENTS.md`.
+- [x] Keep `src/export/run.ts` within 300 lines by moving baseline preparation
+      into the existing export inputs module. Preserve cancellation and
+      incompatible-baseline behavior, then run the export checks.
+- [x] Keep the reporter's existing `ServeShortcuts` export in use after the
+      shutdown-helper extraction, then run the repository checks.
 - [ ] Push the branch after the reviewer checks the local merge.
 
 ### Integration decisions

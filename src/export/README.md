@@ -25,7 +25,9 @@ under a short writer-lock hold. Their pending waits obey export cancellation.
 Rendering stays outside the lock; capture and installation retain their existing
 separate writer-lock boundaries.
 
-`run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
+`inputs.ts` prepares the pinned baseline with the existing cancellation and
+earlier-output rules. `run.ts` uses that one merge-base commit through
+`RepositoryEvidence`, retains the
 independent `BaselineReader`, runs the normal build, captures public inputs,
 constructs one typed authored-plus-generated `ChangeEvidence` shared by Review
 and material Changes classification, and verifies inputs again

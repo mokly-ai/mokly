@@ -1,12 +1,7 @@
 import path from "node:path";
 
-import type {
-  HistoricalManifest,
-  ReviewArtifact,
-  PageResourceEvidence,
-} from "@mokly/viewer/data";
+import type { ReviewArtifact, PageResourceEvidence } from "@mokly/viewer/data";
 
-import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { compileCatalogue } from "../build/compile.js";
 import { withOutputLock } from "../build/output_lock.js";
 import { writeLockedCompilation } from "../build/transaction.js";
@@ -16,10 +11,7 @@ import { errorMessage, isCancellation, isMoklyError } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import { parseHistoricalManifest } from "../registry/manifest.js";
 import { GitReviewAssetReader } from "../review/assets.js";
-import {
-  baselineResourceConfig,
-  readBaseManifest,
-} from "../review/base_manifest.js";
+import { baselineResourceConfig } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
 import { CssResourceAnalysis } from "../review/css/resource_analysis.js";
@@ -29,7 +21,6 @@ import {
   packageRemovedPagePreviews,
   RepositoryRemovedPagePreview,
 } from "../review/page_preview.js";
-import { prepareReviewRepository } from "../review/prepare.js";
 import { classifyChangedContent } from "../server/changed_content.js";
 
 import { withExportCleanup } from "./cleanup.js";
@@ -42,6 +33,7 @@ import {
   assertInputsUnchanged,
   capturedAssetReader,
   pinnedEvidence,
+  prepareExportBaseline,
 } from "./inputs.js";
 import { resolveExportOutput } from "./paths.js";
 import { capturePublicFiles } from "./public_files.js";
@@ -90,30 +82,11 @@ async function generateExport(
 ): Promise<ExportResult> {
   try {
     const base = options.base ?? config.review.base;
-    const { baseline, incompatible, prepared } =
-      await withPreInstallationCancellation(options.signal, async () => {
-        const prepared = options.noChanges
-          ? undefined
-          : await prepareReviewRepository(config, base, {
-              ...(options.signal ? { signal: options.signal } : {}),
-              ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
-            });
-        let incompatible = false;
-        let baseline: HistoricalManifest | undefined;
-        if (prepared)
-          try {
-            baseline = await readBaseManifest(
-              prepared.reader,
-              prepared.commit,
-              config,
-            );
-          } catch (error) {
-            if (!isIncompatibleEarlierBaseline(error)) throw error;
-            incompatible = true;
-            options.incompatibleBaseline?.(prepared.commit);
-          }
-        return { baseline, incompatible, prepared };
-      });
+    const { baseline, incompatible, prepared } = await prepareExportBaseline(
+      config,
+      base,
+      options,
+    );
     const compilation = await withPreInstallationCancellation(
       options.signal,
       () => compile(config, undefined, options.signal, options.onWarning),
