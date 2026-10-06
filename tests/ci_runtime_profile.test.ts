@@ -8,9 +8,17 @@ import { promisify } from "node:util";
 
 import { parse } from "yaml";
 
+import {
+  SUPPORTED_NODE_RANGE,
+  TESTED_NODE_VERSIONS,
+  isSupportedNodeVersion,
+} from "../dist/cli/bootstrap.js";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
+const testedNodeVersions: readonly string[] = TESTED_NODE_VERSIONS;
+const [, currentTestedNode] = TESTED_NODE_VERSIONS;
 const selectedNodeMatrix =
   "${{ fromJSON(needs.repository.outputs.node-matrix) }}";
 
@@ -19,9 +27,12 @@ interface WorkflowStep {
   id?: string;
   name?: string;
   run?: string;
+  uses?: string;
+  with?: Readonly<Record<string, unknown>>;
 }
 
 interface WorkflowJob {
+  needs?: readonly string[];
   outputs?: Readonly<Record<string, string>>;
   steps: readonly WorkflowStep[];
   strategy?: {
@@ -30,6 +41,7 @@ interface WorkflowJob {
 }
 
 interface Workflow {
+  env: Readonly<Record<string, string>>;
   jobs: Readonly<Record<string, WorkflowJob>>;
 }
 
@@ -99,12 +111,86 @@ test("selected runtimes drive every functional matrix and Required CI", async ()
   assert.match(String(aggregate?.run), /--runtimes "\$EXPECTED_RUNTIMES"/);
 });
 
+test("local, package and CI runtimes share the Node compatibility policy", async () => {
+  const [version, manifestSource, lockSource, readme] = await Promise.all([
+    fs.readFile(path.join(repositoryRoot, ".nvmrc"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "README.md"), "utf8"),
+  ]);
+  const manifest = JSON.parse(manifestSource) as {
+    engines: { node: string };
+  };
+  const lock = JSON.parse(lockSource) as {
+    packages: { "": { engines: { node: string } } };
+  };
+  assert.equal(version.trim(), currentTestedNode);
+  assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
+  assert.equal(lock.packages[""].engines.node, manifest.engines.node);
+  assert.ok(
+    readme.includes(`\`${SUPPORTED_NODE_RANGE}\``),
+    "the README must document the supported Node range",
+  );
+  assert.ok(
+    readme.includes("[`.nvmrc`](./.nvmrc)"),
+    "development setup must follow the tested Node version",
+  );
+  assert.ok(TESTED_NODE_VERSIONS.every(isSupportedNodeVersion));
+  assert.ok(testedNodeVersions.includes(version.trim()));
+});
+
+test("CI resolves the latest Node 24 patch once for every dependent job", async () => {
+  const source = await workflowSource();
+  const workflow = parse(source) as Workflow;
+  assert.equal(workflow.env.NODE_24_VERSION, undefined);
+  const repository = workflow.jobs.repository;
+  assert.ok(repository);
+  const setupIndex = repository.steps.findIndex((step) =>
+    step.uses?.startsWith("actions/setup-node@"),
+  );
+  const captureIndex = repository.steps.findIndex(
+    (step) => step.name === "Capture exact Node.js version",
+  );
+  assert.ok(setupIndex >= 0 && captureIndex > setupIndex);
+  const repositorySetup = repository.steps[setupIndex];
+  const capture = repository.steps[captureIndex];
+  assert.equal(repositorySetup?.with?.["node-version"], 24);
+  assert.equal(capture?.id, "node-version");
+  assert.equal(
+    capture?.run,
+    `echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"`,
+  );
+  assert.equal(
+    repository.outputs?.["node-24-version"],
+    "${{ steps.node-version.outputs.value }}",
+  );
+  assert.doesNotMatch(source, /steps\.node\.outputs\.node-version/);
+  for (const name of ["package", "unit", "browser", "hydration", "required"]) {
+    const job = workflow.jobs[name];
+    assert.ok(job, name);
+    assert.ok(job.needs?.includes("repository"), name);
+    const setup = job.steps.find((step) =>
+      step.uses?.startsWith("actions/setup-node@"),
+    );
+    assert.equal(
+      setup?.with?.["node-version"],
+      name === "required"
+        ? "${{ needs.repository.outputs.node-24-version }}"
+        : "${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}",
+      `${name} must reuse the exact Node 24 version captured by the prerequisite`,
+    );
+  }
+});
+
 async function readWorkflow(): Promise<Workflow> {
-  const source = await fs.readFile(
+  return parse(await workflowSource()) as Workflow;
+}
+
+async function workflowSource(): Promise<string> {
+  return await fs.readFile(
     path.join(repositoryRoot, ".github/workflows/ci.yml"),
     "utf8",
   );
-  return parse(source) as Workflow;
 }
 
 async function runSelector(

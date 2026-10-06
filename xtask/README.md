@@ -28,8 +28,15 @@ subdirectory. The source audit finds that root with Git, covers `.ts`, `.tsx`,
 During an uncommitted merge, the changed-file audit compares the resolved tree
 directly with `origin/main`, so main-only additions do not become false
 violations before the merge commit exists.
-The Node unit/integration suite runs at most two test files concurrently;
-individual concurrency tests and their existing timeouts remain unchanged.
+The Node unit/integration suite runs at most half the available CPUs' worth of
+test files at once, never fewer than two. The hydration suite runs half the
+available CPUs as Playwright workers, never fewer than one, and the browser
+suite keeps one worker. Each Playwright worker owns one example server and runs
+whole spec files. Set `MOKLY_UNIT_CONCURRENCY` or `MOKLY_PLAYWRIGHT_WORKERS` to a
+positive integer to override these values. The
+[test concurrency contract](../docs/protocol/ci-suite-evidence.md#test-concurrency)
+defines them. Individual concurrency tests and their existing timeouts remain
+unchanged.
 The complete check starts with `npm run dependencies:check`, covering all
 workspace dependency categories. It requires registry access; an audit or network
 failure stops subsequent checks. Reviewed workspace exceptions have exact
@@ -66,9 +73,12 @@ prerequisite and explicitly shares that exact result with dependent jobs,
 keeping shard evidence consistent across runner caches. The single release
 publishing job independently resolves the latest Node 24.
 
-Hydration coverage discovers a separate browser test for every example route, so
-adding screens does not consume one shared test deadline. The unsharded
-`hydration` suite runs those filename-selected specs separately from `browser`.
+Hydration coverage discovers a separate browser test for one representative
+route per example entry shape, as
+[development hydration coverage](../docs/protocol/ci-verification-hydration.md)
+defines. A new screen adds a test only when it adds a new shape, and no route
+shares a test deadline. The unsharded `hydration` suite runs those
+filename-selected specs separately from `browser`.
 Tests using `changedFixture` register servers and workers with
 `fixture.onCleanup` to drain them before removing their working tree.
 
@@ -109,7 +119,9 @@ cargo test --package xtask
   validates the delivered browser module graph;
   [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and
   [`../scripts/package/imported_styles.mjs`](../scripts/package/imported_styles.mjs)
-  own every clean packed-consumer smoke.
+  own every clean packed-consumer smoke. The
+  [consumer fixtures README](../tests/fixtures/consumers/README.md) states what
+  each copied project tests.
 - [`../scripts/verification/repository-ratchets.mjs`](../scripts/verification/repository-ratchets.mjs)
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)

@@ -16,16 +16,16 @@ Created 2026-09-24 from the
 CSS-in-JS investigation on this branch. Milestones 13, 15 and 16 resolve the
 authorized review findings; finding 3 was resolved in the separate `922c1ec`
 merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
-[final review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
-and [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
+[final review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery.md#milestone-12-review)
+and [Milestone 14 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-14.md).
 Milestone 18 (`3aa7d67`) resolves M17-2 and makes M17-3, M17-8 and M17-9
 obsolete. Milestone 20 (`9bab3d7`) resolves M19-1 with Mokly-owned `@scope` scoping and
 rename-only verification; M19-2 is partly mitigated, and other findings in the
-[Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
+[Milestone 17 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-17.md)
 remain open for the user's decision, as do the other findings in the
-[Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md)
+[Milestone 19 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-19.md)
 and unresolved findings in the
-[Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md).
+[Milestone 21 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-21.md).
 A follow-up after PR #140 resolves M19-6: every Mokly PostCSS call now ignores
 input source maps through one ESLint-enforced boundary.
 Milestone 22 (`8a47cc5`) accepts the selector-list behavior from finding 3 of that review;
@@ -34,43 +34,43 @@ Milestone 24 (`7ba5628`) resolves the M23 findings: it accepts the plugins' comp
 without comma whitespace and ignores selector comments while rejecting
 invalid newly created compounds.
 The findings in the
-[Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md)
+[Milestone 23 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-23.md)
 are addressed there; other findings remain open for the user's decision, as
 do the earlier unselected findings. Milestone 26 (`266164b`) resolves the
 approved findings in the
-[Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
+[Milestone 25 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-25.md).
 Milestone 28 (`c482bd0`) resolves the approved findings in the
-[Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md);
+[Milestone 27 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-27.md);
 other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the
 approved findings in the
-[Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
+[Milestone 29 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-29.md).
 Milestone 32 (`6a02190`) resolves only finding 1 in the
-[Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md);
+[Milestone 31 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-31.md);
 findings 2–4 remain open for the user's decision. Milestone 34 (`583af0a9`) resolves only
 finding 2 in the
-[Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md);
+[Milestone 33 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-33.md);
 findings 1 and 3 remain open, as do findings in the
-[Milestone 35 review record](../docs/reviews/imported-css-delivery-milestone-35.md).
+[Milestone 35 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-35.md).
 Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` before the
 implementation PR. The merged tree retains imported CSS with manifest v7,
 read model v3, aligned comparison panes and delta publishing. Main's removal
 of historical v2 manifest parsing remains in force; `compatibility.transformer`
 remains available. The full gate passed before and after the merge commit,
 and the implementation PR is #125. The user approved the findings in
-the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md)
+the [Milestone 37 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-37.md)
 for Milestone 38; the focused reconciliation is committed in `c260b5b2`.
 Milestone 39 merged main's 0.13.0 release at `5d1c37a` in `3a2d90a8`.
 The complete gate passed on the merged tree, with no removal of main content.
 Milestone 41 (`7f64f8b0`) replaced the custom merge check with Git's remerge
 diff, resolving findings 1, 2, 4 and 11 in the
-[Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md).
+[Milestone 40 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-40.md).
 Other findings remain open. Milestone 42 (`beab8560`) merged main's
 release-runner fix at `b4a02a30`; the full gate passed on retry without any
 deletion of main content. Milestone 44 (`8729ec16`) resolves the selected findings in the
-[Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md)
+[Milestone 43 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-43.md)
 by reviewing named merge commits and recording path-specific decisions.
 Other previously unselected findings remain out of scope. Findings in the
-[Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md)
+[Milestone 45 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-45.md)
 remain open for the user's decision. Milestone 46 addresses only the imported-CSS
 watcher-test flakiness recorded as Milestone 40 finding 12. The final helper
 follows intermediate versions and child restarts; an in-process server test
@@ -78,7 +78,7 @@ checks that stylesheet installation precedes the content update, without
 running the watched child. Milestone 46 (`77a1f493`)
 passed the full gate and resolves that finding; other review findings remain
 open. Findings in the
-[Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md)
+[Milestone 47 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-47.md)
 were resolved after the merge in `ec04332`; other review findings remain open
 for the user's decision.
 Imported CSS, CSS Modules, binary assets and
@@ -750,7 +750,7 @@ Close the remaining edge cases without changing successful delivery bytes.
       with severity, context, impact, lettered options, and a recommendation;
       do not change the implementation. Twenty findings (1 High, 6 Medium,
       13 Low) are recorded in the
-      [review record](../docs/reviews/imported-css-delivery.md) for the
+      [review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery.md) for the
       user's decision.
 
 ## Milestone 10: Final review fixes (High and Medium) (complete)
@@ -792,7 +792,7 @@ Close review findings 8–20 without changing the accepted-generation model.
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation; the parent session owns this review.
       Sixteen findings (1 High, 2 Medium, 13 Low) are recorded in the
-      [review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
+      [review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery.md#milestone-12-review)
       for the user's decision.
 
 ## Milestone 13: CSS Module import and custom-property regression (complete)
@@ -814,7 +814,7 @@ without changing any other Milestone 12 review finding.
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation; the parent session owns this review.
       Three new findings (2 Medium, 1 Low) are recorded in the
-      [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md)
+      [Milestone 14 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-14.md)
       for the user's decision.
 
 ## Milestone 15: Committed output, watch and CSS Module targets (complete)
@@ -848,7 +848,7 @@ findings left for a later user decision.
 ## Milestone 17: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Fifteen new findings (3 Medium, 12 Low) are recorded in the [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Fifteen new findings (3 Medium, 12 Low) are recorded in the [Milestone 17 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-17.md) for the user's decision.
 
 ## Milestone 18: Rename-only CSS Modules (complete)
 
@@ -866,7 +866,7 @@ rewrites that retain authored values, rules, comments and browser semantics.
 ## Milestone 19: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Nine new findings (2 Medium, 7 Low) are recorded in the [Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Nine new findings (2 Medium, 7 Low) are recorded in the [Milestone 19 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-19.md) for the user's decision.
 
 ## Milestone 20: Mokly-owned `@scope` scoping and rename-only verification (complete)
 
@@ -884,7 +884,7 @@ plugins and reject any change beyond documented local-name rewrites.
 ## Milestone 21: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Eight new findings (all Low) are recorded in the [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Eight new findings (all Low) are recorded in the [Milestone 21 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-21.md) for the user's decision.
 
 ## Milestone 22: Accept CSS Modules selector lists in `:global()` and `:local()` (complete)
 
@@ -900,7 +900,7 @@ the rename-only check for any other selector rewrite.
 ## Milestone 23: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (1 Medium, 1 Low) are recorded in the [Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (1 Medium, 1 Low) are recorded in the [Milestone 23 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-23.md) for the user's decision.
 
 ## Milestone 24: Follow the plugins' list join and ignore selector comments (complete)
 
@@ -917,7 +917,7 @@ without accepting fused identifiers or invalid newly created compounds.
 ## Milestone 25: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (1 Medium, 3 Low) are recorded in the [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (1 Medium, 3 Low) are recorded in the [Milestone 25 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-25.md) for the user's decision.
 
 ## Milestone 26: Wrapper-only moved whitespace, empty wrappers, a browser oracle and exact join docs (complete)
 
@@ -933,7 +933,7 @@ whitespace to move, reject all-empty wrappers, and verify browser semantics.
 ## Milestone 27: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (1 Medium, 3 Low) are recorded in the [Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (1 Medium, 3 Low) are recorded in the [Milestone 27 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-27.md) for the user's decision.
 
 ## Milestone 28: CSS whitespace, escape guards, wrapper empty tails and a stricter oracle (complete)
 
@@ -949,7 +949,7 @@ follow plugin-owned empty tails, and compare only real Chrome-parsed selectors.
 ## Milestone 29: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 29 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-29.md) for the user's decision.
 
 ## Milestone 30: Browser-accurate escape combinators, meaning-preserving escape advice and missing tests (complete)
 
@@ -967,7 +967,7 @@ the scoped CSS had hidden comments that ship and rejected those valid rules.
 ## Milestone 31: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (all Low) are recorded in the [Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (all Low) are recorded in the [Milestone 31 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-31.md) for the user's decision.
 
 ## Milestone 32: Compare the scoped text that ships (complete)
 
@@ -984,7 +984,7 @@ modelling the cleaned input the CSS Modules plugins processed.
 ## Milestone 33: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (all Low) are recorded in the [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (all Low) are recorded in the [Milestone 33 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-33.md) for the user's decision.
 
 ## Milestone 34: Accept byte-identical shipped selectors (complete)
 
@@ -999,7 +999,7 @@ that ships, while retaining every changed-text verification and rejection.
 ## Milestone 35: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (both Low) are recorded in the [Milestone 35 review record](../docs/reviews/imported-css-delivery-milestone-35.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (both Low) are recorded in the [Milestone 35 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-35.md) for the user's decision.
 
 ## Milestone 36: Merge latest main (complete)
 
@@ -1018,7 +1018,7 @@ navigation, publication and manifest changes.
 ## Milestone 37: Commit, push, and review (complete)
 
 - [x] Commit and push the merge and final bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Thirteen new findings (1 High, 3 Medium, 9 Low) are recorded in the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Thirteen new findings (1 High, 3 Medium, 9 Low) are recorded in the [Milestone 37 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-37.md) for the user's decision.
 
 ## Milestone 38: Reconcile merged protocol pages and restore main's tooling (complete)
 
@@ -1046,7 +1046,7 @@ the imported CSS work or main's published version and documentation updates.
 ## Milestone 40: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fixes and final bookkeeping; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Twelve new findings (3 Medium, 9 Low) are recorded in the [Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Twelve new findings (3 Medium, 9 Low) are recorded in the [Milestone 40 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-40.md) for the user's decision.
 
 ## Milestone 41: Replace the custom merge check with Git's remerge diff (complete)
 
@@ -1068,7 +1068,7 @@ release protocol pages.
 ## Milestone 43: Commit, push, and review (complete)
 
 - [x] Commit and push the approved work, confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 43 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-43.md) for the user's decision.
 
 ## Milestone 44: Review merges by named commit (complete)
 
@@ -1083,7 +1083,7 @@ path-complete record of intentional merge decisions.
 ## Milestone 45: Commit, push, and review (complete)
 
 - [x] Commit and push the documentation changes; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Five new findings (2 Medium, 3 Low) are recorded in the [Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Five new findings (2 Medium, 3 Low) are recorded in the [Milestone 45 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-45.md) for the user's decision.
 
 ## Milestone 46: Stabilize imported-CSS watcher tests (complete)
 
@@ -1110,7 +1110,7 @@ Deliver the approved watcher-test fix while leaving its post-push review to
 the user.
 
 - [x] Commit and push the fix; confirm the remote ref and a clean tree.
-- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md) for the user's decision.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 47 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-47.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
