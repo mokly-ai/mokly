@@ -143,6 +143,10 @@ condition. Write locked versions as `` `package` X.Y.Z ``, or add "or newer"
 for a declared floor; `tests/dependency_security.test.ts` matches each one to
 a `package-lock.json` install.
 
+List only choices that still affect later updates: an exception, override,
+hold, version floor, standing update rule, or production dependency review.
+Explain a one-time update that leaves none of these in its pull request.
+
 The current maintenance choices are:
 
 - [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
@@ -161,15 +165,6 @@ The current maintenance choices are:
   padded output and preserves normal brace alternatives. The
   [upstream advisory](https://github.com/advisories/GHSA-rgw5-rvv9-x895)
   explains why the intermediate-allocation fix requires 5.0.9, not 5.0.8.
-- [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
-  / CVE-2026-93749 affects `source-map-js >=1.0.0 <1.2.2`: a huge section
-  offset in an indexed source map can block the event loop. Runtime `postcss`
-  and development `@tailwindcss/node` share one copy, and both accept `^1.2.1`.
-  The workspace therefore locks `source-map-js` 1.2.2 as a lockfile-only
-  update, with no override or exception. Mokly disables PostCSS map output, so
-  its builds did not reach the blocking step. A bounded regression loads the
-  copy that PostCSS resolves. It keeps ordinary section offsets and rejects an
-  offset line above 10,000,000.
 - React Native's compatible Metro 0.84 line is updated to `metro` 0.84.6,
   including its coupled packages. The
   [0.84.5 security fix](https://github.com/react/metro/releases/tag/v0.84.5)
