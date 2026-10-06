@@ -71,13 +71,17 @@ operation and single-edit evidence used to approve the grouping.
 Record intermediate file timings here. Final measurements run all four files
 individually, one after another, with no other heavy work running.
 
-| Step                                                      | File or check                                |  Duration | Result                            |
-| --------------------------------------------------------- | -------------------------------------------- | --------: | --------------------------------- |
-| Helper verification                                       | `tests/attribution_result_helpers.test.ts`   |   0.220 s | 6 passed; no compilation          |
-| Unchanged current-merge verification                      | `tests/design_library_attribution.test.ts`   | 612.961 s | 33 passed                         |
-| Unchanged current-merge verification                      | `tests/component_design_attribution.test.ts` | 123.173 s | 10 passed                         |
-| Library CSS consolidated; source cases still in this file | `tests/design_library_attribution.test.ts`   | 382.350 s | 18 passed                         |
-| Shared CSS consolidated                                   | `tests/component_design_attribution.test.ts` |  27.641 s | 1 passed; all nine scopes checked |
+| Step                                                      | File or check                                     |  Duration | Result                            |
+| --------------------------------------------------------- | ------------------------------------------------- | --------: | --------------------------------- |
+| Helper verification                                       | `tests/attribution_result_helpers.test.ts`        |   0.220 s | 6 passed; no compilation          |
+| Unchanged current-merge verification                      | `tests/design_library_attribution.test.ts`        | 612.961 s | 33 passed                         |
+| Unchanged current-merge verification                      | `tests/component_design_attribution.test.ts`      | 123.173 s | 10 passed                         |
+| Library CSS consolidated; source cases still in this file | `tests/design_library_attribution.test.ts`        | 382.350 s | 18 passed                         |
+| Shared CSS consolidated                                   | `tests/component_design_attribution.test.ts`      |  27.641 s | 1 passed; all nine scopes checked |
+| Final file split verification                             | `tests/design_library_attribution.test.ts`        |  38.513 s | 2 passed                          |
+| Final file split verification                             | `tests/component_design_attribution.test.ts`      |  27.891 s | 1 passed                          |
+| Final file split verification                             | `tests/design_library_source_edits.test.ts`       | 130.643 s | 6 passed                          |
+| Final file split verification                             | `tests/design_library_committed_baseline.test.ts` |  60.797 s | 1 passed                          |
 
 The unchanged files ran individually in this session after the merge. These
 verification runs do not replace the approved previous-session before figures.

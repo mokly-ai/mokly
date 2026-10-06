@@ -295,7 +295,7 @@ scope comes from the dependency reasons.
       `affectedConsumers` is empty because shared stylesheets have no owner.
 - [x] Run the file; record the after timing.
 
-## Milestone 5: Source-edit groups and the committed baseline in their own files
+## Milestone 5: Source-edit groups and the committed baseline in their own files (completed)
 
 Move tests 2–5 out of `design_library_attribution.test.ts`. Group source
 edits into one rebuild only when every edit keeps its own proof under the
@@ -350,17 +350,19 @@ Builds 3–5 assert `affectedConsumers` equals `[]`. Every build asserts
 exactly the listed kinds per path (dependency reasons name the edited source
 file). Today's `affects` boolean becomes the exact `impactingIds` list.
 
-- [ ] Create `tests/design_library_source_edits.test.ts` with one module-level
+- [x] Create `tests/design_library_source_edits.test.ts` with one module-level
       fixture and the five builds above as subtests. Each subtest resets,
       applies its edits, rebuilds once, classifies once, and asserts the table.
-- [ ] Add a doc comment above the table in the test that states the grouping
+- [x] Keep the twelve source transformations in a typed helper so the group
+      table and its assertions stay readable and below the file-length cap.
+- [x] Add a doc comment above the table in the test that states the grouping
       rules, so a future edit that changes a signature is regrouped rather than
       silently merged.
-- [ ] Create `tests/design_library_committed_baseline.test.ts` holding test 5
+- [x] Create `tests/design_library_committed_baseline.test.ts` holding test 5
       with its committed-mode fixture, unchanged in substance.
-- [ ] Remove tests 2–5 from `tests/design_library_attribution.test.ts`; keep
+- [x] Remove tests 2–5 from `tests/design_library_attribution.test.ts`; keep
       every file under 300 lines.
-- [ ] Run the four files individually and record each timing.
+- [x] Run the four files individually and record each timing.
 
 ## Milestone 6: Timing verification, measurement record, commit, and review
 
