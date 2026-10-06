@@ -163,7 +163,7 @@ test("an excluded imported JSON file remains an authoring input and rebuilds", a
     "rebuild",
   );
   const second = await compileCatalogue(config);
-  assert.equal(entryAt(second.manifest, "home", "screen")?.title, "After");
+  assert.equal(entryAt(second.manifest, "home", "screen").title, "After");
 });
 
 test("canonical builder metadata remains writable when excluded from public reads", async (t) => {

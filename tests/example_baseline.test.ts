@@ -44,7 +44,7 @@ test("the example fixture rebuilds an untracked baseline from its own source and
       ),
     ),
   );
-  assert.ok(entryAt(manifest, "example/screens/welcome", "screen"));
+  entryAt(manifest, "example/screens/welcome", "screen");
   await prepared.assertUnchanged();
   await assert.rejects(fs.access(manifestPath), { code: "ENOENT" });
 });

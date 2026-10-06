@@ -43,7 +43,7 @@ test(
         readManifest(fixture.config),
         "home",
         "screen",
-      )?.title;
+      ).title;
       const previousVersion = version(
         await waitForClassifiedCount(running.url, 0),
       );
@@ -57,7 +57,7 @@ test(
         readManifest(fixture.config),
         "home",
         "screen",
-      )?.title;
+      ).title;
       assert.ok(after);
       assert.notEqual(after, before);
       assert.ok(html.includes(after));

@@ -169,7 +169,7 @@ test("discovery unions globs, ignores order, and sorts by repository path", asyn
     assert.deepEqual(graph.entrySources, expected);
     const manifest = (await compileCatalogue(config)).manifest;
     assert.equal(
-      entryAt(manifest, "alpha", "screen")?.sourcePath,
+      entryAt(manifest, "alpha", "screen").sourcePath,
       "src/widgets/alpha/alpha.mockup.ts",
     );
     assert.ok(

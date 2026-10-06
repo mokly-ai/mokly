@@ -94,7 +94,7 @@ test("a re-exported helper screen links its exporting entry's stylesheet", async
     "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
   ]);
   assert.equal(
-    entryAt(compiled.manifest, "home", "screen")?.sourcePath,
+    entryAt(compiled.manifest, "home", "screen").sourcePath,
     "entries/helper.tsx",
   );
   assert.ok(!JSON.stringify(compiled.manifest).includes("entryRoot"));

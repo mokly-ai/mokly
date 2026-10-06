@@ -1,7 +1,7 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 5 completed and approved. Milestone 6
-completed. Waiting for reviewer approval before Milestone 7.
+Status: Active; Milestones 1 through 6 completed and approved. Milestone 7
+in progress.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -486,6 +486,9 @@ Extend the lint rule to literal path lookups, as the user approved on
 
 Complete the required delivery sequence after validation passes.
 
+- [x] Remove optional chains and tautological assertions on `entryAt`
+      results in a separate cleanup commit. Run all affected files under the
+      guard and retain assertions that state their real claims.
 - [ ] Set the Delivery Status of `docs/protocol/ci-test-assertions.md` to
       implemented.
 - [ ] Remove the "planned" assertion-contract wording from `README.md`,

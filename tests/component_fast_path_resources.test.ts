@@ -109,7 +109,6 @@ async function relocatedFixture(t: TestContext) {
 
 function actionViewPath(compilation: Compilation): string {
   const action = entryAt(compilation.manifest, "action/default", "component");
-  assert.ok(action);
   return generatedViews(action)[0]!.path;
 }
 

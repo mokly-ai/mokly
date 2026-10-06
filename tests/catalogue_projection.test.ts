@@ -155,7 +155,6 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
 test("removed variants keep baseline authored order at a surviving parent's position", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const current = entryAt(fixture.after.manifest, "home", "screen");
-  assert.ok(current);
   const removedScreen = (id: string, variantOf?: string) => ({
     folderTitles: [],
     ...(variantOf === undefined ? {} : { parentTitle: current.title }),
