@@ -32,9 +32,14 @@ An unchanged local URL beside another rule's edit can keep fingerprints.
 Resource seeds still come from original and retained-rule records.
 
 When link normalization is present, also keep text if either original parse
-leaves SVG or MathML open at EOF. An appended style can then become foreign
-content, where entity decoding can change URL equality. Read the EOF state from
-the original page parse; never parse again for this guard.
+leaves SVG or MathML open at EOF, or an original SVG/MathML element starts
+before a paired ignore region and its recorded `sourceCodeLocation.endOffset`
+falls within that region. Include both endpoint boundaries: an explicit closer
+can finish at the region's end, and a breakout tag can close foreign content
+at the region's start. Removing the paired region can therefore leave the
+element open. An appended style then becomes foreign content, where entity
+decoding can change URL equality. Read EOF state and element locations from
+each side's existing page analysis; never parse again for this guard.
 
 Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
 

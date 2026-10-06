@@ -55,9 +55,9 @@ export async function compareStyleOnlyView(
     return;
 
   const head = pages.afterAnalysis;
-  // The safe raw-text window leaves both sides in the same EOF parser state.
-  if (pages.links && head.openForeignContent) return;
   const paired = pages.pairedIgnoreIds;
+  // The safe raw-text window leaves both sides with the same foreign structure.
+  if (pages.links && head.foreignContentMayStayOpen(paired)) return;
   if (
     [...spans.before, ...spans.after].some(({ text }) => hasReviewPrefix(text))
   )

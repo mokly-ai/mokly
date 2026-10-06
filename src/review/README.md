@@ -366,14 +366,17 @@ Key code:
   head tree, UTF-16 windows and no base parse, projection or implementation
   comparison. Reconstructed base style spans retain document-wide ordinals;
   shared inline preparation survives fallback. Both retained multisets are
-  composed normally. `stylePath` counts only settled views.
+  composed normally. With link normalization, SVG/MathML open at EOF or closed
+  only inside paired ignore regions takes the full path. `stylePath` counts
+  only settled views.
 - `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
   validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
   Original validation stays eager; fingerprint inventories derive lazily. The
   pair caches normalization and keeps a stable projected exclusion policy.
 - `page_parser.ts`, `page_source_locations.ts`, `page_subjects.ts`: the one
   default-tree parse captures adopted attribute/clone provenance from parse5's
-  own tokens. Empty parser-created elements use their creating token's offset
+  own tokens. Its `onEof` callback records SVG/MathML left on the open-element
+  stack. Empty parser-created elements use their creating token's offset
   for ignore status; located descendants retain the all-ignored rule. No regex
   recovery or second tokenizer/tree runs. The corpus checks producer spellings,
   all source-less offsets and shared-token clone originals; a separate test pins
@@ -389,11 +392,14 @@ Key code:
   authored prefixes, skipped source references/copies/rewrites and M8 marker guards keep text;
   parse failures stay verbatim. Producer references survive the representation
   change, and the route keeps its canonical comparison without fingerprint work.
+  With link normalization, SVG/MathML open at EOF or closed only inside
+  paired ignore regions keeps text on both sides, using existing original-tree
+  locations.
 - `inline_link_material.ts`: keeps text when path/move normalization changes a
   skipped style source without an identical-normalizer proof, or changes an
-  actual/projected appendix equality outcome. Original open SVG/MathML EOF state
-  also keeps text. Link-normalization parses use the counted `linkNormalization`
-  step; CSS matching and reference discovery still use originals.
+  actual/projected appendix equality outcome. Link-normalization parses use
+  the counted `linkNormalization` step; CSS matching and reference discovery
+  still use originals.
 - `page_fingerprint_guard.ts`, `material_normalization_recipe.ts` and
   `fingerprint_seams.ts`: inspect delivered recipe joins, including marker/ignore
   normalization and caller copies. Windows read at most 12 UTF-16 units on each

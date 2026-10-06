@@ -1,5 +1,5 @@
 /** One lazy original-page tree per component-aware view side. */
-import type { DefaultTreeAdapterMap } from "parse5";
+import { html, type DefaultTreeAdapterMap } from "parse5";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
@@ -117,6 +117,35 @@ export class PageAnalysis {
 
   get openForeignContent(): boolean {
     return hasOpenForeignContent(this.document);
+  }
+
+  /** Paired ignores can remove an explicit or parser-implied foreign closer. */
+  foreignContentMayStayOpen(paired: readonly string[]): boolean {
+    if (this.openForeignContent) return true;
+    const regions = this.ignored(paired);
+    if (!regions.length) return false;
+    const visit = (node: DefaultTreeAdapterMap["node"]): boolean => {
+      if ("tagName" in node) {
+        const location = node.sourceCodeLocation;
+        if (
+          (node.namespaceURI === html.NS.SVG ||
+            node.namespaceURI === html.NS.MATHML) &&
+          location?.startTag &&
+          regions.some(
+            ({ start, end }) =>
+              location.startTag!.startOffset < start &&
+              start <= location.endOffset &&
+              location.endOffset <= end,
+          )
+        )
+          return true;
+      }
+      return (
+        ("childNodes" in node && node.childNodes.some(visit)) ||
+        ("content" in node && visit(node.content))
+      );
+    };
+    return visit(this.document);
   }
 
   get materialSignals(): readonly (SourceSpan & { id: string })[] {
