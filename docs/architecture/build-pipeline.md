@@ -97,10 +97,14 @@ per effective stylesheet input; lazy CSS Modules plugins rename local
 classes, IDs and keyframes using a repo-relative path hash without rewriting
 other authored CSS. Every Mokly PostCSS parse and process call goes through
 `src/build/styles/postcss_boundary.ts`, which disables input and output source
-maps. In other product sources, ESLint rejects the PostCSS default export,
-`parse`, `plugin`, `Processor` and `Input`, any `postcss/**` import, and
-`import()` or `require()` of PostCSS. ESLint cannot see CSS text passed to node
-insertion methods such as `append`, so Mokly code inserts nodes as objects. A
+maps. In other product sources, ESLint rejects value imports and re-exports of
+the PostCSS default export, `parse`, `plugin`, `Processor` and `Input`
+(including through a namespace import), and value imports from `postcss/**`.
+Type-only imports stay allowed. ESLint also rejects `import()` and every other
+call whose first argument is the string literal `postcss` or `postcss/…`, such
+as `require()` or `require.resolve()`. It cannot see a template-literal
+specifier or CSS text passed to node insertion methods such as `append`, so
+Mokly code uses string-literal specifiers and inserts nodes as objects. A
 second esbuild pass produces one CSS file per configured renderer/entry root
 and path-mirrored local assets. The
 compatibility transformer is a graph source, not a CSS delivery root;

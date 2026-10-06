@@ -195,8 +195,8 @@ only when a module is imported, not during CLI module import.
 `styles/postcss_boundary.ts` owns every PostCSS parse and process call and
 always passes `map: false`, so Mokly ignores
 [input source maps](../../docs/protocol/mokly-imported-styles-postcss.md#input-source-maps).
-ESLint rejects PostCSS's parsers and processors in other product sources; build
-PostCSS nodes from objects, not CSS text.
+ESLint rejects run-time imports and loads of PostCSS's parsers and processors
+in other product sources; build PostCSS nodes from objects, not CSS text.
 The preprocessor caches by local imports actually excluded in each file,
 allowing both graph and CSS passes to share unaffected transformations. The
 output cleaner drops esbuild's source-path comments and their separator lines
